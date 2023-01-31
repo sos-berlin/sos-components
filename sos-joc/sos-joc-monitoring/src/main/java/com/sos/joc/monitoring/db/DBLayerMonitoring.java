@@ -24,13 +24,17 @@ import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.db.monitoring.DBItemNotification;
 import com.sos.joc.db.monitoring.DBItemNotificationMonitor;
 import com.sos.joc.db.monitoring.DBItemNotificationWorkflow;
+import com.sos.joc.db.monitoring.DBItemSystemNotification;
 import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.joc.model.xmleditor.common.ObjectType;
+import com.sos.joc.monitoring.bean.SystemMonitoringEvent;
 import com.sos.joc.monitoring.configuration.Notification;
+import com.sos.joc.monitoring.configuration.SystemNotification;
 import com.sos.joc.monitoring.configuration.monitor.AMonitor;
 import com.sos.joc.monitoring.model.HistoryMonitoringModel.HistoryOrderStepResult;
 import com.sos.joc.monitoring.model.HistoryNotifyAnalyzer;
 import com.sos.joc.monitoring.notification.notifier.NotifyResult;
+import com.sos.monitoring.notification.NotificationApplication;
 import com.sos.monitoring.notification.NotificationRange;
 import com.sos.monitoring.notification.NotificationType;
 
@@ -328,8 +332,8 @@ public class DBLayerMonitoring extends DBLayer {
         return getSession().getSingleResult(query);
     }
 
-    public DBItemNotification saveNotification(Notification notification, HistoryNotifyAnalyzer analyzer, NotificationRange range, NotificationType type,
-            Long recoveredNotificationId, JobWarning warn, String warnText) throws SOSHibernateException {
+    public DBItemNotification saveNotification(Notification notification, HistoryNotifyAnalyzer analyzer, NotificationRange range,
+            NotificationType type, Long recoveredNotificationId, JobWarning warn, String warnText) throws SOSHibernateException {
         DBItemNotification item = new DBItemNotification();
         item.setType(type);
         item.setRange(range);
@@ -351,10 +355,41 @@ public class DBLayerMonitoring extends DBLayer {
         return item;
     }
 
+    public static DBItemSystemNotification createSystemNotification(SystemNotification notification, SystemMonitoringEvent event, Date dateTime,
+            String exception) {
+        DBItemSystemNotification item = new DBItemSystemNotification();
+        item.setType(event.getType());
+        item.setCategory(event.getCategory());
+        item.setHasMonitors(notification.getMonitors().size() > 0);
+        item.setSection(event.getSection());
+        item.setNotifier(event.getLoggerName());
+        item.setTime(dateTime);
+        item.setMessage(event.getMessage());
+        item.setException(exception);
+        item.setCreated(new Date());
+        return item;
+    }
+
+    public static DBItemNotificationMonitor createSystemNotificationMonitor(AMonitor monitor, NotifyResult notifyResult) {
+        DBItemNotificationMonitor item = new DBItemNotificationMonitor();
+        item.setApplication(NotificationApplication.SYSTEM_NOTIFICATION.intValue());
+        item.setType(monitor.getType());
+        item.setName(monitor.getMonitorName());
+        item.setMessage(notifyResult.getMessage());
+        item.setConfiguration(monitor.getInfo().toString());
+        if (notifyResult.getError() != null && !SOSString.isEmpty(notifyResult.getError().getMessage())) {
+            item.setError(true);
+            item.setErrorText(notifyResult.getError().getMessage());
+        }
+        item.setCreated(new Date());
+        return item;
+    }
+
     public DBItemNotificationMonitor saveNotificationMonitor(DBItemNotification notification, AMonitor monitor, NotifyResult notifyResult)
             throws SOSHibernateException {
         DBItemNotificationMonitor item = new DBItemNotificationMonitor();
         item.setNotificationId(notification.getId());
+        item.setApplication(NotificationApplication.ORDER_NOTIFICATION.intValue());
         item.setType(monitor.getType());
         item.setName(monitor.getMonitorName());
         item.setMessage(notifyResult.getMessage());
@@ -373,6 +408,7 @@ public class DBLayerMonitoring extends DBLayer {
             throws SOSHibernateException {
         DBItemNotificationMonitor item = new DBItemNotificationMonitor();
         item.setNotificationId(notification.getId());
+        item.setApplication(NotificationApplication.ORDER_NOTIFICATION.intValue());
         item.setType(monitor.getType());
         item.setName(monitor.getMonitorName());
         item.setMessage(monitor.getMessage());

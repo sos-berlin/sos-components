@@ -1,6 +1,7 @@
 package com.sos.joc.monitoring.notification.notifier;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
@@ -49,18 +50,19 @@ public class NotifierMail extends ANotifier {
     }
 
     @Override
-    public NotifyResult notify(NotificationType type, TimeZone timeZone, SystemMonitoringEvent event) {
-        NotifyResult result = new NotifyResult(monitor.getMessage(), getSendInfo());
+    public NotifyResult notify(NotificationType type, TimeZone timeZone, SystemMonitoringEvent event, Date dateTime, String exception) {
         if (mail == null) {
+            NotifyResult result = new NotifyResult(monitor.getMessage(), getSendInfo());
             result.setError("mail is null");
             return result;
         }
+        set(type, timeZone, event, dateTime, exception);
 
-        set(type, timeZone, event);
+        String body = resolveSystemVars(monitor.getMessage(), true);
+        NotifyResult result = new NotifyResult(body, getSendInfo());
 
         mail.setSubject(resolveSystemVars(monitor.getSubject(), true));
-        mail.setBody(resolveSystemVars(monitor.getMessage(), true));
-
+        mail.setBody(body);
         try {
             StringBuilder info = new StringBuilder();
             info.append("[subject=").append(mail.getSubject()).append("]");
@@ -99,21 +101,22 @@ public class NotifierMail extends ANotifier {
     @Override
     public NotifyResult notify(NotificationType type, TimeZone timeZone, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos,
             DBItemNotification mn) {
-        NotifyResult result = new NotifyResult(monitor.getMessage(), getSendInfo());
         if (mail == null) {
+            NotifyResult result = new NotifyResult(monitor.getMessage(), getSendInfo());
             result.setError("mail is null");
             return result;
         }
-
         NotifyResult skip = checkJobNotification(type, mos);
         if (skip != null) {
             return skip;
         }
-
         set(type, timeZone, mo, mos, mn);
 
+        String body = resolve(monitor.getMessage(), true);
+        NotifyResult result = new NotifyResult(body, getSendInfo());
+
         mail.setSubject(resolve(monitor.getSubject(), true));
-        mail.setBody(resolve(monitor.getMessage(), true));
+        mail.setBody(body);
 
         try {
             StringBuilder info = new StringBuilder();
@@ -176,7 +179,7 @@ public class NotifierMail extends ANotifier {
                 List<MailResource> list = new ArrayList<>();
                 for (String res : monitor.getJobResources()) {
                     MailResource r = Configuration.INSTANCE.getMailResources().get(res);
-                    if (r == null) {
+                    if (r == null || !r.isAvailable()) {
                         notDeployed.add(res);
                     } else {
                         list.add(r);
@@ -193,7 +196,7 @@ public class NotifierMail extends ANotifier {
                 }
             }
         }
-        if (resource == null) {
+        if (resource == null || !resource.isAvailable()) {
             throw new Exception(String.format("[monitor %s]missing Job Resource", monitor.getInfo()));
         }
         return resource;

@@ -36,6 +36,8 @@ public class MailResource {
     private String cc;
     private String bcc;
 
+    private boolean available;
+
     /** Create a MailResource from a certain JobResource */
     public void parse(String name, String content) {
         jobResourceName = name;
@@ -62,7 +64,7 @@ public class MailResource {
                 LOGGER.debug(String.format("[parse][%s][mail properties]%s", jobResourceName, getMaskedMailProperties()));
                 LOGGER.debug(String.format("[parse][%s][credentialStoreArgs]%s", jobResourceName, SOSString.toString(credentialStoreArgs)));
             }
-
+            available = true;
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         }
@@ -100,6 +102,7 @@ public class MailResource {
             to = getCurrentValue("mail", "to", to, mr.getTo(), isDebugEnabled, mr.jobResourceName);
             cc = getCurrentValue("mail", "cc", cc, mr.getCC(), isDebugEnabled, mr.jobResourceName);
             bcc = getCurrentValue("mail", "bcc", bcc, mr.getBCC(), isDebugEnabled, mr.jobResourceName);
+            available = true;
         }
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("[parse][result]credentialStoreArgs=" + SOSString.toString(credentialStoreArgs));
@@ -157,6 +160,7 @@ public class MailResource {
         to = null;
         cc = null;
         bcc = null;
+        available = false;
     }
 
     public SOSCredentialStoreArguments getCredentialStoreArgs() {
@@ -211,10 +215,19 @@ public class MailResource {
         return bcc;
     }
 
+    public boolean isAvailable() {
+        return available;
+    }
+
+    public void isAvailable(boolean val) {
+        available = val;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("jobResourceName=").append(jobResourceName);
+        sb.append(",available=").append(available);
         sb.append(",from=").append(from);
         sb.append(",fromName=").append(fromName);
         sb.append(",to=").append(to);

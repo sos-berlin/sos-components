@@ -1,5 +1,6 @@
 package com.sos.joc.monitoring.notification.notifier;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
@@ -42,9 +43,9 @@ public class NotifierCommand extends ANotifier {
     }
 
     @Override
-    public NotifyResult notify(NotificationType type, TimeZone timeZone, SystemMonitoringEvent event) {
+    public NotifyResult notify(NotificationType type, TimeZone timeZone, SystemMonitoringEvent event, Date dateTime, String exception) {
 
-        set(type, timeZone, event);
+        set(type, timeZone, event, dateTime, exception);
         String cmd = resolveSystemVars(monitor.getCommand(), false);
         LOGGER.info(getInfo4execute(true, event, type, cmd));
 

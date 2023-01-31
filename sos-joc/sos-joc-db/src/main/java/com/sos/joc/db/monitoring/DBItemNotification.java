@@ -74,7 +74,7 @@ public class DBItemNotification extends DBItem {
 
     public void setType(Integer val) {
         if (val == null) {
-            val = NotificationType.ERROR.intValue();
+            val = MonitoringConstants.NOTIFICATION_DEFAULT_TYPE.intValue();
         }
         type = val;
     }
@@ -85,7 +85,7 @@ public class DBItemNotification extends DBItem {
 
     public void setRange(Integer val) {
         if (val == null) {
-            val = NotificationRange.WORKFLOW.intValue();
+            val = MonitoringConstants.NOTIFICATION_DEFAULT_RANGE.intValue();
         }
         range = val;
     }
@@ -119,7 +119,7 @@ public class DBItemNotification extends DBItem {
 
     public void setWarn(Integer val) {
         if (val == null) {
-            val = JobWarning.NONE.intValue();
+            val = MonitoringConstants.NOTIFICATION_DEFAULT_JOB_WARNING.intValue();
         }
         warn = val;
     }
@@ -149,7 +149,7 @@ public class DBItemNotification extends DBItem {
         try {
             return NotificationType.fromValue(type);
         } catch (Throwable e) {
-            return NotificationType.ERROR;
+            return MonitoringConstants.NOTIFICATION_DEFAULT_TYPE;
         }
     }
 
@@ -163,7 +163,7 @@ public class DBItemNotification extends DBItem {
         try {
             return NotificationRange.fromValue(range);
         } catch (Throwable e) {
-            return NotificationRange.WORKFLOW;
+            return MonitoringConstants.NOTIFICATION_DEFAULT_RANGE;
         }
     }
 
@@ -187,7 +187,7 @@ public class DBItemNotification extends DBItem {
         try {
             return JobWarning.fromValue(warn);
         } catch (IllegalArgumentException e) {
-            return JobWarning.NONE;
+            return MonitoringConstants.NOTIFICATION_DEFAULT_JOB_WARNING;
         }
     }
 }
