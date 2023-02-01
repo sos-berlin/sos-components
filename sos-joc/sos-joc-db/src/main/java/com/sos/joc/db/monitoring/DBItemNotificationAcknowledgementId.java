@@ -19,6 +19,11 @@ public class DBItemNotificationAcknowledgementId implements Serializable {
     @Column(name = "[APPLICATION]", nullable = false)
     private Integer application;
 
+    public DBItemNotificationAcknowledgementId() {
+        this.notificationId = null;
+        this.application = null;
+    }
+
     public DBItemNotificationAcknowledgementId(Long notificationId, Integer application) {
         this.notificationId = notificationId;
         this.application = application;

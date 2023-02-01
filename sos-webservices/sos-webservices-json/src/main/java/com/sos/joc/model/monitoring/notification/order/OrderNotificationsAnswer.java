@@ -1,5 +1,5 @@
 
-package com.sos.joc.model.monitoring;
+package com.sos.joc.model.monitoring.notification.order;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -8,13 +8,14 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.monitoring.notification.order.items.OrderNotificationItem;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * notification collection of monitors
+ * monitoring collection of notifications
  * <p>
  * 
  * 
@@ -22,9 +23,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "deliveryDate",
-    "monitors"
+    "notifications"
 })
-public class NotificationAnswer {
+public class OrderNotificationsAnswer {
 
     /**
      * timestamp
@@ -41,8 +42,8 @@ public class NotificationAnswer {
      * (Required)
      * 
      */
-    @JsonProperty("monitors")
-    private List<MonitorItem> monitors = new ArrayList<MonitorItem>();
+    @JsonProperty("notifications")
+    private List<OrderNotificationItem> notifications = new ArrayList<OrderNotificationItem>();
 
     /**
      * timestamp
@@ -73,9 +74,9 @@ public class NotificationAnswer {
      * (Required)
      * 
      */
-    @JsonProperty("monitors")
-    public List<MonitorItem> getMonitors() {
-        return monitors;
+    @JsonProperty("notifications")
+    public List<OrderNotificationItem> getNotifications() {
+        return notifications;
     }
 
     /**
@@ -83,19 +84,19 @@ public class NotificationAnswer {
      * (Required)
      * 
      */
-    @JsonProperty("monitors")
-    public void setMonitors(List<MonitorItem> monitors) {
-        this.monitors = monitors;
+    @JsonProperty("notifications")
+    public void setNotifications(List<OrderNotificationItem> notifications) {
+        this.notifications = notifications;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("monitors", monitors).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("notifications", notifications).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deliveryDate).append(monitors).toHashCode();
+        return new HashCodeBuilder().append(deliveryDate).append(notifications).toHashCode();
     }
 
     @Override
@@ -103,11 +104,11 @@ public class NotificationAnswer {
         if (other == this) {
             return true;
         }
-        if ((other instanceof NotificationAnswer) == false) {
+        if ((other instanceof OrderNotificationsAnswer) == false) {
             return false;
         }
-        NotificationAnswer rhs = ((NotificationAnswer) other);
-        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(monitors, rhs.monitors).isEquals();
+        OrderNotificationsAnswer rhs = ((OrderNotificationsAnswer) other);
+        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(notifications, rhs.notifications).isEquals();
     }
 
 }

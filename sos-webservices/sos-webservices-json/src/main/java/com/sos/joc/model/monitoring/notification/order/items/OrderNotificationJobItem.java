@@ -1,5 +1,5 @@
 
-package com.sos.joc.model.monitoring;
+package com.sos.joc.model.monitoring.notification.order.items;
 
 import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -30,7 +30,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "agentUrl",
     "exitCode"
 })
-public class NotificationItemJobItem {
+public class OrderNotificationJobItem {
 
     /**
      * 
@@ -317,10 +317,10 @@ public class NotificationItemJobItem {
         if (other == this) {
             return true;
         }
-        if ((other instanceof NotificationItemJobItem) == false) {
+        if ((other instanceof OrderNotificationJobItem) == false) {
             return false;
         }
-        NotificationItemJobItem rhs = ((NotificationItemJobItem) other);
+        OrderNotificationJobItem rhs = ((OrderNotificationJobItem) other);
         return new EqualsBuilder().append(criticality, rhs.criticality).append(exitCode, rhs.exitCode).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(position, rhs.position).append(state, rhs.state).append(agentUrl, rhs.agentUrl).append(job, rhs.job).append(taskId, rhs.taskId).isEquals();
     }
 

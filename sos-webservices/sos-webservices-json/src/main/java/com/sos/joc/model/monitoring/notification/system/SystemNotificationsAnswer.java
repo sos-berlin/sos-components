@@ -1,5 +1,5 @@
 
-package com.sos.joc.model.monitoring;
+package com.sos.joc.model.monitoring.notification.system;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.monitoring.notification.system.items.SystemNotificationItem;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -24,7 +25,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "deliveryDate",
     "notifications"
 })
-public class NotificationsAnswer {
+public class SystemNotificationsAnswer {
 
     /**
      * timestamp
@@ -42,7 +43,7 @@ public class NotificationsAnswer {
      * 
      */
     @JsonProperty("notifications")
-    private List<NotificationItem> notifications = new ArrayList<NotificationItem>();
+    private List<SystemNotificationItem> notifications = new ArrayList<SystemNotificationItem>();
 
     /**
      * timestamp
@@ -74,7 +75,7 @@ public class NotificationsAnswer {
      * 
      */
     @JsonProperty("notifications")
-    public List<NotificationItem> getNotifications() {
+    public List<SystemNotificationItem> getNotifications() {
         return notifications;
     }
 
@@ -84,7 +85,7 @@ public class NotificationsAnswer {
      * 
      */
     @JsonProperty("notifications")
-    public void setNotifications(List<NotificationItem> notifications) {
+    public void setNotifications(List<SystemNotificationItem> notifications) {
         this.notifications = notifications;
     }
 
@@ -103,10 +104,10 @@ public class NotificationsAnswer {
         if (other == this) {
             return true;
         }
-        if ((other instanceof NotificationsAnswer) == false) {
+        if ((other instanceof SystemNotificationsAnswer) == false) {
             return false;
         }
-        NotificationsAnswer rhs = ((NotificationsAnswer) other);
+        SystemNotificationsAnswer rhs = ((SystemNotificationsAnswer) other);
         return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(notifications, rhs.notifications).isEquals();
     }
 

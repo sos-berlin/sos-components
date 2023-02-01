@@ -8,8 +8,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import org.hibernate.ScrollableResults;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -27,26 +25,33 @@ import com.sos.joc.db.monitoring.MonitoringDBLayer;
 import com.sos.joc.db.monitoring.NotificationDBItemEntity;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.monitoring.NotificationItem;
-import com.sos.joc.model.monitoring.NotificationItemAcknowledgementItem;
-import com.sos.joc.model.monitoring.NotificationItemJobItem;
-import com.sos.joc.model.monitoring.NotificationsAnswer;
-import com.sos.joc.model.monitoring.NotificationsFilter;
-import com.sos.joc.monitoring.resource.INotifications;
+import com.sos.joc.model.monitoring.notification.common.AcknowledgementItem;
+import com.sos.joc.model.monitoring.notification.order.OrderNotificationsAnswer;
+import com.sos.joc.model.monitoring.notification.order.OrderNotificationsFilter;
+import com.sos.joc.model.monitoring.notification.order.items.OrderNotificationItem;
+import com.sos.joc.model.monitoring.notification.order.items.OrderNotificationJobItem;
+import com.sos.joc.monitoring.resource.IOrderNotifications;
 import com.sos.monitoring.notification.NotificationType;
 import com.sos.schema.JsonValidator;
 
+import jakarta.ws.rs.Path;
+
 @Path(WebservicePaths.MONITORING)
-public class NotificationsImpl extends JOCResourceImpl implements INotifications {
+public class OrderNotificationsImpl extends JOCResourceImpl implements IOrderNotifications {
 
     @Override
     public JOCDefaultResponse post(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
             initLogging(IMPL_PATH, inBytes, accessToken);
-            JsonValidator.validateFailFast(inBytes, NotificationsFilter.class);
-            NotificationsFilter in = Globals.objectMapper.readValue(inBytes, NotificationsFilter.class);
-            
+            JsonValidator.validateFailFast(inBytes, OrderNotificationsFilter.class);
+            OrderNotificationsFilter in = Globals.objectMapper.readValue(inBytes, OrderNotificationsFilter.class);
+
+            // 1) notification view permitted
+            if (!getJocPermissions(accessToken).getNotification().getView()) {
+                return initPermissions(in.getControllerId(), false);
+            }
+            // 2) controller permitted (because of controller related monitoring entries)
             String controllerId = in.getControllerId();
             Set<String> allowedControllers = Collections.emptySet();
             boolean permitted = false;
@@ -76,17 +81,17 @@ public class NotificationsImpl extends JOCResourceImpl implements INotifications
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             MonitoringDBLayer dbLayer = new MonitoringDBLayer(session);
-            List<NotificationItem> notifications = new ArrayList<NotificationItem>();
+            List<OrderNotificationItem> notifications = new ArrayList<OrderNotificationItem>();
             ScrollableResults sr = null;
             try {
                 if (in.getNotificationIds() == null || in.getNotificationIds().size() == 0) {
-                    sr = dbLayer.getNotifications(JobSchedulerDate.getDateFrom(in.getDateFrom(), in.getTimeZone()), allowedControllers, types, in
+                    sr = dbLayer.getOrderNotifications(JobSchedulerDate.getDateFrom(in.getDateFrom(), in.getTimeZone()), allowedControllers, types, in
                             .getLimit());
                 } else {
-                    sr = dbLayer.getNotifications(in.getNotificationIds(), allowedControllers, types);
+                    sr = dbLayer.getOrderNotifications(in.getNotificationIds(), allowedControllers, types);
                 }
                 while (sr.next()) {
-                    NotificationItem item = convert((NotificationDBItemEntity) sr.get(0));
+                    OrderNotificationItem item = convert((NotificationDBItemEntity) sr.get(0));
                     if (canAdd(item.getWorkflow(), permittedFolders.get(item.getControllerId()))) {
                         notifications.add(item);
                     }
@@ -99,7 +104,7 @@ public class NotificationsImpl extends JOCResourceImpl implements INotifications
                 }
             }
 
-            NotificationsAnswer answer = new NotificationsAnswer();
+            OrderNotificationsAnswer answer = new OrderNotificationsAnswer();
             answer.setDeliveryDate(new Date());
             answer.setNotifications(notifications);
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
@@ -113,7 +118,7 @@ public class NotificationsImpl extends JOCResourceImpl implements INotifications
         }
     }
 
-    private List<Integer> getTypes(NotificationsFilter in) {
+    private List<Integer> getTypes(OrderNotificationsFilter in) {
         if (in.getTypes() == null || in.getTypes().size() == 0) {
             return null;
         }
@@ -126,8 +131,8 @@ public class NotificationsImpl extends JOCResourceImpl implements INotifications
         }).collect(Collectors.toList());
     }
 
-    private NotificationItem convert(NotificationDBItemEntity entity) {
-        NotificationItem item = new NotificationItem();
+    private OrderNotificationItem convert(NotificationDBItemEntity entity) {
+        OrderNotificationItem item = new OrderNotificationItem();
         item.setNotificationId(entity.getId());
         item.setType(getType(entity.getType()));
         item.setCreated(entity.getCreated());
@@ -142,7 +147,7 @@ public class NotificationsImpl extends JOCResourceImpl implements INotifications
         item.setMessage(getMessage(entity));
 
         if (!SOSString.isEmpty(entity.getOrderStepJobName())) {
-            NotificationItemJobItem job = new NotificationItemJobItem();
+            OrderNotificationJobItem job = new OrderNotificationJobItem();
             job.setJob(entity.getOrderStepJobName());
             job.setStartTime(entity.getOrderStepStartTime());
             job.setEndTime(entity.getOrderStepEndTime());
@@ -156,7 +161,7 @@ public class NotificationsImpl extends JOCResourceImpl implements INotifications
             item.setJob(job);
         }
         if (!SOSString.isEmpty(entity.getAcknowledgementAccount())) {
-            NotificationItemAcknowledgementItem ac = new NotificationItemAcknowledgementItem();
+            AcknowledgementItem ac = new AcknowledgementItem();
             ac.setAccount(entity.getAcknowledgementAccount());
             ac.setComment(entity.getAcknowledgementComment());
             ac.setCreated(entity.getAcknowledgementCreated());

@@ -1,11 +1,12 @@
 
-package com.sos.joc.model.monitoring;
+package com.sos.joc.model.monitoring.notification.system.items;
 
 import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.monitoring.notification.common.AcknowledgementItem;
 import com.sos.monitoring.notification.NotificationType;
 import com.sos.monitoring.notification.SystemNotificationCategory;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -114,7 +115,7 @@ public class SystemNotificationItem {
      * 
      */
     @JsonProperty("acknowledgement")
-    private NotificationItemAcknowledgementItem acknowledgement;
+    private AcknowledgementItem acknowledgement;
 
     /**
      * non negative long
@@ -323,7 +324,7 @@ public class SystemNotificationItem {
      * 
      */
     @JsonProperty("acknowledgement")
-    public NotificationItemAcknowledgementItem getAcknowledgement() {
+    public AcknowledgementItem getAcknowledgement() {
         return acknowledgement;
     }
 
@@ -334,7 +335,7 @@ public class SystemNotificationItem {
      * 
      */
     @JsonProperty("acknowledgement")
-    public void setAcknowledgement(NotificationItemAcknowledgementItem acknowledgement) {
+    public void setAcknowledgement(AcknowledgementItem acknowledgement) {
         this.acknowledgement = acknowledgement;
     }
 

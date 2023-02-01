@@ -25,24 +25,23 @@ public class MonitoringDBLayer extends DBLayer {
         super(session);
     }
 
-    public ScrollableResults getNotifications(Date dateFrom, Collection<String> controllerIds, List<Integer> types, Integer limit)
+    public ScrollableResults getOrderNotifications(Date dateFrom, Collection<String> controllerIds, List<Integer> types, Integer limit)
             throws SOSHibernateException {
         if (controllerIds == null) {
             controllerIds = Collections.emptySet();
         }
-        StringBuilder hql = new StringBuilder(getNotificationsMainHQL());
+        StringBuilder hql = new StringBuilder(getOrderNotificationsMainHQL());
         if (dateFrom != null) {
             hql.append("and n.created >= :dateFrom ");
         }
         if (!controllerIds.isEmpty()) {
             hql.append("and o.controllerId in (:controllerIds) ");
         }
-        if (types != null && types.size() > 0) {
-            if (types.size() == 1) {
-                hql.append("and n.type=:type ");
-            } else {
-                hql.append("and n.type in :types ");
-            }
+        int typesSize = types == null ? 0 : types.size();
+        if (typesSize > 0) {
+            hql.append("and ");
+            hql.append(typesSize == 1 ? "n.type=:type" : "n.type in :types");
+            hql.append(" ");
         }
         hql.append("order by n.id desc");
 
@@ -53,8 +52,8 @@ public class MonitoringDBLayer extends DBLayer {
         if (!controllerIds.isEmpty()) {
             query.setParameterList("controllerIds", controllerIds);
         }
-        if (types != null && types.size() > 0) {
-            if (types.size() == 1) {
+        if (typesSize > 0) {
+            if (typesSize == 1) {
                 query.setParameter("type", types.get(0));
             } else {
                 query.setParameterList("types", types);
@@ -66,20 +65,26 @@ public class MonitoringDBLayer extends DBLayer {
         return getSession().scroll(query);
     }
 
-    public ScrollableResults getSystemNotifications(Date dateFrom, List<Integer> types, Integer limit) throws SOSHibernateException {
+    public ScrollableResults getSystemNotifications(Date dateFrom, List<Integer> types, List<Integer> categories, Integer limit)
+            throws SOSHibernateException {
         StringBuilder hql = new StringBuilder(getSystemNotificationsMainHQL());
         String add = "where ";
         if (dateFrom != null) {
             hql.append(add).append("n.time >= :dateFrom ");
             add = "and ";
         }
-        if (types != null && types.size() > 0) {
+        int typesSize = types == null ? 0 : types.size();
+        if (typesSize > 0) {
             hql.append(add);
-            if (types.size() == 1) {
-                hql.append("n.type=:type ");
-            } else {
-                hql.append("n.type in :types ");
-            }
+            hql.append(typesSize == 1 ? "n.type=:type" : "n.type in :types");
+            hql.append(" ");
+            add = "and ";
+        }
+        int categoriesSize = categories == null ? 0 : categories.size();
+        if (categoriesSize > 0) {
+            hql.append(add);
+            hql.append(categoriesSize == 1 ? "n.category=:category" : "n.category in :categories");
+            hql.append(" ");
             add = "and ";
         }
         hql.append("order by n.id desc");
@@ -88,11 +93,18 @@ public class MonitoringDBLayer extends DBLayer {
         if (dateFrom != null) {
             query.setParameter("dateFrom", dateFrom);
         }
-        if (types != null && types.size() > 0) {
-            if (types.size() == 1) {
+        if (typesSize > 0) {
+            if (typesSize == 1) {
                 query.setParameter("type", types.get(0));
             } else {
                 query.setParameterList("types", types);
+            }
+        }
+        if (categoriesSize > 0) {
+            if (categoriesSize == 1) {
+                query.setParameter("category", categories.get(0));
+            } else {
+                query.setParameterList("categories", categories);
             }
         }
         if (limit != null && limit > 0) {
@@ -101,31 +113,34 @@ public class MonitoringDBLayer extends DBLayer {
         return getSession().scroll(query);
     }
 
-    public ScrollableResults getSystemNotifications(List<Long> notificationIds, List<Integer> types) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder(getSystemNotificationsMainHQL());
-        String add = "where ";
-        if (types != null && types.size() > 0) {
-            hql.append(add);
-            if (types.size() == 1) {
-                hql.append("n.type=:type ");
-            } else {
-                hql.append("n.type in :types ");
-            }
-            add = "and ";
-        }
-        hql.append(add);
-
+    public ScrollableResults getOrderNotifications(List<Long> notificationIds, Collection<String> controllerIds, List<Integer> types)
+            throws SOSHibernateException {
         int size = notificationIds.size();
+        if (controllerIds == null) {
+            controllerIds = Collections.emptySet();
+        }
+        StringBuilder hql = new StringBuilder(getOrderNotificationsMainHQL());
+        if (!controllerIds.isEmpty()) {
+            hql.append("and o.controllerId in (:controllerIds) ");
+        }
+        int typesSize = types == null ? 0 : types.size();
+        if (typesSize > 0) {
+            hql.append("and ");
+            hql.append(typesSize == 1 ? "n.type=:type" : "n.type in :types");
+            hql.append(" ");
+        }
         if (size == 1) {
-            hql.append("n.id=:notificationId");
+            hql.append("and n.id=:notificationId");
         } else {
-            hql.append("n.id in :notificationIds ");
+            hql.append("and n.id in :notificationIds ");
             hql.append("order by n.id desc");
         }
-
-        Query<SystemNotificationDBItemEntity> query = getSession().createQuery(hql.toString(), SystemNotificationDBItemEntity.class);
-        if (types != null && types.size() > 0) {
-            if (types.size() == 1) {
+        Query<NotificationDBItemEntity> query = getSession().createQuery(hql.toString(), NotificationDBItemEntity.class);
+        if (!controllerIds.isEmpty()) {
+            query.setParameterList("controllerIds", controllerIds);
+        }
+        if (typesSize > 0) {
+            if (typesSize == 1) {
                 query.setParameter("type", types.get(0));
             } else {
                 query.setParameterList("types", types);
@@ -139,38 +154,47 @@ public class MonitoringDBLayer extends DBLayer {
         return getSession().scroll(query);
     }
 
-    public ScrollableResults getNotifications(List<Long> notificationIds, Collection<String> controllerIds, List<Integer> types)
+    public ScrollableResults getSystemNotifications(List<Long> notificationIds, List<Integer> types, List<Integer> categories)
             throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder(getSystemNotificationsMainHQL());
+        String add = "where ";
+        int typesSize = types == null ? 0 : types.size();
+        if (typesSize > 0) {
+            hql.append(add);
+            hql.append(typesSize == 1 ? "n.type=:type" : "n.type in :types");
+            hql.append(" ");
+            add = "and ";
+        }
+        int categoriesSize = categories == null ? 0 : categories.size();
+        if (categoriesSize > 0) {
+            hql.append(add);
+            hql.append(categoriesSize == 1 ? "n.category=:category" : "n.category in :categories");
+            hql.append(" ");
+            add = "and ";
+        }
+
+        hql.append(add);
         int size = notificationIds.size();
-        if (controllerIds == null) {
-            controllerIds = Collections.emptySet();
-        }
-        StringBuilder hql = new StringBuilder(getNotificationsMainHQL());
-        if (!controllerIds.isEmpty()) {
-            hql.append("and o.controllerId in (:controllerIds) ");
-        }
-        if (types != null && types.size() > 0) {
-            if (types.size() == 1) {
-                hql.append("and n.type=:type ");
-            } else {
-                hql.append("and n.type in :types ");
-            }
-        }
         if (size == 1) {
-            hql.append("and n.id=:notificationId");
+            hql.append("n.id=:notificationId");
         } else {
-            hql.append("and n.id in :notificationIds ");
+            hql.append("n.id in :notificationIds ");
             hql.append("order by n.id desc");
         }
-        Query<NotificationDBItemEntity> query = getSession().createQuery(hql.toString(), NotificationDBItemEntity.class);
-        if (!controllerIds.isEmpty()) {
-            query.setParameterList("controllerIds", controllerIds);
-        }
-        if (types != null && types.size() > 0) {
-            if (types.size() == 1) {
+
+        Query<SystemNotificationDBItemEntity> query = getSession().createQuery(hql.toString(), SystemNotificationDBItemEntity.class);
+        if (typesSize > 0) {
+            if (typesSize == 1) {
                 query.setParameter("type", types.get(0));
             } else {
                 query.setParameterList("types", types);
+            }
+        }
+        if (categoriesSize > 0) {
+            if (categoriesSize == 1) {
+                query.setParameter("category", categories.get(0));
+            } else {
+                query.setParameterList("categories", categories);
             }
         }
         if (size == 1) {
@@ -205,7 +229,7 @@ public class MonitoringDBLayer extends DBLayer {
         return getSession().getSingleResult(query);
     }
 
-    public DBItemNotification getNotification(Long notificationId) throws SOSHibernateException {
+    public DBItemNotification getOrderNotification(Long notificationId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_MON_NOTIFICATIONS).append(" ");
         hql.append("where id=:notificationId");
 
@@ -225,7 +249,7 @@ public class MonitoringDBLayer extends DBLayer {
         return getSession().getSingleResult(query);
     }
 
-    private StringBuilder getNotificationsMainHQL() {
+    private StringBuilder getOrderNotificationsMainHQL() {
         StringBuilder hql = new StringBuilder("select n.id as id"); // set aliases for all properties
         hql.append(",n.type as type");
         hql.append(",n.recoveredId as recoveredNotificationId");

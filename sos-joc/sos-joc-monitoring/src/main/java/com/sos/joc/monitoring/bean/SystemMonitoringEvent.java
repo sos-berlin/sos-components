@@ -15,12 +15,13 @@ public class SystemMonitoringEvent {
 
     private static final String SECTION_DATABASE = "Database";
     private static final String SECTION_CONTROLLER = "Controller";
-    private static final String SECTION_MONITORING = "Monitoring";
+    private static final String SECTION_MONITOR = "Monitor";
     private static final String SECTION_HISTORY = "History";
     private static final String SECTION_CLEANUP = "Cleanup";
     private static final String SECTION_DEPLOYMENT = "Deployment";
     private static final String SECTION_DAILYPLAN = "DailyPlan";
     private static final String SECTION_INVENTORY = "Inventory";
+    private static final String SECTION_JOC_CLUSTER = "JocCluster";
 
     private static final String SECTION_DATABASE_WARNING = SECTION_DATABASE + "_" + NotificationType.WARNING.name();
     private static final String SECTION_DATABASE_ERROR = SECTION_DATABASE + "_" + NotificationType.ERROR.name();
@@ -177,9 +178,11 @@ public class SystemMonitoringEvent {
         } else if (className.startsWith("com.sos.joc.history")) {
             return SECTION_HISTORY;
         } else if (className.startsWith("com.sos.joc.monitoring")) {
-            return SECTION_MONITORING;
+            return SECTION_MONITOR;
         } else if (className.startsWith("com.sos.joc.cleanup")) {
             return SECTION_CLEANUP;
+        } else if (className.startsWith("com.sos.joc.cluster")) {
+            return SECTION_JOC_CLUSTER;
         }
         return null;
     }

@@ -1,5 +1,5 @@
 
-package com.sos.joc.model.monitoring;
+package com.sos.joc.model.monitoring.notification.common;
 
 import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonInclude;

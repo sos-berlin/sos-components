@@ -1,7 +1,9 @@
 
-package com.sos.joc.model.monitoring;
+package com.sos.joc.model.monitoring.notification.common;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -20,9 +22,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "deliveryDate",
-    "acknowledgement"
+    "monitors"
 })
-public class NotificationAcknowledgeAnswer {
+public class NotificationAnswer {
 
     /**
      * timestamp
@@ -35,14 +37,12 @@ public class NotificationAcknowledgeAnswer {
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deliveryDate;
     /**
-     * order object in history collection
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("acknowledgement")
-    private NotificationItemAcknowledgementItem acknowledgement;
+    @JsonProperty("monitors")
+    private List<MonitorItem> monitors = new ArrayList<MonitorItem>();
 
     /**
      * timestamp
@@ -69,37 +69,33 @@ public class NotificationAcknowledgeAnswer {
     }
 
     /**
-     * order object in history collection
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("acknowledgement")
-    public NotificationItemAcknowledgementItem getAcknowledgement() {
-        return acknowledgement;
+    @JsonProperty("monitors")
+    public List<MonitorItem> getMonitors() {
+        return monitors;
     }
 
     /**
-     * order object in history collection
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("acknowledgement")
-    public void setAcknowledgement(NotificationItemAcknowledgementItem acknowledgement) {
-        this.acknowledgement = acknowledgement;
+    @JsonProperty("monitors")
+    public void setMonitors(List<MonitorItem> monitors) {
+        this.monitors = monitors;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("acknowledgement", acknowledgement).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("monitors", monitors).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deliveryDate).append(acknowledgement).toHashCode();
+        return new HashCodeBuilder().append(deliveryDate).append(monitors).toHashCode();
     }
 
     @Override
@@ -107,11 +103,11 @@ public class NotificationAcknowledgeAnswer {
         if (other == this) {
             return true;
         }
-        if ((other instanceof NotificationAcknowledgeAnswer) == false) {
+        if ((other instanceof NotificationAnswer) == false) {
             return false;
         }
-        NotificationAcknowledgeAnswer rhs = ((NotificationAcknowledgeAnswer) other);
-        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(acknowledgement, rhs.acknowledgement).isEquals();
+        NotificationAnswer rhs = ((NotificationAnswer) other);
+        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(monitors, rhs.monitors).isEquals();
     }
 
 }
