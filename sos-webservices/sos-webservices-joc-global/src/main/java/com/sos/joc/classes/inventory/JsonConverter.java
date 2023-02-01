@@ -7,13 +7,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -142,16 +140,19 @@ public class JsonConverter {
                             ExecutableScript signEs = signJob.getExecutable().cast();
                             if (signEs != null) {
                                 if (rc.getSuccess() != null) {
-                                    signEs.getReturnCodeMeaning().setSuccess(Stream.of(rc.getSuccess(), rc.getWarning()).flatMap(List::stream)
-                                            .filter(Objects::nonNull).distinct().sorted().collect(Collectors.toList()));
+                                    signEs.getReturnCodeMeaning().setSuccessNormalized(rc.getSuccess() + "," + rc.getWarning());
+//                                    signEs.getReturnCodeMeaning().setSuccess(Stream.of(rc.getSuccess(), rc.getWarning()).flatMap(List::stream).filter(
+//                                            Objects::nonNull).distinct().sorted().collect(Collectors.toList()));
                                 } else if (rc.getFailure() != null) {
-                                    signEs.getReturnCodeMeaning().getFailure().removeAll(rc.getWarning());
+//                                    signEs.getReturnCodeMeaning().getFailure().removeAll(rc.getWarning());
+                                    signEs.getReturnCodeMeaning().setFailureNormalized(rc.getWarning());
                                 } else {
                                     if (signEs.getReturnCodeMeaning() == null) {
                                         signEs.setReturnCodeMeaning(new com.sos.sign.model.job.JobReturnCode());
                                     }
-                                    signEs.getReturnCodeMeaning().setSuccess(Stream.of(Collections.singletonList(0), rc.getWarning()).flatMap(
-                                            List::stream).filter(Objects::nonNull).distinct().sorted().collect(Collectors.toList()));
+                                    signEs.getReturnCodeMeaning().setSuccessNormalized("0," + rc.getWarning());
+//                                    signEs.getReturnCodeMeaning().setSuccess(Stream.of(Collections.singletonList(0), rc.getWarning()).flatMap(
+//                                            List::stream).filter(Objects::nonNull).distinct().sorted().collect(Collectors.toList()));
                                 }
                             }
                         }

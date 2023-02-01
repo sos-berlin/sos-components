@@ -2,12 +2,15 @@
 package com.sos.inventory.model.job;
 
 import java.util.List;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
@@ -20,10 +23,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "warning"
 })
-public class JobReturnCodeWarning {
+public class JobReturnCodeWarning extends JobReturnCodeHelper {
 
     @JsonProperty("warning")
-    private List<Integer> warning = null;
+    private String warning;
 
     /**
      * No args constructor for use in serialization
@@ -36,19 +39,44 @@ public class JobReturnCodeWarning {
      * 
      * @param warning
      */
+    public JobReturnCodeWarning(String warning) {
+        super();
+        this.warning = getCodes(warning, TYPE.WARNING);
+    }
+    
     public JobReturnCodeWarning(List<Integer> warning) {
         super();
-        this.warning = warning;
+        this.warning = getCodes(warning, TYPE.WARNING);
+    }
+    
+    public JobReturnCodeWarning(Object warning) {
+        super();
+        this.warning = getCodes(warning, TYPE.WARNING);
     }
 
     @JsonProperty("warning")
-    public List<Integer> getWarning() {
+    public String getWarning() {
         return warning;
     }
 
     @JsonProperty("warning")
+    public void setWarning(Object warning) {
+        this.warning = getCodes(warning, TYPE.WARNING);
+    }
+    
+    @JsonIgnore
+    public void setWarning(String warning) {
+        this.warning = getCodes(warning, TYPE.WARNING);
+    }
+    
+    @JsonIgnore
     public void setWarning(List<Integer> warning) {
-        this.warning = warning;
+        this.warning = getCodes(warning, TYPE.WARNING);
+    }
+    
+    @JsonIgnore
+    public boolean isInWarnings(Integer warning) {
+        return isInReturnCodes(warning, TYPE.WARNING);
     }
 
     @Override

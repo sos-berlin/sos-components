@@ -15,6 +15,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.job.ExecutableJava;
 import com.sos.inventory.model.job.ExecutableScript;
+import com.sos.inventory.model.job.JobReturnCodeWarning;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.classes.history.HistoryNotification;
 import com.sos.joc.classes.inventory.search.WorkflowSearcher;
@@ -395,21 +396,21 @@ public class HistoryCacheHandler {
         return map;
     }
 
-    private List<Integer> getWarningReturnCodes(com.sos.inventory.model.job.Job job) {
-        List<Integer> result = null;
+    private JobReturnCodeWarning getWarningReturnCodes(com.sos.inventory.model.job.Job job) {
+        JobReturnCodeWarning result = null;
         if (job.getExecutable() != null && job.getExecutable().getTYPE() != null) {
             switch (job.getExecutable().getTYPE()) {
             case ShellScriptExecutable:
             case ScriptExecutable:
-                ExecutableScript es = (ExecutableScript) job.getExecutable();
-                if (es != null && es.getReturnCodeMeaning() != null) {
-                    result = es.getReturnCodeMeaning().getWarning();
+                ExecutableScript es = job.getExecutable().cast();
+                if (es != null) {
+                    result = es.getReturnCodeMeaning();
                 }
                 break;
             case InternalExecutable:
-                ExecutableJava ej = (ExecutableJava) job.getExecutable();
-                if (ej != null && ej.getReturnCodeMeaning() != null) {
-                    result = ej.getReturnCodeMeaning().getWarning();
+                ExecutableJava ej = job.getExecutable().cast();
+                if (ej != null) {
+                    result = ej.getReturnCodeMeaning();
                 }
                 break;
             }
