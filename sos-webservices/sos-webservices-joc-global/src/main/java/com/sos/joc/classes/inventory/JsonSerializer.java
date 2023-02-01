@@ -341,9 +341,15 @@ public class JsonSerializer {
     
     private static JobReturnCode emptyReturnCodeToNull(JobReturnCode j) {
         if (j != null) {
-            emptyCollectionsToNull(j.getFailure());
-            emptyCollectionsToNull(j.getSuccess());
-            emptyCollectionsToNull(j.getWarning());
+            if (j.getSuccess() != null && j.getSuccess().isEmpty()) {
+                j.setSuccess((String) null);
+            }
+            if (j.getFailure() != null && j.getFailure().isEmpty()) {
+                j.setFailure((String) null);
+            }
+            if (j.getWarning() != null && j.getWarning().isEmpty()) {
+                j.setWarning((String) null);
+            }
             if (j.getFailure() == null && j.getSuccess() == null && j.getWarning() == null) {
                 return null;
             }
@@ -354,7 +360,9 @@ public class JsonSerializer {
     
     private static JobReturnCodeWarning emptyReturnCodeWarningToNull(JobReturnCodeWarning j) {
         if (j != null) {
-            emptyCollectionsToNull(j.getWarning());
+            if (j.getWarning() != null && j.getWarning().isEmpty()) {
+                j.setWarning((String) null);
+            }
             if (j.getWarning() == null) {
                 return null;
             }
@@ -365,8 +373,12 @@ public class JsonSerializer {
     
     private static com.sos.sign.model.job.JobReturnCode emptyReturnCodeToNull(com.sos.sign.model.job.JobReturnCode j) {
         if (j != null) {
-            emptyCollectionsToNull(j.getFailure());
-            emptyCollectionsToNull(j.getSuccess());
+            if (j.getSuccess() != null && j.getSuccess().isEmpty()) {
+                j.setSuccess((String) null);
+            }
+            if (j.getFailure() != null && j.getFailure().isEmpty()) {
+                j.setFailure((String) null);
+            }
             if (j.getFailure() == null && j.getSuccess() == null) {
                 return null;
             }

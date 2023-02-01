@@ -2,12 +2,15 @@
 package com.sos.inventory.model.job;
 
 import java.util.List;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
@@ -26,9 +29,9 @@ public class JobReturnCode
 {
 
     @JsonProperty("success")
-    private List<Integer> success = null;
+    private String success;
     @JsonProperty("failure")
-    private List<Integer> failure = null;
+    private String failure;
 
     /**
      * No args constructor for use in serialization
@@ -43,30 +46,60 @@ public class JobReturnCode
      * @param failure
      * @param warning
      */
-    public JobReturnCode(List<Integer> success, List<Integer> failure, List<Integer> warning) {
+    public JobReturnCode(Object success, Object failure, Object warning) {
         super(warning);
-        this.success = success;
-        this.failure = failure;
+        this.success = getCodes(success, TYPE.SUCCESS);
+        this.failure = getCodes(failure, TYPE.FAILURE);
     }
 
     @JsonProperty("success")
-    public List<Integer> getSuccess() {
+    public String getSuccess() {
         return success;
     }
 
     @JsonProperty("success")
+    public void setSuccess(Object success) {
+        this.success = getCodes(success, TYPE.SUCCESS);
+    }
+    
+    @JsonIgnore
+    public void setSuccess(String success) {
+        this.success = getCodes(success, TYPE.SUCCESS);
+    }
+    
+    @JsonIgnore
     public void setSuccess(List<Integer> success) {
-        this.success = success;
+        this.success = getCodes(success, TYPE.SUCCESS);
+    }
+    
+    @JsonIgnore
+    public boolean isInSuccess(Integer success) {
+        return isInReturnCodes(success, TYPE.SUCCESS);
     }
 
     @JsonProperty("failure")
-    public List<Integer> getFailure() {
+    public String getFailure() {
         return failure;
     }
 
     @JsonProperty("failure")
+    public void setFailure(Object failure) {
+        this.failure = getCodes(failure, TYPE.FAILURE);
+    }
+    
+    @JsonIgnore
+    public void setFailure(String failure) {
+        this.failure = getCodes(failure, TYPE.FAILURE);
+    }
+    
+    @JsonIgnore
     public void setFailure(List<Integer> failure) {
-        this.failure = failure;
+        this.failure = getCodes(failure, TYPE.FAILURE);
+    }
+    
+    @JsonIgnore
+    public boolean isInFailures(Integer failure) {
+        return isInReturnCodes(failure, TYPE.FAILURE);
     }
 
     @Override
