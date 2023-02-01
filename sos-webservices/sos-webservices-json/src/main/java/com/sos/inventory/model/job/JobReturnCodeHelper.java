@@ -100,7 +100,6 @@ public class JobReturnCodeHelper {
         return false;
     }
     
-    @JsonIgnore
     private boolean isInReturnCodes(Integer i, SortedSet<Integer> single, List<SortedSet<Integer>> interval) {
         if (single.contains(i) || isInIntervals(i, interval)) {
             return true;
@@ -115,8 +114,16 @@ public class JobReturnCodeHelper {
         if (single.isEmpty() && interval.isEmpty()) {
             return null;
         }
-        return Stream.concat(single.stream().map(i -> i.toString()), interval.stream().map(i -> i.first() + ".." + i.last())).sorted().collect(
-                Collectors.joining(","));
+        return Stream.concat(single.stream().map(i -> constructSortedSet(i)), interval.stream()).sorted(Comparator.comparingInt(SortedSet::first))
+                .map(i -> {
+                    if (i.size() == 1) {
+                        return i.first().toString();
+                    } else if (i.size() == 2) {
+                        return i.first() + ".." + i.last();
+                    } else {
+                        return null;
+                    }
+                }).filter(Objects::nonNull).collect(Collectors.joining(","));
     }
 
     private boolean isInIntervals(Integer i, List<SortedSet<Integer>> ival) {
