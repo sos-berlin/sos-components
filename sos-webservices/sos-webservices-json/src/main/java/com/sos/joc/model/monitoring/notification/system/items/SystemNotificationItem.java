@@ -28,7 +28,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "hasMonitors",
     "section",
     "notifier",
-    "time",
     "message",
     "exception",
     "created",
@@ -84,16 +83,6 @@ public class SystemNotificationItem {
      */
     @JsonProperty("notifier")
     private String notifier;
-    /**
-     * timestamp
-     * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * (Required)
-     * 
-     */
-    @JsonProperty("time")
-    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    private Date time;
     @JsonProperty("message")
     private String message;
     @JsonProperty("exception")
@@ -249,30 +238,6 @@ public class SystemNotificationItem {
         this.notifier = notifier;
     }
 
-    /**
-     * timestamp
-     * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * (Required)
-     * 
-     */
-    @JsonProperty("time")
-    public Date getTime() {
-        return time;
-    }
-
-    /**
-     * timestamp
-     * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * (Required)
-     * 
-     */
-    @JsonProperty("time")
-    public void setTime(Date time) {
-        this.time = time;
-    }
-
     @JsonProperty("message")
     public String getMessage() {
         return message;
@@ -341,12 +306,12 @@ public class SystemNotificationItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("notificationId", notificationId).append("type", type).append("category", category).append("hasMonitors", hasMonitors).append("section", section).append("notifier", notifier).append("time", time).append("message", message).append("exception", exception).append("created", created).append("acknowledgement", acknowledgement).toString();
+        return new ToStringBuilder(this).append("notificationId", notificationId).append("type", type).append("category", category).append("hasMonitors", hasMonitors).append("section", section).append("notifier", notifier).append("message", message).append("exception", exception).append("created", created).append("acknowledgement", acknowledgement).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(exception).append(acknowledgement).append(created).append(hasMonitors).append(notifier).append(notificationId).append(section).append(time).append(type).append(category).append(message).toHashCode();
+        return new HashCodeBuilder().append(exception).append(acknowledgement).append(created).append(hasMonitors).append(notifier).append(notificationId).append(section).append(type).append(category).append(message).toHashCode();
     }
 
     @Override
@@ -358,7 +323,7 @@ public class SystemNotificationItem {
             return false;
         }
         SystemNotificationItem rhs = ((SystemNotificationItem) other);
-        return new EqualsBuilder().append(exception, rhs.exception).append(acknowledgement, rhs.acknowledgement).append(created, rhs.created).append(hasMonitors, rhs.hasMonitors).append(notifier, rhs.notifier).append(notificationId, rhs.notificationId).append(section, rhs.section).append(time, rhs.time).append(type, rhs.type).append(category, rhs.category).append(message, rhs.message).isEquals();
+        return new EqualsBuilder().append(exception, rhs.exception).append(acknowledgement, rhs.acknowledgement).append(created, rhs.created).append(hasMonitors, rhs.hasMonitors).append(notifier, rhs.notifier).append(notificationId, rhs.notificationId).append(section, rhs.section).append(type, rhs.type).append(category, rhs.category).append(message, rhs.message).isEquals();
     }
 
 }

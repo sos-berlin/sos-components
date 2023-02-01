@@ -122,10 +122,9 @@ public class SystemNotificationsImpl extends JOCResourceImpl implements ISystemN
         item.setHasMonitors(entity.getHasMonitors());
         item.setSection(entity.getSection());
         item.setNotifier(entity.getNotifier());
-        item.setTime(entity.getTime());
         item.setMessage(entity.getMessage());
         item.setException(entity.getException());
-        item.setCreated(entity.getCreated());
+        item.setCreated(entity.getTime());
 
         if (!SOSString.isEmpty(entity.getAcknowledgementAccount())) {
             AcknowledgementItem ac = new AcknowledgementItem();
