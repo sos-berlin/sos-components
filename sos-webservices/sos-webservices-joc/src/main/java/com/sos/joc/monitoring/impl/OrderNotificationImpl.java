@@ -1,52 +1,53 @@
 package com.sos.joc.monitoring.impl;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import jakarta.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.WebservicePaths;
-import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.monitoring.DBItemNotificationMonitor;
 import com.sos.joc.db.monitoring.MonitoringDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.MonitoringMonitorTypeText;
-import com.sos.joc.model.monitoring.MonitorItem;
-import com.sos.joc.model.monitoring.NotificationAnswer;
-import com.sos.joc.model.monitoring.NotificationFilter;
-import com.sos.joc.monitoring.resource.INotification;
+import com.sos.joc.model.monitoring.notification.common.MonitorItem;
+import com.sos.joc.model.monitoring.notification.common.NotificationAnswer;
+import com.sos.joc.model.monitoring.notification.order.OrderNotificationFilter;
+import com.sos.joc.monitoring.resource.IOrderNotification;
 import com.sos.monitoring.MonitorType;
 import com.sos.monitoring.notification.NotificationApplication;
 import com.sos.schema.JsonValidator;
 
+import jakarta.ws.rs.Path;
+
 @Path(WebservicePaths.MONITORING)
-public class NotificationImpl extends JOCResourceImpl implements INotification {
+public class OrderNotificationImpl extends JOCResourceImpl implements IOrderNotification {
 
     @Override
     public JOCDefaultResponse post(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
         try {
             initLogging(IMPL_PATH, inBytes, accessToken);
-            JsonValidator.validateFailFast(inBytes, NotificationFilter.class);
-            NotificationFilter in = Globals.objectMapper.readValue(inBytes, NotificationFilter.class);
+            JsonValidator.validateFailFast(inBytes, OrderNotificationFilter.class);
+            OrderNotificationFilter in = Globals.objectMapper.readValue(inBytes, OrderNotificationFilter.class);
 
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), getPermitted(accessToken, in));
-            if (response != null) {
-                return response;
+            // 1) notification view permitted
+            if (!getJocPermissions(accessToken).getNotification().getView()) {
+                return initPermissions(in.getControllerId(), false);
+            }
+            // 2) controller permitted (because of controller related monitoring entries)
+            if (!getControllerPermissions(in.getControllerId(), accessToken).getOrders().getView()) {
+                return initPermissions(in.getControllerId(), false);
             }
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             MonitoringDBLayer dbLayer = new MonitoringDBLayer(session);
 
             List<MonitorItem> monitors = new ArrayList<MonitorItem>();
+            // TODO check controllerId
             List<DBItemNotificationMonitor> result = dbLayer.getNotificationMonitors(NotificationApplication.ORDER_NOTIFICATION, in
                     .getNotificationId());
             if (result != null) {
@@ -77,7 +78,6 @@ public class NotificationImpl extends JOCResourceImpl implements INotification {
         item.setMessage(entity.getMessage());
         item.setError(entity.getErrorText());
         item.setCreated(entity.getCreated());
-
         return item;
     }
 
@@ -87,24 +87,5 @@ public class NotificationImpl extends JOCResourceImpl implements INotification {
         } catch (Throwable e) {
             return MonitoringMonitorTypeText.COMMAND;
         }
-    }
-
-    private boolean getPermitted(String accessToken, NotificationFilter in) {
-        String controllerId = in.getControllerId();
-        Set<String> allowedControllers = Collections.emptySet();
-        boolean permitted = false;
-        if (controllerId == null || controllerId.isEmpty()) {
-            controllerId = "";
-            allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
-                    availableController, accessToken).getOrders().getView()).collect(Collectors.toSet());
-            permitted = !allowedControllers.isEmpty();
-            if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
-                allowedControllers = Collections.emptySet();
-            }
-        } else {
-            allowedControllers = Collections.singleton(controllerId);
-            permitted = getControllerPermissions(controllerId, accessToken).getOrders().getView();
-        }
-        return permitted;
     }
 }

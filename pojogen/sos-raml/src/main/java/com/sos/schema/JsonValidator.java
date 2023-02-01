@@ -91,7 +91,7 @@ public class JsonValidator {
             put("OrderingSubagentClusters", "agent/orderingSubagentCluster-schema.json");
             put("AgentExportFilter", "agent/transfer/agentExportFilter-schema.json");
             put("AgentImportFilter", "agent/transfer/agentImportFilter-schema.json");
-            
+
             put("VersionsFilter", "joc/versionsFilter-schema.json");
 
             put("JobTemplateFilter", "jobTemplate/jobTemplateFilter-schema.json");
@@ -125,7 +125,7 @@ public class JsonValidator {
             put("OrderRunningLogFilter", "order/orderRunningLogFilter-schema.json");
             put("AddOrders", "order/addOrders-schema.json");
             put("ModifyOrders", "order/modifyOrders-schema.json");
-            
+
             put("ScheduleDatesFilter", "orderManagement/scheduleDatesFilter-schema.json");
 
             put("JobsFilter", "job/jobsFilter-schema.json");
@@ -232,11 +232,23 @@ public class JsonValidator {
             put("com.sos.joc.model.yade.FileFilter", "yade/fileFilter-schema.json");
             put("com.sos.joc.model.yade.FilesFilter", "yade/filesFilter-schema.json");
 
-            put("com.sos.joc.model.monitoring.NotificationsFilter", "monitoring/notifications-filter-schema.json");
-            put("com.sos.joc.model.monitoring.NotificationFilter", "monitoring/notification-filter-schema.json");
-            put("com.sos.joc.model.monitoring.NotificationAcknowledgeFilter", "monitoring/notification-acknowledge-filter-schema.json");
+            // monitor
             put("com.sos.joc.model.monitoring.ControllersFilter", "monitoring/controllers-filter-schema.json");
             put("com.sos.joc.model.monitoring.AgentsFilter", "monitoring/agents-filter-schema.json");
+            // monitor order notifications
+            put("com.sos.joc.model.monitoring.notification.order.OrderNotificationAcknowledgeFilter",
+                    "monitoring/notification/order/order-notification-acknowledge-filter-schema.json");
+            put("com.sos.joc.model.monitoring.notification.order.OrderNotificationFilter",
+                    "monitoring/notification/order/order-notification-filter-schema.json");
+            put("com.sos.joc.model.monitoring.notification.order.OrderNotificationsFilter",
+                    "monitoring/notification/order/order-notifications-filter-schema.json");
+            // monitor system notifications
+            put("com.sos.joc.model.monitoring.notification.system.SystemNotificationAcknowledgeFilter",
+                    "monitoring/notification/system/system-notification-acknowledge-filter-schema.json");
+            put("com.sos.joc.model.monitoring.notification.system.SystemNotificationFilter",
+                    "monitoring/notification/system/system-notification-filter-schema.json");
+            put("com.sos.joc.model.monitoring.notification.system.SystemNotificationsFilter",
+                    "monitoring/notification/system/system-notifications-filter-schema.json");
 
             // utilities
             put("com.sos.joc.model.dailyplan.RelativeDatesConverter", "orderManagement/dailyplan/relativeDatesConverter-schema.json");

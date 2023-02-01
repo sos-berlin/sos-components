@@ -1,10 +1,8 @@
 package com.sos.joc.monitoring.impl;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.hibernate.ScrollableResults;
@@ -17,14 +15,13 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.classes.WebservicePaths;
-import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.monitoring.MonitoringDBLayer;
 import com.sos.joc.db.monitoring.SystemNotificationDBItemEntity;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.monitoring.NotificationItemAcknowledgementItem;
-import com.sos.joc.model.monitoring.NotificationsFilter;
-import com.sos.joc.model.monitoring.SystemNotificationItem;
-import com.sos.joc.model.monitoring.SystemNotificationsAnswer;
+import com.sos.joc.model.monitoring.notification.common.AcknowledgementItem;
+import com.sos.joc.model.monitoring.notification.system.SystemNotificationsAnswer;
+import com.sos.joc.model.monitoring.notification.system.SystemNotificationsFilter;
+import com.sos.joc.model.monitoring.notification.system.items.SystemNotificationItem;
 import com.sos.joc.monitoring.resource.ISystemNotifications;
 import com.sos.monitoring.notification.NotificationType;
 import com.sos.monitoring.notification.SystemNotificationCategory;
@@ -40,34 +37,20 @@ public class SystemNotificationsImpl extends JOCResourceImpl implements ISystemN
         SOSHibernateSession session = null;
         try {
             initLogging(IMPL_PATH, inBytes, accessToken);
-            JsonValidator.validateFailFast(inBytes, NotificationsFilter.class);
-            NotificationsFilter in = Globals.objectMapper.readValue(inBytes, NotificationsFilter.class);
+            JsonValidator.validateFailFast(inBytes, SystemNotificationsFilter.class);
+            SystemNotificationsFilter in = Globals.objectMapper.readValue(inBytes, SystemNotificationsFilter.class);
 
-            String controllerId = in.getControllerId();
-            Set<String> allowedControllers = Collections.emptySet();
-            boolean permitted = false;
-            if (controllerId == null || controllerId.isEmpty()) {
-                controllerId = "";
-                allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
-                        availableController, accessToken).getOrders().getView()).collect(Collectors.toSet());
-                permitted = !allowedControllers.isEmpty();
-            } else {
-                allowedControllers = Collections.singleton(controllerId);
-                permitted = getControllerPermissions(controllerId, accessToken).getOrders().getView();
+            // 1) notification view permitted
+            if (!getJocPermissions(accessToken).getNotification().getView()) {
+                return initPermissions(null, false);
             }
 
-            JOCDefaultResponse response = initPermissions(null, permitted);
-            if (response != null) {
-                return response;
-            }
             if (in.getLimit() == null) {
                 in.setLimit(WebserviceConstants.HISTORY_RESULTSET_LIMIT);
             }
 
             List<Integer> types = getTypes(in);
-            if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
-                allowedControllers = Collections.emptySet();
-            }
+            List<Integer> categories = getCategories(in);
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             MonitoringDBLayer dbLayer = new MonitoringDBLayer(session);
@@ -75,9 +58,10 @@ public class SystemNotificationsImpl extends JOCResourceImpl implements ISystemN
             ScrollableResults sr = null;
             try {
                 if (in.getNotificationIds() == null || in.getNotificationIds().size() == 0) {
-                    sr = dbLayer.getSystemNotifications(JobSchedulerDate.getDateFrom(in.getDateFrom(), in.getTimeZone()), types, in.getLimit());
+                    sr = dbLayer.getSystemNotifications(JobSchedulerDate.getDateFrom(in.getDateFrom(), in.getTimeZone()), types, categories, in
+                            .getLimit());
                 } else {
-                    sr = dbLayer.getSystemNotifications(in.getNotificationIds(), types);
+                    sr = dbLayer.getSystemNotifications(in.getNotificationIds(), types, categories);
                 }
                 while (sr.next()) {
                     notifications.add(convert((SystemNotificationDBItemEntity) sr.get(0)));
@@ -104,7 +88,7 @@ public class SystemNotificationsImpl extends JOCResourceImpl implements ISystemN
         }
     }
 
-    private List<Integer> getTypes(NotificationsFilter in) {
+    private List<Integer> getTypes(SystemNotificationsFilter in) {
         if (in.getTypes() == null || in.getTypes().size() == 0) {
             return null;
         }
@@ -113,6 +97,19 @@ public class SystemNotificationsImpl extends JOCResourceImpl implements ISystemN
                 return NotificationType.fromValue(e.value()).intValue();
             } catch (Throwable ex) {
                 return NotificationType.ERROR.intValue();
+            }
+        }).collect(Collectors.toList());
+    }
+
+    private List<Integer> getCategories(SystemNotificationsFilter in) {
+        if (in.getCategories() == null || in.getCategories().size() == 0) {
+            return null;
+        }
+        return in.getCategories().stream().map(e -> {
+            try {
+                return SystemNotificationCategory.fromValue(e.value()).intValue();
+            } catch (Throwable ex) {
+                return SystemNotificationCategory.JOC.intValue();
             }
         }).collect(Collectors.toList());
     }
@@ -131,7 +128,7 @@ public class SystemNotificationsImpl extends JOCResourceImpl implements ISystemN
         item.setCreated(entity.getCreated());
 
         if (!SOSString.isEmpty(entity.getAcknowledgementAccount())) {
-            NotificationItemAcknowledgementItem ac = new NotificationItemAcknowledgementItem();
+            AcknowledgementItem ac = new AcknowledgementItem();
             ac.setAccount(entity.getAcknowledgementAccount());
             ac.setComment(entity.getAcknowledgementComment());
             ac.setCreated(entity.getAcknowledgementCreated());

@@ -1,5 +1,5 @@
 
-package com.sos.joc.model.monitoring;
+package com.sos.joc.model.monitoring.notification.order;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -20,7 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "controllerId",
     "notificationId"
 })
-public class NotificationFilter {
+public class OrderNotificationFilter {
 
     /**
      * controllerId
@@ -104,10 +104,10 @@ public class NotificationFilter {
         if (other == this) {
             return true;
         }
-        if ((other instanceof NotificationFilter) == false) {
+        if ((other instanceof OrderNotificationFilter) == false) {
             return false;
         }
-        NotificationFilter rhs = ((NotificationFilter) other);
+        OrderNotificationFilter rhs = ((OrderNotificationFilter) other);
         return new EqualsBuilder().append(controllerId, rhs.controllerId).append(notificationId, rhs.notificationId).isEquals();
     }
 

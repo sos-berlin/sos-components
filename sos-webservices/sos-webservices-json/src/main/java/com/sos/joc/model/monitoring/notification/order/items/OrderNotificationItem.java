@@ -1,11 +1,12 @@
 
-package com.sos.joc.model.monitoring;
+package com.sos.joc.model.monitoring.notification.order.items;
 
 import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.monitoring.notification.common.AcknowledgementItem;
 import com.sos.monitoring.notification.NotificationType;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -32,7 +33,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "job",
     "acknowledgement"
 })
-public class NotificationItem {
+public class OrderNotificationItem {
 
     /**
      * non negative long
@@ -110,7 +111,7 @@ public class NotificationItem {
      * 
      */
     @JsonProperty("job")
-    private NotificationItemJobItem job;
+    private OrderNotificationJobItem job;
     /**
      * order object in history collection
      * <p>
@@ -118,7 +119,7 @@ public class NotificationItem {
      * 
      */
     @JsonProperty("acknowledgement")
-    private NotificationItemAcknowledgementItem acknowledgement;
+    private AcknowledgementItem acknowledgement;
 
     /**
      * non negative long
@@ -315,7 +316,7 @@ public class NotificationItem {
      * 
      */
     @JsonProperty("job")
-    public NotificationItemJobItem getJob() {
+    public OrderNotificationJobItem getJob() {
         return job;
     }
 
@@ -326,7 +327,7 @@ public class NotificationItem {
      * 
      */
     @JsonProperty("job")
-    public void setJob(NotificationItemJobItem job) {
+    public void setJob(OrderNotificationJobItem job) {
         this.job = job;
     }
 
@@ -337,7 +338,7 @@ public class NotificationItem {
      * 
      */
     @JsonProperty("acknowledgement")
-    public NotificationItemAcknowledgementItem getAcknowledgement() {
+    public AcknowledgementItem getAcknowledgement() {
         return acknowledgement;
     }
 
@@ -348,7 +349,7 @@ public class NotificationItem {
      * 
      */
     @JsonProperty("acknowledgement")
-    public void setAcknowledgement(NotificationItemAcknowledgementItem acknowledgement) {
+    public void setAcknowledgement(AcknowledgementItem acknowledgement) {
         this.acknowledgement = acknowledgement;
     }
 
@@ -367,10 +368,10 @@ public class NotificationItem {
         if (other == this) {
             return true;
         }
-        if ((other instanceof NotificationItem) == false) {
+        if ((other instanceof OrderNotificationItem) == false) {
             return false;
         }
-        NotificationItem rhs = ((NotificationItem) other);
+        OrderNotificationItem rhs = ((OrderNotificationItem) other);
         return new EqualsBuilder().append(acknowledgement, rhs.acknowledgement).append(controllerId, rhs.controllerId).append(workflow, rhs.workflow).append(recoveredNotificationId, rhs.recoveredNotificationId).append(orderId, rhs.orderId).append(created, rhs.created).append(hasMonitors, rhs.hasMonitors).append(notificationId, rhs.notificationId).append(type, rhs.type).append(message, rhs.message).append(job, rhs.job).isEquals();
     }
 

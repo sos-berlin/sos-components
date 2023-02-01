@@ -10,9 +10,9 @@ import jakarta.ws.rs.core.MediaType;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.WebservicePaths;
 
-public interface INotification {
+public interface IOrderNotifications {
 
-    public static final String PATH = "notification";
+    public static final String PATH = "notifications";
     public static final String IMPL_PATH = WebservicePaths.getResourceImplPath(WebservicePaths.MONITORING, PATH);
 
     @POST

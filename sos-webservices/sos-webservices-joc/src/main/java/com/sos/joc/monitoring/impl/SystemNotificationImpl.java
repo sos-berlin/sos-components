@@ -1,25 +1,21 @@
 package com.sos.joc.monitoring.impl;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.WebservicePaths;
-import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.monitoring.DBItemNotificationMonitor;
 import com.sos.joc.db.monitoring.MonitoringDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.MonitoringMonitorTypeText;
-import com.sos.joc.model.monitoring.MonitorItem;
-import com.sos.joc.model.monitoring.NotificationAnswer;
-import com.sos.joc.model.monitoring.NotificationFilter;
+import com.sos.joc.model.monitoring.notification.common.MonitorItem;
+import com.sos.joc.model.monitoring.notification.common.NotificationAnswer;
+import com.sos.joc.model.monitoring.notification.system.SystemNotificationFilter;
 import com.sos.joc.monitoring.resource.ISystemNotification;
 import com.sos.monitoring.MonitorType;
 import com.sos.monitoring.notification.NotificationApplication;
@@ -35,12 +31,12 @@ public class SystemNotificationImpl extends JOCResourceImpl implements ISystemNo
         SOSHibernateSession session = null;
         try {
             initLogging(IMPL_PATH, inBytes, accessToken);
-            JsonValidator.validateFailFast(inBytes, NotificationFilter.class);
-            NotificationFilter in = Globals.objectMapper.readValue(inBytes, NotificationFilter.class);
+            JsonValidator.validateFailFast(inBytes, SystemNotificationFilter.class);
+            SystemNotificationFilter in = Globals.objectMapper.readValue(inBytes, SystemNotificationFilter.class);
 
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), getPermitted(accessToken, in));
-            if (response != null) {
-                return response;
+            // 1) notification view permitted
+            if (!getJocPermissions(accessToken).getNotification().getView()) {
+                return initPermissions(null, false);
             }
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
@@ -87,24 +83,5 @@ public class SystemNotificationImpl extends JOCResourceImpl implements ISystemNo
         } catch (Throwable e) {
             return MonitoringMonitorTypeText.COMMAND;
         }
-    }
-
-    private boolean getPermitted(String accessToken, NotificationFilter in) {
-        String controllerId = in.getControllerId();
-        Set<String> allowedControllers = Collections.emptySet();
-        boolean permitted = false;
-        if (controllerId == null || controllerId.isEmpty()) {
-            controllerId = "";
-            allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
-                    availableController, accessToken).getOrders().getView()).collect(Collectors.toSet());
-            permitted = !allowedControllers.isEmpty();
-            if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
-                allowedControllers = Collections.emptySet();
-            }
-        } else {
-            allowedControllers = Collections.singleton(controllerId);
-            permitted = getControllerPermissions(controllerId, accessToken).getOrders().getView();
-        }
-        return permitted;
     }
 }

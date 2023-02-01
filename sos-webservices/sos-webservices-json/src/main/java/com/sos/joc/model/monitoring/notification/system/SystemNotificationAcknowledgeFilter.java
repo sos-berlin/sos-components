@@ -1,5 +1,5 @@
 
-package com.sos.joc.model.monitoring;
+package com.sos.joc.model.monitoring.notification.system;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,22 +20,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "controllerId",
     "notificationIds",
     "comment",
     "auditLog"
 })
-public class NotificationAcknowledgeFilter {
+public class SystemNotificationAcknowledgeFilter {
 
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    private String controllerId;
     /**
      * 
      * (Required)
@@ -53,30 +43,6 @@ public class NotificationAcknowledgeFilter {
      */
     @JsonProperty("auditLog")
     private AuditParams auditLog;
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
 
     /**
      * 
@@ -132,12 +98,12 @@ public class NotificationAcknowledgeFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("notificationIds", notificationIds).append("comment", comment).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("notificationIds", notificationIds).append("comment", comment).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(notificationIds).append(comment).append(controllerId).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(notificationIds).append(comment).append(auditLog).toHashCode();
     }
 
     @Override
@@ -145,11 +111,11 @@ public class NotificationAcknowledgeFilter {
         if (other == this) {
             return true;
         }
-        if ((other instanceof NotificationAcknowledgeFilter) == false) {
+        if ((other instanceof SystemNotificationAcknowledgeFilter) == false) {
             return false;
         }
-        NotificationAcknowledgeFilter rhs = ((NotificationAcknowledgeFilter) other);
-        return new EqualsBuilder().append(notificationIds, rhs.notificationIds).append(comment, rhs.comment).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).isEquals();
+        SystemNotificationAcknowledgeFilter rhs = ((SystemNotificationAcknowledgeFilter) other);
+        return new EqualsBuilder().append(notificationIds, rhs.notificationIds).append(comment, rhs.comment).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }

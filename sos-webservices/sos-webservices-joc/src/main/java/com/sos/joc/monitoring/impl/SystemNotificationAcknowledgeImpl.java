@@ -1,25 +1,21 @@
 package com.sos.joc.monitoring.impl;
 
-import java.util.Collections;
 import java.util.Date;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.WebservicePaths;
-import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.monitoring.DBItemNotificationAcknowledgement;
 import com.sos.joc.db.monitoring.DBItemNotificationAcknowledgementId;
 import com.sos.joc.db.monitoring.DBItemSystemNotification;
 import com.sos.joc.db.monitoring.MonitoringDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.monitoring.NotificationAcknowledgeAnswer;
-import com.sos.joc.model.monitoring.NotificationAcknowledgeFilter;
-import com.sos.joc.model.monitoring.NotificationItemAcknowledgementItem;
+import com.sos.joc.model.monitoring.notification.common.AcknowledgementItem;
+import com.sos.joc.model.monitoring.notification.common.NotificationAcknowledgeAnswer;
+import com.sos.joc.model.monitoring.notification.system.SystemNotificationAcknowledgeFilter;
 import com.sos.joc.monitoring.resource.ISystemNotificationAcknowledge;
 import com.sos.monitoring.notification.NotificationApplication;
 import com.sos.monitoring.notification.NotificationType;
@@ -35,19 +31,19 @@ public class SystemNotificationAcknowledgeImpl extends JOCResourceImpl implement
         SOSHibernateSession session = null;
         try {
             initLogging(IMPL_PATH, inBytes, accessToken);
-            JsonValidator.validateFailFast(inBytes, NotificationAcknowledgeFilter.class);
-            NotificationAcknowledgeFilter in = Globals.objectMapper.readValue(inBytes, NotificationAcknowledgeFilter.class);
-
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), getPermitted(accessToken, in));
-            if (response != null) {
-                return response;
-            }
+            JsonValidator.validateFailFast(inBytes, SystemNotificationAcknowledgeFilter.class);
+            SystemNotificationAcknowledgeFilter in = Globals.objectMapper.readValue(inBytes, SystemNotificationAcknowledgeFilter.class);
 
             storeAuditLog(in.getAuditLog(), CategoryType.MONITORING);
 
+            // 1) notification view changes permitted
+            if (!getJocPermissions(accessToken).getNotification().getManage()) {
+                return initPermissions(null, false);
+            }
+
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             MonitoringDBLayer dbLayer = new MonitoringDBLayer(session);
-            NotificationItemAcknowledgementItem ac = new NotificationItemAcknowledgementItem();
+            AcknowledgementItem ac = new AcknowledgementItem();
 
             if (in.getNotificationIds() != null && in.getNotificationIds().size() > 0) {
                 session.beginTransaction();
@@ -95,24 +91,5 @@ public class SystemNotificationAcknowledgeImpl extends JOCResourceImpl implement
         } finally {
             Globals.disconnect(session);
         }
-    }
-
-    private boolean getPermitted(String accessToken, NotificationAcknowledgeFilter in) {
-        String controllerId = in.getControllerId();
-        Set<String> allowedControllers = Collections.emptySet();
-        boolean permitted = false;
-        if (controllerId == null || controllerId.isEmpty()) {
-            controllerId = "";
-            allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
-                    availableController, accessToken).getOrders().getModify()).collect(Collectors.toSet());
-            permitted = !allowedControllers.isEmpty();
-            if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
-                allowedControllers = Collections.emptySet();
-            }
-        } else {
-            allowedControllers = Collections.singleton(controllerId);
-            permitted = getControllerPermissions(controllerId, accessToken).getOrders().getModify();
-        }
-        return permitted;
     }
 }

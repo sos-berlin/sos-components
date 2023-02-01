@@ -1,9 +1,7 @@
 
-package com.sos.joc.model.monitoring;
+package com.sos.joc.model.monitoring.notification.common;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -14,7 +12,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * monitoring collection of notifications
+ * notification collection of monitors
  * <p>
  * 
  * 
@@ -22,9 +20,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "deliveryDate",
-    "notifications"
+    "acknowledgement"
 })
-public class SystemNotificationsAnswer {
+public class NotificationAcknowledgeAnswer {
 
     /**
      * timestamp
@@ -37,12 +35,14 @@ public class SystemNotificationsAnswer {
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deliveryDate;
     /**
+     * order object in history collection
+     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("notifications")
-    private List<SystemNotificationItem> notifications = new ArrayList<SystemNotificationItem>();
+    @JsonProperty("acknowledgement")
+    private AcknowledgementItem acknowledgement;
 
     /**
      * timestamp
@@ -69,33 +69,37 @@ public class SystemNotificationsAnswer {
     }
 
     /**
+     * order object in history collection
+     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("notifications")
-    public List<SystemNotificationItem> getNotifications() {
-        return notifications;
+    @JsonProperty("acknowledgement")
+    public AcknowledgementItem getAcknowledgement() {
+        return acknowledgement;
     }
 
     /**
+     * order object in history collection
+     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("notifications")
-    public void setNotifications(List<SystemNotificationItem> notifications) {
-        this.notifications = notifications;
+    @JsonProperty("acknowledgement")
+    public void setAcknowledgement(AcknowledgementItem acknowledgement) {
+        this.acknowledgement = acknowledgement;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("notifications", notifications).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("acknowledgement", acknowledgement).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deliveryDate).append(notifications).toHashCode();
+        return new HashCodeBuilder().append(deliveryDate).append(acknowledgement).toHashCode();
     }
 
     @Override
@@ -103,11 +107,11 @@ public class SystemNotificationsAnswer {
         if (other == this) {
             return true;
         }
-        if ((other instanceof SystemNotificationsAnswer) == false) {
+        if ((other instanceof NotificationAcknowledgeAnswer) == false) {
             return false;
         }
-        SystemNotificationsAnswer rhs = ((SystemNotificationsAnswer) other);
-        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(notifications, rhs.notifications).isEquals();
+        NotificationAcknowledgeAnswer rhs = ((NotificationAcknowledgeAnswer) other);
+        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(acknowledgement, rhs.acknowledgement).isEquals();
     }
 
 }

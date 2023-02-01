@@ -1,5 +1,5 @@
 
-package com.sos.joc.model.monitoring;
+package com.sos.joc.model.monitoring.notification.common;
 
 import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -23,7 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "comment",
     "created"
 })
-public class NotificationItemAcknowledgementItem {
+public class AcknowledgementItem {
 
     /**
      * 
@@ -114,10 +114,10 @@ public class NotificationItemAcknowledgementItem {
         if (other == this) {
             return true;
         }
-        if ((other instanceof NotificationItemAcknowledgementItem) == false) {
+        if ((other instanceof AcknowledgementItem) == false) {
             return false;
         }
-        NotificationItemAcknowledgementItem rhs = ((NotificationItemAcknowledgementItem) other);
+        AcknowledgementItem rhs = ((AcknowledgementItem) other);
         return new EqualsBuilder().append(comment, rhs.comment).append(account, rhs.account).append(created, rhs.created).isEquals();
     }
 
