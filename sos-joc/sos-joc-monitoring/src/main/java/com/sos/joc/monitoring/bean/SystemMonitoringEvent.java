@@ -147,17 +147,18 @@ public class SystemMonitoringEvent {
         else if (evt.getLoggerName().startsWith("js7.common") || evt.getLoggerName().startsWith("js7.base")) {
             return SECTION_CONTROLLER;
         } else {
-            String section = getSectionByJocClassName(evt.getLoggerName());
-            if (section != null) {
-                return section;
-            }
+            String section = null;
             if (evt.getThrown() != null) {
                 for (StackTraceElement el : evt.getThrown().getStackTrace()) {
-                    section = getSectionByJocClassName(el.getClassName());
+                    section = getSectionByJocClassName(el.getClassName(), null);
                     if (section != null) {
                         return section;
                     }
                 }
+            }
+            section = getSectionByJocClassName(evt.getLoggerName(), evt.getMessage());
+            if (section != null) {
+                return section;
             }
             int i = evt.getLoggerName().lastIndexOf(".");
             if (i > -1) {
@@ -168,8 +169,12 @@ public class SystemMonitoringEvent {
     }
 
     // @TODO optimize
-    private String getSectionByJocClassName(String className) {
-        if (className.startsWith("com.sos.joc.publish")) {
+    private String getSectionByJocClassName(String className, String message) {
+        if (className.equals("com.sos.joc.classes.ProblemHelper")) {
+            if (message != null && message.contains("UnknownItemPath")) {
+                return SECTION_DEPLOYMENT;
+            }
+        } else if (className.startsWith("com.sos.joc.publish")) {
             return SECTION_DEPLOYMENT;
         } else if (className.startsWith("com.sos.joc.inventory")) {
             return SECTION_INVENTORY;
