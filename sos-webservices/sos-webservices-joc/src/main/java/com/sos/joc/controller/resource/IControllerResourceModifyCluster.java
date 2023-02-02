@@ -21,5 +21,11 @@ public interface IControllerResourceModifyCluster {
     @Consumes("application/json")
     @Produces({ "application/json" })
     public JOCDefaultResponse postJobschedulerAppointNodes(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    
+    @POST
+    @Path("cluster/confirm_node_loss")
+    @Consumes("application/json")
+    @Produces({ "application/json" })
+    public JOCDefaultResponse postJobschedulerConfirmClusterNodeLoss(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 
 }

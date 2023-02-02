@@ -136,6 +136,7 @@ public class EventService {
     private volatile ConcurrentMap<String, WorkflowId> orders = new ConcurrentHashMap<>();
     private volatile CopyOnWriteArraySet<String> uncoupledAgents = new CopyOnWriteArraySet<>();
     private volatile CopyOnWriteArraySet<String> uncoupledSubagents = new CopyOnWriteArraySet<>();
+    private AtomicBoolean burstFilter = new AtomicBoolean(true);
 
     public EventService(String controllerId) {
         this.controllerId = controllerId;
@@ -157,11 +158,14 @@ public class EventService {
                 if (evtBus != null) {
                     LOGGER.info("Start EventBus");
                     evtBus.subscribe(eventsOfController, callbackOfController);
+                    burstFilter.set(true);
                     // setOrders();
                 }
             }
         } catch (Exception e) {
-            LOGGER.warn(e.toString());
+            if (burstFilter.getAndSet(false)) {
+                LOGGER.warn(e.toString());
+            }
         }
     }
 
