@@ -29,8 +29,9 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
 
     private int totalOrders = 0;
     private int totalOrderSteps = 0;
-    private int totalNotifications = 0;
-    private int totalNotificationWorkflows = 0;
+    private int totalOrderNotifications = 0;
+    private int totalOrderNotificationWorkflows = 0;
+    private int totalSystemNotifications = 0;
     private int totalNotificationMonitors = 0;
     private int totalNotificationAcknowledgements = 0;
 
@@ -47,11 +48,10 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
 
             tryOpenSession();
             if (notificationDatetime.getDatetime() != null) {
-                LOGGER.info(String.format("[%s][notifications][%s][%s]start cleanup", getIdentifier(), notificationDatetime.getAge().getConfigured(),
-                        notificationDatetime.getZonedDatetime()));
                 state = cleanupNotifications(Scope.MAIN, notificationDatetime);
             } else {
-                LOGGER.info(String.format("[%s][notifications][%s]skip", getIdentifier(), notificationDatetime.getAge().getConfigured()));
+                LOGGER.info(String.format("[%s][order/system_notifications][%s]skip", getIdentifier(), notificationDatetime.getAge()
+                        .getConfigured()));
             }
 
             if (monitoringDatetime.getDatetime() != null && (state == null || state.equals(JocServiceTaskAnswerState.COMPLETED))) {
@@ -83,11 +83,22 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
     }
 
     private JocServiceTaskAnswerState cleanupNotifications(Scope scope, TaskDateTime datetime) throws SOSHibernateException {
+        JocServiceTaskAnswerState state = cleanupOrderNotifications(scope, datetime);
+        if (state.equals(JocServiceTaskAnswerState.COMPLETED)) {
+            state = cleanupSystemNotifications(scope, datetime);
+        }
+        return state;
+    }
+
+    private JocServiceTaskAnswerState cleanupOrderNotifications(Scope scope, TaskDateTime datetime) throws SOSHibernateException {
+        LOGGER.info(String.format("[%s][order_notifications][%s][%s]start cleanup", getIdentifier(), datetime.getAge().getConfigured(), datetime
+                .getZonedDatetime()));
+
         boolean runm = true;
         while (runm) {
             tryOpenSession();
 
-            List<Long> rm = getNotificationIds(scope, datetime);
+            List<Long> rm = getOrderNotificationIds(scope, datetime);
             if (rm == null || rm.size() == 0) {
                 return JocServiceTaskAnswerState.COMPLETED;
             }
@@ -96,7 +107,30 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
             }
 
             getDbLayer().beginTransaction();
-            deleteNotifications(scope, datetime, rm);
+            deleteOrderNotifications(scope, datetime, rm);
+            getDbLayer().commit();
+        }
+        return JocServiceTaskAnswerState.COMPLETED;
+    }
+
+    private JocServiceTaskAnswerState cleanupSystemNotifications(Scope scope, TaskDateTime datetime) throws SOSHibernateException {
+        LOGGER.info(String.format("[%s][system_notifications][%s][%s]start cleanup", getIdentifier(), datetime.getAge().getConfigured(), datetime
+                .getZonedDatetime()));
+
+        boolean runm = true;
+        while (runm) {
+            tryOpenSession();
+
+            List<Long> rm = getSystemNotificationIds(scope, datetime);
+            if (rm == null || rm.size() == 0) {
+                return JocServiceTaskAnswerState.COMPLETED;
+            }
+            if (isStopped()) {
+                return JocServiceTaskAnswerState.UNCOMPLETED;
+            }
+
+            getDbLayer().beginTransaction();
+            deleteSystemNotifications(scope, datetime, rm);
             getDbLayer().commit();
         }
         return JocServiceTaskAnswerState.COMPLETED;
@@ -207,9 +241,9 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         return true;
     }
 
-    private StringBuilder deleteNotifications(Scope scope, TaskDateTime datetime, List<Long> notificationIds) throws SOSHibernateException {
+    private StringBuilder deleteOrderNotifications(Scope scope, TaskDateTime datetime, List<Long> notificationIds) throws SOSHibernateException {
         StringBuilder log = new StringBuilder();
-        log.append("[").append(getIdentifier()).append("][notifications][").append(getScope(scope)).append("][").append(datetime.getAge()
+        log.append("[").append(getIdentifier()).append("][order_notifications][").append(getScope(scope)).append("][").append(datetime.getAge()
                 .getConfigured()).append("][deleted]");
 
         // getDbLayer().beginTransaction();
@@ -231,8 +265,8 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("notificationIds", notificationIds);
         r = getDbLayer().getSession().executeUpdate(query);
-        totalNotificationWorkflows += r;
-        log.append(getDeleted(DBLayer.TABLE_MON_NOT_WORKFLOWS, r, totalNotificationWorkflows));
+        totalOrderNotificationWorkflows += r;
+        log.append(getDeleted(DBLayer.TABLE_MON_NOT_WORKFLOWS, r, totalOrderNotificationWorkflows));
 
         hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DBITEM_MON_NOT_ACKNOWLEDGEMENTS).append(" ");
@@ -251,15 +285,58 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("notificationIds", notificationIds);
         r = getDbLayer().getSession().executeUpdate(query);
-        totalNotifications += r;
-        log.append(getDeleted(DBLayer.TABLE_MON_NOTIFICATIONS, r, totalNotifications));
+        totalOrderNotifications += r;
+        log.append(getDeleted(DBLayer.TABLE_MON_NOTIFICATIONS, r, totalOrderNotifications));
 
         // getDbLayer().commit();
         LOGGER.info(log.toString());
         return log;
     }
 
-    private List<Long> getNotificationIds(Scope scope, TaskDateTime datetime) throws SOSHibernateException {
+    private StringBuilder deleteSystemNotifications(Scope scope, TaskDateTime datetime, List<Long> notificationIds) throws SOSHibernateException {
+        StringBuilder log = new StringBuilder();
+        log.append("[").append(getIdentifier()).append("][system_notifications][").append(getScope(scope)).append("][").append(datetime.getAge()
+                .getConfigured()).append("][deleted]");
+
+        // getDbLayer().beginTransaction();
+
+        StringBuilder hql = new StringBuilder("delete from ");
+        hql.append(DBLayer.DBITEM_MON_NOT_MONITORS).append(" ");
+        hql.append("where notificationId in (:notificationIds) ");
+        hql.append("and application=:application");
+        Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
+        query.setParameterList("notificationIds", notificationIds);
+        query.setParameter("application", NotificationApplication.SYSTEM_NOTIFICATION.intValue());
+        int r = getDbLayer().getSession().executeUpdate(query);
+        totalNotificationMonitors += r;
+        log.append(getDeleted(DBLayer.TABLE_MON_NOT_MONITORS, r, totalNotificationMonitors));
+
+        hql = new StringBuilder("delete from ");
+        hql.append(DBLayer.DBITEM_MON_NOT_ACKNOWLEDGEMENTS).append(" ");
+        hql.append("where id.notificationId in (:notificationIds) ");
+        hql.append("and id.application=:application");
+        query = getDbLayer().getSession().createQuery(hql.toString());
+        query.setParameterList("notificationIds", notificationIds);
+        query.setParameter("application", NotificationApplication.SYSTEM_NOTIFICATION.intValue());
+        r = getDbLayer().getSession().executeUpdate(query);
+        totalNotificationAcknowledgements += r;
+        log.append(getDeleted(DBLayer.TABLE_MON_NOT_ACKNOWLEDGEMENTS, r, totalNotificationAcknowledgements));
+
+        hql = new StringBuilder("delete from ");
+        hql.append(DBLayer.DBITEM_MON_SYSNOTIFICATIONS).append(" ");
+        hql.append("where id in (:notificationIds) ");
+        query = getDbLayer().getSession().createQuery(hql.toString());
+        query.setParameterList("notificationIds", notificationIds);
+        r = getDbLayer().getSession().executeUpdate(query);
+        totalSystemNotifications += r;
+        log.append(getDeleted(DBLayer.TABLE_MON_SYSNOTIFICATIONS, r, totalSystemNotifications));
+
+        // getDbLayer().commit();
+        LOGGER.info(log.toString());
+        return log;
+    }
+
+    private List<Long> getOrderNotificationIds(Scope scope, TaskDateTime datetime) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select id from ");
         hql.append(DBLayer.DBITEM_MON_NOTIFICATIONS).append(" ");
         hql.append("where created < :startTime ");
@@ -270,8 +347,25 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         List<Long> r = getDbLayer().getSession().getResultList(query);
 
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(String.format("[%s][notifications][%s][%s][%s]found=%s", getIdentifier(), getScope(scope), datetime.getAge().getConfigured(),
-                    DBLayer.TABLE_MON_NOTIFICATIONS, r.size()));
+            LOGGER.debug(String.format("[%s][order_notifications][%s][%s][%s]found=%s", getIdentifier(), getScope(scope), datetime.getAge()
+                    .getConfigured(), DBLayer.TABLE_MON_NOTIFICATIONS, r.size()));
+        }
+        return r;
+    }
+
+    private List<Long> getSystemNotificationIds(Scope scope, TaskDateTime datetime) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select id from ");
+        hql.append(DBLayer.DBITEM_MON_SYSNOTIFICATIONS).append(" ");
+        hql.append("where time < :startTime ");
+
+        Query<Long> query = getDbLayer().getSession().createQuery(hql.toString());
+        query.setParameter("startTime", datetime.getDatetime());
+        query.setMaxResults(getBatchSize());
+        List<Long> r = getDbLayer().getSession().getResultList(query);
+
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(String.format("[%s][system_notifications][%s][%s][%s]found=%s", getIdentifier(), getScope(scope), datetime.getAge()
+                    .getConfigured(), DBLayer.TABLE_MON_SYSNOTIFICATIONS, r.size()));
         }
         return r;
     }
