@@ -107,10 +107,23 @@ public class ProxyContext {
     }
 
     protected CompletableFuture<Void> stop() {
-        JControllerProxy proxy = proxyFuture.getNow(null);
+        JControllerProxy proxy = null;
+        try {
+            proxy = proxyFuture.getNow(null);
+        } catch (Exception e) {
+            //
+        }
         if (proxy == null) {
             LOGGER.info(String.format("%s of %s will be cancelled", proxyFuture.toString(), toString()));
-            return CompletableFuture.runAsync(() -> proxyFuture.cancel(false));
+            return CompletableFuture.runAsync(() -> {
+                if (!proxyFuture.isDone()) {
+                    try {
+                        proxyFuture.cancel(false);
+                    } catch (Exception e) {
+                        //
+                    }
+                }
+            });
         } else {
             LOGGER.info(String.format("%s of %s will be stopped", proxy.toString(), toString()));
             return proxy.stop();
