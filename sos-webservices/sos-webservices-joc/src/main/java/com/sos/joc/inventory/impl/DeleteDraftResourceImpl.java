@@ -49,7 +49,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
         try {
             // don't use JsonValidator.validateFailFast because of oneOf-Requirements
             initLogging(IMPL_PATH, inBytes, accessToken);
-            JsonValidator.validate(inBytes, RequestFilters.class);
+            JsonValidator.validate(inBytes, RequestFilters.class, true);
             RequestFilters in = Globals.objectMapper.readValue(inBytes, RequestFilters.class);
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
             if (response == null) {
@@ -69,7 +69,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
         try {
             // don't use JsonValidator.validateFailFast because of oneOf-Requirements
             initLogging(IMPL_PATH_FOLDER, inBytes, accessToken);
-            JsonValidator.validate(inBytes, RequestFolder.class);
+            JsonValidator.validate(inBytes, RequestFolder.class, true);
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
             if (response == null) {

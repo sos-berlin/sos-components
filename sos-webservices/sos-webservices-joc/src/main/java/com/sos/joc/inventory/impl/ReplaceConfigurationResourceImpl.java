@@ -39,7 +39,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
     public JOCDefaultResponse replace(final String accessToken, final byte[] inBytes) {
         try {
             initLogging(IMPL_PATH, inBytes, accessToken);
-            JsonValidator.validate(inBytes, RequestFilters.class);
+            JsonValidator.validate(inBytes, RequestFilters.class, true);
             RequestFilters in = Globals.objectMapper.readValue(inBytes, RequestFilters.class);
 
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
@@ -59,7 +59,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
     public JOCDefaultResponse replaceFolder(final String accessToken, final byte[] inBytes) {
         try {
             initLogging(IMPL_PATH, inBytes, accessToken);
-            JsonValidator.validate(inBytes, RequestFolder.class);
+            JsonValidator.validate(inBytes, RequestFolder.class, true);
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
 
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());

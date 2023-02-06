@@ -26,7 +26,7 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
         SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL, filter, xAccessToken);
-            JsonValidator.validate(filter, ReleasableRecallFilter.class);
+            JsonValidator.validate(filter, ReleasableRecallFilter.class, true);
             ReleasableRecallFilter recallFilter = Globals.objectMapper.readValue(filter, ReleasableRecallFilter.class);
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);

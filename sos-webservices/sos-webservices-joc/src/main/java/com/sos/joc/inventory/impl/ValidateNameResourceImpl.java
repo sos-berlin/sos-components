@@ -28,7 +28,7 @@ public class ValidateNameResourceImpl extends JOCResourceImpl implements IValida
     public JOCDefaultResponse check(final String accessToken, byte[] inBytes) {
         try {
             initLogging(IMPL_PATH, inBytes, accessToken);
-            JsonValidator.validate(inBytes, RequestFilter.class);
+            JsonValidator.validate(inBytes, RequestFilter.class, true);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
             
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());

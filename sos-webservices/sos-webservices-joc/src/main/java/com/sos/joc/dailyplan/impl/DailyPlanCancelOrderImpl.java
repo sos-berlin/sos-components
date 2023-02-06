@@ -22,7 +22,6 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.WebservicePaths;
-import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.dailyplan.common.DailyPlanSettings;
@@ -68,7 +67,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
     public JOCDefaultResponse postCancelOrder(String accessToken, byte[] filterBytes) {
         try {
             initLogging(IMPL_PATH, filterBytes, accessToken);
-            JsonValidator.validate(filterBytes, DailyPlanOrderFilterDef.class);
+            JsonValidator.validateFailFast(filterBytes, DailyPlanOrderFilterDef.class);
             DailyPlanOrderFilterDef in = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilterDef.class);
             
             JOCDefaultResponse response = initPermissions(null, true);

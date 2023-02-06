@@ -73,7 +73,7 @@ public class AgentsImportImpl extends JOCResourceImpl implements IAgentsImport {
         SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL, null, xAccessToken); 
-            JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(filter), AgentImportFilter.class);
+            JsonValidator.validateFailFast(Globals.objectMapper.writeValueAsBytes(filter), AgentImportFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getAdministration().getControllers()
                     .getManage());
             if (jocDefaultResponse != null) {

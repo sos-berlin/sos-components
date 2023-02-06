@@ -41,7 +41,7 @@ public class AgentsExportImpl extends JOCResourceImpl implements IAgentsExport {
         StreamingOutput stream = null;
         try {
             initLogging(API_CALL, agentsExportFilter, xAccessToken);
-            JsonValidator.validate(agentsExportFilter, AgentExportFilter.class);
+            JsonValidator.validateFailFast(agentsExportFilter, AgentExportFilter.class);
             AgentExportFilter filter = Globals.objectMapper.readValue(agentsExportFilter, AgentExportFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getAdministration().getControllers()
                     .getManage());
