@@ -6,27 +6,27 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum SystemNotificationCategory {
+public enum OrderNotificationRange {
 
-    SYSTEM(0), JOC(1), CONTROLLER(2), AGENT(3);
+    WORKFLOW(0), WORKFLOW_JOB(1);
 
     private final Integer intValue;
-    private final static Map<String, SystemNotificationCategory> CONSTANTS = new HashMap<String, SystemNotificationCategory>();
-    private final static Map<Integer, SystemNotificationCategory> INTCONSTANTS = new HashMap<Integer, SystemNotificationCategory>();
+    private final static Map<String, OrderNotificationRange> CONSTANTS = new HashMap<String, OrderNotificationRange>();
+    private final static Map<Integer, OrderNotificationRange> INTCONSTANTS = new HashMap<Integer, OrderNotificationRange>();
 
     static {
-        for (SystemNotificationCategory c : values()) {
+        for (OrderNotificationRange c : values()) {
             CONSTANTS.put(c.name(), c);
         }
     }
 
     static {
-        for (SystemNotificationCategory c : values()) {
+        for (OrderNotificationRange c : values()) {
             INTCONSTANTS.put(c.intValue, c);
         }
     }
 
-    private SystemNotificationCategory(Integer intValue) {
+    private OrderNotificationRange(Integer intValue) {
         this.intValue = intValue;
     }
 
@@ -45,8 +45,8 @@ public enum SystemNotificationCategory {
     }
 
     @JsonCreator
-    public static SystemNotificationCategory fromValue(String value) {
-        SystemNotificationCategory constant = CONSTANTS.get(value);
+    public static OrderNotificationRange fromValue(String value) {
+        OrderNotificationRange constant = CONSTANTS.get(value);
         if (constant == null) {
             throw new IllegalArgumentException(value);
         } else {
@@ -54,8 +54,8 @@ public enum SystemNotificationCategory {
         }
     }
 
-    public static SystemNotificationCategory fromValue(Integer intValue) {
-        SystemNotificationCategory constant = INTCONSTANTS.get(intValue);
+    public static OrderNotificationRange fromValue(Integer intValue) {
+        OrderNotificationRange constant = INTCONSTANTS.get(intValue);
         if (constant == null) {
             throw new IllegalArgumentException(intValue + "");
         } else {

@@ -70,7 +70,7 @@ public class HistoryMonitoringModel implements Serializable {
 
     private final SOSHibernateFactory factory;
     private final JocConfiguration jocConfiguration;
-    private final HistoryNotifierModel notifier;
+    private final OrderNotifierModel notifier;
 
     private ScheduledExecutorService threadPool;
     private CopyOnWriteArraySet<AHistoryBean> payloads = new CopyOnWriteArraySet<>();
@@ -89,7 +89,7 @@ public class HistoryMonitoringModel implements Serializable {
     public HistoryMonitoringModel(ThreadGroup threadGroup, SOSHibernateFactory factory, JocConfiguration jocConfiguration) {
         this.factory = factory;
         this.jocConfiguration = jocConfiguration;
-        this.notifier = new HistoryNotifierModel(threadGroup, factory.getConfigFile().get());
+        this.notifier = new OrderNotifierModel(threadGroup, factory.getConfigFile().get());
         EventBus.getInstance().register(this);
     }
 

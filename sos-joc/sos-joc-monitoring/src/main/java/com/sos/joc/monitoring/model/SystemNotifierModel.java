@@ -42,15 +42,18 @@ public class SystemNotifierModel {
     private AtomicBoolean closed = new AtomicBoolean();
 
     private ExecutorService threadPool;
+    private ExecutorService threadPoolDB;
 
     protected SystemNotifierModel(ThreadGroup threadGroup) {
         MonitorService.setLogger();
 
         threadPool = Executors.newFixedThreadPool(1, new JocClusterThreadFactory(threadGroup, IDENTIFIER));
+        // newFixedThreadPool problem: The threads in the pool will exist until it is explicitly shutdown.
+        // threadPoolDB = Executors.newFixedThreadPool(10, new JocClusterThreadFactory(threadGroup, IDENTIFIER + "_db"));
     }
 
     protected void notify(SystemNotification notification, List<SystemMonitoringEvent> toNotify) {
-        if (notification == null || toNotify.size() == 0 || notification.getMonitors().size() == 0) {
+        if (notification == null || toNotify.size() == 0) {
             return;
         }
 
@@ -74,6 +77,8 @@ public class SystemNotifierModel {
         for (SystemMonitoringEvent event : toNotify) {
             toStore.add(notifyEvent(notification, event));
         }
+        // TODO timeout, max threads ....
+        // CompletableFuture.runAsync(() -> storeAndPostEvents(toStore, toNotify), threadPoolDB);
         CompletableFuture.runAsync(() -> storeAndPostEvents(toStore, toNotify));
     }
 
@@ -117,18 +122,9 @@ public class SystemNotifierModel {
         return result;
     }
 
-    /** Truncate ms, because the database can round seconds from ms, but the time sent by the notifiers is not rounded<br/>
-     * e.g.: 2023-01-30T12:00:00.892Z<br/>
-     * - TIME notifier: 2023-01-30T13:00:00+0100<br/>
-     * - TIME db: 2023-01-30 12:00:01 */
-    private Date truncateMillis(long millis) {
-        Calendar c = Calendar.getInstance();
-        c.setTime(new Date(millis));
-        c.set(Calendar.MILLISECOND, 0);
-        return c.getTime();
-    }
-
     private void storeAndPostEvents(List<SystemNotifierResult> toStore, List<SystemMonitoringEvent> events) {
+        MonitorService.setLogger();
+
         DBLayerMonitoring dbLayer = new DBLayerMonitoring(IDENTIFIER);
         try {
             dbLayer.setSession(Globals.createSosHibernateStatelessConnection(IDENTIFIER));
@@ -147,10 +143,10 @@ public class SystemNotifierModel {
 
             dbLayer.commit();
         } catch (Throwable e) {
+            LOGGER.info(String.format("[%s][DB][error]%s", IDENTIFIER, e.toString()));
             dbLayer.rollback();
         } finally {
             dbLayer.close();
-
             // db failed - events with time delay - but JOC is not reachable without db anyway...
             // db success - events are synchronized with the database entries ...
             for (SystemMonitoringEvent event : events) {
@@ -163,7 +159,7 @@ public class SystemNotifierModel {
         if (event == null) {
             return;
         }
-        EventBus.getInstance().post(new MonitoringGuiEvent(event.getType().intValue(), event.getCategory().name(), event.getSection(), event
+        EventBus.getInstance().post(new MonitoringGuiEvent(event.getType().intValue(), event.getCategory().name(), event.getSource(), event
                 .getCaller(), event.getEpochMillis(), event.getMessage()));
     }
 
@@ -174,7 +170,21 @@ public class SystemNotifierModel {
         if (threadPool != null) {
             JocCluster.shutdownThreadPool(mode, threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
         }
+        if (threadPoolDB != null) {
+            JocCluster.shutdownThreadPool(mode, threadPoolDB, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
+        }
         return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
+    }
+
+    /** Truncate ms, because the database can round seconds from ms, but the time sent by the notifiers is not rounded<br/>
+     * e.g.: 2023-01-30T12:00:00.892Z<br/>
+     * - TIME notifier: 2023-01-30T13:00:00+0100<br/>
+     * - TIME db: 2023-01-30 12:00:01 */
+    private Date truncateMillis(long millis) {
+        Calendar c = Calendar.getInstance();
+        c.setTime(new Date(millis));
+        c.set(Calendar.MILLISECOND, 0);
+        return c.getTime();
     }
 
 }

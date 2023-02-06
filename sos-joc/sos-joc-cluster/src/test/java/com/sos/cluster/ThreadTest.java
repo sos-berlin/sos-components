@@ -27,6 +27,13 @@ public class ThreadTest {
         }
     }
 
+    public void C() {
+        synchronized (lock) {
+            name = "test C";
+            LOGGER.info("C name=" + name);
+        }
+    }
+    
     public static void main(String[] args) {
         ThreadPoolExecutor threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(2);
 
@@ -51,6 +58,14 @@ public class ThreadTest {
             @Override
             public void run() {
                 t1.A();
+            }
+        });
+        
+        threadPool.submit(new Runnable() {
+
+            @Override
+            public void run() {
+                t1.C();
             }
         });
         threadPool.shutdown();

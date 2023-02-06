@@ -1,7 +1,7 @@
 package com.sos.cluster;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -9,6 +9,9 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.sos.joc.cluster.ThreadHelper;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 
 public class ThreadPoolTest {
 
@@ -56,10 +59,25 @@ public class ThreadPoolTest {
 
     }
 
+    private ThreadPoolExecutor createThreadPoolExecutor() {
+        ThreadPoolExecutor r = null;
+
+        int maxThreads = 2;
+
+        // r = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxThreads);
+        // r = (ThreadPoolExecutor) Executors.newCachedThreadPool();
+        // r = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>());
+        // r = new ThreadPoolExecutor(0, maxThreads, 60L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>());
+        // r = new ThreadPoolExecutor(maxThreads, maxThreads, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
+        r = new ThreadPoolExecutor(maxThreads, maxThreads, 60L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
+
+        return r;
+    }
+
     @Ignore
     @Test
     public void testFixedTreadPool() throws Exception {
-        ThreadPoolExecutor threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(2);
+        ThreadPoolExecutor threadPool = createThreadPoolExecutor();
 
         submitTask(threadPool, "1");
         submitTask(threadPool, "2");
@@ -71,10 +89,10 @@ public class ThreadPoolTest {
         submitTask(threadPool, "5");
         submitTask(threadPool, "6");
 
-        setPoolSize(threadPool, 1);
+        // setPoolSize(threadPool, 1);
 
-        submitTask(threadPool, "7");
-        submitTask(threadPool, "8");
+        // submitTask(threadPool, "7");
+        // submitTask(threadPool, "8");
 
         setStopper(threadPool);
     }
@@ -85,8 +103,7 @@ public class ThreadPoolTest {
             @Override
             public void run() {
 
-                LOGGER.info(String.format("[run][%s]start ...", identifier));
-                LOGGER.info(String.format("[run][%s]poolSize=%s", identifier, threadPool.getPoolSize()));
+                LOGGER.info(String.format("[run][%s][poolSize=%s]start ...", identifier, threadPool.getPoolSize()));
                 waitFor(5);
                 LOGGER.info(String.format("[run][%s]end", identifier));
             }
@@ -98,6 +115,9 @@ public class ThreadPoolTest {
     private void setStopper(ThreadPoolExecutor threadPool) {
         LOGGER.info(String.format("[start][setStopper][%ss]...", MAX_EXECUTION_TIME));
         waitFor(MAX_EXECUTION_TIME);
+        LOGGER.info(String.format("[start][setStopper][%ss][activeCount=%s]poolSize=%s", MAX_EXECUTION_TIME, threadPool.getActiveCount(), threadPool
+                .getPoolSize()));
+        ThreadHelper.print(StartupMode.manual, "My Header");
         shutdown(threadPool);
         LOGGER.info(String.format("[end][setStopper][%ss]", MAX_EXECUTION_TIME));
     }
@@ -133,7 +153,7 @@ public class ThreadPoolTest {
 
     private void waitFor(int seconds) {
         try {
-            // LOGGER.info(String.format("[wait]%s...", seconds));
+            // LOGGER.info(String.format("[waitFor]%s...", seconds));
             TimeUnit.SECONDS.sleep(seconds);
         } catch (InterruptedException e) {
             LOGGER.error(e.toString(), e);

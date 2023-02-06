@@ -179,7 +179,7 @@ public class MonitoringDBLayer extends DBLayer {
             hql.append("n.id=:notificationId");
         } else {
             hql.append("n.id in :notificationIds ");
-            hql.append("order by n.id desc");
+            hql.append("order by n.time desc");
         }
 
         Query<SystemNotificationDBItemEntity> query = getSession().createQuery(hql.toString(), SystemNotificationDBItemEntity.class);
@@ -294,7 +294,7 @@ public class MonitoringDBLayer extends DBLayer {
         hql.append(",n.type as type");
         hql.append(",n.category as category");
         hql.append(",n.hasMonitors as hasMonitors");
-        hql.append(",n.section as section");
+        hql.append(",n.source as source");
         hql.append(",n.notifier as notifier");
         hql.append(",n.time as time");
         hql.append(",n.message as message");

@@ -29,10 +29,10 @@ import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.monitoring.bean.SystemMonitoringEvent;
 import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.monitor.AMonitor;
-import com.sos.joc.monitoring.model.HistoryNotifyAnalyzer;
-import com.sos.monitoring.notification.NotificationRange;
+import com.sos.joc.monitoring.model.OrderNotifyAnalyzer;
 import com.sos.monitoring.notification.NotificationStatus;
 import com.sos.monitoring.notification.NotificationType;
+import com.sos.monitoring.notification.OrderNotificationRange;
 
 public abstract class ANotifier {
 
@@ -95,7 +95,7 @@ public abstract class ANotifier {
         systemVars = new HashMap<>();
         systemVars.put("MON_SN_TYPE", getVarValue(type.name()));
         systemVars.put("MON_SN_CATEGORY", event.getCategory().name());
-        systemVars.put("MON_SN_SECTION", getVarValue(event.getSection()));
+        systemVars.put("MON_SN_SOURCE", getVarValue(event.getSource()));
 
         systemVars.put("MON_SN_NOTIFIER", getVarValue(event.getLoggerName()));
         systemVars.put("MON_SN_TIME", dateTime2String(timeZone, dateTime));
@@ -280,7 +280,7 @@ public abstract class ANotifier {
         return sb.toString();
     }
 
-    public static StringBuilder getInfo(HistoryNotifyAnalyzer analyzer, AMonitor monitor, NotificationType type) {
+    public static StringBuilder getInfo(OrderNotifyAnalyzer analyzer, AMonitor monitor, NotificationType type) {
         if (analyzer == null || monitor == null) {
             return null;
         }
@@ -288,7 +288,7 @@ public abstract class ANotifier {
         return sb.append(getInfo(analyzer));
     }
 
-    public static StringBuilder getInfo(HistoryNotifyAnalyzer analyzer) {
+    public static StringBuilder getInfo(OrderNotifyAnalyzer analyzer) {
         if (analyzer == null) {
             return null;
         }
@@ -407,7 +407,7 @@ public abstract class ANotifier {
             }
             String range = tableFields.get(tablePrefix + "_RANGE");
             try {
-                tableFields.put(tablePrefix + "_RANGE", NotificationRange.fromValue(Integer.valueOf(range)).value());
+                tableFields.put(tablePrefix + "_RANGE", OrderNotificationRange.fromValue(Integer.valueOf(range)).value());
             } catch (Throwable e) {
                 putTableField(tablePrefix + "_RANGE", range);
             }

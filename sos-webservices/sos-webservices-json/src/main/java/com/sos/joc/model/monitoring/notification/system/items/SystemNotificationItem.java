@@ -25,11 +25,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "notificationId",
     "type",
     "category",
-    "hasMonitors",
-    "section",
+    "source",
     "notifier",
     "message",
     "exception",
+    "hasMonitors",
     "created",
     "acknowledgement"
 })
@@ -67,15 +67,8 @@ public class SystemNotificationItem {
      * (Required)
      * 
      */
-    @JsonProperty("hasMonitors")
-    private Boolean hasMonitors;
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("section")
-    private String section;
+    @JsonProperty("source")
+    private String source;
     /**
      * 
      * (Required)
@@ -87,6 +80,13 @@ public class SystemNotificationItem {
     private String message;
     @JsonProperty("exception")
     private String exception;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("hasMonitors")
+    private Boolean hasMonitors;
     /**
      * timestamp
      * <p>
@@ -183,9 +183,9 @@ public class SystemNotificationItem {
      * (Required)
      * 
      */
-    @JsonProperty("hasMonitors")
-    public Boolean getHasMonitors() {
-        return hasMonitors;
+    @JsonProperty("source")
+    public String getSource() {
+        return source;
     }
 
     /**
@@ -193,29 +193,9 @@ public class SystemNotificationItem {
      * (Required)
      * 
      */
-    @JsonProperty("hasMonitors")
-    public void setHasMonitors(Boolean hasMonitors) {
-        this.hasMonitors = hasMonitors;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("section")
-    public String getSection() {
-        return section;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("section")
-    public void setSection(String section) {
-        this.section = section;
+    @JsonProperty("source")
+    public void setSource(String source) {
+        this.source = source;
     }
 
     /**
@@ -256,6 +236,26 @@ public class SystemNotificationItem {
     @JsonProperty("exception")
     public void setException(String exception) {
         this.exception = exception;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("hasMonitors")
+    public Boolean getHasMonitors() {
+        return hasMonitors;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("hasMonitors")
+    public void setHasMonitors(Boolean hasMonitors) {
+        this.hasMonitors = hasMonitors;
     }
 
     /**
@@ -306,12 +306,12 @@ public class SystemNotificationItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("notificationId", notificationId).append("type", type).append("category", category).append("hasMonitors", hasMonitors).append("section", section).append("notifier", notifier).append("message", message).append("exception", exception).append("created", created).append("acknowledgement", acknowledgement).toString();
+        return new ToStringBuilder(this).append("notificationId", notificationId).append("type", type).append("category", category).append("source", source).append("notifier", notifier).append("message", message).append("exception", exception).append("hasMonitors", hasMonitors).append("created", created).append("acknowledgement", acknowledgement).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(exception).append(acknowledgement).append(created).append(hasMonitors).append(notifier).append(notificationId).append(section).append(type).append(category).append(message).toHashCode();
+        return new HashCodeBuilder().append(exception).append(acknowledgement).append(created).append(notifier).append(hasMonitors).append(notificationId).append(source).append(type).append(category).append(message).toHashCode();
     }
 
     @Override
@@ -323,7 +323,7 @@ public class SystemNotificationItem {
             return false;
         }
         SystemNotificationItem rhs = ((SystemNotificationItem) other);
-        return new EqualsBuilder().append(exception, rhs.exception).append(acknowledgement, rhs.acknowledgement).append(created, rhs.created).append(hasMonitors, rhs.hasMonitors).append(notifier, rhs.notifier).append(notificationId, rhs.notificationId).append(section, rhs.section).append(type, rhs.type).append(category, rhs.category).append(message, rhs.message).isEquals();
+        return new EqualsBuilder().append(exception, rhs.exception).append(acknowledgement, rhs.acknowledgement).append(created, rhs.created).append(notifier, rhs.notifier).append(hasMonitors, rhs.hasMonitors).append(notificationId, rhs.notificationId).append(source, rhs.source).append(type, rhs.type).append(category, rhs.category).append(message, rhs.message).isEquals();
     }
 
 }

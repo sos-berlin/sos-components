@@ -4,8 +4,6 @@ import java.util.Map;
 
 import com.sos.commons.util.SOSString;
 import com.sos.joc.event.bean.monitoring.NotificationLogEvent;
-import com.sos.joc.monitoring.model.HistoryMonitoringModel;
-import com.sos.joc.monitoring.model.HistoryNotifierModel;
 import com.sos.monitoring.notification.NotificationType;
 import com.sos.monitoring.notification.SystemNotificationCategory;
 
@@ -13,23 +11,28 @@ import js7.proxy.JournaledProxy;
 
 public class SystemMonitoringEvent {
 
-    private static final String SECTION_DATABASE = "Database";
-    private static final String SECTION_CONTROLLER = "Controller";
-    private static final String SECTION_MONITOR = "Monitor";
-    private static final String SECTION_HISTORY = "History";
-    private static final String SECTION_CLEANUP = "Cleanup";
-    private static final String SECTION_DEPLOYMENT = "Deployment";
-    private static final String SECTION_DAILYPLAN = "DailyPlan";
-    private static final String SECTION_INVENTORY = "Inventory";
-    private static final String SECTION_JOC_CLUSTER = "JocCluster";
+    private static final SystemNotificationCategory DEFAULT_CATEGORY = SystemNotificationCategory.JOC;
 
-    private static final String SECTION_DATABASE_WARNING = SECTION_DATABASE + "_" + NotificationType.WARNING.name();
-    private static final String SECTION_DATABASE_ERROR = SECTION_DATABASE + "_" + NotificationType.ERROR.name();
-    private static final String SECTION_CONTROLLER_WARNING = SECTION_CONTROLLER + "_" + NotificationType.WARNING.name();
-    private static final String SECTION_CONTROLLER_ERROR = SECTION_CONTROLLER + "_" + NotificationType.ERROR.name();
+    private static final String SOURCE_DATABASE = "Database";
+    private static final String SOURCE_MONITOR = "Monitor";
+    private static final String SOURCE_HISTORY = "History";
+    private static final String SOURCE_CLEANUP = "Cleanup";
+    private static final String SOURCE_DEPLOYMENT = "Deployment";
+    private static final String SOURCE_RELEASE_NOTIFICATION = "ReleaseNotification";
+    private static final String SOURCE_DAILYPLAN = "DailyPlan";
+    private static final String SOURCE_INVENTORY = "Inventory";
+    private static final String SOURCE_JOC_CLUSTER = "JOCCockpitCluster";
+
+    private static final String KEY_DATABASE_WARNING = (SOURCE_DATABASE + "_" + NotificationType.WARNING.name()).toLowerCase();
+    private static final String KEY_DATABASE_ERROR = (SOURCE_DATABASE + "_" + NotificationType.ERROR.name()).toLowerCase();
+    private static final String KEY_CONTROLLER = SystemNotificationCategory.CONTROLLER.name();
+    private static final String KEY_CONTROLLER_WARNING = (KEY_CONTROLLER + "_" + NotificationType.WARNING.name()).toLowerCase();
+    private static final String KEY_CONTROLLER_ERROR = (KEY_CONTROLLER + "_" + NotificationType.ERROR.name()).toLowerCase();
+
+    private static final String CLASS_NAME_RELEASE_NOTIFICATION = "com.sos.joc.xmleditor.impl.ReleaseResourceImpl";
+    private static final String CLASS_NAME_PROBLEM_HELPER = "com.sos.joc.classes.ProblemHelper";
 
     private final NotificationType type;
-    private final String section;
     private final long epochMillis;
     private final String loggerName;
     private final String caller;
@@ -37,34 +40,60 @@ public class SystemMonitoringEvent {
     private final Throwable thrown;
 
     private SystemNotificationCategory category;
+    private String source;
 
     private String key;
     private boolean forceNotify;
 
     public SystemMonitoringEvent(NotificationLogEvent evt) {
         type = getType(evt.getLevel());
-        category = getCategory(evt.getCategory());
-        section = getSection(evt);
         epochMillis = evt.getEpochMillis();
         loggerName = evt.getLoggerName();
         caller = evt.getMarkerName();
         message = evt.getMessage();
         thrown = evt.getThrown();
+        setCategoryAndSource();
+    }
+
+    private void setCategoryAndSource() {
+        if (thrown == null) {
+            setByClassName(loggerName, message);
+        } else {
+            for (StackTraceElement el : thrown.getStackTrace()) {
+                setByClassName(el.getClassName(), null);
+                if (category != null && source != null) {
+                    return;
+                }
+            }
+        }
+
+        if (category == null) {
+            category = DEFAULT_CATEGORY;
+        }
+        if (source == null) {
+            // can't be identified by thrown..
+            if (loggerName.equals(CLASS_NAME_RELEASE_NOTIFICATION)) {
+                category = SystemNotificationCategory.JOC;
+                source = SOURCE_RELEASE_NOTIFICATION;
+            } else {
+                int i = loggerName.lastIndexOf(".");
+                source = i > -1 ? loggerName.substring(i + 1) : loggerName;
+            }
+        }
     }
 
     public boolean skip(Map<String, SystemMonitoringEvent> events) {
         if (forceNotify) {
-            if (category.equals(SystemNotificationCategory.JOC) && loggerName.equals(JournaledProxy.class.getName()) && message.startsWith(
-                    "EventSeqTorn")) {
+            if (loggerName.equals(JournaledProxy.class.getName()) && message.startsWith("EventSeqTorn")) {
                 return true;
             }
         } else {
-            if (key.equals(SystemMonitoringEvent.SECTION_DATABASE_WARNING)) {
-                if (events.containsKey(SystemMonitoringEvent.SECTION_DATABASE_ERROR)) {
+            if (key.equals(SystemMonitoringEvent.KEY_DATABASE_WARNING)) {
+                if (events.containsKey(SystemMonitoringEvent.KEY_DATABASE_ERROR)) {
                     return true;
                 }
-            } else if (key.equals(SystemMonitoringEvent.SECTION_CONTROLLER_WARNING)) {
-                if (events.containsKey(SystemMonitoringEvent.SECTION_CONTROLLER_ERROR)) {
+            } else if (key.equals(SystemMonitoringEvent.KEY_CONTROLLER_WARNING)) {
+                if (events.containsKey(SystemMonitoringEvent.KEY_CONTROLLER_ERROR)) {
                     return true;
                 }
             }
@@ -73,45 +102,22 @@ public class SystemMonitoringEvent {
     }
 
     public void init() {
-        maybeChangeCategory();
         setForceNotify();
         setKey();
     }
 
     private void setKey() {
-        if (category.equals(SystemNotificationCategory.JOC)) {
-            if (section.equals(SECTION_CONTROLLER)) {
-                key = section + "_" + type;
-            } else {
-                key = loggerName + "_" + type;
-            }
-        } else {
-            key = section + "_" + type;
-        }
-    }
-
-    public String getKey() {
-        return key;
-    }
-
-    private void maybeChangeCategory() {
-        if (loggerName.equals(HistoryNotifierModel.class.getName()) || loggerName.equals(HistoryMonitoringModel.class.getName())) {
-            category = SystemNotificationCategory.JOC;
-        }
-        if (section.equals(SECTION_DATABASE)) {
-            category = SystemNotificationCategory.SYSTEM;
-        }
+        key = (source + "_" + type).toLowerCase();
     }
 
     private void setForceNotify() {
-        if (category.equals(SystemNotificationCategory.JOC)) {
-            if (section.equals(SECTION_CONTROLLER)) {
-                forceNotify = false;
-            } else {
-                forceNotify = true;
-            }
-        } else {
+        switch (category) {
+        case JOC:
+            forceNotify = true;
+            break;
+        default:
             forceNotify = false;
+            break;
         }
     }
 
@@ -132,64 +138,56 @@ public class SystemMonitoringEvent {
         }
     }
 
-    private SystemNotificationCategory getCategory(String val) {
-        if (SOSString.isEmpty(val)) {
-            return SystemNotificationCategory.SYSTEM;
-        }
-        return val.toLowerCase().equals("joc") ? SystemNotificationCategory.JOC : SystemNotificationCategory.SYSTEM;
-    }
-
-    // @TODO RegExp
-    private String getSection(NotificationLogEvent evt) {
-        if (evt.getLoggerName().startsWith("org.hibernate") || evt.getLoggerName().startsWith("com.zaxxer")) {
-            return SECTION_DATABASE;
-        }// ??? all js7.
-        else if (evt.getLoggerName().startsWith("js7.common") || evt.getLoggerName().startsWith("js7.base")) {
-            return SECTION_CONTROLLER;
-        } else {
-            String section = null;
-            if (evt.getThrown() != null) {
-                for (StackTraceElement el : evt.getThrown().getStackTrace()) {
-                    section = getSectionByJocClassName(el.getClassName(), null);
-                    if (section != null) {
-                        return section;
-                    }
-                }
-            }
-            section = getSectionByJocClassName(evt.getLoggerName(), evt.getMessage());
-            if (section != null) {
-                return section;
-            }
-            int i = evt.getLoggerName().lastIndexOf(".");
-            if (i > -1) {
-                return evt.getLoggerName().substring(i + 1);
-            }
-            return evt.getLoggerName();
-        }
-    }
-
     // @TODO optimize
-    private String getSectionByJocClassName(String className, String message) {
-        if (className.equals("com.sos.joc.classes.ProblemHelper")) {
+    private void setByClassName(String className, String message) {
+        if (className.startsWith("org.hibernate") || className.startsWith("com.zaxxer")) {
+            category = SystemNotificationCategory.SYSTEM;
+            source = SOURCE_DATABASE;
+        } else if (className.startsWith("com.sos.commons.hibernate")) {
+            // applies to all Hibernate errors (not only connection errors)
+            category = SystemNotificationCategory.SYSTEM;
+            // source(History, Inventory etc) will be evaluated later
+        }
+        // ??? all js7.
+        else if (className.startsWith("js7.common") || className.startsWith("js7.base")) {
+            category = SystemNotificationCategory.CONTROLLER;
+            // source will be evaluated later
+
+            // TODO CONTROLLER or JOC?
+            // className= js7.base.session.SessionApi
+            // message=js7.proxy.ControllerApi@702644c4: ControllerApi-0 Connect(localhost:5444): java.net.ConnectException: Connection refused: no further
+            // information
+
+        } else if (className.equals(CLASS_NAME_PROBLEM_HELPER)) {
             if (message != null && message.contains("UnknownItemPath")) {
-                return SECTION_DEPLOYMENT;
+                category = SystemNotificationCategory.CONTROLLER;
+                source = SOURCE_DEPLOYMENT;
             }
         } else if (className.startsWith("com.sos.joc.publish")) {
-            return SECTION_DEPLOYMENT;
+            source = SOURCE_DEPLOYMENT;
         } else if (className.startsWith("com.sos.joc.inventory")) {
-            return SECTION_INVENTORY;
+            source = SOURCE_INVENTORY;
         } else if (className.startsWith("com.sos.joc.dailyplan")) {
-            return SECTION_DAILYPLAN;
+            source = SOURCE_DAILYPLAN;
         } else if (className.startsWith("com.sos.joc.history")) {
-            return SECTION_HISTORY;
+            source = SOURCE_HISTORY;
         } else if (className.startsWith("com.sos.joc.monitoring")) {
-            return SECTION_MONITOR;
+            source = SOURCE_MONITOR;
         } else if (className.startsWith("com.sos.joc.cleanup")) {
-            return SECTION_CLEANUP;
+            source = SOURCE_CLEANUP;
         } else if (className.startsWith("com.sos.joc.cluster")) {
-            return SECTION_JOC_CLUSTER;
+            source = SOURCE_JOC_CLUSTER;
         }
-        return null;
+        if (source != null) {
+            if (category == null) {
+                // JOC category and not a default category because the source was set from a sos.joc class
+                category = SystemNotificationCategory.JOC;
+            }
+        }
+    }
+
+    public String getKey() {
+        return key;
     }
 
     public NotificationType getType() {
@@ -204,8 +202,8 @@ public class SystemMonitoringEvent {
         return category;
     }
 
-    public String getSection() {
-        return section;
+    public String getSource() {
+        return source;
     }
 
     public long getEpochMillis() {
