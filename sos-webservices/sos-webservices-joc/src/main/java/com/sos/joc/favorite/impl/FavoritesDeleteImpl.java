@@ -26,7 +26,7 @@ public class FavoritesDeleteImpl extends JOCResourceImpl implements IFavoritesDe
         SOSHibernateSession connection = null;
         try {
             initLogging(API_CALL, filterBytes, accessToken);
-            JsonValidator.validate(filterBytes, FavoriteIdentifiers.class);
+            JsonValidator.validateFailFast(filterBytes, FavoriteIdentifiers.class);
             FavoriteIdentifiers favorites = Globals.objectMapper.readValue(filterBytes, FavoriteIdentifiers.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
             if (jocDefaultResponse != null) {

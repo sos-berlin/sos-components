@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -326,7 +327,13 @@ public class JsonValidator {
      * @throws SOSJsonSchemaException */
     public static void validate(byte[] json, String schemaPath) throws IOException, SOSJsonSchemaException {
         if (schemaPath != null) {
-            validate(json, URI.create("classpath:/raml/api/schemas/" + schemaPath), false, false);
+            validate(json, URI.create("classpath:/raml/api/schemas/" + schemaPath), false, false, false);
+        }
+    }
+    
+    public static void validate(byte[] json, String schemaPath, boolean onlyFirstError) throws IOException, SOSJsonSchemaException {
+        if (schemaPath != null) {
+            validate(json, URI.create("classpath:/raml/api/schemas/" + schemaPath), false, false, onlyFirstError);
         }
     }
 
@@ -337,7 +344,11 @@ public class JsonValidator {
      * @throws IOException
      * @throws SOSJsonSchemaException */
     public static void validate(byte[] json, Class<?> clazz) throws IOException, SOSJsonSchemaException {
-        validate(json, getSchemaPath(clazz));
+        validate(json, getSchemaPath(clazz), false);
+    }
+    
+    public static void validate(byte[] json, Class<?> clazz, boolean onlyFirstError) throws IOException, SOSJsonSchemaException {
+        validate(json, getSchemaPath(clazz), onlyFirstError);
     }
 
     /** Validation which raises all errors
@@ -348,7 +359,13 @@ public class JsonValidator {
      * @throws SOSJsonSchemaException */
     public static void validate(byte[] json, URI schemaUri) throws IOException, SOSJsonSchemaException {
         if (schemaUri != null) {
-            validate(json, schemaUri, false, false);
+            validate(json, schemaUri, false, false, false);
+        }
+    }
+    
+    public static void validate(byte[] json, URI schemaUri, boolean onlyFirstError) throws IOException, SOSJsonSchemaException {
+        if (schemaUri != null) {
+            validate(json, schemaUri, false, false, onlyFirstError);
         }
     }
 
@@ -360,7 +377,7 @@ public class JsonValidator {
      * @throws SOSJsonSchemaException */
     public static void validateFailFast(byte[] json, String schemaPath) throws IOException, SOSJsonSchemaException {
         if (schemaPath != null) {
-            validate(json, URI.create("classpath:/raml/api/schemas/" + schemaPath), true, false);
+            validate(json, URI.create("classpath:/raml/api/schemas/" + schemaPath), true, false, true);
         }
     }
 
@@ -382,23 +399,39 @@ public class JsonValidator {
      * @throws SOSJsonSchemaException */
     public static void validateFailFast(byte[] json, URI schemaUri) throws IOException, SOSJsonSchemaException {
         if (schemaUri != null) {
-            validate(json, schemaUri, true, false);
+            validate(json, schemaUri, true, false, true);
         }
     }
 
     public static void validateStrict(byte[] json, String schemaPath) throws IOException, SOSJsonSchemaException {
         if (schemaPath != null) {
-            validate(json, URI.create("classpath:/raml/api/schemas/" + schemaPath), false, true);
+            validate(json, URI.create("classpath:/raml/api/schemas/" + schemaPath), false, true, false);
+        }
+    }
+    
+    public static void validateStrict(byte[] json, String schemaPath, boolean onlyFirstError) throws IOException, SOSJsonSchemaException {
+        if (schemaPath != null) {
+            validate(json, URI.create("classpath:/raml/api/schemas/" + schemaPath), false, true, onlyFirstError);
         }
     }
 
     public static void validateStrict(byte[] json, Class<?> clazz) throws IOException, SOSJsonSchemaException {
-        validateStrict(json, getSchemaPath(clazz));
+        validateStrict(json, getSchemaPath(clazz), false);
+    }
+    
+    public static void validateStrict(byte[] json, Class<?> clazz, boolean onlyFirstError) throws IOException, SOSJsonSchemaException {
+        validateStrict(json, getSchemaPath(clazz), onlyFirstError);
     }
 
     public static void validateStrict(byte[] json, URI schemaUri) throws IOException, SOSJsonSchemaException {
         if (schemaUri != null) {
-            validate(json, schemaUri, false, true);
+            validate(json, schemaUri, false, true, false);
+        }
+    }
+    
+    public static void validateStrict(byte[] json, URI schemaUri, boolean onlyFirstError) throws IOException, SOSJsonSchemaException {
+        if (schemaUri != null) {
+            validate(json, schemaUri, false, true, onlyFirstError);
         }
     }
 
@@ -434,13 +467,18 @@ public class JsonValidator {
         }
     }
 
-    private static void validate(byte[] json, URI schemaUri, boolean failFast, boolean strict) throws IOException, SOSJsonSchemaException {
+    private static void validate(byte[] json, URI schemaUri, boolean failFast, boolean strict, boolean onlyFirstError) throws IOException,
+            SOSJsonSchemaException {
         JsonSchema schema = getSchema(schemaUri, failFast, strict);
         Set<ValidationMessage> errors;
         try {
             errors = schema.validate(MAPPER.readTree(json));
             if (errors != null && !errors.isEmpty()) {
-                throw new SOSJsonSchemaException(errors.toString());
+                if (onlyFirstError) {
+                    throw new SOSJsonSchemaException(errors.iterator().next().toString());
+                } else {
+                    throw new SOSJsonSchemaException(errors.stream().map(ValidationMessage::toString).collect(Collectors.joining(" or ")));
+                }
             }
         } catch (JsonParseException e) {
             throw e;
@@ -488,7 +526,7 @@ public class JsonValidator {
 
     public static boolean isValid(byte[] json, URI schemaUri, boolean failFast, boolean strict) {
         try {
-            validate(json, schemaUri, failFast, strict);
+            validate(json, schemaUri, failFast, strict, true);
             return true;
         } catch (IOException | SOSJsonSchemaException e) {
             return false;
