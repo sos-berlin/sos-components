@@ -22,7 +22,7 @@ public final class NotificationAppender extends AbstractAppender {
     public static final String APPENDER_NAME = NotificationAppender.class.getSimpleName();
 
     public static boolean doNotify = false;
-    
+
     private static final String NOT_NOTIFY_LOGGER = WebserviceConstants.NOT_NOTIFY_LOGGER.getName();
 
     protected NotificationAppender(String name, Filter filter) {
@@ -46,7 +46,7 @@ public final class NotificationAppender extends AbstractAppender {
             }
         }
     }
-    
+
     private void post(final LogEvent event) {
         NotificationLogEvent e = logEventToNotification(event);
         EventBus.getInstance().post(e);
@@ -54,9 +54,8 @@ public final class NotificationAppender extends AbstractAppender {
     }
 
     private NotificationLogEvent logEventToNotification(final LogEvent event) {
-        String category = event.getContextData().isEmpty() ? "JOC" : "SYSTEM";
         String markerName = event.getMarker() != null ? event.getMarker().getName() : null;
-        return new NotificationLogEvent(event.getLevel().name(), category, event.getInstant().getEpochMillisecond(), event.getLoggerName(),
-                markerName, event.getMessage().getFormattedMessage(), event.getThrown());
+        return new NotificationLogEvent(event.getLevel().name(), event.getInstant().getEpochMillisecond(), event.getLoggerName(), markerName, event
+                .getMessage().getFormattedMessage(), event.getThrown());
     }
 }

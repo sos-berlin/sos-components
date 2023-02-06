@@ -32,11 +32,11 @@ import com.sos.joc.monitoring.configuration.Notification;
 import com.sos.joc.monitoring.configuration.SystemNotification;
 import com.sos.joc.monitoring.configuration.monitor.AMonitor;
 import com.sos.joc.monitoring.model.HistoryMonitoringModel.HistoryOrderStepResult;
-import com.sos.joc.monitoring.model.HistoryNotifyAnalyzer;
+import com.sos.joc.monitoring.model.OrderNotifyAnalyzer;
 import com.sos.joc.monitoring.notification.notifier.NotifyResult;
 import com.sos.monitoring.notification.NotificationApplication;
-import com.sos.monitoring.notification.NotificationRange;
 import com.sos.monitoring.notification.NotificationType;
+import com.sos.monitoring.notification.OrderNotificationRange;
 
 public class DBLayerMonitoring extends DBLayer {
 
@@ -290,7 +290,7 @@ public class DBLayerMonitoring extends DBLayer {
         return item;
     }
 
-    public List<DBItemNotification> getNotifications(NotificationType type, NotificationRange range, Long orderId, Long stepId)
+    public List<DBItemNotification> getNotifications(NotificationType type, OrderNotificationRange range, Long orderId, Long stepId)
             throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select n from ").append(DBLayer.DBITEM_MON_NOTIFICATIONS).append(" n ");
         hql.append(",").append(DBLayer.DBITEM_MON_NOT_WORKFLOWS).append(" w ");
@@ -309,7 +309,7 @@ public class DBLayerMonitoring extends DBLayer {
         return getSession().getResultList(query);
     }
 
-    public LastWorkflowNotificationDBItemEntity getLastNotification(String notificationId, NotificationRange range, Long orderId)
+    public LastWorkflowNotificationDBItemEntity getLastNotification(String notificationId, OrderNotificationRange range, Long orderId)
             throws SOSHibernateException {
         StringBuilder hql = new StringBuilder(
                 "select n.id as id, n.type as type, n.notificationId as notificationId, w.orderStepHistoryId as stepId ");
@@ -332,7 +332,7 @@ public class DBLayerMonitoring extends DBLayer {
         return getSession().getSingleResult(query);
     }
 
-    public DBItemNotification saveNotification(Notification notification, HistoryNotifyAnalyzer analyzer, NotificationRange range,
+    public DBItemNotification saveNotification(Notification notification, OrderNotifyAnalyzer analyzer, OrderNotificationRange range,
             NotificationType type, Long recoveredNotificationId, JobWarning warn, String warnText) throws SOSHibernateException {
         DBItemNotification item = new DBItemNotification();
         item.setType(type);
@@ -361,7 +361,7 @@ public class DBLayerMonitoring extends DBLayer {
         item.setType(event.getType());
         item.setCategory(event.getCategory());
         item.setHasMonitors(notification.getMonitors().size() > 0);
-        item.setSection(event.getSection());
+        item.setSource(event.getSource());
         item.setNotifier(event.getLoggerName());
         item.setTime(dateTime);
         item.setMessage(event.getMessage());

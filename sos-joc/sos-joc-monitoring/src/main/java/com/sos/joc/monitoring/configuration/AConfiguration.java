@@ -25,8 +25,8 @@ import com.sos.joc.monitoring.configuration.objects.workflow.Workflow;
 import com.sos.joc.monitoring.configuration.objects.workflow.WorkflowJob;
 import com.sos.joc.monitoring.configuration.objects.workflow.WorkflowJob.CriticalityType;
 import com.sos.joc.monitoring.db.DBLayerMonitoring;
-import com.sos.monitoring.notification.NotificationRange;
 import com.sos.monitoring.notification.NotificationType;
+import com.sos.monitoring.notification.OrderNotificationRange;
 
 public abstract class AConfiguration {
 
@@ -301,11 +301,11 @@ public abstract class AConfiguration {
         }
     }
 
-    public List<Notification> findWorkflowMatches(NotificationRange range, List<Notification> source, String controllerId, String workflowPath) {
+    public List<Notification> findWorkflowMatches(OrderNotificationRange range, List<Notification> source, String controllerId, String workflowPath) {
         return findWorkflowMatches(range, source, controllerId, workflowPath, null, null, null, null);
     }
 
-    public List<Notification> findWorkflowMatches(NotificationRange range, List<Notification> source, String controllerId, String workflowPath,
+    public List<Notification> findWorkflowMatches(OrderNotificationRange range, List<Notification> source, String controllerId, String workflowPath,
             String jobName, String jobLabel, Integer criticality, Integer returnCode) {
 
         boolean isDebugEnabled = LOGGER.isDebugEnabled();

@@ -25,8 +25,8 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.db.monitoring.DBItemNotification;
 import com.sos.joc.monitoring.model.SerializedHistoryResult;
-import com.sos.monitoring.notification.NotificationRange;
 import com.sos.monitoring.notification.NotificationType;
+import com.sos.monitoring.notification.OrderNotificationRange;
 
 public class DBLayerMonitoringTest {
 
@@ -45,9 +45,9 @@ public class DBLayerMonitoringTest {
             DBLayerMonitoring dbLayer = new DBLayerMonitoring("test");
             dbLayer.setSession(session);
 
-            LOGGER.info(SOSString.toString(dbLayer.getLastNotification("1", NotificationRange.WORKFLOW, 663L)));
+            LOGGER.info(SOSString.toString(dbLayer.getLastNotification("1", OrderNotificationRange.WORKFLOW, 663L)));
 
-            List<DBItemNotification> result = dbLayer.getNotifications(NotificationType.SUCCESS, NotificationRange.WORKFLOW, 711L, 1014L);
+            List<DBItemNotification> result = dbLayer.getNotifications(NotificationType.SUCCESS, OrderNotificationRange.WORKFLOW, 711L, 1014L);
             LOGGER.info("RESULT SIZE= " + result.size());
             for (DBItemNotification n : result) {
                 LOGGER.info(" " + SOSHibernate.toString(n));

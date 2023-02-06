@@ -17,8 +17,8 @@ import com.sos.history.JobWarning;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.common.MonitoringConstants;
-import com.sos.monitoring.notification.NotificationRange;
 import com.sos.monitoring.notification.NotificationType;
+import com.sos.monitoring.notification.OrderNotificationRange;
 
 @Entity
 @Table(name = DBLayer.TABLE_MON_NOTIFICATIONS)
@@ -159,16 +159,16 @@ public class DBItemNotification extends DBItem {
     }
 
     @Transient
-    public NotificationRange getRangeAsEnum() {
+    public OrderNotificationRange getRangeAsEnum() {
         try {
-            return NotificationRange.fromValue(range);
+            return OrderNotificationRange.fromValue(range);
         } catch (Throwable e) {
             return MonitoringConstants.NOTIFICATION_DEFAULT_RANGE;
         }
     }
 
     @Transient
-    public void setRange(NotificationRange val) {
+    public void setRange(OrderNotificationRange val) {
         setRange(val == null ? null : val.intValue());
     }
 

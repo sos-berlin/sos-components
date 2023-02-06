@@ -42,8 +42,8 @@ public class DBItemSystemNotification extends DBItem {
     @Type(type = "numeric_boolean")
     private boolean hasMonitors;
 
-    @Column(name = "[SECTION]", nullable = false)
-    private String section;
+    @Column(name = "[SOURCE]", nullable = false)
+    private String source;
 
     @Column(name = "[NOTIFIER]", nullable = false)
     private String notifier;
@@ -101,12 +101,12 @@ public class DBItemSystemNotification extends DBItem {
         return hasMonitors;
     }
 
-    public String getSection() {
-        return section;
+    public String getSource() {
+        return source;
     }
 
-    public void setSection(String val) {
-        section = normalizeSection(val);
+    public void setSource(String val) {
+        source = normalizeSource(val);
     }
 
     public void setNotifier(String val) {
@@ -181,11 +181,11 @@ public class DBItemSystemNotification extends DBItem {
     }
 
     @Transient
-    private static String normalizeSection(String val) {
+    private static String normalizeSource(String val) {
         if (val == null) {
             return DBLayer.DEFAULT_KEY;
         }
-        return normalizeValue(val, MonitoringConstants.MAX_LEN_SYSTEM_NOTIFICATION_SECTION);
+        return normalizeValue(val, MonitoringConstants.MAX_LEN_SYSTEM_NOTIFICATION_SOURCE);
     }
 
     @Transient

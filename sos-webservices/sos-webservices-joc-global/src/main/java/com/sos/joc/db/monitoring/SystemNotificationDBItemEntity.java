@@ -7,12 +7,12 @@ public class SystemNotificationDBItemEntity {
     private Long id;
     private Integer type;
     private Integer category;
-    private boolean hasMonitors;
-    private String section;
+    private String source;
     private String notifier;
     private Date time;
     private String message;
     private String exception;
+    private boolean hasMonitors;
     private Date created;
 
     private String acknowledgementAccount;
@@ -43,20 +43,12 @@ public class SystemNotificationDBItemEntity {
         category = val;
     }
 
-    public boolean getHasMonitors() {
-        return hasMonitors;
+    public String getSource() {
+        return source;
     }
 
-    public void setHasMonitors(boolean val) {
-        hasMonitors = val;
-    }
-
-    public String getSection() {
-        return section;
-    }
-
-    public void setSection(String val) {
-        section = val;
+    public void setSource(String val) {
+        source = val;
     }
 
     public String getNotifier() {
@@ -89,6 +81,14 @@ public class SystemNotificationDBItemEntity {
 
     public void setException(String val) {
         exception = val;
+    }
+
+    public boolean getHasMonitors() {
+        return hasMonitors;
+    }
+
+    public void setHasMonitors(boolean val) {
+        hasMonitors = val;
     }
 
     public Date getCreated() {

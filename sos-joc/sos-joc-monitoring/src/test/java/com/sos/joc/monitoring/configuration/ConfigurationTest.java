@@ -17,7 +17,7 @@ import com.sos.joc.monitoring.configuration.monitor.MonitorCommand;
 import com.sos.joc.monitoring.configuration.monitor.mail.MonitorMail;
 import com.sos.joc.monitoring.configuration.objects.workflow.Workflow;
 import com.sos.joc.monitoring.configuration.objects.workflow.WorkflowJob;
-import com.sos.monitoring.notification.NotificationRange;
+import com.sos.monitoring.notification.OrderNotificationRange;
 
 public class ConfigurationTest {
 
@@ -51,7 +51,7 @@ public class ConfigurationTest {
         Configuration.INSTANCE.process(new String(Files.readAllBytes(Paths.get("src/test/resources/Configurations.xml")), Charsets.UTF_8));
 
         LOGGER.info("---WORKFLOW MATCHES---:");
-        List<Notification> r = Configuration.INSTANCE.findWorkflowMatches(NotificationRange.WORKFLOW, Configuration.INSTANCE.getOnError(), "js7.x",
+        List<Notification> r = Configuration.INSTANCE.findWorkflowMatches(OrderNotificationRange.WORKFLOW, Configuration.INSTANCE.getOnError(), "js7.x",
                 "/my_workflow");
         LOGGER.info("---               MATCHES---:" + r.size());
         for (Notification n : r) {
@@ -59,7 +59,7 @@ public class ConfigurationTest {
         }
 
         LOGGER.info("---JOB MATCHES 1---:");
-        r = Configuration.INSTANCE.findWorkflowMatches(NotificationRange.WORKFLOW_JOB, Configuration.INSTANCE.getOnError(), "js7.x", "/my_workflow",
+        r = Configuration.INSTANCE.findWorkflowMatches(OrderNotificationRange.WORKFLOW_JOB, Configuration.INSTANCE.getOnError(), "js7.x", "/my_workflow",
                 "my_job_name", "my_job_label", JobCriticality.NORMAL.intValue(), 0);
         LOGGER.info("---               MATCHES---:" + r.size());
         for (Notification n : r) {
@@ -67,7 +67,7 @@ public class ConfigurationTest {
         }
 
         LOGGER.info("---JOB MATCHES 2---:");
-        r = Configuration.INSTANCE.findWorkflowMatches(NotificationRange.WORKFLOW_JOB, Configuration.INSTANCE.getOnSuccess(), "js7.x", "/my_workflow",
+        r = Configuration.INSTANCE.findWorkflowMatches(OrderNotificationRange.WORKFLOW_JOB, Configuration.INSTANCE.getOnSuccess(), "js7.x", "/my_workflow",
                 "my_job_name", "my_job_label", JobCriticality.CRITICAL.intValue(), 0);
         LOGGER.info("---               MATCHES---:" + r.size());
         for (Notification n : r) {
