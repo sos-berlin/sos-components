@@ -25,6 +25,7 @@ import com.sos.joc.cluster.bean.history.HistoryOrderBean;
 import com.sos.joc.cluster.bean.history.HistoryOrderStepBean;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.db.monitoring.DBItemNotification;
 import com.sos.joc.event.EventBus;
@@ -342,15 +343,31 @@ public class OrderNotifierModel {
             }
             i++;
         }
-        postEvent(mn, analyzer);
+        postEvent(analyzer.getControllerId(), mn, analyzer.getOrder(), os);
         return true;
     }
 
-    private void postEvent(DBItemNotification mn, OrderNotifyAnalyzer analyzer) {
-        if (mn == null || analyzer == null) {
+    private void postEvent(String controllerId, DBItemNotification mn, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos) {
+        if (mn == null || mo == null) {
             return;
         }
-        EventBus.getInstance().post(new NotificationCreated(analyzer.getControllerId(), mn.getId()));
+        // mn.getCreated();
+        // mn.getType();
+        // mo.getWorkflowPath();
+        // mo.getOrderId();
+        // message = getPostEventMessage(mn, mo, mos);
+        EventBus.getInstance().post(new NotificationCreated(controllerId, mn.getId()));
+    }
+
+    // see com.sos.joc.monitoring.impl.OrderNotificationsImpl.getMessage
+    private String getPostEventMessage(DBItemNotification mn, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos) {
+        if (mn.getType().equals(NotificationType.WARNING.intValue())) {
+            return mn.getWarnText();
+        }
+        if (mos != null && !SOSString.isEmpty(mos.getErrorText())) {
+            return mos.getErrorText();
+        }
+        return mo.getErrorText();
     }
 
     private void notifyStepWarning(HistoryOrderStepResult r) {
