@@ -1393,6 +1393,7 @@ try {
         hql.append(" where id = (select max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY);
         hql.append(" where inventoryConfigurationId = :cid");
         hql.append(" and controllerId = :controllerId");
+        hql.append(" and operation = 0");
         hql.append(" and state = 0").append(")");
         Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
         query.setParameter("cid", configurationId);
