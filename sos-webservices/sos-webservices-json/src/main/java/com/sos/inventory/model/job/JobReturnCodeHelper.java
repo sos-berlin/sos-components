@@ -125,6 +125,17 @@ public class JobReturnCodeHelper {
                     }
                 }).filter(Objects::nonNull).collect(Collectors.joining(","));
     }
+    
+    @JsonIgnore
+    protected List<SortedSet<Integer>> normalizedAsList(TYPE t) {
+        SortedSet<Integer> single = singles.getOrDefault(t, Collections.emptySortedSet());
+        List<SortedSet<Integer>> interval = intervals.getOrDefault(t, Collections.emptyList());
+        if (single.isEmpty() && interval.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return Stream.concat(single.stream().map(i -> constructSortedSet(i)), interval.stream()).filter(i -> !i.isEmpty()).sorted(Comparator
+                .comparingInt(SortedSet::first)).collect(Collectors.toList());
+    }
 
     private boolean isInIntervals(Integer i, List<SortedSet<Integer>> ival) {
         for (SortedSet<Integer> interval : ival) {

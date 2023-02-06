@@ -2,6 +2,7 @@
 package com.sos.inventory.model.job;
 
 import java.util.List;
+import java.util.SortedSet;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -77,6 +78,11 @@ public class JobReturnCodeWarning extends JobReturnCodeHelper {
     @JsonIgnore
     public boolean isInWarnings(Integer warning) {
         return isInReturnCodes(warning, TYPE.WARNING);
+    }
+    
+    @JsonIgnore
+    public List<SortedSet<Integer>> getNormalizedAsList() {
+        return normalizedAsList(TYPE.WARNING);
     }
 
     @Override
