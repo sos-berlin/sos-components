@@ -447,7 +447,7 @@ public class Validator {
             Job job = entry.getValue();
             try {
                 JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(job), URI.create(
-                        "classpath:/raml/inventory/schemas/job/job-schema.json"));
+                        "classpath:/raml/inventory/schemas/job/job-schema.json"), true);
                 if (job.getJobResourceNames() != null) {
                     jobResources.addAll(job.getJobResourceNames());
                 }
@@ -500,10 +500,18 @@ public class Validator {
         return jobResources;
     }
     
-    private static void checkReturnCodeMeaning(ExecutableScript es, String position) {
+    private static void checkReturnCodeMeaning(ExecutableScript es, String position) throws JsonProcessingException, IOException, SOSJsonSchemaException {
         if (es.getReturnCodeMeaning() != null) {
             if (es.getReturnCodeMeaning().getSuccess() != null && es.getReturnCodeMeaning().getFailure() != null) {
                 throw new JocConfigurationException(position + ".executable.returnCodeMeaning: only one of 'success' or 'failure' may be specified.");
+            }
+            if (es.getReturnCodeMeaning().getWarning() != null) {
+                try {
+                    JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(es.getReturnCodeMeaning()), URI.create(
+                            "classpath:/raml/inventory/schemas/job/jobReturnCodeWarning-schema.json"), true);
+                } catch (SOSJsonSchemaException e) {
+                    throw new SOSJsonSchemaException(position + e.getMessage().substring(1));
+                }
             }
         }
     }
@@ -576,10 +584,10 @@ public class Validator {
                 try {
                     if (unLicensedForkList) {
                         JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(inst), URI.create(
-                                JocInventory.FORKLIST_SCHEMA_WITHOUT_LICENSE));
+                                JocInventory.FORKLIST_SCHEMA_WITHOUT_LICENSE), true);
                     } else {
                         JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(inst), URI.create(JocInventory.INSTRUCTION_SCHEMA_LOCATION.get(
-                                inst.getTYPE())));
+                                inst.getTYPE())), true);
                     }
                 } catch (SOSJsonSchemaException e) {
                     String msg = e.getMessage();
