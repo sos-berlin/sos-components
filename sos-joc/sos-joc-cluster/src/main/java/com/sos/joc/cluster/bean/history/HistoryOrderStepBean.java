@@ -1,9 +1,11 @@
 package com.sos.joc.cluster.bean.history;
 
 import java.util.Date;
+import java.util.List;
+import java.util.SortedSet;
+import java.util.stream.Collectors;
 
 import com.sos.controller.model.event.EventType;
-import com.sos.inventory.model.job.JobReturnCodeWarning;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
 
 public class HistoryOrderStepBean extends AHistoryBean {
@@ -41,7 +43,7 @@ public class HistoryOrderStepBean extends AHistoryBean {
     // currently only for warnings
     private String firstChunkStdError;
 
-    private JobReturnCodeWarning warnReturnCodes;
+    private List<SortedSet<Integer>> warnReturnCodes;
     private String warnIfLonger;
     private String warnIfShorter;
     private Long warnIfLongerAvgSeconds;
@@ -53,7 +55,7 @@ public class HistoryOrderStepBean extends AHistoryBean {
     }
 
     public HistoryOrderStepBean(EventType eventType, Long eventId, DBItemHistoryOrderStep item, String warnIfLonger, String warnIfShorter,
-            JobReturnCodeWarning warnReturnCodes, String notification) {
+            List<SortedSet<Integer>> warnReturnCodes, String notification) {
         super(eventType, eventId, item.getControllerId(), item.getId());
 
         this.workflowPosition = item.getWorkflowPosition();
@@ -332,12 +334,23 @@ public class HistoryOrderStepBean extends AHistoryBean {
         return warnIfLongerAvgSeconds;
     }
 
-    public void setWarnReturnCodes(JobReturnCodeWarning val) {
+    public void setWarnReturnCodes(List<SortedSet<Integer>> val) {
         warnReturnCodes = val;
     }
 
-    public JobReturnCodeWarning getWarnReturnCodes() {
-        return warnReturnCodes;
+    public String getWarnReturnCodes() {
+        if (warnReturnCodes == null) {
+            return "";
+        }
+        return warnReturnCodes.stream().filter(i -> !i.isEmpty()).map(i -> (i.size() == 1) ? i.first().toString() : i.first() + ".." + i.last())
+                .collect(Collectors.joining(","));
+    }
+
+    public boolean isInWarnReturnCodes(Integer returnCode) {
+        if (returnCode == null || warnReturnCodes == null) {
+            return false;
+        }
+        return warnReturnCodes.stream().filter(i -> !i.isEmpty()).anyMatch(i -> i.first() <= returnCode && returnCode <= i.last());
     }
 
     public void setFirstChunkStdError(String val) {
