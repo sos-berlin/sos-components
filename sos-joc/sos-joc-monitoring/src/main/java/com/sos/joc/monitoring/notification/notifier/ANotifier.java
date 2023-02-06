@@ -95,7 +95,10 @@ public abstract class ANotifier {
         systemVars = new HashMap<>();
         systemVars.put("MON_SN_TYPE", getVarValue(type.name()));
         systemVars.put("MON_SN_CATEGORY", event.getCategory().name());
-        systemVars.put("MON_SN_SOURCE", getVarValue(event.getSource()));
+        String source = getVarValue(event.getSource());
+        systemVars.put("MON_SN_SOURCE", source);
+        // MON_SN_SECTION deprecated with 2.5.2 - use MON_SN_SOURCE instead
+        systemVars.put("MON_SN_SECTION", source);
 
         systemVars.put("MON_SN_NOTIFIER", getVarValue(event.getLoggerName()));
         systemVars.put("MON_SN_TIME", dateTime2String(timeZone, dateTime));
