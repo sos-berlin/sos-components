@@ -1333,11 +1333,17 @@ public class JS7Converter {
                 } else {
                     isStandalone = true;
                 }
+                if (agent != null) {
+                    if (ah != null) {
+                        agent.setUrl(getJS1StandaloneAgentURL(ah.getProcessClass()));
+                    }
+                }
             }
             if (agent == null) {
                 agent = new com.sos.joc.model.agent.Agent();
                 if (ah != null) {
                     isStandalone = ah.isJS1AgentIsStandalone();
+                    agent.setUrl(getJS1StandaloneAgentURL(ah.getProcessClass()));
                 } else {
                     isStandalone = true;
                 }
@@ -1471,13 +1477,17 @@ public class JS7Converter {
     }
 
     private JS7Agent getAgent(ProcessClass js1ProcessClass, JS7Agent jobChainAgent, ACommonJob job, JobChain jobChain) {
-        Path processClassPath = (js1ProcessClass != null && js1ProcessClass.getPath() != null) ? js1ProcessClass.getPath() : null;// defaultProcessClassPath;
-        if (processClassPath != null && js1ProcessClass2js7Agent.containsKey(processClassPath)) {
-            return js1ProcessClass2js7Agent.get(processClassPath);
-        }
-
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
         boolean isTraceEnabled = LOGGER.isTraceEnabled();
+        Path processClassPath = (js1ProcessClass != null && js1ProcessClass.getPath() != null) ? js1ProcessClass.getPath() : null;// defaultProcessClassPath;
+        if (processClassPath != null && js1ProcessClass2js7Agent.containsKey(processClassPath)) {
+            JS7Agent agent = js1ProcessClass2js7Agent.get(processClassPath);
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[getAgent][return][js1ProcessClass2js7Agent][%s][%s][details][processClassPath=%s]agent=%s",
+                        processClassPath.getFileName(), agent.getJS7AgentName(), processClassPath, SOSString.toString(agent)));
+            }
+            return agent;
+        }
 
         AgentHelper ah = null;
         String js1AgentName = null;
@@ -1501,37 +1511,49 @@ public class JS7Converter {
                 defaultProcessClassPath = Paths.get(agent.getJS7AgentName());
             }
         } else {
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format(
+                        "[getAgent][notForced][start][jobChainAgent=%s][js1AgentName=%s][js7AgentName=%s][js1ProcessClass=%s][ah=%s][ah processClass=%s]",
+                        jobChainAgent, js1AgentName, js7AgentName, SOSString.toString(js1ProcessClass), SOSString.toString(ah), (ah == null ? "null"
+                                : SOSString.toString(ah.getProcessClass()))));
+            }
+            String range = "";
             if (jobChainAgent != null && (job == null || job.getProcessClass() == null || !job.getProcessClass().isAgent())) {
-                if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[getAgent][JOB_CHAIN]%s", jobChainAgent.getJS7AgentName()));
-                }
+                range = "JOB_CHAIN";
+
                 agent = jobChainAgent;
             } else if (js1AgentName != null && CONFIG.getAgentConfig().getMappings().containsKey(js1AgentName)) {
-                if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[getAgent][%s]js1AgentName=%s", JS7AgentConvertType.CONFIG_MAPPINGS.name(), js1AgentName));
-                }
+                range = JS7AgentConvertType.CONFIG_MAPPINGS.name();
+
                 agent = convertAgentFrom(JS7AgentConvertType.CONFIG_MAPPINGS, CONFIG.getAgentConfig().getMappings().get(js1AgentName), CONFIG
                         .getAgentConfig().getDefaultAgent(), ah);
             } else if (js1ProcessClass != null && js1ProcessClass.isAgent()) {
-                if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[getAgent][%s][js1AgentName=%s][js7AgentName=%s]", JS7AgentConvertType.PROCESS_CLASS.name(),
-                            js1AgentName, js7AgentName));
-                }
+                range = JS7AgentConvertType.PROCESS_CLASS.name();
+
                 agent = convertAgentFrom(JS7AgentConvertType.PROCESS_CLASS, null, CONFIG.getAgentConfig().getDefaultAgent(), ah);
             } else {
-                if (isTraceEnabled) {
-                    LOGGER.debug(String.format("[getAgent][%s][js1AgentName=%s][js7AgentName=%s]", JS7AgentConvertType.CONFIG_DEFAULT.name(),
-                            js1AgentName, js7AgentName));
-                }
+                range = JS7AgentConvertType.CONFIG_DEFAULT.name();
+
                 agent = convertAgentFrom(JS7AgentConvertType.CONFIG_DEFAULT, CONFIG.getAgentConfig().getDefaultAgent(), null, ah);
+            }
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[getAgent][notForced][end][%s][js1AgentName=%s]agent=%s", range, js1AgentName, SOSString.toString(
+                        agent)));
             }
         }
         if (agent != null) {
+            if (isTraceEnabled) {
+                LOGGER.trace(String.format("[getAgent][1]agent=%s", SOSString.toString(agent)));
+            }
             if (processClassPath == null) {
                 if (defaultProcessClassPath == null) {
                     defaultProcessClassPath = Paths.get(JS7AgentConverter.DEFAULT_AGENT_NAME);
                 }
                 processClassPath = defaultProcessClassPath;
+            }
+
+            if (isTraceEnabled) {
+                LOGGER.trace(String.format("[getAgent][2]agent=%s", SOSString.toString(agent)));
             }
 
             if (agent.getStandaloneAgent() != null && agent.getStandaloneAgent().getUrl() != null) {
@@ -1553,6 +1575,10 @@ public class JS7Converter {
                 // LOGGER.info(agent.getJS7AgentName()+" = "+agent.getStandaloneAgent().getUrl());
             }
 
+            if (isTraceEnabled) {
+                LOGGER.trace(String.format("[getAgent][3]agent=%s", SOSString.toString(agent)));
+            }
+
             StringBuilder sb = new StringBuilder();
             if (job != null) {
                 sb.append("[first usage job=").append(job.getPath()).append("]");
@@ -1568,6 +1594,10 @@ public class JS7Converter {
             }
             js1ProcessClass2js7AgentResult.add(new ProcessClassFirstUsageHelper(processClassPath, agent.getJS7AgentName(), sb.toString()));
 
+            if (isTraceEnabled) {
+                LOGGER.trace(String.format("[getAgent][4]agent=%s", SOSString.toString(agent)));
+            }
+
             if (js7Agents.containsKey(agent.getJS7AgentName())) {
                 AgentHelper h = js7Agents.get(agent.getJS7AgentName());
                 if (h.getProcessClass() != null) {
@@ -1578,8 +1608,18 @@ public class JS7Converter {
                             + sb));
                 }
             }
+
+            if (isTraceEnabled) {
+                LOGGER.trace(String.format("[getAgent][5]agent=%s", SOSString.toString(agent)));
+            }
+
             js7Agents.put(agent.getJS7AgentName(), new AgentHelper(agent, js1ProcessClass));
             js1ProcessClass2js7Agent.put(processClassPath, agent);
+
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[getAgent][put][js1ProcessClass2js7Agent][%s][%s][details][processClassPath=%s]agent=%s", processClassPath
+                        .getFileName(), agent.getJS7AgentName(), processClassPath, SOSString.toString(agent)));
+            }
         } else {
             if (js1ProcessClass != null) {
                 ConverterReport.INSTANCE.addWarningRecord(js1ProcessClass.getPath(), "Agent", "not used. Use a standalone "
@@ -2213,7 +2253,7 @@ public class JS7Converter {
 
     private void convertJobChainWorkflow(JS7ConverterResult result, String js7Name, JobChain jobChain) {
         String method = "convertJobChainWorkflow";
-        LOGGER.info("[" + method + "]" + jobChain.getPath());
+        LOGGER.info("[" + method + "][" + jobChain.getName() + "]" + jobChain.getPath());
 
         Map<String, JobChainJobHelper> uniqueJobs = new LinkedHashMap<>();
         Map<String, JobChainStateHelper> allStates = new LinkedHashMap<>();
@@ -2310,7 +2350,8 @@ public class JS7Converter {
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
         if (isDebugEnabled) {
             allStates.entrySet().forEach(e -> {
-                LOGGER.debug(String.format("[convertJobChainWorkflow][allStates]state=%s,helper=%s", e.getKey(), SOSString.toString(e.getValue())));
+                LOGGER.debug(String.format("[convertJobChainWorkflow][%s][allStates]state=%s,helper=%s", jobChain.getName(), e.getKey(), SOSString
+                        .toString(e.getValue())));
             });
         }
 
@@ -2325,7 +2366,8 @@ public class JS7Converter {
 
         if (isDebugEnabled) {
             usedStates.entrySet().forEach(e -> {
-                LOGGER.debug(String.format("[convertJobChainWorkflow][usedStates]state=%s,helper=%s", e.getKey(), SOSString.toString(e.getValue())));
+                LOGGER.debug(String.format("[convertJobChainWorkflow][%s][usedStates]state=%s,helper=%s", jobChain.getName(), e.getKey(), SOSString
+                        .toString(e.getValue())));
             });
         }
 
@@ -2364,13 +2406,13 @@ public class JS7Converter {
                 if (jh == null) {
                     if (js1Job.isJavaJITLSplitterJob() || js1Job.isJavaJITLJoinJob()) {
                         if (isDebugEnabled) {
-                            LOGGER.debug(String.format("[%s][%s][Job %s=%s][not converted]splitter/join job", method, jobChain.getPath(), e.getKey(),
-                                    js1Job.getPath()));
+                            LOGGER.debug(String.format("[%s][%s][%s][Job %s=%s][not converted]splitter/join job", method, jobChain.getName(), jobChain
+                                    .getPath(), e.getKey(), js1Job.getPath()));
                         }
                     } else if (js1Job.isJavaJITLSynchronizerJob()) {
                         if (isDebugEnabled) {
-                            LOGGER.debug(String.format("[%s][%s][Job %s=%s][not converted]synchronizer job", method, jobChain.getPath(), e.getKey(),
-                                    js1Job.getPath()));
+                            LOGGER.debug(String.format("[%s][%s][%s][Job %s=%s][not converted]synchronizer job", method, jobChain.getName(), jobChain
+                                    .getPath(), e.getKey(), js1Job.getPath()));
                         }
                     } else {
                         try {
@@ -2379,13 +2421,14 @@ public class JS7Converter {
                         } catch (Throwable ee) {
                         }
                         if (isDebugEnabled) {
-                            LOGGER.debug(String.format("[%s][%s][Job %s=%s]cannot be converted", method, jobChain.getPath(), e.getKey(), js1Job
-                                    .getPath()));
+                            LOGGER.debug(String.format("[%s][%s][%s][Job %s=%s]cannot be converted", method, jobChain.getName(), jobChain.getPath(), e
+                                    .getKey(), js1Job.getPath()));
                         }
                     }
                 } else {
                     if (isDebugEnabled) {
-                        LOGGER.debug(String.format("[%s][%s]Job %s=%s", method, jobChain.getPath(), e.getKey(), js1Job.getPath()));
+                        LOGGER.debug(String.format("[%s][%s][%s]Job %s=%s", method, jobChain.getName(), jobChain.getPath(), e.getKey(), js1Job
+                                .getPath()));
                     }
                     Job job = jh.getJS7Job();
                     job.setAdmissionTimeScheme(JS7RunTimeConverter.convert(js1Job));
@@ -2402,8 +2445,8 @@ public class JS7Converter {
                 // } catch (Throwable ee) {
                 // }
                 if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[%s][%s][Job %s=%s]not used in the current workflow. handle separately", method, jobChain.getPath(), e
-                            .getKey(), js1Job.getPath()));
+                    LOGGER.debug(String.format("[%s][%s][%s][Job %s=%s]not used in the current workflow. handle separately", method, jobChain
+                            .getName(), jobChain.getPath(), e.getKey(), js1Job.getPath()));
                 }
             }
         });
