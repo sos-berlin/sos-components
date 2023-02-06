@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -15,7 +16,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.job.ExecutableJava;
 import com.sos.inventory.model.job.ExecutableScript;
-import com.sos.inventory.model.job.JobReturnCodeWarning;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.classes.history.HistoryNotification;
 import com.sos.joc.classes.inventory.search.WorkflowSearcher;
@@ -396,21 +396,21 @@ public class HistoryCacheHandler {
         return map;
     }
 
-    private JobReturnCodeWarning getWarningReturnCodes(com.sos.inventory.model.job.Job job) {
-        JobReturnCodeWarning result = null;
+    private List<SortedSet<Integer>> getWarningReturnCodes(com.sos.inventory.model.job.Job job) {
+        List<SortedSet<Integer>> result = null;
         if (job.getExecutable() != null && job.getExecutable().getTYPE() != null) {
             switch (job.getExecutable().getTYPE()) {
             case ShellScriptExecutable:
             case ScriptExecutable:
                 ExecutableScript es = job.getExecutable().cast();
-                if (es != null) {
-                    result = es.getReturnCodeMeaning();
+                if (es != null && es.getReturnCodeMeaning() != null) {
+                    result = es.getReturnCodeMeaning().getNormalizedAsList();
                 }
                 break;
             case InternalExecutable:
                 ExecutableJava ej = job.getExecutable().cast();
-                if (ej != null) {
-                    result = ej.getReturnCodeMeaning();
+                if (ej != null && ej.getReturnCodeMeaning() != null) {
+                    result = ej.getReturnCodeMeaning().getNormalizedAsList();
                 }
                 break;
             }

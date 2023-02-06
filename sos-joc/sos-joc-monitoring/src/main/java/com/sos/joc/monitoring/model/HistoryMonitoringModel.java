@@ -560,9 +560,9 @@ public class HistoryMonitoringModel implements Serializable {
 
     private HistoryOrderStepResultWarn analyzeReturnCode(HistoryOrderStepBean hosb) {
         HistoryOrderStepResultWarn warn = null;
-        if (hosb.getWarnReturnCodes() != null && hosb.getWarnReturnCodes().isInWarnings(hosb.getReturnCode())) {
+        if (hosb.isInWarnReturnCodes(hosb.getReturnCode())) {
             warn = new HistoryOrderStepResultWarn(JobWarning.RETURN_CODE, "Job return code " + hosb.getReturnCode()
-                    + " matches the configured warning return codes " + hosb.getWarnReturnCodes().getWarning());
+                    + " matches the configured warning return codes " + hosb.getWarnReturnCodes());
 
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug(String.format("[%s][%s][workflowPath=%s,job=%s(historyId=%s)]%s", MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY, hosb
