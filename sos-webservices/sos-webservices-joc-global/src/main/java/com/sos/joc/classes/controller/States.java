@@ -1,4 +1,4 @@
-package com.sos.joc.classes.jobscheduler;
+package com.sos.joc.classes.controller;
 
 import java.io.IOException;
 import java.util.List;
@@ -100,6 +100,7 @@ public class States {
             break;
         case ACTIVE_SHUT_DOWN:
         case PREPARED_TO_BE_COUPLED:
+        case ACTIVE_NODE_IS_NOT_READY:
         case EMPTY:
             clusterState.setSeverity(2);
             break;

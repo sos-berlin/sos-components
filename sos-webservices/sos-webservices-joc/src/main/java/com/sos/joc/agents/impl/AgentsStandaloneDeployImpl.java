@@ -118,7 +118,7 @@ public class AgentsStandaloneDeployImpl extends JOCResourceImpl implements IAgen
             }
             
             if (!clusterWatcherUrls.isEmpty()) {
-                ClusterWatch.getInstance().appointNodes(controllerId, proxy, agentDBLayer, accessToken, getJocError());
+                ClusterWatch.getInstance().appointNodes(controllerId, proxy.api(), agentDBLayer, accessToken, getJocError());
             }
             
             if (!agentRefs.isEmpty()) {

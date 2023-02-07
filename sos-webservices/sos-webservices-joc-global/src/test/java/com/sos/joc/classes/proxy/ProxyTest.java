@@ -33,6 +33,7 @@ import js7.base.io.https.TrustStoreRef;
 import js7.base.problem.Problem;
 import js7.data.cluster.ClusterEvent;
 import js7.data.cluster.ClusterEvent.ClusterCoupled;
+import js7.data.cluster.ClusterWatchId;
 import js7.data.controller.ControllerEvent;
 import js7.data.event.Event;
 import js7.data.event.KeyedEvent;
@@ -96,8 +97,8 @@ public class ProxyTest {
     public static void setUp() {
         Proxies.closeAll();
         Globals.httpConnectionTimeout = Math.max(20000, Globals.httpConnectionTimeout);
-        credential = ProxyCredentialsBuilder.withControllerIdAndUrl("testsuite", "http://centosdev_secondary:5444")
-                .withBackupUrl("http://centosdev_secondary:5544").withAccount(ProxyUser.JOC).build();
+        credential = ProxyCredentialsBuilder.withControllerIdAndUrl("testsuite", "http://centosdev_secondary.sos:5444")
+                .withBackupUrl("http://centosdev_secondary.sos:5544").withAccount(ProxyUser.JOC).build();
         // ProxyCredentials credential2 = ProxyCredentialsBuilder.withUrl("http://centostest_secondary:5344").build();
         // ProxyCredentials credential3 = ProxyCredentialsBuilder.withUrl("http://centostest_secondary:5544").build();
         // Proxies.getInstance().startAll(credential, credential2, credential3);
@@ -264,7 +265,7 @@ public class ProxyTest {
             JControllerEventBus evtBus = controllerProxy.controllerEventBus();
             evtBus.subscribe(Arrays.asList(ControllerEvent.class, ClusterEvent.class), callbackOfCurrentController);
             
-            //controllerProxy2.controllerEventBus().subscribe(Arrays.asList(ControllerEvent.class), callbackOfCurrentController2);;
+            //controllerProxy2.controllerEventBus().subscribe(Arrays.asList(ControllerEvent.class), callbackOfCurrentController2);
 
             final String restartJson = Globals.objectMapper.writeValueAsString(new Terminate(true, null));
             //final String restartJson = Globals.objectMapper.writeValueAsString(new Abort(false));
@@ -294,6 +295,24 @@ public class ProxyTest {
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
+    }
+    
+    @Test
+    public void testControllerWatch() {
+            try {
+                JControllerApi api = ControllerApi.of(credential);
+                api.runClusterWatch(ClusterWatchId.of("joc#0"));
+                TimeUnit.SECONDS.sleep(5);
+                Either<Problem, JControllerState> stateE = api.controllerState().get();
+                if (stateE.isRight()) {
+                    LOGGER.info(stateE.get().clusterState().toJson());
+                } else {
+                    LOGGER.warn(stateE.getLeft().messageWithCause());
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        
     }
 
     @Test

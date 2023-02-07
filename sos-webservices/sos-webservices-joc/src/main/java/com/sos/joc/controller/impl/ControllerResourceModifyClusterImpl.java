@@ -104,8 +104,8 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
             storeAuditLog(urlParameter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_APPOINT_NODES);
-            ClusterWatch.getInstance().appointNodes(controllerId, Proxy.of(controllerId), new InventoryAgentInstancesDBLayer(connection), accessToken,
-                    getJocError());
+            ClusterWatch.getInstance().appointNodes(controllerId, ControllerApi.of(controllerId), new InventoryAgentInstancesDBLayer(connection),
+                    accessToken, getJocError());
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {

@@ -373,14 +373,18 @@ public class Proxies {
      * @param account
      */
     public static void loadAllApis(final JocCockpitProperties properties, final ProxyUser account) {
-        Proxies.getInstance()._loadAllApis(properties, account);
+        Proxies.getInstance()._loadAllApis(properties, account, null);
     }
     
-    private void _loadAllApis(final JocCockpitProperties properties, final ProxyUser account) {
+    public static void loadAllApis(final JocCockpitProperties properties, final ProxyUser account, Map<String, String> urlMapper) {
+        Proxies.getInstance()._loadAllApis(properties, account, urlMapper);
+    }
+    
+    private void _loadAllApis(final JocCockpitProperties properties, final ProxyUser account, Map<String, String> urlMapper) {
         LOGGER.info(String.format("load all controller apis for user %s ...", account));
         try {
             JHttpsConfig httpsConfig = ProxyCredentialsBuilder.getHttpsConfig(properties);
-            initControllerDbInstances((Map<String, String>) null);
+            initControllerDbInstances(urlMapper);
             if (controllerDbInstances == null) {
                 controllerDbInstances = new ConcurrentHashMap<String, List<DBItemInventoryJSInstance>>();
             }
@@ -588,13 +592,12 @@ public class Proxies {
                 // "identical" checks equality inclusive the urls
                 // restart not necessary if a proxy with identically credentials already started
                 if (controllerFutures.keySet().stream().anyMatch(key -> key.identical(credentials))) {
-                    controllerFutures.get(credentials).checkCluster();
+                    appointNodes(credentials, controllerApis.get(credentials));
                     return false;
                 }
             }
             reloadApi(credentials);
             controllerFutures.get(credentials).restart(loadApi(credentials), credentials);
-            //startWatch(credentials);
             return true;
         }
         return false;
@@ -602,7 +605,7 @@ public class Proxies {
     
     protected JControllerApi loadApi(ProxyCredentials credentials) throws ControllerConnectionRefusedException {
         if (!controllerApis.containsKey(credentials)) {
-            controllerApis.put(credentials, ControllerApiContext.newControllerApi(proxyContext, credentials));
+            controllerApis.put(credentials, newControllerApi(credentials));
         }
         return controllerApis.get(credentials);
     }
@@ -612,13 +615,25 @@ public class Proxies {
             // "identical" checks equality inclusive the urls
             // restart not necessary if a proxy with identically credentials already started
             if (controllerApis.keySet().stream().anyMatch(key -> key.identical(credentials))) {
+                appointNodes(credentials, controllerApis.get(credentials));
                 return false;
             }
             controllerApis.get(credentials).stop();
-            controllerApis.put(credentials, ControllerApiContext.newControllerApi(proxyContext, credentials));
+            controllerApis.put(credentials, newControllerApi(credentials));
             return true;
         }
         return false;
+    }
+    
+    private JControllerApi newControllerApi(ProxyCredentials credentials) {
+        return appointNodes(credentials, ControllerApiContext.newControllerApi(proxyContext, credentials));
+    }
+    
+    private JControllerApi appointNodes(ProxyCredentials credentials, JControllerApi api) {
+        if (api != null && credentials.getBackupUrl() != null && ProxyUser.JOC.equals(credentials.getUser())) {
+            ClusterWatch.getInstance().appointNodes(credentials.getControllerId(), api, null, null, null);
+        }
+        return api;
     }
 
 }

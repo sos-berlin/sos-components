@@ -13,8 +13,9 @@ public enum ClusterType {
     PREPARED_TO_BE_COUPLED("PreparedToBeCoupled"),
     COUPLED("Coupled"),
     PASSIVE_LOST("PassiveLost"),
-    SWITCHED_OVER("SwitchedOver"),
     FAILED_OVER("FailedOver"),
+    SWITCHED_OVER("SwitchedOver"),
+    ACTIVE_NODE_IS_NOT_READY("ActiveNodeIsNotReady"),
     ACTIVE_SHUT_DOWN("ActiveShutDown");
     private final String value;
     private final static Map<String, ClusterType> CONSTANTS = new HashMap<String, ClusterType>();
