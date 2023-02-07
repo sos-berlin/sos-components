@@ -41,7 +41,7 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
             initLogging(IMPL_PATH, inBytes, accessToken);
-            JsonValidator.validate(inBytes, RequestFilter.class);
+            JsonValidator.validate(inBytes, RequestFilter.class, true);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
 
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getView());
@@ -63,7 +63,7 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
             initLogging(TRASH_IMPL_PATH, inBytes, accessToken);
-            JsonValidator.validate(inBytes, RequestFilter.class);
+            JsonValidator.validate(inBytes, RequestFilter.class, true);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
 
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getView());

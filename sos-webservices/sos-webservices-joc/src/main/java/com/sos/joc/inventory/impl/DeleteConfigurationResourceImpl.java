@@ -66,7 +66,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
             initLogging(IMPL_PATH_DELETE, inBytes, accessToken);
-            JsonValidator.validate(inBytes, RequestFilters.class);
+            JsonValidator.validate(inBytes, RequestFilters.class, true);
             RequestFilters in = Globals.objectMapper.readValue(inBytes, RequestFilters.class);
 
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
@@ -87,7 +87,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
             initLogging(IMPL_PATH_FOLDER_DELETE, inBytes, accessToken);
-            JsonValidator.validate(inBytes, RequestFolder.class);
+            JsonValidator.validate(inBytes, RequestFolder.class, true);
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
 
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
@@ -108,7 +108,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
             initLogging(IMPL_PATH_TRASH_DELETE, inBytes, accessToken);
-            JsonValidator.validate(inBytes, RequestFilters.class);
+            JsonValidator.validate(inBytes, RequestFilters.class, true);
             RequestFilters in = Globals.objectMapper.readValue(inBytes, RequestFilters.class);
 
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
@@ -129,7 +129,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
             initLogging(IMPL_PATH_TRASH_DELETE, inBytes, accessToken);
-            JsonValidator.validate(inBytes, RequestFolder.class);
+            JsonValidator.validate(inBytes, RequestFolder.class, true);
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
 
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());

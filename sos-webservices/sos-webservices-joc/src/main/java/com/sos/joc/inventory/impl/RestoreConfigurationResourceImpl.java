@@ -41,7 +41,7 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
     public JOCDefaultResponse restore(final String accessToken, final byte[] inBytes) {
         try {
             initLogging(TRASH_IMPL_PATH, inBytes, accessToken);
-            JsonValidator.validate(inBytes, RequestFilter.class);
+            JsonValidator.validate(inBytes, RequestFilter.class, true);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
 
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());

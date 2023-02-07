@@ -38,7 +38,7 @@ public class ReleasableResourceImpl extends JOCResourceImpl implements IReleasab
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
             initLogging(IMPL_PATH, inBytes, accessToken);
-            JsonValidator.validate(inBytes, ReleasableFilter.class);
+            JsonValidator.validate(inBytes, ReleasableFilter.class, true);
             ReleasableFilter in = Globals.objectMapper.readValue(inBytes, ReleasableFilter.class);
 
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getView());

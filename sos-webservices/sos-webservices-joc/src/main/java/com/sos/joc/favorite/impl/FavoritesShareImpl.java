@@ -36,7 +36,7 @@ public class FavoritesShareImpl extends JOCResourceImpl implements IFavoritesSha
         SOSHibernateSession connection = null;
         try {
             initLogging(apiCall, filterBytes, accessToken);
-            JsonValidator.validate(filterBytes, FavoriteIdentifiers.class);
+            JsonValidator.validateFailFast(filterBytes, FavoriteIdentifiers.class);
             FavoriteIdentifiers favorites = Globals.objectMapper.readValue(filterBytes, FavoriteIdentifiers.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
             if (jocDefaultResponse != null) {

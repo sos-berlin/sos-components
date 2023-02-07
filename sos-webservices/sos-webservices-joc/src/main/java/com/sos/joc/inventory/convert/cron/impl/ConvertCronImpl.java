@@ -95,7 +95,7 @@ public class ConvertCronImpl extends JOCResourceImpl implements IConvertCronReso
         SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL, null, xAccessToken); 
-            JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(filter), ConvertCronFilter.class);
+            JsonValidator.validateFailFast(Globals.objectMapper.writeValueAsBytes(filter), ConvertCronFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getInventory().getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

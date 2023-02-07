@@ -37,7 +37,7 @@ public class FavoritesResourceImpl extends JOCResourceImpl implements IFavorites
         SOSHibernateSession connection = null;
         try {
             initLogging(API_CALL, filterBytes, accessToken);
-            JsonValidator.validate(filterBytes, ReadFavoritesFilter.class);
+            JsonValidator.validateFailFast(filterBytes, ReadFavoritesFilter.class);
             ReadFavoritesFilter favoritesFilter = Globals.objectMapper.readValue(filterBytes, ReadFavoritesFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
             if (jocDefaultResponse != null) {
