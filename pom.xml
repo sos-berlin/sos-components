@@ -37,43 +37,37 @@
     <inventory.schema.version>1.6.0-SNAPSHOT</inventory.schema.version>
     <sos.license.version>1.2.0-SNAPSHOT</sos.license.version>
 
-    <!-- 3rd Party version properties and the dependencyManagement have to 
-      be reworked for 2.0.0 below configuration is only as an example -->
-    <jackson.version>2.13.4</jackson.version>
-    <jackson.databind.version>2.13.4.1</jackson.databind.version>
+    <jackson.version>2.14.2</jackson.version>
+    <jackson.databind.version>2.14.2</jackson.databind.version>
     <jsonschema2pojo.version>0.5.1</jsonschema2pojo.version>
     <junit.version>4.13.1</junit.version>
-    <slf4j.version>1.7.36</slf4j.version>
-    <guava.version>30.1.1-jre</guava.version>
-    <javassist.version>3.25.0-GA</javassist.version>
-    <log4j2.version>2.18.0</log4j2.version>
-    <!-- joda.time.version>2.9.9</joda.time.version -->
-    <!-- jta.version>1.1</jta.version -->
-    <commons.io.version>2.7</commons.io.version>
+    <slf4j.version>2.0.6</slf4j.version>
+    <guava.version>31.1-jre</guava.version>
+    <javassist.version>3.29.2-GA</javassist.version>
+    <log4j2.version>2.19.0</log4j2.version>
+    <commons.io.version>2.11.0</commons.io.version>
     <commons.codec.version>1.11</commons.codec.version>
-    <commons.lang.version>2.4</commons.lang.version>
-    <apache.commons.lang.version>3.1</apache.commons.lang.version>
-    <apache.commons.compress.version>1.21</apache.commons.compress.version>
-    <apache.commons.csv.version>1.9.0</apache.commons.csv.version>
+    <commons.lang.version>2.6</commons.lang.version>
+    <apache.commons.lang.version>3.12.0</apache.commons.lang.version>
+    <apache.commons.compress.version>1.22</apache.commons.compress.version>
+    <apache.commons.csv.version>1.10.0</apache.commons.csv.version>
     <apache.commons.net.version>3.9.0</apache.commons.net.version>
-    <apache.httpcomponents.httpclient.version>4.5.13</apache.httpcomponents.httpclient.version>
-    <json.version>1.0.4</json.version>
+    <apache.httpcomponents.httpclient.version>4.5.14</apache.httpcomponents.httpclient.version>
+    <json.version>1.1.4</json.version>
     <servlet.version>5.0.0</servlet.version>
-
     <hibernate.version>5.5.4.Final</hibernate.version>
     <hibernate.commons.annotation.version>5.1.2.Final</hibernate.commons.annotation.version>
     <hibernate.jpa.version>1.0.2.Final</hibernate.jpa.version>
-    <c3p0.version>0.9.5.4</c3p0.version>
-    <hikari.version>3.2.0</hikari.version>
-    <mchange.commons.version>0.2.15</mchange.commons.version>
+    <c3p0.version>0.9.5.5</c3p0.version>
+    <hikari.version>5.0.1</hikari.version>
+    <mchange.commons.version>0.2.20</mchange.commons.version>
     <maria.db.driver.version>2.2.6</maria.db.driver.version>
     <postgresql.version>42.4.3</postgresql.version>
     <classmate.version>1.3.0</classmate.version>
-    <sos.ojdbc8.version>18.3.0.0</sos.ojdbc8.version>
-    <!--javax.mail.version>1.4.7</javax.mail.version-->
+    <sos.ojdbc8.version>21.8.0.0</sos.ojdbc8.version>
     <com.sun.javax.mail.version>1.6.2</com.sun.javax.mail.version>
     <jersey.glassfish.version>3.0.8</jersey.glassfish.version>
-    <io.vavr.version>0.10.3</io.vavr.version>
+    <io.vavr.version>0.10.4</io.vavr.version>
     <txtmark.version>0.13</txtmark.version>
     <jakarta.ws.rs-api.version>3.0.0</jakarta.ws.rs-api.version>
     <byte.buddy.version>1.8.12</byte.buddy.version>
@@ -81,15 +75,16 @@
     <dom4j.version>2.1.3</dom4j.version>
     <xml.apis.version>1.4.01</xml.apis.version>
     <google.findbugs.version>3.0.2</google.findbugs.version>
-    <typesafe.config.version>1.4.1</typesafe.config.version>
+    <typesafe.config.version>1.4.2</typesafe.config.version>
     <keepass.java2.version>2.1.4</keepass.java2.version>
-    <sshj.version>0.34.0</sshj.version>
+    <sshj.version>0.35.0</sshj.version>
     <javax.jms-api.version>2.0.1</javax.jms-api.version>
     <jsendnsca.version>2.1.1</jsendnsca.version>
-    <jna.version>5.11.0</jna.version>
+    <jna.version>5.13.0</jna.version>
     <yaml.version>1.33</yaml.version>
     <xml.bind.version>2.3.1</xml.bind.version>
-    <jwt.version>4.0.0</jwt.version>
+    <jwt.version>4.2.2</jwt.version>
+    <json.schema.validator.version>1.0.76</json.schema.validator.version>
   </properties>
 
   <build>
@@ -142,6 +137,7 @@
           <includeSystemScope>true</includeSystemScope>
           <includeTestScope>false</includeTestScope>
           <includeLicenseText>false</includeLicenseText>
+          <excludeGroupId>com.sos-berlin</excludeGroupId>
           <outputReactorProjects>false</outputReactorProjects>
           <outputFormat>json</outputFormat>
           <outputName>sos-components-sbom</outputName>
@@ -807,6 +803,12 @@
         <artifactId>java-jwt</artifactId>
         <version>${jwt.version}</version>
       </dependency>
+      <dependency>
+        <groupId>com.networknt</groupId>
+        <artifactId>json-schema-validator</artifactId>
+        <version>${json.schema.validator.version}</version>
+      </dependency>
+
     </dependencies>
   </dependencyManagement>
   <repositories>
