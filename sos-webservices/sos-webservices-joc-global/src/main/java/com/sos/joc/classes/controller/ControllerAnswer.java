@@ -1,4 +1,4 @@
-package com.sos.joc.classes.jobscheduler;
+package com.sos.joc.classes.controller;
 
 import java.time.Instant;
 import java.util.Date;
@@ -107,7 +107,9 @@ public class ControllerAnswer extends Controller {
 			    setComponentState(States.getComponentState(ComponentStateText.unknown));
 			} else if (!isActive && clusterState == ClusterType.PREPARED_TO_BE_COUPLED) {
 			    setComponentState(States.getComponentState(ComponentStateText.inoperable));
-			} else {
+			} else if (isActive && clusterState == ClusterType.ACTIVE_NODE_IS_NOT_READY) {
+                setComponentState(States.getComponentState(ComponentStateText.inoperable));
+            } else {
 			    setComponentState(States.getComponentState(ComponentStateText.operational));
 			}
 			setIsCoupled(clusterState != null && clusterState == ClusterType.COUPLED);

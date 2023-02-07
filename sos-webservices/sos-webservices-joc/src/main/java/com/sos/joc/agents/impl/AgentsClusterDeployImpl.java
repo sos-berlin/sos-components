@@ -121,7 +121,7 @@ public class AgentsClusterDeployImpl extends JOCResourceImpl implements IAgentsC
             }
 
             if (!clusterWatcherUrls.isEmpty()) {
-                ClusterWatch.getInstance().appointNodes(controllerId, proxy, dbLayer, accessToken, getJocError());
+                ClusterWatch.getInstance().appointNodes(controllerId, proxy.api(), dbLayer, accessToken, getJocError());
             }
             
             if (!updateItems.isEmpty()) {

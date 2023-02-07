@@ -8,14 +8,13 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.cluster.ClusterSetting;
 import com.sos.controller.model.cluster.ClusterState;
@@ -31,8 +30,6 @@ import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
 import com.sos.joc.event.bean.cluster.ActiveClusterChangedEvent;
-import com.sos.joc.exceptions.ControllerConnectionRefusedException;
-import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -41,12 +38,14 @@ import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
 
+import io.vavr.control.Either;
+import js7.base.problem.Problem;
 import js7.base.web.Uri;
 import js7.data.cluster.ClusterSetting.Watch;
 import js7.data.cluster.ClusterWatchId;
 import js7.data.node.NodeId;
+import js7.data_for_java.controller.JControllerState;
 import js7.proxy.javaapi.JControllerApi;
-import js7.proxy.javaapi.JControllerProxy;
 
 public class ClusterWatch {
     
@@ -55,6 +54,7 @@ public class ClusterWatch {
     private String clusterId = null;
     private String memberId = null;
     private volatile ConcurrentMap<String, CompletableFuture<Void>> startedWatches = new ConcurrentHashMap<>();
+    private Map<String, String> urlMapper = null;
     protected static boolean onStart = true;
     
     private ClusterWatch() {
@@ -68,6 +68,14 @@ public class ClusterWatch {
             instance = new ClusterWatch();
         }
         return instance;
+    }
+    
+    public static void init(Map<String, String> val) {
+        ClusterWatch.getInstance().setUrlMapper(val);
+    }
+    
+    private void setUrlMapper(Map<String, String> val) {
+        urlMapper = val;
     }
     
     @Subscribe({ ActiveClusterChangedEvent.class })
@@ -87,8 +95,12 @@ public class ClusterWatch {
                 SOSHibernateSession sosHibernateSession = null;
                 try {
                     sosHibernateSession = Globals.createSosHibernateStatelessConnection("ClusterWatch");
-                    ConcurrentMap<String, List<DBItemInventoryJSInstance>> controllerDbInstances = new InventoryInstancesDBLayer(sosHibernateSession)
-                            .getInventoryInstances().stream().collect(Collectors.groupingByConcurrent(DBItemInventoryJSInstance::getControllerId));
+                    
+                    ConcurrentMap<String, List<DBItemInventoryJSInstance>> controllerDbInstances = (urlMapper == null)
+                            ? new InventoryInstancesDBLayer(sosHibernateSession).getInventoryInstances().stream().collect(Collectors
+                                    .groupingByConcurrent(DBItemInventoryJSInstance::getControllerId)) 
+                            : new InventoryInstancesDBLayer(sosHibernateSession).getInventoryInstances().stream().peek(i -> i.setUri(urlMapper.getOrDefault(i
+                                    .getUri(), i.getUri()))).collect(Collectors.groupingByConcurrent(DBItemInventoryJSInstance::getControllerId));
                     Globals.disconnect(sosHibernateSession);
                     controllerDbInstances.forEach((controllerId, dbItems) -> Proxies.getInstance().updateProxies(dbItems));
 
@@ -103,12 +115,11 @@ public class ClusterWatch {
         }
     }
     
-    public void appointNodes(String controllerId, JControllerProxy proxy, InventoryAgentInstancesDBLayer dbLayer, String accessToken,
+    public void appointNodes(String controllerId, JControllerApi controllerApi, InventoryAgentInstancesDBLayer dbLayer, String accessToken,
             JocError jocError) throws DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
-            DBConnectionRefusedException, ControllerConnectionRefusedException, JsonProcessingException, JocBadRequestException,
-            ControllerConnectionResetException, ExecutionException {
+            DBConnectionRefusedException, JocBadRequestException {
         if (onStart) {
-            LOGGER.warn(toStringWithId() + " cluster service is not started: " + controllerId);
+            //LOGGER.warn(toStringWithId() + " cluster service is not started: " + controllerId);
             return;
         }
         // ask for cluster
@@ -120,12 +131,12 @@ public class ClusterWatch {
         List<String> agentWatches = getClusterWatchers(controllerId, dbLayer);
         String watchId = null;
         if (agentWatches.isEmpty()) {
-            watchId = start(proxy.api(), controllerId, true, dbLayer);
+            watchId = start(controllerApi, controllerId, true, dbLayer);
         } else {
             stop(controllerId);
         }
            
-        ClusterState cState = getCurrentClusterState(controllerId, proxy);
+        ClusterState cState = getCurrentClusterState(controllerId, controllerApi);
 
         NodeId primeId = NodeId.of("Primary");
         Map<NodeId, Uri> idToUri = new HashMap<>();
@@ -166,9 +177,8 @@ public class ClusterWatch {
                 LOGGER.info("[ClusterWatch] Appoint Controller cluster nodes for '" + controllerId + "'");
             }
 
-            proxy.api().clusterAppointNodes(idToUri, activeId, agentWatches.stream().map(item -> new Watch(Uri.of(item))).collect(Collectors
+            controllerApi.clusterAppointNodes(idToUri, activeId, agentWatches.stream().map(item -> new Watch(Uri.of(item))).collect(Collectors
                     .toList())).thenAccept(e -> {
-                        ProblemHelper.postProblemEventIfExist(e, accessToken, jocError, null);
                         if (e.isLeft()) {
                             if (jocError == null) {
                                 LOGGER.warn(ProblemHelper.getErrorMessage(e.getLeft()));
@@ -298,20 +308,34 @@ public class ClusterWatch {
         }
     }
     
-    private static ClusterState getCurrentClusterState(String controllerId, JControllerProxy proxy) {
-        String clusterState = proxy.currentState().clusterState().toJson();
-        LOGGER.info("[ClusterWatch] Current Controller cluster state for '" + controllerId + "': " + clusterState);
-        ClusterState cState;
+    private static ClusterState getCurrentClusterState(String controllerId, JControllerApi controllerApi) {
+        
+        String clusterState = null;
         try {
-            cState = Globals.objectMapper.readValue(clusterState, ClusterState.class);
+            Either<Problem, JControllerState> stateE = controllerApi.controllerState().get(2, TimeUnit.SECONDS);
+            if (stateE.isRight()) {
+                clusterState = stateE.get().clusterState().toJson();
+                LOGGER.info("[ClusterWatch] Current Controller cluster state for '" + controllerId + "': " + clusterState);
+            } else {
+                LOGGER.warn(ProblemHelper.getErrorMessage(stateE.getLeft()));
+            }
         } catch (Exception e) {
-            cState = new ClusterState();
+            //
+        }
+        
+        ClusterState cState = new ClusterState();
+        if (clusterState != null) {
+            try {
+                cState = Globals.objectMapper.readValue(clusterState, ClusterState.class);
+            } catch (Exception e) {
+                //
+            }
         }
         if (cState.getSetting() == null) {
-            cState.setSetting(new ClusterSetting()); 
+            cState.setSetting(new ClusterSetting());
         }
         if (cState.getSetting().getClusterWatches() == null) {
-            cState.getSetting().setClusterWatches(Collections.emptyList()); 
+            cState.getSetting().setClusterWatches(Collections.emptyList());
         }
         if (cState.getSetting().getIdToUri() == null) {
             cState.getSetting().setIdToUri(new IdToUri());

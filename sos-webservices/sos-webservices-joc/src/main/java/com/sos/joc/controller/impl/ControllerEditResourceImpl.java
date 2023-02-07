@@ -22,9 +22,9 @@ import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.agent.AgentHelper;
-import com.sos.joc.classes.jobscheduler.ControllerAnswer;
-import com.sos.joc.classes.jobscheduler.ControllerCallable;
-import com.sos.joc.classes.jobscheduler.States;
+import com.sos.joc.classes.controller.ControllerAnswer;
+import com.sos.joc.classes.controller.ControllerCallable;
+import com.sos.joc.classes.controller.States;
 import com.sos.joc.classes.proxy.ClusterWatch;
 import com.sos.joc.classes.proxy.ProxiesEdit;
 import com.sos.joc.classes.proxy.Proxy;
@@ -427,7 +427,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             
             if (clusterUriChanged || controllerUpdateRequired) {
                 try {
-                    ClusterWatch.getInstance().appointNodes(controllerId, proxy, agentDBLayer, accessToken, getJocError());
+                    ClusterWatch.getInstance().appointNodes(controllerId, proxy.api(), agentDBLayer, accessToken, getJocError());
                 } catch (JocBadRequestException e) {
                 }
             }
