@@ -115,6 +115,11 @@ public class ClusterWatch {
         }
     }
     
+    public void appointNodes(String controllerId, JControllerApi controllerApi) throws DBMissingDataException, JocConfigurationException,
+            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, JocBadRequestException {
+        appointNodes(controllerId, controllerApi, null, null, null);
+    }
+    
     public void appointNodes(String controllerId, JControllerApi controllerApi, InventoryAgentInstancesDBLayer dbLayer, String accessToken,
             JocError jocError) throws DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
             DBConnectionRefusedException, JocBadRequestException {
@@ -213,8 +218,7 @@ public class ClusterWatch {
     }
 
     private String start(JControllerApi controllerApi, String controllerId, boolean checkWatchByJoc, InventoryAgentInstancesDBLayer dbLayer) {
-        LOGGER.info("[ClusterWatch] try to start " + toStringWithId() + " as watcher for '" + controllerId + "'");
-        // LOGGER.info("[ClusterWatch] current watched Controller cluster by " + toStringWithId() + ": " + startedWatches.keySet().toString());
+        //LOGGER.info("[ClusterWatch] try to start " + toStringWithId() + " as watcher for '" + controllerId + "'");
         boolean clusterWatchByJoc = !checkWatchByJoc;
         boolean jocIsActive = true;
         if (checkWatchByJoc) {

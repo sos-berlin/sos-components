@@ -58,7 +58,7 @@ public class ProxyContext {
         this.credentials = credentials;
         JControllerApi api = ControllerApiContext.newControllerApi(proxyContext, credentials);
         if (credentials.getBackupUrl() != null && ProxyUser.JOC.equals(credentials.getUser())) {
-            ClusterWatch.getInstance().appointNodes(credentials.getControllerId(), api, null, null, null);
+            ClusterWatch.getInstance().appointNodes(credentials.getControllerId(), api);
         }
         start(api);
     }

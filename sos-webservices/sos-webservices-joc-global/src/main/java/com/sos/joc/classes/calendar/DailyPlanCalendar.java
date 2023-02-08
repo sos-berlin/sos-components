@@ -4,12 +4,14 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsDailyPlan;
@@ -56,26 +58,6 @@ public class DailyPlanCalendar {
             updateDailyPlanCalendar(null, null, jocError);
         }
     }
-    
-//    @Subscribe({ ProxyCoupled.class })
-//    public void updateProxy(ProxyCoupled evt) {
-//        if (evt.isCoupled() && initIsCalled) {
-//            try {
-//                JCalendar calendar = getDailyPlanCalendar(Globals.getConfigurationGlobalsDailyPlan());
-//                JControllerProxy proxy = Proxy.of(evt.getControllerId());
-//                if (!dailyPlanCalendarIsAlreadySubmitted(proxy, calendar)) {
-//                    proxy.api().updateItems(Flux.just(JUpdateItemOperation.addOrChangeSimple(calendar))).thenAccept(e -> {
-//                        ProblemHelper.postProblemEventIfExist(e, null, null, null);
-//                        if (e.isRight()) {
-//                            LOGGER.info("DailyPlanCalendar submitted to " + evt.getControllerId());
-//                        }
-//                    });
-//                }
-//            } catch (Exception e) {
-//                //
-//            }
-//        }
-//    }
     
     // this method is called directly in onProxyCoupled so that we don't need longer to listen ProxyCoupled event
     public void updateDailyPlanCalendar(JControllerApi controllerApi, JControllerState currentState, String controller) {
@@ -128,11 +110,15 @@ public class DailyPlanCalendar {
 
         Flux<JUpdateItemOperation> itemOperation = Flux.just(JUpdateItemOperation.addOrChangeSimple(calendar));
         for (String controllerId : Proxies.getControllerDbInstances().keySet()) {
+            Map<CalendarPath, JCalendar> knownCalendars = null;
             try {
-                JControllerProxy proxy = Proxy.of(controllerId);
-                Map<CalendarPath, JCalendar> knownCalendars = proxy.currentState().pathToCalendar();
+                JControllerApi api = ControllerApi.of(controllerId);
+                try {
+                    knownCalendars = api.controllerState().get(2, TimeUnit.SECONDS).map(JControllerState::pathToCalendar).getOrNull();
+                } catch (Exception e1) {
+                }
                 if (!dailyPlanCalendarIsAlreadySubmitted(knownCalendars, calendar)) {
-                    proxy.api().updateItems(itemOperation).thenAccept(e -> {
+                    api.updateItems(itemOperation).thenAccept(e -> {
                         if (curControllerId != null && controllerId.equals(curControllerId)) {
                             ProblemHelper.postProblemEventIfExist(e, accessToken, jocError, controllerId);
                         } else {
@@ -152,6 +138,9 @@ public class DailyPlanCalendar {
     }
     
     private static boolean dailyPlanCalendarIsAlreadySubmitted(Map<CalendarPath, JCalendar> knownCalendars, JCalendar newCalendar) {
+        if (knownCalendars == null) {
+            return false;
+        }
         JCalendar oldCalendar = knownCalendars.get(dailyPlanCalendarPath);
         if (oldCalendar != null) {
             if (oldCalendar.timezone().equals(newCalendar.timezone()) && oldCalendar.dateOffset().equals(newCalendar.dateOffset())) {
