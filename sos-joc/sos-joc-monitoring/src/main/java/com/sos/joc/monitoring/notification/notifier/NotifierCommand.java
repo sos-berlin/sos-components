@@ -111,7 +111,11 @@ public class NotifierCommand extends ANotifier {
         // SYSTEM VARS
         if (getSystemVars() != null) {
             getSystemVars().entrySet().forEach(e -> {
-                map.put(PREFIX_ENV_VAR + "_" + e.getKey(), e.getValue());
+                String val = e.getValue();
+                if (e.getKey().endsWith("MESSAGE") || e.getKey().endsWith("EXCEPTION")) {
+                    val = escape(val);
+                }
+                map.put(PREFIX_ENV_VAR + "_" + e.getKey(), nl2sp(val));
             });
         }
 
