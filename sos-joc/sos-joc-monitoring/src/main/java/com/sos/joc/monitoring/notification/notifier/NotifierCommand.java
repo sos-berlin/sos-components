@@ -108,16 +108,25 @@ public class NotifierCommand extends ANotifier {
             map.put(PREFIX_ENV_VAR + "_" + e.getKey(), e.getValue());
         });
 
+        // SYSTEM VARS
+        if (getSystemVars() != null) {
+            getSystemVars().entrySet().forEach(e -> {
+                map.put(PREFIX_ENV_VAR + "_" + e.getKey(), e.getValue());
+            });
+        }
+
         // TABLE VARS
-        getTableFields().entrySet().forEach(e -> {
-            // if (!e.getKey().endsWith("_PARAMETERS")) {
-            String val = e.getValue();
-            if (e.getKey().endsWith("ERROR_TEXT") || e.getKey().endsWith("WARN_TEXT")) {// TITLE? ....
-                val = escape(val);
-            }
-            map.put(PREFIX_ENV_VAR + "_" + e.getKey(), nl2sp(val));
-            // }
-        });
+        if (getTableFields() != null) {
+            getTableFields().entrySet().forEach(e -> {
+                // if (!e.getKey().endsWith("_PARAMETERS")) {
+                String val = e.getValue();
+                if (e.getKey().endsWith("ERROR_TEXT") || e.getKey().endsWith("WARN_TEXT")) {// TITLE? ....
+                    val = escape(val);
+                }
+                map.put(PREFIX_ENV_VAR + "_" + e.getKey(), nl2sp(val));
+                // }
+            });
+        }
         return new SOSEnv(map);
     }
 

@@ -73,6 +73,10 @@ public abstract class ANotifier {
         return tableFields;
     }
 
+    protected Map<String, String> getSystemVars() {
+        return systemVars;
+    }
+
     protected Map<String, String> getCommonVars() {
         return commonVars;
     }
