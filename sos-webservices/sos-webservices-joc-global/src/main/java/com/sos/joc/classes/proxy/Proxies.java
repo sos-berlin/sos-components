@@ -631,7 +631,7 @@ public class Proxies {
     
     private JControllerApi appointNodes(ProxyCredentials credentials, JControllerApi api) {
         if (api != null && credentials.getBackupUrl() != null && ProxyUser.JOC.equals(credentials.getUser())) {
-            ClusterWatch.getInstance().appointNodes(credentials.getControllerId(), api, null, null, null);
+            ClusterWatch.getInstance().appointNodes(credentials.getControllerId(), api);
         }
         return api;
     }

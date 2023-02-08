@@ -37,6 +37,7 @@ import com.sos.joc.monitoring.SystemMonitorService;
 import com.sos.joc.monitoring.bean.SystemMonitoringEvent;
 import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.SystemNotification;
+import com.sos.monitoring.notification.NotificationType;
 
 public class SystemMonitoringModel {
 
@@ -48,6 +49,7 @@ public class SystemMonitoringModel {
 
     private static final Set<String> SKIPPED_NOTIFIERS = new HashSet<>(Arrays.asList(SystemNotification.class.getName(), SystemNotifierModel.class
             .getName(), SystemMonitoringModel.class.getName(), WebserviceConstants.AUDIT_LOGGER, "org.hibernate.engine.jdbc.spi.SqlExceptionHelper"));
+    private static final Set<String> SKIPPED_WARN_NOTIFIERS = new HashSet<>(Arrays.asList("js7.cluster.watch.ClusterWatchService"));
 
     // ms
     private static final long MAX_ADDED_TIME = 2 * 60 * 1_000; // 2m
@@ -212,6 +214,12 @@ public class SystemMonitoringModel {
         if (SKIPPED_NOTIFIERS.contains(evt.getLoggerName())) {
             if (isDebugEnabled) {
                 LOGGER.debug(String.format("[handleEvents][skip][skip all events of %s]%s", evt.getLoggerName(), evt.toString()));
+            }
+            return false;
+        }
+        if (SKIPPED_WARN_NOTIFIERS.contains(evt.getLoggerName()) && NotificationType.WARNING.equals(evt.getType())) {
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[handleEvents][skip][skip all warnings of %s]%s", evt.getLoggerName(), evt.toString()));
             }
             return false;
         }
