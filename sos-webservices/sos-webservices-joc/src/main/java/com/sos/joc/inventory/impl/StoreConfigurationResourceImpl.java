@@ -11,6 +11,7 @@ import jakarta.ws.rs.Path;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.inventory.model.calendar.CalendarType;
+import com.sos.inventory.model.common.IInventoryObject;
 import com.sos.inventory.model.jobtemplate.JobTemplate;
 import com.sos.inventory.model.lock.Lock;
 import com.sos.inventory.model.schedule.OrderParameterisation;
@@ -174,6 +175,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             } else {
                 item.setValid(in.getValid() == null ? true : in.getValid());
                 item.setTitle(in.getConfiguration().getTitle());
+                ((IInventoryObject) in.getConfiguration()).setVersion(Globals.getStrippedInventoryVersion());
 
                 switch (in.getObjectType()) {
                 case WORKINGDAYSCALENDAR:

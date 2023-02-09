@@ -37,6 +37,7 @@ public class WorkflowConverter {
             if (hasConvertInstruction.test(content)) {
                 convertInstructions(workflow.getInstructions());
             }
+            workflow.setVersion(Globals.getStrippedInventoryVersion());
             return workflow;
         }
         return null;
