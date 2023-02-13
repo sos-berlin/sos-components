@@ -293,11 +293,11 @@ public class JocInventory {
                 fos.setDirectoryExpr(JsonSerializer.quoteString(fos.getDirectory()));
                 fos.setDirectory(null);
             }
-            fos.setVersion(Globals.inventoryVersion);
+            fos.setVersion(Globals.getStrippedInventoryVersion());
             return fos;
         } else {
             IConfigurationObject obj = (IConfigurationObject) Globals.objectMapper.readValue(content, CLASS_MAPPING.get(type));
-            ((IInventoryObject) obj).setVersion(Globals.inventoryVersion);
+            ((IInventoryObject) obj).setVersion(Globals.getStrippedInventoryVersion());
             return obj;
         }
     }
