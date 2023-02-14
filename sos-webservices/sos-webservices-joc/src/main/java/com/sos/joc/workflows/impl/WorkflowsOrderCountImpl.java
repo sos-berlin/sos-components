@@ -11,6 +11,7 @@ import jakarta.ws.rs.Path;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.exceptions.JocException;
@@ -49,8 +50,8 @@ public class WorkflowsOrderCountImpl extends JOCResourceImpl implements IWorkflo
             
             WorkflowsOrderCount workflows = new WorkflowsOrderCount();
             workflows.setSurveyDate(Date.from(surveyInstant));
-            workflows.setWorkflows(WorkflowsHelper.getGroupedOrdersCountPerWorkflow(currentstate, workflowsFilter, permittedFolders).entrySet()
-                    .stream().map(e -> {
+            workflows.setWorkflows(WorkflowsHelper.getGroupedOrdersCountPerWorkflow(currentstate, workflowsFilter, permittedFolders, OrdersHelper
+                    .getDailyPlanTimeZone()).entrySet().stream().map(e -> {
                         WorkflowOrderCount w = new WorkflowOrderCount();
                         w.setPath(e.getKey().path().string());
                         w.setVersionId(e.getKey().versionId().string());

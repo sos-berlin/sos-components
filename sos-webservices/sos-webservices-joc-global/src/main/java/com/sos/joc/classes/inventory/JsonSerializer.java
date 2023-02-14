@@ -382,6 +382,9 @@ public class JsonSerializer {
             if (j.getFailure() == null && j.getSuccess() == null) {
                 return null;
             }
+            if (j.getFailure() == null && j.getSuccess().equals("0")) {
+                return null;
+            }
             return j;
         }
         return null;
@@ -580,9 +583,11 @@ public class JsonSerializer {
                 case FORK:
                     ForkJoin fj = inst.cast();
                     fj.setJoinIfFailed(defaultToNull(fj.getJoinIfFailed(), Boolean.FALSE));
-                    for (Branch branch : fj.getBranches()) {
-                        if (branch.getWorkflow() != null) {
-                            cleanInventoryInstructions(branch.getWorkflow().getInstructions(), jobs, forkListAgentName, stickyAgentName);
+                    if (fj.getBranches() != null) {
+                        for (Branch branch : fj.getBranches()) {
+                            if (branch.getWorkflow() != null) {
+                                cleanInventoryInstructions(branch.getWorkflow().getInstructions(), jobs, forkListAgentName, stickyAgentName);
+                            }
                         }
                     }
                     break;

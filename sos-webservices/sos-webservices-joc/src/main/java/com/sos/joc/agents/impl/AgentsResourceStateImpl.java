@@ -1,6 +1,7 @@
 package com.sos.joc.agents.impl;
 
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -143,6 +144,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                 agentsParam.getStates().add(AgentStateText.INITIALISED);
             }
             Instant currentStateMoment = null;
+            ZoneId zoneId = OrdersHelper.getDailyPlanTimeZone();
 
             if (dbAgents != null) {
 
@@ -186,7 +188,8 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                                 .toSet()), currentState);
                         ordersPerAgent.putAll(jOrders.stream().map(o -> {
                             try {
-                                return OrdersHelper.mapJOrderToOrderV(o, currentState, true, permittedFolders, waitingOrders, null, surveyDateMillis);
+                                return OrdersHelper.mapJOrderToOrderV(o, currentState, true, permittedFolders, waitingOrders, null, surveyDateMillis,
+                                        zoneId);
                             } catch (Exception e) {
                                 return null;
                             }

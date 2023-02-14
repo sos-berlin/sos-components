@@ -1,5 +1,6 @@
 package com.sos.joc.lock.common;
 
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -50,11 +51,13 @@ public class LockEntryHelper {
     private final String controllerId;
     private final Boolean compact;
     private final Integer limit;
+    private final ZoneId zoneId;
 
-    public LockEntryHelper(String controllerId, Boolean compact, Integer limit) {
+    public LockEntryHelper(String controllerId, Boolean compact, Integer limit, ZoneId zoneId) {
         this.controllerId = controllerId;
         this.compact = compact;
         this.limit = limit;
+        this.zoneId = zoneId;
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LockEntryHelper.class);
@@ -110,7 +113,7 @@ public class LockEntryHelper {
             if (controllerState != null) {
                 if (compact != Boolean.TRUE) {
                     Long surveyDateMillis = controllerState.instant().toEpochMilli();
-                    ToLongFunction<JOrder> compareScheduleFor =  OrdersHelper.getCompareScheduledFor(surveyDateMillis);
+                    ToLongFunction<JOrder> compareScheduleFor =  OrdersHelper.getCompareScheduledFor(zoneId, surveyDateMillis);
 
                     List<JOrder> lockJOrders = controllerState.ordersBy(o -> lockOrderIds.contains(o.id())).sorted(Comparator.comparingLong(
                             compareScheduleFor).reversed()).collect(Collectors.toList());
@@ -126,7 +129,7 @@ public class LockEntryHelper {
                         ordersHoldingLocksCount++;
                         LockOrder lo = new LockOrder();
                         if (ordersHoldingLocksCount <= limit) {
-                            lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, true, finalParamsPerWorkflow, surveyDateMillis));
+                            lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, true, finalParamsPerWorkflow, surveyDateMillis, zoneId));
                         }
                         lo.setLock(getWorkflowLock(sharedAcquired, lockId, jo.id().string()));
 
@@ -142,7 +145,7 @@ public class LockEntryHelper {
                         ordersWaitingForLocksCount++;
                         LockOrder lo = new LockOrder();
                         if (ordersWaitingForLocksCount <= limit) {
-                            lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, true, finalParamsPerWorkflow, surveyDateMillis));
+                            lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, true, finalParamsPerWorkflow, surveyDateMillis, zoneId));
                         }
                         lo.setLock(getWorkflowLock(controllerState, jo, queuedWorkflowLocks, lockId));
 

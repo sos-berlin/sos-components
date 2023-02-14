@@ -13,6 +13,7 @@ import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.items.DeployedContent;
@@ -73,7 +74,8 @@ public class LockResourceImpl extends JOCResourceImpl implements ILockResource {
             }
             checkFolderPermissions(dc.getPath());
             
-            LockEntryHelper helper = new LockEntryHelper(filter.getControllerId(), filter.getCompact(), filter.getLimit());
+            LockEntryHelper helper = new LockEntryHelper(filter.getControllerId(), filter.getCompact(), filter.getLimit(), OrdersHelper
+                    .getDailyPlanTimeZone());
             answer.setLock(helper.getLockEntry(currentstate, dc));
             answer.setDeliveryDate(Date.from(Instant.now()));
             return answer;

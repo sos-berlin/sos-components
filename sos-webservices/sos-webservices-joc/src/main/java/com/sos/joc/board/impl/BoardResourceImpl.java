@@ -16,6 +16,7 @@ import com.sos.joc.board.common.BoardHelper;
 import com.sos.joc.board.resource.IBoardResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -81,9 +82,10 @@ public class BoardResourceImpl extends JOCResourceImpl implements IBoardResource
                 answer.setNoticeBoard(BoardHelper.getCompactBoard(currentstate, dc, numOfExpectings));
             } else {
                 Integer limit = filter.getLimit() != null ? filter.getLimit() : 10000;
-                ConcurrentMap<String, List<JOrder>> expectings = BoardHelper.getExpectingOrders(currentstate, Collections.singleton(dc
-                        .getName()), folderPermissions.getListOfFolders()).getOrDefault(dc.getName(), new ConcurrentHashMap<>());
-                answer.setNoticeBoard(BoardHelper.getBoard(currentstate, dc, expectings, limit, surveyDateMillis));
+                ConcurrentMap<String, List<JOrder>> expectings = BoardHelper.getExpectingOrders(currentstate, Collections.singleton(dc.getName()),
+                        folderPermissions.getListOfFolders()).getOrDefault(dc.getName(), new ConcurrentHashMap<>());
+                answer.setNoticeBoard(BoardHelper.getBoard(currentstate, dc, expectings, limit, OrdersHelper.getDailyPlanTimeZone(),
+                        surveyDateMillis));
             }
             answer.setDeliveryDate(Date.from(Instant.now()));
             return answer;

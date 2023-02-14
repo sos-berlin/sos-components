@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -182,18 +183,17 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                     currentState = proxy.currentState();
                 }
             }
-            
+            setSettings();
+            ZoneId zoneId = getZoneId();
             Either<List<Err419>, OrderIdMap> adhocCall = OrdersHelper.cancelAndAddFreshOrder(orderIds.get(Boolean.TRUE), in, accessToken,
-                    getJocError(), auditlog.getId(), proxy, currentState, folderPermissions);
+                    getJocError(), auditlog.getId(), proxy, currentState, zoneId, folderPermissions);
             OrderIdMap dailyPlanResult = null;
 
             if (!dailyPlanOrderItems.isEmpty()) {
-                setSettings();
-                
                 if (!onlyStarttimeModifications) {
-                    dailyPlanResult = modifyOrderParameterisation(in, dailyPlanOrderItems, auditlog); 
+                    dailyPlanResult = modifyOrderParameterisation(in, dailyPlanOrderItems, auditlog, zoneId); 
                 } else {
-                    dailyPlanResult = modifyStartTime(in, dailyPlanOrderItems, auditlog);
+                    dailyPlanResult = modifyStartTime(in, dailyPlanOrderItems, auditlog, zoneId);
                 }
             } else {
                 LOGGER.debug("0 dailyplan orders found");
@@ -323,7 +323,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         return withAddOrUpdateVariables(in) || withRemoveVariables(in);
     }
 
-    private OrderIdMap modifyOrderParameterisation(DailyPlanModifyOrder in, List<DBItemDailyPlanOrder> items, DBItemJocAuditLog auditlog)
+    private OrderIdMap modifyOrderParameterisation(DailyPlanModifyOrder in, List<DBItemDailyPlanOrder> items, DBItemJocAuditLog auditlog, ZoneId zoneId)
             throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException, SOSHibernateException, IOException {
 
@@ -412,7 +412,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                     if (item.isCyclic()) {
                         if (item.getSubmitted()) {
                             // calculate new OrderId
-                            String newPart = OrdersHelper.getUniqueOrderId();
+                            String newPart = OrdersHelper.getUniqueOrderId(zoneId);
                             submittedCyclicNewParts.put(item.getId(), newPart);
                             result.getAdditionalProperties().put(item.getOrderId(), OrdersHelper.getNewFromOldOrderId(item.getOrderId(), newPart));
 
@@ -439,7 +439,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                         if (item.getSubmitted()) {
                             // not check the plannedStatTime due to possible cyclic workflow ..
                             // calculate new OrderId
-                            result.getAdditionalProperties().put(item.getOrderId(), OrdersHelper.generateNewFromOldOrderId(item.getOrderId()));
+                            result.getAdditionalProperties().put(item.getOrderId(), OrdersHelper.generateNewFromOldOrderId(item.getOrderId(), zoneId));
 
                             // prepare to modify later
                             submitted.add(item);
@@ -597,7 +597,8 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                         either2, getAccessToken(), getJocError(), in.getControllerId()));
     }
 
-    private OrderIdMap modifyStartTime(DailyPlanModifyOrder in, List<DBItemDailyPlanOrder> mainItems, DBItemJocAuditLog auditlog) throws Exception {
+    private OrderIdMap modifyStartTime(DailyPlanModifyOrder in, List<DBItemDailyPlanOrder> mainItems, DBItemJocAuditLog auditlog, ZoneId zoneId)
+            throws Exception {
         OrderIdMap result = new OrderIdMap();
 
         if (isCyclicOrders(mainItems)) {
@@ -630,14 +631,15 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             }
 
             // can have multiple items - of the same schedule or workflow
-            result = modifyStartTimeSingle(in, mainItems, scheduledFor, auditlog);
+            result = modifyStartTimeSingle(in, mainItems, scheduledFor, auditlog, zoneId);
         }
         return result;
     }
 
-    private OrderIdMap modifyStartTimeSingle(DailyPlanModifyOrder in, List<DBItemDailyPlanOrder> items, Date scheduledFor, DBItemJocAuditLog auditlog)
-            throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
-            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException, SOSInvalidDataException {
+    private OrderIdMap modifyStartTimeSingle(DailyPlanModifyOrder in, List<DBItemDailyPlanOrder> items, Date scheduledFor, DBItemJocAuditLog auditlog,
+            ZoneId zoneId) throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
+            JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException,
+            SOSInvalidDataException {
         List<Long> submissionIds = items.stream().filter(SOSCollection.distinctByKey(DBItemDailyPlanOrder::getSubmissionHistoryId)).map(e -> {
             return e.getSubmissionHistoryId();
         }).collect(Collectors.toList());
@@ -648,7 +650,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         for (DBItemDailyPlanOrder item : items) {
             // not check if now > plannedStart of already submitted orders because of cyclic workflows
             // generate for not submitted too because maybe the daily plan day was changed - use new for all - same behaviour as for cyclic orders
-            result.getAdditionalProperties().put(item.getOrderId(), OrdersHelper.generateNewFromOldOrderId(item.getOrderId(), dailyPlanDate));
+            result.getAdditionalProperties().put(item.getOrderId(), OrdersHelper.generateNewFromOldOrderId(item.getOrderId(), dailyPlanDate, zoneId));
         }
 
         CompletableFuture<Either<Problem, Void>> c = OrdersHelper.removeFromJobSchedulerController(in.getControllerId(), items);
