@@ -30,6 +30,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.inventory.model.descriptor.DeploymentDescriptor;
 import com.sos.joc.Globals;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
@@ -564,5 +565,12 @@ public class MappingTest {
             }
         }
         assertTrue(workflows.size() == 2);
+    }
+
+    @Test
+    public void test37DeploymentDescriptorExample() throws JsonProcessingException {
+        DeploymentDescriptor descriptor = DeploymentTestUtils.createDeploymentDescriptorSchemaExample();
+        LOGGER.trace("DeploymentDescriptor");
+        LOGGER.trace(Globals.prettyPrintObjectMapper.writeValueAsString(descriptor));
     }
 }
