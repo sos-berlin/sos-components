@@ -177,6 +177,13 @@ public class Globals {
         }
         return p;
     }
+    
+    public static String getStrippedInventoryVersion() {
+        if (inventoryVersion == null) {
+            return null;
+        }
+        return inventoryVersion.replaceFirst("-.*$", "");
+    }
 
     private static void readJocCockpitVersion() {
         InputStream stream = null;

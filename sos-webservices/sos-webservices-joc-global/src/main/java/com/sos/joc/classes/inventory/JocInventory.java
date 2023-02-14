@@ -35,6 +35,7 @@ import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.board.Board;
 import com.sos.inventory.model.calendar.Calendar;
+import com.sos.inventory.model.common.IInventoryObject;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.inventory.model.job.ExecutableScript;
@@ -282,6 +283,7 @@ public class JocInventory {
             // JOC-1255 workflowName -> workflowNames
             Schedule s = setWorkflowNames(Globals.objectMapper.readValue(content, Schedule.class));
             s.setWorkflowName(null);
+            s.setVersion(Globals.getStrippedInventoryVersion());
             return s;
         }
         if (type.equals(ConfigurationType.FILEORDERSOURCE)) {
@@ -291,9 +293,12 @@ public class JocInventory {
                 fos.setDirectoryExpr(JsonSerializer.quoteString(fos.getDirectory()));
                 fos.setDirectory(null);
             }
+            fos.setVersion(Globals.getStrippedInventoryVersion());
             return fos;
         } else {
-            return (IConfigurationObject) Globals.objectMapper.readValue(content, CLASS_MAPPING.get(type));
+            IConfigurationObject obj = (IConfigurationObject) Globals.objectMapper.readValue(content, CLASS_MAPPING.get(type));
+            ((IInventoryObject) obj).setVersion(Globals.getStrippedInventoryVersion());
+            return obj;
         }
     }
 

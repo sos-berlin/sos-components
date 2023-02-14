@@ -293,13 +293,14 @@ public class JOCResourceImpl {
             } catch (Exception e) {
                 bodyStr = new String(body, StandardCharsets.UTF_8);
             }
-            if (bodyStr.length() > 4096) {
-                bodyStr = bodyStr.substring(0, 4093) + "...";
-            }
         }
-
         jocAuditLog = new JocAuditLog(user, request, bodyStr);
-        LOGGER.debug("REQUEST: " + request + ", PARAMS: " + bodyStr);
+        if (bodyStr.length() > 4096) {
+            bodyStr = bodyStr.substring(0, 4093) + "...";
+        }
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("REQUEST: " + request + ", PARAMS: " + bodyStr);
+        }
         jocError.addMetaInfoOnTop("\nREQUEST: " + request, "PARAMS: " + bodyStr, "USER: " + user);
         jocError.setApiCall(request);
     }

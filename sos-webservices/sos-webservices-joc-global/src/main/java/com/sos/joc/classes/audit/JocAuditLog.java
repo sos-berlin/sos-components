@@ -53,6 +53,13 @@ public class JocAuditLog {
         }
         return prop;
     }
+    
+    private String truncateParams() {
+        if (params.length() > 4096) {
+            params = params.substring(0, 4093) + "...";
+        }
+        return params;
+    }
 
     public void logAuditMessage(AuditParams audit) {
         if (!isLogged) {
@@ -72,22 +79,23 @@ public class JocAuditLog {
                         ticketLink = audit.getTicketLink();
                     }
                 }
-                AUDIT_LOGGER.info(String.format("REQUEST: %1$s - USER: %2$s - PARAMS: %3$s - COMMENT: %4$s - TIMESPENT: %5$s - TICKET: %6$s", request,
-                        user, params, comment, timeSpent, ticketLink));
+                AUDIT_LOGGER.info(String.format("REQUEST: %1$s - USER: %2$s - PARAMS: %3$s - COMMENT: %4$s - TIMESPENT: %5$s - TICKET: %6$s",
+                        request, user, params, comment, timeSpent, ticketLink));
+                truncateParams();
+                
             } catch (Exception e) {
                 LOGGER.error("Cannot write to audit log file", e);
             }
         }
     }
     
-    public synchronized DBItemJocAuditLog storeAuditLogEntry(AuditParams audit, String controllerId, Integer type,
-            SOSHibernateSession connection) {
+    public synchronized DBItemJocAuditLog storeAuditLogEntry(AuditParams audit, String controllerId, Integer type, SOSHibernateSession connection) {
         controllerId = setProperty(controllerId);
         DBItemJocAuditLog auditLogToDb = new DBItemJocAuditLog();
         auditLogToDb.setControllerId(controllerId);
         auditLogToDb.setAccount(user);
         auditLogToDb.setRequest(request);
-        auditLogToDb.setParameters(params);
+        auditLogToDb.setParameters(truncateParams());
         auditLogToDb.setCategory(type != null ? type : 0);
         if (audit != null) {
             auditLogToDb.setComment(audit.getComment());
