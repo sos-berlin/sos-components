@@ -1,6 +1,7 @@
 package com.sos.joc.classes.event;
 
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -51,6 +52,7 @@ import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.common.IEventObject;
 import com.sos.joc.model.event.EventMonitoring;
+import com.sos.joc.model.event.EventOrderMonitoring;
 import com.sos.joc.model.event.EventSnapshot;
 import com.sos.joc.model.event.EventType;
 import com.sos.monitoring.notification.NotificationType;
@@ -137,6 +139,7 @@ public class EventService {
     private volatile CopyOnWriteArraySet<String> uncoupledAgents = new CopyOnWriteArraySet<>();
     private volatile CopyOnWriteArraySet<String> uncoupledSubagents = new CopyOnWriteArraySet<>();
     private AtomicBoolean burstFilter = new AtomicBoolean(true);
+    private static final EnumSet notificationFailureTypes = EnumSet.of(NotificationType.ERROR, NotificationType.WARNING);
 
     public EventService(String controllerId) {
         this.controllerId = controllerId;
@@ -310,12 +313,26 @@ public class EventService {
 
     @Subscribe({ NotificationCreated.class })
     public void createEvent(NotificationCreated evt) {
+        // TODO if (evt.getControllerId() == null || controllerId.equals(evt.getControllerId())) ?
         EventSnapshot eventSnapshot = new EventSnapshot();
         eventSnapshot.setEventId(evt.getEventId() / 1000);
         eventSnapshot.setEventType(evt.getKey());
         eventSnapshot.setObjectType(EventType.MONITORINGNOTIFICATION);
         eventSnapshot.setMessage(evt.getNotificationId().toString());
         addEvent(eventSnapshot);
+        
+        NotificationType type = getNotificationType(evt.getLevel());
+        if (notificationFailureTypes.contains(type)) {
+            EventOrderMonitoring eventO = new EventOrderMonitoring();
+            eventO.setEventId(evt.getEventId() / 1000);
+            eventO.setLevel(type);
+            eventO.setWorkflowName(evt.getWorkflowName());
+            eventO.setOrderId(evt.getOrderId());
+            eventO.setJobName(evt.getJobName());
+            eventO.setTimestamp(evt.getDate());
+            eventO.setMessage(evt.getMessage());
+            addEventO(eventO);
+        }
     }
 
     @Subscribe({ AuditlogChangedEvent.class })
@@ -357,7 +374,7 @@ public class EventService {
             EventMonitoring eventM = new EventMonitoring();
             eventM.setEventId(evt.getEventId() / 1000);
             eventM.setLevel(getNotificationType(evt.getLevel()));
-            eventM.setSubCategory(evt.getSection());
+            eventM.setSource(evt.getSource());
             eventM.setCategory(evt.getCategory());
             eventM.setRequest(evt.getRequest());
             eventM.setTimestamp(evt.getDate());
@@ -694,6 +711,19 @@ public class EventService {
         if (eventMonitoring != null && eventMonitoring.getEventId() != null && events.add(eventMonitoring)) {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("add event for " + controllerId + ": " + eventMonitoring.toString());
+            }
+            if (atLeastOneConditionIsHold()) {
+                signalAll();
+            }
+        }
+    }
+    
+
+    
+    private void addEventO(EventOrderMonitoring eventOrderMonitoring) {
+        if (eventOrderMonitoring != null && eventOrderMonitoring.getEventId() != null && events.add(eventOrderMonitoring)) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("add event for " + controllerId + ": " + eventOrderMonitoring.toString());
             }
             if (atLeastOneConditionIsHold()) {
                 signalAll();

@@ -26,8 +26,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "objectType",
     "workflow",
     "accessToken",
-    "message",
-    "clazz"
+    "message"
 })
 public class EventSnapshot implements IEventObject
 {
@@ -78,7 +77,7 @@ public class EventSnapshot implements IEventObject
     private String accessToken;
     @JsonProperty("message")
     private String message;
-    
+
     /**
      * path
      * <p>

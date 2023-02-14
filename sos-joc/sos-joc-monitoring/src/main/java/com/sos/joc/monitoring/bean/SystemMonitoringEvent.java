@@ -50,9 +50,19 @@ public class SystemMonitoringEvent {
         epochMillis = evt.getEpochMillis();
         loggerName = evt.getLoggerName();
         caller = evt.getMarkerName();
-        message = evt.getMessage();
+        message = getMessage(evt);
         thrown = evt.getThrown();
         setCategoryAndSource();
+    }
+    
+    private String getMessage(NotificationLogEvent evt) {
+        if (evt.getMessage() != null) {
+            return evt.getMessage();
+        }
+        if (evt.getThrown() != null) {
+            return evt.getThrown().toString();
+        }
+        return null;
     }
 
     private void setCategoryAndSource() {
