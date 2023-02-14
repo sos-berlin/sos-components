@@ -17,10 +17,35 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.inventory.model.deploy.DeployType;
+import com.sos.inventory.model.descriptor.DeploymentDescriptor;
+import com.sos.inventory.model.descriptor.Descriptor;
+import com.sos.inventory.model.descriptor.License;
+import com.sos.inventory.model.descriptor.agent.AgentDescriptor;
+import com.sos.inventory.model.descriptor.agent.AgentsDescriptor;
+import com.sos.inventory.model.descriptor.agent.ControllerRef;
+import com.sos.inventory.model.descriptor.common.Authentication;
+import com.sos.inventory.model.descriptor.common.Authentication.Method;
+import com.sos.inventory.model.descriptor.common.Certificates;
+import com.sos.inventory.model.descriptor.common.Connection;
+import com.sos.inventory.model.descriptor.common.Installation;
+import com.sos.inventory.model.descriptor.common.Media;
+import com.sos.inventory.model.descriptor.controller.Cluster;
+import com.sos.inventory.model.descriptor.controller.ControllerClusterDescriptor;
+import com.sos.inventory.model.descriptor.controller.ControllerDescriptor;
+import com.sos.inventory.model.descriptor.controller.Instance;
+import com.sos.inventory.model.descriptor.controller.Target;
+import com.sos.inventory.model.descriptor.joc.JocClusterDescriptor;
+import com.sos.inventory.model.descriptor.joc.JocClusterMembersDescriptor;
+import com.sos.inventory.model.descriptor.joc.JocDescriptor;
+import com.sos.inventory.model.descriptor.joc.JocInstallation;
+import com.sos.inventory.model.descriptor.joc.JocInstallation.DbmsInit;
+import com.sos.inventory.model.descriptor.joc.JocInstallation.SecurityLevel;
+import com.sos.inventory.model.descriptor.joc.StartFiles;
 import com.sos.joc.Globals;
 import com.sos.joc.model.agent.transfer.AgentExportFilter;
 import com.sos.joc.model.agent.transfer.AgentImportFilter;
@@ -1481,5 +1506,425 @@ public class DeploymentTestUtils {
         filter.setAgentIds(Arrays.asList("primaryAgentID","standaloneAgentID","agent_cluster_001"));
         filter.setControllerIds(Arrays.asList("controller", "standalone", "testsuite"));
         return filter;
+    }
+    
+    public static DeploymentDescriptor createDeploymentDescriptorSchemaExample () {
+        DeploymentDescriptor depDescriptor = new DeploymentDescriptor();
+
+        Descriptor descr = new Descriptor();
+        descr.setAccount("sp");
+        descr.setDescriptorId("example_01");
+        descr.setTitle("Example of the current schema of a deployment descriptor");
+        Instant now = Instant.now();
+        descr.setCreated(Date.from(now));
+        Instant scheduledFor = now.plusSeconds(TimeUnit.DAYS.toSeconds(14));
+        descr.setScheduled(Date.from(scheduledFor));
+        depDescriptor.setDescriptor(descr);
+        
+        License license = new License();
+        license.setLicenseBinFile("licenses/js7-license.jar");
+        license.setLicenseKeyFile("licenses/sos.pem");
+        depDescriptor.setLicense(license);
+        
+        ControllerClusterDescriptor ccDescriptor = new ControllerClusterDescriptor();
+        
+        ccDescriptor.setJocRef("cluster");
+
+        ControllerDescriptor primaryControllerDesc = new ControllerDescriptor();
+        Instance primaryInstance = new Instance();
+
+        com.sos.inventory.model.descriptor.controller.Configuration cfgPrimary = new com.sos.inventory.model.descriptor.controller.Configuration();
+        Certificates primaryCertificates = new Certificates();
+        primaryCertificates.setKeyStore("controllers/instances/cluster.primary/config/private/https-keystore.p12");
+        primaryCertificates.setKeyStorePassword("jobscheduler");
+        primaryCertificates.setKeyPassword("jobscheduler");
+        primaryCertificates.setKeyAlias("centostest-primary");
+        primaryCertificates.setTrustStore("controllers/instances/cluster.primary/config/private/https-truststore.p12");
+        primaryCertificates.setTrustStorePassword("jobscheduler");
+        cfgPrimary.setCertificates(primaryCertificates);
+        cfgPrimary.setControllerCert("controllers/instances/cluster.primary/config/private/centostest-primary.crt");
+        
+        List<String> primaryTemplates = new ArrayList<String>();
+        primaryTemplates.add("controllers/templates/https.primary/config");
+        cfgPrimary.setTemplates(primaryTemplates);
+        
+        primaryInstance.setConfiguration(cfgPrimary);
+
+        Installation installationPrimary = new Installation();
+        installationPrimary.setData("/var/sos-berlin.com/js7/controller-primary");
+        installationPrimary.setDataOwner("sos2:sos2");
+        installationPrimary.setHome("/opt/sos-berlin.com/js7/controller-primary");
+        installationPrimary.setHomeOwner("sos1:sos1");
+        installationPrimary.setHttpPort("localhost:21444");
+        installationPrimary.setHttpsPort("centostest-primary.sos:21443");
+        installationPrimary.setJavaHome("/opt/jdk-11.0.2");
+        installationPrimary.setJavaOptions("-Xmx256m -Djava.security.egd=file:///dev/urandom");
+        installationPrimary.setRunUser("sos2");
+        primaryInstance.setInstallation(installationPrimary);
+
+        Media primaryMedia = new Media();
+        primaryMedia.setRelease("2.5.1");
+        primaryMedia.setTarball("2.5.1/js7_controller_unix.2.5.1.tar.gz");
+        primaryInstance.setMedia(primaryMedia);
+
+        primaryControllerDesc.setInstanceType(primaryInstance);
+
+        Target primaryTarget = new Target();
+
+        Authentication primaryAuth = new Authentication();
+        primaryAuth.setKeyFile("/home/sos/.ssh/sos_rsa");
+        primaryAuth.setMethod(Method.PUBLICKEY);
+        primaryAuth.setUser("sos");
+        primaryTarget.setAuthentication(primaryAuth);
+        
+        Connection primaryConnection = new Connection();
+        primaryConnection.setHost("centostest-primary");
+        primaryConnection.setPort(22);
+        primaryTarget.setConnection(primaryConnection);
+        
+        primaryTarget.setExecPost("StartService");
+        primaryTarget.setExecPre("StopService");
+        primaryTarget.setMakeService(true);
+        primaryTarget.setPackageLocation("/tmp");
+        primaryInstance.setTarget(primaryTarget);
+
+        ccDescriptor.setAdditionalProperty("primary", primaryControllerDesc);
+
+        ControllerDescriptor secondaryControllerDesc = new ControllerDescriptor();
+        Instance secondaryInstance = new Instance();
+
+        com.sos.inventory.model.descriptor.controller.Configuration cfgSecondary = new com.sos.inventory.model.descriptor.controller.Configuration();
+        Certificates secondaryCertificates = new Certificates();
+        secondaryCertificates.setKeyStore("controllers/instances/cluster.secondary/config/private/https-keystore.p12");
+        secondaryCertificates.setKeyStorePassword("jobscheduler");
+        secondaryCertificates.setKeyPassword("jobscheduler");
+        secondaryCertificates.setKeyAlias("centostest-secondary");
+        secondaryCertificates.setTrustStore("controllers/instances/cluster.secondary/config/private/https-truststore.p12");
+        secondaryCertificates.setTrustStorePassword("jobscheduler");
+        cfgSecondary.setCertificates(secondaryCertificates);
+        cfgSecondary.setControllerCert("controllers/instances/cluster.secondary/config/private/centostest-secondary.crt");
+
+        List<String> secondaryTemplates = new ArrayList<String>();
+        secondaryTemplates.add("controllers/templates/https.secondary/config");
+        cfgSecondary.setTemplates(secondaryTemplates);
+        
+        secondaryInstance.setConfiguration(cfgSecondary);
+
+        Installation installationSecondary = new Installation();
+        installationSecondary.setData("/var/sos-berlin.com/js7/controller-secondary");
+        installationSecondary.setDataOwner("sos2:sos2");
+        installationSecondary.setHome("/opt/sos-berlin.com/js7/controller-secondary");
+        installationSecondary.setHomeOwner("sos1:sos1");
+        installationSecondary.setHttpPort("localhost:22444");
+        installationSecondary.setHttpsPort("centostest-secondary.sos:22443");
+        installationSecondary.setJavaHome("/opt/jdk-11.0.2");
+        installationSecondary.setJavaOptions("-Xmx256m -Djava.security.egd=file:///dev/urandom");
+        installationSecondary.setRunUser("sos2");
+        secondaryInstance.setInstallation(installationSecondary);
+        
+        Media secondaryMedia = new Media();
+        secondaryMedia.setRelease("2.5.1");
+        secondaryMedia.setTarball("2.5.1/js7_controller_unix.2.5.1.tar.gz");
+        secondaryInstance.setMedia(secondaryMedia);
+        
+        Target secondaryTarget = new Target();
+        Authentication secondaryAuth = new Authentication();
+        secondaryAuth.setKeyFile("/home/sos/.ssh/sos_rsa");
+        secondaryAuth.setMethod(Method.PUBLICKEY);
+        secondaryAuth.setUser("sos");
+        secondaryTarget.setAuthentication(secondaryAuth);
+        
+        Connection secondaryConnection = new Connection();
+        secondaryConnection.setHost("centostest-secondary");
+        secondaryConnection.setPort(22);
+        secondaryTarget.setConnection(secondaryConnection);
+        
+        secondaryTarget.setExecPost("StartService");
+        secondaryTarget.setExecPre("StopService");
+        secondaryTarget.setMakeService(true);
+        secondaryTarget.setPackageLocation("/tmp");
+        secondaryInstance.setTarget(secondaryTarget);
+        
+        secondaryControllerDesc.setInstanceType(secondaryInstance);
+        ccDescriptor.setAdditionalProperty("secondary", secondaryControllerDesc);
+        Cluster controllerCluster = new Cluster();
+        controllerCluster.setAdditionalProperty("cluster", ccDescriptor);
+        depDescriptor.setControllers(controllerCluster);
+        
+        AgentsDescriptor agentsDescriptor = new AgentsDescriptor();
+        
+        AgentDescriptor agent1Desc = new AgentDescriptor();
+        
+        com.sos.inventory.model.descriptor.agent.Configuration cfgAgent1 = new com.sos.inventory.model.descriptor.agent.Configuration();
+        Certificates agent1Certs = new Certificates();
+        agent1Certs.setKeyStore("agents/instances/agent_001/config/private/https-keystore.p12");
+        agent1Certs.setKeyStorePassword("jobscheduler");
+        agent1Certs.setKeyPassword("jobscheduler");
+        agent1Certs.setKeyAlias("centostest-primary");
+        agent1Certs.setTrustStore("agents/instances/agent_001/config/private/https-truststore.p12");
+        agent1Certs.setTrustStorePassword("jobscheduler");
+        cfgAgent1.setCertificates(agent1Certs);
+        
+        ControllerRef agent1ControllerRef = new ControllerRef();
+        agent1ControllerRef.setControllerId("cluster");
+        cfgAgent1.setController(agent1ControllerRef);
+        
+        List<String> agent1Templates = new ArrayList<String>();
+        agent1Templates.add("agents/templates/https/config");
+        cfgAgent1.setTemplates(agent1Templates);
+        
+        agent1Desc.setConfiguration(cfgAgent1);
+        
+        Installation agent1Install = new Installation();
+        agent1Install.setData("/var/sos-berlin.com/js7/agent-primary");
+        agent1Install.setDataOwner("sos2:sos2");
+        agent1Install.setHome("/opt/sos-berlin.com/js7/agent-primary");
+        agent1Install.setHomeOwner("sos1:sos1");
+        agent1Install.setHttpPort("localhost:31445");
+        agent1Install.setHttpsPort("centostest-primary.sos:31443");
+        agent1Install.setJavaHome("/opt/jdk-11.0.2");
+        agent1Install.setJavaOptions("-Xmx125m -Djava.security.egd=file:///dev/urandom");
+        agent1Install.setRunUser("sos2");
+        agent1Desc.setInstallation(agent1Install);
+        
+        Media agent1Media = new Media();
+        agent1Media.setRelease("2.5.1");
+        agent1Media.setTarball("2.5.1/js7_agent_unix.2.5.1.tar.gz");
+        agent1Desc.setMedia(agent1Media);
+        
+        com.sos.inventory.model.descriptor.agent.Target agent1Target = new com.sos.inventory.model.descriptor.agent.Target();
+        Authentication agent1Auth = new Authentication();
+        agent1Auth.setKeyFile("/home/sos/.ssh/sos_rsa");
+        agent1Auth.setMethod(Authentication.Method.PUBLICKEY);
+        agent1Auth.setUser("sos");
+        agent1Target.setAuthentication(agent1Auth);
+        
+        Connection agent1Connection = new Connection();
+        agent1Connection.setHost("centostest-primary");
+        agent1Connection.setPort(22);
+        agent1Target.setConnection(agent1Connection);
+        
+        agent1Target.setExecPost("StartService");
+        agent1Target.setExecPre("StopService");
+        agent1Target.setMakeService(true);
+        agent1Target.setPackageLocation("/tmp");
+        agent1Desc.setTarget(agent1Target);
+        
+        agentsDescriptor.setAdditionalProperty("agent_001", agent1Desc);
+        
+        AgentDescriptor agent2Desc = new AgentDescriptor();
+        
+        com.sos.inventory.model.descriptor.agent.Configuration cfgAgent2 = new com.sos.inventory.model.descriptor.agent.Configuration();
+        Certificates agent2Certs = new Certificates();
+        agent2Certs.setKeyStore("agents/instances/agent_002/config/private/https-keystore.p12");
+        agent2Certs.setKeyStorePassword("jobscheduler");
+        agent2Certs.setKeyPassword("jobscheduler");
+        agent2Certs.setKeyAlias("centostest-primary");
+        agent2Certs.setTrustStore("agents/instances/agent_002/config/private/https-truststore.p12");
+        agent2Certs.setTrustStorePassword("jobscheduler");
+        cfgAgent2.setCertificates(agent2Certs);
+        
+        ControllerRef agent2ControllerRef = new ControllerRef();
+        agent2ControllerRef.setControllerId("cluster");
+        cfgAgent2.setController(agent2ControllerRef);
+        
+        List<String> agent2Templates = new ArrayList<String>();
+        agent2Templates.add("agents/templates/https/config");
+        cfgAgent2.setTemplates(agent2Templates);
+        
+        agent2Desc.setConfiguration(cfgAgent2);
+        
+        Installation agent2Install = new Installation();
+        agent2Install.setData("/var/sos-berlin.com/js7/agent-secondary");
+        agent2Install.setDataOwner("sos2:sos2");
+        agent2Install.setHome("/opt/sos-berlin.com/js7/agent-secondary");
+        agent2Install.setHomeOwner("sos1:sos1");
+        agent2Install.setHttpPort("localhost:32445");
+        agent2Install.setHttpsPort("centostest-secondary.sos:32443");
+        agent2Install.setJavaHome("/opt/jdk-11.0.2");
+        agent2Install.setJavaOptions("-Xmx256m -Djava.security.egd=file:///dev/urandom");
+        agent2Install.setRunUser("sos2");
+        agent2Desc.setInstallation(agent2Install);
+        
+        Media agent2Media = new Media();
+        agent2Media.setRelease("2.5.1");
+        agent2Media.setTarball("2.5.1/js7_agent_unix.2.5.1.tar.gz");
+        agent2Desc.setMedia(agent2Media);
+        
+        com.sos.inventory.model.descriptor.agent.Target agent2Target = new com.sos.inventory.model.descriptor.agent.Target();
+        Authentication agent2Auth = new Authentication();
+        agent2Auth.setKeyFile("/home/sos/.ssh/sos_rsa");
+        agent2Auth.setMethod(Authentication.Method.PUBLICKEY);
+        agent2Auth.setUser("sos");
+        agent2Target.setAuthentication(agent2Auth);
+        
+        Connection agent2Connection = new Connection();
+        agent2Connection.setHost("centostest-secondary");
+        agent2Connection.setPort(22);
+        agent2Target.setConnection(agent2Connection);
+        
+        agent2Target.setExecPost("StartService");
+        agent2Target.setExecPre("StopService");
+        agent2Target.setMakeService(true);
+        agent2Target.setPackageLocation("/tmp");
+        agent2Desc.setTarget(agent2Target);
+        
+        agentsDescriptor.setAdditionalProperty("agent_002", agent2Desc);
+        depDescriptor.setAgents(agentsDescriptor);
+        
+        JocClusterDescriptor jocClusterDescriptor = new JocClusterDescriptor();
+        JocClusterMembersDescriptor jocClusterMembersDescriptor = new JocClusterMembersDescriptor();
+        jocClusterDescriptor.setAdditionalProperty("cluster", jocClusterMembersDescriptor);
+        
+        JocDescriptor joc1Descr = new JocDescriptor();
+        joc1Descr.setOrdering(1);
+        
+        com.sos.inventory.model.descriptor.joc.Configuration joc1Cfg = new com.sos.inventory.model.descriptor.joc.Configuration();
+        
+        Certificates joc1Certs = new Certificates();
+        joc1Certs.setKeyStore("joc/instances/cluster.primary/resources/https-keystore.p12");
+        joc1Certs.setKeyStorePassword("jobscheduler");
+        joc1Certs.setKeyPassword("jobscheduler");
+        joc1Certs.setKeyAlias("centostest-primary");
+        joc1Certs.setTrustStore("joc/instances/cluster.primary/resources/https-truststore.p12");
+        joc1Certs.setTrustStorePassword("jobscheduler");
+        joc1Cfg.setCertificates(joc1Certs);
+
+        joc1Cfg.setJocCert("joc/instances/cluster.primary/resources/centostest-primary.crt");
+        
+        StartFiles joc1StartFiles = new StartFiles();
+        joc1StartFiles.setHttpIni("joc/templates/https/start.d/http.ini");
+        joc1StartFiles.setHttpsIni("joc/templates/https/start.d/https.ini");
+        joc1StartFiles.setSslIni("joc/templates/https/start.d/ssl.ini");
+        joc1Cfg.setStartFiles(joc1StartFiles);
+        
+        List<String> joc1Templates = new ArrayList<String>();
+        joc1Templates.add("joc/templates/https/resources");
+        joc1Cfg.setTemplates(joc1Templates);
+        
+        joc1Cfg.setResponseDir("joc/templates/dbms/h2/response");
+        joc1Descr.setConfiguration(joc1Cfg);
+        
+        JocInstallation joc1Installation = new JocInstallation();
+        joc1Installation.setData("/var/sos-berlin.com/js7/joc-primary");
+        joc1Installation.setDataOwner("sos2:sos2");
+        joc1Installation.setDbmsConfig("joc/templates/dbms/h2/response/hibernate.cfg.xml");
+        joc1Installation.setDbmsDriver("joc/templates/dbms/h2/response/h2-1.4.200.jar");
+        joc1Installation.setDbmsInit(DbmsInit.BY_JOC);
+        joc1Installation.setHome("/opt/sos-berlin.com/js7/joc-primary");
+        joc1Installation.setHomeOwner("sos1:sos1");
+        joc1Installation.setHttpPort("localhost:11446");
+        joc1Installation.setHttpsPort("centostest-primary.sos:11443");
+        joc1Installation.setIsPreserveEnv(true);
+        joc1Installation.setIsUser(true);
+        joc1Installation.setJavaHome("/opt/jdk-11.0.2");
+        joc1Installation.setJavaOptions("-Xmx256m -Djava.security.egd=file:///dev/urandom");
+        joc1Installation.setRunUser("sos2");
+        joc1Installation.setSecurityLevel(SecurityLevel.MEDIUM);
+        joc1Installation.setSetupDir("/opt/sos-berlin.com/js7/joc-primary.setup");
+        joc1Installation.setTitle("PRIMARY JOC COCKPIT");
+        joc1Descr.setInstallation(joc1Installation);
+        
+        Media joc1Media = new Media();
+        joc1Media.setRelease("2.5.1");
+        joc1Media.setTarball("2.5.1/js7_joc_linux.2.5.1.tar.gz");
+        joc1Descr.setMedia(joc1Media);
+        
+        com.sos.inventory.model.descriptor.joc.Target joc1Target = new com.sos.inventory.model.descriptor.joc.Target();
+        
+        Authentication joc1Authentication = new Authentication();
+        joc1Authentication.setKeyFile("/home/sos/.ssh/sos_rsa");
+        joc1Authentication.setMethod(Authentication.Method.PUBLICKEY);
+        joc1Authentication.setUser("sos");
+        joc1Target.setAuthentication(joc1Authentication);
+        
+        Connection joc1Connection = new Connection();
+        joc1Connection.setHost("centostest-primary");
+        joc1Connection.setPort(22);
+        joc1Target.setConnection(joc1Connection);
+        
+        joc1Target.setExecPost("StartService");
+        joc1Target.setExecPre("StopService");
+        joc1Target.setMakeService(true);
+        joc1Target.setPackageLocation("/tmp");
+        joc1Descr.setTarget(joc1Target);
+        
+        jocClusterMembersDescriptor.setAdditionalProperty("1", joc1Descr);
+        
+        JocDescriptor joc2Descr = new JocDescriptor();
+        joc2Descr.setOrdering(2);
+        com.sos.inventory.model.descriptor.joc.Configuration joc2Cfg = new com.sos.inventory.model.descriptor.joc.Configuration();
+        Certificates joc2Certs = new Certificates();
+        joc2Certs.setKeyStore("joc/instances/cluster.secondary/resources/https-keystore.p12");
+        joc2Certs.setKeyStorePassword("jobscheduler");
+        joc2Certs.setKeyPassword("jobscheduler");
+        joc2Certs.setKeyAlias("centostest-secondary");
+        joc2Certs.setTrustStore("joc/instances/cluster.secondary/resources/https-truststore.p12");
+        joc2Certs.setTrustStorePassword("jobscheduler");
+        joc2Cfg.setCertificates(joc2Certs);
+
+        joc2Cfg.setJocCert("joc/instances/cluster.secondary/resources/centostest-secondary.crt");
+        
+        StartFiles joc2StartFiles = new StartFiles();
+        joc2StartFiles.setHttpIni("joc/templates/https/start.d/http.ini");
+        joc2StartFiles.setHttpsIni("joc/templates/https/start.d/https.ini");
+        joc2StartFiles.setSslIni("joc/templates/https/start.d/ssl.ini");
+        joc2Cfg.setStartFiles(joc2StartFiles);
+        
+        List<String> joc2Templates = new ArrayList<String>();
+        joc2Templates.add("joc/templates/https/resources");
+        joc2Cfg.setTemplates(joc2Templates);
+        
+        joc2Cfg.setResponseDir("joc/templates/dbms/h2/response");
+        joc2Descr.setConfiguration(joc2Cfg);
+        
+        JocInstallation joc2Installation = new JocInstallation();
+        joc2Installation.setData("/var/sos-berlin.com/js7/joc-secondary");
+        joc2Installation.setDataOwner("sos2:sos2");
+        joc2Installation.setDbmsConfig("joc/templates/dbms/h2/response/hibernate.cfg.xml");
+        joc2Installation.setDbmsDriver("joc/templates/dbms/h2/response/h2-1.4.200.jar");
+        joc2Installation.setDbmsInit(DbmsInit.BY_JOC);
+        joc2Installation.setHome("/opt/sos-berlin.com/js7/joc-secondary");
+        joc2Installation.setHomeOwner("sos1:sos1");
+        joc2Installation.setHttpPort("localhost:12446");
+        joc2Installation.setHttpsPort("centostest-secondary.sos:12443");
+        joc2Installation.setIsPreserveEnv(true);
+        joc2Installation.setIsUser(true);
+        joc2Installation.setJavaHome("/opt/jdk-11.0.2");
+        joc2Installation.setJavaOptions("-Xmx256m -Djava.security.egd=file:///dev/urandom");
+        joc2Installation.setRunUser("sos2");
+        joc2Installation.setSecurityLevel(SecurityLevel.MEDIUM);
+        joc2Installation.setSetupDir("/sos-berlin.com/js7/opt/joc-secondary.setup");
+        joc2Installation.setTitle("SECONDARY JOC COCKPIT");
+        joc2Descr.setInstallation(joc2Installation);
+        
+        Media joc2Media = new Media();
+        joc2Media.setRelease("2.5.1");
+        joc2Media.setTarball("2.5.1/js7_joc_linux.2.5.1.tar.gz");
+        joc2Descr.setMedia(joc2Media);
+        
+        com.sos.inventory.model.descriptor.joc.Target joc2Target = new com.sos.inventory.model.descriptor.joc.Target();
+        
+        Authentication joc2Authentication = new Authentication();
+        joc2Authentication.setKeyFile("/home/sos/.ssh/sos_rsa");
+        joc2Authentication.setMethod(Authentication.Method.PUBLICKEY);
+        joc2Authentication.setUser("sos");
+        joc2Target.setAuthentication(joc2Authentication);
+        
+        Connection joc2Connection = new Connection();
+        joc2Connection.setHost("centostest-secondary");
+        joc2Connection.setPort(22);
+        joc2Target.setConnection(joc2Connection);
+        
+        joc2Target.setExecPost("StartService");
+        joc2Target.setExecPre("StopService");
+        joc2Target.setMakeService(true);
+        joc2Target.setPackageLocation("/tmp");
+        joc2Descr.setTarget(joc2Target);
+        
+        jocClusterMembersDescriptor.setAdditionalProperty("2", joc2Descr);
+        
+        depDescriptor.setJoc(jocClusterDescriptor);
+        return depDescriptor;
     }
 }
