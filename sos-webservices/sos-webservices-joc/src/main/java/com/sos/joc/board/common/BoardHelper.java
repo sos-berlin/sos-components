@@ -2,6 +2,7 @@ package com.sos.joc.board.common;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -79,7 +80,7 @@ public class BoardHelper {
     }
     
     public static Board getBoard(JControllerState controllerState, DeployedContent dc, ConcurrentMap<String, List<JOrder>> expectings, Integer limit,
-            long surveyDateMillis) throws Exception {
+            ZoneId zoneId, long surveyDateMillis) throws Exception {
         SyncStateText stateText = SyncStateText.UNKNOWN;
         Board item = init(dc);
 
@@ -95,7 +96,7 @@ public class BoardHelper {
         item.setState(SyncStateHelper.getState(stateText));
         item.setNumOfExpectingOrders(expectings.values().stream().mapToInt(List::size).sum());
 
-        ToLongFunction<JOrder> compareScheduleFor = OrdersHelper.getCompareScheduledFor(surveyDateMillis);
+        ToLongFunction<JOrder> compareScheduleFor = OrdersHelper.getCompareScheduledFor(zoneId, surveyDateMillis);
         List<Notice> notices = new ArrayList<>();
 
         expectings.forEach((noticeId, jOrders) -> {
@@ -106,7 +107,7 @@ public class BoardHelper {
                 notice.setExpectingOrders(jOrders.stream().sorted(Comparator.comparingLong(compareScheduleFor).reversed()).limit(limit.longValue())
                         .map(o -> {
                             try {
-                                return OrdersHelper.mapJOrderToOrderV(o, true, null, null);
+                                return OrdersHelper.mapJOrderToOrderV(o, true, null, null, zoneId);
                             } catch (Exception e) {
                                 return null;
                             }
@@ -114,7 +115,7 @@ public class BoardHelper {
             } else {
                 notice.setExpectingOrders(jOrders.stream().map(o -> {
                     try {
-                        return OrdersHelper.mapJOrderToOrderV(o, true, null, null);
+                        return OrdersHelper.mapJOrderToOrderV(o, true, null, null, zoneId);
                     } catch (Exception e) {
                         return null;
                     }

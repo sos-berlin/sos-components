@@ -14,7 +14,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * event from monitoring
+ * event from order monitoring
  * <p>
  * 
  * 
@@ -23,13 +23,13 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "eventId",
     "level",
-    "category",
-    "source",
-    "request",
+    "workflowName",
+    "orderId",
+    "jobName",
     "timestamp",
     "message"
 })
-public class EventMonitoring implements IEventObject
+public class EventOrderMonitoring implements IEventObject
 {
 
     /**
@@ -56,19 +56,24 @@ public class EventMonitoring implements IEventObject
      * (Required)
      * 
      */
-    @JsonProperty("category")
-    private String category;
+    @JsonProperty("workflowName")
+    private String workflowName;
     /**
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
-    @JsonProperty("source")
-    private String source;
-    @JsonProperty("request")
-    private String request;
+    @JsonProperty("orderId")
+    private String orderId;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("jobName")
+    private String jobName;
     /**
      * timestamp
      * <p>
@@ -135,9 +140,9 @@ public class EventMonitoring implements IEventObject
      * (Required)
      * 
      */
-    @JsonProperty("category")
-    public String getCategory() {
-        return category;
+    @JsonProperty("workflowName")
+    public String getWorkflowName() {
+        return workflowName;
     }
 
     /**
@@ -147,43 +152,53 @@ public class EventMonitoring implements IEventObject
      * (Required)
      * 
      */
-    @JsonProperty("category")
-    public void setCategory(String category) {
-        this.category = category;
+    @JsonProperty("workflowName")
+    public void setWorkflowName(String workflowName) {
+        this.workflowName = workflowName;
     }
 
     /**
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
-    @JsonProperty("source")
-    public String getSource() {
-        return source;
+    @JsonProperty("orderId")
+    public String getOrderId() {
+        return orderId;
     }
 
     /**
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
-    @JsonProperty("source")
-    public void setSource(String source) {
-        this.source = source;
+    @JsonProperty("orderId")
+    public void setOrderId(String orderId) {
+        this.orderId = orderId;
     }
 
-    @JsonProperty("request")
-    public String getRequest() {
-        return request;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("jobName")
+    public String getJobName() {
+        return jobName;
     }
 
-    @JsonProperty("request")
-    public void setRequest(String request) {
-        this.request = request;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("jobName")
+    public void setJobName(String jobName) {
+        this.jobName = jobName;
     }
 
     /**
@@ -222,12 +237,12 @@ public class EventMonitoring implements IEventObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("eventId", eventId).append("level", level).append("category", category).append("source", source).append("request", request).append("timestamp", timestamp).append("message", message).toString();
+        return new ToStringBuilder(this).append("eventId", eventId).append("level", level).append("workflowName", workflowName).append("orderId", orderId).append("jobName", jobName).append("timestamp", timestamp).append("message", message).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(request).append(level).append(source).append(category).toHashCode();
+        return new HashCodeBuilder().append(jobName).append(level).append(orderId).append(workflowName).toHashCode();
     }
 
     @Override
@@ -235,11 +250,11 @@ public class EventMonitoring implements IEventObject
         if (other == this) {
             return true;
         }
-        if ((other instanceof EventMonitoring) == false) {
+        if ((other instanceof EventOrderMonitoring) == false) {
             return false;
         }
-        EventMonitoring rhs = ((EventMonitoring) other);
-        return new EqualsBuilder().append(request, rhs.request).append(level, rhs.level).append(source, rhs.source).append(category, rhs.category).isEquals();
+        EventOrderMonitoring rhs = ((EventOrderMonitoring) other);
+        return new EqualsBuilder().append(jobName, rhs.jobName).append(level, rhs.level).append(orderId, rhs.orderId).append(workflowName, rhs.workflowName).isEquals();
     }
 
 }

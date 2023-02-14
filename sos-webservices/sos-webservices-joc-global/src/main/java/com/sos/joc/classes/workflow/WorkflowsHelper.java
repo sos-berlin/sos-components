@@ -1,6 +1,7 @@
 package com.sos.joc.classes.workflow;
 
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1156,7 +1157,7 @@ public class WorkflowsHelper {
     }
 
     public static ConcurrentMap<JWorkflowId, Map<OrderStateText, Integer>> getGroupedOrdersCountPerWorkflow(JControllerState currentstate,
-            WorkflowOrderCountFilter workflowsFilter, Set<Folder> permittedFolders) {
+            WorkflowOrderCountFilter workflowsFilter, Set<Folder> permittedFolders, ZoneId zoneId) {
 
         final Instant surveyInstant = currentstate.instant();
         long surveyDateMillis = surveyInstant.toEpochMilli();
@@ -1170,7 +1171,7 @@ public class WorkflowsHelper {
             final Instant until = (dateToInstant.isBefore(surveyInstant)) ? surveyInstant : dateToInstant;
             dateToFilter = o -> {
                 if (!o.asScala().isSuspended() && OrderStateText.SCHEDULED.equals(OrdersHelper.getGroupedState(o.asScala().state().getClass()))) {
-                    Instant scheduledFor = OrdersHelper.getScheduledForInstant(o);
+                    Instant scheduledFor = OrdersHelper.getScheduledForInstant(o, zoneId);
                     if (scheduledFor != null && scheduledFor.isAfter(until)) {
                         if (scheduledFor.toEpochMilli() == JobSchedulerDate.NEVER_MILLIS.longValue()) {
                             return true;
@@ -1201,7 +1202,7 @@ public class WorkflowsHelper {
         Function1<Order<Order.State>, Object> notCycledOrderFilter = JOrderPredicates.not(cycledOrderFilter);
 
         Function1<Order<Order.State>, Object> blockedFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), o -> !o
-                .isSuspended() && OrdersHelper.getScheduledForMillis(o, surveyDateMillis) < surveyDateMillis);
+                .isSuspended() && OrdersHelper.getScheduledForMillis(o, zoneId, surveyDateMillis) < surveyDateMillis);
 
         Set<JOrder> blockedOrders = currentstate.ordersBy(JOrderPredicates.and(workflowFilter, blockedFilter)).collect(Collectors.toSet());
         ConcurrentMap<OrderId, JOrder> blockedButWaitingForAdmissionOrders = OrdersHelper.getWaitingForAdmissionOrders(blockedOrders, currentstate);
@@ -1219,20 +1220,21 @@ public class WorkflowsHelper {
         notCycledOrderStream = Stream.concat(notCycledOrderStream, blockedButWaitingForAdmissionOrders.values().stream()).distinct();
         ConcurrentMap<JWorkflowId, Map<OrderStateText, Integer>> groupedOrdersCount = Stream.concat(notCycledOrderStream, cycledOrderStream).collect(
                 Collectors.groupingByConcurrent(JOrder::workflowId, Collectors.groupingBy(o -> groupingByState(o, surveyInstant,
-                        blockedButWaitingForAdmissionOrderIds), Collectors.reducing(0, e -> 1, Integer::sum))));
+                        blockedButWaitingForAdmissionOrderIds, zoneId), Collectors.reducing(0, e -> 1, Integer::sum))));
 
         workflows2.forEach(w -> groupedOrdersCount.putIfAbsent(JWorkflowId.apply(w), Collections.emptyMap()));
 
         return groupedOrdersCount;
     }
 
-    private static OrderStateText groupingByState(JOrder order, Instant surveyInstant, Set<OrderId> blockedButWaitingForAdmissionOrderIds) {
+    private static OrderStateText groupingByState(JOrder order, Instant surveyInstant, Set<OrderId> blockedButWaitingForAdmissionOrderIds,
+            ZoneId zoneId) {
         OrderStateText groupedState = OrdersHelper.getGroupedState(order.asScala().state().getClass());
         if (order.asScala().isSuspended() && !(OrderStateText.CANCELLED.equals(groupedState) || OrderStateText.FINISHED.equals(groupedState))) {
             groupedState = OrderStateText.SUSPENDED;
         }
         if (OrderStateText.SCHEDULED.equals(groupedState)) {
-            Instant scheduledInstant = OrdersHelper.getScheduledForInstant(order);
+            Instant scheduledInstant = OrdersHelper.getScheduledForInstant(order, zoneId);
             if (scheduledInstant != null) {
                 if (JobSchedulerDate.NEVER_MILLIS.longValue() == scheduledInstant.toEpochMilli()) {
                     groupedState = OrderStateText.PENDING;

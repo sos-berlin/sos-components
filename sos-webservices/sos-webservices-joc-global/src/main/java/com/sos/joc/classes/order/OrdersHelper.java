@@ -5,6 +5,10 @@ import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -52,6 +56,7 @@ import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowPaths;
+import com.sos.joc.cluster.configuration.globals.common.ConfigurationEntry;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanWithHistory;
 import com.sos.joc.db.history.common.HistorySeverity;
@@ -127,6 +132,7 @@ public class OrdersHelper {
     public static final String mainOrderIdControllerPattern = "replaceAll(\"$js7EpochMilli\", '^.*([0-9]{9})$', '$1')";
     public static final Pattern orderIdPattern = Pattern.compile("#(\\d{4}-\\d{2}-\\d{2})#\\D(\\d)(\\d{8})\\d{2}-.*");
     public static final String cyclicOrderIdRegex = "#\\d{4}-\\d{2}-\\d{2}#C[0-9]+-.*";
+    private static final DateTimeFormatter datetimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault());
 
     public static final Map<Class<? extends Order.State>, OrderStateText> groupByStateClasses = Collections.unmodifiableMap(
             new HashMap<Class<? extends Order.State>, OrderStateText>() {
@@ -378,7 +384,7 @@ public class OrdersHelper {
 
     public static OrderV mapJOrderToOrderV(JOrder jOrder, OrderItem oItem, JControllerState controllerState, Boolean compact,
             Set<Folder> listOfFolders, Set<OrderId> blockedButWaitingForAdmissionOrderIds, Map<JWorkflowId, Collection<String>> finalParameters,
-            Long surveyDateMillis) throws IOException, JocFolderPermissionsException {
+            Long surveyDateMillis, ZoneId zoneId) throws IOException, JocFolderPermissionsException {
         OrderV o = new OrderV();
         WorkflowId wId = oItem.getWorkflowPosition().getWorkflowId();
         if (finalParameters != null) {
@@ -438,7 +444,7 @@ public class OrdersHelper {
         } else if (oItem.getId().contains("|")) { // is (not running) child order
             orderIsInImplicitEnd(jOrder, controllerState).ifPresent(b -> o.setPositionIsImplicitEnd(b ? true : null));
         }
-        Long scheduledFor = getScheduledForMillis(jOrder);
+        Long scheduledFor = getScheduledForMillis(jOrder, zoneId);
         if (scheduledFor != null && surveyDateMillis != null && scheduledFor < surveyDateMillis && "Fresh".equals(oItem.getState().getTYPE())) {
             if (blockedButWaitingForAdmissionOrderIds != null && blockedButWaitingForAdmissionOrderIds.contains(jOrder.id())) {
                 o.setState(getState("Ready", oItem.getIsSuspended()));
@@ -482,19 +488,19 @@ public class OrdersHelper {
     }
 
     public static OrderV mapJOrderToOrderV(JOrder jOrder, JControllerState controllerState, Boolean compact, Set<Folder> listOfFolders,
-            Set<OrderId> blockedButWaitingForAdmissionOrderIds, Map<JWorkflowId, Collection<String>> finalParameters, Long surveyDateMillis)
-            throws JsonParseException, JsonMappingException, IOException, JocFolderPermissionsException {
+            Set<OrderId> blockedButWaitingForAdmissionOrderIds, Map<JWorkflowId, Collection<String>> finalParameters, Long surveyDateMillis,
+            ZoneId zoneId) throws JsonParseException, JsonMappingException, IOException, JocFolderPermissionsException {
         // TODO mapping without ObjectMapper
         OrderItem oItem = Globals.objectMapper.readValue(jOrder.toJson(), OrderItem.class);
         return mapJOrderToOrderV(jOrder, oItem, controllerState, compact, listOfFolders, blockedButWaitingForAdmissionOrderIds, finalParameters,
-                surveyDateMillis);
+                surveyDateMillis, zoneId);
     }
 
     public static OrderV mapJOrderToOrderV(JOrder jOrder, Boolean compact, Map<JWorkflowId, Collection<String>> finalParameters,
-            Long surveyDateMillis) throws JsonParseException, JsonMappingException, IOException, JocFolderPermissionsException {
+            Long surveyDateMillis, ZoneId zoneId) throws JsonParseException, JsonMappingException, IOException, JocFolderPermissionsException {
         // TODO mapping without ObjectMapper
         OrderItem oItem = Globals.objectMapper.readValue(jOrder.toJson(), OrderItem.class);
-        return mapJOrderToOrderV(jOrder, oItem, null, compact, null, null, finalParameters, surveyDateMillis);
+        return mapJOrderToOrderV(jOrder, oItem, null, compact, null, null, finalParameters, surveyDateMillis, zoneId);
     }
 
     public static OrderPreparation getOrderPreparation(JOrder jOrder, JControllerState currentState) throws JsonParseException, JsonMappingException,
@@ -729,7 +735,7 @@ public class OrdersHelper {
     }
     
     public static Either<List<Err419>, OrderIdMap> cancelAndAddFreshOrder(Collection<String> temporaryOrderIds,
-            DailyPlanModifyOrder dailyplanModifyOrder, String accessToken, JocError jocError, Long auditlogId,
+            DailyPlanModifyOrder dailyplanModifyOrder, String accessToken, JocError jocError, Long auditlogId, ZoneId zoneId,
             SOSAuthFolderPermissions folderPermissions) throws ControllerConnectionResetException, ControllerConnectionRefusedException,
             DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
             ExecutionException {
@@ -741,12 +747,12 @@ public class OrdersHelper {
         JControllerProxy proxy = Proxy.of(dailyplanModifyOrder.getControllerId());
         JControllerState currentState = proxy.currentState();
         return cancelAndAddFreshOrder(temporaryOrderIds, dailyplanModifyOrder, accessToken, jocError, auditlogId, proxy, currentState,
-                folderPermissions);
+                zoneId, folderPermissions);
     }
 
     public static Either<List<Err419>, OrderIdMap> cancelAndAddFreshOrder(Collection<String> temporaryOrderIds,
             DailyPlanModifyOrder dailyplanModifyOrder, String accessToken, JocError jocError, Long auditlogId, JControllerProxy proxy,
-            JControllerState currentState, SOSAuthFolderPermissions folderPermissions) throws ControllerConnectionResetException,
+            JControllerState currentState, ZoneId zoneId, SOSAuthFolderPermissions folderPermissions) throws ControllerConnectionResetException,
             ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
             DBConnectionRefusedException, ExecutionException {
 
@@ -795,7 +801,7 @@ public class OrdersHelper {
                 Set<JPositionOrLabel> endPoss = getEndPositions(dailyplanModifyOrder.getEndPositions(), reachablePositions, JavaConverters.asJava(
                         order.asScala().stopPositions()));
 
-                FreshOrder o = new FreshOrder(order.id(), order.workflowId().path(), args, scheduledFor, startPos, endPoss);
+                FreshOrder o = new FreshOrder(order.id(), order.workflowId().path(), args, scheduledFor, startPos, endPoss, zoneId);
                 auditLogDetails.add(new AuditLogDetail(workflowPath, order.id().string(), controllerId));
                 either = Either.right(o);
             } catch (Exception ex) {
@@ -865,23 +871,33 @@ public class OrdersHelper {
         return cancelOrders(ControllerApi.of(modifyOrders.getControllerId()), modifyOrders, oIds);
     }
 
-    public static String getUniqueOrderId() {
+    public static String getUniqueOrderId(ZoneId zoneId) {
+        if (zoneId == null) {
+            zoneId = getDailyPlanTimeZone();
+        }
+        return getUniqueOrderId(ZonedDateTime.of(LocalDateTime.now(zoneId), ZoneId.systemDefault()));
+        //return Long.valueOf((Instant.now().toEpochMilli() * 100) + (n % 100)).toString().substring(4);
+    }
+    
+    public static String getUniqueOrderId(ZonedDateTime zonedDateTime) {
         int n = no.getAndUpdate(x -> x == Integer.MAX_VALUE ? 0 : x + 1);
-        return Long.valueOf((Instant.now().toEpochMilli() * 100) + (n % 100)).toString().substring(4);
+        return Long.valueOf((zonedDateTime.toInstant().toEpochMilli() * 100) + (n % 100))
+                .toString().substring(4);
+        //return Long.valueOf((Instant.now().toEpochMilli() * 100) + (n % 100)).toString().substring(4);
     }
 
-    public static String generateNewFromOldOrderId(String oldOrderId, String newDailyPlanDate) {
+    public static String generateNewFromOldOrderId(String oldOrderId, String newDailyPlanDate, ZoneId zoneId) {
         // #2021-10-12#C4038226057-00012-12-dailyplan_shedule_cyclic
         // #2021-10-25#C1234567890-00012-12-dailyplan_shedule_cyclic
-        return generateNewFromOldOrderId(getWithNewDateFromOldOrderId(oldOrderId, newDailyPlanDate));
+        return generateNewFromOldOrderId(getWithNewDateFromOldOrderId(oldOrderId, newDailyPlanDate), zoneId);
     }
     
     public static String getWithNewDateFromOldOrderId(String oldOrderId, String newDailyPlanDate) {
         return "#" + newDailyPlanDate + oldOrderId.substring(11);
     }
 
-    public static String generateNewFromOldOrderId(String oldOrderId) {
-        return getNewFromOldOrderId(oldOrderId, OrdersHelper.getUniqueOrderId());
+    public static String generateNewFromOldOrderId(String oldOrderId, ZoneId zoneId) {
+        return getNewFromOldOrderId(oldOrderId, getUniqueOrderId(zoneId));
     }
 
     public static String getNewFromOldOrderId(String oldOrderId, String newUniqueOrderIdPart) {
@@ -890,8 +906,12 @@ public class OrdersHelper {
         return oldOrderId.replaceFirst("^(#\\d{4}-\\d{2}-\\d{2}#[A-Z])\\d{10,11}(-.+)$", "$1" + newUniqueOrderIdPart + "$2");
     }
 
-    public static JFreshOrder mapToFreshOrder(AddOrder order, String yyyymmdd, Optional<JPositionOrLabel> startPos, Set<JPositionOrLabel> endPoss) {
-        String orderId = String.format("#%s#T%s-%s", yyyymmdd, getUniqueOrderId(), order.getOrderName());
+    public static JFreshOrder mapToFreshOrder(AddOrder order, ZoneId zoneId, Optional<JPositionOrLabel> startPos, Set<JPositionOrLabel> endPoss) {
+        if (zoneId == null) {
+            zoneId = getDailyPlanTimeZone();
+        }
+        ZonedDateTime zonedNow = ZonedDateTime.of(LocalDateTime.now(zoneId), ZoneId.systemDefault());
+        String orderId = String.format("#%s#T%s-%s", datetimeFormatter.format(zonedNow), getUniqueOrderId(zonedNow), order.getOrderName());
         Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(order.getScheduledFor(), order.getTimeZone());
         // if (!scheduledFor.isPresent()) {
         // scheduledFor = Optional.of(Instant.now());
@@ -1047,7 +1067,16 @@ public class OrdersHelper {
         return Optional.of(controllerState.asScala().instruction(o.asScala().workflowPosition()) instanceof ImplicitEnd);
     }
 
-    public static Long getScheduledForMillis(String orderId, Long defaultMillis) {
+    public static Long getScheduledForMillis(String orderId, ZoneId zoneId, Long defaultMillis) {
+        Instant instant = getScheduledForMillis(orderId, zoneId);
+        if (instant == null) {
+            return defaultMillis;
+        }
+        return instant.toEpochMilli();
+    }
+    
+    public static Instant getScheduledForMillis(String orderId, ZoneId zoneId) {
+        //reflect DailyPlan timezone
         try {
             Matcher m = orderIdPattern.matcher(orderId);
             if (m.find()) {
@@ -1056,47 +1085,51 @@ public class OrdersHelper {
                 if (first5 - (first4 * 10) > Long.valueOf(m.group(2))) {
                     first4++;
                 }
-                return (first4 * 1000000000L) + Long.valueOf(m.group(2) + m.group(3));
+                Long millis = (first4 * 1000000000L) + Long.valueOf(m.group(2) + m.group(3));
+                if (zoneId == null) {
+                    zoneId = getDailyPlanTimeZone();
+                }
+                return ZonedDateTime.of(LocalDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneId.systemDefault()), zoneId).toInstant();
             }
         } catch (Exception e) {
         }
-        return defaultMillis;
+        return null;
     }
 
-    public static Long getScheduledForMillis(JOrder order) {
-        return getScheduledForMillis(order, null);
+    public static Long getScheduledForMillis(JOrder order, ZoneId zoneId) {
+        return getScheduledForMillis(order, zoneId, null);
     }
 
-    public static Long getScheduledForMillis(JOrder order, Long defaultMillis) {
+    public static Long getScheduledForMillis(JOrder order, ZoneId zoneId, Long defaultMillis) {
         if (order.scheduledFor().isPresent()) {
             return order.scheduledFor().get().toEpochMilli();
         } else {
-            return getScheduledForMillis(order.id().string(), defaultMillis);
+            return getScheduledForMillis(order.id().string(), zoneId, defaultMillis);
         }
     }
 
-    public static Long getScheduledForMillis(Order<Order.State> order, Long defaultMillis) {
+    public static Long getScheduledForMillis(Order<Order.State> order, ZoneId zoneId, Long defaultMillis) {
         if (!order.scheduledFor().isEmpty()) {
             return order.scheduledFor().get().toEpochMilli();
         } else {
-            return getScheduledForMillis(order.id().string(), defaultMillis);
+            return getScheduledForMillis(order.id().string(), zoneId, defaultMillis);
         }
     }
-
+    
     public static Instant getScheduledForInstant(JOrder order) {
+        return getScheduledForInstant(order, null);
+    }
+
+    public static Instant getScheduledForInstant(JOrder order, ZoneId zoneId) {
         if (order.scheduledFor().isPresent()) {
             return order.scheduledFor().get();
         } else {
-            Long millis = getScheduledForMillis(order.id().string(), null);
-            if (millis != null) {
-                return Instant.ofEpochMilli(millis);
-            }
-            return null;
+            return getScheduledForMillis(order.id().string(), zoneId);
         }
     }
 
-    public static ToLongFunction<JOrder> getCompareScheduledFor(long surveyDateMillis) {
-        return o -> getScheduledForMillis(o, surveyDateMillis);
+    public static ToLongFunction<JOrder> getCompareScheduledFor(ZoneId zoneId, long surveyDateMillis) {
+        return o -> getScheduledForMillis(o, zoneId, surveyDateMillis);
     }
     
     public static List<Object> stringPositionToList(String pos) {
@@ -1183,6 +1216,20 @@ public class OrdersHelper {
             }
         }
         return false;
+    }
+    
+    public static ZoneId getDailyPlanTimeZone() {
+        ConfigurationEntry timeZoneEntry = Globals.getConfigurationGlobalsDailyPlan().getTimeZone();
+        String timeZone = timeZoneEntry.getValue();
+        if (timeZone == null) {
+            timeZone = timeZoneEntry.getDefault();
+        }
+        try {
+            return ZoneId.of(timeZone);
+        } catch (Exception e) {
+            LOGGER.warn("DailyPlan timezone is invalid. Etc/UTC is used as fallback.", e);
+            return ZoneId.of("Etc/UTC");
+        }
     }
 
 }

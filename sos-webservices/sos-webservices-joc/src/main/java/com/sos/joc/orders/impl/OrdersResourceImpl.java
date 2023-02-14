@@ -1,6 +1,7 @@
 package com.sos.joc.orders.impl;
 
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -89,6 +90,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
 
             boolean withFolderFilter = ordersFilter.getFolders() != null && !ordersFilter.getFolders().isEmpty();
             final Set<Folder> folders = addPermittedFolder(ordersFilter.getFolders());
+            ZoneId zoneId = OrdersHelper.getDailyPlanTimeZone();
 
             JControllerState currentState = Proxy.of(ordersFilter.getControllerId()).currentState();
             Instant surveyDateInstant = currentState.instant();
@@ -115,7 +117,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             Function1<Order<Order.State>, Object> cyclicFilter = o -> OrdersHelper.isCyclicOrderId(o.id().string());
             Function1<Order<Order.State>, Object> notCyclicFilter = JOrderPredicates.not(cyclicFilter);
             Function1<Order<Order.State>, Object> blockedFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), o -> !o
-                    .isSuspended() && OrdersHelper.getScheduledForMillis(o, surveyDateMillis) < surveyDateMillis);
+                    .isSuspended() && OrdersHelper.getScheduledForMillis(o, zoneId, surveyDateMillis) < surveyDateMillis);
 
             if (!withOrderIdFilter) {
                 if (withStatesFilter) {
@@ -149,19 +151,19 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     }
 
                     if (lookingForScheduled && !lookingForBlocked && !lookingForPending) {
-                        freshOrderFilter = o -> OrdersHelper.getScheduledForMillis(o, surveyDateMillis) >= surveyDateMillis && o.scheduledFor().get()
+                        freshOrderFilter = o -> OrdersHelper.getScheduledForMillis(o, zoneId, surveyDateMillis) >= surveyDateMillis && o.scheduledFor().get()
                                 .toEpochMilli() != JobSchedulerDate.NEVER_MILLIS;
                     } else if (lookingForScheduled && lookingForBlocked && !lookingForPending) {
                         freshOrderFilter = o -> o.scheduledFor().isEmpty() || (!o.scheduledFor().isEmpty() && o.scheduledFor().get()
                                 .toEpochMilli() != JobSchedulerDate.NEVER_MILLIS);
                     } else if (lookingForScheduled && !lookingForBlocked && lookingForPending) {
-                        freshOrderFilter = o -> OrdersHelper.getScheduledForMillis(o, surveyDateMillis) >= surveyDateMillis;
+                        freshOrderFilter = o -> OrdersHelper.getScheduledForMillis(o, zoneId, surveyDateMillis) >= surveyDateMillis;
                     } else if (!lookingForScheduled && lookingForBlocked && !lookingForPending) {
-                        freshOrderFilter = o -> OrdersHelper.getScheduledForMillis(o, surveyDateMillis) < surveyDateMillis;
+                        freshOrderFilter = o -> OrdersHelper.getScheduledForMillis(o, zoneId, surveyDateMillis) < surveyDateMillis;
                     } else if (!lookingForScheduled && !lookingForBlocked && lookingForPending) {
                         freshOrderFilter = o -> !o.scheduledFor().isEmpty() && o.scheduledFor().get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS;
                     } else if (!lookingForScheduled && lookingForBlocked && lookingForPending) {
-                        freshOrderFilter = o -> OrdersHelper.getScheduledForMillis(o, surveyDateMillis) < surveyDateMillis || o.scheduledFor().get()
+                        freshOrderFilter = o -> OrdersHelper.getScheduledForMillis(o, zoneId, surveyDateMillis) < surveyDateMillis || o.scheduledFor().get()
                                 .toEpochMilli() == JobSchedulerDate.NEVER_MILLIS;
                     }
 
@@ -255,7 +257,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     Predicate<JOrder> dateToFilter = o -> {
                         if (!o.asScala().isSuspended() && OrderStateText.SCHEDULED.equals(OrdersHelper.getGroupedState(o.asScala().state()
                                 .getClass()))) {
-                            Instant scheduledFor = OrdersHelper.getScheduledForInstant(o);
+                            Instant scheduledFor = OrdersHelper.getScheduledForInstant(o, zoneId);
                             if (scheduledFor != null && scheduledFor.isAfter(until)) {
                                 if ((!withStatesFilter || lookingForPending) && scheduledFor.toEpochMilli() == JobSchedulerDate.NEVER_MILLIS) {
                                     return true;
@@ -311,7 +313,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             ConcurrentMap<JWorkflowId, Collection<String>> finalParamsPerWorkflow = groupedByWorkflowIds.keySet().parallelStream().collect(Collectors
                     .toConcurrentMap(Function.identity(), w -> OrdersHelper.getFinalParameters(w, currentState)));
 
-            ToLongFunction<JOrder> compareScheduleFor = OrdersHelper.getCompareScheduledFor(surveyDateMillis);
+            ToLongFunction<JOrder> compareScheduleFor = OrdersHelper.getCompareScheduledFor(zoneId, surveyDateMillis);
 
             if (withWorkflowIdFilter && ordersFilter.getLimit() != null && ordersFilter.getLimit() > -1) {
                 // consider limit per workflow (not over all)
@@ -331,7 +333,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             Function<JOrder, OrderV> mapJOrderToOrderV = o -> {
                 try {
                     OrderV order = OrdersHelper.mapJOrderToOrderV(o, currentState, ordersFilter.getCompact(), null,
-                            blockedButWaitingForAdmissionOrderIds, finalParamsPerWorkflow, surveyDateMillis);
+                            blockedButWaitingForAdmissionOrderIds, finalParamsPerWorkflow, surveyDateMillis, zoneId);
                     order.setCyclicOrder(cycleInfos.get(order.getOrderId()));
                     if (orderStateWithRequirements.contains(order.getState().get_text())) {
                         if (!orderPreparations.containsKey(o.workflowId())) {

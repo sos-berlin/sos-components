@@ -351,14 +351,10 @@ public class OrderNotifierModel {
         if (mn == null || mo == null) {
             return;
         }
-        // mn.getCreated();
-        // mn.getType();
-        // mo.getWorkflowPath();
-        // mo.getOrderId();
-        // message = getPostEventMessage(mn, mo, mos);
-        EventBus.getInstance().post(new NotificationCreated(controllerId, mn.getId()));
+        EventBus.getInstance().post(new NotificationCreated(controllerId, mn.getId(), mn.getType(), mo.getWorkflowName(), mo.getOrderId(), mos
+                .getJobName(), mn.getCreated(), getPostEventMessage(mn, mo, mos)));
     }
-
+    
     // see com.sos.joc.monitoring.impl.OrderNotificationsImpl.getMessage
     private String getPostEventMessage(DBItemNotification mn, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos) {
         if (mn.getType().equals(NotificationType.WARNING.intValue())) {

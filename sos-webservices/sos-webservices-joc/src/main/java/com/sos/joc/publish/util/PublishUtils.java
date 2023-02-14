@@ -123,8 +123,6 @@ import com.sos.sign.model.workflow.Branch;
 import com.sos.sign.model.workflow.Workflow;
 
 import io.vavr.control.Either;
-import js7.base.crypt.SignedString;
-import js7.base.crypt.SignerId;
 import js7.base.problem.Problem;
 import js7.data.agent.AgentPath;
 import js7.data.board.BoardPath;
@@ -1699,7 +1697,7 @@ public abstract class PublishUtils {
                 + " ++ '00-' ++ \"$orderWatchPath:$0\"";
         String timeZone = fileOrderSource.getTimeZone();
         if (timeZone == null || timeZone.isEmpty()) {
-            timeZone = "Etc/UTC";
+            timeZone = OrdersHelper.getDailyPlanTimeZone().getId();
         }
         fileOrderSource.setTimeZone(null);
         return String.format(idPattern, timeZone);

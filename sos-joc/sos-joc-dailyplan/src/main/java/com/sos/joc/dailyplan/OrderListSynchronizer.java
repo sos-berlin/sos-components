@@ -3,6 +3,7 @@ package com.sos.joc.dailyplan;
 import java.nio.file.Paths;
 import java.text.ParseException;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -204,6 +205,7 @@ public class OrderListSynchronizer {
             DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
             session.setAutoCommit(false);
             Globals.beginTransaction(session);
+            ZoneId zoneId = ZoneId.of(settings.getTimeZone());
 
             Map<MainCyclicOrderKey, List<PlannedOrder>> cyclics = new TreeMap<MainCyclicOrderKey, List<PlannedOrder>>();
             for (PlannedOrder plannedOrder : plannedOrders.values()) {
@@ -212,7 +214,7 @@ public class OrderListSynchronizer {
                     DBItemDailyPlanOrder item = dbLayer.getUniqueDailyPlan(plannedOrder);
                     if (settings.isOverwrite() || item == null) {
                         plannedOrder.setAverageDuration(durations.get(plannedOrder.getWorkflowPath()));
-                        dbLayer.store(plannedOrder, OrdersHelper.getUniqueOrderId(), 0, 0);
+                        dbLayer.store(plannedOrder, OrdersHelper.getUniqueOrderId(zoneId), 0, 0);
 
                         plannedOrder.setStoredInDb(true);
                         counter.addStoredSingle();
@@ -237,7 +239,7 @@ public class OrderListSynchronizer {
             for (Entry<MainCyclicOrderKey, List<PlannedOrder>> entry : cyclics.entrySet()) {
                 int size = entry.getValue().size();
                 int nr = 1;
-                String id = OrdersHelper.getUniqueOrderId();
+                String id = OrdersHelper.getUniqueOrderId(zoneId);
                 if (isDebugEnabled) {
                     LOGGER.debug(String.format("[%s][store][%s][%s][cyclic]size=%s, order id main part=%s, key=%s", startupMode, controllerId, date,
                             size, id, entry.getKey()));

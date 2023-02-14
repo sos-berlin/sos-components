@@ -1,5 +1,6 @@
 package com.sos.joc.dailyplan.common;
 
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -46,6 +47,13 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
             settings = new GlobalSettingsReader().getSettings(section);
         }
         return settings;
+    }
+    
+    public ZoneId getZoneId() {
+       if (settings == null) {
+           setSettings();
+       }
+       return ZoneId.of(settings.getTimeZone());
     }
 
     protected void setSettings() {

@@ -118,9 +118,10 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             if (EventServiceFactory.isClosed.get()) {
                 return evt;
             }
-            if (evt.getEventsFromMonitoring() != null && evt.getEventsFromMonitoring().size() > 10) {
-                evt.getEventsFromMonitoring().subList(10, evt.getEventsFromMonitoring().size() - 1).clear();
+            if (evt.getEventsFromSystemMonitoring() != null && evt.getEventsFromSystemMonitoring().size() > 10) {
+                evt.getEventsFromSystemMonitoring().subList(10, evt.getEventsFromSystemMonitoring().size() - 1).clear();
             }
+            // TODO same sublist for getEventsFromOrderMonitoring?
             if (evt.getEventSnapshots() != null && !evt.getEventSnapshots().isEmpty()) {
 
                 connection = Globals.createSosHibernateStatelessConnection(API_CALL);

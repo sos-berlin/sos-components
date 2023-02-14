@@ -2,6 +2,7 @@ package com.sos.joc.dailyplan;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -59,8 +60,9 @@ public class TestDailyPlanService {
     @Ignore
     @Test
     public void testGenerateNewFromOldOrderId() {
-        LOGGER.info(OrdersHelper.generateNewFromOldOrderId("#2021-10-12#C4038226057-00012-12-dailyplan_shedule_cyclic"));
-        LOGGER.info(OrdersHelper.generateNewFromOldOrderId("#2021-10-12#C4038226057-00012-12-dailyplan_shedule_cyclic", "2021-10-25"));
+        LOGGER.info(OrdersHelper.generateNewFromOldOrderId("#2021-10-12#C4038226057-00012-12-dailyplan_shedule_cyclic", ZoneId.systemDefault()));
+        LOGGER.info(OrdersHelper.generateNewFromOldOrderId("#2021-10-12#C4038226057-00012-12-dailyplan_shedule_cyclic", "2021-10-25", ZoneId
+                .systemDefault()));
 
         LOGGER.info(OrdersHelper.getNewFromOldOrderId("#2021-10-12#C4038226057-00001-12-dailyplan_shedule_cyclic", "XXX"));
         LOGGER.info(OrdersHelper.getNewFromOldOrderId("#2021-10-12#C4038226057-00002-12-dailyplan_shedule_cyclic", "XXX"));

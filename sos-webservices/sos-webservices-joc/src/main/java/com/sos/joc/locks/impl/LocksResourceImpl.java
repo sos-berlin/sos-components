@@ -1,6 +1,7 @@
 package com.sos.joc.locks.impl;
 
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -19,6 +20,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.DeployedConfigurationFilter;
@@ -75,6 +77,7 @@ public class LocksResourceImpl extends JOCResourceImpl implements ILocksResource
             }
             boolean withFolderFilter = filter.getFolders() != null && !filter.getFolders().isEmpty();
             final Set<Folder> folders = addPermittedFolder(filter.getFolders());
+            ZoneId zoneId = OrdersHelper.getDailyPlanTimeZone();
 
             session = Globals.createSosHibernateStatelessConnection(API_CALL);
             DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
@@ -94,7 +97,7 @@ public class LocksResourceImpl extends JOCResourceImpl implements ILocksResource
 
             Locks answer = new Locks();
             answer.setSurveyDate(Date.from(Instant.now()));
-            LockEntryHelper helper = new LockEntryHelper(filter.getControllerId(), filter.getCompact(), filter.getLimit());
+            LockEntryHelper helper = new LockEntryHelper(filter.getControllerId(), filter.getCompact(), filter.getLimit(), zoneId);
             final JControllerState controllerState = getCurrentState(filter.getControllerId());
             if (controllerState != null) {
                 answer.setSurveyDate(Date.from(controllerState.instant()));

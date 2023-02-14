@@ -2,6 +2,7 @@ package com.sos.joc.orders.impl;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -196,6 +197,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         CategoryType category = CategoryType.CONTROLLER;
         String controllerId = modifyOrders.getControllerId();
         DBItemJocAuditLog dbAuditLog = storeAuditLog(modifyOrders.getAuditLog(), controllerId, category);
+        ZoneId zoneId = OrdersHelper.getDailyPlanTimeZone();
 
         Set<String> orders = modifyOrders.getOrderIds();
         List<WorkflowId> workflowIds = modifyOrders.getWorkflowIds();
@@ -228,9 +230,10 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             Function1<Order<Order.State>, Object> workflowFilter = o -> (workflowPaths.contains(o.workflowId()) || workflowPaths2.contains(o
                     .workflowId().path()));
 
-            Function1<Order<Order.State>, Object> workflowStateFilter = getWorkflowStateFilter(modifyOrders, surveyDateMillis, workflowFilter);
+            Function1<Order<Order.State>, Object> workflowStateFilter = getWorkflowStateFilter(modifyOrders, surveyDateMillis, workflowFilter,
+                    zoneId);
             orderStream = currentState.ordersBy(workflowStateFilter).parallel().filter(getDateToFilter(modifyOrders, surveyInstant));
-            orderStream = considerAdmissionOrders(orderStream, lookingForBlocked, lookingForInProgress, workflowStateFilter, currentState);
+            orderStream = considerAdmissionOrders(orderStream, lookingForBlocked, lookingForInProgress, workflowStateFilter, currentState, zoneId);
 
         } else if (withFolderFilter && (permittedFolders == null || permittedFolders.isEmpty())) {
             // no permission
@@ -240,9 +243,11 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             if (workflowIds2 != null && !workflowIds2.isEmpty()) {
                 Function1<Order<Order.State>, Object> workflowFilter = o -> workflowIds2.contains(o.workflowId());
 
-                Function1<Order<Order.State>, Object> workflowStateFilter = getWorkflowStateFilter(modifyOrders, surveyDateMillis, workflowFilter);
+                Function1<Order<Order.State>, Object> workflowStateFilter = getWorkflowStateFilter(modifyOrders, surveyDateMillis, workflowFilter,
+                        zoneId);
                 orderStream = currentState.ordersBy(workflowStateFilter).parallel().filter(getDateToFilter(modifyOrders, surveyInstant));
-                orderStream = considerAdmissionOrders(orderStream, lookingForBlocked, lookingForInProgress, workflowStateFilter, currentState);
+                orderStream = considerAdmissionOrders(orderStream, lookingForBlocked, lookingForInProgress, workflowStateFilter, currentState,
+                        zoneId);
             }
         }
 
@@ -270,6 +275,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         JControllerState currentState = Proxy.of(controllerId).currentState();
         Instant surveyInstant = currentState.instant();
         long surveyDateMillis = surveyInstant.toEpochMilli();
+        ZoneId zoneId = OrdersHelper.getDailyPlanTimeZone();
 
         Set<String> orders = modifyOrders.getOrderIds();
         List<WorkflowId> workflowIds = modifyOrders.getWorkflowIds();
@@ -287,8 +293,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     .pathToName(w.getPath()))).collect(Collectors.toSet());
             Function1<Order<Order.State>, Object> workflowFilter = o -> (workflowPaths.contains(o.workflowId()) || workflowPaths2.contains(o
                     .workflowId().path()));
-            orders = currentState.ordersBy(getWorkflowStateFilter(modifyOrders, surveyDateMillis, workflowFilter)).parallel().filter(getDateToFilter(
-                    modifyOrders, surveyInstant)).map(JOrder::id).map(OrderId::string).collect(Collectors.toSet());
+            orders = currentState.ordersBy(getWorkflowStateFilter(modifyOrders, surveyDateMillis, workflowFilter, zoneId)).parallel().filter(
+                    getDateToFilter(modifyOrders, surveyInstant)).map(JOrder::id).map(OrderId::string).collect(Collectors.toSet());
         } else if (withFolderFilter && (permittedFolders == null || permittedFolders.isEmpty())) {
             // no permission
         } else if (withFolderFilter && permittedFolders != null && !permittedFolders.isEmpty()) {
@@ -296,7 +302,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     .collect(Collectors.toList()), currentState, permittedFolders);
             if (workflowIds2 != null && !workflowIds2.isEmpty()) {
                 Function1<Order<Order.State>, Object> workflowFilter = o -> workflowIds2.contains(o.workflowId());
-                orders = currentState.ordersBy(getWorkflowStateFilter(modifyOrders, surveyDateMillis, workflowFilter)).parallel().filter(
+                orders = currentState.ordersBy(getWorkflowStateFilter(modifyOrders, surveyDateMillis, workflowFilter, zoneId)).parallel().filter(
                         getDateToFilter(modifyOrders, surveyInstant)).map(JOrder::id).map(OrderId::string).collect(Collectors.toSet());
             }
         }
@@ -677,7 +683,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     }
 
     private static Function1<Order<Order.State>, Object> getWorkflowStateFilter(ModifyOrders modifyOrders, long surveyDateMillis,
-            Function1<Order<Order.State>, Object> workflowFilter) {
+            Function1<Order<Order.State>, Object> workflowFilter, ZoneId zoneId) {
         List<OrderStateText> states = modifyOrders.getStates();
         Function1<Order<Order.State>, Object> stateFilter = null;
 
@@ -724,19 +730,19 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             }
 
             if (lookingForScheduled && !lookingForBlocked && !lookingForPending) {
-                freshOrderFilter = o -> OrdersHelper.getScheduledForMillis(o, surveyDateMillis) >= surveyDateMillis && o.scheduledFor().get()
+                freshOrderFilter = o -> OrdersHelper.getScheduledForMillis(o, zoneId, surveyDateMillis) >= surveyDateMillis && o.scheduledFor().get()
                         .toEpochMilli() != JobSchedulerDate.NEVER_MILLIS;
             } else if (lookingForScheduled && lookingForBlocked && !lookingForPending) {
                 freshOrderFilter = o -> o.scheduledFor().isEmpty() || (!o.scheduledFor().isEmpty() && o.scheduledFor().get()
                         .toEpochMilli() != JobSchedulerDate.NEVER_MILLIS);
             } else if (lookingForScheduled && !lookingForBlocked && lookingForPending) {
-                freshOrderFilter = o -> OrdersHelper.getScheduledForMillis(o, surveyDateMillis) >= surveyDateMillis;
+                freshOrderFilter = o -> OrdersHelper.getScheduledForMillis(o, zoneId, surveyDateMillis) >= surveyDateMillis;
             } else if (!lookingForScheduled && lookingForBlocked && !lookingForPending) {
-                freshOrderFilter = o -> OrdersHelper.getScheduledForMillis(o, surveyDateMillis) < surveyDateMillis;
+                freshOrderFilter = o -> OrdersHelper.getScheduledForMillis(o, zoneId, surveyDateMillis) < surveyDateMillis;
             } else if (!lookingForScheduled && !lookingForBlocked && lookingForPending) {
                 freshOrderFilter = o -> !o.scheduledFor().isEmpty() && o.scheduledFor().get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS;
             } else if (!lookingForScheduled && lookingForBlocked && lookingForPending) {
-                freshOrderFilter = o -> OrdersHelper.getScheduledForMillis(o, surveyDateMillis) < surveyDateMillis || o.scheduledFor().get()
+                freshOrderFilter = o -> OrdersHelper.getScheduledForMillis(o, zoneId, surveyDateMillis) < surveyDateMillis || o.scheduledFor().get()
                         .toEpochMilli() == JobSchedulerDate.NEVER_MILLIS;
             }
 
@@ -765,12 +771,12 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     }
 
     private static Stream<JOrder> considerAdmissionOrders(Stream<JOrder> orderStream, boolean lookingForBlocked, boolean lookingForInProgress,
-            Function1<Order<Order.State>, Object> filter, JControllerState controllerState) {
+            Function1<Order<Order.State>, Object> filter, JControllerState controllerState, ZoneId zoneId) {
 
         if (lookingForBlocked || lookingForInProgress) {
             long surveyDateMillis = controllerState.instant().toEpochMilli();
             Function1<Order<Order.State>, Object> blockedFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), o -> !o
-                    .isSuspended() && OrdersHelper.getScheduledForMillis(o, surveyDateMillis) < surveyDateMillis);
+                    .isSuspended() && OrdersHelper.getScheduledForMillis(o, zoneId, surveyDateMillis) < surveyDateMillis);
 
             Set<JOrder> blockedOrders = controllerState.ordersBy(JOrderPredicates.and(filter, blockedFilter)).collect(Collectors.toSet());
             ConcurrentMap<OrderId, JOrder> blockedOrders2 = OrdersHelper.getWaitingForAdmissionOrders(blockedOrders, controllerState);

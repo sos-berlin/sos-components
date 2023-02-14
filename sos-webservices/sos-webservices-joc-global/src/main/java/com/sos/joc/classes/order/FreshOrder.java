@@ -1,6 +1,7 @@
 package com.sos.joc.classes.order;
 
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -54,9 +55,9 @@ public class FreshOrder {
 //    }
     
     public FreshOrder(OrderId oldOrderId, WorkflowPath workflowPath, Map<String, Value> args, Optional<Instant> scheduledFor,
-            Optional<JPositionOrLabel> startPosition, Set<JPositionOrLabel> endPositions) {
+            Optional<JPositionOrLabel> startPosition, Set<JPositionOrLabel> endPositions, ZoneId zoneId) {
         this.oldOrderId = oldOrderId;
-        this.newOrderId = generateNewFromOldOrderId(oldOrderId);
+        this.newOrderId = generateNewFromOldOrderId(oldOrderId, zoneId);
         this.workflowPath = workflowPath;
         this.args = args;
         this.scheduledFor = scheduledFor;
@@ -87,8 +88,8 @@ public class FreshOrder {
         return JFreshOrder.of(newOrderId, workflowPath, scheduledFor, args, true, startPosition, endPositions);
     }
 
-    private static OrderId generateNewFromOldOrderId(OrderId orderId) {
-        return OrderId.of(OrdersHelper.generateNewFromOldOrderId(orderId.string()));
+    private static OrderId generateNewFromOldOrderId(OrderId orderId, ZoneId zoneId) {
+        return OrderId.of(OrdersHelper.generateNewFromOldOrderId(orderId.string(), zoneId));
     }
 
 }

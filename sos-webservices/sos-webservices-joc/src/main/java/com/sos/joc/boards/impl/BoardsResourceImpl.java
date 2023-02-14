@@ -1,6 +1,7 @@
 package com.sos.joc.boards.impl;
 
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -23,6 +24,7 @@ import com.sos.joc.boards.resource.IBoardsResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.DeployedConfigurationFilter;
 import com.sos.joc.db.deploy.items.DeployedContent;
@@ -104,6 +106,7 @@ public class BoardsResourceImpl extends JOCResourceImpl implements IBoardsResour
             }
             final long surveyDateMillis = controllerState != null ? controllerState.instant().toEpochMilli() : Instant.now().toEpochMilli();
             final Set<Folder> permittedFolders = withFolderFilter ? null : folders;
+            ZoneId zoneId = OrdersHelper.getDailyPlanTimeZone();
             
             JocError jocError = getJocError();
             if (contents != null) {
@@ -137,7 +140,7 @@ public class BoardsResourceImpl extends JOCResourceImpl implements IBoardsResour
                                 throw new DBMissingDataException("doesn't exist");
                             }
                             return BoardHelper.getBoard(controllerState, dc, expectings.getOrDefault(dc.getName(), new ConcurrentHashMap<>()), limit,
-                                    surveyDateMillis);
+                                    zoneId, surveyDateMillis);
                         } catch (Throwable e) {
                             if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
                                 LOGGER.info(jocError.printMetaInfo());

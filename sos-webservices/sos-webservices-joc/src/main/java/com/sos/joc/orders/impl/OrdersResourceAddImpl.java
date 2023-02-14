@@ -2,7 +2,6 @@ package com.sos.joc.orders.impl;
 
 import java.time.Instant;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -58,7 +57,6 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrdersResourceAddImpl.class);
     private static final String API_CALL = "./orders/add";
-    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault());
 
     @Override
     public JOCDefaultResponse postOrdersAdd(String accessToken, byte[] filterBytes) {
@@ -88,7 +86,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             final JControllerProxy proxy = Proxy.of(controllerId);
             final JControllerState currentState = proxy.currentState();
             
-            final String yyyymmdd = formatter.format(Instant.now());
+            final ZoneId zoneId = OrdersHelper.getDailyPlanTimeZone();
             
             final String defaultOrderName = SOSCheckJavaVariableName.makeStringRuleConform(getAccount());
             List<AuditLogDetail> auditLogDetails = new ArrayList<>();
@@ -112,7 +110,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     Set<JPositionOrLabel> endPoss = OrdersHelper.getEndPosition(order.getEndPositions(), reachablePositions);
                     // TODO check if endPos not before startPos
                     
-                    JFreshOrder o = OrdersHelper.mapToFreshOrder(order, yyyymmdd, startPos, endPoss);
+                    JFreshOrder o = OrdersHelper.mapToFreshOrder(order, zoneId, startPos, endPoss);
                     auditLogDetails.add(new AuditLogDetail(WorkflowPaths.getPath(order.getWorkflowPath()), o.id().string(), controllerId));
                     either = Either.right(o);
                 } catch (Exception ex) {

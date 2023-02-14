@@ -26,6 +26,7 @@ import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.common.Err;
 import com.sos.joc.model.event.Event;
 import com.sos.joc.model.event.EventMonitoring;
+import com.sos.joc.model.event.EventOrderMonitoring;
 import com.sos.joc.model.event.EventSnapshot;
 
 public class EventServiceFactory {
@@ -152,6 +153,7 @@ public class EventServiceFactory {
             SortedSet<Long> evtIds = new TreeSet<>(Comparator.comparing(Long::longValue));
             Set<EventSnapshot> evt = new HashSet<>();
             Set<EventMonitoring> evtM = new HashSet<>();
+            Set<EventOrderMonitoring> evtO = new HashSet<>();
             Mode mode = service.hasOldEvent(eventId, eventArrived);
             if (Mode.FALSE.equals(mode)) {
                 long delay = Math.min(responsePeriodInMillis - 1000, getSessionTimeout(session));
@@ -180,8 +182,10 @@ public class EventServiceFactory {
                         e.setEventId(e.getEventId() - 1L);
                         if (e instanceof EventSnapshot) {
                             evt.add((EventSnapshot) e);
-                        } else {
+                        } else if (e instanceof EventMonitoring) {
                             evtM.add((EventMonitoring) e);
+                        } else if (e instanceof EventOrderMonitoring) {
+                            evtO.add((EventOrderMonitoring) e);
                         }
                         evtIds.add(e.getEventId());
                     }
@@ -192,14 +196,16 @@ public class EventServiceFactory {
                         e.setEventId(e.getEventId() - 1L);
                         if (e instanceof EventSnapshot) {
                             evt.add((EventSnapshot) e);
-                        } else {
+                        } else if (e instanceof EventMonitoring) {
                             evtM.add((EventMonitoring) e);
+                        } else if (e instanceof EventOrderMonitoring) {
+                            evtO.add((EventOrderMonitoring) e);
                         }
                         evtIds.add(e.getEventId());
                     }
                 });
             }
-            if (evt.isEmpty() && evtM.isEmpty()) {
+            if (evt.isEmpty() && evtM.isEmpty() && evtO.isEmpty()) {
                 //events.setEventSnapshots(null);
             } else {
                 if (isDebugEnabled) {
@@ -207,12 +213,16 @@ public class EventServiceFactory {
                         LOGGER.debug("Events for " + controllerId + ": " + evt.toString());
                     }
                     if (!evtM.isEmpty()) {
-                        LOGGER.debug("Monitoring events for " + controllerId + ": " + evtM.toString());
+                        LOGGER.debug("System monitoring events for " + controllerId + ": " + evtM.toString());
+                    }
+                    if (!evtO.isEmpty()) {
+                        LOGGER.debug("Order monitoring events for " + controllerId + ": " + evtO.toString());
                     }
                 }
                 events.setEventId(evtIds.last());
                 events.setEventSnapshots(evt.stream().map(e -> cloneEvent(e)).distinct().collect(Collectors.toList()));
-                events.setEventsFromMonitoring(evtM.stream().map(e -> cloneEventM(e)).distinct().collect(Collectors.toList()));
+                events.setEventsFromSystemMonitoring(evtM.stream().map(e -> cloneEventM(e)).distinct().collect(Collectors.toList()));
+                events.setEventsFromOrderMonitoring(evtO.stream().map(e -> cloneEventO(e)).distinct().collect(Collectors.toList()));
             }
         } catch (SessionNotExistException e1) {
             throw e1;
@@ -278,7 +288,20 @@ public class EventServiceFactory {
         es.setLevel(e.getLevel());
         es.setRequest(e.getRequest());
         es.setMessage(e.getMessage());
-        es.setSubCategory(e.getSubCategory());
+        es.setSource(e.getSource());
+        es.setTimestamp(e.getTimestamp());
+        return es;
+    }
+    
+    private static EventOrderMonitoring cloneEventO(EventOrderMonitoring e) {
+        //LOGGER.info("Clone events for " + e.toString());
+        EventOrderMonitoring es = new EventOrderMonitoring();
+        es.setEventId(null);
+        es.setLevel(e.getLevel());
+        es.setJobName(e.getJobName());
+        es.setMessage(e.getMessage());
+        es.setOrderId(e.getOrderId());
+        es.setWorkflowName(e.getWorkflowName());
         es.setTimestamp(e.getTimestamp());
         return es;
     }
