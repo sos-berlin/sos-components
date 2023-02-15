@@ -16,7 +16,8 @@ public enum ClusterType {
     FAILED_OVER("FailedOver"),
     SWITCHED_OVER("SwitchedOver"),
     ACTIVE_NODE_IS_NOT_READY("ActiveNodeIsNotReady"),
-    ACTIVE_SHUT_DOWN("ActiveShutDown");
+    ACTIVE_SHUT_DOWN("ActiveShutDown"),
+    NODE_LOSS_TO_BE_CONFIRMED("NodeLossToBeConfirmed");
     private final String value;
     private final static Map<String, ClusterType> CONSTANTS = new HashMap<String, ClusterType>();
 

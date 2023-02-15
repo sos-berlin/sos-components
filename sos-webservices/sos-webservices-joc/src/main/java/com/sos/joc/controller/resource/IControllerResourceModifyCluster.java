@@ -14,18 +14,18 @@ public interface IControllerResourceModifyCluster {
     @Path("cluster/switchover")
     @Consumes("application/json")
     @Produces({ "application/json" })
-    public JOCDefaultResponse postJobschedulerSwitchOver(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    public JOCDefaultResponse postClusterNodeSwitchOver(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
     
     @POST
     @Path("cluster/appoint_nodes")
     @Consumes("application/json")
     @Produces({ "application/json" })
-    public JOCDefaultResponse postJobschedulerAppointNodes(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    public JOCDefaultResponse postClusterAppointNodes(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
     
     @POST
     @Path("cluster/confirm_node_loss")
     @Consumes("application/json")
     @Produces({ "application/json" })
-    public JOCDefaultResponse postJobschedulerConfirmClusterNodeLoss(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    public JOCDefaultResponse postConfirmClusterNodeLoss(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 
 }
