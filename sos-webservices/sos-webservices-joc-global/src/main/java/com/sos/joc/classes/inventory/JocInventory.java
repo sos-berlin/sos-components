@@ -36,6 +36,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.board.Board;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.common.IInventoryObject;
+import com.sos.inventory.model.descriptor.DeploymentDescriptor;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.inventory.model.job.ExecutableScript;
@@ -109,6 +110,7 @@ public class JocInventory {
             put(ConfigurationType.WORKFLOW, "classpath:/raml/inventory/schemas/workflow/workflow-schema.json");
             put(ConfigurationType.NOTICEBOARD, "classpath:/raml/inventory/schemas/board/board-schema.json");
             put(ConfigurationType.FOLDER, "classpath:/raml/api/schemas/inventory/folder-schema.json");
+            put(ConfigurationType.DEPLOYMENTDESCRIPTOR, "classpath:/raml/inventory/schemas/deploymentDescriptor/deploymentDescriptor-schema.json");
         }
     });
 
@@ -158,6 +160,7 @@ public class JocInventory {
             put(ConfigurationType.WORKFLOW, Workflow.class);
             put(ConfigurationType.NOTICEBOARD, Board.class);
             put(ConfigurationType.FOLDER, Folder.class);
+            put(ConfigurationType.DEPLOYMENTDESCRIPTOR, DeploymentDescriptor.class);
         }
     });
 

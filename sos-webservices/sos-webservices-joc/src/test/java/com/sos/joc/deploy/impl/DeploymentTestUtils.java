@@ -26,21 +26,16 @@ import com.sos.inventory.model.descriptor.DeploymentDescriptor;
 import com.sos.inventory.model.descriptor.Descriptor;
 import com.sos.inventory.model.descriptor.License;
 import com.sos.inventory.model.descriptor.agent.AgentDescriptor;
-import com.sos.inventory.model.descriptor.agent.AgentsDescriptor;
-import com.sos.inventory.model.descriptor.agent.ControllerRef;
 import com.sos.inventory.model.descriptor.common.Authentication;
 import com.sos.inventory.model.descriptor.common.Authentication.Method;
 import com.sos.inventory.model.descriptor.common.Certificates;
 import com.sos.inventory.model.descriptor.common.Connection;
 import com.sos.inventory.model.descriptor.common.Installation;
 import com.sos.inventory.model.descriptor.common.Media;
-import com.sos.inventory.model.descriptor.controller.Cluster;
+import com.sos.inventory.model.descriptor.common.Target;
 import com.sos.inventory.model.descriptor.controller.ControllerClusterDescriptor;
 import com.sos.inventory.model.descriptor.controller.ControllerDescriptor;
-import com.sos.inventory.model.descriptor.controller.Instance;
-import com.sos.inventory.model.descriptor.controller.Target;
 import com.sos.inventory.model.descriptor.joc.JocClusterDescriptor;
-import com.sos.inventory.model.descriptor.joc.JocClusterMembersDescriptor;
 import com.sos.inventory.model.descriptor.joc.JocDescriptor;
 import com.sos.inventory.model.descriptor.joc.JocInstallation;
 import com.sos.inventory.model.descriptor.joc.JocInstallation.DbmsInit;
@@ -1529,10 +1524,10 @@ public class DeploymentTestUtils {
         ControllerClusterDescriptor ccDescriptor = new ControllerClusterDescriptor();
         
         ccDescriptor.setJocRef("cluster");
-
+        ccDescriptor.setControllerId("testsuite");
+        
         ControllerDescriptor primaryControllerDesc = new ControllerDescriptor();
-        Instance primaryInstance = new Instance();
-
+        
         com.sos.inventory.model.descriptor.controller.Configuration cfgPrimary = new com.sos.inventory.model.descriptor.controller.Configuration();
         Certificates primaryCertificates = new Certificates();
         primaryCertificates.setKeyStore("controllers/instances/cluster.primary/config/private/https-keystore.p12");
@@ -1548,7 +1543,7 @@ public class DeploymentTestUtils {
         primaryTemplates.add("controllers/templates/https.primary/config");
         cfgPrimary.setTemplates(primaryTemplates);
         
-        primaryInstance.setConfiguration(cfgPrimary);
+        primaryControllerDesc.setConfiguration(cfgPrimary);
 
         Installation installationPrimary = new Installation();
         installationPrimary.setData("/var/sos-berlin.com/js7/controller-primary");
@@ -1560,14 +1555,13 @@ public class DeploymentTestUtils {
         installationPrimary.setJavaHome("/opt/jdk-11.0.2");
         installationPrimary.setJavaOptions("-Xmx256m -Djava.security.egd=file:///dev/urandom");
         installationPrimary.setRunUser("sos2");
-        primaryInstance.setInstallation(installationPrimary);
+        primaryControllerDesc.setInstallation(installationPrimary);
 
         Media primaryMedia = new Media();
         primaryMedia.setRelease("2.5.1");
         primaryMedia.setTarball("2.5.1/js7_controller_unix.2.5.1.tar.gz");
-        primaryInstance.setMedia(primaryMedia);
+        primaryControllerDesc.setMedia(primaryMedia);
 
-        primaryControllerDesc.setInstanceType(primaryInstance);
 
         Target primaryTarget = new Target();
 
@@ -1586,12 +1580,11 @@ public class DeploymentTestUtils {
         primaryTarget.setExecPre("StopService");
         primaryTarget.setMakeService(true);
         primaryTarget.setPackageLocation("/tmp");
-        primaryInstance.setTarget(primaryTarget);
+        primaryControllerDesc.setTarget(primaryTarget);
 
-        ccDescriptor.setAdditionalProperty("primary", primaryControllerDesc);
+        ccDescriptor.setPrimary(primaryControllerDesc);
 
         ControllerDescriptor secondaryControllerDesc = new ControllerDescriptor();
-        Instance secondaryInstance = new Instance();
 
         com.sos.inventory.model.descriptor.controller.Configuration cfgSecondary = new com.sos.inventory.model.descriptor.controller.Configuration();
         Certificates secondaryCertificates = new Certificates();
@@ -1608,7 +1601,7 @@ public class DeploymentTestUtils {
         secondaryTemplates.add("controllers/templates/https.secondary/config");
         cfgSecondary.setTemplates(secondaryTemplates);
         
-        secondaryInstance.setConfiguration(cfgSecondary);
+        secondaryControllerDesc.setConfiguration(cfgSecondary);
 
         Installation installationSecondary = new Installation();
         installationSecondary.setData("/var/sos-berlin.com/js7/controller-secondary");
@@ -1620,12 +1613,12 @@ public class DeploymentTestUtils {
         installationSecondary.setJavaHome("/opt/jdk-11.0.2");
         installationSecondary.setJavaOptions("-Xmx256m -Djava.security.egd=file:///dev/urandom");
         installationSecondary.setRunUser("sos2");
-        secondaryInstance.setInstallation(installationSecondary);
+        secondaryControllerDesc.setInstallation(installationSecondary);
         
         Media secondaryMedia = new Media();
         secondaryMedia.setRelease("2.5.1");
         secondaryMedia.setTarball("2.5.1/js7_controller_unix.2.5.1.tar.gz");
-        secondaryInstance.setMedia(secondaryMedia);
+        secondaryControllerDesc.setMedia(secondaryMedia);
         
         Target secondaryTarget = new Target();
         Authentication secondaryAuth = new Authentication();
@@ -1643,19 +1636,22 @@ public class DeploymentTestUtils {
         secondaryTarget.setExecPre("StopService");
         secondaryTarget.setMakeService(true);
         secondaryTarget.setPackageLocation("/tmp");
-        secondaryInstance.setTarget(secondaryTarget);
+        secondaryControllerDesc.setTarget(secondaryTarget);
         
-        secondaryControllerDesc.setInstanceType(secondaryInstance);
-        ccDescriptor.setAdditionalProperty("secondary", secondaryControllerDesc);
-        Cluster controllerCluster = new Cluster();
-        controllerCluster.setAdditionalProperty("cluster", ccDescriptor);
-        depDescriptor.setControllers(controllerCluster);
+        ccDescriptor.setSecondary(secondaryControllerDesc);
+        depDescriptor.setControllers(ccDescriptor);
         
-        AgentsDescriptor agentsDescriptor = new AgentsDescriptor();
+        if (depDescriptor.getAgents() == null) {
+            depDescriptor.setAgents(new ArrayList<AgentDescriptor>());
+        }
         
         AgentDescriptor agent1Desc = new AgentDescriptor();
+        agent1Desc.setAgentId("agent_001");
+        
         
         com.sos.inventory.model.descriptor.agent.Configuration cfgAgent1 = new com.sos.inventory.model.descriptor.agent.Configuration();
+        cfgAgent1.setControllerRef("testsuite");
+
         Certificates agent1Certs = new Certificates();
         agent1Certs.setKeyStore("agents/instances/agent_001/config/private/https-keystore.p12");
         agent1Certs.setKeyStorePassword("jobscheduler");
@@ -1664,10 +1660,6 @@ public class DeploymentTestUtils {
         agent1Certs.setTrustStore("agents/instances/agent_001/config/private/https-truststore.p12");
         agent1Certs.setTrustStorePassword("jobscheduler");
         cfgAgent1.setCertificates(agent1Certs);
-        
-        ControllerRef agent1ControllerRef = new ControllerRef();
-        agent1ControllerRef.setControllerId("cluster");
-        cfgAgent1.setController(agent1ControllerRef);
         
         List<String> agent1Templates = new ArrayList<String>();
         agent1Templates.add("agents/templates/https/config");
@@ -1692,7 +1684,7 @@ public class DeploymentTestUtils {
         agent1Media.setTarball("2.5.1/js7_agent_unix.2.5.1.tar.gz");
         agent1Desc.setMedia(agent1Media);
         
-        com.sos.inventory.model.descriptor.agent.Target agent1Target = new com.sos.inventory.model.descriptor.agent.Target();
+        Target agent1Target = new Target();
         Authentication agent1Auth = new Authentication();
         agent1Auth.setKeyFile("/home/sos/.ssh/sos_rsa");
         agent1Auth.setMethod(Authentication.Method.PUBLICKEY);
@@ -1709,12 +1701,15 @@ public class DeploymentTestUtils {
         agent1Target.setMakeService(true);
         agent1Target.setPackageLocation("/tmp");
         agent1Desc.setTarget(agent1Target);
-        
-        agentsDescriptor.setAdditionalProperty("agent_001", agent1Desc);
+
+        depDescriptor.getAgents().add(agent1Desc);
         
         AgentDescriptor agent2Desc = new AgentDescriptor();
+        agent2Desc.setAgentId("agent_002");
         
         com.sos.inventory.model.descriptor.agent.Configuration cfgAgent2 = new com.sos.inventory.model.descriptor.agent.Configuration();
+        cfgAgent2.setControllerRef("testsuite");
+        
         Certificates agent2Certs = new Certificates();
         agent2Certs.setKeyStore("agents/instances/agent_002/config/private/https-keystore.p12");
         agent2Certs.setKeyStorePassword("jobscheduler");
@@ -1723,10 +1718,6 @@ public class DeploymentTestUtils {
         agent2Certs.setTrustStore("agents/instances/agent_002/config/private/https-truststore.p12");
         agent2Certs.setTrustStorePassword("jobscheduler");
         cfgAgent2.setCertificates(agent2Certs);
-        
-        ControllerRef agent2ControllerRef = new ControllerRef();
-        agent2ControllerRef.setControllerId("cluster");
-        cfgAgent2.setController(agent2ControllerRef);
         
         List<String> agent2Templates = new ArrayList<String>();
         agent2Templates.add("agents/templates/https/config");
@@ -1751,7 +1742,7 @@ public class DeploymentTestUtils {
         agent2Media.setTarball("2.5.1/js7_agent_unix.2.5.1.tar.gz");
         agent2Desc.setMedia(agent2Media);
         
-        com.sos.inventory.model.descriptor.agent.Target agent2Target = new com.sos.inventory.model.descriptor.agent.Target();
+        Target agent2Target = new Target();
         Authentication agent2Auth = new Authentication();
         agent2Auth.setKeyFile("/home/sos/.ssh/sos_rsa");
         agent2Auth.setMethod(Authentication.Method.PUBLICKEY);
@@ -1769,15 +1760,17 @@ public class DeploymentTestUtils {
         agent2Target.setPackageLocation("/tmp");
         agent2Desc.setTarget(agent2Target);
         
-        agentsDescriptor.setAdditionalProperty("agent_002", agent2Desc);
-        depDescriptor.setAgents(agentsDescriptor);
+        depDescriptor.getAgents().add(agent2Desc);
         
         JocClusterDescriptor jocClusterDescriptor = new JocClusterDescriptor();
-        JocClusterMembersDescriptor jocClusterMembersDescriptor = new JocClusterMembersDescriptor();
-        jocClusterDescriptor.setAdditionalProperty("cluster", jocClusterMembersDescriptor);
+        jocClusterDescriptor.setClusterId("cluster");
+        if(jocClusterDescriptor.getMembers() == null) {
+            jocClusterDescriptor.setMembers(new ArrayList<JocDescriptor>());
+        }
         
         JocDescriptor joc1Descr = new JocDescriptor();
         joc1Descr.setOrdering(1);
+        joc1Descr.setInstanceId("" + joc1Descr.getOrdering());
         
         com.sos.inventory.model.descriptor.joc.Configuration joc1Cfg = new com.sos.inventory.model.descriptor.joc.Configuration();
         
@@ -1830,7 +1823,7 @@ public class DeploymentTestUtils {
         joc1Media.setTarball("2.5.1/js7_joc_linux.2.5.1.tar.gz");
         joc1Descr.setMedia(joc1Media);
         
-        com.sos.inventory.model.descriptor.joc.Target joc1Target = new com.sos.inventory.model.descriptor.joc.Target();
+        Target joc1Target = new Target();
         
         Authentication joc1Authentication = new Authentication();
         joc1Authentication.setKeyFile("/home/sos/.ssh/sos_rsa");
@@ -1849,10 +1842,12 @@ public class DeploymentTestUtils {
         joc1Target.setPackageLocation("/tmp");
         joc1Descr.setTarget(joc1Target);
         
-        jocClusterMembersDescriptor.setAdditionalProperty("1", joc1Descr);
+        jocClusterDescriptor.getMembers().add(joc1Descr);
         
         JocDescriptor joc2Descr = new JocDescriptor();
         joc2Descr.setOrdering(2);
+        joc2Descr.setInstanceId("" + joc2Descr.getOrdering());
+        
         com.sos.inventory.model.descriptor.joc.Configuration joc2Cfg = new com.sos.inventory.model.descriptor.joc.Configuration();
         Certificates joc2Certs = new Certificates();
         joc2Certs.setKeyStore("joc/instances/cluster.secondary/resources/https-keystore.p12");
@@ -1903,7 +1898,7 @@ public class DeploymentTestUtils {
         joc2Media.setTarball("2.5.1/js7_joc_linux.2.5.1.tar.gz");
         joc2Descr.setMedia(joc2Media);
         
-        com.sos.inventory.model.descriptor.joc.Target joc2Target = new com.sos.inventory.model.descriptor.joc.Target();
+        Target joc2Target = new Target();
         
         Authentication joc2Authentication = new Authentication();
         joc2Authentication.setKeyFile("/home/sos/.ssh/sos_rsa");
@@ -1922,7 +1917,7 @@ public class DeploymentTestUtils {
         joc2Target.setPackageLocation("/tmp");
         joc2Descr.setTarget(joc2Target);
         
-        jocClusterMembersDescriptor.setAdditionalProperty("2", joc2Descr);
+        jocClusterDescriptor.getMembers().add(joc2Descr);
         
         depDescriptor.setJoc(jocClusterDescriptor);
         return depDescriptor;

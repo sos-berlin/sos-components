@@ -1,16 +1,21 @@
 
-package com.sos.inventory.model.descriptor.agent;
+package com.sos.inventory.model.descriptor.common;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.inventory.model.descriptor.common.Authentication;
-import com.sos.inventory.model.descriptor.common.Connection;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
+
+/**
+ * Deployment Descriptor Target Schema
+ * <p>
+ * JS7 Deployment Descriptor Target Schema
+ * 
+ */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "connection",
@@ -25,22 +30,22 @@ public class Target {
     /**
      * Deployment Descriptor Connection Schema
      * <p>
-     * JS7 JOC Descriptor Connection Schema
+     * JS7 Deployment Descriptor Connection Schema
      * (Required)
      * 
      */
     @JsonProperty("connection")
-    @JsonPropertyDescription("JS7 JOC Descriptor Connection Schema")
+    @JsonPropertyDescription("JS7 Deployment Descriptor Connection Schema")
     private Connection connection;
     /**
      * Deployment Descriptor Authentication Schema
      * <p>
-     * JS7 JOC Descriptor Authentication Schema
+     * JS7 Deployment Descriptor Authentication Schema
      * (Required)
      * 
      */
     @JsonProperty("authentication")
-    @JsonPropertyDescription("JS7 JOC Descriptor Authentication Schema")
+    @JsonPropertyDescription("JS7 Deployment Descriptor Authentication Schema")
     private Authentication authentication;
     /**
      * 
@@ -85,7 +90,7 @@ public class Target {
     /**
      * Deployment Descriptor Connection Schema
      * <p>
-     * JS7 JOC Descriptor Connection Schema
+     * JS7 Deployment Descriptor Connection Schema
      * (Required)
      * 
      */
@@ -97,7 +102,7 @@ public class Target {
     /**
      * Deployment Descriptor Connection Schema
      * <p>
-     * JS7 JOC Descriptor Connection Schema
+     * JS7 Deployment Descriptor Connection Schema
      * (Required)
      * 
      */
@@ -109,7 +114,7 @@ public class Target {
     /**
      * Deployment Descriptor Authentication Schema
      * <p>
-     * JS7 JOC Descriptor Authentication Schema
+     * JS7 Deployment Descriptor Authentication Schema
      * (Required)
      * 
      */
@@ -121,7 +126,7 @@ public class Target {
     /**
      * Deployment Descriptor Authentication Schema
      * <p>
-     * JS7 JOC Descriptor Authentication Schema
+     * JS7 Deployment Descriptor Authentication Schema
      * (Required)
      * 
      */

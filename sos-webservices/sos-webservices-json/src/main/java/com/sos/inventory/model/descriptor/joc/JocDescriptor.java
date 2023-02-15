@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.descriptor.common.Media;
+import com.sos.inventory.model.descriptor.common.Target;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -19,6 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
+    "instanceId",
     "ordering",
     "target",
     "media",
@@ -32,19 +34,33 @@ public class JocDescriptor {
      * (Required)
      * 
      */
+    @JsonProperty("instanceId")
+    private String instanceId;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("ordering")
     private Integer ordering;
+    /**
+     * Deployment Descriptor Target Schema
+     * <p>
+     * JS7 Deployment Descriptor Target Schema
+     * 
+     */
     @JsonProperty("target")
+    @JsonPropertyDescription("JS7 Deployment Descriptor Target Schema")
     private Target target;
     /**
      * Deployment Descriptor Media Schema
      * <p>
-     * JS7 JOC Descriptor Media Schema
+     * JS7 Deployment Descriptor Media Schema
      * (Required)
      * 
      */
     @JsonProperty("media")
-    @JsonPropertyDescription("JS7 JOC Descriptor Media Schema")
+    @JsonPropertyDescription("JS7 Deployment Descriptor Media Schema")
     private Media media;
     /**
      * Deployment Descriptor Installation Schema
@@ -68,19 +84,41 @@ public class JocDescriptor {
 
     /**
      * 
+     * @param instanceId
      * @param configuration
      * @param ordering
      * @param installation
      * @param media
      * @param target
      */
-    public JocDescriptor(Integer ordering, Target target, Media media, JocInstallation installation, Configuration configuration) {
+    public JocDescriptor(String instanceId, Integer ordering, Target target, Media media, JocInstallation installation, Configuration configuration) {
         super();
+        this.instanceId = instanceId;
         this.ordering = ordering;
         this.target = target;
         this.media = media;
         this.installation = installation;
         this.configuration = configuration;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("instanceId")
+    public String getInstanceId() {
+        return instanceId;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("instanceId")
+    public void setInstanceId(String instanceId) {
+        this.instanceId = instanceId;
     }
 
     /**
@@ -103,11 +141,23 @@ public class JocDescriptor {
         this.ordering = ordering;
     }
 
+    /**
+     * Deployment Descriptor Target Schema
+     * <p>
+     * JS7 Deployment Descriptor Target Schema
+     * 
+     */
     @JsonProperty("target")
     public Target getTarget() {
         return target;
     }
 
+    /**
+     * Deployment Descriptor Target Schema
+     * <p>
+     * JS7 Deployment Descriptor Target Schema
+     * 
+     */
     @JsonProperty("target")
     public void setTarget(Target target) {
         this.target = target;
@@ -116,7 +166,7 @@ public class JocDescriptor {
     /**
      * Deployment Descriptor Media Schema
      * <p>
-     * JS7 JOC Descriptor Media Schema
+     * JS7 Deployment Descriptor Media Schema
      * (Required)
      * 
      */
@@ -128,7 +178,7 @@ public class JocDescriptor {
     /**
      * Deployment Descriptor Media Schema
      * <p>
-     * JS7 JOC Descriptor Media Schema
+     * JS7 Deployment Descriptor Media Schema
      * (Required)
      * 
      */
@@ -173,12 +223,12 @@ public class JocDescriptor {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("ordering", ordering).append("target", target).append("media", media).append("installation", installation).append("configuration", configuration).toString();
+        return new ToStringBuilder(this).append("instanceId", instanceId).append("ordering", ordering).append("target", target).append("media", media).append("installation", installation).append("configuration", configuration).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(media).append(configuration).append(ordering).append(target).append(installation).toHashCode();
+        return new HashCodeBuilder().append(instanceId).append(configuration).append(ordering).append(installation).append(media).append(target).toHashCode();
     }
 
     @Override
@@ -190,7 +240,7 @@ public class JocDescriptor {
             return false;
         }
         JocDescriptor rhs = ((JocDescriptor) other);
-        return new EqualsBuilder().append(media, rhs.media).append(configuration, rhs.configuration).append(ordering, rhs.ordering).append(target, rhs.target).append(installation, rhs.installation).isEquals();
+        return new EqualsBuilder().append(instanceId, rhs.instanceId).append(configuration, rhs.configuration).append(ordering, rhs.ordering).append(installation, rhs.installation).append(media, rhs.media).append(target, rhs.target).isEquals();
     }
 
 }

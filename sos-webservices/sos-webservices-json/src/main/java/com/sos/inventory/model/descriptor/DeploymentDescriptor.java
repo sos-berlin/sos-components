@@ -1,14 +1,16 @@
 
 package com.sos.inventory.model.descriptor;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.common.IInventoryObject;
-import com.sos.inventory.model.descriptor.agent.AgentsDescriptor;
-import com.sos.inventory.model.descriptor.controller.Cluster;
+import com.sos.inventory.model.descriptor.agent.AgentDescriptor;
+import com.sos.inventory.model.descriptor.controller.ControllerClusterDescriptor;
 import com.sos.inventory.model.descriptor.joc.JocClusterDescriptor;
 import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.common.IReleaseObject;
@@ -38,17 +40,17 @@ public class DeploymentDescriptor implements IInventoryObject, IConfigurationObj
     private Descriptor descriptor;
     @JsonProperty("license")
     private License license;
+    @JsonProperty("agents")
+    private List<AgentDescriptor> agents = null;
     /**
-     * Agents Item of a Deployment Descriptor
+     * Controller Cluster Item of a Deployment Descriptor
      * <p>
-     * JS7 Agents Descriptor Schema
+     * JS7 Controller Cluster Descriptor Schema
      * 
      */
-    @JsonProperty("agents")
-    @JsonPropertyDescription("JS7 Agents Descriptor Schema")
-    private AgentsDescriptor agents;
     @JsonProperty("controllers")
-    private Cluster controllers;
+    @JsonPropertyDescription("JS7 Controller Cluster Descriptor Schema")
+    private ControllerClusterDescriptor controllers;
     /**
      * Jocs Item of a Deployment Descriptor
      * <p>
@@ -79,7 +81,7 @@ public class DeploymentDescriptor implements IInventoryObject, IConfigurationObj
      * @param agents
      * @param joc
      */
-    public DeploymentDescriptor(Descriptor descriptor, License license, AgentsDescriptor agents, Cluster controllers, JocClusterDescriptor joc) {
+    public DeploymentDescriptor(Descriptor descriptor, License license, List<AgentDescriptor> agents, ControllerClusterDescriptor controllers, JocClusterDescriptor joc) {
         super();
         this.descriptor = descriptor;
         this.license = license;
@@ -108,35 +110,35 @@ public class DeploymentDescriptor implements IInventoryObject, IConfigurationObj
         this.license = license;
     }
 
-    /**
-     * Agents Item of a Deployment Descriptor
-     * <p>
-     * JS7 Agents Descriptor Schema
-     * 
-     */
     @JsonProperty("agents")
-    public AgentsDescriptor getAgents() {
+    public List<AgentDescriptor> getAgents() {
         return agents;
     }
 
-    /**
-     * Agents Item of a Deployment Descriptor
-     * <p>
-     * JS7 Agents Descriptor Schema
-     * 
-     */
     @JsonProperty("agents")
-    public void setAgents(AgentsDescriptor agents) {
+    public void setAgents(List<AgentDescriptor> agents) {
         this.agents = agents;
     }
 
+    /**
+     * Controller Cluster Item of a Deployment Descriptor
+     * <p>
+     * JS7 Controller Cluster Descriptor Schema
+     * 
+     */
     @JsonProperty("controllers")
-    public Cluster getControllers() {
+    public ControllerClusterDescriptor getControllers() {
         return controllers;
     }
 
+    /**
+     * Controller Cluster Item of a Deployment Descriptor
+     * <p>
+     * JS7 Controller Cluster Descriptor Schema
+     * 
+     */
     @JsonProperty("controllers")
-    public void setControllers(Cluster controllers) {
+    public void setControllers(ControllerClusterDescriptor controllers) {
         this.controllers = controllers;
     }
 
@@ -163,28 +165,6 @@ public class DeploymentDescriptor implements IInventoryObject, IConfigurationObj
     }
 
     @Override
-    public String toString() {
-        return new ToStringBuilder(this).append("descriptor", descriptor).append("license", license).append("agents", agents).append("controllers", controllers).append("joc", joc).toString();
-    }
-
-    @Override
-    public int hashCode() {
-        return new HashCodeBuilder().append(license).append(controllers).append(descriptor).append(agents).append(joc).toHashCode();
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        if (other == this) {
-            return true;
-        }
-        if ((other instanceof DeploymentDescriptor) == false) {
-            return false;
-        }
-        DeploymentDescriptor rhs = ((DeploymentDescriptor) other);
-        return new EqualsBuilder().append(license, rhs.license).append(controllers, rhs.controllers).append(descriptor, rhs.descriptor).append(agents, rhs.agents).append(joc, rhs.joc).isEquals();
-    }
-
-    @Override
     @JsonIgnore
     public String getTitle() {
         return title;
@@ -207,5 +187,26 @@ public class DeploymentDescriptor implements IInventoryObject, IConfigurationObj
     public void setVersion(String version) {
         this.version = version;
     }
-    
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this).append("descriptor", descriptor).append("license", license).append("agents", agents).append("controllers", controllers).append("joc", joc).toString();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder().append(license).append(controllers).append(descriptor).append(agents).append(joc).toHashCode();
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == this) {
+            return true;
+        }
+        if ((other instanceof DeploymentDescriptor) == false) {
+            return false;
+        }
+        DeploymentDescriptor rhs = ((DeploymentDescriptor) other);
+        return new EqualsBuilder().append(license, rhs.license).append(controllers, rhs.controllers).append(descriptor, rhs.descriptor).append(agents, rhs.agents).append(joc, rhs.joc).isEquals();
+    }
+
 }

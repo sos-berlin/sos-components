@@ -26,11 +26,11 @@ public class Configuration {
     /**
      * Deployment Descriptor Certificates Schema
      * <p>
-     * JS7 JOC Descriptor Certificates Schema
+     * JS7 Deployment Descriptor Certificates Schema
      * 
      */
     @JsonProperty("certificates")
-    @JsonPropertyDescription("JS7 JOC Descriptor Certificates Schema")
+    @JsonPropertyDescription("JS7 Deployment Descriptor Certificates Schema")
     private Certificates certificates;
     @JsonProperty("jocCert")
     private String jocCert;
@@ -76,7 +76,7 @@ public class Configuration {
     /**
      * Deployment Descriptor Certificates Schema
      * <p>
-     * JS7 JOC Descriptor Certificates Schema
+     * JS7 Deployment Descriptor Certificates Schema
      * 
      */
     @JsonProperty("certificates")
@@ -87,7 +87,7 @@ public class Configuration {
     /**
      * Deployment Descriptor Certificates Schema
      * <p>
-     * JS7 JOC Descriptor Certificates Schema
+     * JS7 Deployment Descriptor Certificates Schema
      * 
      */
     @JsonProperty("certificates")
