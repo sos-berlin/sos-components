@@ -13,22 +13,27 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
-    "controller",
+    "controllerRef",
     "certificates",
     "templates"
 })
 public class Configuration {
 
-    @JsonProperty("controller")
-    private ControllerRef controller;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("controllerRef")
+    private String controllerRef;
     /**
      * Deployment Descriptor Certificates Schema
      * <p>
-     * JS7 JOC Descriptor Certificates Schema
+     * JS7 Deployment Descriptor Certificates Schema
      * 
      */
     @JsonProperty("certificates")
-    @JsonPropertyDescription("JS7 JOC Descriptor Certificates Schema")
+    @JsonPropertyDescription("JS7 Deployment Descriptor Certificates Schema")
     private Certificates certificates;
     @JsonProperty("templates")
     private List<String> templates = null;
@@ -42,31 +47,41 @@ public class Configuration {
 
     /**
      * 
-     * @param controller
      * @param certificates
      * @param templates
+     * @param controllerRef
      */
-    public Configuration(ControllerRef controller, Certificates certificates, List<String> templates) {
+    public Configuration(String controllerRef, Certificates certificates, List<String> templates) {
         super();
-        this.controller = controller;
+        this.controllerRef = controllerRef;
         this.certificates = certificates;
         this.templates = templates;
     }
 
-    @JsonProperty("controller")
-    public ControllerRef getController() {
-        return controller;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("controllerRef")
+    public String getControllerRef() {
+        return controllerRef;
     }
 
-    @JsonProperty("controller")
-    public void setController(ControllerRef controller) {
-        this.controller = controller;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("controllerRef")
+    public void setControllerRef(String controllerRef) {
+        this.controllerRef = controllerRef;
     }
 
     /**
      * Deployment Descriptor Certificates Schema
      * <p>
-     * JS7 JOC Descriptor Certificates Schema
+     * JS7 Deployment Descriptor Certificates Schema
      * 
      */
     @JsonProperty("certificates")
@@ -77,7 +92,7 @@ public class Configuration {
     /**
      * Deployment Descriptor Certificates Schema
      * <p>
-     * JS7 JOC Descriptor Certificates Schema
+     * JS7 Deployment Descriptor Certificates Schema
      * 
      */
     @JsonProperty("certificates")
@@ -97,12 +112,12 @@ public class Configuration {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controller", controller).append("certificates", certificates).append("templates", templates).toString();
+        return new ToStringBuilder(this).append("controllerRef", controllerRef).append("certificates", certificates).append("templates", templates).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controller).append(certificates).append(templates).toHashCode();
+        return new HashCodeBuilder().append(certificates).append(controllerRef).append(templates).toHashCode();
     }
 
     @Override
@@ -114,7 +129,7 @@ public class Configuration {
             return false;
         }
         Configuration rhs = ((Configuration) other);
-        return new EqualsBuilder().append(controller, rhs.controller).append(certificates, rhs.certificates).append(templates, rhs.templates).isEquals();
+        return new EqualsBuilder().append(certificates, rhs.certificates).append(controllerRef, rhs.controllerRef).append(templates, rhs.templates).isEquals();
     }
 
 }

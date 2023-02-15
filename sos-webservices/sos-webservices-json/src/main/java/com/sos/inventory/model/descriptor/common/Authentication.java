@@ -16,7 +16,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * Deployment Descriptor Authentication Schema
  * <p>
- * JS7 JOC Descriptor Authentication Schema
+ * JS7 Deployment Descriptor Authentication Schema
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)

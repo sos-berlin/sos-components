@@ -32,10 +32,13 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.descriptor.DeploymentDescriptor;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
+import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.agent.transfer.AgentExportFilter;
 import com.sos.joc.model.agent.transfer.AgentImportFilter;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.release.ReleasableRecallFilter;
 import com.sos.joc.model.joc.VersionsFilter;
 import com.sos.joc.model.notification.DeleteNotificationFilter;
@@ -571,6 +574,17 @@ public class MappingTest {
     public void test37DeploymentDescriptorExample() throws JsonProcessingException {
         DeploymentDescriptor descriptor = DeploymentTestUtils.createDeploymentDescriptorSchemaExample();
         LOGGER.trace("DeploymentDescriptor");
-        LOGGER.trace(Globals.prettyPrintObjectMapper.writeValueAsString(descriptor));
+        String json = Globals.prettyPrintObjectMapper.writeValueAsString(descriptor);
+        LOGGER.trace( "\n" + json);
+//        boolean valid = false;
+//        try {
+//            Validator.validate(ConfigurationType.DEPLOYMENTDESCRIPTOR, json.getBytes());
+//            valid = true;
+//        } catch (SOSJsonSchemaException | JocConfigurationException | SOSHibernateException | IOException e) {
+//            // TODO Auto-generated catch block
+//            e.printStackTrace();
+//        }
+//        LOGGER.info( "json valid: " + valid);
+//        assertTrue(valid);
     }
 }

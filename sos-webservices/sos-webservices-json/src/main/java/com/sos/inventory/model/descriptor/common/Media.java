@@ -12,7 +12,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * Deployment Descriptor Media Schema
  * <p>
- * JS7 JOC Descriptor Media Schema
+ * JS7 Deployment Descriptor Media Schema
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)

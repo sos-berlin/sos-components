@@ -12,7 +12,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * Deployment Descriptor Certificates Schema
  * <p>
- * JS7 JOC Descriptor Certificates Schema
+ * JS7 Deployment Descriptor Certificates Schema
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)

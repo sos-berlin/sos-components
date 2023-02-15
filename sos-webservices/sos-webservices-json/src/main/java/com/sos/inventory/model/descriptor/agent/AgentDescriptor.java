@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.descriptor.common.Installation;
 import com.sos.inventory.model.descriptor.common.Media;
+import com.sos.inventory.model.descriptor.common.Target;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -20,6 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
+    "agentId",
     "target",
     "media",
     "installation",
@@ -27,27 +29,41 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class AgentDescriptor {
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("agentId")
+    private String agentId;
+    /**
+     * Deployment Descriptor Target Schema
+     * <p>
+     * JS7 Deployment Descriptor Target Schema
+     * 
+     */
     @JsonProperty("target")
+    @JsonPropertyDescription("JS7 Deployment Descriptor Target Schema")
     private Target target;
     /**
      * Deployment Descriptor Media Schema
      * <p>
-     * JS7 JOC Descriptor Media Schema
+     * JS7 Deployment Descriptor Media Schema
      * (Required)
      * 
      */
     @JsonProperty("media")
-    @JsonPropertyDescription("JS7 JOC Descriptor Media Schema")
+    @JsonPropertyDescription("JS7 Deployment Descriptor Media Schema")
     private Media media;
     /**
      * Deployment Descriptor Installation Schema
      * <p>
-     * JS7 JOC Descriptor Installation Schema
+     * JS7 Deployment Descriptor Installation Schema
      * (Required)
      * 
      */
     @JsonProperty("installation")
-    @JsonPropertyDescription("JS7 JOC Descriptor Installation Schema")
+    @JsonPropertyDescription("JS7 Deployment Descriptor Installation Schema")
     private Installation installation;
     @JsonProperty("configuration")
     private Configuration configuration;
@@ -61,24 +77,58 @@ public class AgentDescriptor {
 
     /**
      * 
+     * @param agentId
      * @param configuration
      * @param installation
      * @param media
      * @param target
      */
-    public AgentDescriptor(Target target, Media media, Installation installation, Configuration configuration) {
+    public AgentDescriptor(String agentId, Target target, Media media, Installation installation, Configuration configuration) {
         super();
+        this.agentId = agentId;
         this.target = target;
         this.media = media;
         this.installation = installation;
         this.configuration = configuration;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("agentId")
+    public String getAgentId() {
+        return agentId;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("agentId")
+    public void setAgentId(String agentId) {
+        this.agentId = agentId;
+    }
+
+    /**
+     * Deployment Descriptor Target Schema
+     * <p>
+     * JS7 Deployment Descriptor Target Schema
+     * 
+     */
     @JsonProperty("target")
     public Target getTarget() {
         return target;
     }
 
+    /**
+     * Deployment Descriptor Target Schema
+     * <p>
+     * JS7 Deployment Descriptor Target Schema
+     * 
+     */
     @JsonProperty("target")
     public void setTarget(Target target) {
         this.target = target;
@@ -87,7 +137,7 @@ public class AgentDescriptor {
     /**
      * Deployment Descriptor Media Schema
      * <p>
-     * JS7 JOC Descriptor Media Schema
+     * JS7 Deployment Descriptor Media Schema
      * (Required)
      * 
      */
@@ -99,7 +149,7 @@ public class AgentDescriptor {
     /**
      * Deployment Descriptor Media Schema
      * <p>
-     * JS7 JOC Descriptor Media Schema
+     * JS7 Deployment Descriptor Media Schema
      * (Required)
      * 
      */
@@ -111,7 +161,7 @@ public class AgentDescriptor {
     /**
      * Deployment Descriptor Installation Schema
      * <p>
-     * JS7 JOC Descriptor Installation Schema
+     * JS7 Deployment Descriptor Installation Schema
      * (Required)
      * 
      */
@@ -123,7 +173,7 @@ public class AgentDescriptor {
     /**
      * Deployment Descriptor Installation Schema
      * <p>
-     * JS7 JOC Descriptor Installation Schema
+     * JS7 Deployment Descriptor Installation Schema
      * (Required)
      * 
      */
@@ -144,12 +194,12 @@ public class AgentDescriptor {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("target", target).append("media", media).append("installation", installation).append("configuration", configuration).toString();
+        return new ToStringBuilder(this).append("agentId", agentId).append("target", target).append("media", media).append("installation", installation).append("configuration", configuration).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(media).append(configuration).append(target).append(installation).toHashCode();
+        return new HashCodeBuilder().append(agentId).append(media).append(configuration).append(target).append(installation).toHashCode();
     }
 
     @Override
@@ -161,7 +211,7 @@ public class AgentDescriptor {
             return false;
         }
         AgentDescriptor rhs = ((AgentDescriptor) other);
-        return new EqualsBuilder().append(media, rhs.media).append(configuration, rhs.configuration).append(target, rhs.target).append(installation, rhs.installation).isEquals();
+        return new EqualsBuilder().append(agentId, rhs.agentId).append(media, rhs.media).append(configuration, rhs.configuration).append(target, rhs.target).append(installation, rhs.installation).isEquals();
     }
 
 }
