@@ -24,18 +24,20 @@ import js7.data.node.NodeId;
 public class ControllerAnswer extends Controller {
 
     @JsonIgnore
-	private final Overview overviewJson;
-	@JsonIgnore
+    private final Overview overviewJson;
+    @JsonIgnore
     private final ClusterState clusterStateJson;
     @JsonIgnore
-	private DBItemInventoryJSInstance dbInstance;
-	@JsonIgnore
-	private DBItemInventoryOperatingSystem dbOs;
+    private DBItemInventoryJSInstance dbInstance;
     @JsonIgnore
-	private boolean updateDbInstance = false;
-	@JsonIgnore
+    private DBItemInventoryOperatingSystem dbOs;
+    @JsonIgnore
+    private boolean updateDbInstance = false;
+    @JsonIgnore
     private ClusterType clusterState = null;
-	@JsonIgnore
+    @JsonIgnore
+    private NodeId lossNode = null;
+    @JsonIgnore
     private boolean onlyDb = false;
 
     public ControllerAnswer(Overview overview, ClusterState clusterState, DBItemInventoryJSInstance dbInstance, DBItemInventoryOperatingSystem dbOs,
@@ -74,9 +76,17 @@ public class ControllerAnswer extends Controller {
 		this.dbOs = dbOs;
 	}
 	
-	@JsonIgnore
+    @JsonIgnore
     public ClusterType getClusterState() {
         return clusterState;
+    }
+
+    @JsonIgnore
+    public String getLossNode() {
+        if (lossNode == null) {
+            return null;
+        }
+        return lossNode.string();
     }
 	
 	@JsonIgnore
@@ -108,7 +118,7 @@ public class ControllerAnswer extends Controller {
 	        }
 			boolean currentNodeIsLoss = false;
             if (dbInstance.getIsCluster()) {
-                NodeId lossNode = ClusterWatch.getInstance().getClusterNodeLoss(dbInstance.getControllerId());
+                lossNode = ClusterWatch.getInstance().getClusterNodeLoss(dbInstance.getControllerId());
                 if (lossNode != null) {
                     clusterState = ClusterType.NODE_LOSS_TO_BE_CONFIRMED;
 //                    EventBus.getInstance().post(new ClusterNodeLossEvent(dbInstance.getControllerId(), lossNodes, true));
