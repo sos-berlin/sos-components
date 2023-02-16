@@ -40,6 +40,8 @@ import com.sos.inventory.model.descriptor.joc.JocDescriptor;
 import com.sos.inventory.model.descriptor.joc.JocInstallation;
 import com.sos.inventory.model.descriptor.joc.JocInstallation.DbmsInit;
 import com.sos.inventory.model.descriptor.joc.JocInstallation.SecurityLevel;
+import com.sos.inventory.model.descriptor.joc.JocInstanceDescriptor;
+import com.sos.inventory.model.descriptor.joc.Members;
 import com.sos.inventory.model.descriptor.joc.StartFiles;
 import com.sos.joc.Globals;
 import com.sos.joc.model.agent.transfer.AgentExportFilter;
@@ -1762,13 +1764,16 @@ public class DeploymentTestUtils {
         
         depDescriptor.getAgents().add(agent2Desc);
         
-        JocClusterDescriptor jocClusterDescriptor = new JocClusterDescriptor();
-        jocClusterDescriptor.setClusterId("cluster");
-        if(jocClusterDescriptor.getMembers() == null) {
-            jocClusterDescriptor.setMembers(new ArrayList<JocDescriptor>());
-        }
+        JocDescriptor jocClusterDescriptor = new JocDescriptor();
+        Members jocMembers = new Members();
         
-        JocDescriptor joc1Descr = new JocDescriptor();
+        jocMembers.setClusterId("cluster");
+        if(jocMembers.getInstances() == null) {
+            jocMembers.setInstances(new ArrayList<JocInstanceDescriptor>());
+        }
+        jocClusterDescriptor.setMembers(jocMembers);
+        
+        JocInstanceDescriptor joc1Descr = new JocInstanceDescriptor();
         joc1Descr.setOrdering(1);
         joc1Descr.setInstanceId("" + joc1Descr.getOrdering());
         
@@ -1842,9 +1847,9 @@ public class DeploymentTestUtils {
         joc1Target.setPackageLocation("/tmp");
         joc1Descr.setTarget(joc1Target);
         
-        jocClusterDescriptor.getMembers().add(joc1Descr);
+        jocMembers.getInstances().add(joc1Descr);
         
-        JocDescriptor joc2Descr = new JocDescriptor();
+        JocInstanceDescriptor joc2Descr = new JocInstanceDescriptor();
         joc2Descr.setOrdering(2);
         joc2Descr.setInstanceId("" + joc2Descr.getOrdering());
         
@@ -1917,7 +1922,7 @@ public class DeploymentTestUtils {
         joc2Target.setPackageLocation("/tmp");
         joc2Descr.setTarget(joc2Target);
         
-        jocClusterDescriptor.getMembers().add(joc2Descr);
+        jocMembers.getInstances().add(joc2Descr);
         
         depDescriptor.setJoc(jocClusterDescriptor);
         return depDescriptor;
