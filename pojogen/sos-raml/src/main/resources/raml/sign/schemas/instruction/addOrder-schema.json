@@ -32,7 +32,16 @@
     "deleteWhenTerminated" : {
     	"type" : "boolean",
     	"default": true
-	}
+	},
+    "startPosition": {
+     	"$ref": "../../../inventory/schemas/common/position-schema.json"
+    },
+	"endPositions": {
+		"type": "array",
+		"items": {
+     		"$ref": "../../../inventory/schemas/common/position-schema.json"
+     	}
+    }
   },
   "additionalProperties": false
 }

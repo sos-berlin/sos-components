@@ -26,6 +26,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.inventory.model.deploy.DeployType;
+import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.inventory.JocInventory;
@@ -35,6 +36,8 @@ import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
+import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocDeployException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.common.IDeployObject;
@@ -157,10 +160,23 @@ public class StoreDeployments {
                 if(dailyPlanDate != null) {
                     DailyPlanOrdersGenerateImpl ordersGenerate = new DailyPlanOrdersGenerateImpl();
                     List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(commitId);
-                    List<String> workflowPaths = optimisticEntries.stream().filter(item -> item.getTypeAsEnum().equals(DeployType.WORKFLOW))
-                            .map(workflow -> workflow.getPath()).collect(Collectors.toList());
-                    if(workflowPaths != null && !workflowPaths.isEmpty()) {
-                        List<GenerateRequest> requests =  ordersGenerate.getGenerateRequests(dailyPlanDate, workflowPaths, null, controllerId);
+                    List<String> schedulePaths = new ArrayList<String>();
+                    InventoryDBLayer invDbLayer = new InventoryDBLayer(newHibernateSession);
+                    List<String> workflowNames = optimisticEntries.stream().filter(item -> item.getTypeAsEnum().equals(DeployType.WORKFLOW))
+                    .map(workflow -> workflow.getName()).collect(Collectors.toList());
+                    // get the schedules referencing these workflows 
+                    for (String workflowName : workflowNames) {
+                        List<DBItemInventoryReleasedConfiguration> scheduleDbItems = invDbLayer.getUsedReleasedSchedulesByWorkflowName(workflowName);
+                        for (DBItemInventoryReleasedConfiguration scheduleDbItem : scheduleDbItems) {
+                            Schedule schedule = Globals.objectMapper.readValue(scheduleDbItem.getContent(), Schedule.class);
+                            // check planOrderAutomatically of the schedule first
+                            if (schedule.getPlanOrderAutomatically()) {
+                                schedulePaths.add(schedule.getPath());
+                            }
+                        }
+                    }
+                    if(!schedulePaths.isEmpty()) {
+                        List<GenerateRequest> requests =  ordersGenerate.getGenerateRequests(dailyPlanDate, null, schedulePaths, controllerId);
                         boolean successful = ordersGenerate.generateOrders(requests, accessToken, false);
                         if (!successful) {
                             LOGGER.warn("generate orders failed due to missing permission.");
