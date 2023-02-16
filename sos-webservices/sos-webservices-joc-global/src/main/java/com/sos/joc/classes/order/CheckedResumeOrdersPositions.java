@@ -226,6 +226,7 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
         }
         
         setVariables(getVariables(jOrder, position, implicitEnds));
+        setConstants(OrdersHelper.scalaValuedArgumentsToVariables(jOrder.arguments()));
         
         return this;
     }
@@ -299,6 +300,7 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
             IOException, JocBadRequestException {
         Set<String> allowedPositions = getPositions().stream().map(Position::getPositionString).collect(Collectors.toCollection(LinkedHashSet::new));
         Variables variables = new Variables();
+        Set<String> orderArgs = jOrder.arguments() == null ? Collections.emptySet() : jOrder.arguments().keySet();
         String positionStringWithoutCounter = positionString.replaceAll("/(try|catch|cycle)\\+?[^:]*", "/$1");
 
         if (allowedPositions.contains(positionString) || allowedPositions.contains(positionStringWithoutCounter) || implicitEnds.contains(
@@ -319,7 +321,9 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
                     if (!allowedPositions.contains(outcomePositionStringWithoutCounter)) {
                         continue;
                     }
-                    variables.setAdditionalProperties(outcome.getOutcome().getNamedValues().getAdditionalProperties());
+                    Map<String, Object> vars = outcome.getOutcome().getNamedValues().getAdditionalProperties();
+                    orderArgs.forEach(arg -> vars.remove(arg));
+                    variables.setAdditionalProperties(vars);
                 }
             }
         } else {
