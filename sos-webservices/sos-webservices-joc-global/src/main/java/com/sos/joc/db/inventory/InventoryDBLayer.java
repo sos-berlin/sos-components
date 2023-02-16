@@ -899,6 +899,84 @@ public class InventoryDBLayer extends DBLayer {
         }
     }
 
+    public List<DBItemInventoryReleasedConfiguration> getReleasedConfigurations(List<String> names, ConfigurationType type)
+            throws SOSHibernateException {
+        return getReleasedConfigurations(names, type == null ? Collections.emptyList() : Collections.singleton(type));
+    }
+
+    public List<DBItemInventoryReleasedConfiguration> getReleasedConfigurations(List<String> names, Collection<ConfigurationType> types)
+            throws SOSHibernateException {
+        if (names == null) {
+            names = Collections.emptyList();
+        }
+        int namesSize = names.size();
+        if (namesSize > SOSHibernate.LIMIT_IN_CLAUSE) {
+            List<DBItemInventoryReleasedConfiguration> result = new ArrayList<>();
+            for (int i = 0; i < names.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                result.addAll(getReleasedConfigurations(SOSHibernate.getInClausePartition(i, names), types));
+            }
+            return result;
+        } else {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" ");
+            hql.append("where ");
+            String add = "";
+            switch (namesSize) {
+            case 0:
+                break;
+            case 1:
+                hql.append(add).append("lower(name)=:name ");
+                add = "and ";
+                break;
+            default:
+                hql.append(add).append("lower(name) in (:names) ");
+                add = "and ";
+                break;
+            }
+            int typesSize = types == null ? 0 : types.size();
+            switch (typesSize) {
+            case 0:
+                break;
+            case 1:
+                hql.append(add).append("type=:type ");
+                add = "and ";
+                break;
+            default:
+                hql.append(add).append("types in (:types) ");
+                add = "and ";
+                break;
+            }
+
+            Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
+            switch (namesSize) {
+            case 0:
+                break;
+            case 1:
+                query.setParameter("name", names.get(0).toLowerCase());
+                break;
+            default:
+                query.setParameterList("names", names.stream().map(String::toLowerCase).collect(Collectors.toSet()));
+                break;
+            }
+
+            switch (typesSize) {
+            case 0:
+                break;
+            case 1:
+                query.setParameter("type", types.iterator().next().intValue());
+                break;
+            default:
+                query.setParameterList("types", types.stream().map(ConfigurationType::intValue).collect(Collectors.toSet()));
+                break;
+            }
+
+            List<DBItemInventoryReleasedConfiguration> result = getSession().getResultList(query);
+            if (result == null) {
+                return Collections.emptyList();
+            }
+            return result;
+        }
+    }
+
     public List<DBItemInventoryConfiguration> getFolderContent(String folder, boolean recursive, Collection<Integer> types)
             throws SOSHibernateException {
         return getFolderContent(folder, recursive, types, DBLayer.DBITEM_INV_CONFIGURATIONS);
@@ -1423,19 +1501,19 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("boardName", getRegexpParameter(boardName, "\""));
         return getSession().getResultList(query);
     }
-    
+
     public List<DBItemInventoryConfiguration> getUsedWorkflowsByAgentName(String agentName) throws SOSHibernateException {
         return getUsedWorkflowsByAgentName(agentName, false);
     }
-    
+
     public List<DBItemInventoryConfiguration> getUsedWorkflowsByAgentName(String agentName, boolean onlyInvalid) throws SOSHibernateException {
         return getUsedWorkflowsByAgentNames(Collections.singleton(agentName), onlyInvalid);
     }
-    
+
     public List<DBItemInventoryConfiguration> getUsedWorkflowsByAgentNames(Collection<String> agentNames) throws SOSHibernateException {
         return getUsedWorkflowsByAgentNames(agentNames, false);
     }
-    
+
     public List<DBItemInventoryConfiguration> getUsedWorkflowsByAgentNames(Collection<String> agentNames, boolean onlyInvalid)
             throws SOSHibernateException {
         if (agentNames == null || agentNames.isEmpty()) {
@@ -1599,19 +1677,19 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
-//    public List<DBItemInventoryConfiguration> getUsedSchedulesByCalendarPath(String calendarPath) throws SOSHibernateException {
-//        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
-//        hql.append("where type=:type ");
-//        hql.append("and ");
-//        String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "jsonContent", "$.calendars");
-//        hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":calendarPath"));
-//
-//        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
-//        query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
-//        query.setParameter("calendarPath", getRegexpParameter(calendarPath, "\""));
-//        return getSession().getResultList(query);
-//    }
-//
+    // public List<DBItemInventoryConfiguration> getUsedSchedulesByCalendarPath(String calendarPath) throws SOSHibernateException {
+    // StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
+    // hql.append("where type=:type ");
+    // hql.append("and ");
+    // String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "jsonContent", "$.calendars");
+    // hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":calendarPath"));
+    //
+    // Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+    // query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
+    // query.setParameter("calendarPath", getRegexpParameter(calendarPath, "\""));
+    // return getSession().getResultList(query);
+    // }
+    //
     public List<DBItemInventoryConfiguration> getUsedSchedulesByCalendarName(String calendarName) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
         hql.append("where type=:type ");
@@ -1723,13 +1801,13 @@ public class InventoryDBLayer extends DBLayer {
         } catch (Throwable e) {
         }
     }
-    
+
     public List<DBItemInventoryConfiguration> getAllInvalidConfigurations() throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
         hql.append("where valid = 0");
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         List<DBItemInventoryConfiguration> result = getSession().getResultList(query);
-        if(result == null) {
+        if (result == null) {
             return Collections.emptyList();
         }
         return result;
