@@ -66,7 +66,6 @@ import com.sos.joc.dailyplan.common.PlannedOrder;
 import com.sos.joc.dailyplan.common.PlannedOrderKey;
 import com.sos.joc.dailyplan.db.DBLayerDailyPlannedOrders;
 import com.sos.joc.dailyplan.db.DBLayerOrderVariables;
-import com.sos.joc.dailyplan.db.DBLayerReleasedConfigurations;
 import com.sos.joc.dailyplan.resource.IDailyPlanModifyOrder;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
@@ -74,6 +73,7 @@ import com.sos.joc.db.dailyplan.DBItemDailyPlanVariable;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
+import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.dailyplan.DailyPlanEvent;
@@ -112,12 +112,12 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             JsonValidator.validateFailFast(filterBytes, DailyPlanModifyOrder.class);
             DailyPlanModifyOrder in = Globals.objectMapper.readValue(filterBytes, DailyPlanModifyOrder.class);
             String controllerId = in.getControllerId();
-            
+
             JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getOrders().getModify());
             if (response != null) {
                 return response;
             }
-            
+
             boolean hasManagePositionsPermission = getControllerPermissions(controllerId, accessToken).getOrders().getManagePositions();
             if (!hasManagePositionsPermission && (in.getStartPosition() != null && !in.getStartPosition().isEmpty() || in.getEndPositions() != null
                     && !in.getEndPositions().isEmpty())) {
@@ -132,7 +132,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
             CategoryType category = orderIds.get(Boolean.FALSE).isEmpty() ? CategoryType.CONTROLLER : CategoryType.DAILYPLAN;
             DBItemJocAuditLog auditlog = storeAuditLog(in.getAuditLog(), in.getControllerId(), category);
-            
+
             List<DBItemDailyPlanOrder> dailyPlanOrderItems = null;
             if (!orderIds.get(Boolean.FALSE).isEmpty()) {
                 dailyPlanOrderItems = getDailyPlanOrders(controllerId, getDistinctOrderIds(orderIds.get(Boolean.FALSE)));
@@ -142,30 +142,29 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             }
             boolean someDailyPlanOrdersAreSubmitted = dailyPlanOrderItems.stream().anyMatch(DBItemDailyPlanOrder::getSubmitted);
             boolean onlyStarttimeModifications = hasOnlyStarttimeModifications(in);
-            
+
             Stream<String> workflowNames = Stream.empty();
             if (!onlyStarttimeModifications) {
                 workflowNames = dailyPlanOrderItems.stream().map(DBItemDailyPlanOrder::getWorkflowName).distinct();
             }
-            
+
             JControllerProxy proxy = null;
             JControllerState currentState = null;
-            
+
             // some dailyplan orders are already submitted then these must be in state SCHEDULED
             if (someDailyPlanOrdersAreSubmitted || !orderIds.get(Boolean.TRUE).isEmpty()) {
                 proxy = Proxy.of(controllerId);
                 currentState = proxy.currentState();
-                
+
                 OrdersHelper.getNotFreshOrders(in.getOrderIds(), currentState).ifPresent(s -> {
-                    throw new JocBadRequestException("Some orders are not in the state SCHEDULED or PLANNED: " + s
-                            .toString());
+                    throw new JocBadRequestException("Some orders are not in the state SCHEDULED or PLANNED: " + s.toString());
                 });
 
                 if (!onlyStarttimeModifications) {
                     workflowNames = Stream.concat(workflowNames, OrdersHelper.getWorkflowNamesOfFreshOrders(in.getOrderIds(), currentState));
                 }
             }
-            
+
             if (!onlyStarttimeModifications) { // check that all orders belong to one workflow
                 Set<String> wNames = workflowNames.collect(Collectors.toSet());
                 if (wNames.size() > 1) {
@@ -174,7 +173,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                                     .toString());
                 }
             }
-            
+
             if (!orderIds.get(Boolean.TRUE).isEmpty()) {
                 if (proxy == null) {
                     proxy = Proxy.of(controllerId);
@@ -191,7 +190,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
             if (!dailyPlanOrderItems.isEmpty()) {
                 if (!onlyStarttimeModifications) {
-                    dailyPlanResult = modifyOrderParameterisation(in, dailyPlanOrderItems, auditlog, zoneId); 
+                    dailyPlanResult = modifyOrderParameterisation(in, dailyPlanOrderItems, auditlog, zoneId);
                 } else {
                     dailyPlanResult = modifyStartTime(in, dailyPlanOrderItems, auditlog, zoneId);
                 }
@@ -266,7 +265,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             Globals.disconnect(session);
         }
     }
-    
+
     private boolean hasOnlyStarttimeModifications(DailyPlanModifyOrder in) {
         if (in.getVariables() != null && !in.getVariables().getAdditionalProperties().isEmpty()) {
             return false;
@@ -286,51 +285,52 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         }
         return true;
     }
-    
+
     private boolean withNewStartPosition(DailyPlanModifyOrder in) {
         if (in.getStartPosition() != null && !in.getStartPosition().isEmpty()) {
             return true;
         }
         return false;
     }
-    
+
     private boolean withNewEndPositions(DailyPlanModifyOrder in) {
         if (in.getStartPosition() != null && !in.getStartPosition().isEmpty()) {
             return true;
         }
         return false;
     }
-    
+
     private boolean withNewPositions(DailyPlanModifyOrder in) {
         return withNewStartPosition(in) || withNewEndPositions(in);
     }
-    
+
     private boolean withAddOrUpdateVariables(DailyPlanModifyOrder in) {
         if (in.getVariables() != null && !in.getVariables().getAdditionalProperties().isEmpty()) {
             return true;
         }
         return false;
     }
-    
+
     private boolean withRemoveVariables(DailyPlanModifyOrder in) {
         if (in.getRemoveVariables() != null && !in.getRemoveVariables().isEmpty()) {
             return true;
         }
         return false;
     }
-    
+
     private boolean withNewVariables(DailyPlanModifyOrder in) {
         return withAddOrUpdateVariables(in) || withRemoveVariables(in);
     }
 
-    private OrderIdMap modifyOrderParameterisation(DailyPlanModifyOrder in, List<DBItemDailyPlanOrder> items, DBItemJocAuditLog auditlog, ZoneId zoneId)
-            throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
-            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException, SOSHibernateException, IOException {
+    private OrderIdMap modifyOrderParameterisation(DailyPlanModifyOrder in, List<DBItemDailyPlanOrder> items, DBItemJocAuditLog auditlog,
+            ZoneId zoneId) throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
+            JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException,
+            SOSHibernateException, IOException {
 
         OrderIdMap result = new OrderIdMap();
         boolean withNewPositions = withNewPositions(in);
         boolean withNewVariables = withNewVariables(in);
-        
+
         if (!withNewPositions && !withNewVariables) {
             return result;
         }
@@ -343,12 +343,12 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
         SOSHibernateSession session = null;
         if (items != null && !items.isEmpty()) {
-            
+
             try {
                 session = Globals.createSosHibernateStatelessConnection(IMPL_PATH + "[modifyVariables]");
                 session.setAutoCommit(false);
                 session.beginTransaction();
-                
+
                 if (withNewVariables) {
                     // TODO get OrderPreparation from workflow
                     DeployedConfigurationDBLayer dcDbLayer = new DeployedConfigurationDBLayer(session);
@@ -439,7 +439,8 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                         if (item.getSubmitted()) {
                             // not check the plannedStatTime due to possible cyclic workflow ..
                             // calculate new OrderId
-                            result.getAdditionalProperties().put(item.getOrderId(), OrdersHelper.generateNewFromOldOrderId(item.getOrderId(), zoneId));
+                            result.getAdditionalProperties().put(item.getOrderId(), OrdersHelper.generateNewFromOldOrderId(item.getOrderId(),
+                                    zoneId));
 
                             // prepare to modify later
                             submitted.add(item);
@@ -479,7 +480,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                     sessionNew = Globals.createSosHibernateStatelessConnection(IMPL_PATH + "[modifyVariables]");
                     sessionNew.setAutoCommit(false);
                     sessionNew.beginTransaction();
-                    
+
                     // single & main cyclic
                     for (DBItemDailyPlanOrder item : items) {
                         DBItemDailyPlanVariable variables = submittedVariables.get(item.getId());
@@ -567,11 +568,11 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         return result;
     }
 
-    private void modifyVariables(DailyPlanModifyOrder in, DBItemDailyPlanVariable variables, SOSHibernateSession session,
-            String orderId, Requirements orderPreparation) throws SOSHibernateException, IOException {
+    private void modifyVariables(DailyPlanModifyOrder in, DBItemDailyPlanVariable variables, SOSHibernateSession session, String orderId,
+            Requirements orderPreparation) throws SOSHibernateException, IOException {
         String current = variables == null ? null : variables.getVariableValue();
         String modified = updateVariables(current, in.getVariables(), in.getRemoveVariables(), orderPreparation);
-        
+
         if (modified != null) {
             if (variables == null) {
                 variables = new DBItemDailyPlanVariable();
@@ -865,8 +866,8 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 variables = Globals.objectMapper.readValue(variable.getVariableValue(), Variables.class);
             }
             // TODO order positions??
-//            orderParameterisation.setStartPosition(null);
-//            orderParameterisation.setEndPosition(null);
+            // orderParameterisation.setStartPosition(null);
+            // orderParameterisation.setEndPosition(null);
             orderParameterisation.setVariables(variables);
             if (orderParameterisation.getVariables().getAdditionalProperties().size() > 0) {
                 schedule.getOrderParameterisations().add(orderParameterisation);
@@ -890,8 +891,8 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             DailyPlanScheduleWorkflow w = new DailyPlanScheduleWorkflow(mainItem.getWorkflowName(), mainItem.getWorkflowPath(), null);
             DailyPlanSchedule dailyPlanSchedule = new DailyPlanSchedule(schedule, Arrays.asList(w));
 
-            generatedOrders = runner.generateDailyPlan(StartupMode.manual, controllerId, Arrays.asList(dailyPlanSchedule), mainItem
-                    .getDailyPlanDate(settings.getTimeZone()), newSubmission, mainItem.getSubmitted(), getJocError(), getAccessToken());
+            generatedOrders = runner.generateDailyPlan(StartupMode.manual, controllerId, Arrays.asList(dailyPlanSchedule), mainItem.getDailyPlanDate(
+                    settings.getTimeZone()), newSubmission, mainItem.getSubmitted(), getJocError(), getAccessToken());
 
             Set<AuditLogDetail> auditLogDetails = new HashSet<>();
             for (Entry<PlannedOrderKey, PlannedOrder> entry : generatedOrders.entrySet()) {
@@ -914,7 +915,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH + "[getCalendarById=" + id + "]");
-            DBLayerReleasedConfigurations dbLayer = new DBLayerReleasedConfigurations(session);
+            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             DBItemInventoryReleasedConfiguration config = dbLayer.getReleasedConfiguration(id);
             if (config == null) {
                 throw new DBMissingDataException(String.format("Couldn't find calendar '%s'", id));

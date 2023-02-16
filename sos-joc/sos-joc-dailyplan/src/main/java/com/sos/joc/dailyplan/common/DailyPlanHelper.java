@@ -3,27 +3,47 @@ package com.sos.joc.dailyplan.common;
 import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.exception.SOSInvalidDataException;
+import com.sos.commons.exception.SOSMissingDataException;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
+import com.sos.inventory.model.calendar.AssignedNonWorkingDayCalendars;
+import com.sos.inventory.model.calendar.Calendar;
+import com.sos.inventory.model.calendar.Period;
 import com.sos.inventory.model.schedule.OrderParameterisation;
 import com.sos.inventory.model.schedule.Schedule;
+import com.sos.joc.Globals;
+import com.sos.joc.classes.calendar.FrequencyResolver;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
+import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
+import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 
 public class DailyPlanHelper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanHelper.class);
     private static final String UTC = "UTC";
+
+    private static DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE.withZone(ZoneOffset.UTC);
 
     public static Date getDailyPlanDateAsDate(Long startTime) {
         java.util.Calendar calendar = java.util.Calendar.getInstance(TimeZone.getTimeZone(UTC));
@@ -176,8 +196,8 @@ public class DailyPlanHelper {
         return format.format(startCalendar.getTime());
     }
 
-    public static String buildOrderId(String dailyPlanDate, Schedule schedule, OrderParameterisation orderParameterisation, Long startTime, Integer startMode)
-            throws SOSInvalidDataException {
+    public static String buildOrderId(String dailyPlanDate, Schedule schedule, OrderParameterisation orderParameterisation, Long startTime,
+            Integer startMode) throws SOSInvalidDataException {
         return buildOrderId(dailyPlanDate, getOrderName(schedule, orderParameterisation), startTime, startMode);
     }
 
@@ -205,9 +225,190 @@ public class DailyPlanHelper {
     }
 
     public static Date getNextDay(Date date, DailyPlanSettings settings) throws ParseException {
+        return getDay(date, settings, 1);
+    }
+
+    public static Date getPreviousDay(Date date, DailyPlanSettings settings) throws ParseException {
+        return getDay(date, settings, -1);
+    }
+
+    public static Date getDay(Date date, DailyPlanSettings settings, int amount) throws ParseException {
         java.util.Calendar calendar = java.util.Calendar.getInstance(TimeZone.getTimeZone(settings.getTimeZone()));
         calendar.setTime(date);
-        calendar.add(java.util.Calendar.DATE, 1);
+        calendar.add(java.util.Calendar.DATE, amount);
         return calendar.getTime();
     }
+
+    @SuppressWarnings("unused")
+    private static String getDayAfterNonWorkingDaysTmp(final Set<String> nonWorkingDays, final String date) throws SOSInvalidDataException {
+        java.util.Calendar cal = FrequencyResolver.getCalendarFromString(date);
+        cal.add(java.util.Calendar.DATE, 1);
+        String result = DATE_FORMATTER.format(cal.toInstant());
+        while (nonWorkingDays.contains(result)) {
+            cal.add(java.util.Calendar.DATE, 1);
+            result = DATE_FORMATTER.format(cal.toInstant());
+        }
+        return result;
+    }
+
+    public static String getDayAfterNonWorkingDays(final TreeSet<String> nonWorkingDays) throws SOSInvalidDataException {
+        if (nonWorkingDays.size() == 0) {
+            return null;
+        }
+        java.util.Calendar cal = FrequencyResolver.getCalendarFromString(nonWorkingDays.descendingIterator().next());
+        cal.add(java.util.Calendar.DATE, 1);
+        return DATE_FORMATTER.format(cal.toInstant());
+    }
+
+    @SuppressWarnings("unused")
+    private static String getDayBeforeNonWorkingDaysTmp(final Set<String> nonWorkingDays, final String date) throws SOSInvalidDataException {
+        java.util.Calendar cal = FrequencyResolver.getCalendarFromString(date);
+        cal.add(java.util.Calendar.DATE, -1);
+        String result = DATE_FORMATTER.format(cal.toInstant());
+        while (nonWorkingDays.contains(result)) {
+            cal.add(java.util.Calendar.DATE, -1);
+            result = DATE_FORMATTER.format(cal.toInstant());
+        }
+        return result;
+    }
+
+    public static String getDayBeforeNonWorkingDays(final Set<String> nonWorkingDays) throws SOSInvalidDataException {
+        if (nonWorkingDays.size() == 0) {
+            return null;
+        }
+        java.util.Calendar cal = FrequencyResolver.getCalendarFromString(nonWorkingDays.iterator().next());
+        cal.add(java.util.Calendar.DATE, -1);
+        return DATE_FORMATTER.format(cal.toInstant());
+    }
+
+    // nonWorkingDays=2023-01-10,2023-01-11,2023-01-15,2023-01-20,2023-01-21
+    // returns 2023-01-20
+    // TODO optimize
+    public static String getFirstNonWorkingDayFromLastBlock(final TreeSet<String> nonWorkingDays) throws SOSInvalidDataException {
+        java.util.Calendar cal = null;
+        String result = null;
+        int i = 0;
+
+        Iterator<String> it = nonWorkingDays.descendingIterator();
+        while (it.hasNext()) {
+            String d = it.next();
+            if (i == 0) {
+                result = d;
+                cal = FrequencyResolver.getCalendarFromString(result);
+                i++;
+            } else {
+                if (i > 0) {
+                    cal.add(java.util.Calendar.DATE, -i);
+                    String nd = DATE_FORMATTER.format(cal.toInstant());
+                    if (nd.equals(d)) {
+                        result = d;
+                    } else {
+                        return result;
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    // nonWorkingDays=2023-01-10,2023-01-11,2023-01-15,2023-01-20
+    // returns 2023-01-11
+    // TODO optimize
+    public static String getLastNonWorkingDayFromFirstBlock(final Set<String> nonWorkingDays) throws SOSInvalidDataException {
+        java.util.Calendar cal = null;
+        String result = null;
+        int i = 0;
+
+        Iterator<String> it = nonWorkingDays.iterator();
+        while (it.hasNext()) {
+            String d = it.next();
+            if (i == 0) {
+                result = d;
+                cal = FrequencyResolver.getCalendarFromString(result);
+                i++;
+            } else {
+                if (i > 0) {
+                    cal.add(java.util.Calendar.DATE, i);
+                    String nd = DATE_FORMATTER.format(cal.toInstant());
+                    if (nd.equals(d)) {
+                        result = d;
+                    } else {
+                        return result;
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    public static Set<String> getNonWorkingDays(String caller, InventoryDBLayer dbLayer, List<AssignedNonWorkingDayCalendars> current,
+            String dateFrom, String dateTo) throws SOSHibernateException, JsonMappingException, JsonProcessingException, SOSMissingDataException,
+            SOSInvalidDataException {
+        return getNonWorkingDays(caller, dbLayer, current, dateFrom, dateTo, new HashMap<>());
+    }
+
+    // all - not null
+    public static Set<String> getNonWorkingDays(String caller, InventoryDBLayer dbLayer, List<AssignedNonWorkingDayCalendars> current,
+            String dateFrom, String dateTo, Map<String, Calendar> all) throws SOSHibernateException, JsonMappingException, JsonProcessingException,
+            SOSMissingDataException, SOSInvalidDataException {
+        Set<String> result = new TreeSet<>();
+        if (current != null && !current.isEmpty()) {
+            List<String> notInAllNames = current.stream().map(AssignedNonWorkingDayCalendars::getCalendarName).distinct().filter(e -> !all
+                    .containsKey(e)).collect(Collectors.toList());
+
+            if (notInAllNames != null && notInAllNames.size() > 0) {
+                List<DBItemInventoryReleasedConfiguration> dbItems = null;
+                boolean newSession = false;
+                try {
+                    newSession = dbLayer.getSession() == null;
+                    if (newSession) {
+                        dbLayer.setSession(Globals.createSosHibernateStatelessConnection(caller + "-getNonWorkingDays"));
+                    }
+                    dbItems = dbLayer.getReleasedConfigurations(notInAllNames, ConfigurationType.NONWORKINGDAYSCALENDAR);
+                } finally {
+                    if (newSession) {
+                        dbLayer.close();
+                    }
+                }
+                if (dbItems != null && !dbItems.isEmpty()) {
+                    for (DBItemInventoryReleasedConfiguration dbItem : dbItems) {
+                        Calendar c = Globals.objectMapper.readValue(dbItem.getContent(), Calendar.class);
+                        c.setId(dbItem.getId());
+                        c.setName(dbItem.getName());
+                        c.setPath(dbItem.getPath());
+
+                        all.put(c.getName(), c);
+                    }
+                }
+
+            }
+
+            FrequencyResolver fr = new FrequencyResolver();
+            for (AssignedNonWorkingDayCalendars ac : current) {
+                Calendar c = all.get(ac.getCalendarName());
+                if (c == null) {
+                    continue;
+                }
+                result.addAll(fr.resolve(c, dateFrom, dateTo).getDates());
+            }
+        }
+        return result;
+    }
+
+    public static String toString(Period p) {
+        if (p == null) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("period ");
+        if (p.getSingleStart() == null) {
+            sb.append("begin=" + p.getBegin());
+            sb.append(",").append("end=" + p.getEnd());
+            sb.append(",").append("repeat=" + p.getRepeat());
+        } else {
+            sb.append("singleStart=" + p.getSingleStart());
+        }
+        return sb.toString();
+    }
+
 }
