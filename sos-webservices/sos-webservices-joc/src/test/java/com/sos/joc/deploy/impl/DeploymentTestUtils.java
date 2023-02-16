@@ -35,7 +35,6 @@ import com.sos.inventory.model.descriptor.common.Media;
 import com.sos.inventory.model.descriptor.common.Target;
 import com.sos.inventory.model.descriptor.controller.ControllerClusterDescriptor;
 import com.sos.inventory.model.descriptor.controller.ControllerDescriptor;
-import com.sos.inventory.model.descriptor.joc.JocClusterDescriptor;
 import com.sos.inventory.model.descriptor.joc.JocDescriptor;
 import com.sos.inventory.model.descriptor.joc.JocInstallation;
 import com.sos.inventory.model.descriptor.joc.JocInstallation.DbmsInit;
