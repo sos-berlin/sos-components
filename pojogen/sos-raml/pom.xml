@@ -321,6 +321,7 @@
 							<excludes>
 								<exclude>**/workflowJobs-schema.json</exclude>
 								<exclude>**/instructions-schema.json</exclude>
+								<exclude>**/addOrder-schema.json</exclude>
 								<exclude>**/emptyInstructions-schema.json</exclude>
 							</excludes>
 						</configuration>
@@ -347,6 +348,7 @@
 							<addCompileSourceRoot>false</addCompileSourceRoot>
 							<includes>
 								<include>**/instructions-schema.json</include>
+								<include>**/addOrder-schema.json</include>
 							</includes>
 						</configuration>
 						<goals>

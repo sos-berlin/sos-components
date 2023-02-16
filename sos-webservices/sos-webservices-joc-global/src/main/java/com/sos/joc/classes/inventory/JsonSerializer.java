@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Objects;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.instruction.AddOrder;
 import com.sos.inventory.model.instruction.ConsumeNotices;
@@ -48,7 +49,7 @@ public class JsonSerializer {
         if (config == null) {
             return null;
         }
-        return Globals.objectMapper.writeValueAsString(emptyValuesToNull(config));
+        return Globals.objectMapper.configure(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS, true).writeValueAsString(emptyValuesToNull(config));
     }
     
     public static <T> byte[] serializeAsBytes(T config) throws JsonProcessingException {
@@ -714,6 +715,7 @@ public class JsonSerializer {
                     if (ao.getArguments() == null) {
                         ao.setArguments(new Variables());
                     }
+                    emptyCollectionsToNull(ao.getStartPosition());
                     //Is not optional: ao.setDeleteWhenTerminated(defaultToNull(ao.getDeleteWhenTerminated(), Boolean.TRUE));
                     break;
                 case CYCLE:

@@ -6,12 +6,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.history.HistoryMapper;
 import com.sos.joc.db.history.DBItemHistoryOrder;
@@ -27,6 +26,8 @@ import com.sos.joc.model.order.OrderHistoryItemChildren;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.order.resource.IOrderHistoryResource;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path(WebservicePaths.ORDER)
 public class OrderHistoryResourceImpl extends JOCResourceImpl implements IOrderHistoryResource {
@@ -54,20 +55,24 @@ public class OrderHistoryResourceImpl extends JOCResourceImpl implements IOrderH
             
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(session, dbFilter);
+            OrderHistoryItemChildren answer = new OrderHistoryItemChildren();
             
             if (in.getHistoryId() == null) {
                 Long historyId = dbLayer.getHistoryId();
                 if (historyId == null) {
-                    throw new DBMissingDataException(String.format("Couldn't find order log for '%s'", in.getOrderId()));
+                    DBMissingDataException e = new DBMissingDataException(String.format("Couldn't find order log for '%s'", in.getOrderId()));
+                    ProblemHelper.postMessageAsHintIfExist(e.getMessage(), accessToken, getJocError(), in.getControllerId());
+                    return JOCDefaultResponse.responseStatus434JSError(e, true);
                 } else {
                     in.setHistoryId(historyId);
                 }
             }
+            if (in.getHistoryId() != null) {
+                answer.setHistoryId(in.getHistoryId());
+                mapStates(answer, dbLayer.getOrderStates(in.getHistoryId()));
+                mapChildren(answer, dbLayer.getOrderSteps(in.getHistoryId()), dbLayer.getOrderForkChilds(in.getHistoryId()));
+            }
 
-            OrderHistoryItemChildren answer = new OrderHistoryItemChildren();
-            answer.setHistoryId(in.getHistoryId());
-            mapStates(answer, dbLayer.getOrderStates(in.getHistoryId()));
-            mapChildren(answer, dbLayer.getOrderSteps(in.getHistoryId()), dbLayer.getOrderForkChilds(in.getHistoryId()));
             answer.setDeliveryDate(new Date());
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));

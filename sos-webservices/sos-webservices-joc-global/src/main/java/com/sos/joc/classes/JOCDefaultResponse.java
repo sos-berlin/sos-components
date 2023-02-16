@@ -258,10 +258,17 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
     }
     
     public static JOCDefaultResponse responseStatus434JSError(JocException e) {
-        if (!"".equals(e.getError().printMetaInfo())) {
-            LOGGER.info(e.getError().printMetaInfo());
+        return responseStatus434JSError(e, false);
+    }
+    
+    public static JOCDefaultResponse responseStatus434JSError(JocException e , boolean withoutLogging) {
+        String errorMsg = e.toString();
+        if (!withoutLogging) {
+            if (!"".equals(e.getError().printMetaInfo())) {
+                LOGGER.info(e.getError().printMetaInfo());
+            }
+            errorMsg = getErrorMessage(e);
         }
-        String errorMsg = getErrorMessage(e);
         e.getError().setMessage(errorMsg);
         return responseStatus434(getErr420(e.getError()));
     }

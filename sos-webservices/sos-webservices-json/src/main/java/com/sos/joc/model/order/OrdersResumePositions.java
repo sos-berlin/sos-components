@@ -24,6 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "orderIds",
     "disabledPositionChange",
+    "constants",
     "variables",
     "variablesNotSettable"
 })
@@ -48,6 +49,15 @@ public class OrdersResumePositions
     @JsonProperty("disabledPositionChange")
     @JsonPropertyDescription("reasons that disallow the position change")
     private PositionChange disabledPositionChange;
+    /**
+     * key-value pairs
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
+    @JsonProperty("constants")
+    @JsonPropertyDescription("a map for arbitrary key-value pairs")
+    private Variables constants;
     /**
      * key-value pairs
      * <p>
@@ -113,6 +123,28 @@ public class OrdersResumePositions
      * a map for arbitrary key-value pairs
      * 
      */
+    @JsonProperty("constants")
+    public Variables getConstants() {
+        return constants;
+    }
+
+    /**
+     * key-value pairs
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
+    @JsonProperty("constants")
+    public void setConstants(Variables constants) {
+        this.constants = constants;
+    }
+
+    /**
+     * key-value pairs
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
     @JsonProperty("variables")
     public Variables getVariables() {
         return variables;
@@ -149,12 +181,12 @@ public class OrdersResumePositions
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("orderIds", orderIds).append("disabledPositionChange", disabledPositionChange).append("variables", variables).append("variablesNotSettable", variablesNotSettable).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("orderIds", orderIds).append("disabledPositionChange", disabledPositionChange).append("constants", constants).append("variables", variables).append("variablesNotSettable", variablesNotSettable).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(variablesNotSettable).append(variables).append(orderIds).append(disabledPositionChange).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(variablesNotSettable).append(constants).append(variables).append(orderIds).append(disabledPositionChange).toHashCode();
     }
 
     @Override
@@ -166,7 +198,7 @@ public class OrdersResumePositions
             return false;
         }
         OrdersResumePositions rhs = ((OrdersResumePositions) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(variablesNotSettable, rhs.variablesNotSettable).append(variables, rhs.variables).append(orderIds, rhs.orderIds).append(disabledPositionChange, rhs.disabledPositionChange).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(variablesNotSettable, rhs.variablesNotSettable).append(constants, rhs.constants).append(variables, rhs.variables).append(orderIds, rhs.orderIds).append(disabledPositionChange, rhs.disabledPositionChange).isEquals();
     }
 
 }

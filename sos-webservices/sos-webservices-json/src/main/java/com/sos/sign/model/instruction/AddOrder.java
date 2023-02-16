@@ -20,14 +20,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * instruction with fixed property 'TYPE':'AdOrder'
  * 
  */
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "orderId",
     "workflowPath",
     "arguments",
     "deleteWhenTerminated",
     "startPosition",
-    "endPositions"
+    "stopPositions"
 })
 public class AddOrder
     extends Instruction
@@ -71,8 +71,11 @@ public class AddOrder
     @JsonProperty("startPosition")
     @JsonPropertyDescription("Actually, each even item is a string, each odd item is an integer")
     private List<Object> startPosition = null;
-    @JsonProperty("endPositions")
-    private List<List<Object>> endPositions = null;
+    @JsonProperty("stopPositions")
+    @JsonAlias({
+        "endPositions"
+    })
+    private List<List<Object>> stopPositions = null;
 
     /**
      * No args constructor for use in serialization
@@ -83,7 +86,7 @@ public class AddOrder
 
     /**
      * 
-     * @param endPositions
+     * @param stopPositions
      * @param orderId
      * @param workflowPath
      * @param deleteWhenTerminated
@@ -91,14 +94,14 @@ public class AddOrder
      * @param tYPE
      * @param startPosition
      */
-    public AddOrder(String orderId, String workflowPath, Variables arguments, Boolean deleteWhenTerminated, List<Object> startPosition, List<List<Object>> endPositions, InstructionType tYPE) {
+    public AddOrder(String orderId, String workflowPath, Variables arguments, Boolean deleteWhenTerminated, List<Object> startPosition, List<List<Object>> stopPositions, InstructionType tYPE) {
         super(tYPE);
         this.orderId = orderId;
         this.workflowPath = workflowPath;
         this.arguments = arguments;
         this.deleteWhenTerminated = deleteWhenTerminated;
         this.startPosition = startPosition;
-        this.endPositions = endPositions;
+        this.stopPositions = stopPositions;
     }
 
     /**
@@ -195,24 +198,24 @@ public class AddOrder
         this.startPosition = startPosition;
     }
 
-    @JsonProperty("endPositions")
-    public List<List<Object>> getEndPositions() {
-        return endPositions;
+    @JsonProperty("stopPositions")
+    public List<List<Object>> getStopPositions() {
+        return stopPositions;
     }
 
-    @JsonProperty("endPositions")
-    public void setEndPositions(List<List<Object>> endPositions) {
-        this.endPositions = endPositions;
+    @JsonProperty("stopPositions")
+    public void setStopPositions(List<List<Object>> stopPositions) {
+        this.stopPositions = stopPositions;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("orderId", orderId).append("workflowPath", workflowPath).append("arguments", arguments).append("deleteWhenTerminated", deleteWhenTerminated).append("startPosition", startPosition).append("endPositions", endPositions).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("orderId", orderId).append("workflowPath", workflowPath).append("arguments", arguments).append("deleteWhenTerminated", deleteWhenTerminated).append("startPosition", startPosition).append("stopPositions", stopPositions).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(endPositions).append(orderId).append(workflowPath).append(deleteWhenTerminated).append(arguments).append(startPosition).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(stopPositions).append(orderId).append(workflowPath).append(deleteWhenTerminated).append(arguments).append(startPosition).toHashCode();
     }
 
     @Override
@@ -224,7 +227,7 @@ public class AddOrder
             return false;
         }
         AddOrder rhs = ((AddOrder) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(endPositions, rhs.endPositions).append(orderId, rhs.orderId).append(workflowPath, rhs.workflowPath).append(deleteWhenTerminated, rhs.deleteWhenTerminated).append(arguments, rhs.arguments).append(startPosition, rhs.startPosition).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(stopPositions, rhs.stopPositions).append(orderId, rhs.orderId).append(workflowPath, rhs.workflowPath).append(deleteWhenTerminated, rhs.deleteWhenTerminated).append(arguments, rhs.arguments).append(startPosition, rhs.startPosition).isEquals();
     }
 
 }
