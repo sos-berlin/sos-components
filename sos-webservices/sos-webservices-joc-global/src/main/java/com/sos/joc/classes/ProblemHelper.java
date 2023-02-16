@@ -56,6 +56,10 @@ public class ProblemHelper {
             String controller) throws JocException {
         postExceptionEventIfExist(either, accessToken, err, controller, true);
     }
+    
+    public static void postMessageAsHintIfExist(String message, String accessToken, JocError err, String controller) throws JocException {
+        postMessageIfExist(message, accessToken, err, controller, true);
+    }
 
     private static synchronized void postEventIfExist(Either<Problem, ?> either, String accessToken, JocError err, String controller,
             boolean isOnlyHint) throws JocException {
@@ -110,6 +114,14 @@ public class ProblemHelper {
                 if (accessToken != null && !accessToken.isEmpty()) {
                     EventBus.getInstance().post(new ProblemEvent(accessToken, controller, either.getLeft().toString(), isOnlyHint));
                 }
+            }
+        }
+    }
+    
+    private static synchronized void postMessageIfExist(String message, String accessToken, JocError err, String controller, boolean isOnlyHint) {
+        if (message != null && !message.isEmpty()) {
+            if (accessToken != null && !accessToken.isEmpty()) {
+                EventBus.getInstance().post(new ProblemEvent(accessToken, controller, message, isOnlyHint));
             }
         }
     }
