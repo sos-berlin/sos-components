@@ -84,7 +84,7 @@ public class AddOrder
      * @param positionString
      */
     public AddOrder(String workflowName, Variables arguments, Boolean remainWhenTerminated, List<Object> startPosition, List<List<Object>> endPositions, List<Object> position, String positionString, InstructionState state) {
-        super(, position, positionString, state);
+        super();
         this.workflowName = workflowName;
         this.arguments = arguments;
         this.remainWhenTerminated = remainWhenTerminated;
