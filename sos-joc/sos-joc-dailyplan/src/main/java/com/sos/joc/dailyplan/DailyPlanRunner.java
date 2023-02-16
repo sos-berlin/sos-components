@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.TimerTask;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
@@ -38,7 +39,6 @@ import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.order.FreshOrder;
 import com.sos.inventory.model.calendar.AssignedCalendars;
-import com.sos.inventory.model.calendar.AssignedNonWorkingDayCalendars;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.Period;
 import com.sos.inventory.model.common.Variables;
@@ -66,12 +66,12 @@ import com.sos.joc.dailyplan.db.DBBeanReleasedSchedule2DeployedWorkflow;
 import com.sos.joc.dailyplan.db.DBLayerDailyPlanSubmissions;
 import com.sos.joc.dailyplan.db.DBLayerDailyPlannedOrders;
 import com.sos.joc.dailyplan.db.DBLayerOrderVariables;
-import com.sos.joc.dailyplan.db.DBLayerReleasedConfigurations;
 import com.sos.joc.dailyplan.db.DBLayerSchedules;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanVariable;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
+import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.dailyplan.DailyPlanEvent;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
@@ -82,7 +82,6 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
-import com.sos.joc.model.calendar.CalendarDatesFilter;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 
@@ -96,7 +95,6 @@ public class DailyPlanRunner extends TimerTask {
     private AtomicLong lastActivityEnd = new AtomicLong(0);
     private DailyPlanSettings settings;
     private java.util.Calendar startCalendar;
-    private Map<String, String> nonWorkingDays;
     private Map<String, Long> durations = null;
     private Set<String> createdPlans;
 
@@ -651,15 +649,15 @@ public class DailyPlanRunner extends TimerTask {
         }
     }
 
-    private Calendar getCalendar(String controllerId, String calendarName, ConfigurationType type) throws DBMissingDataException, JsonParseException,
+    private Calendar getWorkingDaysCalendar(String controllerId, String calendarName) throws DBMissingDataException, JsonParseException,
             JsonMappingException, IOException, DBConnectionRefusedException, DBInvalidDataException, JocConfigurationException,
             DBOpenSessionException, SOSHibernateException {
 
         SOSHibernateSession session = null;
         try {
-            session = Globals.createSosHibernateStatelessConnection(IDENTIFIER + "-getCalendar");
-            DBLayerReleasedConfigurations dbLayer = new DBLayerReleasedConfigurations(session);
-            DBItemInventoryReleasedConfiguration config = dbLayer.getReleasedConfiguration(type, calendarName);
+            session = Globals.createSosHibernateStatelessConnection(IDENTIFIER + "-getWorkingDaysCalendar");
+            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+            DBItemInventoryReleasedConfiguration config = dbLayer.getReleasedConfiguration(calendarName, ConfigurationType.WORKINGDAYSCALENDAR);
             session.close();
             session = null;
 
@@ -688,51 +686,6 @@ public class DailyPlanRunner extends TimerTask {
         return order;
     }
 
-    private void generateNonWorkingDays(String controllerId, Schedule schedule, Date date, String dateAsString) throws SOSMissingDataException,
-            SOSInvalidDataException, JsonParseException, JsonMappingException, DBMissingDataException, DBConnectionRefusedException,
-            DBInvalidDataException, IOException, ParseException, JocConfigurationException, DBOpenSessionException, SOSHibernateException {
-
-        String method = "generateNonWorkingDays";
-        boolean isDebugEnabled = LOGGER.isDebugEnabled();
-        boolean isTraceEnabled = LOGGER.isTraceEnabled();
-
-        Date nextDate = DailyPlanHelper.getNextDay(date, settings);
-
-        if (schedule.getNonWorkingDayCalendars() != null) {
-            FrequencyResolver fr = new FrequencyResolver();
-            for (AssignedNonWorkingDayCalendars calendars : schedule.getNonWorkingDayCalendars()) {
-                if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[%s][%s][%s][%s]NonWorkingDayCalendar=%s", method, controllerId, dateAsString, schedule.getPath(),
-                            calendars.getCalendarPath()));
-                }
-                nonWorkingDays = new HashMap<String, String>();
-
-                Calendar calendar = null;
-                try {
-                    calendar = getCalendar(controllerId, calendars.getCalendarName(), ConfigurationType.NONWORKINGDAYSCALENDAR);
-                } catch (DBMissingDataException e) {
-                    LOGGER.warn(String.format("[%s][%s][%s][%s][NonWorkingDayCalendar=%s][skip]not found", method, controllerId, dateAsString,
-                            schedule.getPath(), calendars.getCalendarPath()));
-                    continue;
-                }
-
-                CalendarDatesFilter filter = new CalendarDatesFilter();
-                filter.setDateFrom(SOSDate.getDateWithTimeZoneAsString(date, settings.getTimeZone()));
-                filter.setDateTo(SOSDate.getDateWithTimeZoneAsString(nextDate, settings.getTimeZone()));
-                filter.setCalendar(calendar);
-
-                fr.resolve(filter);
-            }
-            Set<String> s = fr.getDates().keySet();
-            for (String d : s) {
-                if (isTraceEnabled) {
-                    LOGGER.trace(String.format("[%s][%s][%s][%s]Non working date=%s", method, controllerId, dateAsString, schedule.getPath(), d));
-                }
-                nonWorkingDays.put(d, controllerId);
-            }
-        }
-    }
-
     public static boolean isFromService(StartupMode mode) {
         if (mode == null) {
             return false;
@@ -747,11 +700,11 @@ public class DailyPlanRunner extends TimerTask {
 
         String method = "calculateStartTimes";
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
-        boolean isTraceEnabled = LOGGER.isTraceEnabled();
 
         Date date = SOSDate.getDate(dailyPlanDate);
         Date actDate = date;
         Date nextDate = DailyPlanHelper.getNextDay(date, settings);
+        String logPrefix = String.format("[%s][%s][%s][%s]", startupMode, method, controllerId, dailyPlanDate);
         boolean fromService = isFromService(startupMode);
 
         if (isDebugEnabled) {
@@ -760,23 +713,23 @@ public class DailyPlanRunner extends TimerTask {
         }
 
         Map<String, Calendar> calendars = new HashMap<String, Calendar>();
+        Map<String, Calendar> nonWorkingCalendars = new HashMap<String, Calendar>();
         OrderListSynchronizer synchronizer = new OrderListSynchronizer(settings);
+        InventoryDBLayer invDbLayer = new InventoryDBLayer(null);
         if (submission != null) {
             synchronizer.setSubmission(submission);
         }
         for (DailyPlanSchedule dailyPlanSchedule : dailyPlanSchedules) {
             Schedule schedule = dailyPlanSchedule.getSchedule();
-
+            logPrefix = String.format("%s[schedule=%s]", logPrefix, schedule.getPath());
             if (fromService && !schedule.getPlanOrderAutomatically()) {
                 if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[%s][%s][%s][%s][skip schedule=%s]fromService=true, plan order automatically=false", startupMode,
-                            method, controllerId, dailyPlanDate, schedule.getPath()));
+                    LOGGER.debug(String.format("%s[skip]fromService=true, plan order automatically=false", logPrefix, schedule.getPath()));
                 }
             } else {
                 if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[%s][%s][%s][%s]schedule=%s", startupMode, method, controllerId, dailyPlanDate, schedule.getPath()));
+                    LOGGER.debug(String.format("%s", logPrefix));
                 }
-                generateNonWorkingDays(controllerId, schedule, date, dailyPlanDate);
 
                 for (AssignedCalendars assignedCalendar : schedule.getCalendars()) {
                     if (assignedCalendar.getTimeZone() == null) {
@@ -788,30 +741,29 @@ public class DailyPlanRunner extends TimerTask {
                     String dailyPlanDateAsString = SOSDate.getDateAsString(date);
 
                     if (isDebugEnabled) {
-                        LOGGER.debug(String.format("[%s][%s][%s][%s][%s][calendar=%s][timeZone=%s][actDate=%s][nextDate=%s]dailyPlanDate=%s",
-                                startupMode, method, controllerId, dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName(),
-                                assignedCalendar.getTimeZone(), actDateAsString, nextDateAsString, dailyPlanDateAsString));
+                        LOGGER.debug(String.format("%s[calendar=%s][timeZone=%s][actDate=%s][nextDate=%s]dailyPlanDate=%s", logPrefix,
+                                assignedCalendar.getCalendarName(), assignedCalendar.getTimeZone(), actDateAsString, nextDateAsString,
+                                dailyPlanDateAsString));
                     }
 
                     String calendarsKey = assignedCalendar.getCalendarName() + "#" + schedule.getPath();
                     Calendar calendar = calendars.get(calendarsKey);
                     if (calendar == null) {
                         try {
-                            calendar = getCalendar(controllerId, assignedCalendar.getCalendarName(), ConfigurationType.WORKINGDAYSCALENDAR);
+                            calendar = getWorkingDaysCalendar(controllerId, assignedCalendar.getCalendarName());
                             if (isDebugEnabled) {
-                                LOGGER.debug(String.format("[%s][%s][%s][%s][%s][WorkingDayCalendar=%s][db]%s", startupMode, method, controllerId,
-                                        dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName(), SOSString.toString(calendar)));
+                                LOGGER.debug(String.format("%s[WorkingDaysCalendar=%s][db]%s", logPrefix, assignedCalendar.getCalendarName(),
+                                        SOSString.toString(calendar)));
                             }
                         } catch (DBMissingDataException e) {
-                            LOGGER.warn(String.format("[%s][%s][%s][%s][%s][WorkingDayCalendar=%s][skip]not found", startupMode, method, controllerId,
-                                    dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName()));
+                            LOGGER.warn(String.format("%s[WorkingDaysCalendar=%s][skip]not found", logPrefix, assignedCalendar.getCalendarName()));
                             continue;
                         }
                         calendars.put(calendarsKey, calendar);
                     } else {
                         if (isDebugEnabled) {
-                            LOGGER.debug(String.format("[%s][%s][%s][%s][%s][WorkingDayCalendar=%s][cache]%s", startupMode, method, controllerId,
-                                    dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName(), SOSString.toString(calendar)));
+                            LOGGER.debug(String.format("%s[WorkingDaysCalendar=%s][cache]%s", logPrefix, assignedCalendar.getCalendarName(), SOSString
+                                    .toString(calendar)));
                         }
                     }
                     calendar.setFrom(actDateAsString);
@@ -820,126 +772,348 @@ public class DailyPlanRunner extends TimerTask {
                     Calendar restrictions = new Calendar();
                     restrictions.setIncludes(assignedCalendar.getIncludes());
                     if (isDebugEnabled) {
-                        LOGGER.debug(String.format("[%s][%s][%s][%s][%s][WorkingDayCalendar=%s][includes]%s", startupMode, method, controllerId,
-                                dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName(), SOSString.toString(restrictions)));
+                        LOGGER.debug(String.format("%s[WorkingDaysCalendar=%s][includes]%s", logPrefix, assignedCalendar.getCalendarName(), SOSString
+                                .toString(restrictions)));
                     }
 
                     int plannedOrdersCount = 0;
                     List<String> frequencyResolverDates = null;
                     try {
+                        PeriodResolver periodResolver = null;
                         frequencyResolverDates = new FrequencyResolver().resolveRestrictions(calendar, restrictions, actDateAsString,
                                 nextDateAsString).getDates();
                         if (isDebugEnabled) {
-                            LOGGER.debug(String.format("[%s][%s][%s][%s][%s][calendar=%s][FrequencyResolver]dates=%s", startupMode, method,
-                                    controllerId, dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName(), String.join(",",
-                                            frequencyResolverDates)));
+                            LOGGER.debug(String.format("%s[WorkingDaysCalendar=%s][FrequencyResolver]dates=%s", logPrefix, assignedCalendar
+                                    .getCalendarName(), String.join(",", frequencyResolverDates)));
+                        }
+
+                        // NonWorkingDays handling - NEXTNONWORKINGDAY, PREVIOUSNONWORKINGDAY
+                        // frequencyResolverDates is empty because no dates in the regular calendar or the next day
+                        boolean checkNonWorkingDaysNextPrev = true;
+                        if (!frequencyResolverDates.contains(actDateAsString)) {
+                            List<String> newFrequencyResolverDates = new ArrayList<>();
+
+                            TreeSet<String> nonWorkingDaysForNext = new TreeSet<>();
+                            String prevDateAsStringForNext = "";
+
+                            Set<String> nonWorkingDaysForPrev = new TreeSet<>();
+                            String nextDateAsStringForPrev = "";
+
+                            List<Period> nonEmptyWhenHolidays = assignedCalendar.getPeriods().stream().filter(p -> p.getWhenHoliday() != null)
+                                    .collect(Collectors.toList());
+                            List<Period> allowedPeriods = new ArrayList<>();
+                            if (nonEmptyWhenHolidays.size() > 0) {
+                                boolean added = false;
+                                for (Period p : nonEmptyWhenHolidays) {
+                                    switch (p.getWhenHoliday()) {
+                                    case NEXTNONWORKINGDAY:
+                                        added = false;
+                                        if (isDebugEnabled) {
+                                            LOGGER.debug(String.format("%s[NonWorkingDays][NEXTNONWORKINGDAY]start...", logPrefix));
+                                        }
+                                        if (isDayAfterNonWorkingDays(isDebugEnabled, logPrefix, invDbLayer, schedule, nonWorkingCalendars, actDate,
+                                                actDateAsString, prevDateAsStringForNext, nonWorkingDaysForNext, p)) {
+                                            // check if this day is allowed in the regular calendar
+                                            String firstNonWorkingDay = DailyPlanHelper.getFirstNonWorkingDayFromLastBlock(nonWorkingDaysForNext);
+                                            if (isDebugEnabled) {
+                                                LOGGER.debug(String.format("%s[NonWorkingDays][NEXTNONWORKINGDAY]firstNonWorkingDay=%s", logPrefix,
+                                                        firstNonWorkingDay));
+                                            }
+                                            if (firstNonWorkingDay != null) {
+                                                Calendar calendayCopy = calendars.get(calendarsKey);
+                                                calendayCopy.setFrom(firstNonWorkingDay);
+                                                calendayCopy.setTo(actDateAsString);
+
+                                                List<String> workingDates = new FrequencyResolver().resolveRestrictions(calendayCopy, restrictions,
+                                                        firstNonWorkingDay, actDateAsString).getDates();
+                                                if (isDebugEnabled) {
+                                                    LOGGER.debug(String.format("%s[NonWorkingDays][NEXTNONWORKINGDAY]workingDates=%s", logPrefix,
+                                                            String.join(",", workingDates)));
+                                                }
+                                                if (workingDates.size() > 0) {
+                                                    added = true;
+                                                    allowedPeriods.add(p);
+                                                }
+                                            }
+                                        }
+                                        if (isDebugEnabled) {
+                                            LOGGER.debug(String.format("%s[NonWorkingDays][NEXTNONWORKINGDAY][%s]end", logPrefix, added ? "added"
+                                                    : "skip"));
+                                        }
+                                        break;
+                                    case PREVIOUSNONWORKINGDAY:
+                                        added = false;
+                                        if (isDebugEnabled) {
+                                            LOGGER.debug(String.format("%s[NonWorkingDays][PREVIOUSNONWORKINGDAY]start...", logPrefix));
+                                        }
+                                        if (isDayBeforeNonWorkingDays(isDebugEnabled, logPrefix, invDbLayer, schedule, nonWorkingCalendars,
+                                                actDateAsString, nextDateAsStringForPrev, nonWorkingDaysForPrev, p)) {
+                                            // check if this day is allowed in the regular calendar
+                                            String lastNonWorkingDay = DailyPlanHelper.getLastNonWorkingDayFromFirstBlock(nonWorkingDaysForPrev);
+                                            if (isDebugEnabled) {
+                                                LOGGER.debug(String.format("%s[NonWorkingDays][PREVIOUSNONWORKINGDAY]lastNonWorkingDay=%s", logPrefix,
+                                                        lastNonWorkingDay));
+                                            }
+                                            if (lastNonWorkingDay != null) {
+                                                Calendar calendayCopy = calendars.get(calendarsKey);
+                                                calendayCopy.setFrom(actDateAsString);
+                                                calendayCopy.setTo(lastNonWorkingDay);
+
+                                                List<String> workingDates = new FrequencyResolver().resolveRestrictions(calendayCopy, restrictions,
+                                                        actDateAsString, lastNonWorkingDay).getDates();
+                                                if (isDebugEnabled) {
+                                                    LOGGER.debug(String.format("%s[NonWorkingDays][PREVIOUSNONWORKINGDAY]workingDates=%s", logPrefix,
+                                                            String.join(",", workingDates)));
+                                                }
+                                                if (workingDates.size() > 0) {
+                                                    added = true;
+                                                    allowedPeriods.add(p);
+                                                }
+                                            }
+                                        }
+                                        if (isDebugEnabled) {
+                                            LOGGER.debug(String.format("%s[NonWorkingDays][PREVIOUSNONWORKINGDAY]end", logPrefix));
+                                        }
+                                        break;
+                                    default:
+                                        break;
+                                    }
+                                }
+
+                                if (allowedPeriods.size() > 0) {
+                                    checkNonWorkingDaysNextPrev = false;
+                                    periodResolver = createPeriodResolver(allowedPeriods, dailyPlanDateAsString, assignedCalendar.getTimeZone());
+                                    if (!newFrequencyResolverDates.contains(actDateAsString)) {
+                                        newFrequencyResolverDates.add(actDateAsString);
+                                    }
+                                    frequencyResolverDates.clear();
+                                    frequencyResolverDates.addAll(newFrequencyResolverDates);
+
+                                    if (isDebugEnabled) {
+                                        LOGGER.debug(String.format("%s[NonWorkingDays][added][days=%s]allowedPeriods=%s", logPrefix, String.join(",",
+                                                frequencyResolverDates), allowedPeriods.size()));
+                                    }
+                                } else {
+                                    if (isDebugEnabled) {
+                                        LOGGER.debug(String.format("%s[NonWorkingDays][skip]day=%s", logPrefix, actDateAsString));
+                                    }
+                                }
+                            }
                         }
 
                         if (frequencyResolverDates.size() > 0) {
-                            PeriodResolver periodResolver = new PeriodResolver(settings);
-                            for (Period p : assignedCalendar.getPeriods()) {
-                                Period _period = new Period();
-                                _period.setBegin(p.getBegin());
-                                _period.setEnd(p.getEnd());
-                                _period.setRepeat(p.getRepeat());
-                                _period.setSingleStart(p.getSingleStart());
-                                _period.setWhenHoliday(p.getWhenHoliday());
-                                try {
-                                    periodResolver.addStartTimes(_period, dailyPlanDateAsString, assignedCalendar.getTimeZone());
-                                } catch (Throwable e) {
-                                    throw new Exception(String.format("[period %s]%s", _period.toString(), e.toString()), e);
-                                }
+                            if (periodResolver == null) {
+                                periodResolver = createPeriodResolver(assignedCalendar.getPeriods(), dailyPlanDateAsString, assignedCalendar
+                                        .getTimeZone());
                             }
 
+                            Set<String> nonWorkingDaysForSuppress = new TreeSet<>();
                             for (String frequencyResolverDate : frequencyResolverDates) {
-                                if (isTraceEnabled) {
-                                    LOGGER.trace(String.format("[%s][%s][%s][FrequencyResolver date=%s][%s][%s][calendar=%s]", startupMode, method,
-                                            controllerId, dailyPlanDate, frequencyResolverDate, schedule.getPath(), assignedCalendar
-                                                    .getCalendarName()));
+                                Map<Long, Period> startTimes = periodResolver.getStartTimes(frequencyResolverDate, dailyPlanDateAsString,
+                                        assignedCalendar.getTimeZone());
+
+                                if (isDebugEnabled) {
+                                    LOGGER.debug(String.format(
+                                            "%s[WorkingDaysCalendar=%s][FrequencyResolver date=%s][checkNonWorkingDaysNextPrev=%s][periodResolver]startTimes size=%s",
+                                            logPrefix, assignedCalendar.getCalendarName(), frequencyResolverDate, checkNonWorkingDaysNextPrev,
+                                            startTimes.size()));
+
                                 }
-                                if (nonWorkingDays != null && nonWorkingDays.get(frequencyResolverDate) != null) {
-                                    if (isDebugEnabled) {
-                                        LOGGER.debug(String.format(
-                                                "[%s][%s][%s][%s][FrequencyResolver date=%s][%s][calendar=%s][skip]FrequencyResolver date is a non working day",
-                                                startupMode, method, controllerId, dailyPlanDate, frequencyResolverDate, schedule.getPath(),
-                                                assignedCalendar.getCalendarName()));
-                                    }
-                                } else {
-                                    Map<Long, Period> startTimes = periodResolver.getStartTimes(frequencyResolverDate, dailyPlanDateAsString,
-                                            assignedCalendar.getTimeZone());
 
-                                    if (isDebugEnabled) {
-                                        LOGGER.debug(String.format(
-                                                "[%s][%s][%s][%s][FrequencyResolver date=%s][%s][calendar=%s][timeZone=%s][periodResolver]startTimes size=%s",
-                                                startupMode, method, controllerId, dailyPlanDate, frequencyResolverDate, schedule.getPath(),
-                                                assignedCalendar.getCalendarName(), assignedCalendar.getTimeZone(), startTimes.size()));
-                                    }
-
-                                    for (Entry<Long, Period> periodEntry : startTimes.entrySet()) {
-                                        Integer startMode;
-                                        if (periodEntry.getValue().getSingleStart() == null) {
-                                            startMode = 1;
-                                        } else {
-                                            startMode = 0;
-                                        }
-
-                                        if (schedule.getOrderParameterisations() == null || schedule.getOrderParameterisations().size() == 0) {
-                                            OrderParameterisation orderParameterisation = new OrderParameterisation();
-                                            schedule.setOrderParameterisations(new ArrayList<OrderParameterisation>());
-                                            schedule.getOrderParameterisations().add(orderParameterisation);
-                                        }
-
-                                        for (OrderParameterisation orderParameterisation : schedule.getOrderParameterisations()) {
-                                            for (DailyPlanScheduleWorkflow sw : dailyPlanSchedule.getWorkflows()) {
-
-                                                FreshOrder freshOrder = buildFreshOrder(dailyPlanDate, dailyPlanSchedule.getSchedule(), sw,
-                                                        orderParameterisation, periodEntry.getKey(), startMode);
-
-                                                if (!fromService) {
-                                                    schedule.setSubmitOrderToControllerWhenPlanned(settings.isSubmit());
-                                                }
-
-                                                if (synchronizer.getSubmission() == null) {
-                                                    synchronizer.setSubmission(addDailyPlanSubmission(controllerId, date));
-                                                }
-
-                                                PlannedOrder plannedOrder = new PlannedOrder(controllerId, freshOrder, dailyPlanSchedule, sw, calendar
-                                                        .getId());
-                                                plannedOrder.setPeriod(periodEntry.getValue());
-                                                plannedOrder.setSubmissionHistoryId(synchronizer.getSubmission().getId());
-                                                plannedOrder.setOrderName(DailyPlanHelper.getOrderName(schedule, orderParameterisation));
-                                                synchronizer.add(startupMode, plannedOrder, controllerId, dailyPlanDate);
-                                                plannedOrdersCount++;
+                                st: for (Entry<Long, Period> periodEntry : startTimes.entrySet()) {
+                                    Period p = periodEntry.getValue();
+                                    if (p.getWhenHoliday() != null) {
+                                        switch (p.getWhenHoliday()) {
+                                        case IGNORE:
+                                            // do nothing - log only
+                                            if (isDebugEnabled) {
+                                                LOGGER.debug(String.format("%s[FrequencyResolver date=%s][NonWorkingDays][IGNORE][skip][%s]",
+                                                        logPrefix, frequencyResolverDate, DailyPlanHelper.toString(p)));
                                             }
+                                            break;
+                                        case SUPPRESS:
+                                            if (isNonWorkingDay(isDebugEnabled, logPrefix, invDbLayer, schedule, nonWorkingCalendars, actDateAsString,
+                                                    nextDateAsString, nonWorkingDaysForSuppress, p, frequencyResolverDate)) {
+                                                continue st;
+                                            } else {
+                                                break;
+                                            }
+                                            // suppress because if the current day is a NonWorking day - it is a not a Next/Previous NonWorking day
+                                        case NEXTNONWORKINGDAY:
+                                        case PREVIOUSNONWORKINGDAY:
+                                            if (checkNonWorkingDaysNextPrev && isNonWorkingDay(isDebugEnabled, logPrefix, invDbLayer, schedule,
+                                                    nonWorkingCalendars, actDateAsString, nextDateAsString, nonWorkingDaysForSuppress, p,
+                                                    frequencyResolverDate)) {
+                                                continue st;
+                                            } else {
+                                                break;
+                                            }
+                                        default:
+                                            break;
+                                        }
+                                    }
+
+                                    Integer startMode;
+                                    if (p.getSingleStart() == null) {
+                                        startMode = 1;
+                                    } else {
+                                        startMode = 0;
+                                    }
+
+                                    if (schedule.getOrderParameterisations() == null || schedule.getOrderParameterisations().size() == 0) {
+                                        OrderParameterisation orderParameterisation = new OrderParameterisation();
+                                        schedule.setOrderParameterisations(new ArrayList<OrderParameterisation>());
+                                        schedule.getOrderParameterisations().add(orderParameterisation);
+                                    }
+
+                                    for (OrderParameterisation orderParameterisation : schedule.getOrderParameterisations()) {
+                                        for (DailyPlanScheduleWorkflow sw : dailyPlanSchedule.getWorkflows()) {
+
+                                            FreshOrder freshOrder = buildFreshOrder(dailyPlanDate, dailyPlanSchedule.getSchedule(), sw,
+                                                    orderParameterisation, periodEntry.getKey(), startMode);
+
+                                            if (!fromService) {
+                                                schedule.setSubmitOrderToControllerWhenPlanned(settings.isSubmit());
+                                            }
+
+                                            if (synchronizer.getSubmission() == null) {
+                                                synchronizer.setSubmission(addDailyPlanSubmission(controllerId, date));
+                                            }
+
+                                            PlannedOrder plannedOrder = new PlannedOrder(controllerId, freshOrder, dailyPlanSchedule, sw, calendar
+                                                    .getId());
+                                            plannedOrder.setPeriod(p);
+                                            plannedOrder.setSubmissionHistoryId(synchronizer.getSubmission().getId());
+                                            plannedOrder.setOrderName(DailyPlanHelper.getOrderName(schedule, orderParameterisation));
+                                            synchronizer.add(startupMode, plannedOrder, controllerId, dailyPlanDate);
+                                            plannedOrdersCount++;
                                         }
                                     }
                                 }
+
                             }
                         }
                     } catch (Throwable e) {
                         if (frequencyResolverDates == null) {
                             frequencyResolverDates = new ArrayList<>();
                         }
-                        LOGGER.error(String.format("[%s][%s][%s][%s][schedule=%s][calendar=%s][FrequencyResolver dates=%s]%s", startupMode, method,
-                                controllerId, dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName(), String.join(",",
-                                        frequencyResolverDates), e.toString()), e);
+                        LOGGER.error(String.format("%s[WorkingDaysCalendar=%s,timeZone=%s][FrequencyResolver dates=%s]%s", logPrefix, assignedCalendar
+                                .getCalendarName(), assignedCalendar.getTimeZone(), String.join(",", frequencyResolverDates), e.toString()), e);
                     }
 
                     if (plannedOrdersCount == 0) {
-                        LOGGER.info(String.format("[%s][%s][%s][%s][skip][schedule=%s][calendar=%s][timeZone=%s]0 planned orders", startupMode,
-                                method, controllerId, dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName(), assignedCalendar
-                                        .getTimeZone()));
-
+                        LOGGER.info(String.format("%s[WorkingDaysCalendar=%s,timeZone=%s]0 planned orders", logPrefix, assignedCalendar
+                                .getCalendarName(), assignedCalendar.getTimeZone()));
                     } else {
                         if (isDebugEnabled) {
-                            LOGGER.debug(String.format("[%s][%s][%s][%s][%s][calendar=%s]%s planned orders", startupMode, method, controllerId,
-                                    dailyPlanDate, schedule.getPath(), assignedCalendar.getCalendarName(), plannedOrdersCount));
+                            LOGGER.debug(String.format("%s[WorkingDaysCalendar=%s,timeZone=%s]%s planned orders", logPrefix, assignedCalendar
+                                    .getCalendarName(), assignedCalendar.getTimeZone(), plannedOrdersCount));
                         }
                     }
                 }
             }
         }
         return synchronizer;
+    }
+
+    private boolean isDayAfterNonWorkingDays(boolean isDebugEnabled, String logPrefix, InventoryDBLayer dbLayer, Schedule schedule,
+            Map<String, Calendar> nonWorkingCalendars, Date date, String dateAsString, String prevDateAsString, TreeSet<String> nonWorkingDays,
+            Period p) throws Exception {
+        String method = "isDayAfterNonWorkingDays";
+        if (nonWorkingDays.size() == 0) {
+            // get not working days from previous 7 days to date
+            prevDateAsString = SOSDate.getDateAsString(DailyPlanHelper.getDay(SOSDate.getDate(dateAsString), settings, -7));
+            nonWorkingDays.addAll(DailyPlanHelper.getNonWorkingDays(method, dbLayer, schedule.getNonWorkingDayCalendars(), prevDateAsString,
+                    dateAsString, nonWorkingCalendars));
+        }
+        String d = "";
+        if (nonWorkingDays.size() > 0) {
+            d = DailyPlanHelper.getDayAfterNonWorkingDays(nonWorkingDays);
+            if (d.equals(dateAsString)) {
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format(
+                            "%s[NonWorkingDays][NEXTNONWORKINGDAY][isDayAfterNonWorkingDays=true][from=%s,to=%s][nonWorkingDays=%s]dayAfterNonWorkingDays=%s",
+                            logPrefix, prevDateAsString, dateAsString, String.join(",", nonWorkingDays), d));
+                }
+                return true;
+            }
+        }
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format(
+                    "%s[NonWorkingDays][NEXTNONWORKINGDAY][isDayAfterNonWorkingDays=false][from=%s,to=%s][nonWorkingDays=%s]dayAfterNonWorkingDays=%s",
+                    logPrefix, prevDateAsString, dateAsString, String.join(",", nonWorkingDays), d));
+        }
+        return false;
+    }
+
+    private boolean isDayBeforeNonWorkingDays(boolean isDebugEnabled, String logPrefix, InventoryDBLayer dbLayer, Schedule schedule,
+            Map<String, Calendar> nonWorkingCalendars, String dateAsString, String nextDateAsString, Set<String> nonWorkingDays, Period p)
+            throws Exception {
+        String method = "isDayBeforeNonWorkingDays";
+        if (nonWorkingDays.size() == 0) {
+            // get not working days from date for next 7 days
+            nextDateAsString = SOSDate.getDateAsString(DailyPlanHelper.getDay(SOSDate.getDate(dateAsString), settings, 7));
+            nonWorkingDays.addAll(DailyPlanHelper.getNonWorkingDays(method, dbLayer, schedule.getNonWorkingDayCalendars(), dateAsString,
+                    nextDateAsString, nonWorkingCalendars));
+        }
+        String d = "";
+        if (nonWorkingDays.size() > 0) {
+            d = DailyPlanHelper.getDayBeforeNonWorkingDays(nonWorkingDays);
+            if (d.equals(dateAsString)) {
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format(
+                            "%s[NonWorkingDays][PREVIOUSNONWORKINGDAY][isDayBeforeNonWorkingDays=true][from=%s,to=%s][nonWorkingDays=%s]getDayBeforeNonWorkingDays=%s",
+                            logPrefix, dateAsString, nextDateAsString, String.join(",", nonWorkingDays), d));
+                }
+                return true;
+            }
+        }
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format(
+                    "%s[NonWorkingDays][PREVIOUSNONWORKINGDAY][isDayBeforeNonWorkingDays=false][from=%s,to=%s][nonWorkingDays=%s]getDayBeforeNonWorkingDays=%s",
+                    logPrefix, dateAsString, nextDateAsString, String.join(",", nonWorkingDays), d));
+        }
+        return false;
+    }
+
+    private boolean isNonWorkingDay(boolean isDebugEnabled, String logPrefix, InventoryDBLayer dbLayer, Schedule schedule,
+            Map<String, Calendar> nonWorkingCalendars, String dateAsString, String nextDateAsString, Set<String> nonWorkingDays, Period p,
+            String frequencyResolverDate) throws Exception {
+        String method = "isNonWorkingDay";
+        if (nonWorkingDays.size() == 0) {
+            nonWorkingDays.addAll(DailyPlanHelper.getNonWorkingDays(method, dbLayer, schedule.getNonWorkingDayCalendars(), dateAsString,
+                    nextDateAsString, nonWorkingCalendars));
+        }
+        if (nonWorkingDays.contains(dateAsString)) {
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("%s[FrequencyResolver date=%s][NonWorkingDays][%s][isNonWorkingDay=true][%s]nonWorkingDays=%s", logPrefix,
+                        frequencyResolverDate, p.getWhenHoliday(), DailyPlanHelper.toString(p), String.join(",", nonWorkingDays)));
+            }
+            return true;
+        }
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("%s[FrequencyResolver date=%s][NonWorkingDays][%s][isNonWorkingDay=false][%s]nonWorkingDays=%s", logPrefix,
+                    frequencyResolverDate, p.getWhenHoliday(), DailyPlanHelper.toString(p), String.join(",", nonWorkingDays)));
+        }
+        return false;
+    }
+
+    private PeriodResolver createPeriodResolver(List<Period> periods, String date, String timeZone) throws Exception {
+        PeriodResolver pr = new PeriodResolver(settings);
+        for (Period p : periods) {
+            Period period = new Period();
+            period.setBegin(p.getBegin());
+            period.setEnd(p.getEnd());
+            period.setRepeat(p.getRepeat());
+            period.setSingleStart(p.getSingleStart());
+            period.setWhenHoliday(p.getWhenHoliday());
+            try {
+                pr.addStartTimes(period, date, timeZone);
+            } catch (Throwable e) {
+                throw new Exception(String.format("[%s][timeZone=%s][%s]%s", date, timeZone, DailyPlanHelper.toString(period), e.toString()), e);
+            }
+        }
+        return pr;
     }
 
     private DBItemDailyPlanSubmission addDailyPlanSubmission(String controllerId, Date dailyPlanDate) throws JocConfigurationException,
