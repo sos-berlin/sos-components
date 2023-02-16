@@ -9,6 +9,7 @@ import com.sos.controller.model.cluster.ClusterType;
 import com.sos.controller.model.command.Overview;
 import com.sos.controller.model.command.overview.SystemProperties;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.proxy.ClusterWatch;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
 import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
@@ -17,6 +18,8 @@ import com.sos.joc.model.controller.ConnectionStateText;
 import com.sos.joc.model.controller.Controller;
 import com.sos.joc.model.controller.OperatingSystem;
 import com.sos.joc.model.controller.Role;
+
+import js7.data.node.NodeId;
 
 public class ControllerAnswer extends Controller {
 
@@ -103,11 +106,24 @@ public class ControllerAnswer extends Controller {
                     break;
                 }
 	        }
+			boolean currentNodeIsLoss = false;
+            if (dbInstance.getIsCluster()) {
+                NodeId lossNode = ClusterWatch.getInstance().getClusterNodeLoss(dbInstance.getControllerId());
+                if (lossNode != null) {
+                    clusterState = ClusterType.NODE_LOSS_TO_BE_CONFIRMED;
+//                    EventBus.getInstance().post(new ClusterNodeLossEvent(dbInstance.getControllerId(), lossNodes, true));
+                    currentNodeIsLoss = ((lossNode.string().equals("Primary") && dbInstance.getIsPrimary()) || (lossNode.string().equals("Backup")
+                            && !dbInstance.getIsPrimary()));
+
+                }
+            }
 			if (clusterState == null) {
 			    setComponentState(States.getComponentState(ComponentStateText.unknown));
 			} else if (!isActive && clusterState == ClusterType.PREPARED_TO_BE_COUPLED) {
 			    setComponentState(States.getComponentState(ComponentStateText.inoperable));
 			} else if (isActive && clusterState == ClusterType.ACTIVE_NODE_IS_NOT_READY) {
+                setComponentState(States.getComponentState(ComponentStateText.inoperable));
+            } else if (currentNodeIsLoss && clusterState == ClusterType.NODE_LOSS_TO_BE_CONFIRMED) {
                 setComponentState(States.getComponentState(ComponentStateText.inoperable));
             } else {
 			    setComponentState(States.getComponentState(ComponentStateText.operational));

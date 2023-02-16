@@ -9,19 +9,12 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
-
-/**
- * Jocs Item of a Deployment Descriptor
- * <p>
- * JS7 JOC Cluster Descriptor Schema
- * 
- */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "clusterId",
-    "members"
+    "instances"
 })
-public class JocClusterDescriptor {
+public class Members {
 
     /**
      * 
@@ -35,25 +28,25 @@ public class JocClusterDescriptor {
      * (Required)
      * 
      */
-    @JsonProperty("members")
-    private List<JocDescriptor> members = null;
+    @JsonProperty("instances")
+    private List<JocInstanceDescriptor> instances = null;
 
     /**
      * No args constructor for use in serialization
      * 
      */
-    public JocClusterDescriptor() {
+    public Members() {
     }
 
     /**
      * 
-     * @param members
+     * @param instances
      * @param clusterId
      */
-    public JocClusterDescriptor(String clusterId, List<JocDescriptor> members) {
+    public Members(String clusterId, List<JocInstanceDescriptor> instances) {
         super();
         this.clusterId = clusterId;
-        this.members = members;
+        this.instances = instances;
     }
 
     /**
@@ -81,9 +74,9 @@ public class JocClusterDescriptor {
      * (Required)
      * 
      */
-    @JsonProperty("members")
-    public List<JocDescriptor> getMembers() {
-        return members;
+    @JsonProperty("instances")
+    public List<JocInstanceDescriptor> getInstances() {
+        return instances;
     }
 
     /**
@@ -91,19 +84,19 @@ public class JocClusterDescriptor {
      * (Required)
      * 
      */
-    @JsonProperty("members")
-    public void setMembers(List<JocDescriptor> members) {
-        this.members = members;
+    @JsonProperty("instances")
+    public void setInstances(List<JocInstanceDescriptor> instances) {
+        this.instances = instances;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("clusterId", clusterId).append("members", members).toString();
+        return new ToStringBuilder(this).append("clusterId", clusterId).append("instances", instances).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(clusterId).append(members).toHashCode();
+        return new HashCodeBuilder().append(instances).append(clusterId).toHashCode();
     }
 
     @Override
@@ -111,11 +104,11 @@ public class JocClusterDescriptor {
         if (other == this) {
             return true;
         }
-        if ((other instanceof JocClusterDescriptor) == false) {
+        if ((other instanceof Members) == false) {
             return false;
         }
-        JocClusterDescriptor rhs = ((JocClusterDescriptor) other);
-        return new EqualsBuilder().append(clusterId, rhs.clusterId).append(members, rhs.members).isEquals();
+        Members rhs = ((Members) other);
+        return new EqualsBuilder().append(instances, rhs.instances).append(clusterId, rhs.clusterId).isEquals();
     }
 
 }

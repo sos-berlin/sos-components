@@ -8,7 +8,7 @@ public class NotificationCreated extends MonitoringEvent {
 
     public NotificationCreated(String controllerId, Long notificationId, Integer type, String workflowName, String orderId, String jobName,
             Date created, String messsage) {
-        super(MonitoringGuiEvent.class.getSimpleName(), controllerId, null);
+        super(NotificationCreated.class.getSimpleName(), controllerId, null);
         putVariables(notificationId, type, workflowName, orderId, jobName, created, messsage);
     }
 

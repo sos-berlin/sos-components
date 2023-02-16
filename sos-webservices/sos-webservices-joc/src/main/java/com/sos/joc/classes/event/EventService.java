@@ -37,6 +37,7 @@ import com.sos.joc.event.bean.inventory.InventoryTrashEvent;
 import com.sos.joc.event.bean.monitoring.MonitoringGuiEvent;
 import com.sos.joc.event.bean.monitoring.NotificationCreated;
 import com.sos.joc.event.bean.problem.ProblemEvent;
+import com.sos.joc.event.bean.proxy.ClusterNodeLossEvent;
 import com.sos.joc.event.bean.proxy.ProxyClosed;
 import com.sos.joc.event.bean.proxy.ProxyCoupled;
 import com.sos.joc.event.bean.proxy.ProxyEvent;
@@ -139,7 +140,7 @@ public class EventService {
     private volatile CopyOnWriteArraySet<String> uncoupledAgents = new CopyOnWriteArraySet<>();
     private volatile CopyOnWriteArraySet<String> uncoupledSubagents = new CopyOnWriteArraySet<>();
     private AtomicBoolean burstFilter = new AtomicBoolean(true);
-    private static final EnumSet notificationFailureTypes = EnumSet.of(NotificationType.ERROR, NotificationType.WARNING);
+    private static final EnumSet<NotificationType> notificationFailureTypes = EnumSet.of(NotificationType.ERROR, NotificationType.WARNING);
 
     public EventService(String controllerId) {
         this.controllerId = controllerId;
@@ -383,6 +384,21 @@ public class EventService {
         } catch (Exception e) {
             //
         }
+    }
+    
+    @Subscribe({ ClusterNodeLossEvent.class })
+    public void createEvent(ClusterNodeLossEvent evt) {
+        if (!evt.onlyProblem()) {
+            addEvent(createControllerEvent(evt.getEventId() / 1000));
+        }
+        
+        EventSnapshot eventSnapshot = new EventSnapshot();
+        eventSnapshot.setEventId(evt.getEventId() / 1000);
+        eventSnapshot.setEventType("ProblemEvent");
+        eventSnapshot.setObjectType(EventType.PROBLEM);
+        //eventSnapshot.setAccessToken(evt.getKey());
+        eventSnapshot.setMessage("Loss node '" + evt.getNodeId() + "' of Controller cluster '" + evt.getControllerId() + "' must be confirmed");
+        addEvent(eventSnapshot);
     }
 
     @Subscribe({ ProxyCoupled.class })
@@ -710,7 +726,7 @@ public class EventService {
     private void addEventM(EventMonitoring eventMonitoring) {
         if (eventMonitoring != null && eventMonitoring.getEventId() != null && events.add(eventMonitoring)) {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("add event for " + controllerId + ": " + eventMonitoring.toString());
+                LOGGER.debug("add system monitoring event for " + controllerId + ": " + eventMonitoring.toString());
             }
             if (atLeastOneConditionIsHold()) {
                 signalAll();
@@ -718,12 +734,10 @@ public class EventService {
         }
     }
     
-
-    
     private void addEventO(EventOrderMonitoring eventOrderMonitoring) {
         if (eventOrderMonitoring != null && eventOrderMonitoring.getEventId() != null && events.add(eventOrderMonitoring)) {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("add event for " + controllerId + ": " + eventOrderMonitoring.toString());
+                LOGGER.debug("add order monitoring event for " + controllerId + ": " + eventOrderMonitoring.toString());
             }
             if (atLeastOneConditionIsHold()) {
                 signalAll();
