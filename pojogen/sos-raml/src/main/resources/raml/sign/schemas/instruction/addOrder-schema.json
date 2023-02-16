@@ -36,7 +36,8 @@
     "startPosition": {
      	"$ref": "../../../inventory/schemas/common/position-schema.json"
     },
-	"endPositions": {
+	"stopPositions": {
+		"alias": "endPositions",
 		"type": "array",
 		"items": {
      		"$ref": "../../../inventory/schemas/common/position-schema.json"
