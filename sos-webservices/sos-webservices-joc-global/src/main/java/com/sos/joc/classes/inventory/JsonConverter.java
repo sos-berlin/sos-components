@@ -471,11 +471,8 @@ public class JsonConverter {
         if (sao.getArguments() != null && sao.getArguments().getAdditionalProperties() != null) {
             sao.getArguments().getAdditionalProperties().replaceAll((k, v) -> quoteVariable(v));
         }
-        if (sao.getStartPosition() == null) {
-            sao.setStartPosition(Collections.emptyList());
-        }
-        if (sao.getEndPositions() == null) {
-            sao.setEndPositions(Collections.emptyList());
+        if (sao.getStopPositions() == null) {
+            sao.setStopPositions(Collections.emptyList());
         }
     }
     
