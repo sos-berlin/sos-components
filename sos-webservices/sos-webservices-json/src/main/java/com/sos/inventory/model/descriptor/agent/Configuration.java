@@ -13,19 +13,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
-    "controllerRef",
     "certificates",
     "templates"
 })
 public class Configuration {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerRef")
-    private String controllerRef;
     /**
      * Deployment Descriptor Certificates Schema
      * <p>
@@ -49,33 +41,11 @@ public class Configuration {
      * 
      * @param certificates
      * @param templates
-     * @param controllerRef
      */
-    public Configuration(String controllerRef, Certificates certificates, List<String> templates) {
+    public Configuration(Certificates certificates, List<String> templates) {
         super();
-        this.controllerRef = controllerRef;
         this.certificates = certificates;
         this.templates = templates;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerRef")
-    public String getControllerRef() {
-        return controllerRef;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerRef")
-    public void setControllerRef(String controllerRef) {
-        this.controllerRef = controllerRef;
     }
 
     /**
@@ -112,12 +82,12 @@ public class Configuration {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerRef", controllerRef).append("certificates", certificates).append("templates", templates).toString();
+        return new ToStringBuilder(this).append("certificates", certificates).append("templates", templates).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(certificates).append(controllerRef).append(templates).toHashCode();
+        return new HashCodeBuilder().append(certificates).append(templates).toHashCode();
     }
 
     @Override
@@ -129,7 +99,7 @@ public class Configuration {
             return false;
         }
         Configuration rhs = ((Configuration) other);
-        return new EqualsBuilder().append(certificates, rhs.certificates).append(controllerRef, rhs.controllerRef).append(templates, rhs.templates).isEquals();
+        return new EqualsBuilder().append(certificates, rhs.certificates).append(templates, rhs.templates).isEquals();
     }
 
 }

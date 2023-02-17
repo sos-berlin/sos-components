@@ -6,10 +6,9 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.common.IInventoryObject;
-import com.sos.inventory.model.descriptor.agent.AgentDescriptor;
+import com.sos.inventory.model.descriptor.agent.AgentsDescriptor;
 import com.sos.inventory.model.descriptor.controller.ControllerClusterDescriptor;
 import com.sos.inventory.model.descriptor.joc.JocDescriptor;
 import com.sos.joc.model.common.IConfigurationObject;
@@ -41,25 +40,11 @@ public class DeploymentDescriptor implements IInventoryObject, IConfigurationObj
     @JsonProperty("license")
     private License license;
     @JsonProperty("agents")
-    private List<AgentDescriptor> agents = null;
-    /**
-     * Controller Cluster Item of a Deployment Descriptor
-     * <p>
-     * JS7 Controller Cluster Descriptor Schema
-     * 
-     */
+    private AgentsDescriptor agents;
     @JsonProperty("controllers")
-    @JsonPropertyDescription("JS7 Controller Cluster Descriptor Schema")
-    private ControllerClusterDescriptor controllers;
-    /**
-     * Joc Item of a Deployment Descriptor
-     * <p>
-     * JS7 JOC Item Descriptor Schema
-     * 
-     */
+    private List<ControllerClusterDescriptor> controllers = null;
     @JsonProperty("joc")
-    @JsonPropertyDescription("JS7 JOC Item Descriptor Schema")
-    private JocDescriptor joc;
+    private List<JocDescriptor> joc = null;
 
     @JsonIgnore
     private String title = null;
@@ -81,7 +66,7 @@ public class DeploymentDescriptor implements IInventoryObject, IConfigurationObj
      * @param agents
      * @param joc
      */
-    public DeploymentDescriptor(Descriptor descriptor, License license, List<AgentDescriptor> agents, ControllerClusterDescriptor controllers, JocDescriptor joc) {
+    public DeploymentDescriptor(Descriptor descriptor, License license, AgentsDescriptor agents, List<ControllerClusterDescriptor> controllers, List<JocDescriptor> joc) {
         super();
         this.descriptor = descriptor;
         this.license = license;
@@ -111,56 +96,32 @@ public class DeploymentDescriptor implements IInventoryObject, IConfigurationObj
     }
 
     @JsonProperty("agents")
-    public List<AgentDescriptor> getAgents() {
+    public AgentsDescriptor getAgents() {
         return agents;
     }
 
     @JsonProperty("agents")
-    public void setAgents(List<AgentDescriptor> agents) {
+    public void setAgents(AgentsDescriptor agents) {
         this.agents = agents;
     }
 
-    /**
-     * Controller Cluster Item of a Deployment Descriptor
-     * <p>
-     * JS7 Controller Cluster Descriptor Schema
-     * 
-     */
     @JsonProperty("controllers")
-    public ControllerClusterDescriptor getControllers() {
+    public List<ControllerClusterDescriptor> getControllers() {
         return controllers;
     }
 
-    /**
-     * Controller Cluster Item of a Deployment Descriptor
-     * <p>
-     * JS7 Controller Cluster Descriptor Schema
-     * 
-     */
     @JsonProperty("controllers")
-    public void setControllers(ControllerClusterDescriptor controllers) {
+    public void setControllers(List<ControllerClusterDescriptor> controllers) {
         this.controllers = controllers;
     }
 
-    /**
-     * Joc Item of a Deployment Descriptor
-     * <p>
-     * JS7 JOC Item Descriptor Schema
-     * 
-     */
     @JsonProperty("joc")
-    public JocDescriptor getJoc() {
+    public List<JocDescriptor> getJoc() {
         return joc;
     }
 
-    /**
-     * Joc Item of a Deployment Descriptor
-     * <p>
-     * JS7 JOC Item Descriptor Schema
-     * 
-     */
     @JsonProperty("joc")
-    public void setJoc(JocDescriptor joc) {
+    public void setJoc(List<JocDescriptor> joc) {
         this.joc = joc;
     }
 

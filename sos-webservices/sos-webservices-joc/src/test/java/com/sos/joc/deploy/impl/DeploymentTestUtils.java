@@ -26,6 +26,8 @@ import com.sos.inventory.model.descriptor.DeploymentDescriptor;
 import com.sos.inventory.model.descriptor.Descriptor;
 import com.sos.inventory.model.descriptor.License;
 import com.sos.inventory.model.descriptor.agent.AgentDescriptor;
+import com.sos.inventory.model.descriptor.agent.AgentsDescriptor;
+import com.sos.inventory.model.descriptor.agent.ControllerRefDescriptor;
 import com.sos.inventory.model.descriptor.common.Authentication;
 import com.sos.inventory.model.descriptor.common.Authentication.Method;
 import com.sos.inventory.model.descriptor.common.Certificates;
@@ -1509,7 +1511,7 @@ public class DeploymentTestUtils {
 
         Descriptor descr = new Descriptor();
         descr.setAccount("sp");
-        descr.setDescriptorId("example_01");
+        descr.setDescriptorId("example_04");
         descr.setTitle("Example of the current schema of a deployment descriptor");
         Instant now = Instant.now();
         descr.setCreated(Date.from(now));
@@ -1522,10 +1524,19 @@ public class DeploymentTestUtils {
         license.setLicenseKeyFile("licenses/sos.pem");
         depDescriptor.setLicense(license);
         
-        ControllerClusterDescriptor ccDescriptor = new ControllerClusterDescriptor();
+        depDescriptor.setControllers(createControllersDescriptor());
+        depDescriptor.setAgents(createAgentsDescriptor());
+        depDescriptor.setJoc(createJocsDescriptor());
         
-        ccDescriptor.setJocRef("cluster");
-        ccDescriptor.setControllerId("testsuite");
+        return depDescriptor;
+    }
+    
+    private static List<ControllerClusterDescriptor>createControllersDescriptor() {
+        List<ControllerClusterDescriptor> controllers = new ArrayList<ControllerClusterDescriptor>();
+        ControllerClusterDescriptor cc1Descriptor = new ControllerClusterDescriptor();
+        
+        cc1Descriptor.setJocRef("cluster");
+        cc1Descriptor.setControllerId("testsuite");
         
         ControllerDescriptor primaryControllerDesc = new ControllerDescriptor();
         
@@ -1583,7 +1594,7 @@ public class DeploymentTestUtils {
         primaryTarget.setPackageLocation("/tmp");
         primaryControllerDesc.setTarget(primaryTarget);
 
-        ccDescriptor.setPrimary(primaryControllerDesc);
+        cc1Descriptor.setPrimary(primaryControllerDesc);
 
         ControllerDescriptor secondaryControllerDesc = new ControllerDescriptor();
 
@@ -1639,19 +1650,26 @@ public class DeploymentTestUtils {
         secondaryTarget.setPackageLocation("/tmp");
         secondaryControllerDesc.setTarget(secondaryTarget);
         
-        ccDescriptor.setSecondary(secondaryControllerDesc);
-        depDescriptor.setControllers(ccDescriptor);
-        
-        if (depDescriptor.getAgents() == null) {
-            depDescriptor.setAgents(new ArrayList<AgentDescriptor>());
+        cc1Descriptor.setSecondary(secondaryControllerDesc);
+        controllers.add(cc1Descriptor);
+        return controllers;
+    }
+    
+    private static AgentsDescriptor createAgentsDescriptor() {
+        AgentsDescriptor agentsDescriptor = new AgentsDescriptor();
+        if(agentsDescriptor.getControllerRefs() == null) {
+            agentsDescriptor.setControllerRefs(new ArrayList<ControllerRefDescriptor>());
+        }
+        ControllerRefDescriptor ref1Descriptor = new ControllerRefDescriptor();
+        ref1Descriptor.setControllerId("testsuite");
+        if(ref1Descriptor.getMembers() == null) {
+            ref1Descriptor.setMembers(new ArrayList<AgentDescriptor>());
         }
         
         AgentDescriptor agent1Desc = new AgentDescriptor();
         agent1Desc.setAgentId("agent_001");
         
-        
         com.sos.inventory.model.descriptor.agent.Configuration cfgAgent1 = new com.sos.inventory.model.descriptor.agent.Configuration();
-        cfgAgent1.setControllerRef("testsuite");
 
         Certificates agent1Certs = new Certificates();
         agent1Certs.setKeyStore("agents/instances/agent_001/config/private/https-keystore.p12");
@@ -1703,13 +1721,12 @@ public class DeploymentTestUtils {
         agent1Target.setPackageLocation("/tmp");
         agent1Desc.setTarget(agent1Target);
 
-        depDescriptor.getAgents().add(agent1Desc);
+        ref1Descriptor.getMembers().add(agent1Desc);
         
         AgentDescriptor agent2Desc = new AgentDescriptor();
         agent2Desc.setAgentId("agent_002");
         
         com.sos.inventory.model.descriptor.agent.Configuration cfgAgent2 = new com.sos.inventory.model.descriptor.agent.Configuration();
-        cfgAgent2.setControllerRef("testsuite");
         
         Certificates agent2Certs = new Certificates();
         agent2Certs.setKeyStore("agents/instances/agent_002/config/private/https-keystore.p12");
@@ -1761,8 +1778,13 @@ public class DeploymentTestUtils {
         agent2Target.setPackageLocation("/tmp");
         agent2Desc.setTarget(agent2Target);
         
-        depDescriptor.getAgents().add(agent2Desc);
-        
+        ref1Descriptor.getMembers().add(agent2Desc);
+        agentsDescriptor.getControllerRefs().add(ref1Descriptor);
+        return agentsDescriptor;
+    }
+    
+    private static List<JocDescriptor> createJocsDescriptor() {
+        List<JocDescriptor> jocs = new ArrayList<JocDescriptor>();
         JocDescriptor jocClusterDescriptor = new JocDescriptor();
         Members jocMembers = new Members();
         
@@ -1922,8 +1944,9 @@ public class DeploymentTestUtils {
         joc2Descr.setTarget(joc2Target);
         
         jocMembers.getInstances().add(joc2Descr);
-        
-        depDescriptor.setJoc(jocClusterDescriptor);
-        return depDescriptor;
+        jocClusterDescriptor.setMembers(jocMembers);
+        jocs.add(jocClusterDescriptor);
+        return jocs;
     }
+
 }
