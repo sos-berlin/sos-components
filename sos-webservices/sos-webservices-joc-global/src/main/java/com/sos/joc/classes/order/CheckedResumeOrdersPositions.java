@@ -38,6 +38,7 @@ import com.sos.joc.model.order.OrdersResumePositions;
 import com.sos.joc.model.order.Position;
 import com.sos.joc.model.order.PositionChange;
 import com.sos.joc.model.order.PositionChangeCode;
+import com.sos.sign.model.workflow.OrderPreparation;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
@@ -189,6 +190,13 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
         JsonNode node = Globals.objectMapper.readTree(w.withPositions().toJson());
         List<Instruction> instructions = Globals.objectMapper.reader().forType(new TypeReference<List<Instruction>>() {
         }).readValue(node.get("instructions"));
+        
+        OrderPreparation orderPreparation = null;
+        if (node.get("orderPreparation") != null) {
+            orderPreparation = Globals.objectMapper.reader().forType(new TypeReference<OrderPreparation>() {
+            }).readValue(node.get("orderPreparation"));
+        }
+        
         // List<Instruction> instructions = Arrays.asList(Globals.objectMapper.reader().treeToValue(node.get("instructions"), Instruction[].class));
         Set<String> implicitEnds = WorkflowsHelper.extractImplicitEnds(instructions);
 
@@ -225,8 +233,19 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
             setVariablesNotSettable(firstPos.equals(position));
         }
         
-        setVariables(getVariables(jOrder, position, implicitEnds));
-        setConstants(OrdersHelper.scalaValuedArgumentsToVariables(jOrder.arguments()));
+        Variables constants = OrdersHelper.scalaValuedArgumentsToVariables(jOrder.arguments());
+        if (orderPreparation != null && orderPreparation.getParameters() != null && orderPreparation.getParameters().getAdditionalProperties() != null) {
+            orderPreparation.getParameters().getAdditionalProperties().forEach((k, v) -> {
+                if (v.getDefault() != null && !constants.getAdditionalProperties().containsKey(k)) {
+                    constants.setAdditionalProperty(k, v.getDefault());
+                } else if (v.getFinal() != null && !constants.getAdditionalProperties().containsKey(k)) {
+                    constants.setAdditionalProperty(k, v.getFinal());
+                }
+            });
+        }
+        setVariables(getVariables(jOrder, position, implicitEnds, constants.getAdditionalProperties().keySet()));
+        
+        setConstants(constants);
         
         return this;
     }
@@ -286,21 +305,20 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
     }
     
     @JsonIgnore
-    public Variables getVariables(JOrder jOrder, List<Object> position, Set<String> implicitEnds) throws JsonParseException, JsonMappingException,
-            IOException, JocBadRequestException {
+    public Variables getVariables(JOrder jOrder, List<Object> position, Set<String> implicitEnds, Set<String> orderArgs) throws JsonParseException,
+            JsonMappingException, IOException, JocBadRequestException {
         Either<Problem, JPosition> posFromList = JPosition.fromList(position);
         if (posFromList.isLeft()) {
             new JocBadRequestException(ProblemHelper.getErrorMessage(posFromList.getLeft()));
         }
-        return getVariables(jOrder, posFromList.get().toString(), implicitEnds);
+        return getVariables(jOrder, posFromList.get().toString(), implicitEnds, orderArgs);
     }
-    
+
     @JsonIgnore
-    public Variables getVariables(JOrder jOrder, String positionString, Set<String> implicitEnds) throws JsonParseException, JsonMappingException,
-            IOException, JocBadRequestException {
+    public Variables getVariables(JOrder jOrder, String positionString, Set<String> implicitEnds, Set<String> orderArgs) throws JsonParseException,
+            JsonMappingException, IOException, JocBadRequestException {
         Set<String> allowedPositions = getPositions().stream().map(Position::getPositionString).collect(Collectors.toCollection(LinkedHashSet::new));
         Variables variables = new Variables();
-        Set<String> orderArgs = jOrder.arguments() == null ? Collections.emptySet() : jOrder.arguments().keySet();
         String positionStringWithoutCounter = positionString.replaceAll("/(try|catch|cycle)\\+?[^:]*", "/$1");
 
         if (allowedPositions.contains(positionString) || allowedPositions.contains(positionStringWithoutCounter) || implicitEnds.contains(
@@ -322,7 +340,9 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
                         continue;
                     }
                     Map<String, Object> vars = outcome.getOutcome().getNamedValues().getAdditionalProperties();
-                    orderArgs.forEach(arg -> vars.remove(arg));
+                    if (orderArgs != null) {
+                        orderArgs.forEach(arg -> vars.remove(arg));
+                    }
                     variables.setAdditionalProperties(vars);
                 }
             }

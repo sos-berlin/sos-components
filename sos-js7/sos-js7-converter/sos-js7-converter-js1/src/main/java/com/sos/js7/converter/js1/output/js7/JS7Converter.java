@@ -100,6 +100,7 @@ import com.sos.js7.converter.js1.common.jobchain.node.AJobChainNode;
 import com.sos.js7.converter.js1.common.jobchain.node.JobChainNode;
 import com.sos.js7.converter.js1.common.jobchain.node.JobChainNodeFileOrderSink;
 import com.sos.js7.converter.js1.common.jobchain.node.JobChainNodeFileOrderSource;
+import com.sos.js7.converter.js1.common.jobchain.node.JobChainNodeOnReturnCode;
 import com.sos.js7.converter.js1.common.json.calendars.JS1Calendar;
 import com.sos.js7.converter.js1.common.json.calendars.JS1Calendars;
 import com.sos.js7.converter.js1.common.processclass.ProcessClass;
@@ -700,7 +701,7 @@ public class JS7Converter {
         w.setTimeZone(CONFIG.getWorkflowConfig().getDefaultTimeZone());
 
         Jobs js = new Jobs();
-        JobHelper jh = getJob(result, js1Job, jobChainAgent);
+        JobHelper jh = getJob(result, js1Job, jobChainAgent, null);
         Job job = null;
         if (jh != null) {
             job = jh.getJS7Job();
@@ -709,7 +710,7 @@ public class JS7Converter {
         w.setJobs(js);
 
         List<Instruction> in = new ArrayList<>();
-        in.add(getNamedJobInstruction(js1Job, js7Name, js7Name, null, null));
+        in.add(getNamedJobInstruction(js1Job, js7Name, js7Name, null, null, null));
         if (h == null) {
             in = getRetryInstructions(js1Job, in);
         } else {
@@ -887,7 +888,8 @@ public class JS7Converter {
         if (parent == null) {
             parent = Paths.get("");
         }
-        return parent.resolve(workflowName + additionalName + ".schedule.json");
+        // return parent.resolve(workflowName + additionalName + ".schedule.json");
+        return resolvePath(parent, workflowName + additionalName + ".schedule.json");
     }
 
     private Path getFileOrderSourcePathFromJS7Path(Path workflowPath, String workflowName) {
@@ -895,7 +897,8 @@ public class JS7Converter {
         if (parent == null) {
             parent = Paths.get("");
         }
-        return parent.resolve(workflowName + ".fileordersource.json");
+        // return parent.resolve(workflowName + ".fileordersource.json");
+        return resolvePath(parent, workflowName + ".fileordersource.json");
     }
 
     private Path getNoticeBoardPathFromJS7Path(Path workflowPath, String boardName) {
@@ -918,7 +921,8 @@ public class JS7Converter {
         } else {
             js7Path = getJS7ObjectPath(Paths.get(relative));
         }
-        return js7Path.resolve(js7Name + ".workflow.json");
+        // return js7Path.resolve(js7Name + ".workflow.json");
+        return resolvePath(js7Path, js7Name + ".workflow.json");
     }
 
     public String getUniqueWorkflowName(String name) {
@@ -959,7 +963,18 @@ public class JS7Converter {
         if (parent == null) {
             parent = Paths.get("");
         }
-        return parent.resolve(name + ".workflow.json");
+        // return parent.resolve(name + ".workflow.json");
+        return resolvePath(parent, name + ".workflow.json");
+    }
+
+    private Path resolvePath(Path parent, String name) {
+        try {
+            return parent.resolve(name);
+        } catch (Throwable e) {
+            LOGGER.error(String.format("[%s][%s]%s", parent, name, e.toString()), e);
+            ConverterReport.INSTANCE.addErrorRecord(parent, name, e.toString());
+            return null;
+        }
     }
 
     public Path getJS7ObjectPath(Path path) {
@@ -1111,14 +1126,14 @@ public class JS7Converter {
         return in;
     }
 
-    public JobHelper getJob(JS7ConverterResult result, ACommonJob job, JS7Agent jobChainAgent) {
+    public JobHelper getJob(JS7ConverterResult result, ACommonJob job, JS7Agent jobChainAgent, JobChain jobChain) {
         if (job.getMonitors() != null && job.getMonitors().size() > 0) {
             if (!js1JobsWithMonitors.contains(job)) {
                 js1JobsWithMonitors.add(job);
             }
         }
 
-        JobHelper jh = new JobHelper(job);
+        JobHelper jh = new JobHelper(job, jobChain);
         List<ACommonJob> jbt = js1JobsByLanguage.get(jh.getLanguage());
         if (jbt == null) {
             jbt = new ArrayList<>();
@@ -1148,7 +1163,7 @@ public class JS7Converter {
     }
 
     public NamedJob getNamedJobInstruction(ACommonJob js1Job, String js7JobName, String js7JobLabel, Params jobChainConfigProcessParams,
-            SOSParameterSubstitutor ps) {
+            SOSParameterSubstitutor ps, JobChain jobChain) {
         NamedJob nj = new NamedJob(js7JobName);
         nj.setLabel(js7JobLabel);
         if (jobChainConfigProcessParams != null && jobChainConfigProcessParams.hasParams()) {
@@ -1161,7 +1176,7 @@ public class JS7Converter {
             Environment env = new Environment();
 
             // TODO see getJobArguments handling arguments
-            JobHelper jh = new JobHelper(js1Job);
+            JobHelper jh = new JobHelper(js1Job, jobChain);
             JavaJITLJobHelper jitlJob = jh.getJavaJITLJob();
             ShellJobHelper shellJob = jh.getShellJob();
 
@@ -2264,6 +2279,12 @@ public class JS7Converter {
             switch (n.getType()) {
             case NODE:
                 JobChainNode jcn = (JobChainNode) n;
+                if (jcn.getOnReturnCodes() != null && jcn.getOnReturnCodes().size() > 0) {
+                    for (JobChainNodeOnReturnCode rc : jcn.getOnReturnCodes()) {
+                        ConverterReport.INSTANCE.addWarningRecord(jobChain.getPath(), "ON_RETURN_CODE not implemented yet", String.format(
+                                "[state=%s][ON_RETURN_CODE]returnCode=%s,toState=%s", jcn.getState(), rc.getReturnCode(), rc.getToState()));
+                    }
+                }
                 if (jcn.getJob() == null) {
                     if (jcn.getState() != null) {
                         allStates.put(jcn.getState(), new JobChainStateHelper(jcn, null, null));
@@ -2402,7 +2423,7 @@ public class JS7Converter {
         uniqueJobs.entrySet().forEach(e -> {
             OrderJob js1Job = e.getValue().getJob();
             if (usedJobNames.contains(e.getKey())) {
-                JobHelper jh = getJob(result, js1Job, jobChainAgent);
+                JobHelper jh = getJob(result, js1Job, jobChainAgent, jobChain);
                 if (jh == null) {
                     if (js1Job.isJavaJITLSplitterJob() || js1Job.isJavaJITLJoinJob()) {
                         if (isDebugEnabled) {
@@ -2578,6 +2599,7 @@ public class JS7Converter {
                 if (useNextState) {
                     name = name + NAME_CONCAT_CHARACTER + n.getNextState();
                 }
+                name = getJS7ObjectName(n.getPath(), name);
                 FileOrderSource fos = new FileOrderSource();
                 fos.setWorkflowName(workflowName);
                 fos.setAgentName(js7Agent.getJS7AgentName());
@@ -2824,7 +2846,7 @@ public class JS7Converter {
                     });
                 }
                 in.add(getNamedJobInstruction(job, h.getJS7JobName(), h.getJS7State(), hasConfigProcess ? jobChain.getConfig().getProcess().get(h
-                        .getJS1State()) : null, ps));
+                        .getJS1State()) : null, ps, jobChain));
             }
 
             String onError = h.getOnError().toLowerCase();

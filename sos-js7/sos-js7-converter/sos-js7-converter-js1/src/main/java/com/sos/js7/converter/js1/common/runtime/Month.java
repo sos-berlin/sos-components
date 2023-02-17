@@ -1,6 +1,7 @@
 package com.sos.js7.converter.js1.common.runtime;
 
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -60,6 +61,14 @@ public class Month {
 
     public String getMonth() {
         return month;
+    }
+
+    // <month month="1 4 7 10"> ...
+    public String[] getMonthMonths() {
+        if (month == null || month.length() == 0) {
+            return null;
+        }
+        return Arrays.stream(month.split(" ")).map(m -> m.trim()).filter(m -> m.length() > 0).toArray(String[]::new);
     }
 
 }

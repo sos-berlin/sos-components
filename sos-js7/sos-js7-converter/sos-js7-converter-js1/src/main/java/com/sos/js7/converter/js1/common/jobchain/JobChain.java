@@ -1,5 +1,6 @@
 package com.sos.js7.converter.js1.common.jobchain;
 
+import java.io.FileNotFoundException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -53,7 +54,7 @@ public class JobChain {
 
         Path jobChainFile = handleFiles(pr, jobChainFiles);
         if (jobChainFile == null) {
-            throw new Exception("job chain file not found");
+            throw new FileNotFoundException("JobChain file not found");
         }
         parse(pr, jobChainFile);
     }
