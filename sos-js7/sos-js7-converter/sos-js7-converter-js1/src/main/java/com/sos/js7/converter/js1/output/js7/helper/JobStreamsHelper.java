@@ -29,7 +29,7 @@ public class JobStreamsHelper {
                 ConverterReport.INSTANCE.addAnalyzerRecord(file, "convert=" + jobStream.getJobStream(), "[" + path + "]StandaloneJob not found");
             } else {
                 js7Converter.getJS1JobStreamJobs().add(path);
-                JobHelper jh = js7Converter.getJob(result, js1Job, null);
+                JobHelper jh = js7Converter.getJob(result, js1Job, null, null);
                 if (jh != null) {
                     Job js7Job = jh.getJS7Job();
                     js7Job.setAdmissionTimeScheme(JS7RunTimeConverter.convert(js1Job));

@@ -222,7 +222,11 @@ public class DirectoryParser {
                 }
                 folder.addJobChain(r, entry.getKey(), entry.getValue());
             } catch (Throwable e) {
-                LOGGER.error(String.format("[%s]%s", method, e.toString()), e);
+                if (e instanceof FileNotFoundException) {
+                    LOGGER.error(String.format("[%s][folder=%s][job chain=%s]%s", method, folder.getPath(), entry.getKey(), e.toString()));
+                } else {
+                    LOGGER.error(String.format("[%s][folder=%s][job chain=%s]%s", method, folder.getPath(), entry.getKey(), e.toString()), e);
+                }
                 ParserReport.INSTANCE.addErrorRecord(folder.getPath(), "job chain=" + entry.getKey(), e.toString());
             }
         }

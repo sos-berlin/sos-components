@@ -112,7 +112,7 @@ public class JS7JobStreamsConverter {
                                     .get(0).getJob() + "]StandaloneJob not found");
                         } else {
                             in.add(js7Converter.getNamedJobInstruction(startJob.getJS1Job(), startJob.getJS7JobName(), startJob.getJS7JobName(), null,
-                                    null));
+                                    null, null));
                             LOGGER.info(String.format("[%s][%s][added]", method, startJob.getJS1Job().getName()));
 
                             List<JobStreamJob> allJobs = new ArrayList<>(jobStream.getJobs());
@@ -352,7 +352,7 @@ public class JS7JobStreamsConverter {
         // child.setJS7BranchPath(getBranchPath(parentBranchPath, branchName));
         LOGGER.debug(String.format("[addNamedInstruction][%s]job=%s", workflowName, job.getJS7JobName()));
 
-        in.add(js7Converter.getNamedJobInstruction(job.getJS1Job(), job.getJS7JobName(), job.getJS7JobName(), null, null));
+        in.add(js7Converter.getNamedJobInstruction(job.getJS1Job(), job.getJS7JobName(), job.getJS7JobName(), null, null, null));
         addJob(workflowName, job);
 
     }

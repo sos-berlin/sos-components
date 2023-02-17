@@ -33,6 +33,9 @@ public class JS7ExportObjects<T> {
     }
 
     public JS7ExportObject addItem(Path path, T o) {
+        if (path == null || o == null) {
+            return null;
+        }
         JS7ExportObject eo = new JS7ExportObject(o, path, getUniquePath(path));
         items.add(eo);
         return eo;
@@ -113,7 +116,10 @@ public class JS7ExportObjects<T> {
     }
 
     private JS7ExportObject find(Path path) {
-        return this.getItems().stream().filter(o -> o.getUniquePath().getName().equals(getName(path))).findFirst().orElse(null);
+        if (path == null || this.getItems() == null) {
+            return null;
+        }
+        return this.getItems().stream().filter(o -> o != null && o.getUniquePath().getName().equals(getName(path))).findFirst().orElse(null);
     }
 
     private String getName(Path path) {

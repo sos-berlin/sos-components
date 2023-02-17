@@ -2,7 +2,6 @@ package com.sos.js7.converter.js1.output.js7;
 
 import java.nio.file.Path;
 import java.time.LocalTime;
-import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -10,6 +9,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
@@ -42,6 +43,8 @@ public class JS7RunTimeConverter {
     private static final Logger LOGGER = LoggerFactory.getLogger(JS7RunTimeConverter.class);
 
     private static final int DAY_SECONDS = 24 * 3_600;
+
+    private static final int CONVERT_MONTH_FOR_MAX_YEARS = 3;
 
     private enum DaysType {
         WEEKDAYS, MONTHDAYS, ULTIMOS;
@@ -362,41 +365,47 @@ public class JS7RunTimeConverter {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(currentDate);
         int currentYear = calendar.get(Calendar.YEAR);
-        String monthNumber = getMonthNumber(month.getMonth());
+        // String monthNumber = getMonthNumber(month.getMonth());
+        String[] months = month.getMonthMonths();
         boolean hasWarning = false;
         if (month.getMonthDays() != null) {
+
             for (com.sos.js7.converter.js1.common.runtime.MonthDays wd : month.getMonthDays()) {
                 for (com.sos.js7.converter.js1.common.runtime.Day d : wd.getDays()) {
                     AssignedCalendars c = createWorkingCalendar(timeZone);
 
-                    List<String> days = new ArrayList<>();
-                    for (Integer day : d.getDays()) {
-                        try {
-                            String iso = currentYear + "-" + monthNumber + "-" + String.format("%02d", day);
-                            Date isoDate = SOSDate.getDate(iso);
+                    Set<String> days = new TreeSet<>();
+                    for (String monthEntry : months) {
+                        String monthNumber = getMonthNumber(monthEntry.trim());
 
-                            int startYear = currentYear;
-                            if (currentDate.getTime() > isoDate.getTime()) {
-                                startYear = currentYear + 1;
+                        for (Integer day : d.getDays()) {
+                            try {
+                                String iso = currentYear + "-" + monthNumber + "-" + String.format("%02d", day);
+                                Date isoDate = SOSDate.getDate(iso);
+
+                                int startYear = currentYear;
+                                if (currentDate.getTime() > isoDate.getTime()) {
+                                    startYear = currentYear + 1;
+                                }
+                                for (int i = 0; i < CONVERT_MONTH_FOR_MAX_YEARS; i++) {
+                                    days.add((startYear + i) + "-" + monthNumber + "-" + String.format("%02d", day));
+                                }
+                            } catch (SOSInvalidDataException e) {
+                                LOGGER.warn(String.format("[%s]%s", js7SchedulePath, e.toString()), e);
+                                ConverterReport.INSTANCE.addWarningRecord(js7SchedulePath, "convertMonth", e.toString());
                             }
-                            for (int i = 0; i < 3; i++) {
-                                days.add((startYear + i) + "-" + monthNumber + "-" + String.format("%02d", day));
-                            }
-                        } catch (SOSInvalidDataException e) {
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
                         }
                     }
-                    c.getIncludes().setDates(days);
+                    c.getIncludes().setDates(days.stream().collect(Collectors.toList()));
                     c.setPeriods(convertPeriods(d.getPeriods()));
                     working.add(c);
-
-                    ConverterReport.INSTANCE.addWarningRecord(js7SchedulePath,
-                            "Schedule Run-Time was converted for a specific day in year instead of a general day in " + StringUtils.capitalize(month
-                                    .getMonth()), days.toString());
-                    hasWarning = true;
                 }
+
             }
+            ConverterReport.INSTANCE.addWarningRecord(js7SchedulePath, "Schedule Run-Time",
+                    "JS1 Month Run-Time converted as the 'Specific Days' (for the next " + CONVERT_MONTH_FOR_MAX_YEARS
+                            + " years) instead of a general day in month(s): " + month.getMonth());
+            hasWarning = true;
         }
         // month.getMonthDays();
         // wd.getPeriods();

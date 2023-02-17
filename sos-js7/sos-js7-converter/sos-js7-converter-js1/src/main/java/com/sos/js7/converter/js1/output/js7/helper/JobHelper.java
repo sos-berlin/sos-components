@@ -1,5 +1,6 @@
 package com.sos.js7.converter.js1.output.js7.helper;
 
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -11,6 +12,7 @@ import com.sos.js7.converter.commons.config.json.JS7Agent;
 import com.sos.js7.converter.commons.report.ConverterReport;
 import com.sos.js7.converter.js1.common.Script;
 import com.sos.js7.converter.js1.common.job.ACommonJob;
+import com.sos.js7.converter.js1.common.jobchain.JobChain;
 
 public class JobHelper {
 
@@ -48,7 +50,7 @@ public class JobHelper {
 
     private String language;
 
-    public JobHelper(ACommonJob js1Job) {
+    public JobHelper(ACommonJob js1Job, JobChain jobChain) {
         this.js1Job = js1Job;
         this.language = js1Job.getScript().getLanguage() == null ? "shell" : js1Job.getScript().getLanguage().toLowerCase();
         switch (language) {
@@ -128,7 +130,8 @@ public class JobHelper {
                 break;
             default:
                 shellJob = new ShellJobHelper(language, jc);
-                ConverterReport.INSTANCE.addWarningRecord(js1Job.getPath(), "[job " + jc + "]", "not implemented yet");
+                Path p = jobChain == null ? js1Job.getPath() : jobChain.getPath();
+                ConverterReport.INSTANCE.addWarningRecord(p, "[" + language + " job " + jc + "]", "not implemented yet, a shell job created");
                 break;
             }
             break;
