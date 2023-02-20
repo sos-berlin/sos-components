@@ -89,7 +89,7 @@ public class Validator {
             InstructionType.EXPECT_NOTICE.value(), InstructionType.EXPECT_NOTICES.value(), InstructionType.CONSUME_NOTICES.value());
     private final static Predicate<String> hasNoticesInstruction = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + noticesInstructions + ")\"")
             .asPredicate();
-    private final static boolean hasLicense = AgentHelper.hasClusterLicense();
+    private static boolean hasLicense = false;
 
     /** @param type
      * @param configBytes
@@ -168,6 +168,7 @@ public class Validator {
                     List<String> boardNames = hasNoticesInstruction.test(json) ? dbLayer.getBoardNames() : Collections.emptyList();
                     Jobs jobs = workflow.getJobs() == null ? new Jobs() : workflow.getJobs();
                     Set<String> invalidAgentRefs = getInvalidAgentRefs(json, agentDBLayer, visibleAgentNames);
+                    hasLicense = AgentHelper.hasClusterLicense();
                     validateInstructions(workflow.getInstructions(), "instructions", jobs, workflow.getOrderPreparation(),
                             new HashMap<String, String>(), invalidAgentRefs, boardNames, false, dbLayer);
                     //validateJobArguments(workflow.getJobs(), workflow.getOrderPreparation());
@@ -196,6 +197,8 @@ public class Validator {
                                         "%s: Multiple workflows with order variables are not permitted: schedule=%s, workflowName=%s, %s order variables",
                                         position, schedule.getPath(), workflowName, r.getParameters().getAdditionalProperties().size()));
                             }
+                        } else {
+                            // TODO check positions and labels exist in Workflow
                         }
                         validateOrderParameterisations(schedule.getOrderParameterisations(), r, "$.variableSets");
                     }
