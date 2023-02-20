@@ -12,6 +12,9 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import com.sos.commons.util.SOSDate;
+import com.sos.jitl.jobs.common.ABlockingInternalJob;
+import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.common.JobStep;
 import com.sos.jitl.jobs.file.common.AFileOperationsJob;
 import com.sos.jitl.jobs.file.common.FileOperationsImpl;
@@ -40,5 +43,4 @@ public class FileExistsJob extends AFileOperationsJob {
         return handleResult(step, fo.getResultList(), result);
     }
 
-    //
 }

@@ -1,12 +1,6 @@
 package com.sos.jitl.jobs.file.common;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileLock;
-import java.nio.channels.OverlappingFileLockException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,7 +25,6 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
         super(jobContext);
     }
 
-    //
         if (args.getReplacing().isEmpty() && !args.getReplacement().isEmpty()) {
             throw new SOSJobRequiredArgumentMissingException(String.format("'%s' is missing but required for '%s'", args.getReplacing().getName(),
                     args.getReplacement().getName()));

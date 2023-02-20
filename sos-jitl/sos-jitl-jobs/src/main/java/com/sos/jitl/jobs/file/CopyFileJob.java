@@ -16,7 +16,6 @@ public class CopyFileJob extends AFileOperationsJob {
         super(jobContext);
     }
 
-    //
     @Override
     public JOutcome.Completed onOrderProcess(JobStep<FileOperationsJobArguments> step) throws Exception {
         checkArguments(step.getArguments());

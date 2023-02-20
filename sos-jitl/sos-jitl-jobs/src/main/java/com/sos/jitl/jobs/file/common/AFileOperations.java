@@ -48,7 +48,6 @@ public abstract class AFileOperations {
 
     protected abstract boolean handleOneFile(File sourceFile, File targetFile, boolean overwrite, boolean gracious) throws Exception;
 
-    //
     public boolean canWrite(File file, final String fileSpec, final int fileSpecFlags) throws Exception {
         if (logger.isDebugEnabled()) {
             logger.debug(getDebugMain(fileSpecFlags));
