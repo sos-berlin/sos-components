@@ -49,6 +49,7 @@ public class FileOperationsJobArguments extends JobArguments {
     private JobArgument<String> raiseErrorIfResultSetIs = new JobArgument<String>("raise_error_if_result_set_is", false);
     private JobArgument<Path> resultSetFile = new JobArgument<Path>("result_set_file", false);
 
+    //
     public JobOutcomeVariable<String> getReturnResultSet() {
         return returnResultSet;
     }
