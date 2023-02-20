@@ -79,5 +79,4 @@ public class ExtendedCertificates
         ExtendedCertificates rhs = ((ExtendedCertificates) other);
         return new EqualsBuilder().appendSuper(super.equals(other)).append(cert, rhs.cert).isEquals();
     }
-
 }

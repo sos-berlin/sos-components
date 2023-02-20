@@ -221,5 +221,4 @@ public class Target {
         Target rhs = ((Target) other);
         return new EqualsBuilder().append(execPost, rhs.execPost).append(makeService, rhs.makeService).append(connection, rhs.connection).append(packageLocation, rhs.packageLocation).append(execPre, rhs.execPre).append(forceSudo, rhs.forceSudo).append(authentication, rhs.authentication).isEquals();
     }
-
 }

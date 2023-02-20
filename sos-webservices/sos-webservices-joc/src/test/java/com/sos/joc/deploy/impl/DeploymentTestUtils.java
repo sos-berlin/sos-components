@@ -1512,7 +1512,7 @@ public class DeploymentTestUtils {
 
         Descriptor descr = new Descriptor();
         descr.setAccount("sp");
-        descr.setDescriptorId("example_04");
+        descr.setDescriptorId("example_05");
         descr.setTitle("Example of the current schema of a deployment descriptor");
         Instant now = Instant.now();
         descr.setCreated(Date.from(now));
@@ -1800,8 +1800,7 @@ public class DeploymentTestUtils {
         jocClusterDescriptor.setMembers(jocMembers);
         
         JocInstanceDescriptor joc1Descr = new JocInstanceDescriptor();
-        joc1Descr.setOrdering(1);
-        joc1Descr.setInstanceId("" + joc1Descr.getOrdering());
+        joc1Descr.setInstanceId(1);
         
         com.sos.inventory.model.descriptor.joc.Configuration joc1Cfg = new com.sos.inventory.model.descriptor.joc.Configuration();
         
@@ -1876,8 +1875,7 @@ public class DeploymentTestUtils {
         jocMembers.getInstances().add(joc1Descr);
         
         JocInstanceDescriptor joc2Descr = new JocInstanceDescriptor();
-        joc2Descr.setOrdering(2);
-        joc2Descr.setInstanceId("" + joc2Descr.getOrdering());
+        joc2Descr.setInstanceId(2);
         
         com.sos.inventory.model.descriptor.joc.Configuration joc2Cfg = new com.sos.inventory.model.descriptor.joc.Configuration();
         ExtendedCertificates joc2Certs = new ExtendedCertificates();

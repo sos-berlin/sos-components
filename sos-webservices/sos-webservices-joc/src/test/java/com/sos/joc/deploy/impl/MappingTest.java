@@ -573,9 +573,9 @@ public class MappingTest {
     @Test
     public void test37DeploymentDescriptorExample() throws JsonProcessingException {
         DeploymentDescriptor descriptor = DeploymentTestUtils.createDeploymentDescriptorSchemaExample();
-        LOGGER.info("DeploymentDescriptor");
+        LOGGER.trace("DeploymentDescriptor");
         String json = Globals.prettyPrintObjectMapper.writeValueAsString(descriptor);
-        LOGGER.info( "\n" + json);
+        LOGGER.trace( "\n" + json);
         boolean valid = false;
         try {
             Validator.validate(ConfigurationType.DEPLOYMENTDESCRIPTOR, json.getBytes());

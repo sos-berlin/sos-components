@@ -169,7 +169,7 @@ public class TreePermanent {
                 }
                 break;
             case DEPLOYMENTDESCRIPTOR:
-                // TODO: create correct permissions for DEPLOYMENTDESCRIPTOR and reference them here
+                // TODO: create correct permissions for DEPLOYMENTDESCRIPTOR and reference them here!
                 if (jocPermissions.getInventory().getView()) {
                     types.add(type);
                 }

@@ -21,7 +21,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "instanceId",
-    "ordering",
     "target",
     "media",
     "installation",
@@ -35,14 +34,7 @@ public class JocInstanceDescriptor {
      * 
      */
     @JsonProperty("instanceId")
-    private String instanceId;
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("ordering")
-    private Integer ordering;
+    private Integer instanceId;
     /**
      * Deployment Descriptor Target Schema
      * <p>
@@ -86,15 +78,13 @@ public class JocInstanceDescriptor {
      * 
      * @param instanceId
      * @param configuration
-     * @param ordering
      * @param installation
      * @param media
      * @param target
      */
-    public JocInstanceDescriptor(String instanceId, Integer ordering, Target target, Media media, JocInstallation installation, Configuration configuration) {
+    public JocInstanceDescriptor(Integer instanceId, Target target, Media media, JocInstallation installation, Configuration configuration) {
         super();
         this.instanceId = instanceId;
-        this.ordering = ordering;
         this.target = target;
         this.media = media;
         this.installation = installation;
@@ -107,7 +97,7 @@ public class JocInstanceDescriptor {
      * 
      */
     @JsonProperty("instanceId")
-    public String getInstanceId() {
+    public Integer getInstanceId() {
         return instanceId;
     }
 
@@ -117,28 +107,8 @@ public class JocInstanceDescriptor {
      * 
      */
     @JsonProperty("instanceId")
-    public void setInstanceId(String instanceId) {
+    public void setInstanceId(Integer instanceId) {
         this.instanceId = instanceId;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("ordering")
-    public Integer getOrdering() {
-        return ordering;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("ordering")
-    public void setOrdering(Integer ordering) {
-        this.ordering = ordering;
     }
 
     /**
@@ -223,12 +193,12 @@ public class JocInstanceDescriptor {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("instanceId", instanceId).append("ordering", ordering).append("target", target).append("media", media).append("installation", installation).append("configuration", configuration).toString();
+        return new ToStringBuilder(this).append("instanceId", instanceId).append("target", target).append("media", media).append("installation", installation).append("configuration", configuration).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(instanceId).append(configuration).append(ordering).append(installation).append(media).append(target).toHashCode();
+        return new HashCodeBuilder().append(instanceId).append(media).append(configuration).append(target).append(installation).toHashCode();
     }
 
     @Override
@@ -240,7 +210,7 @@ public class JocInstanceDescriptor {
             return false;
         }
         JocInstanceDescriptor rhs = ((JocInstanceDescriptor) other);
-        return new EqualsBuilder().append(instanceId, rhs.instanceId).append(configuration, rhs.configuration).append(ordering, rhs.ordering).append(installation, rhs.installation).append(media, rhs.media).append(target, rhs.target).isEquals();
+        return new EqualsBuilder().append(instanceId, rhs.instanceId).append(media, rhs.media).append(configuration, rhs.configuration).append(target, rhs.target).append(installation, rhs.installation).isEquals();
     }
 
 }
