@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.deser.std.ThrowableDeserializer;
 import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSParameterSubstitutor;
@@ -446,12 +447,26 @@ public abstract class ANotifier {
         String endTime = tableFields.get(tablePrefix + "_END_TIME");
         if (!SOSString.isEmpty(startTime) && !SOSString.isEmpty(endTime)) {
             try {
-                Date s = SOSDate.getDateTime(startTime);
-                Date e = SOSDate.getDateTime(endTime);
-                Long diffSeconds = e.getTime() / 1000 - s.getTime() / 1000;
-                tableFields.put(newField, diffSeconds.toString());
-            } catch (Exception e) {
+                Date s = toDate(startTime);
+                Date e = toDate(endTime);
+                if (s != null && e != null) {
+                    Long diffSeconds = e.getTime() / 1000 - s.getTime() / 1000;
+                    tableFields.put(newField, diffSeconds.toString());
+                }
+            } catch (Throwable e) {
             }
+        }
+    }
+
+    private Date toDate(String date) {
+        try {
+            return SOSDate.parse(date, SOSDate.DATETIME_FORMAT_WITH_ZONE_OFFSET);
+        } catch (Throwable e) {
+            try {
+                return SOSDate.getDateTime(date);
+            } catch (Throwable ee) {
+            }
+            return null;
         }
     }
 
