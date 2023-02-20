@@ -962,11 +962,27 @@ public class OrdersHelper {
     // public static scala.collection.immutable.Map<String, Value> toScalaImmutableMap(Map<String, Value> jmap) {
     // return scala.collection.immutable.Map.from(scala.jdk.CollectionConverters.MapHasAsScala(jmap).asScala());
     // }
-
+    
     public static Variables scalaValuedArgumentsToVariables(Map<String, Value> args) {
         Variables variables = new Variables();
         if (args != null) {
-            args.forEach((k, v) -> variables.setAdditionalProperty(k, v.toJava()));
+            args.forEach((k, v) -> {
+                if (v instanceof js7.data.value.ListValue) {
+                    List<Object> l1 = new ArrayList<>();
+                    ((js7.data.value.ListValue) v).toJava().forEach(item -> {
+                        if (item instanceof js7.data.value.ObjectValue) {
+                            Map<String, Object> m = new HashMap<>();
+                            ((js7.data.value.ObjectValue) item).toJava().forEach((k1, v1) -> m.put(k1, v1.toJava()));
+                            l1.add(m);
+                        } else {
+                            l1.add(item.toJava());
+                        }
+                    });
+                    variables.setAdditionalProperty(k, l1);
+                } else {
+                    variables.setAdditionalProperty(k, v.toJava());
+                }
+            });
         }
         return variables;
     }
