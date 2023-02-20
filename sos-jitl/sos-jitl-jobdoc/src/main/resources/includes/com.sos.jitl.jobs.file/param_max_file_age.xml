@@ -9,10 +9,10 @@
     required="false">
 
     <note>
-        <title>Maximum age of a file</title>
+        <title>maximum age of a file</title>
         <p>
             Specifies the maximum age of a file.
-            If a file is older, then it is deemed not to exist, it will be not included in the result-list.
+            If a file is older then it will be ignored and will not be included in the result list.
         </p>
     </note>
     <xi:include href="../common/notes/note_age_values.xml" parse="xml" />

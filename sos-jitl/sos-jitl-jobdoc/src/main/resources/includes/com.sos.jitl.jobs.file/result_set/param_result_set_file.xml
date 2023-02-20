@@ -8,10 +8,10 @@
 	required="false">
 	
 	<note>
-		<title>Name of the result-list file</title>
+		<title>Name of the result set file</title>
 		<p>
-			If the value of this parameter specifies a valid filename the result-list will be
-			written to this file.
+            If the value of the argument specifies a valid file name then the result set will be
+            written to this file.
 		</p>
 	</note>
 </param>

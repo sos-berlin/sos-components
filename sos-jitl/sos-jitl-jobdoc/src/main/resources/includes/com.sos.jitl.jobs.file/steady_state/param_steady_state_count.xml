@@ -8,12 +8,12 @@
     usewith="steady_state_interval">
     
     <note>
-        <title>Check the completeness of a file (steady state).Maximum Number of Checkpoints</title>
+        <title>Check if a file is steady</title>
         <p>
-            The value of this option specifies the number of retries for to check the steady state of a file.
+            The value of this option specifies the number of retries to check if a file is steady.
         </p>
         <p>
-            Setting this parameter to greater than 0 the receiver will check the file for completeness before he starts the transfer.
+            Setting this argument to a value greater 0 causes the check to be performed before the respective file operation is executed.
         </p>
     </note>
 </param> 

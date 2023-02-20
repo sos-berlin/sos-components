@@ -8,20 +8,20 @@
        usewith="replacing">
 
 	<note>
-		<title>String for renaming Filenames </title>
+		<title>String for renaming files</title>
         <p>
             String for replacement of matching character sequences within file names that are specified with the
             value of the parameter <paramref>replacing</paramref>.
         </p>
         <p>
-            If multiple "capturing groups" are to be replaced then one replacement string per group has to be specified. 
-            These strings are separated by a semicolon ";":
+            If a number of "capturing groups" are to be replaced then one replacement string per group has to be specified. 
+            Replacement strings are separated by a semicolon ";":
         </p>
         <p>
             replacement: aa;[filename:];bb
         </p>
         <p>
-              Supports masks for substitution in the file name with format strings that are enclosed with
+              Supports masks for substitution in the file name with format strings that are enclosed by
               <em>[</em>
               and
               <em>]</em>
@@ -41,7 +41,7 @@
 				<item>
 					<p>
 						<em>date format</em>
-						must be a valid Java data format string, e.g.
+						must be a valid Java date format string, e.g.
 						<br/>
 						<em>yyyyMMddHHmmss</em>
 						,
@@ -89,9 +89,9 @@
                 </item>
 			</list>
         <p>
-            Requires the parameter
+            Requires the
             <paramref>replacing</paramref>
-            to be specified.
+            argument to be specified.
         </p>
         <p>
 			<list type="unordered">

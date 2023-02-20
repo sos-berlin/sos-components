@@ -7,47 +7,46 @@
 	required="false" 
 	DataType="java.lang.String" 
 	usewith="replacement">
-	
 	<note>
-		<title >Regular expression for renaming Files</title>
-		<p>
-			Regular expression for filename replacement with
-			the value of the parameter <paramref>replacement</paramref>.
-		</p>
-		<p>
-			If the expression matches the filename then the groups found are replaced.
-		</p>
-		<p>
-			a) For replacement "capturing groups" are used. Only the content of the
-			capturing groups is replaced.
-		</p>
-		<p>
-			Replacements are separated by a semicolon ";". Example:
-		</p>
-		<p>
-			<paramref>replacing</paramref> = (1)abc(12)def(.*)
-			<br />
-			<paramref>replacement</paramref> = A;BB;CCC
-			<br />
-			Name of original file: 1abc12def123.txt
-			<br />
-			Name after renaming: AabcBBdefCCC
-		</p>
-		<p>
-			b) If no "capturing groups" are specified then the entire match is
-			replaced. Example:
-			<br />
-			<paramref>replacing</paramref> = Hello
-			<br />
-			<paramref>replacement</paramref> = 1234
-			<br />
-			Input file: Hello_World.txt
-			<br />
-			Output file: 1234_World.txt
-		</p>
-		<p>
-			Requires the parameter <paramref>replacement</paramref> to be specified.
-		</p>
+        <title>Regular expression for renaming files</title>
+        <p>
+            Regular expression for file name replacement with
+            the value of the <paramref>replacement</paramref> argument.
+        </p>
+        <p>
+            If the expression matches the file name then the groups found will be replaced.
+        </p>
+        <p>
+            a) For replacement "capturing groups" are used. Only the content of the
+            capturing groups is replaced.
+        </p>
+        <p>
+            Replacements are separated by a semicolon ";". Example:
+        </p>
+        <p>
+            <paramref>replacing</paramref> = (1)abc(12)def(.*)
+            <br/>
+            <paramref>replacement</paramref> = A;BB;CCC
+            <br/>
+            Name of original file: 1abc12def123.txt
+            <br/>
+            Name after renaming: AabcBBdefCCC
+        </p>
+        <p>
+            b) If no "capturing groups" are specified then the entire match is
+            replaced. Example:
+            <br/>
+            <paramref>replacing</paramref> = Hello
+            <br/>
+            <paramref>replacement</paramref> = 1234
+            <br/>
+            Input file: Hello_World.txt
+            <br/>
+            Output file: 1234_World.txt
+        </p>
+        <p>
+            Requires the <paramref>replacement</paramref> argument to be specified.
+        </p>
 	</note>
 	<xi:include href="./note_regexp_example_replace.xml" parse="xml" />
 </param>

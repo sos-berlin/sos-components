@@ -8,6 +8,6 @@
     usewith="file_operations_result_set">
     
     <note>
-        <title>The amount of hits in the result set of the operation</title>
+        <title>The number of hits in the result set of the operation</title>
     </note>
 </param>

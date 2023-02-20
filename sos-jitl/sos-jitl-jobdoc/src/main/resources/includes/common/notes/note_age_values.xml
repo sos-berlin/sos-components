@@ -12,11 +12,11 @@
 		</tr>
 		<tr>
 			<td>0</td>
-			<td>The value of the parameter has no effect and the parameter is not part of the filter.</td>
+			<td>The value of the argument has no effect and the argument is not part of the filter.</td>
 		</tr>
 		<tr>
 			<td>seconds</td>
-			<td>no of seconds.</td>
+			<td>number of seconds.</td>
 		</tr>
 		<tr>
 			<td>hours:minutes</td>

@@ -14,21 +14,21 @@
 				<td>-1</td>
 				<td>The value of the parameter has no effect and the parameter is not part of the filter.</td>
 			</tr>
-			<tr>
-				<td>number</td>
-				<td>a number stand for the size in byte, e.g. 40 means 40 bytes.</td>
-			</tr>
-			<tr>
-				<td>numberKB</td>
-				<td>a number with the chars "KB" stand for the size in kilobyte.</td>
-			</tr>
-			<tr>
-				<td>numberMB</td>
-				<td>a number with the chars "MB" stand for the size in megabyte.</td>
-			</tr>
+            <tr>
+                <td>number</td>
+                <td>the number indicates the size in bytes, for example 40 means 40 bytes.</td>
+            </tr>
+            <tr>
+                <td>numberKB</td>
+                <td>the number indicates the size in kilobytes.</td>
+            </tr>
+            <tr>
+                <td>numberMB</td>
+                <td>the number indicates the size in megabytes.</td>
+            </tr>
             <tr>
                 <td>numberGB</td>
-                <td>a number with the chars "GB" stand for the size in gigabyte.</td>
+                <td>the number indicates the size in gigabytes.</td>
             </tr>
 		</table>
 </note>

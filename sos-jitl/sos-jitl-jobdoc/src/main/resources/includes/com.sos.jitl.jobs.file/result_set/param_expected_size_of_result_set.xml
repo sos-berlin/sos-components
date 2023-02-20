@@ -10,6 +10,6 @@
 	usewith="raise_error_if_result_set_is">
 
 	<note>
-		<title>number of expected hits in result-list</title>
+		<title>number of expected hits in result set</title>
 	</note>
 </param>

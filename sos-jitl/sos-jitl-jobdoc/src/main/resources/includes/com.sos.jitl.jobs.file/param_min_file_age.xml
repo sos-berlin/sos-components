@@ -10,8 +10,8 @@
     <note>
         <title>minimum age of a file</title>
         <p>
-        	Specifies the minimum age of a file.
-        	If the file(s) is newer then it is classified as non-existing, it will be not included in the result-list.
+            Specifies the minimum age of a file.
+            If the file(s) is newer then it will be ignored and will not be included in the result set.
         </p>
    	</note>
    	<xi:include href="../common/notes/note_age_values.xml" parse="xml" />

@@ -10,12 +10,12 @@
 	required="false">
     
 	<note>
-		<title>Create folder</title>
+		<title>Create directory</title>
 		<p>
-			If enabled the folder, which is specified as value of the parameter
-			<paramref>target_file</paramref>, is checked for existence.
-			If <paramref>target_file</paramref> does not exist
-			<paramref>target_file</paramref> will be created as a directory.
+            If this argument is set to "<code>true</code>" then the directory which is specified as the value of the 
+            <paramref>target_file</paramref> argument is checked for existence.
+            If the directory does not exist
+            then it will be created.
 		</p>
 	</note>
 </param>

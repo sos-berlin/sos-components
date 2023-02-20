@@ -16,9 +16,7 @@
       
         <params id="job_parameter">
             <xi:include href="./includes/com.sos.jitl.jobs.file/param_source_file.xml" parse="xml" />
-            
             <xi:include href="./includes/com.sos.jitl.jobs.file/param_file_spec_fileop.xml" parse="xml" />
-            <xi:include href="./includes/com.sos.jitl.jobs.file/param_recursive.xml" parse="xml" />
             <xi:include href="./includes/com.sos.jitl.jobs.file/param_max_file_age.xml" parse="xml" />
             <xi:include href="./includes/com.sos.jitl.jobs.file/param_max_file_size.xml" parse="xml" />
             <xi:include href="./includes/com.sos.jitl.jobs.file/param_min_file_age.xml" parse="xml" />
@@ -37,8 +35,8 @@
     <documentation>
         <div xmlns="http://www.w3.org/1999/xhtml" xmlns:xi="http://www.w3.org/2001/XInclude">
             <p>
-                Checks for the existence of a file, a directory or for specific files inside of a directory.
-                The job belongs to the category "FileOperations".
+                Checks for the existence of a file, of a directory or of files inside of a directory.
+                The job belongs to the category "File Operations".
             </p>
             <xi:include href="./includes/com.sos.jitl.jobs.file/note_file_operations.xml" parse="xml" />
             <p>

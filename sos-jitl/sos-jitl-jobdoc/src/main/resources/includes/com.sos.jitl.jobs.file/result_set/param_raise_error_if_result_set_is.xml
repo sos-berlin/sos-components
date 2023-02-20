@@ -10,18 +10,18 @@
 	usewith="expected_size_of_result_set">
 
 	<note>
-		<title>raise error on expected size of result-set</title>
-		<p>
-			With this parameter it is possible to raise an error if the quantity of hits of the
-			result-list is according to the value of this parameter.
-		</p>
-		<p>
-			An example:
-		</p>
-		<p>
-			Assuming, that the parameter "raise_error_if_result_set_is=ne" is defined and the parameter
-			"expected_size_of_result_set=1" is specified as well. If the number of hits is not equal to "1"
-			an error will raised.
-		</p>
+        <title>raise error on expected size of result set</title>
+        <p>
+            With this argument an error is raised if the number of hits in the
+            result list matches the value of the argument.
+        </p>
+        <p>
+            An example:
+        </p>
+        <p>
+            Assume that the "raise_error_if_result_set_is=ne" argument is specified and the
+            "expected_size_of_result_set=1" argument is specified too. If the number of hits is not equal to "1"
+            an error will be raised.
+        </p>
 	</note>
 </param>

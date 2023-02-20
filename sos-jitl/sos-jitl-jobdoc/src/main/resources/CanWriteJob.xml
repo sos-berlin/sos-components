@@ -20,7 +20,7 @@
     <documentation language="en">
         <div xmlns="http://www.w3.org/1999/xhtml">
             <p>
-                this job checks whether one or more files can be written including check of file exist.
+                this job checks if one or more files exist and are writeable.
             </p>
         </div>
     </documentation>

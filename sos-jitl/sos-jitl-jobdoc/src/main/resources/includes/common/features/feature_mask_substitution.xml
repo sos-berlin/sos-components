@@ -3,11 +3,11 @@
 	xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xhtml="http://www.w3.org/1999/xhtml"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
-    <title>state-dependent substitution</title>
+    <title>State dependent substitution</title>
     <documentation>
         <p>
-            This technique is useful when for example inserting the current date or a timestamp into a filename or
-            into a name of a directory.
+            This is useful for example to insert the current date or timestamp into a file name or
+            into the name of a directory.
         </p>
     </documentation>
     <xi:include href="../notes/note_parameter_mask_substitution.xml" parse="xml" />

@@ -50,9 +50,7 @@
                     <td>[filename:] [date:yyyy-MM-dd].dat</td>
                     <td>a.txt</td>
                     <td>a.txt2011-11-24.dat</td>
-                    <td>[filename:] and [date:] will be substituted after file has
-                        been replaced
-                    </td>
+                    <td>[filename:] and [date:] will be substituted after replacements to the file name have been applied</td>
                 </tr>
                 <tr>
                     <td>./temp</td>
@@ -70,7 +68,7 @@
                     <td>123;[date:yyyy-MM-dd]</td>
                     <td>-</td>
                     <td>123cde2011-11-24.txt</td>
-                    <td>; : separator between multiple replacements</td>
+                    <td>; : separator between a number of replacements</td>
                 </tr>
                 <tr>
                     <td>./temp</td>
@@ -88,7 +86,7 @@
                     <td>tail</td>
                     <td>aa_QU_061205_222334</td>
                     <td>aa_QU_tail</td>
-                    <td>(?:...) : "?:" specifies a non capturing group. The file will
+                    <td>(?:...) : "?:" specifies a non-capturing group. The file will
                         not be replaced.
                     </td>
                 </tr>
@@ -135,9 +133,7 @@
                     <td>[date:yyyy].txt</td>
                     <td>aaa/bbb/hello.txt</td>
                     <td>aaa/bbb/20070316/hello2007.txt</td>
-                    <td>If the directory aaa/bbb/20070316 does not yet exist it will
-                        be created
-                    </td>
+                    <td>If the directory aaa/bbb/20070316 does not exist it will be created</td>
                 </tr>
             </table>
         </p>

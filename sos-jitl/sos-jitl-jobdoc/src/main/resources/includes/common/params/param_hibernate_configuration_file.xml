@@ -8,6 +8,6 @@
        DataType="java.nio.file.Path (Job argument - String)">
 	
 	<note>
-		<p>Location of the hibernate configuration file.</p>
+		<p>Location of the Hibernate configuration file.</p>
     </note>
 </param>

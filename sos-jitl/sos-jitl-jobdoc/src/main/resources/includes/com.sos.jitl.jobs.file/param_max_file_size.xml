@@ -9,8 +9,8 @@
 	<note>
 		<title>maximum size of a file</title>
 		<p>
-			Specifies the maximum size of a file in bytes:
-			should the size of one of the files exceed this value, then it is classified as non-existing.
+            Specifies the maximum size of a file in bytes:
+            should the size of one of the files exceed this value, then it will be ignored.
 		</p>
 	</note>
     <xi:include href="./note_file_size_values.xml" xmlns:xi="http://www.w3.org/2001/XInclude" parse="xml" />
