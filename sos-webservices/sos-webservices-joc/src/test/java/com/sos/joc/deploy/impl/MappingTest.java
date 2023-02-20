@@ -573,18 +573,18 @@ public class MappingTest {
     @Test
     public void test37DeploymentDescriptorExample() throws JsonProcessingException {
         DeploymentDescriptor descriptor = DeploymentTestUtils.createDeploymentDescriptorSchemaExample();
-        LOGGER.trace("DeploymentDescriptor");
+        LOGGER.info("DeploymentDescriptor");
         String json = Globals.prettyPrintObjectMapper.writeValueAsString(descriptor);
-        LOGGER.trace( "\n" + json);
-//        boolean valid = false;
-//        try {
-//            Validator.validate(ConfigurationType.DEPLOYMENTDESCRIPTOR, json.getBytes());
-//            valid = true;
-//        } catch (SOSJsonSchemaException | JocConfigurationException | SOSHibernateException | IOException e) {
-//            // TODO Auto-generated catch block
-//            e.printStackTrace();
-//        }
-//        LOGGER.info( "json valid: " + valid);
-//        assertTrue(valid);
+        LOGGER.info( "\n" + json);
+        boolean valid = false;
+        try {
+            Validator.validate(ConfigurationType.DEPLOYMENTDESCRIPTOR, json.getBytes());
+            valid = true;
+        } catch (SOSJsonSchemaException | JocConfigurationException | SOSHibernateException | IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        LOGGER.info( "json valid: " + valid);
+        assertTrue(valid);
     }
 }
