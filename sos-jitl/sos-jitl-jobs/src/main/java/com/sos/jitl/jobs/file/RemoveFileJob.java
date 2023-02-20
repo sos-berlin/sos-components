@@ -19,7 +19,6 @@ public class RemoveFileJob extends AFileOperationsJob {
     public JOutcome.Completed onOrderProcess(JobStep<FileOperationsJobArguments> step) throws Exception {
         FileOperationsJobArguments args = step.getArguments();
         checkArguments(args);
-        setFlags(args);
 
         FileOperationsImpl fo = new FileOperationsImpl(step.getLogger());
         int result = fo.removeFileCnt(args.getSourceFile().getValue(), args.getFileSpec().getValue(), args.getFlags(), Pattern.CASE_INSENSITIVE, args

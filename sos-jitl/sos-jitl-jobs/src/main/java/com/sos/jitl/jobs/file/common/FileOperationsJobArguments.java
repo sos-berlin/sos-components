@@ -44,6 +44,11 @@ public class FileOperationsJobArguments extends JobArguments {
     private JobArgument<Boolean> createFile = new JobArgument<Boolean>("create_file", false, false);// create_dir, create_files
     private JobArgument<Boolean> removeDir = new JobArgument<Boolean>("remove_dir", false, false);
 
+    // steady state
+    private JobArgument<Integer> steadyStateCount = new JobArgument<Integer>("steady_state_count", false, 0);
+    // seconds
+    private JobArgument<Integer> steadyStateInterval = new JobArgument<Integer>("steady_state_interval", false, 1);
+
     // result set
     private JobArgument<Integer> expectedSizeOfResultSet = new JobArgument<Integer>("expected_size_of_result_set", false, 0);
     private JobArgument<String> raiseErrorIfResultSetIs = new JobArgument<String>("raise_error_if_result_set_is", false);
@@ -111,6 +116,14 @@ public class FileOperationsJobArguments extends JobArguments {
 
     public JobArgument<Integer> getExpectedSizeOfResultSet() {
         return expectedSizeOfResultSet;
+    }
+
+    public JobArgument<Integer> getSteadyStateCount() {
+        return steadyStateCount;
+    }
+
+    public JobArgument<Integer> getSteadyStateInterval() {
+        return steadyStateInterval;
     }
 
     public JobArgument<String> getRaiseErrorIfResultSetIs() {

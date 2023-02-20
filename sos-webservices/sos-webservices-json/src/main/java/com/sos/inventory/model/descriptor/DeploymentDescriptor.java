@@ -48,6 +48,7 @@ public class DeploymentDescriptor implements IInventoryObject, IConfigurationObj
 
     @JsonIgnore
     private String title = null;
+    @JsonIgnore
     private String version = null;
 
     /**
@@ -137,11 +138,13 @@ public class DeploymentDescriptor implements IInventoryObject, IConfigurationObj
     }
 
     @Override
+    @JsonIgnore
     public String getVersion() {
         return version;
     }
 
     @Override
+    @JsonIgnore
     public void setVersion(String version) {
         this.version = version;
     }

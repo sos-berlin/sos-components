@@ -168,12 +168,6 @@ public class TreePermanent {
                     types.add(type);
                 }
                 break;
-            case DEPLOYMENTDESCRIPTOR:
-                // TODO: create correct permissions for DEPLOYMENTDESCRIPTOR and reference them here
-                if (jocPermissions.getInventory().getView()) {
-                    types.add(type);
-                }
-                break;
             }
         }
         return new ArrayList<TreeType>(types);
@@ -301,7 +295,7 @@ public class TreePermanent {
         boolean withDocus = false;
         boolean onlyWithAssignReference = treeBody.getOnlyWithAssignReference() == Boolean.TRUE;
         List<TreeType> possibleInventoryTypes = Arrays.asList(TreeType.JOBTEMPLATE, TreeType.SCHEDULE, TreeType.INCLUDESCRIPT,
-                TreeType.WORKINGDAYSCALENDAR, TreeType.NONWORKINGDAYSCALENDAR, TreeType.DEPLOYMENTDESCRIPTOR);
+                TreeType.WORKINGDAYSCALENDAR, TreeType.NONWORKINGDAYSCALENDAR);
         Set<Integer> possibleDeployIntTypes = Arrays.asList(DeployType.values()).stream().map(DeployType::intValue).collect(Collectors.toSet());
         Set<Integer> deployTypes = new HashSet<>();
         Set<Integer> inventoryTypes = new HashSet<>();

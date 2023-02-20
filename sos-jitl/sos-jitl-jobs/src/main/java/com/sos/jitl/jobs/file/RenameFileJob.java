@@ -19,7 +19,6 @@ public class RenameFileJob extends AFileOperationsJob {
     public JOutcome.Completed onOrderProcess(JobStep<FileOperationsJobArguments> step) throws Exception {
         FileOperationsJobArguments args = step.getArguments();
         checkArguments(args);
-        setFlags(args);
 
         FileOperationsRenameImpl fo = new FileOperationsRenameImpl(step.getLogger());
         int result = fo.renameFileCnt(args.getSourceFile().getValue(), args.getTargetFile().getValue(), args.getFileSpec().getValue(), args

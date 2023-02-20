@@ -23,8 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "packageLocation",
     "execPre",
     "execPost",
-    "makeService",
-    "forceSudo"
+    "makeService"
 })
 public class Target {
 
@@ -61,8 +60,6 @@ public class Target {
     private String execPost;
     @JsonProperty("makeService")
     private Boolean makeService;
-    @JsonProperty("forceSudo")
-    private Boolean forceSudo;
 
     /**
      * No args constructor for use in serialization
@@ -78,10 +75,9 @@ public class Target {
      * @param connection
      * @param packageLocation
      * @param execPre
-     * @param forceSudo
      * @param authentication
      */
-    public Target(Connection connection, Authentication authentication, String packageLocation, String execPre, String execPost, Boolean makeService, Boolean forceSudo) {
+    public Target(Connection connection, Authentication authentication, String packageLocation, String execPre, String execPost, Boolean makeService) {
         super();
         this.connection = connection;
         this.authentication = authentication;
@@ -89,7 +85,6 @@ public class Target {
         this.execPre = execPre;
         this.execPost = execPost;
         this.makeService = makeService;
-        this.forceSudo = forceSudo;
     }
 
     /**
@@ -190,24 +185,14 @@ public class Target {
         this.makeService = makeService;
     }
 
-    @JsonProperty("forceSudo")
-    public Boolean getForceSudo() {
-        return forceSudo;
-    }
-
-    @JsonProperty("forceSudo")
-    public void setForceSudo(Boolean forceSudo) {
-        this.forceSudo = forceSudo;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("connection", connection).append("authentication", authentication).append("packageLocation", packageLocation).append("execPre", execPre).append("execPost", execPost).append("makeService", makeService).append("forceSudo", forceSudo).toString();
+        return new ToStringBuilder(this).append("connection", connection).append("authentication", authentication).append("packageLocation", packageLocation).append("execPre", execPre).append("execPost", execPost).append("makeService", makeService).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(execPost).append(makeService).append(connection).append(packageLocation).append(execPre).append(forceSudo).append(authentication).toHashCode();
+        return new HashCodeBuilder().append(execPost).append(makeService).append(connection).append(packageLocation).append(execPre).append(authentication).toHashCode();
     }
 
     @Override
@@ -219,7 +204,7 @@ public class Target {
             return false;
         }
         Target rhs = ((Target) other);
-        return new EqualsBuilder().append(execPost, rhs.execPost).append(makeService, rhs.makeService).append(connection, rhs.connection).append(packageLocation, rhs.packageLocation).append(execPre, rhs.execPre).append(forceSudo, rhs.forceSudo).append(authentication, rhs.authentication).isEquals();
+        return new EqualsBuilder().append(execPost, rhs.execPost).append(makeService, rhs.makeService).append(connection, rhs.connection).append(packageLocation, rhs.packageLocation).append(execPre, rhs.execPre).append(authentication, rhs.authentication).isEquals();
     }
 
 }

@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.inventory.model.descriptor.common.ExtendedCertificates;
+import com.sos.inventory.model.descriptor.common.Certificates;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -14,19 +14,22 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "certificates",
+    "controllerCert",
     "templates"
 })
 public class Configuration {
 
     /**
-     * Deployment Descriptor for extended Certificates Schema
+     * Deployment Descriptor Certificates Schema
      * <p>
      * JS7 Deployment Descriptor Certificates Schema
      * 
      */
     @JsonProperty("certificates")
     @JsonPropertyDescription("JS7 Deployment Descriptor Certificates Schema")
-    private ExtendedCertificates certificates;
+    private Certificates certificates;
+    @JsonProperty("controllerCert")
+    private String controllerCert;
     @JsonProperty("templates")
     private List<String> templates = null;
 
@@ -41,33 +44,45 @@ public class Configuration {
      * 
      * @param certificates
      * @param templates
+     * @param controllerCert
      */
-    public Configuration(ExtendedCertificates certificates, List<String> templates) {
+    public Configuration(Certificates certificates, String controllerCert, List<String> templates) {
         super();
         this.certificates = certificates;
+        this.controllerCert = controllerCert;
         this.templates = templates;
     }
 
     /**
-     * Deployment Descriptor for extended Certificates Schema
+     * Deployment Descriptor Certificates Schema
      * <p>
      * JS7 Deployment Descriptor Certificates Schema
      * 
      */
     @JsonProperty("certificates")
-    public ExtendedCertificates getCertificates() {
+    public Certificates getCertificates() {
         return certificates;
     }
 
     /**
-     * Deployment Descriptor for extended Certificates Schema
+     * Deployment Descriptor Certificates Schema
      * <p>
      * JS7 Deployment Descriptor Certificates Schema
      * 
      */
     @JsonProperty("certificates")
-    public void setCertificates(ExtendedCertificates certificates) {
+    public void setCertificates(Certificates certificates) {
         this.certificates = certificates;
+    }
+
+    @JsonProperty("controllerCert")
+    public String getControllerCert() {
+        return controllerCert;
+    }
+
+    @JsonProperty("controllerCert")
+    public void setControllerCert(String controllerCert) {
+        this.controllerCert = controllerCert;
     }
 
     @JsonProperty("templates")
@@ -82,12 +97,12 @@ public class Configuration {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("certificates", certificates).append("templates", templates).toString();
+        return new ToStringBuilder(this).append("certificates", certificates).append("controllerCert", controllerCert).append("templates", templates).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(certificates).append(templates).toHashCode();
+        return new HashCodeBuilder().append(controllerCert).append(certificates).append(templates).toHashCode();
     }
 
     @Override
@@ -99,7 +114,7 @@ public class Configuration {
             return false;
         }
         Configuration rhs = ((Configuration) other);
-        return new EqualsBuilder().append(certificates, rhs.certificates).append(templates, rhs.templates).isEquals();
+        return new EqualsBuilder().append(controllerCert, rhs.controllerCert).append(certificates, rhs.certificates).append(templates, rhs.templates).isEquals();
     }
 
 }

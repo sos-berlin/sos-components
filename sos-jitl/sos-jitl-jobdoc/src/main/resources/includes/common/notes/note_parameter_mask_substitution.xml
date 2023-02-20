@@ -38,11 +38,14 @@
             Example:
         </p>
         <p>
-            Argument<code>source_file</code> value: <code>sample/hello[date:yyyyMMdd].txt</code>
+            <code>
+                &lt;param name="file"
+                value="sample/hello[date:yyyyMMdd].txt"
+                /&gt; </code>
         </p>
         <p>
-            On 2050-12-31 the argument
-            <code>source_file</code>
+            On 2050-12-31 the
+            <code>file</code>
             argument will contain the value
             <code>"sample/hello20501231.txt"</code>
             .
