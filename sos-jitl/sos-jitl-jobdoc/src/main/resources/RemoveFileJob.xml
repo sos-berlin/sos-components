@@ -16,18 +16,18 @@
                     parse="xml"/>
         <params id="job_parameter">
             <xi:include href="./includes/com.sos.jitl.jobs.file/param_source_file.xml"
-                        parse="xml"/>
+            
             <xi:include href="./includes/com.sos.jitl.jobs.file/param_file_spec_fileop.xml"
-                        parse="xml"/>
-            <xi:include href="./includes/com.sos.jitl.jobs.file/param_gracious.xml"
+            <xi:include href="./includes/com.sos.jitl.jobs.file/param_recursive.xml" parse="xml" />
+		    <xi:include href="./includes/com.sos.jitl.jobs.file/param_max_file_age.xml" parse="xml" />
                         parse="xml"/>
             <xi:include href="./includes/com.sos.jitl.jobs.file/param_max_file_age.xml"
                         parse="xml"/>
             <xi:include href="./includes/com.sos.jitl.jobs.file/param_max_file_size.xml"
                         parse="xml"/>
             <xi:include href="./includes/com.sos.jitl.jobs.file/param_min_file_age.xml"
-                        parse="xml"/>
-            <xi:include href="./includes/com.sos.jitl.jobs.file/param_min_file_size.xml"
+			<xi:include href="./includes/com.sos.jitl.jobs.file/param_gracious.xml" parse="xml" />
+        	<xi:include href="./includes/com.sos.jitl.jobs.file/param_remove_dir.xml" parse="xml" />
                         parse="xml"/>
             <xi:include href="./includes/com.sos.jitl.jobs.file/param_skip_first_files.xml"
                         parse="xml"/>

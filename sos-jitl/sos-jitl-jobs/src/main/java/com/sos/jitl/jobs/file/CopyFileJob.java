@@ -18,33 +18,35 @@ public class CopyFileJob extends AFileOperationsJob {
 
     @Override
     public JOutcome.Completed onOrderProcess(JobStep<FileOperationsJobArguments> step) throws Exception {
-        checkArguments(step.getArguments());
+        FileOperationsJobArguments args = step.getArguments();
+        checkArguments(args);
+        setFlags(args);
 
         FileOperationsCopyImpl fo = new FileOperationsCopyImpl(step.getLogger());
 
-        String[] sourceArr = step.getArguments().getSourceFile().getValue().split(";");
+        String[] sourceArr = args.getSourceFile().getValue().split(";");
         String[] targetArr = null;
-        if (!step.getArguments().getTargetFile().isEmpty()) {
-            targetArr = step.getArguments().getTargetFile().getValue().split(";");
+        if (!args.getTargetFile().isEmpty()) {
+            targetArr = args.getTargetFile().getValue().split(";");
             if (sourceArr.length != targetArr.length) {
-                throw new SOSFileOperationsException(String.format("length mismatch: %s=%s, %s=%s", step.getArguments().getSourceFile().getName(),
-                        sourceArr.length, step.getArguments().getTargetFile().getName(), targetArr.length));
+                throw new SOSFileOperationsException(String.format("length mismatch: %s=%s, %s=%s", args.getSourceFile().getName(), sourceArr.length,
+                        args.getTargetFile().getName(), targetArr.length));
             }
         }
-        String[] fileSpecsArr = step.getArguments().getFileSpec().getValue().split(";");
+        String[] fileSpecsArr = args.getFileSpec().getValue().split(";");
         boolean checkLen = sourceArr.length == fileSpecsArr.length;
-        step.getArguments().setFileSpec(fileSpecsArr[0]);
+        args.setFileSpec(fileSpecsArr[0]);
         int files = 0;
         for (int i = 0; i < sourceArr.length; i++) {
             String source = sourceArr[i];
             String target = null;
-            if (!step.getArguments().getTargetFile().isEmpty()) {
+            if (!args.getTargetFile().isEmpty()) {
                 target = targetArr[i];
             }
-            if (!step.getArguments().getFileSpec().isEmpty() && checkLen) {
-                step.getArguments().setFileSpec(fileSpecsArr[i]);
+            if (!args.getFileSpec().isEmpty() && checkLen) {
+                args.setFileSpec(fileSpecsArr[i]);
             }
-            files += doFileOperation(step.getArguments(), fo, source, target);
+            files += doFileOperation(args, fo, source, target);
         }
         return handleResult(step, fo.getResultList(), files > 0);
     }

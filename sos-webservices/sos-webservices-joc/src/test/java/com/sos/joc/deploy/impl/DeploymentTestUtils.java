@@ -32,6 +32,7 @@ import com.sos.inventory.model.descriptor.common.Authentication;
 import com.sos.inventory.model.descriptor.common.Authentication.Method;
 import com.sos.inventory.model.descriptor.common.Certificates;
 import com.sos.inventory.model.descriptor.common.Connection;
+import com.sos.inventory.model.descriptor.common.ExtendedCertificates;
 import com.sos.inventory.model.descriptor.common.Installation;
 import com.sos.inventory.model.descriptor.common.Media;
 import com.sos.inventory.model.descriptor.common.Target;
@@ -1541,15 +1542,15 @@ public class DeploymentTestUtils {
         ControllerDescriptor primaryControllerDesc = new ControllerDescriptor();
         
         com.sos.inventory.model.descriptor.controller.Configuration cfgPrimary = new com.sos.inventory.model.descriptor.controller.Configuration();
-        Certificates primaryCertificates = new Certificates();
+        ExtendedCertificates primaryCertificates = new ExtendedCertificates();
         primaryCertificates.setKeyStore("controllers/instances/cluster.primary/config/private/https-keystore.p12");
         primaryCertificates.setKeyStorePassword("jobscheduler");
         primaryCertificates.setKeyPassword("jobscheduler");
         primaryCertificates.setKeyAlias("centostest-primary");
         primaryCertificates.setTrustStore("controllers/instances/cluster.primary/config/private/https-truststore.p12");
         primaryCertificates.setTrustStorePassword("jobscheduler");
+        primaryCertificates.setCert("controllers/instances/cluster.primary/config/private/centostest-primary.crt");
         cfgPrimary.setCertificates(primaryCertificates);
-        cfgPrimary.setControllerCert("controllers/instances/cluster.primary/config/private/centostest-primary.crt");
         
         List<String> primaryTemplates = new ArrayList<String>();
         primaryTemplates.add("controllers/templates/https.primary/config");
@@ -1591,6 +1592,7 @@ public class DeploymentTestUtils {
         primaryTarget.setExecPost("StartService");
         primaryTarget.setExecPre("StopService");
         primaryTarget.setMakeService(true);
+        primaryTarget.setForceSudo(true);
         primaryTarget.setPackageLocation("/tmp");
         primaryControllerDesc.setTarget(primaryTarget);
 
@@ -1599,15 +1601,15 @@ public class DeploymentTestUtils {
         ControllerDescriptor secondaryControllerDesc = new ControllerDescriptor();
 
         com.sos.inventory.model.descriptor.controller.Configuration cfgSecondary = new com.sos.inventory.model.descriptor.controller.Configuration();
-        Certificates secondaryCertificates = new Certificates();
+        ExtendedCertificates secondaryCertificates = new ExtendedCertificates();
         secondaryCertificates.setKeyStore("controllers/instances/cluster.secondary/config/private/https-keystore.p12");
         secondaryCertificates.setKeyStorePassword("jobscheduler");
         secondaryCertificates.setKeyPassword("jobscheduler");
         secondaryCertificates.setKeyAlias("centostest-secondary");
         secondaryCertificates.setTrustStore("controllers/instances/cluster.secondary/config/private/https-truststore.p12");
         secondaryCertificates.setTrustStorePassword("jobscheduler");
+        secondaryCertificates.setCert("controllers/instances/cluster.secondary/config/private/centostest-secondary.crt");
         cfgSecondary.setCertificates(secondaryCertificates);
-        cfgSecondary.setControllerCert("controllers/instances/cluster.secondary/config/private/centostest-secondary.crt");
 
         List<String> secondaryTemplates = new ArrayList<String>();
         secondaryTemplates.add("controllers/templates/https.secondary/config");
@@ -1647,6 +1649,7 @@ public class DeploymentTestUtils {
         secondaryTarget.setExecPost("StartService");
         secondaryTarget.setExecPre("StopService");
         secondaryTarget.setMakeService(true);
+        secondaryTarget.setForceSudo(true);
         secondaryTarget.setPackageLocation("/tmp");
         secondaryControllerDesc.setTarget(secondaryTarget);
         
@@ -1718,6 +1721,7 @@ public class DeploymentTestUtils {
         agent1Target.setExecPost("StartService");
         agent1Target.setExecPre("StopService");
         agent1Target.setMakeService(true);
+        agent1Target.setForceSudo(true);
         agent1Target.setPackageLocation("/tmp");
         agent1Desc.setTarget(agent1Target);
 
@@ -1775,6 +1779,7 @@ public class DeploymentTestUtils {
         agent2Target.setExecPost("StartService");
         agent2Target.setExecPre("StopService");
         agent2Target.setMakeService(true);
+        agent2Target.setForceSudo(true);
         agent2Target.setPackageLocation("/tmp");
         agent2Desc.setTarget(agent2Target);
         
@@ -1800,17 +1805,16 @@ public class DeploymentTestUtils {
         
         com.sos.inventory.model.descriptor.joc.Configuration joc1Cfg = new com.sos.inventory.model.descriptor.joc.Configuration();
         
-        Certificates joc1Certs = new Certificates();
+        ExtendedCertificates joc1Certs = new ExtendedCertificates();
         joc1Certs.setKeyStore("joc/instances/cluster.primary/resources/https-keystore.p12");
         joc1Certs.setKeyStorePassword("jobscheduler");
         joc1Certs.setKeyPassword("jobscheduler");
         joc1Certs.setKeyAlias("centostest-primary");
         joc1Certs.setTrustStore("joc/instances/cluster.primary/resources/https-truststore.p12");
         joc1Certs.setTrustStorePassword("jobscheduler");
+        joc1Certs.setCert("joc/instances/cluster.primary/resources/centostest-primary.crt");
         joc1Cfg.setCertificates(joc1Certs);
 
-        joc1Cfg.setJocCert("joc/instances/cluster.primary/resources/centostest-primary.crt");
-        
         StartFiles joc1StartFiles = new StartFiles();
         joc1StartFiles.setHttpIni("joc/templates/https/start.d/http.ini");
         joc1StartFiles.setHttpsIni("joc/templates/https/start.d/https.ini");
@@ -1865,6 +1869,7 @@ public class DeploymentTestUtils {
         joc1Target.setExecPost("StartService");
         joc1Target.setExecPre("StopService");
         joc1Target.setMakeService(true);
+        joc1Target.setForceSudo(true);
         joc1Target.setPackageLocation("/tmp");
         joc1Descr.setTarget(joc1Target);
         
@@ -1875,16 +1880,15 @@ public class DeploymentTestUtils {
         joc2Descr.setInstanceId("" + joc2Descr.getOrdering());
         
         com.sos.inventory.model.descriptor.joc.Configuration joc2Cfg = new com.sos.inventory.model.descriptor.joc.Configuration();
-        Certificates joc2Certs = new Certificates();
+        ExtendedCertificates joc2Certs = new ExtendedCertificates();
         joc2Certs.setKeyStore("joc/instances/cluster.secondary/resources/https-keystore.p12");
         joc2Certs.setKeyStorePassword("jobscheduler");
         joc2Certs.setKeyPassword("jobscheduler");
         joc2Certs.setKeyAlias("centostest-secondary");
         joc2Certs.setTrustStore("joc/instances/cluster.secondary/resources/https-truststore.p12");
+        joc2Certs.setCert("joc/instances/cluster.secondary/resources/centostest-secondary.crt");
         joc2Certs.setTrustStorePassword("jobscheduler");
         joc2Cfg.setCertificates(joc2Certs);
-
-        joc2Cfg.setJocCert("joc/instances/cluster.secondary/resources/centostest-secondary.crt");
         
         StartFiles joc2StartFiles = new StartFiles();
         joc2StartFiles.setHttpIni("joc/templates/https/start.d/http.ini");
@@ -1940,6 +1944,7 @@ public class DeploymentTestUtils {
         joc2Target.setExecPost("StartService");
         joc2Target.setExecPre("StopService");
         joc2Target.setMakeService(true);
+        joc2Target.setForceSudo(true);
         joc2Target.setPackageLocation("/tmp");
         joc2Descr.setTarget(joc2Target);
         

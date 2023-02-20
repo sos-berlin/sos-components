@@ -120,15 +120,9 @@ public abstract class AFileOperations {
 
     }
 
-    public boolean existsFile(final String file, final String fileSpec, final int fileSpecFlags, final String minFileAge, final String maxFileAge,
-            final String minFileSize, final String maxFileSize, final int skipFirstFiles, final int skipLastFiles) throws Exception {
-        return existsFile(new File(file), fileSpec, fileSpecFlags, minFileAge, maxFileAge, minFileSize, maxFileSize, skipFirstFiles, skipLastFiles,
-                -1, -1);
-    }
-
-    private boolean existsFile(File file, final String fileSpec, final int fileSpecFlags, final String minFileAge, final String maxFileAge,
-            final String minFileSize, final String maxFileSize, final int skipFirstFiles, final int skipLastFiles, final int minNumOfFiles,
-            final int maxNumOfFiles) throws Exception {
+    public boolean existsFile(File file, final String fileSpec, final boolean recursive, final int fileSpecFlags, final String minFileAge,
+            final String maxFileAge, final String minFileSize, final String maxFileSize, final int skipFirstFiles, final int skipLastFiles)
+            throws Exception {
         long minAge = SOSDate.getTimeAsSeconds(minFileAge);
         long maxAge = SOSDate.getTimeAsSeconds(maxFileAge);
         long minSize = calculateFileSize(minFileSize);
@@ -156,7 +150,6 @@ public abstract class AFileOperations {
             return false;
         } else {
             if (!file.isDirectory()) {
-                logger.info("[%s]file exists", file.getCanonicalPath());
                 long currentTime = System.currentTimeMillis();
                 if (minAge > 0) {
                     long interval = currentTime - file.lastModified();
@@ -192,6 +185,7 @@ public abstract class AFileOperations {
                     logger.info("[%s]skipped", file.getCanonicalPath());
                     return false;
                 }
+                logger.info(file.getCanonicalPath());
                 resultList.add(file);
                 return true;
             } else {
@@ -199,25 +193,15 @@ public abstract class AFileOperations {
                     logger.info("[%s]directory exists", file.getCanonicalPath());
                     return true;
                 }
-                List<File> fileList = getFilelist(file.getPath(), fileSpec, fileSpecFlags, false, minAge, maxAge, minSize, maxSize, skipFirstFiles,
-                        skipLastFiles);
+                List<File> fileList = getFilelist(file.getPath(), fileSpec, fileSpecFlags, recursive, minAge, maxAge, minSize, maxSize,
+                        skipFirstFiles, skipLastFiles);
                 if (fileList.isEmpty()) {
                     logger.info("[%s]directory contains no files matching %s", file.getCanonicalPath(), fileSpec);
                     return false;
                 } else {
                     logger.info("[%s]directory contains %s file(s) matching %s", file.getCanonicalPath(), fileList.size(), fileSpec);
-
-                    for (int i = 0; i < fileList.size(); i++) {
-                        File checkFile = fileList.get(i);
-                        logger.info("[%s]found", checkFile.getCanonicalPath());
-                    }
-                    if (minNumOfFiles >= 0 && fileList.size() < minNumOfFiles) {
-                        logger.info("found %s files, minimum expected %s files", fileList.size(), minNumOfFiles);
-                        return false;
-                    }
-                    if (maxNumOfFiles >= 0 && fileList.size() > maxNumOfFiles) {
-                        logger.info("found %s files, maximum expected %s files", fileList.size(), maxNumOfFiles);
-                        return false;
+                    for (File f : fileList) {
+                        logger.info(f.getCanonicalPath());
                     }
                     resultList.addAll(fileList);
                     return true;
