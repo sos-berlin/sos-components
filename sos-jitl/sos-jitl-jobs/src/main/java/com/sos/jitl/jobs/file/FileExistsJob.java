@@ -44,7 +44,6 @@ public class FileExistsJob extends ABlockingInternalJob<FileOperationsJobFileExi
         return AFileOperationsJob.handleResult(step, fo.getResultList(), result);
     }
 
-    //
     public boolean checkSteadyStateOfFiles(JobLogger logger, FileOperationsJobFileExistsArguments args, List<File> files) throws Exception {
         if (files == null || files.size() == 0 || args.getSteadyStateCount().getValue() <= 0) {
             return true;
