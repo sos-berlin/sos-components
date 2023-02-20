@@ -1,5 +1,15 @@
 package com.sos.jitl.jobs.file;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
+import java.nio.channels.OverlappingFileLockException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import com.sos.jitl.jobs.common.JobStep;
@@ -30,4 +40,5 @@ public class FileExistsJob extends AFileOperationsJob {
         return handleResult(step, fo.getResultList(), result);
     }
 
+    //
 }

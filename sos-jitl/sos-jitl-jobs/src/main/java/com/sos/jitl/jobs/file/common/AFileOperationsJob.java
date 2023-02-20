@@ -31,7 +31,7 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
         super(jobContext);
     }
 
-    public void checkArguments(FileOperationsJobArguments args) throws Exception {
+    //
         if (args.getReplacing().isEmpty() && !args.getReplacement().isEmpty()) {
             throw new SOSJobRequiredArgumentMissingException(String.format("'%s' is missing but required for '%s'", args.getReplacing().getName(),
                     args.getReplacement().getName()));
