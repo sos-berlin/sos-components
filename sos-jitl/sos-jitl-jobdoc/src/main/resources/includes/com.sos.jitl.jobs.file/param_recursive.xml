@@ -13,7 +13,7 @@
             This parameter specifies wether files from subdirectories should be included recursively.
         </p>
         <p>
-            Only effective if <paramref>file</paramref> is a directory.
+            Only effective if <paramref>source_file</paramref> is a directory.
         </p>
         <p>
             Regular expression matches apply to files from subdirectories

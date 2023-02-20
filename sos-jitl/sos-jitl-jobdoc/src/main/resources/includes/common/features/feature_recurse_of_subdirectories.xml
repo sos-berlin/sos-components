@@ -11,16 +11,8 @@
                 directories should also be processed.
             </p>
             <p>
-                If the directories do not yet exist on the target platform, they are created in dependence on the parameter 
-                <paramref>make_dirs</paramref>.
-            </p>
-            <p>
                 The selection of the objects (files) to be processed is also done in the subdirectories via the parameter 
                 <paramref>file_spec</paramref>.
-            </p>
-            <p>
-                If subdirectories are newly created, the structure is created below the directory specified with the parameter 
-                <paramref>target_dir</paramref> (or <paramref>remote_dir</paramref>) is created.
             </p>
         </documentation>
     </feature>
