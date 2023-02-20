@@ -37,6 +37,7 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
             boolean treeForInventoryTrash = (treeBody.getForInventoryTrash() != null && treeBody.getForInventoryTrash());
             boolean treeForInventory = !treeForInventoryTrash && ((treeBody.getForInventory() != null && treeBody.getForInventory()) || (treeBody
                     .getTypes() != null && treeBody.getTypes().contains(TreeType.INVENTORY)));
+            boolean treeForDeploymentDescriptors = treeBody.getTypes().contains(TreeType.DEPLOYMENTDESCRIPTOR);
             
             String controllerId = (treeForInventory || treeForInventoryTrash) ? "" : treeBody.getControllerId();
 //            if (controllerId == null) { //e.g. it could be null for Documentation 

@@ -576,15 +576,15 @@ public class MappingTest {
         LOGGER.trace("DeploymentDescriptor");
         String json = Globals.prettyPrintObjectMapper.writeValueAsString(descriptor);
         LOGGER.trace( "\n" + json);
-//        boolean valid = false;
-//        try {
-//            Validator.validate(ConfigurationType.DEPLOYMENTDESCRIPTOR, json.getBytes());
-//            valid = true;
-//        } catch (SOSJsonSchemaException | JocConfigurationException | SOSHibernateException | IOException e) {
-//            // TODO Auto-generated catch block
-//            e.printStackTrace();
-//        }
-//        LOGGER.info( "json valid: " + valid);
-//        assertTrue(valid);
+        boolean valid = false;
+        try {
+            Validator.validate(ConfigurationType.DEPLOYMENTDESCRIPTOR, json.getBytes());
+            valid = true;
+        } catch (SOSJsonSchemaException | JocConfigurationException | SOSHibernateException | IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        LOGGER.info( "json valid: " + valid);
+        assertTrue(valid);
     }
 }

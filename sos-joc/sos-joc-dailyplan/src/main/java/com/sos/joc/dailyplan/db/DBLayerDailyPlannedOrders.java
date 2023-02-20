@@ -1162,10 +1162,10 @@ public class DBLayerDailyPlannedOrders {
                     }
                 }
                 return item;
-
-            } else {
-                LOGGER.warn("Expected one record for order-id " + filter.getOrderId());
+            } else if(items.size() > 1) {
                 throw new DBMissingDataException("Expected one record for order-id " + filter.getOrderId());
+            } else {
+                return null;
             }
         } finally {
             Globals.disconnect(session);
