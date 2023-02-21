@@ -13,7 +13,7 @@ public class ImportTest {
 
     @Test
     public void testImportOrderLength() {
-        // -3 : because JOBCLASS, FOLDER and DEPLOYMENTDESCRIPTOR are not im-/export objects
-        assertTrue(ImportUtils.getImportOrder().size() == EnumSet.allOf(ConfigurationType.class).size() - 3);
+        // -4 : because JOBCLASS, FOLDER, DESCRIPTORFOLDER  and DEPLOYMENTDESCRIPTOR are not im-/export objects
+        assertTrue(ImportUtils.getImportOrder().size() == EnumSet.allOf(ConfigurationType.class).size() - 4);
     }
 }
