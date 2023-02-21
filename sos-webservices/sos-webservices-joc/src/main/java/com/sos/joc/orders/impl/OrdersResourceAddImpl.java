@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -30,6 +31,7 @@ import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.Folder;
@@ -72,10 +74,19 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             }
             
             boolean hasManagePositionsPermission = getControllerPermissions(controllerId, accessToken).getOrders().getManagePositions();
-            Predicate<AddOrder> requestHasPositionSettings = o -> (o.getStartPosition() != null && !o.getStartPosition().isEmpty() || o
-                    .getEndPositions() != null && !o.getEndPositions().isEmpty());
+            Predicate<AddOrder> requestHasPositionSettings = o -> (o.getStartPosition() != null || (o.getEndPositions() != null && !o
+                    .getEndPositions().isEmpty()));
             if (!hasManagePositionsPermission && addOrders.getOrders().parallelStream().anyMatch(requestHasPositionSettings)) {
                 return accessDeniedResponse("Access denied for setting start-/endpositions");
+            }
+            
+            // TODO JOC-1453
+            if (addOrders.getOrders().stream().map(AddOrder::getStartPosition).filter(Objects::nonNull).anyMatch(o -> o instanceof String)) {
+                throw new JocNotImplementedException("The use of labels as a start position is not yet implemented");
+            }
+            if (addOrders.getOrders().stream().map(AddOrder::getEndPositions).filter(Objects::nonNull).anyMatch(l -> l.stream().filter(
+                    Objects::nonNull).anyMatch(o -> o instanceof String))) {
+                throw new JocNotImplementedException("The use of labels as end positions is not yet implemented");
             }
 
             DBItemJocAuditLog dbAuditLog = storeAuditLog(addOrders.getAuditLog(), controllerId, CategoryType.CONTROLLER);
@@ -91,6 +102,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             final String defaultOrderName = SOSCheckJavaVariableName.makeStringRuleConform(getAccount());
             List<AuditLogDetail> auditLogDetails = new ArrayList<>();
 
+            @SuppressWarnings("unchecked")
             Function<AddOrder, Either<Err419, JFreshOrder>> mapper = order -> {
                 Either<Err419, JFreshOrder> either = null;
                 try {
@@ -106,8 +118,20 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     order.setArguments(OrdersHelper.checkArguments(order.getArguments(), JsonConverter.signOrderPreparationToInvOrderPreparation(
                             workflow.getOrderPreparation())));
                     Set<String> reachablePositions = CheckedAddOrdersPositions.getReachablePositions(e.get());
-                    Optional<JPositionOrLabel> startPos = OrdersHelper.getStartPosition(order.getStartPosition(), reachablePositions);
-                    Set<JPositionOrLabel> endPoss = OrdersHelper.getEndPosition(order.getEndPositions(), reachablePositions);
+                    
+                    // TODO JOC-1453 consider labels
+                    List<Object> startPosition = null;
+                    if (order.getStartPosition() != null && order.getStartPosition() instanceof List<?>) {
+                        startPosition = (List<Object>) order.getStartPosition();
+                    }
+                    List<List<Object>> endPositions = null;
+                    if (order.getEndPositions() != null) {
+                        endPositions = order.getEndPositions().stream().filter(Objects::nonNull).filter(ep -> ep instanceof List<?>).map(
+                                ep -> (List<Object>) ep).collect(Collectors.toList());
+                    }
+                    
+                    Optional<JPositionOrLabel> startPos = OrdersHelper.getStartPosition(startPosition, reachablePositions);
+                    Set<JPositionOrLabel> endPoss = OrdersHelper.getEndPosition(endPositions, reachablePositions);
                     // TODO check if endPos not before startPos
                     
                     JFreshOrder o = OrdersHelper.mapToFreshOrder(order, zoneId, startPos, endPoss);

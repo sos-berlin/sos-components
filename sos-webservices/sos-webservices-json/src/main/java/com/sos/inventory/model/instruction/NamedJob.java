@@ -20,7 +20,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "jobName",
-    "label",
     "defaultArguments"
 })
 public class NamedJob
@@ -34,13 +33,6 @@ public class NamedJob
      */
     @JsonProperty("jobName")
     private String jobName;
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("label")
-    private String label;
     /**
      * key-value pairs particularly to assign parameters to environment
      * <p>
@@ -65,22 +57,6 @@ public class NamedJob
 
     /**
      * 
-     * @param jobName
-     * @param defaultArguments
-     * @param label
-     * @param position
-     * 
-     * @param positionString
-     */
-    public NamedJob(String jobName, String label, Environment defaultArguments) {
-        super();
-        this.jobName = jobName;
-        this.label = label;
-        this.defaultArguments = defaultArguments;
-    }
-
-    /**
-     * 
      * (Required)
      * 
      */
@@ -97,26 +73,6 @@ public class NamedJob
     @JsonProperty("jobName")
     public void setJobName(String jobName) {
         this.jobName = jobName;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("label")
-    public String getLabel() {
-        return label;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("label")
-    public void setLabel(String label) {
-        this.label = label;
     }
 
     /**
@@ -143,12 +99,12 @@ public class NamedJob
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("jobName", jobName).append("label", label).append("defaultArguments", defaultArguments).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("jobName", jobName).append("defaultArguments", defaultArguments).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(jobName).append(label).append(defaultArguments).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(jobName).append(defaultArguments).toHashCode();
     }
 
     @Override
@@ -160,7 +116,7 @@ public class NamedJob
             return false;
         }
         NamedJob rhs = ((NamedJob) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(jobName, rhs.jobName).append(label, rhs.label).append(defaultArguments, rhs.defaultArguments).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(jobName, rhs.jobName).append(defaultArguments, rhs.defaultArguments).isEquals();
     }
 
 }

@@ -1,7 +1,6 @@
 package com.sos.joc.dailyplan;
 
 import java.time.Instant;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -58,6 +57,28 @@ import reactor.core.publisher.Flux;
 public class OrderApi {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderApi.class);
+    
+    @SuppressWarnings("unchecked")
+    private static Optional<JPositionOrLabel> getPositionOrLabel(Object position) {
+        if (position != null) {
+            if (position instanceof List<?>) {
+                List<Object> pos = (List<Object>) position;
+                if (!pos.isEmpty()) {
+                    Either<Problem, JPosition> startPosE = JPosition.fromList(pos);
+                    ProblemHelper.throwProblemIfExist(startPosE);
+                    return Optional.of(startPosE.get());
+                }
+            } else if (position instanceof String) {
+                // TODO JOC-1453 consider labels
+//                String label = (String) position;
+//                if (!label.isEmpty()) {
+//                    return Optional.of(JLabel.of(label));
+//                }
+                return Optional.empty();
+            }
+        }
+        return Optional.empty();
+    }
 
     private static JFreshOrder mapToFreshOrder(FreshOrder order) {
         Optional<Instant> scheduledFor = Optional.empty();
@@ -66,21 +87,15 @@ public class OrderApi {
         } else {
             scheduledFor = Optional.of(Instant.now());
         }
-        Optional<JPositionOrLabel> startPosition = Optional.empty();
-        Set<JPositionOrLabel> endPositions = Collections.emptySet();
         OrderPositions positions = order.getPositions();
+        Optional<JPositionOrLabel> startPosition = Optional.empty();
+        Set<JPositionOrLabel> endPositions = new HashSet<>();
         if (positions != null) {
-            if (positions.getStartPosition() != null && !positions.getStartPosition().isEmpty()) {
-                Either<Problem, JPosition> startPosE = JPosition.fromList(positions.getStartPosition());
-                ProblemHelper.throwProblemIfExist(startPosE);
-                startPosition = Optional.of(startPosE.get());
-            }
-            if (positions.getEndPositions() != null && !positions.getEndPositions().isEmpty()) {
-                endPositions = new HashSet<>();
-                for (List<Object> endPosition : positions.getEndPositions()) {
-                    Either<Problem, JPosition> endPosE = JPosition.fromList(endPosition);
-                    ProblemHelper.throwProblemIfExist(endPosE);
-                    endPositions.add(endPosE.get());
+            // TODO JOC-1453 consider labels
+            startPosition = getPositionOrLabel(positions.getStartPosition());
+            if (positions.getEndPositions() != null) {
+                for (Object endPosition : positions.getEndPositions()) {
+                    getPositionOrLabel(endPosition).ifPresent(p -> endPositions.add(p));
                 }
             }
         }
@@ -94,6 +109,9 @@ public class OrderApi {
             throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, InterruptedException, ExecutionException {
 
+        // TODO JOC-1453 determine workflows from order and their possible positions
+        // convert labels to positions
+        
         final String method = "addOrdersToController";
         String logDailyPlanDate = SOSString.isEmpty(dailyPlanDate) ? "" : "[" + dailyPlanDate + "]";
 

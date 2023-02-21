@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TimeZone;
@@ -87,6 +88,7 @@ import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
+import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.dailyplan.DailyPlanModifyOrder;
@@ -109,7 +111,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
     public JOCDefaultResponse postModifyOrder(String accessToken, byte[] filterBytes) {
         try {
             initLogging(IMPL_PATH, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, DailyPlanModifyOrder.class);
+            JsonValidator.validate(filterBytes, DailyPlanModifyOrder.class);
             DailyPlanModifyOrder in = Globals.objectMapper.readValue(filterBytes, DailyPlanModifyOrder.class);
             String controllerId = in.getControllerId();
 
@@ -119,10 +121,23 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             }
 
             boolean hasManagePositionsPermission = getControllerPermissions(controllerId, accessToken).getOrders().getManagePositions();
-            if (!hasManagePositionsPermission && (in.getStartPosition() != null && !in.getStartPosition().isEmpty() || in.getEndPositions() != null
-                    && !in.getEndPositions().isEmpty())) {
+            if (!hasManagePositionsPermission && (in.getStartPosition() != null || (in.getEndPositions() != null && !in.getEndPositions()
+                    .isEmpty()))) {
                 return accessDeniedResponse("Access denied for setting start-/endpositions");
             }
+            
+            // TODO JOC-1453
+            if (in.getStartPosition() != null) {
+                if (in.getStartPosition() instanceof String) {
+                    throw new JocNotImplementedException("The use of labels as a start position is not yet implemented");
+                }
+            }
+            if (in.getEndPositions() != null && !in.getEndPositions().isEmpty()) {
+                if (in.getEndPositions().stream().filter(Objects::nonNull).anyMatch(ep -> ep instanceof String)) {
+                    throw new JocNotImplementedException("The use of labels as end position> is not yet implemented");
+                }
+            }
+            // end of TODO JOC-1453
 
             // DailyPlan Orders: orderIds.get(Boolean.FALSE), Adhoc Orders: orderIds.get(Boolean.TRUE)
             Map<Boolean, Set<String>> orderIds = in.getOrderIds().stream().collect(Collectors.groupingBy(id -> id.matches(".*#T[0-9]+-.*"), Collectors
@@ -273,7 +288,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         if (in.getRemoveVariables() != null && !in.getRemoveVariables().isEmpty()) {
             return false;
         }
-        if (in.getStartPosition() != null && !in.getStartPosition().isEmpty()) {
+        if (in.getStartPosition() != null) {
             return false;
         }
         if (in.getEndPositions() != null && !in.getEndPositions().isEmpty()) {
@@ -287,14 +302,14 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
     }
 
     private boolean withNewStartPosition(DailyPlanModifyOrder in) {
-        if (in.getStartPosition() != null && !in.getStartPosition().isEmpty()) {
+        if (in.getStartPosition() != null) {
             return true;
         }
         return false;
     }
 
     private boolean withNewEndPositions(DailyPlanModifyOrder in) {
-        if (in.getStartPosition() != null && !in.getStartPosition().isEmpty()) {
+        if (in.getEndPositions() != null && !in.getEndPositions().isEmpty()) {
             return true;
         }
         return false;

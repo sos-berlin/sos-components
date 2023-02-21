@@ -34,14 +34,13 @@ public class AddOrder {
     @JsonProperty("orderName")
     private String orderName;
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * (Required)
      * 
      */
     @JsonProperty("workflowPath")
-    @JsonPropertyDescription("absolute path of an object.")
     private String workflowPath;
     /**
      * timestamp with now
@@ -69,17 +68,10 @@ public class AddOrder {
     @JsonProperty("arguments")
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
     private Variables arguments;
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
     @JsonProperty("startPosition")
-    @JsonPropertyDescription("Actually, each even item is a string, each odd item is an integer")
-    private List<Object> startPosition = new ArrayList<Object>();
+    private Object startPosition;
     @JsonProperty("endPositions")
-    private List<List<Object>> endPositions = new ArrayList<List<Object>>();
+    private List<Object> endPositions = new ArrayList<Object>();
 
     @JsonProperty("orderName")
     public String getOrderName() {
@@ -92,9 +84,9 @@ public class AddOrder {
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * (Required)
      * 
      */
@@ -104,9 +96,9 @@ public class AddOrder {
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * (Required)
      * 
      */
@@ -181,35 +173,23 @@ public class AddOrder {
         this.arguments = arguments;
     }
 
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
     @JsonProperty("startPosition")
-    public List<Object> getStartPosition() {
+    public Object getStartPosition() {
         return startPosition;
     }
 
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
     @JsonProperty("startPosition")
-    public void setStartPosition(List<Object> startPosition) {
+    public void setStartPosition(Object startPosition) {
         this.startPosition = startPosition;
     }
 
     @JsonProperty("endPositions")
-    public List<List<Object>> getEndPositions() {
+    public List<Object> getEndPositions() {
         return endPositions;
     }
 
     @JsonProperty("endPositions")
-    public void setEndPositions(List<List<Object>> endPositions) {
+    public void setEndPositions(List<Object> endPositions) {
         this.endPositions = endPositions;
     }
 

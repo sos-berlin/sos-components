@@ -30,6 +30,7 @@ import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.workflow.ModifyWorkflowPositions;
 import com.sos.joc.workflow.resource.IWorkflowPositionsModify;
@@ -116,10 +117,18 @@ public class WorkflowPositionsModifyImpl extends JOCResourceImpl implements IWor
 
         JWorkflow workflow = workflowE.get();
         checkFolderPermissions(WorkflowPaths.getPath(workflow.id().path().string()));
-        modifyWorkflow.getPositions().stream().map(pos -> JPosition.fromList(pos)).filter(Either::isLeft).findAny().ifPresent(e -> ProblemHelper
-                .throwProblemIfExist(e));
-        Set<JPosition> positions = modifyWorkflow.getPositions().stream().map(pos -> JPosition.fromList(pos)).filter(Either::isRight).map(Either::get)
-                .collect(Collectors.toSet());
+        
+        // TODO JOC-1453 consider labels
+        if (modifyWorkflow.getPositions().stream().anyMatch(pos -> pos instanceof String)) {
+            throw new JocNotImplementedException("The use of labels as positions is not yet implemented");
+        }
+        
+        @SuppressWarnings("unchecked")
+        Set<Either<Problem, JPosition>> jPosEithers = modifyWorkflow.getPositions().stream().filter(pos -> pos instanceof List<?>).map(
+                pos -> (List<Object>) pos).map(pos -> JPosition.fromList(pos)).collect(Collectors.toSet());
+
+        jPosEithers.stream().filter(Either::isLeft).findAny().ifPresent(e -> ProblemHelper.throwProblemIfExist(e));
+        Set<JPosition> positions =jPosEithers.stream().filter(Either::isRight).map(Either::get).collect(Collectors.toSet());
         checkWorkflow(action, workflow, positions, currentState, new ArrayList<>(positions));
 
         command(controllerId, action, workflow, positions, dbAuditLog);

@@ -91,7 +91,7 @@ public class PojosTest {
     
     @Test
     public void tryTest() throws Exception {
-		NamedJob job = new NamedJob("TEST", null, null);
+		NamedJob job = new NamedJob("TEST");
 		TryCatch _try = new TryCatch(new Instructions(Arrays.asList(job)));
         System.out.println(objectMapper.writeValueAsString(_try));
         String expected = "{\"TYPE\":\"Try\",\"try\":{\"instructions\":[{\"TYPE\":\"Execute.Named\",\"jobName\":\"TEST\"}]},\"catch\":{\"instructions\":[]}}";

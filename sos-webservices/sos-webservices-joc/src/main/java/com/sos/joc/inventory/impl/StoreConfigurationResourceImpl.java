@@ -196,8 +196,8 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 case SCHEDULE:
                     Schedule schedule = (Schedule) in.getConfiguration();
                     Predicate<OrderParameterisation> requestHasPositionSettings = o -> o.getPositions() != null && (o.getPositions()
-                            .getStartPosition() != null && !o.getPositions().getStartPosition().isEmpty() || o.getPositions()
-                                    .getEndPositions() != null && !o.getPositions().getEndPositions().isEmpty());
+                            .getStartPosition() != null || (o.getPositions().getEndPositions() != null && !o.getPositions().getEndPositions()
+                                    .isEmpty()));
                     if (schedule.getOrderParameterisations() != null && schedule.getOrderParameterisations().parallelStream().anyMatch(
                             requestHasPositionSettings)) {
                         boolean hasManagePositionsPermission = Proxies.getControllerDbInstances().keySet().parallelStream().anyMatch(

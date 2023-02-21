@@ -56,6 +56,7 @@ import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.ModifyOrders;
@@ -312,12 +313,22 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         }
 
         Optional<JPosition> positionOpt = Optional.empty();
-        if (modifyOrders.getPosition() != null && !modifyOrders.getPosition().isEmpty()) {
-            Either<Problem, JPosition> posFromList = JPosition.fromList(modifyOrders.getPosition());
-            if (posFromList.isLeft()) {
-                ProblemHelper.throwProblemIfExist(posFromList);
+        
+        // TODO JOC-1453 consider labels
+        if (modifyOrders.getPosition() != null) {
+            if (modifyOrders.getPosition() instanceof String) {
+                throw new JocNotImplementedException("The use of labels as a position is not yet implemented");
+            } else if (modifyOrders.getPosition() instanceof List<?>) {
+                @SuppressWarnings("unchecked")
+                List<Object> pos = (List<Object>) modifyOrders.getPosition();
+                if (!pos.isEmpty()) {
+                    Either<Problem, JPosition> posFromList = JPosition.fromList(pos);
+                    if (posFromList.isLeft()) {
+                        ProblemHelper.throwProblemIfExist(posFromList);
+                    }
+                    positionOpt = Optional.of(posFromList.get());
+                }
             }
-            positionOpt = Optional.of(posFromList.get());
         }
 
         boolean withVariables = modifyOrders.getVariables() != null && modifyOrders.getVariables().getAdditionalProperties() != null && !modifyOrders

@@ -52,17 +52,10 @@ public class AddOrder
     private Variables arguments;
     @JsonProperty("remainWhenTerminated")
     private Boolean remainWhenTerminated = false;
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
     @JsonProperty("startPosition")
-    @JsonPropertyDescription("Actually, each even item is a string, each odd item is an integer")
-    private List<Object> startPosition = null;
+    private Object startPosition;
     @JsonProperty("endPositions")
-    private List<List<Object>> endPositions = null;
+    private List<Object> endPositions = null;
 
     /**
      * No args constructor for use in serialization
@@ -76,14 +69,11 @@ public class AddOrder
      * @param endPositions
      * @param workflowName
      * @param arguments
-     * @param position
-     * @param state
      * 
      * @param remainWhenTerminated
      * @param startPosition
-     * @param positionString
      */
-    public AddOrder(String workflowName, Variables arguments, Boolean remainWhenTerminated, List<Object> startPosition, List<List<Object>> endPositions, List<Object> position, String positionString, InstructionState state) {
+    public AddOrder(String workflowName, Variables arguments, Boolean remainWhenTerminated, Object startPosition, List<Object> endPositions) {
         super();
         this.workflowName = workflowName;
         this.arguments = arguments;
@@ -144,35 +134,23 @@ public class AddOrder
         this.remainWhenTerminated = remainWhenTerminated;
     }
 
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
     @JsonProperty("startPosition")
-    public List<Object> getStartPosition() {
+    public Object getStartPosition() {
         return startPosition;
     }
 
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
     @JsonProperty("startPosition")
-    public void setStartPosition(List<Object> startPosition) {
+    public void setStartPosition(Object startPosition) {
         this.startPosition = startPosition;
     }
 
     @JsonProperty("endPositions")
-    public List<List<Object>> getEndPositions() {
+    public List<Object> getEndPositions() {
         return endPositions;
     }
 
     @JsonProperty("endPositions")
-    public void setEndPositions(List<List<Object>> endPositions) {
+    public void setEndPositions(List<Object> endPositions) {
         this.endPositions = endPositions;
     }
 
