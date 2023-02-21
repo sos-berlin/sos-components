@@ -1,11 +1,8 @@
 
 package com.sos.joc.model.order;
 
-import java.util.ArrayList;
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -44,15 +41,8 @@ public class OrderVariablesFilter {
      */
     @JsonProperty("orderId")
     private String orderId;
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
     @JsonProperty("position")
-    @JsonPropertyDescription("Actually, each even item is a string, each odd item is an integer")
-    private List<Object> position = new ArrayList<Object>();
+    private Object position;
 
     /**
      * controllerId
@@ -102,25 +92,13 @@ public class OrderVariablesFilter {
         this.orderId = orderId;
     }
 
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
     @JsonProperty("position")
-    public List<Object> getPosition() {
+    public Object getPosition() {
         return position;
     }
 
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
     @JsonProperty("position")
-    public void setPosition(List<Object> position) {
+    public void setPosition(Object position) {
         this.position = position;
     }
 

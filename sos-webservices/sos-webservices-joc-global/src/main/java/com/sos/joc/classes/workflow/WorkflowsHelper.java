@@ -216,6 +216,20 @@ public class WorkflowsHelper {
         setWorkflowPositions(o, w.getInstructions());
         return w;
     }
+    
+    public static Map<String, List<Object>> getLabelToPositionsMap(com.sos.inventory.model.workflow.Workflow w) {
+        if (w == null) {
+            return Collections.emptyMap();
+        }
+        List<Instruction> instructions = w.getInstructions();
+        if (instructions == null) {
+            return Collections.emptyMap();
+        }
+        Object[] o = {};
+        Map<String, List<Object>> labelToPositionsMap = new HashMap<>();
+        setWorkflowPositions(o, w.getInstructions(), labelToPositionsMap);
+        return labelToPositionsMap;
+    }
 
     public static Set<Position> getWorkflowAddOrderPositions(Workflow w) {
         if (w == null) {
@@ -588,8 +602,12 @@ public class WorkflowsHelper {
             }
         }
     }
-
+    
     private static void setWorkflowPositions(Object[] parentPosition, List<Instruction> insts) {
+        setWorkflowPositions(parentPosition, insts, null);
+    }
+
+    private static void setWorkflowPositions(Object[] parentPosition, List<Instruction> insts, Map<String, List<Object>> mapLabelToPos) {
         if (insts != null) {
             for (int i = 0; i < insts.size(); i++) {
                 Object[] pos = extendArray(parentPosition, i);
@@ -597,6 +615,9 @@ public class WorkflowsHelper {
                 Instruction inst = insts.get(i);
                 inst.setPosition(Arrays.asList(pos));
                 inst.setPositionString(getJPositionString(inst.getPosition()));
+                if (mapLabelToPos != null && inst.getLabel() != null && !inst.getLabel().isEmpty()) {
+                    mapLabelToPos.putIfAbsent(inst.getLabel(), inst.getPosition());
+                }
                 switch (inst.getTYPE()) {
                 case FORK:
                     ForkJoin f = inst.cast();
@@ -607,7 +628,7 @@ public class WorkflowsHelper {
                             } else {
                                 b.getWorkflow().setInstructions(Collections.singletonList(createImplicitEndInstruction()));
                             }
-                            setWorkflowPositions(extendArray(pos, "fork+" + b.getId()), b.getWorkflow().getInstructions());
+                            setWorkflowPositions(extendArray(pos, "fork+" + b.getId()), b.getWorkflow().getInstructions(), mapLabelToPos);
                         }
                     }
                     break;
@@ -619,7 +640,7 @@ public class WorkflowsHelper {
                         } else {
                             fl.getWorkflow().setInstructions(Collections.singletonList(createImplicitEndInstruction()));
                         }
-                        setWorkflowPositions(extendArray(pos, "fork"), fl.getWorkflow().getInstructions());
+                        setWorkflowPositions(extendArray(pos, "fork"), fl.getWorkflow().getInstructions(), mapLabelToPos);
                     }
                     break;
                 case EXPECT_NOTICE:
@@ -633,42 +654,42 @@ public class WorkflowsHelper {
                     if (cn.getSubworkflow() == null || cn.getSubworkflow().getInstructions() == null) {
                         cn.setSubworkflow(new Instructions(Collections.emptyList())); 
                     }
-                    setWorkflowPositions(extendArray(pos, "consumeNotices"), cn.getSubworkflow().getInstructions());
+                    setWorkflowPositions(extendArray(pos, "consumeNotices"), cn.getSubworkflow().getInstructions(), mapLabelToPos);
                     break;
                 case IF:
                     IfElse ie = inst.cast();
                     if (ie.getThen() != null) {
-                        setWorkflowPositions(extendArray(pos, "then"), ie.getThen().getInstructions());
+                        setWorkflowPositions(extendArray(pos, "then"), ie.getThen().getInstructions(), mapLabelToPos);
                     }
                     if (ie.getElse() != null) {
-                        setWorkflowPositions(extendArray(pos, "else"), ie.getElse().getInstructions());
+                        setWorkflowPositions(extendArray(pos, "else"), ie.getElse().getInstructions(), mapLabelToPos);
                     }
                     break;
                 case TRY:
                     TryCatch tc = inst.cast();
                     if (tc.getTry() != null) {
-                        setWorkflowPositions(extendArray(pos, "try"), tc.getTry().getInstructions());
+                        setWorkflowPositions(extendArray(pos, "try"), tc.getTry().getInstructions(), mapLabelToPos);
                     }
                     if (tc.getCatch() != null) {
-                        setWorkflowPositions(extendArray(pos, "catch"), tc.getCatch().getInstructions());
+                        setWorkflowPositions(extendArray(pos, "catch"), tc.getCatch().getInstructions(), mapLabelToPos);
                     }
                     break;
                 case LOCK:
                     Lock l = inst.cast();
                     if (l.getLockedWorkflow() != null) {
-                        setWorkflowPositions(extendArray(pos, "lock"), l.getLockedWorkflow().getInstructions());
+                        setWorkflowPositions(extendArray(pos, "lock"), l.getLockedWorkflow().getInstructions(), mapLabelToPos);
                     }
                     break;
                 case CYCLE:
                     Cycle c = inst.cast();
                     if (c.getCycleWorkflow() != null) {
-                        setWorkflowPositions(extendArray(pos, "cycle"), c.getCycleWorkflow().getInstructions());
+                        setWorkflowPositions(extendArray(pos, "cycle"), c.getCycleWorkflow().getInstructions(), mapLabelToPos);
                     }
                     break;
                 case STICKY_SUBAGENT:
                     StickySubagent sticky = inst.cast();
                     if (sticky.getSubworkflow() != null) {
-                        setWorkflowPositions(extendArray(pos, "stickySubagent"), sticky.getSubworkflow().getInstructions());
+                        setWorkflowPositions(extendArray(pos, "stickySubagent"), sticky.getSubworkflow().getInstructions(), mapLabelToPos);
                     }
                     break;
                 default:

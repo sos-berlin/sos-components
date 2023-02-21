@@ -96,17 +96,10 @@ public class DailyPlanModifyOrder {
     @JsonProperty("dailyPlanDate")
     @JsonPropertyDescription("ISO date YYYY-MM-DD")
     private String dailyPlanDate;
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
     @JsonProperty("startPosition")
-    @JsonPropertyDescription("Actually, each even item is a string, each odd item is an integer")
-    private List<Object> startPosition = null;
+    private Object startPosition;
     @JsonProperty("endPositions")
-    private List<List<Object>> endPositions = null;
+    private List<Object> endPositions = null;
     /**
      * auditParams
      * <p>
@@ -280,35 +273,23 @@ public class DailyPlanModifyOrder {
         this.dailyPlanDate = dailyPlanDate;
     }
 
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
     @JsonProperty("startPosition")
-    public List<Object> getStartPosition() {
+    public Object getStartPosition() {
         return startPosition;
     }
 
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
     @JsonProperty("startPosition")
-    public void setStartPosition(List<Object> startPosition) {
+    public void setStartPosition(Object startPosition) {
         this.startPosition = startPosition;
     }
 
     @JsonProperty("endPositions")
-    public List<List<Object>> getEndPositions() {
+    public List<Object> getEndPositions() {
         return endPositions;
     }
 
     @JsonProperty("endPositions")
-    public void setEndPositions(List<List<Object>> endPositions) {
+    public void setEndPositions(List<Object> endPositions) {
         this.endPositions = endPositions;
     }
 

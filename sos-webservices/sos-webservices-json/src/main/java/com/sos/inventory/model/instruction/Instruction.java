@@ -27,6 +27,7 @@ import com.sos.inventory.model.common.ClassHelper;
     "TYPE",
     "position",
     "positionString",
+    "label",
     "state"
 })
 @JsonTypeInfo(
@@ -76,6 +77,9 @@ public abstract class Instruction
     
     @JsonProperty("positionString")
     private String positionString;
+    
+    @JsonProperty("label")
+    private String label;
     
     @JsonProperty("state")
     private InstructionState state;
@@ -141,6 +145,16 @@ public abstract class Instruction
         this.positionString = positionString;
     }
     
+    @JsonProperty("label")
+    public String getLabel() {
+        return label;
+    }
+    
+    @JsonProperty("label")
+    public void setLabel(String label) {
+        this.label = label;
+    }
+    
     @JsonProperty("state")
     public InstructionState getState() {
         return state;
@@ -166,7 +180,7 @@ public abstract class Instruction
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("tYPE", tYPE).append("position", position).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("tYPE", tYPE).append("position", position).append("label", label).toString();
     }
 
     @Override

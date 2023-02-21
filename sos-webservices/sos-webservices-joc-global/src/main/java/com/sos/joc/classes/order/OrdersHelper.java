@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -734,21 +735,21 @@ public class OrdersHelper {
                 WorkflowPath::string).distinct();
     }
     
-    public static Either<List<Err419>, OrderIdMap> cancelAndAddFreshOrder(Collection<String> temporaryOrderIds,
-            DailyPlanModifyOrder dailyplanModifyOrder, String accessToken, JocError jocError, Long auditlogId, ZoneId zoneId,
-            SOSAuthFolderPermissions folderPermissions) throws ControllerConnectionResetException, ControllerConnectionRefusedException,
-            DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
-            ExecutionException {
-
-        Either<List<Err419>, OrderIdMap> result = Either.right(new OrderIdMap());
-        if (temporaryOrderIds.isEmpty()) {
-            return result;
-        }
-        JControllerProxy proxy = Proxy.of(dailyplanModifyOrder.getControllerId());
-        JControllerState currentState = proxy.currentState();
-        return cancelAndAddFreshOrder(temporaryOrderIds, dailyplanModifyOrder, accessToken, jocError, auditlogId, proxy, currentState,
-                zoneId, folderPermissions);
-    }
+//    public static Either<List<Err419>, OrderIdMap> cancelAndAddFreshOrder(Collection<String> temporaryOrderIds,
+//            DailyPlanModifyOrder dailyplanModifyOrder, String accessToken, JocError jocError, Long auditlogId, ZoneId zoneId,
+//            SOSAuthFolderPermissions folderPermissions) throws ControllerConnectionResetException, ControllerConnectionRefusedException,
+//            DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
+//            ExecutionException {
+//
+//        Either<List<Err419>, OrderIdMap> result = Either.right(new OrderIdMap());
+//        if (temporaryOrderIds.isEmpty()) {
+//            return result;
+//        }
+//        JControllerProxy proxy = Proxy.of(dailyplanModifyOrder.getControllerId());
+//        JControllerState currentState = proxy.currentState();
+//        return cancelAndAddFreshOrder(temporaryOrderIds, dailyplanModifyOrder, accessToken, jocError, auditlogId, proxy, currentState,
+//                zoneId, folderPermissions);
+//    }
 
     public static Either<List<Err419>, OrderIdMap> cancelAndAddFreshOrder(Collection<String> temporaryOrderIds,
             DailyPlanModifyOrder dailyplanModifyOrder, String accessToken, JocError jocError, Long auditlogId, JControllerProxy proxy,
@@ -764,6 +765,7 @@ public class OrdersHelper {
         Instant now = Instant.now();
         List<AuditLogDetail> auditLogDetails = new ArrayList<>();
 
+        @SuppressWarnings("unchecked")
         Function<JOrder, Either<Err419, FreshOrder>> mapper = order -> {
             Either<Err419, FreshOrder> either = null;
             try {
@@ -796,10 +798,21 @@ public class OrdersHelper {
                 }
                 // modify start/end positions
                 Set<String> reachablePositions = CheckedAddOrdersPositions.getReachablePositions(e.get());
-                Optional<JPositionOrLabel> startPos = getStartPosition(dailyplanModifyOrder.getStartPosition(), reachablePositions, order
-                        .workflowPosition().position());
-                Set<JPositionOrLabel> endPoss = getEndPositions(dailyplanModifyOrder.getEndPositions(), reachablePositions, JavaConverters.asJava(
-                        order.asScala().stopPositions()));
+                
+                // TODO JOC-1453 consider labels
+                List<Object> startPosition = null;
+                if (dailyplanModifyOrder.getStartPosition() != null && dailyplanModifyOrder.getStartPosition() instanceof List<?>) {
+                    startPosition = (List<Object>) dailyplanModifyOrder.getStartPosition();
+                }
+                List<List<Object>> endPositions = null;
+                if (dailyplanModifyOrder.getEndPositions() != null) {
+                    endPositions = dailyplanModifyOrder.getEndPositions().stream().filter(Objects::nonNull).filter(ep -> ep instanceof List<?>).map(
+                            ep -> (List<Object>) ep).collect(Collectors.toList());
+                }
+                
+                Optional<JPositionOrLabel> startPos = getStartPosition(startPosition, reachablePositions, order.workflowPosition().position());
+                Set<JPositionOrLabel> endPoss = getEndPositions(endPositions, reachablePositions, JavaConverters.asJava(order.asScala()
+                        .stopPositions()));
 
                 FreshOrder o = new FreshOrder(order.id(), order.workflowId().path(), args, scheduledFor, startPos, endPoss, zoneId);
                 auditLogDetails.add(new AuditLogDetail(workflowPath, order.id().string(), controllerId));

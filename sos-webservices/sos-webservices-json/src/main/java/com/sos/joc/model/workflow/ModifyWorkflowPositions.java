@@ -52,7 +52,7 @@ public class ModifyWorkflowPositions {
      * 
      */
     @JsonProperty("positions")
-    private List<List<Object>> positions = new ArrayList<List<Object>>();
+    private List<Object> positions = new ArrayList<Object>();
     /**
      * auditParams
      * <p>
@@ -116,7 +116,7 @@ public class ModifyWorkflowPositions {
      * 
      */
     @JsonProperty("positions")
-    public List<List<Object>> getPositions() {
+    public List<Object> getPositions() {
         return positions;
     }
 
@@ -126,7 +126,7 @@ public class ModifyWorkflowPositions {
      * 
      */
     @JsonProperty("positions")
-    public void setPositions(List<List<Object>> positions) {
+    public void setPositions(List<Object> positions) {
         this.positions = positions;
     }
 

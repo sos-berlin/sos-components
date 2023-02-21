@@ -1,6 +1,6 @@
 package com.sos.joc.order.impl;
 
-import jakarta.ws.rs.Path;
+import java.util.List;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -9,11 +9,13 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.order.CheckedResumeOrdersPositions;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.model.order.OrderVariablesFilter;
 import com.sos.joc.order.resource.IOrderVariablesResource;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
+import jakarta.ws.rs.Path;
 import js7.base.problem.Problem;
 import js7.data_for_java.workflow.position.JPosition;
 
@@ -35,10 +37,20 @@ public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariabl
             }
             
             String position = null;
-            if (orderFilter.getPosition() != null && !orderFilter.getPosition().isEmpty()) {
-                Either<Problem, JPosition> jPos = JPosition.fromList(orderFilter.getPosition());
-                ProblemHelper.throwProblemIfExist(jPos);
-                position = jPos.get().toString();
+            
+            // TODO JOC-1453 consider labels
+            if (orderFilter.getPosition() != null) {
+                if (orderFilter.getPosition() instanceof String) {
+                    throw new JocNotImplementedException("The use of labels as a position is not yet implemented");
+                } else if (orderFilter.getPosition() instanceof List<?>) {
+                    @SuppressWarnings("unchecked")
+                    List<Object> pos = (List<Object>) orderFilter.getPosition();
+                    if (!pos.isEmpty()) {
+                        Either<Problem, JPosition> jPos = JPosition.fromList(pos);
+                        ProblemHelper.throwProblemIfExist(jPos);
+                        position = jPos.get().toString();
+                    }
+                }
             }
 
             CheckedResumeOrdersPositions cop = new CheckedResumeOrdersPositions();

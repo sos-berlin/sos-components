@@ -94,15 +94,8 @@ public class ModifyOrders {
     private OrderModeType orderType = OrderModeType.fromValue("FreshOrStarted");
     @JsonProperty("kill")
     private Boolean kill = false;
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
     @JsonProperty("position")
-    @JsonPropertyDescription("Actually, each even item is a string, each odd item is an integer")
-    private List<Object> position = new ArrayList<Object>();
+    private Object position;
     /**
      * key-value pairs
      * <p>
@@ -269,25 +262,13 @@ public class ModifyOrders {
         this.kill = kill;
     }
 
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
     @JsonProperty("position")
-    public List<Object> getPosition() {
+    public Object getPosition() {
         return position;
     }
 
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
     @JsonProperty("position")
-    public void setPosition(List<Object> position) {
+    public void setPosition(Object position) {
         this.position = position;
     }
 

@@ -4,7 +4,6 @@ package com.sos.inventory.model.schedule;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -24,47 +23,36 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class OrderPositions {
 
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
     @JsonProperty("startPosition")
-    @JsonPropertyDescription("Actually, each even item is a string, each odd item is an integer")
-    private List<Object> startPosition = null;
+    private Object startPosition;
     @JsonProperty("endPositions")
-    private List<List<Object>> endPositions = null;
+    private List<Object> endPositions = null;
 
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
+    @SuppressWarnings("unchecked")
     @JsonProperty("startPosition")
-    public List<Object> getStartPosition() {
+    public Object getStartPosition() {
+        if (startPosition != null) {
+            if (startPosition instanceof String && ((String) startPosition).isEmpty()) {
+                return null;
+            } else if (startPosition instanceof List<?> && ((List<Object>) startPosition).isEmpty()) {
+                return null;
+            }
+        }
         return startPosition;
     }
 
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
     @JsonProperty("startPosition")
-    public void setStartPosition(List<Object> startPosition) {
+    public void setStartPosition(Object startPosition) {
         this.startPosition = startPosition;
     }
 
     @JsonProperty("endPositions")
-    public List<List<Object>> getEndPositions() {
+    public List<Object> getEndPositions() {
         return endPositions;
     }
 
     @JsonProperty("endPositions")
-    public void setEndPositions(List<List<Object>> endPositions) {
+    public void setEndPositions(List<Object> endPositions) {
         this.endPositions = endPositions;
     }
 
