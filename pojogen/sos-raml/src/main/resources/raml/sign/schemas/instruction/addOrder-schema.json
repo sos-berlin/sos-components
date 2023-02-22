@@ -34,13 +34,19 @@
     	"default": true
 	},
     "startPosition": {
-     	"$ref": "../../../inventory/schemas/common/position-schema.json"
+     	"anyOf": [
+    		{"$ref": "../../../inventory/schemas/common/position-schema.json"},
+    		{"$ref": "../../../inventory/schemas/common/string255Required-schema.json"}
+    	]
     },
 	"stopPositions": {
 		"alias": "endPositions",
 		"type": "array",
 		"items": {
-     		"$ref": "../../../inventory/schemas/common/position-schema.json"
+     		"anyOf": [
+    			{"$ref": "../../../inventory/schemas/common/position-schema.json"},
+    			{"$ref": "../../../inventory/schemas/common/string255Required-schema.json"}
+    		]
      	}
     }
   },

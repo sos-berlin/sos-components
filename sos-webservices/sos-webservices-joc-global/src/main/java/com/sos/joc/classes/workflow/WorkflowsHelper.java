@@ -69,9 +69,14 @@ import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.DeployedConfigurationFilter;
 import com.sos.joc.db.deploy.items.DeployedContent;
+import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
+import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.model.audit.ObjectType;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.Position;
 import com.sos.joc.model.workflow.WorkflowOrderCountFilter;
@@ -229,6 +234,48 @@ public class WorkflowsHelper {
         Map<String, List<Object>> labelToPositionsMap = new HashMap<>();
         setWorkflowPositions(o, w.getInstructions(), labelToPositionsMap);
         return labelToPositionsMap;
+    }
+    
+    public static Map<String, List<Object>> getLabelToPositionsMapFromInventory(String workflowPath) {
+        SOSHibernateSession session = null;
+        try {
+            session = Globals.createSosHibernateStatelessConnection("GetPositionFromLabel");
+            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+            List<DBItemInventoryConfiguration> configs = dbLayer.getConfigurationByName(workflowPath, ConfigurationType.WORKFLOW.intValue());
+            if (configs != null && !configs.isEmpty()) {
+                DBItemInventoryConfiguration config = configs.get(0);
+                try {
+                    return getLabelToPositionsMap((com.sos.inventory.model.workflow.Workflow) JocInventory.content2IJSObject(config.getContent(),
+                            ConfigurationType.WORKFLOW));
+                } catch (Exception e) {
+                    throw new DBInvalidDataException(e);
+                }
+            }
+            return Collections.emptyMap();
+        } finally {
+            Globals.disconnect(session);
+        }
+    }
+    
+    public static Map<String, List<Object>> getLabelToPositionsMapFromDepHistory(String controllerId, String workflowPath) {
+        SOSHibernateSession session = null;
+        try {
+            session = Globals.createSosHibernateStatelessConnection("GetPositionFromLabel");
+            DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
+            DeployedContent config = dbLayer.getDeployedInventory(controllerId, ConfigurationType.WORKFLOW.intValue(), workflowPath);
+            if (config != null) {
+                try {
+                    return getLabelToPositionsMap((com.sos.inventory.model.workflow.Workflow) JocInventory.content2IJSObject(config.getContent(),
+                            ConfigurationType.WORKFLOW));
+                } catch (Exception e) {
+                    throw new DBInvalidDataException(e);
+                }
+            } else {
+                throw new DBMissingDataException("Couldn't find workflow '" + workflowPath + "'.");
+            }
+        } finally {
+            Globals.disconnect(session);
+        }
     }
 
     public static Set<Position> getWorkflowAddOrderPositions(Workflow w) {
@@ -712,14 +759,11 @@ public class WorkflowsHelper {
                 }
                 p.setPositionString(getJPositionString(p.getPosition()));
                 p.setType(inst.getTYPE().value().replace("Execute.Named", "Job"));
+                p.setLabel(inst.getLabel());
                 positions.add(p);
                 // inst.setPosition(Arrays.asList(pos));
                 // inst.setPositionString(getJPositionString(inst.getPosition()));
                 switch (inst.getTYPE()) {
-                case EXECUTE_NAMED:
-                    NamedJob j = inst.cast();
-                    p.setLabel(j.getLabel());
-                    break;
                 case FORK:
                     // ForkJoin f = inst.cast();
                     // for (Branch b : f.getBranches()) {

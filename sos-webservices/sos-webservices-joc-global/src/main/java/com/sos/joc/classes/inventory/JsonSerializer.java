@@ -649,6 +649,7 @@ public class JsonSerializer {
         }
     }
     
+    @SuppressWarnings("unchecked")
     private static void cleanSignedInstructions(List<com.sos.sign.model.instruction.Instruction> instructions) {
         if (instructions != null) {
             for (com.sos.sign.model.instruction.Instruction inst : instructions) {
@@ -715,7 +716,13 @@ public class JsonSerializer {
                     if (ao.getArguments() == null) {
                         ao.setArguments(new Variables());
                     }
-                    emptyCollectionsToNull(ao.getStartPosition());
+                    if (ao.getStartPosition() != null) {
+                        if (ao.getStartPosition() instanceof List<?>) {
+                            emptyCollectionsToNull((List<Object>) ao.getStartPosition());
+                        } else if (ao.getStartPosition() instanceof String) {
+                            defaultToNull((String) ao.getStartPosition(), "");
+                        }
+                    }
                     //Is not optional: ao.setDeleteWhenTerminated(defaultToNull(ao.getDeleteWhenTerminated(), Boolean.TRUE));
                     break;
                 case CYCLE:

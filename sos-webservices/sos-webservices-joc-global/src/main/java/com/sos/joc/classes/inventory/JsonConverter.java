@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
@@ -45,6 +46,8 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.agent.AgentHelper;
 import com.sos.joc.classes.calendar.DailyPlanCalendar;
 import com.sos.joc.classes.order.OrdersHelper;
+import com.sos.joc.classes.workflow.WorkflowsHelper;
+import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.common.IDeployObject;
 import com.sos.sign.model.job.ExecutableScript;
 import com.sos.sign.model.workflow.ListParameters;
@@ -77,20 +80,20 @@ public class JsonConverter {
     private final static Logger LOGGER = LoggerFactory.getLogger(JsonConverter.class);
 
     @SuppressWarnings("unchecked")
-    public static <T extends IDeployObject> T readAsConvertedDeployObject(String objectName, String json, Class<T> clazz, String commitId,
-            Map<String, String> releasedScripts) throws JsonParseException, JsonMappingException, IOException {
+    public static <T extends IDeployObject> T readAsConvertedDeployObject(String controllerId, String objectName, String json, Class<T> clazz,
+            String commitId, Map<String, String> releasedScripts) throws JsonParseException, JsonMappingException, IOException {
         if (commitId != null && !commitId.isEmpty()) {
             json = json.replaceAll("(\"versionId\"\\s*:\\s*\")[^\"]*\"", "$1" + commitId + "\"");
         }
         if (clazz.getName().equals("com.sos.sign.model.workflow.Workflow")) {
-            return (T) readAsConvertedWorkflow(objectName, json, releasedScripts);
+            return (T) readAsConvertedWorkflow(controllerId, objectName, json, releasedScripts);
         } else {
             return Globals.objectMapper.readValue(json.replaceAll("(\\$)epoch(Second|Milli)", "$1js7Epoch$2"), clazz);
         }
     }
     
-    public static com.sos.sign.model.workflow.Workflow readAsConvertedWorkflow(String workflowName, String json, Map<String, String> releasedScripts)
-            throws JsonParseException, JsonMappingException, IOException {
+    public static com.sos.sign.model.workflow.Workflow readAsConvertedWorkflow(String controllerId, String workflowName, String json,
+            Map<String, String> releasedScripts) throws JsonParseException, JsonMappingException, IOException {
 
         com.sos.sign.model.workflow.Workflow signWorkflow = Globals.objectMapper.readValue(json.replaceAll("(\\$)epoch(Second|Milli)",
                 "$1js7Epoch$2"), com.sos.sign.model.workflow.Workflow.class);
@@ -101,7 +104,7 @@ public class JsonConverter {
         if (signWorkflow.getInstructions() != null) {
             // at the moment the converter is only necessary to modify instructions for ForkList, AddOrder instructions
             if (hasInstructionToConvert.test(json)) {
-                convertInstructions(invWorkflow.getInstructions(), signWorkflow.getInstructions(), new AtomicInteger(0), OrdersHelper
+                convertInstructions(controllerId, workflowName, invWorkflow.getInstructions(), signWorkflow.getInstructions(), new AtomicInteger(0), OrdersHelper
                         .getDailyPlanTimeZone());
             }
             if (hasCycleInstruction.test(json)) {
@@ -313,7 +316,7 @@ public class JsonConverter {
         return replaceTokens;
     }
 
-    private static void convertInstructions(List<Instruction> invInstructions,
+    private static void convertInstructions(String controllerId, String workflowName, List<Instruction> invInstructions,
             List<com.sos.sign.model.instruction.Instruction> signInstructions, AtomicInteger addOrderIndex, ZoneId zoneId) {
         if (invInstructions != null) {
             for (int i = 0; i < invInstructions.size(); i++) {
@@ -325,7 +328,8 @@ public class JsonConverter {
                     com.sos.sign.model.instruction.ForkList sfl = signInstruction.cast();
                     convertForkList(fl, sfl);
                     if (fl.getWorkflow() != null) {
-                        convertInstructions(fl.getWorkflow().getInstructions(), sfl.getWorkflow().getInstructions(), addOrderIndex, zoneId);
+                        convertInstructions(controllerId, workflowName, fl.getWorkflow().getInstructions(), sfl.getWorkflow().getInstructions(),
+                                addOrderIndex, zoneId);
                     }
                     break;
                 case FORK:
@@ -334,8 +338,8 @@ public class JsonConverter {
                     for (int j = 0; j < fj.getBranches().size(); j++) {
                         Branch invBranch = fj.getBranches().get(j);
                         if (invBranch.getWorkflow() != null) {
-                            convertInstructions(invBranch.getWorkflow().getInstructions(), sfj.getBranches().get(j).getWorkflow()
-                                    .getInstructions(), addOrderIndex, zoneId);
+                            convertInstructions(controllerId, workflowName, invBranch.getWorkflow().getInstructions(), sfj.getBranches().get(j)
+                                    .getWorkflow().getInstructions(), addOrderIndex, zoneId);
                         }
                     }
                     break;
@@ -343,39 +347,43 @@ public class JsonConverter {
                     IfElse ifElse = invInstruction.cast();
                     com.sos.sign.model.instruction.IfElse sIfElse = signInstruction.cast();
                     if (ifElse.getThen() != null) {
-                        convertInstructions(ifElse.getThen().getInstructions(), sIfElse.getThen().getInstructions(), addOrderIndex, zoneId);
+                        convertInstructions(controllerId, workflowName, ifElse.getThen().getInstructions(), sIfElse.getThen().getInstructions(),
+                                addOrderIndex, zoneId);
                     }
                     if (ifElse.getElse() != null) {
-                        convertInstructions(ifElse.getElse().getInstructions(), sIfElse.getElse().getInstructions(), addOrderIndex, zoneId);
+                        convertInstructions(controllerId, workflowName, ifElse.getElse().getInstructions(), sIfElse.getElse().getInstructions(),
+                                addOrderIndex, zoneId);
                     }
                     break;
                 case TRY:
                     TryCatch tryCatch = invInstruction.cast();
                     com.sos.sign.model.instruction.TryCatch sTryCatch = signInstruction.cast();
                     if (tryCatch.getTry() != null) {
-                        convertInstructions(tryCatch.getTry().getInstructions(), sTryCatch.getTry().getInstructions(), addOrderIndex, zoneId);
+                        convertInstructions(controllerId, workflowName, tryCatch.getTry().getInstructions(), sTryCatch.getTry().getInstructions(),
+                                addOrderIndex, zoneId);
                     }
                     if (tryCatch.getCatch() != null) {
-                        convertInstructions(tryCatch.getCatch().getInstructions(), sTryCatch.getCatch().getInstructions(), addOrderIndex,zoneId);
+                        convertInstructions(controllerId, workflowName, tryCatch.getCatch().getInstructions(), sTryCatch.getCatch().getInstructions(),
+                                addOrderIndex, zoneId);
                     }
                     break;
                 case LOCK:
                     Lock lock = invInstruction.cast();
                     com.sos.sign.model.instruction.Lock sLock = LockToLockDemandsConverter.lockToSignLockDemands(lock, signInstruction.cast());
                     if (lock.getLockedWorkflow() != null) {
-                        convertInstructions(lock.getLockedWorkflow().getInstructions(), sLock.getLockedWorkflow().getInstructions(),
-                                addOrderIndex, zoneId);
+                        convertInstructions(controllerId, workflowName, lock.getLockedWorkflow().getInstructions(), sLock.getLockedWorkflow()
+                                .getInstructions(), addOrderIndex, zoneId);
                     }
                     break;
                 case ADD_ORDER:
-                    convertAddOrder(invInstruction.cast(), signInstruction.cast(), addOrderIndex, zoneId);
+                    convertAddOrder(controllerId, workflowName, invInstruction.cast(), signInstruction.cast(), addOrderIndex, zoneId);
                     break;
                 case CYCLE:
                     Cycle cycle = invInstruction.cast();
                     if (cycle.getCycleWorkflow() != null) {
                         com.sos.sign.model.instruction.Cycle sCycle = signInstruction.cast();
-                        convertInstructions(cycle.getCycleWorkflow().getInstructions(), sCycle.getCycleWorkflow().getInstructions(),
-                                addOrderIndex, zoneId);
+                        convertInstructions(controllerId, workflowName, cycle.getCycleWorkflow().getInstructions(), sCycle.getCycleWorkflow()
+                                .getInstructions(), addOrderIndex, zoneId);
                     }
                     break;
                 case POST_NOTICE:
@@ -390,7 +398,8 @@ public class JsonConverter {
                     if (sCn.getSubworkflow() == null || sCn.getSubworkflow().getInstructions() == null) {
                         sCn.setSubworkflow(new com.sos.sign.model.instruction.Instructions(Collections.emptyList()));
                     } else if (cn.getSubworkflow() != null && cn.getSubworkflow().getInstructions() != null) {
-                        convertInstructions(cn.getSubworkflow().getInstructions(), sCn.getSubworkflow().getInstructions(), addOrderIndex, zoneId);
+                        convertInstructions(controllerId, workflowName, cn.getSubworkflow().getInstructions(), sCn.getSubworkflow().getInstructions(),
+                                addOrderIndex, zoneId);
                     }
                     break;
                 case FINISH:
@@ -413,8 +422,8 @@ public class JsonConverter {
                     com.sos.sign.model.instruction.StickySubagent sSticky = signInstruction.cast();
                     convertStickySubagent(sticky, sSticky);
                     if (sticky.getSubworkflow() != null) {
-                        convertInstructions(sticky.getSubworkflow().getInstructions(), sSticky.getSubworkflow().getInstructions(),
-                                addOrderIndex, zoneId);
+                        convertInstructions(controllerId, workflowName, sticky.getSubworkflow().getInstructions(), sSticky.getSubworkflow()
+                                .getInstructions(), addOrderIndex, zoneId);
                     }
                     break;
                 default:
@@ -450,7 +459,8 @@ public class JsonConverter {
         }
     }
     
-    private static void convertAddOrder(AddOrder ao, com.sos.sign.model.instruction.AddOrder sao, AtomicInteger addOrderIndex, ZoneId zoneId) {
+    private static void convertAddOrder(String controllerId, String workflowName, AddOrder ao, com.sos.sign.model.instruction.AddOrder sao,
+            AtomicInteger addOrderIndex, ZoneId zoneId) {
         sao.setDeleteWhenTerminated(ao.getRemainWhenTerminated() != Boolean.TRUE);
         String timeZone = zoneId.getId();
         int n = addOrderIndex.getAndUpdate(x -> x == Integer.MAX_VALUE ? 0 : x + 1);
@@ -474,6 +484,40 @@ public class JsonConverter {
         if (sao.getStopPositions() == null) {
             sao.setStopPositions(Collections.emptyList());
         }
+        
+        boolean withStartLabel = (sao.getStartPosition() != null && sao.getStartPosition() instanceof String);
+        boolean withEndLabels = sao.getStopPositions().stream().anyMatch(pos -> pos instanceof String);
+
+        if (withStartLabel || withEndLabels) {
+            Map<String, List<Object>> labelMap = getLabelToPositionsMap(controllerId, sao.getWorkflowPath());
+            int numOfEndPositions = sao.getStopPositions().size();
+            if (withStartLabel) {
+                sao.setStartPosition(labelMap.get((String) sao.getStartPosition()));
+            }
+            if (withEndLabels) {
+                sao.setStopPositions(sao.getStopPositions().stream().map(pos -> pos instanceof String ? labelMap.get((String) pos) : pos).filter(
+                        Objects::nonNull).collect(Collectors.toList()));
+            }
+            if (sao.getStartPosition() == null || numOfEndPositions > sao.getStopPositions().size()) {
+                throw new DBInvalidDataException("Workflow '" + sao.getWorkflowPath() + "' of AddOrder instruction in Workflow '" + workflowName
+                        + "' doesn't all specified labels.");
+            }
+        }
+    }
+    
+    private static Map<String, List<Object>> getLabelToPositionsMap(String controllerId, String workflowName) {
+        Map<String, List<Object>> labelMap = Collections.emptyMap();
+        // TODO it needs all other workflows of the same deploy call 
+//        if (controllerId != null) {
+//            try {
+//                labelMap = WorkflowsHelper.getLabelToPositionsMapFromDepHistory(controllerId, workflowName);
+//            } catch (DBMissingDataException e) {
+//                labelMap = WorkflowsHelper.getLabelToPositionsMapFromInventory(workflowName);
+//            }
+//        } else {
+            labelMap = WorkflowsHelper.getLabelToPositionsMapFromInventory(workflowName);
+//        }
+        return labelMap;
     }
     
     private static String quoteVariable(Object val) {

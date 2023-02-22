@@ -62,20 +62,13 @@ public class AddOrder
     private Variables arguments;
     @JsonProperty("deleteWhenTerminated")
     private Boolean deleteWhenTerminated = true;
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
     @JsonProperty("startPosition")
-    @JsonPropertyDescription("Actually, each even item is a string, each odd item is an integer")
-    private List<Object> startPosition = null;
+    private Object startPosition;
     @JsonProperty("stopPositions")
     @JsonAlias({
         "endPositions"
     })
-    private List<List<Object>> stopPositions = null;
+    private List<Object> stopPositions = null;
 
     /**
      * No args constructor for use in serialization
@@ -94,7 +87,7 @@ public class AddOrder
      * @param tYPE
      * @param startPosition
      */
-    public AddOrder(String orderId, String workflowPath, Variables arguments, Boolean deleteWhenTerminated, List<Object> startPosition, List<List<Object>> stopPositions, InstructionType tYPE) {
+    public AddOrder(String orderId, String workflowPath, Variables arguments, Boolean deleteWhenTerminated, Object startPosition, List<Object> stopPositions, InstructionType tYPE) {
         super(tYPE);
         this.orderId = orderId;
         this.workflowPath = workflowPath;
@@ -176,35 +169,31 @@ public class AddOrder
         this.deleteWhenTerminated = deleteWhenTerminated;
     }
 
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
+    @SuppressWarnings("unchecked")
     @JsonProperty("startPosition")
-    public List<Object> getStartPosition() {
+    public Object getStartPosition() {
+        if (startPosition != null) {
+            if (startPosition instanceof String && ((String) startPosition).isEmpty()) {
+                return null;
+            } else if (startPosition instanceof List<?> && ((List<Object>) startPosition).isEmpty()) {
+                return null;
+            }
+        }
         return startPosition;
     }
 
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
     @JsonProperty("startPosition")
-    public void setStartPosition(List<Object> startPosition) {
+    public void setStartPosition(Object startPosition) {
         this.startPosition = startPosition;
     }
 
     @JsonProperty("stopPositions")
-    public List<List<Object>> getStopPositions() {
+    public List<Object> getStopPositions() {
         return stopPositions;
     }
 
     @JsonProperty("stopPositions")
-    public void setStopPositions(List<List<Object>> stopPositions) {
+    public void setStopPositions(List<Object> stopPositions) {
         this.stopPositions = stopPositions;
     }
 

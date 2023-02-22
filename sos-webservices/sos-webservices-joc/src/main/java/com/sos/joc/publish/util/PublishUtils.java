@@ -1728,8 +1728,8 @@ public abstract class PublishUtils {
         newItem.setType(cfg.getType());
         newItem.setTitle(cfg.getTitle());
         try {
-            newItem.writeUpdateableContent(JsonConverter.readAsConvertedDeployObject(cfg.getPath(), cfg.getContent(), StoreDeployments.CLASS_MAPPING
-                    .get(cfg.getType()), commitId, releasedScripts));
+            newItem.writeUpdateableContent(JsonConverter.readAsConvertedDeployObject(null, cfg.getPath(), cfg.getContent(),
+                    StoreDeployments.CLASS_MAPPING.get(cfg.getType()), commitId, releasedScripts));
         } catch (IOException e) {
             throw new JocException(e);
         }
