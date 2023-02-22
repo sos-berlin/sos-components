@@ -200,7 +200,7 @@ public class Validator {
                                         position, schedule.getPath(), workflowName, r.getParameters().getAdditionalProperties().size()));
                             }
                         }
-                        validateOrderParameterisations(schedule.getOrderParameterisations(), r, w, "$.variableSets");
+                        validateOrderParameterisations(schedule.getOrderParameterisations(), r, w, "$.variableSets.orderParameterisations");
                     }
                 } else if (ConfigurationType.FILEORDERSOURCE.equals(type)) {
                     FileOrderSource fileOrderSource = (FileOrderSource) config;
@@ -991,9 +991,9 @@ public class Validator {
                     Map<List<Object>, String> posLabelMap = availablePositions.stream().collect(Collectors.toMap(Position::getPosition,
                             pos -> pos.getLabel() != null ? pos.getLabel() : ""));
 
-                    checkAddOrderPositions(p.getStartPosition(), posLabelMap, position + ".positions");
+                    checkAddOrderPositions(p.getStartPosition(), posLabelMap, position + ".positions.");
                     if (p.getEndPositions() != null) {
-                        p.getEndPositions().forEach(endP -> checkAddOrderPositions(endP, posLabelMap, position + ".positions"));
+                        p.getEndPositions().forEach(endP -> checkAddOrderPositions(endP, posLabelMap, position + ".positions."));
                     }
                 }
             });
