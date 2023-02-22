@@ -59,7 +59,7 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
             v.setValid(true);
         } catch (Throwable e) {
             v.setValid(false);
-            v.setInvalidMsg(e.getMessage());
+            v.setInvalidMsg(e.getMessage() != null ? e.getMessage() : e.toString());
         }
         return v;
     }
