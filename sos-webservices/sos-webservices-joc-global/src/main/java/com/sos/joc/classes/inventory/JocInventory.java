@@ -195,11 +195,11 @@ public class JocInventory {
     }
 
     public static boolean isFolder(ConfigurationType type) {
-        return ConfigurationType.FOLDER.equals(type);
+        return ConfigurationType.FOLDER.equals(type) || ConfigurationType.DESCRIPTORFOLDER.equals(type);
     }
 
     public static boolean isFolder(Integer type) {
-        return ConfigurationType.FOLDER.intValue() == type;
+        return (ConfigurationType.FOLDER.intValue() == type) || (ConfigurationType.DESCRIPTORFOLDER.intValue() == type);
     }
 
     public static boolean isCalendar(ConfigurationType type) {
@@ -310,7 +310,7 @@ public class JocInventory {
         return content2IJSObject(content, getType(typeNum));
     }
 
-    public static void makeParentDirs(InventoryDBLayer dbLayer, Path parentFolder, Long auditLogId) throws SOSHibernateException {
+    public static void makeParentDirs(InventoryDBLayer dbLayer, Path parentFolder, Long auditLogId, ConfigurationType folderType) throws SOSHibernateException {
         if (parentFolder != null) {
             String newFolder = parentFolder.toString().replace('\\', '/');
             if (!ROOT_FOLDER.equals(newFolder)) {
@@ -333,26 +333,27 @@ public class JocInventory {
                     newDbFolder.setDeleted(false);
                     newDbFolder.setId(null);
                     newDbFolder.setTitle(null);
-                    newDbFolder.setType(ConfigurationType.FOLDER);
+                    newDbFolder.setType(folderType);
                     newDbFolder.setValid(true);
                     dbLayer.getSession().save(newDbFolder);
                     if(parentFolder.getParent() != null ) {
-                        makeParentDirs(dbLayer, parentFolder.getParent(), auditLogId);
+                        makeParentDirs(dbLayer, parentFolder.getParent(), auditLogId, folderType);
                     }
                 }
             }
         }
     }
 
-    public static void makeParentDirs(InventoryDBLayer dbLayer, Path folder) throws SOSHibernateException {
-        makeParentDirs(dbLayer, folder, null);
+    public static void makeParentDirs(InventoryDBLayer dbLayer, Path folder, ConfigurationType folderType) throws SOSHibernateException {
+        makeParentDirs(dbLayer, folder, null, folderType);
     }
 
-    public static void makeParentDirsForTrash(InventoryDBLayer dbLayer, Path folder) throws SOSHibernateException {
-        makeParentDirsForTrash(dbLayer, folder, null);
+    public static void makeParentDirsForTrash(InventoryDBLayer dbLayer, Path folder, ConfigurationType folderType) throws SOSHibernateException {
+        makeParentDirsForTrash(dbLayer, folder, null, folderType);
     }
 
-    public static void makeParentDirsForTrash(InventoryDBLayer dbLayer, Path parentFolder, Long auditLogId) throws SOSHibernateException {
+    public static void makeParentDirsForTrash(InventoryDBLayer dbLayer, Path parentFolder, Long auditLogId, ConfigurationType folderType)
+            throws SOSHibernateException {
         if (parentFolder != null) {
             String newFolder = parentFolder.toString().replace('\\', '/');
             if (!ROOT_FOLDER.equals(newFolder)) {
@@ -368,10 +369,10 @@ public class JocInventory {
                     newDbFolder.setCreated(newDbFolder.getModified());
                     newDbFolder.setId(null);
                     newDbFolder.setTitle(null);
-                    newDbFolder.setType(ConfigurationType.FOLDER);
+                    newDbFolder.setType(folderType);
                     newDbFolder.setValid(true);
                     dbLayer.getSession().save(newDbFolder);
-                    makeParentDirsForTrash(dbLayer, parentFolder.getParent(), auditLogId);
+                    makeParentDirsForTrash(dbLayer, parentFolder.getParent(), auditLogId, folderType);
                 }
             }
         }
@@ -386,6 +387,11 @@ public class JocInventory {
 
     public static List<DBItemInventoryConfiguration> deleteEmptyFolders(InventoryDBLayer dbLayer, DBItemInventoryConfiguration folder)
             throws SOSHibernateException {
+        return deleteEmptyFolders(dbLayer, folder, false);
+    }
+    
+    public static List<DBItemInventoryConfiguration> deleteEmptyFolders(InventoryDBLayer dbLayer, DBItemInventoryConfiguration folder, 
+            boolean forDescriptors) throws SOSHibernateException {
         List<DBItemInventoryConfiguration> folderContent = dbLayer.getFolderContent(folder.getPath(), true, null);
         if (folderContent == null) {
             folderContent = new ArrayList<DBItemInventoryConfiguration>();
@@ -393,30 +399,47 @@ public class JocInventory {
         if (!ROOT_FOLDER.equals(folder.getPath())) {
             folderContent.add(folder);
         }
-        return deleteEmptyFolders(dbLayer.getSession(), folderContent);
+        return deleteEmptyFolders(dbLayer.getSession(), folderContent, forDescriptors);
     }
 
     public static List<DBItemInventoryConfiguration> deleteEmptyFolders(InventoryDBLayer dbLayer, String folder) throws SOSHibernateException {
+        return deleteEmptyFolders(dbLayer, folder, false);
+    }
+    
+    public static List<DBItemInventoryConfiguration> deleteEmptyFolders(InventoryDBLayer dbLayer, String folder, boolean forDescriptors)
+            throws SOSHibernateException {
         List<DBItemInventoryConfiguration> folderContent = dbLayer.getFolderContent(folder, true, null);
         if (folderContent == null) {
             folderContent = new ArrayList<DBItemInventoryConfiguration>();
         }
         if (!ROOT_FOLDER.equals(folder)) {
-            DBItemInventoryConfiguration dbFolder = dbLayer.getConfiguration(folder, ConfigurationType.FOLDER.intValue());
+            DBItemInventoryConfiguration dbFolder = null;
+            if(forDescriptors) {
+                dbFolder = dbLayer.getConfiguration(folder, ConfigurationType.DEPLOYMENTDESCRIPTOR.intValue());
+            } else {
+                dbFolder = dbLayer.getConfiguration(folder, ConfigurationType.FOLDER.intValue());
+            }
             if (dbFolder != null) {
                 folderContent.add(dbFolder);
             }
         }
-        return deleteEmptyFolders(dbLayer.getSession(), folderContent);
+        return deleteEmptyFolders(dbLayer.getSession(), folderContent, forDescriptors);
     }
 
     private static List<DBItemInventoryConfiguration> deleteEmptyFolders(SOSHibernateSession session,
-            List<DBItemInventoryConfiguration> folderContent) throws SOSHibernateException {
+            List<DBItemInventoryConfiguration> folderContent, boolean forDescriptors) throws SOSHibernateException {
         List<DBItemInventoryConfiguration> deletedFolders = new ArrayList<>();
         if (!folderContent.isEmpty()) {
-            LinkedHashSet<DBItemInventoryConfiguration> folders = folderContent.stream().filter(i -> ConfigurationType.FOLDER.intValue() == i
-                    .getType()).sorted(Comparator.comparing(DBItemInventoryConfiguration::getPath).reversed()).collect(Collectors.toCollection(
-                            LinkedHashSet::new));
+            LinkedHashSet<DBItemInventoryConfiguration> folders = null;
+            if(forDescriptors) {
+                folders = folderContent.stream().filter(i -> ConfigurationType.DESCRIPTORFOLDER.intValue() == i
+                        .getType()).sorted(Comparator.comparing(DBItemInventoryConfiguration::getPath).reversed())
+                        .collect(Collectors.toCollection(LinkedHashSet::new));
+            } else {
+                folders = folderContent.stream().filter(i -> ConfigurationType.FOLDER.intValue() == i
+                        .getType()).sorted(Comparator.comparing(DBItemInventoryConfiguration::getPath).reversed())
+                        .collect(Collectors.toCollection(LinkedHashSet::new));
+            }
             for (DBItemInventoryConfiguration folder : folders) {
                 if (!folderContent.stream().parallel().anyMatch(i -> folder.getPath().equals(i.getFolder()))) {
                     session.delete(folder);
@@ -624,7 +647,7 @@ public class JocInventory {
                 throw new JocFolderPermissionsException("Access denied for folder: " + config.getFolder());
             }
         } else if (path != null) {
-            if (JocInventory.ROOT_FOLDER.equals(path) && ConfigurationType.FOLDER.equals(type)) {
+            if (JocInventory.ROOT_FOLDER.equals(path) && (ConfigurationType.FOLDER.equals(type) || ConfigurationType.DESCRIPTORFOLDER.equals(type))) {
                 config = new DBItemInventoryConfigurationTrash();
                 config.setId(0L);
                 config.setPath(path);
@@ -874,7 +897,7 @@ public class JocInventory {
         }
     }
 
-    public static void deleteInventoryConfigurationAndPutToTrash(DBItemInventoryConfiguration item, InventoryDBLayer dbLayer) {
+    public static void deleteInventoryConfigurationAndPutToTrash(DBItemInventoryConfiguration item, InventoryDBLayer dbLayer, ConfigurationType folderType) {
         if (item != null) {
             try {
                 List<DBItemInventoryConfigurationTrash> trashItems = dbLayer.getTrashConfigurationByName(item.getName(), item.getType());
@@ -906,11 +929,11 @@ public class JocInventory {
                 trashItem.setModified(now);
                 if (trashItem.getId() == null) {
                     dbLayer.getSession().save(trashItem);
-                    makeParentDirsForTrash(dbLayer, Paths.get(trashItem.getFolder()), trashItem.getAuditLogId());
+                    makeParentDirsForTrash(dbLayer, Paths.get(trashItem.getFolder()), trashItem.getAuditLogId(), folderType);
                 } else {
                     dbLayer.getSession().update(trashItem);
                     if (createParentFolder) {
-                        makeParentDirsForTrash(dbLayer, Paths.get(trashItem.getFolder()), trashItem.getAuditLogId());
+                        makeParentDirsForTrash(dbLayer, Paths.get(trashItem.getFolder()), trashItem.getAuditLogId(), folderType);
                     }
                 }
             } catch (SOSHibernateInvalidSessionException ex) {

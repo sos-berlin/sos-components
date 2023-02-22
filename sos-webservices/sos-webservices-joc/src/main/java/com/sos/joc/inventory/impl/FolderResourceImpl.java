@@ -51,7 +51,9 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             boolean permission = getJocPermissions(accessToken).getInventory().getView();
             JOCDefaultResponse response = checkPermissions(accessToken, in, permission);
             if (response == null) {
-                response = JOCDefaultResponse.responseStatus200(readFolder(in, IMPL_PATH));
+                ResponseFolder folder = readFolder(in, IMPL_PATH);
+                folder.setDeploymentDescriptors(null);
+                response = JOCDefaultResponse.responseStatus200(folder);
             }
             return response;
         } catch (JocException e) {
@@ -73,7 +75,9 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             boolean permission = getJocPermissions(accessToken).getInventory().getView();
             JOCDefaultResponse response = checkPermissions(accessToken, in, permission);
             if (response == null) {
-                response = JOCDefaultResponse.responseStatus200(readFolder(in, TRASH_IMPL_PATH));
+                ResponseFolder folder = readFolder(in, TRASH_IMPL_PATH);
+                folder.setDeploymentDescriptors(null);
+                response = JOCDefaultResponse.responseStatus200(folder);
             }
             return response;
         } catch (JocException e) {
@@ -84,7 +88,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
         }
     }
 
-    private ResponseFolder readFolder(RequestFolder in, String action) throws Exception {
+    public ResponseFolder readFolder(RequestFolder in, String action) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(action);
@@ -173,6 +177,9 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                         case NONWORKINGDAYSCALENDAR:
                             folder.getCalendars().add(config);
                             break;
+                        case DEPLOYMENTDESCRIPTOR:
+                             folder.getDeploymentDescriptors().add(config);
+                            break;
                         case FOLDER:
                             // folder.getFolders().add(config);
                             break;
@@ -192,6 +199,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                 folder.setSchedules(sort(folder.getSchedules()));
                 folder.setIncludeScripts(sort(folder.getIncludeScripts()));
                 folder.setCalendars(sort(folder.getCalendars()));
+                folder.setDeploymentDescriptors(sort(folder.getDeploymentDescriptors()));
                 // folder.setFolders(sort(folder.getFolders()));
             }
             return folder;
@@ -222,7 +230,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
         return set.stream().sorted(Comparator.comparing(ResponseFolderItem::getPath)).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
-    private JOCDefaultResponse checkPermissions(final String accessToken, final RequestFolder in, boolean permission) throws Exception {
+    public JOCDefaultResponse checkPermissions(final String accessToken, final RequestFolder in, boolean permission) throws Exception {
         JOCDefaultResponse response = initPermissions(null, permission);
         if (response == null) {
             // for in.getRecursive() == TRUE: folder permissions are checked later

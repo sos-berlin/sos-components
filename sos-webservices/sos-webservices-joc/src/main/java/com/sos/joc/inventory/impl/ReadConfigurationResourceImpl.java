@@ -80,7 +80,7 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
         }
     }
 
-    private JOCDefaultResponse read(RequestFilter in) throws Exception {
+    public JOCDefaultResponse read(RequestFilter in) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
@@ -199,7 +199,7 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
         }
     }
     
-    private JOCDefaultResponse readTrash(RequestFilter in) throws Exception {
+    public JOCDefaultResponse readTrash(RequestFilter in) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(TRASH_IMPL_PATH);

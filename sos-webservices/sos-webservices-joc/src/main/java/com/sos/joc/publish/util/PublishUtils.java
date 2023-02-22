@@ -957,7 +957,7 @@ public abstract class PublishUtils {
                     if (withTrash) {
                         DBItemInventoryConfiguration orig = dbLayer.getInventoryConfigurationByNameAndType(delete.getName(), delete.getType());
                         if (orig != null) {
-                            JocInventory.deleteInventoryConfigurationAndPutToTrash(orig, invDBLayer);
+                            JocInventory.deleteInventoryConfigurationAndPutToTrash(orig, invDBLayer, ConfigurationType.FOLDER);
                         }
                     }
                 }

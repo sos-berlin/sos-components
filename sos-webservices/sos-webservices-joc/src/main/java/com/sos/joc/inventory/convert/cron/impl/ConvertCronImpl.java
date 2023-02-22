@@ -174,7 +174,7 @@ public class ConvertCronImpl extends JOCResourceImpl implements IConvertCronReso
         }
         
         // mkdirs if necessary
-        JocInventory.makeParentDirs(dbLayer, path.getParent());
+        JocInventory.makeParentDirs(dbLayer, path.getParent(), ConfigurationType.FOLDER);
         item = new DBItemInventoryConfiguration();
         item.setType(in.getObjectType());
         item = setProperties(in, item, dbLayer, true);

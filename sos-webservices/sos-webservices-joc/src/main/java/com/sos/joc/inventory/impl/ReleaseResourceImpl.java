@@ -414,7 +414,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             for (DBItemInventoryConfiguration item : folderContent) {
                 JocAuditLog.storeAuditLogDetail(new AuditLogDetail(item.getPath(), item.getType()), dbLayer.getSession(), dbAuditLog);
                 // delete releasable objects in INV_CONFIGURATION
-                JocInventory.deleteInventoryConfigurationAndPutToTrash(item, dbLayer);
+                JocInventory.deleteInventoryConfigurationAndPutToTrash(item, dbLayer, ConfigurationType.FOLDER);
             }
         }
         if (withDeletionOfEmptyFolders) {
@@ -427,7 +427,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             throws SOSHibernateException {
         conf.setAuditLogId(dbAuditLog.getId());
         dbLayer.deleteReleasedItemsByConfigurationIds(Collections.singletonList(conf.getId()));
-        JocInventory.deleteInventoryConfigurationAndPutToTrash(conf, dbLayer);
+        JocInventory.deleteInventoryConfigurationAndPutToTrash(conf, dbLayer, ConfigurationType.FOLDER);
         JocAuditLog.storeAuditLogDetail(new AuditLogDetail(conf.getPath(), conf.getType()), dbLayer.getSession(), dbAuditLog);
     }
     
