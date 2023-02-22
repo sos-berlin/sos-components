@@ -278,7 +278,7 @@ public class WorkflowsHelper {
         }
     }
 
-    public static Set<Position> getWorkflowAddOrderPositions(Workflow w) {
+    public static Set<Position> getWorkflowAddOrderPositions(com.sos.inventory.model.workflow.Workflow w) {
         if (w == null) {
             return null;
         }

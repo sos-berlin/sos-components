@@ -63,6 +63,7 @@ import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.agent.AgentHelper;
 import com.sos.joc.classes.order.OrdersHelper;
+import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.common.HistoryConstants;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
@@ -70,6 +71,7 @@ import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.order.Position;
 import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
 
@@ -197,10 +199,8 @@ public class Validator {
                                         "%s: Multiple workflows with order variables are not permitted: schedule=%s, workflowName=%s, %s order variables",
                                         position, schedule.getPath(), workflowName, r.getParameters().getAdditionalProperties().size()));
                             }
-                        } else {
-                            // TODO check positions and labels exist in Workflow
                         }
-                        validateOrderParameterisations(schedule.getOrderParameterisations(), r, "$.variableSets");
+                        validateOrderParameterisations(schedule.getOrderParameterisations(), r, w, "$.variableSets");
                     }
                 } else if (ConfigurationType.FILEORDERSOURCE.equals(type)) {
                     FileOrderSource fileOrderSource = (FileOrderSource) config;
@@ -583,6 +583,12 @@ public class Validator {
             int index = 0;
             for (Instruction inst : instructions) {
                 String instPosition = position + "[" + index + "].";
+                if (labels.containsKey(inst.getLabel())) {
+                    throw new SOSJsonSchemaException("$." + instPosition + "label: duplicate label '" + inst.getLabel() + "' with " + labels.get(inst
+                            .getLabel()));
+                } else {
+                    labels.put(inst.getLabel(), "$." + instPosition + "label");
+                }
                 boolean unLicensedForkList = inst.getTYPE().equals(InstructionType.FORKLIST) && !hasLicense;
                 try {
                     if (unLicensedForkList) {
@@ -613,12 +619,12 @@ public class Validator {
                         throw new JocConfigurationException("$." + instPosition + "agentName: Missing assigned Agent: " + j.getAgentName());
                     }
                     testJavaNameRules("$." + instPosition, "label", nj.getLabel());
-                    if (labels.containsKey(nj.getLabel())) {
-                        throw new SOSJsonSchemaException("$." + instPosition + "label: duplicate label '" + nj.getLabel() + "' with " + labels.get(nj
-                                .getLabel()));
-                    } else {
-                        labels.put(nj.getLabel(), "$." + instPosition + "label");
-                    }
+//                    if (labels.containsKey(nj.getLabel())) {
+//                        throw new SOSJsonSchemaException("$." + instPosition + "label: duplicate label '" + nj.getLabel() + "' with " + labels.get(nj
+//                                .getLabel()));
+//                    } else {
+//                        labels.put(nj.getLabel(), "$." + instPosition + "label");
+//                    }
                     // validateArguments(nj.getDefaultArguments(), orderPreparation, "$." + instPosition + "defaultArguments");
                     // validateArgumentKeys(nj.getDefaultArguments(), "$." + instPosition + "defaultArguments");
                     break;
@@ -712,6 +718,17 @@ public class Validator {
                         } catch (Exception e) {
                             throw new JocConfigurationException("$." + instPosition + "arguments: " + e.getMessage());
                         }
+                        
+                        if (ao.getStartPosition() != null || (ao.getEndPositions() != null && !ao.getEndPositions().isEmpty())) {
+                            Set<Position> availablePositions = WorkflowsHelper.getWorkflowAddOrderPositions(workflowOfAddOrder);
+                            Map<List<Object>, String> posLabelMap = availablePositions.stream().collect(Collectors.toMap(Position::getPosition,
+                                    pos -> pos.getLabel() != null ? pos.getLabel() : ""));
+                            
+                            checkAddOrderPositions(ao.getStartPosition(), posLabelMap, "$." + instPosition);
+                            if (ao.getEndPositions() != null) {
+                                ao.getEndPositions().forEach(endP -> checkAddOrderPositions(endP, posLabelMap, "$." + instPosition));
+                            }
+                        }
                     }
                     break;
                 case CONSUME_NOTICES:
@@ -795,6 +812,17 @@ public class Validator {
                     break;
                 }
                 index++;
+            }
+        }
+    }
+    
+    @SuppressWarnings("unchecked")
+    private static void checkAddOrderPositions(Object pos, Map<List<Object>, String> posLabelMap, String position) {
+        if (pos != null) {
+            if (pos instanceof String && !posLabelMap.containsValue((String) pos)) {
+                throw new JocConfigurationException(position + "startPosition: invalid label '" + (String) pos + "'");
+            } else if (pos instanceof List<?> && !posLabelMap.containsKey((List<Object>) pos)) {
+                throw new JocConfigurationException(position + "startPosition: invalid position '" + ((List<Object>) pos).toString() + "'");
             }
         }
     }
@@ -944,8 +972,8 @@ public class Validator {
         }
     }
 
-    private static void validateOrderParameterisations(List<OrderParameterisation> variableSets, Requirements orderPreparation, String position)
-            throws JocConfigurationException {
+    private static void validateOrderParameterisations(List<OrderParameterisation> variableSets, Requirements orderPreparation, Workflow workflow,
+            String position) throws JocConfigurationException {
         if (variableSets != null) {
             if (variableSets.size() != variableSets.stream().map(OrderParameterisation::getOrderName).distinct().mapToInt(e -> 1).sum()) {
                 throw new JocConfigurationException(position + ": Order names has to be unique");
@@ -955,6 +983,18 @@ public class Validator {
                     OrdersHelper.checkArguments(v, orderPreparation);
                 } catch (Exception e1) {
                     throw new JocConfigurationException(position + ": " + e1.getMessage());
+                }
+            });
+            variableSets.stream().map(OrderParameterisation::getPositions).filter(Objects::nonNull).forEach(p -> {
+                if (p.getStartPosition() != null || (p.getEndPositions() != null && !p.getEndPositions().isEmpty())) {
+                    Set<Position> availablePositions = WorkflowsHelper.getWorkflowAddOrderPositions(workflow);
+                    Map<List<Object>, String> posLabelMap = availablePositions.stream().collect(Collectors.toMap(Position::getPosition,
+                            pos -> pos.getLabel() != null ? pos.getLabel() : ""));
+
+                    checkAddOrderPositions(p.getStartPosition(), posLabelMap, position + ".positions");
+                    if (p.getEndPositions() != null) {
+                        p.getEndPositions().forEach(endP -> checkAddOrderPositions(endP, posLabelMap, position + ".positions"));
+                    }
                 }
             });
         }
