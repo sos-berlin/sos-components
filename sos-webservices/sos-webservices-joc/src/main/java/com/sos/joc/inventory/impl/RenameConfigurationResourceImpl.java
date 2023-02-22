@@ -56,7 +56,7 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
         }
     }
 
-    private JOCDefaultResponse rename(RequestFilter in) throws Exception {
+    public JOCDefaultResponse rename(RequestFilter in) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
@@ -158,8 +158,12 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                 } else {
                     JocInventory.updateConfiguration(dbLayer, config);
                 }
-                
-                JocInventory.makeParentDirs(dbLayer, p.getParent(), config.getAuditLogId());
+                if(config.getTypeAsEnum().equals(ConfigurationType.DEPLOYMENTDESCRIPTOR) 
+                        || config.getTypeAsEnum().equals(ConfigurationType.DESCRIPTORFOLDER)) {
+                    JocInventory.makeParentDirs(dbLayer, p.getParent(), config.getAuditLogId(), ConfigurationType.DESCRIPTORFOLDER);
+                } else {
+                    JocInventory.makeParentDirs(dbLayer, p.getParent(), config.getAuditLogId(), ConfigurationType.FOLDER);
+                }
                 for (DBItemInventoryConfiguration item : oldDBFolderContent) {
                     if (deletedIds.remove(item.getId())) {
                         config.setId(null);
@@ -199,7 +203,12 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                 JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), session, dbAuditLog);
                 setItem(config, p, dbAuditLog.getId());
                 JocInventory.updateConfiguration(dbLayer, config);
-                JocInventory.makeParentDirs(dbLayer, p.getParent(), config.getAuditLogId());
+                if(config.getTypeAsEnum().equals(ConfigurationType.DEPLOYMENTDESCRIPTOR) 
+                        || config.getTypeAsEnum().equals(ConfigurationType.DESCRIPTORFOLDER)) {
+                    JocInventory.makeParentDirs(dbLayer, p.getParent(), config.getAuditLogId(), ConfigurationType.DESCRIPTORFOLDER);
+                } else {
+                    JocInventory.makeParentDirs(dbLayer, p.getParent(), config.getAuditLogId(), ConfigurationType.FOLDER);
+                }
                 response.setPath(config.getPath());
                 response.setId(config.getId());
                 

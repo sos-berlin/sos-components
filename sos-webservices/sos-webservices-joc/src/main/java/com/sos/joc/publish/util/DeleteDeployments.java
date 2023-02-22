@@ -314,7 +314,7 @@ public class DeleteDeployments {
                         itemsFromTrashByType.get(optimistic.getType())
                             .add(invDbLayer.getTrashConfiguration(optimistic.getPath(), optimistic.getType()));
                     } else {
-                        itemsFromTrashByType.put(optimistic.getType(), new HashSet());
+                        itemsFromTrashByType.put(optimistic.getType(), new HashSet<>());
                         itemsFromTrashByType.get(optimistic.getType())
                             .add(invDbLayer.getTrashConfiguration(optimistic.getPath(), optimistic.getType()));
                     }
@@ -459,7 +459,7 @@ public class DeleteDeployments {
         InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
         for (DBItemInventoryConfiguration invConfiguration : itemsToDelete.stream().collect(Collectors.toSet())) {
             invConfiguration.setAuditLogId(auditlogId);
-            JocInventory.deleteInventoryConfigurationAndPutToTrash(invConfiguration, invDbLayer);
+            JocInventory.deleteInventoryConfigurationAndPutToTrash(invConfiguration, invDbLayer, ConfigurationType.FOLDER);
             if (withEvents) {
                 foldersForEvent.add(invConfiguration.getFolder());
             }

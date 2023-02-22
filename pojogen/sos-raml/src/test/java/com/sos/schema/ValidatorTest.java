@@ -7,11 +7,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 
-import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Ignore
 public class ValidatorTest {
+    
+    private static final Logger LOGGER = LoggerFactory.getLogger(ValidatorTest.class);
     
     @Test
     public void testLoadingSchemas() {
@@ -21,10 +23,10 @@ public class ValidatorTest {
                 URI schemaUri = URI.create("classpath:/raml/api/schemas/" + entry.getValue());
                 JsonValidator.getSchema(schemaUri, false, false);
             } catch (Exception e) {
+                LOGGER.error("", e);
                 classNames.add(entry.getKey());
             }
         }
         assertTrue("Schemas not found for: " + classNames.toString(), classNames.isEmpty());
     }
-
 }

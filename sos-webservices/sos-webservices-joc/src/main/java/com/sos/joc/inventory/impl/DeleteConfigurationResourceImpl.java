@@ -145,7 +145,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
         }
     }
 
-    private JOCDefaultResponse remove(String accessToken, RequestFilters in) throws Exception {
+    public JOCDefaultResponse remove(String accessToken, RequestFilters in) throws Exception {
         SOSHibernateSession session = null;
         try {
             DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
@@ -183,7 +183,11 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
                                                 Collectors.toSet());
                     }
                     if (deployments == null || deployments.isEmpty()) {
-                        JocInventory.deleteInventoryConfigurationAndPutToTrash(config, dbLayer);
+                        if (config.getTypeAsEnum().equals(ConfigurationType.DEPLOYMENTDESCRIPTOR)) {
+                            JocInventory.deleteInventoryConfigurationAndPutToTrash(config, dbLayer, ConfigurationType.DESCRIPTORFOLDER);
+                        } else {
+                            JocInventory.deleteInventoryConfigurationAndPutToTrash(config, dbLayer, ConfigurationType.FOLDER);
+                        }
                         JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), dbLayer.getSession(), dbAuditLog);
                         foldersForEvent.add(config.getFolder());
                     } else {
@@ -213,6 +217,10 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
     }
     
     private JOCDefaultResponse removeFolder(String accessToken, RequestFolder in) throws Exception {
+        return removeFolder(accessToken, in, false);
+    }
+
+    public JOCDefaultResponse removeFolder(String accessToken, RequestFolder in, boolean forDescriptors) throws Exception {
         SOSHibernateSession session = null;
         try {
             DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
@@ -222,21 +230,25 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             session.beginTransaction();
 
-            DBItemInventoryConfiguration folder = JocInventory.getConfiguration(dbLayer, null, in.getPath(), ConfigurationType.FOLDER,
-                    folderPermissions);
-            cancelOrders(accessToken, folder, in.getCancelOrdersDateFrom(),dbLayer);
-            ReleaseResourceImpl.delete(folder, dbLayer, dbAuditLog, false, false);
-
-            // TODO restrict to allowed Controllers
-            List<DBItemInventoryConfiguration> deployables = dbLayer.getFolderContent(folder.getPath(), true, JocInventory.getDeployableTypes());
-            if (deployables != null && !deployables.isEmpty()) {
-                String account = JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel()) ? ClusterSettings.getDefaultProfileAccount(Globals
-                        .getConfigurationGlobalsJoc()) : getAccount();
-                DeleteDeployments.deleteFolder(IMPL_PATH_FOLDER_DELETE, folder.getPath(), true, Proxies.getControllerDbInstances().keySet(),
-                        new DBLayerDeploy(session), account, accessToken, getJocError(), dbAuditLog.getId(), true, false, in.getCancelOrdersDateFrom());
+            DBItemInventoryConfiguration folder = null;
+            if(forDescriptors) {
+                folder = JocInventory.getConfiguration(dbLayer, null, in.getPath(), ConfigurationType.DESCRIPTORFOLDER, folderPermissions);
+            } else {
+                folder = JocInventory.getConfiguration(dbLayer, null, in.getPath(), ConfigurationType.FOLDER, folderPermissions);
             }
-            
-            JocInventory.deleteEmptyFolders(dbLayer, folder.getPath());
+            cancelOrders(accessToken, folder, in.getCancelOrdersDateFrom(),dbLayer);
+            if (!forDescriptors) {
+                ReleaseResourceImpl.delete(folder, dbLayer, dbAuditLog, false, false);
+                // TODO restrict to allowed Controllers
+                List<DBItemInventoryConfiguration> deployables = dbLayer.getFolderContent(folder.getPath(), true, JocInventory.getDeployableTypes());
+                if (deployables != null && !deployables.isEmpty()) {
+                    String account = JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel()) ? ClusterSettings.getDefaultProfileAccount(Globals
+                            .getConfigurationGlobalsJoc()) : getAccount();
+                    DeleteDeployments.deleteFolder(IMPL_PATH_FOLDER_DELETE, folder.getPath(), true, Proxies.getControllerDbInstances().keySet(),
+                            new DBLayerDeploy(session), account, accessToken, getJocError(), dbAuditLog.getId(), true, false, in.getCancelOrdersDateFrom());
+                }
+            }
+            JocInventory.deleteEmptyFolders(dbLayer, folder.getPath(), forDescriptors);
             
             Globals.commit(session);
             JocInventory.postFolderEvent(folder.getFolder());
@@ -251,7 +263,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
         }
     }
     
-    private JOCDefaultResponse delete(String accessToken, RequestFilters in) throws Exception {
+    public JOCDefaultResponse delete(String accessToken, RequestFilters in) throws Exception {
         SOSHibernateSession session = null;
         try {
             DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
@@ -289,6 +301,9 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
     }
     
     private JOCDefaultResponse deleteFolder(String accessToken, RequestFolder in) throws Exception {
+        return deleteFolder(accessToken, in, false);
+    }
+    public JOCDefaultResponse deleteFolder(String accessToken, RequestFolder in, boolean forDescriptors) throws Exception {
         SOSHibernateSession session = null;
         try {
             //DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
@@ -300,9 +315,13 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
             session.beginTransaction();
 
             // TODO auditLogDetails
-
-            DBItemInventoryConfigurationTrash config = JocInventory.getTrashConfiguration(dbLayer, null, in.getPath(), ConfigurationType.FOLDER,
-                    folderPermissions);
+            
+            DBItemInventoryConfigurationTrash config = null;
+            if(forDescriptors) {
+                config = JocInventory.getTrashConfiguration(dbLayer, null, in.getPath(), ConfigurationType.DESCRIPTORFOLDER, folderPermissions);
+            } else {
+                config = JocInventory.getTrashConfiguration(dbLayer, null, in.getPath(), ConfigurationType.FOLDER, folderPermissions);
+            }
             dbLayer.deleteTrashFolder(config.getPath());
             Globals.commit(session);
             JocInventory.postTrashEvent(config.getFolder());

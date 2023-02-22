@@ -51,7 +51,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
 
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
             if (response == null) {
-                response = store(in);
+                response = store(in, ConfigurationType.FOLDER);
             }
             return response;
         } catch (JocException e) {
@@ -62,7 +62,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
         }
     }
 
-    private JOCDefaultResponse store(ConfigurationObject in) throws Exception {
+    public JOCDefaultResponse store(ConfigurationObject in, ConfigurationType folderType) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
@@ -110,7 +110,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
 
                 // mkdirs if necessary
-                JocInventory.makeParentDirs(dbLayer, path.getParent());
+                JocInventory.makeParentDirs(dbLayer, path.getParent(), folderType);
 
                 item = new DBItemInventoryConfiguration();
                 item.setType(in.getObjectType());

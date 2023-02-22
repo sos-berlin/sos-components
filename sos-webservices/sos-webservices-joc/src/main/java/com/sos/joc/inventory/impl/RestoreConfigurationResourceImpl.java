@@ -57,7 +57,7 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
         }
     }
 
-    private JOCDefaultResponse restore(RequestFilter in) throws Exception {
+    public JOCDefaultResponse restore(RequestFilter in) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(TRASH_IMPL_PATH);
@@ -94,24 +94,27 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
                     throw new JocFolderPermissionsException("Access denied for folder: " + newPathWithoutFix);
                 }
                 
-                List<ConfigurationType> restoreOrder = Arrays.asList(ConfigurationType.FOLDER, ConfigurationType.LOCK, ConfigurationType.INCLUDESCRIPT,
-                        ConfigurationType.NOTICEBOARD, ConfigurationType.JOBRESOURCE, ConfigurationType.NONWORKINGDAYSCALENDAR,
-                        ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.JOBTEMPLATE, ConfigurationType.WORKFLOW, ConfigurationType.FILEORDERSOURCE,
-                        ConfigurationType.SCHEDULE);
+                List<ConfigurationType> restoreOrder = Arrays.asList(ConfigurationType.FOLDER, ConfigurationType.DESCRIPTORFOLDER,
+                        ConfigurationType.DEPLOYMENTDESCRIPTOR,ConfigurationType.LOCK, ConfigurationType.INCLUDESCRIPT, ConfigurationType.NOTICEBOARD,
+                        ConfigurationType.JOBRESOURCE, ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR,
+                        ConfigurationType.JOBTEMPLATE, ConfigurationType.WORKFLOW, ConfigurationType.FILEORDERSOURCE, ConfigurationType.SCHEDULE);
 
                 List<DBItemInventoryConfigurationTrash> trashDBFolderContent = dbLayer.getTrashFolderContent(config.getPath(), true, null);
                 Map<ConfigurationType, List<DBItemInventoryConfigurationTrash>> trashMap = trashDBFolderContent.stream().collect(Collectors
                         .groupingBy(DBItemInventoryConfigurationTrash::getTypeAsEnum));
                 
                 List<DBItemInventoryConfiguration> curDBFolderContent = dbLayer.getFolderContent(newPathWithoutFix, true, null);
-                Set<String> folderPaths = curDBFolderContent.stream().filter(i -> ConfigurationType.FOLDER.intValue() == i.getType()).map(
-                        DBItemInventoryConfiguration::getPath).collect(Collectors.toSet());
+                Set<String> folderPaths = curDBFolderContent.stream()
+                        .filter(i -> ConfigurationType.FOLDER.intValue() == i.getType() 
+                            || ConfigurationType.DESCRIPTORFOLDER.intValue() == i.getType())
+                        .map(DBItemInventoryConfiguration::getPath).collect(Collectors.toSet());
                 DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
                 
                 for (ConfigurationType objType : restoreOrder) {
                     for (DBItemInventoryConfigurationTrash trashItem : trashMap.getOrDefault(objType, Collections.emptyList())) {
                         java.nio.file.Path oldItemPath = Paths.get(trashItem.getPath());
-                        if (ConfigurationType.FOLDER.intValue() == trashItem.getType()) {
+                        if (ConfigurationType.FOLDER.intValue() == trashItem.getType() 
+                                || ConfigurationType.DESCRIPTORFOLDER.intValue() == trashItem.getType()) {
                             if (!folderPaths.contains(trashItem.getPath())) {
                                 DBItemInventoryConfiguration item = createItem(trashItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath)),
                                         dbAuditLog.getId(), dbLayer);
@@ -137,7 +140,12 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
                     if (newItem == null) {
                         DBItemInventoryConfiguration newDbItem = createItem(config, pWithoutFix, dbAuditLog.getId(), dbLayer);
                         JocInventory.insertConfiguration(dbLayer, newDbItem);
-                        JocInventory.makeParentDirs(dbLayer, pWithoutFix.getParent(), dbAuditLog.getId());
+                        if (newDbItem.getTypeAsEnum().equals(ConfigurationType.DEPLOYMENTDESCRIPTOR) 
+                                || newDbItem.getTypeAsEnum().equals(ConfigurationType.DESCRIPTORFOLDER)) {
+                            JocInventory.makeParentDirs(dbLayer, pWithoutFix.getParent(), dbAuditLog.getId(), ConfigurationType.DESCRIPTORFOLDER);
+                        } else {
+                            JocInventory.makeParentDirs(dbLayer, pWithoutFix.getParent(), dbAuditLog.getId(), ConfigurationType.FOLDER);
+                        }
                         response.setId(newDbItem.getId());
                         response.setPath(newDbItem.getPath());
                     } else {
@@ -179,7 +187,11 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
                     response.setId(dbItem.getId());
                     response.setPath(dbItem.getPath());
                 }
-                JocInventory.makeParentDirs(dbLayer, pWithoutFix.getParent(), dbAuditLog.getId());
+                if (config.getTypeAsEnum().equals(ConfigurationType.DEPLOYMENTDESCRIPTOR)) {
+                    JocInventory.makeParentDirs(dbLayer, pWithoutFix.getParent(), dbAuditLog.getId(), ConfigurationType.DESCRIPTORFOLDER);
+                } else {
+                    JocInventory.makeParentDirs(dbLayer, pWithoutFix.getParent(), dbAuditLog.getId(), ConfigurationType.FOLDER);
+                }
                 session.delete(config);
                 events = Collections.singleton(config.getFolder());
             }

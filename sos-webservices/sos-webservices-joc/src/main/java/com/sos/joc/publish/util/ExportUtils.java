@@ -196,7 +196,7 @@ public class ExportUtils {
             ControllerObject jsObject = new ControllerObject();
             jsObject.setPath(item.getPath());
             jsObject.setObjectType(DeployType.fromValue(item.getType()));
-            jsObject.setContent(JsonConverter.readAsConvertedDeployObject(item.getPath(), item.getContent(), StoreDeployments.CLASS_MAPPING.get(
+            jsObject.setContent(JsonConverter.readAsConvertedDeployObject(null, item.getPath(), item.getContent(), StoreDeployments.CLASS_MAPPING.get(
                     item.getType()), commitId, releasedScripts));
             jsObject.setAccount(account);
             jsObject.setModified(item.getModified());
@@ -213,7 +213,7 @@ public class ExportUtils {
             jsObject.setPath(item.getPath());
             jsObject.setObjectType(item.getTypeAsEnum());
             if (releasedScripts != null) {
-                jsObject.setContent(JsonConverter.readAsConvertedDeployObject(item.getPath(), item.getInvContent(),
+                jsObject.setContent(JsonConverter.readAsConvertedDeployObject(item.getControllerId(), item.getPath(), item.getInvContent(),
                         StoreDeployments.CLASS_MAPPING.get(item.getType()), commitId, releasedScripts));
             } else {
                 jsObject.setContent(Globals.objectMapper.readValue(item.getInvContent(), IDeployObject.class));

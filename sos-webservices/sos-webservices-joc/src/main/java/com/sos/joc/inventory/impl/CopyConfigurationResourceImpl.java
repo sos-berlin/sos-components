@@ -65,6 +65,10 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
     }
 
     private JOCDefaultResponse copy(RequestFilter in) throws Exception {
+        return copy(in, false);
+    }
+    
+    public JOCDefaultResponse copy(RequestFilter in, boolean forDescriptors) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
@@ -123,7 +127,10 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                 }
                 
                 List<DBItemInventoryConfiguration> oldDBFolderContent = null;
-                if (in.getShallowCopy()) {
+                if (forDescriptors) {
+                    oldDBFolderContent = dbLayer.getFolderContent(
+                            config.getPath(), true, Arrays.asList(new Integer[] {ConfigurationType.DEPLOYMENTDESCRIPTOR.intValue()}));
+                } else if (in.getShallowCopy()) {
                     oldDBFolderContent = dbLayer.getFolderContent(config.getPath(), true, JocInventory.getTypesFromObjectsWithReferencesAndFolders());
                 } else {
                     oldDBFolderContent = dbLayer.getFolderContent(config.getPath(), true, null);
@@ -237,7 +244,7 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                             DBItemInventoryConfiguration newDbItem = createItem(config, pWithoutFix);
                             newDbItem.setAuditLogId(dbAuditLog.getId());
                             JocInventory.insertConfiguration(dbLayer, newDbItem);
-                            JocInventory.makeParentDirs(dbLayer, pWithoutFix.getParent(), newDbItem.getAuditLogId());
+                            JocInventory.makeParentDirs(dbLayer, pWithoutFix.getParent(), newDbItem.getAuditLogId(), ConfigurationType.FOLDER);
                             response.setId(newDbItem.getId());
                             response.setPath(newDbItem.getPath());
                         } else {
@@ -416,7 +423,7 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                 //createAuditLog(newDbItem, in.getAuditLog());
                 newDbItem.setAuditLogId(dbAuditLog.getId());
                 JocInventory.insertConfiguration(dbLayer, newDbItem);
-                JocInventory.makeParentDirs(dbLayer, p.getParent(), newDbItem.getAuditLogId());
+                JocInventory.makeParentDirs(dbLayer, p.getParent(), newDbItem.getAuditLogId(), ConfigurationType.FOLDER);
                 response.setId(newDbItem.getId());
                 response.setPath(newDbItem.getPath());
                 events = Collections.singleton(newDbItem.getFolder());

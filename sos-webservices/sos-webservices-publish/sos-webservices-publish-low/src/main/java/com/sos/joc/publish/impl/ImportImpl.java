@@ -238,7 +238,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                     InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
                     filteredConfigurations.stream().map(ConfigurationObject::getPath).map(path -> Paths.get(path).getParent()).distinct().forEach(item -> {
                         try {
-                            JocInventory.makeParentDirs(invDbLayer, item, auditLogId);
+                            JocInventory.makeParentDirs(invDbLayer, item, auditLogId, ConfigurationType.FOLDER);
                         } catch (SOSHibernateException e) {
                             throw new JocSosHibernateException(e);
                         }
