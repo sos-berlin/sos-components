@@ -11,10 +11,10 @@ import com.sos.schema.JsonValidator;
 import jakarta.ws.rs.Path;
 
 
+@Path("descriptor")
 public class RestoreDescriptorImpl extends ARestoreConfiguration implements IRestoreDescriptor {
 
     @Override
-    @Path(PATH_RESTORE)
     public JOCDefaultResponse postRestoreFromTrash(String accessToken, byte[] body) {
         try {
             initLogging(IMPL_PATH_RESTORE, body, accessToken);

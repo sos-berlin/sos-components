@@ -11,10 +11,10 @@ import com.sos.schema.JsonValidator;
 import jakarta.ws.rs.Path;
 
 
+@Path("descriptor")
 public class RenameDescriptorImpl extends ARenameConfiguration implements IRenameDescriptor {
 
     @Override
-    @Path(PATH_RENAME)
     public JOCDefaultResponse postRename(String accessToken, byte[] body) {
         try {
             initLogging(IMPL_PATH_RENAME, body, accessToken);

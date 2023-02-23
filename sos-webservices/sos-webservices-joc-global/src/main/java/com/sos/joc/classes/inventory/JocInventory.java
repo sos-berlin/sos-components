@@ -112,6 +112,7 @@ public class JocInventory {
             put(ConfigurationType.NOTICEBOARD, "classpath:/raml/inventory/schemas/board/board-schema.json");
             put(ConfigurationType.FOLDER, "classpath:/raml/api/schemas/inventory/folder-schema.json");
             put(ConfigurationType.DEPLOYMENTDESCRIPTOR, "classpath:/raml/inventory/schemas/deploymentDescriptor/deploymentDescriptor-schema.json");
+            put(ConfigurationType.DESCRIPTORFOLDER, "classpath:/raml/api/schemas/inventory/folder-schema.json");
         }
     });
 
@@ -162,6 +163,7 @@ public class JocInventory {
             put(ConfigurationType.NOTICEBOARD, Board.class);
             put(ConfigurationType.FOLDER, Folder.class);
             put(ConfigurationType.DEPLOYMENTDESCRIPTOR, DeploymentDescriptor.class);
+            put(ConfigurationType.DESCRIPTORFOLDER, Folder.class);
         }
     });
 

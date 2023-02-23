@@ -67,7 +67,8 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             session.beginTransaction();
             
-            Predicate<RequestFilter> isFolder = r -> ConfigurationType.FOLDER.equals(r.getObjectType());
+            Predicate<RequestFilter> isFolder = r -> ConfigurationType.FOLDER.equals(r.getObjectType()) 
+                    || ConfigurationType.DESCRIPTORFOLDER.equals(r.getObjectType());
             if (in.getObjects().stream().parallel().anyMatch(isFolder)) {
                 //throw new 
             }

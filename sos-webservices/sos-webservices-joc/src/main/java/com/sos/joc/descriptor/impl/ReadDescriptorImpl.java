@@ -12,10 +12,10 @@ import com.sos.schema.JsonValidator;
 import jakarta.ws.rs.Path;
 
 
+@Path("descriptor")
 public class ReadDescriptorImpl extends AReadConfiguration implements IReadDescriptor {
 
     @Override
-    @Path(PATH_READ)
     public JOCDefaultResponse read(String accessToken, byte[] body) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
@@ -38,7 +38,6 @@ public class ReadDescriptorImpl extends AReadConfiguration implements IReadDescr
     }
 
     @Override
-    @Path(PATH_TRASH_READ)
     public JOCDefaultResponse readTrash(String accessToken, byte[] body) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
