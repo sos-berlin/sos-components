@@ -19,7 +19,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "severity",
-    "_text"
+    "_text",
+    "lossNode"
 })
 public class ClusterState {
 
@@ -38,6 +39,8 @@ public class ClusterState {
      */
     @JsonProperty("_text")
     private String _text;
+    @JsonProperty("lossNode")
+    private String lossNode;
 
     /**
      *  0=ClusterCoupled, 1=ClusterNodesAppointed,ClusterPassiveLost,ClusterSwitchedOver,ClusterFailOver 2=ClusterPreparedToBeCoupled,ClusterEmpty 3=ClusterUnknown
@@ -78,15 +81,25 @@ public class ClusterState {
     public void set_text(String _text) {
         this._text = _text;
     }
+    
+    @JsonProperty("lossNode")
+    public String getLossNode() {
+        return lossNode;
+    }
+    
+    @JsonProperty("lossNode")
+    public void setLossNode(String lossNode) {
+        this.lossNode = lossNode;
+    }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("severity", severity).append("_text", _text).toString();
+        return new ToStringBuilder(this).append("severity", severity).append("_text", _text).append("lossNode", lossNode).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(severity).append(_text).toHashCode();
+        return new HashCodeBuilder().append(severity).append(_text).append(lossNode).toHashCode();
     }
 
     @Override
@@ -98,7 +111,7 @@ public class ClusterState {
             return false;
         }
         ClusterState rhs = ((ClusterState) other);
-        return new EqualsBuilder().append(severity, rhs.severity).append(_text, rhs._text).isEquals();
+        return new EqualsBuilder().append(severity, rhs.severity).append(_text, rhs._text).append(lossNode, rhs.lossNode).isEquals();
     }
 
 }
