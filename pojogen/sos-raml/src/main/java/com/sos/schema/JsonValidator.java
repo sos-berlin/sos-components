@@ -182,6 +182,17 @@ public class JsonValidator {
             put("com.sos.joc.model.inventory.search.RequestSearchFilter", "inventory/search/request-search-filter-schema.json");
             put("com.sos.joc.model.inventory.convert.ConvertCronFilter", "inventory/convert/convertCronFilter-schema.json");
             put("JobWizardFilter", "wizard/wizard-job-filter-schema.json");
+            
+            put("com.sos.joc.model.descriptor.common.RequestFilter", "descriptor/common/request-filter-schema.json");
+            put("com.sos.joc.model.descriptor.common.RequestFolder", "descriptor/common/request-folder-schema.json");
+            put("com.sos.joc.model.descriptor.common.ResponseFolder", "descriptor/common/response-folder-schema.json");
+            put("com.sos.joc.model.descriptor.common.ResponseFolderItem", "descriptor/common/response-folderItem-schema.json");
+            put("com.sos.joc.model.descriptor.common.ResponseRenamed", "descriptor/common/response-newPath-schema.json");
+            put("com.sos.joc.model.descriptor.copy.RequestFilter", "descriptor/copy/request-filter-schema.json");
+            put("com.sos.joc.model.descriptor.remove.RequestFilters", "descriptor/remove/request-filters-schema.json");
+            put("com.sos.joc.model.descriptor.remove.ResponseItem", "descriptor/remove/response-item-schema.json");
+            put("com.sos.joc.model.descriptor.rename.RequestFilter", "descriptor/rename/request-filter-schema.json");
+            put("com.sos.joc.model.descriptor.restore.RequestFilter", "descriptor/restore/request-filter-schema.json");
 
             put("com.sos.joc.model.publish.SetKeyFilter", "publish/setKey-schema.json");
             put("com.sos.joc.model.publish.GenerateKeyFilter", "publish/generateKey-schema.json");
