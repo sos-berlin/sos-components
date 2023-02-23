@@ -136,7 +136,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                 // get deleted deployables outside deleted folders
                 if (in.getWithRemovedObjects()) {
                     List<DBItemInventoryConfiguration> folders = dbLayer.getFolderContent(in.getFolder(), in.getRecursive(), Collections.singleton(
-                            ConfigurationType.FOLDER.intValue()));
+                            ConfigurationType.FOLDER.intValue()), false);
                     deployables.addAll(getResponseStreamOfDeletedItem(dbLayer.getDeletedConfigurations(deployableTypes, in.getFolder(), in
                             .getRecursive(), deletedFolders), folders, permittedFolders));
                 }

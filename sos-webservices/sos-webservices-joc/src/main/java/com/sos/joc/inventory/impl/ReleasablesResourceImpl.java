@@ -128,7 +128,7 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
                 // get deleted releasables outside deleted folders
                 if (in.getWithRemovedObjects()) {
                     List<DBItemInventoryConfiguration> folders = dbLayer.getFolderContent(in.getFolder(), in.getRecursive(), Arrays.asList(
-                            ConfigurationType.FOLDER.intValue()));
+                            ConfigurationType.FOLDER.intValue()), false);
                     releasables.addAll(getResponseStreamOfDeletedItem(dbLayer.getDeletedConfigurations(releasableTypes, in.getFolder(), in
                             .getRecursive(), deletedFolders), folders, permittedFolders));
                 }

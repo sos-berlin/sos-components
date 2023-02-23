@@ -1,7 +1,6 @@
 package com.sos.joc.descriptor.resource;
 
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.inventory.JocInventory;
 
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.HeaderParam;
@@ -12,8 +11,8 @@ import jakarta.ws.rs.core.MediaType;
 
 public interface ICopyDescriptor {
 
-    public static final String PATH_COPY = "descriptor/copy";
-    public static final String IMPL_PATH_COPY = JocInventory.getResourceImplPath(PATH_COPY);
+    public static final String PATH_COPY = "copy";
+    public static final String IMPL_PATH_COPY = "./descriptor/copy";
 
     @POST
     @Path(PATH_COPY)
