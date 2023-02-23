@@ -81,25 +81,28 @@ public class UpdateJobFromTemplatesImpl extends JOCResourceImpl implements IUpda
             report.setJobs(new JobReports());
 
             Map<String, JobTemplate> jobTemplates = Collections.emptyMap();
-            Workflow workflow = (Workflow) JocInventory.content2IJSObject(config.getContent(), ConfigurationType.WORKFLOW);
-            if (workflow.getJobs() != null && workflow.getJobs().getAdditionalProperties() != null && !workflow.getJobs().getAdditionalProperties()
-                    .isEmpty()) {
-                // determine job templates
-                Job job = workflow.getJobs().getAdditionalProperties().get(in.getJobName());
-                if (job == null) {
-                    throw new JocBadRequestException(String.format("Workflow '%s' has no job '%s'.", config.getPath(), in.getJobName()));
+            Workflow workflow = JocInventory.workflowContent2Workflow(config.getContent());
+            if (workflow != null) {
+                if (workflow.getJobs() != null && workflow.getJobs().getAdditionalProperties() != null && !workflow.getJobs()
+                        .getAdditionalProperties().isEmpty()) {
+                    // determine job templates
+                    Job job = workflow.getJobs().getAdditionalProperties().get(in.getJobName());
+                    if (job == null) {
+                        throw new JocBadRequestException(String.format("Workflow '%s' has no job '%s'.", config.getPath(), in.getJobName()));
+                    }
+                    String jobTemplateName = null;
+                    if (job.getJobTemplate() != null && job.getJobTemplate().getName() != null) {
+                        jobTemplateName = job.getJobTemplate().getName();
+                    }
+                    List<DBItemInventoryReleasedConfiguration> jts = dbLayer.getReleasedJobTemplatesByNames(Collections.singletonList(
+                            jobTemplateName));
+                    jobTemplates = jts.stream().map(item -> JobTemplatesResourceImpl.getJobTemplate(item, false, jocError)).filter(Objects::nonNull)
+                            .collect(Collectors.toMap(JobTemplate::getName, Function.identity()));
+                    if (jobTemplateName != null) {
+                        jobTemplates.putIfAbsent(jobTemplateName, null);
+                    }
+                    report = propagate.template2Job(config, workflow, jobTemplates, Collections.singleton(in.getJobName()), dbLayer, now, dbAuditLog);
                 }
-                String jobTemplateName = null;
-                if (job.getJobTemplate() != null && job.getJobTemplate().getName() != null) {
-                    jobTemplateName = job.getJobTemplate().getName();
-                }
-                List<DBItemInventoryReleasedConfiguration> jts = dbLayer.getReleasedJobTemplatesByNames(Collections.singletonList(jobTemplateName));
-                jobTemplates = jts.stream().map(item -> JobTemplatesResourceImpl.getJobTemplate(item, false, jocError)).filter(Objects::nonNull)
-                        .collect(Collectors.toMap(JobTemplate::getName, Function.identity()));
-                if (jobTemplateName != null) {
-                    jobTemplates.putIfAbsent(jobTemplateName, null);
-                }
-                report = propagate.template2Job(config, workflow, jobTemplates, Collections.singleton(in.getJobName()), dbLayer, now, dbAuditLog);
             }
             
             Globals.commit(session);

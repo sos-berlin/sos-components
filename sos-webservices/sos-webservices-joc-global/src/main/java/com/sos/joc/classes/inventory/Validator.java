@@ -583,11 +583,13 @@ public class Validator {
             int index = 0;
             for (Instruction inst : instructions) {
                 String instPosition = position + "[" + index + "].";
-                if (labels.containsKey(inst.getLabel())) {
-                    throw new SOSJsonSchemaException("$." + instPosition + "label: duplicate label '" + inst.getLabel() + "' with " + labels.get(inst
-                            .getLabel()));
-                } else {
-                    labels.put(inst.getLabel(), "$." + instPosition + "label");
+                if (inst.getLabel() != null) {
+                    if (labels.containsKey(inst.getLabel())) {
+                        throw new SOSJsonSchemaException("$." + instPosition + "label: duplicate label '" + inst.getLabel() + "' with " + labels.get(
+                                inst.getLabel()));
+                    } else {
+                        labels.put(inst.getLabel(), "$." + instPosition + "label");
+                    }
                 }
                 boolean unLicensedForkList = inst.getTYPE().equals(InstructionType.FORKLIST) && !hasLicense;
                 try {
@@ -640,11 +642,13 @@ public class Validator {
                                 String branchInstPosition = branchPosition + "[" + branchIndex + "].workflow";
                                 for (Map.Entry<String, String> entry : bw.getResult().getAdditionalProperties().entrySet()) {
                                     validateExpression("$." + branchInstPosition + ".result", entry.getKey(), entry.getValue());
-                                    if (resultKeys.containsKey(entry.getKey())) {
-                                        throw new JocConfigurationException("$." + branchInstPosition + ".result: duplicate key '" + entry.getKey()
-                                                + "': already used in " + resultKeys.get(entry.getKey()));
-                                    } else {
-                                        resultKeys.put(entry.getKey(), branchInstPosition);
+                                    if (entry.getKey() != null) {
+                                        if (resultKeys.containsKey(entry.getKey())) {
+                                            throw new JocConfigurationException("$." + branchInstPosition + ".result: duplicate key '" + entry
+                                                    .getKey() + "': already used in " + resultKeys.get(entry.getKey()));
+                                        } else {
+                                            resultKeys.put(entry.getKey(), branchInstPosition);
+                                        }
                                     }
                                 }
                             }

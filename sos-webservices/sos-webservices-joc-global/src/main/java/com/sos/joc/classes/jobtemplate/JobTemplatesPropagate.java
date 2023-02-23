@@ -125,7 +125,7 @@ public class JobTemplatesPropagate {
 
     public WorkflowReport template2Job(DBItemInventoryConfiguration dbWorkflow, Map<String, JobTemplate> jobTemplates, InventoryDBLayer dbLayer,
             Date now, DBItemJocAuditLog dbAuditLog) throws JsonParseException, JsonMappingException, IOException, SOSHibernateException {
-        Workflow workflow = (Workflow) JocInventory.content2IJSObject(dbWorkflow.getContent(), ConfigurationType.WORKFLOW);
+        Workflow workflow = JocInventory.workflowContent2Workflow(dbWorkflow.getContent());
         return template2Job(dbWorkflow, workflow, jobTemplates, dbLayer, now, dbAuditLog);
     }
     
@@ -667,13 +667,16 @@ public class JobTemplatesPropagate {
     }
     
     private static void validate(DBItemInventoryConfiguration item, Workflow workflow, InventoryDBLayer dbLayer) {
-
-        try {
-            item.setContent(JocInventory.toString(workflow));
-            Validator.validate(ConfigurationType.WORKFLOW, workflow, dbLayer, null);
-            item.setValid(true);
-        } catch (Throwable e) {
+        if (workflow == null) {
             item.setValid(false);
+        } else {
+            try {
+                item.setContent(JocInventory.toString(workflow));
+                Validator.validate(ConfigurationType.WORKFLOW, workflow, dbLayer, null);
+                item.setValid(true);
+            } catch (Throwable e) {
+                item.setValid(false);
+            }
         }
     }
     

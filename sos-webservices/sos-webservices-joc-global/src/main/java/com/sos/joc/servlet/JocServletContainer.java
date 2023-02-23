@@ -34,6 +34,7 @@ import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.db.DbInstaller;
 import com.sos.joc.db.cluster.CheckInstance;
 import com.sos.joc.exceptions.JocConfigurationException;
+import com.sos.joc.log4j2.NotificationAppender;
 
 import jakarta.servlet.ServletException;
 
@@ -100,6 +101,8 @@ public class JocServletContainer extends ServletContainer {
     public void destroy() {
         LOGGER.debug("----> destroy on close JOC");
         super.destroy();
+        
+        NotificationAppender.doNotify = false;
 
         // 1 - stop cluster
         JocClusterService.getInstance().stop(StartupMode.automatic, true);

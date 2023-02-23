@@ -3,20 +3,22 @@ package com.sos.joc.workflow.impl;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -26,11 +28,12 @@ import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
+import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
+import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.workflow.ModifyWorkflowPositions;
 import com.sos.joc.workflow.resource.IWorkflowPositionsModify;
@@ -38,6 +41,7 @@ import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
 
 import io.vavr.control.Either;
+import jakarta.ws.rs.Path;
 import js7.base.problem.Problem;
 import js7.data.controller.ControllerCommand.Response;
 import js7.data.workflow.Workflow;
@@ -98,40 +102,60 @@ public class WorkflowPositionsModifyImpl extends JOCResourceImpl implements IWor
     }
 
     private void postWorkflowInstructionsModify(Action action, ModifyWorkflowPositions modifyWorkflow) throws Exception {
+        SOSHibernateSession connection = null;
+        try {
+            String controllerId = modifyWorkflow.getControllerId();
+            DBItemJocAuditLog dbAuditLog = storeAuditLog(modifyWorkflow.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+            JControllerState currentState = Proxy.of(controllerId).currentState();
 
-        String controllerId = modifyWorkflow.getControllerId();
-        DBItemJocAuditLog dbAuditLog = storeAuditLog(modifyWorkflow.getAuditLog(), controllerId, CategoryType.CONTROLLER);
-        JControllerState currentState = Proxy.of(controllerId).currentState();
+            String versionId = modifyWorkflow.getWorkflowId().getVersionId();
+            String workflowPath = modifyWorkflow.getWorkflowId().getPath();
+            Either<Problem, JWorkflow> workflowE = null;
+            if (versionId != null && !versionId.isEmpty()) {
+                JWorkflowId wId = JWorkflowId.of(JocInventory.pathToName(workflowPath), versionId);
+                workflowE = currentState.repo().idToCheckedWorkflow(wId);
+                ProblemHelper.throwProblemIfExist(workflowE);
+            } else {
+                workflowE = currentState.repo().pathToCheckedWorkflow(WorkflowPath.of(workflowPath));
+                ProblemHelper.throwProblemIfExist(workflowE);
+            }
 
-        String versionId = modifyWorkflow.getWorkflowId().getVersionId();
-        String workflowPath = modifyWorkflow.getWorkflowId().getPath();
-        Either<Problem, JWorkflow> workflowE = null;
-        if (versionId != null && !versionId.isEmpty()) {
-            JWorkflowId wId = JWorkflowId.of(JocInventory.pathToName(workflowPath), versionId);
-            workflowE = currentState.repo().idToCheckedWorkflow(wId);
-            ProblemHelper.throwProblemIfExist(workflowE);
-        } else {
-            workflowE = currentState.repo().pathToCheckedWorkflow(WorkflowPath.of(workflowPath));
-            ProblemHelper.throwProblemIfExist(workflowE);
+            JWorkflow workflow = workflowE.get();
+            checkFolderPermissions(WorkflowPaths.getPath(workflow.id().path().string()));
+
+            // TODO JOC-1453 consider labels
+            Map<String, List<Object>> labelMap = Collections.emptyMap();
+            if (modifyWorkflow.getPositions().stream().anyMatch(pos -> pos instanceof String)) {
+                // throw new JocNotImplementedException("The use of labels as positions is not yet implemented");
+
+                connection = Globals.createSosHibernateStatelessConnection(API_CALL + action.name().toLowerCase());
+                DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
+                DeployedContent dbWorkflow = dbLayer.getDeployedInventory(controllerId, DeployType.WORKFLOW.intValue(), workflowPath);
+                Globals.disconnect(connection);
+                if (dbWorkflow != null) {
+                    com.sos.inventory.model.workflow.Workflow w = JocInventory.workflowContent2Workflow(dbWorkflow.getContent());
+                    if (w != null) {
+                        labelMap = WorkflowsHelper.getLabelToPositionsMap(w);
+                    }
+                }
+            }
+
+            Set<Either<Problem, JPosition>> jPosEithers = getJPositions(modifyWorkflow.getPositions(), labelMap);
+
+            jPosEithers.stream().filter(Either::isLeft).findAny().ifPresent(e -> ProblemHelper.throwProblemIfExist(e));
+            Set<JPosition> positions = jPosEithers.stream().filter(Either::isRight).map(Either::get).collect(Collectors.toSet());
+            checkWorkflow(action, workflow, positions, currentState, new ArrayList<>(positions));
+
+            command(controllerId, action, workflow, positions, dbAuditLog);
+        } finally {
+            Globals.disconnect(connection);
         }
-
-        JWorkflow workflow = workflowE.get();
-        checkFolderPermissions(WorkflowPaths.getPath(workflow.id().path().string()));
-        
-        // TODO JOC-1453 consider labels
-        if (modifyWorkflow.getPositions().stream().anyMatch(pos -> pos instanceof String)) {
-            throw new JocNotImplementedException("The use of labels as positions is not yet implemented");
-        }
-        
-        @SuppressWarnings("unchecked")
-        Set<Either<Problem, JPosition>> jPosEithers = modifyWorkflow.getPositions().stream().filter(pos -> pos instanceof List<?>).map(
-                pos -> (List<Object>) pos).map(pos -> JPosition.fromList(pos)).collect(Collectors.toSet());
-
-        jPosEithers.stream().filter(Either::isLeft).findAny().ifPresent(e -> ProblemHelper.throwProblemIfExist(e));
-        Set<JPosition> positions =jPosEithers.stream().filter(Either::isRight).map(Either::get).collect(Collectors.toSet());
-        checkWorkflow(action, workflow, positions, currentState, new ArrayList<>(positions));
-
-        command(controllerId, action, workflow, positions, dbAuditLog);
+    }
+    
+    @SuppressWarnings("unchecked")
+    private Set<Either<Problem, JPosition>> getJPositions(List<Object> poss, Map<String, List<Object>> labelMap) {
+        return poss.stream().filter(Objects::nonNull).map(ep -> ep instanceof String ? labelMap.get((String) ep) : (List<Object>) ep).filter(
+                Objects::nonNull).map(pos -> JPosition.fromList(pos)).collect(Collectors.toSet());
     }
 
     private void checkWorkflow(Action action, JWorkflow workflow, Set<JPosition> positions, JControllerState currentState,
