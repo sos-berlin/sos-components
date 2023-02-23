@@ -2,15 +2,17 @@ package com.sos.joc.descriptor.impl;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.descriptor.resource.ICopyDescriptor;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.inventory.impl.CopyConfigurationResourceImpl;
+import com.sos.joc.inventory.impl.common.ACopyConfiguration;
 import com.sos.joc.model.descriptor.copy.RequestFilter;
 import com.sos.schema.JsonValidator;
 
+import jakarta.ws.rs.Path;
 
-public class CopyDescriptorImpl extends JOCResourceImpl implements ICopyDescriptor {
+
+@Path("descriptor")
+public class CopyDescriptorImpl extends ACopyConfiguration implements ICopyDescriptor {
 
     @Override
     public JOCDefaultResponse copy(String accessToken, byte[] body) {
@@ -22,8 +24,7 @@ public class CopyDescriptorImpl extends JOCResourceImpl implements ICopyDescript
 
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
             if (response == null) {
-                CopyConfigurationResourceImpl copyConfiguration = new CopyConfigurationResourceImpl();
-                response = copyConfiguration.copy(in, true);
+                response = copy(in, true, IMPL_PATH_COPY);
             }
             return response;
         } catch (JocException e) {

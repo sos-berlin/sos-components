@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -111,6 +112,7 @@ public class JocInventory {
             put(ConfigurationType.NOTICEBOARD, "classpath:/raml/inventory/schemas/board/board-schema.json");
             put(ConfigurationType.FOLDER, "classpath:/raml/api/schemas/inventory/folder-schema.json");
             put(ConfigurationType.DEPLOYMENTDESCRIPTOR, "classpath:/raml/inventory/schemas/deploymentDescriptor/deploymentDescriptor-schema.json");
+            put(ConfigurationType.DESCRIPTORFOLDER, "classpath:/raml/api/schemas/inventory/folder-schema.json");
         }
     });
 
@@ -161,6 +163,7 @@ public class JocInventory {
             put(ConfigurationType.NOTICEBOARD, Board.class);
             put(ConfigurationType.FOLDER, Folder.class);
             put(ConfigurationType.DEPLOYMENTDESCRIPTOR, DeploymentDescriptor.class);
+            put(ConfigurationType.DESCRIPTORFOLDER, Folder.class);
         }
     });
 
@@ -194,6 +197,10 @@ public class JocInventory {
         return result;
     }
 
+    public static boolean isDescriptor (ConfigurationType type) {
+        return EnumSet.of(ConfigurationType.DEPLOYMENTDESCRIPTOR, ConfigurationType.DESCRIPTORFOLDER).contains(type);
+    }
+    
     public static boolean isFolder(ConfigurationType type) {
         return ConfigurationType.FOLDER.equals(type) || ConfigurationType.DESCRIPTORFOLDER.equals(type);
     }
@@ -321,7 +328,7 @@ public class JocInventory {
         if (parentFolder != null) {
             String newFolder = parentFolder.toString().replace('\\', '/');
             if (!ROOT_FOLDER.equals(newFolder)) {
-                DBItemInventoryConfiguration newDbFolder = dbLayer.getConfiguration(newFolder, ConfigurationType.FOLDER.intValue());
+                DBItemInventoryConfiguration newDbFolder = dbLayer.getConfiguration(newFolder, folderType.intValue());
                 if (newDbFolder == null) {
                     newDbFolder = new DBItemInventoryConfiguration();
                     newDbFolder.setPath(newFolder);
@@ -364,7 +371,7 @@ public class JocInventory {
         if (parentFolder != null) {
             String newFolder = parentFolder.toString().replace('\\', '/');
             if (!ROOT_FOLDER.equals(newFolder)) {
-                DBItemInventoryConfigurationTrash newDbFolder = dbLayer.getTrashConfiguration(newFolder, ConfigurationType.FOLDER.intValue());
+                DBItemInventoryConfigurationTrash newDbFolder = dbLayer.getTrashConfiguration(newFolder, folderType.intValue());
                 if (newDbFolder == null) {
                     newDbFolder = new DBItemInventoryConfigurationTrash();
                     newDbFolder.setPath(newFolder);
@@ -399,7 +406,7 @@ public class JocInventory {
     
     public static List<DBItemInventoryConfiguration> deleteEmptyFolders(InventoryDBLayer dbLayer, DBItemInventoryConfiguration folder, 
             boolean forDescriptors) throws SOSHibernateException {
-        List<DBItemInventoryConfiguration> folderContent = dbLayer.getFolderContent(folder.getPath(), true, null);
+        List<DBItemInventoryConfiguration> folderContent = dbLayer.getFolderContent(folder.getPath(), true, null, forDescriptors);
         if (folderContent == null) {
             folderContent = new ArrayList<DBItemInventoryConfiguration>();
         }
@@ -415,7 +422,7 @@ public class JocInventory {
     
     public static List<DBItemInventoryConfiguration> deleteEmptyFolders(InventoryDBLayer dbLayer, String folder, boolean forDescriptors)
             throws SOSHibernateException {
-        List<DBItemInventoryConfiguration> folderContent = dbLayer.getFolderContent(folder, true, null);
+        List<DBItemInventoryConfiguration> folderContent = dbLayer.getFolderContent(folder, true, null, forDescriptors);
         if (folderContent == null) {
             folderContent = new ArrayList<DBItemInventoryConfiguration>();
         }

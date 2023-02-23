@@ -269,7 +269,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
     private List<Err419> updateReleasedFolder(DBItemInventoryConfiguration conf, InventoryDBLayer dbLayer, Map<String, Workflow> cachedWorkflows,
             DBItemJocAuditLog dbAuditLog) throws SOSHibernateException, JsonParseException, JsonMappingException, IOException {
         List<Err419> errors = new ArrayList<>();
-        List<DBItemInventoryConfiguration> folderContent = dbLayer.getFolderContent(conf.getPath(), true, JocInventory.getReleasableTypes());
+        List<DBItemInventoryConfiguration> folderContent = dbLayer.getFolderContent(conf.getPath(), true, JocInventory.getReleasableTypes(), false);
 
         // quick and dirty TODO version with more performance
         if (folderContent != null && !folderContent.isEmpty()) {
@@ -406,7 +406,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
 
     private static void deleteReleasedFolder(DBItemInventoryConfiguration conf, InventoryDBLayer dbLayer, DBItemJocAuditLog dbAuditLog,
             boolean withDeletionOfEmptyFolders) throws SOSHibernateException {
-        List<DBItemInventoryConfiguration> folderContent = dbLayer.getFolderContent(conf.getPath(), true, JocInventory.getReleasableTypes());
+        List<DBItemInventoryConfiguration> folderContent = dbLayer.getFolderContent(conf.getPath(), true, JocInventory.getReleasableTypes(), false);
 
         if (folderContent != null && !folderContent.isEmpty()) {
             dbLayer.deleteReleasedItemsByConfigurationIds(folderContent.stream().map(DBItemInventoryConfiguration::getId).distinct().collect(
