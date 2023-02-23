@@ -2,6 +2,7 @@ package com.sos.joc.descriptor.impl;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.descriptor.resource.IStoreDescriptor;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
@@ -23,8 +24,7 @@ public class StoreDescriptorImpl extends AStoreConfiguration implements IStoreDe
             JsonValidator.validate(body, ConfigurationObject.class, true);
             ConfigurationObject filter = Globals.objectMapper.readValue(body, ConfigurationObject.class);
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
-            if(!ConfigurationType.DEPLOYMENTDESCRIPTOR.equals(filter.getObjectType()) 
-                    && !ConfigurationType.DESCRIPTORFOLDER.equals(filter.getObjectType())) {
+            if(!JocInventory.isDescriptor(filter.getObjectType())) {
                 throw new JocBadRequestException("wrong object type, only DEPLOYMENTDESCRIPTOR or DESCRIPTORFOLDER are allowed.");
             }
             if (response == null) {

@@ -27,6 +27,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class RequestFilters {
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("paths")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     private Set<RequestFilter> paths = new LinkedHashSet<RequestFilter>();
@@ -39,11 +44,21 @@ public class RequestFilters {
     @JsonProperty("auditLog")
     private AuditParams auditLog;
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("paths")
     public Set<RequestFilter> getPaths() {
         return paths;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("paths")
     public void setPaths(Set<RequestFilter> paths) {
         this.paths = paths;

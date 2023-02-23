@@ -15,10 +15,10 @@ import com.sos.schema.JsonValidator;
 import jakarta.ws.rs.Path;
 
 
+@Path("descriptor")
 public class ReadFolderDescriptorImpl extends AReadFolder implements IReadFolderDescriptor {
 
     @Override
-    @Path(PATH_READ_FOLDER)
     public JOCDefaultResponse postReadFolder(String accessToken, byte[] body) {
         try {
             initLogging(IMPL_PATH_READ_FOLDER, body, accessToken);
@@ -40,7 +40,6 @@ public class ReadFolderDescriptorImpl extends AReadFolder implements IReadFolder
     }
     
     @Override
-    @Path(PATH_TRASH_READ_FOLDER)
     public JOCDefaultResponse postReadTrashFolder(String accessToken, byte[] body) {
         try {
             initLogging(IMPL_PATH_TRASH_READ_FOLDER, body, accessToken);

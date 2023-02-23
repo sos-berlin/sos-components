@@ -12,10 +12,10 @@ import com.sos.schema.JsonValidator;
 import jakarta.ws.rs.Path;
 
 
+@Path("descriptor")
 public class RemoveDescriptorImpl extends ADeleteConfiguration implements IRemoveDescriptor {
 
     @Override
-    @Path(PATH_REMOVE)
     public JOCDefaultResponse remove(String accessToken, byte[] body) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
@@ -38,7 +38,6 @@ public class RemoveDescriptorImpl extends ADeleteConfiguration implements IRemov
     }
 
     @Override
-    @Path(PATH_REMOVE_FOLDER)
     public JOCDefaultResponse removeFolder(String accessToken, byte[] body) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
@@ -61,7 +60,6 @@ public class RemoveDescriptorImpl extends ADeleteConfiguration implements IRemov
     }
 
     @Override
-    @Path(IRemoveDescriptor.PATH_TRASH_DELETE)
     public JOCDefaultResponse deleteFromTrash(String accessToken, byte[] body) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
@@ -84,7 +82,6 @@ public class RemoveDescriptorImpl extends ADeleteConfiguration implements IRemov
     }
 
     @Override
-    @Path(PATH_TRASH_DELETE_FOLDER)
     public JOCDefaultResponse deleteFolderFromTrash(String accessToken, byte[] body) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
