@@ -57,7 +57,7 @@ public class ClusterWatch {
     
     private ClusterWatch() {
         EventBus.getInstance().register(this);
-        clusterId = Globals.getClusterId() + "#" + Globals.getOrdering();
+        clusterId = Globals.getJocId();
         memberId = Globals.getMemberId();
     }
     
