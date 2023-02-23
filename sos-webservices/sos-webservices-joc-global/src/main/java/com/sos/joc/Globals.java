@@ -398,6 +398,10 @@ public class Globals {
         clusterId = val;
     }
     
+    public static String getJocId() throws JocConfigurationException {
+        return getClusterId() + "#" + getOrdering();
+    }
+    
     public static Integer getOrdering() throws JocConfigurationException {
         if (ordering == null) {
             if (sosCockpitProperties == null) {
