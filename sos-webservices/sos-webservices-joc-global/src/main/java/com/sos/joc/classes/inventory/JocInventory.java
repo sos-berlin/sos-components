@@ -281,8 +281,15 @@ public class JocInventory {
         return releasables;
     }
     
+    public static Workflow workflowContent2Workflow(String content) throws JsonParseException, JsonMappingException, IOException {
+        if (SOSString.isEmpty(content)) {
+            return null;
+        }
+        return com.sos.joc.classes.inventory.WorkflowConverter.convertInventoryWorkflow(content);
+    }
+
     public static IConfigurationObject content2IJSObject(String content, ConfigurationType type) throws JsonParseException, JsonMappingException,
-    IOException {
+            IOException {
         if (SOSString.isEmpty(content) || ConfigurationType.FOLDER.equals(type)) {
             return null;
         }

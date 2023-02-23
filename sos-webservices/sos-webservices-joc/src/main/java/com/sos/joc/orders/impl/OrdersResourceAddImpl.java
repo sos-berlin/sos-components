@@ -3,7 +3,9 @@ package com.sos.joc.orders.impl;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -12,11 +14,14 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSCheckJavaVariableName;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -28,6 +33,10 @@ import com.sos.joc.classes.order.CheckedAddOrdersPositions;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowPaths;
+import com.sos.joc.classes.workflow.WorkflowsHelper;
+import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
+import com.sos.joc.db.deploy.DeployedConfigurationFilter;
+import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.JocException;
@@ -62,6 +71,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
 
     @Override
     public JOCDefaultResponse postOrdersAdd(String accessToken, byte[] filterBytes) {
+        SOSHibernateSession connection = null;
         try {
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validate(filterBytes, AddOrders.class);
@@ -74,22 +84,51 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             }
             
             boolean hasManagePositionsPermission = getControllerPermissions(controllerId, accessToken).getOrders().getManagePositions();
-            Predicate<AddOrder> requestHasPositionSettings = o -> (o.getStartPosition() != null || (o.getEndPositions() != null && !o
-                    .getEndPositions().isEmpty()));
-            if (!hasManagePositionsPermission && addOrders.getOrders().parallelStream().anyMatch(requestHasPositionSettings)) {
+            Predicate<AddOrder> requestHasStartPositionSettings = o -> o.getStartPosition() != null;
+            Predicate<AddOrder> requestHasEndPositionSettings = o -> o.getEndPositions() != null && !o.getEndPositions().isEmpty();
+            if (!hasManagePositionsPermission && addOrders.getOrders().parallelStream().anyMatch(requestHasStartPositionSettings.or(
+                    requestHasEndPositionSettings))) {
                 return accessDeniedResponse("Access denied for setting start-/endpositions");
             }
             
             // TODO JOC-1453
-            if (addOrders.getOrders().stream().map(AddOrder::getStartPosition).filter(Objects::nonNull).anyMatch(o -> o instanceof String)) {
-                throw new JocNotImplementedException("The use of labels as a start position is not yet implemented");
-            }
-            if (addOrders.getOrders().stream().map(AddOrder::getEndPositions).filter(Objects::nonNull).anyMatch(l -> l.stream().filter(
-                    Objects::nonNull).anyMatch(o -> o instanceof String))) {
-                throw new JocNotImplementedException("The use of labels as end positions is not yet implemented");
-            }
-
+//            if (addOrders.getOrders().stream().map(AddOrder::getStartPosition).filter(Objects::nonNull).anyMatch(o -> o instanceof String)) {
+//                throw new JocNotImplementedException("The use of labels as a start position is not yet implemented");
+//            }
+//            if (addOrders.getOrders().stream().map(AddOrder::getEndPositions).filter(Objects::nonNull).anyMatch(l -> l.stream().filter(
+//                    Objects::nonNull).anyMatch(o -> o instanceof String))) {
+//                throw new JocNotImplementedException("The use of labels as end positions is not yet implemented");
+//            }
+            
+            
             DBItemJocAuditLog dbAuditLog = storeAuditLog(addOrders.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+            
+            // TODO JOC-1453
+            Set<String> workflowsWithLabels = Stream.concat(addOrders.getOrders().stream().filter(requestHasStartPositionSettings).filter(ao -> ao
+                    .getStartPosition() instanceof String).map(AddOrder::getWorkflowPath).map(JocInventory::pathToName), addOrders.getOrders().stream().filter(
+                            requestHasEndPositionSettings).filter(ao -> ao.getEndPositions().stream().filter(Objects::nonNull).anyMatch(
+                                    o -> o instanceof String)).map(AddOrder::getWorkflowPath).map(JocInventory::pathToName)).collect(Collectors.toSet());
+            
+            Map<String, Map<String, List<Object>>> workflowsWithLabelsMap = new HashMap<>();
+            if (!workflowsWithLabels.isEmpty()) {
+                connection = Globals.createSosHibernateStatelessConnection(API_CALL);
+                DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
+                DeployedConfigurationFilter dbFilter = new DeployedConfigurationFilter();
+                dbFilter.setControllerId(controllerId);
+                dbFilter.setNames(workflowsWithLabels);
+                dbFilter.setObjectTypes(Collections.singleton(DeployType.WORKFLOW.intValue()));
+                List<DeployedContent> dbWorkflows = dbLayer.getDeployedInventory(dbFilter);
+                Globals.disconnect(connection);
+                connection = null;
+                if (dbWorkflows != null) {
+                    for (DeployedContent dbWorkflow : dbWorkflows) {
+                        com.sos.inventory.model.workflow.Workflow w = JocInventory.workflowContent2Workflow(dbWorkflow.getContent());
+                        if (w != null) {
+                            workflowsWithLabelsMap.put(dbWorkflow.getName(), WorkflowsHelper.getLabelToPositionsMap(w));
+                        }
+                    }
+                }
+            }
 
             final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             Predicate<AddOrder> permissions = order -> canAdd(WorkflowPaths.getPath(order.getWorkflowPath()), permittedFolders);
@@ -102,7 +141,6 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             final String defaultOrderName = SOSCheckJavaVariableName.makeStringRuleConform(getAccount());
             List<AuditLogDetail> auditLogDetails = new ArrayList<>();
 
-            @SuppressWarnings("unchecked")
             Function<AddOrder, Either<Err419, JFreshOrder>> mapper = order -> {
                 Either<Err419, JFreshOrder> either = null;
                 try {
@@ -119,19 +157,9 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                             workflow.getOrderPreparation())));
                     Set<String> reachablePositions = CheckedAddOrdersPositions.getReachablePositions(e.get());
                     
-                    // TODO JOC-1453 consider labels
-                    List<Object> startPosition = null;
-                    if (order.getStartPosition() != null && order.getStartPosition() instanceof List<?>) {
-                        startPosition = (List<Object>) order.getStartPosition();
-                    }
-                    List<List<Object>> endPositions = null;
-                    if (order.getEndPositions() != null) {
-                        endPositions = order.getEndPositions().stream().filter(Objects::nonNull).filter(ep -> ep instanceof List<?>).map(
-                                ep -> (List<Object>) ep).collect(Collectors.toList());
-                    }
-                    
-                    Optional<JPositionOrLabel> startPos = OrdersHelper.getStartPosition(startPosition, reachablePositions);
-                    Set<JPositionOrLabel> endPoss = OrdersHelper.getEndPosition(endPositions, reachablePositions);
+                    Map<String, List<Object>> labelMap = workflowsWithLabelsMap.getOrDefault(workflow.getPath(), Collections.emptyMap());
+                    Optional<JPositionOrLabel> startPos = OrdersHelper.getStartPosition(order.getStartPosition(), labelMap, reachablePositions);
+                    Set<JPositionOrLabel> endPoss = OrdersHelper.getEndPosition(order.getEndPositions(), labelMap, reachablePositions);
                     // TODO check if endPos not before startPos
                     
                     JFreshOrder o = OrdersHelper.mapToFreshOrder(order, zoneId, startPos, endPoss);
@@ -176,6 +204,8 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(connection);
         }
     }
 

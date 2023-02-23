@@ -173,8 +173,16 @@ public class AddOrder {
         this.arguments = arguments;
     }
 
+    @SuppressWarnings("unchecked")
     @JsonProperty("startPosition")
     public Object getStartPosition() {
+        if (startPosition != null) {
+            if (startPosition instanceof String && ((String) startPosition).isEmpty()) {
+                return null;
+            } else if (startPosition instanceof List<?> && ((List<Object>) startPosition).isEmpty()) {
+                return null;
+            }
+        }
         return startPosition;
     }
 

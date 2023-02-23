@@ -100,24 +100,26 @@ public class UpdateWorkflowsFromTemplatesImpl extends JOCResourceImpl implements
                     }
 
                     Map<String, JobTemplate> jobTemplates = Collections.emptyMap();
-                    Workflow workflow = (Workflow) JocInventory.content2IJSObject(dbWorkflow.getContent(), ConfigurationType.WORKFLOW);
-                    if (workflow.getJobs() != null && workflow.getJobs().getAdditionalProperties() != null && !workflow.getJobs()
-                            .getAdditionalProperties().isEmpty()) {
-                        // determine job template names from Workflow
-                        List<String> jobTemplateNamesAtWorkflow = workflow.getJobs().getAdditionalProperties().values().stream().map(
-                                Job::getJobTemplate).filter(Objects::nonNull).map(JobTemplateRef::getName).filter(Objects::nonNull).filter(s -> !s
-                                        .isEmpty()).collect(Collectors.toList());
-                        // read job template items from DB
-                        List<DBItemInventoryReleasedConfiguration> jts = dbLayer.getReleasedJobTemplatesByNames(jobTemplateNamesAtWorkflow);
-                        
-                        jobTemplates = jts.stream().map(item -> JobTemplatesResourceImpl.getJobTemplate(item, false, jocError)).filter(
-                                Objects::nonNull).collect(Collectors.toMap(JobTemplate::getName, Function.identity()));
-                        
-                        for (String name : jobTemplateNamesAtWorkflow) {
-                            jobTemplates.putIfAbsent(name, null);
+                    Workflow workflow = JocInventory.workflowContent2Workflow(dbWorkflow.getContent());
+                    if (workflow != null) {
+                        if (workflow.getJobs() != null && workflow.getJobs().getAdditionalProperties() != null && !workflow.getJobs()
+                                .getAdditionalProperties().isEmpty()) {
+                            // determine job template names from Workflow
+                            List<String> jobTemplateNamesAtWorkflow = workflow.getJobs().getAdditionalProperties().values().stream().map(
+                                    Job::getJobTemplate).filter(Objects::nonNull).map(JobTemplateRef::getName).filter(Objects::nonNull).filter(s -> !s
+                                            .isEmpty()).collect(Collectors.toList());
+                            // read job template items from DB
+                            List<DBItemInventoryReleasedConfiguration> jts = dbLayer.getReleasedJobTemplatesByNames(jobTemplateNamesAtWorkflow);
+
+                            jobTemplates = jts.stream().map(item -> JobTemplatesResourceImpl.getJobTemplate(item, false, jocError)).filter(
+                                    Objects::nonNull).collect(Collectors.toMap(JobTemplate::getName, Function.identity()));
+
+                            for (String name : jobTemplateNamesAtWorkflow) {
+                                jobTemplates.putIfAbsent(name, null);
+                            }
                         }
+                        report.getWorkflows().add(propagate.template2Job(dbWorkflow, workflow, jobTemplates, dbLayer, now, dbAuditLog));
                     }
-                    report.getWorkflows().add(propagate.template2Job(dbWorkflow, workflow, jobTemplates, dbLayer, now, dbAuditLog));
                 }
             }
             Globals.commit(session);

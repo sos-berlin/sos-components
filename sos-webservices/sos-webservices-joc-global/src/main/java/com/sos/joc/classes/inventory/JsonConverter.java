@@ -516,6 +516,9 @@ public class JsonConverter {
 //            }
 //        } else {
             labelMap = WorkflowsHelper.getLabelToPositionsMapFromInventory(workflowName);
+            if (labelMap == null) {
+                return Collections.emptyMap();
+            }
 //        }
         return labelMap;
     }

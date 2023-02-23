@@ -1182,6 +1182,22 @@ public class OrdersHelper {
         return posList;
     }
     
+    @SuppressWarnings("unchecked")
+    public static Optional<JPositionOrLabel> getStartPosition(Object pos, Map<String, List<Object>> labelMap, Set<String> reachablePositions) {
+        List<Object> startPosition = null;
+        if (labelMap == null) {
+            labelMap = Collections.emptyMap(); 
+        }
+        if (pos != null) {
+            if (pos instanceof String) {
+                startPosition = labelMap.get((String) pos);
+            } else {
+                startPosition = (List<Object>) pos;
+            }
+        }
+        return getStartPosition(startPosition, reachablePositions, null);
+    }
+    
     public static Optional<JPositionOrLabel> getStartPosition(List<Object> pos, Set<String> reachablePositions) {
         return getStartPosition(pos, reachablePositions, null);
     }
@@ -1203,6 +1219,16 @@ public class OrdersHelper {
             }
         }
         return posOpt;
+    }
+    
+    @SuppressWarnings("unchecked")
+    public static Set<JPositionOrLabel> getEndPosition(List<Object> poss, Map<String, List<Object>> labelMap, Set<String> reachablePositions) {
+        List<List<Object>> endPositions = null;
+        if (poss != null) {
+            endPositions = poss.stream().filter(Objects::nonNull).map(ep -> ep instanceof String ? labelMap.get(
+                    (String) ep) : (List<Object>) ep).filter(Objects::nonNull).collect(Collectors.toList());
+        }
+        return getEndPositions(endPositions, reachablePositions, Collections.emptySet());
     }
     
     public static Set<JPositionOrLabel> getEndPosition(List<List<Object>> poss, Set<String> reachablePositions) {

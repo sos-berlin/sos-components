@@ -245,8 +245,7 @@ public class WorkflowsHelper {
             if (configs != null && !configs.isEmpty()) {
                 DBItemInventoryConfiguration config = configs.get(0);
                 try {
-                    return getLabelToPositionsMap((com.sos.inventory.model.workflow.Workflow) JocInventory.content2IJSObject(config.getContent(),
-                            ConfigurationType.WORKFLOW));
+                    return getLabelToPositionsMap(JocInventory.workflowContent2Workflow(config.getContent()));
                 } catch (Exception e) {
                     throw new DBInvalidDataException(e);
                 }
@@ -265,8 +264,7 @@ public class WorkflowsHelper {
             DeployedContent config = dbLayer.getDeployedInventory(controllerId, ConfigurationType.WORKFLOW.intValue(), workflowPath);
             if (config != null) {
                 try {
-                    return getLabelToPositionsMap((com.sos.inventory.model.workflow.Workflow) JocInventory.content2IJSObject(config.getContent(),
-                            ConfigurationType.WORKFLOW));
+                    return getLabelToPositionsMap(JocInventory.workflowContent2Workflow(config.getContent()));
                 } catch (Exception e) {
                     throw new DBInvalidDataException(e);
                 }
