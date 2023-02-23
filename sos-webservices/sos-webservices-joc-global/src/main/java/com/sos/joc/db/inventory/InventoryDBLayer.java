@@ -989,17 +989,29 @@ public class InventoryDBLayer extends DBLayer {
         }
     }
 
-    public List<DBItemInventoryConfiguration> getFolderContent(String folder, boolean recursive, Collection<Integer> types)
+    public List<DBItemInventoryConfiguration> getFolderContent(String folder, boolean recursive, Collection<Integer> types, boolean isDescriptor)
             throws SOSHibernateException {
-        return getFolderContent(folder, recursive, types, DBLayer.DBITEM_INV_CONFIGURATIONS);
+        List<DBItemInventoryConfiguration> folderContent = getFolderContent(folder, recursive, types, DBLayer.DBITEM_INV_CONFIGURATIONS);
+        final Predicate<DBItemInventoryConfiguration> filter = i -> JocInventory.isDescriptor(i.getTypeAsEnum()); 
+        if(isDescriptor) {
+            return folderContent.stream().filter(filter).collect(Collectors.toList());
+        } else {
+            return folderContent.stream().filter(filter.negate()).collect(Collectors.toList());
+        }
     }
 
-    public List<DBItemInventoryConfigurationTrash> getTrashFolderContent(String folder, boolean recursive, Collection<Integer> types)
+    public List<DBItemInventoryConfigurationTrash> getTrashFolderContent(String folder, boolean recursive, Collection<Integer> types, boolean isDescriptor)
             throws SOSHibernateException {
-        return getFolderContent(folder, recursive, types, DBLayer.DBITEM_INV_CONFIGURATION_TRASH);
+        List<DBItemInventoryConfigurationTrash> folderContent = getFolderContent(folder, recursive, types, DBLayer.DBITEM_INV_CONFIGURATION_TRASH);
+        final Predicate<DBItemInventoryConfigurationTrash> filter = i -> JocInventory.isDescriptor(i.getTypeAsEnum()); 
+        if(isDescriptor) {
+            return folderContent.stream().filter(filter).collect(Collectors.toList());
+        } else {
+            return folderContent.stream().filter(filter.negate()).collect(Collectors.toList());
+        }
     }
 
-    public <T> List<T> getFolderContent(String folder, boolean recursive, Collection<Integer> types, String tableName) throws SOSHibernateException {
+    private <T> List<T> getFolderContent(String folder, boolean recursive, Collection<Integer> types, String tableName) throws SOSHibernateException {
         if (folder == null) {
             folder = "/";
         }

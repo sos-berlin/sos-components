@@ -148,7 +148,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
                     folderPermissions);
             ResponseItem entity = new ResponseItem();
 
-            List<DBItemInventoryConfiguration> dbFolderContent = dbLayer.getFolderContent(config.getPath(), true, null);
+            List<DBItemInventoryConfiguration> dbFolderContent = dbLayer.getFolderContent(config.getPath(), true, null, false);
             DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
             for (DBItemInventoryConfiguration item : dbFolderContent) {
                 if (!item.getDeployed() && !item.getReleased() && !ConfigurationType.FOLDER.intValue().equals(item.getType())) {

@@ -2,22 +2,20 @@ package com.sos.joc.descriptor.impl;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.descriptor.resource.IRestoreDescriptor;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.inventory.impl.RestoreConfigurationResourceImpl;
+import com.sos.joc.inventory.impl.common.ARestoreConfiguration;
 import com.sos.joc.model.descriptor.restore.RequestFilter;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
 
 
-@Path(JocInventory.APPLICATION_PATH)
-public class RestoreDescriptorImpl extends JOCResourceImpl implements IRestoreDescriptor {
+public class RestoreDescriptorImpl extends ARestoreConfiguration implements IRestoreDescriptor {
 
     @Override
-    public JOCDefaultResponse restoreFromTrash(String accessToken, byte[] body) {
+    @Path(PATH_RESTORE)
+    public JOCDefaultResponse postRestoreFromTrash(String accessToken, byte[] body) {
         try {
             initLogging(IMPL_PATH_RESTORE, body, accessToken);
             JsonValidator.validate(body, RequestFilter.class, true);
@@ -25,8 +23,7 @@ public class RestoreDescriptorImpl extends JOCResourceImpl implements IRestoreDe
                     Globals.objectMapper.readValue(body, com.sos.joc.model.inventory.restore.RequestFilter.class);
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
             if (response == null) {
-                RestoreConfigurationResourceImpl restoreConfiguration = new RestoreConfigurationResourceImpl();
-                response = restoreConfiguration.restore(filter);
+                response = restore(filter, IMPL_PATH_RESTORE);
             }
             return response;
         } catch (JocException e) {

@@ -95,7 +95,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
 
             Set<String> events = new HashSet<>();
             
-            List<DBItemInventoryConfiguration> dBFolderContent = dbLayer.getFolderContent(config.getPath(), true, null).stream().filter(
+            List<DBItemInventoryConfiguration> dBFolderContent = dbLayer.getFolderContent(config.getPath(), true, null, false).stream().filter(
                     notFolderFilter).filter(regexFilter).collect(Collectors.toList());
             for (DBItemInventoryConfiguration item : dBFolderContent) {
                 String newName = item.getName().replaceAll(search, replace);
