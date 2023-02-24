@@ -135,7 +135,7 @@ public abstract class AStoreConfiguration extends JOCResourceImpl {
             item.setTitle(null);
         }
 
-        if (ConfigurationType.FOLDER.equals(in.getObjectType())) {
+        if (JocInventory.isFolder(in.getObjectType())) {
             item.setTitle(null);
             item.setValid(true);
             item.setContent(null);
