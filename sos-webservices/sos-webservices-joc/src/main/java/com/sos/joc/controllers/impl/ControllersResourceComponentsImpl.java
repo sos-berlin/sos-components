@@ -40,6 +40,7 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.controller.ClusterNodeStateText;
+import com.sos.joc.model.controller.ClusterState;
 import com.sos.joc.model.controller.ComponentStateText;
 import com.sos.joc.model.controller.Components;
 import com.sos.joc.model.controller.ConnectionStateText;
@@ -95,8 +96,7 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
                 return s;
             }).collect(Collectors.toList());
 
-            ClusterType clusterType = getClusterType(controllers);
-            entity.setClusterState(States.getClusterState(clusterType));
+            entity.setClusterState(getClusterState(controllers));
             entity.setControllers(controllers.stream().map(Controller.class::cast).collect(Collectors.toList()));
             entity.setJocs(setCockpits(connection, fakeControllerConnections, unknownControllerConnections));
             entity.setDatabase(getDB(connection));
@@ -294,8 +294,9 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
         return db;
     }
 
-    private static ClusterType getClusterType(List<ControllerAnswer> masters) {
+    private static ClusterState getClusterState(List<ControllerAnswer> masters) {
         ClusterType clusterType = null;
+        Optional<String> lossNode = Optional.empty();
         if (!masters.stream().anyMatch(m -> m.getRole() == Role.STANDALONE)) {
             int unreachables = masters.stream().filter(m -> m.getConnectionState().get_text() == ConnectionStateText.unreachable).mapToInt(m -> 1)
                     .sum();
@@ -309,10 +310,16 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
                 } else {
                     clusterType = masters.get(0).getClusterState();
                 }
+                
+                lossNode = masters.stream().map(m -> m.getLossNode()).filter(Objects::nonNull).findAny();
+                
             } else {
                 ControllerAnswer j = masters.stream().filter(m -> m.getConnectionState().get_text() != ConnectionStateText.unreachable).findAny()
                         .get();
                 clusterType = j.getClusterState();
+                if (j.getLossNode() != null) {
+                    lossNode = Optional.of(j.getLossNode());
+                }
                 if (j.isCoupledOrPreparedTobeCoupled()) {
                     int index = masters.indexOf(j);
                     int otherIndex = (index + 1) % 2;
@@ -330,7 +337,9 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
                 }
             }
         }
-        return clusterType;
+        ClusterState clusterState = States.getClusterState(clusterType);
+        lossNode.ifPresent(n -> clusterState.setLossNode(n));
+        return clusterState;
     }
 
 }
