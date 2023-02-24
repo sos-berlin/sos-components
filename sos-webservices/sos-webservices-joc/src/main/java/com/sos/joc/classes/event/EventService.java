@@ -397,7 +397,11 @@ public class EventService {
         eventSnapshot.setEventType("ProblemEvent");
         eventSnapshot.setObjectType(EventType.PROBLEM);
         //eventSnapshot.setAccessToken(evt.getKey());
-        eventSnapshot.setMessage("Loss node '" + evt.getNodeId() + "' of Controller Cluster '" + evt.getControllerId() + "' must be confirmed");
+        if (evt.getMessage() != null) {
+            eventSnapshot.setMessage(evt.getMessage());
+        } else {
+            eventSnapshot.setMessage("Loss instance '" + evt.getNodeId() + "' of Controller Cluster '" + evt.getControllerId() + "' must be confirmed");
+        }
         addEvent(eventSnapshot);
     }
 

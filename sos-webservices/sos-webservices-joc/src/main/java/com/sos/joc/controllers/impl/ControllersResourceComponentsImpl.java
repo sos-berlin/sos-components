@@ -343,7 +343,7 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
         ClusterState clusterState = States.getClusterState(clusterType);
         lossNode.ifPresent(n -> {
             clusterState.setLossNode(n);
-            EventBus.getInstance().post(new ClusterNodeLossEvent(controllerId, n));
+            EventBus.getInstance().post(new ClusterNodeLossEvent(controllerId, n, null, true));
         });
         return clusterState;
     }

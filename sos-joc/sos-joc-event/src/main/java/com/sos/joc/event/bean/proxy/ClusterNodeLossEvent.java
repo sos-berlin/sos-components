@@ -12,21 +12,28 @@ public class ClusterNodeLossEvent extends JOCEvent {
     public ClusterNodeLossEvent() {
     }
 
-    public ClusterNodeLossEvent(String controllerId, String nodeId) {
+    public ClusterNodeLossEvent(String controllerId, String nodeId, String message) {
         super(ClusterNodeLossEvent.class.getSimpleName(), controllerId, null);
         putVariable("nodeId", nodeId);
+        putVariable("message", message);
         putVariable("onlyProblem", false);
     }
     
-    public ClusterNodeLossEvent(String controllerId, String nodeId, boolean onlyProblem) {
+    public ClusterNodeLossEvent(String controllerId, String nodeId, String message, boolean onlyProblem) {
         super(ClusterNodeLossEvent.class.getSimpleName(), controllerId, null);
         putVariable("nodeId", nodeId);
+        putVariable("message", message);
         putVariable("onlyProblem", onlyProblem);
     }
     
     @JsonIgnore
     public String getNodeId() {
         return (String) getVariables().get("nodeId");
+    }
+    
+    @JsonIgnore
+    public String getMessage() {
+        return (String) getVariables().get("message");
     }
     
     @JsonIgnore

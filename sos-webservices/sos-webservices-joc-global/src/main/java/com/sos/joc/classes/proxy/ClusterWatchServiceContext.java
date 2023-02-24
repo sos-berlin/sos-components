@@ -53,7 +53,7 @@ public class ClusterWatchServiceContext {
             burstFilter = Instant.now().plusSeconds(120);
             LOGGER.warn("[ClusterWatchService] ClusterNodeLossNotConfirmedProblem of cluster '" + controllerId + "' received: " + problem
                     .messageWithCause());
-            EventBus.getInstance().post(new ClusterNodeLossEvent(controllerId, problem.event().lostNodeId().string()));
+            EventBus.getInstance().post(new ClusterNodeLossEvent(controllerId, problem.event().lostNodeId().string(), problem.messageWithCause()));
         }
     }
     
