@@ -3,6 +3,7 @@ package com.sos.joc.inventory.impl.common;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
@@ -146,8 +147,8 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             } else {
                 folder = JocInventory.getConfiguration(dbLayer, null, in.getPath(), ConfigurationType.FOLDER, folderPermissions);
             }
-            cancelOrders(accessToken, folder, in.getCancelOrdersDateFrom(),dbLayer);
             if (!forDescriptors) {
+                cancelOrders(accessToken, folder, in.getCancelOrdersDateFrom(),dbLayer);
                 ReleaseResourceImpl.delete(folder, dbLayer, dbAuditLog, false, false);
                 // TODO restrict to allowed Controllers
                 List<DBItemInventoryConfiguration> deployables = dbLayer.getFolderContent(folder.getPath(), true, JocInventory.getDeployableTypes(), forDescriptors);
@@ -157,6 +158,12 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                     DeleteDeployments.deleteFolder(request, folder.getPath(), true, Proxies.getControllerDbInstances().keySet(),
                             new DBLayerDeploy(session), account, accessToken, getJocError(), dbAuditLog.getId(), true, false, in.getCancelOrdersDateFrom());
                 }
+            } else {
+                List<DBItemInventoryConfiguration> folderContent = dbLayer.getFolderContent(folder.getPath(), true, Collections.singleton(ConfigurationType.DEPLOYMENTDESCRIPTOR.intValue()), forDescriptors);
+                for (DBItemInventoryConfiguration descriptor : folderContent) {
+                    session.delete(descriptor);
+                }
+                
             }
             JocInventory.deleteEmptyFolders(dbLayer, folder.getPath(), forDescriptors);
             

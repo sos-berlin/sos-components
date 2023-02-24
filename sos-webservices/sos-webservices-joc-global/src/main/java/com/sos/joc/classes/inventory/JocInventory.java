@@ -429,7 +429,7 @@ public class JocInventory {
         if (!ROOT_FOLDER.equals(folder)) {
             DBItemInventoryConfiguration dbFolder = null;
             if(forDescriptors) {
-                dbFolder = dbLayer.getConfiguration(folder, ConfigurationType.DEPLOYMENTDESCRIPTOR.intValue());
+                dbFolder = dbLayer.getConfiguration(folder, ConfigurationType.DESCRIPTORFOLDER.intValue());
             } else {
                 dbFolder = dbLayer.getConfiguration(folder, ConfigurationType.FOLDER.intValue());
             }

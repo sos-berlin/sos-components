@@ -1,5 +1,6 @@
 package com.sos.joc.descriptor.impl;
 
+import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import com.sos.joc.Globals;
@@ -48,7 +49,7 @@ public class RemoveDescriptorImpl extends ADeleteConfiguration implements IRemov
             JsonValidator.validate(body, RequestFolder.class, true);
             com.sos.joc.model.inventory.delete.RequestFolder in = 
                     Globals.objectMapper.readValue(body, com.sos.joc.model.inventory.delete.RequestFolder.class);
-
+            in.setObjectTypes(Arrays.asList(new ConfigurationType[] {ConfigurationType.DEPLOYMENTDESCRIPTOR, ConfigurationType.DESCRIPTORFOLDER}));
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
             if (response == null) {
                 response = removeFolder(accessToken, in, true, IMPL_PATH_REMOVE_FOLDER);
