@@ -41,6 +41,7 @@ public class ClusterWatchServiceContext {
         this.controllerId = controllerId;
         this.controllerApi = controllerApi;
         this.service = controllerApi.startClusterWatch(ClusterWatchId.of(clusterWatchId), startEventbus()).get();
+        logClusterState(primaryId, backupId);
     }
     
     private JStandardEventBus<ClusterNodeLossNotConfirmedProblem> startEventbus() {
@@ -62,12 +63,12 @@ public class ClusterWatchServiceContext {
     }
     
     protected NodeId getClusterNodeLoss() {
-        if (service.clusterNodeLossEventToBeConfirmed(primaryId).isDefined()) {
-            return primaryId;
-        }
-        if (service.clusterNodeLossEventToBeConfirmed(backupId).isDefined()) {
-            return backupId;
-        }
+//        if (OptionConverters.toJava(service.clusterNodeLossEventToBeConfirmed(primaryId)).isPresent()) {
+//            return primaryId;
+//        }
+//        if (OptionConverters.toJava(service.clusterNodeLossEventToBeConfirmed(backupId)).isPresent()) {
+//            return backupId;
+//        }
         return lossNode;
     }
     
@@ -87,13 +88,6 @@ public class ClusterWatchServiceContext {
 //        if (service.clusterNodeLossEventToBeConfirmed(lossNodeId).isDefined()) {
 //            throw new ControllerConflictException("The cluster node with id '" + lossNodeId.string() + "' is not lost.");
 //        } else {
-            LOGGER.info("[ClusterWatchService] " + OptionConverters.toJava(service.clusterNodeLossEventToBeConfirmed(lossNodeId)).get().toString());
-            scala.util.Either<Problem, ClusterState> state = service.clusterState();
-            if (state.isLeft()) {
-                LOGGER.info("[ClusterWatchService] " + OptionConverters.toJava(state.left().toOption()).get().toString());
-            } else {
-                LOGGER.info("[ClusterWatchService] " + OptionConverters.toJava(state.toOption()).get().toString());
-            }
             LOGGER.info("[ClusterWatchService] send service.confirmNodeLoss(" + lossNodeId.string() + ")");
             scala.util.Either<Problem,?> checked = service.confirmNodeLoss(lossNodeId);
             if (checked.isLeft()) {
@@ -102,6 +96,7 @@ public class ClusterWatchServiceContext {
                 burstFilter = null;
                 lossNode = null;
                 message = null;
+                logClusterState(lossNodeId);
             }
 //        }
 //        if (service.clusterNodeLossEventToBeConfirmed(lossNodeId).isDefined()) {
@@ -131,6 +126,21 @@ public class ClusterWatchServiceContext {
             }
         }
         return true;
+    }
+    
+    private void logClusterState(NodeId... lossNodeIds) {
+        if (lossNodeIds != null) {
+            for (NodeId lossNodeId : lossNodeIds) {
+                OptionConverters.toJava(service.clusterNodeLossEventToBeConfirmed(lossNodeId)).ifPresent(e -> LOGGER.info("[ClusterWatchService] "
+                        + lossNodeId + ": " + e.toString()));
+            }
+        }
+        scala.util.Either<Problem, ClusterState> state = service.clusterState();
+        if (state.isLeft()) {
+            LOGGER.info("[ClusterWatchService] " + OptionConverters.toJava(state.left().toOption()).get().toString());
+        } else {
+            LOGGER.info("[ClusterWatchService] " + OptionConverters.toJava(state.toOption()).get().toString());
+        }
     }
 
 }
