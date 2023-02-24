@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
@@ -228,6 +229,13 @@ public class ClusterWatch {
         if (isAlive(controllerId)) {
             startedWatches.get(controllerId).confirmNodeLoss(NodeId.of(nodeId));
         }
+    }
+    
+    public Optional<String> getAndCleanLastMessage(String controllerId) {
+        if (isAlive(controllerId)) {
+            return startedWatches.get(controllerId).getAndCleanLastMessage();
+        }
+        return Optional.empty();
     }
     
     private Stream<String> jocIsClusterWatch(String controllerId, InventoryAgentInstancesDBLayer dbLayer) {
