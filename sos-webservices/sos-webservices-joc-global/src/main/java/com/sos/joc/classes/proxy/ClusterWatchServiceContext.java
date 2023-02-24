@@ -31,6 +31,7 @@ public class ClusterWatchServiceContext {
     private static final NodeId primaryId = NodeId.of("Primary");
     private static final NodeId backupId = NodeId.of("Backup");
     private AtomicInteger burstFilter = new AtomicInteger(0);
+    private NodeId lossNode = null;
     
     protected ClusterWatchServiceContext(String controllerId, String clusterWatchId, JControllerApi controllerApi) throws InterruptedException,
             ExecutionException {
@@ -46,6 +47,7 @@ public class ClusterWatchServiceContext {
     }
     
     private void onNodeLossNotConfirmedProblem(ClusterNodeLossNotConfirmedProblem problem) {
+        lossNode = problem.event().lostNodeId();
         if (burstFilter.getAndAdd(1) % 36 == 0) {
             LOGGER.warn("[ClusterWatchService] ClusterNodeLossNotConfirmedProblem of cluster '" + controllerId + "' received: " + problem
                     .messageWithCause());
@@ -60,7 +62,7 @@ public class ClusterWatchServiceContext {
         if (service.clusterNodeLossEventToBeConfirmed(backupId).isDefined()) {
             return backupId;
         }
-        return null;
+        return lossNode;
     }
     
     protected void confirmNodeLoss(NodeId lossNodeId) throws ControllerObjectNotExistException, ControllerConflictException, JocBadRequestException {
@@ -78,6 +80,7 @@ public class ClusterWatchServiceContext {
                 throw new JocBadRequestException(OptionConverters.toJava(checked.left().toOption()).get().toString());
             } else {
                 burstFilter.set(0);
+                lossNode = null;
             }
         }
 //        if (service.clusterNodeLossEventToBeConfirmed(lossNodeId).isEmpty()) {
