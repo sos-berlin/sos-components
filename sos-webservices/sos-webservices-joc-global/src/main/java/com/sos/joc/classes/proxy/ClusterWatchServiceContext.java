@@ -1,8 +1,8 @@
 package com.sos.joc.classes.proxy;
 
+import java.time.Instant;
 import java.util.Collections;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +30,7 @@ public class ClusterWatchServiceContext {
     private JControllerApi controllerApi;
     private static final NodeId primaryId = NodeId.of("Primary");
     private static final NodeId backupId = NodeId.of("Backup");
-    private AtomicInteger burstFilter = new AtomicInteger(0);
+    private Instant burstFilter = null;
     private NodeId lossNode = null;
     
     protected ClusterWatchServiceContext(String controllerId, String clusterWatchId, JControllerApi controllerApi) throws InterruptedException,
@@ -48,7 +48,9 @@ public class ClusterWatchServiceContext {
     
     private void onNodeLossNotConfirmedProblem(ClusterNodeLossNotConfirmedProblem problem) {
         lossNode = problem.event().lostNodeId();
-        if (burstFilter.getAndAdd(1) % 36 == 0) {
+        Instant now = Instant.now();
+        if (burstFilter == null || !burstFilter.isAfter(now)) {
+            burstFilter = Instant.now().plusSeconds(120);
             LOGGER.warn("[ClusterWatchService] ClusterNodeLossNotConfirmedProblem of cluster '" + controllerId + "' received: " + problem
                     .messageWithCause());
             EventBus.getInstance().post(new ClusterNodeLossEvent(controllerId, problem.event().lostNodeId().string()));
@@ -72,18 +74,18 @@ public class ClusterWatchServiceContext {
         if (!primaryId.equals(lossNodeId) && !backupId.equals(lossNodeId)) {
             throw new ControllerObjectNotExistException("Invalid cluster node id '" + lossNodeId.string() + "'. Must be 'Primary' or 'Backup'.");
         }
-        if (service.clusterNodeLossEventToBeConfirmed(lossNodeId).isDefined()) {
-            throw new ControllerConflictException("The cluster node with id '" + lossNodeId.string() + "' is not lost.");
-        } else {
+//        if (service.clusterNodeLossEventToBeConfirmed(lossNodeId).isDefined()) {
+//            throw new ControllerConflictException("The cluster node with id '" + lossNodeId.string() + "' is not lost.");
+//        } else {
             scala.util.Either<Problem,?> checked = service.confirmNodeLoss(lossNodeId);
             if (checked.isLeft()) {
                 throw new JocBadRequestException(OptionConverters.toJava(checked.left().toOption()).get().toString());
             } else {
-                burstFilter.set(0);
+                burstFilter = null;
                 lossNode = null;
             }
-        }
-//        if (service.clusterNodeLossEventToBeConfirmed(lossNodeId).isEmpty()) {
+//        }
+//        if (service.clusterNodeLossEventToBeConfirmed(lossNodeId).isDefined()) {
 //            ClusterNodeLostEvent clusterNodeLostEvent = service.clusterNodeLossEventToBeConfirmed(lossNodeId).get();
 //            // assert clusterNodeLostEvent.lostNodeId().equals(primaryId);
 //

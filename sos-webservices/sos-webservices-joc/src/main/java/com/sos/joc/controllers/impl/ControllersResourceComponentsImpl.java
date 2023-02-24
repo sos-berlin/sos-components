@@ -14,9 +14,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.json.Json;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.UriInfo;
 
 import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -35,6 +32,8 @@ import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
 import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
 import com.sos.joc.db.joc.DBItemJocCluster;
 import com.sos.joc.db.joc.DBItemJocInstance;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.proxy.ClusterNodeLossEvent;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocException;
@@ -52,6 +51,10 @@ import com.sos.joc.model.joc.Cockpit;
 import com.sos.joc.model.joc.ControllerConnectionState;
 import com.sos.joc.model.joc.DB;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.UriInfo;
 
 @Path("controller")
 public class ControllersResourceComponentsImpl extends JOCResourceImpl implements IControllersResourceComponents {
@@ -95,8 +98,8 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
                 s.setState(States.getConnectionState(ConnectionStateText.unknown));
                 return s;
             }).collect(Collectors.toList());
-
-            entity.setClusterState(getClusterState(controllers));
+            
+            entity.setClusterState(getClusterState(controllers, controllerIdObj.getControllerId()));
             entity.setControllers(controllers.stream().map(Controller.class::cast).collect(Collectors.toList()));
             entity.setJocs(setCockpits(connection, fakeControllerConnections, unknownControllerConnections));
             entity.setDatabase(getDB(connection));
@@ -294,7 +297,7 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
         return db;
     }
 
-    private static ClusterState getClusterState(List<ControllerAnswer> masters) {
+    private static ClusterState getClusterState(List<ControllerAnswer> masters, String controllerId) {
         ClusterType clusterType = null;
         Optional<String> lossNode = Optional.empty();
         if (!masters.stream().anyMatch(m -> m.getRole() == Role.STANDALONE)) {
@@ -326,19 +329,22 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
                     if (j.getClusterNodeState().get_text() == ClusterNodeStateText.active) {
                         masters.get(otherIndex).setClusterNodeState(States.getClusterNodeState(false, true));
                     } else {
-                        masters.get(otherIndex).setClusterNodeState(States.getClusterNodeState(true, true));
+                        masters.get(otherIndex).setClusterNodeState(States.getClusterNodeState(null, true));
                     }
-                    if (j.getClusterState() == ClusterType.PREPARED_TO_BE_COUPLED) {
-                        // masters.get(otherIndex).setComponentState(States.getComponentState(ComponentStateText.inoperable));
-                    }
+//                    if (j.getClusterState() == ClusterType.PREPARED_TO_BE_COUPLED) {
+//                        // masters.get(otherIndex).setComponentState(States.getComponentState(ComponentStateText.inoperable));
+//                    }
                     if (j.getClusterState() == ClusterType.COUPLED) {
-                        masters.get(otherIndex).setIsCoupled(true);
+                        masters.get(otherIndex).setIsCoupled(false);
                     }
                 }
             }
         }
         ClusterState clusterState = States.getClusterState(clusterType);
-        lossNode.ifPresent(n -> clusterState.setLossNode(n));
+        lossNode.ifPresent(n -> {
+            clusterState.setLossNode(n);
+            EventBus.getInstance().post(new ClusterNodeLossEvent(controllerId, n));
+        });
         return clusterState;
     }
 
