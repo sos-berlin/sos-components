@@ -2,6 +2,7 @@ package com.sos.joc.classes.proxy;
 
 import java.util.Collections;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +30,7 @@ public class ClusterWatchServiceContext {
     private JControllerApi controllerApi;
     private static final NodeId primaryId = NodeId.of("Primary");
     private static final NodeId backupId = NodeId.of("Backup");
+    private AtomicInteger burstFilter = new AtomicInteger(0);
     
     protected ClusterWatchServiceContext(String controllerId, String clusterWatchId, JControllerApi controllerApi) throws InterruptedException,
             ExecutionException {
@@ -44,8 +46,11 @@ public class ClusterWatchServiceContext {
     }
     
     private void onNodeLossNotConfirmedProblem(ClusterNodeLossNotConfirmedProblem problem) {
-        LOGGER.warn("[ClusterWatchService] ClusterNodeLossNotConfirmedProblem of cluster '" + controllerId + "' received: " + problem.messageWithCause());
-        EventBus.getInstance().post(new ClusterNodeLossEvent(controllerId, problem.event().lostNodeId().string()));
+        if (burstFilter.getAndAdd(1) % 36 == 0) {
+            LOGGER.warn("[ClusterWatchService] ClusterNodeLossNotConfirmedProblem of cluster '" + controllerId + "' received: " + problem
+                    .messageWithCause());
+            EventBus.getInstance().post(new ClusterNodeLossEvent(controllerId, problem.event().lostNodeId().string()));
+        }
     }
     
     protected NodeId getClusterNodeLoss() {
@@ -71,6 +76,8 @@ public class ClusterWatchServiceContext {
             scala.util.Either<Problem,?> checked = service.confirmNodeLoss(lossNodeId);
             if (checked.isLeft()) {
                 throw new JocBadRequestException(OptionConverters.toJava(checked.left().toOption()).get().toString());
+            } else {
+                burstFilter.set(0);
             }
         }
 //        if (service.clusterNodeLossEventToBeConfirmed(lossNodeId).isEmpty()) {
