@@ -1,12 +1,16 @@
 package com.sos.joc.descriptor.impl;
 
+import java.util.stream.Collectors;
+
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.descriptor.resource.IRemoveDescriptor;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.impl.common.ADeleteConfiguration;
+import com.sos.joc.model.descriptor.common.RequestFilter;
 import com.sos.joc.model.descriptor.common.RequestFolder;
 import com.sos.joc.model.descriptor.remove.RequestFilters;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
@@ -21,9 +25,8 @@ public class RemoveDescriptorImpl extends ADeleteConfiguration implements IRemov
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
             initLogging(IMPL_PATH_REMOVE, body, accessToken);
             JsonValidator.validate(body, RequestFilters.class, true);
-            com.sos.joc.model.inventory.delete.RequestFilters in = 
-                    Globals.objectMapper.readValue(body, com.sos.joc.model.inventory.delete.RequestFilters.class);
-
+            RequestFilters filters = Globals.objectMapper.readValue(body, RequestFilters.class);;
+            com.sos.joc.model.inventory.delete.RequestFilters in = mapTo(filters);
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
             if (response == null) {
                 response = remove(accessToken, in, IMPL_PATH_REMOVE);
@@ -103,4 +106,18 @@ public class RemoveDescriptorImpl extends ADeleteConfiguration implements IRemov
         }
     }
 
+    private com.sos.joc.model.inventory.delete.RequestFilters mapTo(RequestFilters filters) {
+        com.sos.joc.model.inventory.delete.RequestFilters invFilters = new com.sos.joc.model.inventory.delete.RequestFilters();
+        invFilters.setObjects(filters.getPaths().stream().map(path -> mapTo(path)).collect(Collectors.toSet()));
+        return invFilters;
+    }
+    
+    private com.sos.joc.model.inventory.common.RequestFilter mapTo (RequestFilter filter) {
+        com.sos.joc.model.inventory.common.RequestFilter invFilter = new com.sos.joc.model.inventory.common.RequestFilter();
+        invFilter.setAuditLog(filter.getAuditLog());
+        invFilter.setPath(filter.getPath());
+        invFilter.setControllerId(null);
+        invFilter.setObjectType(ConfigurationType.DEPLOYMENTDESCRIPTOR);
+        return invFilter;
+    }
 }

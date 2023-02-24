@@ -96,16 +96,13 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                                                 Collectors.toSet());
                     }
                     if (deployments == null || deployments.isEmpty()) {
-                        if (config.getTypeAsEnum().equals(ConfigurationType.DEPLOYMENTDESCRIPTOR)) {
-                            JocInventory.deleteInventoryConfigurationAndPutToTrash(config, dbLayer, ConfigurationType.DESCRIPTORFOLDER);
-                        } else {
-                            JocInventory.deleteInventoryConfigurationAndPutToTrash(config, dbLayer, ConfigurationType.FOLDER);
-                        }
+                        JocInventory.deleteInventoryConfigurationAndPutToTrash(config, dbLayer, ConfigurationType.FOLDER);
                         JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), dbLayer.getSession(), dbAuditLog);
                         foldersForEvent.add(config.getFolder());
-                    } else {
-                        allDeployments.addAll(deployments);
                     }
+                } else { 
+                    // deployment descriptors (not releaseable and not deployable)
+                    JocInventory.deleteInventoryConfigurationAndPutToTrash(config, dbLayer, ConfigurationType.DESCRIPTORFOLDER);
                 }
             }
             if (allDeployments != null && !allDeployments.isEmpty()) {
