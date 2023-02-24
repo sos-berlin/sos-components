@@ -1,5 +1,6 @@
 package com.sos.joc.classes.event;
 
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
@@ -20,6 +21,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.classes.event.EventServiceFactory.EventCondition;
 import com.sos.joc.classes.order.OrdersHelper;
+import com.sos.joc.classes.proxy.ClusterWatch;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.event.EventBus;
@@ -146,6 +148,8 @@ public class EventService {
         this.controllerId = controllerId;
         EventBus.getInstance().register(this);
         startEventService();
+        ClusterWatch.getInstance().getAndCleanLastMessage(controllerId).ifPresent(m -> addEvent(createNodeLossProblem(Instant.now().toEpochMilli()
+                / 1000, m)));
     }
 
     protected void close() {
@@ -391,14 +395,11 @@ public class EventService {
         if (!evt.onlyProblem()) {
             addEvent(createControllerEvent(evt.getEventId() / 1000));
         }
-        
-        EventSnapshot eventSnapshot = new EventSnapshot();
-        eventSnapshot.setEventId(evt.getEventId() / 1000);
-        eventSnapshot.setEventType("ProblemEvent");
-        eventSnapshot.setObjectType(EventType.PROBLEM);
-        //eventSnapshot.setAccessToken(evt.getKey());
-        eventSnapshot.setMessage("Loss node '" + evt.getNodeId() + "' of Controller Cluster '" + evt.getControllerId() + "' must be confirmed");
-        addEvent(eventSnapshot);
+        String message = evt.getMessage();
+        if (message == null) {
+            message = "Loss instance '" + evt.getNodeId() + "' of Controller Cluster '" + evt.getControllerId() + "' must be confirmed";
+        }
+        addEvent(createNodeLossProblem(evt.getEventId() / 1000, message));
     }
 
     @Subscribe({ ProxyCoupled.class })
@@ -639,6 +640,15 @@ public class EventService {
         evt.setEventId(eventId);
         evt.setEventType("ControllerStateChanged");
         evt.setObjectType(EventType.CONTROLLER);
+        return evt;
+    }
+    
+    private EventSnapshot createNodeLossProblem(long eventId, String message) {
+        EventSnapshot evt = new EventSnapshot();
+        evt.setEventId(eventId);
+        evt.setEventType("ProblemEvent");
+        evt.setObjectType(EventType.PROBLEM);
+        evt.setMessage(message);
         return evt;
     }
 

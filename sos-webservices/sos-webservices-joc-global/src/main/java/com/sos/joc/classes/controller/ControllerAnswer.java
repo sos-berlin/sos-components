@@ -121,7 +121,7 @@ public class ControllerAnswer extends Controller {
                 lossNode = ClusterWatch.getInstance().getClusterNodeLoss(dbInstance.getControllerId());
                 if (lossNode != null) {
                     clusterState = ClusterType.NODE_LOSS_TO_BE_CONFIRMED;
-//                    EventBus.getInstance().post(new ClusterNodeLossEvent(dbInstance.getControllerId(), lossNodes, true));
+//                    EventBus.getInstance().post(new ClusterNodeLossEvent(dbInstance.getControllerId(), lossNodes, null, true));
                     currentNodeIsLoss = ((lossNode.string().equals("Primary") && dbInstance.getIsPrimary()) || (lossNode.string().equals("Backup")
                             && !dbInstance.getIsPrimary()));
 
