@@ -27,8 +27,9 @@ public class InventoryTrashDBLayer extends DBLayer {
         super(session);
     }
 
-    public Set<Tree> getFoldersByFolderAndType(String folder, Set<Integer> inventoryTypes, Boolean onlyValidObjects)
-            throws DBConnectionRefusedException, DBInvalidDataException {
+    public Set<Tree> getFoldersByFolderAndType(String folder, Set<Integer> inventoryTypes, Boolean onlyValidObjects,
+            boolean forDescriptors) throws DBConnectionRefusedException, DBInvalidDataException {
+        ConfigurationType folderType = forDescriptors ? ConfigurationType.DESCRIPTORFOLDER : ConfigurationType.FOLDER;
         try {
             List<String> whereClause = new ArrayList<String>();
             StringBuilder sql = new StringBuilder();
@@ -63,7 +64,7 @@ public class InventoryTrashDBLayer extends DBLayer {
             if (result != null && !result.isEmpty()) {
                 Set<String> folders = result.stream().map(item -> {
                     Integer type = (Integer) item[1];
-                    if (type.equals(ConfigurationType.FOLDER.intValue())) {
+                    if (type.equals(folderType.intValue())) {
                         return (String) item[2];
                     }
                     return (String) item[0];

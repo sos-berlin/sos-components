@@ -1287,9 +1287,15 @@ public class InventoryDBLayer extends DBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-
+    
     public Set<Tree> getFoldersByFolderAndTypeForInventory(String folder, Set<Integer> inventoryTypes, Boolean onlyValidObjects)
             throws DBConnectionRefusedException, DBInvalidDataException {
+        return getFoldersByFolderAndTypeForInventory(folder, inventoryTypes, onlyValidObjects, false);
+    }
+
+    public Set<Tree> getFoldersByFolderAndTypeForInventory(String folder, Set<Integer> inventoryTypes, Boolean onlyValidObjects,
+            boolean forDescriptors) throws DBConnectionRefusedException, DBInvalidDataException {
+        ConfigurationType folderType = forDescriptors ? ConfigurationType.DESCRIPTORFOLDER : ConfigurationType.FOLDER;
         try {
             List<String> whereClause = new ArrayList<String>();
             StringBuilder sql = new StringBuilder();
@@ -1327,7 +1333,7 @@ public class InventoryDBLayer extends DBLayer {
             if (result != null && !result.isEmpty()) {
                 Set<String> folders = result.stream().map(item -> {
                     Integer type = (Integer) item[1];
-                    if (type.equals(ConfigurationType.FOLDER.intValue())) {
+                    if (type.equals(folderType.intValue())) {
                         return (String) item[2];
                     }
                     return (String) item[0];
@@ -1340,7 +1346,7 @@ public class InventoryDBLayer extends DBLayer {
                         folderWithParents.add(("/" + p.subpath(0, i + 1)).replace('\\', '/'));
                     }
                 }
-                Set<Tree> tree = getFoldersByFolder(new ArrayList<String>(folderWithParents));
+                Set<Tree> tree = getFoldersByFolder(new ArrayList<String>(folderWithParents), folderType);
                 Tree root = new Tree();
                 root.setPath(JocInventory.ROOT_FOLDER);
                 root.setDeleted(false);
@@ -1364,18 +1370,18 @@ public class InventoryDBLayer extends DBLayer {
         }
     }
 
-    private Set<Tree> getFoldersByFolder(List<String> folders) throws SOSHibernateException {
-        return _getFoldersByFolder(folders).stream().collect(Collectors.toSet());
+    private Set<Tree> getFoldersByFolder(List<String> folders, ConfigurationType folderType) throws SOSHibernateException {
+        return _getFoldersByFolder(folders, folderType).stream().collect(Collectors.toSet());
     }
 
-    private List<FolderItem> _getFoldersByFolder(List<String> folders) throws SOSHibernateException {
+    private List<FolderItem> _getFoldersByFolder(List<String> folders, ConfigurationType folderType) throws SOSHibernateException {
         if (folders == null) {
             folders = Collections.emptyList();
         }
         if (folders.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
             List<FolderItem> result = new ArrayList<>();
             for (int i = 0; i < folders.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
-                result.addAll(_getFoldersByFolder(SOSHibernate.getInClausePartition(i, folders)));
+                result.addAll(_getFoldersByFolder(SOSHibernate.getInClausePartition(i, folders), folderType));
             }
             return result;
         } else if (!folders.isEmpty()) {
@@ -1386,7 +1392,7 @@ public class InventoryDBLayer extends DBLayer {
             sql.append(" where path in (:folders) and type=:type");
             Query<FolderItem> query = getSession().createQuery(sql.toString());
             query.setParameterList("folders", folders);
-            query.setParameter("type", ConfigurationType.FOLDER.intValue());
+            query.setParameter("type", folderType.intValue());
             List<FolderItem> result = getSession().getResultList(query);
             if (result != null) {
                 return result;

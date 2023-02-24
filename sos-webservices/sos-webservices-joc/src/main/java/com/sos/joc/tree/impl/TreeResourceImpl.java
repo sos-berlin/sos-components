@@ -34,17 +34,18 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
             JsonValidator.validateFailFast(treeBodyBytes, TreeFilter.class);
             TreeFilter treeBody = Globals.objectMapper.readValue(treeBodyBytes, TreeFilter.class);
 
-            boolean treeForInventoryTrash = (treeBody.getForInventoryTrash() != null && treeBody.getForInventoryTrash());
+            boolean treeForInventoryTrash = treeBody.getForInventoryTrash() == Boolean.TRUE;
             boolean treeForInventory = !treeForInventoryTrash && ((treeBody.getForInventory() != null && treeBody.getForInventory()) || (treeBody
                     .getTypes() != null && treeBody.getTypes().contains(TreeType.INVENTORY)));
-            boolean treeForDeploymentDescriptors = treeBody.getTypes().contains(TreeType.DEPLOYMENTDESCRIPTOR);
+            boolean treeForDescriptorsTrash = treeBody.getForDescriptorsTrash() == Boolean.TRUE;
+            boolean treeForDescriptors = treeBody.getForDescriptors() == Boolean.TRUE;
             
             String controllerId = (treeForInventory || treeForInventoryTrash) ? "" : treeBody.getControllerId();
 //            if (controllerId == null) { //e.g. it could be null for Documentation 
 //                throw new JocMissingRequiredParameterException("$.controllerId: is missing but it is required");
 //            }
             List<TreeType> types = TreePermanent.getAllowedTypes(treeBody.getTypes(), getJocPermissions(accessToken), getControllerPermissions(
-                    controllerId, accessToken), treeForInventory, treeForInventoryTrash);
+                    controllerId, accessToken), treeForInventory, treeForInventoryTrash, treeForDescriptors, treeForDescriptorsTrash);
             
             JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, types.size() > 0);
             if (jocDefaultResponse != null) {
@@ -60,6 +61,10 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
                 folders = TreePermanent.initFoldersByFoldersForInventory(treeBody);
             } else if (treeForInventoryTrash) {
                 folders = TreePermanent.initFoldersByFoldersForInventoryTrash(treeBody);
+            } else if (treeForDescriptors) {
+                folders = TreePermanent.initFoldersByFoldersForDescriptors(treeBody);
+            } else if (treeForDescriptorsTrash) {
+                folders = TreePermanent.initFoldersByFoldersForDescriptorsTrash(treeBody);
             } else {
                 folders = TreePermanent.initFoldersByFoldersForViews(treeBody);
             }

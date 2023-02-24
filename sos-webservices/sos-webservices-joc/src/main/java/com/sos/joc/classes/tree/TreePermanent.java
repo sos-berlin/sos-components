@@ -38,11 +38,13 @@ import com.sos.joc.model.tree.TreeType;
 public class TreePermanent {
 
     public static List<TreeType> getAllowedTypes(List<TreeType> bodyTypes, JocPermissions jocPermissions, ControllerPermissions controllerPermission,
-            boolean treeForInventory, boolean treeForInventoryTrash) {
+            boolean treeForInventory, boolean treeForInventoryTrash, boolean treeForDescriptors, boolean treeForDescriptorsTrash) {
 
         if (bodyTypes == null || bodyTypes.isEmpty()) {
             if (treeForInventory || treeForInventoryTrash) {
                 bodyTypes = Arrays.asList(TreeType.INVENTORY, TreeType.DOCUMENTATION);
+            } else if (treeForDescriptors || treeForDescriptorsTrash) {
+                bodyTypes = Arrays.asList(TreeType.DEPLOYMENTDESCRIPTOR, TreeType.DESCRIPTORFOLDER);
             } else {
                 bodyTypes = Arrays.asList(TreeType.values());
             }
@@ -169,8 +171,8 @@ public class TreePermanent {
                 }
                 break;
             case DEPLOYMENTDESCRIPTOR:
-                // TODO: create correct permissions for DEPLOYMENTDESCRIPTOR and reference them here!
-                if (jocPermissions.getInventory().getView()) {
+            case DESCRIPTORFOLDER:
+                if (inventoryPermission) {
                     types.add(type);
                 }
                 break;
@@ -200,7 +202,7 @@ public class TreePermanent {
             if (treeBody.getFolders() != null && !treeBody.getFolders().isEmpty()) {
                 for (Folder folder : treeBody.getFolders()) {
                     String normalizedFolder = ("/" + folder.getFolder()).replaceAll("//+", "/");
-                    results = dbLayer.getFoldersByFolderAndTypeForInventory(normalizedFolder, inventoryTypes, treeBody.getOnlyValidObjects());
+                    results = dbLayer.getFoldersByFolderAndTypeForInventory(normalizedFolder, inventoryTypes, treeBody.getOnlyValidObjects(), false);
 //                    if (withDocus) {
 //                        docResults = dbDocLayer.getFoldersByFolder(normalizedFolder);
 //                        if (docResults != null && !docResults.isEmpty()) {
@@ -218,7 +220,7 @@ public class TreePermanent {
                     }
                 }
             } else {
-                results = dbLayer.getFoldersByFolderAndTypeForInventory("/", inventoryTypes, treeBody.getOnlyValidObjects());
+                results = dbLayer.getFoldersByFolderAndTypeForInventory("/", inventoryTypes, treeBody.getOnlyValidObjects(), false);
 //                if (withDocus) {
 //                    docResults = dbDocLayer.getFoldersByFolder("/");
 //                    if (docResults != null && !docResults.isEmpty()) {
@@ -269,7 +271,7 @@ public class TreePermanent {
             if (treeBody.getFolders() != null && !treeBody.getFolders().isEmpty()) {
                 for (Folder folder : treeBody.getFolders()) {
                     String normalizedFolder = ("/" + folder.getFolder()).replaceAll("//+", "/");
-                    results = dbLayer.getFoldersByFolderAndType(normalizedFolder, inventoryTypes, treeBody.getOnlyValidObjects());
+                    results = dbLayer.getFoldersByFolderAndType(normalizedFolder, inventoryTypes, treeBody.getOnlyValidObjects(), false);
                     if (results != null && !results.isEmpty()) {
                         if (folder.getRecursive() == null || folder.getRecursive()) {
                             folders.addAll(results);
@@ -281,7 +283,103 @@ public class TreePermanent {
                     }
                 }
             } else {
-                results = dbLayer.getFoldersByFolderAndType("/", inventoryTypes, treeBody.getOnlyValidObjects());
+                results = dbLayer.getFoldersByFolderAndType("/", inventoryTypes, treeBody.getOnlyValidObjects(), false);
+                if (results != null && !results.isEmpty()) {
+                    folders.addAll(results);
+                }
+            }
+            Globals.commit(session);
+            return folders;
+        } catch (JocException e) {
+            Globals.rollback(session);
+            throw e;
+        } finally {
+            Globals.disconnect(session);
+        }
+    }
+
+    public static SortedSet<Tree> initFoldersByFoldersForDescriptors(TreeFilter treeBody) {
+        Set<Integer> descriptorTypes = treeBody.getTypes().stream().map(TreeType::intValue).collect(Collectors.toSet());
+
+        SOSHibernateSession session = null;
+        try {
+            session = Globals.createSosHibernateStatelessConnection("initTreeForDescriptors");
+            Globals.beginTransaction(session);
+            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+
+            Comparator<Tree> comparator = Comparator.comparing(Tree::getPath).reversed();
+            SortedSet<Tree> folders = new TreeSet<Tree>(comparator);
+            Set<Tree> results = null;
+            if (treeBody.getFolders() != null && !treeBody.getFolders().isEmpty()) {
+                for (Folder folder : treeBody.getFolders()) {
+                    String normalizedFolder = ("/" + folder.getFolder()).replaceAll("//+", "/");
+                    results = dbLayer.getFoldersByFolderAndTypeForInventory(normalizedFolder, descriptorTypes, treeBody.getOnlyValidObjects(), true);
+                    if (results != null && !results.isEmpty()) {
+                        if (folder.getRecursive() == null || folder.getRecursive()) {
+                            folders.addAll(results);
+                        } else {
+                            final int parentDepth = Paths.get(normalizedFolder).getNameCount();
+                            folders.addAll(results.stream().filter(item -> Paths.get(item.getPath()).getNameCount() == parentDepth + 1).collect(
+                                    Collectors.toSet()));
+                        }
+                    }
+                }
+            } else {
+                results = dbLayer.getFoldersByFolderAndTypeForInventory("/", descriptorTypes, treeBody.getOnlyValidObjects(), true);
+                if (results != null && !results.isEmpty()) {
+                    folders.addAll(results);
+                }
+            }
+            List<DBItemJocLock> jocLocks = dbLayer.getJocLocks();
+            if (jocLocks != null && jocLocks.size() > 0) {
+                Supplier<TreeSet<Tree>> supplier = () -> new TreeSet<Tree>(comparator);
+                folders = folders.stream().map(folder -> {
+                    Optional<DBItemJocLock> jocLock = jocLocks.stream().filter(l -> l.getFolder().equals(folder.getPath())).findFirst();
+                    if (jocLock.isPresent()) {
+                        folder.setLockedBy(jocLock.get().getAccount());
+                        folder.setLockedSince(jocLock.get().getCreated());
+                    }
+                    return folder;
+                }).collect(Collectors.toCollection(supplier));
+            }
+            Globals.commit(session);
+            return folders;
+        } catch (JocException e) {
+            Globals.rollback(session);
+            throw e;
+        } finally {
+            Globals.disconnect(session);
+        }
+    }
+    
+    public static SortedSet<Tree> initFoldersByFoldersForDescriptorsTrash(TreeFilter treeBody) throws JocException {
+        Set<Integer> inventoryTypes = treeBody.getTypes().stream().map(TreeType::intValue).collect(Collectors.toSet());
+
+        SOSHibernateSession session = null;
+        try {
+            session = Globals.createSosHibernateStatelessConnection("initTreeForDescriptorsTrash");
+            Globals.beginTransaction(session);
+            InventoryTrashDBLayer dbLayer = new InventoryTrashDBLayer(session);
+
+            Comparator<Tree> comparator = Comparator.comparing(Tree::getPath).reversed();
+            SortedSet<Tree> folders = new TreeSet<Tree>(comparator);
+            Set<Tree> results = null;
+            if (treeBody.getFolders() != null && !treeBody.getFolders().isEmpty()) {
+                for (Folder folder : treeBody.getFolders()) {
+                    String normalizedFolder = ("/" + folder.getFolder()).replaceAll("//+", "/");
+                    results = dbLayer.getFoldersByFolderAndType(normalizedFolder, inventoryTypes, treeBody.getOnlyValidObjects(), true);
+                    if (results != null && !results.isEmpty()) {
+                        if (folder.getRecursive() == null || folder.getRecursive()) {
+                            folders.addAll(results);
+                        } else {
+                            final int parentDepth = Paths.get(normalizedFolder).getNameCount();
+                            folders.addAll(results.stream().filter(item -> Paths.get(item.getPath()).getNameCount() == parentDepth + 1).collect(
+                                    Collectors.toSet()));
+                        }
+                    }
+                }
+            } else {
+                results = dbLayer.getFoldersByFolderAndType("/", inventoryTypes, treeBody.getOnlyValidObjects(), true);
                 if (results != null && !results.isEmpty()) {
                     folders.addAll(results);
                 }
