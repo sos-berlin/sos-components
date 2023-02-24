@@ -190,6 +190,7 @@ public class JsonValidator {
             put("com.sos.joc.model.descriptor.common.ResponseRenamed", "descriptor/common/response-newPath-schema.json");
             put("com.sos.joc.model.descriptor.copy.RequestFilter", "descriptor/copy/request-filter-schema.json");
             put("com.sos.joc.model.descriptor.remove.RequestFilters", "descriptor/remove/request-filters-schema.json");
+            put("com.sos.joc.model.descriptor.remove.RequestFilter", "descriptor/remove/request-filter-schema.json");
             put("com.sos.joc.model.descriptor.remove.ResponseItem", "descriptor/remove/response-item-schema.json");
             put("com.sos.joc.model.descriptor.rename.RequestFilter", "descriptor/rename/request-filter-schema.json");
             put("com.sos.joc.model.descriptor.restore.RequestFilter", "descriptor/restore/request-filter-schema.json");
