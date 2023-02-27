@@ -95,7 +95,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     private static final Logger LOGGER = LoggerFactory.getLogger(OrdersResourceModifyImpl.class);
 
     private enum Action {
-        CANCEL, SUSPEND, RESUME, REMOVE_WHEN_TERMINATED, ANSWER_PROMPT, TRANSITION
+        CANCEL, SUSPEND, RESUME, REMOVE_WHEN_TERMINATED, ANSWER_PROMPT
     }
 
     @Override
@@ -194,9 +194,6 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     }
 
     public void postOrdersModify(Action action, ModifyOrders modifyOrders) throws Exception {
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(String.format("[postOrdersModify]action=%s", action));
-        }
         CategoryType category = CategoryType.CONTROLLER;
         String controllerId = modifyOrders.getControllerId();
         DBItemJocAuditLog dbAuditLog = storeAuditLog(modifyOrders.getAuditLog(), controllerId, category);
@@ -316,7 +313,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         }
 
         Optional<JPosition> positionOpt = Optional.empty();
-        
+
         // TODO JOC-1453 consider labels
         Object positionObj = modifyOrders.getPosition();
         boolean withPosition = positionObj != null && !((positionObj instanceof List<?> && ((List<Object>) positionObj).isEmpty()));
@@ -355,11 +352,11 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                             }
                         }
                         pos = labelMap.get((String) positionObj);
-                        
+
                     } finally {
                         Globals.disconnect(connection);
                     }
-                    
+
                 } else if (positionObj instanceof List<?>) {
                     pos = (List<Object>) positionObj;
                     if (!pos.isEmpty()) {
@@ -473,13 +470,13 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             }
         }
     }
-    
+
     private static List<JHistoryOperation> getJHistoricOperations(HistoricOutcome h, JocError err, boolean append) throws JsonProcessingException {
         String json = Globals.objectMapper.writeValueAsString(h);
         Either<Problem, JHistoricOutcome> hoE = JHistoricOutcome.fromJson(json);
         if (hoE.isLeft()) {
             ProblemHelper.postProblemEventIfExist(hoE, null, err, null);
-            //ProblemHelper.postProblemEventAsHintIfExist(API_CALL + "/resume", hoE, null, err, null);
+            // ProblemHelper.postProblemEventAsHintIfExist(API_CALL + "/resume", hoE, null, err, null);
             return Collections.emptyList();
         }
         if (append) {
@@ -564,11 +561,11 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             return orderStream.collect(Collectors.toSet());
         }
     }
-    
+
     private Problem getProblem(Set<JOrder> orders, String message) {
         return Problem.pure(orders.stream().map(o -> o.id().string()).collect(Collectors.joining("', '", "Orders '", "' are not " + message)));
     }
-    
+
     private void postProblem(Map<Boolean, Set<JOrder>> orders, String controllerId, boolean withPostProblem, String message) {
         if (withPostProblem && orders.containsKey(Boolean.FALSE)) {
             ProblemHelper.postProblemEventAsHintIfExist(Either.left(getProblem(orders.get(Boolean.FALSE), message)), getAccessToken(), getJocError(),
@@ -586,9 +583,9 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         Stream<JOrder> cyclicOrderStream = Stream.empty();
         // determine cyclic ids
         Map<OrderId, JOrder> knownOrders = currentState.idToOrder();
-        Set<String> freshCyclicIds = orderIds.stream().filter(s -> OrdersHelper.isCyclicOrderId(s)).map(s -> knownOrders.get(OrderId.of(s)))
-                .filter(Objects::nonNull).filter(o -> Order.Fresh$.class.isInstance(o.asScala().state())).map(o -> OrdersHelper
-                        .getCyclicOrderIdMainPart(o.id().string())).collect(Collectors.toSet());
+        Set<String> freshCyclicIds = orderIds.stream().filter(s -> OrdersHelper.isCyclicOrderId(s)).map(s -> knownOrders.get(OrderId.of(s))).filter(
+                Objects::nonNull).filter(o -> Order.Fresh$.class.isInstance(o.asScala().state())).map(o -> OrdersHelper.getCyclicOrderIdMainPart(o
+                        .id().string())).collect(Collectors.toSet());
         if (!freshCyclicIds.isEmpty()) {
             cyclicOrderStream = currentState.ordersBy(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), o -> freshCyclicIds
                     .contains(OrdersHelper.getCyclicOrderIdMainPart(o.id().string()))));
@@ -637,8 +634,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         try {
             // only for non-temporary and non-file orders
             LOGGER.debug("Cancel orders. Calling updateDailyPlan");
-            updateDailyPlan(oIds.stream().map(OrderId::string).filter(s -> !s.matches(".*#(T|F|D)[0-9]+-.*")).collect(Collectors
-                    .toSet()));
+            updateDailyPlan(oIds.stream().map(OrderId::string).filter(s -> !s.matches(".*#(T|F|D)[0-9]+-.*")).collect(Collectors.toSet()));
         } catch (Exception e) {
             ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), controllerId);
         }
