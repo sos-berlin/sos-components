@@ -354,7 +354,7 @@ public class OrderNotifierModel {
         EventBus.getInstance().post(new NotificationCreated(controllerId, mn.getId(), mn.getType(), mo.getWorkflowName(), mo.getOrderId(), mos
                 .getJobName(), mn.getCreated(), getPostEventMessage(mn, mo, mos)));
     }
-    
+
     // see com.sos.joc.monitoring.impl.OrderNotificationsImpl.getMessage
     private String getPostEventMessage(DBItemNotification mn, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos) {
         if (mn.getType().equals(NotificationType.WARNING.intValue())) {

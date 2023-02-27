@@ -59,42 +59,7 @@ public class NotifierJMS extends ANotifier {
         closeConnection();
     }
 
-    @Override
-    public NotifyResult notify(NotificationType type, TimeZone timeZone, SystemMonitoringEvent event, Date dateTime, String exception) {
-
-        MessageProducer producer = null;
-        String message = null;
-        try {
-            producer = createProducer();
-            set(type, timeZone, event, dateTime, exception);
-
-            message = resolveSystemVars(monitor.getMessage(), true);
-
-            producer.setPriority(monitor.getPriority());
-            producer.setDeliveryMode(monitor.getDeliveryMode());
-            producer.setTimeToLive(monitor.getTimeToLive());
-
-            StringBuilder info = new StringBuilder();
-            info.append("[destination ").append(monitor.getDestinationName()).append("(").append(monitor.getDestination()).append(")]");
-            info.append(message);
-            LOGGER.info(getInfo4execute(true, event, type, info.toString()));
-
-            producer.send(session.createTextMessage(message));
-            return new NotifyResult(message, getSendInfo());
-        } catch (Throwable e) {
-            NotifyResult result = new NotifyResult(message, getSendInfo());
-            result.setError(getInfo4executeFailed(event, type, "[" + monitor.getInfo().toString() + "]" + e.toString()), e);
-            return result;
-        } finally {
-            if (producer != null) {
-                try {
-                    producer.close();
-                } catch (Exception e) {
-                }
-            }
-        }
-    }
-
+    // OrderNotification
     @Override
     public NotifyResult notify(NotificationType type, TimeZone timeZone, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos,
             DBItemNotification mn) {
@@ -121,6 +86,43 @@ public class NotifierJMS extends ANotifier {
         } catch (Throwable e) {
             NotifyResult result = new NotifyResult(message, getSendInfo());
             result.setError(getInfo4executeFailed(mo, mos, type, "[" + monitor.getInfo().toString() + "]" + e.toString()), e);
+            return result;
+        } finally {
+            if (producer != null) {
+                try {
+                    producer.close();
+                } catch (Exception e) {
+                }
+            }
+        }
+    }
+
+    // SystemNotification
+    @Override
+    public NotifyResult notify(NotificationType type, TimeZone timeZone, String jocId, SystemMonitoringEvent event, Date dateTime, String exception) {
+
+        MessageProducer producer = null;
+        String message = null;
+        try {
+            producer = createProducer();
+            set(type, timeZone, jocId, event, dateTime, exception);
+
+            message = resolveSystemVars(monitor.getMessage(), true);
+
+            producer.setPriority(monitor.getPriority());
+            producer.setDeliveryMode(monitor.getDeliveryMode());
+            producer.setTimeToLive(monitor.getTimeToLive());
+
+            StringBuilder info = new StringBuilder();
+            info.append("[destination ").append(monitor.getDestinationName()).append("(").append(monitor.getDestination()).append(")]");
+            info.append(message);
+            LOGGER.info(getInfo4execute(true, event, type, info.toString()));
+
+            producer.send(session.createTextMessage(message));
+            return new NotifyResult(message, getSendInfo());
+        } catch (Throwable e) {
+            NotifyResult result = new NotifyResult(message, getSendInfo());
+            result.setError(getInfo4executeFailed(event, type, "[" + monitor.getInfo().toString() + "]" + e.toString()), e);
             return result;
         } finally {
             if (producer != null) {

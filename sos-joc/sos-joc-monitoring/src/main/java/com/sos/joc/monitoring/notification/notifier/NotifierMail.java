@@ -49,55 +49,7 @@ public class NotifierMail extends ANotifier {
         return monitor;
     }
 
-    @Override
-    public NotifyResult notify(NotificationType type, TimeZone timeZone, SystemMonitoringEvent event, Date dateTime, String exception) {
-        if (mail == null) {
-            NotifyResult result = new NotifyResult(monitor.getMessage(), getSendInfo());
-            result.setError("mail is null");
-            return result;
-        }
-        set(type, timeZone, event, dateTime, exception);
-
-        String body = resolveSystemVars(monitor.getMessage(), true);
-        NotifyResult result = new NotifyResult(body, getSendInfo());
-
-        mail.setSubject(resolveSystemVars(monitor.getSubject(), true));
-        mail.setBody(body);
-        try {
-            StringBuilder info = new StringBuilder();
-            info.append("[subject=").append(mail.getSubject()).append("]");
-
-            LOGGER.info(getInfo4execute(true, event, type, info.toString()));
-
-            if (!mail.send()) {
-                if (QUEUE_MAIL_ON_ERROR) {
-                    // - mail will be stored to the mail queue directory
-                    // - a warning message will be logged by SOSMail
-                } else {
-                    result.setError(getInfo4executeFailed(event, type, monitor.getInfo().toString()));
-                }
-            }
-            return result;
-        } catch (Throwable e) {
-            result.setError(getInfo4executeFailed(event, type, "[" + monitor.getInfo().toString() + "]" + e.toString()), e);
-            return result;
-        } finally {
-            try {
-                mail.clearRecipients();
-            } catch (Exception e) {
-            }
-        }
-    }
-
-    @SuppressWarnings("unused")
-    // TODO check ...
-    private String nl2br(String body) {
-        if (mail == null || body == null || !"text/html".equals(mail.getContentType())) {
-            return body;
-        }
-        return body.replaceAll("(\r\n|\n)", "<br/>");
-    }
-
+    // OrderNotification
     @Override
     public NotifyResult notify(NotificationType type, TimeZone timeZone, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos,
             DBItemNotification mn) {
@@ -142,6 +94,56 @@ public class NotifierMail extends ANotifier {
             } catch (Exception e) {
             }
         }
+    }
+
+    // SystemNotification
+    @Override
+    public NotifyResult notify(NotificationType type, TimeZone timeZone, String jocId, SystemMonitoringEvent event, Date dateTime, String exception) {
+        if (mail == null) {
+            NotifyResult result = new NotifyResult(monitor.getMessage(), getSendInfo());
+            result.setError("mail is null");
+            return result;
+        }
+        set(type, timeZone, jocId, event, dateTime, exception);
+
+        String body = resolveSystemVars(monitor.getMessage(), true);
+        NotifyResult result = new NotifyResult(body, getSendInfo());
+
+        mail.setSubject(resolveSystemVars(monitor.getSubject(), true));
+        mail.setBody(body);
+        try {
+            StringBuilder info = new StringBuilder();
+            info.append("[subject=").append(mail.getSubject()).append("]");
+
+            LOGGER.info(getInfo4execute(true, event, type, info.toString()));
+
+            if (!mail.send()) {
+                if (QUEUE_MAIL_ON_ERROR) {
+                    // - mail will be stored to the mail queue directory
+                    // - a warning message will be logged by SOSMail
+                } else {
+                    result.setError(getInfo4executeFailed(event, type, monitor.getInfo().toString()));
+                }
+            }
+            return result;
+        } catch (Throwable e) {
+            result.setError(getInfo4executeFailed(event, type, "[" + monitor.getInfo().toString() + "]" + e.toString()), e);
+            return result;
+        } finally {
+            try {
+                mail.clearRecipients();
+            } catch (Exception e) {
+            }
+        }
+    }
+
+    @SuppressWarnings("unused")
+    // TODO check ...
+    private String nl2br(String body) {
+        if (mail == null || body == null || !"text/html".equals(mail.getContentType())) {
+            return body;
+        }
+        return body.replaceAll("(\r\n|\n)", "<br/>");
     }
 
     @Override

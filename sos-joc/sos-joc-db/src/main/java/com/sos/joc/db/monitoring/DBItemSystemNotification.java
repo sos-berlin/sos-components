@@ -38,9 +38,8 @@ public class DBItemSystemNotification extends DBItem {
     @Column(name = "[CATEGORY]", nullable = false)
     private Integer category;
 
-    @Column(name = "[HAS_MONITORS]", nullable = false)
-    @Type(type = "numeric_boolean")
-    private boolean hasMonitors;
+    @Column(name = "[JOC_ID]", nullable = false)
+    private String jocId;
 
     @Column(name = "[SOURCE]", nullable = false)
     private String source;
@@ -56,6 +55,10 @@ public class DBItemSystemNotification extends DBItem {
 
     @Column(name = "[EXCEPTION]", nullable = true)
     private String exception;
+
+    @Column(name = "[HAS_MONITORS]", nullable = false)
+    @Type(type = "numeric_boolean")
+    private boolean hasMonitors;
 
     @Column(name = "[CREATED]", nullable = false)
     private Date created;
@@ -93,12 +96,12 @@ public class DBItemSystemNotification extends DBItem {
         category = val;
     }
 
-    public void setHasMonitors(boolean val) {
-        hasMonitors = val;
+    public String getJocId() {
+        return jocId;
     }
 
-    public boolean getHasMonitors() {
-        return hasMonitors;
+    public void setJocId(String val) {
+        jocId = normalizeJocId(val);
     }
 
     public String getSource() {
@@ -144,6 +147,14 @@ public class DBItemSystemNotification extends DBItem {
         exception = normalizeException(val);
     }
 
+    public void setHasMonitors(boolean val) {
+        hasMonitors = val;
+    }
+
+    public boolean getHasMonitors() {
+        return hasMonitors;
+    }
+
     public void setCreated(Date val) {
         created = val;
     }
@@ -178,6 +189,14 @@ public class DBItemSystemNotification extends DBItem {
     @Transient
     public void setCategory(SystemNotificationCategory val) {
         setCategory(val == null ? null : val.intValue());
+    }
+
+    @Transient
+    private static String normalizeJocId(String val) {
+        if (val == null) {
+            return MonitoringConstants.SYSTEM_NOTIFICATION_DEFAULT_JOC_ID;
+        }
+        return normalizeValue(val, MonitoringConstants.MAX_LEN_SYSTEM_NOTIFICATION_JOC_ID);
     }
 
     @Transient
