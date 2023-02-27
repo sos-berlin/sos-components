@@ -120,9 +120,9 @@ public class ClusterWatchServiceContext {
         if (service != null) {
             try {
                 controllerApi.stopClusterWatch().get();
-                LOGGER.info("[ClusterWatch] Watch is stopped for '" + controllerId + "'");
+                LOGGER.info("[ClusterWatchService] Watch is stopped for '" + controllerId + "'");
             } catch (Exception e) {
-                LOGGER.error("[ClusterWatch] stopping watch for '" + controllerId + "' failed", e);
+                LOGGER.error("[ClusterWatchService] stopping watch for '" + controllerId + "' failed", e);
                 return false;
             }
         }
