@@ -161,7 +161,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             } else {
                 List<DBItemInventoryConfiguration> folderContent = dbLayer.getFolderContent(folder.getPath(), true, Collections.singleton(ConfigurationType.DEPLOYMENTDESCRIPTOR.intValue()), forDescriptors);
                 for (DBItemInventoryConfiguration descriptor : folderContent) {
-                    session.delete(descriptor);
+                    JocInventory.deleteInventoryConfigurationAndPutToTrash(descriptor, dbLayer, ConfigurationType.DESCRIPTORFOLDER);
                 }
                 
             }
