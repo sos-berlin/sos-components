@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-
 public class ClientCertificateHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientCertificateHandler.class);
@@ -23,36 +22,33 @@ public class ClientCertificateHandler {
     private String subjectDN;
     private String clientCN;
     private String sslSessionIdHex;
-    
+
     public ClientCertificateHandler(HttpServletRequest req) throws IOException, CertificateEncodingException, InvalidNameException {
         readClientCertificateInfo(req);
     }
-    
-    private void readClientCertificateInfo (HttpServletRequest request) throws IOException, CertificateEncodingException, InvalidNameException {
+
+    private void readClientCertificateInfo(HttpServletRequest request) throws IOException, CertificateEncodingException, InvalidNameException {
         /*
-         * With the SecureRequestCustomizer in place you can access various pieces about the SSL connection from 
-         *     HttpServletRequest.getAttribute(String) calls using the following attribute names. 
-         *   javax.servlet.request.X509Certificate - an array of java.security.cert.X509Certificate[]
-         *   javax.servlet.request.cipher_suite    - the String name of the cipher suite. 
-         *                                           (same as what is returned from javax.net.ssl.SSLSession.getCipherSuite())
-         *   javax.servlet.request.key_size        - Integer of the key length in use 
-         *   javax.servlet.request.ssl_session_id  - String representation (hexified) of the active SSL Session ID
-         *      
+         * With the SecureRequestCustomizer in place you can access various pieces about the SSL connection from HttpServletRequest.getAttribute(String) calls
+         * using the following attribute names. javax.servlet.request.X509Certificate - an array of java.security.cert.X509Certificate[]
+         * javax.servlet.request.cipher_suite - the String name of the cipher suite. (same as what is returned from javax.net.ssl.SSLSession.getCipherSuite())
+         * javax.servlet.request.key_size - Integer of the key length in use javax.servlet.request.ssl_session_id - String representation (hexified) of the
+         * active SSL Session ID
          */
         String cipherSuiteName = "";
         Integer keySize = 0;
         Enumeration<String> attributes = request.getAttributeNames();
-        while(attributes.hasMoreElements()) {
+        while (attributes.hasMoreElements()) {
             String attributeName = attributes.nextElement();
-            //LOGGER.info("attributeName=" + attributeName);
+            // LOGGER.info("attributeName=" + attributeName);
             for (String prefix : Arrays.asList("javax.servlet.request.", "jakarta.servlet.request.")) {
-                if((prefix + "X509Certificate").equals(attributeName)) {
+                if ((prefix + "X509Certificate").equals(attributeName)) {
                     this.clientCertificateChain = (X509Certificate[]) request.getAttribute(prefix + "X509Certificate");
-                } else if((prefix + "cipher_suite").equals(attributeName)) {
+                } else if ((prefix + "cipher_suite").equals(attributeName)) {
                     cipherSuiteName = (String) request.getAttribute(prefix + "cipher_suite");
-                } else if((prefix + "key_size").equals(attributeName)) {
+                } else if ((prefix + "key_size").equals(attributeName)) {
                     keySize = (Integer) request.getAttribute(prefix + "key_size");
-                } else if((prefix + "ssl_session_id").equals(attributeName)) {
+                } else if ((prefix + "ssl_session_id").equals(attributeName)) {
                     this.sslSessionIdHex = (String) request.getAttribute(prefix + "ssl_session_id");
                 }
             }
@@ -63,20 +59,20 @@ public class ClientCertificateHandler {
             this.clientCertificate = clientCertificateChain[0];
             if (clientCertificate != null) {
                 this.subjectDN = clientCertificate.getSubjectDN().getName();
-                
+
                 // deprecated usage of all sun.* classes in Javas rt.jar
-                // the rt.jar is  present in Javas JRE 1.8, not present in Javas JDK 11, 15, 17
-//                this.clientCN = ((sun.security.x509.X500Name)clientCertificate.getSubjectDN()).getCommonName();
+                // the rt.jar is present in Javas JRE 1.8, not present in Javas JDK 11, 15, 17
+                // this.clientCN = ((sun.security.x509.X500Name)clientCertificate.getSubjectDN()).getCommonName();
 
                 // same with bouncy castle
-//                X500Name x500Name = new JcaX509CertificateHolder(clientCertificate).getSubject();
-//                RDN cn = x500Name.getRDNs(BCStyle.CN)[0];
-//                this.clientCN = IETFUtils.valueToString(cn.getFirst().getValue());
+                // X500Name x500Name = new JcaX509CertificateHolder(clientCertificate).getSubject();
+                // RDN cn = x500Name.getRDNs(BCStyle.CN)[0];
+                // this.clientCN = IETFUtils.valueToString(cn.getFirst().getValue());
 
-                
                 // same with LDAP (preferred implementation, no third party jar needed)
                 LdapName ldapName = new LdapName(subjectDN);
-                ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("CN")).findFirst().ifPresent(o -> this.clientCN = o.getValue().toString());
+                ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("CN")).findFirst().ifPresent(o -> this.clientCN = o
+                        .getValue().toString());
 
                 LOGGER.debug("Client SubjectDN read from request: " + subjectDN);
                 LOGGER.debug("Client CN read from request for comparison with the account: " + clientCN);
@@ -84,7 +80,7 @@ public class ClientCertificateHandler {
             LOGGER.debug("Certificate infos as JSON: \n" + createResponse200(cipherSuiteName, keySize));
         }
     }
-    
+
     private String createResponse200(String cipherSuiteName, Integer keySize) {
         StringBuilder jsonStrb = new StringBuilder();
         jsonStrb.append("{\n");
@@ -123,21 +119,21 @@ public class ClientCertificateHandler {
         jsonStrb.append("}");
         return jsonStrb.toString();
     }
-        
+
     public X509Certificate getClientCertificate() {
         return clientCertificate;
     }
-    
+
     public X509Certificate[] getClientCertificateChain() {
         return clientCertificateChain;
     }
-    
+
     public String getSubjectDN() {
         return subjectDN;
     }
-    
+
     public String getClientCN() {
         return clientCN;
     }
-    
+
 }
