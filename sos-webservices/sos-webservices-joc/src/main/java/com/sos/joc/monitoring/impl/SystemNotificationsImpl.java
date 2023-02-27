@@ -119,6 +119,7 @@ public class SystemNotificationsImpl extends JOCResourceImpl implements ISystemN
         item.setNotificationId(entity.getId());
         item.setType(getType(entity.getType()));
         item.setCategory(getCategory(entity.getCategory()));
+        item.setJocId(entity.getJocId());
         item.setHasMonitors(entity.getHasMonitors());
         item.setSource(entity.getSource());
         item.setNotifier(entity.getNotifier());

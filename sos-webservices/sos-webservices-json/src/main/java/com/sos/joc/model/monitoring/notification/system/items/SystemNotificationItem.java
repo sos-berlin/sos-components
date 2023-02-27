@@ -25,6 +25,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "notificationId",
     "type",
     "category",
+    "jocId",
     "source",
     "notifier",
     "message",
@@ -62,6 +63,15 @@ public class SystemNotificationItem {
      */
     @JsonProperty("category")
     private SystemNotificationCategory category;
+    /**
+     * jocId
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("jocId")
+    private String jocId;
     /**
      * 
      * (Required)
@@ -176,6 +186,30 @@ public class SystemNotificationItem {
     @JsonProperty("category")
     public void setCategory(SystemNotificationCategory category) {
         this.category = category;
+    }
+
+    /**
+     * jocId
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("jocId")
+    public String getJocId() {
+        return jocId;
+    }
+
+    /**
+     * jocId
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("jocId")
+    public void setJocId(String jocId) {
+        this.jocId = jocId;
     }
 
     /**
@@ -306,12 +340,12 @@ public class SystemNotificationItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("notificationId", notificationId).append("type", type).append("category", category).append("source", source).append("notifier", notifier).append("message", message).append("exception", exception).append("hasMonitors", hasMonitors).append("created", created).append("acknowledgement", acknowledgement).toString();
+        return new ToStringBuilder(this).append("notificationId", notificationId).append("type", type).append("category", category).append("jocId", jocId).append("source", source).append("notifier", notifier).append("message", message).append("exception", exception).append("hasMonitors", hasMonitors).append("created", created).append("acknowledgement", acknowledgement).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(exception).append(acknowledgement).append(created).append(notifier).append(hasMonitors).append(notificationId).append(source).append(type).append(category).append(message).toHashCode();
+        return new HashCodeBuilder().append(jocId).append(exception).append(acknowledgement).append(created).append(notifier).append(hasMonitors).append(notificationId).append(source).append(type).append(category).append(message).toHashCode();
     }
 
     @Override
@@ -323,7 +357,7 @@ public class SystemNotificationItem {
             return false;
         }
         SystemNotificationItem rhs = ((SystemNotificationItem) other);
-        return new EqualsBuilder().append(exception, rhs.exception).append(acknowledgement, rhs.acknowledgement).append(created, rhs.created).append(notifier, rhs.notifier).append(hasMonitors, rhs.hasMonitors).append(notificationId, rhs.notificationId).append(source, rhs.source).append(type, rhs.type).append(category, rhs.category).append(message, rhs.message).isEquals();
+        return new EqualsBuilder().append(jocId, rhs.jocId).append(exception, rhs.exception).append(acknowledgement, rhs.acknowledgement).append(created, rhs.created).append(notifier, rhs.notifier).append(hasMonitors, rhs.hasMonitors).append(notificationId, rhs.notificationId).append(source, rhs.source).append(type, rhs.type).append(category, rhs.category).append(message, rhs.message).isEquals();
     }
 
 }

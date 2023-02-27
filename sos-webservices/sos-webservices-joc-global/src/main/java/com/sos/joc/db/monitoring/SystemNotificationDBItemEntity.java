@@ -7,6 +7,7 @@ public class SystemNotificationDBItemEntity {
     private Long id;
     private Integer type;
     private Integer category;
+    private String jocId;
     private String source;
     private String notifier;
     private Date time;
@@ -41,6 +42,14 @@ public class SystemNotificationDBItemEntity {
 
     public void setCategory(Integer val) {
         category = val;
+    }
+
+    public String getJocId() {
+        return jocId;
+    }
+
+    public void setJocId(String val) {
+        jocId = val;
     }
 
     public String getSource() {
