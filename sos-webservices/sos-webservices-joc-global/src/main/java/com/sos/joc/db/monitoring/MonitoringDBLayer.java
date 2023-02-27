@@ -293,6 +293,7 @@ public class MonitoringDBLayer extends DBLayer {
         StringBuilder hql = new StringBuilder("select n.id as id"); // set aliases for all properties
         hql.append(",n.type as type");
         hql.append(",n.category as category");
+        hql.append(",n.jocId as jocId");
         hql.append(",n.hasMonitors as hasMonitors");
         hql.append(",n.source as source");
         hql.append(",n.notifier as notifier");
