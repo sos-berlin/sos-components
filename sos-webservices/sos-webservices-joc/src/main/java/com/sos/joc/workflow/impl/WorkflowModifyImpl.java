@@ -17,6 +17,7 @@ import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
+import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.workflow.ModifyWorkflow;
@@ -27,6 +28,7 @@ import com.sos.schema.exception.SOSJsonSchemaException;
 import io.vavr.control.Either;
 import jakarta.ws.rs.Path;
 import js7.base.problem.Problem;
+import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.workflow.JWorkflow;
 import js7.data_for_java.workflow.JWorkflowId;
@@ -95,8 +97,15 @@ public class WorkflowModifyImpl extends JOCResourceImpl implements IWorkflowModi
             JWorkflowId wId = JWorkflowId.of(JocInventory.pathToName(workflowPath), versionId);
             Either<Problem, JWorkflow> workflowE = currentState.repo().idToCheckedWorkflow(wId);
             ProblemHelper.throwProblemIfExist(workflowE);
+            
+            Either<Problem, JWorkflow> curWorkflowE = currentState.repo().pathToCheckedWorkflow(WorkflowPath.of(workflowPath));
+            ProblemHelper.throwProblemIfExist(curWorkflowE);
 
             JWorkflow workflow = workflowE.get();
+            JWorkflow curWorkflow = curWorkflowE.get();
+            if (workflow.id().versionId().string().equals(curWorkflow.id().versionId().string())) {
+                throw new JocBadRequestException("The requested versionId is the current version. Use an older version.");
+            }
             checkFolderPermissions(WorkflowPaths.getPath(workflow.id().path().string()));
             
             String json = String.format("{\"TYPE\":\"TransferOrders\",\"workflowId\":{\"path\": \"%s\",\"versionId\": \"%s\"}}", workflow.id().path()
