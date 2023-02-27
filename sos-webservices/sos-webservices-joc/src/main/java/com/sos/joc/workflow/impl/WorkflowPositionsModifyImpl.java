@@ -124,6 +124,9 @@ public class WorkflowPositionsModifyImpl extends JOCResourceImpl implements IWor
             checkFolderPermissions(WorkflowPaths.getPath(workflow.id().path().string()));
 
             // TODO JOC-1453 consider labels
+            if (modifyWorkflow.getPositions() == null) {
+                modifyWorkflow.setPositions(Collections.emptyList());
+            }
             Map<String, List<Object>> labelMap = Collections.emptyMap();
             if (modifyWorkflow.getPositions().stream().anyMatch(pos -> pos instanceof String)) {
                 // throw new JocNotImplementedException("The use of labels as positions is not yet implemented");
@@ -132,6 +135,7 @@ public class WorkflowPositionsModifyImpl extends JOCResourceImpl implements IWor
                 DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
                 DeployedContent dbWorkflow = dbLayer.getDeployedInventory(controllerId, DeployType.WORKFLOW.intValue(), workflowPath);
                 Globals.disconnect(connection);
+                connection = null;
                 if (dbWorkflow != null) {
                     com.sos.inventory.model.workflow.Workflow w = JocInventory.workflowContent2Workflow(dbWorkflow.getContent());
                     if (w != null) {

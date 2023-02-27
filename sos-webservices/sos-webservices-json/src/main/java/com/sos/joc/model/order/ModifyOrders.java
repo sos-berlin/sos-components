@@ -264,6 +264,11 @@ public class ModifyOrders {
 
     @JsonProperty("position")
     public Object getPosition() {
+        if (position != null) {
+            if (position instanceof String && ((String) position).isEmpty()) {
+                return null;
+            }
+        }
         return position;
     }
 

@@ -161,10 +161,10 @@ public class WorkflowLabelsModifyImpl extends JOCResourceImpl implements IWorkfl
 
         if (!requestedLabels.isEmpty()) {
             if (requestedLabels.size() == 1) {
-                throw new ControllerObjectNotExistException("The label '" + requestedLabels.get(0) + "' doesn't exist in workflow '" + wj.getPath()
+                throw new ControllerObjectNotExistException("Couldn't find a Job instruction with the label '" + requestedLabels.get(0) + "' in the Workflow '" + wj.getPath()
                         + "'.");
             }
-            throw new ControllerObjectNotExistException("The labels " + requestedLabels.toString() + " don't exist in workflow '" + wj.getPath()
+            throw new ControllerObjectNotExistException("Couldn't find a Job instructions with the labels " + requestedLabels.toString() + " in the workflow '" + wj.getPath()
                     + "'.");
         }
 

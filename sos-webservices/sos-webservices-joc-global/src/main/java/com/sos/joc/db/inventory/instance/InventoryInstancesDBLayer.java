@@ -209,7 +209,11 @@ public class InventoryInstancesDBLayer {
             sql.append(" where securityLevel = :securityLevel");
             Query<DBItemInventoryJSInstance> query = session.createQuery(sql.toString());
             query.setParameter("securityLevel", level.intValue());
-            return session.getResultList(query);
+            List<DBItemInventoryJSInstance> result = session.getResultList(query);
+            if (result == null) {
+                return Collections.emptyList();
+            }
+            return result;
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {

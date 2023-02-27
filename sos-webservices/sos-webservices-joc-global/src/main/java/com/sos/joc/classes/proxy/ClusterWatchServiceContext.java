@@ -91,7 +91,8 @@ public class ClusterWatchServiceContext {
             LOGGER.info("[ClusterWatchService] send service.confirmNodeLoss(" + lossNodeId.string() + ")");
             scala.util.Either<Problem,?> checked = service.confirmNodeLoss(lossNodeId);
             if (checked.isLeft()) {
-                throw new JocBadRequestException(OptionConverters.toJava(checked.left().toOption()).get().toString());
+                throw new JocBadRequestException(checked.left().toOption().get().toString());
+                //throw new JocBadRequestException(OptionConverters.toJava(checked.left().toOption()).get().toString());
             } else {
                 burstFilter = null;
                 lossNode = null;
