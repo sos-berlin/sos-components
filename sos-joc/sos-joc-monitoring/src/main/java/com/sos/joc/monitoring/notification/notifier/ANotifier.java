@@ -14,7 +14,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.deser.std.ThrowableDeserializer;
 import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSParameterSubstitutor;
@@ -51,7 +50,7 @@ public abstract class ANotifier {
 
     private static final String COMMON_VAR_TIME_ZONE = PREFIX_COMMON_VAR + "_TIME_ZONE";
 
-    private JocHref jocHref;
+    private JocVariables jocVariables;
     private Map<String, String> tableFields;
     private Map<String, String> commonVars;
     private Map<String, String> systemVars;
@@ -59,10 +58,13 @@ public abstract class ANotifier {
     private TimeZone timeZone;
     private int nr;
 
+    // OrderNotifications
     public abstract NotifyResult notify(NotificationType type, TimeZone timeZone, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos,
             DBItemNotification mn);
 
-    public abstract NotifyResult notify(NotificationType type, TimeZone timeZone, SystemMonitoringEvent event, Date dateTime, String exception);
+    // SystemNotifications
+    public abstract NotifyResult notify(NotificationType type, TimeZone timeZone, String jocId, SystemMonitoringEvent event, Date dateTime,
+            String exception);
 
     public abstract void close();
 
@@ -86,28 +88,39 @@ public abstract class ANotifier {
         return type == null ? "" : type.name();
     }
 
-    // SystemNotification
-    protected void set(NotificationType type, TimeZone timeZone, SystemMonitoringEvent event, Date dateTime, String exception) {
+    // OrderNotification
+    protected void set(NotificationType type, TimeZone timeZone, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, DBItemNotification mn) {
         this.timeZone = timeZone;
+
+        setStatus(type);
+        setCommonVars();
+        setTableFields(mo, mos, mn);
+
+        this.jocVariables = new JocVariables(mo, mos);
+    }
+
+    // SystemNotification
+    protected void set(NotificationType type, TimeZone timeZone, String jocId, SystemMonitoringEvent event, Date dateTime, String exception) {
+        this.timeZone = timeZone;
+
         setStatus(type);
         setCommonVars();
         setSystemVars(type, timeZone, event, dateTime, exception);
 
-        this.jocHref = new JocHref(event);
+        this.jocVariables = new JocVariables(jocId, event);
     }
 
+    // jocId is set by JocVariables
     private void setSystemVars(NotificationType type, TimeZone timeZone, SystemMonitoringEvent event, Date dateTime, String exception) {
+        String source = getVarValue(event.getSource());
+
         systemVars = new HashMap<>();
         systemVars.put("MON_SN_TYPE", getVarValue(type.name()));
         systemVars.put("MON_SN_CATEGORY", event.getCategory().name());
-        String source = getVarValue(event.getSource());
         systemVars.put("MON_SN_SOURCE", source);
-        // MON_SN_SECTION deprecated with 2.5.2 - use MON_SN_SOURCE instead
-        systemVars.put("MON_SN_SECTION", source);
-
+        systemVars.put("MON_SN_SECTION", source);// MON_SN_SECTION deprecated with 2.5.2 - use MON_SN_SOURCE instead
         systemVars.put("MON_SN_NOTIFIER", getVarValue(event.getLoggerName()));
         systemVars.put("MON_SN_TIME", dateTime2String(timeZone, dateTime));
-
         systemVars.put("MON_SN_MESSAGE", event.getMessage());
         systemVars.put("MON_SN_EXCEPTION", getVarValue(exception));
     }
@@ -136,7 +149,7 @@ public abstract class ANotifier {
 
     protected String resolveSystemVars(String msg, boolean resolveEnv, Map<String, String> map) {
         SOSParameterSubstitutor ps = new SOSParameterSubstitutor(false, "${", "}");
-        jocHref.addKeys(ps);
+        jocVariables.addKeys(ps);
 
         commonVars.entrySet().forEach(e -> {
             ps.addKey(e.getKey(), e.getValue());
@@ -155,23 +168,13 @@ public abstract class ANotifier {
         return resolveEnv ? ps.replaceEnvVars(m) : m;
     }
 
-    // HistoryNotification
-    protected void set(NotificationType type, TimeZone timeZone, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, DBItemNotification mn) {
-        this.timeZone = timeZone;
-
-        setStatus(type);
-        setCommonVars();
-        setTableFields(mo, mos, mn);
-        this.jocHref = new JocHref(mo, mos);
-    }
-
     protected String resolve(String msg, boolean resolveEnv) {
         return resolve(msg, resolveEnv, null);
     }
 
     protected String resolve(String msg, boolean resolveEnv, Map<String, String> map) {
         SOSParameterSubstitutor ps = new SOSParameterSubstitutor(false, "${", "}");
-        jocHref.addKeys(ps);
+        jocVariables.addKeys(ps);
 
         commonVars.entrySet().forEach(e -> {
             ps.addKey(e.getKey(), e.getValue());
@@ -523,8 +526,8 @@ public abstract class ANotifier {
         }
     }
 
-    protected JocHref getJocHref() {
-        return jocHref;
+    protected JocVariables getJocVariables() {
+        return jocVariables;
     }
 
     public void setNr(int nr) {

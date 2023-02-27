@@ -355,17 +355,18 @@ public class DBLayerMonitoring extends DBLayer {
         return item;
     }
 
-    public static DBItemSystemNotification createSystemNotification(SystemNotification notification, SystemMonitoringEvent event, Date dateTime,
-            String exception) {
+    public static DBItemSystemNotification createSystemNotification(SystemNotification notification, String jocId, SystemMonitoringEvent event,
+            Date dateTime, String exception) {
         DBItemSystemNotification item = new DBItemSystemNotification();
         item.setType(event.getType());
         item.setCategory(event.getCategory());
-        item.setHasMonitors(notification.getMonitors().size() > 0);
+        item.setJocId(jocId);
         item.setSource(event.getSource());
         item.setNotifier(event.getLoggerName());
         item.setTime(dateTime);
         item.setMessage(event.getMessage());
         item.setException(exception);
+        item.setHasMonitors(notification.getMonitors().size() > 0);
         item.setCreated(new Date());
         return item;
     }

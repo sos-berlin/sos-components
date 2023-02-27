@@ -73,38 +73,7 @@ public class NotifierNSCA extends ANotifier {
     public void close() {
     }
 
-    @Override
-    public NotifyResult notify(NotificationType type, TimeZone timeZone, SystemMonitoringEvent event, Date dateTime, String exception) {
-
-        try {
-            set(type, timeZone, event, dateTime, exception);
-            set(type);
-
-            Map<String, String> map = new HashMap<>();
-            map.put(VAR_SERVICE_NAME, serviceName);
-            message = resolveSystemVars(monitor.getMessage(), true, map);
-
-            MessagePayload payload = new MessagePayloadBuilder().withHostname(monitor.getServiceHost()).withLevel(level).withServiceName(serviceName)
-                    .withMessage(message).create();
-
-            NagiosPassiveCheckSender sender = new NagiosPassiveCheckSender(settings);
-
-            StringBuilder info = new StringBuilder();
-            info.append("[monitor host=").append(settings.getNagiosHost()).append(":").append(settings.getPort()).append("]");
-            info.append("[service host=").append(payload.getHostname()).append("]");
-            info.append("[level=").append(payload.getLevel()).append("]");
-            info.append(payload.getMessage());
-            LOGGER.info(getInfo4execute(true, event, type, info.toString()));
-
-            sender.send(payload);
-            return new NotifyResult(payload.getMessage(), getSendInfo());
-        } catch (Throwable e) {
-            NotifyResult result = new NotifyResult(message, getSendInfo());
-            result.setError(getInfo4executeFailed(event, type, "[" + monitor.getInfo().toString() + "]" + e.toString()), e);
-            return result;
-        }
-    }
-
+    // OrderNotification
     @Override
     public NotifyResult notify(NotificationType type, TimeZone timeZone, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos,
             DBItemNotification mn) {
@@ -134,6 +103,39 @@ public class NotifierNSCA extends ANotifier {
         } catch (Throwable e) {
             NotifyResult result = new NotifyResult(message, getSendInfo());
             result.setError(getInfo4executeFailed(mo, mos, type, "[" + monitor.getInfo().toString() + "]" + e.toString()), e);
+            return result;
+        }
+    }
+
+    // SystemNotification
+    @Override
+    public NotifyResult notify(NotificationType type, TimeZone timeZone, String jocId, SystemMonitoringEvent event, Date dateTime, String exception) {
+
+        try {
+            set(type, timeZone, jocId, event, dateTime, exception);
+            set(type);
+
+            Map<String, String> map = new HashMap<>();
+            map.put(VAR_SERVICE_NAME, serviceName);
+            message = resolveSystemVars(monitor.getMessage(), true, map);
+
+            MessagePayload payload = new MessagePayloadBuilder().withHostname(monitor.getServiceHost()).withLevel(level).withServiceName(serviceName)
+                    .withMessage(message).create();
+
+            NagiosPassiveCheckSender sender = new NagiosPassiveCheckSender(settings);
+
+            StringBuilder info = new StringBuilder();
+            info.append("[monitor host=").append(settings.getNagiosHost()).append(":").append(settings.getPort()).append("]");
+            info.append("[service host=").append(payload.getHostname()).append("]");
+            info.append("[level=").append(payload.getLevel()).append("]");
+            info.append(payload.getMessage());
+            LOGGER.info(getInfo4execute(true, event, type, info.toString()));
+
+            sender.send(payload);
+            return new NotifyResult(payload.getMessage(), getSendInfo());
+        } catch (Throwable e) {
+            NotifyResult result = new NotifyResult(message, getSendInfo());
+            result.setError(getInfo4executeFailed(event, type, "[" + monitor.getInfo().toString() + "]" + e.toString()), e);
             return result;
         }
     }

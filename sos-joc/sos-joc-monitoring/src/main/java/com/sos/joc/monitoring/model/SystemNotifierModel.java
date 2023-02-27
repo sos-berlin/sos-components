@@ -85,9 +85,11 @@ public class SystemNotifierModel {
     private SystemNotifierResult notifyEvent(SystemNotification notification, SystemMonitoringEvent event) {
         int i = 1;
 
+        String jocId = Globals.getJocId();
         Date dateTime = truncateMillis(event.getEpochMillis());
         String exception = SOSClassUtil.getStackTrace(event.getThrown());
-        SystemNotifierResult result = new SystemNotifierResult(DBLayerMonitoring.createSystemNotification(notification, event, dateTime, exception));
+        SystemNotifierResult result = new SystemNotifierResult(DBLayerMonitoring.createSystemNotification(notification, jocId, event, dateTime,
+                exception));
 
         for (AMonitor m : notification.getMonitors()) {
             ANotifier n = null;
@@ -100,7 +102,7 @@ public class SystemNotifierModel {
             }
             if (n != null) {
                 try {
-                    NotifyResult nr = n.notify(event.getType(), m.getTimeZone(), event, dateTime, exception);
+                    NotifyResult nr = n.notify(event.getType(), m.getTimeZone(), jocId, event, dateTime, exception);
                     if (nr != null && nr.getError() != null) {
                         LOGGER.error(nr.getError().getMessage(), nr.getError().getException());
                     }

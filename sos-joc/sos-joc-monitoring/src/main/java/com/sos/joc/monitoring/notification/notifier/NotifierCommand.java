@@ -42,28 +42,7 @@ public class NotifierCommand extends ANotifier {
         return monitor;
     }
 
-    @Override
-    public NotifyResult notify(NotificationType type, TimeZone timeZone, SystemMonitoringEvent event, Date dateTime, String exception) {
-
-        set(type, timeZone, event, dateTime, exception);
-        String cmd = resolveSystemVars(monitor.getCommand(), false);
-        LOGGER.info(getInfo4execute(true, event, type, cmd));
-
-        SOSCommandResult commandResult = JOCSOSShell.executeCommand(cmd, TIMEOUT, getEnvVariables(cmd));
-        NotifyResult result = new NotifyResult(commandResult.getCommand(), getSendInfo());
-        if (commandResult.hasError()) {
-            StringBuilder info = new StringBuilder();
-            info.append("[").append(monitor.getInfo()).append("]");
-            info.append(commandResult);
-
-            result.setError(getInfo4executeFailed(event, type, info.toString()));
-            return result;
-        }
-
-        LOGGER.info(Configuration.LOG_INTENT_2 + getInfo4execute(false, event, type, commandResult.getCommand()));
-        return result;
-    }
-
+    // OrderNotification
     @Override
     public NotifyResult notify(NotificationType type, TimeZone timeZone, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos,
             DBItemNotification mn) {
@@ -87,6 +66,29 @@ public class NotifierCommand extends ANotifier {
         return result;
     }
 
+    // SystemNotification
+    @Override
+    public NotifyResult notify(NotificationType type, TimeZone timeZone, String jocId, SystemMonitoringEvent event, Date dateTime, String exception) {
+
+        set(type, timeZone, jocId, event, dateTime, exception);
+        String cmd = resolveSystemVars(monitor.getCommand(), false);
+        LOGGER.info(getInfo4execute(true, event, type, cmd));
+
+        SOSCommandResult commandResult = JOCSOSShell.executeCommand(cmd, TIMEOUT, getEnvVariables(cmd));
+        NotifyResult result = new NotifyResult(commandResult.getCommand(), getSendInfo());
+        if (commandResult.hasError()) {
+            StringBuilder info = new StringBuilder();
+            info.append("[").append(monitor.getInfo()).append("]");
+            info.append(commandResult);
+
+            result.setError(getInfo4executeFailed(event, type, info.toString()));
+            return result;
+        }
+
+        LOGGER.info(Configuration.LOG_INTENT_2 + getInfo4execute(false, event, type, commandResult.getCommand()));
+        return result;
+    }
+
     @Override
     public void close() {
     }
@@ -101,7 +103,7 @@ public class NotifierCommand extends ANotifier {
         map.put(PREFIX_ENV_VAR + "_" + VAR_COMMAND, cmd); // extra var
 
         // JOC VARS
-        getJocHref().addEnvs(map);
+        getJocVariables().addEnvs(map);
 
         // COMMON VARS
         getCommonVars().entrySet().forEach(e -> {
