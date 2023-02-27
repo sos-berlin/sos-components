@@ -613,7 +613,7 @@ public class JocInventory {
                         if (!isPermittedForFolder && !isNotPermittedParentFolder(folderPermissions, path, withIsNotPermittedParentFolder)) {
                             throw new JocFolderPermissionsException("Access denied for folder: " + path);
                         }
-                    } else if (p.equals(ROOT_FOLDER)) {
+                    } else if (ROOT_FOLDER.equals(p.toString().replace('\\', '/'))) {
                         throw new JocBadRequestException(String.format("Invalid object name '%1$s'.", p.toString().replace('\\', '/')));
                     } else if (!folderPermissions.isPermittedForFolder(p.getParent().toString().replace('\\', '/'))) {
                         throw new JocFolderPermissionsException("Access denied for folder: " + p.getParent().toString().replace('\\', '/'));
