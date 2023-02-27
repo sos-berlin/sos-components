@@ -7,7 +7,6 @@ import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -28,7 +27,6 @@ import com.sos.schema.exception.SOSJsonSchemaException;
 import io.vavr.control.Either;
 import jakarta.ws.rs.Path;
 import js7.base.problem.Problem;
-import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.workflow.JWorkflow;
 import js7.data_for_java.workflow.JWorkflowId;
@@ -83,41 +81,37 @@ public class WorkflowModifyImpl extends JOCResourceImpl implements IWorkflowModi
     }
 
     private void postWorkflowModify(Action action, ModifyWorkflow workflowFilter) throws Exception {
-        SOSHibernateSession connection = null;
-        try {
-            String controllerId = workflowFilter.getControllerId();
-            DBItemJocAuditLog dbAuditLog = storeAuditLog(workflowFilter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
-            JControllerProxy proxy = Proxy.of(controllerId);
-            JControllerState currentState = proxy.currentState();
+        String controllerId = workflowFilter.getControllerId();
+        DBItemJocAuditLog dbAuditLog = storeAuditLog(workflowFilter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+        JControllerProxy proxy = Proxy.of(controllerId);
+        JControllerState currentState = proxy.currentState();
 
-            String versionId = workflowFilter.getWorkflowId().getVersionId();
-            String workflowPath = workflowFilter.getWorkflowId().getPath();
-            checkRequiredParameter("versionId", versionId);
-            
-            String workflowName = JocInventory.pathToName(workflowPath);
-            
-            JWorkflowId wId = JWorkflowId.of(workflowName, versionId);
-            Either<Problem, JWorkflow> workflowE = currentState.repo().idToCheckedWorkflow(wId);
-            ProblemHelper.throwProblemIfExist(workflowE);
-            
-            Either<Problem, JWorkflow> curWorkflowE = currentState.repo().pathToCheckedWorkflow(WorkflowPath.of(workflowName));
-            ProblemHelper.throwProblemIfExist(curWorkflowE);
+        String versionId = workflowFilter.getWorkflowId().getVersionId();
+        String workflowPath = workflowFilter.getWorkflowId().getPath();
+        checkRequiredParameter("versionId", versionId);
 
-            JWorkflow workflow = workflowE.get();
-            JWorkflow curWorkflow = curWorkflowE.get();
-            if (workflow.id().versionId().string().equals(curWorkflow.id().versionId().string())) {
-                throw new JocBadRequestException("The requested versionId is the current version. Use an older version.");
-            }
-            checkFolderPermissions(WorkflowPaths.getPath(workflow.id().path().string()));
-            
-            String json = String.format("{\"TYPE\":\"TransferOrders\",\"workflowId\":{\"path\": \"%s\",\"versionId\": \"%s\"}}", workflow.id().path()
-                    .string(), workflow.id().versionId().string());
-            LOGGER.debug("send command: " + json);
-            proxy.api().executeCommandJson(json).thenAccept(either -> thenAcceptHandler(either, controllerId, workflow, dbAuditLog));
+        JWorkflowId workflowId = JWorkflowId.of(JocInventory.pathToName(workflowPath), versionId);
+        
+        Either<Problem, JWorkflow> workflowE = currentState.repo().idToCheckedWorkflow(workflowId);
+        ProblemHelper.throwProblemIfExist(workflowE);
 
-        } finally {
-            Globals.disconnect(connection);
+        Either<Problem, JWorkflow> curWorkflowE = currentState.repo().pathToCheckedWorkflow(workflowId.path());
+        ProblemHelper.throwProblemIfExist(curWorkflowE);
+
+        JWorkflow workflow = workflowE.get();
+        if (versionId.equals(curWorkflowE.get().id().versionId().string())) {
+            throw new JocBadRequestException("The requested versionId is the current version. Use an older version.");
         }
+        checkFolderPermissions(WorkflowPaths.getPath(workflowId.path().string()));
+
+        String json = getCommandJson(workflowId);
+        LOGGER.debug("send command: " + json);
+        proxy.api().executeCommandJson(json).thenAccept(either -> thenAcceptHandler(either, controllerId, workflow, dbAuditLog));
+    }
+    
+    private static String getCommandJson(JWorkflowId workflowId) {
+        return String.format("{\"TYPE\":\"TransferOrders\",\"workflowId\":{\"path\":\"%s\",\"versionId\":\"%s\"}}", workflowId.path()
+                .string(), workflowId.versionId().string());
     }
     
     private ModifyWorkflow initRequest(Action action, String accessToken, byte[] filterBytes) throws SOSJsonSchemaException, IOException {
