@@ -69,8 +69,8 @@ public class RemoveDescriptorImpl extends ADeleteConfiguration implements IRemov
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
             initLogging(IRemoveDescriptor.IMPL_PATH_TRASH_DELETE, body, accessToken);
             JsonValidator.validate(body, RequestFilters.class, true);
-            com.sos.joc.model.inventory.delete.RequestFilters in = 
-                    Globals.objectMapper.readValue(body, com.sos.joc.model.inventory.delete.RequestFilters.class);
+            RequestFilters filters = Globals.objectMapper.readValue(body, RequestFilters.class);;
+            com.sos.joc.model.inventory.delete.RequestFilters in = mapTo(filters);
 
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
             if (response == null) {
