@@ -94,11 +94,13 @@ public class WorkflowModifyImpl extends JOCResourceImpl implements IWorkflowModi
             String workflowPath = workflowFilter.getWorkflowId().getPath();
             checkRequiredParameter("versionId", versionId);
             
-            JWorkflowId wId = JWorkflowId.of(JocInventory.pathToName(workflowPath), versionId);
+            String workflowName = JocInventory.pathToName(workflowPath);
+            
+            JWorkflowId wId = JWorkflowId.of(workflowName, versionId);
             Either<Problem, JWorkflow> workflowE = currentState.repo().idToCheckedWorkflow(wId);
             ProblemHelper.throwProblemIfExist(workflowE);
             
-            Either<Problem, JWorkflow> curWorkflowE = currentState.repo().pathToCheckedWorkflow(WorkflowPath.of(workflowPath));
+            Either<Problem, JWorkflow> curWorkflowE = currentState.repo().pathToCheckedWorkflow(WorkflowPath.of(workflowName));
             ProblemHelper.throwProblemIfExist(curWorkflowE);
 
             JWorkflow workflow = workflowE.get();

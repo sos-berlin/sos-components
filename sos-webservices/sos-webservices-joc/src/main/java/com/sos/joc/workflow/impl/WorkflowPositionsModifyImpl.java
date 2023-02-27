@@ -116,7 +116,7 @@ public class WorkflowPositionsModifyImpl extends JOCResourceImpl implements IWor
                 workflowE = currentState.repo().idToCheckedWorkflow(wId);
                 ProblemHelper.throwProblemIfExist(workflowE);
             } else {
-                workflowE = currentState.repo().pathToCheckedWorkflow(WorkflowPath.of(workflowPath));
+                workflowE = currentState.repo().pathToCheckedWorkflow(WorkflowPath.of(JocInventory.pathToName(workflowPath)));
                 ProblemHelper.throwProblemIfExist(workflowE);
             }
 
