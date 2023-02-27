@@ -71,6 +71,7 @@ import com.sos.joc.event.bean.inventory.InventoryTrashFolderEvent;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
+import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocMissingCommentException;
 import com.sos.joc.model.SuffixPrefix;
@@ -606,11 +607,14 @@ public class JocInventory {
                 } else {
                     Path p = normalizePath(path);
                     path = p.toString().replace('\\', '/');
+                    
                     if (isFolder(type)) {
                         boolean isPermittedForFolder = folderPermissions.isPermittedForFolder(path);
                         if (!isPermittedForFolder && !isNotPermittedParentFolder(folderPermissions, path, withIsNotPermittedParentFolder)) {
                             throw new JocFolderPermissionsException("Access denied for folder: " + path);
                         }
+                    } else if (p.equals(ROOT_FOLDER)) {
+                        throw new JocBadRequestException(String.format("Invalid object name '%1$s'.", p.toString().replace('\\', '/')));
                     } else if (!folderPermissions.isPermittedForFolder(p.getParent().toString().replace('\\', '/'))) {
                         throw new JocFolderPermissionsException("Access denied for folder: " + p.getParent().toString().replace('\\', '/'));
                     }
