@@ -92,7 +92,6 @@ public class ClusterWatch {
                 }
             } else if (memberId.equals(evt.getNewClusterMemberId())) {
                 // start for all controllerIds
-                LOGGER.info("[ClusterWatch] try to start watches");
                 SOSHibernateSession sosHibernateSession = null;
                 try {
                     sosHibernateSession = Globals.createSosHibernateStatelessConnection("ClusterWatch");
@@ -105,6 +104,11 @@ public class ClusterWatch {
                     ConcurrentMap<String, List<DBItemInventoryJSInstance>> controllerDbInstances = instancesStream.collect(Collectors
                             .groupingByConcurrent(DBItemInventoryJSInstance::getControllerId));
                     Globals.disconnect(sosHibernateSession);
+                    if (controllerDbInstances.values().stream().anyMatch(l -> l.size() > 1)) {
+                        LOGGER.info("[ClusterWatch] try to start watches");
+                    } else {
+                        LOGGER.info("[ClusterWatch] no Controller cluster registered.");
+                    }
                     controllerDbInstances.forEach((controllerId, dbItems) -> Proxies.getInstance().updateProxies(dbItems));
 
                     Proxies.getControllerDbInstances().keySet().stream().filter(c -> !controllerDbInstances.containsKey(c)).forEach(c -> Proxies
@@ -203,7 +207,7 @@ public class ClusterWatch {
     }
     
     public NodeId getClusterNodeLoss(String controllerId) {
-        if (isAlive(controllerId)) {
+        if (isWatched(controllerId)) {
             return startedWatches.get(controllerId).getClusterNodeLoss();
         }
         return null;
@@ -213,26 +217,21 @@ public class ClusterWatch {
         return getClusterNodeLoss(controllerId) != null;
     }
     
-    public void confirmNodeLoss(String controllerId) {
-        if (isAlive(controllerId)) {
+    public void confirmNodeLoss(String controllerId) throws JocBadRequestException {
+        if (isWatched(controllerId)) {
             NodeId nodeId = startedWatches.get(controllerId).getClusterNodeLoss();
             if (nodeId != null) {
                 startedWatches.get(controllerId).confirmNodeLoss(nodeId);
+            } else {
+                throw new JocBadRequestException("Couldn't determine loss node of Controller cluster '" + controllerId + "'."); 
             }
-        }
-    }
-    
-    public void confirmNodeLoss(String controllerId, String nodeId) {
-        if (nodeId == null) {
-            confirmNodeLoss(controllerId); 
-        }
-        if (isAlive(controllerId)) {
-            startedWatches.get(controllerId).confirmNodeLoss(NodeId.of(nodeId));
+        } else {
+            throw new JocBadRequestException("Controller cluster '" + controllerId + "' is not watched by " + toStringWithId() + "."); 
         }
     }
     
     public Optional<String> getAndCleanLastMessage(String controllerId) {
-        if (isAlive(controllerId)) {
+        if (isWatched(controllerId)) {
             return startedWatches.get(controllerId).getAndCleanLastMessage();
         }
         return Optional.empty();
@@ -265,7 +264,7 @@ public class ClusterWatch {
             jocIsActive = jocInstanceIsActive(dbLayer);
         }
         if (clusterWatchByJoc && jocIsActive) {
-            if (isAlive(controllerId)) {
+            if (isWatched(controllerId)) {
                 LOGGER.info("[ClusterWatch] Watcher by " + toStringWithId() + " is still running for '" + controllerId + "'");
                 // throw new JocServiceException("[ClusterWatch] " + controllerId + " is still running.");
                 return clusterId;
@@ -293,7 +292,7 @@ public class ClusterWatch {
     }
     
     private void stop(String controllerId) {
-        if (isAlive(controllerId)) {
+        if (isWatched(controllerId)) {
             if (startedWatches.get(controllerId).stop()) {
                 startedWatches.remove(controllerId);
             }
@@ -320,7 +319,7 @@ public class ClusterWatch {
         }
     }
     
-    private boolean isAlive(String controllerId) {
+    private boolean isWatched(String controllerId) {
         return startedWatches.containsKey(controllerId);
 //        boolean isAlive = false;
 //        if (startedWatches.containsKey(controllerId)) {
