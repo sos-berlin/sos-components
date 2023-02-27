@@ -32,6 +32,7 @@ import com.sos.controller.model.common.Outcome;
 import com.sos.controller.model.workflow.HistoricOutcome;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.common.Variables;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -49,6 +50,8 @@ import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
 import com.sos.joc.dailyplan.db.DBLayerDailyPlannedOrders;
 import com.sos.joc.dailyplan.db.FilterDailyPlannedOrders;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
+import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
+import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.dailyplan.DailyPlanEvent;
@@ -56,7 +59,6 @@ import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.ModifyOrders;
@@ -93,7 +95,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     private static final Logger LOGGER = LoggerFactory.getLogger(OrdersResourceModifyImpl.class);
 
     private enum Action {
-        CANCEL, SUSPEND, RESUME, REMOVE_WHEN_TERMINATED, ANSWER_PROMPT
+        CANCEL, SUSPEND, RESUME, REMOVE_WHEN_TERMINATED, ANSWER_PROMPT, TRANSITION
     }
 
     @Override
@@ -268,6 +270,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         }
     }
 
+    @SuppressWarnings("unchecked")
     public void postResumeOrders(ModifyOrders modifyOrders) throws Exception {
 
         String controllerId = modifyOrders.getControllerId();
@@ -315,21 +318,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         Optional<JPosition> positionOpt = Optional.empty();
         
         // TODO JOC-1453 consider labels
-        if (modifyOrders.getPosition() != null) {
-            if (modifyOrders.getPosition() instanceof String) {
-                throw new JocNotImplementedException("The use of labels as a position is not yet implemented");
-            } else if (modifyOrders.getPosition() instanceof List<?>) {
-                @SuppressWarnings("unchecked")
-                List<Object> pos = (List<Object>) modifyOrders.getPosition();
-                if (!pos.isEmpty()) {
-                    Either<Problem, JPosition> posFromList = JPosition.fromList(pos);
-                    if (posFromList.isLeft()) {
-                        ProblemHelper.throwProblemIfExist(posFromList);
-                    }
-                    positionOpt = Optional.of(posFromList.get());
-                }
-            }
-        }
+        Object positionObj = modifyOrders.getPosition();
+        boolean withPosition = positionObj != null && !((positionObj instanceof List<?> && ((List<Object>) positionObj).isEmpty()));
 
         boolean withVariables = modifyOrders.getVariables() != null && modifyOrders.getVariables().getAdditionalProperties() != null && !modifyOrders
                 .getVariables().getAdditionalProperties().isEmpty();
@@ -340,9 +330,49 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         Set<String> allowedPositions = cop.getPositions().stream().map(Position::getPositionString).collect(Collectors.toCollection(
                 LinkedHashSet::new));
 
-        if (positionOpt.isPresent()) {
+        if (withPosition) {
             if (!cop.isSingleOrder() && cop.getDisabledPositionChange() != null) {
                 throw new JocBadRequestException(cop.getDisabledPositionChange().getMessage());
+            }
+            if (cop.isSingleOrder()) {
+                List<Object> pos = null;
+                if (positionObj instanceof String) {
+                    SOSHibernateSession connection = null;
+                    try {
+                        JWorkflowId jWorkflowId = jOrders.iterator().next().workflowId();
+                        Map<String, List<Object>> labelMap = Collections.emptyMap();
+
+                        connection = Globals.createSosHibernateStatelessConnection(API_CALL);
+                        DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
+                        DeployedContent dbWorkflow = dbLayer.getDeployedInventory(controllerId, DeployType.WORKFLOW.intValue(), jWorkflowId.path()
+                                .string(), jWorkflowId.versionId().string());
+                        Globals.disconnect(connection);
+                        connection = null;
+                        if (dbWorkflow != null) {
+                            com.sos.inventory.model.workflow.Workflow w = JocInventory.workflowContent2Workflow(dbWorkflow.getContent());
+                            if (w != null) {
+                                labelMap = WorkflowsHelper.getLabelToPositionsMap(w);
+                            }
+                        }
+                        pos = labelMap.get((String) positionObj);
+                        
+                    } finally {
+                        Globals.disconnect(connection);
+                    }
+                    
+                } else if (positionObj instanceof List<?>) {
+                    pos = (List<Object>) positionObj;
+                    if (!pos.isEmpty()) {
+                        pos = null;
+                    }
+                }
+                if (pos != null) {
+                    Either<Problem, JPosition> posFromList = JPosition.fromList(pos);
+                    if (posFromList.isLeft()) {
+                        ProblemHelper.throwProblemIfExist(posFromList);
+                    }
+                    positionOpt = Optional.of(posFromList.get());
+                }
             }
 
             if (!allowedPositions.contains(positionOpt.get().toString())) {
