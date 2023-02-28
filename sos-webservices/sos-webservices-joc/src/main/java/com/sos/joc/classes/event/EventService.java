@@ -396,9 +396,12 @@ public class EventService {
         if (!evt.onlyProblem()) {
             addEvent(createControllerEvent(evt.getEventId() / 1000));
         }
+        String msg = "Loss instance '" + evt.getNodeId().toUpperCase() + "' of Controller Cluster '" + evt.getControllerId() + "' must be confirmed";
         String message = evt.getMessage();
         if (message == null) {
-            message = "Loss instance '" + evt.getNodeId() + "' of Controller Cluster '" + evt.getControllerId() + "' must be confirmed";
+            message = msg;
+        } else {
+            message = msg + ": " + message;
         }
         addEvent(createNodeLossProblem(evt.getEventId() / 1000, message));
     }
@@ -439,6 +442,10 @@ public class EventService {
                         w = mapWorkflowId(optOrder.workflowId());
                         orders.put(mainOrderId, w);
                     }
+                    if (evt instanceof OrderTransferred) {
+                        w = mapWorkflowId(((OrderTransferred) evt).workflowPosition().workflowId());
+                        orders.put(mainOrderId, w);
+                    }
                     addEvent(createWorkflowEventOfOrder(eventId, w));
                     if (evt instanceof OrderProcessingStarted || evt instanceof OrderProcessed || evt instanceof OrderProcessingKilled$) {
                         addEvent(createTaskEventOfOrder(eventId, w));
@@ -446,8 +453,8 @@ public class EventService {
                         OrderLockEvent lockEvt = (OrderLockEvent) evt;
                         JavaConverters.asJava(lockEvt.lockPaths()).forEach(lock -> addEvent(createLockEvent(eventId, lock.string())));
                     } else if (evt instanceof OrderNoticeEvent) {
-                        orderPositionToBoardPaths(optOrder, currentState).ifPresent(boardPaths -> boardPaths.forEach(boardPath -> createBoardEvent(
-                                eventId, boardPath.string())));
+                        orderPositionToBoardPaths(optOrder, currentState).ifPresent(boardPaths -> boardPaths.forEach(
+                                boardPath -> createBoardEvent(eventId, boardPath.string())));
                     }
                 } else {
                     // LOGGER.info("Order is not in current state");

@@ -359,7 +359,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
                 } else if (positionObj instanceof List<?>) {
                     pos = (List<Object>) positionObj;
-                    if (!pos.isEmpty()) {
+                    if (pos.isEmpty()) {
                         pos = null;
                     }
                 }
@@ -372,7 +372,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 }
             }
 
-            if (!allowedPositions.contains(positionOpt.get().toString())) {
+            if (positionOpt.isPresent() && !allowedPositions.contains(positionOpt.get().toString())) {
                 if (cop.isSingleOrder() && cop.getCurrentPosition().toString().equals(positionOpt.get().toString())) {
                     positionOpt = Optional.empty();
                 } else {
