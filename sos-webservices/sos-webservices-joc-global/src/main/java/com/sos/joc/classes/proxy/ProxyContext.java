@@ -119,12 +119,10 @@ public class ProxyContext {
         if (proxy == null) {
             LOGGER.info(String.format("%s of %s will be cancelled", proxyFuture.toString(), toString()));
             return CompletableFuture.runAsync(() -> {
-                if (!proxyFuture.isDone()) {
-                    try {
-                        proxyFuture.cancel(false);
-                    } catch (Exception e) {
-                        //
-                    }
+                try {
+                    proxyFuture.cancel(false);
+                } catch (Exception e) {
+                    //
                 }
             });
         } else {
