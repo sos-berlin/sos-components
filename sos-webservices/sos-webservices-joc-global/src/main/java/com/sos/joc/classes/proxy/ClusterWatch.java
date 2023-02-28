@@ -122,6 +122,16 @@ public class ClusterWatch {
         }
     }
     
+//    @Subscribe({ ProxyRestarted.class })
+//    public void listenProxyRestartedEvent(ProxyRestarted evt) {
+//        if (ProxyUser.JOC.getUser().equals(evt.getKey())) {
+//            if (isWatched(evt.getControllerId())) {
+//                startedWatches.get(evt.getControllerId()).stop();
+//                appointNodes(evt.getControllerId(), ControllerApi.of(evt.getControllerId()));
+//            }
+//        }
+//    }
+    
     public void appointNodes(String controllerId, JControllerApi controllerApi) throws DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, JocBadRequestException {
         appointNodes(controllerId, controllerApi, null, null, null);
@@ -235,6 +245,10 @@ public class ClusterWatch {
             return startedWatches.get(controllerId).getAndCleanLastMessage();
         }
         return Optional.empty();
+    }
+    
+    protected void clear() {
+        startedWatches.clear();
     }
     
     private Stream<String> jocIsClusterWatch(String controllerId, InventoryAgentInstancesDBLayer dbLayer) {

@@ -422,6 +422,7 @@ public class Proxies {
                 .thenRun(() -> {
                     controllerFutures.clear();
                     controllerApis.clear();
+                    ClusterWatch.getInstance().clear();
                     proxyContext.close();
                     proxyContext = null;
                 }).get(30, TimeUnit.SECONDS);
@@ -550,10 +551,10 @@ public class Proxies {
         try {
             return context.getProxy(connectionTimeout);
         } catch (ProxyNotCoupledException e) {
-            close(credentials);
+            closeProxy(credentials);
             throw e;
         } catch (CancellationException e) {
-            close(credentials);
+            closeProxy(credentials);
             throw new ControllerConnectionResetException(credentials.getControllerId());
         }
     }
@@ -566,6 +567,22 @@ public class Proxies {
                 if (controllerApi != null) {
                     controllerApi.stop();
                 }
+                EventBus.getInstance().post(new ProxyClosed(credentials.getUser().name(), credentials.getControllerId()));
+            });
+        } else if (controllerApis.containsKey(credentials)) {
+            return CompletableFuture.runAsync(() -> {
+                controllerApis.remove(credentials);
+                EventBus.getInstance().post(new ProxyClosed(credentials.getUser().name(), credentials.getControllerId()));
+            });
+        } else {
+            return CompletableFuture.completedFuture(null);
+        }
+    }
+    
+    private CompletableFuture<Void> closeProxy(ProxyCredentials credentials) {
+        if (controllerFutures.containsKey(credentials)) {
+            return controllerFutures.get(credentials).stop().thenRun(() -> {
+                controllerFutures.remove(credentials);
                 EventBus.getInstance().post(new ProxyClosed(credentials.getUser().name(), credentials.getControllerId()));
             });
         } else if (controllerApis.containsKey(credentials)) {
