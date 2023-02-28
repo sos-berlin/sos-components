@@ -339,14 +339,14 @@ public class JocCluster {
             if (dbLayer != null) {
                 dbLayer.rollback();
             }
-            LOGGER.warn(String.format("[%s][exception][current=%s][active=%s][lastActive=%s][locked][%s]%s", mode, currentMemberId, activeMemberId,
+            LOGGER.info(String.format("[%s][locked][current=%s][active=%s][lastActive=%s][%s]%s", mode, currentMemberId, activeMemberId,
                     lastActiveMemberId, SOSHibernate.toString(item), e.toString()), e);
 
         } catch (SOSHibernateObjectOperationException e) {
             if (dbLayer != null) {
                 dbLayer.rollback();
             }
-            LOGGER.error(String.format("[%s][exception][current=%s][active=%s][lastActive=%s][%s]%s", mode, currentMemberId, activeMemberId,
+            LOGGER.info(String.format("[%s][locked][current=%s][active=%s][lastActive=%s][%s]%s", mode, currentMemberId, activeMemberId,
                     lastActiveMemberId, SOSHibernate.toString(item), e.toString()), e);
         } catch (Exception e) {
             LOGGER.error(e.toString(), e);
@@ -415,15 +415,23 @@ public class JocCluster {
             item.setHeartBeat(new Date());
             item.setMemberId(currentMemberId);
 
-            dbLayer.beginTransaction();
-            dbLayer.getSession().save(item);
-            dbLayer.commit();
+            try {
+                dbLayer.beginTransaction();
+                dbLayer.getSession().save(item);
+                dbLayer.commit();
 
-            if (!isFirstRun) {
-                mode = StartupMode.automatic_switchover;
-                item.setStartupMode(mode.name());
+                if (!isFirstRun) {
+                    mode = StartupMode.automatic_switchover;
+                    item.setStartupMode(mode.name());
+                }
+            } catch (SOSHibernateObjectOperationException e) {
+                dbLayer.rollback();
+                item = dbLayer.getCluster();
+                LOGGER.info(String.format("[%s][saveCluster][locked][current=%s][active=%s][lastActive=%s][%s]%s", mode, currentMemberId,
+                        activeMemberId, lastActiveMemberId, SOSHibernate.toString(item), e.toString()), e);
             }
-        } else {
+        }
+        if (item != null) {
             if (item.getMemberId().equals(currentMemberId)) {
                 item = trySwitchActiveMemberOnProcess(mode, dbLayer, item, configurations, isFirstRun);
             } else {
