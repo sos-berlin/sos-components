@@ -584,6 +584,7 @@ public class InventoryDBLayer extends DBLayer {
         }
         Query<T> query = getSession().createQuery(hql.toString());
         query.setParameter("path", path.toLowerCase());
+        query.setMaxResults(1);
         if (isCalendar) {
             query.setParameterList("types", JocInventory.getCalendarTypes());
         } else {
