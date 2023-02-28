@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -1012,14 +1013,23 @@ try {
     public DBItemInventoryConfiguration saveOrUpdateInventoryConfiguration(ConfigurationObject configuration, String account, Long auditLogId, boolean overwrite,
             Set<String> agentNames) {
         try {
+            boolean isCalendar = JocInventory.isCalendar(configuration.getObjectType());
             DBItemInventoryConfiguration existingConfiguration = null;
             StringBuilder hql = new StringBuilder(" from ");
             hql.append(DBLayer.DBITEM_INV_CONFIGURATIONS);
             hql.append(" where name = :name");
-            hql.append(" and type = :type");
+            if (isCalendar) {
+                hql.append(" and type in (:types)");
+            } else {
+                hql.append(" and type = :type");
+            }
             Query<DBItemInventoryConfiguration> query = session.createQuery(hql.toString());
-            query.setParameter("type", configuration.getObjectType().intValue());
             query.setParameter("name", configuration.getName());
+            if (isCalendar) {
+                query.setParameterList("types", JocInventory.getCalendarTypes());
+            } else {
+                query.setParameter("type", configuration.getObjectType().intValue());
+            }
             query.setMaxResults(1);
             existingConfiguration = session.getSingleResult(query);
             boolean valid = false;
