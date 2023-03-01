@@ -26,6 +26,7 @@ import com.sos.joc.classes.controller.ControllerAnswer;
 import com.sos.joc.classes.controller.ControllerCallable;
 import com.sos.joc.classes.controller.States;
 import com.sos.joc.classes.proxy.ClusterWatch;
+import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.ProxiesEdit;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.proxy.ProxyUser;
@@ -75,7 +76,7 @@ import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.item.JUpdateItemOperation;
 import js7.data_for_java.subagent.JSubagentItem;
-import js7.proxy.javaapi.JControllerProxy;
+import js7.proxy.javaapi.JControllerApi;
 import reactor.core.publisher.Flux;
 
 @Path("controller")
@@ -418,16 +419,16 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             instances = instances.stream().filter(Objects::nonNull).collect(Collectors.toList());
 //            boolean proxyIsUpdated = false;
             if (!instances.isEmpty()) {
-                // appointClusterNodes is called in Proxy when coupled with controller if cluster TYPE:Empty
                 ProxiesEdit.update(instances);
 //                proxyIsUpdated = true;
             }
             
-            JControllerProxy proxy = Proxy.of(controllerId);
+            JControllerApi controllerApi = null;
             
             if (clusterUriChanged || controllerUpdateRequired) {
                 try {
-                    ClusterWatch.getInstance().appointNodes(controllerId, proxy.api(), agentDBLayer, accessToken, getJocError());
+                    controllerApi = ControllerApi.of(controllerId);
+                    ClusterWatch.getInstance().appointNodes(controllerId, controllerApi, agentDBLayer, accessToken, getJocError());
                 } catch (JocBadRequestException e) {
                 }
             }
@@ -436,11 +437,12 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 final String cId = controllerId;
 
                 // TODO consider old Agent cannot convert to new Agents
-                JControllerState currentState = proxy.currentState();
-                
-                Map<AgentPath, JAgentRef> knownAgents = currentState.pathToAgentRef();
+                Map<AgentPath, JAgentRef> knownAgents = getKnownAgents(controllerId);
+                if (controllerApi == null) {
+                    controllerApi = ControllerApi.of(controllerId);
+                }
 
-                proxy.api().updateItems(Flux.fromStream(agentWatchers.stream().map(a -> {
+                controllerApi.updateItems(Flux.fromStream(agentWatchers.stream().map(a -> {
                     JAgentRef agentRef = knownAgents.get(AgentPath.of(a.getAgentId()));
 
                     String subagentIdFromRequest = a.getAgentId();
@@ -498,6 +500,18 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
         } finally {
             Globals.disconnect(connection);
         }
+    }
+    
+    private Map<AgentPath, JAgentRef> getKnownAgents(String controllerId) {
+        // TODO consider old Agent cannot convert to new Agents
+        Map<AgentPath, JAgentRef> knownAgents = Collections.emptyMap();
+        try {
+            JControllerState currentState = Proxy.of(controllerId).currentState();
+            knownAgents = currentState.pathToAgentRef();
+        } catch (Exception e) {
+            //
+        }
+        return knownAgents;
     }
     
     private static JAgentRef createAgent(Agent a, SubagentId subagentId) {

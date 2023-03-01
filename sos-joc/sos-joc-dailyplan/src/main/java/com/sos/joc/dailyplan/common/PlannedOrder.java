@@ -1,6 +1,9 @@
 package com.sos.joc.dailyplan.common;
 
 import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.order.FreshOrder;
@@ -23,6 +26,8 @@ public class PlannedOrder {
     private Long averageDuration = 0L;
     private boolean storedInDb = false;
     private String orderName;
+    private Map<String, List<Object>> labelToPositionMap = Collections.emptyMap(); 
+    
 
     public PlannedOrder(String controllerId, FreshOrder freshOrder, DailyPlanSchedule dailyPlanSchedule, DailyPlanScheduleWorkflow scheduleWorkflow,
             Long calendarId) {
@@ -36,6 +41,8 @@ public class PlannedOrder {
         this.schedulePath = dailyPlanSchedule.getSchedule().getPath();
         this.submitOrderToControllerWhenPlanned = dailyPlanSchedule.getSchedule().getSubmitOrderToControllerWhenPlanned() == null ? false
                 : dailyPlanSchedule.getSchedule().getSubmitOrderToControllerWhenPlanned();
+        
+        // TODO JOC-1453 create label->position map here from scheduleWorkflow.getContent() or store scheduleWorkflow.getContent() and do it later in OrderApi
     }
 
     public PlannedOrderKey uniqueOrderKey() {
@@ -132,5 +139,15 @@ public class PlannedOrder {
 
     public void setStoredInDb(boolean val) {
         storedInDb = val;
+    }
+    
+    public Map<String, List<Object>> getLabelToPositionMap() {
+        return labelToPositionMap;
+    }
+
+    public void setLabelToPositionMap(Map<String, List<Object>> labelToPositionMap) {
+        if (labelToPositionMap != null) {
+            this.labelToPositionMap = labelToPositionMap;
+        }
     }
 }

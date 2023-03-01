@@ -30,6 +30,7 @@ import com.sos.joc.event.bean.agent.AgentInventoryEvent;
 import com.sos.joc.event.bean.auditlog.AuditlogChangedEvent;
 import com.sos.joc.event.bean.auditlog.AuditlogWorkflowEvent;
 import com.sos.joc.event.bean.cluster.ActiveClusterChangedEvent;
+import com.sos.joc.event.bean.command.WorkflowDeletedEvent;
 import com.sos.joc.event.bean.dailyplan.DailyPlanEvent;
 import com.sos.joc.event.bean.documentation.DocumentationEvent;
 import com.sos.joc.event.bean.history.HistoryOrderEvent;
@@ -404,6 +405,14 @@ public class EventService {
             message = msg + ": " + message;
         }
         addEvent(createNodeLossProblem(evt.getEventId() / 1000, message));
+    }
+    
+    @Subscribe({ WorkflowDeletedEvent.class }) //TODO can be deleted if Controller send ItemDeleted event after transfer Orders
+    public void createEvent(WorkflowDeletedEvent evt) {
+        WorkflowId w = new WorkflowId();
+        w.setPath(evt.getPath());
+        w.setVersionId(evt.getVersionId());
+        addEvent(createWorkflowEvent(evt.getEventId() / 1000, w, "ItemDeleted"));
     }
 
     @Subscribe({ ProxyCoupled.class })

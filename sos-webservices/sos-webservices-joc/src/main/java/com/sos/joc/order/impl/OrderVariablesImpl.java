@@ -1,15 +1,23 @@
 package com.sos.joc.order.impl;
 
 import java.util.List;
+import java.util.Map;
 
+import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.inventory.model.deploy.DeployType;
+import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.order.CheckedResumeOrdersPositions;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.classes.workflow.WorkflowsHelper;
+import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
+import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocNotImplementedException;
+import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.order.OrderVariablesFilter;
 import com.sos.joc.order.resource.IOrderVariablesResource;
 import com.sos.schema.JsonValidator;
@@ -17,6 +25,9 @@ import com.sos.schema.JsonValidator;
 import io.vavr.control.Either;
 import jakarta.ws.rs.Path;
 import js7.base.problem.Problem;
+import js7.data.order.OrderId;
+import js7.data_for_java.controller.JControllerState;
+import js7.data_for_java.order.JOrder;
 import js7.data_for_java.workflow.position.JPosition;
 
 @Path("order")
@@ -24,8 +35,10 @@ public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariabl
 
     private static final String API_CALL = "./order/variables";
 
+    @SuppressWarnings("unchecked")
     @Override
     public JOCDefaultResponse postVariables(String accessToken, byte[] filterBytes) {
+        SOSHibernateSession connection = null;
         try {
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validate(filterBytes, OrderVariablesFilter.class);
@@ -37,24 +50,35 @@ public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariabl
             }
             
             String position = null;
+            JControllerState currentState = Proxy.of(controllerId).currentState();
             
-            // TODO JOC-1453 consider labels
             if (orderFilter.getPosition() != null) {
                 if (orderFilter.getPosition() instanceof String) {
-                    throw new JocNotImplementedException("The use of labels as a position is not yet implemented");
-                } else if (orderFilter.getPosition() instanceof List<?>) {
-                    @SuppressWarnings("unchecked")
-                    List<Object> pos = (List<Object>) orderFilter.getPosition();
-                    if (!pos.isEmpty()) {
-                        Either<Problem, JPosition> jPos = JPosition.fromList(pos);
-                        ProblemHelper.throwProblemIfExist(jPos);
-                        position = jPos.get().toString();
+                    JOrder jOrder = currentState.idToOrder().get(OrderId.of(orderFilter.getOrderId()));
+                    if (jOrder == null) {
+                        throw new JocObjectNotExistException(String.format("Unknown OrderId: %s", orderFilter.getOrderId()));
                     }
+                    connection = Globals.createSosHibernateStatelessConnection(API_CALL);
+                    DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
+                    DeployedContent dbWorkflow = dbLayer.getDeployedInventory(controllerId, DeployType.WORKFLOW.intValue(), jOrder.workflowId().path()
+                            .string());
+                    Globals.disconnect(connection);
+                    connection = null;
+                    if (dbWorkflow != null) {
+                        Workflow w = JocInventory.workflowContent2Workflow(dbWorkflow.getContent());
+                        if (w != null) {
+                            Map<String, List<Object>> labelMap = WorkflowsHelper.getLabelToPositionsMap(w);
+                            position = getPosition(labelMap.get((String) orderFilter.getPosition()));
+                        }
+                    }
+                    //throw new JocNotImplementedException("The use of labels as a position is not yet implemented");
+                } else if (orderFilter.getPosition() instanceof List<?>) {
+                    position = getPosition((List<Object>) orderFilter.getPosition());
                 }
             }
 
             CheckedResumeOrdersPositions cop = new CheckedResumeOrdersPositions();
-            cop.get(orderFilter.getOrderId(), Proxy.of(controllerId).currentState(), folderPermissions.getListOfFolders(), position, false);
+            cop.get(orderFilter.getOrderId(), currentState, folderPermissions.getListOfFolders(), position, false);
             cop.setOrderIds(null);
             cop.setDisabledPositionChange(null);
             cop.setPositions(null);
@@ -66,7 +90,18 @@ public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariabl
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(connection);
         }
+    }
+    
+    private String getPosition(List<Object> pos) {
+        if (pos != null && !pos.isEmpty()) {
+            Either<Problem, JPosition> jPos = JPosition.fromList(pos);
+            ProblemHelper.throwProblemIfExist(jPos);
+            return jPos.get().toString();
+        }
+        return null;
     }
 
 }
