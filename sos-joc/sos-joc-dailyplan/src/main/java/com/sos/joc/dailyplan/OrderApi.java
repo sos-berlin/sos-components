@@ -59,28 +59,33 @@ public class OrderApi {
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderApi.class);
     
     @SuppressWarnings("unchecked")
-    private static Optional<JPositionOrLabel> getPositionOrLabel(Object position) {
+    private static Optional<JPositionOrLabel> getPositionOrLabel(Object position, Map<String, List<Object>> labelToPositionMap) {
         if (position != null) {
             if (position instanceof List<?>) {
-                List<Object> pos = (List<Object>) position;
-                if (!pos.isEmpty()) {
-                    Either<Problem, JPosition> startPosE = JPosition.fromList(pos);
-                    ProblemHelper.throwProblemIfExist(startPosE);
-                    return Optional.of(startPosE.get());
-                }
+                return getPosition((List<Object>) position);
             } else if (position instanceof String) {
                 // TODO JOC-1453 consider labels
-//                String label = (String) position;
+                return getPosition(labelToPositionMap.get((String) position));
+                
 //                if (!label.isEmpty()) {
 //                    return Optional.of(JLabel.of(label));
 //                }
-                return Optional.empty();
+//                return Optional.empty();
             }
         }
         return Optional.empty();
     }
+    
+    private static Optional<JPositionOrLabel> getPosition(List<Object> pos) {
+        if (pos != null && !pos.isEmpty()) {
+            Either<Problem, JPosition> posE = JPosition.fromList(pos);
+            ProblemHelper.throwProblemIfExist(posE);
+            return Optional.of(posE.get());
+        }
+        return Optional.empty();
+    }
 
-    private static JFreshOrder mapToFreshOrder(FreshOrder order) {
+    private static JFreshOrder mapToFreshOrder(FreshOrder order, Map<String, List<Object>> labelToPositionMap) {
         Optional<Instant> scheduledFor = Optional.empty();
         if (order.getScheduledFor() != null) {
             scheduledFor = Optional.of(Instant.ofEpochMilli(order.getScheduledFor()));
@@ -92,10 +97,10 @@ public class OrderApi {
         Set<JPositionOrLabel> endPositions = new HashSet<>();
         if (positions != null) {
             // TODO JOC-1453 consider labels
-            startPosition = getPositionOrLabel(positions.getStartPosition());
+            startPosition = getPositionOrLabel(positions.getStartPosition(), labelToPositionMap);
             if (positions.getEndPositions() != null) {
                 for (Object endPosition : positions.getEndPositions()) {
-                    getPositionOrLabel(endPosition).ifPresent(p -> endPositions.add(p));
+                    getPositionOrLabel(endPosition, labelToPositionMap).ifPresent(p -> endPositions.add(p));
                 }
             }
         }
@@ -118,7 +123,7 @@ public class OrderApi {
         Function<PlannedOrder, Either<Err419, JFreshOrder>> mapper = order -> {
             Either<Err419, JFreshOrder> either = null;
             try {
-                either = Either.right(mapToFreshOrder(order.getFreshOrder()));
+                either = Either.right(mapToFreshOrder(order.getFreshOrder(), order.getLabelToPositionMap()));
             } catch (Exception ex) {
                 either = Either.left(new BulkError(LOGGER).get(ex, jocError, order.getFreshOrder().getId()));
             }
