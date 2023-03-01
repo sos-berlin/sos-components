@@ -16,6 +16,8 @@ import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.command.WorkflowDeletedEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
@@ -106,7 +108,7 @@ public class WorkflowModifyImpl extends JOCResourceImpl implements IWorkflowModi
 
         String json = getCommandJson(workflowId);
         LOGGER.debug("send command: " + json);
-        proxy.api().executeCommandJson(json).thenAccept(either -> thenAcceptHandler(either, controllerId, workflow, dbAuditLog));
+        proxy.api().executeCommandJson(json).thenAccept(either -> thenAcceptHandler(either, proxy, controllerId, workflow.id(), dbAuditLog));
     }
     
     private static String getCommandJson(JWorkflowId workflowId) {
@@ -120,11 +122,19 @@ public class WorkflowModifyImpl extends JOCResourceImpl implements IWorkflowModi
         return Globals.objectMapper.readValue(filterBytes, ModifyWorkflow.class);
     }
 
-    private void thenAcceptHandler(Either<Problem, String> either, String controllerId, JWorkflow workflow, DBItemJocAuditLog dbAuditLog) {
+    private void thenAcceptHandler(Either<Problem, String> either, JControllerProxy proxy, String controllerId, JWorkflowId workflowId,
+            DBItemJocAuditLog dbAuditLog) {
         ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
         if (either.isRight()) {
-            WorkflowsHelper.storeAuditLogDetailsFromWorkflowPath(workflow.id().path(), dbAuditLog, controllerId).thenAccept(either2 -> ProblemHelper
+            WorkflowsHelper.storeAuditLogDetailsFromWorkflowPath(workflowId.path(), dbAuditLog, controllerId).thenAccept(either2 -> ProblemHelper
                     .postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
+            try {
+                if (proxy.currentState().repo().idToCheckedWorkflow(workflowId).isLeft()) {
+                    EventBus.getInstance().post(new WorkflowDeletedEvent(controllerId, workflowId.path().string(), workflowId.versionId().string()));
+                }
+            } catch (Exception e) {
+                //
+            }
         }
     }
 
