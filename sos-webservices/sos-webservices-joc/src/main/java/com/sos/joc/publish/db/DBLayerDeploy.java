@@ -1075,6 +1075,7 @@ try {
                     existingConfiguration.setValid(valid);
                     existingConfiguration.setDeployed(false);
                     existingConfiguration.setReleased(false);
+                    existingConfiguration.setType(configuration.getObjectType());
                     JocInventory.updateConfiguration(new InventoryDBLayer(session), existingConfiguration);
                     return existingConfiguration;
                 } else {
