@@ -51,6 +51,7 @@ import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocImportException;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -1095,6 +1096,9 @@ try {
                     return newConfiguration;
                 }
             } else {
+                if(existingConfiguration != null) {
+                    throw new JocImportException(String.format("Cannot import, object with name '%1$s'. Object already exists and overwrite is set to false.", existingConfiguration.getName()));
+                }
                 DBItemInventoryConfiguration newConfiguration = new DBItemInventoryConfiguration();
                 Date now = Date.from(Instant.now());
                 newConfiguration.setModified(now);
