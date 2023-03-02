@@ -131,6 +131,8 @@ public class WorkflowModifyImpl extends JOCResourceImpl implements IWorkflowModi
             try {
                 if (proxy.currentState().repo().idToCheckedWorkflow(workflowId).isLeft()) {
                     EventBus.getInstance().post(new WorkflowDeletedEvent(controllerId, workflowId.path().string(), workflowId.versionId().string()));
+                } else if (!WorkflowsHelper.oldJWorkflowIds(proxy.currentState()).anyMatch(w -> w.equals(workflowId))) {
+                    EventBus.getInstance().post(new WorkflowDeletedEvent(controllerId, workflowId.path().string(), workflowId.versionId().string()));
                 }
             } catch (Exception e) {
                 //
