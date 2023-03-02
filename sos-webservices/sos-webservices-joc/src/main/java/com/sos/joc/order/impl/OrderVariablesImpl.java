@@ -1,7 +1,6 @@
 package com.sos.joc.order.impl;
 
 import java.util.List;
-import java.util.Map;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
@@ -12,6 +11,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.order.CheckedResumeOrdersPositions;
+import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
@@ -67,11 +67,9 @@ public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariabl
                     if (dbWorkflow != null) {
                         Workflow w = JocInventory.workflowContent2Workflow(dbWorkflow.getContent());
                         if (w != null) {
-                            Map<String, List<Object>> labelMap = WorkflowsHelper.getLabelToPositionsMap(w);
-                            position = getPosition(labelMap.get((String) orderFilter.getPosition()));
+                            position = getPosition(OrdersHelper.getPosition(orderFilter.getPosition(), WorkflowsHelper.getLabelToPositionsMap(w)));
                         }
                     }
-                    //throw new JocNotImplementedException("The use of labels as a position is not yet implemented");
                 } else if (orderFilter.getPosition() instanceof List<?>) {
                     position = getPosition((List<Object>) orderFilter.getPosition());
                 }

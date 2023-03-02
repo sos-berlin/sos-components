@@ -764,8 +764,11 @@ public class OrdersHelper {
         String controllerId = dailyplanModifyOrder.getControllerId();
         Instant now = Instant.now();
         List<AuditLogDetail> auditLogDetails = new ArrayList<>();
+        
+        // JOC-1453 consider labels
+        final List<Object> startPosition = getPosition(dailyplanModifyOrder.getStartPosition(), labelMap);
+        final List<List<Object>> endPositions = getPositions(dailyplanModifyOrder.getEndPositions(), labelMap);
 
-        @SuppressWarnings("unchecked")
         Function<JOrder, Either<Err419, FreshOrder>> mapper = order -> {
             Either<Err419, FreshOrder> either = null;
             try {
@@ -798,28 +801,6 @@ public class OrdersHelper {
                 }
                 // modify start/end positions
                 Set<String> reachablePositions = CheckedAddOrdersPositions.getReachablePositions(e.get());
-                
-                // JOC-1453 consider labels
-                List<Object> startPosition = null;
-                if (dailyplanModifyOrder.getStartPosition() != null) {
-                    if (dailyplanModifyOrder.getStartPosition() instanceof String) {
-                        startPosition = labelMap.get((String) dailyplanModifyOrder.getStartPosition());
-                    } else if (dailyplanModifyOrder.getStartPosition() instanceof List<?>) {
-                        startPosition = (List<Object>) dailyplanModifyOrder.getStartPosition();
-                    }
-                }
-                
-                List<List<Object>> endPositions = null;
-                if (dailyplanModifyOrder.getEndPositions() != null) {
-                    endPositions = dailyplanModifyOrder.getEndPositions().stream().filter(Objects::nonNull).map(ep -> {
-                        if (ep instanceof String) {
-                            return labelMap.get((String) ep);
-                        } else if (ep instanceof List<?>) {
-                            return (List<Object>) ep;
-                        }
-                        return null;
-                    }).filter(Objects::nonNull).collect(Collectors.toList());
-                }
                 
                 Optional<JPositionOrLabel> startPos = getStartPosition(startPosition, reachablePositions, order.workflowPosition().position());
                 Set<JPositionOrLabel> endPoss = getEndPositions(endPositions, reachablePositions, JavaConverters.asJava(order.asScala()
@@ -1194,18 +1175,35 @@ public class OrdersHelper {
     }
     
     @SuppressWarnings("unchecked")
-    public static Optional<JPositionOrLabel> getStartPosition(Object pos, Map<String, List<Object>> labelMap, Set<String> reachablePositions) {
-        List<Object> startPosition = null;
+    public static List<Object> getPosition(Object pos, Map<String, List<Object>> labelMap) {
         if (labelMap == null) {
             labelMap = Collections.emptyMap(); 
         }
         if (pos != null) {
             if (pos instanceof String) {
-                startPosition = labelMap.get((String) pos);
+                List<Object> position = labelMap.get((String) pos);
+                if (position == null) {
+                    throw new IllegalArgumentException("invalid label '" + (String) pos + "'");
+                }
+                return position;
             } else {
-                startPosition = (List<Object>) pos;
+                return (List<Object>) pos;
             }
         }
+        return null;
+    }
+    
+    public static List<List<Object>> getPositions(List<Object> poss, Map<String, List<Object>> labelMap) {
+        List<List<Object>> positions = null;
+        if (poss != null) {
+            positions = poss.stream().filter(Objects::nonNull).map(ep -> getPosition(ep, labelMap)).filter(Objects::nonNull).collect(Collectors
+                    .toList());
+        }
+        return positions;
+    }
+    
+    public static Optional<JPositionOrLabel> getStartPosition(Object pos, Map<String, List<Object>> labelMap, Set<String> reachablePositions) {
+        List<Object> startPosition = getPosition(pos, labelMap);
         return getStartPosition(startPosition, reachablePositions, null);
     }
     
@@ -1232,13 +1230,8 @@ public class OrdersHelper {
         return posOpt;
     }
     
-    @SuppressWarnings("unchecked")
     public static Set<JPositionOrLabel> getEndPosition(List<Object> poss, Map<String, List<Object>> labelMap, Set<String> reachablePositions) {
-        List<List<Object>> endPositions = null;
-        if (poss != null) {
-            endPositions = poss.stream().filter(Objects::nonNull).map(ep -> ep instanceof String ? labelMap.get(
-                    (String) ep) : (List<Object>) ep).filter(Objects::nonNull).collect(Collectors.toList());
-        }
+        List<List<Object>> endPositions = getPositions(poss, labelMap);
         return getEndPositions(endPositions, reachablePositions, Collections.emptySet());
     }
     

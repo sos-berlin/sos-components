@@ -376,6 +376,10 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
                 DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
                 DBLayerOrderVariables ovDbLayer = new DBLayerOrderVariables(session);
+                
+                final List<Object> startPosition = OrdersHelper.getPosition(in.getStartPosition(), labelMap);
+                final List<Object> endPositions = withNewEndPositions(in) ? in.getEndPositions().stream().map(pos -> OrdersHelper.getPosition(pos,
+                        labelMap)).filter(Objects::nonNull).collect(Collectors.toList()) : null;
 
                 // modify planned and prepare submitted
                 for (DBItemDailyPlanOrder item : items) {
@@ -391,15 +395,10 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                         OrderPositions origOp = orderParameterisation.getPositions();
                         OrderPositions newOp = new OrderPositions();
                         if (withNewStartPosition(in)) {
-                            if (in.getStartPosition() instanceof String) {
-                                newOp.setStartPosition(labelMap.get((String) in.getStartPosition()));
-                            } else {
-                                newOp.setStartPosition(in.getStartPosition());
-                            }
+                            newOp.setStartPosition(startPosition);
                         }
                         if (withNewEndPositions(in)) {
-                            newOp.setEndPositions(in.getEndPositions().stream().map(pos -> pos instanceof String ? labelMap.get((String) pos) : pos)
-                                    .filter(Objects::nonNull).collect(Collectors.toList()));
+                            newOp.setEndPositions(endPositions);
                         }
                         if (newOp.equals(origOp)) {
                             withNewPositions = false;
