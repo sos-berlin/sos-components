@@ -223,8 +223,7 @@ public class ExecuteRollOut {
                     }
                 }
             } catch (Throwable e) {
-                System.out.println(e.getMessage());
-                System.out.println("token expired or no valid token found!");
+                System.out.println(e.toString());
             } finally {
                 closeClient();
             }             
