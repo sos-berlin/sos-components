@@ -750,12 +750,12 @@ public class OrdersHelper {
 //        return cancelAndAddFreshOrder(temporaryOrderIds, dailyplanModifyOrder, accessToken, jocError, auditlogId, proxy, currentState,
 //                zoneId, folderPermissions);
 //    }
-
+    
     public static Either<List<Err419>, OrderIdMap> cancelAndAddFreshOrder(Collection<String> temporaryOrderIds,
             DailyPlanModifyOrder dailyplanModifyOrder, String accessToken, JocError jocError, Long auditlogId, JControllerProxy proxy,
-            JControllerState currentState, ZoneId zoneId, SOSAuthFolderPermissions folderPermissions) throws ControllerConnectionResetException,
-            ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
-            DBConnectionRefusedException, ExecutionException {
+            JControllerState currentState, ZoneId zoneId, Map<String, List<Object>> labelMap, SOSAuthFolderPermissions folderPermissions)
+            throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
+            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
 
         Either<List<Err419>, OrderIdMap> result = Either.right(new OrderIdMap());
         if (temporaryOrderIds.isEmpty()) {
@@ -799,15 +799,26 @@ public class OrdersHelper {
                 // modify start/end positions
                 Set<String> reachablePositions = CheckedAddOrdersPositions.getReachablePositions(e.get());
                 
-                // TODO JOC-1453 consider labels
+                // JOC-1453 consider labels
                 List<Object> startPosition = null;
-                if (dailyplanModifyOrder.getStartPosition() != null && dailyplanModifyOrder.getStartPosition() instanceof List<?>) {
-                    startPosition = (List<Object>) dailyplanModifyOrder.getStartPosition();
+                if (dailyplanModifyOrder.getStartPosition() != null) {
+                    if (dailyplanModifyOrder.getStartPosition() instanceof String) {
+                        startPosition = labelMap.get((String) dailyplanModifyOrder.getStartPosition());
+                    } else if (dailyplanModifyOrder.getStartPosition() instanceof List<?>) {
+                        startPosition = (List<Object>) dailyplanModifyOrder.getStartPosition();
+                    }
                 }
+                
                 List<List<Object>> endPositions = null;
                 if (dailyplanModifyOrder.getEndPositions() != null) {
-                    endPositions = dailyplanModifyOrder.getEndPositions().stream().filter(Objects::nonNull).filter(ep -> ep instanceof List<?>).map(
-                            ep -> (List<Object>) ep).collect(Collectors.toList());
+                    endPositions = dailyplanModifyOrder.getEndPositions().stream().filter(Objects::nonNull).map(ep -> {
+                        if (ep instanceof String) {
+                            return labelMap.get((String) ep);
+                        } else if (ep instanceof List<?>) {
+                            return (List<Object>) ep;
+                        }
+                        return null;
+                    }).filter(Objects::nonNull).collect(Collectors.toList());
                 }
                 
                 Optional<JPositionOrLabel> startPos = getStartPosition(startPosition, reachablePositions, order.workflowPosition().position());
