@@ -79,7 +79,7 @@ public class ClusterWatch {
     
     @Subscribe({ ActiveClusterChangedEvent.class })
     public void listenEvent(ActiveClusterChangedEvent evt) {
-        LOGGER.info("[ClusterWatch] memberId = " + memberId);
+        LOGGER.debug("[ClusterWatch] memberId = " + memberId);
         LOGGER.info("[ClusterWatch] current watched Controller clusters by " + toStringWithId() + ": " + startedWatches.keySet().toString());
         LOGGER.info("[ClusterWatch] receive event: " + evt.toString());
         onStart = false;
@@ -360,7 +360,7 @@ public class ClusterWatch {
 //                if (activeInstance.getHeartBeat() != null) {
 //                    Instant oneMinuteAgo = Instant.now().minusSeconds(TimeUnit.MINUTES.toSeconds(1));
 //                    if (activeInstance.getHeartBeat().toInstant().isAfter(oneMinuteAgo)) {
-                        LOGGER.info("[ClusterWatch] " + toStringWithId() + " instance is active");
+                        LOGGER.debug("[ClusterWatch] " + toStringWithId() + " instance is active");
                         return true;
 //                    }
 //                }
