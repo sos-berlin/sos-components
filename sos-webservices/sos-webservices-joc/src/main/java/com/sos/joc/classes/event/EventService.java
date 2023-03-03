@@ -30,7 +30,6 @@ import com.sos.joc.event.bean.agent.AgentInventoryEvent;
 import com.sos.joc.event.bean.auditlog.AuditlogChangedEvent;
 import com.sos.joc.event.bean.auditlog.AuditlogWorkflowEvent;
 import com.sos.joc.event.bean.cluster.ActiveClusterChangedEvent;
-import com.sos.joc.event.bean.command.WorkflowDeletedEvent;
 import com.sos.joc.event.bean.dailyplan.DailyPlanEvent;
 import com.sos.joc.event.bean.documentation.DocumentationEvent;
 import com.sos.joc.event.bean.history.HistoryOrderEvent;
@@ -151,7 +150,7 @@ public class EventService {
         EventBus.getInstance().register(this);
         startEventService();
         ClusterWatch.getInstance().getAndCleanLastMessage(controllerId).ifPresent(m -> addEvent(createNodeLossProblem(Instant.now().toEpochMilli()
-                / 1000, m)));
+                / 1000, controllerId, m)));
     }
 
     protected void close() {
@@ -404,17 +403,9 @@ public class EventService {
         } else {
             message = msg + ": " + message;
         }
-        addEvent(createNodeLossProblem(evt.getEventId() / 1000, message));
+        addEvent(createNodeLossProblem(evt.getEventId() / 1000, evt.getControllerId(), message));
     }
     
-    @Subscribe({ WorkflowDeletedEvent.class }) //TODO can be deleted if Controller send ItemDeleted event after transfer Orders
-    public void createEvent(WorkflowDeletedEvent evt) {
-        WorkflowId w = new WorkflowId();
-        w.setPath(evt.getPath());
-        w.setVersionId(evt.getVersionId());
-        addEvent(createWorkflowEvent(evt.getEventId() / 1000, w, "ItemDeleted"));
-    }
-
     @Subscribe({ ProxyCoupled.class })
     public void createEvent(ProxyCoupled evt) {
         if (controllerId.equals(evt.getControllerId())) {
@@ -660,11 +651,12 @@ public class EventService {
         return evt;
     }
     
-    private EventSnapshot createNodeLossProblem(long eventId, String message) {
+    private EventSnapshot createNodeLossProblem(long eventId, String controllerId, String message) {
         EventSnapshot evt = new EventSnapshot();
         evt.setEventId(eventId);
-        evt.setEventType("ProblemEvent");
+        evt.setEventType("NodeLossProblemEvent");
         evt.setObjectType(EventType.PROBLEM);
+        evt.setPath(controllerId);
         evt.setMessage(message);
         return evt;
     }

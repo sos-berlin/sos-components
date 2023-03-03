@@ -17,7 +17,6 @@ import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.event.EventBus;
-import com.sos.joc.event.bean.command.WorkflowDeletedEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
@@ -128,15 +127,6 @@ public class WorkflowModifyImpl extends JOCResourceImpl implements IWorkflowModi
         if (either.isRight()) {
             WorkflowsHelper.storeAuditLogDetailsFromWorkflowPath(workflowId.path(), dbAuditLog, controllerId).thenAccept(either2 -> ProblemHelper
                     .postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
-            try {
-                if (proxy.currentState().repo().idToCheckedWorkflow(workflowId).isLeft()) {
-                    EventBus.getInstance().post(new WorkflowDeletedEvent(controllerId, workflowId.path().string(), workflowId.versionId().string()));
-                } else if (!WorkflowsHelper.oldJWorkflowIds(proxy.currentState()).anyMatch(w -> w.equals(workflowId))) {
-                    EventBus.getInstance().post(new WorkflowDeletedEvent(controllerId, workflowId.path().string(), workflowId.versionId().string()));
-                }
-            } catch (Exception e) {
-                //
-            }
         }
     }
 

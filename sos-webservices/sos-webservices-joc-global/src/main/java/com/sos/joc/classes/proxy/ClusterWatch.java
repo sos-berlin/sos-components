@@ -79,7 +79,7 @@ public class ClusterWatch {
     
     @Subscribe({ ActiveClusterChangedEvent.class })
     public void listenEvent(ActiveClusterChangedEvent evt) {
-        LOGGER.info("[ClusterWatch] memberId = " + memberId);
+        LOGGER.debug("[ClusterWatch] memberId = " + memberId);
         LOGGER.info("[ClusterWatch] current watched Controller clusters by " + toStringWithId() + ": " + startedWatches.keySet().toString());
         LOGGER.info("[ClusterWatch] receive event: " + evt.toString());
         onStart = false;
@@ -227,11 +227,11 @@ public class ClusterWatch {
         return getClusterNodeLoss(controllerId) != null;
     }
     
-    public void confirmNodeLoss(String controllerId) throws JocBadRequestException {
+    public void confirmNodeLoss(String controllerId, String confirmer) throws JocBadRequestException {
         if (isWatched(controllerId)) {
             NodeId nodeId = startedWatches.get(controllerId).getClusterNodeLoss();
             if (nodeId != null) {
-                startedWatches.get(controllerId).confirmNodeLoss(nodeId);
+                startedWatches.get(controllerId).confirmNodeLoss(nodeId, confirmer);
             } else {
                 throw new JocBadRequestException("Couldn't determine loss node of Controller cluster '" + controllerId + "'."); 
             }
@@ -360,7 +360,7 @@ public class ClusterWatch {
 //                if (activeInstance.getHeartBeat() != null) {
 //                    Instant oneMinuteAgo = Instant.now().minusSeconds(TimeUnit.MINUTES.toSeconds(1));
 //                    if (activeInstance.getHeartBeat().toInstant().isAfter(oneMinuteAgo)) {
-                        LOGGER.info("[ClusterWatch] " + toStringWithId() + " instance is active");
+                        LOGGER.debug("[ClusterWatch] " + toStringWithId() + " instance is active");
                         return true;
 //                    }
 //                }
