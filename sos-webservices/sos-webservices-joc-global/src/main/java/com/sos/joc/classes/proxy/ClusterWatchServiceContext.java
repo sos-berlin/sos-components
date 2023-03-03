@@ -56,7 +56,7 @@ public class ClusterWatchServiceContext {
         Instant now = Instant.now();
         if (burstFilter == null || !burstFilter.isAfter(now)) {
             burstFilter = Instant.now().plusSeconds(120);
-            LOGGER.warn("[ClusterWatchService] ClusterNodeLossNotConfirmedProblem of cluster '" + controllerId + "' received: " + problem
+            LOGGER.error("[ClusterWatchService] ClusterNodeLossNotConfirmedProblem of cluster '" + controllerId + "' received: " + problem
                     .messageWithCause());
             EventBus.getInstance().post(new ClusterNodeLossEvent(controllerId, lossNode.string(), message));
         }
