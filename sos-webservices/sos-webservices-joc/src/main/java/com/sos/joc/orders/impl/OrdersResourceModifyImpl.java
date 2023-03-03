@@ -314,7 +314,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
         Optional<JPosition> positionOpt = Optional.empty();
 
-        // TODO JOC-1453 consider labels
+        // JOC-1453 consider labels
         Object positionObj = modifyOrders.getPosition();
         boolean withPosition = positionObj != null && !((positionObj instanceof List<?> && ((List<Object>) positionObj).isEmpty()));
 
@@ -351,7 +351,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                                 labelMap = WorkflowsHelper.getLabelToPositionsMap(w);
                             }
                         }
-                        pos = labelMap.get((String) positionObj);
+                        pos = OrdersHelper.getPosition(positionObj, labelMap);
 
                     } finally {
                         Globals.disconnect(connection);

@@ -68,8 +68,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             session.beginTransaction();
             
-            Predicate<RequestFilter> isFolder = r -> ConfigurationType.FOLDER.equals(r.getObjectType()) 
-                    || ConfigurationType.DESCRIPTORFOLDER.equals(r.getObjectType());
+            Predicate<RequestFilter> isFolder = r -> JocInventory.isFolder(r.getObjectType());
             if (in.getObjects().stream().parallel().anyMatch(isFolder)) {
                 //throw new 
             }
@@ -100,6 +99,8 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                         JocInventory.deleteInventoryConfigurationAndPutToTrash(config, dbLayer, ConfigurationType.FOLDER);
                         JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), dbLayer.getSession(), dbAuditLog);
                         foldersForEvent.add(config.getFolder());
+                    } else {
+                        allDeployments.addAll(deployments);
                     }
                 } else { 
                     // deployment descriptors (not releaseable and not deployable)

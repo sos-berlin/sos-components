@@ -24,6 +24,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowPaths;
@@ -156,10 +157,9 @@ public class WorkflowPositionsModifyImpl extends JOCResourceImpl implements IWor
         }
     }
     
-    @SuppressWarnings("unchecked")
     private Set<Either<Problem, JPosition>> getJPositions(List<Object> poss, Map<String, List<Object>> labelMap) {
-        return poss.stream().filter(Objects::nonNull).map(ep -> ep instanceof String ? labelMap.get((String) ep) : (List<Object>) ep).filter(
-                Objects::nonNull).map(pos -> JPosition.fromList(pos)).collect(Collectors.toSet());
+        return poss.stream().map(ep -> OrdersHelper.getPosition(ep, labelMap)).filter(Objects::nonNull).map(pos -> JPosition.fromList(pos)).collect(
+                Collectors.toSet());
     }
 
     private void checkWorkflow(Action action, JWorkflow workflow, Set<JPosition> positions, JControllerState currentState,
