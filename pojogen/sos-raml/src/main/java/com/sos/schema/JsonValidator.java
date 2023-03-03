@@ -233,7 +233,7 @@ public class JsonValidator {
             // schedules
             put("com.sos.webservices.order.initiator.model.ScheduleSelector", "orderManagement/orders/schedulesSelector-schema.json");
 
-            put("com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef", "orderManagement/dailyplan/dailyPlanOrdersFilterDef-schema.json");
+            put("com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef", "orderManagement/dailyplan/dailyPlanOrdersFilterDefRequired-schema.json");
             put("com.sos.joc.model.dailyplan.DailyPlanModifyOrder", "orderManagement/dailyplan/dailyPlanModifyOrder-schema.json");
             put("com.sos.joc.model.dailyplan.generate.GenerateRequest", "dailyplan/generate/generate-request-schema.json");
             put("com.sos.joc.model.dailyplan.history.MainRequest", "dailyplan/history/main-request-schema.json");
