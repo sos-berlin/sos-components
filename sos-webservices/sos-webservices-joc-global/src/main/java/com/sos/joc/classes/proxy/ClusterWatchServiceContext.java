@@ -28,6 +28,7 @@ public class ClusterWatchServiceContext {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(ClusterWatchServiceContext.class);
     private String controllerId;
+    private String clusterWatchId;
     private ClusterWatchService service;
     private JControllerApi controllerApi;
     private static final NodeId primaryId = NodeId.of("Primary");
@@ -40,6 +41,7 @@ public class ClusterWatchServiceContext {
             ExecutionException {
         this.controllerId = controllerId;
         this.controllerApi = controllerApi;
+        this.clusterWatchId = clusterWatchId;
         this.service = controllerApi.startClusterWatch(ClusterWatchId.of(clusterWatchId), startEventbus()).get();
         logClusterState(primaryId, backupId);
     }
@@ -89,7 +91,7 @@ public class ClusterWatchServiceContext {
 //            throw new ControllerConflictException("The cluster node with id '" + lossNodeId.string() + "' is not lost.");
 //        } else {
             LOGGER.info("[ClusterWatchService] send service.confirmNodeLoss(" + lossNodeId.string() + ")");
-            scala.util.Either<Problem,?> checked = service.confirmNodeLoss(lossNodeId);
+            scala.util.Either<Problem,?> checked = service.manuallyConfirmNodeLoss(lossNodeId, clusterWatchId);
             if (checked.isLeft()) {
                 throw new JocBadRequestException(checked.left().toOption().get().toString());
                 //throw new JocBadRequestException(OptionConverters.toJava(checked.left().toOption()).get().toString());
@@ -138,9 +140,9 @@ public class ClusterWatchServiceContext {
         }
         scala.util.Either<Problem, ClusterState> state = service.clusterState();
         if (state.isLeft()) {
-            LOGGER.info("[ClusterWatchService] " + OptionConverters.toJava(state.left().toOption()).get().toString());
+            LOGGER.info("[ClusterWatchService] " + state.left().toOption().get().toString());
         } else {
-            LOGGER.info("[ClusterWatchService] " + OptionConverters.toJava(state.toOption()).get().toString());
+            LOGGER.info("[ClusterWatchService] " + state.toOption().get().toString());
         }
     }
 
