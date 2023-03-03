@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
@@ -48,6 +49,7 @@ import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.job.ExecutableJava;
 import com.sos.inventory.model.job.ExecutableScript;
+import com.sos.inventory.model.job.ExecutableType;
 import com.sos.inventory.model.job.Job;
 import com.sos.inventory.model.jobresource.JobResource;
 import com.sos.inventory.model.jobtemplate.JobTemplate;
@@ -463,6 +465,7 @@ public class Validator {
             case InternalExecutable:
                 ExecutableJava ej = job.getExecutable().cast();
                 if (ej.getArguments() != null) {
+                    validateEmptyArguments(ej.getArguments(), "$.jobs['" + entry.getKey() + "'].executable.arguments");
                     validateExpression("$.jobs['" + entry.getKey() + "'].executable.arguments", ej.getArguments().getAdditionalProperties());
                 }
                 break;
@@ -470,6 +473,7 @@ public class Validator {
             case ShellScriptExecutable:
                 ExecutableScript es = job.getExecutable().cast();
                 if (es.getEnv() != null) {
+                    validateEmptyArguments(es.getEnv(), "$.jobs['" + entry.getKey() + "'].executable.env");
                     validateExpression("$.jobs['" + entry.getKey() + "'].executable.env", es.getEnv().getAdditionalProperties());
                 }
                 validateEnvironmentKeys(es.getEnv(), "$.jobs['" + entry.getKey() + "'].executable.env");
@@ -629,6 +633,7 @@ public class Validator {
 //                    }
                     // validateArguments(nj.getDefaultArguments(), orderPreparation, "$." + instPosition + "defaultArguments");
                     // validateArgumentKeys(nj.getDefaultArguments(), "$." + instPosition + "defaultArguments");
+                    validateEmptyArguments(nj.getDefaultArguments(), "$." + instPosition + "defaultArguments");
                     break;
                 case FORK:
                     ForkJoin fj = inst.cast();
@@ -986,6 +991,15 @@ public class Validator {
                     }
                 }
             });
+        }
+    }
+    
+    private static void validateEmptyArguments(Environment arguments, String position) throws JocConfigurationException {
+        final Map<String, String> args = (arguments != null) ? arguments.getAdditionalProperties() : Collections.emptyMap();
+        Optional<JocConfigurationException> optException = args.entrySet().stream().filter(e -> e.getValue().isEmpty()).findAny().map(
+                e -> new JocConfigurationException(String.format("%s['%s']: disallowed empty value", position, e.getKey())));
+        if (optException.isPresent()) {
+            throw optException.get();
         }
     }
 
