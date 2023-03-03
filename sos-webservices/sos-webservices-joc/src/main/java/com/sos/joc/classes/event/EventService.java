@@ -150,7 +150,7 @@ public class EventService {
         EventBus.getInstance().register(this);
         startEventService();
         ClusterWatch.getInstance().getAndCleanLastMessage(controllerId).ifPresent(m -> addEvent(createNodeLossProblem(Instant.now().toEpochMilli()
-                / 1000, m)));
+                / 1000, controllerId, m)));
     }
 
     protected void close() {
@@ -403,7 +403,7 @@ public class EventService {
         } else {
             message = msg + ": " + message;
         }
-        addEvent(createNodeLossProblem(evt.getEventId() / 1000, message));
+        addEvent(createNodeLossProblem(evt.getEventId() / 1000, evt.getControllerId(), message));
     }
     
     @Subscribe({ ProxyCoupled.class })
@@ -651,11 +651,12 @@ public class EventService {
         return evt;
     }
     
-    private EventSnapshot createNodeLossProblem(long eventId, String message) {
+    private EventSnapshot createNodeLossProblem(long eventId, String controllerId, String message) {
         EventSnapshot evt = new EventSnapshot();
         evt.setEventId(eventId);
-        evt.setEventType("ProblemEvent");
+        evt.setEventType("NodeLossProblemEvent");
         evt.setObjectType(EventType.PROBLEM);
+        evt.setPath(controllerId);
         evt.setMessage(message);
         return evt;
     }
