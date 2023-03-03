@@ -65,7 +65,7 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
         LOGGER.debug("Submit orders to JS7 controller");
         try {
             initLogging(IMPL_PATH, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, DailyPlanOrderFilterDef.class);
+            JsonValidator.validateFailFast(filterBytes, "orderManagement/dailyplan/dailyPlanOrdersFilterDef-schema.json");
             DailyPlanOrderFilterDef in = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilterDef.class);
             
             boolean noControllerAvailable = Proxies.getControllerDbInstances().isEmpty();
