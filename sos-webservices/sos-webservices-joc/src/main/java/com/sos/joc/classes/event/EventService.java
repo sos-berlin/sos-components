@@ -396,7 +396,7 @@ public class EventService {
         if (!evt.onlyProblem()) {
             addEvent(createControllerEvent(evt.getEventId() / 1000));
         }
-        String msg = "Loss instance '" + evt.getNodeId().toUpperCase() + "' of Controller Cluster '" + evt.getControllerId() + "' must be confirmed";
+        String msg = "Loss of '" + evt.getNodeId().toUpperCase() + "' instance in Controller Cluster '" + evt.getControllerId() + "' requires confirmation";
         String message = evt.getMessage();
         if (message == null) {
             message = msg;
