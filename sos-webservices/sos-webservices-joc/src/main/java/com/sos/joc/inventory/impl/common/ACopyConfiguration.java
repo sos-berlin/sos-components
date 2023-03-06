@@ -154,7 +154,7 @@ public abstract class ACopyConfiguration extends JOCResourceImpl {
                             } else {
                                 Map<String,String> oldNewName = new HashMap<String, String>();
                                 oldNewName.put(oldName, newName);
-                                oldToNewName.put(newDbItem.getTypeAsEnum(), oldNewName);                                
+                                oldToNewName.put(newDbItem.getTypeAsEnum(), oldNewName);
                             }
                         }
                         newDBFolderItems.add(newDbItem);
@@ -212,13 +212,22 @@ public abstract class ACopyConfiguration extends JOCResourceImpl {
                 DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog(), auditLogDetails);
                 
                 if (!JocInventory.ROOT_FOLDER.equals(config.getPath())) {
-                    DBItemInventoryConfiguration newItem = dbLayer.getConfiguration(newPathWithoutFix, ConfigurationType.FOLDER.intValue());
+                    DBItemInventoryConfiguration newItem = null;
+                    if(forDescriptors) {
+                        newItem = dbLayer.getConfiguration(newPathWithoutFix, ConfigurationType.DESCRIPTORFOLDER.intValue());
+                    } else {
+                        newItem = dbLayer.getConfiguration(newPathWithoutFix, ConfigurationType.FOLDER.intValue());
+                    }
                     if (newItem == null) {
                         if (!newFolderIsRootFolder) {
                             DBItemInventoryConfiguration newDbItem = createItem(config, pWithoutFix);
                             newDbItem.setAuditLogId(dbAuditLog.getId());
                             JocInventory.insertConfiguration(dbLayer, newDbItem);
-                            JocInventory.makeParentDirs(dbLayer, pWithoutFix.getParent(), newDbItem.getAuditLogId(), ConfigurationType.FOLDER);
+                            if(forDescriptors) {
+                                JocInventory.makeParentDirs(dbLayer, pWithoutFix.getParent(), newDbItem.getAuditLogId(), ConfigurationType.DESCRIPTORFOLDER);
+                            } else {
+                                JocInventory.makeParentDirs(dbLayer, pWithoutFix.getParent(), newDbItem.getAuditLogId(), ConfigurationType.FOLDER);
+                            }
                             response.setId(newDbItem.getId());
                             response.setPath(newDbItem.getPath());
                         } else {
@@ -397,7 +406,11 @@ public abstract class ACopyConfiguration extends JOCResourceImpl {
                 //createAuditLog(newDbItem, in.getAuditLog());
                 newDbItem.setAuditLogId(dbAuditLog.getId());
                 JocInventory.insertConfiguration(dbLayer, newDbItem);
-                JocInventory.makeParentDirs(dbLayer, p.getParent(), newDbItem.getAuditLogId(), ConfigurationType.FOLDER);
+                if(forDescriptors) {
+                    JocInventory.makeParentDirs(dbLayer, p.getParent(), newDbItem.getAuditLogId(), ConfigurationType.DESCRIPTORFOLDER);
+                } else {
+                    JocInventory.makeParentDirs(dbLayer, p.getParent(), newDbItem.getAuditLogId(), ConfigurationType.FOLDER);
+                }
                 response.setId(newDbItem.getId());
                 response.setPath(newDbItem.getPath());
                 events = Collections.singleton(newDbItem.getFolder());

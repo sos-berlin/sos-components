@@ -23,7 +23,7 @@ public class RestoreConfigurationResourceImpl extends ARestoreConfiguration impl
 
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
             if (response == null) {
-                response = restore(in, TRASH_IMPL_PATH);
+                response = restore(in, TRASH_IMPL_PATH, false);
             }
             return response;
         } catch (JocException e) {

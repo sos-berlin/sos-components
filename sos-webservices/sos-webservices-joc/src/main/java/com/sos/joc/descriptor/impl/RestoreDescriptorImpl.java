@@ -23,7 +23,7 @@ public class RestoreDescriptorImpl extends ARestoreConfiguration implements IRes
                     Globals.objectMapper.readValue(body, com.sos.joc.model.inventory.restore.RequestFilter.class);
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
             if (response == null) {
-                response = restore(filter, IMPL_PATH_RESTORE);
+                response = restore(filter, IMPL_PATH_RESTORE, true);
             }
             return response;
         } catch (JocException e) {
