@@ -122,7 +122,7 @@ public class Job implements IConfigurationObject
     @JsonAlias({
         "sigkillDelay"
     })
-    private Integer graceTimeout = 15;
+    private Integer graceTimeout = 1;
     @JsonProperty("failOnErrWritten")
     private Boolean failOnErrWritten = false;
     @JsonProperty("warnOnErrWritten")

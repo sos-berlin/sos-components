@@ -31,7 +31,7 @@ import com.sos.joc.model.inventory.restore.RequestFilter;
 
 public abstract class ARestoreConfiguration extends JOCResourceImpl {
 
-    public JOCDefaultResponse restore(RequestFilter in, String request) throws Exception {
+    public JOCDefaultResponse restore(RequestFilter in, String request, boolean forDescriptors) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(request);
@@ -112,7 +112,12 @@ public abstract class ARestoreConfiguration extends JOCResourceImpl {
                 }
 
                 if (!JocInventory.ROOT_FOLDER.equals(config.getPath())) {
-                    DBItemInventoryConfiguration newItem = dbLayer.getConfiguration(newPathWithoutFix, ConfigurationType.FOLDER.intValue());
+                    DBItemInventoryConfiguration newItem = null;
+                    if(forDescriptors) {
+                        newItem = dbLayer.getConfiguration(newPathWithoutFix, ConfigurationType.DESCRIPTORFOLDER.intValue());
+                    } else {
+                        newItem = dbLayer.getConfiguration(newPathWithoutFix, ConfigurationType.FOLDER.intValue());
+                    }
 
                     if (newItem == null) {
                         DBItemInventoryConfiguration newDbItem = createItem(config, pWithoutFix, dbAuditLog.getId(), dbLayer);

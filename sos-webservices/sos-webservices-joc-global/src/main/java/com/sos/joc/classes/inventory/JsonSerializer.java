@@ -229,7 +229,7 @@ public class JsonSerializer {
                     emptyStringCollectionsToNull(job.getJobResourceNames());
                     emptyExecutableToNull(job.getExecutable(), job.getReturnCodeMeaning());
                     job.setReturnCodeMeaning(null);
-                    job.setGraceTimeout(defaultToNull(job.getGraceTimeout(), 15));
+                    //job.setGraceTimeout(defaultToNull(job.getGraceTimeout(), 15));
                     job.setAdmissionTimeScheme(emptyAdmissionTimeSchemeToNull(job.getAdmissionTimeScheme()));
                     job.setSkipIfNoAdmissionForOrderDay(defaultToNull(job.getSkipIfNoAdmissionForOrderDay(), Boolean.FALSE));
                     if (job.getSubagentClusterIdExpr() != null && !job.getSubagentClusterIdExpr().isEmpty()) {
@@ -249,7 +249,7 @@ public class JsonSerializer {
             jt.setDefaultArguments(emptyEnvToNullAndQuoteStrings(jt.getDefaultArguments()));
             emptyStringCollectionsToNull(jt.getJobResourceNames());
             emptyExecutableToNull(jt.getExecutable(), null);
-            jt.setGraceTimeout(defaultToNull(jt.getGraceTimeout(), 15));
+            //jt.setGraceTimeout(defaultToNull(jt.getGraceTimeout(), 15));
             jt.setAdmissionTimeScheme(emptyAdmissionTimeSchemeToNull(jt.getAdmissionTimeScheme()));
             jt.setSkipIfNoAdmissionForOrderDay(defaultToNull(jt.getSkipIfNoAdmissionForOrderDay(), Boolean.FALSE));
             jt.setHash(null);

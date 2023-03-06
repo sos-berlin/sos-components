@@ -93,7 +93,7 @@ public class JobTemplate implements IInventoryObject, IConfigurationObject, IRel
      */
     @JsonProperty("graceTimeout")
     @JsonPropertyDescription("in seconds")
-    private Integer graceTimeout = 15;
+    private Integer graceTimeout = 1;
     @JsonProperty("failOnErrWritten")
     private Boolean failOnErrWritten = false;
     @JsonProperty("warnOnErrWritten")
