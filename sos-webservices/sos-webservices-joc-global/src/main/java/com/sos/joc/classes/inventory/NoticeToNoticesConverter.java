@@ -4,7 +4,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.instruction.ExpectNotice;
 import com.sos.inventory.model.instruction.ExpectNotices;
 import com.sos.inventory.model.instruction.InstructionType;
@@ -59,8 +61,15 @@ public class NoticeToNoticesConverter {
         if (noticeBoardNames == null) {
             return Collections.emptyList();
         }
-        return Arrays.asList(noticeBoardNames.replaceAll("[|&\\(\\)'\"]", " ").replaceAll("  +", " ").trim().split(" ")).stream().distinct().collect(
-                Collectors.toList());
+        return expectNoticeBoardsToStream(noticeBoardNames).collect(Collectors.toList());
+    }
+    
+    public static Stream<String> expectNoticeBoardsToStream(String noticeBoardNames) {
+        if (noticeBoardNames == null) {
+            return Stream.empty();
+        }
+        return Arrays.asList(noticeBoardNames.replaceAll("[|&\\(\\)'\"]", " ").replaceAll("  +", " ").trim().split(" ")).stream().filter(
+                n -> !SOSString.isEmpty(n)).distinct();
     }
 
 }
