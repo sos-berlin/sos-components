@@ -568,8 +568,7 @@ public class WorkflowsHelper {
                 case EXPECT_NOTICES:
                     ExpectNotices ens = inst.cast();
                     String ensNamesExpr = ens.getNoticeBoardNames();
-                    List<String> ensNames = NoticeToNoticesConverter.expectNoticeBoardsToList(ensNamesExpr);
-                    ensNames.forEach(nb -> expectedNoticeBoards.add(nb));
+                    NoticeToNoticesConverter.expectNoticeBoardsToStream(ensNamesExpr).forEach(nb -> expectedNoticeBoards.add(nb));
                     break;
                 case POST_NOTICE:
                     PostNotice pn = inst.cast();

@@ -494,11 +494,13 @@ public class WorkflowConverter {
                 for (WorkflowInstruction<Lock> lock : locks) {
                     if (lock.getInstruction().getDemands() != null) {
                         for (LockDemand ld : lock.getInstruction().getDemands()) {
-                            lockIds.add(ld.getLockName());
-                            Integer currentCount = ld.getCount() == null ? -1 : ld.getCount();
-                            Integer previousCount = this.locks.get(ld.getLockName());
-                            if (previousCount == null || currentCount > previousCount) {
-                                this.locks.put(ld.getLockName(), currentCount);
+                            if (!SOSString.isEmpty(ld.getLockName())) {
+                                lockIds.add(ld.getLockName());
+                                Integer currentCount = ld.getCount() == null ? -1 : ld.getCount();
+                                Integer previousCount = this.locks.get(ld.getLockName());
+                                if (previousCount == null || currentCount > previousCount) {
+                                    this.locks.put(ld.getLockName(), currentCount);
+                                }
                             }
                         }
                     }
@@ -522,7 +524,7 @@ public class WorkflowConverter {
             if (pNoticess != null) {
                 for (WorkflowInstruction<PostNotices> notice : pNoticess) {
                     if (notice.getInstruction().getNoticeBoardNames() != null) {
-                        notice.getInstruction().getNoticeBoardNames().forEach(n -> postNotices.add(n));
+                        notice.getInstruction().getNoticeBoardNames().stream().filter(n -> !SOSString.isEmpty(n)).forEach(n -> postNotices.add(n));
                     }
                 }
             }
@@ -538,8 +540,8 @@ public class WorkflowConverter {
             if (eNoticess != null) {
                 for (WorkflowInstruction<ExpectNotices> notice : eNoticess) {
                     if (!SOSString.isEmpty(notice.getInstruction().getNoticeBoardNames())) {
-                        List<String> ensNames = NoticeToNoticesConverter.expectNoticeBoardsToList(notice.getInstruction().getNoticeBoardNames());
-                        ensNames.forEach(n -> expectNotices.add(n));
+                        NoticeToNoticesConverter.expectNoticeBoardsToStream(notice.getInstruction().getNoticeBoardNames()).forEach(n -> expectNotices
+                                .add(n));
                     }
                 }
             }
@@ -547,8 +549,8 @@ public class WorkflowConverter {
             if (cNoticess != null) {
                 for (WorkflowInstruction<ConsumeNotices> notice : cNoticess) {
                     if (!SOSString.isEmpty(notice.getInstruction().getNoticeBoardNames())) {
-                        List<String> cnsNames = NoticeToNoticesConverter.expectNoticeBoardsToList(notice.getInstruction().getNoticeBoardNames());
-                        cnsNames.forEach(n -> consumeNotices.add(n));
+                        NoticeToNoticesConverter.expectNoticeBoardsToStream(notice.getInstruction().getNoticeBoardNames()).forEach(n -> consumeNotices
+                                .add(n));
                     }
                 }
             }
@@ -587,7 +589,7 @@ public class WorkflowConverter {
     }
 
     private static void jsonAddStringValues(JsonObjectBuilder builder, String key, Collection<String> list) {
-        if (list.size() > 0) {
+        if (list != null && list.size() > 0) {
             builder.add(key, getJsonArray(list));
         }
     }
@@ -595,7 +597,9 @@ public class WorkflowConverter {
     private static JsonArrayBuilder getJsonArray(Collection<String> list) {
         JsonArrayBuilder b = Json.createArrayBuilder();
         for (String n : list) {
-            b.add(n);
+            if (n != null) {
+                b.add(n);
+            }
         }
         return b;
     }
