@@ -100,8 +100,14 @@ public abstract class ARestoreConfiguration extends JOCResourceImpl {
                         } else {
                             List<DBItemInventoryConfiguration> targetItems = dbLayer.getConfigurationByName(trashItem.getName(), trashItem.getType());
                             if (targetItems.isEmpty()) {
-                                JocInventory.insertConfiguration(dbLayer, createItem(trashItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath)),
-                                        dbAuditLog.getId(), dbLayer));
+                                if(in.getPrefix() != null || in.getSuffix() != null) {
+                                    JocInventory.insertConfiguration(dbLayer, createItem(trashItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath
+                                            .getParent().resolve(trashItem.getName().replaceFirst(replace.get(0), replace.get(1))))),
+                                            dbAuditLog.getId(), dbLayer));
+                                } else {
+                                    JocInventory.insertConfiguration(dbLayer, createItem(trashItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath)),
+                                            dbAuditLog.getId(), dbLayer));
+                                }
                             } else {
                                 JocInventory.insertConfiguration(dbLayer, createItem(trashItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath
                                         .getParent().resolve(trashItem.getName().replaceFirst(replace.get(0), replace.get(1))))), dbAuditLog.getId(),
@@ -158,7 +164,13 @@ public abstract class ARestoreConfiguration extends JOCResourceImpl {
                 
                 DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
                 if (dbLayer.getConfigurationByName(pWithoutFix.getFileName().toString(), config.getType()).isEmpty()) {
-                    DBItemInventoryConfiguration dbItem = createItem(config, pWithoutFix, dbAuditLog.getId(), dbLayer);
+                    DBItemInventoryConfiguration dbItem = null;
+                    if(in.getPrefix() != null || in.getSuffix() != null) {
+                        dbItem = createItem(config, pWithoutFix.getParent().resolve(pWithoutFix.getFileName().toString()
+                                .replaceFirst(replace.get(0), replace.get(1))), dbAuditLog.getId(), dbLayer);
+                    } else {
+                        dbItem = createItem(config, pWithoutFix, dbAuditLog.getId(), dbLayer);
+                    }
                     JocInventory.insertConfiguration(dbLayer, dbItem);
                     response.setId(dbItem.getId());
                     response.setPath(dbItem.getPath());
