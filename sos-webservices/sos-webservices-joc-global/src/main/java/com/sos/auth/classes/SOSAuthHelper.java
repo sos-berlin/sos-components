@@ -132,8 +132,8 @@ public class SOSAuthHelper {
         return false;
     }
 
-    public static SOSInitialPasswordSetting getInitialPasswordSettings(SOSHibernateSession sosHibernateSession) throws JsonParseException, JsonMappingException, IOException,
-            SOSHibernateException {
+    public static SOSInitialPasswordSetting getInitialPasswordSettings(SOSHibernateSession sosHibernateSession) throws JsonParseException,
+            JsonMappingException, IOException, SOSHibernateException {
 
         if (sosHibernateSession == null) {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(SOSAuthHelper.class.getName() + ":accountIsDisabled");
@@ -203,7 +203,7 @@ public class SOSAuthHelper {
                         LOGGER.warn("Certificate not_before is null");
                     } else {
                         notBefore = clientCertHandler.getClientCertificate().getNotBefore().getTime();
-						LOGGER.debug("NotBefore:" + notBefore);
+                        LOGGER.debug("NotBefore:" + notBefore);
                     }
                 }
 
@@ -220,9 +220,14 @@ public class SOSAuthHelper {
                     LOGGER.debug("clientCertCN could not read");
                 }
                 if (success) {
-                    if (now < notBefore && notBefore != 0 || now > notAfter && notAfter != 0) {
-                        LOGGER.warn("Certificate is no longer valid (not before/not after)");
+                    if (now < notBefore && notBefore != 0) {
+                        LOGGER.warn("Certificate validity starts on " + java.time.Instant.ofEpochMilli(notBefore));
                         success = false;
+                    } else {
+                        if (now > notAfter && notAfter != 0) {
+                            LOGGER.warn("Certificate expired on " + java.time.Instant.ofEpochMilli(notAfter));
+                            success = false;
+                        }
                     }
                 }
 
@@ -233,6 +238,7 @@ public class SOSAuthHelper {
 
         return success;
     }
+
     public static Map<String, List<String>> getMapOfFolderPermissions(List<DBItemIamPermissionWithName> listOfPermissions) {
         Map<String, List<String>> mapOfFolderPermissions = new HashMap<String, List<String>>();
         for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfPermissions) {
