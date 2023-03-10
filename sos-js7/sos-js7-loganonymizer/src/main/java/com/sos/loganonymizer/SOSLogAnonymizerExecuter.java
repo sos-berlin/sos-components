@@ -24,7 +24,9 @@ import java.util.zip.GZIPInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.Constructor;
 import org.yaml.snakeyaml.nodes.Tag;
 import org.yaml.snakeyaml.representer.Representer;
 
@@ -188,7 +190,24 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
             throw new IOException("No rule file specified."); 
         }
         listOfRules.clear();
-        Yaml yaml = new Yaml(new org.yaml.snakeyaml.constructor.Constructor(SOSRules.class));
+        // update snakeyaml to version 2.0 requires LoaderOptions to be set for Constructor
+        LoaderOptions loaderOptions = new LoaderOptions();
+        // below are the possible setters to use, using defaults at the moment
+//        loaderOptions.setAllowDuplicateKeys(false);
+//        loaderOptions.setAllowRecursiveKeys(false);
+//        loaderOptions.setCodePointLimit(0);
+//        loaderOptions.setEnumCaseSensitive(false);
+//        loaderOptions.setMaxAliasesForCollections(0);
+//        loaderOptions.setNestingDepthLimit(0);
+//        loaderOptions.setProcessComments(false);
+//        loaderOptions.setTagInspector(new TagInspector() {
+//            public boolean isGlobalTagAllowed(Tag tag) {
+//                return false;
+//            }
+//        });
+//        loaderOptions.setWrappedToRootException(false);
+//        Yaml yaml = new Yaml(new org.yaml.snakeyaml.constructor.Constructor(SOSRules.class));
+        Yaml yaml = new Yaml(new Constructor(SOSRules.class, loaderOptions));
         Path rulesPath = Paths.get(rules);
         if (!Files.exists(rulesPath)) {
             throw new FileNotFoundException(rules + " doesn't exist.");
@@ -300,10 +319,13 @@ public class SOSLogAnonymizerExecuter extends DefaultRulesTable {
         options.setPrettyFlow(true);
         options.setProcessComments(true);
         options.setCanonical(false);
-        Representer representer = new Representer();
+//        Representer representer = new Representer();
+        // update snakeyaml to version 2.0 requires DumperOptions to be set on Representer initialization
+        Representer representer = new Representer(options);
         representer.addClassTag(com.sos.loganonymizer.classes.SOSRules.class, Tag.MAP);
 
-        final Yaml yaml = new Yaml(representer, options);
+//        final Yaml yaml = new Yaml(representer, options);
+        final Yaml yaml = new Yaml(representer);
 
         SOSRules defaultRules = new SOSRules();
         defaultRules.getRules().addAll(listOfDefaultRules);
