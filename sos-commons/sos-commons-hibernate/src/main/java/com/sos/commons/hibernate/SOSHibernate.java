@@ -39,6 +39,11 @@ public class SOSHibernate {
     public static final String HIBERNATE_PROPERTY_JDBC_FETCH_SIZE = "hibernate.jdbc.fetch_size";
     public static final String HIBERNATE_PROPERTY_TRANSACTION_ISOLATION = "hibernate.connection.isolation";
     public static final String HIBERNATE_PROPERTY_USE_SCROLLABLE_RESULTSET = "hibernate.jdbc.use_scrollable_resultset";
+    
+    //JS7 Environment variables for substitution
+    public static final String JS7_DBMS_URL_PARAMETER = "JS7_DBMS_URL_PARAMETER";
+    public static final String JS7_DBMS_USER = "JS7_DBMS_USER";
+    public static final String JS7_DBMS_PASSWORD = "JS7_DBMS_PASSWORD";
 
     // SOS configuration properties
     public static final String HIBERNATE_SOS_PROPERTY_MSSQL_LOCK_TIMEOUT = "hibernate.sos.mssql_lock_timeout";

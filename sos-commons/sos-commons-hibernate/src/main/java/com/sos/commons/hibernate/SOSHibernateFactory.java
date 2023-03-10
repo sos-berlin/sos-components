@@ -471,6 +471,7 @@ public class SOSHibernateFactory implements Serializable {
         configure();
         setConfigurationProperties();
         resolveCredentialStoreProperties();
+        substituteJS7Environment();
     }
 
     private void initConfigurationProperties() {
@@ -574,6 +575,74 @@ public class SOSHibernateFactory implements Serializable {
         } catch (Throwable e) {
             throw new SOSHibernateConfigurationException(e.toString(), e);
         }
+    }
+    
+    private void substituteJS7Environment() {
+        // JOC-1510
+        if (configuration == null) {
+            return;
+        }
+
+        String url = configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL);
+        if (url != null && url.contains("${" + SOSHibernate.JS7_DBMS_URL_PARAMETER + "}")) {
+            configuration.setProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL, substituteJS7Environment(url,
+                    SOSHibernate.JS7_DBMS_URL_PARAMETER));
+        }
+        String username = configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME);
+        if (username != null && username.contains("${" + SOSHibernate.JS7_DBMS_USER + "}")) {
+            configuration.setProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME, substituteJS7Environment(username,
+                    SOSHibernate.JS7_DBMS_USER));
+        }
+        String password = configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD);
+        if (password != null && password.contains("${" + SOSHibernate.JS7_DBMS_PASSWORD + "}")) {
+            configuration.setProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD, substituteJS7Environment(password,
+                    SOSHibernate.JS7_DBMS_PASSWORD));
+        }
+    }
+    
+    private String substituteJS7Environment(String url, String key) {
+        String envVar = getEnvironmentVariable(key);
+        if (SOSHibernate.JS7_DBMS_URL_PARAMETER.equals(key)) {
+            envVar = normalizeJS7UrlParam(envVar, url, key);
+        }
+        return url.replaceFirst("\\$\\{" + key + "\\}", envVar);
+    }
+    
+    private String getEnvironmentVariable(String key) {
+        String envVar = System.getProperty(getSystemPropKey(key));
+        if (envVar == null) {
+            envVar = System.getenv(key);
+        }
+        if (envVar == null) {
+            envVar = "";
+        }
+        return envVar;
+    }
+    
+    private String getSystemPropKey(String key) {
+        // e.g. env key to system prop key: JS7_DBMS_PASSWORD -> js7.dbms.password
+        return key.toLowerCase().replace('_', '.');
+    }
+    
+    private String normalizeJS7UrlParam(String envVar, String url, String key) {
+        if (!envVar.isEmpty()) {
+            int index = url.indexOf("${" + key + "}");
+            if (index > -1) {
+                char firstCharOfEnvVar = envVar.charAt(0);
+                if (firstCharOfEnvVar == '&' || firstCharOfEnvVar == '?') {
+                    envVar = envVar.substring(1);
+                }
+                char charBeforeEnvVar = url.charAt(index - 1);
+                if (charBeforeEnvVar != '&' && charBeforeEnvVar != '?') {
+                    if (url.contains("?")) {
+                        envVar = "&" + envVar;
+                    } else {
+                        envVar = "?" + envVar;
+                    }
+                }
+            }
+        }
+        return envVar;
     }
 
     private void setDbms(String dialect) {
