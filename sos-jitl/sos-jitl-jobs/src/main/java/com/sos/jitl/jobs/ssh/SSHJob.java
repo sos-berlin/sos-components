@@ -66,7 +66,8 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
             logger.info("[connected][%s:%s]%s", providerArgs.getHost().getDisplayValue(), providerArgs.getPort().getDisplayValue(), provider
                     .getServerInfo().toString());
             isWindowsShell = provider.getServerInfo().hasWindowsShell();
-            delimiter = isWindowsShell ? SSHJobUtil.DEFAULT_WINDOWS_DELIMITER : SSHJobUtil.DEFAULT_LINUX_DELIMITER;
+//            delimiter = isWindowsShell ? SSHJobUtil.DEFAULT_WINDOWS_DELIMITER : SSHJobUtil.DEFAULT_LINUX_DELIMITER;
+            delimiter = jobArgs.getCommandDelimiter().getValue();
             
             Map<String, String> allEnvVars = Collections.emptyMap();
             if (jobArgs.getCreateEnvVars().getValue()) {
@@ -134,17 +135,18 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
 
                 if (!SOSString.isEmpty(result.getStdOut())) {
                     outcomes.put("std_out", result.getStdOut());
-                    logger.info("[stdOut]%s", result.getStdOut());
+                    logger.info("[stdOut] %s", result.getStdOut());
                 }
                 if (!SOSString.isEmpty(result.getStdErr())) {
                     outcomes.put("std_err", result.getStdErr());
-                    logger.error("[stdErr]%s", result.getStdErr());
+                    logger.error("[stdErr] %s", result.getStdErr());
                 }
-                logger.info("[exitCode]%s", result.getExitCode());
+                logger.info("[returnCode] %s", result.getExitCode());
                 outcomes.put("exit_code", result.getExitCode());
+                outcomes.put("returnCode", result.getExitCode());
                 if (result.getException() != null) {
                     outcomes.put("exception", result.getException());
-                    logger.info("[exception]%s", SOSString.toString(result.getException()));
+                    logger.info("[exception] %s", SOSString.toString(result.getException()));
                 }
             }
             if (resolvedReturnValuesFileName != null) {
