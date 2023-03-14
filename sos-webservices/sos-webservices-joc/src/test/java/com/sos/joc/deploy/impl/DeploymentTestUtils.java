@@ -22,8 +22,10 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.inventory.model.deploy.DeployType;
+import com.sos.inventory.model.descriptor.Controller;
 import com.sos.inventory.model.descriptor.DeploymentDescriptor;
 import com.sos.inventory.model.descriptor.Descriptor;
+import com.sos.inventory.model.descriptor.Joc;
 import com.sos.inventory.model.descriptor.License;
 import com.sos.inventory.model.descriptor.agent.AgentDescriptor;
 import com.sos.inventory.model.descriptor.agent.AgentsDescriptor;
@@ -1529,6 +1531,15 @@ public class DeploymentTestUtils {
         depDescriptor.setAgents(createAgentsDescriptor());
         depDescriptor.setJoc(createJocsDescriptor());
         
+        Controller controller = new Controller(
+                "controllers/instances/cluster.primary/config/private/centostest-primary.crt", 
+                "controllers/instances/cluster.secondary/config/private/centostest-secondary.crt");
+        Joc joc = new Joc(
+                "joc/instances/cluster.primary/resources/centostest-primary.crt", 
+                "joc/instances/cluster.secondary/resources/centostest-secondary.crt");
+        
+        com.sos.inventory.model.descriptor.Certificates certs = new com.sos.inventory.model.descriptor.Certificates(controller, joc);
+        depDescriptor.setCertificates(certs);
         return depDescriptor;
     }
     
