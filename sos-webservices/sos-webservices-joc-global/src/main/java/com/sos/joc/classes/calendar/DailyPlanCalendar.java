@@ -158,7 +158,7 @@ public class DailyPlanCalendar {
         return JCalendar.of(dailyPlanCalendarPath, ZoneId.of(timezone), Duration.ofSeconds(dateOffset), "#([^#]+)#.*", "yyyy-MM-dd");
     }
     
-    private static long convertPeriodBeginToLong(String periodBegin) {
+    public static long convertPeriodBeginToLong(String periodBegin) {
         
         periodBegin = (periodBegin + ":00:00").substring(0, 8);
         if (!periodBegin.matches("\\d{2}:\\d{2}:\\d{2}")) {

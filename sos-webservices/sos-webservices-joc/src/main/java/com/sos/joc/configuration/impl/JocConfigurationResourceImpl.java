@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -32,6 +33,7 @@ import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.configuration.ConfigurationGlobalsChanged;
 import com.sos.joc.exceptions.DBMissingDataException;
+import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
@@ -156,7 +158,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                     }
                 } else {
                     // Calendar for controller
-                    try {
+                    //try {
                         Optional<JsonObject> oldObj = getOldJsonObject(oldConfiguration);
                         updateControllerCalendar = !oldObj.isPresent() || oldObj.get().get(DefaultSections.dailyplan.name()) == null;
                         if (!updateControllerCalendar) {
@@ -174,15 +176,26 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                                         "time_zone").getString("value", oldTimeZone);
                                 String curPeriodBegin = curDailyPlan.getJsonObject("period_begin") == null ? oldPeriodBegin : curDailyPlan
                                         .getJsonObject("period_begin").getString("value", oldPeriodBegin);
+                                long periodBeginOffset = DailyPlanCalendar.convertPeriodBeginToLong(curPeriodBegin);
+                                if (periodBeginOffset < 0 || periodBeginOffset >= TimeUnit.DAYS.toMillis(1)) {
+                                    throw new JocBadRequestException("Invalid 'dailyplan.period_begin': " + curPeriodBegin);
+                                }
+                                String curStartTime = curDailyPlan.getJsonObject("start_time").getString("value");
+                                if (curStartTime != null) {
+                                    long curStartTimeOffset = DailyPlanCalendar.convertPeriodBeginToLong(curStartTime);
+                                    if (curStartTimeOffset < 0 || curStartTimeOffset >= TimeUnit.DAYS.toMillis(1)) {
+                                        throw new JocBadRequestException("Invalid 'dailyplan.start_time': " + curStartTime);
+                                    }
+                                }
                                 if (!curTimeZone.equals(oldTimeZone) || !curPeriodBegin.equals(oldPeriodBegin)) {
                                     updateControllerCalendar = true;
                                     LOGGER.info("DailyPlan settings are changed. Calendar has to be updated.");
                                 }
                             }
                         }
-                    } catch (Exception e) {
-                        //
-                    }
+//                    } catch (Exception e) {
+//                        //
+//                    }
                 }
                 break;
             case IAM:
@@ -637,8 +650,12 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
     private static Optional<JsonObject> getOldJsonObject(String oldConfiguration) {
         Optional<JsonObject> oldObj = Optional.empty();
         if (oldConfiguration != null) {
-            JsonReader oldRdr = Json.createReader(new StringReader(oldConfiguration));
-            oldObj = Optional.of(oldRdr.readObject());
+            try {
+                JsonReader oldRdr = Json.createReader(new StringReader(oldConfiguration));
+                oldObj = Optional.of(oldRdr.readObject());
+            } catch (Exception e) {
+                //
+            }
         }
         return oldObj;
     }

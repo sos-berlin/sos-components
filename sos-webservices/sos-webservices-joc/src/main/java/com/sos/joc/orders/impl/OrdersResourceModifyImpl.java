@@ -313,6 +313,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         }
 
         Optional<JPosition> positionOpt = Optional.empty();
+        Optional<JPosition> orderPositionOpt = Optional.empty();
+        Optional<String> workflowPositionStringOpt = Optional.empty();
 
         // JOC-1453 consider labels
         Object positionObj = modifyOrders.getPosition();
@@ -371,12 +373,16 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     positionOpt = Optional.of(posFromList.get());
                 }
             }
+            
+            workflowPositionStringOpt = positionOpt.map(pos -> cop.orderPositionToWorkflowPosition(pos
+                    .toString()));
 
-            if (positionOpt.isPresent() && !allowedPositions.contains(positionOpt.get().toString())) {
-                if (cop.isSingleOrder() && cop.getCurrentPosition().toString().equals(positionOpt.get().toString())) {
+            if (positionOpt.isPresent() && !allowedPositions.contains(workflowPositionStringOpt.get())) {
+                if (cop.isSingleOrder() && (cop.getCurrentWorkflowPosition().toString().equals(positionOpt.get().toString()) || cop
+                        .getCurrentOrderPosition().toString().equals(positionOpt.get().toString()))) {
                     positionOpt = Optional.empty();
                 } else {
-                    throw new JocBadRequestException("Disallowed position '" + positionOpt.get().toString() + "'. Allowed positions are: "
+                    throw new JocBadRequestException("Disallowed position '" + workflowPositionStringOpt.get() + "'. Allowed positions are: "
                             + allowedPositions.toString());
                 }
             }
@@ -404,11 +410,11 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             if (withVariables) {
                 Set<String> allowedPositionsWithImplicitEnds = cop.getPositionsWithImplicitEnds().stream().map(Position::getPositionString).collect(
                         Collectors.toCollection(LinkedHashSet::new));
-                final String positionString = positionOpt.isPresent() ? positionOpt.get().toString() : "";
+                final String workflowPositionString = workflowPositionStringOpt.isPresent() ? workflowPositionStringOpt.get() : "";
                 boolean isNotFuturePosition = true;
                 if (positionOpt.isPresent()) {
-                    int posIndex = getIndex(allowedPositionsWithImplicitEnds, positionString);
-                    int curPosIndex = getIndex(allowedPositionsWithImplicitEnds, cop.getCurrentPosition().toString());
+                    int posIndex = getIndex(allowedPositionsWithImplicitEnds, workflowPositionString);
+                    int curPosIndex = getIndex(allowedPositionsWithImplicitEnds, cop.getCurrentWorkflowPosition().toString());
                     isNotFuturePosition = posIndex <= curPosIndex;
                 }
 
@@ -418,15 +424,19 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 if (isNotFuturePosition) {
                     JOrder currentJOrder = jOrders.iterator().next();
                     Set<String> historicPositions = JavaConverters.asJava(currentJOrder.asScala().historicOutcomes()).stream().map(h -> JPosition
-                            .apply(h.position())).map(p -> p.toString()).collect(Collectors.toCollection(LinkedHashSet::new));
-                    Position prevP = getPrevious(historicPositions, cop.getPositionsWithImplicitEnds(), positionString);
+                            .apply(h.position())).map(JPosition::toString).collect(Collectors.toCollection(LinkedHashSet::new));
+                    
+                    //TODO !!!!!!! historicPositions are orderPositions
+                    Position prevP = getPrevious(historicPositions, cop.getPositionsWithImplicitEnds(), workflowPositionString);
+                    
+                    
                     if (prevP != null) {
                         prevPos = prevP.getPosition();
                         prevPosString = prevP.getPositionString();
                     }
                 } else {
-                    prevPos = cop.getCurrentPosition().toList();
-                    prevPosString = cop.getCurrentPosition().toString();
+                    prevPos = cop.getCurrentOrderPosition().toList();
+                    prevPosString = cop.getCurrentOrderPosition().toString();
                 }
                 if (prevPos != null) {
                     final String prevPString = prevPosString;
@@ -450,8 +460,11 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     }
                 }
             }
+            
+//            String oId = jOrders.iterator().next().id().string();
 
-            ControllerApi.of(controllerId).resumeOrder(jOrders.iterator().next().id(), positionOpt, historyOperations, true).thenAccept(either -> {
+            orderPositionOpt = cop.workflowPositionToOrderPosition(positionOpt, modifyOrders.getCycleEndTime());
+            ControllerApi.of(controllerId).resumeOrder(jOrders.iterator().next().id(), orderPositionOpt, historyOperations, true).thenAccept(either -> {
                 ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
                 if (either.isRight()) {
                     OrdersHelper.storeAuditLogDetailsFromJOrders(jOrders, dbAuditLog.getId(), controllerId).thenAccept(either2 -> ProblemHelper
@@ -460,7 +473,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             });
         } else {
             for (JOrder jOrder : jOrders) {
-                ControllerApi.of(controllerId).resumeOrder(jOrder.id(), positionOpt, historyOperations, true).thenAccept(either -> {
+                orderPositionOpt = cop.workflowPositionToOrderPosition(positionOpt, jOrder, modifyOrders.getCycleEndTime());
+                ControllerApi.of(controllerId).resumeOrder(jOrder.id(), orderPositionOpt, historyOperations, true).thenAccept(either -> {
                     ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
                     if (either.isRight()) {
                         OrdersHelper.storeAuditLogDetailsFromJOrder(jOrder, dbAuditLog.getId(), controllerId).thenAccept(either2 -> ProblemHelper
@@ -498,6 +512,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     }
 
     private static Position getPrevious(Set<String> historicPositions, Set<Position> allowedPositions, String value) {
+        // TODO handle order-/workflow position
         Position result = null;
         for (Position entry : allowedPositions) {
             if (entry.getPositionString().equals(value)) {

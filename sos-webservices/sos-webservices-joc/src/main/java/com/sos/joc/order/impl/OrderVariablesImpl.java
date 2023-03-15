@@ -49,7 +49,7 @@ public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariabl
                 return jocDefaultResponse;
             }
             
-            String position = null;
+            JPosition position = null;
             JControllerState currentState = Proxy.of(controllerId).currentState();
             
             if (orderFilter.getPosition() != null) {
@@ -74,12 +74,13 @@ public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariabl
                     position = getPosition((List<Object>) orderFilter.getPosition());
                 }
             }
-
+            
             CheckedResumeOrdersPositions cop = new CheckedResumeOrdersPositions();
             cop.get(orderFilter.getOrderId(), currentState, folderPermissions.getListOfFolders(), position, false);
             cop.setOrderIds(null);
             cop.setDisabledPositionChange(null);
             cop.setPositions(null);
+            cop.setWithCyclePosition(null);
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(cop));
 
@@ -93,11 +94,11 @@ public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariabl
         }
     }
     
-    private String getPosition(List<Object> pos) {
+    private JPosition getPosition(List<Object> pos) {
         if (pos != null && !pos.isEmpty()) {
             Either<Problem, JPosition> jPos = JPosition.fromList(pos);
             ProblemHelper.throwProblemIfExist(jPos);
-            return jPos.get().toString();
+            return jPos.get();
         }
         return null;
     }
