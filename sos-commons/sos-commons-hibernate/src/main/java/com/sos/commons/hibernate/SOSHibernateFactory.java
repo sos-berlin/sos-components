@@ -600,12 +600,12 @@ public class SOSHibernateFactory implements Serializable {
         }
     }
     
-    private String substituteJS7Environment(String url, String key) {
+    private String substituteJS7Environment(String confValue, String key) {
         String envVar = getEnvironmentVariable(key);
         if (SOSHibernate.JS7_DBMS_URL_PARAMETER.equals(key)) {
-            envVar = normalizeJS7UrlParam(envVar, url, key);
+            envVar = normalizeJS7UrlParam(envVar, confValue);
         }
-        return url.replaceFirst("\\$\\{" + key + "\\}", envVar);
+        return confValue.replaceFirst("\\$\\{" + key + "\\}", envVar);
     }
     
     private String getEnvironmentVariable(String key) {
@@ -624,9 +624,9 @@ public class SOSHibernateFactory implements Serializable {
         return key.toLowerCase().replace('_', '.');
     }
     
-    private String normalizeJS7UrlParam(String envVar, String url, String key) {
+    private String normalizeJS7UrlParam(String envVar, String url) {
         if (!envVar.isEmpty()) {
-            int index = url.indexOf("${" + key + "}");
+            int index = url.indexOf("${" + SOSHibernate.JS7_DBMS_URL_PARAMETER + "}");
             if (index > -1) {
                 char firstCharOfEnvVar = envVar.charAt(0);
                 if (firstCharOfEnvVar == '&' || firstCharOfEnvVar == '?') {

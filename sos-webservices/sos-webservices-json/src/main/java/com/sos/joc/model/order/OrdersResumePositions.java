@@ -26,7 +26,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "disabledPositionChange",
     "constants",
     "variables",
-    "variablesNotSettable"
+    "variablesNotSettable",
+    "withCyclePosition"
 })
 public class OrdersResumePositions
     extends OrdersPositions
@@ -74,6 +75,8 @@ public class OrdersResumePositions
     @JsonProperty("variablesNotSettable")
     @JsonPropertyDescription("only relevant for resuming a single order. Occurs if order starts from the beginning in its scope")
     private Boolean variablesNotSettable;
+    @JsonProperty("withCyclePosition")
+    private Boolean withCyclePosition = false;
 
     /**
      * 
@@ -179,14 +182,24 @@ public class OrdersResumePositions
         this.variablesNotSettable = variablesNotSettable;
     }
 
+    @JsonProperty("withCyclePosition")
+    public Boolean getWithCyclePosition() {
+        return withCyclePosition;
+    }
+
+    @JsonProperty("withCyclePosition")
+    public void setWithCyclePosition(Boolean withCyclePosition) {
+        this.withCyclePosition = withCyclePosition;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("orderIds", orderIds).append("disabledPositionChange", disabledPositionChange).append("constants", constants).append("variables", variables).append("variablesNotSettable", variablesNotSettable).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("orderIds", orderIds).append("disabledPositionChange", disabledPositionChange).append("constants", constants).append("variables", variables).append("variablesNotSettable", variablesNotSettable).append("withCyclePosition", withCyclePosition).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(variablesNotSettable).append(constants).append(variables).append(orderIds).append(disabledPositionChange).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(variables).append(withCyclePosition).append(variablesNotSettable).append(orderIds).append(disabledPositionChange).append(constants).toHashCode();
     }
 
     @Override
@@ -198,7 +211,7 @@ public class OrdersResumePositions
             return false;
         }
         OrdersResumePositions rhs = ((OrdersResumePositions) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(variablesNotSettable, rhs.variablesNotSettable).append(constants, rhs.constants).append(variables, rhs.variables).append(orderIds, rhs.orderIds).append(disabledPositionChange, rhs.disabledPositionChange).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(variables, rhs.variables).append(withCyclePosition, rhs.withCyclePosition).append(variablesNotSettable, rhs.variablesNotSettable).append(orderIds, rhs.orderIds).append(disabledPositionChange, rhs.disabledPositionChange).append(constants, rhs.constants).isEquals();
     }
 
 }

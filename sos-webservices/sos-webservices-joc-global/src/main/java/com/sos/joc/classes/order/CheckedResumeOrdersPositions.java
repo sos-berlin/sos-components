@@ -2,14 +2,17 @@ package com.sos.joc.classes.order;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
@@ -65,7 +68,10 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
     private List<HistoricOutcome> historicOutcomes = Collections.emptyList();
     
     @JsonIgnore
-    private JPosition currentPosition = null;
+    private JPosition currentOrderPosition = null;
+    
+    @JsonIgnore
+    private JPosition currentWorkflowPosition = null;
     
     @JsonIgnore
     private Set<Position> positionsWithImplicitEnds = new LinkedHashSet<>();
@@ -134,9 +140,12 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
             final Map<String, Integer> counterPerPos = new HashMap<>();
             final Set<Position> pos = new LinkedHashSet<>();
             final Set<String> orderIds = new HashSet<>();
+            //final Set<JPosition> jPositions = new HashSet<>();
+            
             jOrders = suspendedOrFailedOrders.get(workflowId);
             jOrders.forEach(o -> {
                 orderIds.add(o.id().string());
+                //jPositions.add(JPosition.apply(o.asScala().position()));
                 w.reachablePositions(o.workflowPosition().position()).stream().forEachOrdered(jPos -> {
                     Position p = createPosition(jPos, w.asScala());
                     //positionsWithImplicitEnds.add(p);
@@ -155,6 +164,7 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
 
             setPositions(pos.stream().filter(p -> commonPos.contains(p.getPositionString())).collect(Collectors.toCollection(LinkedHashSet::new)));
             disableIfNoCommonAllowedPositionsExist();
+            setWithCyclePosition(getPositions().stream().anyMatch(p -> p.getPositionString().contains("cycle")));
         }
 
         setDeliveryDate(Date.from(Instant.now()));
@@ -164,7 +174,7 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
     }
     
     @JsonIgnore
-    public CheckedResumeOrdersPositions get(String order, JControllerState currentState, Set<Folder> permittedFolders, String position,
+    public CheckedResumeOrdersPositions get(String order, JControllerState currentState, Set<Folder> permittedFolders, JPosition position,
             boolean withStatusCheck) throws JsonParseException, JsonMappingException, IOException, JocBadRequestException,
             JocFolderPermissionsException {
 
@@ -219,19 +229,22 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
 
         setDeliveryDate(Date.from(Instant.now()));
         setSurveyDate(Date.from(currentState.instant()));
-        currentPosition = JPosition.apply(jOrder.asScala().position());
-        if (position == null || position.isEmpty()) {
-            position = currentPosition.toString();
-        }
+        currentOrderPosition = JPosition.apply(jOrder.asScala().position());
+        currentWorkflowPosition = orderPositionToWorkflowPosition(currentOrderPosition);
         if (pos.isEmpty()) {
-            Position p = createPosition(currentPosition, w.asScala());
+            Position p = createPosition(currentWorkflowPosition, w.asScala());
             pos.add(p);
             // TODO + ImplicitEnd of the Order's scope
             setVariablesNotSettable(true);
         } else {
             String firstPos = pos.iterator().next().getPositionString();
-            setVariablesNotSettable(firstPos.equals(position));
+            if (position == null) {
+                setVariablesNotSettable(firstPos.equals(currentWorkflowPosition.toString()));
+            } else {
+                setVariablesNotSettable(firstPos.equals(position.toString()));
+            }
         }
+        setWithCyclePosition(getPositions().stream().anyMatch(p -> p.getPositionString().contains("cycle")));
         
         Variables constants = OrdersHelper.scalaValuedArgumentsToVariables(jOrder.arguments());
         if (orderPreparation != null && orderPreparation.getParameters() != null && orderPreparation.getParameters().getAdditionalProperties() != null) {
@@ -250,7 +263,7 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
         return this;
     }
     
-    public void disableIfNoCommonAllowedPositionsExist() throws JocBadRequestException {
+    public void disableIfNoCommonAllowedPositionsExist() {
         if (getPositions().isEmpty() && getOrderIds().size() > 1) {
             PositionChange pc = new PositionChange();
             pc.setCode(PositionChangeCode.NO_COMMON_POSITIONS);
@@ -276,24 +289,13 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
     }
     
     @JsonIgnore
-    public JPosition getCurrentPosition() {
-        return currentPosition;
+    public JPosition getCurrentOrderPosition() {
+        return currentOrderPosition;
     }
     
-    public int currentPositionCompareTo(JPosition pos) {
-        // TODO that's wrong
-        List<Object> position = pos.toList();
-        List<Object> cPos = currentPosition.toList();
-        int result = 0;
-        for (int i = 0; i < cPos.size(); i += 2) {
-            Integer c = (Integer) cPos.get(i);
-            Integer p = (Integer) position.get(i);
-            result = c.compareTo(p);
-            if (result != 0) {
-                break;
-            }
-        }
-        return result;
+    @JsonIgnore
+    public JPosition getCurrentWorkflowPosition() {
+        return currentWorkflowPosition;
     }
     
     @JsonIgnore
@@ -303,33 +305,34 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
         }
         return historicOutcomes;
     }
-    
-    @JsonIgnore
-    public Variables getVariables(JOrder jOrder, List<Object> position, Set<String> implicitEnds, Set<String> orderArgs) throws JsonParseException,
-            JsonMappingException, IOException, JocBadRequestException {
-        Either<Problem, JPosition> posFromList = JPosition.fromList(position);
-        if (posFromList.isLeft()) {
-            new JocBadRequestException(ProblemHelper.getErrorMessage(posFromList.getLeft()));
-        }
-        return getVariables(jOrder, posFromList.get().toString(), implicitEnds, orderArgs);
-    }
 
     @JsonIgnore
-    public Variables getVariables(JOrder jOrder, String positionString, Set<String> implicitEnds, Set<String> orderArgs) throws JsonParseException,
+    public Variables getVariables(JOrder jOrder, JPosition position, Set<String> implicitEnds, Set<String> orderArgs) throws JsonParseException,
             JsonMappingException, IOException, JocBadRequestException {
+        if (position == null) {
+            position = currentOrderPosition;
+        }
         Set<String> allowedPositions = getPositions().stream().map(Position::getPositionString).collect(Collectors.toCollection(LinkedHashSet::new));
         Variables variables = new Variables();
-        String positionStringWithoutCounter = positionString.replaceAll("/(try|catch|cycle)\\+?[^:]*", "/$1");
+        String positionString = position.toString();
+        String positionStringWithoutCounter = orderPositionToWorkflowPosition(positionString);
 
-        if (allowedPositions.contains(positionString) || allowedPositions.contains(positionStringWithoutCounter) || implicitEnds.contains(
-                positionString) || implicitEnds.contains(positionStringWithoutCounter)) {
+        if (allowedPositions.contains(positionStringWithoutCounter) || allowedPositions.contains(positionString) || implicitEnds.contains(
+                positionStringWithoutCounter) || implicitEnds.contains(positionString)) {
             OrderItem oItem = Globals.objectMapper.readValue(jOrder.toJson(), OrderItem.class);
             historicOutcomes = oItem.getHistoricOutcomes();
             if (historicOutcomes != null) {
+                
+                // determine orderPosition from workflowPosition
+                positionString = workflowPositionToOrderPositionFromHistoricOutcome(positionString);
+                
                 for (HistoricOutcome outcome : historicOutcomes) {
                     String outcomePositionString = JPosition.fromList(outcome.getPosition()).get().toString();
-                    String outcomePositionStringWithoutCounter = outcomePositionString.replaceAll("/(try|catch|cycle)\\+?[^:]*", "/$1");
-                    if (outcomePositionStringWithoutCounter.equals(positionStringWithoutCounter)) {
+                    String outcomePositionStringWithoutCounter = orderPositionToWorkflowPosition(outcomePositionString);
+//                    if (outcomePositionStringWithoutCounter.equals(positionStringWithoutCounter)) {
+//                        break;
+//                    }
+                    if (outcomePositionString.equals(positionString)) {
                         break;
                     }
                     if (outcome.getOutcome() == null || outcome.getOutcome().getNamedValues() == null || outcome.getOutcome().getNamedValues()
@@ -351,6 +354,88 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
         }
 
         return variables;
+    }
+    
+    public String orderPositionToWorkflowPosition(String pos) {
+        return pos.replaceAll("/(try|catch|cycle)\\+?[^:]*", "/$1");
+    }
+    
+    private JPosition orderPositionToWorkflowPosition(JPosition pos) {
+        return JPosition.fromList(pos.toList().stream().map(o ->{
+            if (o instanceof String) {
+                return ((String) o).replaceAll("(try|catch|cycle)\\+?.*", "$1");
+            } else {
+                return o;
+            }
+        }).collect(Collectors.toList())).get();
+    }
+    
+    public Optional<JPosition> workflowPositionToOrderPosition(final Optional<JPosition> workflowPosition, Long cycleSeconds) {
+        return workflowPosition.map(JPosition::toList).map(l -> workflowPositionToOrderPosition(l, null, cycleSeconds)).map(JPosition::fromList).map(
+                Either::get);
+    }
+    
+    public Optional<JPosition> workflowPositionToOrderPosition(final Optional<JPosition> workflowPosition, JOrder jOrder, Long cycleSeconds) {
+        return workflowPosition.map(JPosition::toList).map(l -> workflowPositionToOrderPosition(l, jOrder, cycleSeconds)).map(JPosition::fromList).map(
+                Either::get);
+    }
+    
+    private List<Object> workflowPositionToOrderPosition(final List<Object> workflowPosition, JOrder jOrder, Long cycleSeconds) {
+        List<Object> curOrderPosition = null;
+        if (jOrder == null) {
+            curOrderPosition = getCurrentOrderPosition().toList();
+        } else {
+            curOrderPosition = JPosition.apply(jOrder.asScala().position()).toList();
+        }
+        List<Object> result = new LinkedList<>();
+        int numOfCurPos = curOrderPosition == null ? 0 : curOrderPosition.size();
+        int index = 0;
+        if (cycleSeconds != null) {
+            cycleSeconds = Instant.now().plusSeconds(cycleSeconds).toEpochMilli();
+        }
+        for (Object pos : workflowPosition) {
+            boolean posIsAdded = false;
+            if (index < numOfCurPos && pos instanceof String) {
+                String posStr = (String) pos;
+                boolean isWorkflowPosition = posStr.equals(posStr.replaceAll("(try|catch|cycle)\\+?.*", "$1"));
+                if (isWorkflowPosition && (posStr.equals("cycle") || posStr.equals("try") || posStr.equals("catch"))) {
+                    String curOrderPos = (String) curOrderPosition.get(index);
+                    if (curOrderPos != null && posStr.equals(curOrderPos.replaceAll("(try|catch|cycle)\\+?.*", "$1"))) {
+                        if (posStr.equals("cycle") && cycleSeconds != null) {
+                            curOrderPos = curOrderPos.replaceFirst("end=\\d+", "end=" + cycleSeconds);
+                        }
+                        result.add(curOrderPos);
+                        posIsAdded = true;
+                    }
+                }
+            }
+            if (!posIsAdded) {
+                result.add(pos); 
+            }
+            index++;
+        }
+        return result;
+    }
+    
+    private String workflowPositionToOrderPositionFromHistoricOutcome(String positionString) {
+        // determine orderPosition from workflowPosition
+        String workflowPositionString = orderPositionToWorkflowPosition(positionString);
+        if (positionString.equals(workflowPositionString)) { // position is workflowPosition
+            if (positionString.contains("cycle") || positionString.contains("try") || positionString.contains("catch")) {
+                String orderPosition = getHistoricOutcomes().stream().map(HistoricOutcome::getPosition).map(JPosition::fromList).map(Either::get).map(
+                        JPosition::toString).filter(s -> orderPositionToWorkflowPosition(s).equals(workflowPositionString)).collect(
+                                Collectors.toCollection(LinkedList::new)).peekLast();
+                if (orderPosition != null) {
+                    return orderPosition;  
+                }
+            }
+        }
+        return positionString;
+    }
+    
+    private JPosition getJPositionFromString(String positionString) {
+        return JPosition.fromList(Arrays.asList(positionString.split("[:/]")).stream().map(str -> str.matches("\\d+") ? Integer.valueOf(str) : str)
+                .collect(Collectors.toCollection(LinkedList::new))).get();
     }
     
     private static Position createPosition(JPosition jPos, Workflow w) {
