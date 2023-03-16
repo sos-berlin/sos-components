@@ -133,7 +133,7 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
             JsonNode node = Globals.objectMapper.readTree(w.withPositions().toJson());
             List<Instruction> instructions = Globals.objectMapper.reader().forType(new TypeReference<List<Instruction>>() {}).readValue(node.get("instructions"));
             //List<Instruction> instructions = Arrays.asList(Globals.objectMapper.reader().treeToValue(node.get("instructions"), Instruction[].class));
-            Set<String> implicitEnds = WorkflowsHelper.extractImplicitEnds(instructions);
+            Set<String> implicitEnds = WorkflowsHelper.extractDisallowedImplicitEnds(instructions);
 
             setWorkflowId(new WorkflowId(WorkflowPaths.getPath(workflowId), workflowId.versionId().string()));
 
@@ -165,6 +165,7 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
             setPositions(pos.stream().filter(p -> commonPos.contains(p.getPositionString())).collect(Collectors.toCollection(LinkedHashSet::new)));
             disableIfNoCommonAllowedPositionsExist();
             setWithCyclePosition(getPositions().stream().anyMatch(p -> p.getPositionString().contains("cycle")));
+            setVariablesNotSettable(orderIds.size() > 1);
         }
 
         setDeliveryDate(Date.from(Instant.now()));
@@ -208,7 +209,7 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
         }
         
         // List<Instruction> instructions = Arrays.asList(Globals.objectMapper.reader().treeToValue(node.get("instructions"), Instruction[].class));
-        Set<String> implicitEnds = WorkflowsHelper.extractImplicitEnds(instructions);
+        Set<String> implicitEnds = WorkflowsHelper.extractDisallowedImplicitEnds(instructions);
 
         setWorkflowId(new WorkflowId(WorkflowPaths.getPath(workflowId), workflowId.versionId().string()));
 
@@ -371,16 +372,16 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
     }
     
     public Optional<JPosition> workflowPositionToOrderPosition(final Optional<JPosition> workflowPosition, Long cycleSeconds) {
-        return workflowPosition.map(JPosition::toList).map(l -> workflowPositionToOrderPosition(l, null, cycleSeconds)).map(JPosition::fromList).map(
+        return workflowPosition.map(l -> workflowPositionToOrderPosition(l, null, cycleSeconds)).map(JPosition::fromList).map(
                 Either::get);
     }
     
     public Optional<JPosition> workflowPositionToOrderPosition(final Optional<JPosition> workflowPosition, JOrder jOrder, Long cycleSeconds) {
-        return workflowPosition.map(JPosition::toList).map(l -> workflowPositionToOrderPosition(l, jOrder, cycleSeconds)).map(JPosition::fromList).map(
+        return workflowPosition.map(l -> workflowPositionToOrderPosition(l, jOrder, cycleSeconds)).map(JPosition::fromList).map(
                 Either::get);
     }
     
-    private List<Object> workflowPositionToOrderPosition(final List<Object> workflowPosition, JOrder jOrder, Long cycleSeconds) {
+    private List<Object> workflowPositionToOrderPosition(final JPosition workflowJPosition, JOrder jOrder, Long cycleSeconds) {
         List<Object> curOrderPosition = null;
         if (jOrder == null) {
             curOrderPosition = getCurrentOrderPosition().toList();
@@ -393,7 +394,12 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
         if (cycleSeconds != null) {
             cycleSeconds = Instant.now().plusSeconds(cycleSeconds).toEpochMilli();
         }
-        for (Object pos : workflowPosition) {
+        
+        Integer indexOfImplicitEndCyclePosition = getPositions().stream().filter(p -> workflowJPosition.toString().equals(p.getPositionString()))
+                .filter(p -> "ImplicitEnd".equals(p.getType())).map(Position::getPosition).findAny().map(l -> (l.lastIndexOf("cycle") == l.size() - 2)
+                        ? l.lastIndexOf("cycle") : -1).orElse(-1);
+
+        for (Object pos : workflowJPosition.toList()) {
             boolean posIsAdded = false;
             if (index < numOfCurPos && pos instanceof String) {
                 String posStr = (String) pos;
@@ -401,8 +407,12 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
                 if (isWorkflowPosition && (posStr.equals("cycle") || posStr.equals("try") || posStr.equals("catch"))) {
                     String curOrderPos = (String) curOrderPosition.get(index);
                     if (curOrderPos != null && posStr.equals(curOrderPos.replaceAll("(try|catch|cycle)\\+?.*", "$1"))) {
-                        if (posStr.equals("cycle") && cycleSeconds != null) {
-                            curOrderPos = curOrderPos.replaceFirst("end=\\d+", "end=" + cycleSeconds);
+                        if (posStr.equals("cycle")) {
+                            if (indexOfImplicitEndCyclePosition == index) {
+                                curOrderPos = posStr;
+                            } else if (cycleSeconds != null) {
+                                curOrderPos = curOrderPos.replaceAll("end=\\d+", "end=" + cycleSeconds);
+                            }
                         }
                         result.add(curOrderPos);
                         posIsAdded = true;

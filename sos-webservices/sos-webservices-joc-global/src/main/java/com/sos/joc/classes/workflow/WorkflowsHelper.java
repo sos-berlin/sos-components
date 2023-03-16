@@ -946,7 +946,7 @@ public class WorkflowsHelper {
         }
     }
 
-    public static Set<String> extractImplicitEnds(List<Instruction> insts) {
+    public static Set<String> extractDisallowedImplicitEnds(List<Instruction> insts) {
         Set<String> posSet = new HashSet<>();
         extractImplicitEnds(insts, posSet, false);
         return posSet;
@@ -999,7 +999,7 @@ public class WorkflowsHelper {
                 case CYCLE:
                     Cycle c = inst.cast();
                     if (c.getCycleWorkflow() != null) {
-                        extractImplicitEnds(c.getCycleWorkflow().getInstructions(), posSet, true);
+                        extractImplicitEnds(c.getCycleWorkflow().getInstructions(), posSet, false);
                     }
                     break;
                 case CONSUME_NOTICES:
