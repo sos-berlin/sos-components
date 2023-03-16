@@ -221,8 +221,9 @@ public class JocCluster {
     }
 
     private ConfigurationGlobals getStoredSettings() throws Exception {
-        ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
-                SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .configure(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true)
+                .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
         ConfigurationGlobals configurations = new ConfigurationGlobals();
         GlobalSettings settings = null;

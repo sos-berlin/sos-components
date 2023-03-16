@@ -940,7 +940,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 throw new DBMissingDataException(String.format("Couldn't find calendar '%s'", id));
             }
 
-            Calendar calendar = new ObjectMapper().readValue(config.getContent(), Calendar.class);
+            Calendar calendar = Globals.objectMapper.readValue(config.getContent(), Calendar.class);
             calendar.setName(config.getName());
             calendar.setPath(config.getPath());
             return calendar;

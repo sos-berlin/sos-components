@@ -9,8 +9,10 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 
 public class Globals {
 
-    public static ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
-            SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
+    public static ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .configure(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true)
+            .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+            .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
     private static Map<String, String> session = new ConcurrentHashMap<String, String>();
 
     public static String getSessionVariable(String name) {

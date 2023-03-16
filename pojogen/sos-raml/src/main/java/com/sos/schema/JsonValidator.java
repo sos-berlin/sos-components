@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networknt.schema.JsonMetaSchema;
 import com.networknt.schema.JsonSchema;
@@ -29,7 +30,8 @@ import com.sos.schema.exception.SOSJsonSchemaException;
 public class JsonValidator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JsonValidator.class);
-    private static final ObjectMapper MAPPER = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    private static final ObjectMapper MAPPER = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .configure(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true);
     private static final SpecVersion.VersionFlag JSONDRAFT = SpecVersion.VersionFlag.V4;
     private static final List<NonValidationKeyword> NON_VALIDATION_KEYS = Arrays.asList(new NonValidationKeyword("javaType"),
             new NonValidationKeyword("javaInterfaces"), new NonValidationKeyword("javaEnumNames"), new NonValidationKeyword("extends"),
@@ -497,7 +499,7 @@ public class JsonValidator {
             }
         } catch (JsonParseException e) {
             throw e;
-        } catch (JsonSchemaException e) {
+        } catch (JsonMappingException | JsonSchemaException e) {
             if (e.getCause() == null || e.getCause().getClass().isInstance(e)) {
                 throw new SOSJsonSchemaException(e.getMessage());
             }

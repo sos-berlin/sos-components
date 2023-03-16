@@ -452,7 +452,6 @@ public class DailyPlanRunner extends TimerTask {
 
         String method = "convert";
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
-        ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         Map<String, DailyPlanSchedule> releasedSchedules = new HashMap<>();
         for (DBBeanReleasedSchedule2DeployedWorkflow item : items) {
@@ -469,7 +468,7 @@ public class DailyPlanRunner extends TimerTask {
                 }
                 Schedule schedule;
                 try {
-                    schedule = objectMapper.readValue(item.getScheduleContent(), Schedule.class);
+                    schedule = Globals.objectMapper.readValue(item.getScheduleContent(), Schedule.class);
                     if (schedule != null) {
                         schedule.setPath(item.getSchedulePath());
                     }
@@ -523,7 +522,7 @@ public class DailyPlanRunner extends TimerTask {
                     if (namesSize >= JocInventory.SCHEDULE_MIN_MULTIPLE_WORKFLOWS_SIZE) {// check only multiple workflows
                         if (dpw.getContent() != null) {
                             try {
-                                Workflow w = objectMapper.readValue(dpw.getContent(), Workflow.class);
+                                Workflow w = Globals.objectMapper.readValue(dpw.getContent(), Workflow.class);
                                 Requirements r = w.getOrderPreparation();
                                 if (r != null && r.getParameters() != null && r.getParameters().getAdditionalProperties() != null && r.getParameters()
                                         .getAdditionalProperties().size() > 0) {
@@ -665,7 +664,7 @@ public class DailyPlanRunner extends TimerTask {
                 throw new DBMissingDataException(String.format("calendar '%s' not found for controller instance %s", calendarName, controllerId));
             }
 
-            Calendar calendar = new ObjectMapper().readValue(config.getContent(), Calendar.class);
+            Calendar calendar = Globals.objectMapper.readValue(config.getContent(), Calendar.class);
             calendar.setId(config.getId());
             calendar.setPath(config.getPath());
             calendar.setName(config.getName());

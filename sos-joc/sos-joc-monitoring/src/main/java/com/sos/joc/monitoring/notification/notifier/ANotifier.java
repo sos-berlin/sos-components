@@ -38,8 +38,10 @@ public abstract class ANotifier {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ANotifier.class);
 
-    protected static ObjectMapper JSON_OM = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
-            SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
+    protected static ObjectMapper JSON_OM = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .configure(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true)
+            .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+            .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
 
     protected static final String PREFIX_ENV_VAR = "JS7";
     protected static final String PREFIX_COMMON_VAR = "MON";

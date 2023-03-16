@@ -133,7 +133,7 @@ public class ControllerResourceModifyImpl extends JOCResourceImpl implements ICo
         
         JOCJsonCommand jocJsonCommand = new JOCJsonCommand(urlParameter.getUrl(), accessToken);
         jocJsonCommand.setUriBuilderForCommands();
-        String body = new ObjectMapper().writeValueAsString(cmd);
+        String body = Globals.objectMapper.writeValueAsString(cmd);
         if (request.contains("abort")) {
             try {
                 jocJsonCommand.getJsonObjectFromPost(body);
