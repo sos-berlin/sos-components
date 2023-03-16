@@ -937,7 +937,7 @@ public class DBLayerDailyPlannedOrders {
             DBItemDailyPlanVariable item = new DBItemDailyPlanVariable();
             item.setControllerId(controllerId);
             item.setOrderId(orderId);
-            item.setVariableValue(new ObjectMapper().writeValueAsString(order.getFreshOrder().getArguments()));
+            item.setVariableValue(Globals.objectMapper.writeValueAsString(order.getFreshOrder().getArguments()));
             item.setCreated(JobSchedulerDate.nowInUtc());
             item.setModified(JobSchedulerDate.nowInUtc());
             session.save(item);

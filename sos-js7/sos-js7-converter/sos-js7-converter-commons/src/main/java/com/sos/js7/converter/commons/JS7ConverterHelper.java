@@ -32,8 +32,10 @@ public class JS7ConverterHelper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JS7ConverterHelper.class);
 
-    public static ObjectMapper JSON_OM = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
-            SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
+    public static ObjectMapper JSON_OM = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .configure(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true)
+            .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+            .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
 
     private final static Set<Character> QUOTED_CHARS = new HashSet<>(Arrays.asList('\"', '$', '\n'));
 

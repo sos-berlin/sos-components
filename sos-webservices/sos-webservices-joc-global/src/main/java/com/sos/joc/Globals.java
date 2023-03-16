@@ -45,10 +45,15 @@ public class Globals {
 
     public static SOSHibernateFactory sosHibernateFactory;
     public static JocWebserviceDataContainer jocWebserviceDataContainer = JocWebserviceDataContainer.getInstance();
-    public static ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
-            SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
-    public static ObjectMapper prettyPrintObjectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false)
+    public static ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .configure(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true)
+            .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+            .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
+    public static ObjectMapper prettyPrintObjectMapper = new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .configure(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true)
+            .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+            .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false)
             .configure(SerializationFeature.INDENT_OUTPUT, true);
     public static JocCockpitProperties sosCockpitProperties;
     public static TimeZone jocTimeZone = TimeZone.getDefault();

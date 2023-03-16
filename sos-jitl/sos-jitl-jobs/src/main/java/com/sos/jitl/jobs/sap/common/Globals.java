@@ -14,10 +14,16 @@ import com.sos.jitl.jobs.sap.common.bean.ScheduleDescription;
 public class Globals {
 
     public static final Path statusFileDirectory = Paths.get("saps4hana");
-    public static final ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
-            SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
-    public static final ObjectMapper objectMapperPrettyPrint = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false)
+    public static final ObjectMapper objectMapper = new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .configure(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true)
+            .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+            .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
+    public static final ObjectMapper objectMapperPrettyPrint = new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .configure(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true)
+            .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+            .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false)
             .configure(SerializationFeature.INDENT_OUTPUT, true);
 
     public static Path getStatusFileDirectory(CommonJobArguments args) throws SOSJobProblemException, JsonProcessingException {
