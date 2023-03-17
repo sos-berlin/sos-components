@@ -78,6 +78,8 @@ public class ModifyOrders {
     @JsonPropertyDescription("0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp")
     private String dateTo;
     /**
+     * string without < and >
+     * <p>
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
      */
@@ -107,13 +109,14 @@ public class ModifyOrders {
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
     private Variables variables;
     /**
-     * non negative long
+     * timestamp with now
      * <p>
-     * 
+     * ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS or empty
      * 
      */
     @JsonProperty("cycleEndTime")
-    private Long cycleEndTime;
+    @JsonPropertyDescription("ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS or empty")
+    private String cycleEndTime;
     /**
      * auditParams
      * <p>
@@ -222,6 +225,8 @@ public class ModifyOrders {
     }
 
     /**
+     * string without < and >
+     * <p>
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
      */
@@ -231,6 +236,8 @@ public class ModifyOrders {
     }
 
     /**
+     * string without < and >
+     * <p>
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
      */
@@ -309,24 +316,24 @@ public class ModifyOrders {
     }
 
     /**
-     * non negative long
+     * timestamp with now
      * <p>
-     * 
+     * ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS or empty
      * 
      */
     @JsonProperty("cycleEndTime")
-    public Long getCycleEndTime() {
+    public String getCycleEndTime() {
         return cycleEndTime;
     }
 
     /**
-     * non negative long
+     * timestamp with now
      * <p>
-     * 
+     * ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS or empty
      * 
      */
     @JsonProperty("cycleEndTime")
-    public void setCycleEndTime(Long cycleEndTime) {
+    public void setCycleEndTime(String cycleEndTime) {
         this.cycleEndTime = cycleEndTime;
     }
 
@@ -359,7 +366,7 @@ public class ModifyOrders {
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowIds).append(orderType).append(variables).append(folders).append(cycleEndTime).append(controllerId).append(auditLog).append(timeZone).append(kill).append(states).append(dateTo).append(orderIds).append(position).toHashCode();
+        return new HashCodeBuilder().append(workflowIds).append(orderType).append(variables).append(folders).append(controllerId).append(auditLog).append(timeZone).append(kill).append(states).append(cycleEndTime).append(dateTo).append(orderIds).append(position).toHashCode();
     }
 
     @Override
@@ -371,7 +378,7 @@ public class ModifyOrders {
             return false;
         }
         ModifyOrders rhs = ((ModifyOrders) other);
-        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(orderType, rhs.orderType).append(variables, rhs.variables).append(folders, rhs.folders).append(cycleEndTime, rhs.cycleEndTime).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(timeZone, rhs.timeZone).append(kill, rhs.kill).append(states, rhs.states).append(dateTo, rhs.dateTo).append(orderIds, rhs.orderIds).append(position, rhs.position).isEquals();
+        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(orderType, rhs.orderType).append(variables, rhs.variables).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(timeZone, rhs.timeZone).append(kill, rhs.kill).append(states, rhs.states).append(cycleEndTime, rhs.cycleEndTime).append(dateTo, rhs.dateTo).append(orderIds, rhs.orderIds).append(position, rhs.position).isEquals();
     }
 
 }

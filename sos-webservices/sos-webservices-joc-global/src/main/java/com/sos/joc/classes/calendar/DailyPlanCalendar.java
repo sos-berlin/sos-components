@@ -151,21 +151,29 @@ public class DailyPlanCalendar {
     }
     
     private static JCalendar getDailyPlanCalendar(ConfigurationGlobalsDailyPlan conf) {
-        return getCalendar(getValue(conf.getTimeZone()), convertPeriodBeginToLong(getValue(conf.getPeriodBegin())));
+        return getCalendar(getValue(conf.getTimeZone()), convertPeriodBeginToSeconds(getValue(conf.getPeriodBegin())));
     }
     
     private static JCalendar getCalendar(String timezone, long dateOffset) {
         return JCalendar.of(dailyPlanCalendarPath, ZoneId.of(timezone), Duration.ofSeconds(dateOffset), "#([^#]+)#.*", "yyyy-MM-dd");
     }
     
-    public static long convertPeriodBeginToLong(String periodBegin) {
+    public static long convertPeriodBeginToSeconds(String periodBegin) {
+        return convertTimeToSeconds(periodBegin, "period_begin");
+    }
+    
+    public static long convertTimeToSeconds(String timeField, String fieldname) {
         
-        periodBegin = (periodBegin + ":00:00").substring(0, 8);
-        if (!periodBegin.matches("\\d{2}:\\d{2}:\\d{2}")) {
-            throw new IllegalArgumentException("periodBegin (" + periodBegin + ") must have the format hh:mm:ss");
+        timeField = (timeField + ":00:00").substring(0, 8);
+        if (!timeField.matches("\\d{2}:\\d{2}:\\d{2}")) {
+            throw new IllegalArgumentException(fieldname + " (" + timeField + ") must have the format hh:mm:ss");
         }
         
-        return Instant.parse("1970-01-01T" + periodBegin + "Z").getEpochSecond();
+        try {
+            return Instant.parse("1970-01-01T" + timeField + "Z").getEpochSecond();
+        } catch (Exception e) {
+            throw new IllegalArgumentException(fieldname + " (" + timeField + ") must have the format hh:mm:ss");
+        }
     }
     
     private static String getValue(ConfigurationEntry c) {

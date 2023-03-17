@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -406,34 +407,33 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                         }
                     });
         } else if (cop.isSingleOrder()) {
-
+            
             if (withVariables) {
                 Set<String> allowedPositionsWithImplicitEnds = cop.getPositionsWithImplicitEnds().stream().map(Position::getPositionString).collect(
                         Collectors.toCollection(LinkedHashSet::new));
-                final String workflowPositionString = workflowPositionStringOpt.isPresent() ? workflowPositionStringOpt.get() : "";
-                boolean isNotFuturePosition = true;
-                if (positionOpt.isPresent()) {
-                    int posIndex = getIndex(allowedPositionsWithImplicitEnds, workflowPositionString);
-                    int curPosIndex = getIndex(allowedPositionsWithImplicitEnds, cop.getCurrentWorkflowPosition().toString());
-                    isNotFuturePosition = posIndex <= curPosIndex;
-                }
+                int posIndex = getIndex(allowedPositionsWithImplicitEnds, workflowPositionStringOpt.orElse(""));
+                int curPosIndex = getIndex(allowedPositionsWithImplicitEnds, cop.getCurrentWorkflowPosition().toString());
+                boolean isNotFuturePosition = posIndex <= curPosIndex;
 
-                // TODO for the time being: quick and dirty solution by replacing historicOutcome of previous allowed position
+                // TODO for the time being: quick and dirty solution by replacing historicOutcome of previous position
                 List<Object> prevPos = null;
                 String prevPosString = null;
                 if (isNotFuturePosition) {
+                    
                     JOrder currentJOrder = jOrders.iterator().next();
-                    Set<String> historicPositions = JavaConverters.asJava(currentJOrder.asScala().historicOutcomes()).stream().map(h -> JPosition
-                            .apply(h.position())).map(JPosition::toString).collect(Collectors.toCollection(LinkedHashSet::new));
-                    
-                    //TODO !!!!!!! historicPositions are orderPositions
-                    Position prevP = getPrevious(historicPositions, cop.getPositionsWithImplicitEnds(), workflowPositionString);
-                    
-                    
-                    if (prevP != null) {
-                        prevPos = prevP.getPosition();
-                        prevPosString = prevP.getPositionString();
+                    List<JPosition> historicPositions = JavaConverters.asJava(currentJOrder.asScala().historicOutcomes()).stream().map(h -> JPosition
+                            .apply(h.position())).collect(Collectors.toCollection(LinkedList::new));
+                    List<String> historicWorkflowPositions = historicPositions.stream().map(JPosition::toString).map(p -> cop
+                            .orderPositionToWorkflowPosition(p)).collect(Collectors.toCollection(LinkedList::new));
+                    int lastIndexOfWorkflowPos =  historicWorkflowPositions.lastIndexOf(workflowPositionStringOpt.orElse(""));
+                    if (lastIndexOfWorkflowPos > 0) {
+                        JPosition jPos = historicPositions.get(lastIndexOfWorkflowPos - 1);
+                        if (jPos != null) {
+                            prevPos = jPos.toList();
+                            prevPosString = jPos.toString();
+                        }
                     }
+                    
                 } else {
                     prevPos = cop.getCurrentOrderPosition().toList();
                     prevPosString = cop.getCurrentOrderPosition().toString();
@@ -461,9 +461,9 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 }
             }
             
-//            String oId = jOrders.iterator().next().id().string();
-
-            orderPositionOpt = cop.workflowPositionToOrderPosition(positionOpt, modifyOrders.getCycleEndTime());
+            Optional<Long> cycleTime = JobSchedulerDate.getCycleEndTimeInUTC(modifyOrders.getCycleEndTime(), modifyOrders.getTimeZone()).map(
+                    Instant::toEpochMilli);
+            orderPositionOpt = cop.workflowPositionToOrderPosition(positionOpt, cycleTime);
             ControllerApi.of(controllerId).resumeOrder(jOrders.iterator().next().id(), orderPositionOpt, historyOperations, true).thenAccept(either -> {
                 ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
                 if (either.isRight()) {
@@ -472,8 +472,10 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 }
             });
         } else {
+            Optional<Long> cycleTime = JobSchedulerDate.getCycleEndTimeInUTC(modifyOrders.getCycleEndTime(), modifyOrders.getTimeZone()).map(
+                    Instant::toEpochMilli);
             for (JOrder jOrder : jOrders) {
-                orderPositionOpt = cop.workflowPositionToOrderPosition(positionOpt, jOrder, modifyOrders.getCycleEndTime());
+                orderPositionOpt = cop.workflowPositionToOrderPosition(positionOpt, jOrder, cycleTime);
                 ControllerApi.of(controllerId).resumeOrder(jOrder.id(), orderPositionOpt, historyOperations, true).thenAccept(either -> {
                     ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
                     if (either.isRight()) {
@@ -507,20 +509,6 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 return result;
             }
             result++;
-        }
-        return result;
-    }
-
-    private static Position getPrevious(Set<String> historicPositions, Set<Position> allowedPositions, String value) {
-        // TODO handle order-/workflow position
-        Position result = null;
-        for (Position entry : allowedPositions) {
-            if (entry.getPositionString().equals(value)) {
-                break;
-            }
-            if (historicPositions.contains(entry.getPositionString())) {
-                result = entry;
-            }
         }
         return result;
     }

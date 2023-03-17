@@ -621,6 +621,11 @@ public class WorkflowsHelper {
                     break;
                 case CYCLE:
                     Cycle c = inst.cast();
+                    if (c.getCycleWorkflow().getInstructions() != null) {
+                        c.getCycleWorkflow().getInstructions().add(createImplicitEndInstruction());
+                    } else {
+                        c.getCycleWorkflow().setInstructions(Collections.singletonList(createImplicitEndInstruction()));
+                    }
                     setWorkflowPositionsAndForkListVariables(extendArray(pos, "cycle"), c.getCycleWorkflow().getInstructions(), forkListVariables,
                             expectedNoticeBoards, postNoticeBoards, consumeNoticeBoards, workflowNamesFromAddOrders, skippedLabels, stoppedPositions);
                     break;

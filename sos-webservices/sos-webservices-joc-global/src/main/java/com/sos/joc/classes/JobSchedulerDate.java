@@ -128,6 +128,22 @@ public class JobSchedulerDate {
         }
         return getScheduledForWithoutNowInUTC(scheduledFor, userTimezone);
     }
+    
+    public static Optional<Instant> getCycleEndTimeInUTC(String cycleEndTime, String userTimezone) throws JocBadRequestException {
+        if (cycleEndTime == null || cycleEndTime.isEmpty()) {
+            return Optional.empty();
+        } else if ("never".equals(cycleEndTime.trim().toLowerCase())) {
+            return Optional.of(NEVER);
+        }
+        cycleEndTime = cycleEndTime.trim();
+        if (userTimezone == null) {
+            userTimezone = "UTC";
+        }
+        if (cycleEndTime.toLowerCase().contains("now")) {
+            return getScheduledForWithNowInUTC(cycleEndTime.toLowerCase(), userTimezone);
+        }
+        return getScheduledForWithoutNowInUTC(cycleEndTime, userTimezone);
+    }
 
     private static Optional<Instant> getScheduledForWithNowInUTC(String scheduledFor, String userTimezone) throws JocBadRequestException {
         if (!scheduledFor.matches("now|now\\s*\\+\\s*(\\d+|\\d{2}:\\d{2}(:\\d{2})?)")) {
@@ -138,7 +154,9 @@ public class JobSchedulerDate {
         String[] nowPlusParts = scheduledFor.replaceFirst("^now(\\s*\\+\\s*)?", "").split(":");
         LocalDateTime now = LocalDateTime.now();
         now = now.withNano(0);
-        if (nowPlusParts.length == 1) { // + SECONDS
+        if (nowPlusParts.length == 0) {
+            // nothing to do
+        } else if (nowPlusParts.length == 1) { // + SECONDS
             if (!nowPlusParts[0].isEmpty()) {
                 Long plusSeconds = Long.valueOf(nowPlusParts[0]);
                 if (plusSeconds == 0L) {
