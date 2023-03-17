@@ -461,7 +461,9 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 }
             }
             
-            orderPositionOpt = cop.workflowPositionToOrderPosition(positionOpt, modifyOrders.getCycleEndTime());
+            Optional<Long> cycleTime = JobSchedulerDate.getCycleEndTimeInUTC(modifyOrders.getCycleEndTime(), modifyOrders.getTimeZone()).map(
+                    Instant::toEpochMilli);
+            orderPositionOpt = cop.workflowPositionToOrderPosition(positionOpt, cycleTime);
             ControllerApi.of(controllerId).resumeOrder(jOrders.iterator().next().id(), orderPositionOpt, historyOperations, true).thenAccept(either -> {
                 ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
                 if (either.isRight()) {
@@ -470,8 +472,10 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 }
             });
         } else {
+            Optional<Long> cycleTime = JobSchedulerDate.getCycleEndTimeInUTC(modifyOrders.getCycleEndTime(), modifyOrders.getTimeZone()).map(
+                    Instant::toEpochMilli);
             for (JOrder jOrder : jOrders) {
-                orderPositionOpt = cop.workflowPositionToOrderPosition(positionOpt, jOrder, modifyOrders.getCycleEndTime());
+                orderPositionOpt = cop.workflowPositionToOrderPosition(positionOpt, jOrder, cycleTime);
                 ControllerApi.of(controllerId).resumeOrder(jOrder.id(), orderPositionOpt, historyOperations, true).thenAccept(either -> {
                     ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
                     if (either.isRight()) {

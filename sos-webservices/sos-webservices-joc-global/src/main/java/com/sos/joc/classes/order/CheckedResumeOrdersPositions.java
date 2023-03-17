@@ -2,6 +2,9 @@ package com.sos.joc.classes.order;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -28,6 +31,7 @@ import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
@@ -371,17 +375,16 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
         }).collect(Collectors.toList())).get();
     }
     
-    public Optional<JPosition> workflowPositionToOrderPosition(final Optional<JPosition> workflowPosition, Long cycleSeconds) {
-        return workflowPosition.map(l -> workflowPositionToOrderPosition(l, null, cycleSeconds)).map(JPosition::fromList).map(
-                Either::get);
+    public Optional<JPosition> workflowPositionToOrderPosition(final Optional<JPosition> workflowPosition, Optional<Long> cycleEndTime) {
+        return workflowPosition.map(l -> workflowPositionToOrderPosition(l, null, cycleEndTime)).map(JPosition::fromList).map(Either::get);
     }
-    
-    public Optional<JPosition> workflowPositionToOrderPosition(final Optional<JPosition> workflowPosition, JOrder jOrder, Long cycleSeconds) {
-        return workflowPosition.map(l -> workflowPositionToOrderPosition(l, jOrder, cycleSeconds)).map(JPosition::fromList).map(
-                Either::get);
+
+    public Optional<JPosition> workflowPositionToOrderPosition(final Optional<JPosition> workflowPosition, JOrder jOrder,
+            Optional<Long> cycleEndTime) {
+        return workflowPosition.map(l -> workflowPositionToOrderPosition(l, jOrder, cycleEndTime)).map(JPosition::fromList).map(Either::get);
     }
-    
-    private List<Object> workflowPositionToOrderPosition(final JPosition workflowJPosition, JOrder jOrder, Long cycleSeconds) {
+
+    private List<Object> workflowPositionToOrderPosition(final JPosition workflowJPosition, JOrder jOrder, Optional<Long> cycleEndTime) {
         List<Object> curOrderPosition = null;
         if (jOrder == null) {
             curOrderPosition = getCurrentOrderPosition().toList();
@@ -391,10 +394,7 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
         List<Object> result = new LinkedList<>();
         int numOfCurPos = curOrderPosition == null ? 0 : curOrderPosition.size();
         int index = 0;
-        if (cycleSeconds != null) {
-            cycleSeconds = Instant.now().plusSeconds(cycleSeconds).toEpochMilli();
-        }
-        
+
         Integer indexOfImplicitEndCyclePosition = getPositions().stream().filter(p -> workflowJPosition.toString().equals(p.getPositionString()))
                 .filter(p -> "ImplicitEnd".equals(p.getType())).map(Position::getPosition).findAny().map(l -> (l.lastIndexOf("cycle") == l.size() - 2)
                         ? l.lastIndexOf("cycle") : -1).orElse(-1);
@@ -410,8 +410,8 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
                         if (posStr.equals("cycle")) {
                             if (indexOfImplicitEndCyclePosition == index) {
                                 curOrderPos = posStr;
-                            } else if (cycleSeconds != null) {
-                                curOrderPos = curOrderPos.replaceAll("end=\\d+", "end=" + cycleSeconds);
+                            } else if (cycleEndTime.isPresent()) {
+                                curOrderPos = curOrderPos.replaceAll("end=\\d+", "end=" + cycleEndTime.get());
                             }
                         }
                         result.add(curOrderPos);
