@@ -180,7 +180,8 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                                 if (periodBeginOffset < 0 || periodBeginOffset >= TimeUnit.DAYS.toMillis(1)) {
                                     throw new JocBadRequestException("Invalid 'dailyplan.period_begin': " + curPeriodBegin);
                                 }
-                                String curStartTime = curDailyPlan.getJsonObject("start_time").getString("value");
+                                String curStartTime = curDailyPlan.getJsonObject("start_time") == null ? null : curDailyPlan.getJsonObject(
+                                        "start_time").getString("value");
                                 if (curStartTime != null) {
                                     long curStartTimeOffset = DailyPlanCalendar.convertPeriodBeginToLong(curStartTime);
                                     if (curStartTimeOffset < 0 || curStartTimeOffset >= TimeUnit.DAYS.toMillis(1)) {
