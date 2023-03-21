@@ -112,6 +112,11 @@ public class ClusterSettings {
         return welcome != null && welcome.equalsIgnoreCase("true");
     }
     
+    public static boolean getAllowEmptyArguments(ConfigurationGlobalsJoc settings) {
+        String allowEmptyArguments = settings.getAllowEmptyArguments().getValue();
+        return allowEmptyArguments != null && allowEmptyArguments.equalsIgnoreCase("true");
+    }
+    
     private static SuffixPrefix getSuffixPrefix(ConfigurationEntry suf, ConfigurationEntry pref) {
         String suffix = suf.getValue();
         String prefix = pref.getValue();
