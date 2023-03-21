@@ -351,7 +351,7 @@ public class JsonSerializer {
             if (j.getWarning() != null && j.getWarning().isEmpty()) {
                 j.setWarning((String) null);
             }
-            if (j.getFailure() == null && j.getSuccess() == null && j.getWarning() == null) {
+            if (j.getFailure() == null && (j.getSuccess() == null || j.getSuccess().equals("0")) && j.getWarning() == null) {
                 return null;
             }
             return j;
@@ -380,10 +380,7 @@ public class JsonSerializer {
             if (j.getFailure() != null && j.getFailure().isEmpty()) {
                 j.setFailure((String) null);
             }
-            if (j.getFailure() == null && j.getSuccess() == null) {
-                return null;
-            }
-            if (j.getFailure() == null && j.getSuccess().equals("0")) {
+            if (j.getFailure() == null && (j.getSuccess() == null || j.getSuccess().equals("0"))) {
                 return null;
             }
             return j;
