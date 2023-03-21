@@ -20,6 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "overwriteNotification",
     "overwriteAdmissionTime",
+    "deleteUnknownNodeProperties",
     "auditLog"
 })
 public class JobTemplatesPropagateBaseFilter {
@@ -28,6 +29,8 @@ public class JobTemplatesPropagateBaseFilter {
     private Boolean overwriteNotification = false;
     @JsonProperty("overwriteAdmissionTime")
     private Boolean overwriteAdmissionTime = false;
+    @JsonProperty("deleteUnknownNodeProperties")
+    private Boolean deleteUnknownNodeProperties = false;
     /**
      * auditParams
      * <p>
@@ -57,6 +60,16 @@ public class JobTemplatesPropagateBaseFilter {
         this.overwriteAdmissionTime = overwriteAdmissionTime;
     }
 
+    @JsonProperty("deleteUnknownNodeProperties")
+    public Boolean getDeleteUnknownNodeProperties() {
+        return deleteUnknownNodeProperties;
+    }
+
+    @JsonProperty("deleteUnknownNodeProperties")
+    public void setDeleteUnknownNodeProperties(Boolean deleteUnknownNodeProperties) {
+        this.deleteUnknownNodeProperties = deleteUnknownNodeProperties;
+    }
+
     /**
      * auditParams
      * <p>
@@ -81,12 +94,12 @@ public class JobTemplatesPropagateBaseFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("overwriteNotification", overwriteNotification).append("overwriteAdmissionTime", overwriteAdmissionTime).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("overwriteNotification", overwriteNotification).append("overwriteAdmissionTime", overwriteAdmissionTime).append("deleteUnknownNodeProperties", deleteUnknownNodeProperties).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(overwriteNotification).append(overwriteAdmissionTime).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(overwriteNotification).append(overwriteAdmissionTime).append(deleteUnknownNodeProperties).append(auditLog).toHashCode();
     }
 
     @Override
@@ -98,7 +111,7 @@ public class JobTemplatesPropagateBaseFilter {
             return false;
         }
         JobTemplatesPropagateBaseFilter rhs = ((JobTemplatesPropagateBaseFilter) other);
-        return new EqualsBuilder().append(overwriteNotification, rhs.overwriteNotification).append(overwriteAdmissionTime, rhs.overwriteAdmissionTime).append(auditLog, rhs.auditLog).isEquals();
+        return new EqualsBuilder().append(overwriteNotification, rhs.overwriteNotification).append(overwriteAdmissionTime, rhs.overwriteAdmissionTime).append(deleteUnknownNodeProperties, rhs.deleteUnknownNodeProperties).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }
