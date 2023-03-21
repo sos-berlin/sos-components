@@ -50,6 +50,7 @@ public class PropertiesImpl extends JOCResourceImpl implements IPropertiesResour
             entity.setRestore(ClusterSettings.getRestoreSuffixPrefix(jocSettings));
             entity.setImport(ClusterSettings.getImportSuffixPrefix(jocSettings));
             entity.setShowViews(ClusterSettings.getShowViews(jocSettings, true));
+            entity.setAllowEmptyArguments(ClusterSettings.getAllowEmptyArguments(jocSettings));
             
             ConfigurationGlobalsUser userSettings = Globals.getConfigurationGlobalsUser();
             entity.setWelcomeDoNotRemindMe(ClusterSettings.getWelcomeDoNotRemindMe(userSettings));

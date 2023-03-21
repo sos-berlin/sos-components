@@ -64,6 +64,7 @@ import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.agent.AgentHelper;
 import com.sos.joc.classes.order.OrdersHelper;
+import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.common.HistoryConstants;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
@@ -446,6 +447,7 @@ public class Validator {
         if (workflow.getJobs() == null) {
             return jobResources;
         }
+        boolean allowEmptyArguments = ClusterSettings.getAllowEmptyArguments(Globals.getConfigurationGlobalsJoc());
         for (Map.Entry<String, Job> entry : workflow.getJobs().getAdditionalProperties().entrySet()) {
             // TODO check JobResources references in Job
             Job job = entry.getValue();
@@ -464,7 +466,7 @@ public class Validator {
             case InternalExecutable:
                 ExecutableJava ej = job.getExecutable().cast();
                 if (ej.getArguments() != null) {
-                    validateEmptyExpressions(ej.getArguments(), "$.jobs['" + entry.getKey() + "'].executable.arguments");
+                    validateEmptyExpressions(ej.getArguments(), "$.jobs['" + entry.getKey() + "'].executable.arguments", allowEmptyArguments);
                     validateExpression("$.jobs['" + entry.getKey() + "'].executable.arguments", ej.getArguments().getAdditionalProperties());
                 }
                 break;
@@ -472,7 +474,7 @@ public class Validator {
             case ShellScriptExecutable:
                 ExecutableScript es = job.getExecutable().cast();
                 if (es.getEnv() != null) {
-                    validateEmptyExpressions(es.getEnv(), "$.jobs['" + entry.getKey() + "'].executable.env");
+                    validateEmptyExpressions(es.getEnv(), "$.jobs['" + entry.getKey() + "'].executable.env", allowEmptyArguments);
                     validateExpression("$.jobs['" + entry.getKey() + "'].executable.env", es.getEnv().getAdditionalProperties());
                 }
                 validateEnvironmentKeys(es.getEnv(), "$.jobs['" + entry.getKey() + "'].executable.env");
@@ -632,7 +634,8 @@ public class Validator {
 //                    }
                     // validateArguments(nj.getDefaultArguments(), orderPreparation, "$." + instPosition + "defaultArguments");
                     // validateArgumentKeys(nj.getDefaultArguments(), "$." + instPosition + "defaultArguments");
-                    validateEmptyExpressions(nj.getDefaultArguments(), "$." + instPosition + "defaultArguments");
+                    validateEmptyExpressions(nj.getDefaultArguments(), "$." + instPosition + "defaultArguments", ClusterSettings
+                            .getAllowEmptyArguments(Globals.getConfigurationGlobalsJoc()));
                     break;
                 case FORK:
                     ForkJoin fj = inst.cast();
@@ -993,13 +996,15 @@ public class Validator {
         }
     }
     
-    private static void validateEmptyExpressions(Environment arguments, String position) throws JocConfigurationException {
-        final Map<String, String> args = (arguments != null) ? arguments.getAdditionalProperties() : Collections.emptyMap();
-        Optional<JocConfigurationException> optException = args.entrySet().stream().filter(e -> e.getValue().isEmpty() || e.getValue().replaceFirst(
-                "^\"(.*)\"$", "$1").isEmpty() || e.getValue().replaceFirst("^'(.*)'$", "$1").isEmpty()).findAny().map(
-                        e -> new JocConfigurationException(String.format("%s['%s']: disallowed empty value", position, e.getKey())));
-        if (optException.isPresent()) {
-            throw optException.get();
+    private static void validateEmptyExpressions(Environment arguments, String position, boolean allowEmptyArguments) throws JocConfigurationException {
+        if (!allowEmptyArguments) {
+            final Map<String, String> args = (arguments != null) ? arguments.getAdditionalProperties() : Collections.emptyMap();
+            Optional<JocConfigurationException> optException = args.entrySet().stream().filter(e -> e.getValue().isEmpty() || e.getValue()
+                    .replaceFirst("^\"(.*)\"$", "$1").isEmpty() || e.getValue().replaceFirst("^'(.*)'$", "$1").isEmpty()).findAny().map(
+                            e -> new JocConfigurationException(String.format("%s['%s']: disallowed empty value", position, e.getKey())));
+            if (optException.isPresent()) {
+                throw optException.get();
+            }
         }
     }
 
