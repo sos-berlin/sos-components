@@ -205,8 +205,9 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             }
 
             dbItemIamAccount.setAccountName(account.getAccountName());
-            if ("JOC".equals(dbItemIamIdentityService.getIdentityServiceType()) || "VAULT-JOC-ACTIVE".equals(dbItemIamIdentityService
-                    .getIdentityServiceType())) {
+            if (dbItemIamIdentityService.getIdentityServiceType().equals(IdentityServiceTypes.JOC.value()) || 
+                 dbItemIamIdentityService.getIdentityServiceType().equals(IdentityServiceTypes.VAULT_JOC_ACTIVE.value())){
+
                 if (account.getPassword() != null && !password.isEmpty()) {
                     if (!sosInitialPasswordSetting.isMininumPasswordLength(password)) {
                         JocError error = new JocError();
@@ -219,10 +220,14 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                 dbItemIamAccount.setAccountPassword("********");
             }
             dbItemIamAccount.setIdentityServiceId(dbItemIamIdentityService.getId());
-            if (sosInitialPasswordSetting.getInitialPassword().equals(password)) {
-                dbItemIamAccount.setForcePasswordChange(true);
+            if (!dbItemIamIdentityService.getIdentityServiceType().equals(IdentityServiceTypes.OIDC.value())){
+                if (sosInitialPasswordSetting.getInitialPassword().equals(password)) {
+                    dbItemIamAccount.setForcePasswordChange(true);
+                } else {
+                    dbItemIamAccount.setForcePasswordChange(account.getForcePasswordChange());
+                }
             } else {
-                dbItemIamAccount.setForcePasswordChange(account.getForcePasswordChange());
+                dbItemIamAccount.setForcePasswordChange(false);
             }
             dbItemIamAccount.setDisabled(account.getDisabled());
 
@@ -376,7 +381,8 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                 iamAccountFilter.setAccountName(accountName);
                 int count = iamAccountDBLayer.deleteCascading(iamAccountFilter);
                 if (count == 0) {
-                    throw new JocObjectNotExistException("Couldn't find the account <" + accountName + "> disabled=" + iamAccountFilter.getDisabled() + "");
+                    throw new JocObjectNotExistException("Couldn't find the account <" + accountName + "> disabled=" + iamAccountFilter.getDisabled()
+                            + "");
                 }
             }
             Globals.commit(sosHibernateSession);
@@ -438,6 +444,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                 Account account = new Account();
                 account.setAccountName(dbItemIamAccount.getAccountName());
                 account.setDisabled(dbItemIamAccount.getDisabled());
+
                 account.setForcePasswordChange(dbItemIamAccount.getForcePasswordChange());
                 account.setIdentityServiceName(accountFilter.getIdentityServiceName());
                 account.setBlocked(blockedAccounts.get(dbItemIamAccount.getAccountName()) != null);

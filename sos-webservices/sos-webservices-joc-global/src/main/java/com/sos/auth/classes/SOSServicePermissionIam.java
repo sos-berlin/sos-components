@@ -204,6 +204,7 @@ public class SOSServicePermissionIam {
                 }
             }
             SOSLoginParameters sosLoginParameters = new SOSLoginParameters();
+LOGGER.info("idToken: " + idToken) ;           
             sosLoginParameters.setIdToken(idToken);
             sosLoginParameters.setBasicAuthorization(basicAuthorization);
             sosLoginParameters.setClientCertCN(clientCertCN);
@@ -760,10 +761,10 @@ public class SOSServicePermissionIam {
                             IdentityServiceTypes.OIDC);
                     webserviceCredentials.setValuesFromProfile(sosIdentityService);
                     webserviceCredentials.setIdToken(sosLoginParameters.getIdToken());
-                    if (Files.exists(Paths.get(webserviceCredentials.getTruststorePath()))) {
-                        SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials);
-                        sosLoginParameters.setAccount(sosOpenIdHandler.decodeIdToken(sosLoginParameters.getIdToken()));
-                    } else {
+                    SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials);
+                    String account = sosOpenIdHandler.decodeIdToken(sosLoginParameters.getIdToken()); 
+                    sosLoginParameters.setAccount(account);
+                    if (!Files.exists(Paths.get(webserviceCredentials.getTruststorePath()))) {
                         LOGGER.warn("Truststore file " + webserviceCredentials.getTruststorePath() + " not existing");
                     }
                     sosLoginParameters.setWebserviceCredentials(webserviceCredentials);
