@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.order.OrdersSummary;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -23,7 +24,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "deliveryDate",
     "surveyDate",
-    "workflows"
+    "workflows",
+    "numOfAllOrders"
 })
 public class WorkflowsOrderCount {
 
@@ -47,6 +49,14 @@ public class WorkflowsOrderCount {
     private Date surveyDate;
     @JsonProperty("workflows")
     private List<WorkflowOrderCount> workflows = new ArrayList<WorkflowOrderCount>();
+    /**
+     * order summary
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfAllOrders")
+    private OrdersSummary numOfAllOrders;
 
     /**
      * timestamp
@@ -102,14 +112,36 @@ public class WorkflowsOrderCount {
         this.workflows = workflows;
     }
 
+    /**
+     * order summary
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfAllOrders")
+    public OrdersSummary getNumOfAllOrders() {
+        return numOfAllOrders;
+    }
+
+    /**
+     * order summary
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfAllOrders")
+    public void setNumOfAllOrders(OrdersSummary numOfAllOrders) {
+        this.numOfAllOrders = numOfAllOrders;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("workflows", workflows).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("workflows", workflows).append("numOfAllOrders", numOfAllOrders).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflows).append(deliveryDate).append(surveyDate).toHashCode();
+        return new HashCodeBuilder().append(workflows).append(deliveryDate).append(surveyDate).append(numOfAllOrders).toHashCode();
     }
 
     @Override
@@ -121,7 +153,7 @@ public class WorkflowsOrderCount {
             return false;
         }
         WorkflowsOrderCount rhs = ((WorkflowsOrderCount) other);
-        return new EqualsBuilder().append(workflows, rhs.workflows).append(deliveryDate, rhs.deliveryDate).append(surveyDate, rhs.surveyDate).isEquals();
+        return new EqualsBuilder().append(workflows, rhs.workflows).append(deliveryDate, rhs.deliveryDate).append(surveyDate, rhs.surveyDate).append(numOfAllOrders, rhs.numOfAllOrders).isEquals();
     }
 
 }
