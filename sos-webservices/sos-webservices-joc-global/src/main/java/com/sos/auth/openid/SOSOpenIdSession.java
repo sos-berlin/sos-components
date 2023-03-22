@@ -47,7 +47,6 @@ public class SOSOpenIdSession implements ISOSSession {
             try {
                 webserviceCredentials.setValuesFromProfile(identityService);
                 webserviceCredentials.setAccount(currentAccount.getAccountname());
-                webserviceCredentials.setAccount(currentAccount.getAccountname());
 
                 sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials);
                 startSession = Instant.now().toEpochMilli();

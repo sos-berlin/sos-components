@@ -6,8 +6,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -18,12 +16,13 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.OrdersSummary;
-import com.sos.joc.model.workflow.WorkflowOrderCountFilter;
 import com.sos.joc.model.workflow.WorkflowOrderCount;
+import com.sos.joc.model.workflow.WorkflowOrderCountFilter;
 import com.sos.joc.model.workflow.WorkflowsOrderCount;
 import com.sos.joc.workflows.resource.IWorkflowsOrderCount;
 import com.sos.schema.JsonValidator;
 
+import jakarta.ws.rs.Path;
 import js7.data_for_java.controller.JControllerState;
 
 @Path("workflows")
@@ -50,15 +49,19 @@ public class WorkflowsOrderCountImpl extends JOCResourceImpl implements IWorkflo
             
             WorkflowsOrderCount workflows = new WorkflowsOrderCount();
             workflows.setSurveyDate(Date.from(surveyInstant));
+            OrdersSummary allOrders = new OrdersSummary();
+            init(allOrders);
             workflows.setWorkflows(WorkflowsHelper.getGroupedOrdersCountPerWorkflow(currentstate, workflowsFilter, permittedFolders, OrdersHelper
                     .getDailyPlanTimeZone()).entrySet().stream().map(e -> {
                         WorkflowOrderCount w = new WorkflowOrderCount();
                         w.setPath(e.getKey().path().string());
                         w.setVersionId(e.getKey().versionId().string());
                         w.setNumOfOrders(getNumOfOrders(e.getValue()));
+                        cumulateAll(allOrders, w.getNumOfOrders());
                         return w;
                     }).collect(Collectors.toList()));
             workflows.setDeliveryDate(Date.from(Instant.now()));
+            workflows.setNumOfAllOrders(allOrders);
 
             return JOCDefaultResponse.responseStatus200(workflows);
 
@@ -96,5 +99,31 @@ public class WorkflowsOrderCountImpl extends JOCResourceImpl implements IWorkflo
             summary.setPrompting(0);
         }
         return summary;
+    }
+    
+    private static void cumulateAll(OrdersSummary allOrdersSummary, OrdersSummary summary) {
+        allOrdersSummary.setBlocked(allOrdersSummary.getBlocked() + summary.getBlocked());
+        allOrdersSummary.setFailed(allOrdersSummary.getFailed() + summary.getFailed());
+        allOrdersSummary.setInProgress(allOrdersSummary.getInProgress() + summary.getInProgress());
+        allOrdersSummary.setPending(allOrdersSummary.getPending() + summary.getPending());
+        allOrdersSummary.setPrompting(allOrdersSummary.getPrompting() + summary.getPrompting());
+        allOrdersSummary.setRunning(allOrdersSummary.getRunning() + summary.getRunning());
+        allOrdersSummary.setScheduled(allOrdersSummary.getScheduled() + summary.getScheduled());
+        allOrdersSummary.setSuspended(allOrdersSummary.getSuspended() + summary.getSuspended());
+        allOrdersSummary.setTerminated(allOrdersSummary.getTerminated() + summary.getTerminated());
+        allOrdersSummary.setWaiting(allOrdersSummary.getWaiting() + summary.getWaiting());
+    }
+    
+    private static void init(OrdersSummary allOrdersSummary) {
+        allOrdersSummary.setBlocked(0);
+        allOrdersSummary.setFailed(0);
+        allOrdersSummary.setInProgress(0);
+        allOrdersSummary.setPending(0);
+        allOrdersSummary.setPrompting(0);
+        allOrdersSummary.setRunning(0);
+        allOrdersSummary.setScheduled(0);
+        allOrdersSummary.setSuspended(0);
+        allOrdersSummary.setTerminated(0);
+        allOrdersSummary.setWaiting(0);
     }
 }

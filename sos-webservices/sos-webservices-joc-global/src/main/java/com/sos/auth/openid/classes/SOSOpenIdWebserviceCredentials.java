@@ -128,44 +128,18 @@ public class SOSOpenIdWebserviceCredentials {
                 String truststorePassGui = getProperty(properties.getOidc().getIamOidcTruststorePassword(), "");
                 String tTypeGui = getProperty(properties.getOidc().getIamOidcTruststoreType(), "");
 
-                String truststorePathDefault = getProperty(System.getProperty("javax.net.ssl.trustStore"), "");
-                String truststoreTypeDefault = getProperty(System.getProperty("javax.net.ssl.trustStoreType"), "PKCS12");
-                String truststorePassDefault = getProperty(System.getProperty("javax.net.ssl.trustStorePassword"), "");
+                String truststorePathDefault = getProperty(System.getProperty("javax.net.ssl.trustStore"), Globals.sosCockpitProperties.getProperty("truststore_path", ""));
+                String truststoreTypeDefault = getProperty(System.getProperty("javax.net.ssl.trustStoreType"), Globals.sosCockpitProperties.getProperty("truststore_type", "PKCS12"));
+                String truststorePassDefault = getProperty(System.getProperty("javax.net.ssl.trustStorePassword"), Globals.sosCockpitProperties.getProperty("truststore_password", ""));
 
-                if (!(truststorePathGui + truststorePassGui + tTypeGui).isEmpty()) {
-
-                    if (truststorePath.isEmpty()) {
                         truststorePath = getProperty(truststorePathGui, truststorePathDefault);
-                    }
-
-                    if (truststorePassword.isEmpty()) {
                         truststorePassword = getProperty(truststorePassGui, truststorePassDefault);
-                    }
-
-                    if (truststoreType == null) {
                         truststoreType = KeystoreType.valueOf(getProperty(tTypeGui, truststoreTypeDefault));
-                    }
-                } else {
-                    if (!truststorePath.equals("-")) {
-                        if (truststorePath.isEmpty()) {
-                            truststorePath = Globals.sosCockpitProperties.getProperty("truststore_path", truststorePathDefault);
-                        }
-
-                        if (truststorePassword.isEmpty()) {
-                            truststorePassword = Globals.sosCockpitProperties.getProperty("truststore_password", truststorePassDefault);
-                        }
-
-                        if (truststoreType == null) {
-                            truststoreType = KeystoreType.valueOf(Globals.sosCockpitProperties.getProperty("truststore_type", truststoreTypeDefault));
-                        }
-                    }
-                }
 
                 if (truststorePath != null && !truststorePath.trim().isEmpty()) {
                     Path p = Globals.sosCockpitProperties.resolvePath(truststorePath.trim());
                     truststorePath = p.toString();
                 }
-
             }
         } catch (SOSHibernateException | IOException e) {
             LOGGER.error("", e);
