@@ -1,5 +1,6 @@
 package com.sos.joc.classes.inventory;
 
+import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -284,10 +285,24 @@ public class JsonSerializer {
     }
     
     private static Environment emptyEnvToNull(Environment env) {
-        if (env != null && env.getAdditionalProperties().isEmpty()) {
-            return null;
+        if (env != null) {
+            if (env.getAdditionalProperties().isEmpty()) {
+                return null;
+            } else {
+                env.getAdditionalProperties().replaceAll((k, v) -> handleEmptyExpression(v));
+            }
         }
         return env;
+    }
+    
+    private static String handleEmptyExpression(String str) {
+        if (str == null) {
+            return null;
+        }
+        if (str.isEmpty()) {
+            return "\"\"";
+        }
+        return str;
     }
     
     private static Variables emptyVarsToNull(Variables vars) {
@@ -473,14 +488,40 @@ public class JsonSerializer {
     }
     
     public static String quoteString(String str) {
+        str = handleEmptyExpression(str);
         if (str == null) {
             return null;
+        }
+        if (!str.contains("\"") && !str.contains("'") && !str.contains("$") && !isBool(str) && !isNumber(str)) {
+            str = "\"" + str + "\""; 
         }
         Either<Problem, JExpression> e = JExpression.parse(str);
         if (e.isLeft()) {
             str = JExpression.quoteString(str);
         }
         return str;
+    }
+    
+    private static boolean isBool(String str) {
+        if (str == null) {
+            return false;
+        }
+        if ("true".equals(str.toLowerCase()) || "false".equals(str.toLowerCase())) {
+            return true;
+        }
+        return false;
+    }
+    
+    private static boolean isNumber(String str) {
+        if (str == null) {
+            return false;
+        }
+        try {
+            new BigDecimal(str);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
     
     private static void getForklistJobsAndCleanInventoryInstructions(com.sos.inventory.model.workflow.Workflow w) {
