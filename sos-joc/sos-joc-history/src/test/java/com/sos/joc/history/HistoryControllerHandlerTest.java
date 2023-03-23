@@ -66,6 +66,7 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStepProcessed;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStepStarted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStepStdWritten;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStepStdWritten.StdType;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStopped;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderSuspended;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderSuspensionMarked;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventWithProblem;
@@ -368,6 +369,13 @@ public class HistoryControllerHandlerTest {
                 order = entry.getCheckedOrder();
 
                 event = new FatEventOrderFailed(entry.getEventId(), entry.getEventDate());
+                event.set(order.getOrderId(), order.getOutcomeInfoFailed(), order.getWorkflowInfo().getPosition());
+                break;
+
+            case OrderStopped:
+                order = entry.getCheckedOrder();
+
+                event = new FatEventOrderStopped(entry.getEventId(), entry.getEventDate());
                 event.set(order.getOrderId(), order.getOutcomeInfoFailed(), order.getWorkflowInfo().getPosition());
                 break;
 

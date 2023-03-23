@@ -113,6 +113,7 @@ import com.sos.sign.model.instruction.ForkJoin;
 import com.sos.sign.model.instruction.ForkList;
 import com.sos.sign.model.instruction.IfElse;
 import com.sos.sign.model.instruction.Instruction;
+import com.sos.sign.model.instruction.Options;
 import com.sos.sign.model.instruction.StickySubagent;
 import com.sos.sign.model.instruction.TryCatch;
 import com.sos.sign.model.job.Job;
@@ -556,7 +557,12 @@ public abstract class PublishUtils {
                         setAgentNamesInInstructions(ss.getSubworkflow().getInstructions(), path, controllerId, agentIdAliasesMap, jobAgentNames);
                     }
                     break;
-                
+                case OPTIONS:
+                    Options o = inst.cast();
+                    if (o.getBlock() != null) {
+                        setAgentNamesInInstructions(o.getBlock().getInstructions(), path, controllerId, agentIdAliasesMap, jobAgentNames);
+                    }
+                    break;
                 default:
                     break;
                 }
@@ -1192,6 +1198,12 @@ public abstract class PublishUtils {
                     }
                     if (ss.getSubworkflow() != null) {
                         replaceAgentNameWithAgentIdInInstructions(ss.getSubworkflow().getInstructions(), controllerId, agentNameToIdMap);
+                    }
+                    break;
+                case OPTIONS:
+                    Options o = inst.cast();
+                    if (o.getBlock() != null) {
+                        replaceAgentNameWithAgentIdInInstructions(o.getBlock().getInstructions(), controllerId, agentNameToIdMap);
                     }
                     break;
                 default:

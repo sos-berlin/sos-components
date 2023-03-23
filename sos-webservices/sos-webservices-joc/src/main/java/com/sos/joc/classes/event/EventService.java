@@ -104,6 +104,7 @@ import js7.data.order.OrderEvent.OrderRetrying;
 import js7.data.order.OrderEvent.OrderStarted$;
 import js7.data.order.OrderEvent.OrderSuspended$;
 import js7.data.order.OrderEvent.OrderSuspensionMarked;
+import js7.data.order.OrderEvent.OrderStopped$;
 import js7.data.order.OrderEvent.OrderTerminated;
 import js7.data.order.OrderEvent.OrderTransferred;
 import js7.data.order.OrderId;
@@ -131,7 +132,7 @@ public class EventService {
             AgentRefStateEvent.class, OrderStarted$.class, OrderProcessingKilled$.class, OrderFailed.class, OrderFailedInFork.class,
             OrderRetrying.class, OrderBroken.class, OrderTerminated.class, OrderAdded.class, OrderProcessed.class, OrderSuspended$.class,
             OrderSuspensionMarked.class, OrderResumed.class, OrderResumptionMarked.class, OrderCancellationMarked.class, OrderPrompted.class,
-            OrderPromptAnswered.class, OrderProcessingStarted.class, OrderDeleted$.class, VersionedItemAddedOrChanged.class,
+            OrderPromptAnswered.class, OrderProcessingStarted.class, OrderDeleted$.class, OrderStopped$.class, VersionedItemAddedOrChanged.class,
             UnsignedSimpleItemEvent.class, UnsignedItemEvent.class, ItemDeleted.class, ItemAttached.class, BoardEvent.class, OrderLocksAcquired.class,
             OrderLocksQueued.class, OrderLocksReleased.class, OrderNoticeEvent.class, OrderTransferred.class, SubagentItemStateEvent.class);
     private String controllerId;

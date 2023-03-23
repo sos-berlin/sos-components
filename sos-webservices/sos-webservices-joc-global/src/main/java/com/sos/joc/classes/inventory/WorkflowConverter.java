@@ -16,6 +16,7 @@ import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.inventory.model.instruction.Instructions;
 import com.sos.inventory.model.instruction.Lock;
+import com.sos.inventory.model.instruction.Options;
 import com.sos.inventory.model.instruction.StickySubagent;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.workflow.Branch;
@@ -113,6 +114,12 @@ public class WorkflowConverter {
                     StickySubagent sticky = invInstruction.cast();
                     if (sticky.getSubworkflow() != null) {
                         convertInstructions(sticky.getSubworkflow().getInstructions());
+                    }
+                    break;
+                case OPTIONS:
+                    Options opts = invInstruction.cast();
+                    if (opts.getBlock() != null) {
+                        convertInstructions(opts.getBlock().getInstructions());
                     }
                     break;
                 default:

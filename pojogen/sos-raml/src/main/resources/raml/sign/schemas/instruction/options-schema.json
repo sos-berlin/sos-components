@@ -1,0 +1,29 @@
+{
+  "title": "Options",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.sign.model.instruction.Options",
+  "type": "object",
+  "required": [
+  	"block"
+  ],
+  
+  "extends" : {
+    "$ref": "instruction-schema.json"
+  },
+  
+  "description": "instruction with fixed property 'TYPE':'Options'",
+  "propertyOrder": [
+  	"TYPE",
+    "stopOnFailure",
+    "block"
+  ],
+  "properties": {
+    "stopOnFailure": {
+    	"type": "boolean"
+    },
+    "block": {
+    	"$ref": "instructions-schema.json"
+    }
+  },
+  "additionalProperties": false
+}

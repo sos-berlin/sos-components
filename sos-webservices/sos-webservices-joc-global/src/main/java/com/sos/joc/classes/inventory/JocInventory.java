@@ -141,6 +141,7 @@ public class JocInventory {
                     put(InstructionType.ADD_ORDER, "classpath:/raml/inventory/schemas/instruction/addOrder-schema.json");
                     put(InstructionType.CYCLE, "classpath:/raml/inventory/schemas/instruction/cycle-schema.json");
                     put(InstructionType.STICKY_SUBAGENT, "classpath:/raml/inventory/schemas/instruction/stickySubagent-schema.json");
+                    put(InstructionType.OPTIONS, "classpath:/raml/inventory/schemas/instruction/options-schema.json");
                 }
             });
     

@@ -264,7 +264,9 @@ public class HistoryEventEntry {
         public boolean isMarked() {
             if (order != null) {
                 try {
-                    return order.asScala().isMarked();
+                    return OptionConverters.toJava(order.asScala().mark()).isPresent();
+                    // maybe without OptionConverters return order.asScala().mark().isDefined();
+                    // isMarked has not longer public access: return order.asScala().isMarked();
                 } catch (Throwable e) {
                     LOGGER.warn(String.format("[%s][isMarked]%s", getOrderId(), e.toString()), e);
                 }

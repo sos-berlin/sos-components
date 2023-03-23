@@ -258,6 +258,12 @@ public class HistoryMonitoringModel implements Serializable {
 
                     toNotify.getErrorOrders().add(hob);
                     break;
+                case OrderStopped:
+                    hob = (HistoryOrderBean) b;
+                    orderStopped(dbLayer, hob);
+
+                    toNotify.getErrorOrders().add(hob);
+                    break;
                 case OrderSuspended:
                     orderSuspended(dbLayer, (HistoryOrderBean) b);
                     break;
@@ -466,6 +472,12 @@ public class HistoryMonitoringModel implements Serializable {
     }
 
     private void orderFailed(DBLayerMonitoring dbLayer, HistoryOrderBean hob) throws SOSHibernateException {
+        if (!dbLayer.updateOrder(hob)) {
+            insert(dbLayer, hob.getEventType(), hob.getOrderId(), hob.getHistoryId());
+        }
+    }
+
+    private void orderStopped(DBLayerMonitoring dbLayer, HistoryOrderBean hob) throws SOSHibernateException {
         if (!dbLayer.updateOrder(hob)) {
             insert(dbLayer, hob.getEventType(), hob.getOrderId(), hob.getHistoryId());
         }

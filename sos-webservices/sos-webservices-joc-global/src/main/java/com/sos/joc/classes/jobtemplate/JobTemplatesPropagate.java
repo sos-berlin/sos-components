@@ -26,6 +26,7 @@ import com.sos.inventory.model.instruction.IfElse;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.NamedJob;
+import com.sos.inventory.model.instruction.Options;
 import com.sos.inventory.model.instruction.StickySubagent;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.job.Environment;
@@ -566,15 +567,15 @@ public class JobTemplatesPropagate {
                 case LOCK:
                     Lock l = inst.cast();
                     if (l.getLockedWorkflow() != null) {
-                        setNodeArguments(l.getLockedWorkflow().getInstructions(), jobName, jReport, jobTemplateArguments, defaultArgs, deleteUnknownNodeProps,
-                                withAddRequiredParams);
+                        setNodeArguments(l.getLockedWorkflow().getInstructions(), jobName, jReport, jobTemplateArguments, defaultArgs,
+                                deleteUnknownNodeProps, withAddRequiredParams);
                     }
                     break;
                 case CYCLE:
                     Cycle c = inst.cast();
                     if (c.getCycleWorkflow() != null) {
-                        setNodeArguments(c.getCycleWorkflow().getInstructions(), jobName, jReport, jobTemplateArguments, defaultArgs, deleteUnknownNodeProps,
-                                withAddRequiredParams);
+                        setNodeArguments(c.getCycleWorkflow().getInstructions(), jobName, jReport, jobTemplateArguments, defaultArgs,
+                                deleteUnknownNodeProps, withAddRequiredParams);
                     }
                     break;
                 case EXECUTE_NAMED:
@@ -586,15 +587,22 @@ public class JobTemplatesPropagate {
                 case CONSUME_NOTICES:
                     ConsumeNotices cn = inst.cast();
                     if (cn.getSubworkflow() != null) {
-                        setNodeArguments(cn.getSubworkflow().getInstructions(), jobName, jReport, jobTemplateArguments, defaultArgs, deleteUnknownNodeProps,
-                                withAddRequiredParams);
+                        setNodeArguments(cn.getSubworkflow().getInstructions(), jobName, jReport, jobTemplateArguments, defaultArgs,
+                                deleteUnknownNodeProps, withAddRequiredParams);
                     }
                     break;
                 case STICKY_SUBAGENT:
                     StickySubagent ss = inst.cast();
                     if (ss.getSubworkflow() != null) {
-                        setNodeArguments(ss.getSubworkflow().getInstructions(), jobName, jReport, jobTemplateArguments, defaultArgs, deleteUnknownNodeProps,
-                                withAddRequiredParams);
+                        setNodeArguments(ss.getSubworkflow().getInstructions(), jobName, jReport, jobTemplateArguments, defaultArgs,
+                                deleteUnknownNodeProps, withAddRequiredParams);
+                    }
+                    break;
+                case OPTIONS:
+                    Options opts = inst.cast();
+                    if (opts.getBlock() != null) {
+                        setNodeArguments(opts.getBlock().getInstructions(), jobName, jReport, jobTemplateArguments, defaultArgs,
+                                deleteUnknownNodeProps, withAddRequiredParams);
                     }
                     break;
                 default:
@@ -674,6 +682,12 @@ public class JobTemplatesPropagate {
                     StickySubagent ss = inst.cast();
                     if (ss.getSubworkflow() != null) {
                         readNodeArguments(ss.getSubworkflow().getInstructions(), jobName, args);
+                    }
+                    break;
+                case OPTIONS:
+                    Options opts = inst.cast();
+                    if (opts.getBlock() != null) {
+                        readNodeArguments(opts.getBlock().getInstructions(), jobName, args);
                     }
                     break;
                 default:

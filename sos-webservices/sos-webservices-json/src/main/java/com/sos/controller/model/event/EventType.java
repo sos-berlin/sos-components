@@ -34,6 +34,7 @@ public enum EventType {
     OrderOutcomeAdded("OrderOutcomeAdded"),
     OrderFailedinFork("OrderFailedinFork"),
     OrderFailed("OrderFailed"),
+    OrderStopped("OrderStopped"),
     OrderCatched("OrderCatched"),
     OrderCaught("OrderCaught"),
     OrderAwoke("OrderAwoke"),

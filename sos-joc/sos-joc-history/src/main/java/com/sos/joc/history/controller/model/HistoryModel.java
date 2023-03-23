@@ -409,6 +409,12 @@ public class HistoryModel {
 
                         postEventOrderUpdated(hob);
                         break;
+                    case OrderStopped:
+                        hob = orderNotCompleted(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderStopped, endedOrderSteps, null);
+                        counter.getOrder().addFailed();
+
+                        postEventOrderUpdated(hob);
+                        break;
                     case OrderSuspended:
                         FatEventOrderSuspended eos = (FatEventOrderSuspended) entry;
                         if (hasOrderStarted(eos.getOrderId(), eos.isStarted())) {
@@ -1092,6 +1098,7 @@ public class HistoryModel {
                 co.setHasStates(true);
                 break;
             case OrderFailed:
+            case OrderStopped:
                 co.setHasStates(true);
                 stateErrorText = orderErrorText;
                 break;
@@ -1261,6 +1268,7 @@ public class HistoryModel {
             break;
         case OrderFailed:
         case OrderFailedinFork:
+        case OrderStopped:
             le.setState(OrderStateText.FAILED.intValue());
             le.setLogLevel(OrderLogEntryLogLevel.ERROR);
             break;
