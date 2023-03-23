@@ -50,10 +50,6 @@ public class SOSOpenIdHandler {
 
     private static final String WELL_KNOWN_OPENID_CONFIGURATION = "/.well-known/openid-configuration";
 
-    private static final String INTROSPECTION_ENDPOINT = "introspection_endpoint";
-
-    private static final String TOKEN_ENDPOINT = "token_endpoint";
-
     private static final String JWKS_URI_ENDPOINT = "jwks_uri";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSOpenIdHandler.class);
@@ -167,7 +163,7 @@ public class SOSOpenIdHandler {
     }
 
     public String getAccountIdentifier() throws SocketException, SOSException {
-        String result = "";
+        String result = EMAIL;
         URI requestUri = URI.create(webserviceCredentials.getAuthenticationUrl() + WELL_KNOWN_OPENID_CONFIGURATION);
         String configurationResponse = getFormResponse(false, requestUri, null, null);
         JsonReader jsonReaderConfigurationResponse = Json.createReader(new StringReader(configurationResponse));
@@ -191,8 +187,6 @@ public class SOSOpenIdHandler {
                     }
                 }
             }
-        } else {
-            result = EMAIL;
         }
         return result;
     }
@@ -329,9 +323,12 @@ public class SOSOpenIdHandler {
         try {
 
             if (accountIdentifier == null) {
-                accountIdentifier = getAccountIdentifier();
+                try {
+                    accountIdentifier = getAccountIdentifier();
+                } catch (Exception e) {
+                    accountIdentifier = EMAIL;
+                }
             }
-
             String[] accessTokenParts = idToken.split("\\.");
             Base64.Decoder decoder = Base64.getUrlDecoder();
 
