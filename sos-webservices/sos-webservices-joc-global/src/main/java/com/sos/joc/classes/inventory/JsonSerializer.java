@@ -20,6 +20,7 @@ import com.sos.inventory.model.instruction.IfElse;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.NamedJob;
+import com.sos.inventory.model.instruction.Options;
 import com.sos.inventory.model.instruction.StickySubagent;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.job.AdmissionTimeScheme;
@@ -680,6 +681,12 @@ public class JsonSerializer {
                         cleanInventoryInstructions(ss.getSubworkflow().getInstructions(), jobs, forkListAgentName, stickyAgentName);
                     }
                     break;
+                case OPTIONS:
+                    Options opts = inst.cast();
+                    if (opts.getBlock() != null) {
+                        cleanInventoryInstructions(opts.getBlock().getInstructions(), jobs, forkListAgentName, stickyAgentName);
+                    }
+                    break;
                 default:
                     break;
                 }
@@ -781,6 +788,13 @@ public class JsonSerializer {
                     com.sos.sign.model.instruction.StickySubagent ss = inst.cast();
                     if (ss.getSubworkflow() != null) {
                         cleanSignedInstructions(ss.getSubworkflow().getInstructions());
+                    }
+                    break;
+                case OPTIONS:
+                    com.sos.sign.model.instruction.Options opts = inst.cast();
+                    opts.setStopOnFailure(defaultToNull(opts.getStopOnFailure(), Boolean.FALSE));
+                    if (opts.getBlock() != null) {
+                        cleanSignedInstructions(opts.getBlock().getInstructions());
                     }
                     break;
                 default:

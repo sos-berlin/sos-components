@@ -84,6 +84,8 @@ public class ProxyTest {
                     put(Order.Failed$.class, "failed");
                     put(Order.FailedInFork$.class, "failed");
                     put(Order.FailedWhileFresh$.class, "failed");
+                    put(Order.Stopped$.class, "failed");
+                    put(Order.StoppedWhileFresh$.class, "failed");
                     put(Order.Ready$.class, "running");
                     put(Order.Processed$.class, "running");
                     put(Order.Processing.class, "running");

@@ -41,6 +41,7 @@ import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.NamedJob;
+import com.sos.inventory.model.instruction.Options;
 import com.sos.inventory.model.instruction.PostNotice;
 import com.sos.inventory.model.instruction.PostNotices;
 import com.sos.inventory.model.instruction.Prompt;
@@ -831,6 +832,11 @@ public class Validator {
                         validateInstructions(sticky.getSubworkflow().getInstructions(), instPosition + "subworkflow.instructions", jobs,
                                 orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, dbLayer);
                     }
+                    break;
+                case OPTIONS:
+                    Options opts = inst.cast();
+                    validateInstructions(opts.getBlock().getInstructions(), instPosition + "block.instructions", jobs, orderPreparation, labels,
+                            invalidAgentRefs, boardNames, forkListExist, dbLayer);
                     break;
                 default:
                     break;

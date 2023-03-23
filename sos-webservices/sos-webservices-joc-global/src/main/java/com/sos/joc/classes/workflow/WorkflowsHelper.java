@@ -49,6 +49,7 @@ import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.inventory.model.instruction.Instructions;
 import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.NamedJob;
+import com.sos.inventory.model.instruction.Options;
 import com.sos.inventory.model.instruction.PostNotice;
 import com.sos.inventory.model.instruction.PostNotices;
 import com.sos.inventory.model.instruction.StickySubagent;
@@ -645,6 +646,11 @@ public class WorkflowsHelper {
                             forkListVariables, expectedNoticeBoards, postNoticeBoards, consumeNoticeBoards, workflowNamesFromAddOrders, skippedLabels,
                             stoppedPositions);
                     break;
+                case OPTIONS:
+                    Options opts = inst.cast();
+                    setWorkflowPositionsAndForkListVariables(extendArray(pos, "options"), opts.getBlock().getInstructions(), forkListVariables,
+                            expectedNoticeBoards, postNoticeBoards, consumeNoticeBoards, workflowNamesFromAddOrders, skippedLabels, stoppedPositions);
+                    break;
                 default:
                     break;
                 }
@@ -739,6 +745,12 @@ public class WorkflowsHelper {
                     StickySubagent sticky = inst.cast();
                     if (sticky.getSubworkflow() != null) {
                         setWorkflowPositions(extendArray(pos, "stickySubagent"), sticky.getSubworkflow().getInstructions(), mapLabelToPos);
+                    }
+                    break;
+                case OPTIONS:
+                    Options opts = inst.cast();
+                    if (opts.getBlock() != null) {
+                        setWorkflowPositions(extendArray(pos, "options"), opts.getBlock().getInstructions(), mapLabelToPos);
                     }
                     break;
                 default:
@@ -943,7 +955,12 @@ public class WorkflowsHelper {
                         updateWorkflowBoardname(oldNewBoardNames, ss.getSubworkflow().getInstructions());
                     }
                     break;
-                
+                case OPTIONS:
+                    Options opts = inst.cast();
+                    if (opts.getBlock() != null) {
+                        updateWorkflowBoardname(oldNewBoardNames, opts.getBlock().getInstructions());
+                    }
+                    break;
                 default:
                     break;
                 }
@@ -1017,6 +1034,12 @@ public class WorkflowsHelper {
                     StickySubagent ss = inst.cast();
                     if (ss.getSubworkflow() != null) {
                         extractImplicitEnds(ss.getSubworkflow().getInstructions(), posSet, true);
+                    }
+                    break;
+                case OPTIONS:
+                    Options opts = inst.cast();
+                    if (opts.getBlock() != null) {
+                        extractImplicitEnds(opts.getBlock().getInstructions(), posSet, true);
                     }
                     break;
                 default:

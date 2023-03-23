@@ -34,6 +34,7 @@ import js7.data.order.OrderEvent.OrderRetrying;
 import js7.data.order.OrderEvent.OrderStarted$;
 import js7.data.order.OrderEvent.OrderStderrWritten;
 import js7.data.order.OrderEvent.OrderStdoutWritten;
+import js7.data.order.OrderEvent.OrderStopped$;
 import js7.data.order.OrderEvent.OrderSuspended$;
 import js7.data.order.OrderEvent.OrderSuspensionMarked;
 import js7.data.subagent.SubagentItemStateEvent.SubagentDedicated;
@@ -69,6 +70,8 @@ public enum HistoryEventType {
     OrderOutcomeAdded(OrderOutcomeAdded.class.getSimpleName()),
 
     OrderFailed(OrderFailed.class.getSimpleName()),
+
+    OrderStopped(OrderStopped$.class.getSimpleName()),
 
     OrderBroken(OrderBroken.class.getSimpleName()),
 

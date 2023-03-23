@@ -152,6 +152,8 @@ public class OrdersHelper {
                     put(Order.Failed$.class, OrderStateText.FAILED);
                     put(Order.FailedInFork$.class, OrderStateText.FAILED);
                     put(Order.FailedWhileFresh$.class, OrderStateText.FAILED);
+                    put(Order.Stopped$.class, OrderStateText.FAILED);
+                    put(Order.StoppedWhileFresh$.class, OrderStateText.FAILED);
                     put(Order.Ready$.class, OrderStateText.INPROGRESS);
                     put(Order.Processed$.class, OrderStateText.INPROGRESS);
                     put(Order.Processing.class, OrderStateText.RUNNING);
@@ -180,6 +182,8 @@ public class OrdersHelper {
             put("Failed", OrderStateText.FAILED);
             put("FailedInFork", OrderStateText.FAILED);
             put("FailedWhileFresh", OrderStateText.FAILED);
+            put("Stopped", OrderStateText.FAILED);
+            put("StoppedWhileFresh", OrderStateText.FAILED);
             put("Ready", OrderStateText.INPROGRESS);
             put("Processed", OrderStateText.INPROGRESS);
             put("Processing", OrderStateText.RUNNING);

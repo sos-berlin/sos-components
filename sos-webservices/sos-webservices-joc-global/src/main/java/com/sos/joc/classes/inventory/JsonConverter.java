@@ -31,6 +31,7 @@ import com.sos.inventory.model.instruction.IfElse;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.inventory.model.instruction.Lock;
+import com.sos.inventory.model.instruction.Options;
 import com.sos.inventory.model.instruction.StickySubagent;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.job.Job;
@@ -426,6 +427,14 @@ public class JsonConverter {
                                 .getInstructions(), addOrderIndex, zoneId);
                     }
                     break;
+                case OPTIONS:
+                    Options opts = invInstruction.cast();
+                    com.sos.sign.model.instruction.Options sOpts = signInstruction.cast();
+                    if (opts.getBlock() != null) {
+                        convertInstructions(controllerId, workflowName, opts.getBlock().getInstructions(), sOpts.getBlock().getInstructions(),
+                                addOrderIndex, zoneId);
+                    }
+                    break;
                 default:
                     break;
                 }
@@ -541,6 +550,9 @@ public class JsonConverter {
     public static String quoteString(String str) {
         if (str == null) {
             return null;
+        }
+        if (str.isEmpty()) {
+            str = "\"" + str + "\"";
         }
         Either<Problem, JExpression> e = JExpression.parse(str);
         if (e.isLeft()) {
