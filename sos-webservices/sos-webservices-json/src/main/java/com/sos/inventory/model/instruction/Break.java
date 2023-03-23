@@ -31,18 +31,6 @@ public class Break
     public Break() {
     }
 
-    /**
-     * 
-     * @param position
-     * @param label
-     * @param state
-     * 
-     * @param positionString
-     */
-    public Break(, List<Object> position, String positionString, String label, InstructionState state) {
-        super(, position, positionString, label, state);
-    }
-
     @Override
     public String toString() {
         return new ToStringBuilder(this).appendSuper(super.toString()).toString();
