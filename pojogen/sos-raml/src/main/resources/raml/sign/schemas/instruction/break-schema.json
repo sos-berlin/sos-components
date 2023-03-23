@@ -1,0 +1,12 @@
+{
+  "title": "break",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.sign.model.instruction.Break",
+  "type": "object",
+  "extends" : {
+    "$ref": "instruction-schema.json"
+  },
+  
+  "description": "instruction with fixed property 'TYPE':'Break'",
+  "additionalProperties": false
+}

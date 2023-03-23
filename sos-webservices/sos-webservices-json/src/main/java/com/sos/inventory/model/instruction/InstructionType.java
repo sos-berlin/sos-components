@@ -12,7 +12,7 @@ public enum InstructionType {
     IF("If"),
     TRY("Try"),
     FORK("Fork"),
-    FORKLIST("ForkList"),
+    FORK_LIST("ForkList"),
     FINISH("Finish"),
     FAIL("Fail"),
     RETRY("Retry"),
@@ -27,7 +27,8 @@ public enum InstructionType {
     ADD_ORDER("AddOrder"),
     CYCLE("Cycle"),
     STICKY_SUBAGENT("StickySubagent"),
-    OPTIONS("Options");
+    OPTIONS("Options"),
+    BREAK("Break");
     private final String value;
     private final static Map<String, InstructionType> CONSTANTS = new HashMap<String, InstructionType>();
 
