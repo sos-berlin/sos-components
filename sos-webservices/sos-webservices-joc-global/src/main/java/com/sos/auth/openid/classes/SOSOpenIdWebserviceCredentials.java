@@ -29,6 +29,7 @@ public class SOSOpenIdWebserviceCredentials {
     private String clientSecret;
     private String clientId;
     private String providerName;
+    private String userAttribute; 
 
     private String truststorePath = "";
     private String truststorePassword = "";
@@ -36,6 +37,11 @@ public class SOSOpenIdWebserviceCredentials {
 
     public String getAuthenticationUrl() {
         return authenticationUrl;
+    }
+
+    
+    public String getUserAttribute() {
+        return userAttribute;
     }
 
     public SOSOpenIdWebserviceCredentials() {
@@ -124,17 +130,24 @@ public class SOSOpenIdWebserviceCredentials {
                     providerName = getProperty(properties.getOidc().getIamOidcName(), "");
                 }
 
+                if (userAttribute == null || userAttribute.isEmpty()) {
+                    userAttribute = getProperty(properties.getOidc().getIamOidcUserAttribute(), "");
+                }
+
                 String truststorePathGui = getProperty(properties.getOidc().getIamOidcTruststorePath(), "");
                 String truststorePassGui = getProperty(properties.getOidc().getIamOidcTruststorePassword(), "");
                 String tTypeGui = getProperty(properties.getOidc().getIamOidcTruststoreType(), "");
 
-                String truststorePathDefault = getProperty(System.getProperty("javax.net.ssl.trustStore"), Globals.sosCockpitProperties.getProperty("truststore_path", ""));
-                String truststoreTypeDefault = getProperty(System.getProperty("javax.net.ssl.trustStoreType"), Globals.sosCockpitProperties.getProperty("truststore_type", "PKCS12"));
-                String truststorePassDefault = getProperty(System.getProperty("javax.net.ssl.trustStorePassword"), Globals.sosCockpitProperties.getProperty("truststore_password", ""));
+                String truststorePathDefault = getProperty(System.getProperty("javax.net.ssl.trustStore"), Globals.sosCockpitProperties.getProperty(
+                        "truststore_path", ""));
+                String truststoreTypeDefault = getProperty(System.getProperty("javax.net.ssl.trustStoreType"), Globals.sosCockpitProperties
+                        .getProperty("truststore_type", "PKCS12"));
+                String truststorePassDefault = getProperty(System.getProperty("javax.net.ssl.trustStorePassword"), Globals.sosCockpitProperties
+                        .getProperty("truststore_password", ""));
 
-                        truststorePath = getProperty(truststorePathGui, truststorePathDefault);
-                        truststorePassword = getProperty(truststorePassGui, truststorePassDefault);
-                        truststoreType = KeystoreType.valueOf(getProperty(tTypeGui, truststoreTypeDefault));
+                truststorePath = getProperty(truststorePathGui, truststorePathDefault);
+                truststorePassword = getProperty(truststorePassGui, truststorePassDefault);
+                truststoreType = KeystoreType.valueOf(getProperty(tTypeGui, truststoreTypeDefault));
 
                 if (truststorePath != null && !truststorePath.trim().isEmpty()) {
                     Path p = Globals.sosCockpitProperties.resolvePath(truststorePath.trim());
