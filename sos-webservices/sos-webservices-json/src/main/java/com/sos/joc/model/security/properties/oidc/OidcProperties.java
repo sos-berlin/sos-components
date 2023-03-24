@@ -21,6 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "iamOidcClientId",
     "iamOidcName",
     "iamOidcClientSecret",
+    "iamOidcUserAttribute",
     "iamOidcTruststorePath",
     "iamOidcTruststorePassword",
     "iamOidcTruststoreType"
@@ -65,6 +66,14 @@ public class OidcProperties {
      * 
      * 
      */
+    @JsonProperty("iamOidcUserAttribute")
+    private String iamOidcUserAttribute;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("iamOidcTruststorePath")
     private String iamOidcTruststorePath;
     /**
@@ -99,14 +108,16 @@ public class OidcProperties {
      * @param iamOidcName
      * @param iamOidcTruststorePath
      * @param iamOidcTruststorePassword
+     * @param iamOidcUserAttribute
      * @param iamOidcTruststoreType
      */
-    public OidcProperties(String iamOidcAuthenticationUrl, String iamOidcClientId, String iamOidcName, String iamOidcClientSecret, String iamOidcTruststorePath, String iamOidcTruststorePassword, String iamOidcTruststoreType) {
+    public OidcProperties(String iamOidcAuthenticationUrl, String iamOidcClientId, String iamOidcName, String iamOidcClientSecret, String iamOidcUserAttribute, String iamOidcTruststorePath, String iamOidcTruststorePassword, String iamOidcTruststoreType) {
         super();
         this.iamOidcAuthenticationUrl = iamOidcAuthenticationUrl;
         this.iamOidcClientId = iamOidcClientId;
         this.iamOidcName = iamOidcName;
         this.iamOidcClientSecret = iamOidcClientSecret;
+        this.iamOidcUserAttribute = iamOidcUserAttribute;
         this.iamOidcTruststorePath = iamOidcTruststorePath;
         this.iamOidcTruststorePassword = iamOidcTruststorePassword;
         this.iamOidcTruststoreType = iamOidcTruststoreType;
@@ -206,6 +217,28 @@ public class OidcProperties {
      * 
      * 
      */
+    @JsonProperty("iamOidcUserAttribute")
+    public String getIamOidcUserAttribute() {
+        return iamOidcUserAttribute;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("iamOidcUserAttribute")
+    public void setIamOidcUserAttribute(String iamOidcUserAttribute) {
+        this.iamOidcUserAttribute = iamOidcUserAttribute;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("iamOidcTruststorePath")
     public String getIamOidcTruststorePath() {
         return iamOidcTruststorePath;
@@ -268,12 +301,12 @@ public class OidcProperties {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("iamOidcAuthenticationUrl", iamOidcAuthenticationUrl).append("iamOidcClientId", iamOidcClientId).append("iamOidcName", iamOidcName).append("iamOidcClientSecret", iamOidcClientSecret).append("iamOidcTruststorePath", iamOidcTruststorePath).append("iamOidcTruststorePassword", iamOidcTruststorePassword).append("iamOidcTruststoreType", iamOidcTruststoreType).toString();
+        return new ToStringBuilder(this).append("iamOidcAuthenticationUrl", iamOidcAuthenticationUrl).append("iamOidcClientId", iamOidcClientId).append("iamOidcName", iamOidcName).append("iamOidcClientSecret", iamOidcClientSecret).append("iamOidcUserAttribute", iamOidcUserAttribute).append("iamOidcTruststorePath", iamOidcTruststorePath).append("iamOidcTruststorePassword", iamOidcTruststorePassword).append("iamOidcTruststoreType", iamOidcTruststoreType).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(iamOidcClientSecret).append(iamOidcClientId).append(iamOidcAuthenticationUrl).append(iamOidcName).append(iamOidcTruststorePath).append(iamOidcTruststorePassword).append(iamOidcTruststoreType).toHashCode();
+        return new HashCodeBuilder().append(iamOidcClientSecret).append(iamOidcClientId).append(iamOidcAuthenticationUrl).append(iamOidcName).append(iamOidcTruststorePath).append(iamOidcTruststorePassword).append(iamOidcUserAttribute).append(iamOidcTruststoreType).toHashCode();
     }
 
     @Override
@@ -285,7 +318,7 @@ public class OidcProperties {
             return false;
         }
         OidcProperties rhs = ((OidcProperties) other);
-        return new EqualsBuilder().append(iamOidcClientSecret, rhs.iamOidcClientSecret).append(iamOidcClientId, rhs.iamOidcClientId).append(iamOidcAuthenticationUrl, rhs.iamOidcAuthenticationUrl).append(iamOidcName, rhs.iamOidcName).append(iamOidcTruststorePath, rhs.iamOidcTruststorePath).append(iamOidcTruststorePassword, rhs.iamOidcTruststorePassword).append(iamOidcTruststoreType, rhs.iamOidcTruststoreType).isEquals();
+        return new EqualsBuilder().append(iamOidcClientSecret, rhs.iamOidcClientSecret).append(iamOidcClientId, rhs.iamOidcClientId).append(iamOidcAuthenticationUrl, rhs.iamOidcAuthenticationUrl).append(iamOidcName, rhs.iamOidcName).append(iamOidcTruststorePath, rhs.iamOidcTruststorePath).append(iamOidcTruststorePassword, rhs.iamOidcTruststorePassword).append(iamOidcUserAttribute, rhs.iamOidcUserAttribute).append(iamOidcTruststoreType, rhs.iamOidcTruststoreType).isEquals();
     }
 
 }
