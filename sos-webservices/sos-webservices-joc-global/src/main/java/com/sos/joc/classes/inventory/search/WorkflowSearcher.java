@@ -23,6 +23,7 @@ import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.NamedJob;
+import com.sos.inventory.model.instruction.Options;
 import com.sos.inventory.model.instruction.PostNotice;
 import com.sos.inventory.model.instruction.PostNotices;
 import com.sos.inventory.model.instruction.StickySubagent;
@@ -298,6 +299,13 @@ public class WorkflowSearcher {
     public List<WorkflowInstruction<AddOrder>> getAddOrderInstructions() {
         return getInstructionsStream(InstructionType.ADD_ORDER).map(l -> (WorkflowInstruction<AddOrder>) l).collect(Collectors.toList());
     }
+    
+    @SuppressWarnings("unchecked")
+    public List<WorkflowInstruction<Options>> getOptionsInstructions() {
+        return getInstructionsStream(InstructionType.OPTIONS).map(l -> (WorkflowInstruction<Options>) l).collect(Collectors.toList());
+    }
+
+    
 
     public List<WorkflowInstruction<Lock>> getLockInstructions(String lockIdRegex) {
         List<WorkflowInstruction<Lock>> r = getLockInstructions();
@@ -529,6 +537,15 @@ public class WorkflowSearcher {
                     result.add(new WorkflowInstruction<StickySubagent>(position, ss));
 
                     handleInstructions(result, ss.getSubworkflow().getInstructions(), position);
+                }
+                break;
+            case OPTIONS:
+                Options opts = in.cast();
+                if (opts.getBlock() != null) {
+                    String position = getPosition(parentPosition, index, "options");
+                    result.add(new WorkflowInstruction<Options>(position, opts));
+
+                    handleInstructions(result, opts.getBlock().getInstructions(), position);
                 }
                 break;
                 
