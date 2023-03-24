@@ -163,7 +163,11 @@ public class SOSOpenIdHandler {
     }
 
     public String getAccountIdentifier() throws SocketException, SOSException {
-        String result = EMAIL;
+        String result = "";
+        if ((webserviceCredentials.getUserAttribute() != null) && (!webserviceCredentials.getUserAttribute().isEmpty())) {
+            return webserviceCredentials.getUserAttribute();
+        }
+
         URI requestUri = URI.create(webserviceCredentials.getAuthenticationUrl() + WELL_KNOWN_OPENID_CONFIGURATION);
         String configurationResponse = getFormResponse(false, requestUri, null, null);
         JsonReader jsonReaderConfigurationResponse = Json.createReader(new StringReader(configurationResponse));
@@ -178,7 +182,7 @@ public class SOSOpenIdHandler {
                     break;
                 }
             }
-            if (result == null) {
+            if (result == null || result.isEmpty()) {
                 for (int j = 0; j < len; j++) {
                     String supported = claimsSupported.getString(j);
                     if (supported.equals(EMAIL)) {
@@ -188,6 +192,11 @@ public class SOSOpenIdHandler {
                 }
             }
         }
+        if (result == null || result.isEmpty()) {
+            result = EMAIL;
+            LOGGER.info("Could not get attribute name from " + CLAIMS_SUPPORTED + ". Default=" + EMAIL);
+        }
+
         return result;
     }
 

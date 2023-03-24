@@ -204,7 +204,7 @@ public class SOSServicePermissionIam {
                 }
             }
             SOSLoginParameters sosLoginParameters = new SOSLoginParameters();
-LOGGER.info("idToken: " + idToken) ;           
+            LOGGER.info("idToken: " + idToken);
             sosLoginParameters.setIdToken(idToken);
             sosLoginParameters.setBasicAuthorization(basicAuthorization);
             sosLoginParameters.setClientCertCN(clientCertCN);
@@ -756,13 +756,32 @@ LOGGER.info("idToken: " + idToken) ;
         if (sosLoginParameters.getBasicAuthorization() == null || sosLoginParameters.getBasicAuthorization().isEmpty()) {
             if (sosLoginParameters.getAccount() == null) {
                 if (sosLoginParameters.getIdToken() != null && !sosLoginParameters.getIdToken().isEmpty()) {
+
+                    sosHibernateSession = Globals.createSosHibernateStatelessConnection("login");
+                    try {
+                        IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
+                        IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
+                        filter.setIdentityServiceName(sosLoginParameters.getIdentityService());
+                        DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(filter);
+
+                        if (dbItemIamIdentityService == null) {
+                            throw new Exception("Identity Service not found: " + sosLoginParameters.getIdentityService());
+                        }
+
+                        if (dbItemIamIdentityService.getDisabled()) {
+                            throw new Exception("Identity Service " + sosLoginParameters.getIdentityService() + " is disabled");
+                        }
+                    } finally {
+                        Globals.disconnect(sosHibernateSession);
+                    }
+
                     SOSOpenIdWebserviceCredentials webserviceCredentials = new SOSOpenIdWebserviceCredentials();
                     SOSIdentityService sosIdentityService = new SOSIdentityService(sosLoginParameters.getIdentityService(),
                             IdentityServiceTypes.OIDC);
                     webserviceCredentials.setValuesFromProfile(sosIdentityService);
                     webserviceCredentials.setIdToken(sosLoginParameters.getIdToken());
                     SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials);
-                    String account = sosOpenIdHandler.decodeIdToken(sosLoginParameters.getIdToken()); 
+                    String account = sosOpenIdHandler.decodeIdToken(sosLoginParameters.getIdToken());
                     sosLoginParameters.setAccount(account);
                     if (!Files.exists(Paths.get(webserviceCredentials.getTruststorePath()))) {
                         LOGGER.warn("Truststore file " + webserviceCredentials.getTruststorePath() + " not existing");
