@@ -1,5 +1,6 @@
 package com.sos.joc.monitoring.model;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -15,10 +16,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterThreadFactory;
@@ -37,7 +40,6 @@ import com.sos.joc.monitoring.SystemMonitorService;
 import com.sos.joc.monitoring.bean.SystemMonitoringEvent;
 import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.SystemNotification;
-import com.sos.monitoring.notification.NotificationType;
 
 public class SystemMonitoringModel {
 
@@ -49,7 +51,11 @@ public class SystemMonitoringModel {
 
     private static final Set<String> SKIPPED_NOTIFIERS = new HashSet<>(Arrays.asList(SystemNotification.class.getName(), SystemNotifierModel.class
             .getName(), SystemMonitoringModel.class.getName(), WebserviceConstants.AUDIT_LOGGER, "org.hibernate.engine.jdbc.spi.SqlExceptionHelper"));
+
     private static final Set<String> SKIPPED_WARN_NOTIFIERS = new HashSet<>(Arrays.asList("js7.cluster.watch.ClusterWatchService"));
+    private static final Map<String, Set<String>> SKIPPED_WARN_NOTIFIERS_BY_MESSAGE_START = Stream.of(new AbstractMap.SimpleEntry<>(
+            "js7.proxy.ControllerApi", new HashSet<>(Arrays.asList("akka.stream.scaladsl.TcpIdleTimeoutException")))).collect(Collectors.toMap(
+                    Map.Entry::getKey, Map.Entry::getValue));
 
     // ms
     private static final long MAX_ADDED_TIME = 2 * 60 * 1_000; // 2m
@@ -217,13 +223,28 @@ public class SystemMonitoringModel {
             }
             return false;
         }
-        if (SKIPPED_WARN_NOTIFIERS.contains(evt.getLoggerName()) && NotificationType.WARNING.equals(evt.getType())) {
-            if (isDebugEnabled) {
-                LOGGER.debug(String.format("[handleEvents][skip][skip all warnings of %s]%s", evt.getLoggerName(), evt.toString()));
+        switch (evt.getType()) {
+        case WARNING:
+            if (SKIPPED_WARN_NOTIFIERS.contains(evt.getLoggerName())) {
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("[handleEvents][skip][skip all warnings of %s]%s", evt.getLoggerName(), evt.toString()));
+                }
+                return false;
             }
-            return false;
+            if (SKIPPED_WARN_NOTIFIERS_BY_MESSAGE_START.containsKey(evt.getLoggerName()) && !SOSString.isEmpty(evt.getMessage())) {
+                long c = SKIPPED_WARN_NOTIFIERS_BY_MESSAGE_START.get(evt.getLoggerName()).stream().filter(m -> evt.getMessage().trim().startsWith(m))
+                        .count();
+                if (c > 0) {
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[handleEvents][skip][skip this warning of %s]%s", evt.getLoggerName(), evt.toString()));
+                    }
+                    return false;
+                }
+            }
+            break;
+        default:
+            break;
         }
-
         return true;
     }
 
