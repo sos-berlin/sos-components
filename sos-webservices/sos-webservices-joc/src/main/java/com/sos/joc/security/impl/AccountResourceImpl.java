@@ -1,5 +1,6 @@
 package com.sos.joc.security.impl;
 
+import java.io.StringReader;
 import java.security.KeyStore;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -10,6 +11,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
 import jakarta.ws.rs.Path;
 
 import org.slf4j.Logger;
@@ -31,6 +35,7 @@ import com.sos.auth.vault.classes.SOSVaultAccountCredentials;
 import com.sos.auth.vault.classes.SOSVaultLogin;
 import com.sos.auth.vault.classes.SOSVaultWebserviceCredentials;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -43,6 +48,10 @@ import com.sos.joc.db.authentication.DBItemIamBlockedAccount;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.authentication.DBItemIamPermissionWithName;
 import com.sos.joc.db.authentication.DBItemIamRole;
+import com.sos.joc.db.configuration.JocConfigurationDbLayer;
+import com.sos.joc.db.configuration.JocConfigurationFilter;
+import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
+import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.db.security.IamAccountFilter;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
@@ -52,6 +61,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocInfoException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.audit.CategoryType;
+import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.security.accounts.Account;
 import com.sos.joc.model.security.accounts.AccountChangePassword;
 import com.sos.joc.model.security.accounts.AccountFilter;
@@ -71,6 +81,14 @@ import com.sos.schema.JsonValidator;
 
 @Path("iam")
 public class AccountResourceImpl extends JOCResourceImpl implements IAccountResource {
+
+    private static final String VALUE = "value";
+
+    private static final String DEFAULT_PROFILE_ACCOUNT = "default_profile_account";
+
+    private static final String JOC = "joc";
+
+    private static final String ROOT = "root";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AccountResourceImpl.class);
 
@@ -141,6 +159,59 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
         }
     }
 
+    private String getDefaultProfileName(SOSHibernateSession sosHibernateSession) throws SOSHibernateException {
+        JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
+        JocConfigurationFilter filter = new JocConfigurationFilter();
+        filter.setConfigurationType(ConfigurationType.GLOBALS.name());
+        DBItemJocConfiguration dbItem = jocConfigurationDBLayer.getJocConfiguration(filter, 0);
+
+        if (dbItem != null) {
+            JsonReader json = Json.createReader(new StringReader(dbItem.getConfigurationItem()));
+            JsonObject jsonObject = json.readObject();
+            if (jsonObject.getJsonObject(JOC) == null || jsonObject.getJsonObject(JOC).getJsonObject(DEFAULT_PROFILE_ACCOUNT) == null
+                    || jsonObject.getJsonObject(JOC).getJsonObject(DEFAULT_PROFILE_ACCOUNT).getString(VALUE) == null) {
+                return ROOT;
+            } else {
+                return jsonObject.getJsonObject(JOC).getJsonObject(DEFAULT_PROFILE_ACCOUNT).getString(VALUE);
+            }
+        } else {
+            return ROOT;
+        }
+    }
+
+    private void storeDefaultProfile(SOSHibernateSession sosHibernateSession, String account) throws SOSHibernateException {
+        InventoryInstancesDBLayer inventoryInstancesDBLayer = new InventoryInstancesDBLayer(sosHibernateSession);
+        List<String> controllerIds = inventoryInstancesDBLayer.getControllerIds();
+        String defaultProfileName = getDefaultProfileName(sosHibernateSession);
+        JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
+        JocConfigurationFilter filter = new JocConfigurationFilter();
+        filter.setConfigurationType(ConfigurationType.PROFILE.name());
+
+        for (String controllerId : controllerIds) {
+            filter.setAccount(defaultProfileName);
+            filter.setControllerId(controllerId);
+            DBItemJocConfiguration dbItem = jocConfigurationDBLayer.getJocConfiguration(filter, 0);
+
+            if (dbItem != null) {
+                filter.setAccount(account);
+                DBItemJocConfiguration dbItemAccount = jocConfigurationDBLayer.getJocConfiguration(filter, 0);
+                if (dbItemAccount == null) {
+                    dbItemAccount = new DBItemJocConfiguration();
+                    dbItemAccount.setAccount(account);
+                    dbItemAccount.setConfigurationItem(dbItem.getConfigurationItem());
+                    dbItemAccount.setConfigurationType(dbItem.getConfigurationType());
+                    dbItemAccount.setControllerId(dbItem.getControllerId());
+                    dbItemAccount.setInstanceId(dbItem.getInstanceId());
+                    dbItemAccount.setName(dbItem.getName());
+                    dbItemAccount.setObjectType(dbItem.getObjectType());
+                    dbItemAccount.setShared(dbItem.getShared());
+                    jocConfigurationDBLayer.saveOrUpdateConfiguration(dbItemAccount);
+                }
+
+            }
+        }
+    }
+
     @Override
     public JOCDefaultResponse postAccountStore(String accessToken, byte[] body) {
         SOSHibernateSession sosHibernateSession = null;
@@ -205,8 +276,8 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             }
 
             dbItemIamAccount.setAccountName(account.getAccountName());
-            if (dbItemIamIdentityService.getIdentityServiceType().equals(IdentityServiceTypes.JOC.value()) || 
-                 dbItemIamIdentityService.getIdentityServiceType().equals(IdentityServiceTypes.VAULT_JOC_ACTIVE.value())){
+            if (dbItemIamIdentityService.getIdentityServiceType().equals(IdentityServiceTypes.JOC.value()) || dbItemIamIdentityService
+                    .getIdentityServiceType().equals(IdentityServiceTypes.VAULT_JOC_ACTIVE.value())) {
 
                 if (account.getPassword() != null && !password.isEmpty()) {
                     if (!sosInitialPasswordSetting.isMininumPasswordLength(password)) {
@@ -220,7 +291,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                 dbItemIamAccount.setAccountPassword("********");
             }
             dbItemIamAccount.setIdentityServiceId(dbItemIamIdentityService.getId());
-            if (!dbItemIamIdentityService.getIdentityServiceType().equals(IdentityServiceTypes.OIDC.value())){
+            if (!dbItemIamIdentityService.getIdentityServiceType().equals(IdentityServiceTypes.OIDC.value())) {
                 if (sosInitialPasswordSetting.getInitialPassword().equals(password)) {
                     dbItemIamAccount.setForcePasswordChange(true);
                 } else {
@@ -233,6 +304,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
 
             if (newAccount) {
                 sosHibernateSession.save(dbItemIamAccount);
+                storeDefaultProfile(sosHibernateSession, account.getAccountName());
             } else {
                 sosHibernateSession.update(dbItemIamAccount);
             }
