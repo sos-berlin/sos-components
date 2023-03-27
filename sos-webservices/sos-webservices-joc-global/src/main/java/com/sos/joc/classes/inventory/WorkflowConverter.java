@@ -31,10 +31,14 @@ public class WorkflowConverter {
             .asPredicate();
 
     public static Workflow convertInventoryWorkflow(String content) throws JsonMappingException, JsonProcessingException {
+        return convertInventoryWorkflow(content, Workflow.class);
+    }
+    
+    public static <T extends Workflow> T convertInventoryWorkflow(String content, Class<T> clazz) throws JsonMappingException, JsonProcessingException {
         if (content != null && !content.isEmpty()) {
             // for compatibility ReadNotice -> ExpectNotice
             content = content.replaceAll("(\"TYPE\"\\s*:\\s*)\"ReadNotice\"", "$1\"ExpectNotice\"");
-            Workflow workflow = Globals.objectMapper.readValue(content, Workflow.class);
+            T workflow = Globals.objectMapper.readValue(content, clazz);
             if (hasConvertInstruction.test(content)) {
                 convertInstructions(workflow.getInstructions());
             }
