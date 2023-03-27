@@ -13,7 +13,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -336,7 +335,7 @@ public class JS7RunTimeConverter {
         }
         if (hasHolidays) {
             AssignedNonWorkingDayCalendars nwc = new AssignedNonWorkingDayCalendars();
-            nwc.setCalendarName(JS7Converter.CONFIG.getScheduleConfig().getDefaultNonWorkingDayCalendarName());
+            nwc.setCalendarName(JS12JS7Converter.CONFIG.getScheduleConfig().getDefaultNonWorkingDayCalendarName());
             nonWorking.add(nwc);
         }
 
@@ -346,8 +345,8 @@ public class JS7RunTimeConverter {
             schedule.setCalendars(working.size() == 0 ? null : working);
             schedule.setNonWorkingDayCalendars(nonWorking.size() == 0 ? null : nonWorking);
             schedule.setWorkflowNames(workflowNames);
-            schedule.setPlanOrderAutomatically(JS7Converter.CONFIG.getScheduleConfig().planOrders());
-            schedule.setSubmitOrderToControllerWhenPlanned(JS7Converter.CONFIG.getScheduleConfig().submitOrders());
+            schedule.setPlanOrderAutomatically(JS12JS7Converter.CONFIG.getScheduleConfig().planOrders());
+            schedule.setSubmitOrderToControllerWhenPlanned(JS12JS7Converter.CONFIG.getScheduleConfig().submitOrders());
         } else {
             ConverterReport.INSTANCE.addWarningRecord(js7SchedulePath, "Schedule was not converted", "Please check/create manually:" + js1RunTime
                     .getNodeText());
@@ -625,10 +624,10 @@ public class JS7RunTimeConverter {
 
     private static AssignedCalendars createWorkingCalendar(String timeZone) {
         AssignedCalendars c = new AssignedCalendars();
-        c.setCalendarName(JS7Converter.CONFIG.getScheduleConfig().getDefaultWorkingDayCalendarName());
+        c.setCalendarName(JS12JS7Converter.CONFIG.getScheduleConfig().getDefaultWorkingDayCalendarName());
         c.setTimeZone(timeZone);
         if (c.getTimeZone() == null) {
-            c.setTimeZone(JS7Converter.CONFIG.getScheduleConfig().getDefaultTimeZone());
+            c.setTimeZone(JS12JS7Converter.CONFIG.getScheduleConfig().getDefaultTimeZone());
         }
         c.setIncludes(new Frequencies());
         return c;

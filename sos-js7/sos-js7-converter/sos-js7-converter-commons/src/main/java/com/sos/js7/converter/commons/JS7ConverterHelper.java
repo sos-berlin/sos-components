@@ -4,14 +4,15 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -24,20 +25,31 @@ import org.w3c.dom.Node;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
+import com.sos.inventory.model.board.Board;
+import com.sos.inventory.model.job.Job;
+import com.sos.inventory.model.lock.Lock;
+import com.sos.inventory.model.script.Script;
+import com.sos.joc.model.agent.transfer.Agent;
+import com.sos.js7.converter.commons.agent.JS7AgentConverter;
+import com.sos.js7.converter.commons.config.JS7ConverterConfig;
+import com.sos.js7.converter.commons.config.json.JS7Agent;
 import com.sos.js7.converter.commons.report.ConverterReport;
 
 public class JS7ConverterHelper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JS7ConverterHelper.class);
 
-    public static ObjectMapper JSON_OM = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            .configure(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true)
-            .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-            .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
+    public static ObjectMapper JSON_OM = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
+            SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
+
+    public final static String JS7_NEW_LINE = "\n";
 
     private final static Set<Character> QUOTED_CHARS = new HashSet<>(Arrays.asList('\"', '$', '\n'));
+
+    private static int converterNameCounter = 0;
 
     public static String stringValue(String val) {
         return val == null ? null : StringUtils.strip(val.trim(), "\"");
@@ -217,7 +229,7 @@ public class JS7ConverterHelper {
         if (nmap == null) {
             return null;
         }
-        Map<String, String> map = new HashMap<>();
+        Map<String, String> map = new TreeMap<>();
         for (int i = 0; i < nmap.getLength(); i++) {
             Node n = nmap.item(i);
             map.put(n.getNodeName().trim(), n.getNodeValue().trim());
@@ -243,7 +255,7 @@ public class JS7ConverterHelper {
 
     public static String nodeToString(Node node) {
         try {
-            return SOSXML.nodeToString(node, true, false);
+            return SOSXML.nodeToString(node, true, 0);
         } catch (Exception e) {
             return node + "";
         }
@@ -324,4 +336,138 @@ public class JS7ConverterHelper {
         return i > -1 ? p.substring(i + 1) : p;
     }
 
+    public static Path resolvePath(Path parent, String name) {
+        try {
+            return parent.resolve(name);
+        } catch (Throwable e) {
+            LOGGER.error(String.format("[%s][%s]%s", parent, name, e.toString()), e);
+            ConverterReport.INSTANCE.addErrorRecord(parent, name, e.toString());
+            return null;
+        }
+    }
+
+    public static Job setFromConfig(JS7ConverterConfig config, Job j) {
+        if (config.getJobConfig().getForcedGraceTimeout() != null) {
+            j.setGraceTimeout(config.getJobConfig().getForcedGraceTimeout());
+        }
+        if (config.getJobConfig().getForcedParallelism() != null) {
+            j.setParallelism(config.getJobConfig().getForcedParallelism());
+        }
+        if (config.getJobConfig().getForcedFailOnErrWritten() != null) {
+            j.setFailOnErrWritten(config.getJobConfig().getForcedFailOnErrWritten());
+        }
+        return j;
+    }
+
+    public static String getWorkflowName(Path workflowPath) {
+        return workflowPath.getFileName().toString().replace(".workflow.json", "");
+    }
+
+    public static Path getSchedulePathFromJS7Path(Path workflowPath, String workflowName, String additionalName) {
+        Path parent = workflowPath.getParent();
+        if (parent == null) {
+            parent = Paths.get("");
+        }
+        return JS7ConverterHelper.resolvePath(parent, workflowName + additionalName + ".schedule.json");
+    }
+
+    public static Path getFileOrderSourcePathFromJS7Path(Path workflowPath, String workflowName) {
+        Path parent = workflowPath.getParent();
+        if (parent == null) {
+            parent = Paths.get("");
+        }
+        return JS7ConverterHelper.resolvePath(parent, workflowName + ".fileordersource.json");
+    }
+
+    public static Path getNoticeBoardPathFromJS7Path(Path workflowPath, String boardName) {
+        Path parent = workflowPath == null ? null : workflowPath.getParent();
+        if (parent == null) {
+            parent = Paths.get("");
+        }
+        return parent.resolve(boardName + ".noticeboard.json");
+    }
+
+    public static void createNoticeBoardFromWorkflowPath(JS7ConverterResult result, Path workflowPath, String boardName, String boardTitle) {
+        result.add(getNoticeBoardPathFromJS7Path(workflowPath, boardName), createNoticeBoard(boardTitle));
+    }
+
+    public static void createNoticeBoardByParentPath(JS7ConverterResult result, Path parentPath, String boardName, String boardTitle) {
+        result.add(parentPath.resolve(boardName + ".noticeboard.json"), createNoticeBoard(boardTitle));
+    }
+
+    private static Board createNoticeBoard(String boardTitle) {
+        Board b = new Board();
+        b.setTitle(boardTitle);
+        b.setEndOfLife("$js7EpochMilli + 1 * 24 * 60 * 60 * 1000");
+        b.setExpectOrderToNoticeId("replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2})#.*$', '$1')");
+        b.setPostOrderToNoticeId("replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2})#.*$', '$1')");
+        return b;
+    }
+
+    public static Path getJS7ObjectPath(Path path) {
+        Path output = path.getRoot() == null ? Paths.get("") : path.getRoot();
+        for (int i = 0; i < path.getNameCount(); i++) {
+            output = output.resolve(getJS7ObjectName(path, path.getName(i).toString()));
+        }
+        return output;
+    }
+
+    public static String getJS7ObjectName(String oldName) {
+        return getJS7ObjectName(null, oldName);
+    }
+
+    public static String getJS7ObjectName(Path oldPath, String oldName) {
+        String error = SOSCheckJavaVariableName.check(oldName);
+        if (error == null) {
+            return oldName;
+        }
+        String newName = SOSCheckJavaVariableName.makeStringRuleConform(oldName);
+        if (SOSString.isEmpty(newName)) {
+            converterNameCounter++;
+            newName = "js7_converter_name_" + converterNameCounter;
+        }
+        ConverterReport.INSTANCE.addAnalyzerRecord(oldPath, "MAKE STRING RULE CONFORM", "[changed][" + oldName + "]" + newName);
+        return newName;
+    }
+
+    public static JS7ConverterResult convertAgents(JS7ConverterResult result, List<JS7Agent> agents) {
+        for (JS7Agent agent : agents) {
+            Agent a = null;
+            if (agent.getStandaloneAgent() != null) {
+                a = new Agent();
+                a.setStandaloneAgent(JS7AgentConverter.convertStandaloneAgent(agent));
+            } else if (agent.getAgentCluster() != null) {
+                a = new Agent();
+                a.setAgentCluster(JS7AgentConverter.convertAgentCluster(agent));
+                a.setSubagentClusters(JS7AgentConverter.convertSubagentClusters(agent));
+            }
+            if (a == null) {
+                ConverterReport.INSTANCE.addErrorRecord("[agent=" + agent.getJS7AgentName()
+                        + "][cannot be converted]missing standalone or agentCluster");
+            } else {
+                result.add(Paths.get(agent.getJS7AgentName() + ".agent.json"), a);
+            }
+        }
+        return result;
+    }
+
+    public static JS7ConverterResult convertIncludeScripts(JS7ConverterResult result, Map<String, String> includeScripts) {
+        for (Map.Entry<String, String> e : includeScripts.entrySet()) {
+            Script si = new Script();
+            si.setScript(e.getValue());
+
+            result.add(Paths.get(e.getKey() + ".includescript.json"), si);
+        }
+        return result;
+    }
+
+    public static JS7ConverterResult convertLocks(JS7ConverterResult result, Map<String, Integer> locks) {
+        for (Map.Entry<String, Integer> e : locks.entrySet()) {
+            Lock l = new Lock();
+            l.setTitle(e.getKey());
+            l.setLimit(e.getValue());
+            result.add(Paths.get(e.getKey() + ".lock.json"), l);
+        }
+        return result;
+    }
 }

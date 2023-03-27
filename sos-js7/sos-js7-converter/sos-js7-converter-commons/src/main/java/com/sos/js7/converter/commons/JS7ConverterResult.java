@@ -11,7 +11,9 @@ import com.sos.inventory.model.board.Board;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.jobresource.JobResource;
+import com.sos.inventory.model.lock.Lock;
 import com.sos.inventory.model.schedule.Schedule;
+import com.sos.inventory.model.script.Script;
 import com.sos.joc.model.agent.transfer.Agent;
 import com.sos.js7.converter.commons.JS7ExportObjects.JS7ExportObject;
 
@@ -24,6 +26,8 @@ public class JS7ConverterResult {
     private JS7ExportObjects<Board> boards = new JS7ExportObjects<>();
     private JS7ExportObjects<JobResource> jobResources = new JS7ExportObjects<>();
     private JS7ExportObjects<FileOrderSource> fileOrderSources = new JS7ExportObjects<>();
+    private JS7ExportObjects<Script> includeScripts = new JS7ExportObjects<>();
+    private JS7ExportObjects<Lock> locks = new JS7ExportObjects<>();
 
     private PostNotices postNotices = this.new PostNotices();
     private Set<String> applications = new HashSet<>();
@@ -59,6 +63,14 @@ public class JS7ConverterResult {
 
     public void add(Path path, FileOrderSource val) {
         fileOrderSources.addItem(path, val);
+    }
+
+    public void add(Path path, Script val) {
+        includeScripts.addItem(path, val);
+    }
+
+    public void add(Path path, Lock val) {
+        locks.addItem(path, val);
     }
 
     @SuppressWarnings("rawtypes")
@@ -119,6 +131,14 @@ public class JS7ConverterResult {
 
     public JS7ExportObjects<FileOrderSource> getFileOrderSources() {
         return fileOrderSources;
+    }
+
+    public JS7ExportObjects<Script> getIncludeScripts() {
+        return includeScripts;
+    }
+
+    public JS7ExportObjects<Lock> getLocks() {
+        return locks;
     }
 
     public PostNotices getPostNotices() {

@@ -26,7 +26,7 @@ import com.sos.js7.converter.js1.common.lock.LockUse;
 import com.sos.js7.converter.js1.common.processclass.ProcessClass;
 import com.sos.js7.converter.js1.common.runtime.RunTime;
 import com.sos.js7.converter.js1.input.DirectoryParser.DirectoryParserResult;
-import com.sos.js7.converter.js1.output.js7.JS7Converter;
+import com.sos.js7.converter.js1.output.js7.JS12JS7Converter;
 
 public abstract class ACommonJob {
 
@@ -229,7 +229,7 @@ public abstract class ACommonJob {
             return null;
         }
         try {
-            Path p = JS7Converter.findIncludeFile(pr, currentPath, Paths.get(includePath + EConfigFileExtensions.PROCESS_CLASS.extension()));
+            Path p = JS12JS7Converter.findIncludeFile(pr, currentPath, Paths.get(includePath + EConfigFileExtensions.PROCESS_CLASS.extension()));
             if (p != null) {
                 return new ProcessClass(p);
             } else {

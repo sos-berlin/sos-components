@@ -29,11 +29,14 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.exception.SOSXMLDoctypeException;
 import com.sos.commons.xml.exception.SOSXMLXPathException;
 
 public class SOSXML {
+
+    public static final String DEFAULT_XML_DECLARATION = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
 
     public static Document parse(StringBuilder xml) throws Exception {
         return parse(xml.toString());
@@ -159,15 +162,28 @@ public class SOSXML {
         return builder;
     }
 
-    public static String nodeToString(Node node) throws Exception {
-        return nodeToString(node, true, true);
+    public static void toFile(Path outputFile, Node node) throws Exception {
+        if (outputFile == null || node == null) {
+            return;
+        }
+        SOSPath.append(outputFile, DEFAULT_XML_DECLARATION, System.lineSeparator());
+        SOSPath.append(outputFile, nodeToString(node));
     }
 
-    public static String nodeToString(Node node, boolean omitXmlDeclaration, boolean indent) throws Exception {
+    public static String nodeToString(Node node) throws Exception {
+        return nodeToString(node, true, 4);
+    }
+
+    public static String nodeToString(Node node, boolean omitXmlDeclaration, int indentAmount) throws Exception {
         StringWriter sw = new StringWriter();
         Transformer t = TransformerFactory.newInstance().newTransformer();
         t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, omitXmlDeclaration ? "yes" : "no");
-        t.setOutputProperty(OutputKeys.INDENT, indent ? "yes" : "no");
+        if (indentAmount > 0) {
+            t.setOutputProperty(OutputKeys.INDENT, "yes");
+            t.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", String.valueOf(indentAmount));
+        } else {
+            t.setOutputProperty(OutputKeys.INDENT, "no");
+        }
         t.transform(new DOMSource(node), new StreamResult(sw));
         return sw.toString().trim();
     }

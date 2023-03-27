@@ -1,8 +1,8 @@
 package com.sos.js7.converter.js1.output.js7.helper;
 
 import com.sos.commons.util.SOSString;
+import com.sos.js7.converter.commons.JS7ConverterHelper;
 import com.sos.js7.converter.js1.common.jobchain.node.JobChainNode;
-import com.sos.js7.converter.js1.output.js7.JS7Converter;
 
 public class JobChainStateHelper {
 
@@ -32,7 +32,7 @@ public class JobChainStateHelper {
         if (SOSString.isEmpty(val)) {
             return null;
         }
-        return JS7Converter.getJS7ObjectName(node.getPath(), val);
+        return JS7ConverterHelper.getJS7ObjectName(node.getPath(), val);
     }
 
     public String getJS1State() {

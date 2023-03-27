@@ -17,7 +17,7 @@ import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSGzip;
 import com.sos.commons.util.SOSPath;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
-import com.sos.js7.converter.commons.config.JS7ConverterConfig.ParserConfig;
+import com.sos.js7.converter.commons.config.items.ParserConfig;
 import com.sos.js7.converter.commons.output.ZipCompress;
 import com.sos.js7.converter.commons.report.ParserReport;
 import com.sos.js7.converter.js1.common.EConfigFileExtensions;

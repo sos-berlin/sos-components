@@ -10,7 +10,7 @@ import com.sos.js7.converter.js1.common.runtime.CalendarsHelper;
 
 public class JS7JsonFilesConverter {
 
-    public static void convert(JS7Converter js7Converter, JS7ConverterResult result) {
+    public static void convert(JS12JS7Converter js7Converter, JS7ConverterResult result) {
         if (js7Converter.getPr().getJsonFiles().size() > 0) {
             ParserReport.INSTANCE.addAnalyzerRecord("JSON FILES", "START");
             for (Path file : js7Converter.getPr().getJsonFiles()) {

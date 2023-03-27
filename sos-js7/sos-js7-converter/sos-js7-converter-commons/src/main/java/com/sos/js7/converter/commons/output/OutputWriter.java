@@ -17,11 +17,9 @@ public class OutputWriter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OutputWriter.class);
 
-    public static final ObjectMapper OM = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            .configure(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true)
-            .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-            .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false)
-            .configure(SerializationFeature.INDENT_OUTPUT, true);
+    public static final ObjectMapper OM = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
+            SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false).configure(
+                    SerializationFeature.INDENT_OUTPUT, true);
 
     public static <T> void write(Path directory, JS7ExportObjects<T> objects) throws IOException {
         String method = "write";
@@ -30,7 +28,8 @@ public class OutputWriter {
             return;
         }
         // directory = directory.toAbsolutePath();
-        LOGGER.info(String.format("[%s][directory=%s][start]%s items", method, directory, objects.getItems().size()));
+        // LOGGER.info(String.format("[%s][directory=%s][start]%s items", method, directory, objects.getItems().size()));
+        LOGGER.info(String.format("[%s][directory=%s]%s items", method, directory, objects.getItems().size()));
         for (JS7ExportObjects<T>.JS7ExportObject item : objects.getItems()) {
             Path outputPath = directory.resolve(item.getUniquePath().getPath());
             Path parent = outputPath.getParent();
@@ -40,7 +39,7 @@ public class OutputWriter {
             LOGGER.trace(String.format("[%s]file=%s", method, outputPath));
             OM.writeValue(SOSPath.toFile(outputPath), item.getObject());
         }
-        LOGGER.info(String.format("[%s][directory=%s][end]", method, directory));
+        // LOGGER.info(String.format("[%s][directory=%s][end]", method, directory));
     }
 
     public static void prepareDirectory(Path directory) throws IOException {
