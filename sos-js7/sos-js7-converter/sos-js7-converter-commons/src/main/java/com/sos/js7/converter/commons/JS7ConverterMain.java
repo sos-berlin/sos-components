@@ -136,6 +136,7 @@ public abstract class JS7ConverterMain {
 
     private JS7ConverterConfig doConfig(JS7ConverterConfig config, Path configFile) throws Exception {
         if (configFile == null) {
+            LOGGER.info("[doConfig]use defaults");
             config.getGenerateConfig().withWorkflows(true).withSchedules(true).withLocks(true).withCyclicOrders(false);
         } else {
             config.parse(configFile);

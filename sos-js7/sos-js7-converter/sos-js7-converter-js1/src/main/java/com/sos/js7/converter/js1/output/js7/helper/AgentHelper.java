@@ -14,7 +14,7 @@ public class AgentHelper {
         this.js7Agent = new JS7Agent();
         this.js7Agent.setJS7AgentName(js7AgentName);
         if (processClass != null) {
-            this.js7Agent.setJS1AgentName(processClass.getName());
+            this.js7Agent.setOriginalAgentName(processClass.getName());
         }
     }
 

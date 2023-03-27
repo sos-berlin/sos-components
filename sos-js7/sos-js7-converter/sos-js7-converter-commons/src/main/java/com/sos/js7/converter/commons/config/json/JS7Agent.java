@@ -23,7 +23,7 @@ public class JS7Agent extends Agent {
 
     // extra
     private String js7AgentName;
-    private String js1AgentName;
+    private String originalAgentName;
 
     @JsonProperty("platform")
     public String getPlatform() {
@@ -67,12 +67,12 @@ public class JS7Agent extends Agent {
         js7AgentName = val;
     }
 
-    public String getJS1AgentName() {
-        return js1AgentName;
+    public String getOriginalAgentName() {
+        return originalAgentName;
     }
 
-    public void setJS1AgentName(String val) {
-        js1AgentName = val;
+    public void setOriginalAgentName(String val) {
+        originalAgentName = val;
     }
 
     @Override

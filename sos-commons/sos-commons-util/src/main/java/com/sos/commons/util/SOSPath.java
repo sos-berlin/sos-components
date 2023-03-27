@@ -1,5 +1,6 @@
 package com.sos.commons.util;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -14,6 +15,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
+import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -496,6 +498,53 @@ public class SOSPath {
             }
         }
         return sb;
+    }
+
+    public static void append(Path outputFile, String content) throws Exception {
+        append(outputFile, content, (String) null);
+    }
+
+    public static void append(Path outputFile, String content, String newLine) throws Exception {
+        append(outputFile, content, newLine, StandardCharsets.UTF_8);
+    }
+
+    public static void append(Path outputFile, String content, Charset cs) throws Exception {
+        append(outputFile, content, null, cs);
+    }
+
+    public static void append(Path outputFile, String content, String newLine, Charset cs) throws Exception {
+        write(outputFile, content, newLine, cs, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+    }
+
+    public static void overwrite(Path outputFile, String content) throws Exception {
+        overwrite(outputFile, content, (String) null);
+    }
+
+    public static void overwrite(Path outputFile, String content, String newLine) throws Exception {
+        overwrite(outputFile, content, newLine, StandardCharsets.UTF_8);
+    }
+
+    public static void overwrite(Path outputFile, String content, Charset cs) throws Exception {
+        overwrite(outputFile, content, null, cs);
+    }
+
+    public static void overwrite(Path outputFile, String content, String newLine, Charset cs) throws Exception {
+        write(outputFile, content, newLine, cs, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+    }
+
+    public static void write(Path outputFile, String content, List<OpenOption> openOptions) throws Exception {
+        write(outputFile, content, null, StandardCharsets.UTF_8, openOptions == null ? null : openOptions.stream().toArray(OpenOption[]::new));
+    }
+
+    public static void write(Path outputFile, String content, String newLine, Charset cs, OpenOption... openOptions) throws Exception {
+        OpenOption[] op = openOptions == null ? new OpenOption[] { StandardOpenOption.CREATE } : openOptions;
+        try (BufferedWriter writer = Files.newBufferedWriter(outputFile, cs == null ? StandardCharsets.UTF_8 : cs, op)) {
+            writer.write(content);
+            writer.flush();
+            if (newLine != null) {
+                writer.write(newLine);
+            }
+        }
     }
 
     public class SOSPathResult {

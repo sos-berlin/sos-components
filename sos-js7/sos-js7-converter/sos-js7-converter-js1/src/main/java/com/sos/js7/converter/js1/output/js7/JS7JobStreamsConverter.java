@@ -50,7 +50,7 @@ public class JS7JobStreamsConverter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JS7JobStreamsConverter.class);
 
-    private JS7Converter js7Converter;
+    private JS12JS7Converter js7Converter;
     private Map<String, List<JobStreamJS1JS7Job>> added = new HashMap<>();
     private Map<String, JobStreamConditionsHelper> notResolvedConditions = new HashMap<>();
     private Map<String, List<Instruction>> allInstructions = new HashMap<>();
@@ -61,7 +61,7 @@ public class JS7JobStreamsConverter {
         return JS7ConverterHelper.JSON_OM.readerForListOf(JobStream.class).readValue(SOSPath.readFile(file, StandardCharsets.UTF_8));
     }
 
-    public static void convert(JS7Converter js7Converter, JS7ConverterResult result, Path file, List<JobStream> jobStreams) {
+    public static void convert(JS12JS7Converter js7Converter, JS7ConverterResult result, Path file, List<JobStream> jobStreams) {
         try {
             JS7JobStreamsConverter c = new JS7JobStreamsConverter();
             c.js7Converter = js7Converter;
@@ -100,7 +100,7 @@ public class JS7JobStreamsConverter {
                 Map<String, JobStreamJS1JS7Job> allConvertedJobStreamsJobs = JobStreamsHelper.convert(js7Converter, result, file, jobStream);
 
                 Path workflowPath = getWorkflowPath(result, jobStream);
-                String workflowName = js7Converter.getWorkflowName(workflowPath);
+                String workflowName = JS7ConverterHelper.getWorkflowName(workflowPath);
 
                 List<Instruction> in = new ArrayList<>();
                 if (starters.size() == 1) {
@@ -182,7 +182,7 @@ public class JS7JobStreamsConverter {
     private void createWorkflow(JS7ConverterResult result, Path workflowPath, String title, List<Instruction> in, List<JobStreamJS1JS7Job> jobs) {
         Workflow w = new Workflow();
         w.setTitle(title);
-        w.setTimeZone(JS7Converter.CONFIG.getWorkflowConfig().getDefaultTimeZone());
+        w.setTimeZone(JS12JS7Converter.CONFIG.getWorkflowConfig().getDefaultTimeZone());
         w.setInstructions(in);
 
         Jobs js = new Jobs();
@@ -206,11 +206,11 @@ public class JS7JobStreamsConverter {
         List<JobStreamClosingJob> closingJobs = convertJobChilds(method, result, allConvertedJobStreamsJobs, allJobs, workflowPath, workflowName, in,
                 in, startJob);
         if (closingJobs != null && closingJobs.size() > 0) {
-            LOGGER.info("[CLOSING]WORKFLOW_END");
+            LOGGER.debug("[CLOSING]WORKFLOW_END");
             add2nestedClosingJobs(closingJobs);
             handleNestedClosingJobs(method + "-closingJobs", result, allConvertedJobStreamsJobs, allJobs, workflowPath, workflowName, in, in);
         }
-        LOGGER.info("[CLOSING]WORKFLOW_END_END");
+        LOGGER.debug("[CLOSING]WORKFLOW_END_END");
 
         handleNestedClosingJobs(method, result, allConvertedJobStreamsJobs, allJobs, workflowPath, workflowName, in, in);
 
@@ -233,7 +233,7 @@ public class JS7JobStreamsConverter {
             List<Instruction> in, List<Instruction> currentIn, JobStreamJS1JS7Job js1js7Job) {
 
         String method = "convertJobChilds";
-        LOGGER.info(String.format("[%s][%s][%s][startJob=%s]...", method, workflowName, range, js1js7Job.getJS1Job().getName()));
+        LOGGER.debug(String.format("[%s][%s][%s][startJob=%s]...", method, workflowName, range, js1js7Job.getJS1Job().getName()));
 
         JobStreamJS1JS7Job child = js1js7Job;
         List<JobStreamClosingJob> closingJobs = null;
@@ -250,14 +250,14 @@ public class JS7JobStreamsConverter {
                     // add2nestedClosingJobs(closingJobs);
                     // closingJobs = null;
                 }
-                LOGGER.info(String.format("[%s][%s][%s][child=%s][children=0]closingJobs=%s", method, workflowName, range, child, closingJobs));
+                LOGGER.debug(String.format("[%s][%s][%s][child=%s][children=0]closingJobs=%s", method, workflowName, range, child, closingJobs));
                 child = null;
 
                 handleNestedClosingJobs(method + "-childen=0", result, allConvertedJobStreamsJobs, allJobs, workflowPath, workflowName, in,
                         currentIn);
                 break;
             case 1:
-                LOGGER.info(String.format("[%s][%s][%s][child=%s][children=1]...", method, workflowName, range, child));
+                LOGGER.debug(String.format("[%s][%s][%s][child=%s][children=1]...", method, workflowName, range, child));
 
                 child = children.get(0);
                 addNamedInstruction(child, currentIn, workflowPath, workflowName);
@@ -269,12 +269,12 @@ public class JS7JobStreamsConverter {
                         currentIn);
                 break;
             default:
-                LOGGER.info(String.format("  [%s][%s][][child=%s][children=%s]createForkJoin ...", method, workflowName, range, child, children
+                LOGGER.debug(String.format("  [%s][%s][][child=%s][children=%s]createForkJoin ...", method, workflowName, range, child, children
                         .size()));
                 JobStreamForkJoinResult fjr = createForkJoin(result, allConvertedJobStreamsJobs, allJobs, workflowPath, workflowName, currentIn, null,
                         js1js7Job, children);
 
-                LOGGER.info("[FORK_JOIN]" + fjr);
+                LOGGER.debug("[FORK_JOIN]" + fjr);
                 // in.add(fjr.getForkJoin());
                 child = null; // TODO
                 break;
@@ -283,7 +283,7 @@ public class JS7JobStreamsConverter {
 
         // handleNestedClosingJobs(result, allConvertedJobStreamsJobs, allJobs, workflowPath, workflowName, in, currentIn);
 
-        LOGGER.info(String.format("[%s][%s][%s][%s]end", method, workflowName, range, js1js7Job.getJS1Job().getName()));
+        LOGGER.debug(String.format("[%s][%s][%s][%s]end", method, workflowName, range, js1js7Job.getJS1Job().getName()));
         return closingJobs;
     }
 
@@ -372,7 +372,7 @@ public class JS7JobStreamsConverter {
             JobStreamJS1JS7Job js1js7Job, List<JobStreamJS1JS7Job> children) {
         String method = "createForkJoin";
 
-        LOGGER.info(String.format("[%s][%s][%s]children=%s...", method, workflowName, js1js7Job.getJS1Job().getName(), children.size()));
+        LOGGER.debug(String.format("[%s][%s][%s]children=%s...", method, workflowName, js1js7Job.getJS1Job().getName(), children.size()));
 
         Map<String, List<JobStreamJS1JS7Job>> forkChildrenTmp = new HashMap<>();
         int i = 1;
@@ -384,7 +384,7 @@ public class JS7JobStreamsConverter {
             JobStreamFindChildsResult fcr = findChildsPreview(allConvertedJobStreamsJobs, allJobs, workflowName, child);
             switch (fcr.getJobs().size()) {
             case 0:
-                LOGGER.info(String.format("  [%s][%s][child=%s]child jobs=0", method, workflowName, child.getJS7JobName()));
+                LOGGER.debug(String.format("  [%s][%s][child=%s]child jobs=0", method, workflowName, child.getJS7JobName()));
 
                 fc = new ArrayList<>();
                 fc.add(child);
@@ -393,7 +393,7 @@ public class JS7JobStreamsConverter {
                 break;
             case 1:
                 c = fcr.getJobs().get(0);
-                LOGGER.info(String.format("  [%s][%s][child=%s][child jobs=1]%s", method, workflowName, child.getJS7JobName(), c.getJS7JobName()));
+                LOGGER.debug(String.format("  [%s][%s][child=%s][child jobs=1]%s", method, workflowName, child.getJS7JobName(), c.getJS7JobName()));
 
                 fc = forkChildrenTmp.get(c.getJS7JobName());
                 if (fc == null) {
@@ -403,7 +403,7 @@ public class JS7JobStreamsConverter {
                 forkChildrenTmp.put(c.getJS7JobName(), fc);
                 break;
             default:
-                LOGGER.info(String.format("  [%s][%s][child=%s][child jobs=%s]%s", method, workflowName, child.getJS7JobName(), fcr.getJobs().size(),
+                LOGGER.debug(String.format("  [%s][%s][child=%s][child jobs=%s]%s", method, workflowName, child.getJS7JobName(), fcr.getJobs().size(),
                         child.getJS7JobName()));
 
                 fc = new ArrayList<>();
@@ -452,7 +452,7 @@ public class JS7JobStreamsConverter {
             i++;
         }
 
-        LOGGER.info(String.format("[%s][%s][%s][child branches=%s]forkChildren=%s", method, workflowName, js1js7Job.getJS1Job().getName(), lb.size(),
+        LOGGER.debug(String.format("[%s][%s][%s][child branches=%s]forkChildren=%s", method, workflowName, js1js7Job.getJS1Job().getName(), lb.size(),
                 forkChildren));
 
         ForkJoin forkJoin = new ForkJoin();
@@ -460,7 +460,7 @@ public class JS7JobStreamsConverter {
         List<JobStreamClosingJob> closingJobs = null;
         for (JobStreamJS7Branch b : lb) {
 
-            LOGGER.info(String.format("[%s][%s][%s][child branch]%s", method, workflowName, js1js7Job.getJS1Job().getName(), b));
+            LOGGER.debug(String.format("[%s][%s][%s][child branch]%s", method, workflowName, js1js7Job.getJS1Job().getName(), b));
 
             List<Instruction> bwIn = new ArrayList<>();
             if (b.getChildBranches().size() > 0) {
@@ -472,7 +472,7 @@ public class JS7JobStreamsConverter {
                     addNamedInstruction(bb.getChildJob(), subBwIn, workflowPath, workflowName);
                     closingJobs = convertJobChilds(method + "-subbranches", result, allConvertedJobStreamsJobs, allJobs, workflowPath, workflowName,
                             bwIn, subBwIn, bb.getChildJob());
-                    LOGGER.info("[CLOSING][SUBBRANCH][" + bb.getChildJob() + "]" + closingJobs);
+                    LOGGER.debug("[CLOSING][SUBBRANCH][" + bb.getChildJob() + "]" + closingJobs);
 
                     BranchWorkflow bw = new BranchWorkflow(subBwIn, null);
                     subBranches.add(new Branch(bb.getName(), bw));
@@ -497,7 +497,7 @@ public class JS7JobStreamsConverter {
                             handleNestedClosingJobs(method + "-closingjobs-nested", result, allConvertedJobStreamsJobs, allJobs, workflowPath,
                                     workflowName, bwIn, bwIn);
                             // TODO
-                            LOGGER.info("[CLOSING][NESTED]" + closingJobs);
+                            LOGGER.debug("[CLOSING][NESTED]" + closingJobs);
                         }
                     }
                 }
@@ -518,9 +518,9 @@ public class JS7JobStreamsConverter {
                 BranchWorkflow bw = new BranchWorkflow(bwIn, null);
                 branches.add(new Branch(b.getName(), bw));
 
-                LOGGER.info("[CLOSING][CHILD_JOB][" + b.getChildJob() + "]" + closingJobs);
+                LOGGER.debug("[CLOSING][CHILD_JOB][" + b.getChildJob() + "]" + closingJobs);
             }
-            LOGGER.info(String.format("[%s][%s][%s][branch]%s", method, workflowName, js1js7Job.getJS1Job().getName(), b));
+            LOGGER.debug(String.format("[%s][%s][%s][branch]%s", method, workflowName, js1js7Job.getJS1Job().getName(), b));
 
             handleNestedClosingJobs(method + "-branches", result, allConvertedJobStreamsJobs, allJobs, workflowPath, workflowName, in, bwIn);
         }
@@ -540,7 +540,7 @@ public class JS7JobStreamsConverter {
 
         handleNestedClosingJobs(method + "-end", result, allConvertedJobStreamsJobs, allJobs, workflowPath, workflowName, in, in);
 
-        LOGGER.info(String.format("[%s][%s][%s]end-", method, workflowName, js1js7Job.getJS1Job().getName()));
+        LOGGER.debug(String.format("[%s][%s][%s]end-", method, workflowName, js1js7Job.getJS1Job().getName()));
 
         return null;
     }
@@ -686,7 +686,7 @@ public class JS7JobStreamsConverter {
                                     }
                                     toRemove.add(jobStreamJob);
 
-                                    LOGGER.info(String.format("[%s][%s][%s][%s][expr=%s][hasAllJobs]all jobs found", method, workflowName, js1js7Job
+                                    LOGGER.debug(String.format("[%s][%s][%s][%s][expr=%s][hasAllJobs]all jobs found", method, workflowName, js1js7Job
                                             .getJS1Job().getName(), jobStreamJob.getJob(), expr));
                                 } else {
                                     notResolvedConditions.put(jobStreamJob.getJob(), new JobStreamConditionsHelper(js1js7Job, conditions,
@@ -696,7 +696,7 @@ public class JS7JobStreamsConverter {
 
                                     String tmpExpr = " " + expr + " ";// job1 -> job10
                                     if (tmpExpr.contains(" " + js1js7Job.getJS1Job().getName() + " ")) {
-                                        LOGGER.info(msg);
+                                        LOGGER.debug(msg);
                                     } else {
                                         LOGGER.trace(msg);
                                     }
@@ -737,10 +737,10 @@ public class JS7JobStreamsConverter {
 
     private Path getWorkflowPath(JS7ConverterResult result, JobStream js1JobStream) {
         Path firstStarterFirstJob = Paths.get(js1JobStream.getJobstreamStarters().get(0).getJobs().get(0).getJob());
-        Path js7Path = js7Converter.getJS7ObjectPath(firstStarterFirstJob.getParent());
+        Path js7Path = JS7ConverterHelper.getJS7ObjectPath(firstStarterFirstJob.getParent());
 
         StringBuilder sb = new StringBuilder();
-        return js7Path.resolve(sb.append(js7Converter.getUniqueWorkflowName(JS7Converter.getJS7ObjectName(js7Path, js1JobStream.getJobStream()))
+        return js7Path.resolve(sb.append(js7Converter.getUniqueWorkflowName(JS7ConverterHelper.getJS7ObjectName(js7Path, js1JobStream.getJobStream()))
                 .toString()) + ".workflow.json");
     }
 

@@ -24,14 +24,12 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
 import com.sos.controller.model.workflow.Workflow;
-import com.sos.inventory.model.board.Board;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.AssignedNonWorkingDayCalendars;
 import com.sos.inventory.model.calendar.Calendar;
@@ -70,7 +68,6 @@ import com.sos.joc.model.agent.ClusterAgent;
 import com.sos.joc.model.agent.SubAgent;
 import com.sos.joc.model.agent.SubAgentId;
 import com.sos.joc.model.agent.SubagentCluster;
-import com.sos.joc.model.agent.transfer.Agent;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 import com.sos.js7.converter.commons.JS7ConverterResult;
 import com.sos.js7.converter.commons.JS7ExportObjects.JS7ExportObject;
@@ -149,9 +146,9 @@ import com.sos.js7.converter.js1.output.js7.helper.WorkflowHelper;
  * TODO Order state - Schedule start position<br/>
  * TODO YADE without settings - generate jobresource ... ? -<br/>
  */
-public class JS7Converter {
+public class JS12JS7Converter {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JS7Converter.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(JS12JS7Converter.class);
 
     public static JS7ConverterConfig CONFIG = new JS7ConverterConfig();
 
@@ -171,8 +168,6 @@ public class JS7Converter {
     private static final String YADE_JOBRESOURCE_SETTINGS_ENV = "YADE_XML";
     private static final String YADE_JOB_SETTINGS_ENV = "YADE_SETTINGS";
     private static final String YADE_JOB_PROFILE_ENV = "YADE_PROFILE";
-
-    private static int CONVERTER_NAME_COUNTER = 0;
 
     private ConverterObjects converterObjects;
     private DirectoryParserResult pr;
@@ -291,7 +286,7 @@ public class JS7Converter {
     private static JS7ConverterResult convert(DirectoryParserResult pr) {
         JS7ConverterResult result = new JS7ConverterResult();
 
-        JS7Converter c = new JS7Converter();
+        JS12JS7Converter c = new JS12JS7Converter();
         c.pr = pr;
 
         c.inputDirPath = pr.getRoot().getPath().toString();
@@ -337,24 +332,8 @@ public class JS7Converter {
 
     private void convertAgents(JS7ConverterResult result) {
         if (CONFIG.getGenerateConfig().getAgents()) {
-            List<JS7Agent> agents = js7Agents.entrySet().stream().map(e -> e.getValue().getJS7Agent()).collect(Collectors.toList());
-            for (JS7Agent agent : agents) {
-                Agent a = null;
-                if (agent.getStandaloneAgent() != null) {
-                    a = new Agent();
-                    a.setStandaloneAgent(JS7AgentConverter.convertStandaloneAgent(agent));
-                } else if (agent.getAgentCluster() != null) {
-                    a = new Agent();
-                    a.setAgentCluster(JS7AgentConverter.convertAgentCluster(agent));
-                    a.setSubagentClusters(JS7AgentConverter.convertSubagentClusters(agent));
-                }
-                if (a == null) {
-                    ConverterReport.INSTANCE.addErrorRecord("[agent=" + agent.getJS7AgentName()
-                            + "][cannot be converted]missing standalone or agentCluster");
-                } else {
-                    result.add(Paths.get(agent.getJS7AgentName() + ".agent.json"), a);
-                }
-            }
+            result = JS7ConverterHelper.convertAgents(result, js7Agents.entrySet().stream().map(e -> e.getValue().getJS7Agent()).collect(Collectors
+                    .toList()));
         }
     }
 
@@ -379,7 +358,7 @@ public class JS7Converter {
                             String replacement = "$1" + boardName + "\"\\]";
                             w = w.replaceAll(regex, replacement);
 
-                            createNoticeBoard(result, eo.getOriginalPath().getPath(), boardName, boardName);
+                            JS7ConverterHelper.createNoticeBoardFromWorkflowPath(result, eo.getOriginalPath().getPath(), boardName, boardName);
 
                             // Generate n ExpectNotices of all workflows
                             List<String> al = new ArrayList<>();
@@ -424,7 +403,7 @@ public class JS7Converter {
 
     private void addSchedulesBasedOnJS1Schedule(JS7ConverterResult result) {
         js1Schedules.entrySet().stream().sorted(Map.Entry.<String, ScheduleHelper> comparingByKey()).forEach(e -> {
-            Path schedulePath = getSchedulePathFromJS7Path(e.getValue().getWorkflows().get(0).getPath(), e.getKey(), "");
+            Path schedulePath = JS7ConverterHelper.getSchedulePathFromJS7Path(e.getValue().getWorkflows().get(0).getPath(), e.getKey(), "");
 
             Schedule schedule = JS7RunTimeConverter.convert(schedulePath, e.getValue().getJS1Schedule(), e.getValue().getTimeZone(), e.getValue()
                     .getWorkflows().stream().map(w -> {
@@ -566,7 +545,7 @@ public class JS7Converter {
                 ConverterReport.INSTANCE.addAnalyzerRecord("", "");
                 ConverterReport.INSTANCE.addAnalyzerRecord("JS7 Agent TO  JS1 Agent", "START");
                 js1ProcessClass2js7Agent.entrySet().forEach(p -> {
-                    ConverterReport.INSTANCE.addAnalyzerRecord(null, p.getValue().getJS7AgentName(), p.getValue().getJS1AgentName());
+                    ConverterReport.INSTANCE.addAnalyzerRecord(null, p.getValue().getJS7AgentName(), p.getValue().getOriginalAgentName());
                 });
                 ConverterReport.INSTANCE.addAnalyzerRecord("JS7 Agent TO  JS1 Agent", "END");
             }
@@ -701,7 +680,7 @@ public class JS7Converter {
         w.setTimeZone(CONFIG.getWorkflowConfig().getDefaultTimeZone());
 
         Jobs js = new Jobs();
-        JobHelper jh = getJob(result, js1Job, jobChainAgent, null);
+        JobHelper jh = getJob(result, js1Job, jobChainAgent, null, null);
         Job job = null;
         if (jh != null) {
             job = jh.getJS7Job();
@@ -729,7 +708,7 @@ public class JS7Converter {
 
         Path workflowPath = mainWorkflowPath == null ? getWorkflowPathFromJS1Path(result, js1Job.getPath(), js7Name) : getWorkflowPathFromJS7Path(
                 result, mainWorkflowPath, mainWorkflowName);
-        String workflowName = getWorkflowName(workflowPath);
+        String workflowName = JS7ConverterHelper.getWorkflowName(workflowPath);
 
         RunTimeHelper rth = convertRunTimeForSchedule("STANDALONE", js1Job.getRunTime(), workflowPath, workflowName, "");
         if (rth != null) {
@@ -873,44 +852,12 @@ public class JS7Converter {
                     s.setPlanOrderAutomatically(CONFIG.getScheduleConfig().planOrders());
                     s.setSubmitOrderToControllerWhenPlanned(CONFIG.getScheduleConfig().submitOrders());
 
-                    return new RunTimeHelper(getSchedulePathFromJS7Path(workflowPath, workflowName, additionalName), s);
+                    return new RunTimeHelper(JS7ConverterHelper.getSchedulePathFromJS7Path(workflowPath, workflowName, additionalName), s);
                 }
-
             } else {
-
             }
         }
         return null;
-    }
-
-    public Path getSchedulePathFromJS7Path(Path workflowPath, String workflowName, String additionalName) {
-        Path parent = workflowPath.getParent();
-        if (parent == null) {
-            parent = Paths.get("");
-        }
-        // return parent.resolve(workflowName + additionalName + ".schedule.json");
-        return resolvePath(parent, workflowName + additionalName + ".schedule.json");
-    }
-
-    private Path getFileOrderSourcePathFromJS7Path(Path workflowPath, String workflowName) {
-        Path parent = workflowPath.getParent();
-        if (parent == null) {
-            parent = Paths.get("");
-        }
-        // return parent.resolve(workflowName + ".fileordersource.json");
-        return resolvePath(parent, workflowName + ".fileordersource.json");
-    }
-
-    private Path getNoticeBoardPathFromJS7Path(Path workflowPath, String boardName) {
-        Path parent = workflowPath.getParent();
-        if (parent == null) {
-            parent = Paths.get("");
-        }
-        return parent.resolve(boardName + ".noticeboard.json");
-    }
-
-    public String getWorkflowName(Path workflowPath) {
-        return workflowPath.getFileName().toString().replace(".workflow.json", "");
     }
 
     private Path getWorkflowPathFromJS1Path(JS7ConverterResult result, Path js1Path, String js7Name) {
@@ -919,10 +866,10 @@ public class JS7Converter {
         if (SOSString.isEmpty(relative)) {
             js7Path = Paths.get("");
         } else {
-            js7Path = getJS7ObjectPath(Paths.get(relative));
+            js7Path = JS7ConverterHelper.getJS7ObjectPath(Paths.get(relative));
         }
         // return js7Path.resolve(js7Name + ".workflow.json");
-        return resolvePath(js7Path, js7Name + ".workflow.json");
+        return JS7ConverterHelper.resolvePath(js7Path, js7Name + ".workflow.json");
     }
 
     public String getUniqueWorkflowName(String name) {
@@ -964,39 +911,7 @@ public class JS7Converter {
             parent = Paths.get("");
         }
         // return parent.resolve(name + ".workflow.json");
-        return resolvePath(parent, name + ".workflow.json");
-    }
-
-    private Path resolvePath(Path parent, String name) {
-        try {
-            return parent.resolve(name);
-        } catch (Throwable e) {
-            LOGGER.error(String.format("[%s][%s]%s", parent, name, e.toString()), e);
-            ConverterReport.INSTANCE.addErrorRecord(parent, name, e.toString());
-            return null;
-        }
-    }
-
-    public Path getJS7ObjectPath(Path path) {
-        Path output = path.getRoot() == null ? Paths.get("") : path.getRoot();
-        for (int i = 0; i < path.getNameCount(); i++) {
-            output = output.resolve(getJS7ObjectName(path, path.getName(i).toString()));
-        }
-        return output;
-    }
-
-    public static String getJS7ObjectName(Path js1Path, String js1Name) {
-        String error = SOSCheckJavaVariableName.check(js1Name);
-        if (error == null) {
-            return js1Name;
-        }
-        String newName = SOSCheckJavaVariableName.makeStringRuleConform(js1Name);
-        if (SOSString.isEmpty(newName)) {
-            CONVERTER_NAME_COUNTER++;
-            newName = "js7_converter_name_" + CONVERTER_NAME_COUNTER;
-        }
-        ConverterReport.INSTANCE.addAnalyzerRecord(js1Path, "MAKE STRING RULE CONFORM", "[changed][" + js1Name + "]" + newName);
-        return newName;
+        return JS7ConverterHelper.resolvePath(parent, name + ".workflow.json");
     }
 
     private List<Instruction> getRetryInstructions(ACommonJob job, List<Instruction> in) {
@@ -1126,7 +1041,8 @@ public class JS7Converter {
         return in;
     }
 
-    public JobHelper getJob(JS7ConverterResult result, ACommonJob job, JS7Agent jobChainAgent, JobChain jobChain) {
+    public JobHelper getJob(JS7ConverterResult result, ACommonJob job, JS7Agent jobChainAgent, JobChain jobChain,
+            JobChainJobHelper jobChainJobHelper) {
         if (job.getMonitors() != null && job.getMonitors().size() > 0) {
             if (!js1JobsWithMonitors.contains(job)) {
                 js1JobsWithMonitors.add(job);
@@ -1147,13 +1063,13 @@ public class JS7Converter {
 
         Job j = new Job();
         j.setTitle(job.getTitle());
-        setFromConfig(j);
+        j = JS7ConverterHelper.setFromConfig(CONFIG, j);
 
         jh.setJS7Agent(getAgent(job.getProcessClass(), jobChainAgent, job, null));
 
         j = JS7AgentHelper.setAgent(j, jh.getJS7Agent());
         setJobJobResources(j, jh);
-        setExecutable(j, jh);
+        setExecutable(j, jh, jobChainJobHelper);
         setJobOptions(j, job);
         setJobNotification(j, job);
 
@@ -1288,18 +1204,6 @@ public class JS7Converter {
         }
 
         return val;
-    }
-
-    private void setFromConfig(Job j) {
-        if (CONFIG.getJobConfig().getForcedGraceTimeout() != null) {
-            j.setGraceTimeout(CONFIG.getJobConfig().getForcedGraceTimeout());
-        }
-        if (CONFIG.getJobConfig().getForcedParallelism() != null) {
-            j.setParallelism(CONFIG.getJobConfig().getForcedParallelism());
-        }
-        if (CONFIG.getJobConfig().getForcedFailOnErrWritten() != null) {
-            j.setFailOnErrWritten(CONFIG.getJobConfig().getForcedFailOnErrWritten());
-        }
     }
 
     private JS7Agent convertAgentFrom(final JS7AgentConvertType type, final JS7Agent sourceConf, final JS7Agent defaultConf, final AgentHelper ah) {
@@ -1510,7 +1414,7 @@ public class JS7Converter {
         if (js1ProcessClass != null && js1ProcessClass.isAgent()) {
             ah = js1Agents.get(js1ProcessClass.getPath());
             if (ah != null) {
-                js1AgentName = ah.getJS7Agent().getJS1AgentName();
+                js1AgentName = ah.getJS7Agent().getOriginalAgentName();
                 js7AgentName = ah.getJS7Agent().getJS7AgentName();
             }
         }
@@ -1644,14 +1548,14 @@ public class JS7Converter {
         return agent;
     }
 
-    private void setExecutable(Job j, JobHelper jh) {
-        j.setExecutable(jh.getJavaJITLJob() == null ? getExecutableScript(jh) : getInternalExecutable(jh));
+    private void setExecutable(Job j, JobHelper jh, JobChainJobHelper jcjh) {
+        j.setExecutable(jh.getJavaJITLJob() == null ? getExecutableScript(jh, jcjh) : getInternalExecutable(jh));
     }
 
     private ExecutableJava getInternalExecutable(JobHelper jh) {
         ExecutableJava ej = new ExecutableJava();
         ej.setClassName(jh.getJavaJITLJob().getNewJavaClass());
-        ej.setArguments(getJobArguments(jh));
+        ej.setArguments(getJobArguments(jh, null));
 
         setLogLevel(ej, jh.getJS1Job());
         setMockLevel(ej);
@@ -1663,7 +1567,7 @@ public class JS7Converter {
         return JS7ConverterHelper.quoteValue4JS7(replaceJS1Values(val));
     }
 
-    private Environment getJobArguments(JobHelper jh) {
+    private Environment getJobArguments(JobHelper jh, JobChainJobHelper jobChainJobHelper) {
         Environment env = null;
         ACommonJob job = jh.getJS1Job();
 
@@ -1781,6 +1685,22 @@ public class JS7Converter {
             }
         }
 
+        // set nodes default arguments as ENV vars
+        if (jobChainJobHelper != null && jobChainJobHelper.getJS7JobNodesDefaultArguments() != null) {
+            Set<String> defaultArguments = jobChainJobHelper.getJS7JobNodesDefaultArguments();
+            if (defaultArguments.size() > 0) {
+                if (env == null) {
+                    env = new Environment();
+                }
+                for (String da : defaultArguments) {
+                    // if (!env.getAdditionalProperties().containsKey(da)) {
+                    // overwrite job parameters
+                    env.getAdditionalProperties().put(da, "$" + da);
+                    // }
+                }
+            }
+        }
+
         return env;
     }
 
@@ -1822,14 +1742,14 @@ public class JS7Converter {
         }
     }
 
-    private ExecutableScript getExecutableScript(JobHelper jh) {
+    private ExecutableScript getExecutableScript(JobHelper jh, JobChainJobHelper jcjh) {
         StringBuilder scriptHeader = new StringBuilder();
         StringBuilder scriptCommand = new StringBuilder();
         String commentBegin = "#";
         boolean isMock = CONFIG.getMockConfig().hasScript();
         boolean isUnix = jh.getJS7Agent().getPlatform().equalsIgnoreCase(Platform.UNIX.name());
         String newLine = isUnix ? CONFIG.getJobConfig().getUnixNewLine() : CONFIG.getJobConfig().getWindowsNewLine();
-        Environment jobArguments = getJobArguments(jh);
+        Environment jobArguments = getJobArguments(jh, jcjh);
 
         ShellJobHelper shellJob = jh.getShellJob();
         boolean checkUnixFirstLine = false;
@@ -2303,7 +2223,7 @@ public class JS7Converter {
                                     throw new Exception("[job " + job + "]not found");
                                 }
                                 String js1JobName = oj.getName();
-                                String js7JobName = getJS7ObjectName(oj.getPath(), js1JobName);
+                                String js7JobName = JS7ConverterHelper.getJS7ObjectName(oj.getPath(), js1JobName);
                                 if (uniqueJobs.containsKey(js1JobName)) {
                                     OrderJob uoj = uniqueJobs.get(js1JobName).getJob();
                                     // same name but another location
@@ -2423,7 +2343,7 @@ public class JS7Converter {
         uniqueJobs.entrySet().forEach(e -> {
             OrderJob js1Job = e.getValue().getJob();
             if (usedJobNames.contains(e.getKey())) {
-                JobHelper jh = getJob(result, js1Job, jobChainAgent, jobChain);
+                JobHelper jh = getJob(result, js1Job, jobChainAgent, jobChain, e.getValue());
                 if (jh == null) {
                     if (js1Job.isJavaJITLSplitterJob() || js1Job.isJavaJITLJoinJob()) {
                         if (isDebugEnabled) {
@@ -2510,7 +2430,7 @@ public class JS7Converter {
         }
         // result.add(workflowPath, w);
 
-        String workflowName = getWorkflowName(workflowPath);
+        String workflowName = JS7ConverterHelper.getWorkflowName(workflowPath);
         handleBoardHelpers(boardHelper, workflowPath, workflowName);
         convertJobChainOrders2Schedules(result, jobChain, usedStates, workflowPath, workflowName, w, yadeJobs);
         convertJobChainFileOrderSources(result, jobChain, fileOrderSources, workflowPath, workflowName, jobChainFileWatchingAgent);
@@ -2599,7 +2519,7 @@ public class JS7Converter {
                 if (useNextState) {
                     name = name + NAME_CONCAT_CHARACTER + n.getNextState();
                 }
-                name = getJS7ObjectName(n.getPath(), name);
+                name = JS7ConverterHelper.getJS7ObjectName(n.getPath(), name);
                 FileOrderSource fos = new FileOrderSource();
                 fos.setWorkflowName(workflowName);
                 fos.setAgentName(js7Agent.getJS7AgentName());
@@ -2618,7 +2538,7 @@ public class JS7Converter {
                     }
                 }
                 fos.setDelay(delay);
-                result.add(getFileOrderSourcePathFromJS7Path(workflowPath, name), fos);
+                result.add(JS7ConverterHelper.getFileOrderSourcePathFromJS7Path(workflowPath, name), fos);
             }
         }
     }
@@ -2657,7 +2577,7 @@ public class JS7Converter {
                         // TODO
                         startPosition = "0";
                     }
-                    String js7OrderName = getJS7ObjectName(o.getPath(), o.getName());
+                    String js7OrderName = JS7ConverterHelper.getJS7ObjectName(o.getPath(), o.getName());
                     String add = "";
                     if (useAdd) {
                         add = NAME_CONCAT_CHARACTER + js7OrderName;
@@ -2703,7 +2623,7 @@ public class JS7Converter {
                                     }
                                     JobHelper yejh = ye.getValue();
                                     yejh.setJS7OrderVariables(vs);
-                                    wj.setExecutable(getExecutableScript(yejh));
+                                    wj.setExecutable(getExecutableScript(yejh, null));
                                 }
                             }
                         }
@@ -2845,8 +2765,14 @@ public class JS7Converter {
                         ps.addKey(e.getKey(), e.getValue());
                     });
                 }
-                in.add(getNamedJobInstruction(job, h.getJS7JobName(), h.getJS7State(), hasConfigProcess ? jobChain.getConfig().getProcess().get(h
-                        .getJS1State()) : null, ps, jobChain));
+                NamedJob nji = getNamedJobInstruction(job, h.getJS7JobName(), h.getJS7State(), hasConfigProcess ? jobChain.getConfig().getProcess()
+                        .get(h.getJS1State()) : null, ps, jobChain);
+
+                if (nji.getDefaultArguments() != null) {
+                    jh.setJS7JobNodesDefaultArguments(nji.getDefaultArguments());
+                }
+
+                in.add(nji);
             }
 
             String onError = h.getOnError().toLowerCase();
@@ -3050,7 +2976,7 @@ public class JS7Converter {
     private Job getFileOrderSinkJob(String jobName, JS7Agent jobChainAgent) {
         Job job = new Job();
         job = JS7AgentHelper.setAgent(job, jobChainAgent);
-        setFromConfig(job);
+        job = JS7ConverterHelper.setFromConfig(CONFIG, job);
 
         ExecutableJava ex = new ExecutableJava();
         switch (jobName) {
@@ -3067,16 +2993,6 @@ public class JS7Converter {
         return job;
     }
 
-    public void createNoticeBoard(JS7ConverterResult result, Path workflowPath, String boardName, String boardTitle) {
-        Board b = new Board();
-        b.setTitle(boardTitle);
-        b.setEndOfLife("$js7EpochMilli + 1 * 24 * 60 * 60 * 1000");
-        b.setExpectOrderToNoticeId("replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2})#.*$', '$1')");
-        b.setPostOrderToNoticeId("replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2})#.*$', '$1')");
-
-        result.add(getNoticeBoardPathFromJS7Path(workflowPath, boardName), b);
-    }
-
     private ConverterObjects getConverterObjects(Folder root) {
         ConverterObjects co = new ConverterObjects();
         walk(root, co);
@@ -3085,7 +3001,7 @@ public class JS7Converter {
 
     private void walk(Folder f, ConverterObjects co) {
         for (StandaloneJob o : f.getStandaloneJobs()) {
-            String name = getJS7ObjectName(o.getPath(), o.getName());
+            String name = JS7ConverterHelper.getJS7ObjectName(o.getPath(), o.getName());
             if (co.getStandalone().getUnique().containsKey(name)) {
                 List<StandaloneJob> l = new ArrayList<>();
                 if (co.getStandalone().getDuplicates().containsKey(name)) {
@@ -3098,7 +3014,7 @@ public class JS7Converter {
             }
         }
         for (JobChain o : f.getJobChains()) {
-            String name = getJS7ObjectName(o.getPath(), o.getName());
+            String name = JS7ConverterHelper.getJS7ObjectName(o.getPath(), o.getName());
             if (co.getJobChains().getUnique().containsKey(name)) {
                 List<JobChain> l = new ArrayList<>();
                 if (co.getJobChains().getDuplicates().containsKey(name)) {
@@ -3118,7 +3034,7 @@ public class JS7Converter {
 
         }
         for (ProcessClass o : f.getProcessClasses()) {
-            String name = getJS7ObjectName(o.getPath(), o.getName());
+            String name = JS7ConverterHelper.getJS7ObjectName(o.getPath(), o.getName());
             if (co.getProcessClasses().getUnique().containsKey(name)) {
                 List<ProcessClass> l = new ArrayList<>();
                 if (co.getProcessClasses().getDuplicates().containsKey(name)) {

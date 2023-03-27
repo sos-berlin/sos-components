@@ -23,7 +23,7 @@ import com.sos.js7.converter.commons.JS7ConverterHelper;
 import com.sos.js7.converter.commons.report.ParserReport;
 import com.sos.js7.converter.js1.common.EConfigFileExtensions;
 import com.sos.js7.converter.js1.input.DirectoryParser.DirectoryParserResult;
-import com.sos.js7.converter.js1.output.js7.JS7Converter;
+import com.sos.js7.converter.js1.output.js7.JS12JS7Converter;
 
 public class RunTime {
 
@@ -216,7 +216,7 @@ public class RunTime {
 
     public static Schedule newSchedule(DirectoryParserResult pr, Path currentPath, String includePath, String attrName) {
         try {
-            Path p = JS7Converter.findIncludeFile(pr, currentPath, Paths.get(includePath + EConfigFileExtensions.SCHEDULE.extension()));
+            Path p = JS12JS7Converter.findIncludeFile(pr, currentPath, Paths.get(includePath + EConfigFileExtensions.SCHEDULE.extension()));
             if (p != null) {
                 return new Schedule(pr, p);
             } else {

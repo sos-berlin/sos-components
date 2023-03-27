@@ -68,7 +68,7 @@ import com.sos.js7.converter.commons.agent.JS7AgentConverter.JS7AgentConvertType
 import com.sos.js7.converter.commons.agent.JS7AgentHelper;
 import com.sos.js7.converter.commons.config.JS7ConverterConfig;
 import com.sos.js7.converter.commons.config.JS7ConverterConfig.Platform;
-import com.sos.js7.converter.commons.config.JS7ConverterConfig.SubFolderConfig;
+import com.sos.js7.converter.commons.config.items.SubFolderConfig;
 import com.sos.js7.converter.commons.config.json.JS7Agent;
 import com.sos.js7.converter.commons.output.OutputWriter;
 import com.sos.js7.converter.commons.report.ConverterReport;
@@ -84,9 +84,9 @@ import com.sos.js7.converter.commons.report.ConverterReportWriter;
  * --- post/expected notices - box and box job<br/>
  * , TODO Report<br/>
  */
-public class JS7Converter {
+public class Autosys2JS7Converter {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JS7Converter.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Autosys2JS7Converter.class);
 
     public static JS7ConverterConfig CONFIG = new JS7ConverterConfig();
 
@@ -160,7 +160,7 @@ public class JS7Converter {
     private static JS7ConverterResult convert(DirectoryParserResult pr) {
         String method = "convert";
 
-        JS7Converter c = new JS7Converter();
+        Autosys2JS7Converter c = new Autosys2JS7Converter();
         JS7ConverterResult result = new JS7ConverterResult();
         result.getApplications().addAll(pr.getJobs().stream().map(e -> e.getFolder().getApplication().getValue()).filter(Objects::nonNull).distinct()
                 .collect(Collectors.toSet()));

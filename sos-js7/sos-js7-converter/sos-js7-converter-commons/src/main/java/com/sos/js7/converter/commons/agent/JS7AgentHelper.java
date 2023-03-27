@@ -20,7 +20,7 @@ public class JS7AgentHelper {
 
         JS7Agent a = new JS7Agent();
         a.setAgentCluster(copy(agent.getAgentCluster()));
-        a.setJS1AgentName(agent.getJS1AgentName());
+        a.setOriginalAgentName(agent.getOriginalAgentName());
         a.setJS7AgentName(agent.getJS7AgentName());
         a.setPlatform(agent.getPlatform());
         a.setStandaloneAgent(copy(agent.getStandaloneAgent()));
