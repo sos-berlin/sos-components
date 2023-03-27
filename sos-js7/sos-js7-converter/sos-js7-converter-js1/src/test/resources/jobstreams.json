@@ -1,675 +1,675 @@
 [
-  {
-    "jobStream": "Simple",
-    "jobstreamStarters": [
-      {
-        "starterName": "Starter",
-        "title": "",
-        "jobs": [
-          {
-            "job": "/jobstreams/examples/job1",
-            "startDelay": 0,
-            "skipOutCondition": false,
-            "inconditions": [],
-            "outconditions": []
-          }
-        ],
-        "runTime": {
-          "letRun": "false",
-          "runOnce": "false"
-        },
-        "params": []
-      }
-    ],
-    "jobs": [
-      {
-        "job": "/jobstreams/examples/job1",
-        "inconditions": [],
-        "outconditions": [
-          {
-            "conditionExpression": {
-              "expression": "rc:0"
-            },
-            "outconditionEvents": [
-              {
-                "command": "create",
-                "event": "job1",
-                "globalEvent": false
-              }
-            ],
-            "jobStream": "Simple"
-          }
-        ]
-      },
-      {
-        "job": "/jobstreams/examples/job2",
-        "inconditions": [
-          {
-            "conditionExpression": {
-              "expression": "job1 "
-            },
-            "inconditionCommands": [
-              {
-                "command": "startjob",
-                "commandParam": "now"
-              }
-            ],
-            "jobStream": "Simple",
-            "markExpression": true,
-            "skipOutCondition": false
-          }
-        ],
-        "outconditions": [
-          {
-            "conditionExpression": {
-              "expression": "rc:0"
-            },
-            "outconditionEvents": [
-              {
-                "command": "create",
-                "event": "job2",
-                "globalEvent": false
-              }
-            ],
-            "jobStream": "Simple"
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "jobStream": "Two Starter 1",
-    "jobstreamStarters": [
-      {
-        "starterName": "ST1",
-        "title": "",
-        "jobs": [
-          {
-            "job": "/jobstreams/examples/job10",
-            "startDelay": 0,
-            "skipOutCondition": false,
-            "inconditions": [],
-            "outconditions": []
-          }
-        ],
-        "runTime": {
-          "letRun": "false",
-          "runOnce": "false"
-        },
-        "params": []
-      },
-      {
-        "starterName": "St2",
-        "title": "",
-        "jobs": [
-          {
-            "job": "/jobstreams/examples/job12",
-            "startDelay": 0,
-            "skipOutCondition": false,
-            "inconditions": [],
-            "outconditions": []
-          }
-        ],
-        "runTime": {
-          "letRun": "false",
-          "runOnce": "false"
-        },
-        "params": []
-      }
-    ],
-    "jobs": [
-      {
-        "job": "/jobstreams/examples/job12",
-        "inconditions": [],
-        "outconditions": [
-          {
-            "conditionExpression": {
-              "expression": "rc:0"
-            },
-            "outconditionEvents": [
-              {
-                "command": "create",
-                "event": "job12",
-                "globalEvent": false
-              }
-            ],
-            "jobStream": "Two Starter 1"
-          }
-        ]
-      },
-      {
-        "job": "/jobstreams/examples/job10",
-        "inconditions": [],
-        "outconditions": [
-          {
-            "conditionExpression": {
-              "expression": "rc:0"
-            },
-            "outconditionEvents": [
-              {
-                "command": "create",
-                "event": "job10",
-                "globalEvent": false
-              }
-            ],
-            "jobStream": "Two Starter 1"
-          }
-        ]
-      },
-      {
-        "job": "/jobstreams/examples/job14",
-        "inconditions": [
-          {
-            "conditionExpression": {
-              "expression": "job10 and job12 "
-            },
-            "inconditionCommands": [
-              {
-                "command": "startjob",
-                "commandParam": "now"
-              }
-            ],
-            "jobStream": "Two Starter 1",
-            "markExpression": true,
-            "skipOutCondition": false
-          }
-        ],
-        "outconditions": [
-          {
-            "conditionExpression": {
-              "expression": "rc:0"
-            },
-            "outconditionEvents": [
-              {
-                "command": "create",
-                "event": "job14",
-                "globalEvent": false
-              }
-            ],
-            "jobStream": "Two Starter 1"
-          }
-        ]
-      },
-      {
-        "job": "/jobstreams/examples/job15",
-        "inconditions": [
-          {
-            "conditionExpression": {
-              "expression": "job14 "
-            },
-            "inconditionCommands": [
-              {
-                "command": "startjob",
-                "commandParam": "now"
-              }
-            ],
-            "jobStream": "Two Starter 1",
-            "markExpression": true,
-            "skipOutCondition": false
-          }
-        ],
-        "outconditions": [
-          {
-            "conditionExpression": {
-              "expression": "rc:0"
-            },
-            "outconditionEvents": [
-              {
-                "command": "create",
-                "event": "job15",
-                "globalEvent": false
-              }
-            ],
-            "jobStream": "Two Starter 1"
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "jobStream": "Two Starter 2",
-    "jobstreamStarters": [
-      {
-        "starterName": "st3",
-        "title": "",
-        "jobs": [
-          {
-            "job": "/jobstreams/examples/job17",
-            "startDelay": 0,
-            "skipOutCondition": false,
-            "inconditions": [],
-            "outconditions": []
-          }
-        ],
-        "runTime": {
-          "letRun": "false",
-          "runOnce": "false"
-        },
-        "params": []
-      },
-      {
-        "starterName": "st4",
-        "title": "",
-        "jobs": [
-          {
-            "job": "/jobstreams/examples/job17",
-            "startDelay": 0,
-            "skipOutCondition": false,
-            "inconditions": [],
-            "outconditions": []
-          }
-        ],
-        "runTime": {
-          "letRun": "false",
-          "runOnce": "false"
-        },
-        "params": []
-      }
-    ],
-    "jobs": [
-      {
-        "job": "/jobstreams/examples/job17",
-        "inconditions": [],
-        "outconditions": [
-          {
-            "conditionExpression": {
-              "expression": "rc:0"
-            },
-            "outconditionEvents": [
-              {
-                "command": "create",
-                "event": "job17",
-                "globalEvent": false
-              }
-            ],
-            "jobStream": "Two Starter 2"
-          }
-        ]
-      },
-      {
-        "job": "/jobstreams/examples/job19",
-        "inconditions": [
-          {
-            "conditionExpression": {
-              "expression": "job17 "
-            },
-            "inconditionCommands": [
-              {
-                "command": "startjob",
-                "commandParam": "now"
-              }
-            ],
-            "jobStream": "Two Starter 2",
-            "markExpression": true,
-            "skipOutCondition": false
-          }
-        ],
-        "outconditions": [
-          {
-            "conditionExpression": {
-              "expression": "rc:0"
-            },
-            "outconditionEvents": [
-              {
-                "command": "create",
-                "event": "job19",
-                "globalEvent": false
-              }
-            ],
-            "jobStream": "Two Starter 2"
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "jobStream": "Fork Join",
-    "jobstreamStarters": [
-      {
-        "starterName": "st5",
-        "title": "",
-        "jobs": [
-          {
-            "job": "/jobstreams/examples/job20",
-            "startDelay": 0,
-            "skipOutCondition": false,
-            "inconditions": [],
-            "outconditions": []
-          }
-        ],
-        "runTime": {
-          "letRun": "false",
-          "runOnce": "false"
-        },
-        "params": []
-      }
-    ],
-    "jobs": [
-      {
-        "job": "/jobstreams/examples/job20",
-        "inconditions": [],
-        "outconditions": [
-          {
-            "conditionExpression": {
-              "expression": "rc:0"
-            },
-            "outconditionEvents": [
-              {
-                "command": "create",
-                "event": "job20",
-                "globalEvent": false
-              }
-            ],
-            "jobStream": "Fork Join"
-          }
-        ]
-      },
-      {
-        "job": "/jobstreams/examples/job21",
-        "inconditions": [
-          {
-            "conditionExpression": {
-              "expression": "job20 "
-            },
-            "inconditionCommands": [
-              {
-                "command": "startjob",
-                "commandParam": "now"
-              }
-            ],
-            "jobStream": "Fork Join",
-            "markExpression": true,
-            "skipOutCondition": false
-          }
-        ],
-        "outconditions": [
-          {
-            "conditionExpression": {
-              "expression": "rc:0"
-            },
-            "outconditionEvents": [
-              {
-                "command": "create",
-                "event": "job21",
-                "globalEvent": false
-              }
-            ],
-            "jobStream": "Fork Join"
-          }
-        ]
-      },
-      {
-        "job": "/jobstreams/examples/job22",
-        "inconditions": [
-          {
-            "conditionExpression": {
-              "expression": "job20 "
-            },
-            "inconditionCommands": [
-              {
-                "command": "startjob",
-                "commandParam": "now"
-              }
-            ],
-            "jobStream": "Fork Join",
-            "markExpression": true,
-            "skipOutCondition": false
-          }
-        ],
-        "outconditions": [
-          {
-            "conditionExpression": {
-              "expression": "rc:0"
-            },
-            "outconditionEvents": [
-              {
-                "command": "create",
-                "event": "job22",
-                "globalEvent": false
-              }
-            ],
-            "jobStream": "Fork Join"
-          }
-        ]
-      },
-      {
-        "job": "/jobstreams/examples/job23",
-        "inconditions": [
-          {
-            "conditionExpression": {
-              "expression": "job22 "
-            },
-            "inconditionCommands": [
-              {
-                "command": "startjob",
-                "commandParam": "now"
-              }
-            ],
-            "jobStream": "Fork Join",
-            "markExpression": true,
-            "skipOutCondition": false
-          }
-        ],
-        "outconditions": [
-          {
-            "conditionExpression": {
-              "expression": "rc:0"
-            },
-            "outconditionEvents": [
-              {
-                "command": "create",
-                "event": "job23",
-                "globalEvent": false
-              }
-            ],
-            "jobStream": "Fork Join"
-          }
-        ]
-      },
-      {
-        "job": "/jobstreams/examples/job24",
-        "inconditions": [
-          {
-            "conditionExpression": {
-              "expression": "job23 and job25 "
-            },
-            "inconditionCommands": [
-              {
-                "command": "startjob",
-                "commandParam": "now"
-              }
-            ],
-            "jobStream": "Fork Join",
-            "markExpression": true,
-            "skipOutCondition": false
-          }
-        ],
-        "outconditions": [
-          {
-            "conditionExpression": {
-              "expression": "rc:0"
-            },
-            "outconditionEvents": [
-              {
-                "command": "create",
-                "event": "job24",
-                "globalEvent": false
-              }
-            ],
-            "jobStream": "Fork Join"
-          }
-        ]
-      },
-      {
-        "job": "/jobstreams/examples/job25",
-        "inconditions": [
-          {
-            "conditionExpression": {
-              "expression": "job22 "
-            },
-            "inconditionCommands": [
-              {
-                "command": "startjob",
-                "commandParam": "now"
-              }
-            ],
-            "jobStream": "Fork Join",
-            "markExpression": true,
-            "skipOutCondition": false
-          }
-        ],
-        "outconditions": [
-          {
-            "conditionExpression": {
-              "expression": "rc:0"
-            },
-            "outconditionEvents": [
-              {
-                "command": "create",
-                "event": "job25",
-                "globalEvent": false
-              }
-            ],
-            "jobStream": "Fork Join"
-          }
-        ]
-      },
-      {
-        "job": "/jobstreams/examples/job27",
-        "inconditions": [
-          {
-            "conditionExpression": {
-              "expression": "job21 "
-            },
-            "inconditionCommands": [
-              {
-                "command": "startjob",
-                "commandParam": "now"
-              }
-            ],
-            "jobStream": "Fork Join",
-            "markExpression": true,
-            "skipOutCondition": false
-          }
-        ],
-        "outconditions": [
-          {
-            "conditionExpression": {
-              "expression": "rc:0"
-            },
-            "outconditionEvents": [
-              {
-                "command": "create",
-                "event": "job27",
-                "globalEvent": false
-              }
-            ],
-            "jobStream": "Fork Join"
-          }
-        ]
-      },
-      {
-        "job": "/jobstreams/examples/job3",
-        "inconditions": [
-          {
-            "conditionExpression": {
-              "expression": "job27 "
-            },
-            "inconditionCommands": [
-              {
-                "command": "startjob",
-                "commandParam": "now"
-              }
-            ],
-            "jobStream": "Fork Join",
-            "markExpression": true,
-            "skipOutCondition": false
-          }
-        ],
-        "outconditions": [
-          {
-            "conditionExpression": {
-              "expression": "rc:0"
-            },
-            "outconditionEvents": [
-              {
-                "command": "create",
-                "event": "job3",
-                "globalEvent": false
-              }
-            ],
-            "jobStream": "Fork Join"
-          }
-        ]
-      },
-      {
-        "job": "/jobstreams/examples/job5",
-        "inconditions": [
-          {
-            "conditionExpression": {
-              "expression": "job3 and job24 "
-            },
-            "inconditionCommands": [
-              {
-                "command": "startjob",
-                "commandParam": "now"
-              }
-            ],
-            "jobStream": "Fork Join",
-            "markExpression": true,
-            "skipOutCondition": false
-          }
-        ],
-        "outconditions": [
-          {
-            "conditionExpression": {
-              "expression": "rc:0"
-            },
-            "outconditionEvents": [
-              {
-                "command": "create",
-                "event": "job5",
-                "globalEvent": false
-              }
-            ],
-            "jobStream": "Fork Join"
-          }
-        ]
-      },
-      {
-        "job": "/jobstreams/examples/job6",
-        "inconditions": [
-          {
-            "conditionExpression": {
-              "expression": "job5 "
-            },
-            "inconditionCommands": [
-              {
-                "command": "startjob",
-                "commandParam": "now"
-              }
-            ],
-            "jobStream": "Fork Join",
-            "markExpression": true,
-            "skipOutCondition": false
-          }
-        ],
-        "outconditions": [
-          {
-            "conditionExpression": {
-              "expression": "rc:0"
-            },
-            "outconditionEvents": [
-              {
-                "command": "create",
-                "event": "job6",
-                "globalEvent": false
-              }
-            ],
-            "jobStream": "Fork Join"
-          }
-        ]
-      }
-    ]
-  }
+	{
+		"jobStream": "Simple",
+		"jobstreamStarters": [
+			{
+				"starterName": "Starter",
+				"title": "",
+				"jobs": [
+					{
+						"job": "/jobstreams/examples/job1",
+						"startDelay": 0,
+						"skipOutCondition": false,
+						"inconditions": [],
+						"outconditions": []
+					}
+				],
+				"runTime": {
+					"letRun": "false",
+					"runOnce": "false"
+				},
+				"params": []
+			}
+		],
+		"jobs": [
+			{
+				"job": "/jobstreams/examples/job1",
+				"inconditions": [],
+				"outconditions": [
+					{
+						"conditionExpression": {
+							"expression": "rc:0"
+						},
+						"outconditionEvents": [
+							{
+								"command": "create",
+								"event": "job1",
+								"globalEvent": false
+							}
+						],
+						"jobStream": "Simple"
+					}
+				]
+			},
+			{
+				"job": "/jobstreams/examples/job2",
+				"inconditions": [
+					{
+						"conditionExpression": {
+							"expression": "job1 "
+						},
+						"inconditionCommands": [
+							{
+								"command": "startjob",
+								"commandParam": "now"
+							}
+						],
+						"jobStream": "Simple",
+						"markExpression": true,
+						"skipOutCondition": false
+					}
+				],
+				"outconditions": [
+					{
+						"conditionExpression": {
+							"expression": "rc:0"
+						},
+						"outconditionEvents": [
+							{
+								"command": "create",
+								"event": "job2",
+								"globalEvent": false
+							}
+						],
+						"jobStream": "Simple"
+					}
+				]
+			}
+		]
+	},
+	{
+		"jobStream": "Two Starter 1",
+		"jobstreamStarters": [
+			{
+				"starterName": "ST1",
+				"title": "",
+				"jobs": [
+					{
+						"job": "/jobstreams/examples/job10",
+						"startDelay": 0,
+						"skipOutCondition": false,
+						"inconditions": [],
+						"outconditions": []
+					}
+				],
+				"runTime": {
+					"letRun": "false",
+					"runOnce": "false"
+				},
+				"params": []
+			},
+			{
+				"starterName": "St2",
+				"title": "",
+				"jobs": [
+					{
+						"job": "/jobstreams/examples/job12",
+						"startDelay": 0,
+						"skipOutCondition": false,
+						"inconditions": [],
+						"outconditions": []
+					}
+				],
+				"runTime": {
+					"letRun": "false",
+					"runOnce": "false"
+				},
+				"params": []
+			}
+		],
+		"jobs": [
+			{
+				"job": "/jobstreams/examples/job12",
+				"inconditions": [],
+				"outconditions": [
+					{
+						"conditionExpression": {
+							"expression": "rc:0"
+						},
+						"outconditionEvents": [
+							{
+								"command": "create",
+								"event": "job12",
+								"globalEvent": false
+							}
+						],
+						"jobStream": "Two Starter 1"
+					}
+				]
+			},
+			{
+				"job": "/jobstreams/examples/job10",
+				"inconditions": [],
+				"outconditions": [
+					{
+						"conditionExpression": {
+							"expression": "rc:0"
+						},
+						"outconditionEvents": [
+							{
+								"command": "create",
+								"event": "job10",
+								"globalEvent": false
+							}
+						],
+						"jobStream": "Two Starter 1"
+					}
+				]
+			},
+			{
+				"job": "/jobstreams/examples/job14",
+				"inconditions": [
+					{
+						"conditionExpression": {
+							"expression": "job10 and job12 "
+						},
+						"inconditionCommands": [
+							{
+								"command": "startjob",
+								"commandParam": "now"
+							}
+						],
+						"jobStream": "Two Starter 1",
+						"markExpression": true,
+						"skipOutCondition": false
+					}
+				],
+				"outconditions": [
+					{
+						"conditionExpression": {
+							"expression": "rc:0"
+						},
+						"outconditionEvents": [
+							{
+								"command": "create",
+								"event": "job14",
+								"globalEvent": false
+							}
+						],
+						"jobStream": "Two Starter 1"
+					}
+				]
+			},
+			{
+				"job": "/jobstreams/examples/job15",
+				"inconditions": [
+					{
+						"conditionExpression": {
+							"expression": "job14 "
+						},
+						"inconditionCommands": [
+							{
+								"command": "startjob",
+								"commandParam": "now"
+							}
+						],
+						"jobStream": "Two Starter 1",
+						"markExpression": true,
+						"skipOutCondition": false
+					}
+				],
+				"outconditions": [
+					{
+						"conditionExpression": {
+							"expression": "rc:0"
+						},
+						"outconditionEvents": [
+							{
+								"command": "create",
+								"event": "job15",
+								"globalEvent": false
+							}
+						],
+						"jobStream": "Two Starter 1"
+					}
+				]
+			}
+		]
+	},
+	{
+		"jobStream": "Two Starter 2",
+		"jobstreamStarters": [
+			{
+				"starterName": "st3",
+				"title": "",
+				"jobs": [
+					{
+						"job": "/jobstreams/examples/job17",
+						"startDelay": 0,
+						"skipOutCondition": false,
+						"inconditions": [],
+						"outconditions": []
+					}
+				],
+				"runTime": {
+					"letRun": "false",
+					"runOnce": "false"
+				},
+				"params": []
+			},
+			{
+				"starterName": "st4",
+				"title": "",
+				"jobs": [
+					{
+						"job": "/jobstreams/examples/job17",
+						"startDelay": 0,
+						"skipOutCondition": false,
+						"inconditions": [],
+						"outconditions": []
+					}
+				],
+				"runTime": {
+					"letRun": "false",
+					"runOnce": "false"
+				},
+				"params": []
+			}
+		],
+		"jobs": [
+			{
+				"job": "/jobstreams/examples/job17",
+				"inconditions": [],
+				"outconditions": [
+					{
+						"conditionExpression": {
+							"expression": "rc:0"
+						},
+						"outconditionEvents": [
+							{
+								"command": "create",
+								"event": "job17",
+								"globalEvent": false
+							}
+						],
+						"jobStream": "Two Starter 2"
+					}
+				]
+			},
+			{
+				"job": "/jobstreams/examples/job19",
+				"inconditions": [
+					{
+						"conditionExpression": {
+							"expression": "job17 "
+						},
+						"inconditionCommands": [
+							{
+								"command": "startjob",
+								"commandParam": "now"
+							}
+						],
+						"jobStream": "Two Starter 2",
+						"markExpression": true,
+						"skipOutCondition": false
+					}
+				],
+				"outconditions": [
+					{
+						"conditionExpression": {
+							"expression": "rc:0"
+						},
+						"outconditionEvents": [
+							{
+								"command": "create",
+								"event": "job19",
+								"globalEvent": false
+							}
+						],
+						"jobStream": "Two Starter 2"
+					}
+				]
+			}
+		]
+	},
+	{
+		"jobStream": "Fork Join",
+		"jobstreamStarters": [
+			{
+				"starterName": "st5",
+				"title": "",
+				"jobs": [
+					{
+						"job": "/jobstreams/examples/job20",
+						"startDelay": 0,
+						"skipOutCondition": false,
+						"inconditions": [],
+						"outconditions": []
+					}
+				],
+				"runTime": {
+					"letRun": "false",
+					"runOnce": "false"
+				},
+				"params": []
+			}
+		],
+		"jobs": [
+			{
+				"job": "/jobstreams/examples/job20",
+				"inconditions": [],
+				"outconditions": [
+					{
+						"conditionExpression": {
+							"expression": "rc:0"
+						},
+						"outconditionEvents": [
+							{
+								"command": "create",
+								"event": "job20",
+								"globalEvent": false
+							}
+						],
+						"jobStream": "Fork Join"
+					}
+				]
+			},
+			{
+				"job": "/jobstreams/examples/job21",
+				"inconditions": [
+					{
+						"conditionExpression": {
+							"expression": "job20 "
+						},
+						"inconditionCommands": [
+							{
+								"command": "startjob",
+								"commandParam": "now"
+							}
+						],
+						"jobStream": "Fork Join",
+						"markExpression": true,
+						"skipOutCondition": false
+					}
+				],
+				"outconditions": [
+					{
+						"conditionExpression": {
+							"expression": "rc:0"
+						},
+						"outconditionEvents": [
+							{
+								"command": "create",
+								"event": "job21",
+								"globalEvent": false
+							}
+						],
+						"jobStream": "Fork Join"
+					}
+				]
+			},
+			{
+				"job": "/jobstreams/examples/job22",
+				"inconditions": [
+					{
+						"conditionExpression": {
+							"expression": "job20 "
+						},
+						"inconditionCommands": [
+							{
+								"command": "startjob",
+								"commandParam": "now"
+							}
+						],
+						"jobStream": "Fork Join",
+						"markExpression": true,
+						"skipOutCondition": false
+					}
+				],
+				"outconditions": [
+					{
+						"conditionExpression": {
+							"expression": "rc:0"
+						},
+						"outconditionEvents": [
+							{
+								"command": "create",
+								"event": "job22",
+								"globalEvent": false
+							}
+						],
+						"jobStream": "Fork Join"
+					}
+				]
+			},
+			{
+				"job": "/jobstreams/examples/job23",
+				"inconditions": [
+					{
+						"conditionExpression": {
+							"expression": "job22 "
+						},
+						"inconditionCommands": [
+							{
+								"command": "startjob",
+								"commandParam": "now"
+							}
+						],
+						"jobStream": "Fork Join",
+						"markExpression": true,
+						"skipOutCondition": false
+					}
+				],
+				"outconditions": [
+					{
+						"conditionExpression": {
+							"expression": "rc:0"
+						},
+						"outconditionEvents": [
+							{
+								"command": "create",
+								"event": "job23",
+								"globalEvent": false
+							}
+						],
+						"jobStream": "Fork Join"
+					}
+				]
+			},
+			{
+				"job": "/jobstreams/examples/job24",
+				"inconditions": [
+					{
+						"conditionExpression": {
+							"expression": "job23 and job25 "
+						},
+						"inconditionCommands": [
+							{
+								"command": "startjob",
+								"commandParam": "now"
+							}
+						],
+						"jobStream": "Fork Join",
+						"markExpression": true,
+						"skipOutCondition": false
+					}
+				],
+				"outconditions": [
+					{
+						"conditionExpression": {
+							"expression": "rc:0"
+						},
+						"outconditionEvents": [
+							{
+								"command": "create",
+								"event": "job24",
+								"globalEvent": false
+							}
+						],
+						"jobStream": "Fork Join"
+					}
+				]
+			},
+			{
+				"job": "/jobstreams/examples/job25",
+				"inconditions": [
+					{
+						"conditionExpression": {
+							"expression": "job22 "
+						},
+						"inconditionCommands": [
+							{
+								"command": "startjob",
+								"commandParam": "now"
+							}
+						],
+						"jobStream": "Fork Join",
+						"markExpression": true,
+						"skipOutCondition": false
+					}
+				],
+				"outconditions": [
+					{
+						"conditionExpression": {
+							"expression": "rc:0"
+						},
+						"outconditionEvents": [
+							{
+								"command": "create",
+								"event": "job25",
+								"globalEvent": false
+							}
+						],
+						"jobStream": "Fork Join"
+					}
+				]
+			},
+			{
+				"job": "/jobstreams/examples/job27",
+				"inconditions": [
+					{
+						"conditionExpression": {
+							"expression": "job21 "
+						},
+						"inconditionCommands": [
+							{
+								"command": "startjob",
+								"commandParam": "now"
+							}
+						],
+						"jobStream": "Fork Join",
+						"markExpression": true,
+						"skipOutCondition": false
+					}
+				],
+				"outconditions": [
+					{
+						"conditionExpression": {
+							"expression": "rc:0"
+						},
+						"outconditionEvents": [
+							{
+								"command": "create",
+								"event": "job27",
+								"globalEvent": false
+							}
+						],
+						"jobStream": "Fork Join"
+					}
+				]
+			},
+			{
+				"job": "/jobstreams/examples/job3",
+				"inconditions": [
+					{
+						"conditionExpression": {
+							"expression": "job27 "
+						},
+						"inconditionCommands": [
+							{
+								"command": "startjob",
+								"commandParam": "now"
+							}
+						],
+						"jobStream": "Fork Join",
+						"markExpression": true,
+						"skipOutCondition": false
+					}
+				],
+				"outconditions": [
+					{
+						"conditionExpression": {
+							"expression": "rc:0"
+						},
+						"outconditionEvents": [
+							{
+								"command": "create",
+								"event": "job3",
+								"globalEvent": false
+							}
+						],
+						"jobStream": "Fork Join"
+					}
+				]
+			},
+			{
+				"job": "/jobstreams/examples/job5",
+				"inconditions": [
+					{
+						"conditionExpression": {
+							"expression": "job3 and job24 "
+						},
+						"inconditionCommands": [
+							{
+								"command": "startjob",
+								"commandParam": "now"
+							}
+						],
+						"jobStream": "Fork Join",
+						"markExpression": true,
+						"skipOutCondition": false
+					}
+				],
+				"outconditions": [
+					{
+						"conditionExpression": {
+							"expression": "rc:0"
+						},
+						"outconditionEvents": [
+							{
+								"command": "create",
+								"event": "job5",
+								"globalEvent": false
+							}
+						],
+						"jobStream": "Fork Join"
+					}
+				]
+			},
+			{
+				"job": "/jobstreams/examples/job6",
+				"inconditions": [
+					{
+						"conditionExpression": {
+							"expression": "job5 "
+						},
+						"inconditionCommands": [
+							{
+								"command": "startjob",
+								"commandParam": "now"
+							}
+						],
+						"jobStream": "Fork Join",
+						"markExpression": true,
+						"skipOutCondition": false
+					}
+				],
+				"outconditions": [
+					{
+						"conditionExpression": {
+							"expression": "rc:0"
+						},
+						"outconditionEvents": [
+							{
+								"command": "create",
+								"event": "job6",
+								"globalEvent": false
+							}
+						],
+						"jobStream": "Fork Join"
+					}
+				]
+			}
+		]
+	}
 ]
