@@ -21,6 +21,7 @@ import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.model.inventory.ConfigurationObject;
+import com.sos.joc.model.inventory.IsReferencedBy;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.ItemStateEnum;
 import com.sos.joc.model.inventory.read.RequestFilter;
@@ -53,6 +54,7 @@ public abstract class AReadConfiguration extends JOCResourceImpl {
             item.setDeployments(null);
             item.setHasDeployments(false);
             item.setHasReleases(false);
+            item.setIsReferencedBy(null);
             
             if (in.getCommitId() != null && !in.getCommitId().isEmpty() && JocInventory.isDeployable(type)) {
                 String invContentFromDepHistory = dbLayer.getDeployedInventoryContent(config.getId(), in.getCommitId());
@@ -107,6 +109,15 @@ public abstract class AReadConfiguration extends JOCResourceImpl {
                             }
                         }
                     } 
+                }
+                
+                // JOC-1498 - IsReferencedBy
+                if (ConfigurationType.WORKFLOW.equals(type)) {
+                    IsReferencedBy isRef = new IsReferencedBy();
+                    isRef.setAdditionalProperty("fileOrderSources", dbLayer.getNumOfUsedFileOrderSourcesByWorkflowName(config.getName()).intValue());
+                    isRef.setAdditionalProperty("schedules", dbLayer.getNumOfUsedSchedulesByWorkflowName(config.getName()).intValue());
+                    isRef.setAdditionalProperty("workflows", dbLayer.getNumOfAddOrderWorkflowsByWorkflowName(config.getName()).intValue());
+                    item.setIsReferencedBy(isRef);
                 }
                 
             } else if (JocInventory.isReleasable(type)) {
@@ -169,6 +180,7 @@ public abstract class AReadConfiguration extends JOCResourceImpl {
             item.setDeployments(null);
             item.setHasDeployments(null);
             item.setHasReleases(null);
+            item.setIsReferencedBy(null);
             item.setConfiguration(JocInventory.content2IJSObject(config.getContent(), config.getType()));
             
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(item));

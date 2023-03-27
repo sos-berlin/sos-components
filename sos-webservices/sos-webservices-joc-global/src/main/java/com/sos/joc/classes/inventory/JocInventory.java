@@ -307,14 +307,7 @@ public class JocInventory {
             return s;
         }
         if (type.equals(ConfigurationType.FILEORDERSOURCE)) {
-            // for compatibility directory -> directoryExpr
-            FileOrderSource fos = Globals.objectMapper.readValue(content, FileOrderSource.class);
-            if (fos.getDirectoryExpr() == null || fos.getDirectoryExpr().isEmpty()) {
-                fos.setDirectoryExpr(JsonSerializer.quoteString(fos.getDirectory()));
-                fos.setDirectory(null);
-            }
-            fos.setVersion(Globals.getStrippedInventoryVersion());
-            return fos;
+            return convertFileOrderSource(content, FileOrderSource.class);
         } else {
             IConfigurationObject obj = (IConfigurationObject) Globals.objectMapper.readValue(content, CLASS_MAPPING.get(type));
             ((IInventoryObject) obj).setVersion(Globals.getStrippedInventoryVersion());
@@ -325,6 +318,18 @@ public class JocInventory {
     public static IConfigurationObject content2IJSObject(String content, Integer typeNum) throws JsonParseException, JsonMappingException,
             IOException {
         return content2IJSObject(content, getType(typeNum));
+    }
+    
+    public static <T extends FileOrderSource> T convertFileOrderSource(String content, Class<T> clazz) throws JsonMappingException,
+            JsonProcessingException {
+        // for compatibility directory -> directoryExpr
+        T fos = Globals.objectMapper.readValue(content, clazz);
+        if (fos.getDirectoryExpr() == null || fos.getDirectoryExpr().isEmpty()) {
+            fos.setDirectoryExpr(JsonSerializer.quoteString(fos.getDirectory()));
+            fos.setDirectory(null);
+        }
+        fos.setVersion(Globals.getStrippedInventoryVersion());
+        return fos;
     }
 
     public static void makeParentDirs(InventoryDBLayer dbLayer, Path parentFolder, Long auditLogId, ConfigurationType folderType) throws SOSHibernateException {

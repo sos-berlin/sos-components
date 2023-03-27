@@ -115,8 +115,7 @@ public class ModifyOrders {
      * 
      */
     @JsonProperty("cycleEndTime")
-    @JsonPropertyDescription("ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS or empty")
-    private String cycleEndTime;
+    private Long cycleEndTime;
     /**
      * auditParams
      * <p>
@@ -322,7 +321,7 @@ public class ModifyOrders {
      * 
      */
     @JsonProperty("cycleEndTime")
-    public String getCycleEndTime() {
+    public Long getCycleEndTime() {
         return cycleEndTime;
     }
 
@@ -333,7 +332,7 @@ public class ModifyOrders {
      * 
      */
     @JsonProperty("cycleEndTime")
-    public void setCycleEndTime(String cycleEndTime) {
+    public void setCycleEndTime(Long cycleEndTime) {
         this.cycleEndTime = cycleEndTime;
     }
 

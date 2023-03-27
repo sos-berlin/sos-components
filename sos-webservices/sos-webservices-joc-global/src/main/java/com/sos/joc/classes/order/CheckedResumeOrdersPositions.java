@@ -375,16 +375,15 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
         }).collect(Collectors.toList())).get();
     }
     
-    public Optional<JPosition> workflowPositionToOrderPosition(final Optional<JPosition> workflowPosition, Optional<Long> cycleEndTime) {
+    public Optional<JPosition> workflowPositionToOrderPosition(final Optional<JPosition> workflowPosition, Long cycleEndTime) {
         return workflowPosition.map(l -> workflowPositionToOrderPosition(l, null, cycleEndTime)).map(JPosition::fromList).map(Either::get);
     }
 
-    public Optional<JPosition> workflowPositionToOrderPosition(final Optional<JPosition> workflowPosition, JOrder jOrder,
-            Optional<Long> cycleEndTime) {
+    public Optional<JPosition> workflowPositionToOrderPosition(final Optional<JPosition> workflowPosition, JOrder jOrder, Long cycleEndTime) {
         return workflowPosition.map(l -> workflowPositionToOrderPosition(l, jOrder, cycleEndTime)).map(JPosition::fromList).map(Either::get);
     }
 
-    private List<Object> workflowPositionToOrderPosition(final JPosition workflowJPosition, JOrder jOrder, Optional<Long> cycleEndTime) {
+    private List<Object> workflowPositionToOrderPosition(final JPosition workflowJPosition, JOrder jOrder, Long cycleEndTime) {
         List<Object> curOrderPosition = null;
         if (jOrder == null) {
             curOrderPosition = getCurrentOrderPosition().toList();
@@ -394,6 +393,8 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
         List<Object> result = new LinkedList<>();
         int numOfCurPos = curOrderPosition == null ? 0 : curOrderPosition.size();
         int index = 0;
+        
+        Optional<Instant> cEndTime = cycleEndTime != null ? Optional.of(Instant.now().plusSeconds(Math.max(0, cycleEndTime))) : Optional.empty();
 
         Integer indexOfImplicitEndCyclePosition = getPositions().stream().filter(p -> workflowJPosition.toString().equals(p.getPositionString()))
                 .filter(p -> "ImplicitEnd".equals(p.getType())).map(Position::getPosition).findAny().map(l -> (l.lastIndexOf("cycle") == l.size() - 2)
@@ -410,8 +411,8 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
                         if (posStr.equals("cycle")) {
                             if (indexOfImplicitEndCyclePosition == index) {
                                 curOrderPos = posStr;
-                            } else if (cycleEndTime.isPresent()) {
-                                curOrderPos = curOrderPos.replaceAll("end=\\d+", "end=" + cycleEndTime.get());
+                            } else if (cEndTime.isPresent()) {
+                                curOrderPos = curOrderPos.replaceAll("end=\\d+", "end=" + cEndTime.get());
                             }
                         }
                         result.add(curOrderPos);

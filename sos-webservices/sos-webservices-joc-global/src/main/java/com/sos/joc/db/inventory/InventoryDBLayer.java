@@ -30,6 +30,8 @@ import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue.ReturnType;
 import com.sos.commons.hibernate.function.regex.SOSHibernateRegexp;
 import com.sos.commons.util.SOSString;
+import com.sos.controller.model.workflow.WorkflowId;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.db.DBItem;
@@ -1648,6 +1650,19 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("workflowName", workflowName);
         return getSession().getResultList(query);
     }
+    
+    public Long getNumOfUsedSchedulesByWorkflowName(String workflowName) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select count(c.id) from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" c ");
+        hql.append(",").append(DBLayer.DBITEM_INV_SCHEDULE2WORKFLOWS).append(" sw ");
+        hql.append("where c.type = :type ");
+        hql.append("and sw.scheduleName = c.name ");
+        hql.append("and sw.workflowName = :workflowName ");
+
+        Query<Long> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
+        query.setParameter("workflowName", workflowName);
+        return getSession().getSingleResult(query);
+    }
 
     public List<DBItemInventoryReleasedConfiguration> getUsedReleasedSchedulesByWorkflowName(String workflowName) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select c from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" c ");
@@ -1709,6 +1724,65 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("type", ConfigurationType.FILEORDERSOURCE.intValue());
         query.setParameter("workflowName", workflowName);
         return getSession().getResultList(query);
+    }
+    
+    public Long getNumOfUsedFileOrderSourcesByWorkflowName(String workflowName) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select count(id) from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
+        hql.append("where type=:type ");
+        hql.append("and ");
+        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.workflowName")).append("=:workflowName");
+
+        Query<Long> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.FILEORDERSOURCE.intValue());
+        query.setParameter("workflowName", workflowName);
+        return getSession().getSingleResult(query);
+    }
+    
+    public List<DBItemInventoryConfiguration> getAddOrderWorkflowsByWorkflowName(String workflowName) throws DBConnectionRefusedException,
+            DBInvalidDataException {
+        try {
+            StringBuilder hql = new StringBuilder("select ic from ");
+            hql.append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic left join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
+            hql.append("on ic.id=sw.inventoryConfigurationId ");
+            hql.append("where ic.type=:type ");
+            hql.append("and ic.deployed=sw.deployed ");
+            hql.append("and ");
+
+            String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.instructions", "$.addOrders");
+            hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":workflowName"));
+
+            Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+            query.setParameter("type", DeployType.WORKFLOW.intValue());
+            query.setParameter("workflowName", getRegexpParameter(workflowName, "\""));
+            return getSession().getResultList(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
+    public Long getNumOfAddOrderWorkflowsByWorkflowName(String workflowName) throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            StringBuilder hql = new StringBuilder("select count(ic.id) from ");
+            hql.append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic left join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
+            hql.append("on ic.id=sw.inventoryConfigurationId ");
+            hql.append("where ic.type=:type ");
+            hql.append("and ic.deployed=sw.deployed ");
+            hql.append("and ");
+
+            String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.instructions", "$.addOrders");
+            hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":workflowName"));
+
+            Query<Long> query = getSession().createQuery(hql.toString());
+            query.setParameter("type", DeployType.WORKFLOW.intValue());
+            query.setParameter("workflowName", getRegexpParameter(workflowName, "\""));
+            return getSession().getSingleResult(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
     }
 
     // public List<DBItemInventoryConfiguration> getUsedSchedulesByCalendarPath(String calendarPath) throws SOSHibernateException {

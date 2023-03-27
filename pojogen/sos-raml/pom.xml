@@ -186,6 +186,7 @@
 								<include>order/orderIdMap*.json</include>
 								<include>agent/*.json</include>
 								<include>jobTemplate/**/*.json</include>
+								<include>inventory/configurationObject-schema.json</include>
 							</includes>
 						</configuration>
 						<goals>
@@ -211,6 +212,9 @@
 								<include>calendar/*.json</include>
 								<include>inventory/*.json</include>
 							</includes>
+							<excludes>
+								<exclude>inventory/configurationObject-schema.json</exclude>
+							</excludes>
 						</configuration>
 						<goals>
 							<goal>generate</goal>
