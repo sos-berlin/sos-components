@@ -5,13 +5,16 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
@@ -30,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.joc.Globals;
+import com.sos.joc.exceptions.JocGitException;
 import com.sos.joc.model.publish.repository.ResponseFolder;
 import com.sos.joc.model.publish.repository.ResponseFolderItem;
 import com.sos.joc.publish.repository.util.RepositoryUtil;
@@ -350,6 +354,38 @@ public class RepositoryTest {
             assertEquals(u, "abc@def");
             assertEquals(pw, "ghi@jkl");
         }
+    }
+    
+    @Test
+    @Ignore
+    public void test10CheckWrongGitServerValue() {
+        List<String> servers = Arrays.asList(new String[]{"github.com", "github.com:833", "user@github.com", "user@github.com:833",
+                "http://github.com", "http://github.com:833", "http://user@github.com", "http://user@github.com:833",
+                "https://github.com", "https://github.com:833", "https://user@github.com", "https://user@github.com:833",
+                "https://github.com/sos-berlin", "https://github.com:833/sos-berlin", "https://user@github.com/sos-berlin", "https://user@github.com:833/sos-berlin",
+                "a://user@github.com:833/sos-berlin", "mailto:oh@sos-berlin.com"});
+        
+        LOGGER.trace(String.format("  %1$-38s | %2$-10s | %3$-2s | %4$-20s | %5$-15s | %6$-2s | %7$-2s | %8$-2s | %9$-2s", 
+                "ENTRY", "HOST", "PORT", "AUTHORITY", "PATH", "FRAGMENT", "QUERY", "USERINFO", "SCHEME"));
+
+        servers.stream().forEach(example -> {
+            try {
+                URI uri = new URI(example);
+                LOGGER.trace(String.format("  %1$-38s | %2$-10s | %3$-4s | %4$-20s | %5$-15s | %6$-8s | %7$-5s | %8$-8s | %9$-2s", 
+                        example, uri.getHost(), uri.getPort(), uri.getAuthority(), uri.getPath(), uri.getFragment(), uri.getQuery(), uri.getUserInfo(), uri.getScheme()));
+            } catch (URISyntaxException e) {
+                LOGGER.trace(e.getMessage());
+            }
+        });
+        Set<String> wrongServernames = servers.stream().filter(example -> example.contains("://")).collect(Collectors.toSet());
+        if(!wrongServernames.isEmpty()) {
+            StringBuilder message = new StringBuilder("Credentials could not be stored! GitServer entries malformed! Allowed Format HOST(:PORT).\n");
+            message.append("Malformed GitServers:\n");
+            wrongServernames.stream().forEach(servername -> message.append(servername).append(", "));
+            LOGGER.trace(message.toString());
+//            throw new JocGitException(message.toString());
+        }
+
     }
 
 }

@@ -2,7 +2,9 @@ package com.sos.joc.publish.repository.git.credentials.impl;
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +44,18 @@ public class GitCredentialsAddImpl extends JOCResourceImpl implements IGitCreden
             LOGGER.trace("*** add credentials started ***" + started);
             // obscure security relevant data
             AddCredentialsFilter filterForLogging = Globals.objectMapper.readValue(addCredentialsFilter, AddCredentialsFilter.class);
+            Set<String> wrongServernames = new HashSet<String>();
+            for(GitCredentials cred : filterForLogging.getCredentials()) {
+                if(cred.getGitServer().contains("://")) {
+                    wrongServernames.add(cred.getGitServer());
+                }
+            }
+            if(!wrongServernames.isEmpty()) {
+                StringBuilder message = new StringBuilder("Credentials could not be stored! GitServer entries malformed! Allowed Format HOST(:PORT).\n");
+                message.append("Malformed GitServers:\n");
+                wrongServernames.stream().forEach(servername -> message.append(servername).append(", "));
+                throw new JocGitException(message.toString());
+            }
             for(GitCredentials cred : filterForLogging.getCredentials()) {
                if(cred.getPassword() != null && !cred.getPassword().isEmpty()) {
                    cred.setPassword("********");
