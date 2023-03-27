@@ -9,8 +9,8 @@
 				pattern="%d{HH:mm:ss.SSS}[%5p][%t](%F:%L) - %m%n" />
 		</Console>
 		<RollingFile name="fileLogger"
-			fileName="${basePath}/js1_converter.log"
-			filePattern="${basePath}/js1_converter-%d{yyyy-MM-dd}.log">
+			fileName="${basePath}/js7_converter.log"
+			filePattern="${basePath}/js7_converter-%d{yyyy-MM-dd}.log">
 			<PatternLayout
 				pattern="%d{HH:mm:ss.SSS}[%5p][%t](%F:%L) - %m%n" />
 			<Policies>
