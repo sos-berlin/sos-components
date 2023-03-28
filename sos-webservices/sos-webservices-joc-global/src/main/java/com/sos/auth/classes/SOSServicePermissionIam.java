@@ -204,7 +204,6 @@ public class SOSServicePermissionIam {
                 }
             }
             SOSLoginParameters sosLoginParameters = new SOSLoginParameters();
-            LOGGER.info("idToken: " + idToken);
             sosLoginParameters.setIdToken(idToken);
             sosLoginParameters.setBasicAuthorization(basicAuthorization);
             sosLoginParameters.setClientCertCN(clientCertCN);
