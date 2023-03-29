@@ -26,6 +26,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.calendar.DailyPlanCalendar;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsDailyPlan;
 import com.sos.joc.configuration.resource.IJocConfigurationResource;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
@@ -176,9 +177,11 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                                         "time_zone").getString("value", oldTimeZone);
                                 String curPeriodBegin = curDailyPlan.getJsonObject("period_begin") == null ? oldPeriodBegin : curDailyPlan
                                         .getJsonObject("period_begin").getString("value", oldPeriodBegin);
-                                long periodBeginOffset = DailyPlanCalendar.convertPeriodBeginToSeconds(curPeriodBegin);
-                                if (periodBeginOffset < 0 || periodBeginOffset >= TimeUnit.DAYS.toMillis(1)) {
-                                    throw new JocBadRequestException("Invalid 'dailyplan.period_begin': " + curPeriodBegin);
+                                if (curPeriodBegin != null && !curPeriodBegin.isEmpty()) {
+                                    long periodBeginOffset = DailyPlanCalendar.convertPeriodBeginToSeconds(curPeriodBegin);
+                                    if (periodBeginOffset < 0 || periodBeginOffset >= TimeUnit.DAYS.toMillis(1)) {
+                                        throw new JocBadRequestException("Invalid 'dailyplan.period_begin': " + curPeriodBegin);
+                                    }
                                 }
                                 String curStartTime = curDailyPlan.getJsonObject("start_time") == null ? null : curDailyPlan.getJsonObject(
                                         "start_time").getString("value");
