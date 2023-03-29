@@ -13,7 +13,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.hibernate.query.Query;
 
@@ -248,27 +247,16 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
         }
     }
     
-    public Stream<String> getControllerIdsWithoutAgentWatch(String controllerId) throws DBInvalidDataException, DBMissingDataException,
+    public boolean isWatchedByAgent(String controllerId) throws DBInvalidDataException, DBMissingDataException,
             DBConnectionRefusedException {
         try {
             StringBuilder hql = new StringBuilder();
-            hql.append("select a.controllerId, max(a.isWatcher) from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES).append(" a, ");
-            hql.append(DBLayer.DBITEM_INV_JS_INSTANCES).append(" b ");
-            hql.append("where a.controllerId=b.controllerId ");
-            if (controllerId != null && !controllerId.isEmpty()) {
-                hql.append("and b.controllerId = :controllerId ");
-            }
-            hql.append("and b.isCluster=1 group by a.controllerId");
+            hql.append("select count(id) from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
+            hql.append("and controllerId = :controllerId and isWatcher=1");
             
-            Query<Object[]> query = getSession().createQuery(hql.toString());
-            if (controllerId != null && !controllerId.isEmpty()) {
-                query.setParameter("controllerId", controllerId);
-            }
-            List<Object[]> result = getSession().getResultList(query);
-            if (result == null || result.isEmpty()) {
-                return Stream.empty();
-            }
-            return result.stream().filter(o -> !((Boolean) o[1])).map(o -> (String) o[0]).distinct();
+            Query<Long> query = getSession().createQuery(hql.toString());
+            query.setParameter("controllerId", controllerId);
+            return getSession().getSingleResult(query) > 0L;
         } catch (DBMissingDataException ex) {
             throw ex;
         } catch (SOSHibernateInvalidSessionException ex) {

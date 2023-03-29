@@ -176,9 +176,11 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                                         "time_zone").getString("value", oldTimeZone);
                                 String curPeriodBegin = curDailyPlan.getJsonObject("period_begin") == null ? oldPeriodBegin : curDailyPlan
                                         .getJsonObject("period_begin").getString("value", oldPeriodBegin);
-                                long periodBeginOffset = DailyPlanCalendar.convertPeriodBeginToSeconds(curPeriodBegin);
-                                if (periodBeginOffset < 0 || periodBeginOffset >= TimeUnit.DAYS.toMillis(1)) {
-                                    throw new JocBadRequestException("Invalid 'dailyplan.period_begin': " + curPeriodBegin);
+                                if (curPeriodBegin != null && !curPeriodBegin.isEmpty()) {
+                                    long periodBeginOffset = DailyPlanCalendar.convertPeriodBeginToSeconds(curPeriodBegin);
+                                    if (periodBeginOffset < 0 || periodBeginOffset >= TimeUnit.DAYS.toMillis(1)) {
+                                        throw new JocBadRequestException("Invalid 'dailyplan.period_begin': " + curPeriodBegin);
+                                    }
                                 }
                                 String curStartTime = curDailyPlan.getJsonObject("start_time") == null ? null : curDailyPlan.getJsonObject(
                                         "start_time").getString("value");
