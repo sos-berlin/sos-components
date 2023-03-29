@@ -251,7 +251,7 @@ public class ClusterWatch {
         startedWatches.clear();
     }
     
-    private Stream<String> jocIsClusterWatch(String controllerId, InventoryAgentInstancesDBLayer dbLayer) {
+    private boolean isWatchedByAgent(String controllerId, InventoryAgentInstancesDBLayer dbLayer) {
         // determine in DB which controllerId don't use Agent Cluster Watch
         SOSHibernateSession sosHibernateSession = null;
         try {
@@ -259,7 +259,7 @@ public class ClusterWatch {
                 sosHibernateSession = Globals.createSosHibernateStatelessConnection("ClusterWatch");
                 dbLayer = new InventoryAgentInstancesDBLayer(sosHibernateSession);
             }
-            return dbLayer.getControllerIdsWithoutAgentWatch(controllerId);
+            return dbLayer.isWatchedByAgent(controllerId);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -274,7 +274,7 @@ public class ClusterWatch {
         boolean clusterWatchByJoc = !checkWatchByJoc;
         boolean jocIsActive = true;
         if (checkWatchByJoc) {
-            clusterWatchByJoc = jocIsClusterWatch(controllerId, dbLayer).count() == 1L;
+            clusterWatchByJoc = !isWatchedByAgent(controllerId, dbLayer);
             jocIsActive = jocInstanceIsActive(dbLayer);
         }
         if (clusterWatchByJoc && jocIsActive) {
@@ -298,7 +298,7 @@ public class ClusterWatch {
                 }
             }
         } else {
-            if (clusterWatchByJoc) {
+            if (!clusterWatchByJoc) {
                 LOGGER.info("[ClusterWatch] '" + controllerId + "' is watched by Agent or a different JOC instance");
             }
         }
@@ -360,7 +360,7 @@ public class ClusterWatch {
 //                if (activeInstance.getHeartBeat() != null) {
 //                    Instant oneMinuteAgo = Instant.now().minusSeconds(TimeUnit.MINUTES.toSeconds(1));
 //                    if (activeInstance.getHeartBeat().toInstant().isAfter(oneMinuteAgo)) {
-                        LOGGER.debug("[ClusterWatch] " + toStringWithId() + " instance is active");
+                        LOGGER.info("[ClusterWatch] " + toStringWithId() + " instance is active");
                         return true;
 //                    }
 //                }
