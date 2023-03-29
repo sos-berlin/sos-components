@@ -29,6 +29,7 @@ import com.sos.joc.classes.proxy.ClusterWatch;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.classes.workflow.WorkflowPaths;
+import com.sos.joc.classes.workflow.WorkflowRefs;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.db.DbInstaller;
@@ -82,6 +83,7 @@ public class JocServletContainer extends ServletContainer {
             LOGGER.error(e1.toString());
         }
         WorkflowPaths.init();
+        WorkflowRefs.init();
         AgentStoreUtils.getInstance();
         CompletableFuture.runAsync(() -> {
             SOSShell.printSystemInfos();

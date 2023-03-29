@@ -105,7 +105,7 @@ import scala.collection.JavaConverters;
 import scala.jdk.javaapi.OptionConverters;
 
 public class WorkflowsHelper {
-
+    
     public static final Map<InstructionStateText, Integer> instructionStates = Collections.unmodifiableMap(
             new HashMap<InstructionStateText, Integer>() {
 
@@ -139,32 +139,15 @@ public class WorkflowsHelper {
         }
         return isCurrentVersion(workflowId.getVersionId(), currentState);
     }
-
-    // public static Stream<String> currentVersions(JControllerState currentState) {
-    // return currentState.ordersBy(currentState.orderIsInCurrentVersionWorkflow()).parallel().map(o -> o.workflowId().versionId().string());
-    // }
-    //
-    // public static Stream<JWorkflowId> currentJWorkflowIds(JControllerState currentState) {
-    // return currentState.ordersBy(currentState.orderIsInCurrentVersionWorkflow()).parallel().map(JOrder::workflowId);
-    // }
-    //
-    // public static Stream<WorkflowId> currentWorkflowIds(JControllerState currentState) {
-    // return currentState.ordersBy(currentState.orderIsInCurrentVersionWorkflow()).parallel().map(o -> new WorkflowId(o.workflowId().path()
-    // .string(), o.workflowId().versionId().string()));
-    // }
-    //
-    // public static Stream<String> oldVersions(JControllerState currentState) {
-    // return currentState.ordersBy(JOrderPredicates.not(currentState.orderIsInCurrentVersionWorkflow())).parallel().map(o -> o.workflowId()
-    // .versionId().string());
-    // }
-
+    
     private static Stream<WorkflowId> oldWorkflowIds(JControllerState currentState) {
-        return currentState.ordersBy(JOrderPredicates.not(currentState.orderIsInCurrentVersionWorkflow())).parallel().map(o -> new WorkflowId(o
-                .workflowId().path().string(), o.workflowId().versionId().string()));
+        return currentState.ordersBy(JOrderPredicates.any()).map(JOrder::workflowId).distinct().map(JWorkflowId::asScala).filter(w -> !currentState
+                .asScala().repo().isCurrentItem(w)).map(o -> new WorkflowId(o.path().string(), o.versionId().string()));
     }
 
     public static Stream<JWorkflowId> oldJWorkflowIds(JControllerState currentState) {
-        return currentState.ordersBy(JOrderPredicates.not(currentState.orderIsInCurrentVersionWorkflow())).parallel().map(JOrder::workflowId);
+        return currentState.ordersBy(JOrderPredicates.any()).map(JOrder::workflowId).distinct().filter(w -> !currentState.asScala().repo()
+                .isCurrentItem(w.asScala()));
     }
 
     public static ImplicitEnd createImplicitEndInstruction() {
@@ -346,7 +329,6 @@ public class WorkflowsHelper {
         if (currentstate != null) {
             contents.addAll(getOlderWorkflows(workflowsFilter, currentstate, dbLayer, permittedFolders));
         }
-
         List<WorkflowId> workflowIds = workflowsFilter.getWorkflowIds();
         if (workflowIds != null && !workflowIds.isEmpty()) {
             workflowsFilter.setFolders(null);
@@ -417,7 +399,7 @@ public class WorkflowsHelper {
                 }
             }
             if (workflowMap.containsKey(false)) { // without versionId
-                dbFilter.setNames(workflowMap.get(false).stream().parallel().map(WorkflowId::getPath).map(JocInventory::pathToName).collect(Collectors
+                dbFilter.setNames(workflowMap.get(false).parallelStream().map(WorkflowId::getPath).map(JocInventory::pathToName).collect(Collectors
                         .toSet()));
 
                 // TODO check if workflows known in controller
@@ -460,7 +442,6 @@ public class WorkflowsHelper {
             if (wIds == null || wIds.isEmpty()) {
                 return Collections.emptyList();
             }
-
             // List<String> jsons = oldJWorkflowIds(currentState).map(wId ->
             // currentState.repo().idToCheckedWorkflow(wId)).filter(Either::isRight).map(Either::get).map(JWorkflow::toJson).collect(Collectors.toList());
 
@@ -493,7 +474,7 @@ public class WorkflowsHelper {
         if (permittedFolders != null && !permittedFolders.isEmpty()) {
             stream = stream.filter(i -> JOCResourceImpl.canAdd(i.getPath(), permittedFolders));
         }
-
+        
         return stream.collect(Collectors.toList());
     }
 
@@ -1186,16 +1167,18 @@ public class WorkflowsHelper {
     public static Map<String, List<FileOrderSource>> workflowToFileOrderSources(JControllerState controllerState, String controllerId,
             Set<String> workflowNames, DeployedConfigurationDBLayer dbLayer) {
         Set<String> syncFileOrderSources = controllerState == null ? Collections.emptySet() : controllerState.pathToFileWatch().values().stream()
-                .parallel().map(f -> f.workflowPath().string()).collect(Collectors.toSet());
+                .map(f -> f.workflowPath().string()).collect(Collectors.toSet());
 
-        DeployedConfigurationFilter filter = new DeployedConfigurationFilter();
-        filter.setControllerId(controllerId);
-        filter.setObjectTypes(Collections.singleton(DeployType.FILEORDERSOURCE.intValue()));
-        List<DeployedContent> fileOrderSources = dbLayer.getDeployedInventory(filter);
+        // TODO fileOrderSources should store permantly and updated by events
+//        DeployedConfigurationFilter filter = new DeployedConfigurationFilter();
+//        filter.setControllerId(controllerId);
+//        filter.setObjectTypes(Collections.singleton(DeployType.FILEORDERSOURCE.intValue()));
+        List<DeployedContent> fileOrderSources = WorkflowRefs.getFileOrderSources(controllerId);
+        
         if (fileOrderSources != null && !fileOrderSources.isEmpty()) {
             return fileOrderSources.stream().parallel().filter(dbItem -> dbItem.getContent() != null).map(dbItem -> {
                 try {
-                    FileOrderSource f = Globals.objectMapper.readValue(dbItem.getContent(), FileOrderSource.class);
+                    FileOrderSource f = JocInventory.convertFileOrderSource(dbItem.getContent(), FileOrderSource.class);
                     if (!workflowNames.contains(f.getWorkflowName())) {
                         return null;
                     }
@@ -1211,6 +1194,19 @@ public class WorkflowsHelper {
                     return null;
                 }
             }).filter(Objects::nonNull).collect(Collectors.groupingBy(FileOrderSource::getWorkflowName));
+
+//            return fileOrderSources.parallelStream().filter(dbItem -> dbItem.getContent() != null).map(dbItem -> {
+//                try {
+//                    FileOrderSource f = JocInventory.convertFileOrderSource(dbItem.getContent(), FileOrderSource.class);
+//                    f.setPath(dbItem.getPath());
+//                    f.setVersionDate(dbItem.getCreated());
+//                    return f;
+//                } catch (Exception e) {
+//                    return null;
+//                }
+//            }).filter(Objects::nonNull).filter(f -> workflowNames.contains(f.getWorkflowName())).peek(f -> f.setState(syncFileOrderSources.contains(f
+//                    .getWorkflowName()) ? SyncStateHelper.getState(SyncStateText.IN_SYNC) : SyncStateHelper.getState(SyncStateText.NOT_IN_SYNC)))
+//                    .collect(Collectors.groupingByConcurrent(FileOrderSource::getWorkflowName));
         }
         return Collections.emptyMap();
     }

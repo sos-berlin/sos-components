@@ -503,7 +503,7 @@ public class DeployedConfigurationDBLayer {
                     } catch (Exception e) {
                         return null;
                     }
-                }).filter(Objects::nonNull).flatMap(l -> l.stream()).collect(Collectors.toSet());
+                }).filter(Objects::nonNull).flatMap(List::stream).collect(Collectors.toSet());
             }
             return Collections.emptySet();
         } catch (SOSHibernateInvalidSessionException ex) {

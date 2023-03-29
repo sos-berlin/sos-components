@@ -26,7 +26,9 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.inventory.WorkflowConverter;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.classes.workflow.WorkflowRefs;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.items.DeployedContent;
@@ -89,13 +91,14 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
 
     public static List<Workflow> getWorkflows(WorkflowsFilter workflowsFilter, DeployedConfigurationDBLayer dbLayer, JControllerState currentstate,
             Set<Folder> permittedFolders, JocError jocError) {
-        
         boolean compact = workflowsFilter.getCompact() == Boolean.TRUE;
         List<DeployedContent> contents = WorkflowsHelper.getDeployedContents(workflowsFilter, dbLayer, currentstate, permittedFolders);
         Stream<DeployedContent> contentsStream = WorkflowsHelper.getDeployedContentsStream(workflowsFilter, contents, permittedFolders);
         
         String controllerId = workflowsFilter.getControllerId();
-        Set<String> workflowNamesWithAddOrders = dbLayer.getAddOrderWorkflows(controllerId);
+        // TODO should be permantly stored and updated by events
+        //Set<String> workflowNamesWithAddOrders = dbLayer.getAddOrderWorkflows(controllerId);
+        Set<String> workflowNamesWithAddOrders = WorkflowRefs.getWorkflowNamesWithAddOrders(controllerId);
         boolean withStatesFilter = withStatesFilter(workflowsFilter.getStates());
         if (workflowsFilter.getInstructionStates() == null) {
             workflowsFilter.setInstructionStates(Collections.emptyList());
@@ -103,16 +106,15 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
         boolean withSkippedInstructionStateFilter = workflowsFilter.getInstructionStates().contains(InstructionStateText.SKIPPED);
         boolean withStoppedInstructionStateFilter = workflowsFilter.getInstructionStates().contains(InstructionStateText.STOPPED);
 
-        Map<String, List<FileOrderSource>> fileOrderSources = (compact) ? null : WorkflowsHelper
-                .workflowToFileOrderSources(currentstate, controllerId, contents.parallelStream().filter(DeployedContent::isCurrentVersion).map(
-                        w -> JocInventory.pathToName(w.getPath())).collect(Collectors.toSet()), dbLayer);
-        
-        return contentsStream.parallel().map(w -> {
+        Map<String, List<FileOrderSource>> fileOrderSources = (compact) ? null : WorkflowsHelper.workflowToFileOrderSources(currentstate,
+                controllerId, contents.stream().filter(DeployedContent::isCurrentVersion).map(DeployedContent::getPath).map(JocInventory::pathToName)
+                        .collect(Collectors.toSet()), dbLayer);
+        return contentsStream.map(w -> {
             try {
                 if (w.getContent() == null || w.getContent().isEmpty()) {
                     throw new DBMissingDataException("doesn't exist");
                 }
-                Workflow workflow = Globals.objectMapper.readValue(w.getContent(), Workflow.class);
+                Workflow workflow = WorkflowConverter.convertInventoryWorkflow(w.getContent(), Workflow.class);
                 workflow.setPath(w.getPath());
                 workflow.setVersionId(w.getCommitId());
                 workflow.setIsCurrentVersion(w.isCurrentVersion());
