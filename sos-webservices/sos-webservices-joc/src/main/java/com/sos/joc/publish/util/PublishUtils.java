@@ -67,6 +67,7 @@ import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.keys.DBLayerKeys;
 import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.deploy.DeployHistoryFileOrdersSourceEvent;
 import com.sos.joc.event.bean.deploy.DeployHistoryJobResourceEvent;
 import com.sos.joc.event.bean.deploy.DeployHistoryWorkflowEvent;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -1722,6 +1723,19 @@ public abstract class PublishUtils {
         } else if (DeployType.JOBRESOURCE.intValue() == dbItem.getType()) {
             EventBus.getInstance().post(new DeployHistoryJobResourceEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem
                     .getPath(), ConfigurationType.JOBRESOURCE.intValue()));
+        } else if (DeployType.FILEORDERSOURCE.intValue() == dbItem.getType()) {
+            EventBus.getInstance().post(new DeployHistoryFileOrdersSourceEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem
+                    .getPath(), ConfigurationType.FILEORDERSOURCE.intValue()));
+        }
+    }
+    
+    public static void postDeployHistoryEventWhenDeleted(DBItemDeploymentHistory dbItem) {
+        if (DeployType.WORKFLOW.intValue() == dbItem.getType()) {
+            EventBus.getInstance().post(new DeployHistoryWorkflowEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem
+                    .getPath(), ConfigurationType.WORKFLOW.intValue()));
+        } else if (DeployType.FILEORDERSOURCE.intValue() == dbItem.getType()) {
+            EventBus.getInstance().post(new DeployHistoryFileOrdersSourceEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem
+                    .getPath(), ConfigurationType.FILEORDERSOURCE.intValue()));
         }
     }
 

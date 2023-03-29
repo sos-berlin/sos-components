@@ -217,6 +217,7 @@ public class StoreDeployments {
             optimistic.setErrorMessage(message);
             optimistic.setState(DeploymentState.NOT_DEPLOYED.value());
             dbLayer.getSession().update(optimistic);
+            PublishUtils.postDeployHistoryEventWhenDeleted(optimistic);
             // update related inventory configuration to deployed=false 
             DBItemInventoryConfiguration cfg = dbLayer.getConfiguration(optimistic.getInventoryConfigurationId());
             if (cfg != null) {
