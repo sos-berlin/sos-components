@@ -26,7 +26,6 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.calendar.DailyPlanCalendar;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
-import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsDailyPlan;
 import com.sos.joc.configuration.resource.IJocConfigurationResource;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
