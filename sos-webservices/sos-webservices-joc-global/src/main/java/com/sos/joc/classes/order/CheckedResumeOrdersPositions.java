@@ -2,9 +2,6 @@ package com.sos.joc.classes.order;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -31,7 +28,6 @@ import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
@@ -394,7 +390,8 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
         int numOfCurPos = curOrderPosition == null ? 0 : curOrderPosition.size();
         int index = 0;
         
-        Optional<Instant> cEndTime = cycleEndTime != null ? Optional.of(Instant.now().plusSeconds(Math.max(0, cycleEndTime))) : Optional.empty();
+        Optional<Long> cEndTime = cycleEndTime != null ? Optional.of(Instant.now().plusSeconds(Math.max(0, cycleEndTime))).map(Instant::toEpochMilli)
+                : Optional.empty();
 
         Integer indexOfImplicitEndCyclePosition = getPositions().stream().filter(p -> workflowJPosition.toString().equals(p.getPositionString()))
                 .filter(p -> "ImplicitEnd".equals(p.getType())).map(Position::getPosition).findAny().map(l -> (l.lastIndexOf("cycle") == l.size() - 2)
