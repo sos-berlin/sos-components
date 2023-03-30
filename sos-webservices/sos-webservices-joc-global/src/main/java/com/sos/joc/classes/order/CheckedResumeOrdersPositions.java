@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -390,8 +391,9 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
         int numOfCurPos = curOrderPosition == null ? 0 : curOrderPosition.size();
         int index = 0;
         
-        Optional<Long> cEndTime = cycleEndTime != null ? Optional.of(Instant.now().plusSeconds(Math.max(0, cycleEndTime))).map(Instant::toEpochMilli)
-                : Optional.empty();
+        // 0 <= cycleEndTime <= 24h
+        Optional<Long> cEndTime = cycleEndTime != null ? Optional.of(Instant.now().plusSeconds(Math.min(TimeUnit.DAYS.toSeconds(1), Math.max(0,
+                cycleEndTime)))).map(Instant::toEpochMilli) : Optional.empty();
 
         Integer indexOfImplicitEndCyclePosition = getPositions().stream().filter(p -> workflowJPosition.toString().equals(p.getPositionString()))
                 .filter(p -> "ImplicitEnd".equals(p.getType())).map(Position::getPosition).findAny().map(l -> (l.lastIndexOf("cycle") == l.size() - 2)
