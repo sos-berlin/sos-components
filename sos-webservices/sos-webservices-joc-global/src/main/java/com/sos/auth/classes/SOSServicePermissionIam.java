@@ -781,10 +781,7 @@ public class SOSServicePermissionIam {
                     webserviceCredentials.setIdToken(sosLoginParameters.getIdToken());
                     SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials);
                     String account = sosOpenIdHandler.decodeIdToken(sosLoginParameters.getIdToken());
-                    sosLoginParameters.setAccount(account);
-                    if (!Files.exists(Paths.get(webserviceCredentials.getTruststorePath()))) {
-                        LOGGER.warn("Truststore file " + webserviceCredentials.getTruststorePath() + " not existing");
-                    }
+                    sosLoginParameters.setAccount(account);                  
                     sosLoginParameters.setWebserviceCredentials(webserviceCredentials);
 
                 } else {
