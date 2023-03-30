@@ -69,7 +69,7 @@ public class SOSOpenIdHandler {
     private KeyStore truststore = null;
     private String accountIdentifier = null;
 
-    public SOSOpenIdHandler(SOSOpenIdWebserviceCredentials webserviceCredentials) {
+    public SOSOpenIdHandler(SOSOpenIdWebserviceCredentials webserviceCredentials) throws Exception {
         this.webserviceCredentials = webserviceCredentials;
 
         if (webserviceCredentials != null && webserviceCredentials.getTruststorePath() != null) {
@@ -78,10 +78,10 @@ public class SOSOpenIdHandler {
                     this.truststore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials
                             .getTrustStoreType(), webserviceCredentials.getTruststorePassword());
                 } catch (Exception e) {
-                    LOGGER.error("", e);
+                    throw e;
                 }
             } else {
-                LOGGER.warn("Truststore file " + webserviceCredentials.getTruststorePath() + " not existing");
+                throw new Exception("Truststore file " + webserviceCredentials.getTruststorePath() + " not existing");
             }
         }
     }
@@ -332,11 +332,7 @@ public class SOSOpenIdHandler {
         try {
 
             if (accountIdentifier == null) {
-                try {
-                    accountIdentifier = getAccountIdentifier();
-                } catch (Exception e) {
-                    accountIdentifier = EMAIL;
-                }
+                accountIdentifier = getAccountIdentifier();
             }
             String[] accessTokenParts = idToken.split("\\.");
             Base64.Decoder decoder = Base64.getUrlDecoder();
@@ -352,14 +348,13 @@ public class SOSOpenIdHandler {
 
         } catch (Exception e) {
             LOGGER.warn(String.format("Could not decode jwt id-token"));
+            throw e;
         } finally {
             if (jsonReaderHeader != null) {
                 jsonReaderHeader.close();
                 jsonReaderPayload.close();
             }
         }
-
-        return "";
     }
 
 }

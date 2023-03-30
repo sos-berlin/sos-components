@@ -25,7 +25,6 @@ public class SOSLdapGroupRolesMapping {
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSLdapLogin.class);
     private SOSLdapWebserviceCredentials sosLdapWebserviceCredentials;
     private InitialDirContext ldapContext;
-    private Map<String, Collection<String>> groupKeyCache;
 
     public SOSLdapGroupRolesMapping(InitialDirContext ldapContext, SOSLdapWebserviceCredentials sosLdapWebserviceCredentials) {
         super();
