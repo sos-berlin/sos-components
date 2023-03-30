@@ -85,6 +85,7 @@ import com.sos.joc.model.workflow.WorkflowsFilter;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
+import js7.data.item.Repo;
 import js7.data.item.VersionedItemId;
 import js7.data.order.Order;
 import js7.data.order.OrderId;
@@ -125,29 +126,14 @@ public class WorkflowsHelper {
         return state;
     }
 
-    public static boolean isCurrentVersion(String versionId, JControllerState currentState) {
-        if (versionId == null || versionId.isEmpty()) {
-            return true;
-        }
-        return currentState.ordersBy(currentState.orderIsInCurrentVersionWorkflow()).parallel().anyMatch(o -> o.workflowId().versionId().string()
-                .equals(versionId));
-    }
-
-    public static boolean isCurrentVersion(WorkflowId workflowId, JControllerState currentState) {
-        if (workflowId == null) {
-            return true;
-        }
-        return isCurrentVersion(workflowId.getVersionId(), currentState);
-    }
-    
     private static Stream<WorkflowId> oldWorkflowIds(JControllerState currentState) {
-        return currentState.ordersBy(JOrderPredicates.any()).map(JOrder::workflowId).distinct().map(JWorkflowId::asScala).filter(w -> !currentState
-                .asScala().repo().isCurrentItem(w)).map(o -> new WorkflowId(o.path().string(), o.versionId().string()));
+        return oldJWorkflowIds(currentState).map(o -> new WorkflowId(o.path().string(), o.versionId().string()));
     }
 
     public static Stream<JWorkflowId> oldJWorkflowIds(JControllerState currentState) {
-        return currentState.ordersBy(JOrderPredicates.any()).map(JOrder::workflowId).distinct().filter(w -> !currentState.asScala().repo()
-                .isCurrentItem(w.asScala()));
+        Repo repo = currentState.asScala().repo();
+        Function1<Order<Order.State>, Object> isOldWorkflow = o -> !repo.isCurrentItem(o.workflowId());
+        return currentState.ordersBy(isOldWorkflow).map(JOrder::workflowId).distinct();
     }
 
     public static ImplicitEnd createImplicitEndInstruction() {
