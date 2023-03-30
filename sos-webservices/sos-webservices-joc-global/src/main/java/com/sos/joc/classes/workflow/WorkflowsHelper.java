@@ -126,26 +126,8 @@ public class WorkflowsHelper {
         return state;
     }
 
-    public static boolean isCurrentVersion(String versionId, JControllerState currentState) {
-        if (versionId == null || versionId.isEmpty()) {
-            return true;
-        }
-        return currentState.ordersBy(currentState.orderIsInCurrentVersionWorkflow()).parallel().anyMatch(o -> o.workflowId().versionId().string()
-                .equals(versionId));
-    }
-
-    public static boolean isCurrentVersion(WorkflowId workflowId, JControllerState currentState) {
-        if (workflowId == null) {
-            return true;
-        }
-        return isCurrentVersion(workflowId.getVersionId(), currentState);
-    }
-    
     private static Stream<WorkflowId> oldWorkflowIds(JControllerState currentState) {
-        Repo repo = currentState.asScala().repo();
-        Function1<Order<Order.State>, Object> isOldWorkflow = o -> !repo.isCurrentItem(o.workflowId());
-        return currentState.ordersBy(isOldWorkflow).map(JOrder::workflowId).distinct().map(o -> new WorkflowId(o.path().string(), o.versionId()
-                .string()));
+        return oldJWorkflowIds(currentState).map(o -> new WorkflowId(o.path().string(), o.versionId().string()));
     }
 
     public static Stream<JWorkflowId> oldJWorkflowIds(JControllerState currentState) {
