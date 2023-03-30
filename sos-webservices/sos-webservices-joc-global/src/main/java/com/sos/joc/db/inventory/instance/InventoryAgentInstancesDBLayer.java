@@ -252,7 +252,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
         try {
             StringBuilder hql = new StringBuilder();
             hql.append("select count(id) from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
-            hql.append("and controllerId = :controllerId and isWatcher=1");
+            hql.append(" where controllerId = :controllerId and isWatcher=1");
             
             Query<Long> query = getSession().createQuery(hql.toString());
             query.setParameter("controllerId", controllerId);
