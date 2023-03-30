@@ -85,6 +85,7 @@ import com.sos.joc.model.workflow.WorkflowsFilter;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
+import js7.data.item.Repo;
 import js7.data.item.VersionedItemId;
 import js7.data.order.Order;
 import js7.data.order.OrderId;
@@ -141,13 +142,16 @@ public class WorkflowsHelper {
     }
     
     private static Stream<WorkflowId> oldWorkflowIds(JControllerState currentState) {
-        return currentState.ordersBy(JOrderPredicates.any()).map(JOrder::workflowId).distinct().map(JWorkflowId::asScala).filter(w -> !currentState
-                .asScala().repo().isCurrentItem(w)).map(o -> new WorkflowId(o.path().string(), o.versionId().string()));
+        Repo repo = currentState.asScala().repo();
+        Function1<Order<Order.State>, Object> isOldWorkflow = o -> !repo.isCurrentItem(o.workflowId());
+        return currentState.ordersBy(isOldWorkflow).map(JOrder::workflowId).distinct().map(o -> new WorkflowId(o.path().string(), o.versionId()
+                .string()));
     }
 
     public static Stream<JWorkflowId> oldJWorkflowIds(JControllerState currentState) {
-        return currentState.ordersBy(JOrderPredicates.any()).map(JOrder::workflowId).distinct().filter(w -> !currentState.asScala().repo()
-                .isCurrentItem(w.asScala()));
+        Repo repo = currentState.asScala().repo();
+        Function1<Order<Order.State>, Object> isOldWorkflow = o -> !repo.isCurrentItem(o.workflowId());
+        return currentState.ordersBy(isOldWorkflow).map(JOrder::workflowId).distinct();
     }
 
     public static ImplicitEnd createImplicitEndInstruction() {
