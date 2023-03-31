@@ -245,7 +245,7 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
 //            } else {
 //                setVariablesNotSettable(firstPos.equals(position.toString()));
 //            }
-            setVariablesNotSettable(true);
+            setVariablesNotSettable(false);
         }
         setWithCyclePosition(getPositions().stream().anyMatch(p -> p.getPositionString().contains("cycle")));
         
