@@ -393,7 +393,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             if (!cop.isSingleOrder()) {
                 throw new JocBadRequestException("Variables can only be set for resuming a single order.");
             } else if (cop.getVariablesNotSettable() == Boolean.TRUE) {
-                throw new JocBadRequestException("Variables can only be set if the order starts from the beginning in its scope.");
+                //throw new JocBadRequestException("Variables can only be set if the order starts from the beginning in its scope.");
             }
         }
 
@@ -414,6 +414,12 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 int posIndex = getIndex(allowedPositionsWithImplicitEnds, workflowPositionStringOpt.orElse(""));
                 int curPosIndex = getIndex(allowedPositionsWithImplicitEnds, cop.getCurrentWorkflowPosition().toString());
                 boolean isNotFuturePosition = posIndex <= curPosIndex;
+                
+                Map<String, Object> vars = modifyOrders.getVariables().getAdditionalProperties();
+                if (vars.containsKey("returnCode") && vars.get("returnCode") instanceof String && ((String) vars.get("returnCode")).matches(
+                        "\\d+")) {
+                    modifyOrders.getVariables().setAdditionalProperty("returnCode", Long.valueOf((String) vars.get("returnCode")));
+                }
 
                 // TODO for the time being: quick and dirty solution by replacing historicOutcome of previous position
                 List<Object> prevPos = null;
@@ -432,6 +438,9 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                             prevPos = jPos.toList();
                             prevPosString = jPos.toString();
                         }
+                    } else {
+//                        prevPos = cop.getCurrentOrderPosition().toList();
+//                        prevPosString = cop.getCurrentOrderPosition().toString();
                     }
                     
                 } else {
@@ -439,25 +448,48 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     prevPosString = cop.getCurrentOrderPosition().toString();
                 }
                 if (prevPos != null) {
-                    final String prevPString = prevPosString;
-                    Optional<HistoricOutcome> hoOpt = cop.getHistoricOutcomes().stream().filter(ho -> JPosition.fromList(ho.getPosition()).get()
-                            .toString().equals(prevPString)).findFirst();
-                    if (hoOpt.isPresent()) {
-                        HistoricOutcome h = hoOpt.get();
+//                    final String prevPString = prevPosString;
+//                    Optional<HistoricOutcome> hoOpt = cop.getHistoricOutcomes().stream().filter(ho -> JPosition.fromList(ho.getPosition()).get()
+//                            .toString().equals(prevPString)).findFirst();
+                    HistoricOutcome h = null;
+                    for (HistoricOutcome ho : cop.getHistoricOutcomes()) {
+                        if (JPosition.fromList(ho.getPosition()).get().toString().equals(prevPosString)) {
+                            h = ho;
+                        }
+                    }
+                    if (h != null) {
+                        //HistoricOutcome h = hoOpt.get();
                         Variables v = h.getOutcome().getNamedValues();
                         if (v == null) {
                             v = new Variables();
                         }
                         v.setAdditionalProperties(modifyOrders.getVariables().getAdditionalProperties());
-                        h.getOutcome().setNamedValues(v);
-
-                        historyOperations = getJHistoricOperations(h, getJocError(), false);
+                        if ("Disrupted".equals(h.getOutcome().getTYPE())) {
+                            String errMsg = null;
+                            try {
+                                errMsg = h.getOutcome().getReason().getProblem().getMessage();
+                            } catch (Exception e) {
+                                //
+                            }
+                            h = new HistoricOutcome(prevPos, new Outcome("Failed", errMsg, v, null, null));
+                        } else {
+                            h.getOutcome().setNamedValues(v);
+                        }
+                        historyOperations = getJHistoricOperations(h, getJocError(), "replace", null);
                     } else {
                         Variables v = new Variables();
                         v.setAdditionalProperties(modifyOrders.getVariables().getAdditionalProperties());
                         historyOperations = getJHistoricOperations(new HistoricOutcome(prevPos, new Outcome("Succeeded", null, v, null, null)),
-                                getJocError(), true);
+                                getJocError(), "append", null);
                     }
+                } else {
+                    Variables v = new Variables();
+                    v.setAdditionalProperties(modifyOrders.getVariables().getAdditionalProperties());
+                    List<Object> posList = new LinkedList<>(cop.getCurrentOrderPosition().toList());
+                    int prev = ((Integer) posList.remove(posList.size() - 1)) - 1;
+                    posList.add(Math.max(0, prev));
+                    historyOperations = getJHistoricOperations(new HistoricOutcome(posList, new Outcome("Succeeded", null, v, null, null)),
+                            getJocError(), "insert", cop.getCurrentOrderPosition());
                 }
             }
             
@@ -483,7 +515,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         }
     }
 
-    private static List<JHistoryOperation> getJHistoricOperations(HistoricOutcome h, JocError err, boolean append) throws JsonProcessingException {
+    private static List<JHistoryOperation> getJHistoricOperations(HistoricOutcome h, JocError err, String command, JPosition posBefore) throws JsonProcessingException {
         String json = Globals.objectMapper.writeValueAsString(h);
         Either<Problem, JHistoricOutcome> hoE = JHistoricOutcome.fromJson(json);
         if (hoE.isLeft()) {
@@ -491,10 +523,12 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             // ProblemHelper.postProblemEventAsHintIfExist(API_CALL + "/resume", hoE, null, err, null);
             return Collections.emptyList();
         }
-        if (append) {
+        if ("append".equals(command)) {
             return Collections.singletonList(JHistoryOperation.append(hoE.get().asScala()));
-        } else {
+        } else if ("replace".equals(command)) {
             return Collections.singletonList(JHistoryOperation.replace(hoE.get().asScala()));
+        } else {
+            return Collections.singletonList(JHistoryOperation.insert(posBefore, hoE.get().asScala()));
         }
     }
 
