@@ -239,12 +239,13 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
             // TODO + ImplicitEnd of the Order's scope
             setVariablesNotSettable(true);
         } else {
-            String firstPos = pos.iterator().next().getPositionString();
-            if (position == null) {
-                setVariablesNotSettable(firstPos.equals(currentWorkflowPosition.toString()));
-            } else {
-                setVariablesNotSettable(firstPos.equals(position.toString()));
-            }
+//            String firstPos = pos.iterator().next().getPositionString();
+//            if (position == null) {
+//                setVariablesNotSettable(firstPos.equals(currentWorkflowPosition.toString()));
+//            } else {
+//                setVariablesNotSettable(firstPos.equals(position.toString()));
+//            }
+            setVariablesNotSettable(true);
         }
         setWithCyclePosition(getPositions().stream().anyMatch(p -> p.getPositionString().contains("cycle")));
         
