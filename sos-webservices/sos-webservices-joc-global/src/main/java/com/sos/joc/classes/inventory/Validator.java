@@ -719,15 +719,21 @@ public class Validator {
                     break;
                 case TRY:
                     TryCatch tryCatch = inst.cast();
-                    validateInstructions(tryCatch.getTry().getInstructions(), instPosition + "try.instructions", jobs, orderPreparation, labels,
-                            invalidAgentRefs, boardNames, forkListExist, dbLayer);
-                    validateInstructions(tryCatch.getCatch().getInstructions(), instPosition + "catch.instructions", jobs, orderPreparation,
-                            labels, invalidAgentRefs, boardNames, forkListExist, dbLayer);
+                    if (tryCatch.getTry() != null) {
+                        validateInstructions(tryCatch.getTry().getInstructions(), instPosition + "try.instructions", jobs, orderPreparation, labels,
+                                invalidAgentRefs, boardNames, forkListExist, dbLayer);
+                    }
+                    if (tryCatch.getCatch() != null) {
+                        validateInstructions(tryCatch.getCatch().getInstructions(), instPosition + "catch.instructions", jobs, orderPreparation,
+                                labels, invalidAgentRefs, boardNames, forkListExist, dbLayer);
+                    }
                     break;
                 case LOCK:
                     Lock lock = inst.cast();
+                    if (lock.getLockedWorkflow() != null) {
                     validateInstructions(lock.getLockedWorkflow().getInstructions(), instPosition + "lockedWorkflow.instructions", jobs,
                             orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, dbLayer);
+                    }
                     break;
                 case PROMPT:
                     Prompt prompt = inst.cast();
@@ -815,8 +821,10 @@ public class Validator {
                     break;
                 case CYCLE:
                     Cycle cycle = inst.cast();
-                    validateInstructions(cycle.getCycleWorkflow().getInstructions(), instPosition + "cycleWorkflow.instructions", jobs,
-                            orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, dbLayer);
+                    if (cycle.getCycleWorkflow() != null) {
+                        validateInstructions(cycle.getCycleWorkflow().getInstructions(), instPosition + "cycleWorkflow.instructions", jobs,
+                                orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, dbLayer);
+                    }
                     break;
                 case STICKY_SUBAGENT:
                     if (!hasLicense) {
@@ -835,8 +843,10 @@ public class Validator {
                     break;
                 case OPTIONS:
                     Options opts = inst.cast();
-                    validateInstructions(opts.getBlock().getInstructions(), instPosition + "block.instructions", jobs, orderPreparation, labels,
-                            invalidAgentRefs, boardNames, forkListExist, dbLayer);
+                    if (opts.getBlock() != null) {
+                        validateInstructions(opts.getBlock().getInstructions(), instPosition + "block.instructions", jobs, orderPreparation, labels,
+                                invalidAgentRefs, boardNames, forkListExist, dbLayer);
+                    }
                     break;
                 default:
                     break;
