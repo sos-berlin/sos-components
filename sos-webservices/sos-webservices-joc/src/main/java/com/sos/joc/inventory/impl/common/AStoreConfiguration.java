@@ -22,6 +22,7 @@ import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.classes.inventory.JocInventory.InventoryPath;
+import com.sos.joc.classes.inventory.ReferenceValidator;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
@@ -187,6 +188,7 @@ public abstract class AStoreConfiguration extends JOCResourceImpl {
                     break;
                 }
                 validate(item, in, dbLayer);
+                ReferenceValidator.validate(item.getName(), in.getObjectType(), in.getConfiguration(), dbLayer, getAccessToken());
             }
         }
 
