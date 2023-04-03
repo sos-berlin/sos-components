@@ -253,6 +253,11 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
     
     public List<GenerateRequest> getGenerateRequests (String date, List<String> workflowPaths, List<String> schedulePaths, String controllerId)
             throws ParseException {
+        return getGenerateRequests(date, workflowPaths, schedulePaths, controllerId, null);
+    }
+    
+    public List<GenerateRequest> getGenerateRequests (String date, List<String> workflowPaths, List<String> schedulePaths, String controllerId,
+            Boolean withSubmit) throws ParseException {
         setSettings();
         int planDaysAhead = getSettings().getDayAheadPlan();
         int submitDaysAhead = getSettings().getDayAheadSubmit();
@@ -275,7 +280,11 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             }
             GenerateRequest req = new GenerateRequest();
             req.setControllerId(controllerId);
-            req.setWithSubmit(i < submitDaysAhead);
+            if(withSubmit == null) {
+              req.setWithSubmit(i < submitDaysAhead);
+            } else {
+                req.setWithSubmit(withSubmit);
+            }
             req.setOverwrite(true);
             req.setDailyPlanDate(sdf.format(Date.from(now)));
             req.setWorkflowPaths(workflowsPathItem);
