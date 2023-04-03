@@ -160,7 +160,8 @@ public class StoreDeployments {
                 if(dailyPlanDate != null) {
                     DailyPlanOrdersGenerateImpl ordersGenerate = new DailyPlanOrdersGenerateImpl();
                     List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(commitId);
-                    List<String> schedulePaths = new ArrayList<String>();
+                    List<String> schedulePathsWithSubmit = new ArrayList<String>();
+                    List<String> schedulePathsWithoutSubmit = new ArrayList<String>();
                     InventoryDBLayer invDbLayer = new InventoryDBLayer(newHibernateSession);
                     List<String> workflowNames = optimisticEntries.stream().filter(item -> item.getTypeAsEnum().equals(DeployType.WORKFLOW))
                     .map(workflow -> workflow.getName()).collect(Collectors.toList());
@@ -171,17 +172,34 @@ public class StoreDeployments {
                             Schedule schedule = Globals.objectMapper.readValue(scheduleDbItem.getContent(), Schedule.class);
                             // check planOrderAutomatically of the schedule first
                             if (schedule.getPlanOrderAutomatically()) {
-                                schedulePaths.add(schedule.getPath());
+                                if(schedule.getSubmitOrderToControllerWhenPlanned()) {
+                                    schedulePathsWithSubmit.add(schedule.getPath());
+                                } else {
+                                    schedulePathsWithoutSubmit.add(schedule.getPath());
+                                }
                             }
                         }
                     }
-                    if(!schedulePaths.isEmpty()) {
-                        List<GenerateRequest> requests =  ordersGenerate.getGenerateRequests(dailyPlanDate, null, schedulePaths, controllerId);
+                    List<GenerateRequest> requests = new ArrayList<GenerateRequest>();
+                    if(!schedulePathsWithSubmit.isEmpty()) {
+                        requests.addAll(ordersGenerate.getGenerateRequests(dailyPlanDate, null, schedulePathsWithSubmit, controllerId, true));
+                    }
+                    if(!schedulePathsWithoutSubmit.isEmpty()) {
+                        requests.addAll(ordersGenerate.getGenerateRequests(dailyPlanDate, null, schedulePathsWithoutSubmit, controllerId, false));
+                    }
+                    if(!requests.isEmpty()) {
                         boolean successful = ordersGenerate.generateOrders(requests, accessToken, false);
                         if (!successful) {
                             LOGGER.warn("generate orders failed due to missing permission.");
                         }
                     }
+//                    if(!schedulePaths.isEmpty()) {
+//                        List<GenerateRequest> requests =  ordersGenerate.getGenerateRequests(dailyPlanDate, null, schedulePaths, controllerId);
+//                        boolean successful = ordersGenerate.generateOrders(requests, accessToken, false);
+//                        if (!successful) {
+//                            LOGGER.warn("generate orders failed due to missing permission.");
+//                        }
+//                    }
                 }
             } else  if (either.isLeft()) {
                 // an error occurred

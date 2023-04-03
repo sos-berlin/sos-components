@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.exception.SOSInvalidDataException;
@@ -547,9 +548,49 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                                             LOGGER.warn("generate orders failed due to missing permission.");
                                         }
                                     } else {
-                                        List<GenerateRequest> requests =  ordersGenerate.getGenerateRequests(addOrdersDateFrom, null, 
-                                                ordersPerController.get(controllerId).stream()
-                                                    .map(order -> order.getSchedulePath()).collect(Collectors.toList()), controllerId);
+                                        List<String> schedulePaths = ordersPerController.get(controllerId).stream()
+                                                .map(order -> order.getSchedulePath()).collect(Collectors.toList());
+                                        // get all schedules from database
+                                        List<DBItemInventoryConfiguration> allSchedules = 
+                                                dbLayer.getConfigurationByNames(schedulePaths, ConfigurationType.SCHEDULE.intValue());
+                                        // collect all schedules with submitWhenPlanned = true
+                                        List<Schedule> schedulesWithSubmit = allSchedules.stream()
+                                                .map(dbSchedule -> {
+                                                    try {
+                                                        return Globals.objectMapper.readValue(dbSchedule.getContent(), Schedule.class);
+                                                    } catch (JsonProcessingException e) {
+                                                        throw new JocConfigurationException(e.getMessage());
+                                                    }
+                                                    }).filter(schedule -> schedule.getSubmitOrderToControllerWhenPlanned() == true)
+                                                .collect(Collectors.toList());
+                                        
+                                        // collect all schedules with submitWhenPlanned = false
+                                        List<Schedule> schedulesWithoutSubmit = allSchedules.stream()
+                                                .map(dbSchedule -> {
+                                                    try {
+                                                        return Globals.objectMapper.readValue(dbSchedule.getContent(), Schedule.class);
+                                                    } catch (JsonProcessingException e) {
+                                                        throw new JocConfigurationException(e.getMessage());
+                                                    }
+                                                    }).filter(schedule -> schedule.getSubmitOrderToControllerWhenPlanned() == false)
+                                                .collect(Collectors.toList());
+                                        // generate requests for a schedules with submitWhenPlanned = true
+                                        
+                                        List<GenerateRequest> requestsWithSubmit = ordersGenerate.getGenerateRequests(addOrdersDateFrom, null, 
+                                                schedulesWithSubmit.stream().map(schedule -> schedule.getPath()).collect(Collectors.toList()),
+                                                controllerId, true);
+                                        // generate requests for a schedules with submitWhenPlanned = false
+                                        List<GenerateRequest> requestsWithoutSubmit = ordersGenerate.getGenerateRequests(addOrdersDateFrom, null, 
+                                                schedulesWithoutSubmit.stream().map(schedule -> schedule.getPath()).collect(Collectors.toList()),
+                                                controllerId, false);
+                                        // merge all generate requests
+                                        
+                                        List<GenerateRequest> requests = new ArrayList<GenerateRequest>();
+                                        requests.addAll(requestsWithSubmit);
+                                        requests.addAll(requestsWithoutSubmit);
+//                                        List<GenerateRequest> requests = ordersGenerate.getGenerateRequests(addOrdersDateFrom, null, 
+//                                                ordersPerController.get(controllerId).stream()
+//                                                    .map(order -> order.getSchedulePath()).collect(Collectors.toList()), controllerId);
                                         successful = ordersGenerate.generateOrders(requests, xAccessToken, false);
                                         if (!successful) {
                                             LOGGER.warn("generate orders failed due to missing permission.");
