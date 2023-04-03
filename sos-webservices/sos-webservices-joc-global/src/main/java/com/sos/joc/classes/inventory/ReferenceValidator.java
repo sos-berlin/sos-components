@@ -2,7 +2,7 @@ package com.sos.joc.classes.inventory;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.function.Predicate;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -27,6 +27,7 @@ import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocConfigurationException;
+import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.schema.exception.SOSJsonSchemaException;
@@ -70,37 +71,32 @@ public class ReferenceValidator {
     private static void validateAddOrderInstructionArguments(String workflowName, Requirements orderPreparation, InventoryDBLayer dbLayer,
             String accessToken) {
         List<DBItemInventoryConfiguration> dbWorkflows = dbLayer.getAddOrderWorkflowsByWorkflowName(workflowName);
-        Predicate<DBItemInventoryConfiguration> addOrderInstructionArgumentAreValid = dbWorkflow -> {
-            try {
-                Workflow w = WorkflowConverter.convertInventoryWorkflow(dbWorkflow.getContent());
-                validateAddOrderInstructionArguments(w.getInstructions(), orderPreparation);
-                return true;
-            } catch (Exception e) {
-                return false;
-            }
-        };
         if (dbWorkflows != null) {
-            String invalidWorkflows = dbWorkflows.stream().filter(addOrderInstructionArgumentAreValid.negate()).map(dbWorkflow -> {
-                if (dbWorkflow.getValid() || dbWorkflow.getDeployed()) {
-                    dbWorkflow.setValid(false);
-                    dbWorkflow.setDeployed(false);
-                    try {
-                        JocInventory.updateConfiguration(dbLayer, dbWorkflow);
-                    } catch (Exception e) {
-                        //
+            String invalidWorkflows = dbWorkflows.stream().map(dbWorkflow -> {
+                try {
+                    Workflow w = WorkflowConverter.convertInventoryWorkflow(dbWorkflow.getContent());
+                    validateAddOrderInstructionArguments(w.getInstructions(), orderPreparation);
+                } catch (JocMissingRequiredParameterException e) {
+                    if (dbWorkflow.getValid() || dbWorkflow.getDeployed()) {
+                        dbWorkflow.setValid(false);
+                        dbWorkflow.setDeployed(false);
+                        try {
+                            JocInventory.updateConfiguration(dbLayer, dbWorkflow);
+                        } catch (Exception e1) {
+                            //
+                        }
                     }
+                    return dbWorkflow.getPath() + ": " + e.getMessage();
+                } catch (Exception e) {
+                    //
                 }
-                return dbWorkflow.getPath();
-            }).collect(Collectors.joining(", "));
+                return null;
+            }).filter(Objects::nonNull).collect(Collectors.joining(", "));
 
             if (!invalidWorkflows.isEmpty() && accessToken != null) {
-                if (invalidWorkflows.contains(", ")) {
-                    ProblemHelper.postMessageAsHintIfExist("The workflows " + invalidWorkflows + " reference " + workflowName
-                            + " and have invalid arguments in an AddOrder instruction", accessToken, null, null);
-                } else {
-                    ProblemHelper.postMessageAsHintIfExist("The workflow " + invalidWorkflows + " references " + workflowName
-                            + " and has invalid arguments in an AddOrder instruction", accessToken, null, null);
-                }
+                ProblemHelper.postMessageAsHintIfExist(workflowName
+                        + " is referenced in an AddOrder instruction of following workflows with conflicts: " + invalidWorkflows, accessToken, null,
+                        null);
             }
         }
     }

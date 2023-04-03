@@ -425,7 +425,8 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             
             JControllerApi controllerApi = null;
             
-            if (clusterUriChanged || controllerUpdateRequired) {
+            //if (clusterUriChanged || controllerUpdateRequired) {
+            if (dbControllers.size() == 2) {
                 try {
                     controllerApi = ControllerApi.of(controllerId);
                     ClusterWatch.getInstance().appointNodes(controllerId, controllerApi, agentDBLayer, accessToken, getJocError());
