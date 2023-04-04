@@ -85,8 +85,8 @@ public class ReferenceValidator {
                         } catch (Exception e1) {
                             //
                         }
+                        return dbWorkflow.getPath() + ": " + e.getMessage();
                     }
-                    return dbWorkflow.getPath() + ": " + e.getMessage();
                 } catch (Exception e) {
                     //
                 }
