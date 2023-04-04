@@ -120,6 +120,8 @@ public abstract class RepositoryUtil {
             path = filename.toString().replace(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value(), "");
         } else if (filename.getFileName().toString().endsWith(ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.toString())) {
             path = filename.toString().replace(ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.value(), "");
+        } else if (filename.getFileName().toString().endsWith(ConfigurationObjectFileExtension.JOBTEMPLATE_FILE_EXTENSION.toString())) {
+            path = filename.toString().replace(ConfigurationObjectFileExtension.JOBTEMPLATE_FILE_EXTENSION.value(), "");
         } else {
             path = filename.toString();
         }
@@ -149,6 +151,8 @@ public abstract class RepositoryUtil {
             newPath = Paths.get(path.toString().replace(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value(), ""));
         } else if (path.getFileName().toString().endsWith(ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.toString())) {
             newPath = Paths.get(path.toString().replace(ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.value(), ""));
+        } else if (path.getFileName().toString().endsWith(ConfigurationObjectFileExtension.JOBTEMPLATE_FILE_EXTENSION.toString())) {
+            newPath = Paths.get(path.toString().replace(ConfigurationObjectFileExtension.JOBTEMPLATE_FILE_EXTENSION.value(), ""));
         } else {
             newPath = path;
         }
@@ -175,6 +179,8 @@ public abstract class RepositoryUtil {
             normalizedPath = Globals.normalizePath(path.toString().replace(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value(), ""));
         } else if (path.getFileName().toString().endsWith(ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.toString())) {
             normalizedPath = Globals.normalizePath(path.toString().replace(ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.value(), ""));
+        } else if (path.getFileName().toString().endsWith(ConfigurationObjectFileExtension.JOBTEMPLATE_FILE_EXTENSION.toString())) {
+            normalizedPath = Globals.normalizePath(path.toString().replace(ConfigurationObjectFileExtension.JOBTEMPLATE_FILE_EXTENSION.value(), ""));
         } else {
             normalizedPath = Globals.normalizePath(path.toString());
         }
@@ -688,7 +694,7 @@ public abstract class RepositoryUtil {
                 folder.getConfiguration().getPath(), folder.getConfiguration().getRecursive())));
         items.stream().forEach(item -> {
             DBItemInventoryConfiguration dbItem = dbLayer.getInventoryConfigurationByNameAndType(
-                    Paths.get(item.getConfiguration().getPath()).getFileName().toString(),
+                    Paths.get(stripFileExtension(Paths.get(item.getConfiguration().getPath()))).getFileName().toString(),
                     item.getConfiguration().getObjectType().intValue());
             if (dbItem != null) {
                 dbItemsToUpdate.add(dbItem);   
