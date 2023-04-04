@@ -1,6 +1,7 @@
 package com.sos.joc.inventory.impl;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -10,6 +11,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
@@ -531,7 +533,12 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                     for (String controllerId : cancelOrderResponsePerController.keySet()) {
                         cancelOrderResponsePerController.get(controllerId).thenAccept(either -> {
                             if(either.isRight()) {
+                                SOSHibernateSession session = null;
                                 try {
+                                    session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+                                    session.setAutoCommit(false);
+
+                                    InventoryDBLayer dbLayerForCompleteableFuture = new InventoryDBLayer(session);
                                     boolean successful = deleteOrdersImpl.deleteOrders(orderFilter, xAccessToken, false, false);
                                     if (!successful) {
                                         JocError je = getJocError();
@@ -541,8 +548,56 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                                         LOGGER.warn("Order delete failed due to missing permission.");
                                     }
                                     if(ordersPerController.isEmpty()) {
-                                        List<GenerateRequest> requests =  ordersGenerate.getGenerateRequests(addOrdersDateFrom, 
-                                                controllerIdsWithWorkflowPaths.get(controllerId), null, controllerId);
+                                        List<String> schedulePaths = new ArrayList<String>(schedulePathsWithWorkflowNames.keySet());
+                                        // get all schedules from database
+                                        List<DBItemInventoryConfiguration> allSchedules = 
+                                                dbLayerForCompleteableFuture.getConfigurationByNames(
+                                                        schedulePaths.stream().map(schedulePath -> Paths.get(schedulePath).getFileName().toString()).collect(Collectors.toList()),
+                                                        ConfigurationType.SCHEDULE.intValue());
+                                        // collect all schedules with submitWhenPlanned = true
+                                        List<DBItemInventoryConfiguration> schedulesWithSubmit = allSchedules.stream()
+                                                .map(dbSchedule -> {
+                                                    try {
+                                                        Schedule schedule = Globals.objectMapper.readValue(dbSchedule.getContent(), Schedule.class);
+                                                        if(schedule.getSubmitOrderToControllerWhenPlanned() == true) {
+                                                            return dbSchedule;
+                                                        }
+                                                        return null; 
+                                                    } catch (JsonProcessingException e) {
+                                                        throw new JocConfigurationException(e.getMessage());
+                                                    }
+                                                    }).filter(Objects::nonNull).collect(Collectors.toList());
+                                        
+                                        // collect all schedules with submitWhenPlanned = false
+                                        List<DBItemInventoryConfiguration> schedulesWithoutSubmit = allSchedules.stream()
+                                                .map(dbSchedule -> {
+                                                    try {
+                                                        Schedule schedule = Globals.objectMapper.readValue(dbSchedule.getContent(), Schedule.class);
+                                                        if (schedule.getSubmitOrderToControllerWhenPlanned() == false) {
+                                                            return dbSchedule;
+                                                        }
+                                                        return null;
+                                                    } catch (JsonProcessingException e) {
+                                                        throw new JocConfigurationException(e.getMessage());
+                                                    }
+                                                    }).filter(Objects::nonNull).collect(Collectors.toList());
+                                        List<GenerateRequest> requests = new ArrayList<GenerateRequest>();
+                                        if (!schedulesWithSubmit.isEmpty()) {
+                                            // generate requests for a schedules with submitWhenPlanned = true
+                                            List<GenerateRequest> requestsWithSubmit = ordersGenerate.getGenerateRequests(addOrdersDateFrom, null, 
+                                                    schedulesWithSubmit.stream().map(schedule -> schedule.getPath()).collect(Collectors.toList()),
+                                                    controllerId, true);
+                                            requests.addAll(requestsWithSubmit);
+                                        }
+                                        if(!schedulesWithoutSubmit.isEmpty()) {
+                                            // generate requests for a schedules with submitWhenPlanned = false
+                                            List<GenerateRequest> requestsWithoutSubmit = ordersGenerate.getGenerateRequests(addOrdersDateFrom, null, 
+                                                    schedulesWithoutSubmit.stream().map(schedule -> schedule.getPath()).collect(Collectors.toList()),
+                                                    controllerId, false);
+                                            requests.addAll(requestsWithoutSubmit);
+                                        }
+//                                        List<GenerateRequest> requests =  ordersGenerate.getGenerateRequests(addOrdersDateFrom, 
+//                                                controllerIdsWithWorkflowPaths.get(controllerId), null, controllerId);
                                         successful = ordersGenerate.generateOrders(requests, xAccessToken, false);
                                         if (!successful) {
                                             LOGGER.warn("generate orders failed due to missing permission.");
@@ -552,42 +607,52 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                                                 .map(order -> order.getSchedulePath()).collect(Collectors.toList());
                                         // get all schedules from database
                                         List<DBItemInventoryConfiguration> allSchedules = 
-                                                dbLayer.getConfigurationByNames(schedulePaths, ConfigurationType.SCHEDULE.intValue());
+                                                dbLayerForCompleteableFuture.getConfigurationByNames(
+                                                        schedulePaths.stream().map(schedulePath -> Paths.get(schedulePath).getFileName().toString())
+                                                            .collect(Collectors.toList()),
+                                                        ConfigurationType.SCHEDULE.intValue());
                                         // collect all schedules with submitWhenPlanned = true
-                                        List<Schedule> schedulesWithSubmit = allSchedules.stream()
+                                        List<DBItemInventoryConfiguration> schedulesWithSubmit = allSchedules.stream()
                                                 .map(dbSchedule -> {
                                                     try {
-                                                        return Globals.objectMapper.readValue(dbSchedule.getContent(), Schedule.class);
+                                                        Schedule schedule = Globals.objectMapper.readValue(dbSchedule.getContent(), Schedule.class);
+                                                        if(schedule.getSubmitOrderToControllerWhenPlanned() == true) {
+                                                            return dbSchedule;
+                                                        }
+                                                        return null; 
                                                     } catch (JsonProcessingException e) {
                                                         throw new JocConfigurationException(e.getMessage());
                                                     }
-                                                    }).filter(schedule -> schedule.getSubmitOrderToControllerWhenPlanned() == true)
-                                                .collect(Collectors.toList());
+                                                    }).filter(Objects::nonNull).collect(Collectors.toList());
                                         
                                         // collect all schedules with submitWhenPlanned = false
-                                        List<Schedule> schedulesWithoutSubmit = allSchedules.stream()
+                                        List<DBItemInventoryConfiguration> schedulesWithoutSubmit = allSchedules.stream()
                                                 .map(dbSchedule -> {
                                                     try {
-                                                        return Globals.objectMapper.readValue(dbSchedule.getContent(), Schedule.class);
+                                                        Schedule schedule = Globals.objectMapper.readValue(dbSchedule.getContent(), Schedule.class);
+                                                        if (schedule.getSubmitOrderToControllerWhenPlanned() == false) {
+                                                            return dbSchedule;
+                                                        }
+                                                        return null;
                                                     } catch (JsonProcessingException e) {
                                                         throw new JocConfigurationException(e.getMessage());
                                                     }
-                                                    }).filter(schedule -> schedule.getSubmitOrderToControllerWhenPlanned() == false)
-                                                .collect(Collectors.toList());
-                                        // generate requests for a schedules with submitWhenPlanned = true
-                                        
-                                        List<GenerateRequest> requestsWithSubmit = ordersGenerate.getGenerateRequests(addOrdersDateFrom, null, 
-                                                schedulesWithSubmit.stream().map(schedule -> schedule.getPath()).collect(Collectors.toList()),
-                                                controllerId, true);
-                                        // generate requests for a schedules with submitWhenPlanned = false
-                                        List<GenerateRequest> requestsWithoutSubmit = ordersGenerate.getGenerateRequests(addOrdersDateFrom, null, 
-                                                schedulesWithoutSubmit.stream().map(schedule -> schedule.getPath()).collect(Collectors.toList()),
-                                                controllerId, false);
-                                        // merge all generate requests
-                                        
+                                                    }).filter(Objects::nonNull).collect(Collectors.toList());
                                         List<GenerateRequest> requests = new ArrayList<GenerateRequest>();
-                                        requests.addAll(requestsWithSubmit);
-                                        requests.addAll(requestsWithoutSubmit);
+                                        if(!schedulesWithSubmit.isEmpty()) {
+                                            // generate requests for a schedules with submitWhenPlanned = true
+                                            List<GenerateRequest> requestsWithSubmit = ordersGenerate.getGenerateRequests(addOrdersDateFrom, null, 
+                                                    schedulesWithSubmit.stream().map(schedule -> schedule.getPath()).collect(Collectors.toList()),
+                                                    controllerId, true);
+                                            requests.addAll(requestsWithSubmit);
+                                        }
+                                        if(!schedulesWithoutSubmit.isEmpty()) {
+                                            // generate requests for a schedules with submitWhenPlanned = false
+                                            List<GenerateRequest> requestsWithoutSubmit = ordersGenerate.getGenerateRequests(addOrdersDateFrom, null, 
+                                                    schedulesWithoutSubmit.stream().map(schedule -> schedule.getPath()).collect(Collectors.toList()),
+                                                    controllerId, false);
+                                            requests.addAll(requestsWithoutSubmit);
+                                        }
 //                                        List<GenerateRequest> requests = ordersGenerate.getGenerateRequests(addOrdersDateFrom, null, 
 //                                                ordersPerController.get(controllerId).stream()
 //                                                    .map(order -> order.getSchedulePath()).collect(Collectors.toList()), controllerId);
@@ -601,6 +666,8 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                                         | ControllerConnectionResetException | ControllerConnectionRefusedException | SOSInvalidDataException 
                                         | SOSMissingDataException | IOException | ExecutionException e) {
                                     LOGGER.warn("generation of new  orders failed.", e.getMessage());
+                                } finally {
+                                    Globals.disconnect(session);
                                 }
                             } else {
                                 JocError je = getJocError();
