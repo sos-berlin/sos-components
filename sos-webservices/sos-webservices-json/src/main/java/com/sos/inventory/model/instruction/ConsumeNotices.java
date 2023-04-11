@@ -39,7 +39,6 @@ public class ConsumeNotices
      * instructions
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("subworkflow")
@@ -54,8 +53,8 @@ public class ConsumeNotices
 
     /**
      * 
-     * @param subworkflow
      * @param noticeBoardNames
+     * @param subworkflow
      */
     public ConsumeNotices(String noticeBoardNames, Instructions subworkflow) {
         super();
@@ -87,7 +86,6 @@ public class ConsumeNotices
      * instructions
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("subworkflow")
@@ -99,7 +97,6 @@ public class ConsumeNotices
      * instructions
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("subworkflow")
