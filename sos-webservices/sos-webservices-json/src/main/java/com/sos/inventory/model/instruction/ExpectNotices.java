@@ -24,6 +24,11 @@ public class ExpectNotices
     extends Instruction
 {
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("noticeBoardNames")
     @JsonAlias({
         "boardPaths"
@@ -47,11 +52,21 @@ public class ExpectNotices
         this.noticeBoardNames = noticeBoardNames;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("noticeBoardNames")
     public String getNoticeBoardNames() {
         return noticeBoardNames;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("noticeBoardNames")
     public void setNoticeBoardNames(String noticeBoardNames) {
         this.noticeBoardNames = noticeBoardNames;
