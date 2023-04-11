@@ -66,8 +66,10 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
             logger.info("[connected][%s:%s]%s", providerArgs.getHost().getDisplayValue(), providerArgs.getPort().getDisplayValue(), provider
                     .getServerInfo().toString());
             isWindowsShell = provider.getServerInfo().hasWindowsShell();
-//            delimiter = isWindowsShell ? SSHJobUtil.DEFAULT_WINDOWS_DELIMITER : SSHJobUtil.DEFAULT_LINUX_DELIMITER;
-            delimiter = jobArgs.getCommandDelimiter().getValue();
+            delimiter = isWindowsShell ? SSHJobUtil.DEFAULT_WINDOWS_DELIMITER : SSHJobUtil.DEFAULT_LINUX_DELIMITER;
+            if(jobArgs.getCommandDelimiter().isDirty()) {
+                delimiter = jobArgs.getCommandDelimiter().getValue();
+            }
             
             Map<String, String> allEnvVars = Collections.emptyMap();
             if (jobArgs.getCreateEnvVars().getValue()) {
