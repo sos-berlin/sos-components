@@ -24,7 +24,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "execPre",
     "execPost",
     "makeService",
-    "forceSudo"
+    "forceSudo",
+    "serviceName",
+    "serviceDir"
 })
 public class Target {
 
@@ -63,6 +65,10 @@ public class Target {
     private Boolean makeService;
     @JsonProperty("forceSudo")
     private Boolean forceSudo;
+    @JsonProperty("serviceName")
+    private String serviceName;
+    @JsonProperty("serviceDir")
+    private String serviceDir;
 
     /**
      * No args constructor for use in serialization
@@ -75,13 +81,15 @@ public class Target {
      * 
      * @param execPost
      * @param makeService
+     * @param serviceDir
      * @param connection
      * @param packageLocation
      * @param execPre
      * @param forceSudo
+     * @param serviceName
      * @param authentication
      */
-    public Target(Connection connection, Authentication authentication, String packageLocation, String execPre, String execPost, Boolean makeService, Boolean forceSudo) {
+    public Target(Connection connection, Authentication authentication, String packageLocation, String execPre, String execPost, Boolean makeService, Boolean forceSudo, String serviceName, String serviceDir) {
         super();
         this.connection = connection;
         this.authentication = authentication;
@@ -90,6 +98,8 @@ public class Target {
         this.execPost = execPost;
         this.makeService = makeService;
         this.forceSudo = forceSudo;
+        this.serviceName = serviceName;
+        this.serviceDir = serviceDir;
     }
 
     /**
@@ -200,14 +210,34 @@ public class Target {
         this.forceSudo = forceSudo;
     }
 
+    @JsonProperty("serviceName")
+    public String getServiceName() {
+        return serviceName;
+    }
+
+    @JsonProperty("serviceName")
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
+    }
+
+    @JsonProperty("serviceDir")
+    public String getServiceDir() {
+        return serviceDir;
+    }
+
+    @JsonProperty("serviceDir")
+    public void setServiceDir(String serviceDir) {
+        this.serviceDir = serviceDir;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("connection", connection).append("authentication", authentication).append("packageLocation", packageLocation).append("execPre", execPre).append("execPost", execPost).append("makeService", makeService).append("forceSudo", forceSudo).toString();
+        return new ToStringBuilder(this).append("connection", connection).append("authentication", authentication).append("packageLocation", packageLocation).append("execPre", execPre).append("execPost", execPost).append("makeService", makeService).append("forceSudo", forceSudo).append("serviceName", serviceName).append("serviceDir", serviceDir).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(execPost).append(makeService).append(connection).append(packageLocation).append(execPre).append(forceSudo).append(authentication).toHashCode();
+        return new HashCodeBuilder().append(execPost).append(makeService).append(serviceDir).append(connection).append(packageLocation).append(execPre).append(forceSudo).append(serviceName).append(authentication).toHashCode();
     }
 
     @Override
@@ -219,6 +249,7 @@ public class Target {
             return false;
         }
         Target rhs = ((Target) other);
-        return new EqualsBuilder().append(execPost, rhs.execPost).append(makeService, rhs.makeService).append(connection, rhs.connection).append(packageLocation, rhs.packageLocation).append(execPre, rhs.execPre).append(forceSudo, rhs.forceSudo).append(authentication, rhs.authentication).isEquals();
+        return new EqualsBuilder().append(execPost, rhs.execPost).append(makeService, rhs.makeService).append(serviceDir, rhs.serviceDir).append(connection, rhs.connection).append(packageLocation, rhs.packageLocation).append(execPre, rhs.execPre).append(forceSudo, rhs.forceSudo).append(serviceName, rhs.serviceName).append(authentication, rhs.authentication).isEquals();
     }
+
 }
