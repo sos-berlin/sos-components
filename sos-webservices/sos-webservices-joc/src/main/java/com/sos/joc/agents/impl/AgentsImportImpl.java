@@ -3,7 +3,6 @@ package com.sos.joc.agents.impl;
 import java.io.InputStream;
 import java.net.URLDecoder;
 import java.time.Instant;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -11,8 +10,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import jakarta.ws.rs.Path;
 
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 
@@ -43,6 +40,8 @@ import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.publish.ArchiveFormat;
 import com.sos.joc.publish.util.ImportUtils;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("agents")
 public class AgentsImportImpl extends JOCResourceImpl implements IAgentsImport {

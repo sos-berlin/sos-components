@@ -162,7 +162,7 @@ public class JobTemplatesPropagateImpl extends JOCResourceImpl implements IJobTe
         } else if (withFolderFilter && (folders == null || folders.isEmpty())) {
             // no folder permission
         } else {
-            dbJobTemplates = dbLayer.getConfigurationsByType(Collections.singletonList(ConfigurationType.JOBTEMPLATE.intValue()));
+            dbJobTemplates = dbLayer.getReleasedConfigurationsByType(Collections.singletonList(ConfigurationType.JOBTEMPLATE.intValue()));
         }
         return dbJobTemplates;
     }
