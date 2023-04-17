@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientConnectionException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -1319,5 +1320,18 @@ public class SOSHibernateSession implements Serializable {
             throw new SOSHibernateException(e);
         }
         return metaData;
+    }
+
+    /** TODO <br/>
+     * PgSQL session.getCurrentDateTime():<br/>
+     * the returned current date time depends on TimeZone.set/getDefault.<br/>
+     * For all others, the returned current date time is independent of TimeZone.set/getDefault.<br/>
+     * see SOSHibernateSessionTest */
+    public Date getCurrentDateTime() throws SOSHibernateException {
+        return (Date) getSingleResultNativeQuery(factory.getCurrentTimestampSelectString());
+    }
+
+    public Date getCurrentUTCDateTime() throws SOSHibernateException {
+        return (Date) getSingleResultNativeQuery(factory.getCurrentUTCTimestampSelectString());
     }
 }
