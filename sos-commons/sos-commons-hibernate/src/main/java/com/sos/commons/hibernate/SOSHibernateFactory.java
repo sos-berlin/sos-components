@@ -67,6 +67,8 @@ public class SOSHibernateFactory implements Serializable {
 
     private String identifier;
     private String logIdentifier;
+    private String currentTimestampSelectString;
+    private String currentUTCTimestampSelectString;
     private boolean useDefaultConfigurationProperties = true;
     private boolean readDatabaseMetaData;
 
@@ -255,6 +257,46 @@ public class SOSHibernateFactory implements Serializable {
             break;
         }
         return null;
+    }
+
+    public String getCurrentTimestampSelectString() {
+        if (currentTimestampSelectString == null) {
+            switch (dbms) {
+            case ORACLE:
+                // extra because of Oracle10gDialect.getCurrentTimestampSelectString "select systimestamp from dual" statement
+                // and MappingException: "No Dialect mapping for JDBC type: -101"
+                currentTimestampSelectString = "select sysdate from dual";
+                break;
+            default:
+                currentTimestampSelectString = dialect.getCurrentTimestampSelectString();
+                break;
+            }
+        }
+        return currentTimestampSelectString;
+    }
+
+    public String getCurrentUTCTimestampSelectString() {
+        if (currentUTCTimestampSelectString == null) {
+            switch (dbms) {
+            case MYSQL:
+            case H2:
+                currentUTCTimestampSelectString = "select utc_timestamp()";
+                break;
+            case ORACLE:
+                currentUTCTimestampSelectString = "select cast(sys_extract_utc(systimestamp) as date) from dual";
+                break;
+            case MSSQL:
+                currentUTCTimestampSelectString = "select getutcdate()";
+                break;
+            case PGSQL:
+                currentUTCTimestampSelectString = "select timezone('UTC', now())";
+                break;
+            default:// TODO - DB2, FBSQL,SYBASE
+                currentUTCTimestampSelectString = getCurrentTimestampSelectString();
+                break;
+            }
+        }
+        return currentUTCTimestampSelectString;
     }
 
     public SessionFactory getSessionFactory() {
@@ -576,7 +618,7 @@ public class SOSHibernateFactory implements Serializable {
             throw new SOSHibernateConfigurationException(e.toString(), e);
         }
     }
-    
+
     private void substituteJS7Environment() {
         // JOC-1510
         if (configuration == null) {
@@ -599,7 +641,7 @@ public class SOSHibernateFactory implements Serializable {
                     SOSHibernate.JS7_DBMS_PASSWORD));
         }
     }
-    
+
     private String substituteJS7Environment(String confValue, String key) {
         String envVar = getEnvironmentVariable(key);
         if (SOSHibernate.JS7_DBMS_URL_PARAMETER.equals(key)) {
@@ -607,7 +649,7 @@ public class SOSHibernateFactory implements Serializable {
         }
         return confValue.replaceFirst("\\$\\{" + key + "\\}", envVar);
     }
-    
+
     private String getEnvironmentVariable(String key) {
         String envVar = System.getProperty(getSystemPropKey(key));
         if (envVar == null) {
@@ -618,12 +660,12 @@ public class SOSHibernateFactory implements Serializable {
         }
         return envVar;
     }
-    
+
     private String getSystemPropKey(String key) {
         // e.g. env key to system prop key: JS7_DBMS_PASSWORD -> js7.dbms.password
         return key.toLowerCase().replace('_', '.');
     }
-    
+
     private String normalizeJS7UrlParam(String envVar, String url) {
         if (!envVar.isEmpty()) {
             int index = url.indexOf("${" + SOSHibernate.JS7_DBMS_URL_PARAMETER + "}");
