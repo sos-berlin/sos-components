@@ -30,7 +30,6 @@ import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue.ReturnType;
 import com.sos.commons.hibernate.function.regex.SOSHibernateRegexp;
 import com.sos.commons.util.SOSString;
-import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonConverter;
@@ -816,6 +815,26 @@ public class InventoryDBLayer extends DBLayer {
             return result;
         }
     }
+    
+    public List<DBItemInventoryConfiguration> getConfigurationsByType(Collection<Integer> types) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        if (types != null && !types.isEmpty()) {
+            if (types.size() == 1) {
+                hql.append(" where type = :type");
+            } else {
+                hql.append(" where type in (:types)");
+            }
+        }
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        if (types != null && !types.isEmpty()) {
+            if (types.size() == 1) {
+                query.setParameter("type", types.iterator().next());
+            } else {
+                query.setParameterList("types", types);
+            }
+        }
+        return getSession().getResultList(query);
+    }
 
     public List<DBItemInventoryReleasedConfiguration> getReleasedCalendarsByNames(List<String> names) throws SOSHibernateException {
         if (names == null) {
@@ -874,8 +893,8 @@ public class InventoryDBLayer extends DBLayer {
             return result;
         }
     }
-
-    public List<DBItemInventoryReleasedConfiguration> getConfigurationsByType(Collection<Integer> types) throws SOSHibernateException {
+    
+    public List<DBItemInventoryReleasedConfiguration> getReleasedConfigurationsByType(Collection<Integer> types) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
         if (types != null && !types.isEmpty()) {
             hql.append(" where type in (:types)");

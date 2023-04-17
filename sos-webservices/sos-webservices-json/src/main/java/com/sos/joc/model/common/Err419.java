@@ -20,11 +20,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "surveyDate",
-    "path",
-    "code",
-    "message"
+    "path"
 })
-public class Err419 {
+public class Err419
+    extends Err
+{
 
     /**
      * timestamp
@@ -46,20 +46,6 @@ public class Err419 {
     @JsonProperty("path")
     @JsonPropertyDescription("absolute path of an object.")
     private String path;
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("code")
-    private String code;
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("message")
-    private String message;
 
     /**
      * timestamp
@@ -109,54 +95,14 @@ public class Err419 {
         this.path = path;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("code")
-    public String getCode() {
-        return code;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("code")
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("message")
-    public String getMessage() {
-        return message;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("message")
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("path", path).append("code", code).append("message", message).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("surveyDate", surveyDate).append("path", path).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(code).append(surveyDate).append(message).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(surveyDate).append(path).toHashCode();
     }
 
     @Override
@@ -168,7 +114,7 @@ public class Err419 {
             return false;
         }
         Err419 rhs = ((Err419) other);
-        return new EqualsBuilder().append(path, rhs.path).append(code, rhs.code).append(surveyDate, rhs.surveyDate).append(message, rhs.message).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(surveyDate, rhs.surveyDate).append(path, rhs.path).isEquals();
     }
 
 }

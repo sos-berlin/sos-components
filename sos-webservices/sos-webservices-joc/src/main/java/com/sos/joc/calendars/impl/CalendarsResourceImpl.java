@@ -82,7 +82,7 @@ public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendars
                 if (calendarsFilter.getType() != null) {
                     types = Arrays.asList(calendarsFilter.getType().intValue());
                 }
-                dbCalendars = dbLayer.getConfigurationsByType(types);
+                dbCalendars = dbLayer.getReleasedConfigurationsByType(types);
             }
 
             Calendars entity = new Calendars();
