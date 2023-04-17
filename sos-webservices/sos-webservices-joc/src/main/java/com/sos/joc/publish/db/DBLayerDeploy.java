@@ -1013,6 +1013,8 @@ try {
 
     public DBItemInventoryConfiguration saveOrUpdateInventoryConfiguration(ConfigurationObject configuration, String account, Long auditLogId, boolean overwrite,
             Set<String> agentNames) {
+        String configPath = configuration.getPath();
+        ConfigurationType configType = configuration.getObjectType();
         try {
             boolean isCalendar = JocInventory.isCalendar(configuration.getObjectType());
             DBItemInventoryConfiguration existingConfiguration = null;
@@ -1118,7 +1120,7 @@ try {
                 return newConfiguration;
             }
         } catch (SOSHibernateException e) {
-            throw new JocSosHibernateException(e);
+            throw new JocSosHibernateException(String.format("%1$s: %2$s - ", configType.value().toLowerCase(), configPath), e);
         } catch (IOException e) {
             throw new JocException(e);
         }
