@@ -114,26 +114,25 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
     }
 
     public List<DBItemInventoryAgentInstance> getAllAgents() throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
-        return getAgentsByControllerIds(null, false, false);
+        return getAgentsByControllerIds(null, false);
     }
 
     public List<DBItemInventoryAgentInstance> getAgentsByControllerIds(Collection<String> controllerIds) throws DBInvalidDataException,
             DBMissingDataException, DBConnectionRefusedException {
-        return getAgentsByControllerIds(controllerIds, false, false);
+        return getAgentsByControllerIds(controllerIds, false);
     }
 
-    public List<DBItemInventoryAgentInstance> getAgentsByControllerIds(Collection<String> controllerIds, boolean onlyWatcher,
-            boolean onlyVisibleAgents) throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
-        return getAgentsByControllerIdAndAgentIds(controllerIds, null, onlyWatcher, onlyVisibleAgents);
+    public List<DBItemInventoryAgentInstance> getAgentsByControllerIds(Collection<String> controllerIds, boolean onlyVisibleAgents)
+            throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
+        return getAgentsByControllerIdAndAgentIds(controllerIds, null, onlyVisibleAgents);
     }
 
     public List<DBItemInventoryAgentInstance> getAgentsByControllerIdAndAgentIds(Collection<String> controllerIds, List<String> agentIds,
-            boolean onlyWatcher, boolean onlyVisibleAgents) throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
+            boolean onlyVisibleAgents) throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
         if (agentIds != null && agentIds.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
             List<DBItemInventoryAgentInstance> r = new ArrayList<>();
             for (int i = 0; i < agentIds.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
-                r.addAll(getAgentsByControllerIdAndAgentIds(controllerIds, SOSHibernate.getInClausePartition(i, agentIds), onlyWatcher,
-                        onlyVisibleAgents));
+                r.addAll(getAgentsByControllerIdAndAgentIds(controllerIds, SOSHibernate.getInClausePartition(i, agentIds), onlyVisibleAgents));
             }
             return r;
         } else {
@@ -150,9 +149,6 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                 }
                 if (agentIds != null && !agentIds.isEmpty()) {
                     clauses.add("agentId in (:agentIds)");
-                }
-                if (onlyWatcher) {
-                    clauses.add("isWatcher = 1");
                 }
                 if (onlyVisibleAgents) {
                     clauses.add("hidden = 0");
@@ -190,7 +186,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
     }
 
     public List<DBItemInventoryAgentInstance> getAgentsByControllerIdAndAgentIdsAndUrls(Collection<String> controllerIds, Collection<String> agentIds,
-            Collection<String> agentUrls, boolean onlyWatcher, boolean onlyVisibleAgents) throws DBInvalidDataException, DBMissingDataException,
+            Collection<String> agentUrls, boolean onlyVisibleAgents) throws DBInvalidDataException, DBMissingDataException,
             DBConnectionRefusedException {
         boolean withAgentIds = agentIds != null && !agentIds.isEmpty();
         boolean withAgentUrls = agentUrls != null && !agentUrls.isEmpty();
@@ -213,9 +209,6 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                 } else {
                     clauses.add("uri in (:agentUrls)");
                 }
-            }
-            if (onlyWatcher) {
-                clauses.add("isWatcher = 1");
             }
             if (onlyVisibleAgents) {
                 clauses.add("hidden = 0");
@@ -246,25 +239,6 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
-    public boolean isWatchedByAgent(String controllerId) throws DBInvalidDataException, DBMissingDataException,
-            DBConnectionRefusedException {
-        try {
-            StringBuilder hql = new StringBuilder();
-            hql.append("select count(id) from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
-            hql.append(" where controllerId = :controllerId and isWatcher=1");
-            
-            Query<Long> query = getSession().createQuery(hql.toString());
-            query.setParameter("controllerId", controllerId);
-            return getSession().getSingleResult(query) > 0L;
-        } catch (DBMissingDataException ex) {
-            throw ex;
-        } catch (SOSHibernateInvalidSessionException ex) {
-            throw new DBConnectionRefusedException(ex);
-        } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
-        }
-    }
 
     public Set<String> getVisibleAgentNames() throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
         return getAgentNames(null, true, true);
@@ -278,7 +252,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
     public Map<String, List<String>> getAgentNamesPerAgentId(Collection<String> controllerIds, boolean onlyVisibleAgents)
             throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
         try {
-            List<DBItemInventoryAgentInstance> agents = getAgentsByControllerIds(controllerIds, false, onlyVisibleAgents);
+            List<DBItemInventoryAgentInstance> agents = getAgentsByControllerIds(controllerIds, onlyVisibleAgents);
             if (agents == null || agents.isEmpty()) {
                 return Collections.emptyMap();
             }
@@ -358,7 +332,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
     public Set<String> getAgentNames(Collection<String> controllerIds, boolean onlyVisibleAgents, boolean withClusterLicense)
             throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
         try {
-            List<DBItemInventoryAgentInstance> agents = getAgentsByControllerIds(controllerIds, false, onlyVisibleAgents);
+            List<DBItemInventoryAgentInstance> agents = getAgentsByControllerIds(controllerIds, onlyVisibleAgents);
             if (agents == null || agents.isEmpty()) {
                 return Collections.emptySet();
             }
@@ -808,10 +782,10 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
     }
 
     public Map<String, List<DBItemInventorySubAgentInstance>> getSubAgentInstancesByControllerIds(Collection<String> controllerIds,
-            boolean onlyWatcher, boolean onlyVisibleAgents) {
+            boolean onlyVisibleAgents) {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES);
-            if ((controllerIds != null && !controllerIds.isEmpty()) || onlyWatcher || onlyVisibleAgents) {
+            if ((controllerIds != null && !controllerIds.isEmpty()) || onlyVisibleAgents) {
                 List<String> clauses = new ArrayList<>(3);
                 hql.append(" where agentId in (select agentId from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
                 if (controllerIds != null && !controllerIds.isEmpty()) {
@@ -820,9 +794,6 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                     } else {
                         clauses.add("controllerId in (:controllerIds)");
                     }
-                }
-                if (onlyWatcher) {
-                    clauses.add("isWatcher = 1");
                 }
                 if (onlyVisibleAgents) {
                     clauses.add("hidden = 0");

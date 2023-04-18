@@ -64,7 +64,7 @@ public class AgentsStandaloneDeployImpl extends JOCResourceImpl implements IAgen
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryAgentInstancesDBLayer agentDBLayer = new InventoryAgentInstancesDBLayer(connection);
             List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIdAndAgentIds(Collections.singleton(controllerId),
-                    agentIds, false, false);
+                    agentIds, false);
             
             if (dbAgents != null) {
                 agentIds.removeAll(dbAgents.stream().map(DBItemInventoryAgentInstance::getAgentId).collect(Collectors.toList()));

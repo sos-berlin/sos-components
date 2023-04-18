@@ -485,11 +485,11 @@ public class Proxies {
                 sosHibernateSession = Globals.createSosHibernateStatelessConnection("GetUnknownAgents");
                 dbLayer = new InventoryAgentInstancesDBLayer(sosHibernateSession);
             }
-            List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIds(Collections.singleton(controllerId), false, false);
+            List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIds(Collections.singleton(controllerId), false);
             if (dbAgents != null) {
                 Map<JAgentRef, List<JSubagentItem>> result = new LinkedHashMap<>(dbAgents.size());
                 Map<String, List<DBItemInventorySubAgentInstance>> subAgents = dbLayer.getSubAgentInstancesByControllerIds(Collections.singleton(
-                        controllerId), false, true);
+                        controllerId), true);
                 for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
                     AgentPath agentPath = AgentPath.of(dbAgent.getAgentId());
                     JAgentRef jAgentRef = controllerKnownAgents.get(agentPath);

@@ -61,7 +61,7 @@ public class AgentsResourceTasksImpl extends JOCResourceImpl implements IAgentsR
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
             dbLayer.setWithAgentOrdering(true);
             List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIdAndAgentIds(Collections.singleton(controllerId),
-                    agentsParam.getAgentIds(), false, agentsParam.getOnlyVisibleAgents());
+                    agentsParam.getAgentIds(), agentsParam.getOnlyVisibleAgents());
 
             List<AgentTasks> agentsList = new ArrayList<>();
             AgentsTasks agents = new AgentsTasks();

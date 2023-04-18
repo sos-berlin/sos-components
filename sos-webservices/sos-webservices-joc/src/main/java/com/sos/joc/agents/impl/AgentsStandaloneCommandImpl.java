@@ -72,7 +72,7 @@ public class AgentsStandaloneCommandImpl extends JOCResourceImpl implements IAge
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_REVOKE);
             InventoryAgentInstancesDBLayer agentDBLayer = new InventoryAgentInstancesDBLayer(connection);
             List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIdAndAgentIds(Collections.singleton(controllerId),
-                    agentIds, false, false);
+                    agentIds, false);
             
             if (dbAgents != null) {
                 agentIds.removeAll(dbAgents.stream().map(DBItemInventoryAgentInstance::getAgentId).collect(Collectors.toList()));
@@ -174,7 +174,7 @@ public class AgentsStandaloneCommandImpl extends JOCResourceImpl implements IAge
             connection = Globals.createSosHibernateStatelessConnection(apiCall);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
             List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIdAndAgentIds(Collections.singleton(controllerId),
-                    agentParameter.getAgentIds(), false, false);
+                    agentParameter.getAgentIds(), false);
             
             checkAgentsBelongToController(agentParameter, dbAgents);
             

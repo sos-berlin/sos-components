@@ -96,10 +96,9 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
             dbLayer.setWithAgentOrdering(true);
             List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIdAndAgentIds(allowedControllers, agentParameter
-                    .getAgentIds(), false, false);
+                    .getAgentIds(), false);
             
-            Map<String, List<DBItemInventorySubAgentInstance>> subAgents = dbLayer.getSubAgentInstancesByControllerIds(allowedControllers, false,
-                    false);
+            Map<String, List<DBItemInventorySubAgentInstance>> subAgents = dbLayer.getSubAgentInstancesByControllerIds(allowedControllers, false);
             if (dbAgents != null) {
                 Set<String> controllerIds = dbAgents.stream().map(DBItemInventoryAgentInstance::getControllerId).filter(Objects::nonNull).collect(
                         Collectors.toSet());

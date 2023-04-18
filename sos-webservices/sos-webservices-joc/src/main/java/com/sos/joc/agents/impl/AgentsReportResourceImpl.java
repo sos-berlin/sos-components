@@ -94,7 +94,7 @@ public class AgentsReportResourceImpl extends JOCResourceImpl implements IAgents
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
             List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIdAndAgentIdsAndUrls(allowedControllers, agentParameter
-                    .getAgentIds(), agentParameter.getUrls(), false, true);
+                    .getAgentIds(), agentParameter.getUrls(), true);
             if (dbAgents != null) {
                 
                 HistoryFilter dbFilter = new HistoryFilter();

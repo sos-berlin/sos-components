@@ -95,7 +95,7 @@ public class AgentsStandaloneResourceImpl extends JOCResourceImpl implements IAg
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
             dbLayer.setWithAgentOrdering(true);
             List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIdAndAgentIds(allowedControllers, agentParameter
-                    .getAgentIds(), false, agentParameter.getOnlyVisibleAgents());
+                    .getAgentIds(), agentParameter.getOnlyVisibleAgents());
             List<String> dbClusterAgentIds = dbLayer.getClusterAgentIds(allowedControllers, agentParameter.getOnlyVisibleAgents());
             if (dbAgents != null) {
                 Set<String> controllerIds = dbAgents.stream().map(DBItemInventoryAgentInstance::getControllerId).collect(Collectors.toSet());

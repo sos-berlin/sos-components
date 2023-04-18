@@ -99,7 +99,7 @@ public class SubAgentClusterResourceImpl extends JOCResourceImpl implements ISub
             
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
             List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIdAndAgentIds(allowedControllers, subAgentClusterParameter
-                    .getAgentIds(), false, false);
+                    .getAgentIds(), false);
             Map<String, String> agentIdControllerIdMap = dbAgents.stream().collect(Collectors.toMap(DBItemInventoryAgentInstance::getAgentId,
                     DBItemInventoryAgentInstance::getControllerId));
             
