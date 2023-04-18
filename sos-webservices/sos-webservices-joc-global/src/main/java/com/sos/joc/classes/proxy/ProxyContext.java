@@ -216,8 +216,7 @@ public class ProxyContext {
                     LOGGER.info(toString() + ": Redeploy Agents");
 
                     Stream<JUpdateItemOperation> a = agents.keySet().stream().map(JUpdateItemOperation::addOrChangeSimple);
-                    Stream<JUpdateItemOperation> s = agents.values().stream().flatMap(l -> l.stream().map(
-                            JUpdateItemOperation::addOrChangeSimple));
+                    Stream<JUpdateItemOperation> s = agents.values().stream().flatMap(List::stream).map(JUpdateItemOperation::addOrChangeSimple);
 
                     p.api().updateItems(Flux.concat(Flux.fromStream(a), Flux.fromStream(s))).thenAccept(e -> {
                         if (e.isLeft()) {
@@ -231,7 +230,7 @@ public class ProxyContext {
                                 InventoryAgentInstancesDBLayer dbLayer1 = new InventoryAgentInstancesDBLayer(connection1);
                                 dbLayer1.setAgentsDeployed(agents.keySet().stream().map(JAgentRef::path).map(AgentPath::string).collect(Collectors
                                         .toList()));
-                                dbLayer1.setSubAgentsDeployed(agents.values().stream().flatMap(l -> l.stream()).map(JSubagentItem::path).map(
+                                dbLayer1.setSubAgentsDeployed(agents.values().stream().flatMap(List::stream).map(JSubagentItem::path).map(
                                         SubagentId::string).collect(Collectors.toList()));
                                 Globals.commit(connection1);
                             } catch (Exception e1) {

@@ -71,8 +71,7 @@ public class AgentsResourceReassignImpl extends JOCResourceImpl implements IAgen
             if (!agents.isEmpty()) {
 
                 Stream<JUpdateItemOperation> a = agents.keySet().stream().map(JUpdateItemOperation::addOrChangeSimple);
-                Stream<JUpdateItemOperation> s = agents.values().stream().flatMap(l -> l.stream().map(
-                        JUpdateItemOperation::addOrChangeSimple));
+                Stream<JUpdateItemOperation> s = agents.values().stream().flatMap(List::stream).map(JUpdateItemOperation::addOrChangeSimple);
 
                 proxy.api().updateItems(Flux.concat(Flux.fromStream(a), Flux.fromStream(s))).thenAccept(e -> {
                     ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), null);
@@ -85,7 +84,7 @@ public class AgentsResourceReassignImpl extends JOCResourceImpl implements IAgen
                             InventoryAgentInstancesDBLayer dbLayer1 = new InventoryAgentInstancesDBLayer(connection1);
                             dbLayer1.setAgentsDeployed(agents.keySet().stream().map(JAgentRef::path).map(AgentPath::string).collect(Collectors
                                     .toList()));
-                            dbLayer1.setSubAgentsDeployed(agents.values().stream().flatMap(l -> l.stream()).map(JSubagentItem::path).map(
+                            dbLayer1.setSubAgentsDeployed(agents.values().stream().flatMap(List::stream).map(JSubagentItem::path).map(
                                     SubagentId::string).collect(Collectors.toList()));
                             Globals.commit(connection1);
                         } catch (Exception e1) {

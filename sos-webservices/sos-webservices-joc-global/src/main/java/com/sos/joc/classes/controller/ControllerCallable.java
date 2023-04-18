@@ -70,7 +70,7 @@ public class ControllerCallable implements Callable<ControllerAnswer> {
                     String activeId = dbItemInventoryInstance.getIsPrimary() ? "Primary" : "Backup";
                     IdToUri idToUri = new IdToUri();
                     idToUri.setAdditionalProperty(activeId, dbItemInventoryInstance.getClusterUri());
-                    clusterState = new ClusterState(ClusterType.ACTIVE_NODE_IS_NOT_READY, new ClusterSetting(idToUri, activeId, null, null, null));
+                    clusterState = new ClusterState(ClusterType.ACTIVE_NODE_IS_NOT_READY, new ClusterSetting(idToUri, activeId, null, null));
                 } else {
                     LOGGER.info(e.toString());
                 }

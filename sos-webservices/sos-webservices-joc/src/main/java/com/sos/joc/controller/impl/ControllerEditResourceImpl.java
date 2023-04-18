@@ -2,25 +2,20 @@ package com.sos.joc.controller.impl;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.controller.model.command.Overview;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.agent.AgentHelper;
 import com.sos.joc.classes.controller.ControllerAnswer;
 import com.sos.joc.classes.controller.ControllerCallable;
@@ -31,15 +26,13 @@ import com.sos.joc.classes.proxy.ProxiesEdit;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.controller.resource.IControllerEditResource;
+import com.sos.joc.db.cluster.JocInstancesDBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
-import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
-import com.sos.joc.event.EventBus;
-import com.sos.joc.event.bean.agent.AgentInventoryEvent;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -50,11 +43,6 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.exceptions.JocServiceException;
 import com.sos.joc.joc.impl.StateImpl;
-import com.sos.joc.model.agent.Agent;
-import com.sos.joc.model.agent.ClusterAgent;
-import com.sos.joc.model.agent.RegisterClusterWatchAgent;
-import com.sos.joc.model.agent.SubAgent;
-import com.sos.joc.model.agent.SubagentDirectorType;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.controller.ConnectionStateText;
@@ -67,17 +55,8 @@ import com.sos.joc.model.controller.TestConnect;
 import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
 
-import io.vavr.control.Either;
 import jakarta.ws.rs.Path;
-import js7.base.web.Uri;
-import js7.data.agent.AgentPath;
-import js7.data.subagent.SubagentId;
-import js7.data_for_java.agent.JAgentRef;
-import js7.data_for_java.controller.JControllerState;
-import js7.data_for_java.item.JUpdateItemOperation;
-import js7.data_for_java.subagent.JSubagentItem;
 import js7.proxy.javaapi.JControllerApi;
-import reactor.core.publisher.Flux;
 
 @Path("controller")
 public class ControllerEditResourceImpl extends JOCResourceImpl implements IControllerEditResource {
@@ -106,13 +85,10 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 controllerId = ""; 
             }
             
-            RegisterClusterWatchAgent clusterWatcher = body.getClusterWatcher();
-            
-            if (body.getControllers().size() < 2) {
-                clusterWatcher = null;
-            } else {
+            if (body.getControllers().size() == 2) {
                 AgentHelper.throwJocMissingLicenseException("missing license for Controller cluster");
             }
+            
             boolean requestWithEmptyControllerId = controllerId.isEmpty();
             int index = 0;
             for (RegisterParameter controller : body.getControllers()) {
@@ -154,7 +130,6 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_REGISTER);
             InventoryInstancesDBLayer instanceDBLayer = new InventoryInstancesDBLayer(connection);
-            InventoryAgentInstancesDBLayer agentDBLayer = new InventoryAgentInstancesDBLayer(connection);
             
             if (!requestWithEmptyControllerId) { // try update controllers with given controllerId
                 Integer securityLevel = instanceDBLayer.getSecurityLevel(controllerId);
@@ -163,21 +138,6 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                             "Controller with ID '%s' is already configured with a different security level '%s'.", controllerId, JocSecurityLevel
                                     .fromValue(securityLevel)));
                 }
-            }
-            
-            ClusterAgent cWatcher = null;
-            if (clusterWatcher != null) {
-                SOSCheckJavaVariableName.test("Agent ID", clusterWatcher.getAgentId());
-                if (!isUrl.test(clusterWatcher.getUrl())) {
-                    throw new JocBadRequestException("$.clusterWatcher.url: does not match the url pattern " + isUrlPattern);
-                }
-                agentDBLayer.agentIdAlreadyExists(Collections.singleton(clusterWatcher.getAgentId()), controllerId);
-                
-                cWatcher = new ClusterAgent();
-                cWatcher.setAgentId(clusterWatcher.getAgentId());
-                cWatcher.setAgentName(clusterWatcher.getAgentName());
-                cWatcher.setUrl(clusterWatcher.getUrl());
-                cWatcher.setIsClusterWatcher(true);
             }
             
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getControllers()
@@ -193,7 +153,6 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             DBItemInventoryOperatingSystem osSystem = null;
                         
             boolean firstController = instanceDBLayer.isEmpty();
-            boolean clusterUriChanged = false;
             
             // sorted by isPrimary first
             List<DBItemInventoryJSInstance> dbControllers = instanceDBLayer.getInventoryInstancesByControllerId(controllerId);
@@ -241,7 +200,6 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 } else { // cluster from request
                     if (dbControllers.size() == 1) { // but standalone in DB
                         instanceDBLayer.deleteInstance(dbControllers.get(0));
-                        clusterUriChanged = true;
                         for (RegisterParameter controller : body.getControllers()) {
                             instances.add(storeNewInventoryInstance(instanceDBLayer, osDBLayer, controller, controllerId));
                         }
@@ -256,7 +214,6 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                                 if (controller.getClusterUrl() == null) {
                                     controller.setClusterUrl(controller.getUrl());
                                 }
-                                clusterUriChanged = !dbControllers.get(0).getClusterUri().equalsIgnoreCase(controller.getClusterUrl().toString());
                                 instance = setInventoryInstance(dbControllers.get(0), controller, controllerId);
                             } else {
                                 if (!uriChanged) {
@@ -265,7 +222,6 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                                 if (controller.getClusterUrl() == null) {
                                     controller.setClusterUrl(controller.getUrl());
                                 }
-                                clusterUriChanged = !dbControllers.get(1).getClusterUri().equalsIgnoreCase(controller.getClusterUrl().toString());
                                 instance = setInventoryInstance(dbControllers.get(1), controller, controllerId);
                             }
                             instances.add(instance);
@@ -284,208 +240,22 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 }
             }
             
-            List<ClusterAgent> agentWatchers = new ArrayList<>();
-            boolean controllerUpdateRequired = false;
-            boolean updateAgentRequired = false;
-            
-            List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(Collections.singleton(controllerId));
-            
-            if (clusterWatcher != null) {
-                final String agentId = clusterWatcher.getAgentId();
-                //List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(Collections.singleton(controllerId));
-                boolean clusterWatcherIsNew = true;
-                
-                if (dbAgents != null && !dbAgents.isEmpty()) {
-                    Optional<DBItemInventoryAgentInstance> dbAgentOpt = dbAgents.stream().filter(a -> a.getAgentId().equals(agentId)).findAny();
-                    if (dbAgentOpt.isPresent()) { // cluster watcher is not new
-                        clusterWatcherIsNew = false;
-                        DBItemInventoryAgentInstance dbAgent = dbAgentOpt.get();
-                        dbAgents.remove(dbAgent);
-                        boolean watcherIsChanged = false;
-                        if (!dbAgent.getIsWatcher()) { // cluster watcher is not already cluster watcher
-                            controllerUpdateRequired = true;
-                            watcherIsChanged = true;
-                            dbAgent.setIsWatcher(true);
-                        }
-                        if (!dbAgent.getAgentName().equals(clusterWatcher.getAgentName())) {
-                            watcherIsChanged = true;
-                            dbAgent.setAgentName(clusterWatcher.getAgentName());
-                        }
-                        if (!dbAgent.getUri().equals(clusterWatcher.getUrl())) {
-                            controllerUpdateRequired = true;
-                            updateAgentRequired = true;
-                            watcherIsChanged = true;
-                            dbAgent.setUri(clusterWatcher.getUrl());
-                            dbAgent.setDeployed(false);
-                            
-                            DBItemInventorySubAgentInstance primaryDirector = agentDBLayer.getDirectorInstance(dbAgent.getAgentId(),
-                                    SubagentDirectorType.PRIMARY_DIRECTOR.intValue());
-                            if (primaryDirector != null) {
-                                SubAgent subAgent = new SubAgent();
-                                subAgent.setSubagentId(primaryDirector.getSubAgentId());
-                                cWatcher.setSubagents(Collections.singletonList(subAgent));
-
-                                primaryDirector.setUri(clusterWatcher.getUrl());
-                                primaryDirector.setDeployed(false);
-
-                                agentDBLayer.getSession().update(primaryDirector);
-                            }
-                            cWatcher.setDisabled(dbAgent.getDisabled());
-                        }
-                        if (watcherIsChanged) {
-                            agentDBLayer.updateAgent(dbAgent);
-                        }
-                    }
-                    for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
-                        if (dbAgent.getIsWatcher()) {
-                            controllerUpdateRequired = true;
-                            dbAgent.setIsWatcher(false);
-                            agentDBLayer.updateAgent(dbAgent);
-                        }
-                    }
-                }
-                
-                if (clusterWatcherIsNew) {
-                    
-                    if (clusterWatcher.getPrimaryDirectorId() == null || clusterWatcher.getPrimaryDirectorId().isEmpty()) {
-                        clusterWatcher.setPrimaryDirectorId(clusterWatcher.getAgentId());
-                    } else {
-                        SOSCheckJavaVariableName.test("Primary Director ID", clusterWatcher.getPrimaryDirectorId());
-                        // TODO check uniqueness
-                    }
-                    
-                    int position = agentDBLayer.getAgentMaxOrdering();
-                    controllerUpdateRequired = true;
-                    updateAgentRequired = true;
-                    DBItemInventoryAgentInstance dbAgent = new DBItemInventoryAgentInstance();
-                    dbAgent.setId(null);
-                    dbAgent.setAgentId(clusterWatcher.getAgentId());
-                    dbAgent.setAgentName(clusterWatcher.getAgentName());
-                    dbAgent.setControllerId(controllerId);
-                    dbAgent.setHidden(false);
-                    dbAgent.setDisabled(false);
-                    dbAgent.setDeployed(false);
-                    dbAgent.setIsWatcher(true);
-                    dbAgent.setOsId(0L);
-                    dbAgent.setStartedAt(null);
-                    dbAgent.setUri(clusterWatcher.getUrl());
-                    dbAgent.setVersion(null);
-                    dbAgent.setTitle(null);
-                    dbAgent.setOrdering(++position);
-                    agentDBLayer.saveAgent(dbAgent);
-                    
-                    if (!clusterWatcher.getAsStandaloneAgent()) {
-                        int position2 = agentDBLayer.getSubagentMaxOrdering();
-                        DBItemInventorySubAgentInstance dbSubAgent = new DBItemInventorySubAgentInstance();
-                        dbSubAgent.setAgentId(clusterWatcher.getAgentId());
-                        dbSubAgent.setDeployed(false);
-                        dbSubAgent.setDisabled(false);
-                        dbSubAgent.setId(null);
-                        dbSubAgent.setIsDirector(SubagentDirectorType.PRIMARY_DIRECTOR);
-                        dbSubAgent.setIsWatcher(true);
-                        dbSubAgent.setOrdering(++position2);
-                        dbSubAgent.setOsId(0L);
-                        dbSubAgent.setSubAgentId(clusterWatcher.getPrimaryDirectorId());
-                        dbSubAgent.setUri(clusterWatcher.getUrl());
-                        dbSubAgent.setModified(Date.from(Instant.now()));
-                        agentDBLayer.getSession().save(dbSubAgent);
-                        
-                        SubAgent subAgent = new SubAgent();
-                        subAgent.setSubagentId(clusterWatcher.getPrimaryDirectorId());
-                        cWatcher.setSubagents(Collections.singletonList(subAgent));
-                    }
-                    
-                    cWatcher.setDisabled(false);
-                }
-                if (updateAgentRequired) {
-                    agentWatchers.add(cWatcher);
-                }
-                
-            } else {
-                if (dbAgents != null) {
-                    for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
-                        if (dbAgent.getIsWatcher()) {
-                            controllerUpdateRequired = true;
-                            dbAgent.setIsWatcher(false);
-                            agentDBLayer.updateAgent(dbAgent);
-                        }
-                    }
-                }
-            }
-            
-            
-                
                 
             instances = instances.stream().filter(Objects::nonNull).collect(Collectors.toList());
-//            boolean proxyIsUpdated = false;
             if (!instances.isEmpty()) {
                 ProxiesEdit.update(instances);
-//                proxyIsUpdated = true;
             }
             
             JControllerApi controllerApi = null;
             
-            //if (clusterUriChanged || controllerUpdateRequired) {
             if (dbControllers.size() == 2) {
                 try {
                     controllerApi = ControllerApi.of(controllerId);
-                    ClusterWatch.getInstance().appointNodes(controllerId, controllerApi, agentDBLayer, accessToken, getJocError());
+                    ClusterWatch.getInstance().appointNodes(controllerId, controllerApi, new JocInstancesDBLayer(connection), accessToken,
+                            getJocError());
                 } catch (JocBadRequestException e) {
                 }
             }
-            
-            if (!agentWatchers.isEmpty()) {
-                final String cId = controllerId;
-
-                // TODO consider old Agent cannot convert to new Agents
-                Map<AgentPath, JAgentRef> knownAgents = getKnownAgents(controllerId);
-                if (controllerApi == null) {
-                    controllerApi = ControllerApi.of(controllerId);
-                }
-
-                controllerApi.updateItems(Flux.fromStream(agentWatchers.stream().map(a -> {
-                    JAgentRef agentRef = knownAgents.get(AgentPath.of(a.getAgentId()));
-
-                    String subagentIdFromRequest = a.getAgentId();
-                    if (a.getSubagents() != null && !a.getSubagents().isEmpty()) {
-                        if (a.getSubagents().get(0).getSubagentId() != null && !a.getSubagents().get(0).getSubagentId().isEmpty()) {
-                            subagentIdFromRequest = a.getSubagents().get(0).getSubagentId();
-                        }
-                    }
-                    SubagentId subagentId = agentRef != null && agentRef.director().isPresent() ? agentRef.director().get() : SubagentId.of(
-                            subagentIdFromRequest);
-                    return Arrays.asList(JUpdateItemOperation.addOrChangeSimple(createAgent(a, subagentId)), JUpdateItemOperation
-                            .addOrChangeSimple(createSubagentDirector(a, subagentId)));
-                
-                }).flatMap(List::stream))).thenAccept(e -> {
-                    ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), null);
-                    if (e.isRight()) {
-                        SOSHibernateSession connection1 = null;
-                        try {
-                            connection1 = Globals.createSosHibernateStatelessConnection(API_CALL_REGISTER);
-                            connection1.setAutoCommit(false);
-                            Globals.beginTransaction(connection1);
-                            InventoryAgentInstancesDBLayer dbLayer1 = new InventoryAgentInstancesDBLayer(connection1);
-                            List<String> agentIds = agentWatchers.stream().map(ClusterAgent::getAgentId).distinct().collect(Collectors.toList());
-                            List<String> subagentIds = agentWatchers.stream().map(ClusterAgent::getSubagents).filter(Objects::nonNull).filter(l -> !l
-                                    .isEmpty()).map(l -> l.get(0)).map(SubAgent::getSubagentId).distinct().collect(Collectors.toList());
-                            dbLayer1.setAgentsDeployed(agentIds);
-                            dbLayer1.setSubAgentsDeployed(subagentIds);
-                            Globals.commit(connection1);
-                            EventBus.getInstance().post(new AgentInventoryEvent(cId, agentIds));
-                        } catch (Exception e1) {
-                            Globals.rollback(connection1);
-                            ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), null);
-                        } finally {
-                            Globals.disconnect(connection1);
-                        }
-                    }
-                });
-            }
-            
-//            if (!proxyIsUpdated && controllerUpdateRequired) {
-//                ProxiesEdit.update(controllerId);
-//            }
             
             if (firstController) { // GUI needs permissions directly for the first controller(s)
                 return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(getJobschedulerUser().getSOSAuthCurrentAccount()
@@ -501,26 +271,6 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
         } finally {
             Globals.disconnect(connection);
         }
-    }
-    
-    private Map<AgentPath, JAgentRef> getKnownAgents(String controllerId) {
-        // TODO consider old Agent cannot convert to new Agents
-        Map<AgentPath, JAgentRef> knownAgents = Collections.emptyMap();
-        try {
-            JControllerState currentState = Proxy.of(controllerId).currentState();
-            knownAgents = currentState.pathToAgentRef();
-        } catch (Exception e) {
-            //
-        }
-        return knownAgents;
-    }
-    
-    private static JAgentRef createAgent(Agent a, SubagentId subagentId) {
-        return JAgentRef.of(AgentPath.of(a.getAgentId()), subagentId);
-    }
-    
-    private static JSubagentItem createSubagentDirector(Agent a, SubagentId subagentId) {
-        return JSubagentItem.of(subagentId, AgentPath.of(a.getAgentId()), Uri.of(a.getUrl()), a.getDisabled());
     }
     
     @Override

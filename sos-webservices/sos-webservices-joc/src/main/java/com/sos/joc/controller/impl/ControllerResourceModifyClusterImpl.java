@@ -18,7 +18,6 @@ import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.controller.resource.IControllerResourceModifyCluster;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
-import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocServiceException;
@@ -79,7 +78,6 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
     
     @Override
     public JOCDefaultResponse postClusterAppointNodes(String accessToken, byte[] filterBytes) {
-        SOSHibernateSession connection = null;
         try {
             initLogging(API_CALL_APPOINT_NODES, filterBytes, accessToken);
             
@@ -97,10 +95,8 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
             }
 
             storeAuditLog(urlParameter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
-            
-            connection = Globals.createSosHibernateStatelessConnection(API_CALL_APPOINT_NODES);
-            ClusterWatch.getInstance().appointNodes(controllerId, ControllerApi.of(controllerId), new InventoryAgentInstancesDBLayer(connection),
-                    accessToken, getJocError());
+
+            ClusterWatch.getInstance().appointNodes(controllerId, ControllerApi.of(controllerId), null, accessToken, getJocError());
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -108,8 +104,6 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-        } finally {
-            Globals.disconnect(connection);
         }
     }
     
