@@ -37,7 +37,6 @@ public class JS1JS7AgentConverter {
             sa.setOrdering(null);
             sa.setSyncState(null);
 
-            sa.setIsClusterWatcher(null);
             sa.setWithGenerateSubagentCluster(null);
 
             result.add(sa);
