@@ -117,7 +117,6 @@ public class AgentsStandaloneResourceImpl extends JOCResourceImpl implements IAg
                     agent.setDisabled(dbAgent.getDisabled());
                     agent.setDeployed(null); // deployed is obsolete, now part of syncState
                     agent.setSyncState(AgentHelper.getSyncState(agentsOnController.get(dbAgent.getControllerId()), dbAgent));
-                    agent.setIsClusterWatcher(dbAgent.getIsWatcher());
                     agent.setControllerId(dbAgent.getControllerId());
                     agent.setUrl(dbAgent.getUri());
                     agent.setOrdering(++position);

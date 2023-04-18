@@ -124,7 +124,6 @@ public class ControllersResourceImpl extends JOCResourceImpl implements IControl
                     agent.setAgentNameAliases(allAliases.get(a.getAgentId()));
                     agent.setHidden(a.getHidden());
                     agent.setDisabled(a.getDisabled());
-                    agent.setIsClusterWatcher(a.getIsWatcher());
 //                  if (clusterAgentIds.contains(a.getAgentId())) {
 //                      agent.setUrl(null);
 //                  } else {

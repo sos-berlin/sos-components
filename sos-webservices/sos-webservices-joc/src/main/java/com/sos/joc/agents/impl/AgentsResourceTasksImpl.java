@@ -93,7 +93,6 @@ public class AgentsResourceTasksImpl extends JOCResourceImpl implements IAgentsR
                     agent.setAgentId(dbAgent.getAgentId());
                     agent.setAgentName(dbAgent.getAgentName());
                     agent.setControllerId(controllerId);
-                    agent.setIsClusterWatcher(dbAgent.getIsWatcher());
                     agent.setRunningTasks(0);
                     if (agentsParam.getCompact() == Boolean.TRUE) {
                         agent.setRunningTasks(ordersCountPerAgent.getOrDefault(dbAgent.getAgentId(), 0));

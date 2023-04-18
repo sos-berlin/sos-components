@@ -23,8 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "agentId",
     "agentName",
     "orders",
-    "runningTasks",
-    "isClusterWatcher"
+    "runningTasks"
 })
 public class AgentTasks {
 
@@ -65,8 +64,6 @@ public class AgentTasks {
      */
     @JsonProperty("runningTasks")
     private Integer runningTasks;
-    @JsonProperty("isClusterWatcher")
-    private Boolean isClusterWatcher = false;
 
     /**
      * controllerId
@@ -172,24 +169,14 @@ public class AgentTasks {
         this.runningTasks = runningTasks;
     }
 
-    @JsonProperty("isClusterWatcher")
-    public Boolean getIsClusterWatcher() {
-        return isClusterWatcher;
-    }
-
-    @JsonProperty("isClusterWatcher")
-    public void setIsClusterWatcher(Boolean isClusterWatcher) {
-        this.isClusterWatcher = isClusterWatcher;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("agentName", agentName).append("orders", orders).append("runningTasks", runningTasks).append("isClusterWatcher", isClusterWatcher).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("agentName", agentName).append("orders", orders).append("runningTasks", runningTasks).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentId).append(controllerId).append(agentName).append(orders).append(isClusterWatcher).append(runningTasks).toHashCode();
+        return new HashCodeBuilder().append(agentId).append(controllerId).append(agentName).append(orders).append(runningTasks).toHashCode();
     }
 
     @Override
@@ -201,7 +188,7 @@ public class AgentTasks {
             return false;
         }
         AgentTasks rhs = ((AgentTasks) other);
-        return new EqualsBuilder().append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(agentName, rhs.agentName).append(orders, rhs.orders).append(isClusterWatcher, rhs.isClusterWatcher).append(runningTasks, rhs.runningTasks).isEquals();
+        return new EqualsBuilder().append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(agentName, rhs.agentName).append(orders, rhs.orders).append(runningTasks, rhs.runningTasks).isEquals();
     }
 
 }

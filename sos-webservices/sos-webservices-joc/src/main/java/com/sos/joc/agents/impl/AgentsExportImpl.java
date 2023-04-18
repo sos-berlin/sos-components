@@ -108,7 +108,6 @@ public class AgentsExportImpl extends JOCResourceImpl implements IAgentsExport {
         clAgent.setDeployed(agentInstance.getDeployed());
         clAgent.setDisabled(agentInstance.getDisabled());
         clAgent.setHidden(agentInstance.getHidden());
-        clAgent.setIsClusterWatcher(agentInstance.getIsWatcher());
         clAgent.setOrdering(agentInstance.getOrdering());
         clAgent.setSyncState(null);
         clAgent.setTitle(agentInstance.getTitle());
@@ -118,7 +117,6 @@ public class AgentsExportImpl extends JOCResourceImpl implements IAgentsExport {
             subAgent.setAgentId(agentInstance.getAgentId());
             subAgent.setDeployed(subagent.getDeployed());
             subAgent.setDisabled(subagent.getDisabled());
-            subAgent.setIsClusterWatcher(subagent.getIsWatcher());
             subAgent.setIsDirector(subagent.getDirectorAsEnum());
             subAgent.setOrdering(subagent.getOrdering());
             subAgent.setSubagentId(subagent.getSubAgentId());
@@ -142,7 +140,6 @@ public class AgentsExportImpl extends JOCResourceImpl implements IAgentsExport {
         standalone.setDeployed(agentInstance.getDeployed());
         standalone.setDisabled(agentInstance.getDisabled());
         standalone.setHidden(agentInstance.getHidden());
-        standalone.setIsClusterWatcher(agentInstance.getIsWatcher());
         standalone.setOrdering(agentInstance.getOrdering());
         standalone.setSyncState(null);
         standalone.setTitle(agentInstance.getTitle());

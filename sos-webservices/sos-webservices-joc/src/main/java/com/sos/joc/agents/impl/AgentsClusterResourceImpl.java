@@ -118,7 +118,6 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
                     agent.setAgentName(dbAgent.getAgentName());
                     agent.setAgentNameAliases(allAliases.get(dbAgent.getAgentId()));
                     //agent.setDisabled(dbAgent.getDisabled());
-                    agent.setIsClusterWatcher(dbAgent.getIsWatcher());
                     agent.setControllerId(dbAgent.getControllerId());
                     agent.setUrl(dbAgent.getUri());
                     agent.setDeployed(null); // deployed is obsolete, now part of syncState
@@ -169,7 +168,6 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
         subagent.setSubagentId(dbSubagent.getSubAgentId());
         subagent.setUrl(dbSubagent.getUri());
         subagent.setIsDirector(dbSubagent.getDirectorAsEnum());
-        subagent.setIsClusterWatcher(dbSubagent.getIsWatcher());
         subagent.setOrdering(dbSubagent.getOrdering());
         subagent.setDisabled(dbSubagent.getDisabled());
         subagent.setTitle(dbSubagent.getTitle());

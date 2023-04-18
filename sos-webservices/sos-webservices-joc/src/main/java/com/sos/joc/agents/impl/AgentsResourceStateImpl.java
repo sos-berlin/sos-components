@@ -432,7 +432,6 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
         agent.setControllerId(dbAgent.getControllerId());
         if (subagents == null) {
             agent.setSubagents(null);
-            agent.setIsClusterWatcher(dbAgent.getIsWatcher());
             agent.setUrl(dbAgent.getUri());
             agent.setState(getState(AgentStateText.UNKNOWN, null));
             agent.setHealthState(null); //will be set later for standalone agents
@@ -443,7 +442,6 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
             } else {
                 agent.setSubagents(subagents);
             }
-            agent.setIsClusterWatcher(null);
             agent.setUrl(null);
             agent.setState(null);
             agent.setHealthState(getHealthState(subagents));

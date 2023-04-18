@@ -41,7 +41,6 @@ public class JS7AgentHelper {
         a.setDeployed(agent.getDeployed());
         a.setDisabled(agent.getDisabled());
         a.setHidden(agent.getHidden());
-        a.setIsClusterWatcher(agent.getIsClusterWatcher());
         a.setOrdering(agent.getOrdering());
         a.setSyncState(agent.getSyncState());
         a.setTitle(agent.getTitle());
@@ -62,7 +61,6 @@ public class JS7AgentHelper {
         a.setDeployed(agent.getDeployed());
         a.setDisabled(agent.getDisabled());
         a.setHidden(agent.getHidden());
-        a.setIsClusterWatcher(agent.getIsClusterWatcher());
         a.setOrdering(agent.getOrdering());
         a.setSyncState(agent.getSyncState());
         a.setTitle(agent.getTitle());

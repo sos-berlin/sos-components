@@ -1324,7 +1324,6 @@ public class ImportUtils {
                     subagent.setAgentId(agentId);
                     subagent.setDeployed(false);
                     subagent.setDisabled(false);
-                    subagent.setIsClusterWatcher(false);
                     subagent.setSyncState(null);
                     subagent.setWithGenerateSubagentCluster(false);
                 });
@@ -1335,7 +1334,6 @@ public class ImportUtils {
                 agent.getStandaloneAgent().setDeployed(false);
                 agent.getStandaloneAgent().setDisabled(false);
                 agent.getStandaloneAgent().setHidden(false);
-                agent.getStandaloneAgent().setIsClusterWatcher(false);
                 agent.getStandaloneAgent().setOrdering(0);
                 agent.getStandaloneAgent().setSyncState(null);
             }

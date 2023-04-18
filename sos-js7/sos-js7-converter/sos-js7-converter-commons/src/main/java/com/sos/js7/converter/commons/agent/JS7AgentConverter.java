@@ -32,7 +32,6 @@ public class JS7AgentConverter {
         a.setDeployed(null);
         a.setHidden(null);
         a.setDisabled(null);
-        a.setIsClusterWatcher(null);
         return a;
     }
 
@@ -45,7 +44,6 @@ public class JS7AgentConverter {
         a.setDeployed(null);
         a.setHidden(null);
         a.setDisabled(null);
-        a.setIsClusterWatcher(null);
         return a;
     }
 

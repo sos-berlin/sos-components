@@ -26,7 +26,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "agentName",
     "agentNameAliases",
     "url",
-    "isClusterWatcher",
     "title",
     "hidden",
     "disabled",
@@ -74,8 +73,6 @@ public class Agent {
      */
     @JsonProperty("url")
     private String url;
-    @JsonProperty("isClusterWatcher")
-    private Boolean isClusterWatcher = false;
     /**
      * string without < and >
      * <p>
@@ -208,16 +205,6 @@ public class Agent {
         this.url = url;
     }
 
-    @JsonProperty("isClusterWatcher")
-    public Boolean getIsClusterWatcher() {
-        return isClusterWatcher;
-    }
-
-    @JsonProperty("isClusterWatcher")
-    public void setIsClusterWatcher(Boolean isClusterWatcher) {
-        this.isClusterWatcher = isClusterWatcher;
-    }
-
     /**
      * string without < and >
      * <p>
@@ -304,12 +291,12 @@ public class Agent {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("agentName", agentName).append("agentNameAliases", agentNameAliases).append("url", url).append("isClusterWatcher", isClusterWatcher).append("title", title).append("hidden", hidden).append("disabled", disabled).append("syncState", syncState).append("deployed", deployed).append("ordering", ordering).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("agentName", agentName).append("agentNameAliases", agentNameAliases).append("url", url).append("title", title).append("hidden", hidden).append("disabled", disabled).append("syncState", syncState).append("deployed", deployed).append("ordering", ordering).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentId).append(controllerId).append(hidden).append(agentNameAliases).append(ordering).append(syncState).append(agentName).append(deployed).append(isClusterWatcher).append(title).append(url).append(disabled).toHashCode();
+        return new HashCodeBuilder().append(agentId).append(controllerId).append(hidden).append(agentNameAliases).append(ordering).append(syncState).append(agentName).append(deployed).append(title).append(url).append(disabled).toHashCode();
     }
 
     @Override
@@ -321,7 +308,7 @@ public class Agent {
             return false;
         }
         Agent rhs = ((Agent) other);
-        return new EqualsBuilder().append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(hidden, rhs.hidden).append(agentNameAliases, rhs.agentNameAliases).append(ordering, rhs.ordering).append(syncState, rhs.syncState).append(agentName, rhs.agentName).append(deployed, rhs.deployed).append(isClusterWatcher, rhs.isClusterWatcher).append(title, rhs.title).append(url, rhs.url).append(disabled, rhs.disabled).isEquals();
+        return new EqualsBuilder().append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(hidden, rhs.hidden).append(agentNameAliases, rhs.agentNameAliases).append(ordering, rhs.ordering).append(syncState, rhs.syncState).append(agentName, rhs.agentName).append(deployed, rhs.deployed).append(title, rhs.title).append(url, rhs.url).append(disabled, rhs.disabled).isEquals();
     }
 
 }
