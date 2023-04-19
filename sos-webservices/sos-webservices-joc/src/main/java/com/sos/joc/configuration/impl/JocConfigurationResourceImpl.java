@@ -184,7 +184,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                                 }
                                 String curStartTime = curDailyPlan.getJsonObject("start_time") == null ? null : curDailyPlan.getJsonObject(
                                         "start_time").getString("value");
-                                if (curStartTime != null) {
+                                if (curStartTime != null && !curStartTime.isEmpty()){
                                     long curStartTimeOffset = DailyPlanCalendar.convertTimeToSeconds(curStartTime, "start_time");
                                     if (curStartTimeOffset < 0 || curStartTimeOffset >= TimeUnit.DAYS.toMillis(1)) {
                                         throw new JocBadRequestException("Invalid 'dailyplan.start_time': " + curStartTime);
