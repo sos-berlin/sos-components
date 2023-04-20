@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.hibernate.SOSHibernateSession;
