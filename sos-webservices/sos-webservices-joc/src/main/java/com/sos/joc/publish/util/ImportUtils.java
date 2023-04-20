@@ -145,6 +145,7 @@ public class ImportUtils {
         		break;
         	case JOBRESOURCE:
                 referencedBy.addAll(getUsedWorkflowsFromArchiveByJobResourceName(oldName, configurations.get(ConfigurationType.WORKFLOW)));
+                referencedBy.addAll(getUsedJobTemplatesFromArchiveByJobResourcesName(oldName, configurations.get(ConfigurationType.JOBTEMPLATE)));
                 break;
             case JOBTEMPLATE:
         	    referencedBy.addAll(getUsedWorkflowsFromArchiveByJobTemplateName(oldName, configurations.get(ConfigurationType.WORKFLOW)));
@@ -397,6 +398,22 @@ public class ImportUtils {
                     return null;
                 }).filter(Objects::nonNull).collect(Collectors.toSet());
     }
+
+    private static Set<ConfigurationObject> getUsedJobTemplatesFromArchiveByJobResourcesName (String name, List<ConfigurationObject> configurations) {
+        return configurations.stream().map(item -> {
+            JobTemplate jt = (JobTemplate)item.getConfiguration();
+            if (jt.getJobResourceNames() != null && jt.getJobResourceNames().contains(name)) {
+                for (int i = 0; i < jt.getJobResourceNames().size(); i++) {
+                    if (jt.getJobResourceNames().get(i).equals(name)) {
+                        return item;
+                    }
+                }
+            }
+            return null;
+            
+        }).filter(Objects::nonNull).collect(Collectors.toSet());
+    }
+
     
     private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByJobTemplateName (String name, List<ConfigurationObject> configurations) {
         return configurations.stream().map(item -> {
