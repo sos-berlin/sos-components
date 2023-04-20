@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -176,7 +177,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                         			if (canAdd(configuration.getPath(), permittedFolders)) {
                         				filteredConfigurations.add(configuration);
                                     	UpdateableConfigurationObject updateable =  ImportUtils.createUpdateableConfiguration(
-                                    			existingConfiguration, configuration, configurations, filter.getPrefix(), filter.getSuffix(), filter.getTargetFolder(), dbLayer);
+                                    			existingConfiguration, configuration, configurationsByType, filter.getPrefix(), filter.getSuffix(), filter.getTargetFolder(), dbLayer);
                                     	ImportUtils.replaceReferences(updateable);
                                         updatedReferencesByUpdateableConfiguration.put(updateable.getConfigurationObject(), updateable.getReferencedBy());
                                         storedConfigurations.add(dbLayer.saveNewInventoryConfiguration(
@@ -246,7 +247,6 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                 }
             }
             ImportUtils.validateAndUpdate(storedConfigurations, agentNames, hibernateSession);
-            ImportUtils.revalidateInvalidInvConfigurations(hibernateSession);
             // post events
             storedConfigurations.stream().map(DBItemInventoryConfiguration::getPath).map(path -> Paths.get(path).getParent()).distinct()
                 .forEach(path -> JocInventory.postEvent(path.toString().replace('\\', '/')));
@@ -262,7 +262,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                 .map(path -> Paths.get(path)).distinct()
                 .forEach(targetParentFolder -> JocInventory.postFolderEvent(targetParentFolder.toString().replace('\\', '/')));
             }
-            
+            CompletableFuture.runAsync(() -> ImportUtils.revalidateInvalidInvConfigurations(storedConfigurations));
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
