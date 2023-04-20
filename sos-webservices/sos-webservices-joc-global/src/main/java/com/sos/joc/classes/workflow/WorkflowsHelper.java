@@ -840,11 +840,15 @@ public class WorkflowsHelper {
                     break;
                 case LOCK:
                     Lock l = inst.cast();
-                    updateWorkflowBoardname(oldNewBoardNames, l.getLockedWorkflow().getInstructions());
+                    if (l.getLockedWorkflow() != null) {
+                        updateWorkflowBoardname(oldNewBoardNames, l.getLockedWorkflow().getInstructions());
+                    }
                     break;
                 case CYCLE:
                     Cycle c = inst.cast();
-                    updateWorkflowBoardname(oldNewBoardNames, c.getCycleWorkflow().getInstructions());
+                    if(c.getCycleWorkflow() != null) {
+                        updateWorkflowBoardname(oldNewBoardNames, c.getCycleWorkflow().getInstructions());
+                    }
                     break;
                 case CONSUME_NOTICES:
                     ConsumeNotices cns = inst.cast();
@@ -913,8 +917,10 @@ public class WorkflowsHelper {
                     break;
                 case POST_NOTICES:
                     PostNotices pns = inst.cast();
-                    pns.getNoticeBoardNames().removeIf(pnb -> oldNewBoardNames.keySet().contains(pnb) || oldNewBoardNames.values().contains(pnb));
-                    pns.getNoticeBoardNames().addAll(oldNewBoardNames.values().stream().filter(s -> !s.isEmpty()).collect(Collectors.toSet()));
+                    if (pns.getNoticeBoardNames() != null) {
+                        pns.getNoticeBoardNames().removeIf(pnb -> oldNewBoardNames.keySet().contains(pnb) || oldNewBoardNames.values().contains(pnb));
+                        pns.getNoticeBoardNames().addAll(oldNewBoardNames.values().stream().filter(s -> !s.isEmpty()).collect(Collectors.toSet()));
+                    }
                     break;
                 case STICKY_SUBAGENT:
                     StickySubagent ss = inst.cast();
@@ -1402,6 +1408,139 @@ public class WorkflowsHelper {
             }
         }
         return Optional.empty();
+    }
+
+    public static boolean hasBoard(String boardName, List<Instruction> insts) {
+        if (boardName == null || boardName.isEmpty()) {
+            return false;
+        }
+        if (insts != null) {
+            for (int i = 0; i < insts.size(); i++) {
+                Instruction inst = insts.get(i);
+                switch (inst.getTYPE()) {
+                case FORK:
+                    ForkJoin f = inst.cast();
+                    for (Branch b : f.getBranches()) {
+                        if (b.getWorkflow() != null) {
+                            if(hasBoard(boardName, b.getWorkflow().getInstructions())) {
+                                return true;
+                            }
+                        }
+                    }
+                    break;
+                case FORKLIST:
+                    ForkList fl = inst.cast();
+                    if (fl.getWorkflow() != null) {
+                        if(hasBoard(boardName, fl.getWorkflow().getInstructions())) {
+                            return true;
+                        }
+                    }
+                    break;
+                case IF:
+                    IfElse ie = inst.cast();
+                    if (ie.getThen() != null) {
+                        if(hasBoard(boardName, ie.getThen().getInstructions())) {
+                            return true;
+                        }
+                    }
+                    if (ie.getElse() != null) {
+                        if(hasBoard(boardName, ie.getElse().getInstructions())) {
+                            return true;
+                        }
+                    }
+                    break;
+                case TRY:
+                    TryCatch tc = inst.cast();
+                    if (tc.getTry() != null) {
+                        if(hasBoard(boardName, tc.getTry().getInstructions())) {
+                            return true;
+                        }
+                    }
+                    if (tc.getCatch() != null) {
+                        if(hasBoard(boardName, tc.getCatch().getInstructions())) {
+                            return true;
+                        }
+                    }
+                    break;
+                case LOCK:
+                    Lock l = inst.cast();
+                    if (l.getLockedWorkflow() != null) {
+                        if(hasBoard(boardName, l.getLockedWorkflow().getInstructions())) {
+                            return true;
+                        }
+                    }
+                    break;
+                case CYCLE:
+                    Cycle c = inst.cast();
+                    if (c.getCycleWorkflow() != null) {
+                        if(hasBoard(boardName, c.getCycleWorkflow().getInstructions())) {
+                            return true;
+                        }
+                    }
+                    break;
+                case CONSUME_NOTICES:
+                    ConsumeNotices cns = inst.cast();
+                    String cnsNamesExpr = cns.getNoticeBoardNames();
+                    List<String> cnsNames = NoticeToNoticesConverter.expectNoticeBoardsToList(cnsNamesExpr);
+                    if (!cnsNames.isEmpty() && cnsNames.contains(boardName)) {
+                        return true;
+                    }
+                    if (cns.getSubworkflow() != null) {
+                        if(hasBoard(boardName, cns.getSubworkflow().getInstructions())) {
+                            return true;
+                        }
+                    }
+                    break;
+                case EXPECT_NOTICE:
+                    ExpectNotice en = inst.cast();
+                    if (boardName.equals(en.getNoticeBoardName())) {
+                        return true;
+                    }
+                    break;
+                case EXPECT_NOTICES:
+                    ExpectNotices ens = inst.cast();
+                    String ensNamesExpr = ens.getNoticeBoardNames();
+                    List<String> ensNames = NoticeToNoticesConverter.expectNoticeBoardsToList(ensNamesExpr);
+                    if (!ensNames.isEmpty() && ensNames.contains(boardName)) {
+                        return true;
+                    }
+                    break;
+                case POST_NOTICE:
+                    PostNotice pn = inst.cast();
+                    if (boardName.equals(pn.getNoticeBoardName())) {
+                        return true;
+                    }
+                    break;
+                case POST_NOTICES:
+                    PostNotices pns = inst.cast();
+                    if(pns.getNoticeBoardNames() != null) {
+                        if (!pns.getNoticeBoardNames().isEmpty() && pns.getNoticeBoardNames().contains(boardName)) {
+                            return true;
+                        }
+                    }
+                    break;
+                case STICKY_SUBAGENT:
+                    StickySubagent ss = inst.cast();
+                    if (ss.getSubworkflow() != null) {
+                        if(hasBoard(boardName, ss.getSubworkflow().getInstructions())) {
+                            return true;
+                        }
+                    }
+                    break;
+                case OPTIONS:
+                    Options opts = inst.cast();
+                    if (opts.getBlock() != null) {
+                        if(hasBoard(boardName, opts.getBlock().getInstructions())) {
+                            return true;
+                        }
+                    }
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+        return false;
     }
 
 }

@@ -25,7 +25,6 @@ import java.util.zip.ZipInputStream;
 
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +52,6 @@ import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
-import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
@@ -103,11 +101,13 @@ public class ImportUtils {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ImportUtils.class);
     private static final String AGENT_FILE_EXTENSION = ".agent.json";
+    private static final Predicate<String> HAS_NOTICE_BOARDS = Pattern.compile("\"(?:noticeB|b)oardNames\"\\s*:\\s*").asPredicate();
+
     public static final String JOC_META_INFO_FILENAME = "meta_inf";
 
     
     public static UpdateableConfigurationObject createUpdateableConfiguration(DBItemInventoryConfiguration existingConfiguration, 
-    		ConfigurationObject configuration, Set<ConfigurationObject> configurations, String prefix, String suffix, String targetFolder, DBLayerDeploy dbLayer)
+    		ConfigurationObject configuration, Map<ConfigurationType, List<ConfigurationObject>> configurations, String prefix, String suffix, String targetFolder, DBLayerDeploy dbLayer)
     				throws SOSHibernateException {
 
     	ConfigurationGlobalsJoc clusterSettings = Globals.getConfigurationGlobalsJoc();
@@ -129,28 +129,28 @@ public class ImportUtils {
         
         switch (configuration.getObjectType()) {
 	    	case LOCK:
-	    		referencedBy.addAll(getUsedWorkflowsFromArchiveByLockId(oldName, configurations));
+	    		referencedBy.addAll(getUsedWorkflowsFromArchiveByLockId(oldName, configurations.get(ConfigurationType.WORKFLOW)));
 	    		break;
 	    	case NOTICEBOARD:
-                referencedBy.addAll(getUsedWorkflowsFromArchiveByBoardName(oldName, configurations));
+                referencedBy.addAll(getUsedWorkflowsFromArchiveByBoardName(oldName, configurations.get(ConfigurationType.WORKFLOW)));
 	    	    break;
         	case WORKFLOW:
-                referencedBy.addAll(getUsedFileOrderSourcesFromArchiveByWorkflowName(oldName, configurations));
-                referencedBy.addAll(getUsedSchedulesFromArchiveByWorkflowName(oldName, configurations));
-                referencedBy.addAll(getUsedWorkflowsFromArchiveByWorkflowName(oldName, configurations));
+                referencedBy.addAll(getUsedFileOrderSourcesFromArchiveByWorkflowName(oldName, configurations.get(ConfigurationType.FILEORDERSOURCE)));
+                referencedBy.addAll(getUsedSchedulesFromArchiveByWorkflowName(oldName, configurations.get(ConfigurationType.SCHEDULE)));
+                referencedBy.addAll(getUsedWorkflowsFromArchiveByWorkflowName(oldName, configurations.get(ConfigurationType.WORKFLOW)));
         		break;
         	case WORKINGDAYSCALENDAR:
         	case NONWORKINGDAYSCALENDAR:
-        		referencedBy.addAll(getUsedSchedulesFromArchiveByCalendarName(oldName, configurations));
+        		referencedBy.addAll(getUsedSchedulesFromArchiveByCalendarName(oldName, configurations.get(ConfigurationType.SCHEDULE)));
         		break;
         	case JOBRESOURCE:
-                referencedBy.addAll(getUsedWorkflowsFromArchiveByJobResourceName(oldName, configurations));
+                referencedBy.addAll(getUsedWorkflowsFromArchiveByJobResourceName(oldName, configurations.get(ConfigurationType.WORKFLOW)));
                 break;
             case JOBTEMPLATE:
-        	    referencedBy.addAll(getUsedWorkflowsFromArchiveByJobTemplateName(oldName, configurations));
+        	    referencedBy.addAll(getUsedWorkflowsFromArchiveByJobTemplateName(oldName, configurations.get(ConfigurationType.WORKFLOW)));
         	    break;
             case INCLUDESCRIPT:
-                referencedBy.addAll(getUsedWorkflowsFromArchiveByIncludeScriptName(oldName, configurations));
+                referencedBy.addAll(getUsedWorkflowsFromArchiveByIncludeScriptName(oldName, configurations.get(ConfigurationType.WORKFLOW)));
                 break;
     		default:
     			break;
@@ -316,23 +316,24 @@ public class ImportUtils {
             try {
                 alreadyExist.setContent(Globals.objectMapper.writeValueAsString(config.getConfiguration()));
                 alreadyExist.setModified(Date.from(Instant.now()));
+                JocInventory.updateConfiguration(new InventoryDBLayer(dbLayer.getSession()), alreadyExist);
                 dbLayer.getSession().update(alreadyExist);
             } catch (JsonProcessingException e) {
                 LOGGER.error(e.getMessage(),e);
             } catch (SOSHibernateException e) {
                 throw new JocSosHibernateException(e);
+            } catch (IOException e) {
+                throw new JocImportException(e);
             }
         }
     }
     
-    private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByWorkflowName (String name, Set<ConfigurationObject> configurations) {
+    private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByWorkflowName (String name, List<ConfigurationObject> configurations) {
         Predicate<String> hasWorkflow = Pattern.compile("\"workflowName\"\\s*:\\s*\"" + name + "\"").asPredicate();
         return configurations.stream().filter(item -> ConfigurationType.WORKFLOW.equals(item.getObjectType()))
                 .map(item -> {
-                    Workflow wf = (Workflow)item.getConfiguration();
                     try {
-                        String wfJson = Globals.objectMapper.writeValueAsString(wf);
-                        if (hasWorkflow.test(wfJson)) {
+                        if (hasWorkflow.test(Globals.objectMapper.writeValueAsString(item.getConfiguration()))) {
                             return item;
                         }
                     } catch (JsonProcessingException e) {
@@ -342,10 +343,12 @@ public class ImportUtils {
                 }).filter(Objects::nonNull).collect(Collectors.toSet());
     }
 
-    private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByLockId (String name, Set<ConfigurationObject> configurations) {
+    private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByLockId (String name, List<ConfigurationObject> configurations) {
         Predicate<String> hasLock = Pattern.compile("\"lockName\"\\s*:\\s*\"" + name + "\"").asPredicate();
-        return configurations.stream().filter(item -> ConfigurationType.WORKFLOW.equals(item.getObjectType()))
-                .map(item -> {
+        if(configurations == null) {
+            return Collections.emptySet();
+        }
+        return configurations.stream().map(item -> {
                     try {
                         if (hasLock.test(Globals.objectMapper.writeValueAsString(item.getConfiguration()))) {
                             return item;
@@ -357,19 +360,19 @@ public class ImportUtils {
                 }).filter(Objects::nonNull).collect(Collectors.toSet());
     }
 
-    private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByBoardName (String name, Set<ConfigurationObject> configurations) {
+    private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByBoardName (String name, List<ConfigurationObject> configurations) {
         Predicate<String> hasNoticeBoard = Pattern.compile("\"(?:noticeB|b)oardName\"\\s*:\\s*\"" + name + "\"").asPredicate();
-        Predicate<String> hasNoticeBoards = Pattern.compile("\"(?:noticeB|b)oardNames\"\\s*:\\s*").asPredicate();
-        return configurations.stream().filter(item -> ConfigurationType.WORKFLOW.equals(item.getObjectType()))
-                .map(item -> {
+        return configurations.stream().map(item -> {
                     try {
-                        String wfJson = Globals.objectMapper.writeValueAsString(item.getConfiguration());
+                        Workflow wf = (Workflow)item.getConfiguration();
+                        String wfJson = Globals.objectMapper.writeValueAsString(wf);
                         if (hasNoticeBoard.test(wfJson)) {
                             return item;
                         }
-                        if (hasNoticeBoards.test(wfJson)) {
-                            // TODO check name
-                            return item;
+                        if (HAS_NOTICE_BOARDS.test(wfJson)) {
+                            if(WorkflowsHelper.hasBoard(name, wf.getInstructions())) {
+                                return item;
+                            }
                         }
                     } catch (JsonProcessingException e) {
                         LOGGER.error(e.getMessage(), e);
@@ -378,9 +381,8 @@ public class ImportUtils {
                 }).filter(Objects::nonNull).collect(Collectors.toSet());
     }
     
-    private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByJobResourceName (String name, Set<ConfigurationObject> configurations) {
-        return configurations.stream().filter(item -> ConfigurationType.WORKFLOW.equals(item.getObjectType()))
-                .map(item -> {
+    private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByJobResourceName (String name, List<ConfigurationObject> configurations) {
+        return configurations.stream().map(item -> {
                     Workflow wf = (Workflow) item.getConfiguration();
                     if (wf.getJobResourceNames() != null && wf.getJobResourceNames().contains(name)) {
                         return item;
@@ -396,9 +398,8 @@ public class ImportUtils {
                 }).filter(Objects::nonNull).collect(Collectors.toSet());
     }
     
-    private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByJobTemplateName (String name, Set<ConfigurationObject> configurations) {
-        return configurations.stream().filter(item -> ConfigurationType.WORKFLOW.equals(item.getObjectType()))
-                .map(item -> {
+    private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByJobTemplateName (String name, List<ConfigurationObject> configurations) {
+        return configurations.stream().map(item -> {
                     Workflow wf = (Workflow) item.getConfiguration();
                     if (wf.getJobs() != null && wf.getJobs().getAdditionalProperties() != null) {
                         for (Job job : wf.getJobs().getAdditionalProperties().values()) {
@@ -412,11 +413,10 @@ public class ImportUtils {
                 }).filter(Objects::nonNull).collect(Collectors.toSet());
     }
     
-    private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByIncludeScriptName (String name, Set<ConfigurationObject> configurations) {
+    private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByIncludeScriptName (String name, List<ConfigurationObject> configurations) {
         Predicate<String> hasScriptInclude = Pattern.compile(JsonConverter.scriptIncludeComments + JsonConverter.scriptInclude + "[ \t]+" + name
                 + "\\s*").asPredicate();
-        return configurations.stream().filter(item -> ConfigurationType.WORKFLOW.equals(item.getObjectType()))
-                .map(item -> {
+        return configurations.stream().map(item -> {
                     try {
                         if (hasScriptInclude.test(Globals.objectMapper.writeValueAsString(item.getConfiguration()))) {
                             return item;
@@ -428,21 +428,22 @@ public class ImportUtils {
                 }).filter(Objects::nonNull).collect(Collectors.toSet());
     }
 
-    private static Set<ConfigurationObject> getUsedFileOrderSourcesFromArchiveByWorkflowName (String name, Set<ConfigurationObject> configurations) {
+    private static Set<ConfigurationObject> getUsedFileOrderSourcesFromArchiveByWorkflowName (String name, List<ConfigurationObject> configurations) {
     	return configurations.stream().filter(item -> ConfigurationType.FILEORDERSOURCE.equals(item.getObjectType())
     			&& ((FileOrderSourceEdit)item).getConfiguration().getWorkflowName().equals(name)).collect(Collectors.toSet());
     }
 
-    private static Set<ConfigurationObject> getUsedSchedulesFromArchiveByWorkflowName (String name, Set<ConfigurationObject> configurations) {
-        return configurations.stream().filter(item -> ConfigurationType.SCHEDULE.equals(item.getObjectType()))
-                .filter(item -> (((ScheduleEdit)item).getConfiguration().getWorkflowNames() != null && ((ScheduleEdit)item).getConfiguration().getWorkflowNames().contains(name))
+    private static Set<ConfigurationObject> getUsedSchedulesFromArchiveByWorkflowName (String name, List<ConfigurationObject> configurations) {
+        return configurations.stream()
+                .filter(item -> (((ScheduleEdit)item).getConfiguration().getWorkflowNames() != null 
+                    && ((ScheduleEdit)item).getConfiguration().getWorkflowNames().contains(name))
                         || name.equals(((ScheduleEdit)item).getConfiguration().getWorkflowName()))
                 .collect(Collectors.toSet());
     }
 
-    private static Set<ConfigurationObject> getUsedSchedulesFromArchiveByCalendarName (String name, Set<ConfigurationObject> configurations) {
+    private static Set<ConfigurationObject> getUsedSchedulesFromArchiveByCalendarName (String name, List<ConfigurationObject> configurations) {
     	return configurations.stream()
-    			.filter(item -> ConfigurationType.SCHEDULE.equals(item.getObjectType())).map(item -> {
+    			.map(item -> {
     	    		if (ConfigurationType.SCHEDULE.equals(item.getObjectType())) {
     	    			List<AssignedCalendars> assignedCalendars = ((ScheduleEdit)item).getConfiguration().getCalendars();
     	    			List<AssignedNonWorkingDayCalendars> assignedNonWorkingDaysCalendars = 
@@ -1073,36 +1074,18 @@ public class ImportUtils {
     
     public static void validateAndUpdate (List<DBItemInventoryConfiguration> storedConfigurations, Set<String> agentNames,
             SOSHibernateSession session) {
-        Boolean autoCommit = true; 
-        try {
-            autoCommit = session.isAutoCommit();
-            if(autoCommit) {
-                session.setAutoCommit(false);
-            }
-            Globals.beginTransaction(session);
-            for (DBItemInventoryConfiguration dbItem : storedConfigurations) {
-                boolean valid = false;
-                try {
-                    Validator.validate(dbItem.getTypeAsEnum(), dbItem.getContent().getBytes(), new InventoryDBLayer(session), agentNames);
-                    valid = true;
-                } catch (Throwable e) {
-                    valid = false;
-                }
-                StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
-                hql.append("set valid = :valid where id = :id");
-                Query<?> query = session.createQuery(hql.toString());
-                query.setParameter("valid", valid);
-                query.setParameter("id", dbItem.getId());
-                session.executeUpdate(query);
-            }
-            Globals.commit(session);
-        } catch (SOSHibernateException e) {
-            Globals.rollback(session);
-        } finally {
-            try {
-                session.setAutoCommit(autoCommit);
-            } catch (SOSHibernateException e1) {}
-        }
+        InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+        storedConfigurations.stream()
+            .forEach(cfg -> {
+                boolean wasValid = cfg.getValid();
+                cfg.setValid(validateConfiguration(cfg, agentNames, dbLayer));
+                if(wasValid != cfg.getValid()) {
+                    try {
+                        session.update(cfg);
+                    } catch (Throwable e) {
+                        throw new JocSosHibernateException(e);
+                    }
+                }});
     }
     
     private static ControllerObject createControllerObjectFromArchiveFileEntry(ByteArrayOutputStream outBuffer, String entryName)
@@ -1344,21 +1327,19 @@ public class ImportUtils {
         
     }
     
-    public static void revalidateInvalidInvConfigurations (SOSHibernateSession session) {
+    public static void revalidateInvalidInvConfigurations (List<DBItemInventoryConfiguration> storedConfigurations) {
+        SOSHibernateSession session = Globals.createSosHibernateStatelessConnection("./inventory/import");
         InventoryDBLayer dbLayer = new InventoryDBLayer(session);
         InventoryAgentInstancesDBLayer agentDbLayer = new InventoryAgentInstancesDBLayer(session);
         Set<Path> folders = new HashSet<Path>();
         try {
             List<DBItemInventoryConfiguration> invalidDBItems = dbLayer.getAllInvalidConfigurations();
+            if (storedConfigurations != null) {
+                invalidDBItems.removeAll(storedConfigurations);
+            }
             Set<String> visibleAgentNames = agentDbLayer.getVisibleAgentNames();
-            invalidDBItems.stream().filter(cfg -> {
-                try {
-                    Validator.validate(cfg.getTypeAsEnum(), cfg.getContent().getBytes(StandardCharsets.UTF_8), dbLayer, visibleAgentNames);
-                    return true;
-                } catch (Exception e) {
-                    return false;
-                }
-            }).peek(cfg -> cfg.setValid(true)).forEach(cfg -> {
+            invalidDBItems.stream().filter(cfg -> validateConfiguration(cfg, visibleAgentNames, dbLayer)
+            ).peek(cfg -> cfg.setValid(true)).forEach(cfg -> {
                 try {
                     folders.add(Paths.get(cfg.getPath()).getParent());
                     dbLayer.getSession().update(cfg);
@@ -1369,7 +1350,17 @@ public class ImportUtils {
             folders.stream().forEach(folder -> JocInventory.postEvent(folder.toString().replace('\\', '/')));
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
+        } finally {
+            Globals.disconnect(session);
         }
-        
+    }
+
+    private static boolean validateConfiguration (DBItemInventoryConfiguration cfg, Set<String> visibleAgentNames, InventoryDBLayer dbLayer) {
+        try {
+            Validator.validate(cfg.getTypeAsEnum(), cfg.getContent().getBytes(StandardCharsets.UTF_8), dbLayer, visibleAgentNames);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

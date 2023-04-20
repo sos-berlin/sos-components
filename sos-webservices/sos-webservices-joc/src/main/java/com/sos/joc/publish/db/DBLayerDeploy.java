@@ -1007,9 +1007,9 @@ try {
         }
     }
 
-    public void saveOrUpdateInventoryConfiguration(ConfigurationObject configuration, String account, Long auditLogId, Set<String> agentNames) {
-        saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, false, agentNames);
-    }
+//    public void saveOrUpdateInventoryConfiguration(ConfigurationObject configuration, String account, Long auditLogId, Set<String> agentNames) {
+//        saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, false, agentNames);
+//    }
 
     public DBItemInventoryConfiguration saveOrUpdateInventoryConfiguration(ConfigurationObject configuration, String account, Long auditLogId, boolean overwrite,
             Set<String> agentNames) {
@@ -1036,31 +1036,31 @@ try {
             query.setMaxResults(1);
             existingConfiguration = session.getSingleResult(query);
             boolean valid = false;
-            try {
-                Validator.validate(configuration.getObjectType(), configuration.getConfiguration(), new InventoryDBLayer(session), agentNames);
-                valid = true;
-            } catch (Throwable e) {
-                valid = false;
-            }
-            // check if imported agentName is known. Has to be removed, when the Validator takes over the check!
-            if (configuration.getObjectType().equals(ConfigurationType.WORKFLOW)) {
-                Workflow workflow = (Workflow) configuration.getConfiguration();
-                boolean allAgentNamesKnown = true;
-                if (workflow.getJobs() != null && workflow.getJobs().getAdditionalProperties() != null) {
-                    for (String jobname : workflow.getJobs().getAdditionalProperties().keySet()) {
-                        Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
-                        String agentName = job.getAgentName();
-                        boolean agentNameKnown = checkAgentNamePresent(agentName);
-                        if (!agentNameKnown) {
-                            allAgentNamesKnown = false;
-                            break;
-                        }
-                    }
-                }
-                if (!allAgentNamesKnown) {
-                    valid = false;
-                }
-            }
+//            try {
+//                Validator.validate(configuration.getObjectType(), configuration.getConfiguration(), new InventoryDBLayer(session), agentNames);
+//                valid = true;
+//            } catch (Throwable e) {
+//                valid = false;
+//            }
+//            // check if imported agentName is known. Has to be removed, when the Validator takes over the check!
+//            if (configuration.getObjectType().equals(ConfigurationType.WORKFLOW)) {
+//                Workflow workflow = (Workflow) configuration.getConfiguration();
+//                boolean allAgentNamesKnown = true;
+//                if (workflow.getJobs() != null && workflow.getJobs().getAdditionalProperties() != null) {
+//                    for (String jobname : workflow.getJobs().getAdditionalProperties().keySet()) {
+//                        Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
+//                        String agentName = job.getAgentName();
+//                        boolean agentNameKnown = checkAgentNamePresent(agentName);
+//                        if (!agentNameKnown) {
+//                            allAgentNamesKnown = false;
+//                            break;
+//                        }
+//                    }
+//                }
+//                if (!allAgentNamesKnown) {
+//                    valid = false;
+//                }
+//            }
 
             if (overwrite) {
                 if (existingConfiguration != null) {
@@ -1129,31 +1129,31 @@ try {
     public DBItemInventoryConfiguration saveNewInventoryConfiguration(ConfigurationObject configuration, String account, Long auditLogId,
             boolean overwrite, Set<String> agentNames) {
         boolean valid = false;
-        try {
-            Validator.validate(configuration.getObjectType(), configuration.getConfiguration(), new InventoryDBLayer(session), agentNames);
-            valid = true;
-        } catch (Exception e) {
-            valid = false;
-        }
-        // check if imported agentName is known. Has to be removed, when the Validator takes over the check!
-        if (configuration.getObjectType().equals(ConfigurationType.WORKFLOW)) {
-            Workflow workflow = (Workflow) configuration.getConfiguration();
-            boolean allAgentNamesKnown = true;
-            if (workflow.getJobs() != null) {
-                for (String jobname : workflow.getJobs().getAdditionalProperties().keySet()) {
-                    Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
-                    String agentName = job.getAgentName();
-                    boolean agentNameKnown = checkAgentNamePresent(agentName);
-                    if (!agentNameKnown) {
-                        allAgentNamesKnown = false;
-                        break;
-                    }
-                }
-            }
-            if (!allAgentNamesKnown) {
-                valid = false;
-            }
-        }
+//        try {
+//            Validator.validate(configuration.getObjectType(), configuration.getConfiguration(), new InventoryDBLayer(session), agentNames);
+//            valid = true;
+//        } catch (Exception e) {
+//            valid = false;
+//        }
+//        // check if imported agentName is known. Has to be removed, when the Validator takes over the check!
+//        if (configuration.getObjectType().equals(ConfigurationType.WORKFLOW)) {
+//            Workflow workflow = (Workflow) configuration.getConfiguration();
+//            boolean allAgentNamesKnown = true;
+//            if (workflow.getJobs() != null) {
+//                for (String jobname : workflow.getJobs().getAdditionalProperties().keySet()) {
+//                    Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
+//                    String agentName = job.getAgentName();
+//                    boolean agentNameKnown = checkAgentNamePresent(agentName);
+//                    if (!agentNameKnown) {
+//                        allAgentNamesKnown = false;
+//                        break;
+//                    }
+//                }
+//            }
+//            if (!allAgentNamesKnown) {
+//                valid = false;
+//            }
+//        }
         try {
             DBItemInventoryConfiguration newConfiguration = new DBItemInventoryConfiguration();
             Date now = Date.from(Instant.now());
