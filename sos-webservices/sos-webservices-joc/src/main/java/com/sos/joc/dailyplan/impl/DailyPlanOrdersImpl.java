@@ -53,7 +53,7 @@ public class DailyPlanOrdersImpl extends JOCOrderResourceImpl implements IDailyP
                     controllerIds = controllerIds.filter(availableController -> in.getControllerIds().contains(availableController));
                 }
                 allowedControllers = controllerIds.filter(availableController -> getControllerPermissions(availableController,
-                        accessToken).getOrders().getCreate()).collect(Collectors.toSet());
+                        accessToken).getOrders().getView()).collect(Collectors.toSet());
                 permitted = !allowedControllers.isEmpty();
             }
 
