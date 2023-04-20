@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -26,6 +27,7 @@ import com.sos.joc.history.controller.proxy.fatevent.FatPostNotice;
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.base.time.Timestamp;
+import js7.base.web.Uri;
 import js7.data.agent.AgentPath;
 import js7.data.agent.AgentRefStateEvent.AgentCouplingFailed;
 import js7.data.agent.AgentRefStateEvent.AgentReady;
@@ -1093,14 +1095,14 @@ public class HistoryEventEntry {
                 // if (ar.uri().isPresent()) {// single agent
                 // uri = ar.uri().get().string();
                 // } else {// agent cluster
-                Optional<SubagentId> director = ar.director();// ar.directors();
-                if (director.isPresent()) {
-                    SubagentId directorId = director.get();
+                //Optional<SubagentId> director = ar.director();// ar.directors();
+                if (!ar.directors().isEmpty()) {
                     Map<SubagentId, JSubagentItem> map = eventAndState.state().idToSubagentItem();
-                    JSubagentItem sar = map.get(directorId);
-                    if (sar != null) {
-                        uri = sar.uri().string();
-                    }
+//                    SubagentId directorId = ar.directors().get(0);
+//                    JSubagentItem sar = map.get(directorId);
+//                    if (sar != null) {
+//                        uri = sar.uri().string();
+//                    }
                     // if (map != null) {
                     // map.entrySet().stream().forEach(e -> {
                     // // subAgents.put(e.getKey().string(), e.getValue().uri().string());
@@ -1109,6 +1111,9 @@ public class HistoryEventEntry {
                     // }
                     // });
                     // }
+                    
+                    ar.directors().stream().map(sa -> map.get(sa)).filter(Objects::nonNull).findFirst().map(JSubagentItem::uri).map(Uri::string)
+                        .ifPresent(s -> uri = s);
                 }
                 // }
             }

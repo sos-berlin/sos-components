@@ -72,6 +72,7 @@ public class AgentStoreUtils {
         List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAllAgents();
         Set<String> agentNamesAndAliases = new HashSet<>();
         Map<String, Set<DBItemInventoryAgentName>> allAliases = dbLayer.getAgentNameAliases(agentMap.keySet());
+        Map<String, Set<DBItemInventoryAgentName>> newAliases = new HashMap<>();
         int position = -1;
         if (dbAgents != null && !dbAgents.isEmpty()) {
             if (overwrite) {
@@ -98,7 +99,7 @@ public class AgentStoreUtils {
                     }
                     dbAgent.setUri(agentFound.getUrl());
                     dbLayer.updateAgent(dbAgent);
-                    updateAliases(dbLayer, agentFound, allAliases.get(agentFound.getAgentId()));
+                    newAliases.put(agentFound.getAgentId(), updateAliases(dbLayer, agentFound, allAliases.get(agentFound.getAgentId())));
                 }
             }
         }
@@ -119,11 +120,11 @@ public class AgentStoreUtils {
             dbAgent.setDeployed(false);
             dbAgent.setOrdering(++position);
             dbLayer.saveAgent(dbAgent);
-            updateAliases(dbLayer, newAgent, allAliases.get(newAgent.getAgentId()));
+            newAliases.put(newAgent.getAgentId(), updateAliases(dbLayer, newAgent, allAliases.get(newAgent.getAgentId())));
             agentNamesAndAliases.add(newAgent.getAgentName());
         }
 
-        agentNamesAndAliases = Stream.concat(agentNamesAndAliases.stream(), allAliases.values().stream().flatMap(s -> s.stream().map(
+        agentNamesAndAliases = Stream.concat(agentNamesAndAliases.stream(), newAliases.values().stream().flatMap(s -> s.stream().map(
                 DBItemInventoryAgentName::getAgentName))).collect(Collectors.toSet());
         AgentHelper.validateInvalidWorkflowsByAgentNames(dbLayer, agentNamesAndAliases);
     }
@@ -142,6 +143,8 @@ public class AgentStoreUtils {
             InventorySubagentClustersDBLayer subagentDbLayer) throws SOSHibernateException {
         List<DBItemInventoryAgentInstance> dbAgents = agentDbLayer.getAllAgents();
         Map<String, Set<DBItemInventoryAgentName>> allAliases = agentDbLayer.getAgentNameAliases(clusterAgentMap.keySet());
+        Map<String, Set<DBItemInventoryAgentName>> newAliases = new HashMap<>();
+        Set<String> agentNamesAndAliases = new HashSet<>();
         List<DBItemInventorySubAgentInstance> dbSubAgents = agentDbLayer.getSubAgentInstancesByControllerIds(Collections.singleton(
                 controllerId));
         // check uniqueness of SubagentUrl with DB
@@ -174,10 +177,11 @@ public class AgentStoreUtils {
                 dbAgent.setHidden(agent.getHidden());
                 dbAgent.setAgentName(agent.getAgentName());
                 dbAgent.setTitle(agent.getTitle());
+                agentNamesAndAliases.add(dbAgent.getAgentName());
                 agentDbLayer.updateAgent(dbAgent);
                 
                 AgentStoreUtils.saveOrUpdate(agentDbLayer, subagentDbLayer, dbAgent, dbSubAgents, agent.getSubagents(), overwrite);
-                updateAliases(agentDbLayer, agent, allAliases.get(agent.getAgentId()));
+                newAliases.put(agent.getAgentId(), updateAliases(agentDbLayer, agent, allAliases.get(agent.getAgentId())));
             }
         }
         for (ClusterAgent agent : clusterAgentMap.values()) {
@@ -197,9 +201,14 @@ public class AgentStoreUtils {
             dbAgent.setDisabled(false);
             dbAgent.setOrdering(++position);
             agentDbLayer.saveAgent(dbAgent);
+            agentNamesAndAliases.add(dbAgent.getAgentName());
             AgentStoreUtils.saveOrUpdate(agentDbLayer, subagentDbLayer, dbAgent, dbSubAgents, agent.getSubagents(), overwrite);
-            updateAliases(agentDbLayer, agent, allAliases.get(agent.getAgentId()));
+            newAliases.put(agent.getAgentId(), updateAliases(agentDbLayer, agent, allAliases.get(agent.getAgentId())));
         }
+        
+        agentNamesAndAliases = Stream.concat(agentNamesAndAliases.stream(), newAliases.values().stream().flatMap(s -> s.stream().map(
+                DBItemInventoryAgentName::getAgentName))).collect(Collectors.toSet());
+        AgentHelper.validateInvalidWorkflowsByAgentNames(agentDbLayer, agentNamesAndAliases);
     }
     
     public static List<DBItemInventorySubAgentCluster> storeSubagentCluster (SubagentCluster subagentCluster,
@@ -259,13 +268,14 @@ public class AgentStoreUtils {
         return dbsubagentClusters;
     }
     
-    public static void updateAliases(InventoryAgentInstancesDBLayer agentDBLayer, Agent agent, Collection<DBItemInventoryAgentName> dbAliases)
-            throws SOSHibernateException {
+    public static Set<DBItemInventoryAgentName> updateAliases(InventoryAgentInstancesDBLayer agentDBLayer, Agent agent,
+            Collection<DBItemInventoryAgentName> dbAliases) throws SOSHibernateException {
         if (dbAliases != null) {
             for (DBItemInventoryAgentName dbAlias : dbAliases) {
                 agentDBLayer.getSession().delete(dbAlias);
             }
         }
+        Set<DBItemInventoryAgentName> newAliases = new HashSet<>();
         // TODO read aliases to provide that per controller aliases should map unique to agentId
         // Collection<String> a = agentDBLayer.getAgentNamesByAgentIds(Collections.singleton(agent.getAgentId())).values();
         Set<String> aliases = agent.getAgentNameAliases();
@@ -276,8 +286,10 @@ public class AgentStoreUtils {
                 a.setAgentId(agent.getAgentId());
                 a.setAgentName(name);
                 agentDBLayer.getSession().save(a);
+                newAliases.add(a);
             }
         }
+        return newAliases;
     }
     
     public static String getUniquenessMsg(String key, Map.Entry<String, Long> e) {

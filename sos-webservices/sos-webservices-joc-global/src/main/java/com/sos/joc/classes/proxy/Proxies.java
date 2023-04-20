@@ -497,9 +497,9 @@ public class Proxies {
                     if (subs == null || subs.isEmpty()) { // single agent
                         if (jAgentRef != null) {
                             // update deployed flag in DB if necessary
-                            String url = jAgentRef.director().map(controllerKnownSubagents::get).map(JSubagentItem::uri).map(Uri::string).orElse(
-                                    dbAgent.getUri());
-                            if (!dbAgent.getDeployed() && dbAgent.getUri().equals(url)) {
+                            boolean singleAgentHasOwnDirector = jAgentRef.directors().stream().map(controllerKnownSubagents::get).filter(
+                                    Objects::nonNull).map(JSubagentItem::uri).map(Uri::string).anyMatch(uri -> uri.equals(dbAgent.getUri()));
+                            if (!dbAgent.getDeployed() && (jAgentRef.directors().isEmpty() || singleAgentHasOwnDirector)) {
                                 dbAgent.setDeployed(true);
                                 dbLayer.updateAgent(dbAgent);
                             }

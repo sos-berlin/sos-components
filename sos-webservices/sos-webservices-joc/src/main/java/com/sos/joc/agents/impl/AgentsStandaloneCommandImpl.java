@@ -94,8 +94,8 @@ public class AgentsStandaloneCommandImpl extends JOCResourceImpl implements IAge
                     JAgentRef agentRef = knownAgents.get(AgentPath.of(dbAgent.getAgentId()));
                     if (agentRef != null) {
                         agentRefs.add(JUpdateItemOperation.deleteSimple(AgentPath.of(dbAgent.getAgentId())));
-                        if (agentRef.director().isPresent()) {
-                            agentRefs.add(JUpdateItemOperation.deleteSimple(agentRef.director().get()));
+                        if (!agentRef.directors().isEmpty()) {
+                            agentRefs.add(JUpdateItemOperation.deleteSimple(agentRef.directors().get(0)));
                         }
                         updateAgentIds.add(dbAgent.getAgentId());
                     } else {
@@ -191,8 +191,8 @@ public class AgentsStandaloneCommandImpl extends JOCResourceImpl implements IAge
             Set<String> unknownAgents = new HashSet<>();
             for (String agentId : agentParameter.getAgentIds()) {
                 JAgentRef aRef = agentsOnController.get(AgentPath.of(agentId));
-                if (aRef != null && aRef.director().isPresent()) {
-                    directors.put(agentId, aRef.director().get());
+                if (aRef != null && !aRef.directors().isEmpty()) {
+                    directors.put(agentId, aRef.directors().get(0));
                 } else {
                     unknownAgents.add(agentId);
                 }

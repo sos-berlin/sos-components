@@ -85,7 +85,7 @@ public class AgentsStandaloneDeployImpl extends JOCResourceImpl implements IAgen
                 for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
                     JAgentRef agentRef = knownAgents.get(AgentPath.of(dbAgent.getAgentId()));
 
-                    SubagentId subagentId = agentRef != null && agentRef.director().isPresent() ? agentRef.director().get() : SubagentId.of(dbAgent
+                    SubagentId subagentId = agentRef != null && !agentRef.directors().isEmpty() ? agentRef.directors().get(0) : SubagentId.of(dbAgent
                             .getAgentId());
                     agentRefs.add(JUpdateItemOperation.addOrChangeSimple(createAgent(dbAgent, subagentId)));
                     agentRefs.add(JUpdateItemOperation.addOrChangeSimple(createSubagentDirector(dbAgent, subagentId)));
