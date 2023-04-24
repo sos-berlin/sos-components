@@ -21,6 +21,7 @@ import com.sos.joc.model.security.properties.ldap.LdapGroupRolesMappingItem;
 
 public class SOSLdapWebserviceCredentials {
 
+    private static final String COM_SUN_JNDI_LDAP_CONNECT_TIMEOUT = "com.sun.jndi.ldap.connect.timeout";
     private static final String DEFAULT_USER_DN_TEMPLATE = "{0}";
     private static final String DEFAULT_GROUP_NAME_ATTRIBUTE = "memberOf";
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSLdapWebserviceCredentials.class);
@@ -33,6 +34,9 @@ public class SOSLdapWebserviceCredentials {
     private String systemUser;
     private String systemPassword;
     private SOSLdapLoginUserName sosLdapLoginUserName;
+
+    private Integer readTimeout;
+    private Integer connectTimeout;
 
     private String userDnTemplate;
     private String searchBase;
@@ -104,6 +108,18 @@ public class SOSLdapWebserviceCredentials {
         return account;
     }
 
+    public String getReadTimeout() {
+        return String.valueOf(readTimeout);
+    }
+
+    public String getConnectTimeout() {
+        if (connectTimeout == null) {
+            return "";
+        } else {
+            return String.valueOf(connectTimeout);
+        }
+    }
+
     public void setAccount(String account) {
         this.account = account;
         sosLdapLoginUserName = new SOSLdapLoginUserName(account);
@@ -135,6 +151,14 @@ public class SOSLdapWebserviceCredentials {
 
     public Map<String, List<String>> getGroupRolesMap() {
         return groupRolesMap;
+    }
+
+    private Integer getProperty(Integer value, Integer defaultValue) {
+        if (value == null) {
+            return defaultValue;
+        } else {
+            return value;
+        }
     }
 
     private String getProperty(String value, String defaultValue) {
@@ -177,6 +201,18 @@ public class SOSLdapWebserviceCredentials {
                 }
                 if (systemUser == null || systemUser.isEmpty()) {
                     systemUser = getProperty(properties.getLdap().getExpert().getIamLdapSystemUser(), "");
+                }
+                if (systemPassword == null || systemPassword.isEmpty()) {
+                    systemPassword = getProperty(properties.getLdap().getExpert().getIamLdapSystemPassword(), "");
+                }
+                if (readTimeout == null) {
+                    readTimeout = getProperty(properties.getLdap().getExpert().getIamLdapReadTimeout(), SOSAuthHelper.LDAP_READ_TIMEOUT);
+                }
+                if (connectTimeout == null) {
+                    if (properties.getLdap().getExpert().getIamLdapConnectTimeout() != null) {
+                        connectTimeout = getProperty(properties.getLdap().getExpert().getIamLdapConnectTimeout(), 0);
+                    }
+
                 }
                 if (systemPassword == null || systemPassword.isEmpty()) {
                     systemPassword = getProperty(properties.getLdap().getExpert().getIamLdapSystemPassword(), "");

@@ -28,7 +28,6 @@ import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
 public class SOSLdapHandler {
 
-    private static final String COM_SUN_JNDI_LDAP_READ_TIMEOUT = "com.sun.jndi.ldap.read.timeout";
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSLdapHandler.class);
     private String msg = "";
     InitialLdapContext ldapContext;
@@ -72,7 +71,10 @@ public class SOSLdapHandler {
             env.put(Context.SECURITY_AUTHENTICATION, SOSLdapWebserviceCredentials.SECURITY_AUTHENTICATION);
             env.put(Context.SECURITY_PRINCIPAL, sosLdapWebserviceCredentials.getSecurityPrincipal());
             env.put(Context.SECURITY_CREDENTIALS, password);
-            env.put(COM_SUN_JNDI_LDAP_READ_TIMEOUT, SOSAuthHelper.LDAP_TIMEOUT);
+            env.put(SOSAuthHelper.COM_SUN_JNDI_LDAP_READ_TIMEOUT, sosLdapWebserviceCredentials.getReadTimeout());
+            if (sosLdapWebserviceCredentials.getConnectTimeout() != null && !sosLdapWebserviceCredentials.getConnectTimeout().isEmpty()) {
+                env.put(SOSAuthHelper.COM_SUN_JNDI_LDAP_CONNECT_TIMEOUT, sosLdapWebserviceCredentials.getConnectTimeout());
+            }
             if (sosLdapWebserviceCredentials.isSSL()) {
                 env.put("java.naming.ldap.factory.socket", "com.sos.auth.ldap.classes.SOSLdapSSLSocketFactory");
             }
@@ -102,7 +104,7 @@ public class SOSLdapHandler {
         try {
 
             if (identityServiceType == IdentityServiceTypes.LDAP_JOC) {
-                if (!SOSAuthHelper.accountExist(sosLdapWebserviceCredentials.getAccount(),sosLdapWebserviceCredentials.getIdentityServiceId())) {
+                if (!SOSAuthHelper.accountExist(sosLdapWebserviceCredentials.getAccount(), sosLdapWebserviceCredentials.getIdentityServiceId())) {
                     msg = "Account has no roles. Login skipped.";
                     return null;
                 }
