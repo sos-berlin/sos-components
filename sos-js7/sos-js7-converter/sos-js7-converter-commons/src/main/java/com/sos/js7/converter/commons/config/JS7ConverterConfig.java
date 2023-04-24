@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.util.Properties;
 
 import com.sos.js7.converter.commons.config.items.AgentConfig;
+import com.sos.js7.converter.commons.config.items.CalendarConfig;
 import com.sos.js7.converter.commons.config.items.GenerateConfig;
 import com.sos.js7.converter.commons.config.items.JobConfig;
 import com.sos.js7.converter.commons.config.items.MockConfig;
@@ -27,6 +28,7 @@ public class JS7ConverterConfig {
     private final JobConfig jobConfig;
     private final AgentConfig agentConfig;
     private final MockConfig mockConfig;
+    private final CalendarConfig calendarConfig;
     private final ScheduleConfig scheduleConfig;
     private final SubFolderConfig subFolderConfig;
 
@@ -37,6 +39,7 @@ public class JS7ConverterConfig {
         jobConfig = new JobConfig();
         agentConfig = new AgentConfig();
         mockConfig = new MockConfig();
+        calendarConfig = new CalendarConfig();
         scheduleConfig = new ScheduleConfig();
         subFolderConfig = new SubFolderConfig();
     }
@@ -59,6 +62,8 @@ public class JS7ConverterConfig {
                 agentConfig.parse(p);
                 // MOCK
                 mockConfig.parse(p);
+                // CALENDAR
+                calendarConfig.parse(p);
                 // SCHEDULE
                 scheduleConfig.parse(p);
                 // SUBFOLDER - TODO autosys only
@@ -97,6 +102,10 @@ public class JS7ConverterConfig {
         return mockConfig;
     }
 
+    public CalendarConfig getCalendarConfig() {
+        return calendarConfig;
+    }
+
     public ScheduleConfig getScheduleConfig() {
         return scheduleConfig;
     }
@@ -121,6 +130,9 @@ public class JS7ConverterConfig {
         }
         if (!mockConfig.isEmpty()) {
             sb.append(",").append(mockConfig.toString());
+        }
+        if (!calendarConfig.isEmpty()) {
+            sb.append(",").append(calendarConfig.toString());
         }
         if (!scheduleConfig.isEmpty()) {
             sb.append(",").append(scheduleConfig.toString());

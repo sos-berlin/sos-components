@@ -33,10 +33,18 @@ public class SOSString {
     }
 
     public static String toString(Object o) {
-        return toString(o, null);
+        return toString(o, null, false);
+    }
+
+    public static String toString(Object o, boolean excludeNullValues) {
+        return toString(o, null, excludeNullValues);
     }
 
     public static String toString(Object o, Collection<String> excludeFieldNames) {
+        return toString(o, excludeFieldNames, false);
+    }
+
+    public static String toString(Object o, Collection<String> excludeFieldNames, boolean excludeNullValues) {
         if (o == null) {
             return null;
         }
@@ -58,10 +66,12 @@ public class SOSString {
             if (excludeFieldNames != null) {
                 builder.setExcludeFieldNames(excludeFieldNames.stream().toArray(String[]::new));
             }
+            builder.setExcludeNullValues(excludeNullValues);
             return builder.toString();
         } catch (Throwable t) {
+            t.printStackTrace();
+            return null;// return null instead of o.toString() to avoid StackOverflowException (when o.toString() uses SOSString.toString)
         }
-        return o.toString();
     }
 
     public static String hash256(String val) {
