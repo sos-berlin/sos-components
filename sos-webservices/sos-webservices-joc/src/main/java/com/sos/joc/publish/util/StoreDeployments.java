@@ -156,7 +156,7 @@ public class StoreDeployments {
                 dbLayer.cleanupSignatures(commitId, controllerId);
                 // cleanup stored commitIds
                 dbLayer.cleanupCommitIds(commitId);
-                // TODO: create new (daily) planned orders
+                // create new (daily) planned orders
                 if(dailyPlanDate != null) {
                     DailyPlanOrdersGenerateImpl ordersGenerate = new DailyPlanOrdersGenerateImpl();
                     List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(commitId);
@@ -173,9 +173,9 @@ public class StoreDeployments {
                             // check planOrderAutomatically of the schedule first
                             if (schedule.getPlanOrderAutomatically()) {
                                 if(schedule.getSubmitOrderToControllerWhenPlanned()) {
-                                    schedulePathsWithSubmit.add(schedule.getPath());
+                                    schedulePathsWithSubmit.add(scheduleDbItem.getPath());
                                 } else {
-                                    schedulePathsWithoutSubmit.add(schedule.getPath());
+                                    schedulePathsWithoutSubmit.add(scheduleDbItem.getPath());
                                 }
                             }
                         }
@@ -193,21 +193,10 @@ public class StoreDeployments {
                             LOGGER.warn("generate orders failed due to missing permission.");
                         }
                     }
-//                    if(!schedulePaths.isEmpty()) {
-//                        List<GenerateRequest> requests =  ordersGenerate.getGenerateRequests(dailyPlanDate, null, schedulePaths, controllerId);
-//                        boolean successful = ordersGenerate.generateOrders(requests, accessToken, false);
-//                        if (!successful) {
-//                            LOGGER.warn("generate orders failed due to missing permission.");
-//                        }
-//                    }
                 }
             } else  if (either.isLeft()) {
                 // an error occurred
-//                String message = String.format(
-//                        "Response from Controller \"%1$s:\": %2$s", controllerId, either.getLeft().message());
-//                LOGGER.error(message);
                 // updateRepo command is atomic, therefore all items are rejected
-                
                 // get all already optimistically stored entries for the commit
                 List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(commitId);
                 // update all previously optimistically stored entries with the error message and change the state
@@ -222,7 +211,6 @@ public class StoreDeployments {
                 ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, null);
             }
         } catch (Exception e) {
-            //LOGGER.error(e.getMessage(), e);
             ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, null);
         } finally {
             Globals.disconnect(newHibernateSession);
