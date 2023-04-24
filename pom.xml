@@ -35,7 +35,7 @@
     <sos.engine.version>2.6.0-SNAPSHOT</sos.engine.version>
     <api.schema.version>${project.version}</api.schema.version>
     <inventory.schema.version>1.6.0-SNAPSHOT</inventory.schema.version>
-    <sos.license.version>1.2.0-SNAPSHOT</sos.license.version>
+    <sos.license.version>1.1.2</sos.license.version>
 
     <jackson.version>2.14.2</jackson.version>
     <jackson.databind.version>2.14.2</jackson.databind.version>
