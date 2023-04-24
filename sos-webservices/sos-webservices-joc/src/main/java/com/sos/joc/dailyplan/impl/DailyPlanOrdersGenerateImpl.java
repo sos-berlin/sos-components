@@ -80,7 +80,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             if (!generateOrders(in, accessToken, true)) {
                 return accessDeniedResponse();
             }
-            
+
             return JOCDefaultResponse.responseStatusJSOk(new Date());
 
         } catch (JocException e) {
@@ -92,7 +92,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
     }
-    
+
     public boolean generateOrders(GenerateRequest in, String accessToken, boolean withAudit) throws SOSInvalidDataException, SOSHibernateException,
             IOException, DBMissingDataException, DBConnectionRefusedException, DBInvalidDataException, JocConfigurationException,
             DBOpenSessionException, ControllerConnectionResetException, ControllerConnectionRefusedException, SOSMissingDataException, ParseException,
@@ -104,12 +104,12 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
         }
 
         Long auditLogId = withAudit ? storeAuditLog(in.getAuditLog(), CategoryType.DAILYPLAN).getId() : 0L;
-        
+
         if (folderPermissions == null) {
             folderPermissions = jobschedulerUser.getSOSAuthCurrentAccount().getSosAuthFolderPermissions();
         }
         folderPermissions.setSchedulerId(controllerId);
-    
+
         Set<Folder> scheduleFolders = null;
         Set<String> scheduleSingles = null;
         Set<Folder> workflowFolders = null;
@@ -156,10 +156,10 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
         Collection<DailyPlanSchedule> dailyPlanSchedules = getSchedules(runner, controllerId, scheduleFolders, scheduleSingles, workflowFolders,
                 workflowSingles, permittedFolders, checkedFolders);
 
-        Map<PlannedOrderKey, PlannedOrder> generatedOrders = runner.generateDailyPlan(StartupMode.manual, controllerId,
-                dailyPlanSchedules, in.getDailyPlanDate(), in.getWithSubmit(), getJocError(), accessToken);
+        Map<PlannedOrderKey, PlannedOrder> generatedOrders = runner.generateDailyPlan(StartupMode.manual, controllerId, dailyPlanSchedules, in
+                .getDailyPlanDate(), in.getWithSubmit(), getJocError(), accessToken);
         JocClusterServiceLogger.clearAllLoggers();
-        
+
         if (withAudit) {
             Set<AuditLogDetail> auditLogDetails = new HashSet<>();
 
@@ -170,7 +170,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             OrdersHelper.storeAuditLogDetails(auditLogDetails, auditLogId).thenAccept(either -> ProblemHelper.postExceptionEventIfExist(either,
                     accessToken, getJocError(), null));
         }
-        
+
         return true;
     }
 
@@ -237,26 +237,26 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
         }
         return result;
     }
-    
-    public boolean generateOrders(List<GenerateRequest> requests, String accessToken, boolean withAudit) 
-            throws DBMissingDataException, DBConnectionRefusedException, DBInvalidDataException, JocConfigurationException, DBOpenSessionException,
+
+    public boolean generateOrders(List<GenerateRequest> requests, String accessToken, boolean withAudit) throws DBMissingDataException,
+            DBConnectionRefusedException, DBInvalidDataException, JocConfigurationException, DBOpenSessionException,
             ControllerConnectionResetException, ControllerConnectionRefusedException, SOSInvalidDataException, SOSHibernateException,
             SOSMissingDataException, IOException, ParseException, ExecutionException {
         boolean successful = true;
-        for(GenerateRequest req : requests) {
-            if(!generateOrders(req, accessToken, withAudit)) {
+        for (GenerateRequest req : requests) {
+            if (!generateOrders(req, accessToken, withAudit)) {
                 successful = false;
             }
         }
         return successful;
     }
-    
-    public List<GenerateRequest> getGenerateRequests (String date, List<String> workflowPaths, List<String> schedulePaths, String controllerId)
+
+    public List<GenerateRequest> getGenerateRequests(String date, List<String> workflowPaths, List<String> schedulePaths, String controllerId)
             throws ParseException {
-        return getGenerateRequests(date, workflowPaths, schedulePaths, controllerId, null);
+        return getGenerateRequests(date, workflowPaths, schedulePaths, controllerId, true);
     }
-    
-    public List<GenerateRequest> getGenerateRequests (String date, List<String> workflowPaths, List<String> schedulePaths, String controllerId,
+
+    public List<GenerateRequest> getGenerateRequests(String date, List<String> workflowPaths, List<String> schedulePaths, String controllerId,
             Boolean withSubmit) throws ParseException {
         setSettings();
         int planDaysAhead = getSettings().getDayAheadPlan();
@@ -268,22 +268,22 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
         if (instant.isBefore(now)) {
             instant = now;
         }
-        
+
         PathItem workflowsPathItem = new PathItem();
         PathItem schedulesPathItem = new PathItem();
         workflowsPathItem.setSingles(workflowPaths);
         schedulesPathItem.setSingles(schedulePaths);
-        
+
         for (int i = 0; i < planDaysAhead; i++) {
             if (now.isBefore(instant)) {
                 continue;
             }
             GenerateRequest req = new GenerateRequest();
             req.setControllerId(controllerId);
-            if(withSubmit == null) {
-              req.setWithSubmit(i < submitDaysAhead);
+            if (withSubmit) {
+                req.setWithSubmit(i < submitDaysAhead);
             } else {
-                req.setWithSubmit(withSubmit);
+                req.setWithSubmit(false);
             }
             req.setOverwrite(true);
             req.setDailyPlanDate(sdf.format(Date.from(now)));
