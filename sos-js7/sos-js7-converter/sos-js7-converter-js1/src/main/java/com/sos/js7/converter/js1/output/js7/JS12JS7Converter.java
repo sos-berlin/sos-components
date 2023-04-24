@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.commons.util.SOSPath;
+import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
 import com.sos.controller.model.workflow.Workflow;
@@ -1990,22 +1991,54 @@ public class JS12JS7Converter {
     }
 
     public static Path findIncludeFile(DirectoryParserResult pr, Path currentPath, Path include) {
-        String logPrefix = "[findIncludeFile][" + currentPath + "]";
-        if (include.isAbsolute()) {
-            LOGGER.debug(logPrefix + "[absolute]" + include);
-            return Files.exists(include) ? include : null;
+        Path liveRoot = pr.getRoot().getPath();
+        StringBuilder msg = new StringBuilder();
+        msg.append("[findIncludeFile]");
+        msg.append("[liveRoot=").append(liveRoot).append("]");
+        msg.append("[currentPath=").append(currentPath).append("]");
+        msg.append("[include=" + include + "]");
+
+        if (SOSShell.IS_WINDOWS && include.isAbsolute()) {
+            msg.append("[absolute]");
+            if (Files.exists(include)) {
+                msg.append(include);
+                LOGGER.debug(msg.toString());
+                return include;
+            } else {
+                msg.append("[not found]");
+                msg.append(include.toAbsolutePath());
+                LOGGER.error(msg.toString());
+                return null;
+            }
         }
+
         Path includePath = null;
-        String ps = include.toString();
-        if (ps.startsWith("/") || ps.startsWith("\\")) {
-            LOGGER.debug(logPrefix + "[root=" + pr.getRoot().getPath() + "]include=" + include);
-            includePath = pr.getRoot().getPath().resolve(ps.substring(1)).normalize();
-            LOGGER.debug(logPrefix + "[starts with / or \\]" + includePath);
+        String is = include.toString();
+        if (is.startsWith("/") || is.startsWith("\\")) {
+            if (!SOSShell.IS_WINDOWS) {
+                if (Files.exists(include)) {
+                    msg.append("[absolute]");
+                    includePath = include;
+                }
+            }
+            if (includePath == null) {
+                includePath = liveRoot.resolve(is.substring(1)).normalize();
+                msg.append("[liveRoot.resolve]");
+            }
         } else {
             includePath = currentPath.getParent().resolve(include).normalize();
-            LOGGER.debug(logPrefix + "[relative]" + includePath);
+            msg.append("[currentPath.getParent().resolve]");
         }
-        return Files.exists(includePath) ? includePath : null;
+        if (Files.exists(includePath)) {
+            msg.append(includePath);
+            LOGGER.debug(msg.toString());
+            return includePath;
+        } else {
+            msg.append("[not found]");
+            msg.append(includePath.toAbsolutePath());
+            LOGGER.error(msg.toString());
+            return null;
+        }
     }
 
     private void setJobOptions(Job j, ACommonJob job) {

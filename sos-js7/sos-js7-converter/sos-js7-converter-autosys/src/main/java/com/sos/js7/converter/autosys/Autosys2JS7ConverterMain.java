@@ -10,7 +10,7 @@ public class Autosys2JS7ConverterMain extends JS7ConverterMain {
 
     @Override
     public String getProductAndVersion() {
-        return "Autosys 2022-10-24 2.5.0";
+        return "Autosys 2023-04-24 2.5.4";
     }
 
     @Override

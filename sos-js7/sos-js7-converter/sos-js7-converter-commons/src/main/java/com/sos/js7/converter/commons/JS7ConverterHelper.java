@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,7 @@ import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
 import com.sos.inventory.model.board.Board;
+import com.sos.inventory.model.instruction.PostNotices;
 import com.sos.inventory.model.job.Job;
 import com.sos.inventory.model.lock.Lock;
 import com.sos.inventory.model.script.Script;
@@ -150,6 +152,55 @@ public class JS7ConverterHelper {
         LOGGER.error(msg);
         ConverterReport.INSTANCE.addErrorRecord(msg);
         return null;
+    }
+
+    public static Integer getMonthNumber(String month) {
+        if (month == null) {
+            return null;
+        }
+        String m = month.toLowerCase();
+        if (m.startsWith("jan")) {
+            return 1;
+        } else if (m.startsWith("feb")) {
+            return 2;
+        } else if (m.startsWith("mar")) {
+            return 3;
+        } else if (m.startsWith("apr")) {
+            return 4;
+        } else if (m.startsWith("may")) {
+            return 5;
+        } else if (m.startsWith("jun")) {
+            return 6;
+        } else if (m.startsWith("jul")) {
+            return 7;
+        } else if (m.startsWith("aug")) {
+            return 8;
+        } else if (m.startsWith("sep")) {
+            return 9;
+        } else if (m.startsWith("oct")) {
+            return 10;
+        } else if (m.startsWith("nov")) {
+            return 11;
+        } else if (m.startsWith("dec")) {
+            return 12;
+        }
+        return null;
+    }
+
+    public static List<Integer> getMonths(Collection<String> months) {
+        if (months == null) {
+            return null;
+        }
+        return months.stream().map(m -> getMonthNumber(m)).filter(Objects::nonNull).collect(Collectors.toList());
+    }
+
+    public static List<String> splitEveryNChars(String text, int n) {
+        List<String> r = new ArrayList<>();
+        int length = text.length();
+        for (int i = 0; i < length; i += n) {
+            r.add(text.substring(i, Math.min(length, i + n)));
+        }
+        return r;
     }
 
     public static List<Integer> allWeekDays() {
@@ -469,5 +520,13 @@ public class JS7ConverterHelper {
             result.add(Paths.get(e.getKey() + ".lock.json"), l);
         }
         return result;
+    }
+
+    public static List<String> removeDuplicates(List<String> val) {
+        return val.stream().distinct().collect(Collectors.toList());
+    }
+
+    public static PostNotices newPostNotices(List<String> val) {
+        return new PostNotices(removeDuplicates(val));
     }
 }
