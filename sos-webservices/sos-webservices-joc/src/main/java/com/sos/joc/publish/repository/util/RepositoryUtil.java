@@ -577,6 +577,9 @@ public abstract class RepositoryUtil {
                 case INCLUDESCRIPT:
                     extension = ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.toString();
                     break;
+                case JOBTEMPLATE:
+                    extension = ConfigurationObjectFileExtension.JOBTEMPLATE_FILE_EXTENSION.toString();
+                    break;
                 case WORKINGDAYSCALENDAR:
                 case NONWORKINGDAYSCALENDAR:
                     extension = ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.toString();
