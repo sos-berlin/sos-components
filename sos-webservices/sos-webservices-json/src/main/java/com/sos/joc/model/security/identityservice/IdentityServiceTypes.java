@@ -17,6 +17,7 @@ public enum IdentityServiceTypes {
     LDAP("LDAP"),
     LDAP_JOC("LDAP-JOC"),
     OIDC("OIDC"),
+    FIDO_2("FIDO2"),
     JOC("JOC");
     private final String value;
     private final static Map<String, IdentityServiceTypes> CONSTANTS = new HashMap<String, IdentityServiceTypes>();
