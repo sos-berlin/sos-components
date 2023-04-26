@@ -10,7 +10,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * Identity Provider
+ * OIDC Identity Provider
  * <p>
  * 
  * 
@@ -24,7 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "iamOidcAuthenticationUrl",
     "iamIconUrl"
 })
-public class IdentityProvider {
+public class OidcIdentityProvider {
 
     /**
      * string without < and >
@@ -79,7 +79,7 @@ public class IdentityProvider {
      * No args constructor for use in serialization
      * 
      */
-    public IdentityProvider() {
+    public OidcIdentityProvider() {
     }
 
     /**
@@ -91,7 +91,7 @@ public class IdentityProvider {
      * @param iamOidcAuthenticationUrl
      * @param iamOidcName
      */
-    public IdentityProvider(String identityServiceName, String iamOidcClientId, String iamOidcClientSecret, String iamOidcName, String iamOidcAuthenticationUrl, String iamIconUrl) {
+    public OidcIdentityProvider(String identityServiceName, String iamOidcClientId, String iamOidcClientSecret, String iamOidcName, String iamOidcAuthenticationUrl, String iamIconUrl) {
         super();
         this.identityServiceName = identityServiceName;
         this.iamOidcClientId = iamOidcClientId;
@@ -248,10 +248,10 @@ public class IdentityProvider {
         if (other == this) {
             return true;
         }
-        if ((other instanceof IdentityProvider) == false) {
+        if ((other instanceof OidcIdentityProvider) == false) {
             return false;
         }
-        IdentityProvider rhs = ((IdentityProvider) other);
+        OidcIdentityProvider rhs = ((OidcIdentityProvider) other);
         return new EqualsBuilder().append(iamOidcClientSecret, rhs.iamOidcClientSecret).append(identityServiceName, rhs.identityServiceName).append(iamIconUrl, rhs.iamIconUrl).append(iamOidcClientId, rhs.iamOidcClientId).append(iamOidcAuthenticationUrl, rhs.iamOidcAuthenticationUrl).append(iamOidcName, rhs.iamOidcName).isEquals();
     }
 

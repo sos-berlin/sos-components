@@ -34,10 +34,11 @@ import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.security.identityservice.IdentityProvider;
+import com.sos.joc.model.security.identityservice.Fido2IdentityProvider;
 import com.sos.joc.model.security.identityservice.IdentityProviders;
 import com.sos.joc.model.security.identityservice.IdentityServiceFilter;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
+import com.sos.joc.model.security.identityservice.OidcIdentityProvider;
 import com.sos.joc.security.resource.IOidcResource;
 import com.sos.schema.JsonValidator;
 
@@ -73,13 +74,13 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_IDENTITY_PROVIDERS);
             IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
             IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
-            filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC);
             filter.setDisabled(false);
+            filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC);
             List<DBItemIamIdentityService> listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
 
             for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
-                IdentityProvider identityProvider = new IdentityProvider();
-                identityProvider.setIdentityServiceName(dbItemIamIdentityService.getIdentityServiceName());
+                OidcIdentityProvider oidcIdentityProvider = new OidcIdentityProvider();
+                oidcIdentityProvider.setIdentityServiceName(dbItemIamIdentityService.getIdentityServiceName());
 
                 JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
                 JocConfigurationFilter jocConfigurationFilter = new JocConfigurationFilter();
@@ -98,16 +99,50 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
                         String iconPath = DocumentationDBLayer.SOS_IMAGES_FOLDER + "/" + dbItemIamIdentityService.getIdentityServiceName();
                         DBItemDocumentation dbItemDocumentation = dbLayer.getDocumentation(iconPath);
                         if (dbItemDocumentation != null) {
-                            identityProvider.setIamIconUrl("/iam/icon/" + JOCJsonCommand.urlEncodedPath(identityProvider.getIdentityServiceName()));
+                            oidcIdentityProvider.setIamIconUrl("/iam/icon/" + JOCJsonCommand.urlEncodedPath(oidcIdentityProvider
+                                    .getIdentityServiceName()));
                         }
 
-                        identityProvider.setIamOidcAuthenticationUrl(getProperty(properties.getOidc().getIamOidcAuthenticationUrl(), ""));
-                        identityProvider.setIamOidcName(getProperty(properties.getOidc().getIamOidcName(), ""));
+                        oidcIdentityProvider.setIamOidcAuthenticationUrl(getProperty(properties.getOidc().getIamOidcAuthenticationUrl(), ""));
+                        oidcIdentityProvider.setIamOidcName(getProperty(properties.getOidc().getIamOidcName(), ""));
                     }
                 }
-                identityProviders.getIdentityServiceItems().add(identityProvider);
+                identityProviders.getOidcServiceItems().add(oidcIdentityProvider);
             }
 
+            listOfIdentityServices.clear();
+            filter.setIamIdentityServiceType(IdentityServiceTypes.FIDO_2);
+            listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
+
+            for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
+                Fido2IdentityProvider fido2IdentityProvider = new Fido2IdentityProvider();
+                fido2IdentityProvider.setIdentityServiceName(dbItemIamIdentityService.getIdentityServiceName());
+
+                JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
+                JocConfigurationFilter jocConfigurationFilter = new JocConfigurationFilter();
+                jocConfigurationFilter.setConfigurationType(SOSAuthHelper.CONFIGURATION_TYPE_IAM);
+                jocConfigurationFilter.setName(dbItemIamIdentityService.getIdentityServiceName());
+                jocConfigurationFilter.setObjectType(IdentityServiceTypes.FIDO_2.value());
+                List<DBItemJocConfiguration> listOfJocConfigurations = jocConfigurationDBLayer.getJocConfigurationList(jocConfigurationFilter, 0);
+                if (listOfJocConfigurations.size() == 1) {
+                    DBItemJocConfiguration dbItem = listOfJocConfigurations.get(0);
+                    com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(dbItem.getConfigurationItem(),
+                            com.sos.joc.model.security.properties.Properties.class);
+
+                    if (properties.getFido2() != null) {
+
+                        DocumentationDBLayer dbLayer = new DocumentationDBLayer(sosHibernateSession);
+                        String iconPath = DocumentationDBLayer.SOS_IMAGES_FOLDER + "/" + dbItemIamIdentityService.getIdentityServiceName();
+                        DBItemDocumentation dbItemDocumentation = dbLayer.getDocumentation(iconPath);
+                        if (dbItemDocumentation != null) {
+                            fido2IdentityProvider.setIamIconUrl("/iam/icon/" + JOCJsonCommand.urlEncodedPath(fido2IdentityProvider
+                                    .getIdentityServiceName()));
+                        }
+                        fido2IdentityProvider.setIamFido2RPName(getProperty(properties.getFido2().getIamFido2RpName(), ""));
+                    }
+                }
+                identityProviders.getFido2ServiceItems().add(fido2IdentityProvider);
+            }
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityProviders));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -137,7 +172,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
             filter.setIdentityServiceName(identityServiceFilter.getIdentityServiceName());
             List<DBItemIamIdentityService> listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
 
-            IdentityProvider identityProvider = new IdentityProvider();
+            OidcIdentityProvider identityProvider = new OidcIdentityProvider();
             if (listOfIdentityServices.size() > 0) {
 
                 identityProvider.setIdentityServiceName(listOfIdentityServices.get(0).getIdentityServiceName());
@@ -170,8 +205,6 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
             Globals.disconnect(sosHibernateSession);
         }
     }
-
- 
 
     @Override
     public JOCDefaultResponse postImportDocumentations(String xAccessToken, String identityServiceName, FormDataBodyPart file, String timeSpent,

@@ -22,7 +22,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "deliveryDate",
-    "identityServiceItems"
+    "oidcServiceItems",
+    "fido2ServiceItems"
 })
 public class IdentityProviders {
 
@@ -35,8 +36,10 @@ public class IdentityProviders {
     @JsonProperty("deliveryDate")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deliveryDate;
-    @JsonProperty("identityServiceItems")
-    private List<IdentityProvider> identityServiceItems = new ArrayList<IdentityProvider>();
+    @JsonProperty("oidcServiceItems")
+    private List<OidcIdentityProvider> oidcServiceItems = new ArrayList<OidcIdentityProvider>();
+    @JsonProperty("fido2ServiceItems")
+    private List<Fido2IdentityProvider> fido2ServiceItems = new ArrayList<Fido2IdentityProvider>();
 
     /**
      * No args constructor for use in serialization
@@ -47,13 +50,15 @@ public class IdentityProviders {
 
     /**
      * 
-     * @param identityServiceItems
+     * @param oidcServiceItems
+     * @param fido2ServiceItems
      * @param deliveryDate
      */
-    public IdentityProviders(Date deliveryDate, List<IdentityProvider> identityServiceItems) {
+    public IdentityProviders(Date deliveryDate, List<OidcIdentityProvider> oidcServiceItems, List<Fido2IdentityProvider> fido2ServiceItems) {
         super();
         this.deliveryDate = deliveryDate;
-        this.identityServiceItems = identityServiceItems;
+        this.oidcServiceItems = oidcServiceItems;
+        this.fido2ServiceItems = fido2ServiceItems;
     }
 
     /**
@@ -78,24 +83,34 @@ public class IdentityProviders {
         this.deliveryDate = deliveryDate;
     }
 
-    @JsonProperty("identityServiceItems")
-    public List<IdentityProvider> getIdentityServiceItems() {
-        return identityServiceItems;
+    @JsonProperty("oidcServiceItems")
+    public List<OidcIdentityProvider> getOidcServiceItems() {
+        return oidcServiceItems;
     }
 
-    @JsonProperty("identityServiceItems")
-    public void setIdentityServiceItems(List<IdentityProvider> identityServiceItems) {
-        this.identityServiceItems = identityServiceItems;
+    @JsonProperty("oidcServiceItems")
+    public void setOidcServiceItems(List<OidcIdentityProvider> oidcServiceItems) {
+        this.oidcServiceItems = oidcServiceItems;
+    }
+
+    @JsonProperty("fido2ServiceItems")
+    public List<Fido2IdentityProvider> getFido2ServiceItems() {
+        return fido2ServiceItems;
+    }
+
+    @JsonProperty("fido2ServiceItems")
+    public void setFido2ServiceItems(List<Fido2IdentityProvider> fido2ServiceItems) {
+        this.fido2ServiceItems = fido2ServiceItems;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("identityServiceItems", identityServiceItems).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("oidcServiceItems", oidcServiceItems).append("fido2ServiceItems", fido2ServiceItems).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deliveryDate).append(identityServiceItems).toHashCode();
+        return new HashCodeBuilder().append(fido2ServiceItems).append(oidcServiceItems).append(deliveryDate).toHashCode();
     }
 
     @Override
@@ -107,7 +122,7 @@ public class IdentityProviders {
             return false;
         }
         IdentityProviders rhs = ((IdentityProviders) other);
-        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(identityServiceItems, rhs.identityServiceItems).isEquals();
+        return new EqualsBuilder().append(fido2ServiceItems, rhs.fido2ServiceItems).append(oidcServiceItems, rhs.oidcServiceItems).append(deliveryDate, rhs.deliveryDate).isEquals();
     }
 
 }
