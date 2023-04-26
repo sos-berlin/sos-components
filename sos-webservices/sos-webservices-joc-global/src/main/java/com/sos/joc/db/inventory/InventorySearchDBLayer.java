@@ -2,6 +2,7 @@ package com.sos.joc.db.inventory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
@@ -35,6 +36,42 @@ public class InventorySearchDBLayer extends DBLayer {
 
     public InventorySearchDBLayer(SOSHibernateSession session) {
         super(session);
+    }
+    
+    public List<InventorySearchItem> getQuickSearchInventoryConfigurations(RequestSearchReturnType type, String search)
+            throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select path as path, type as type, folder as folder, name as name from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        List<String> whereClause = new ArrayList<>();
+        if (type != null) {
+            if (RequestSearchReturnType.CALENDAR.equals(type)) {
+                whereClause.add("type in (:types)");
+            } else {
+                whereClause.add("type=:type");
+            }
+        }
+        if (SOSString.isEmpty(search) || search.equals(FIND_ALL)) {
+            search = null;
+        } else {
+            whereClause.add("lower(name) like :search");
+        }
+        if (!whereClause.isEmpty()) {
+            hql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
+        }
+        hql.append(" group by path,type,folder,name");
+
+        Query<InventorySearchItem> query = getSession().createQuery(hql.toString(), InventorySearchItem.class);
+        if (type != null) {
+            if (RequestSearchReturnType.CALENDAR.equals(type)) {
+                query.setParameter("types", JocInventory.getCalendarTypes());
+            } else {
+                query.setParameter("type", ConfigurationType.valueOf(type.value()).intValue());
+            }
+        }
+        if (search != null) {
+            // (only) on the right hand side always %
+            query.setParameter("search", SearchStringHelper.globToSqlPattern(search.toLowerCase() + '%').replaceAll("%%+", "%"));
+        }
+        return getSession().getResultList(query);
     }
 
     public List<InventorySearchItem> getBasicSearchInventoryConfigurations(RequestSearchReturnType type, String search, List<String> folders)
