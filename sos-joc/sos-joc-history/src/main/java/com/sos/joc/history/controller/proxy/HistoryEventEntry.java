@@ -140,6 +140,13 @@ public class HistoryEventEntry {
         return null;
     }
 
+    public static String getStringValue(Value val) {
+        if (val == null) {
+            return null;
+        }
+        return val.toJava().toString();
+    }
+
     public Long getEventId() {
         return eventId;
     }

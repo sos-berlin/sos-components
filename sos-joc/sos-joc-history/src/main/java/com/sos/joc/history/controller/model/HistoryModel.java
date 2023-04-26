@@ -81,6 +81,8 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesConsume
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesConsumptionStarted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesExpected;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesRead;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderPromptAnswered;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderPrompted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumed;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumptionMarked;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderRetrying;
@@ -491,6 +493,12 @@ public class HistoryModel {
                     case OrderMoved:
                         orderLogMoved(dbLayer, (FatEventOrderMoved) entry, EventType.OrderMoved);
                         counter.getOrder().addMoved();
+                        break;
+                    case OrderPrompted:
+                        orderLog(dbLayer, (FatEventOrderPrompted) entry, EventType.OrderPrompted);
+                        break;
+                    case OrderPromptAnswered:
+                        orderLog(dbLayer, (FatEventOrderPromptAnswered) entry, EventType.OrderPromptAnswered);
                         break;
                     case EventWithProblem:
                         try {
@@ -2060,6 +2068,8 @@ public class HistoryModel {
             default:
                 break;
             }
+        } else if (le.getQuestion() != null) {
+            ole.setQuestion(le.getQuestion());
         }
         return ole;
     }
