@@ -14,6 +14,7 @@ import com.sos.joc.history.controller.proxy.fatevent.AFatEventOrderNotice;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderCaught;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderCaught.FatEventOrderCaughtCause;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderMoved;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderPrompted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderRetrying;
 import com.sos.joc.history.controller.proxy.fatevent.FatForkedChild;
 import com.sos.joc.history.controller.proxy.fatevent.FatInstruction;
@@ -56,6 +57,7 @@ public class LogEntry {
     private FatEventOrderMoved orderMoved;
     private FatInstruction instruction;
     private Variables arguments;
+    private String question;
     private boolean isOrderStarted;
 
     public LogEntry(OrderLogEntryLogLevel level, EventType type, Date controllerDate, Date agentDate) {
@@ -79,6 +81,9 @@ public class LogEntry {
         case OrderCaught:
             caught = new Caught();
             caught.setCause(getCaughtCause(((FatEventOrderCaught) eo).getCause()));
+            break;
+        case OrderPrompted:
+            question = ((FatEventOrderPrompted) eo).getQuestion();
             break;
         default:
             break;
@@ -416,4 +421,7 @@ public class LogEntry {
         return instruction;
     }
 
+    public String getQuestion() {
+        return question;
+    }
 }

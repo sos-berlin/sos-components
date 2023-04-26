@@ -58,6 +58,8 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesConsump
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesExpected;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesRead;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderOutcomeAdded;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderPromptAnswered;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderPrompted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumed;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumptionMarked;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderRetrying;
@@ -80,6 +82,7 @@ import js7.data.order.OrderEvent.OrderLocksQueued;
 import js7.data.order.OrderEvent.OrderLocksReleased;
 import js7.data.order.OrderEvent.OrderMoved;
 import js7.data.order.OrderEvent.OrderNoticesConsumed;
+import js7.data.order.OrderEvent.OrderPrompted;
 import js7.data.order.OrderEvent.OrderRetrying;
 import js7.data.order.OrderEvent.OrderStderrWritten;
 import js7.data.order.OrderEvent.OrderStdoutWritten;
@@ -520,6 +523,20 @@ public class HistoryControllerHandlerTest {
                 event = new FatEventOrderRetrying(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo().getPosition(),
                         HistoryEventEntry.getDate(or.delayedUntil()));
                 break;
+
+            case OrderPrompted:
+                order = entry.getCheckedOrder();
+                OrderPrompted opp = (OrderPrompted) entry.getEvent();
+                event = new FatEventOrderPrompted(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo().getPosition(),
+                        HistoryEventEntry.getStringValue(opp.question()));
+                break;
+
+            case OrderPromptAnswered:
+                order = entry.getCheckedOrder();
+                event = new FatEventOrderPromptAnswered(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
+                        .getPosition());
+                break;
+
             default:
                 event = new FatEventWithProblem(entry, new Exception("unknown type=" + entry.getEventType()));
                 break;
