@@ -596,8 +596,6 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                                                     controllerId, false);
                                             requests.addAll(requestsWithoutSubmit);
                                         }
-//                                        List<GenerateRequest> requests =  ordersGenerate.getGenerateRequests(addOrdersDateFrom, 
-//                                                controllerIdsWithWorkflowPaths.get(controllerId), null, controllerId);
                                         successful = ordersGenerate.generateOrders(requests, xAccessToken, false);
                                         if (!successful) {
                                             LOGGER.warn("generate orders failed due to missing permission.");
@@ -653,9 +651,6 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                                                     controllerId, false);
                                             requests.addAll(requestsWithoutSubmit);
                                         }
-//                                        List<GenerateRequest> requests = ordersGenerate.getGenerateRequests(addOrdersDateFrom, null, 
-//                                                ordersPerController.get(controllerId).stream()
-//                                                    .map(order -> order.getSchedulePath()).collect(Collectors.toList()), controllerId);
                                         successful = ordersGenerate.generateOrders(requests, xAccessToken, false);
                                         if (!successful) {
                                             LOGGER.warn("generate orders failed due to missing permission.");
