@@ -21,6 +21,7 @@ import com.sos.joc.classes.inventory.search.WorkflowSearcher;
 import com.sos.joc.classes.inventory.search.WorkflowSearcher.WorkflowJob;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.common.SearchStringHelper;
+import com.sos.joc.db.inventory.items.InventoryQuickSearchItem;
 import com.sos.joc.db.inventory.items.InventorySearchItem;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.search.RequestSearchAdvancedItem;
@@ -38,7 +39,7 @@ public class InventorySearchDBLayer extends DBLayer {
         super(session);
     }
     
-    public List<InventorySearchItem> getQuickSearchInventoryConfigurations(RequestSearchReturnType type, String search)
+    public List<InventoryQuickSearchItem> getQuickSearchInventoryConfigurations(RequestSearchReturnType type, String search)
             throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select path as path, type as type, folder as folder, name as name from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         List<String> whereClause = new ArrayList<>();
@@ -59,7 +60,7 @@ public class InventorySearchDBLayer extends DBLayer {
         }
         hql.append(" group by path,type,folder,name");
 
-        Query<InventorySearchItem> query = getSession().createQuery(hql.toString(), InventorySearchItem.class);
+        Query<InventoryQuickSearchItem> query = getSession().createQuery(hql.toString(), InventoryQuickSearchItem.class);
         if (type != null) {
             if (RequestSearchReturnType.CALENDAR.equals(type)) {
                 query.setParameter("types", JocInventory.getCalendarTypes());
