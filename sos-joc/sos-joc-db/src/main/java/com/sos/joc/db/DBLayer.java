@@ -8,6 +8,7 @@ import com.sos.commons.util.SOSClassList;
 import com.sos.joc.db.authentication.DBItemIamAccount;
 import com.sos.joc.db.authentication.DBItemIamAccount2Roles;
 import com.sos.joc.db.authentication.DBItemIamBlockedAccount;
+import com.sos.joc.db.authentication.DBItemIamFido2Registration;
 import com.sos.joc.db.authentication.DBItemIamHistory;
 import com.sos.joc.db.authentication.DBItemIamHistoryDetails;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
@@ -295,6 +296,10 @@ public class DBLayer implements Serializable {
     public static final String TABLE_IAM_ACCOUNTS = "IAM_ACCOUNTS";
     public static final String TABLE_IAM_ACCOUNTS_SEQUENCE = "SEQ_IAM_ACCOUNTS";
 
+    public static final String DBITEM_IAM_FIDO2_REGISTRATIONS = DBItemIamFido2Registration.class.getSimpleName();
+    public static final String TABLE_IAM_FIDO2_REGISTRATIONS = "IAM_FIDO2_REGISTRATIONS";
+    public static final String TABLE_IAM_FIDO2_REGISTRATIONS_SEQUENCE = "SEQ_IAM_FIDO2_REGISTRATIONS";
+
     public static final String DBITEM_IAM_HISTORY = DBItemIamHistory.class.getSimpleName();
     public static final String TABLE_IAM_HISTORY = "IAM_HISTORY";
     public static final String TABLE_IAM_HISTORY_SEQUENCE = "SEQ_IAM_HISTORY";
@@ -479,6 +484,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemIamAccount2Roles.class);
         cl.add(DBItemIamPermission.class);
         cl.add(DBItemIamRole.class);
+        cl.add(DBItemIamFido2Registration.class);
 
         cl.merge(getHistoryClassMapping().getClasses());
         cl.merge(getOrderInitatorClassMapping().getClasses());
