@@ -83,15 +83,10 @@ import com.sos.schema.JsonValidator;
 public class AccountResourceImpl extends JOCResourceImpl implements IAccountResource {
 
     private static final String VALUE = "value";
-
     private static final String DEFAULT_PROFILE_ACCOUNT = "default_profile_account";
-
     private static final String JOC = "joc";
-
     private static final String ROOT = "root";
-
     private static final Logger LOGGER = LoggerFactory.getLogger(AccountResourceImpl.class);
-
     private static final String API_CALL_ACCOUNTS = "./iam/accounts";
     private static final String API_CALL_ACCOUNT_READ = "./iam/account";
     private static final String API_CALL_ACCOUNT_STORE = "./iam/account/store";
