@@ -58,12 +58,11 @@ public class InventorySearchDBLayer extends DBLayer {
         if (!whereClause.isEmpty()) {
             hql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
         }
-        hql.append(" group by path,type,folder,name");
 
         Query<InventoryQuickSearchItem> query = getSession().createQuery(hql.toString(), InventoryQuickSearchItem.class);
         if (type != null) {
             if (RequestSearchReturnType.CALENDAR.equals(type)) {
-                query.setParameter("types", JocInventory.getCalendarTypes());
+                query.setParameterList("types", JocInventory.getCalendarTypes());
             } else {
                 query.setParameter("type", ConfigurationType.valueOf(type.value()).intValue());
             }
@@ -121,7 +120,7 @@ public class InventorySearchDBLayer extends DBLayer {
 
         Query<InventorySearchItem> query = getSession().createQuery(hql.toString(), InventorySearchItem.class);
         if (RequestSearchReturnType.CALENDAR.equals(type)) {
-            query.setParameter("types", JocInventory.getCalendarTypes());
+            query.setParameterList("types", JocInventory.getCalendarTypes());
         } else {
             query.setParameter("type", ConfigurationType.valueOf(type.value()).intValue());
         }
@@ -195,7 +194,7 @@ public class InventorySearchDBLayer extends DBLayer {
 
         Query<InventorySearchItem> query = getSession().createQuery(hql.toString(), InventorySearchItem.class);
         if (RequestSearchReturnType.CALENDAR.equals(type)) {
-            query.setParameter("types", JocInventory.getCalendarTypes());
+            query.setParameterList("types", JocInventory.getCalendarTypes());
         } else {
             query.setParameter("type", ConfigurationType.valueOf(type.value()).intValue());
         }
@@ -645,7 +644,7 @@ public class InventorySearchDBLayer extends DBLayer {
 
         Query<InventorySearchItem> query = getSession().createQuery(hql.toString(), InventorySearchItem.class);
         if (RequestSearchReturnType.CALENDAR.equals(type)) {
-            query.setParameter("types", JocInventory.getCalendarTypes());
+            query.setParameterList("types", JocInventory.getCalendarTypes());
         } else {
             query.setParameter("type", ConfigurationType.valueOf(type.value()).intValue());
         }
@@ -1209,7 +1208,7 @@ public class InventorySearchDBLayer extends DBLayer {
         }
         Query<InventorySearchItem> query = getSession().createQuery(hql.toString(), InventorySearchItem.class);
         if (RequestSearchReturnType.CALENDAR.equals(type)) {
-            query.setParameter("types", JocInventory.getCalendarTypes());
+            query.setParameterList("types", JocInventory.getCalendarTypes());
         } else {
             query.setParameter("type", ConfigurationType.valueOf(type.value()).intValue());
         }
