@@ -543,8 +543,12 @@ public class EventService {
                 String agentPath = ((AgentPath) key).string();
                 if (!uncoupledAgents.contains(agentPath)) {
                     uncoupledAgents.add(agentPath);
-                    addEvent(createAgentEvent(eventId, agentPath));
+                    addEvent(createAgentEvent(eventId, agentPath, "AgentCoupling"));
                 }
+            } else if (evt instanceof AgentRefStateEvent.AgentCoupled$) {
+                String agentPath = ((AgentPath) key).string();
+                addEvent(createAgentEvent(eventId, agentPath, "AgentCoupling"));
+                uncoupledAgents.remove(agentPath);
             } else if (evt instanceof AgentRefStateEvent && !(evt instanceof AgentRefStateEvent.AgentEventsObserved)) {
                 String agentPath = ((AgentPath) key).string();
                 addEvent(createAgentEvent(eventId, agentPath));
