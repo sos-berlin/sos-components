@@ -36,10 +36,6 @@ public class IamFido2DBLayer {
             query.setParameter("rejected", filter.getRejected());
         }
 
-        if (filter.getRpName() != null && !filter.getRpName().isEmpty()) {
-            query.setParameter("rpName", filter.getRpName());
-        }
-
         if (filter.getAccountName() != null && !filter.getAccountName().isEmpty()) {
             query.setParameter("accountName", filter.getAccountName());
         }
@@ -61,10 +57,6 @@ public class IamFido2DBLayer {
         String where = " ";
         String and = "";
 
-        if (filter.getRpName() != null && !filter.getRpName().isEmpty()) {
-            where += and + " rpName = :rpName";
-            and = " and ";
-        }
         if (filter.getAccountName() != null && !filter.getAccountName().isEmpty()) {
             where += and + " accountName = :accountName";
             and = " and ";
@@ -107,7 +99,7 @@ public class IamFido2DBLayer {
     public com.sos.joc.db.authentication.DBItemIamFido2Registration getIamFido2RegistrationtByName(IamFido2RegistrationFilter filter)
             throws SOSHibernateException {
 
-        if ((filter.getRpName() == null) || (filter.getRpName().isEmpty())) {
+        if ((filter.getAccountName() == null) || (filter.getAccountName().isEmpty())) {
             return null;
         }
 

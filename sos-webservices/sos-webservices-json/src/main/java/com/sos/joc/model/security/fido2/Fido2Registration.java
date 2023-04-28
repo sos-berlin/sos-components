@@ -22,7 +22,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "identityServiceName",
     "accountName",
     "email",
-    "rpName",
     "publicKey",
     "approved",
     "rejected",
@@ -58,14 +57,6 @@ public class Fido2Registration {
      */
     @JsonProperty("email")
     private String email;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("rpName")
-    private String rpName;
     /**
      * string without < and >
      * <p>
@@ -136,14 +127,12 @@ public class Fido2Registration {
      * @param accessToken
      * @param confirmed
      * @param email
-     * @param rpName
      */
-    public Fido2Registration(String identityServiceName, String accountName, String email, String rpName, String publicKey, Boolean approved, Boolean rejected, Boolean confirmed, String accessToken, AuditParams auditLog) {
+    public Fido2Registration(String identityServiceName, String accountName, String email, String publicKey, Boolean approved, Boolean rejected, Boolean confirmed, String accessToken, AuditParams auditLog) {
         super();
         this.identityServiceName = identityServiceName;
         this.accountName = accountName;
         this.email = email;
-        this.rpName = rpName;
         this.publicKey = publicKey;
         this.approved = approved;
         this.rejected = rejected;
@@ -220,28 +209,6 @@ public class Fido2Registration {
     @JsonProperty("email")
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("rpName")
-    public String getRpName() {
-        return rpName;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("rpName")
-    public void setRpName(String rpName) {
-        this.rpName = rpName;
     }
 
     /**
@@ -378,12 +345,12 @@ public class Fido2Registration {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("accountName", accountName).append("email", email).append("rpName", rpName).append("publicKey", publicKey).append("approved", approved).append("rejected", rejected).append("confirmed", confirmed).append("accessToken", accessToken).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("accountName", accountName).append("email", email).append("publicKey", publicKey).append("approved", approved).append("rejected", rejected).append("confirmed", confirmed).append("accessToken", accessToken).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(identityServiceName).append(approved).append(auditLog).append(accountName).append(rejected).append(publicKey).append(accessToken).append(confirmed).append(email).append(rpName).toHashCode();
+        return new HashCodeBuilder().append(identityServiceName).append(approved).append(auditLog).append(accountName).append(rejected).append(publicKey).append(accessToken).append(confirmed).append(email).toHashCode();
     }
 
     @Override
@@ -395,7 +362,7 @@ public class Fido2Registration {
             return false;
         }
         Fido2Registration rhs = ((Fido2Registration) other);
-        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(approved, rhs.approved).append(auditLog, rhs.auditLog).append(accountName, rhs.accountName).append(rejected, rhs.rejected).append(publicKey, rhs.publicKey).append(accessToken, rhs.accessToken).append(confirmed, rhs.confirmed).append(email, rhs.email).append(rpName, rhs.rpName).isEquals();
+        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(approved, rhs.approved).append(auditLog, rhs.auditLog).append(accountName, rhs.accountName).append(rejected, rhs.rejected).append(publicKey, rhs.publicKey).append(accessToken, rhs.accessToken).append(confirmed, rhs.confirmed).append(email, rhs.email).isEquals();
     }
 
 }

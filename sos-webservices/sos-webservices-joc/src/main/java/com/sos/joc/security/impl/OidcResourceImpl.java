@@ -138,7 +138,6 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
                             fido2IdentityProvider.setIamIconUrl("/iam/icon/" + JOCJsonCommand.urlEncodedPath(fido2IdentityProvider
                                     .getIdentityServiceName()));
                         }
-                        fido2IdentityProvider.setIamFido2RPName(getProperty(properties.getFido2().getIamFido2RpName(), ""));
                     }
                 }
                 identityProviders.getFido2ServiceItems().add(fido2IdentityProvider);
