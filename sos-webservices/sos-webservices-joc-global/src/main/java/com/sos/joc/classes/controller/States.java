@@ -62,6 +62,10 @@ public class States {
         return connectionState;
     }
     
+    public static ClusterNodeState getClusterNodeState(Boolean isActive) {
+        return getClusterNodeState(isActive, true);
+    }
+    
     public static ClusterNodeState getClusterNodeState(Boolean isActive, boolean isCluster) {
         if (!isCluster) {
            return null; 

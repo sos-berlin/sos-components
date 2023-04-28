@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.controller.ClusterState;
 import com.sos.joc.model.order.OrderV;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -29,6 +30,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "version",
     "state",
     "healthState",
+    "clusterState",
     "errorMessage",
     "orders",
     "runningTasks",
@@ -95,6 +97,14 @@ public class AgentStateV {
      */
     @JsonProperty("healthState")
     private AgentClusterState healthState;
+    /**
+     * cluster state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("clusterState")
+    private ClusterState clusterState;
     /**
      * if state == couplngFailed or unknown
      * 
@@ -285,6 +295,28 @@ public class AgentStateV {
     }
 
     /**
+     * cluster state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("clusterState")
+    public ClusterState getClusterState() {
+        return clusterState;
+    }
+
+    /**
+     * cluster state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("clusterState")
+    public void setClusterState(ClusterState clusterState) {
+        this.clusterState = clusterState;
+    }
+
+    /**
      * if state == couplngFailed or unknown
      * 
      */
@@ -346,12 +378,12 @@ public class AgentStateV {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("agentName", agentName).append("subagentId", subagentId).append("url", url).append("version", version).append("state", state).append("healthState", healthState).append("errorMessage", errorMessage).append("orders", orders).append("runningTasks", runningTasks).append("disabled", disabled).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("agentName", agentName).append("subagentId", subagentId).append("url", url).append("version", version).append("state", state).append("healthState", healthState).append("clusterState", clusterState).append("errorMessage", errorMessage).append("orders", orders).append("runningTasks", runningTasks).append("disabled", disabled).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentId).append(controllerId).append(errorMessage).append(agentName).append(version).append(url).append(healthState).append(subagentId).append(orders).append(disabled).append(state).append(runningTasks).toHashCode();
+        return new HashCodeBuilder().append(agentId).append(controllerId).append(errorMessage).append(agentName).append(version).append(url).append(healthState).append(subagentId).append(orders).append(disabled).append(state).append(clusterState).append(runningTasks).toHashCode();
     }
 
     @Override
@@ -363,7 +395,7 @@ public class AgentStateV {
             return false;
         }
         AgentStateV rhs = ((AgentStateV) other);
-        return new EqualsBuilder().append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(errorMessage, rhs.errorMessage).append(agentName, rhs.agentName).append(version, rhs.version).append(url, rhs.url).append(healthState, rhs.healthState).append(subagentId, rhs.subagentId).append(orders, rhs.orders).append(disabled, rhs.disabled).append(state, rhs.state).append(runningTasks, rhs.runningTasks).isEquals();
+        return new EqualsBuilder().append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(errorMessage, rhs.errorMessage).append(agentName, rhs.agentName).append(version, rhs.version).append(url, rhs.url).append(healthState, rhs.healthState).append(subagentId, rhs.subagentId).append(orders, rhs.orders).append(disabled, rhs.disabled).append(state, rhs.state).append(clusterState, rhs.clusterState).append(runningTasks, rhs.runningTasks).isEquals();
     }
 
 }
