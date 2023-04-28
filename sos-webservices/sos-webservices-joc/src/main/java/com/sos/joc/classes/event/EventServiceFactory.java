@@ -152,6 +152,7 @@ public class EventServiceFactory {
             service = getEventService(controllerId);
             SortedSet<Long> evtIds = new TreeSet<>(Comparator.comparing(Long::longValue));
             Set<EventSnapshot> evt = new HashSet<>();
+            Set<EventSnapshot> agentEvt = new HashSet<>();
             Set<EventMonitoring> evtM = new HashSet<>();
             Set<EventOrderMonitoring> evtO = new HashSet<>();
             Mode mode = service.hasOldEvent(eventId, eventArrived);
@@ -181,7 +182,11 @@ public class EventServiceFactory {
                     if (e.getEventId() != null && eventId < e.getEventId()) {
                         e.setEventId(e.getEventId() - 1L);
                         if (e instanceof EventSnapshot) {
-                            evt.add((EventSnapshot) e);
+                            if (((EventSnapshot) e).getEventType().equals("AgentCoupling")) {
+                                agentEvt.add((EventSnapshot) e);
+                            } else {
+                                evt.add((EventSnapshot) e);
+                            }
                         } else if (e instanceof EventMonitoring) {
                             evtM.add((EventMonitoring) e);
                         } else if (e instanceof EventOrderMonitoring) {
@@ -195,7 +200,11 @@ public class EventServiceFactory {
                     if (e.getEventId() != null && eventId < e.getEventId()) {
                         e.setEventId(e.getEventId() - 1L);
                         if (e instanceof EventSnapshot) {
-                            evt.add((EventSnapshot) e);
+                            if (((EventSnapshot) e).getEventType().equals("AgentCoupling")) {
+                                agentEvt.add((EventSnapshot) e);
+                            } else {
+                                evt.add((EventSnapshot) e);
+                            }
                         } else if (e instanceof EventMonitoring) {
                             evtM.add((EventMonitoring) e);
                         } else if (e instanceof EventOrderMonitoring) {
@@ -205,7 +214,12 @@ public class EventServiceFactory {
                     }
                 });
             }
-            if (evt.isEmpty() && evtM.isEmpty() && evtO.isEmpty()) {
+            agentEvt.stream().collect(Collectors.groupingBy(EventSnapshot::getPath)).forEach((a, e) -> {
+                if (e.size() == 1) {
+                    evt.add(e.get(0));
+                }
+            });
+            if (evt.isEmpty() && agentEvt.isEmpty() && evtM.isEmpty() && evtO.isEmpty()) {
                 //events.setEventSnapshots(null);
             } else {
                 if (isDebugEnabled) {
@@ -272,7 +286,11 @@ public class EventServiceFactory {
         EventSnapshot es = new EventSnapshot();
         es.setAccessToken(e.getAccessToken());
         es.setEventId(null);
-        es.setEventType(e.getEventType());
+        if ("AgentCoupling".equals(e.getEventType())) {
+            es.setEventType("AgentStateChanged");
+        } else {
+            es.setEventType(e.getEventType());
+        }
         es.setMessage(e.getMessage());
         es.setObjectType(e.getObjectType());
         es.setPath(e.getPath());
