@@ -17,7 +17,7 @@ public interface IFido2RegistrationResource {
     public JOCDefaultResponse postFido2RegistrationRead(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
 
     @POST
-    @Path("fido2registration/requestregistration")
+    @Path("fido2registration/request_registration")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postFido2RequestRegistration(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
 
