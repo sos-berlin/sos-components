@@ -325,7 +325,9 @@ public class DeleteDeployments {
                         Set<DBItemInventoryConfigurationTrash> itemsFromTrash = itemsFromTrashByType.get(objType.intValue());
                         if(itemsFromTrash != null) {
                             for (DBItemInventoryConfigurationTrash trashItem : itemsFromTrash) {
-                                JocInventory.insertConfiguration(invDbLayer, recreateItem(trashItem, null, invDbLayer));
+                                if (trashItem != null) {
+                                    JocInventory.insertConfiguration(invDbLayer, recreateItem(trashItem, null, invDbLayer));
+                                }
                             }
                         }
                     }
