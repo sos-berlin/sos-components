@@ -19,7 +19,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "identityServiceName",
-    "rpName",
     "accountName",
     "auditLog"
 })
@@ -34,14 +33,6 @@ public class Fido2RegistrationFilter {
      */
     @JsonProperty("identityServiceName")
     private String identityServiceName;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("rpName")
-    private String rpName;
     /**
      * string without < and >
      * <p>
@@ -72,12 +63,10 @@ public class Fido2RegistrationFilter {
      * @param identityServiceName
      * @param auditLog
      * @param accountName
-     * @param rpName
      */
-    public Fido2RegistrationFilter(String identityServiceName, String rpName, String accountName, AuditParams auditLog) {
+    public Fido2RegistrationFilter(String identityServiceName, String accountName, AuditParams auditLog) {
         super();
         this.identityServiceName = identityServiceName;
-        this.rpName = rpName;
         this.accountName = accountName;
         this.auditLog = auditLog;
     }
@@ -104,28 +93,6 @@ public class Fido2RegistrationFilter {
     @JsonProperty("identityServiceName")
     public void setIdentityServiceName(String identityServiceName) {
         this.identityServiceName = identityServiceName;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("rpName")
-    public String getRpName() {
-        return rpName;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("rpName")
-    public void setRpName(String rpName) {
-        this.rpName = rpName;
     }
 
     /**
@@ -176,12 +143,12 @@ public class Fido2RegistrationFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("rpName", rpName).append("accountName", accountName).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("accountName", accountName).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(identityServiceName).append(auditLog).append(accountName).append(rpName).toHashCode();
+        return new HashCodeBuilder().append(identityServiceName).append(auditLog).append(accountName).toHashCode();
     }
 
     @Override
@@ -193,7 +160,7 @@ public class Fido2RegistrationFilter {
             return false;
         }
         Fido2RegistrationFilter rhs = ((Fido2RegistrationFilter) other);
-        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(auditLog, rhs.auditLog).append(accountName, rhs.accountName).append(rpName, rhs.rpName).isEquals();
+        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(auditLog, rhs.auditLog).append(accountName, rhs.accountName).isEquals();
     }
 
 }

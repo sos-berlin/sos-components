@@ -4,7 +4,6 @@ public class IamFido2RegistrationFilter extends SOSHibernateFilter {
 
     private Long id;
     private Long identityServiceId;
-    private String rpName;
     private String accountName;
     private Boolean confirmed;
     private Boolean approved;
@@ -28,14 +27,6 @@ public class IamFido2RegistrationFilter extends SOSHibernateFilter {
 
     public void setIdentityServiceId(Long identityServiceId) {
         this.identityServiceId = identityServiceId;
-    }
-
-    public String getRpName() {
-        return rpName;
-    }
-
-    public void setRpName(String rpName) {
-        this.rpName = rpName;
     }
 
     public Boolean getApproved() {

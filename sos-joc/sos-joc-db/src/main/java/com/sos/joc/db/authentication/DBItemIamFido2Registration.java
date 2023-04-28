@@ -29,9 +29,6 @@ public class DBItemIamFido2Registration {
     @Column(name = "[IDENTITY_SERVICE_ID]", nullable = false)
     private Long identityServiceId;
 
-    @Column(name = "[RP_NAME]", nullable = false)
-    private String rpName;
-
     @Column(name = "[ACCOUNT_NAME]", nullable = false)
     private String accountName;
 
@@ -70,14 +67,6 @@ public class DBItemIamFido2Registration {
 
     public void setIdentityServiceId(Long identityServiceId) {
         this.identityServiceId = identityServiceId;
-    }
-
-    public String getRpName() {
-        return rpName;
-    }
-
-    public void setRpName(String rpName) {
-        this.rpName = rpName;
     }
 
     public String getPublicKey() {
