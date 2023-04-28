@@ -292,6 +292,7 @@ public class DeleteDeployments {
         SOSHibernateSession newHibernateSession = null;
         try {
             if (either.isLeft()) {
+                ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, null);
                 newHibernateSession = Globals.createSosHibernateStatelessConnection("./inventory/deployment/deploy");
                 final DBLayerDeploy dbLayer = new DBLayerDeploy(newHibernateSession);
                 String message = String.format("Response from Controller \"%1$s:\": %2$s", controllerId, either.getLeft().message());
@@ -332,7 +333,6 @@ public class DeleteDeployments {
                 // if not successful the objects and the related controllerId have to be stored 
                 // in a submissions table for reprocessing
                 dbLayer.createSubmissionForFailedDeployments(optimisticEntries);
-                ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, null);
             } else {
                 if(cancelOrderDate != null) {
                     newHibernateSession = Globals.createSosHibernateStatelessConnection("./inventory/deployment/deploy");
@@ -506,4 +506,44 @@ public class DeleteDeployments {
         }
         return item;
     }
+
+    public static void processAfterRevoke(Either<Problem, Void> either, String controllerId, String account, String commitId, 
+            String accessToken, JocError jocError, String cancelOrderDate) {
+        SOSHibernateSession newHibernateSession = null;
+        try {
+            if (either.isLeft()) {
+                ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, null);
+                newHibernateSession = Globals.createSosHibernateStatelessConnection("./inventory/deployment/deploy");
+                final DBLayerDeploy dbLayer = new DBLayerDeploy(newHibernateSession);
+                String message = String.format("Response from Controller \"%1$s:\": %2$s", controllerId, either.getLeft().message());
+                LOGGER.warn(message);
+                // updateRepo command is atomic, therefore all items are rejected
+
+                // get all already optimistically stored entries for the commit
+                List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(commitId);
+                // update all previously optimistically stored entries with the error message and change the state
+                Map<Integer, Set<DBItemInventoryConfigurationTrash>> itemsFromTrashByType = 
+                        new HashMap<Integer, Set<DBItemInventoryConfigurationTrash>>();
+                InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
+                for(DBItemDeploymentHistory optimistic : optimisticEntries) {
+                    optimistic.setErrorMessage(either.getLeft().message());
+                    optimistic.setState(DeploymentState.NOT_DEPLOYED.value());
+                    optimistic.setDeleteDate(null);
+                    dbLayer.getSession().update(optimistic);
+                    DBItemInventoryConfiguration orig = dbLayer.getInventoryConfigurationByNameAndType(optimistic.getName(), optimistic.getType());
+                    if (orig != null) {
+                        orig.setDeployed(true);
+                        dbLayer.getSession().update(orig);
+                    }
+}
+                
+                dbLayer.createSubmissionForFailedDeployments(optimisticEntries);
+            }
+        } catch (Exception e) {
+            ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, null);
+        } finally {
+            Globals.disconnect(newHibernateSession);
+        }
+    }
+
 }
