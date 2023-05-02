@@ -74,8 +74,17 @@ public class QuickSearchResourceImpl extends JOCResourceImpl implements IQuickSe
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventorySearchDBLayer dbLayer = new InventorySearchDBLayer(session);
+            
+            // TODO only temp. for compatibility
+            if (in.getReturnType() != null) {
+                if (in.getReturnTypes() == null) {
+                    in.setReturnTypes(Collections.singletonList(in.getReturnType()));
+                } else {
+                    in.getReturnTypes().add(in.getReturnType());
+                }
+            }
 
-            List<InventoryQuickSearchItem> items = dbLayer.getQuickSearchInventoryConfigurations(in.getReturnType(), in.getSearch());
+            List<InventoryQuickSearchItem> items = dbLayer.getQuickSearchInventoryConfigurations(in.getReturnTypes(), in.getSearch());
 
             if (items != null) {
                 Predicate<InventoryQuickSearchItem> isPermitted = item -> folderPermissions.isPermittedForFolder(item.getFolder());

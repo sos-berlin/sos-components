@@ -1,6 +1,8 @@
 
 package com.sos.joc.model.inventory.search;
 
+import java.util.ArrayList;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -20,6 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "search",
     "returnType",
+    "returnTypes",
     "token",
     "quit"
 })
@@ -43,6 +46,8 @@ public class RequestQuickSearchFilter {
      */
     @JsonProperty("returnType")
     private RequestSearchReturnType returnType;
+    @JsonProperty("returnTypes")
+    private List<RequestSearchReturnType> returnTypes = new ArrayList<RequestSearchReturnType>();
     @JsonProperty("token")
     private String token;
     @JsonProperty("quit")
@@ -94,6 +99,16 @@ public class RequestQuickSearchFilter {
         this.returnType = returnType;
     }
 
+    @JsonProperty("returnTypes")
+    public List<RequestSearchReturnType> getReturnTypes() {
+        return returnTypes;
+    }
+
+    @JsonProperty("returnTypes")
+    public void setReturnTypes(List<RequestSearchReturnType> returnTypes) {
+        this.returnTypes = returnTypes;
+    }
+
     @JsonProperty("token")
     public String getToken() {
         return token;
@@ -116,12 +131,12 @@ public class RequestQuickSearchFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("search", search).append("returnType", returnType).append("token", token).append("quit", quit).toString();
+        return new ToStringBuilder(this).append("search", search).append("returnType", returnType).append("returnTypes", returnTypes).append("token", token).append("quit", quit).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(search).append(quit).append(returnType).append(token).toHashCode();
+        return new HashCodeBuilder().append(returnTypes).append(search).append(quit).append(returnType).append(token).toHashCode();
     }
 
     @Override
@@ -133,7 +148,7 @@ public class RequestQuickSearchFilter {
             return false;
         }
         RequestQuickSearchFilter rhs = ((RequestQuickSearchFilter) other);
-        return new EqualsBuilder().append(search, rhs.search).append(quit, rhs.quit).append(returnType, rhs.returnType).append(token, rhs.token).isEquals();
+        return new EqualsBuilder().append(returnTypes, rhs.returnTypes).append(search, rhs.search).append(quit, rhs.quit).append(returnType, rhs.returnType).append(token, rhs.token).isEquals();
     }
 
 }

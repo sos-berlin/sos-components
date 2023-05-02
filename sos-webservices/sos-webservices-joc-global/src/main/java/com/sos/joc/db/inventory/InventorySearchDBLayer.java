@@ -1,6 +1,8 @@
 package com.sos.joc.db.inventory;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,12 +41,34 @@ public class InventorySearchDBLayer extends DBLayer {
         super(session);
     }
     
-    public List<InventoryQuickSearchItem> getQuickSearchInventoryConfigurations(RequestSearchReturnType type, String search)
+    public List<InventoryQuickSearchItem> getQuickSearchInventoryConfigurations(Collection<RequestSearchReturnType> types, String search)
             throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select path as path, type as type, folder as folder, name as name from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        return getQuickSearchInventoryConfigurations(requestSearchReturnTypesToConfigurationTypeIntValues(types), search);
+    }
+    
+    private static List<Integer> requestSearchReturnTypesToConfigurationTypeIntValues(Collection<RequestSearchReturnType> types) {
+        if (types == null) {
+            return Collections.emptyList();
+        }
+        boolean hasCalendar = types.contains(RequestSearchReturnType.CALENDAR);
+        if (hasCalendar) {
+            types.remove(RequestSearchReturnType.CALENDAR);
+        }
+        List<Integer> intTypes = types.stream().distinct().map(RequestSearchReturnType::value).map(ConfigurationType::valueOf).map(
+                ConfigurationType::intValue).collect(Collectors.toList());
+        if (hasCalendar) {
+            intTypes.addAll(JocInventory.getCalendarTypes());
+        }
+        return intTypes;
+    }
+
+    private List<InventoryQuickSearchItem> getQuickSearchInventoryConfigurations(List<Integer> types, String search)
+            throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select path as path, type as type, folder as folder, name as name from ").append(
+                DBLayer.DBITEM_INV_CONFIGURATIONS);
         List<String> whereClause = new ArrayList<>();
-        if (type != null) {
-            if (RequestSearchReturnType.CALENDAR.equals(type)) {
+        if (types != null && !types.isEmpty()) {
+            if (types.size() > 1) {
                 whereClause.add("type in (:types)");
             } else {
                 whereClause.add("type=:type");
@@ -60,11 +84,11 @@ public class InventorySearchDBLayer extends DBLayer {
         }
 
         Query<InventoryQuickSearchItem> query = getSession().createQuery(hql.toString(), InventoryQuickSearchItem.class);
-        if (type != null) {
-            if (RequestSearchReturnType.CALENDAR.equals(type)) {
-                query.setParameterList("types", JocInventory.getCalendarTypes());
+        if (types != null && !types.isEmpty()) {
+            if (types.size() > 1) {
+                query.setParameterList("types", types);
             } else {
-                query.setParameter("type", ConfigurationType.valueOf(type.value()).intValue());
+                query.setParameter("type", types.iterator().next());
             }
         }
         if (search != null) {
