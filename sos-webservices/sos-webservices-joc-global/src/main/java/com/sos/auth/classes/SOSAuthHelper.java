@@ -56,7 +56,7 @@ public class SOSAuthHelper {
     public static final String EMERGENY_KEY = "sos_emergency_key";
     public static final String CONFIGURATION_TYPE_IAM = "IAM";
     public static final String OBJECT_TYPE_IAM_GENERAL = "GENERAL";
-    public static final Integer LDAP_READ_TIMEOUT = 10;
+    public static final Integer LDAP_READ_TIMEOUT = 10000;
     public static final Integer RESTAPI_CONNECTION_TIMEOUT = 10000;
 
     public static String createSessionId() {

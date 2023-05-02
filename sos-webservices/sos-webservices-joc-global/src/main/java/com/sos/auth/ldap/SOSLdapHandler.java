@@ -73,10 +73,10 @@ public class SOSLdapHandler {
             env.put(Context.SECURITY_CREDENTIALS, password);
             env.put(SOSAuthHelper.COM_SUN_JNDI_LDAP_READ_TIMEOUT, sosLdapWebserviceCredentials.getReadTimeout());
             
-            LOGGER.debug("LDAP read timeout " + SOSAuthHelper.COM_SUN_JNDI_LDAP_READ_TIMEOUT  + ":" +  sosLdapWebserviceCredentials.getReadTimeout());
+            LOGGER.debug("LDAP read timeout " + SOSAuthHelper.COM_SUN_JNDI_LDAP_READ_TIMEOUT  + ":" +  sosLdapWebserviceCredentials.getReadTimeout() + "ms");
             if (sosLdapWebserviceCredentials.getConnectTimeout() != null && !sosLdapWebserviceCredentials.getConnectTimeout().isEmpty()) {
                 env.put(SOSAuthHelper.COM_SUN_JNDI_LDAP_CONNECT_TIMEOUT, sosLdapWebserviceCredentials.getConnectTimeout());
-                LOGGER.debug("LDAP connect timeout " + SOSAuthHelper.COM_SUN_JNDI_LDAP_CONNECT_TIMEOUT  + ":" +  sosLdapWebserviceCredentials.getConnectTimeout());
+                LOGGER.debug("LDAP connect timeout " + SOSAuthHelper.COM_SUN_JNDI_LDAP_CONNECT_TIMEOUT  + ":" +  sosLdapWebserviceCredentials.getConnectTimeout() + "ms");
             }
             if (sosLdapWebserviceCredentials.isSSL()) {
                 env.put("java.naming.ldap.factory.socket", "com.sos.auth.ldap.classes.SOSLdapSSLSocketFactory");
