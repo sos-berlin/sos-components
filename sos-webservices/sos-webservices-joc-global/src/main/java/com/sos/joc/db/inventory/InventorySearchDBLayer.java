@@ -1,6 +1,7 @@
 package com.sos.joc.db.inventory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -73,6 +74,8 @@ public class InventorySearchDBLayer extends DBLayer {
             } else {
                 whereClause.add("type=:type");
             }
+        } else {
+            whereClause.add("type not in (:excludeTypes)");
         }
         if (SOSString.isEmpty(search) || search.equals(FIND_ALL)) {
             search = null;
@@ -90,6 +93,9 @@ public class InventorySearchDBLayer extends DBLayer {
             } else {
                 query.setParameter("type", types.iterator().next());
             }
+        } else {
+            query.setParameterList("excludeTypes", Arrays.asList(ConfigurationType.DEPLOYMENTDESCRIPTOR.intValue(), ConfigurationType.DESCRIPTORFOLDER
+                    .intValue(), ConfigurationType.FOLDER.intValue()));
         }
         if (search != null) {
             // (only) on the right hand side always %
