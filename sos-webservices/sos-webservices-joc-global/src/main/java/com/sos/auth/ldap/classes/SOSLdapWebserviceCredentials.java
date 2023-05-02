@@ -109,11 +109,11 @@ public class SOSLdapWebserviceCredentials {
     }
 
     public String getReadTimeout() {
-        return String.valueOf(readTimeout);
+        return String.valueOf(readTimeout * 1000);
     }
 
     public String getConnectTimeout() {
-        if (connectTimeout == null) {
+        if (connectTimeout == null || connectTimeout == 0) {
             return "";
         } else {
             return String.valueOf(connectTimeout);
@@ -206,11 +206,17 @@ public class SOSLdapWebserviceCredentials {
                     systemPassword = getProperty(properties.getLdap().getExpert().getIamLdapSystemPassword(), "");
                 }
                 if (readTimeout == null) {
-                    readTimeout = getProperty(properties.getLdap().getExpert().getIamLdapReadTimeout(), SOSAuthHelper.LDAP_READ_TIMEOUT);
+                    if (properties.getLdap().getExpert().getIamLdapReadTimeout() != null) {
+                        readTimeout = getProperty(properties.getLdap().getExpert().getIamLdapReadTimeout()*1000,SOSAuthHelper.LDAP_READ_TIMEOUT);
+                    } else {
+                        readTimeout = SOSAuthHelper.LDAP_READ_TIMEOUT;
+
+                    }
                 }
                 if (connectTimeout == null) {
                     if (properties.getLdap().getExpert().getIamLdapConnectTimeout() != null) {
                         connectTimeout = getProperty(properties.getLdap().getExpert().getIamLdapConnectTimeout(), 0);
+                        connectTimeout = connectTimeout * 1000;
                     }
 
                 }
