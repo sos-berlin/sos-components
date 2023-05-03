@@ -7,7 +7,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -30,8 +32,12 @@ import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
 import com.sos.inventory.model.board.Board;
+import com.sos.inventory.model.calendar.CalendarType;
+import com.sos.inventory.model.calendar.Frequencies;
+import com.sos.inventory.model.calendar.WeekDays;
 import com.sos.inventory.model.instruction.PostNotices;
 import com.sos.inventory.model.job.Job;
+import com.sos.inventory.model.jobtemplate.JobTemplate;
 import com.sos.inventory.model.lock.Lock;
 import com.sos.inventory.model.script.Script;
 import com.sos.joc.model.agent.transfer.Agent;
@@ -52,6 +58,23 @@ public class JS7ConverterHelper {
     private final static Set<Character> QUOTED_CHARS = new HashSet<>(Arrays.asList('\"', '$', '\n'));
 
     private static int converterNameCounter = 0;
+
+    public static String getJS7JobTemplateHash(JobTemplate t) {
+        try {
+            return SOSString.hash256(serializeAsString(t));
+        } catch (Throwable e) {
+            LOGGER.error(String.format("[getJS7JobTemplateHash]%s", e.toString()), e);
+            return SOSString.hash256(t.toString());
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    private static <T> String serializeAsString(T config) throws Exception {
+        if (config == null) {
+            return null;
+        }
+        return JSON_OM.configure(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS, true).writeValueAsString(config);
+    }
 
     public static String stringValue(String val) {
         return val == null ? null : StringUtils.strip(val.trim(), "\"");
@@ -154,6 +177,26 @@ public class JS7ConverterHelper {
         return null;
     }
 
+    public static int toCalendarDayOfWeek(int js7DayOfWeek) {
+        switch (js7DayOfWeek) {
+        case 0:
+            return Calendar.SUNDAY;
+        case 1:
+            return Calendar.MONDAY;
+        case 2:
+            return Calendar.TUESDAY;
+        case 3:
+            return Calendar.WEDNESDAY;
+        case 4:
+            return Calendar.THURSDAY;
+        case 5:
+            return Calendar.FRIDAY;
+        case 6:
+            return Calendar.SATURDAY;
+        }
+        return Calendar.MONDAY;
+    }
+
     public static Integer getMonthNumber(String month) {
         if (month == null) {
             return null;
@@ -191,7 +234,7 @@ public class JS7ConverterHelper {
         if (months == null) {
             return null;
         }
-        return months.stream().map(m -> getMonthNumber(m)).filter(Objects::nonNull).collect(Collectors.toList());
+        return months.stream().map(m -> getMonthNumber(m)).filter(Objects::nonNull).sorted().collect(Collectors.toList());
     }
 
     public static List<String> splitEveryNChars(String text, int n) {
@@ -430,6 +473,18 @@ public class JS7ConverterHelper {
         return JS7ConverterHelper.resolvePath(parent, workflowName + ".fileordersource.json");
     }
 
+    public static Path getJobResourcePath(Path parent, String js7Name) {
+        return parent.resolve(js7Name + ".jobresource.json");
+    }
+
+    public static Path getJobTemplatePath(Path parent, String js7Name) {
+        return parent.resolve(js7Name + ".jobtemplate.json");
+    }
+
+    public static Path getCalendarPath(Path parent, String js7Name) {
+        return parent.resolve(js7Name + ".calendar.json");
+    }
+
     public static Path getNoticeBoardPathFromJS7Path(Path workflowPath, String boardName) {
         Path parent = workflowPath == null ? null : workflowPath.getParent();
         if (parent == null) {
@@ -528,5 +583,18 @@ public class JS7ConverterHelper {
 
     public static PostNotices newPostNotices(List<String> val) {
         return new PostNotices(removeDuplicates(val));
+    }
+
+    public static com.sos.inventory.model.calendar.Calendar createDefaultWorkingDaysCalendar() {
+        com.sos.inventory.model.calendar.Calendar c = new com.sos.inventory.model.calendar.Calendar();
+        c.setType(CalendarType.WORKINGDAYSCALENDAR);
+
+        Frequencies fr = new Frequencies();
+        WeekDays wd = new WeekDays();
+        wd.setDays(Arrays.asList(0, 1, 2, 3, 4, 5, 6));
+        fr.setWeekdays(Collections.singletonList(wd));
+        c.setIncludes(fr);
+
+        return c;
     }
 }

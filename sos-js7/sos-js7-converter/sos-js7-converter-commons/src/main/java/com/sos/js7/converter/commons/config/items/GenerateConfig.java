@@ -9,7 +9,8 @@ public class GenerateConfig extends AConfigItem {
     private boolean locks = true;
     private boolean schedules = true;
     private boolean calendars = true;
-    private boolean cyclicOrders;
+    private boolean jobTemplates = true;
+    private boolean cyclicOrders = false;
 
     public GenerateConfig() {
         super(CONFIG_KEY);
@@ -32,6 +33,9 @@ public class GenerateConfig extends AConfigItem {
             break;
         case "calendars":
             withCalendars(Boolean.parseBoolean(val));
+            break;
+        case "jobTemplates":
+            withJobTemplates(Boolean.parseBoolean(val));
             break;
         case "cyclicOrders":
             withCyclicOrders(Boolean.parseBoolean(val));
@@ -69,6 +73,11 @@ public class GenerateConfig extends AConfigItem {
         return this;
     }
 
+    public GenerateConfig withJobTemplates(boolean val) {
+        this.jobTemplates = val;
+        return this;
+    }
+
     public GenerateConfig withCyclicOrders(boolean val) {
         this.cyclicOrders = val;
         return this;
@@ -92,6 +101,10 @@ public class GenerateConfig extends AConfigItem {
 
     public boolean getCalendars() {
         return calendars;
+    }
+
+    public boolean getJobTemplates() {
+        return jobTemplates;
     }
 
     public boolean getCyclicOrders() {

@@ -32,7 +32,7 @@ public class JobChainStateHelper {
         if (SOSString.isEmpty(val)) {
             return null;
         }
-        return JS7ConverterHelper.getJS7ObjectName(node.getPath(), val);
+        return JS7ConverterHelper.getJS7ObjectName(node.getJobChainPath(), val);
     }
 
     public String getJS1State() {

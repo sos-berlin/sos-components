@@ -20,10 +20,10 @@ public class JobChainNodeOnReturnCode {
     private final String returnCode;
     private final String toState;
 
-    protected JobChainNodeOnReturnCode(Path path, Node node) throws Exception {
+    protected JobChainNodeOnReturnCode(Path jobChainPath, Node node) throws Exception {
         Map<String, String> m = JS7ConverterHelper.attribute2map(node);
         returnCode = JS7ConverterHelper.stringValue(m.get(ATTR_RETUN_CODE));
-        toState = getToState(path, node);
+        toState = getToState(node);
         if (returnCode == null) {
             // throw new Exception("missing " + ATTR_RETUN_CODE);
         }
@@ -32,7 +32,7 @@ public class JobChainNodeOnReturnCode {
         }
     }
 
-    private String getToState(Path path, Node node) throws Exception {
+    private String getToState(Node node) throws Exception {
         SOSXMLXPath xpath = SOSXML.newXPath();
         NodeList nl = xpath.selectNodes(node, "./" + ELEMENT_TO_STATE);
         if (nl != null && nl.getLength() > 0) {

@@ -1,5 +1,7 @@
 package com.sos.js7.converter.js1.common.jobchain.node;
 
+import java.nio.file.Path;
+
 import org.w3c.dom.Node;
 
 import com.sos.js7.converter.commons.JS7ConverterHelper;
@@ -14,8 +16,8 @@ public class JobChainNodeFileOrderSink extends AJobChainNode {
     private Boolean remove; // yes|no
     private String state;
 
-    protected JobChainNodeFileOrderSink(Node node, JobChainNodeType type) {
-        super(node, type);
+    protected JobChainNodeFileOrderSink(Path jobChainPath, JobChainNodeType type, Node node) {
+        super(jobChainPath, type, node);
         moveTo = JS7ConverterHelper.stringValue(getAttributes().get(ATTR_MOVE_TO));
         remove = JS7ConverterHelper.booleanValue(getAttributes().get(ATTR_REMOVE));
         state = JS7ConverterHelper.stringValue(getAttributes().get(ATTR_STATE));

@@ -1,5 +1,7 @@
 package com.sos.js7.converter.js1.common.jobchain.node;
 
+import java.nio.file.Path;
+
 import org.w3c.dom.Node;
 
 import com.sos.js7.converter.commons.JS7ConverterHelper;
@@ -24,8 +26,8 @@ public class JobChainNodeFileOrderSource extends AJobChainNode {
     private Boolean alertWhenDirectoryMissing;
     private String delayAfterError; // seconds
 
-    protected JobChainNodeFileOrderSource(Node node, JobChainNodeType type) {
-        super(node, type);
+    protected JobChainNodeFileOrderSource(Path jobChainPath, JobChainNodeType type, Node node) {
+        super(jobChainPath, type, node);
         directory = JS7ConverterHelper.stringValue(getAttributes().get(ATTR_DIRECTORY));
         regex = JS7ConverterHelper.stringValue(getAttributes().get(ATTR_REGEX));
         nextState = JS7ConverterHelper.stringValue(getAttributes().get(ATTR_NEXT_STATE));

@@ -1,5 +1,7 @@
 package com.sos.js7.converter.js1.common.jobchain.node;
 
+import java.nio.file.Path;
+
 import org.w3c.dom.Node;
 
 import com.sos.js7.converter.commons.JS7ConverterHelper;
@@ -16,8 +18,8 @@ public class JobChainNodeJobChain extends AJobChainNode {
     private String nextState;
     private String errorState;
 
-    protected JobChainNodeJobChain(Node node, JobChainNodeType type) {
-        super(node, type);
+    protected JobChainNodeJobChain(Path jobChainPath, JobChainNodeType type, Node node) {
+        super(jobChainPath, type, node);
         jobChain = JS7ConverterHelper.stringValue(getAttributes().get(ATTR_JOB_CHAIN));
         state = JS7ConverterHelper.stringValue(getAttributes().get(ATTR_STATE));
         nextState = JS7ConverterHelper.stringValue(getAttributes().get(ATTR_NEXT_STATE));
