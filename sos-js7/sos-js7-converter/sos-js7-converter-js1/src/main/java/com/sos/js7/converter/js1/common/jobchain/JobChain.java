@@ -70,15 +70,15 @@ public class JobChain {
         ordersRecoverable = JS7ConverterHelper.booleanValue(map.get(ATTR_ORDERS_RECOVERABLE));
         distributed = JS7ConverterHelper.booleanValue(map.get(ATTR_DISTRIBUTED));
         visible = JS7ConverterHelper.stringValue(map.get(ATTR_VISIBLE));
-        parseNode(node);
+        parseNode(pr, node);
     }
 
-    private void parseNode(Node node) throws Exception {
+    private void parseNode(DirectoryParserResult pr, Node node) throws Exception {
         NodeList nl = node.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
-                AJobChainNode jcn = AJobChainNode.parse(path, n);
+                AJobChainNode jcn = AJobChainNode.parse(pr,path, n);
                 if (jcn != null) {
                     nodes.add(jcn);
                 }

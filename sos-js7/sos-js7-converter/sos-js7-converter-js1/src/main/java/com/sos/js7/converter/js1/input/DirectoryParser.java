@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -257,6 +258,8 @@ public class DirectoryParser {
         private Folder root;
         private Path yadeConfiguration;
         private List<Path> jsonFiles = new ArrayList<>();
+        private Map<Path, Integer> orderJobsUsage = new HashMap<>();
+        private Set<Path> includedOrderJobs;
 
         private int countFolders = 0;
         private int countOrders = 0;
@@ -391,5 +394,30 @@ public class DirectoryParser {
             return countFiles;
         }
 
+        public void putOrderJobsUsage(Path jobChainPath, Path jobPath) {
+            if (jobChainPath == null || jobPath == null) {
+                return;
+            }
+            Integer c = orderJobsUsage.get(jobPath);
+            if (c == null) {
+                c = 0;
+                if (!jobChainPath.getParent().equals(jobPath.getParent())) {
+                    c++;
+                }
+            }
+            c++;
+            orderJobsUsage.put(jobPath, c);
+        }
+
+        public Map<Path, Integer> getOrderJobsUsage() {
+            return orderJobsUsage;
+        }
+
+        public Set<Path> getIncludedOrderJobs() {
+            if (includedOrderJobs == null) {
+                includedOrderJobs = orderJobsUsage.entrySet().stream().filter(e -> e.getValue() > 1).map(e -> e.getKey()).collect(Collectors.toSet());
+            }
+            return includedOrderJobs;
+        }
     }
 }
