@@ -217,7 +217,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                             
                             JAgentRefState jAgentRefState = agentRefStates.get(AgentPath.of(dbSubagents.getKey()));
                             ClusterState clusterState = getClusterState(jAgentRefState);
-                            agentClusterStates.put(dbSubagents.getKey(), clusterState.getTYPE());
+                            agentClusterStates.put(dbSubagents.getKey(), getClusterStateType(clusterState));
 
                             subagentsPerAgentId.put(dbSubagents.getKey(), dbSubagents.getValue().stream().sorted(Comparator.comparingInt(
                                     DBItemInventorySubAgentInstance::getOrdering)).map(dbSubAgent -> {
@@ -502,6 +502,10 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
             }
         }
         return clusterState;
+    }
+    
+    private static ClusterType getClusterStateType(ClusterState clusterState) {
+        return clusterState == null ? null : clusterState.getTYPE();
     }
     
     private static boolean isActive(ClusterState clusterState, String subagentUri) {
