@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.job.Job;
@@ -77,7 +76,7 @@ public class JobStreamJS1JS7Job {
 
     private void setJS1OutEventsProperties() {
         if (js1JobStreamJob.getOutconditions() != null) {
-            List<Integer> returnCodes = new ArrayList<>();
+            List<String> returnCodes = new ArrayList<>();
 
             for (OutCondition oc : js1JobStreamJob.getOutconditions()) {
                 if (oc.getConditionExpression() != null) {
@@ -88,21 +87,21 @@ public class JobStreamJS1JS7Job {
                         for (Condition v : co) {
                             switch (v.getType()) {
                             case RC:
-                                String value = v.getValue();
+                                String value = v.getTrimmedValue();
                                 if (value != null && !value.equals("0")) {
                                     String[] arr = value.split("-");
                                     switch (arr.length) {
                                     case 0:
                                         break;
                                     case 1:
-                                        returnCodes.add(Integer.parseInt(arr[0]));
+                                        if (value.endsWith("-")) {
+                                            returnCodes.add(arr[0] + "..255");
+                                        } else {
+                                            returnCodes.add(arr[0]);
+                                        }
                                         break;
                                     default:
-                                        int start = Integer.parseInt(arr[0]);
-                                        int end = Integer.parseInt(arr[1]);
-                                        for (int i = start; i <= end; i++) {
-                                            returnCodes.add(i);
-                                        }
+                                        returnCodes.add(arr[0] + ".." + arr[1]);
                                         break;
                                     }
                                 }
@@ -130,7 +129,7 @@ public class JobStreamJS1JS7Job {
             if (returnCodes.size() > 0) {
                 if (js7Job.getReturnCodeMeaning() == null) {
                     JobReturnCode rc = new JobReturnCode();
-                    rc.setSuccess(returnCodes.stream().distinct().collect(Collectors.toList()));
+                    rc.setSuccess(String.join(",", returnCodes));
                     js7Job.setReturnCodeMeaning(rc);
                 }
             }

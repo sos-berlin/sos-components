@@ -207,7 +207,7 @@ public class DirectoryParser {
                 folder.addFile(p);
 
                 // e.g. calendars or jobstreams
-                if (fileName.endsWith(".json")) {
+                if (fileName.toLowerCase().endsWith(".json")) {
                     r.addJsonFile(p);
                 }
             }
