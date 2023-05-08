@@ -106,7 +106,7 @@ public class ConditionsTest {
         Conditions conditions = new Conditions();
         List<Object> result = conditions.parse(sb.toString());
 
-        conditions.hasAllJobsXX(result, jobs);
+        conditions.hasAllJobs(Conditions.getConditions(result), jobs);
 
     }
 

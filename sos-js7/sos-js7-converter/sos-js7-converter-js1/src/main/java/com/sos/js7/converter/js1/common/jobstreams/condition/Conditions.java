@@ -11,10 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
-import com.sos.js7.converter.commons.JS7ConverterHelper;
-import com.sos.js7.converter.js1.common.job.StandaloneJob;
 import com.sos.js7.converter.js1.common.jobstreams.condition.Condition.ConditionType;
-import com.sos.js7.converter.js1.common.json.jobstreams.JobStreamJob;
 import com.sos.js7.converter.js1.output.js7.helper.JobStreamJS1JS7Job;
 
 public class Conditions {
@@ -318,9 +315,9 @@ public class Conditions {
     }
 
     // ----- TODO all job handling methods
-    // ------- USE JobStreamJS1JS7Job.js1OutEventNames instead of job name
-    public boolean hasJob(List<Condition> conditions, StandaloneJob job) {
-        return conditions.stream().filter(e -> e.getType().equals(ConditionType.EVENT) && e.getName().equals(job.getName())).count() > 0;
+    public boolean hasJob(List<Condition> conditions, JobStreamJS1JS7Job job) {
+        return conditions.stream().filter(e -> e.getType().equals(ConditionType.EVENT) && job.getJS1OutEventNames().contains(e.getName()))
+                .count() > 0;
     }
 
     public boolean hasAllJobs(List<Condition> conditions, Map<String, List<JobStreamJS1JS7Job>> jobs) {
@@ -329,72 +326,16 @@ public class Conditions {
         int eventConditions = 0;
         for (Condition c : conditions) {
             if (c.getType().equals(ConditionType.EVENT)) {
-                // found = jobs.entrySet().stream().filter(e -> e.getValue().stream().filter(j -> JS7ConverterHelper.getFileName(j.getJS1JobStreamJob()
-                // .getJob()).equals(c.getName())).count() > 0).count() > 0;
-
                 for (Map.Entry<String, List<JobStreamJS1JS7Job>> entry : jobs.entrySet()) {
-                    // found = entry.getValue().stream().filter(j -> JS7ConverterHelper.getFileName(j.getJS1JobStreamJob().getJob()).equals(c.getName()))
-                    // .count() > 0;
-
-                    // LOGGER.info("xxx=" + entry.getKey() + "=found=" + found + "=" + toString(conditions));
-
-                    // if (!found) {
-                    // return found;
-                    // }
-                    long cc = entry.getValue().stream().filter(j -> JS7ConverterHelper.getFileName(j.getJS1JobStreamJob().getJob()).equals(c
-                            .getName())).count();
-
+                    // long cc = entry.getValue().stream().filter(j -> JS7ConverterHelper.getFileName(j.getJS1JobStreamJob().getJob()).equals(c
+                    // .getName())).count();
+                    long cc = entry.getValue().stream().filter(j -> j.getJS1OutEventNames().contains(c.getName())).count();
                     count += cc;
                 }
-                // LOGGER.info("XXXXXXXXXXXXXX=" + found + "=" + toString(conditions));
-                // if (!found) {
-                // return found;
-                // }
                 eventConditions++;
             }
         }
-
-        // LOGGER.info("YYY=" + eventConditions + "=" + count);
-
         return eventConditions <= count;
-        // return found;
-    }
-
-    public boolean hasAllJobsXX(List<Object> allObjects, Map<String, List<JobStreamJS1JS7Job>> jobs) {
-        List<Condition> conditions = getConditions(allObjects);
-
-        boolean found = false;
-        long count = 0;
-        int eventConditions = 0;
-        for (Condition c : conditions) {
-            if (c.getType().equals(ConditionType.EVENT)) {
-                // found = jobs.entrySet().stream().filter(e -> e.getValue().stream().filter(j -> JS7ConverterHelper.getFileName(j.getJS1JobStreamJob()
-                // .getJob()).equals(c.getName())).count() > 0).count() > 0;
-
-                for (Map.Entry<String, List<JobStreamJS1JS7Job>> entry : jobs.entrySet()) {
-                    found = entry.getValue().stream().filter(j -> JS7ConverterHelper.getFileName(j.getJS1JobStreamJob().getJob()).equals(c.getName()))
-                            .count() > 0;
-
-                    LOGGER.info("xxx=" + entry.getKey() + "=found=" + found + "=" + toString(conditions));
-
-                    if (!found) {
-                        // return found;
-                    }
-                    count += entry.getValue().stream().filter(j -> JS7ConverterHelper.getFileName(j.getJS1JobStreamJob().getJob()).equals(c
-                            .getName())).count();
-                }
-                // LOGGER.info("XXXXXXXXXXXXXX=" + found + "=" + toString(conditions));
-                // if (!found) {
-                // return found;
-                // }
-                eventConditions++;
-            }
-        }
-
-        LOGGER.info("YYY=" + eventConditions + "=" + count);
-
-        return eventConditions <= count;
-        // return found;
     }
 
     public String toString(List<Condition> conditions) {
@@ -406,8 +347,11 @@ public class Conditions {
         for (Condition c : conditions) {
             if (c.getType().equals(ConditionType.EVENT)) {
                 for (Map.Entry<String, List<JobStreamJS1JS7Job>> entry : jobs.entrySet()) {
-                    List<JobStreamJS1JS7Job> rjobs = entry.getValue().stream().filter(j -> JS7ConverterHelper.getFileName(j.getJS1JobStreamJob()
-                            .getJob()).equals(c.getName())).collect(Collectors.toList());
+                    // List<JobStreamJS1JS7Job> rjobs = entry.getValue().stream().filter(j -> JS7ConverterHelper.getFileName(j.getJS1JobStreamJob()
+                    // .getJob()).equals(c.getName())).collect(Collectors.toList());
+                    List<JobStreamJS1JS7Job> rjobs = entry.getValue().stream().filter(j -> j.getJS1OutEventNames().contains(c.getName())).collect(
+                            Collectors.toList());
+
                     if (rjobs != null) {
                         result.addAll(rjobs);
                     }
@@ -417,27 +361,12 @@ public class Conditions {
         return result;
     }
 
-    public boolean tmpHasAllJobs(List<Object> allObjects, List<JobStreamJob> jobs) {
-        List<Condition> conditions = getConditions(allObjects);
-
-        boolean found = false;
-        for (Condition c : conditions) {
-            if (c.getType().equals(ConditionType.EVENT)) {
-                found = jobs.stream().filter(j -> JS7ConverterHelper.getFileName(j.getJob()).equals(c.getName())).count() > 0;
-                if (!found) {
-                    return found;
-                }
-            }
-        }
-        return found;
-    }
-
     public int getMaxGroupLevel() {
         return maxGroupLevel;
     }
 
     // TODO recursive
-    public static Condition find(List<Object> conditions, String conditionKey) {
+    private static Condition find(List<Object> conditions, String conditionKey) {
         if (conditions == null) {
             return null;
         }
@@ -446,7 +375,8 @@ public class Conditions {
     }
 
     // TODO recursive
-    public static List<Object> remove(List<Object> conditions, Condition condition) {
+    @SuppressWarnings("unused")
+    private static List<Object> remove(List<Object> conditions, Condition condition) {
         if (conditions == null) {
             return conditions;
         }

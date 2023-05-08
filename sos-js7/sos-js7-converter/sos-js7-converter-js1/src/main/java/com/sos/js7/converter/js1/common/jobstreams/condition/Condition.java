@@ -133,6 +133,10 @@ public class Condition {
         return value;
     }
 
+    public String getTrimmedValue() {
+        return value == null ? null : value.trim();
+    }
+
     public boolean isSupported() {
         return supported;
     }

@@ -6,7 +6,6 @@ import java.util.List;
 import com.sos.js7.converter.commons.JS7ConverterResult;
 import com.sos.js7.converter.commons.report.ParserReport;
 import com.sos.js7.converter.js1.common.json.jobstreams.JobStream;
-import com.sos.js7.converter.js1.common.runtime.CalendarsHelper;
 
 public class JS7JsonFilesConverter {
 
@@ -22,7 +21,7 @@ public class JS7JsonFilesConverter {
                 } catch (Throwable e) {
                     // calendar
                     try {
-                        CalendarsHelper h = CalendarsHelper.convert(file);
+                        // CalendarsHelper h = CalendarsHelper.convert(file);
 
                         ParserReport.INSTANCE.addAnalyzerRecord(file, "CALENDAR", "");
                     } catch (Throwable ee) {

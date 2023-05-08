@@ -77,7 +77,6 @@ import com.sos.js7.converter.commons.JS7ExportObjects.JS7ExportObject;
 import com.sos.js7.converter.commons.agent.JS7AgentConverter;
 import com.sos.js7.converter.commons.agent.JS7AgentConverter.JS7AgentConvertType;
 import com.sos.js7.converter.commons.agent.JS7AgentHelper;
-import com.sos.js7.converter.commons.config.JS7ConverterConfig;
 import com.sos.js7.converter.commons.config.JS7ConverterConfig.Platform;
 import com.sos.js7.converter.commons.config.json.JS7Agent;
 import com.sos.js7.converter.commons.output.OutputWriter;
@@ -104,6 +103,7 @@ import com.sos.js7.converter.js1.common.json.calendars.JS1Calendar;
 import com.sos.js7.converter.js1.common.json.calendars.JS1Calendars;
 import com.sos.js7.converter.js1.common.processclass.ProcessClass;
 import com.sos.js7.converter.js1.common.runtime.RunTime;
+import com.sos.js7.converter.js1.config.JS1ConverterConfig;
 import com.sos.js7.converter.js1.input.DirectoryParser;
 import com.sos.js7.converter.js1.input.DirectoryParser.DirectoryParserResult;
 import com.sos.js7.converter.js1.output.js7.helper.AgentHelper;
@@ -153,7 +153,7 @@ public class JS12JS7Converter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JS12JS7Converter.class);
 
-    public static JS7ConverterConfig CONFIG = new JS7ConverterConfig();
+    public static JS1ConverterConfig CONFIG = new JS1ConverterConfig();
 
     public static final String NAME_CONCAT_CHARACTER = "-";
     private static final String DUPLICATE_PREFIX = NAME_CONCAT_CHARACTER + "dup";
