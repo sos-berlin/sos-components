@@ -134,10 +134,12 @@ public class SystemMonitoringModel {
             public void run() {
                 MonitorService.setLogger();
 
-                ToNotify toNotify = handleEvents();
-                if (toNotify != null) {
-                    // tmpLog(toNotify);
-                    notifier.notify(toNotify.notification, toNotify.events);
+                if (!service.closed()) {
+                    ToNotify toNotify = handleEvents();
+                    if (toNotify != null) {
+                        // tmpLog(toNotify);
+                        notifier.notify(toNotify.notification, toNotify.events);
+                    }
                 }
             }
         }, 0 /* start delay */, SCHEDULE_DELAY /* delay */, TimeUnit.SECONDS);

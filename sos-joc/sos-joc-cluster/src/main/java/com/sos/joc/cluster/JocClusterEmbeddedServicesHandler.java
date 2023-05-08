@@ -31,6 +31,8 @@ public class JocClusterEmbeddedServicesHandler {
         START, STOP
     };
 
+    public static final String THREAD_GROUP_NAME = "embedded_services";
+
     private final JocCluster cluster;
     private final ThreadGroup parentThreadGroup;
 
@@ -39,7 +41,7 @@ public class JocClusterEmbeddedServicesHandler {
 
     protected JocClusterEmbeddedServicesHandler(JocCluster jocCluster) {
         cluster = jocCluster;
-        parentThreadGroup = new ThreadGroup("embedded_services");
+        parentThreadGroup = new ThreadGroup(THREAD_GROUP_NAME);
     }
 
     protected synchronized JocClusterAnswer perform(StartupMode mode, PerformType type) {
@@ -138,7 +140,8 @@ public class JocClusterEmbeddedServicesHandler {
         }
     }
 
-    public void updateService(String identifier, StartupMode mode, AConfigurationSection configuration) {
+    @SuppressWarnings("unused")
+    private void updateService(String identifier, StartupMode mode, AConfigurationSection configuration) {
         Optional<IJocEmbeddedService> os = services.stream().filter(h -> h.getIdentifier().equals(identifier)).findAny();
         if (!os.isPresent()) {
             JocClusterServiceLogger.setLogger();
@@ -150,7 +153,8 @@ public class JocClusterEmbeddedServicesHandler {
         s.update(mode, configuration);
     }
 
-    public JocClusterAnswer restartService(String identifier, StartupMode mode) {
+    @SuppressWarnings("unused")
+    private JocClusterAnswer restartService(String identifier, StartupMode mode) {
         Optional<IJocEmbeddedService> os = services.stream().filter(h -> h.getIdentifier().equals(identifier)).findAny();
         if (!os.isPresent()) {
             return JocCluster.getErrorAnswer(new Exception(String.format("handler not found for %s", identifier)));

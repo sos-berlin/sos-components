@@ -10,6 +10,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.cluster.JocClusterService;
+import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.resource.IClusterResource;
@@ -82,35 +83,35 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
     }
-    
+
     @Override
     public JOCDefaultResponse deleteMember(String accessToken, byte[] filterBytes) {
-        SOSHibernateSession connection = null;
+        SOSHibernateSession session = null;
         try {
             initLogging(API_CALL_DELETE, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ClusterSwitchMember.class);
             ClusterSwitchMember in = Globals.objectMapper.readValue(filterBytes, ClusterSwitchMember.class);
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getCluster().getManage());
             if (response == null) {
-                connection = Globals.createSosHibernateStatelessConnection(API_CALL_DELETE);
+                session = Globals.createSosHibernateStatelessConnection(API_CALL_DELETE);
 
-                JocInstancesDBLayer dbLayer = new JocInstancesDBLayer(connection);
+                JocInstancesDBLayer dbLayer = new JocInstancesDBLayer(session);
                 DBItemJocInstance member = dbLayer.getInstance(in.getMemberId());
                 if (member == null) {
                     throw new DBMissingDataException(String.format("Couldn't find cluster member: %s", in.getMemberId()));
                 }
                 DBItemJocCluster activeMember = dbLayer.getCluster();
                 boolean isInactive = activeMember == null || !activeMember.getMemberId().equals(in.getMemberId());
-                Instant now = Instant.now();
-                if (isInactive && (member.getHeartBeat() == null || now.getEpochSecond() - member.getHeartBeat().toInstant().getEpochSecond() > 60)) {
+                if (isInactive && (member.getHeartBeat() == null || JocCluster.isHeartBeatExceeded(session.getCurrentUTCDateTime(), member
+                        .getHeartBeat()))) {
                     // Long osId = member.getOsId();
                     // TODO delete obsolete row in INV_OPERATING_SYSTEMS if not used with other controller or cluster instances
-                    connection.delete(member);
+                    session.delete(member);
                     EventBus.getInstance().post(new ActiveClusterChangedEvent());
                 } else {
                     throw new JocBadRequestException("The cluster member is either active or its last heartbeat is younger than one minute.");
                 }
-                response = JOCDefaultResponse.responseStatusJSOk(Date.from(now));
+                response = JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
             }
             return response;
         } catch (JocException e) {
@@ -119,7 +120,7 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
-            Globals.disconnect(connection);
+            Globals.disconnect(session);
         }
     }
 

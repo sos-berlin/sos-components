@@ -53,7 +53,7 @@ public class SystemNotifierModel {
     }
 
     protected void notify(SystemNotification notification, List<SystemMonitoringEvent> toNotify) {
-        if (notification == null || toNotify.size() == 0) {
+        if (notification == null || toNotify.size() == 0 || closed.get()) {
             return;
         }
 

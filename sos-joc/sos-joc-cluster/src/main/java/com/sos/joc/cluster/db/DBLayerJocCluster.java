@@ -111,21 +111,25 @@ public class DBLayerJocCluster extends DBLayer {
         return getSession().getSingleResult(query);
     }
 
-    public int updateClusterHeartBeat() throws Exception {
+    public int updateClusterHeartBeat(Date now) throws Exception {
         StringBuilder sql = new StringBuilder("update ").append(DBLayer.DBITEM_JOC_CLUSTER).append(" ");
         sql.append("set heartBeat=:heartBeat ");
         Query<DBItemJocInstance> query = getSession().createQuery(sql.toString());
-        query.setParameter("heartBeat", new Date());
+        query.setParameter("heartBeat", now);
         return getSession().executeUpdate(query);
     }
 
-    public int updateInstanceHeartBeat(String memberId) throws Exception {
+    public int updateInstanceHeartBeat(String memberId, Date now) throws Exception {
         StringBuilder sql = new StringBuilder("update ").append(DBLayer.DBITEM_JOC_INSTANCES).append(" ");
         sql.append("set heartBeat=:heartBeat ");
         sql.append("where memberId=:memberId");
         Query<DBItemJocInstance> query = getSession().createQuery(sql.toString());
-        query.setParameter("heartBeat", new Date());
+        query.setParameter("heartBeat", now);
         query.setParameter("memberId", memberId);
         return getSession().executeUpdate(query);
+    }
+
+    public Date getNowUTC() throws Exception {
+        return getSession().getCurrentUTCDateTime();
     }
 }
