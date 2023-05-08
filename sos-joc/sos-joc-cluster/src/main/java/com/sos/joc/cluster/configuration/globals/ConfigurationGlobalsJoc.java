@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.sos.commons.util.SOSString;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
@@ -15,6 +17,10 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
 
     public static enum ShowViewName {
         dashboard, dailyplan, workflows, resources, history, auditlog, configuration, filetransfer, jobstreams, monitor;
+    }
+
+    public static enum LogMove {
+        all, failed, successful
     }
 
     private static final List<String> AUDIT_LOG_COMMENTS = Arrays.asList("System maintenance", "Repeat execution", "Business requirement",
@@ -65,14 +71,21 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     private ConfigurationEntry disableWarningOnLicenseExpiration = new ConfigurationEntry("disable_warning_on_license_expiration", "false",
             GlobalSettingsSectionValueType.BOOLEAN);
 
+    // History - begin
+    private static final List<String> LOG_MOVE_VALUES = Stream.of(LogMove.values()).map(Enum::name).collect(Collectors.toList());
+    private ConfigurationEntry logMoveDirectory = new ConfigurationEntry("log_move_directory", "", GlobalSettingsSectionValueType.STRING);
+    private ConfigurationEntry logMoveOrder = new ConfigurationEntry("log_move_order", "", LOG_MOVE_VALUES, GlobalSettingsSectionValueType.LIST);
+    private ConfigurationEntry logMoveTask = new ConfigurationEntry("log_move_task", "", LOG_MOVE_VALUES, GlobalSettingsSectionValueType.LIST);
+
     private ConfigurationEntry logMaxDisplaySize = new ConfigurationEntry("log_maximum_display_size", "10",
             GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
     private ConfigurationEntry logApplicableSize = new ConfigurationEntry("log_applicable_size", "500",
             GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
     private ConfigurationEntry logMaxSize = new ConfigurationEntry("log_maximum_size", "1000", GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
+    // History - end
 
     private ConfigurationEntry jocReverseProxyUrl = new ConfigurationEntry("joc_reverse_proxy_url", null, GlobalSettingsSectionValueType.STRING);
-    
+
     private ConfigurationEntry allowEmptyArguments = new ConfigurationEntry("allow_empty_arguments", "false", GlobalSettingsSectionValueType.BOOLEAN);
 
     private Charset encodingCharset = null;
@@ -112,12 +125,15 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         encoding.setOrdering(++index);
         disableWarningOnLicenseExpiration.setOrdering(++index);
 
+        logMoveDirectory.setOrdering(++index);
+        logMoveOrder.setOrdering(++index);
+        logMoveTask.setOrdering(++index);
         logMaxDisplaySize.setOrdering(++index);
         logApplicableSize.setOrdering(++index);
         logMaxSize.setOrdering(++index);
 
         jocReverseProxyUrl.setOrdering(++index);
-        
+
         allowEmptyArguments.setOrdering(++index);
     }
 
@@ -171,6 +187,18 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
 
     public ConfigurationEntry getDisableWarningOnLicenseExpiration() {
         return disableWarningOnLicenseExpiration;
+    }
+
+    public ConfigurationEntry getLogMoveDirectory() {
+        return logMoveDirectory;
+    }
+
+    public ConfigurationEntry getLogMoveOrder() {
+        return logMoveOrder;
+    }
+
+    public ConfigurationEntry getLogMoveTask() {
+        return logMoveTask;
     }
 
     public ConfigurationEntry getLogMaxSize() {
@@ -247,7 +275,7 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     public ConfigurationEntry getJocReverseProxyUrl() {
         return jocReverseProxyUrl;
     }
-    
+
     public ConfigurationEntry getAllowEmptyArguments() {
         return allowEmptyArguments;
     }

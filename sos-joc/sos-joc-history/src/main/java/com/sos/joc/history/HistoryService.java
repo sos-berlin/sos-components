@@ -37,18 +37,19 @@ import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
 import com.sos.joc.cluster.common.JocClusterUtil;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
+import com.sos.joc.cluster.configuration.JocHistoryConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration.Action;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc.LogMove;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.cluster.service.active.AJocActiveMemberService;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.db.joc.DBItemJocVariable;
-import com.sos.joc.history.controller.configuration.HistoryConfiguration;
 import com.sos.joc.history.db.DBLayerHistory;
 import com.sos.joc.model.cluster.common.ClusterServices;
 
@@ -59,7 +60,7 @@ public class HistoryService extends AJocActiveMemberService {
     private static final String IDENTIFIER = ClusterServices.history.name();
     private static final long AWAIT_TERMINATION_TIMEOUT_EVENTHANDLER = 3;// in seconds
 
-    private HistoryConfiguration config;
+    private JocHistoryConfiguration config;
     private JocClusterHibernateFactory factory;
     private ExecutorService threadPool;
     private AtomicBoolean processingStarted = new AtomicBoolean(false);
@@ -215,9 +216,9 @@ public class HistoryService extends AJocActiveMemberService {
         JocClusterServiceLogger.setLogger(IDENTIFIER);
         try {
             Properties conf = Globals.sosCockpitProperties == null ? new Properties() : Globals.sosCockpitProperties.getProperties();
-            config = new HistoryConfiguration();
+            config = new JocHistoryConfiguration();
             config.load(conf);
-            updateHistoryConfigLogSize(true);
+            updateHistoryConfig(true);
         } catch (Exception ex) {
             LOGGER.error(ex.toString(), ex);
         } finally {
@@ -225,53 +226,87 @@ public class HistoryService extends AJocActiveMemberService {
         }
     }
 
-    private boolean updateHistoryConfigLogSize(boolean onStart) {
-        int oldLogApplicableMBSize = config.getLogApplicableMBSize();
-        int oldLogMaximumMBSize = config.getLogMaximumMBSize();
-        int oldLogMaximumDisplayMBSize = config.getLogMaximumDisplayMBSize();
+    private boolean updateHistoryConfig(boolean onStart) {
         ConfigurationGlobals cg = Globals.configurationGlobals;
-
         boolean result = false;
         if (cg != null) {
             ConfigurationGlobalsJoc joc = (ConfigurationGlobalsJoc) cg.getConfigurationSection(DefaultSections.joc);
-            if (joc != null) {
-                try {
-                    config.setLogApplicableMBSize(Integer.parseInt(joc.getLogApplicableSize().getValue()));
-                } catch (Throwable e) {
-                    LOGGER.warn(String.format("[%s][%s=%s][use default %s][error]%s", StartupMode.settings_changed.name(), joc.getLogApplicableSize()
-                            .getName(), joc.getLogApplicableSize().getValue(), config.getLogApplicableMBSize(), e.toString()));
-                }
-                try {
-                    config.setLogMaximumMBSize(Integer.parseInt(joc.getLogMaxSize().getValue()));
-                } catch (Throwable e) {
-                    LOGGER.warn(String.format("[%s][%s=%s][use default %s][error]%s", StartupMode.settings_changed.name(), joc.getLogMaxSize()
-                            .getName(), joc.getLogMaxSize().getValue(), config.getLogMaximumMBSize(), e.toString()));
-                }
-
-                try {
-                    config.setLogMaximumDisplayMBSize(Integer.parseInt(joc.getMaxDisplaySize().getValue()));
-                } catch (Throwable e) {
-                    LOGGER.warn(String.format("[%s][%s=%s][use default %s][error]%s", StartupMode.settings_changed.name(), joc.getLogMaxSize()
-                            .getName(), joc.getLogMaxSize().getValue(), config.getLogMaximumMBSize(), e.toString()));
-                }
-
-                result = (oldLogApplicableMBSize != config.getLogApplicableMBSize()) || (oldLogMaximumMBSize != config.getLogMaximumMBSize()
-                        || oldLogMaximumDisplayMBSize != config.getLogMaximumDisplayMBSize());
-                if (result && !onStart) {
-                    LOGGER.info(String.format("[%s][old %s=%s,%s=%s,%s=%s][new %s=%s,%s=%s,%s=%s]", StartupMode.settings_changed.name(), joc
-                            .getLogApplicableSize().getName(), oldLogApplicableMBSize, joc.getLogMaxSize().getName(), oldLogMaximumMBSize, joc
-                                    .getMaxDisplaySize().getName(), oldLogMaximumDisplayMBSize, joc.getLogApplicableSize().getName(), config
-                                            .getLogApplicableMBSize(), joc.getLogMaxSize().getName(), config.getLogMaximumMBSize(), joc
-                                                    .getMaxDisplaySize().getName(), config.getLogMaximumDisplayMBSize()));
-                }
+            String logMoveChanges = updateHistoryConfigLogMove(joc, onStart);
+            String logSizeChanges = updateHistoryConfigLogSize(joc, onStart);
+            result = logMoveChanges != null || logSizeChanges != null;
+            if (result && !onStart) {
+                String lmc = logMoveChanges == null ? "" : "[" + logMoveChanges + "]";
+                String lsc = logSizeChanges == null ? "" : "[" + logSizeChanges + "]";
+                LOGGER.info(String.format("[%s]%s%s", StartupMode.settings_changed.name(), lmc, lsc));
             }
         }
         return result;
     }
 
+    private String updateHistoryConfigLogMove(ConfigurationGlobalsJoc joc, boolean onStart) {
+        if (joc == null) {
+            return null;
+        }
+        Path oldLogMoveDir = config.getLogMoveDir();
+        LogMove oldLogMoveOrder = config.getLogMoveOrder();
+        LogMove oldLogMoveTask = config.getLogMoveTask();
+
+        StringBuilder warn = config.setLogMove(joc);
+        if (warn != null) {
+            LOGGER.warn(String.format("[%s]%s", StartupMode.settings_changed.name(), warn));
+        }
+        boolean result = !config.isLogMoveDirEquals(oldLogMoveDir) || !config.isLogMoveOrderEquals(oldLogMoveOrder) || !config.isLogMoveTaskEquals(
+                oldLogMoveTask);
+        if (result && !onStart) {
+            return String.format("[%s][old %s=%s,%s=%s,%s=%s][new %s=%s,%s=%s,%s=%s]", StartupMode.settings_changed.name(), joc.getLogMoveDirectory()
+                    .getName(), oldLogMoveDir, joc.getLogMoveOrder().getName(), oldLogMoveOrder, joc.getLogMoveTask().getName(), oldLogMoveTask, joc
+                            .getLogMoveDirectory().getName(), config.getLogMoveDir(), joc.getLogMoveOrder().getName(), config.getLogMoveOrder(), joc
+                                    .getLogMoveTask().getName(), config.getLogMoveTask());
+        }
+        return null;
+    }
+
+    private String updateHistoryConfigLogSize(ConfigurationGlobalsJoc joc, boolean onStart) {
+        if (joc == null) {
+            return null;
+        }
+        int oldLogApplicableMBSize = config.getLogApplicableMBSize();
+        int oldLogMaximumMBSize = config.getLogMaximumMBSize();
+        int oldLogMaximumDisplayMBSize = config.getLogMaximumDisplayMBSize();
+
+        boolean result = false;
+        try {
+            config.setLogApplicableMBSize(Integer.parseInt(joc.getLogApplicableSize().getValue()));
+        } catch (Throwable e) {
+            LOGGER.warn(String.format("[%s][%s=%s][use default %s][error]%s", StartupMode.settings_changed.name(), joc.getLogApplicableSize()
+                    .getName(), joc.getLogApplicableSize().getValue(), config.getLogApplicableMBSize(), e.toString()));
+        }
+        try {
+            config.setLogMaximumMBSize(Integer.parseInt(joc.getLogMaxSize().getValue()));
+        } catch (Throwable e) {
+            LOGGER.warn(String.format("[%s][%s=%s][use default %s][error]%s", StartupMode.settings_changed.name(), joc.getLogMaxSize().getName(), joc
+                    .getLogMaxSize().getValue(), config.getLogMaximumMBSize(), e.toString()));
+        }
+        try {
+            config.setLogMaximumDisplayMBSize(Integer.parseInt(joc.getMaxDisplaySize().getValue()));
+        } catch (Throwable e) {
+            LOGGER.warn(String.format("[%s][%s=%s][use default %s][error]%s", StartupMode.settings_changed.name(), joc.getLogMaxSize().getName(), joc
+                    .getLogMaxSize().getValue(), config.getLogMaximumMBSize(), e.toString()));
+        }
+        result = (oldLogApplicableMBSize != config.getLogApplicableMBSize()) || (oldLogMaximumMBSize != config.getLogMaximumMBSize()
+                || oldLogMaximumDisplayMBSize != config.getLogMaximumDisplayMBSize());
+        if (result && !onStart) {
+            return String.format("[old %s=%s,%s=%s,%s=%s][new %s=%s,%s=%s,%s=%s]", joc.getLogApplicableSize().getName(), oldLogApplicableMBSize, joc
+                    .getLogMaxSize().getName(), oldLogMaximumMBSize, joc.getMaxDisplaySize().getName(), oldLogMaximumDisplayMBSize, joc
+                            .getLogApplicableSize().getName(), config.getLogApplicableMBSize(), joc.getLogMaxSize().getName(), config
+                                    .getLogMaximumMBSize(), joc.getMaxDisplaySize().getName(), config.getLogMaximumDisplayMBSize());
+        }
+        return null;
+    }
+
     // Another thread
     public void updateHistoryConfiguration() {
-        if (updateHistoryConfigLogSize(false)) {
+        if (updateHistoryConfig(false)) {
             if (activeHandlers.size() > 0) {
                 for (HistoryControllerHandler h : activeHandlers) {
                     h.updateHistoryConfiguration(config);
@@ -393,7 +428,7 @@ public class HistoryService extends AJocActiveMemberService {
                             dbLayer.commit();
                         } else {
                             if (subfolders > 0 && subfolders != orderLogs.longValue()) {
-                                cleanupNotReferencedLogs(dbLayer, method);
+                                deleteNotReferencedLogs(dbLayer, method);
                             }
                             dbLayer.close();
 
@@ -526,10 +561,10 @@ public class HistoryService extends AJocActiveMemberService {
     }
 
     // TODO duplicate method (some changes) - see com.sos.joc.cleanup.model.CleanupTaskHistory
-    private void cleanupNotReferencedLogs(DBLayerHistory dbLayer, String caller) {
+    private void deleteNotReferencedLogs(DBLayerHistory dbLayer, String caller) {
         Path dir = config.getLogDir().toAbsolutePath();
         if (Files.exists(dir)) {
-            String method = "cleanupNotReferencedLogs";
+            String method = "deleteNotReferencedLogs";
             LOGGER.info(String.format("[%s][%s]%s", caller, method, dir));
 
             try {
@@ -540,7 +575,8 @@ public class HistoryService extends AJocActiveMemberService {
                         if (f.isDirectory()) {
                             try {
                                 Long id = Long.parseLong(f.getName());
-                                if (id > 0) {// id=0 is a temporary folder for not started orders - see config.getLogDirTmpOrders()
+                                if (id > JocHistoryConfiguration.ID_NOT_STARTED_ORDER) {// id=0 is a temporary folder for not started orders - see
+                                                                                        // config.getLogDirTmpOrders()
                                     if (!dbLayer.mainOrderLogNotFinished(id)) {
                                         try {
                                             if (SOSPath.deleteIfExists(p)) {

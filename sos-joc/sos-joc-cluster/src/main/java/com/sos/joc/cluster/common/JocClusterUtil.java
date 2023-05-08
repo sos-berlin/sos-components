@@ -9,6 +9,7 @@ import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSShell;
 
@@ -42,6 +43,13 @@ public class JocClusterUtil {
 
     public static int mb2bytes(int mb) {
         return mb * 1_024 * 1_024;
+    }
+    
+    /** An variable is referenced as "${VAR}" */
+    public static String resolveVars(String cmd) {
+        SOSParameterSubstitutor ps = new SOSParameterSubstitutor();
+        String val = ps.replaceEnvVars(cmd);
+        return ps.replaceSystemProperties(val);
     }
 
     public static Path truncateHistoryOriginalLogFile(String caller, Path file, Long fileSizeUncomressed, int exceededMBSize, boolean isMaximum) {

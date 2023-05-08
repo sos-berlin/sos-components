@@ -11,7 +11,6 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.util.SOSCheckJavaVariableName;
-import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.common.Variables;
 import com.sos.joc.Globals;
@@ -67,11 +66,9 @@ public class HistoryUtil {
         return li > -1 ? forkChildOrderId.substring(li + 1) : forkChildOrderId;
     }
 
-    /** An variable is referenced as "${VAR}" */
-    public static String resolveVars(String cmd) {
-        SOSParameterSubstitutor ps = new SOSParameterSubstitutor();
-        String val = ps.replaceEnvVars(cmd);
-        return ps.replaceSystemProperties(val);
+    public static String getMainOrderId(String orderId) {
+        int li = orderId.indexOf("|");
+        return li > -1 ? orderId.substring(0, li) : orderId;
     }
 
     public static String nl2sp(String value) {

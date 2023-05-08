@@ -22,6 +22,7 @@ import com.sos.commons.util.SOSPath;
 import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
+import com.sos.joc.cluster.configuration.JocHistoryConfiguration;
 import com.sos.joc.cluster.service.active.IJocActiveMemberService;
 import com.sos.joc.db.DBLayer;
 
@@ -39,7 +40,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
 
     // TODO read from history/cluster/globals ..
     private String logDir = "logs/history";
-    private String logDirTmpOrders = "logs/history/0";
+    private String logDirTmpOrders = logDir + "/" + JocHistoryConfiguration.ID_NOT_STARTED_ORDER;
 
     private int totalOrders = 0;
     private int totalOrderStates = 0;
@@ -439,7 +440,8 @@ public class CleanupTaskHistory extends CleanupTaskModel {
                             if (f.isDirectory()) {
                                 try {
                                     Long id = Long.parseLong(f.getName());
-                                    if (id > 0) {// id=0 is a temporary folder for not started orders - see config.getLogDirTmpOrders()
+                                    if (id > JocHistoryConfiguration.ID_NOT_STARTED_ORDER) {// id=0 is a temporary folder for not started orders - see
+                                                                                            // config.getLogDirTmpOrders()
                                         if (!getDbLayer().mainOrderLogNotFinished(id)) {
                                             try {
                                                 if (SOSPath.deleteIfExists(p)) {

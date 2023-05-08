@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.SortedSet;
 
 import com.sos.inventory.model.job.JobCriticality;
-import com.sos.inventory.model.job.JobReturnCodeWarning;
 
 public class CachedWorkflowJob {
 

@@ -1,8 +1,9 @@
-package com.sos.joc.history.controller.configuration;
+package com.sos.joc.cluster.configuration;
 
 import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Properties;
 
 import org.slf4j.Logger;
@@ -10,18 +11,22 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSPath;
+import com.sos.commons.util.SOSString;
 import com.sos.joc.cluster.common.JocClusterUtil;
-import com.sos.joc.history.helper.HistoryUtil;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc.LogMove;
 
-public class HistoryConfiguration implements Serializable {
+public class JocHistoryConfiguration implements Serializable {
+
+    public static final Long ID_NOT_STARTED_ORDER = new Long(0);
 
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = LoggerFactory.getLogger(HistoryConfiguration.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(JocHistoryConfiguration.class);
 
     // Directory, History LOGS - see CleanupTaskHistory
     private Path logDir = SOSPath.toAbsolutePath("logs/history");
     // Directory, History LOGS of not started orders - see CleanupTaskHistory
-    private Path logDirTmpOrders = logDir.resolve("0");
+    private Path logDirTmpOrders = logDir.resolve(ID_NOT_STARTED_ORDER.toString());
     // commit after n db operations
     private int maxTransactions = 100;
 
@@ -44,6 +49,10 @@ public class HistoryConfiguration implements Serializable {
 
     private int maxStopProcessingOnErrors = 5;
 
+    private Path logMoveDir;
+    private LogMove logMoveOrder;
+    private LogMove logMoveTask;
+
     // MB
     private int logApplicableMBSize = 500;
     private int logMaximumMBSize = 1_000;
@@ -57,7 +66,7 @@ public class HistoryConfiguration implements Serializable {
     public void load(final Properties conf) throws Exception {
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
         if (conf.getProperty("history_log_dir") != null) {
-            logDir = SOSPath.toAbsolutePath(HistoryUtil.resolveVars(conf.getProperty("history_log_dir").trim()));
+            logDir = SOSPath.toAbsolutePath(JocClusterUtil.resolveVars(conf.getProperty("history_log_dir").trim()));
             if (isDebugEnabled) {
                 LOGGER.debug(String.format("[history_log_dir=%s]%s", conf.getProperty("history_log_dir"), logDir));
             }
@@ -149,6 +158,79 @@ public class HistoryConfiguration implements Serializable {
 
     public int getMaxStopProcessingOnErrors() {
         return maxStopProcessingOnErrors;
+    }
+
+    public boolean isLogMoveDirEquals(Path val) {
+        if (val == null && logMoveDir == null) {
+            return true;
+        } else if (val != null && logDir != null) {
+            return val.equals(logMoveDir);
+        }
+        return false;
+    }
+
+    public boolean isLogMoveOrderEquals(LogMove val) {
+        if (val == null && logMoveOrder == null) {
+            return true;
+        } else if (val != null && logMoveOrder != null) {
+            return val.equals(logMoveOrder);
+        }
+        return false;
+    }
+
+    public boolean isLogMoveTaskEquals(LogMove val) {
+        if (val == null && logMoveTask == null) {
+            return true;
+        } else if (val != null && logMoveTask != null) {
+            return val.equals(logMoveTask);
+        }
+        return false;
+    }
+
+    public StringBuilder setLogMove(ConfigurationGlobalsJoc joc) {
+        logMoveDir = null;
+        logMoveOrder = null;
+        logMoveTask = null;
+
+        StringBuilder sb = new StringBuilder();
+        if (!SOSString.isEmpty(joc.getLogMoveDirectory().getValue())) {
+            logMoveDir = Paths.get(joc.getLogMoveDirectory().getValue()).toAbsolutePath();
+            if (!Files.exists(logMoveDir)) {
+                sb.append("[").append(joc.getLogMoveDirectory().getName()).append("=").append(logMoveDir).append(" not found]");
+
+                logMoveDir = null;
+                return sb;
+            }
+            if (!SOSString.isEmpty(joc.getLogMoveOrder().getValue())) {
+                try {
+                    logMoveOrder = LogMove.valueOf(joc.getLogMoveOrder().getValue());
+                } catch (Throwable e) {
+                    sb.append("[").append(joc.getLogMoveOrder().getName()).append("=").append(joc.getLogMoveOrder().getValue()).append(
+                            " invalid value]");
+                }
+            }
+            if (!SOSString.isEmpty(joc.getLogMoveTask().getValue())) {
+                try {
+                    logMoveTask = LogMove.valueOf(joc.getLogMoveTask().getValue());
+                } catch (Throwable e) {
+                    sb.append("[").append(joc.getLogMoveTask().getName()).append("=").append(joc.getLogMoveTask().getValue()).append(
+                            " invalid value]");
+                }
+            }
+        }
+        return sb.length() == 0 ? null : sb;
+    }
+
+    public Path getLogMoveDir() {
+        return logMoveDir;
+    }
+
+    public LogMove getLogMoveOrder() {
+        return logMoveOrder;
+    }
+
+    public LogMove getLogMoveTask() {
+        return logMoveTask;
     }
 
     public void setLogApplicableMBSize(int val) {
