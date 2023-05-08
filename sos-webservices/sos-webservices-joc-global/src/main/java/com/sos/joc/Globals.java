@@ -65,7 +65,8 @@ public class Globals {
     public static String apiVersion = "";
     public static String inventoryVersion = "";
     public static String curVersion = "";
-
+    public static boolean isApiServer = false;
+    
     public static long maxSizeOfLogsToDisplay = 1024 * 1024 * 10L; // 10MB
     public static long timeoutToDeleteTempFiles = 1000 * 60 * 3L;
     public static int httpConnectionTimeout = 2000;
@@ -370,6 +371,7 @@ public class Globals {
                     } catch (Exception e) {
                         //
                     }
+                    isApiServer = properties.getProperty("as_api_server", "no").equals("yes");
                 }
             } catch (Exception e) {
                 LOGGER.error(String.format("Error while reading %1$s:", "joc-settings.properties"), e);
