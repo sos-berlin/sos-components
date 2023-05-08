@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.proxy.ProxyUser;
-import com.sos.joc.history.controller.configuration.HistoryConfiguration;
+import com.sos.joc.cluster.configuration.JocHistoryConfiguration;
 import com.sos.joc.history.controller.proxy.EventFluxStopper;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.AgentInfo;
@@ -109,7 +109,7 @@ public class HistoryControllerHandlerTest {
     private static final int SIMULATE_LONG_EXECUTION_INTERVAL = 0; // seconds
     private static final Long START_EVENT_ID = 0L;
 
-    private HistoryConfiguration config = new HistoryConfiguration();
+    private JocHistoryConfiguration config = new JocHistoryConfiguration();
     private EventFluxStopper stopper;
     private AtomicBoolean closed;
 

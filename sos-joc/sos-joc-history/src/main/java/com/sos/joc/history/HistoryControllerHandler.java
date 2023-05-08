@@ -20,9 +20,9 @@ import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.ProxyUser;
+import com.sos.joc.cluster.configuration.JocHistoryConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.service.JocClusterServiceLogger;
-import com.sos.joc.history.controller.configuration.HistoryConfiguration;
 import com.sos.joc.history.controller.exception.HistoryFatalException;
 import com.sos.joc.history.controller.exception.HistoryProcessingDatabaseConnectException;
 import com.sos.joc.history.controller.exception.HistoryProcessingException;
@@ -126,7 +126,7 @@ public class HistoryControllerHandler {
     private JControllerApi api;
     private EventFluxStopper stopper = null;
     private final Object lockObject = new Object();
-    private HistoryConfiguration config;
+    private JocHistoryConfiguration config;
     private HistoryModel model;
 
     private AtomicBoolean closed = new AtomicBoolean(false);
@@ -140,7 +140,7 @@ public class HistoryControllerHandler {
     private AtomicLong lastActivityStart = new AtomicLong();
     private AtomicLong lastActivityEnd = new AtomicLong();
 
-    public HistoryControllerHandler(SOSHibernateFactory factory, HistoryConfiguration config, ControllerConfiguration controllerConfig,
+    public HistoryControllerHandler(SOSHibernateFactory factory, JocHistoryConfiguration config, ControllerConfiguration controllerConfig,
             String serviceIdentifier) {
         this.factory = factory;
         this.config = config;
@@ -151,7 +151,7 @@ public class HistoryControllerHandler {
     }
 
     // Another thread
-    public void updateHistoryConfiguration(HistoryConfiguration config) {
+    public void updateHistoryConfiguration(JocHistoryConfiguration config) {
         this.config = config;
         if (this.model != null) {
             this.model.updateHistoryConfiguration(config);
@@ -890,7 +890,7 @@ public class HistoryControllerHandler {
         }
     }
 
-    private void initIntervals(HistoryConfiguration hc) {
+    private void initIntervals(JocHistoryConfiguration hc) {
         releaseEventsInterval = hc.getReleaseEventsInterval();
         lastReleaseEventId = 0L;
         lastReleaseEvents = SOSDate.getSeconds(new Date());

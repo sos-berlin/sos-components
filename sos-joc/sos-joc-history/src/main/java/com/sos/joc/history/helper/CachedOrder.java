@@ -5,6 +5,7 @@ import java.util.Date;
 import com.sos.commons.util.SOSDate;
 import com.sos.controller.model.event.EventType;
 import com.sos.joc.cluster.bean.history.HistoryOrderBean;
+import com.sos.joc.cluster.common.JocClusterUtil;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.common.HistorySeverity;
 import com.sos.joc.model.order.OrderStateText;
@@ -54,6 +55,7 @@ public class CachedOrder {
         b.setMainParentId(mainParentId);
         b.setParentId(parentId);
         b.setWorkflowPath(workflowPath);
+        b.setWorkflowName(JocClusterUtil.getBasenameFromPath(b.getWorkflowPath()));
         b.setWorkflowVersionId(workflowVersionId);
         b.setWorkflowPosition(workflowPosition);
         b.setState(state);

@@ -14,6 +14,7 @@ public class CachedOrderStep {
     private final Long historyOrderId;
     private final String orderId;
     private final String jobName;
+    private final String jobLabel;
     private final String agentTimezone;
     private final String agentId;
     private final String agentName;
@@ -35,6 +36,7 @@ public class CachedOrderStep {
         this.historyOrderId = item.getHistoryOrderId();
         this.orderId = item.getOrderId();
         this.jobName = item.getJobName();
+        this.jobLabel = item.getJobLabel();
         this.agentTimezone = timezone;
         this.agentId = item.getAgentId();
         this.agentName = item.getAgentName();
@@ -53,6 +55,7 @@ public class CachedOrderStep {
         b.setHistoryOrderId(historyOrderId);
         b.setOrderId(orderId);
         b.setJobName(jobName);
+        b.setJobLabel(jobLabel);
         b.setAgentId(agentId);
         b.setAgentName(agentName);
         b.setAgentUri(agentUri);
@@ -85,6 +88,10 @@ public class CachedOrderStep {
 
     public String getJobName() {
         return jobName;
+    }
+
+    public String getJobLabel() {
+        return jobLabel;
     }
 
     public String getAgentTimezone() {
