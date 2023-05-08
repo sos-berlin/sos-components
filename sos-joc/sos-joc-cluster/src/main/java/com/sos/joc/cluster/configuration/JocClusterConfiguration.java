@@ -58,6 +58,10 @@ public class JocClusterConfiguration {
     // seconds - max wait time = switch_member_wait_counter_on_error*switchMemberWaitIntervalOnError+ execution time
     private int switchMemberWaitIntervalOnError = 2;
 
+    private JocClusterConfiguration() {
+        threadGroup = null;
+    }
+
     public JocClusterConfiguration(Properties properties) {
         if (properties != null) {
             setConfiguration(properties);
@@ -66,6 +70,10 @@ public class JocClusterConfiguration {
         clusterModeResult = clusterMode();
         registerActiveMemberServices();
         registerEmbeddedServices();
+    }
+
+    public static JocClusterConfiguration defaultConfiguration() {
+        return new JocClusterConfiguration();
     }
 
     private void registerActiveMemberServices() {

@@ -20,6 +20,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.joc.Globals;
+import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.db.DBLayerJocCluster;
 import com.sos.joc.cluster.instances.JocInstance;
 import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
@@ -37,18 +38,15 @@ public class CheckInstance {
         try {
             String clusterId = Globals.getClusterId();
             Integer ordering = Globals.getOrdering();
-            
+
             Optional<DBItemJocInstance> dbInstanceOpt = Optional.empty();
-            
+
             session = Globals.createSosHibernateStatelessConnection(CheckInstance.class.getSimpleName());
             JocInstancesDBLayer dbLayer = new JocInstancesDBLayer(session);
             List<DBItemJocInstance> instances = dbLayer.getInstances("ordering, id");
             String memberId = Globals.getMemberId();
             if (instances != null && !instances.isEmpty()) {
-                
-                
-                
-                
+
                 if (instances.stream().map(DBItemJocInstance::getClusterId).distinct().count() > 1) {
                     LOGGER.error("There are more than one JOC Cluster ID in the JOC_INSTANCES table.");
                     throw new JocConfigurationException("There are more than one JOC Cluster ID in the JOC_INSTANCES table.");
@@ -62,11 +60,11 @@ public class CheckInstance {
                             LOGGER.info("The ordering of the JOC instances are not unique");
                             LOGGER.info("...try to repair the ordering to a strictly monotonous sequence without gaps");
                             int maxOrdering = instances.stream().mapToInt(DBItemJocInstance::getOrdering).max().orElse(0);
-                            int curOrdering = -129; //tinyInt [-128, 127]
+                            int curOrdering = -129; // tinyInt [-128, 127]
                             Set<Long> changedIds = new HashSet<>();
                             for (DBItemJocInstance instance : instances) {
                                 if (curOrdering == instance.getOrdering()) {
-                                    instance.setOrdering(++maxOrdering); 
+                                    instance.setOrdering(++maxOrdering);
                                     changedIds.add(instance.getId());
                                 } else {
                                     curOrdering = instance.getOrdering();
@@ -87,7 +85,7 @@ public class CheckInstance {
                                             index++;
                                         }
                                         if (index != instance.getOrdering()) {
-                                            instance.setOrdering(index); 
+                                            instance.setOrdering(index);
                                             changedIds.add(instance.getId());
                                         }
                                     }
@@ -96,13 +94,13 @@ public class CheckInstance {
                             } else {
                                 for (DBItemJocInstance instance : instances) {
                                     if (index != instance.getOrdering()) {
-                                        instance.setOrdering(index); 
+                                        instance.setOrdering(index);
                                         changedIds.add(instance.getId());
                                     }
                                     index++;
                                 }
                             }
-                            
+
                             // update instances with changed ordering
                             for (DBItemJocInstance instance : instances) {
                                 if (changedIds.contains(instance.getId())) {
@@ -110,12 +108,12 @@ public class CheckInstance {
                                 }
                             }
                         }
-                        
+
                         dbInstanceOpt = instances.stream().filter(i -> ordering == i.getOrdering()).findFirst();
                         if (dbInstanceOpt.isPresent()) {
                             DBItemJocInstance dbInstance = dbInstanceOpt.get();
                             if (!memberId.equals(dbInstance.getMemberId())) {
-                                if (instanceIsAlive(dbInstance)) {
+                                if (instanceIsAlive(session, dbInstance)) {
                                     String msg = "There is already a running JOC instance with ID '" + clusterId + "#" + ordering
                                             + "'. You can modify the 'ordering' in the joc.properties file.";
                                     LOGGER.error(msg);
@@ -149,37 +147,37 @@ public class CheckInstance {
                     }
                 }
             }
-            
+
         } finally {
             Globals.disconnect(session);
         }
     }
-    
+
     public static void stopJOC() {
         String jettyHome = System.getProperty("jetty.home");
         if (jettyHome != null && !jettyHome.isEmpty()) {
             if (SOSShell.IS_WINDOWS) {
-//                Path jettyHomePath = Paths.get(jettyHome);
-//                Path serviceFolder = jettyHomePath.resolve("..\\service").normalize();
-//                Path startJar = jettyHomePath.resolve("jetty").resolve("start.jar");
-//                Path javaExe = Paths.get(System.getProperty("java.home")).resolve("bin").resolve("java.exe");
-//                // TODO determine stop port. It would be offer from the setup (maybe the whole stop command)
-//                int jettyStopPort = 40446;
-//                
-//                if (Files.exists(serviceFolder) && Files.exists(startJar)) {
-//                    try {
-//                        Files.list(serviceFolder).map(Path::getFileName).map(Path::toString).filter(f -> f.endsWith(".exe")).filter(f -> f.startsWith(
-//                                "js7_")).map(f -> f.replaceFirst("w?\\.exe", "")).findAny().ifPresent(serviceName -> {
-//                                    new Thread(() -> {
-//                                        String command = String.format("\"%s\" -jar \"%s\" --stop STOP.KEY=%s STOP.PORT=%d STOP.WAIT=10", javaExe
-//                                                .toString(), startJar.toString(), serviceName, jettyStopPort);
-//                                        executeCommand(command);
-//                                    }).start();
-//                                });
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
+                // Path jettyHomePath = Paths.get(jettyHome);
+                // Path serviceFolder = jettyHomePath.resolve("..\\service").normalize();
+                // Path startJar = jettyHomePath.resolve("jetty").resolve("start.jar");
+                // Path javaExe = Paths.get(System.getProperty("java.home")).resolve("bin").resolve("java.exe");
+                // // TODO determine stop port. It would be offer from the setup (maybe the whole stop command)
+                // int jettyStopPort = 40446;
+                //
+                // if (Files.exists(serviceFolder) && Files.exists(startJar)) {
+                // try {
+                // Files.list(serviceFolder).map(Path::getFileName).map(Path::toString).filter(f -> f.endsWith(".exe")).filter(f -> f.startsWith(
+                // "js7_")).map(f -> f.replaceFirst("w?\\.exe", "")).findAny().ifPresent(serviceName -> {
+                // new Thread(() -> {
+                // String command = String.format("\"%s\" -jar \"%s\" --stop STOP.KEY=%s STOP.PORT=%d STOP.WAIT=10", javaExe
+                // .toString(), startJar.toString(), serviceName, jettyStopPort);
+                // executeCommand(command);
+                // }).start();
+                // });
+                // } catch (IOException e) {
+                // e.printStackTrace();
+                // }
+                // }
             } else {
                 Path startscript = Paths.get(jettyHome).resolve("bin").resolve("jetty.sh");
                 if (Files.exists(startscript)) {
@@ -196,7 +194,7 @@ public class CheckInstance {
             }
         }
     }
-    
+
     private static void executeCommand(String command) {
         SOSCommandResult result = SOSShell.executeCommand(command);
         if (result.getStdErr() != null && !result.getStdErr().isEmpty()) {
@@ -205,15 +203,19 @@ public class CheckInstance {
         if (result.getStdOut() != null && !result.getStdOut().isEmpty()) {
             System.out.println("StdOut: " + result.getStdOut());
         }
-        System.out.println("Exit code of '"+ result.getCommand() + "': " + result.getExitCode());
+        System.out.println("Exit code of '" + result.getCommand() + "': " + result.getExitCode());
     }
-    
-    private static boolean instanceIsAlive(DBItemJocInstance dbInstance) {
-        if (dbInstance != null) {
-            // check: heartbeat younger than 60s
-            if (dbInstance.getHeartBeat() != null) {
+
+    private static boolean instanceIsAlive(SOSHibernateSession session, DBItemJocInstance dbItem) {
+        if (dbItem != null && dbItem.getHeartBeat() != null) {
+            // dbItem.getHeartBeat() - database UTC datetime
+            try {
+                if (!JocCluster.isHeartBeatExceeded(session.getCurrentUTCDateTime(), dbItem.getHeartBeat())) {
+                    return true;
+                }
+            } catch (SOSHibernateException e) {
                 Instant oneMinuteAgo = Instant.now().minusSeconds(TimeUnit.MINUTES.toSeconds(1));
-                if (dbInstance.getHeartBeat().toInstant().isAfter(oneMinuteAgo)) {
+                if (dbItem.getHeartBeat().toInstant().isAfter(oneMinuteAgo)) {
                     return true;
                 }
             }

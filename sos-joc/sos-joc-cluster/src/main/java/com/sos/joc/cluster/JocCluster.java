@@ -53,10 +53,10 @@ public class JocCluster {
     private static final Logger LOGGER = LoggerFactory.getLogger(JocCluster.class);
 
     public static final int MAX_AWAIT_TERMINATION_TIMEOUT = 30;
+    private static JocClusterConfiguration config;
     private static Date jocStartTime = null;
 
     private final SOSHibernateFactory dbFactory;
-    private final JocClusterConfiguration config;
     private final JocConfiguration jocConfig;
     private final JocClusterActiveMemberHandler activeMemberHandler;
     private final JocClusterEmbeddedServicesHandler embeddedServicesHandler;
@@ -78,11 +78,12 @@ public class JocCluster {
     public JocCluster(final SOSHibernateFactory factory, final JocClusterConfiguration jocClusterConfiguration,
             final JocConfiguration jocConfiguration, final Date jocStartDateTime) {
         this.dbFactory = factory;
-        this.config = jocClusterConfiguration;
         this.jocConfig = jocConfiguration;
         this.activeMemberHandler = new JocClusterActiveMemberHandler(this);
         this.embeddedServicesHandler = new JocClusterEmbeddedServicesHandler(this);
         this.currentMemberId = jocConfig.getMemberId();
+
+        config = jocClusterConfiguration;
         jocStartTime = jocStartDateTime;
     }
 
@@ -221,9 +222,8 @@ public class JocCluster {
     }
 
     private ConfigurationGlobals getStoredSettings() throws Exception {
-        ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                .configure(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true)
-                .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
+                DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true).configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
         ConfigurationGlobals configurations = new ConfigurationGlobals();
         GlobalSettings settings = null;
@@ -301,7 +301,7 @@ public class JocCluster {
             }
             dbLayer = new DBLayerJocCluster(dbFactory.openStatelessSession());
             dbLayer.beginTransaction();
-            dbLayer.updateInstanceHeartBeat(currentMemberId);
+            dbLayer.updateInstanceHeartBeat(currentMemberId, dbLayer.getNowUTC());
             dbLayer.commit();
 
             skipPerform = false;
@@ -413,7 +413,7 @@ public class JocCluster {
             }
             item = new DBItemJocCluster();
             item.setId(JocClusterConfiguration.IDENTIFIER);
-            item.setHeartBeat(new Date());
+            item.setHeartBeat(dbLayer.getNowUTC());
             item.setMemberId(currentMemberId);
 
             try {
@@ -436,22 +436,22 @@ public class JocCluster {
             if (item.getMemberId().equals(currentMemberId)) {
                 item = trySwitchActiveMemberOnProcess(mode, dbLayer, item, configurations, isFirstRun);
             } else {
-                if (isHeartBeatExceeded(item.getHeartBeat())) {
+                if (isHeartBeatExceeded(dbLayer.getNowUTC(), item.getHeartBeat())) {
                     if (!config.getClusterModeResult().getUse()) {
                         if (!isFirstRun) {// extra check when active JOC was killed/not removed from database
                             return null;
                         }
                     }
-                    LOGGER.info(String.format("[%s][heartBeat exceeded][UTC][%s]%s", mode, SOSDate.getDateTimeAsString(item.getHeartBeat()), item
+                    LOGGER.info(String.format("[%s][heartBeat exceeded][db][UTC][%s]%s", mode, SOSDate.getDateTimeAsString(item.getHeartBeat()), item
                             .getMemberId()));
 
                     boolean update = true;
                     // to avoid start of the current instance if a switchMember defined
                     if (config.getClusterModeResult().getUse() && item.getSwitchMemberId() != null && !item.getSwitchMemberId().equals(
                             currentMemberId)) {
-                        DBItemJocInstance switchInstance = getInstance(item.getSwitchMemberId());
+                        DBItemJocInstance switchInstance = dbLayer.getInstance(item.getSwitchMemberId());
                         if (switchInstance != null) {
-                            if (!isHeartBeatExceeded(switchInstance.getHeartBeat())) {
+                            if (!isHeartBeatExceeded(dbLayer.getNowUTC(), switchInstance.getHeartBeat())) {
                                 LOGGER.info(String.format("[%s][wait for switchMember]%s", mode, switchInstance.getMemberId()));
                                 update = false;
                             }
@@ -460,7 +460,7 @@ public class JocCluster {
 
                     if (update) {
                         item.setMemberId(currentMemberId);
-                        item.setHeartBeat(new Date());
+                        item.setHeartBeat(dbLayer.getNowUTC());
                         item.setSwitchMemberId(null);
                         item.setSwitchHeartBeat(null);
 
@@ -494,25 +494,28 @@ public class JocCluster {
 
     // GUI - separate thread
     public JocClusterAnswer switchMember(StartupMode mode, ConfigurationGlobals configurations, String newMemberId) {
+        if (SOSString.isEmpty(newMemberId)) {
+            return getErrorAnswer(new Exception("missing newMemberId"));
+        }
+        if (newMemberId.equals(currentMemberId)) {
+            if (activeMemberHandler.isActive()) {
+                return getOKAnswer(JocClusterAnswerState.ALREADY_STARTED);
+            }
+        }
+
         config.rereadClusterMode();
         if (!config.getClusterModeResult().getUse()) {
             return JocCluster.getErrorAnswer(JocClusterAnswerState.MISSING_LICENSE);
         }
-        LOGGER.info(String.format("[%s][switch][start][new]%s", mode, newMemberId));
-
-        JocClusterAnswer answer = checkSwitchMember(newMemberId);
-        if (answer != null) {
-            LOGGER.info(String.format("[%s][switch][end]%s", mode, SOSString.toString(answer)));
-            return answer;
-        }
 
         try {
+            JocClusterAnswer answer = null;
             synchronized (lockMember) {
                 boolean run = true;
                 int errorCounter = 0;
                 while (run) {
                     if (closed) {
-                        LOGGER.info("[" + mode + "][switch][end][skip]because closed");
+                        LOGGER.info(String.format("[%s][switch][skip]because closed", mode));
                         return getOKAnswer(JocClusterAnswerState.STOPPED);
                     }
 
@@ -529,7 +532,7 @@ public class JocCluster {
                             dbLayer.close();
                             dbLayer = null;
                         }
-                        LOGGER.warn(String.format("[%s][%s]%s", mode, errorCounter, e.toString()), e);
+                        LOGGER.warn(String.format("[%s][switch][%s]%s", mode, errorCounter, e.toString()), e);
                         errorCounter += 1;
                         if (errorCounter >= config.getSwitchMemberWaitCounterOnError()) {
                             throw e;
@@ -550,35 +553,6 @@ public class JocCluster {
 
     }
 
-    private JocClusterAnswer checkSwitchMember(String newMemberId) {
-        if (SOSString.isEmpty(newMemberId)) {
-            return getErrorAnswer(new Exception("missing newMemberId"));
-        }
-        if (newMemberId.equals(currentMemberId)) {
-            if (activeMemberHandler.isActive()) {
-                return getOKAnswer(JocClusterAnswerState.ALREADY_STARTED);
-            }
-        } else {// check if exists
-            try {
-                if (activeMemberId != null && newMemberId.equals(activeMemberId)) {
-
-                } else {
-                    DBItemJocInstance switchInstance = getInstance(newMemberId);
-                    if (switchInstance == null) {
-                        return getErrorAnswer(new Exception(String.format("memberId=%s not found", newMemberId)));
-                    }
-                    if (isHeartBeatExceeded(switchInstance.getHeartBeat())) {
-                        return getErrorAnswer(new Exception(String.format("[memberId=%s][last heart beat too old][UTC]%s", newMemberId, SOSDate
-                                .getDateTimeAsString(switchInstance.getHeartBeat()))));
-                    }
-                }
-            } catch (Exception e) {
-                return getErrorAnswer(e);
-            }
-        }
-        return null;
-    }
-
     // GUI - separate thread
     private JocClusterAnswer setSwitchMember(StartupMode mode, DBLayerJocCluster dbLayer, ConfigurationGlobals configurations, String newMemberId)
             throws Exception {
@@ -597,29 +571,46 @@ public class JocCluster {
                 if (newMemberId.equals(currentMemberId)) {
                     // current is active - handled by checkSwitchMember
                     // current is not active - not possible (item.getMember() is an active instance)
-                    LOGGER.info("[" + mode + "][switch][end][skip][already active]currentMemberId=switch memberId");
+                    LOGGER.info(String.format("[%s][switch][skip][newMemberId=%s]because newMemberId=currentMemberId", mode, newMemberId));
                     answer = getOKAnswer(JocClusterAnswerState.ALREADY_STARTED);
                 } else {
-                    if (activeMemberHandler.isActive()) {
-                        LOGGER.info("[" + mode + "][switch][start][stop current]" + currentMemberId);
-                        activeMemberHandler.perform(mode, PerformType.STOP, configurations);
+                    DBItemJocInstance ni = dbLayer.getInstance(newMemberId);
+                    Date now = dbLayer.getNowUTC();
+                    if (ni == null) {
+                        String msg = String.format("[%s][switch][skip][newMemberId=%s]JocInstance not found", mode, newMemberId);
+                        LOGGER.info(msg);
+                        // answer = getErrorAnswer(msg);
+                    } else if (isHeartBeatExceeded(now, ni.getHeartBeat())) {
+                        String msg = String.format("[%s][switch][skip][newMemberId=%s][db][UTC]heartBeat=%s exceeded", mode, newMemberId, SOSDate
+                                .getDateTimeAsString(ni.getHeartBeat()));
+                        LOGGER.info(msg);
+                        // answer = getErrorAnswer(msg);
+                    } else {
+                        LOGGER.info(String.format("[%s][switch][start][newMemberId=%s][db][UTC]heartBeat=%s ...", mode, newMemberId, SOSDate
+                                .getDateTimeAsString(ni.getHeartBeat())));
+                        if (activeMemberHandler.isActive()) {
+                            LOGGER.info(String.format("[%s][switch][start][stop][current]%s", mode, currentMemberId));
+                            activeMemberHandler.perform(mode, PerformType.STOP, configurations);
+
+                            now = dbLayer.getNowUTC();
+                        }
+                        item.setMemberId(newMemberId);
+                        item.setHeartBeat(now);
+                        // item.setSwitchMemberId(null);
+                        // item.setSwitchHeartBeat(null);
+
+                        item.setSwitchMemberId(newMemberId);
+                        item.setSwitchHeartBeat(item.getHeartBeat());
+
+                        dbLayer.beginTransaction();
+                        dbLayer.getSession().update(item);
+                        dbLayer.commit();
+
+                        LOGGER.info(String.format("[%s][switch][end]newMemberId=%s", mode, newMemberId));
+                        activeMemberId = newMemberId;
+                        postActiveClusterChangedEvent();
+                        lastActiveMemberId = activeMemberId;
                     }
-                    item.setMemberId(newMemberId);
-                    item.setHeartBeat(new Date());
-                    // item.setSwitchMemberId(null);
-                    // item.setSwitchHeartBeat(null);
-
-                    item.setSwitchMemberId(newMemberId);
-                    item.setSwitchHeartBeat(new Date());
-
-                    dbLayer.beginTransaction();
-                    dbLayer.getSession().update(item);
-                    dbLayer.commit();
-
-                    LOGGER.info("[" + mode + "][switch][end][new]" + newMemberId);
-                    activeMemberId = newMemberId;
-                    postActiveClusterChangedEvent();
-                    lastActiveMemberId = activeMemberId;
                 }
             } else {
                 if (item.getMemberId().equals(newMemberId)) {
@@ -627,18 +618,47 @@ public class JocCluster {
                     answer = getOKAnswer(JocClusterAnswerState.ALREADY_STARTED);
                 } else {
                     if (item.getSwitchMemberId() == null || !item.getSwitchMemberId().equals(newMemberId)) {
-                        // set switchMember because before "switch" the active cluster instance must be stopped
-                        // and the current instance is not an active instance
-                        // TODO concurrency error handling
-                        item.setHeartBeat(new Date());
-                        item.setSwitchMemberId(newMemberId);
-                        item.setSwitchHeartBeat(new Date());
+                        Date lastHeartBeat = null;
+                        Date now = null;
 
-                        dbLayer.beginTransaction();
-                        dbLayer.getSession().update(item);
-                        dbLayer.commit();
-                        LOGGER.info("[" + mode + "][switch]" + SOSHibernate.toString(item));
-                        // watchSwitch(newMemberId);
+                        boolean skip = false;
+                        boolean isCurrentMember = newMemberId.equals(currentMemberId);
+                        if (!isCurrentMember) {
+                            DBItemJocInstance ni = dbLayer.getInstance(newMemberId);
+                            if (ni == null) {
+                                skip = true;
+                                LOGGER.info(String.format("[%s][switch][skip][setSwitchMember][newMemberId=%s]not found", mode, newMemberId));
+                            } else {
+                                lastHeartBeat = ni.getHeartBeat();
+                                now = dbLayer.getNowUTC();
+                                if (isHeartBeatExceeded(now, ni.getHeartBeat())) {
+                                    skip = true;
+                                    LOGGER.info(String.format("[%s][switch][skip][setSwitchMember][newMemberId=%s][db][UTC]heartBeat=%s exceeded",
+                                            mode, newMemberId, SOSDate.getDateTimeAsString(ni.getHeartBeat())));
+                                }
+                            }
+                        }
+                        if (!skip) {
+                            if (isCurrentMember) {
+                                LOGGER.info(String.format("[%s][switch][start][setSwitchMember]newMemberId=currentMemberId=%s ...", mode,
+                                        newMemberId));
+                            } else {
+                                LOGGER.info(String.format("[%s][switch][start][setSwitchMember][newMemberId=%s]last db UTC heartBeat=%s ...", mode,
+                                        newMemberId, SOSDate.getDateTimeAsString(lastHeartBeat)));
+                            }
+                            // set switchMember because before "switch" the active cluster instance must be stopped
+                            // and the current instance is not an active instance
+                            // TODO concurrency error handling
+                            item.setHeartBeat(now == null ? dbLayer.getNowUTC() : now);
+                            item.setSwitchMemberId(newMemberId);
+                            item.setSwitchHeartBeat(item.getHeartBeat());
+
+                            dbLayer.beginTransaction();
+                            dbLayer.getSession().update(item);
+                            dbLayer.commit();
+                            LOGGER.info(String.format("[%s][switch][end][setSwitchMember]newMemberId=%s", mode, newMemberId));
+                            // watchSwitch(newMemberId);
+                        }
                     }
                 }
             }
@@ -662,7 +682,7 @@ public class JocCluster {
             item.setStartupMode(mode.name());
 
             if (item.getSwitchMemberId().equals(currentMemberId)) {
-                item.setHeartBeat(new Date());
+                item.setHeartBeat(dbLayer.getNowUTC());
                 item.setSwitchMemberId(null);
                 item.setSwitchHeartBeat(null);
 
@@ -678,8 +698,9 @@ public class JocCluster {
                         return item;
                     }
                     try {
-                        if (isHeartBeatExceeded(item.getSwitchHeartBeat())) {
-                            LOGGER.info(String.format("[%s][switch][skip][newMemberId=%s][UTC]switchHeartBeat=%s exceeded", mode, item
+                        Date now = dbLayer.getNowUTC();
+                        if (isHeartBeatExceeded(now, item.getSwitchHeartBeat())) {
+                            LOGGER.info(String.format("[%s][switch][skip][newMemberId=%s][db][UTC]switchHeartBeat=%s exceeded", mode, item
                                     .getSwitchMemberId(), SOSDate.getDateTimeAsString(item.getSwitchHeartBeat())));
                         } else {
                             LOGGER.info("[" + mode + "][switch][stop current]newMemberId=" + item.getSwitchMemberId());
@@ -687,13 +708,15 @@ public class JocCluster {
                                 // perform STOP can take a time ...
                                 // the stops of the individual services are executed in parallel, but are joined at the end
                                 activeMemberHandler.perform(mode, PerformType.STOP, configurations);
+
+                                now = dbLayer.getNowUTC();
                             }
                             item.setMemberId(item.getSwitchMemberId());
                             skipPerform = true;
                         }
                         // item.setSwitchMemberId(null);
                         // item.setSwitchHeartBeat(null);
-                        item.setHeartBeat(new Date());
+                        item.setHeartBeat(now);
                         dbLayer.beginTransaction();
                         dbLayer.getSession().update(item);
                         dbLayer.commit();
@@ -716,7 +739,7 @@ public class JocCluster {
             }
 
             dbLayer.beginTransaction();
-            item.setHeartBeat(new Date());
+            item.setHeartBeat(dbLayer.getNowUTC());
             dbLayer.getSession().update(activeMemberHandleConfigurationGlobalsChanged(item));
             dbLayer.commit();
         }
@@ -751,30 +774,12 @@ public class JocCluster {
         return item;
     }
 
-    private DBItemJocInstance getInstance(String memberId) throws Exception {
-        DBLayerJocCluster dbLayer = null;
-        try {
-            dbLayer = new DBLayerJocCluster(dbFactory.openStatelessSession());
-            dbLayer.beginTransaction();
-            DBItemJocInstance item = dbLayer.getInstance(memberId);
-            dbLayer.commit();
-            return item;
-        } catch (Exception e) {
-            LOGGER.error(e.toString(), e);
-            if (dbLayer != null) {
-                dbLayer.rollback();
-            }
-            throw e;
-        } finally {
-            if (dbLayer != null) {
-                dbLayer.close();
-            }
+    public static boolean isHeartBeatExceeded(Date now, Date heartBeat) {
+        if (now == null || heartBeat == null) {
+            return true;
         }
-    }
-
-    private boolean isHeartBeatExceeded(Date heartBeat) {
-        Date now = new Date();
-        if (((now.getTime() / 1_000) - (heartBeat.getTime() / 1_000)) >= config.getHeartBeatExceededInterval()) {
+        JocClusterConfiguration c = config != null ? config : JocClusterConfiguration.defaultConfiguration();
+        if (((now.getTime() / 1_000) - (heartBeat.getTime() / 1_000)) > c.getHeartBeatExceededInterval()) {
             return true;
         }
         return false;
@@ -904,8 +909,9 @@ public class JocCluster {
         try {
             dbLayer = new DBLayerJocCluster(dbFactory.openStatelessSession());
             dbLayer.beginTransaction();
-            dbLayer.updateClusterHeartBeat();
-            dbLayer.updateInstanceHeartBeat(currentMemberId);
+            Date now = dbLayer.getNowUTC();
+            dbLayer.updateClusterHeartBeat(now);
+            dbLayer.updateInstanceHeartBeat(currentMemberId, now);
             dbLayer.commit();
 
             dbLayer.close();

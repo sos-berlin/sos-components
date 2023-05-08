@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,13 +92,20 @@ public class ThreadHelper {
         }
     }
 
-    public static void tryStopChilds(final StartupMode mode, final ThreadGroup group) {
+    public static void tryStopChilds(final StartupMode mode, final ThreadGroup group, Set<String> excludedGroups) {
         try {
             if (group != null) {
                 ThreadGroup[] result = getThreadGroups(group);
                 if (result != null) {
                     for (int i = 0; i < result.length; i++) {
-                        tryStop(mode, result[i]);
+                        ThreadGroup tg = result[i];
+                        if (tg != null) {
+                            ThreadGroup ptg = tg.getParent();
+                            if (excludedGroups.contains(tg.getName()) || (ptg != null && excludedGroups.contains(ptg.getName()))) {
+                                continue;
+                            }
+                            tryStop(mode, result[i]);
+                        }
                     }
                 }
             }

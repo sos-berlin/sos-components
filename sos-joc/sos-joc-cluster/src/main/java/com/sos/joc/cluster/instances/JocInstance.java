@@ -28,6 +28,7 @@ public class JocInstance {
             dbLayer.getSession().beginTransaction();
             DBItemInventoryOperatingSystem osItem = getOS(dbLayer, config.getHostname());
             DBItemJocInstance item = dbLayer.getInstance(config.getMemberId());
+            Date now = dbLayer.getNowUTC();
             if (item == null) {
                 item = new DBItemJocInstance();
                 item.setMemberId(config.getMemberId());
@@ -40,7 +41,7 @@ public class JocInstance {
                 item.setTitle(config.getTitle());
                 item.setOrdering(config.getOrdering());
                 item.setUri(null);// TODO
-                item.setHeartBeat(new Date());
+                item.setHeartBeat(now);
                 dbLayer.getSession().save(item);
             } else {
                 if (StartupMode.automatic.equals(mode)) {
@@ -49,7 +50,7 @@ public class JocInstance {
                     item.setOrdering(config.getOrdering());
                     item.setTitle(config.getTitle());
                     item.setStartedAt(startTime);
-                    item.setHeartBeat(new Date());
+                    item.setHeartBeat(now);
                     dbLayer.getSession().update(item);
                 }
                 config.setTimeZone(item.getTimezone());

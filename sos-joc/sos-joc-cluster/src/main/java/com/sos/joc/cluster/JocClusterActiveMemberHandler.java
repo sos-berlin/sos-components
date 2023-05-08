@@ -2,6 +2,7 @@ package com.sos.joc.cluster;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -183,7 +184,8 @@ public class JocClusterActiveMemberHandler {
         if (active) {
             return JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);// TODO check future results
         } else {
-            ThreadHelper.tryStopChilds(mode, cluster.getConfig().getThreadGroup());
+            ThreadHelper.tryStopChilds(mode, cluster.getConfig().getThreadGroup(), Collections.singleton(
+                    JocClusterEmbeddedServicesHandler.THREAD_GROUP_NAME));
 
             ThreadHelper.print(mode, "after stop active services");
             services = null;
