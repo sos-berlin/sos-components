@@ -20,6 +20,8 @@ public class JocConfiguration {
     private final Path resourceDirectory;
     private final JocSecurityLevel securityLevel;
     private final String memberId;
+    private final String jocId;
+    private final boolean isApiServer;
 
     private String clusterId;
     private String timeZone;
@@ -30,17 +32,23 @@ public class JocConfiguration {
     private boolean clusterMode;
 
     public JocConfiguration(String jocDataDirectory, String jocTimeZone, Path jocHibernateConfig, Path jocResourceDir,
-            JocSecurityLevel jocSecurityLevel, String jocClusterId, String jocTitle, Integer jocOrdering) {
+            JocSecurityLevel jocSecurityLevel, boolean isApiServer, String jocTitle, String jocClusterId, Integer jocOrdering, String jocId) {
+
         setHostname();
-        dataDirectory = Paths.get(jocDataDirectory);
-        timeZone = jocTimeZone;
-        hibernateConfiguration = jocHibernateConfig;
-        resourceDirectory = jocResourceDir;
-        securityLevel = jocSecurityLevel;
-        title = SOSString.isEmpty(jocTitle) ? hostname : jocTitle;
-        ordering = jocOrdering == null ? 0 : jocOrdering;
-        clusterId = SOSString.isEmpty(jocClusterId) ? "." : jocClusterId;
-        memberId = hostname + ":" + SOSString.hash256(dataDirectory.toString());
+
+        this.dataDirectory = Paths.get(jocDataDirectory);
+        this.timeZone = jocTimeZone;
+        this.hibernateConfiguration = jocHibernateConfig;
+        this.resourceDirectory = jocResourceDir;
+
+        this.securityLevel = jocSecurityLevel;
+        this.isApiServer = isApiServer;
+        this.title = SOSString.isEmpty(jocTitle) ? hostname : jocTitle;
+        this.clusterId = SOSString.isEmpty(jocClusterId) ? "joc" : jocClusterId;
+        this.ordering = jocOrdering == null ? 0 : jocOrdering;
+        this.jocId = jocId;
+
+        this.memberId = hostname + ":" + SOSString.hash256(dataDirectory.toString());
     }
 
     private String setHostname() {
@@ -74,9 +82,13 @@ public class JocConfiguration {
     public void setTitle(String val) {
         title = val;
     }
-    
+
     public String getClusterId() {
         return clusterId;
+    }
+
+    public String getJocId() {
+        return jocId;
     }
 
     public Integer getOrdering() {
@@ -117,5 +129,9 @@ public class JocConfiguration {
 
     public boolean getClusterMode() {
         return clusterMode;
+    }
+
+    public boolean isApiServer() {
+        return isApiServer;
     }
 }

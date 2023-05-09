@@ -13,6 +13,8 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.UniqueConstraint;
 
+import org.hibernate.annotations.Type;
+
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -65,6 +67,10 @@ public class DBItemJocInstance extends DBItem {
     @Column(name = "[HEART_BEAT]", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date heartBeat;
+
+    @Column(name = "[API_SERVER]", nullable = false)
+    @Type(type = "numeric_boolean")
+    private boolean apiServer;
 
     public Long getId() {
         return id;
@@ -146,7 +152,7 @@ public class DBItemJocInstance extends DBItem {
         }
         title = val;
     }
-    
+
     public Integer getOrdering() {
         return ordering;
     }
@@ -155,7 +161,7 @@ public class DBItemJocInstance extends DBItem {
         if (val == null) {
             val = 0;
         }
-        //crop to a tiny int between [-128, 127]
+        // crop to a tiny int between [-128, 127]
         Math.min(Math.max(val, -128), 127);
         ordering = val;
     }
@@ -174,6 +180,14 @@ public class DBItemJocInstance extends DBItem {
 
     public Date getHeartBeat() {
         return heartBeat;
+    }
+
+    public void setApiServer(boolean val) {
+        apiServer = val;
+    }
+
+    public boolean getApiServer() {
+        return apiServer;
     }
 
 }

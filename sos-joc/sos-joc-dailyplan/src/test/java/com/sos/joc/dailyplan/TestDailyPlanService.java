@@ -44,9 +44,8 @@ public class TestDailyPlanService {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 
         Path resDir = Paths.get("src/test/resources");
-        // test ignore -> @Uwe: Resource resDir.resolve("hibernate.cfg.xml") missing
         JocConfiguration jocConfig = new JocConfiguration(resDir.toString(), "UTC", resDir.resolve("hibernate.cfg.xml"), resDir, JocSecurityLevel.LOW,
-                "joc", "", 0);
+                false, "title", "joc", 0, "joc#0");
 
         DailyPlanService service = new DailyPlanService(jocConfig, new ThreadGroup(JocClusterConfiguration.IDENTIFIER));
         ConfigurationGlobals configurations = new ConfigurationGlobals();

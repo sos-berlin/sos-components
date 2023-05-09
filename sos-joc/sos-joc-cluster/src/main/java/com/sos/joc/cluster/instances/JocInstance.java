@@ -42,6 +42,7 @@ public class JocInstance {
                 item.setOrdering(config.getOrdering());
                 item.setUri(null);// TODO
                 item.setHeartBeat(now);
+                item.setApiServer(config.isApiServer());
                 dbLayer.getSession().save(item);
             } else {
                 if (StartupMode.automatic.equals(mode)) {
@@ -51,6 +52,7 @@ public class JocInstance {
                     item.setTitle(config.getTitle());
                     item.setStartedAt(startTime);
                     item.setHeartBeat(now);
+                    item.setApiServer(config.isApiServer());
                     dbLayer.getSession().update(item);
                 }
                 config.setTimeZone(item.getTimezone());

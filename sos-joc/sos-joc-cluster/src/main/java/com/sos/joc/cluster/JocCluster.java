@@ -53,6 +53,8 @@ public class JocCluster {
     private static final Logger LOGGER = LoggerFactory.getLogger(JocCluster.class);
 
     public static final int MAX_AWAIT_TERMINATION_TIMEOUT = 30;
+
+    private static final String MSG_SWITCH_TO_API_SERVER = "The action to switch to an API server is not permitted";
     private static JocClusterConfiguration config;
     private static Date jocStartTime = null;
 
@@ -93,7 +95,8 @@ public class JocCluster {
 
     public void doProcessing(StartupMode mode, ConfigurationGlobals configurations, boolean onJocStart) {
         JocClusterServiceLogger.setLogger();
-        LOGGER.info(String.format("[inactive][current memberId]%s", currentMemberId));
+        String ap = jocConfig.isApiServer() ? "[ApiServer]" : "";
+        LOGGER.info(String.format("[inactive]%s[current memberId]%s", ap, currentMemberId));
 
         boolean isFirstRun = onJocStart;
         while (!closed) {
@@ -304,37 +307,40 @@ public class JocCluster {
             dbLayer.updateInstanceHeartBeat(currentMemberId, dbLayer.getNowUTC());
             dbLayer.commit();
 
-            skipPerform = false;
-            synchronized (lockMember) {
-                item = dbLayer.getCluster();
+            if (jocConfig.isApiServer()) {
+                skipPerform = true;
+            } else {
+                skipPerform = false;
+                synchronized (lockMember) {
+                    item = dbLayer.getCluster();
 
-                activeMemberId = item == null ? null : item.getMemberId();
-                if (lastActiveMemberId == null) {
-                    lastActiveMemberId = activeMemberId;
-                }
-                if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[%s][start][current=%s][active=%s][lastActive=%s]%s", mode, currentMemberId, activeMemberId,
-                            lastActiveMemberId, SOSHibernate.toString(item)));
-                }
-
-                item = handleCurrentMemberOnProcess(mode, dbLayer, item, configurations, isFirstRun);
-                if (item != null) {
-                    activeMemberId = item.getMemberId();
+                    activeMemberId = item == null ? null : item.getMemberId();
+                    if (lastActiveMemberId == null) {
+                        lastActiveMemberId = activeMemberId;
+                    }
                     if (isDebugEnabled) {
-                        LOGGER.debug(String.format("[%s][end][current=%s][active=%s][lastActive=%s]%s", mode, currentMemberId, activeMemberId,
+                        LOGGER.debug(String.format("[%s][start][current=%s][active=%s][lastActive=%s]%s", mode, currentMemberId, activeMemberId,
                                 lastActiveMemberId, SOSHibernate.toString(item)));
                     }
-                    if (item.getStartupMode() != null) {
-                        try {
-                            mode = StartupMode.valueOf(item.getStartupMode());
-                        } catch (Throwable e) {
-                            LOGGER.warn(e.toString(), e);
+
+                    item = handleCurrentMemberOnProcess(mode, dbLayer, item, configurations, isFirstRun);
+                    if (item != null) {
+                        activeMemberId = item.getMemberId();
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format("[%s][end][current=%s][active=%s][lastActive=%s]%s", mode, currentMemberId, activeMemberId,
+                                    lastActiveMemberId, SOSHibernate.toString(item)));
                         }
-                        item.setStartupMode(null);
+                        if (item.getStartupMode() != null) {
+                            try {
+                                mode = StartupMode.valueOf(item.getStartupMode());
+                            } catch (Throwable e) {
+                                LOGGER.warn(e.toString(), e);
+                            }
+                            item.setStartupMode(null);
+                        }
                     }
                 }
             }
-
         } catch (SOSHibernateObjectOperationStaleStateException e) {// @Version
             // locked
             if (dbLayer != null) {
@@ -553,6 +559,10 @@ public class JocCluster {
 
     }
 
+    private String getMsgSwitchover2ApiServer(StartupMode mode, DBItemJocInstance ji) {
+        return String.format("[%s][%s]%s", mode, ji.getTitle() == null ? jocConfig.getJocId() : ji.getTitle(), MSG_SWITCH_TO_API_SERVER);
+    }
+
     // GUI - separate thread
     private JocClusterAnswer setSwitchMember(StartupMode mode, DBLayerJocCluster dbLayer, ConfigurationGlobals configurations, String newMemberId)
             throws Exception {
@@ -580,6 +590,10 @@ public class JocCluster {
                         String msg = String.format("[%s][switch][skip][newMemberId=%s]JocInstance not found", mode, newMemberId);
                         LOGGER.info(msg);
                         // answer = getErrorAnswer(msg);
+                    } else if (ni.getApiServer()) {
+                        String msg = getMsgSwitchover2ApiServer(mode, ni);
+                        LOGGER.info(msg);
+                        answer = getErrorAnswer(msg);
                     } else if (isHeartBeatExceeded(now, ni.getHeartBeat())) {
                         String msg = String.format("[%s][switch][skip][newMemberId=%s][db][UTC]heartBeat=%s exceeded", mode, newMemberId, SOSDate
                                 .getDateTimeAsString(ni.getHeartBeat()));
@@ -628,6 +642,12 @@ public class JocCluster {
                             if (ni == null) {
                                 skip = true;
                                 LOGGER.info(String.format("[%s][switch][skip][setSwitchMember][newMemberId=%s]not found", mode, newMemberId));
+                            } else if (ni.getApiServer()) {
+                                skip = true;
+
+                                String msg = getMsgSwitchover2ApiServer(mode, ni);
+                                LOGGER.info(msg);
+                                answer = getErrorAnswer(msg);
                             } else {
                                 lastHeartBeat = ni.getHeartBeat();
                                 now = dbLayer.getNowUTC();
