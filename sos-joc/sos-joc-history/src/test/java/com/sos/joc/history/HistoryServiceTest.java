@@ -67,7 +67,7 @@ public class HistoryServiceTest {
         Globals.sosCockpitProperties.getProperties().setProperty("history_log_dir", resDir.resolve("logs").toString());
 
         JocConfiguration jocConfig = new JocConfiguration(resDir.toString(), "UTC", resDir.resolve("hibernate.cfg.xml"), resDir, JocSecurityLevel.LOW,
-                "joc_cluster_id", "", 0);
+                false, "title", "joc", 0, "joc#0");
 
         HistoryService service = new HistoryService(jocConfig, new ThreadGroup(JocClusterConfiguration.IDENTIFIER));
         AConfigurationSection configuration = null;
