@@ -262,6 +262,10 @@ public class SOSHibernateFactory implements Serializable {
     public String getCurrentTimestampSelectString() {
         if (currentTimestampSelectString == null) {
             switch (dbms) {
+            case H2:
+                // extra because of org.hibernate.MappingException: No Dialect mapping for JDBC type: 2014 [call current_timestamp()]
+                currentTimestampSelectString = "select now()";
+                break;
             case ORACLE:
                 // extra because of Oracle10gDialect.getCurrentTimestampSelectString "select systimestamp from dual" statement
                 // and MappingException: "No Dialect mapping for JDBC type: -101"
@@ -278,8 +282,10 @@ public class SOSHibernateFactory implements Serializable {
     public String getCurrentUTCTimestampSelectString() {
         if (currentUTCTimestampSelectString == null) {
             switch (dbms) {
-            case MYSQL:
             case H2:
+                currentUTCTimestampSelectString = "select now()";// TODO UTC
+                break;
+            case MYSQL:
                 currentUTCTimestampSelectString = "select utc_timestamp()";
                 break;
             case ORACLE:
