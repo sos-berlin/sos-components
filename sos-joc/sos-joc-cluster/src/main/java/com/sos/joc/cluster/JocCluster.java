@@ -504,8 +504,14 @@ public class JocCluster {
             return getErrorAnswer(new Exception("missing newMemberId"));
         }
         if (newMemberId.equals(currentMemberId)) {
-            if (activeMemberHandler.isActive()) {
-                return getOKAnswer(JocClusterAnswerState.ALREADY_STARTED);
+            if (jocConfig.isApiServer()) {
+                String msg = getMsgSwitchover2ApiServer(mode, jocConfig.getTitle(), jocConfig.getClusterId(), jocConfig.getOrdering());
+                LOGGER.info(msg);
+                return getErrorAnswer(msg);
+            } else {
+                if (activeMemberHandler.isActive()) {
+                    return getOKAnswer(JocClusterAnswerState.ALREADY_STARTED);
+                }
             }
         }
 
@@ -560,7 +566,15 @@ public class JocCluster {
     }
 
     private String getMsgSwitchover2ApiServer(StartupMode mode, DBItemJocInstance ji) {
-        return String.format("[%s][%s]%s", mode, ji.getTitle() == null ? jocConfig.getJocId() : ji.getTitle(), MSG_SWITCH_TO_API_SERVER);
+        return getMsgSwitchover2ApiServer(mode, ji.getTitle(), ji.getClusterId(), ji.getOrdering());
+    }
+
+    private String getMsgSwitchover2ApiServer(StartupMode mode, String title, String clusterId, Integer ordering) {
+        return String.format("[%s][%s]%s", mode, title == null ? getJocId(clusterId, ordering) : title, MSG_SWITCH_TO_API_SERVER);
+    }
+
+    private String getJocId(String clusterId, Integer ordering) {
+        return clusterId + "#" + ordering;
     }
 
     // GUI - separate thread
@@ -637,7 +651,11 @@ public class JocCluster {
 
                         boolean skip = false;
                         boolean isCurrentMember = newMemberId.equals(currentMemberId);
-                        if (!isCurrentMember) {
+                        if (isCurrentMember) {
+                            if (jocConfig.isApiServer()) {
+                                skip = true;
+                            }
+                        } else {
                             DBItemJocInstance ni = dbLayer.getInstance(newMemberId);
                             if (ni == null) {
                                 skip = true;
