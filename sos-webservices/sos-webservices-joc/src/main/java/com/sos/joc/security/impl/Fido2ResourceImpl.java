@@ -259,8 +259,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
                         .getPublicKey(), properties.getFido2().getIamFido2CipherType()));
             }
         }
-        return "";
-
+        throw new JocObjectNotExistException("No valid FIDO2 configuration for the identity service <" + identityServiceName + ">");
     }
 
     @Override
