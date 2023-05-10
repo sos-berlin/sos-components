@@ -23,6 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "accountName",
     "email",
     "publicKey",
+    "cipherType",
     "approved",
     "rejected",
     "confirmed",
@@ -65,6 +66,14 @@ public class Fido2Registration {
      */
     @JsonProperty("publicKey")
     private String publicKey;
+    /**
+     * Cipher Types
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("cipherType")
+    private CipherTypes cipherType;
     /**
      * approved parameter
      * <p>
@@ -127,13 +136,15 @@ public class Fido2Registration {
      * @param accessToken
      * @param confirmed
      * @param email
+     * @param cipherType
      */
-    public Fido2Registration(String identityServiceName, String accountName, String email, String publicKey, Boolean approved, Boolean rejected, Boolean confirmed, String accessToken, AuditParams auditLog) {
+    public Fido2Registration(String identityServiceName, String accountName, String email, String publicKey, CipherTypes cipherType, Boolean approved, Boolean rejected, Boolean confirmed, String accessToken, AuditParams auditLog) {
         super();
         this.identityServiceName = identityServiceName;
         this.accountName = accountName;
         this.email = email;
         this.publicKey = publicKey;
+        this.cipherType = cipherType;
         this.approved = approved;
         this.rejected = rejected;
         this.confirmed = confirmed;
@@ -231,6 +242,28 @@ public class Fido2Registration {
     @JsonProperty("publicKey")
     public void setPublicKey(String publicKey) {
         this.publicKey = publicKey;
+    }
+
+    /**
+     * Cipher Types
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("cipherType")
+    public CipherTypes getCipherType() {
+        return cipherType;
+    }
+
+    /**
+     * Cipher Types
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("cipherType")
+    public void setCipherType(CipherTypes cipherType) {
+        this.cipherType = cipherType;
     }
 
     /**
@@ -345,12 +378,12 @@ public class Fido2Registration {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("accountName", accountName).append("email", email).append("publicKey", publicKey).append("approved", approved).append("rejected", rejected).append("confirmed", confirmed).append("accessToken", accessToken).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("accountName", accountName).append("email", email).append("publicKey", publicKey).append("cipherType", cipherType).append("approved", approved).append("rejected", rejected).append("confirmed", confirmed).append("accessToken", accessToken).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(identityServiceName).append(approved).append(auditLog).append(accountName).append(rejected).append(publicKey).append(accessToken).append(confirmed).append(email).toHashCode();
+        return new HashCodeBuilder().append(identityServiceName).append(approved).append(auditLog).append(accountName).append(rejected).append(publicKey).append(accessToken).append(confirmed).append(email).append(cipherType).toHashCode();
     }
 
     @Override
@@ -362,7 +395,7 @@ public class Fido2Registration {
             return false;
         }
         Fido2Registration rhs = ((Fido2Registration) other);
-        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(approved, rhs.approved).append(auditLog, rhs.auditLog).append(accountName, rhs.accountName).append(rejected, rhs.rejected).append(publicKey, rhs.publicKey).append(accessToken, rhs.accessToken).append(confirmed, rhs.confirmed).append(email, rhs.email).isEquals();
+        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(approved, rhs.approved).append(auditLog, rhs.auditLog).append(accountName, rhs.accountName).append(rejected, rhs.rejected).append(publicKey, rhs.publicKey).append(accessToken, rhs.accessToken).append(confirmed, rhs.confirmed).append(email, rhs.email).append(cipherType, rhs.cipherType).isEquals();
     }
 
 }
