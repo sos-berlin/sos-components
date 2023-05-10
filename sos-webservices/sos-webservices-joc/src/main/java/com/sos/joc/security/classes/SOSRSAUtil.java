@@ -33,7 +33,6 @@ public class SOSRSAUtil {
     }
     
     public static byte[] encrypt(String data, String publicKey, CipherTypes cipherType) throws BadPaddingException, IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException {
-        data = "yPDPEQ2i-m8pa-6OAP-z3zfUva4sF47dlhU";
         String cipherTypeString;
         if (cipherType == null) {
             cipherTypeString = "RSA/ECB/PKCS1Padding";
