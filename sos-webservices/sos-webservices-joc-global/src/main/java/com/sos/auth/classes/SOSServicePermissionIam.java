@@ -585,6 +585,7 @@ public class SOSServicePermissionIam {
                     IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
                     filter.setDisabled(false);
                     filter.setRequired(true);
+                    filter.setSecondFactor(false);
 
                     List<DBItemIamIdentityService> listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
 
@@ -761,6 +762,7 @@ public class SOSServicePermissionIam {
                         IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
                         IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
                         filter.setIdentityServiceName(sosLoginParameters.getIdentityService());
+                        filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC);
                         DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(filter);
 
                         if (dbItemIamIdentityService == null) {

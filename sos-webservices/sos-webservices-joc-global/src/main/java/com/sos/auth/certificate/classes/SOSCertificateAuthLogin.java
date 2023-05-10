@@ -1,4 +1,6 @@
-package com.sos.auth.sosintern.classes;
+package com.sos.auth.certificate.classes;
+
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,17 +12,19 @@ import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSLogin;
 import com.sos.auth.sosintern.SOSInternAuthHandler;
+import com.sos.auth.sosintern.classes.SOSInternAuthSubject;
+import com.sos.auth.sosintern.classes.SOSInternAuthWebserviceCredentials;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 
-public class SOSInternAuthLogin implements ISOSLogin {
+public class SOSCertificateAuthLogin implements ISOSLogin {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SOSInternAuthLogin.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SOSCertificateAuthLogin.class);
 
     private String msg = "";
     private SOSIdentityService identityService;
     private SOSInternAuthSubject sosInternAuthSubject;
 
-    public SOSInternAuthLogin() {
+    public SOSCertificateAuthLogin() {
 
     }
 
@@ -36,10 +40,12 @@ public class SOSInternAuthLogin implements ISOSLogin {
             boolean disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), currentAccount.getAccountname());
             if (!disabled && !identityService.isSecondFactor()) {
                 if (identityService.isSingleFactor()) {
-                    sosInternAuthAccessToken = sosInternAuthHandler.login(sosInternAuthWebserviceCredentials, pwd);
+                    if (SOSAuthHelper.checkCertificate(currentAccount.getHttpServletRequest(), currentAccount.getAccountname())) {
+                        sosInternAuthAccessToken = new SOSAuthAccessToken();
+                        sosInternAuthAccessToken.setAccessToken(UUID.randomUUID().toString());
+                    }
                 } else {
-                    if ((identityService.isTwoFactor() && SOSAuthHelper.checkCertificate(currentAccount.getHttpServletRequest(), currentAccount
-                            .getAccountname()))) {
+                    if (SOSAuthHelper.checkCertificate(currentAccount.getHttpServletRequest(), currentAccount.getAccountname())) {
                         sosInternAuthAccessToken = sosInternAuthHandler.login(sosInternAuthWebserviceCredentials, pwd);
                     }
                 }

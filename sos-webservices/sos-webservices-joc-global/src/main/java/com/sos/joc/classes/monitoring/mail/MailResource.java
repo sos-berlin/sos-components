@@ -1,4 +1,4 @@
-package com.sos.joc.monitoring.configuration.monitor.mail;
+package com.sos.joc.classes.monitoring.mail;
 
 import java.util.List;
 import java.util.Map;

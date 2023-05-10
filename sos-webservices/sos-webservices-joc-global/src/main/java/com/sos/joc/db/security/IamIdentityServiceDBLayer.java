@@ -51,6 +51,10 @@ public class IamIdentityServiceDBLayer {
             query.setParameter("disabled", filter.getDisabled());
         }
 
+        if (filter.getSecondFactor() != null) {
+            query.setParameter("secondFactor", filter.getSecondFactor());
+        }
+
         if (filter.getRequired() != null) {
             query.setParameter("required", filter.getRequired());
         }
@@ -79,8 +83,8 @@ public class IamIdentityServiceDBLayer {
             and = " and ";
         }
 
-        if (filter.getIamIdentityServiceType() != null) {
-            where += and + " identityServiceType = :identityServiceType";
+        if (filter.getSecondFactor() != null) {
+            where += and + " secondFactor = :secondFactor";
             and = " and ";
         }
 

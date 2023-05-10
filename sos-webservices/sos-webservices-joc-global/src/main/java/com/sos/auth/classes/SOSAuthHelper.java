@@ -20,20 +20,29 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.auth.client.ClientCertificateHandler;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.db.authentication.DBItemIamAccount;
+import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.authentication.DBItemIamPermissionWithName;
+import com.sos.joc.db.authentication.DBItemIamRole;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.db.security.IamAccountFilter;
+import com.sos.joc.db.security.IamIdentityServiceDBLayer;
+import com.sos.joc.db.security.IamIdentityServiceFilter;
+import com.sos.joc.db.security.IamRoleDBLayer;
+import com.sos.joc.db.security.IamRoleFilter;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocObjectNotExistException;
+import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -299,5 +308,72 @@ public class SOSAuthHelper {
             Globals.disconnect(sosHibernateSession);
         }
         return false;
+    }
+
+    public static DBItemIamIdentityService getIdentityService(SOSHibernateSession sosHibernateSession, String identityServiceName)
+            throws SOSHibernateException {
+        IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
+        IamIdentityServiceFilter iamIdentityServiceFilter = new IamIdentityServiceFilter();
+        iamIdentityServiceFilter.setIdentityServiceName(identityServiceName);
+        DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(iamIdentityServiceFilter);
+        if (dbItemIamIdentityService == null) {
+            throw new JocObjectNotExistException("Couldn't find the Identity Service <" + identityServiceName + ">");
+        }
+        return dbItemIamIdentityService;
+    }
+
+    public static DBItemIamRole getRole(SOSHibernateSession sosHibernateSession, Long identityServiceId, String roleName)
+            throws SOSHibernateException {
+        IamRoleDBLayer iamRoleDBLayer = new IamRoleDBLayer(sosHibernateSession);
+        IamRoleFilter iamRoleFilter = new IamRoleFilter();
+        iamRoleFilter.setIdentityServiceId(identityServiceId);
+        iamRoleFilter.setRoleName(roleName);
+        DBItemIamRole dbItemIamRole = iamRoleDBLayer.getUniqueRole(iamRoleFilter);
+        if (dbItemIamRole == null) {
+            throw new JocObjectNotExistException("Couldn't find the role <" + roleName + ">");
+        }
+        return dbItemIamRole;
+    }
+
+    public static Long getCountAccounts() {
+        SOSHibernateSession sosHibernateSession = null;
+        try {
+
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection("GET_COUNT_ACCOUNTS");
+            IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
+            IamAccountFilter iamIdentityServiceFilter = new IamAccountFilter();
+            return iamAccountDBLayer.getIamCountAccountList(iamIdentityServiceFilter);
+
+        } catch (Exception e) {
+
+        } finally {
+            Globals.disconnect(sosHibernateSession);
+        }
+        return 0L;
+    }
+
+    public static com.sos.joc.model.security.properties.Properties getIamProperties(String identityServiceName) throws SOSHibernateException,
+            JsonMappingException, JsonProcessingException {
+        SOSHibernateSession sosHibernateSession = null;
+
+        try {
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection("getProperties");
+
+            JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
+            JocConfigurationFilter jocConfigurationFilter = new JocConfigurationFilter();
+            jocConfigurationFilter.setConfigurationType(SOSAuthHelper.CONFIGURATION_TYPE_IAM);
+            jocConfigurationFilter.setName(identityServiceName);
+            jocConfigurationFilter.setObjectType(IdentityServiceTypes.FIDO_2.value());
+            List<DBItemJocConfiguration> listOfJocConfigurations = jocConfigurationDBLayer.getJocConfigurationList(jocConfigurationFilter, 0);
+            if (listOfJocConfigurations.size() == 1) {
+                DBItemJocConfiguration dbItem = listOfJocConfigurations.get(0);
+                com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(dbItem.getConfigurationItem(),
+                        com.sos.joc.model.security.properties.Properties.class);
+                return properties;
+            }
+            return null;
+        } finally {
+            Globals.disconnect(sosHibernateSession);
+        }
     }
 }

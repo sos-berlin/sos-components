@@ -75,7 +75,6 @@ import com.sos.joc.model.security.blocklist.BlockedAccountsDeleteFilter;
 import com.sos.joc.model.security.configuration.SecurityConfiguration;
 import com.sos.joc.model.security.configuration.permissions.Permissions;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
-import com.sos.joc.security.classes.SecurityHelper;
 import com.sos.joc.security.resource.IAccountResource;
 import com.sos.schema.JsonValidator;
 
@@ -117,7 +116,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_ACCOUNT_READ);
 
-            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, accountFilter
+            DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, accountFilter
                     .getIdentityServiceName());
 
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
@@ -228,7 +227,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             sosHibernateSession.setAutoCommit(false);
             sosHibernateSession.beginTransaction();
 
-            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, account
+            DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, account
                     .getIdentityServiceName());
 
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
@@ -370,7 +369,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_ACCOUNT_RENAME);
             sosHibernateSession.setAutoCommit(false);
             sosHibernateSession.beginTransaction();
-            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, accountRename
+            DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, accountRename
                     .getIdentityServiceName());
 
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
@@ -429,7 +428,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
 
-            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, accountsFilter
+            DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, accountsFilter
                     .getIdentityServiceName());
 
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
@@ -482,7 +481,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             }
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_ACCOUNTS);
-            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, accountFilter
+            DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, accountFilter
                     .getIdentityServiceName());
 
             Accounts accounts = new Accounts();
@@ -567,7 +566,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(iamIdentityServiceFilter, 0);
 
             if (listOfIdentityServices.size() == 0) {
-                DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, accountFilter
+                DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, accountFilter
                         .getIdentityServiceName());
                 listOfIdentityServices.add(dbItemIamIdentityService);
             }
@@ -755,7 +754,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
 
-            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, account
+            DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, account
                     .getIdentityServiceName());
 
             changePassword(sosHibernateSession, true, account, dbItemIamIdentityService);
@@ -795,7 +794,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(apiCall);
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
-            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, accountsFilter
+            DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, accountsFilter
                     .getIdentityServiceName());
 
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
@@ -876,7 +875,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
 
-            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, accountsFilter
+            DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, accountsFilter
                     .getIdentityServiceName());
             AccountChangePassword account = new AccountChangePassword();
             account.setPassword(null);

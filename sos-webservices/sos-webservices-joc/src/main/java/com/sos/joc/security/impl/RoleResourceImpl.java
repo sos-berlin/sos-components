@@ -10,6 +10,7 @@ import jakarta.ws.rs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -29,7 +30,6 @@ import com.sos.joc.model.security.roles.RoleRename;
 import com.sos.joc.model.security.roles.RoleStore;
 import com.sos.joc.model.security.roles.Roles;
 import com.sos.joc.model.security.roles.RolesFilter;
-import com.sos.joc.security.classes.SecurityHelper;
 import com.sos.joc.security.resource.IRoleResource;
 import com.sos.schema.JsonValidator;
 
@@ -64,7 +64,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_ROLE_READ);
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_ROLE_READ);
 
-            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, roleFilter
+            DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, roleFilter
                     .getIdentityServiceName());
 
             IamRoleDBLayer iamRoleDBLayer = new IamRoleDBLayer(sosHibernateSession);
@@ -110,7 +110,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
             sosHibernateSession.setAutoCommit(false);
             sosHibernateSession.beginTransaction();
 
-            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, roleStore
+            DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, roleStore
                     .getIdentityServiceName());
 
             IamRoleDBLayer iamRoleDBLayer = new IamRoleDBLayer(sosHibernateSession);
@@ -171,7 +171,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_ROLE_RENAME);
             sosHibernateSession.setAutoCommit(false);
             sosHibernateSession.beginTransaction();
-            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, roleRename
+            DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, roleRename
                     .getIdentityServiceName());
 
             IamRoleDBLayer iamRoleDBLayer = new IamRoleDBLayer(sosHibernateSession);
@@ -229,7 +229,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
 
-            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, rolesFilter
+            DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, rolesFilter
                     .getIdentityServiceName());
 
             IamRoleDBLayer iamRoleDBLayer = new IamRoleDBLayer(sosHibernateSession);
@@ -273,7 +273,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
             }
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_ROLES);
-            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, roleListFilter
+            DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, roleListFilter
                     .getIdentityServiceName());
 
             Roles roles = new Roles();
@@ -323,7 +323,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
             sosHibernateSession.setAutoCommit(false);
             sosHibernateSession.beginTransaction();
 
-            DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, roles
+            DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, roles
                     .getIdentityServiceName());
 
             IamRoleDBLayer iamRoleDBLayer = new IamRoleDBLayer(sosHibernateSession);

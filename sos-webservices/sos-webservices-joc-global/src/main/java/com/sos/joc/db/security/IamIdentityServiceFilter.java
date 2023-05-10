@@ -9,6 +9,8 @@ public class IamIdentityServiceFilter extends SOSHibernateFilter {
     private String identityServiceName;
     private Boolean disabled;
     private Boolean required;
+    private Boolean secondFactor;
+
 
     public IamIdentityServiceFilter() {
         super.setOrderCriteria("ordering");
@@ -60,6 +62,16 @@ public class IamIdentityServiceFilter extends SOSHibernateFilter {
     
     public void setRequired(Boolean required) {
         this.required = required;
+    }
+
+    
+    public Boolean getSecondFactor() {
+        return secondFactor;
+    }
+
+    
+    public void setSecondFactor(Boolean secondFactor) {
+        this.secondFactor = secondFactor;
     }
 
 }

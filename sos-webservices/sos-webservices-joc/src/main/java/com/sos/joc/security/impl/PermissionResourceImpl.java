@@ -10,6 +10,7 @@ import jakarta.ws.rs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -29,7 +30,6 @@ import com.sos.joc.model.security.permissions.PermissionListFilter;
 import com.sos.joc.model.security.permissions.PermissionRename;
 import com.sos.joc.model.security.permissions.Permissions;
 import com.sos.joc.model.security.permissions.PermissionsFilter;
-import com.sos.joc.security.classes.SecurityHelper;
 import com.sos.joc.security.resource.IPermissionResource;
 import com.sos.schema.JsonValidator;
 
@@ -63,9 +63,9 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
 
 			sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_PERMISSION_READ);
 
-			DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession,
+			DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession,
 					permissionFilter.getIdentityServiceName());
-			DBItemIamRole dbItemIamRole = SecurityHelper.getRole(sosHibernateSession, dbItemIamIdentityService.getId(),
+			DBItemIamRole dbItemIamRole = SOSAuthHelper.getRole(sosHibernateSession, dbItemIamIdentityService.getId(),
 					permissionFilter.getRoleName());
 
 			IamPermissionDBLayer iamPermissionDBLayer = new IamPermissionDBLayer(sosHibernateSession);
@@ -123,10 +123,10 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
 			sosHibernateSession.setAutoCommit(false);
 			sosHibernateSession.beginTransaction();
 
-			DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession,
+			DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession,
 					permissions.getIdentityServiceName());
 			IamPermissionDBLayer iamPermissionDBLayer = new IamPermissionDBLayer(sosHibernateSession);
-			DBItemIamRole dbItemIamRole = SecurityHelper.getRole(sosHibernateSession, dbItemIamIdentityService.getId(),
+			DBItemIamRole dbItemIamRole = SOSAuthHelper.getRole(sosHibernateSession, dbItemIamIdentityService.getId(),
 					permissions.getRoleName());
 
 			IamPermissionFilter iamPermissionFilter = new IamPermissionFilter();
@@ -191,10 +191,10 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
 			sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_PERMISSION_RENAME);
 			sosHibernateSession.setAutoCommit(false);
 			sosHibernateSession.beginTransaction();
-			DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession,
+			DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession,
 					permissionRename.getIdentityServiceName());
 			IamPermissionDBLayer iamPermissionDBLayer = new IamPermissionDBLayer(sosHibernateSession);
-			DBItemIamRole dbItemIamRole = SecurityHelper.getRole(sosHibernateSession, dbItemIamIdentityService.getId(),
+			DBItemIamRole dbItemIamRole = SOSAuthHelper.getRole(sosHibernateSession, dbItemIamIdentityService.getId(),
 					permissionRename.getRoleName());
 
 			int count = iamPermissionDBLayer.renamePermission(dbItemIamIdentityService.getId(), dbItemIamRole.getId(),
@@ -247,9 +247,9 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
 			Globals.beginTransaction(sosHibernateSession);
 
 			IamPermissionDBLayer iamPermissionDBLayer = new IamPermissionDBLayer(sosHibernateSession);
-			DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession,
+			DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession,
 					permissionsFilter.getIdentityServiceName());
-			DBItemIamRole dbItemIamRole = SecurityHelper.getRole(sosHibernateSession, dbItemIamIdentityService.getId(),
+			DBItemIamRole dbItemIamRole = SOSAuthHelper.getRole(sosHibernateSession, dbItemIamIdentityService.getId(),
 					permissionsFilter.getRoleName());
 
 			IamPermissionFilter iamPermissionFilter = new IamPermissionFilter();
@@ -295,9 +295,9 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
 			}
 
 			sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_PERMISSIONS);
-			DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession,
+			DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession,
 					permissionFilter.getIdentityServiceName());
-			DBItemIamRole dbItemIamRole = SecurityHelper.getRole(sosHibernateSession, dbItemIamIdentityService.getId(),
+			DBItemIamRole dbItemIamRole = SOSAuthHelper.getRole(sosHibernateSession, dbItemIamIdentityService.getId(),
 					permissionFilter.getRoleName());
 
 			IamPermissionFilter iamPermissionFilter = new IamPermissionFilter();

@@ -19,13 +19,13 @@ import com.sos.inventory.model.job.notification.JobNotificationMail;
 import com.sos.inventory.model.job.notification.JobNotificationType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.history.HistoryNotification;
+import com.sos.joc.classes.monitoring.mail.MailResource;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.db.monitoring.DBItemNotification;
 import com.sos.joc.monitoring.bean.SystemMonitoringEvent;
 import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.monitor.AMonitor;
-import com.sos.joc.monitoring.configuration.monitor.mail.MailResource;
 import com.sos.joc.monitoring.configuration.monitor.mail.MonitorMail;
 import com.sos.monitoring.notification.NotificationType;
 
