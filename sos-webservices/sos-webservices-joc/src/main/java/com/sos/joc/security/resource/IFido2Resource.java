@@ -9,7 +9,7 @@ import jakarta.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 
-public interface IFido2RegistrationResource {
+public interface IFido2Resource {
 
     @POST
     @Path("fido2registration")
@@ -22,9 +22,9 @@ public interface IFido2RegistrationResource {
     public JOCDefaultResponse postFido2RequestRegistration(byte[] body);
 
     @POST
-    @Path("fido2registration/verifyregistration")
+    @Path("fido2/request_authentication")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postFido2VerifyRegistration(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
+    public JOCDefaultResponse postFido2RequestAuthentication(byte[] body);
 
     @POST
     @Path("fido2registration/delete")

@@ -309,6 +309,7 @@ public class JsonValidator {
             put("com.sos.joc.model.security.fido2.Fido2RegistrationFilter", "security/fido2/fido2RegistrationFilter-schema.json");
             put("com.sos.joc.model.security.fido2.Fido2Registration", "security/fido2/fido2Registration-schema.json");
             put("com.sos.joc.model.security.fido2.Fido2Registrations", "security/fido2/fido2Registrations-schema.json");
+            put("com.sos.joc.model.security.fido2.Fido2RequestAuthentication", "security/fido2/fido2RequestAuthentication-schema.json");
 
             put("com.sos.joc.model.security.roles.RoleListFilter", "security/roles/roleListFilter-schema.json");
             put("com.sos.joc.model.security.roles.RolesFilter", "security/roles/rolesFilter-schema.json");

@@ -36,14 +36,14 @@ public class DBItemIamFido2Registration {
     @Column(name = "[ACCOUNT_NAME]", nullable = false)
     private String accountName;
 
-    @Column(name = "[ACCESS_TOKEN]", nullable = false)
-    private String accessToken;
-
     @Column(name = "[PUBLIC_KEY]", nullable = false)
     private String publicKey;
 
     @Column(name = "[EMAIL]", nullable = false)
     private String email;
+
+    @Column(name = "[CHALLENGE]", nullable = false)
+    private String challenge;
 
     @Column(name = "[APPROVED]", nullable = false)
     @Type(type = "numeric_boolean")
@@ -56,11 +56,10 @@ public class DBItemIamFido2Registration {
     @Column(name = "[CONFIRMED]", nullable = false)
     @Type(type = "numeric_boolean")
     private Boolean confirmed;
-    
+
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[CREATED]", nullable = false)
     private Date created;
-    
 
     public Long getId() {
         return id;
@@ -110,14 +109,6 @@ public class DBItemIamFido2Registration {
         this.rejected = rejected;
     }
 
-    public String getAccessToken() {
-        return accessToken;
-    }
-
-    public void setAccessToken(String accessToken) {
-        this.accessToken = accessToken;
-    }
-
     public Boolean getConfirmed() {
         return confirmed;
     }
@@ -134,14 +125,20 @@ public class DBItemIamFido2Registration {
         this.accountName = accountName;
     }
 
-    
     public Date getCreated() {
         return created;
     }
 
-    
     public void setCreated(Date created) {
         this.created = created;
+    }
+
+    public String getChallenge() {
+        return challenge;
+    }
+
+    public void setChallenge(String challenge) {
+        this.challenge = challenge;
     }
 
 }
