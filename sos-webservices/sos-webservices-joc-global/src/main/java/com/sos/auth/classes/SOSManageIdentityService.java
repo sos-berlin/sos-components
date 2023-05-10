@@ -69,8 +69,7 @@ public class SOSManageIdentityService {
             dbItemIamIdentityService = new DBItemIamIdentityService();
             dbItemIamIdentityService.setDisabled(false);
             dbItemIamIdentityService.setAuthenticationScheme("SINGLE");
-            dbItemIamIdentityService.setSingleFactorCert(false);
-            dbItemIamIdentityService.setSingleFactorPwd(true);
+            dbItemIamIdentityService.setSecondFactor(false);
             dbItemIamIdentityService.setIdentityServiceName(JOC_FROM_SHIRO);
             dbItemIamIdentityService.setIdentityServiceType("JOC");
             dbItemIamIdentityService.setOrdering(1);
@@ -238,8 +237,7 @@ public class SOSManageIdentityService {
             DBItemIamIdentityService dbItemIamIdentityService = new DBItemIamIdentityService();
             dbItemIamIdentityService.setDisabled(false);
             dbItemIamIdentityService.setAuthenticationScheme("SINGLE");
-            dbItemIamIdentityService.setSingleFactorCert(false);
-            dbItemIamIdentityService.setSingleFactorPwd(true);
+            dbItemIamIdentityService.setSecondFactor(false);
             dbItemIamIdentityService.setIdentityServiceName("LDAP_" + ldapName);
             if (mainSection.get(ldapName + ".groupRolesMap") != null) {
                 dbItemIamIdentityService.setIdentityServiceType("LDAP");

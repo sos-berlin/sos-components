@@ -33,13 +33,9 @@ public class DBItemIamIdentityService {
     @Column(name = "[AUTHENTICATION_SCHEME]", nullable = false)
     private String authenticationScheme;
 
-    @Column(name = "[SINGLE_FACTOR_PWD]", nullable = false)
+    @Column(name = "[SECOND_FACTOR]", nullable = false)
     @Type(type = "numeric_boolean")
-    private Boolean singleFactorPwd;
-
-    @Column(name = "[SINGLE_FACTOR_CERT]", nullable = false)
-    @Type(type = "numeric_boolean")
-    private Boolean singleFactorCert;
+    private Boolean secondFactor;
 
     @Column(name = "[ORDERING]", nullable = false)
     private Integer ordering;
@@ -120,28 +116,17 @@ public class DBItemIamIdentityService {
 
     public void setAuthenticationScheme(String authenticationScheme) {
         this.authenticationScheme = authenticationScheme;
+    }     
+
+    public Boolean getSecondFactor() {
+        return secondFactor;
     }
 
-    public Boolean getSingleFactorPwd() {
-        return singleFactorPwd;
-    }
-
-    public void setSingleFactorPwd(Boolean val) {
+    public void setSecondFactor(Boolean val) {
         if (val == null) {
             val = false;
         }
-        this.singleFactorPwd = val;
-    }
-
-    public Boolean getSingleFactorCert() {
-        return singleFactorCert;
-    }
-
-    public void setSingleFactorCert(Boolean val) {
-        if (val == null) {
-            val = false;
-        }
-        this.singleFactorCert = val;
+        this.secondFactor = val;
     }
 
 }

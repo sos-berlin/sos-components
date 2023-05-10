@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import jakarta.ws.rs.Path;
 
+import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -34,7 +35,6 @@ import com.sos.joc.model.configuration.Profiles;
 import com.sos.joc.model.profile.ProfilesFilter;
 import com.sos.joc.model.security.identityservice.IdentityServiceFilter;
 import com.sos.joc.profiles.resource.IJocProfilesResource;
-import com.sos.joc.security.classes.SecurityHelper;
 import com.sos.schema.JsonValidator;
 
 @Path("profiles")
@@ -172,7 +172,7 @@ public class JocProfilesResourceImpl extends JOCResourceImpl implements IJocProf
             }
 
             if (identityServiceFilter.getIdentityServiceName() != null && !identityServiceFilter.getIdentityServiceName().isEmpty()) {
-                DBItemIamIdentityService dbItemIamIdentityService = SecurityHelper.getIdentityService(sosHibernateSession, identityServiceFilter
+                DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, identityServiceFilter
                         .getIdentityServiceName());
                 IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
                 IamAccountFilter filter = new IamAccountFilter();

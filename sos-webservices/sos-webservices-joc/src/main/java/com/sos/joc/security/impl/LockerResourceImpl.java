@@ -5,6 +5,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSAuthLockerHandler;
 import com.sos.auth.classes.SOSLocker;
 import com.sos.inventory.model.common.Variables;
@@ -16,7 +17,6 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.security.locker.Locker;
 import com.sos.joc.model.security.locker.LockerFilter;
-import com.sos.joc.security.classes.SecurityHelper;
 import com.sos.joc.security.resource.ILockerResource;
 import com.sos.schema.JsonValidator;
 
@@ -71,7 +71,7 @@ public class LockerResourceImpl extends JOCResourceImpl implements ILockerResour
             Locker locker = Globals.objectMapper.readValue(body, Locker.class);
             JsonValidator.validateFailFast(body, Locker.class);
             SOSLocker sosLocker = Globals.jocWebserviceDataContainer.getSOSLocker();
-            if (SecurityHelper.getCountAccounts() * 3 < sosLocker.getCount()) {
+            if (SOSAuthHelper.getCountAccounts() * 3 < sosLocker.getCount()) {
                 throw new JocException(new JocError("No more lockers availabe. Maximum reached"));
 
             }

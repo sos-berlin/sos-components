@@ -10,8 +10,7 @@ public class SOSIdentityService {
     private String identityServiceName;
     private IdentityServiceTypes identyServiceType;
     private IdentityServiceAuthenticationScheme identityServiceAuthenticationScheme;
-    private boolean singleFactorCert;
-    private boolean singleFactorPwd;
+    private boolean secondFactor;
 
     public SOSIdentityService(Long identityServiceId, String identityServiceName, IdentityServiceTypes identyServiceType) {
         super();
@@ -36,8 +35,6 @@ public class SOSIdentityService {
         }
         this.identityServiceId = dbItemIamIdentityService.getId();
         this.identityServiceAuthenticationScheme = IdentityServiceAuthenticationScheme.fromValue(dbItemIamIdentityService.getAuthenticationScheme());
-        this.singleFactorCert = dbItemIamIdentityService.getSingleFactorCert();
-        this.singleFactorPwd = dbItemIamIdentityService.getSingleFactorPwd();
 
     }
 
@@ -73,21 +70,14 @@ public class SOSIdentityService {
         this.identityServiceAuthenticationScheme = identityServiceAuthenticationScheme;
     }
 
-    public boolean isSingleFactorCert() {
-        return singleFactorCert;
+    public boolean isSecondFactor() {
+        return secondFactor;
     }
 
-    public void setSingleFactorCert(boolean singleFactorCert) {
-        this.singleFactorCert = singleFactorCert;
+    public void setSecondFactor(boolean secondFactor) {
+        this.secondFactor = secondFactor;
     }
 
-    public boolean isSingleFactorPwd() {
-        return singleFactorPwd;
-    }
-
-    public void setSingleFactorPwd(boolean singleFactorPwd) {
-        this.singleFactorPwd = singleFactorPwd;
-    }
 
     public boolean isTwoFactor() {
         return (identityServiceAuthenticationScheme == IdentityServiceAuthenticationScheme.TWO_FACTOR);

@@ -118,17 +118,10 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
                 Fido2IdentityProvider fido2IdentityProvider = new Fido2IdentityProvider();
                 fido2IdentityProvider.setIdentityServiceName(dbItemIamIdentityService.getIdentityServiceName());
 
-                JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
-                JocConfigurationFilter jocConfigurationFilter = new JocConfigurationFilter();
-                jocConfigurationFilter.setConfigurationType(SOSAuthHelper.CONFIGURATION_TYPE_IAM);
-                jocConfigurationFilter.setName(dbItemIamIdentityService.getIdentityServiceName());
-                jocConfigurationFilter.setObjectType(IdentityServiceTypes.FIDO_2.value());
-                List<DBItemJocConfiguration> listOfJocConfigurations = jocConfigurationDBLayer.getJocConfigurationList(jocConfigurationFilter, 0);
-                if (listOfJocConfigurations.size() == 1) {
-                    DBItemJocConfiguration dbItem = listOfJocConfigurations.get(0);
-                    com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(dbItem.getConfigurationItem(),
-                            com.sos.joc.model.security.properties.Properties.class);
+                com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getIamProperties(dbItemIamIdentityService
+                        .getIdentityServiceName());
 
+                if (properties != null) {
                     if (properties.getFido2() != null) {
 
                         DocumentationDBLayer dbLayer = new DocumentationDBLayer(sosHibernateSession);

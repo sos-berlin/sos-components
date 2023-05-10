@@ -24,8 +24,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "serviceAuthenticationScheme",
     "ordering",
     "disabled",
-    "singleFactorCert",
-    "singleFactorPwd",
+    "secondFactor",
+    "secondFactorIdentityServiceName",
     "required",
     "auditLog"
 })
@@ -68,30 +68,29 @@ public class IdentityService {
     /**
      * disabled parameter
      * <p>
-     * true if the account is disabled
+     * controls if the object is disabled
      * 
      */
     @JsonProperty("disabled")
-    @JsonPropertyDescription("true if the account is disabled")
+    @JsonPropertyDescription("controls if the object is disabled")
     private Boolean disabled = false;
     /**
-     * Single Factory Cert
+     * Second Factor
      * <p>
-     * Identity Service allows logon via certificate
+     * Identity Service is used as a second factor
      * 
      */
-    @JsonProperty("singleFactorCert")
-    @JsonPropertyDescription("Identity Service allows logon via certificate")
-    private Boolean singleFactorCert = false;
+    @JsonProperty("secondFactor")
+    @JsonPropertyDescription("Identity Service is used as a second factor")
+    private Boolean secondFactor = false;
     /**
-     * Single Factory Pwd
+     * string without < and >
      * <p>
-     * Identity Service allows login via user account/password
+     * 
      * 
      */
-    @JsonProperty("singleFactorPwd")
-    @JsonPropertyDescription("Identity Service allows login via user account/password")
-    private Boolean singleFactorPwd = false;
+    @JsonProperty("secondFactorIdentityServiceName")
+    private String secondFactorIdentityServiceName;
     /**
      * required parameter
      * <p>
@@ -121,23 +120,23 @@ public class IdentityService {
      * 
      * @param identityServiceType
      * @param identityServiceName
+     * @param secondFactorIdentityServiceName
      * @param auditLog
      * @param serviceAuthenticationScheme
      * @param ordering
+     * @param secondFactor
      * @param disabled
-     * @param singleFactorCert
-     * @param singleFactorPwd
      * @param required
      */
-    public IdentityService(IdentityServiceTypes identityServiceType, String identityServiceName, IdentityServiceAuthenticationScheme serviceAuthenticationScheme, Integer ordering, Boolean disabled, Boolean singleFactorCert, Boolean singleFactorPwd, Boolean required, AuditParams auditLog) {
+    public IdentityService(IdentityServiceTypes identityServiceType, String identityServiceName, IdentityServiceAuthenticationScheme serviceAuthenticationScheme, Integer ordering, Boolean disabled, Boolean secondFactor, String secondFactorIdentityServiceName, Boolean required, AuditParams auditLog) {
         super();
         this.identityServiceType = identityServiceType;
         this.identityServiceName = identityServiceName;
         this.serviceAuthenticationScheme = serviceAuthenticationScheme;
         this.ordering = ordering;
         this.disabled = disabled;
-        this.singleFactorCert = singleFactorCert;
-        this.singleFactorPwd = singleFactorPwd;
+        this.secondFactor = secondFactor;
+        this.secondFactorIdentityServiceName = secondFactorIdentityServiceName;
         this.required = required;
         this.auditLog = auditLog;
     }
@@ -237,7 +236,7 @@ public class IdentityService {
     /**
      * disabled parameter
      * <p>
-     * true if the account is disabled
+     * controls if the object is disabled
      * 
      */
     @JsonProperty("disabled")
@@ -248,7 +247,7 @@ public class IdentityService {
     /**
      * disabled parameter
      * <p>
-     * true if the account is disabled
+     * controls if the object is disabled
      * 
      */
     @JsonProperty("disabled")
@@ -257,47 +256,47 @@ public class IdentityService {
     }
 
     /**
-     * Single Factory Cert
+     * Second Factor
      * <p>
-     * Identity Service allows logon via certificate
+     * Identity Service is used as a second factor
      * 
      */
-    @JsonProperty("singleFactorCert")
-    public Boolean getSingleFactorCert() {
-        return singleFactorCert;
+    @JsonProperty("secondFactor")
+    public Boolean getSecondFactor() {
+        return secondFactor;
     }
 
     /**
-     * Single Factory Cert
+     * Second Factor
      * <p>
-     * Identity Service allows logon via certificate
+     * Identity Service is used as a second factor
      * 
      */
-    @JsonProperty("singleFactorCert")
-    public void setSingleFactorCert(Boolean singleFactorCert) {
-        this.singleFactorCert = singleFactorCert;
+    @JsonProperty("secondFactor")
+    public void setSecondFactor(Boolean secondFactor) {
+        this.secondFactor = secondFactor;
     }
 
     /**
-     * Single Factory Pwd
+     * string without < and >
      * <p>
-     * Identity Service allows login via user account/password
+     * 
      * 
      */
-    @JsonProperty("singleFactorPwd")
-    public Boolean getSingleFactorPwd() {
-        return singleFactorPwd;
+    @JsonProperty("secondFactorIdentityServiceName")
+    public String getSecondFactorIdentityServiceName() {
+        return secondFactorIdentityServiceName;
     }
 
     /**
-     * Single Factory Pwd
+     * string without < and >
      * <p>
-     * Identity Service allows login via user account/password
+     * 
      * 
      */
-    @JsonProperty("singleFactorPwd")
-    public void setSingleFactorPwd(Boolean singleFactorPwd) {
-        this.singleFactorPwd = singleFactorPwd;
+    @JsonProperty("secondFactorIdentityServiceName")
+    public void setSecondFactorIdentityServiceName(String secondFactorIdentityServiceName) {
+        this.secondFactorIdentityServiceName = secondFactorIdentityServiceName;
     }
 
     /**
@@ -346,12 +345,12 @@ public class IdentityService {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceType", identityServiceType).append("identityServiceName", identityServiceName).append("serviceAuthenticationScheme", serviceAuthenticationScheme).append("ordering", ordering).append("disabled", disabled).append("singleFactorCert", singleFactorCert).append("singleFactorPwd", singleFactorPwd).append("required", required).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("identityServiceType", identityServiceType).append("identityServiceName", identityServiceName).append("serviceAuthenticationScheme", serviceAuthenticationScheme).append("ordering", ordering).append("disabled", disabled).append("secondFactor", secondFactor).append("secondFactorIdentityServiceName", secondFactorIdentityServiceName).append("required", required).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(identityServiceType).append(identityServiceName).append(auditLog).append(serviceAuthenticationScheme).append(ordering).append(disabled).append(singleFactorCert).append(singleFactorPwd).append(required).toHashCode();
+        return new HashCodeBuilder().append(identityServiceType).append(identityServiceName).append(secondFactorIdentityServiceName).append(auditLog).append(serviceAuthenticationScheme).append(ordering).append(secondFactor).append(disabled).append(required).toHashCode();
     }
 
     @Override
@@ -363,7 +362,7 @@ public class IdentityService {
             return false;
         }
         IdentityService rhs = ((IdentityService) other);
-        return new EqualsBuilder().append(identityServiceType, rhs.identityServiceType).append(identityServiceName, rhs.identityServiceName).append(auditLog, rhs.auditLog).append(serviceAuthenticationScheme, rhs.serviceAuthenticationScheme).append(ordering, rhs.ordering).append(disabled, rhs.disabled).append(singleFactorCert, rhs.singleFactorCert).append(singleFactorPwd, rhs.singleFactorPwd).append(required, rhs.required).isEquals();
+        return new EqualsBuilder().append(identityServiceType, rhs.identityServiceType).append(identityServiceName, rhs.identityServiceName).append(secondFactorIdentityServiceName, rhs.secondFactorIdentityServiceName).append(auditLog, rhs.auditLog).append(serviceAuthenticationScheme, rhs.serviceAuthenticationScheme).append(ordering, rhs.ordering).append(secondFactor, rhs.secondFactor).append(disabled, rhs.disabled).append(required, rhs.required).isEquals();
     }
 
 }

@@ -21,7 +21,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "iamFido2UserVerification",
     "iamFido2Timeout",
     "iamFido2Attestation",
-    "iamFido2Transports"
+    "iamFido2Transports",
+    "iamFido2EmailSettings",
+    "iamFido2IsSecondFactor"
 })
 public class Fido2Properties {
 
@@ -65,6 +67,16 @@ public class Fido2Properties {
      */
     @JsonProperty("iamFido2Transports")
     private Fido2Transports iamFido2Transports;
+    /**
+     * Fido2 Email Settings
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("iamFido2EmailSettings")
+    private Fido2EmailSettings iamFido2EmailSettings;
+    @JsonProperty("iamFido2IsSecondFactor")
+    private Boolean iamFido2IsSecondFactor = false;
 
     /**
      * No args constructor for use in serialization
@@ -75,19 +87,23 @@ public class Fido2Properties {
 
     /**
      * 
+     * @param iamFido2EmailSettings
      * @param iamFido2Attestation
      * @param iamFido2RpName
      * @param iamFido2Timeout
      * @param iamFido2Transports
      * @param iamFido2UserVerification
+     * @param iamFido2IsSecondFactor
      */
-    public Fido2Properties(String iamFido2RpName, Fido2Userverification iamFido2UserVerification, Integer iamFido2Timeout, Fido2Attestation iamFido2Attestation, Fido2Transports iamFido2Transports) {
+    public Fido2Properties(String iamFido2RpName, Fido2Userverification iamFido2UserVerification, Integer iamFido2Timeout, Fido2Attestation iamFido2Attestation, Fido2Transports iamFido2Transports, Fido2EmailSettings iamFido2EmailSettings, Boolean iamFido2IsSecondFactor) {
         super();
         this.iamFido2RpName = iamFido2RpName;
         this.iamFido2UserVerification = iamFido2UserVerification;
         this.iamFido2Timeout = iamFido2Timeout;
         this.iamFido2Attestation = iamFido2Attestation;
         this.iamFido2Transports = iamFido2Transports;
+        this.iamFido2EmailSettings = iamFido2EmailSettings;
+        this.iamFido2IsSecondFactor = iamFido2IsSecondFactor;
     }
 
     /**
@@ -200,14 +216,46 @@ public class Fido2Properties {
         this.iamFido2Transports = iamFido2Transports;
     }
 
+    /**
+     * Fido2 Email Settings
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("iamFido2EmailSettings")
+    public Fido2EmailSettings getIamFido2EmailSettings() {
+        return iamFido2EmailSettings;
+    }
+
+    /**
+     * Fido2 Email Settings
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("iamFido2EmailSettings")
+    public void setIamFido2EmailSettings(Fido2EmailSettings iamFido2EmailSettings) {
+        this.iamFido2EmailSettings = iamFido2EmailSettings;
+    }
+
+    @JsonProperty("iamFido2IsSecondFactor")
+    public Boolean getIamFido2IsSecondFactor() {
+        return iamFido2IsSecondFactor;
+    }
+
+    @JsonProperty("iamFido2IsSecondFactor")
+    public void setIamFido2IsSecondFactor(Boolean iamFido2IsSecondFactor) {
+        this.iamFido2IsSecondFactor = iamFido2IsSecondFactor;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("iamFido2RpName", iamFido2RpName).append("iamFido2UserVerification", iamFido2UserVerification).append("iamFido2Timeout", iamFido2Timeout).append("iamFido2Attestation", iamFido2Attestation).append("iamFido2Transports", iamFido2Transports).toString();
+        return new ToStringBuilder(this).append("iamFido2RpName", iamFido2RpName).append("iamFido2UserVerification", iamFido2UserVerification).append("iamFido2Timeout", iamFido2Timeout).append("iamFido2Attestation", iamFido2Attestation).append("iamFido2Transports", iamFido2Transports).append("iamFido2EmailSettings", iamFido2EmailSettings).append("iamFido2IsSecondFactor", iamFido2IsSecondFactor).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(iamFido2Attestation).append(iamFido2RpName).append(iamFido2Transports).append(iamFido2Timeout).append(iamFido2UserVerification).toHashCode();
+        return new HashCodeBuilder().append(iamFido2EmailSettings).append(iamFido2Attestation).append(iamFido2RpName).append(iamFido2Timeout).append(iamFido2Transports).append(iamFido2UserVerification).append(iamFido2IsSecondFactor).toHashCode();
     }
 
     @Override
@@ -219,7 +267,7 @@ public class Fido2Properties {
             return false;
         }
         Fido2Properties rhs = ((Fido2Properties) other);
-        return new EqualsBuilder().append(iamFido2Attestation, rhs.iamFido2Attestation).append(iamFido2RpName, rhs.iamFido2RpName).append(iamFido2Transports, rhs.iamFido2Transports).append(iamFido2Timeout, rhs.iamFido2Timeout).append(iamFido2UserVerification, rhs.iamFido2UserVerification).isEquals();
+        return new EqualsBuilder().append(iamFido2EmailSettings, rhs.iamFido2EmailSettings).append(iamFido2Attestation, rhs.iamFido2Attestation).append(iamFido2RpName, rhs.iamFido2RpName).append(iamFido2Timeout, rhs.iamFido2Timeout).append(iamFido2Transports, rhs.iamFido2Transports).append(iamFido2UserVerification, rhs.iamFido2UserVerification).append(iamFido2IsSecondFactor, rhs.iamFido2IsSecondFactor).isEquals();
     }
 
 }
