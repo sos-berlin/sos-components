@@ -376,4 +376,18 @@ public class SOSAuthHelper {
             Globals.disconnect(sosHibernateSession);
         }
     }
+
+    public static DBItemIamIdentityService getIdentityServiceById(SOSHibernateSession sosHibernateSession, Long identityServiceId) throws SOSHibernateException {
+        if (identityServiceId == null) {
+            return null;
+        }
+        IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
+        IamIdentityServiceFilter iamIdentityServiceFilter = new IamIdentityServiceFilter();
+        iamIdentityServiceFilter.setId(identityServiceId);
+        DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(iamIdentityServiceFilter);
+        if (dbItemIamIdentityService == null) {
+            throw new JocObjectNotExistException("Couldn't find the Identity Service <" + identityServiceId + ">");
+        }
+        return dbItemIamIdentityService;
+    }
 }

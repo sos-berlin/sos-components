@@ -175,6 +175,13 @@ public class IamIdentityServiceDBLayer {
         sosHibernateSession.executeUpdate(query);
     }
 
+    private void deleteSecondFactorByServiceId(Long identityServiceId) throws SOSHibernateException {
+        String hql = "update " + DBItemIamIdentityService + " set secondFactorIsId=null where secondFactorIsId=:identityServiceId";
+        Query<DBItemIamIdentityService> query = sosHibernateSession.createQuery(hql);
+        query.setParameter("identityServiceId", identityServiceId);
+        sosHibernateSession.executeUpdate(query);
+    }
+    
     private void deleteInVault(Set<String> setOfAccounts, Long identityServiceId, String identityServiceName,
             IdentityServiceTypes identityServiceType) throws Exception {
 
@@ -207,6 +214,8 @@ public class IamIdentityServiceDBLayer {
                 listOfDeletedAccounts.stream().forEach(e -> accounts.add(e.getAccountName()));
                 deleteRolesByServiceId(identityServiceId);
                 deletePermissionsByServiceId(identityServiceId);
+                deleteSecondFactorByServiceId(identityServiceId);
+
                 try {
                     if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
                         deleteInVault(accounts, dbItemIamIdentityService.getId(), dbItemIamIdentityService.getIdentityServiceName(),

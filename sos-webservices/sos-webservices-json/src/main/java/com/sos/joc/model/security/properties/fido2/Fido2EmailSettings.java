@@ -18,7 +18,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "url",
-    "email_settings",
     "body",
     "subject"
 })
@@ -32,14 +31,6 @@ public class Fido2EmailSettings {
      */
     @JsonProperty("url")
     private String url;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("email_settings")
-    private String email_settings;
     /**
      * string without < and >
      * <p>
@@ -67,14 +58,12 @@ public class Fido2EmailSettings {
     /**
      * 
      * @param subject
-     * @param email_settings
      * @param body
      * @param url
      */
-    public Fido2EmailSettings(String url, String email_settings, String body, String subject) {
+    public Fido2EmailSettings(String url, String body, String subject) {
         super();
         this.url = url;
-        this.email_settings = email_settings;
         this.body = body;
         this.subject = subject;
     }
@@ -99,28 +88,6 @@ public class Fido2EmailSettings {
     @JsonProperty("url")
     public void setUrl(String url) {
         this.url = url;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("email_settings")
-    public String getEmail_settings() {
-        return email_settings;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("email_settings")
-    public void setEmail_settings(String email_settings) {
-        this.email_settings = email_settings;
     }
 
     /**
@@ -169,12 +136,12 @@ public class Fido2EmailSettings {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("url", url).append("email_settings", email_settings).append("body", body).append("subject", subject).toString();
+        return new ToStringBuilder(this).append("url", url).append("body", body).append("subject", subject).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(email_settings).append(body).append(url).append(subject).toHashCode();
+        return new HashCodeBuilder().append(body).append(url).append(subject).toHashCode();
     }
 
     @Override
@@ -186,7 +153,7 @@ public class Fido2EmailSettings {
             return false;
         }
         Fido2EmailSettings rhs = ((Fido2EmailSettings) other);
-        return new EqualsBuilder().append(email_settings, rhs.email_settings).append(body, rhs.body).append(url, rhs.url).append(subject, rhs.subject).isEquals();
+        return new EqualsBuilder().append(body, rhs.body).append(url, rhs.url).append(subject, rhs.subject).isEquals();
     }
 
 }
