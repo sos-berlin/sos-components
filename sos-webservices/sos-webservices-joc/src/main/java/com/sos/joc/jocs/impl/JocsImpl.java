@@ -93,7 +93,6 @@ public class JocsImpl extends JOCResourceImpl implements IJocsResource {
                 if (operatingSystems != null) {
                     osMap = operatingSystems.stream().collect(Collectors.toMap(DBItemInventoryOperatingSystem::getId, Function.identity()));
                 }
-                String version = Globals.curVersion;
                 long nowSeconds = Instant.now().getEpochSecond();
                 // TODO version should be in database
                 
@@ -124,7 +123,8 @@ public class JocsImpl extends JOCResourceImpl implements IJocsResource {
                     }
                     cockpit.setStartedAt(instance.getStartedAt());
                     cockpit.setTitle(instance.getTitle());
-                    cockpit.setVersion(version);
+                    // TODO only temp. delete Globals.curVersion later 
+                    cockpit.setVersion(instance.getVersion() == null ? Globals.curVersion : instance.getVersion());
                     cockpit.setLastHeartbeat(instance.getHeartBeat());
 
                     // determine ComponentState/ConnectionState depends on last heart beat

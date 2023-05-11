@@ -45,7 +45,7 @@ public class TestDailyPlanService {
 
         Path resDir = Paths.get("src/test/resources");
         JocConfiguration jocConfig = new JocConfiguration(resDir.toString(), "UTC", resDir.resolve("hibernate.cfg.xml"), resDir, JocSecurityLevel.LOW,
-                false, "title", "joc", 0, "joc#0");
+                false, "title", "joc", 0, "joc#0", "2.5.4");
 
         DailyPlanService service = new DailyPlanService(jocConfig, new ThreadGroup(JocClusterConfiguration.IDENTIFIER));
         ConfigurationGlobals configurations = new ConfigurationGlobals();

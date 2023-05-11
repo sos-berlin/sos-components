@@ -22,7 +22,8 @@ public class JocConfiguration {
     private final String memberId;
     private final String jocId;
     private final boolean isApiServer;
-
+    private final String version;
+    
     private String clusterId;
     private String timeZone;
     private String title;
@@ -32,7 +33,8 @@ public class JocConfiguration {
     private boolean clusterMode;
 
     public JocConfiguration(String jocDataDirectory, String jocTimeZone, Path jocHibernateConfig, Path jocResourceDir,
-            JocSecurityLevel jocSecurityLevel, boolean isApiServer, String jocTitle, String jocClusterId, Integer jocOrdering, String jocId) {
+            JocSecurityLevel jocSecurityLevel, boolean isApiServer, String jocTitle, String jocClusterId, Integer jocOrdering, String jocId,
+            String version) {
 
         setHostname();
 
@@ -43,6 +45,7 @@ public class JocConfiguration {
 
         this.securityLevel = jocSecurityLevel;
         this.isApiServer = isApiServer;
+        this.version = version;
         this.title = SOSString.isEmpty(jocTitle) ? hostname : jocTitle;
         this.clusterId = SOSString.isEmpty(jocClusterId) ? "joc" : jocClusterId;
         this.ordering = jocOrdering == null ? 0 : jocOrdering;
@@ -133,5 +136,9 @@ public class JocConfiguration {
 
     public boolean isApiServer() {
         return isApiServer;
+    }
+    
+    public String getVersion() {
+        return version;
     }
 }
