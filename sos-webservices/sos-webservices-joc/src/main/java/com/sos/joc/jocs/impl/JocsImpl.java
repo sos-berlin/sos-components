@@ -105,6 +105,7 @@ public class JocsImpl extends JOCResourceImpl implements IJocsResource {
                     cockpit.setMemberId(instance.getMemberId());
                     cockpit.setCurrent(curMemberId.equals(instance.getMemberId()));
                     cockpit.setUrl(instance.getUri());
+                    cockpit.setControllerConnectionStates(null);
                     if (osMap != null) {
                         DBItemInventoryOperatingSystem osDB = osMap.get(instance.getOsId());
                         if (osDB != null) {
