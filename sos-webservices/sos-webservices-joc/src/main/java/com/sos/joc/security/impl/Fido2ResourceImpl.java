@@ -247,7 +247,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
         }
     }
 
-    private String getChallenge(DBItemIamFido2Registration dbItemIamFido2Registration, String identityServiceName) throws InvalidKeyException,
+    private String getChallenge(DBItemIamFido2Registration dbItemIamFido2Registration, String identityServiceName, String challengeToken) throws InvalidKeyException,
             BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException, NoSuchAlgorithmException, JsonMappingException,
             JsonProcessingException, SOSHibernateException {
 
@@ -290,9 +290,11 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             DBItemIamFido2Registration dbItemIamFido2Registration = iamFido2DBLayer.getUniqueFido2Registration(filter);
             if (dbItemIamFido2Registration != null) {
                 if (dbItemIamFido2Registration.getApproved()) {
-                    dbItemIamFido2Registration.setChallenge(getChallenge(dbItemIamFido2Registration, fido2RequestAuthentication
-                            .getIdentityServiceName()));
-                    fido2RequestAuthentication.setChallenge(dbItemIamFido2Registration.getChallenge());
+                    String challengeToken = SOSAuthHelper.createAccessToken();
+                    String challenge = getChallenge(dbItemIamFido2Registration, fido2RequestAuthentication
+                            .getIdentityServiceName(),challengeToken);
+                    dbItemIamFido2Registration.setChallenge(challengeToken);
+                    fido2RequestAuthentication.setChallenge(challenge);
                     sosHibernateSession.update(dbItemIamFido2Registration);
                 } else {
                     throw new JocObjectNotExistException("Registration <" + fido2RequestAuthentication.getAccountName() + " in identity service "

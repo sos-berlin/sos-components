@@ -30,6 +30,9 @@ public class DBItemIamIdentityService {
     @Column(name = "[IDENTITY_SERVICE_NAME]", nullable = false)
     private String identityServiceName;
 
+    @Column(name = "[SECOND_FACTOR_IS_NAME]", nullable = false)
+    private Long secondFactorIsId;
+
     @Column(name = "[AUTHENTICATION_SCHEME]", nullable = false)
     private String authenticationScheme;
 
@@ -129,4 +132,18 @@ public class DBItemIamIdentityService {
         this.secondFactor = val;
     }
 
+    
+    public Long getSecondFactorIsId() {
+        return secondFactorIsId;
+    }
+
+    
+    public void setSecondFactorIsId(Long secondFactorIsId) {
+        this.secondFactorIsId = secondFactorIsId;
+    }
+
+    
+    
+
+  
 }
