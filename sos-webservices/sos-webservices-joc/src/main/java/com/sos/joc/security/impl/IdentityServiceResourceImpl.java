@@ -75,7 +75,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
                 if (dbItemIamSecondIdentityService != null) {
                     identityService.setSecondFactorIdentityServiceName(dbItemIamSecondIdentityService.getIdentityServiceName());
                 }
-                
+
                 identityService.setDisabled(dbItemIamIdentityService.getDisabled());
                 identityService.setIdentityServiceName(dbItemIamIdentityService.getIdentityServiceName());
 
@@ -142,16 +142,14 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             }
             dbItemIamIdentityService.setDisabled(identityService.getDisabled());
             dbItemIamIdentityService.setIdentityServiceType(identityService.getIdentityServiceType().value());
-            
-            
-            DBItemIamIdentityService dbItemIamSecondIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession,
-                    identityService.getSecondFactorIdentityServiceName());
+
+            DBItemIamIdentityService dbItemIamSecondIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, identityService
+                    .getSecondFactorIdentityServiceName());
 
             if (dbItemIamSecondIdentityService != null) {
                 dbItemIamIdentityService.setSecondFactorIsId(dbItemIamSecondIdentityService.getId());
             }
-            
-            
+
             if (identityService.getOrdering() != null) {
                 dbItemIamIdentityService.setOrdering(identityService.getOrdering());
             }
@@ -336,15 +334,14 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
                 IdentityService identityService = new IdentityService();
                 identityService.setDisabled(dbItemIamIdentityService.getDisabled());
                 identityService.setIdentityServiceName(dbItemIamIdentityService.getIdentityServiceName());
-                
+
                 DBItemIamIdentityService dbItemIamSecondIdentityService = SOSAuthHelper.getIdentityServiceById(sosHibernateSession,
                         dbItemIamIdentityService.getSecondFactorIsId());
 
                 if (dbItemIamSecondIdentityService != null) {
                     identityService.setSecondFactorIdentityServiceName(dbItemIamSecondIdentityService.getIdentityServiceName());
                 }
-                
-                
+
                 try {
                     identityService.setIdentityServiceType(IdentityServiceTypes.fromValue(dbItemIamIdentityService.getIdentityServiceType()));
                 } catch (IllegalArgumentException e) {

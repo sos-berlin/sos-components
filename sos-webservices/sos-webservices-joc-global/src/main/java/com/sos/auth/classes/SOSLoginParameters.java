@@ -12,6 +12,7 @@ public class SOSLoginParameters {
     private String identityService;
     private String idToken;
     private String account;
+    private String fido2Challenge;
     private SOSOpenIdWebserviceCredentials webserviceCredentials;
 
     public HttpServletRequest getRequest() {
@@ -72,6 +73,18 @@ public class SOSLoginParameters {
 
     public boolean isOIDCLogin() {
         return (getIdentityService() != null && !getIdentityService().equals("") && getIdToken() != null && !getIdToken().isEmpty());
+    }
+
+    public boolean isFIDO2Login() {
+        return (getIdentityService() != null && !getIdentityService().equals("") && getFido2Challenge() != null && !getFido2Challenge().equals(""));
+    }
+
+    public String getFido2Challenge() {
+        return fido2Challenge;
+    }
+
+    public void setFido2Challenge(String fido2Challenge) {
+        this.fido2Challenge = fido2Challenge;
     }
 
 }

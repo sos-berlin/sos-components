@@ -16,7 +16,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import com.sos.auth.certificate.classes.SOSCertificateAuthLogin;
 import com.sos.auth.client.ClientCertificateHandler;
+import com.sos.auth.fido2.classes.SOSFido2AuthLogin;
 import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSLogin;
 import com.sos.auth.keycloak.classes.SOSKeycloakLogin;
@@ -178,7 +180,7 @@ public class SOSServicePermissionIam {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public JOCDefaultResponse loginPost(@Context HttpServletRequest request, @HeaderParam("Authorization") String basicAuthorization,
-            @HeaderParam("X-IDENTITY-SERVICE") String identityService, @HeaderParam("X-ID-TOKEN") String idToken,
+            @HeaderParam("X-IDENTITY-SERVICE") String identityService, @HeaderParam("X-ID-TOKEN") String idToken,@HeaderParam("X-FIDO2-CHALLENGE") String fido2Challenge,
             @QueryParam("account") String account, @QueryParam("pwd") String pwd) {
 
         if (Globals.sosCockpitProperties == null) {
@@ -205,6 +207,7 @@ public class SOSServicePermissionIam {
             }
             SOSLoginParameters sosLoginParameters = new SOSLoginParameters();
             sosLoginParameters.setIdToken(idToken);
+            sosLoginParameters.setFido2Challenge(fido2Challenge);
             sosLoginParameters.setBasicAuthorization(basicAuthorization);
             sosLoginParameters.setClientCertCN(clientCertCN);
             sosLoginParameters.setIdentityService(identityService);
@@ -436,24 +439,32 @@ public class SOSServicePermissionIam {
             case VAULT_JOC:
             case VAULT_JOC_ACTIVE:
                 sosLogin = new SOSVaultLogin();
-                LOGGER.debug("Login with idendity service vault");
+                LOGGER.debug("Login with identity service vault");
                 break;
             case KEYCLOAK:
             case KEYCLOAK_JOC:
                 sosLogin = new SOSKeycloakLogin();
-                LOGGER.debug("Login with idendity service keycloak");
+                LOGGER.debug("Login with identity service keycloak");
                 break;
             case JOC:
                 sosLogin = new SOSInternAuthLogin();
                 LOGGER.debug("Login with idendity service sosintern");
                 break;
+            case CERTIFICATE:
+                sosLogin = new SOSCertificateAuthLogin();
+                LOGGER.debug("Login with identity service certificate");
+                break;
+            case FIDO_2:
+                sosLogin = new SOSFido2AuthLogin();
+                LOGGER.debug("Login with identity service sosintern");
+                break;
             case OIDC:
                 sosLogin = new SOSOpenIdLogin();
-                LOGGER.debug("Login with idendity service openid_connect");
+                LOGGER.debug("Login with identity service openid_connect");
                 break;
             default:
                 sosLogin = new SOSInternAuthLogin();
-                LOGGER.debug("Login with idendity service sosintern");
+                LOGGER.debug("Login with identity service sosintern");
             }
 
             sosLogin.setIdentityService(new SOSIdentityService(dbItemIdentityService));
@@ -590,9 +601,9 @@ public class SOSServicePermissionIam {
                     List<DBItemIamIdentityService> listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
 
                     currentAccount.initFolders();
+                    
 
-                    if (currentAccount.getSosLoginParameters().getIdentityService() == null || currentAccount.getSosLoginParameters()
-                            .getIdentityService().isEmpty()) {
+                    if (!currentAccount.getSosLoginParameters().isOIDCLogin()) {
 
                         for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
                             if (!dbItemIamIdentityService.getIdentityServiceType().equals(IdentityServiceTypes.OIDC.value())) {
