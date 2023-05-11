@@ -38,6 +38,8 @@ public class CheckInstance {
         try {
             String clusterId = Globals.getClusterId();
             Integer ordering = Globals.getOrdering();
+            boolean isApiServer = Globals.isApiServer;
+            Boolean prevWasApiServer = Globals.prevWasApiServer;
 
             Optional<DBItemJocInstance> dbInstanceOpt = Optional.empty();
 
@@ -47,21 +49,22 @@ public class CheckInstance {
             String memberId = Globals.getMemberId();
             if (instances != null && !instances.isEmpty()) {
 
-                if (instances.stream().map(DBItemJocInstance::getClusterId).distinct().count() > 1) {
-                    LOGGER.error("There are more than one JOC Cluster ID in the JOC_INSTANCES table.");
-                    throw new JocConfigurationException("There are more than one JOC Cluster ID in the JOC_INSTANCES table.");
-                } else {
-                    String dbClusterId = instances.get(0).getClusterId();
-                    if (dbClusterId.equals(clusterId)) {
+//                if (instances.stream().map(DBItemJocInstance::getClusterId).distinct().count() > 1) {
+//                    LOGGER.error("There are more than one JOC Cluster ID in the JOC_INSTANCES table.");
+//                    throw new JocConfigurationException("There are more than one JOC Cluster ID in the JOC_INSTANCES table.");
+//                } else {
+                    //String dbClusterId = instances.get(0).getClusterId();
+                    //if (dbClusterId.equals(clusterId)) {
                         Map<Integer, Long> orderings = instances.stream().collect(Collectors.groupingBy(DBItemJocInstance::getOrdering, Collectors
                                 .counting()));
+                        Set<Long> changedIds = new HashSet<>();
+                        
                         if (orderings.values().stream().filter(v -> v > 1).findAny().isPresent()) {
                             // ordering not unique
                             LOGGER.info("The ordering of the JOC instances are not unique");
                             LOGGER.info("...try to repair the ordering to a strictly monotonous sequence without gaps");
                             int maxOrdering = instances.stream().mapToInt(DBItemJocInstance::getOrdering).max().orElse(0);
                             int curOrdering = -129; // tinyInt [-128, 127]
-                            Set<Long> changedIds = new HashSet<>();
                             for (DBItemJocInstance instance : instances) {
                                 if (curOrdering == instance.getOrdering()) {
                                     instance.setOrdering(++maxOrdering);
@@ -70,7 +73,7 @@ public class CheckInstance {
                                     curOrdering = instance.getOrdering();
                                 }
                             }
-                            // strictly monotonous sequence without gaps but current memberId get current orderId
+                            // strictly monotonous sequence without gaps but current memberId get current ordering
                             int index = 0;
                             dbInstanceOpt = instances.stream().filter(i -> memberId.equals(i.getMemberId())).findFirst();
                             if (dbInstanceOpt.isPresent()) {
@@ -100,21 +103,32 @@ public class CheckInstance {
                                     index++;
                                 }
                             }
-
-                            // update instances with changed ordering
-                            for (DBItemJocInstance instance : instances) {
-                                if (changedIds.contains(instance.getId())) {
-                                    session.update(instance);
-                                }
+                        }
+                        
+                        for (DBItemJocInstance instance : instances) {
+                            if (instance.getApiServer() && !"api".equals(instance.getClusterId())) {
+                                instance.setClusterId("api");
+                                changedIds.add(instance.getId());
+                            } else if (!instance.getApiServer() && !"joc".equals(instance.getClusterId())) {
+                                instance.setClusterId("joc");
+                                changedIds.add(instance.getId());
+                            }
+                        }
+                        
+                        // update instances with changed ordering
+                        for (DBItemJocInstance instance : instances) {
+                            if (changedIds.contains(instance.getId())) {
+                                session.update(instance);
                             }
                         }
 
                         dbInstanceOpt = instances.stream().filter(i -> ordering == i.getOrdering()).findFirst();
                         if (dbInstanceOpt.isPresent()) {
                             DBItemJocInstance dbInstance = dbInstanceOpt.get();
+                            // TODO dont't use memberId; use isApiServer, prevWasApiServer
                             if (!memberId.equals(dbInstance.getMemberId())) {
                                 if (instanceIsAlive(session, dbInstance)) {
-                                    String msg = "There is already a running JOC instance with ID '" + clusterId + "#" + ordering
+                                    String msg = "There is already a running JOC instance with ID '" + dbInstance.getClusterId() + "#" + ordering
                                             + "'. You can modify the 'ordering' in the joc.properties file.";
                                     LOGGER.error(msg);
                                     throw new JocConfigurationException(msg);
@@ -133,20 +147,22 @@ public class CheckInstance {
                                     }
                                     dbInstance.setDataDirectory(Globals.getDataDirectory());
                                     dbInstance.setMemberId(memberId);
+                                    dbInstance.setApiServer(isApiServer);
+                                    dbInstance.setClusterId(clusterId);
                                     session.update(dbInstance);
                                 }
                             }
                         }
 
-                    } else {
-                        // Check: Only one clusterId has to be in DB
-                        String msg = "A JOC Cluster ID '" + dbClusterId + "' already exists in the database. The JOC Cluster ID ('" + clusterId
-                                + "') of this instance is unequal. You can modify the 'cluster_id' in the joc.properties file.";
-                        LOGGER.error(msg);
-                        throw new JocConfigurationException(msg);
-                    }
+//                    } else {
+//                        // Check: Only one clusterId has to be in DB
+//                        String msg = "A JOC Cluster ID '" + dbClusterId + "' already exists in the database. The JOC Cluster ID ('" + clusterId
+//                                + "') of this instance is unequal. You can modify the 'cluster_id' in the joc.properties file.";
+//                        LOGGER.error(msg);
+//                        throw new JocConfigurationException(msg);
+                    //}
                 }
-            }
+//            }
 
         } finally {
             Globals.disconnect(session);

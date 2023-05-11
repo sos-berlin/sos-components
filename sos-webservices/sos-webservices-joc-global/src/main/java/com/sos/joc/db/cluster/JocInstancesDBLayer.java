@@ -21,18 +21,34 @@ public class JocInstancesDBLayer {
     }
 
     public List<DBItemJocInstance> getInstances() throws DBConnectionRefusedException, DBInvalidDataException {
-        return getInstances("ordering");
+        return getInstances(null, "ordering");
+    }
+    
+    public List<DBItemJocInstance> getJocInstances() throws DBConnectionRefusedException, DBInvalidDataException {
+        return getInstances(false, "ordering");
+    }
+    
+    public List<DBItemJocInstance> getApiInstances() throws DBConnectionRefusedException, DBInvalidDataException {
+        return getInstances(true, "ordering");
     }
     
     public List<DBItemJocInstance> getInstances(String orderBy) throws DBConnectionRefusedException, DBInvalidDataException {
+        return getInstances(null, orderBy);
+    }
+    
+    public List<DBItemJocInstance> getInstances(Boolean apiServer, String orderBy) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
+            String where = (apiServer == null) ? "" : " where apiServer = :apiServer";
             if (orderBy == null) {
                 orderBy  = "";
             }
             if (!orderBy.isEmpty()) {
                 orderBy = " order by " + orderBy;
             }
-            Query<DBItemJocInstance> query = session.createQuery("from " + DBLayer.DBITEM_JOC_INSTANCES + orderBy);
+            Query<DBItemJocInstance> query = session.createQuery("from " + DBLayer.DBITEM_JOC_INSTANCES + where + orderBy);
+            if (apiServer != null) {
+                query.setParameter("apiServer", apiServer.booleanValue());
+            }
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);

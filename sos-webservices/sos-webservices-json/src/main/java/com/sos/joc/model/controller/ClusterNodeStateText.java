@@ -10,6 +10,7 @@ public enum ClusterNodeStateText {
 
     active("active"),
     inactive("inactive"),
+    api_server("api-server"),
     unknown("unknown");
     private final String value;
     private final static Map<String, ClusterNodeStateText> CONSTANTS = new HashMap<String, ClusterNodeStateText>();
