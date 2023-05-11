@@ -30,7 +30,7 @@ public class DBItemIamIdentityService {
     @Column(name = "[IDENTITY_SERVICE_NAME]", nullable = false)
     private String identityServiceName;
 
-    @Column(name = "[SECOND_FACTOR_IS_NAME]", nullable = false)
+    @Column(name = "[SECOND_FACTOR_IS_ID]", nullable = false)
     private Long secondFactorIsId;
 
     @Column(name = "[AUTHENTICATION_SCHEME]", nullable = false)
