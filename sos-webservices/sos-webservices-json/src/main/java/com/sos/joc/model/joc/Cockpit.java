@@ -27,6 +27,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "id",
+    "instanceId",
     "memberId",
     "title",
     "current",
@@ -34,6 +35,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "url",
     "startedAt",
     "version",
+    "isApiServer",
     "connectionState",
     "componentState",
     "clusterNodeState",
@@ -54,6 +56,17 @@ public class Cockpit {
     @JsonProperty("id")
     private Long id;
     /**
+     * string without < and >
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("instanceId")
+    private String instanceId;
+    /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 
@@ -90,6 +103,8 @@ public class Cockpit {
      */
     @JsonProperty("version")
     private String version;
+    @JsonProperty("isApiServer")
+    private Boolean isApiServer = false;
     /**
      * connection state
      * <p>
@@ -111,21 +126,23 @@ public class Cockpit {
     /**
      * active state
      * <p>
-     * 
+     * not relevant for JOC as API server only
      * (Required)
      * 
      */
     @JsonProperty("clusterNodeState")
+    @JsonPropertyDescription("not relevant for JOC as API server only")
     private ClusterNodeState clusterNodeState;
     /**
-     * 
+     * not relevant for JOC as API server only
      * (Required)
      * 
      */
     @JsonProperty("controllerConnectionStates")
+    @JsonPropertyDescription("not relevant for JOC as API server only")
     private List<ControllerConnectionState> controllerConnectionStates = new ArrayList<ControllerConnectionState>();
     /**
-     * jobscheduler platform
+     * Controller platform
      * <p>
      * 
      * 
@@ -175,6 +192,32 @@ public class Cockpit {
     }
 
     /**
+     * string without < and >
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("instanceId")
+    public String getInstanceId() {
+        return instanceId;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("instanceId")
+    public void setInstanceId(String instanceId) {
+        this.instanceId = instanceId;
+    }
+
+    /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 
@@ -185,6 +228,8 @@ public class Cockpit {
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 
@@ -286,6 +331,16 @@ public class Cockpit {
         this.version = version;
     }
 
+    @JsonProperty("isApiServer")
+    public Boolean getIsApiServer() {
+        return isApiServer;
+    }
+
+    @JsonProperty("isApiServer")
+    public void setIsApiServer(Boolean isApiServer) {
+        this.isApiServer = isApiServer;
+    }
+
     /**
      * connection state
      * <p>
@@ -337,7 +392,7 @@ public class Cockpit {
     /**
      * active state
      * <p>
-     * 
+     * not relevant for JOC as API server only
      * (Required)
      * 
      */
@@ -349,7 +404,7 @@ public class Cockpit {
     /**
      * active state
      * <p>
-     * 
+     * not relevant for JOC as API server only
      * (Required)
      * 
      */
@@ -359,7 +414,7 @@ public class Cockpit {
     }
 
     /**
-     * 
+     * not relevant for JOC as API server only
      * (Required)
      * 
      */
@@ -369,7 +424,7 @@ public class Cockpit {
     }
 
     /**
-     * 
+     * not relevant for JOC as API server only
      * (Required)
      * 
      */
@@ -379,7 +434,7 @@ public class Cockpit {
     }
 
     /**
-     * jobscheduler platform
+     * Controller platform
      * <p>
      * 
      * 
@@ -390,7 +445,7 @@ public class Cockpit {
     }
 
     /**
-     * jobscheduler platform
+     * Controller platform
      * <p>
      * 
      * 
@@ -446,12 +501,12 @@ public class Cockpit {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("memberId", memberId).append("title", title).append("current", current).append("host", host).append("url", url).append("startedAt", startedAt).append("version", version).append("connectionState", connectionState).append("componentState", componentState).append("clusterNodeState", clusterNodeState).append("controllerConnectionStates", controllerConnectionStates).append("os", os).append("securityLevel", securityLevel).append("lastHeartbeat", lastHeartbeat).toString();
+        return new ToStringBuilder(this).append("id", id).append("instanceId", instanceId).append("memberId", memberId).append("title", title).append("current", current).append("host", host).append("url", url).append("startedAt", startedAt).append("version", version).append("isApiServer", isApiServer).append("connectionState", connectionState).append("componentState", componentState).append("clusterNodeState", clusterNodeState).append("controllerConnectionStates", controllerConnectionStates).append("os", os).append("securityLevel", securityLevel).append("lastHeartbeat", lastHeartbeat).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(lastHeartbeat).append(os).append(connectionState).append(startedAt).append(title).append(version).append(url).append(componentState).append(securityLevel).append(current).append(controllerConnectionStates).append(host).append(clusterNodeState).append(id).append(memberId).toHashCode();
+        return new HashCodeBuilder().append(lastHeartbeat).append(os).append(connectionState).append(startedAt).append(title).append(version).append(url).append(componentState).append(securityLevel).append(current).append(instanceId).append(controllerConnectionStates).append(isApiServer).append(host).append(clusterNodeState).append(id).append(memberId).toHashCode();
     }
 
     @Override
@@ -463,7 +518,7 @@ public class Cockpit {
             return false;
         }
         Cockpit rhs = ((Cockpit) other);
-        return new EqualsBuilder().append(lastHeartbeat, rhs.lastHeartbeat).append(os, rhs.os).append(connectionState, rhs.connectionState).append(startedAt, rhs.startedAt).append(title, rhs.title).append(version, rhs.version).append(url, rhs.url).append(componentState, rhs.componentState).append(securityLevel, rhs.securityLevel).append(current, rhs.current).append(controllerConnectionStates, rhs.controllerConnectionStates).append(host, rhs.host).append(clusterNodeState, rhs.clusterNodeState).append(id, rhs.id).append(memberId, rhs.memberId).isEquals();
+        return new EqualsBuilder().append(lastHeartbeat, rhs.lastHeartbeat).append(os, rhs.os).append(connectionState, rhs.connectionState).append(startedAt, rhs.startedAt).append(title, rhs.title).append(version, rhs.version).append(url, rhs.url).append(componentState, rhs.componentState).append(securityLevel, rhs.securityLevel).append(current, rhs.current).append(instanceId, rhs.instanceId).append(controllerConnectionStates, rhs.controllerConnectionStates).append(isApiServer, rhs.isApiServer).append(host, rhs.host).append(clusterNodeState, rhs.clusterNodeState).append(id, rhs.id).append(memberId, rhs.memberId).isEquals();
     }
 
 }

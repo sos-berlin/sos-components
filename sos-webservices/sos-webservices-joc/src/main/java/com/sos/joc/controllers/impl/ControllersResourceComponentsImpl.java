@@ -157,6 +157,8 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
             for (DBItemJocInstance instance : instances) {
                 Cockpit cockpit = new Cockpit();
                 cockpit.setId(instance.getId());
+                cockpit.setInstanceId(instance.getClusterId() + "#" + instance.getOrdering());
+                cockpit.setIsApiServer(instance.getApiServer());
                 cockpit.setMemberId(instance.getMemberId());
                 cockpit.setCurrent(curMemberId.equals(instance.getMemberId()));
                 if (osMap != null) {
