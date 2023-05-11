@@ -68,6 +68,7 @@ public class JsonValidator {
             put("DocumentationsFilter", "docu/documentationsFilter-schema.json");
             put("DocumentationsDeleteFilter", "docu/documentationsDeleteFilter-schema.json");
 
+            put("CockpitFilter", "controller/jocFilter-schema.json");
             put("Controller", "event/controllerFilter-schema.json");
 
             put("com.sos.joc.model.controller.ControllerId", "controller/controllerId-optional-schema.json");
