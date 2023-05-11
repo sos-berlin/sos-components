@@ -71,6 +71,9 @@ public class DBItemJocInstance extends DBItem {
     @Column(name = "[API_SERVER]", nullable = false)
     @Type(type = "numeric_boolean")
     private boolean apiServer;
+    
+    @Column(name = "[VERSION]", nullable = true)
+    private String version;
 
     public Long getId() {
         return id;
@@ -188,6 +191,17 @@ public class DBItemJocInstance extends DBItem {
 
     public boolean getApiServer() {
         return apiServer;
+    }
+    
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String val) {
+        if (val != null && val.length() > 30) {
+            val = val.substring(0, 30);
+        }
+        version = val;
     }
 
 }

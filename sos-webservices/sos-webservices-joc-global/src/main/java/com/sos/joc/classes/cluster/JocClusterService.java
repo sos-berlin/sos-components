@@ -81,7 +81,7 @@ public class JocClusterService {
 
         config = new JocConfiguration(System.getProperty("user.dir"), TimeZone.getDefault().getID(), hibernateConfig, Globals.sosCockpitProperties
                 .getResourceDir(), Globals.getJocSecurityLevel(), Globals.isApiServer, Globals.sosCockpitProperties.getProperty("title"), Globals
-                        .getClusterId(), Globals.getOrdering(), Globals.getJocId());
+                        .getClusterId(), Globals.getOrdering(), Globals.getJocId(), Globals.curVersion);
         startTime = new Date();
         JocClusterServiceLogger.removeLogger();
 
