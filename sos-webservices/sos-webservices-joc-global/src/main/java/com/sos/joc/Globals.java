@@ -66,6 +66,7 @@ public class Globals {
     public static String inventoryVersion = "";
     public static String curVersion = "";
     public static boolean isApiServer = false;
+    public static Boolean prevWasApiServer = null;
     
     public static long maxSizeOfLogsToDisplay = 1024 * 1024 * 10L; // 10MB
     public static long timeoutToDeleteTempFiles = 1000 * 60 * 3L;
@@ -113,6 +114,9 @@ public class Globals {
         readApiSchemaVersion();
         readInventorySchemaVersion();
         LOGGER.info("Security Level = " + getJocSecurityLevel().value());
+        if (isApiServer) {
+            LOGGER.info("Started as API Server");
+        }
         setMaxResponseDuration();
     }
 
@@ -352,26 +356,26 @@ public class Globals {
     }
 
     public static JocSecurityLevel getJocSecurityLevel() {
-        return getJocSecurityLevel(JocSecurityLevel.LOW);
-    }
-
-    public static JocSecurityLevel getJocSecurityLevel(JocSecurityLevel defaultLevel) {
         // the JocSecurity classes should have a method getJocSecurityLevel which is
         // callable static during an abstract class
         if (jocSecurityLevel == null) {
-            jocSecurityLevel = defaultLevel; // default
+            jocSecurityLevel = JocSecurityLevel.LOW; // default
             try {
                 InputStream stream = Globals.class.getResourceAsStream("/joc-settings.properties");
                 if (stream != null) {
                     Properties properties = new Properties();
                     properties.load(stream);
                     try {
-                        jocSecurityLevel = JocSecurityLevel.fromValue(properties.getProperty("security_level", defaultLevel.value())
+                        jocSecurityLevel = JocSecurityLevel.fromValue(properties.getProperty("security_level", JocSecurityLevel.LOW.value())
                                 .toUpperCase());
                     } catch (Exception e) {
                         //
                     }
                     isApiServer = properties.getProperty("as_api_server", "no").equals("yes");
+                    String prevAsApiServer = properties.getProperty("prev_as_api_server");
+                    if (prevAsApiServer != null) {
+                        prevWasApiServer = prevAsApiServer.equals("yes");
+                    }
                 }
             } catch (Exception e) {
                 LOGGER.error(String.format("Error while reading %1$s:", "joc-settings.properties"), e);
@@ -380,23 +384,28 @@ public class Globals {
         return jocSecurityLevel;
     }
 
+    // Only called by tests
     public static void setJocSecurityLevel(JocSecurityLevel level) {
+        getJocSecurityLevel();
         jocSecurityLevel = level;
     }
     
     public static String getClusterId() throws JocConfigurationException {
         if (clusterId == null) {
-            if (sosCockpitProperties == null) {
-                sosCockpitProperties = new JocCockpitProperties();
-            }
-
-            clusterId = sosCockpitProperties.getProperty("cluster_id");
-
-            if (clusterId == null || clusterId.isEmpty()) {
-                throw new JocConfigurationException("The 'cluster_id' setting in the joc.properties file is not defined.");
-            } else if (clusterId.length() > 10) {
-                throw new JocConfigurationException("The 'cluster_id' setting in the joc.properties file can be only max. 10 characters long.");
-            }
+            getJocSecurityLevel();
+            clusterId = isApiServer ? "api" : "joc";
+            
+//            if (sosCockpitProperties == null) {
+//                sosCockpitProperties = new JocCockpitProperties();
+//            }
+//
+//            clusterId = sosCockpitProperties.getProperty("cluster_id");
+//
+//            if (clusterId == null || clusterId.isEmpty()) {
+//                throw new JocConfigurationException("The 'cluster_id' setting in the joc.properties file is not defined.");
+//            } else if (clusterId.length() > 10) {
+//                throw new JocConfigurationException("The 'cluster_id' setting in the joc.properties file can be only max. 10 characters long.");
+//            }
         }
         return clusterId;
     }

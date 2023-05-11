@@ -137,7 +137,7 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
     private List<Cockpit> setCockpits(SOSHibernateSession connection, List<ControllerConnectionState> fakeControllerConnections,
             List<ControllerConnectionState> unknownControllerConnections) throws DBConnectionRefusedException, DBInvalidDataException {
         JocInstancesDBLayer dbLayer = new JocInstancesDBLayer(connection);
-        List<DBItemJocInstance> instances = dbLayer.getInstances();
+        List<DBItemJocInstance> instances = dbLayer.getJocInstances();
         DBItemJocCluster activeInstance = dbLayer.getCluster();
         List<Cockpit> cockpits = new ArrayList<>();
         String hostname = getHostname();
