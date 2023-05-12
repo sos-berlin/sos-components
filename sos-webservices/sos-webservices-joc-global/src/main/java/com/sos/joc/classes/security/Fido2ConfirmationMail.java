@@ -17,6 +17,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.jobresource.JobResource;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.monitoring.mail.MailResource;
+import com.sos.joc.db.authentication.DBItemIamFido2Registration;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocObjectNotExistException;
@@ -34,24 +35,27 @@ public class Fido2ConfirmationMail {
         this.fido2Properties = fido2Properties;
     }
 
-    public void sendMail(String to) throws Exception {
+    public void sendMail(DBItemIamFido2Registration dbItemIamFido2Registration, String to) throws Exception {
 
         init();
 
         Map<String, String> params = new HashMap<String, String>();
-        params.put("link", fido2Properties.getIamFido2EmailSettings().getUrl());
+        params.put("registration_verify_link", fido2Properties.getIamFido2EmailSettings().getUrl());
+        params.put("token", dbItemIamFido2Registration.getToken());
+        params.put("account_name", dbItemIamFido2Registration.getAccountName());
+        params.put("email_address", to);
 
         String body = resolve(fido2Properties.getIamFido2EmailSettings().getBody(), params);
 
         mail.addRecipient(to);
-        mail.setSubject(resolve("mySubject", params));
+        mail.setSubject(resolve(fido2Properties.getIamFido2EmailSettings().getSubject(), params));
         mail.setBody(body);
 
         try {
 
-           // if (!mail.send()) {
+            if (!mail.send()) {
 
-           // }
+            }
         } catch (Throwable e) {
             throw e;
         } finally {
