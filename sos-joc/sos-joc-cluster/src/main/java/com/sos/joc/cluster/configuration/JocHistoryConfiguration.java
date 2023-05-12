@@ -14,7 +14,7 @@ import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.cluster.common.JocClusterUtil;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
-import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc.LogMove;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc.LogExt;
 
 public class JocHistoryConfiguration implements Serializable {
 
@@ -49,9 +49,10 @@ public class JocHistoryConfiguration implements Serializable {
 
     private int maxStopProcessingOnErrors = 5;
 
-    private Path logMoveDir;
-    private LogMove logMoveOrder;
-    private LogMove logMoveTask;
+    private Path logExtDir;
+    private LogExt logExtOrderHistory;
+    private LogExt logExtOrder;
+    private LogExt logExtTask;
 
     // MB
     private int logApplicableMBSize = 500;
@@ -160,77 +161,103 @@ public class JocHistoryConfiguration implements Serializable {
         return maxStopProcessingOnErrors;
     }
 
-    public boolean isLogMoveDirEquals(Path val) {
-        if (val == null && logMoveDir == null) {
+    public boolean isLogExtDirEquals(Path val) {
+        if (val == null && logExtDir == null) {
             return true;
-        } else if (val != null && logDir != null) {
-            return val.equals(logMoveDir);
+        } else if (val != null && logExtDir != null) {
+            return val.equals(logExtDir);
         }
         return false;
     }
 
-    public boolean isLogMoveOrderEquals(LogMove val) {
-        if (val == null && logMoveOrder == null) {
+    public boolean isLogExtOrderHistoryEquals(LogExt val) {
+        if (val == null && logExtOrderHistory == null) {
             return true;
-        } else if (val != null && logMoveOrder != null) {
-            return val.equals(logMoveOrder);
+        } else if (val != null && logExtOrderHistory != null) {
+            return val.equals(logExtOrderHistory);
         }
         return false;
     }
 
-    public boolean isLogMoveTaskEquals(LogMove val) {
-        if (val == null && logMoveTask == null) {
+    public boolean isLogExtOrderEquals(LogExt val) {
+        if (val == null && logExtOrder == null) {
             return true;
-        } else if (val != null && logMoveTask != null) {
-            return val.equals(logMoveTask);
+        } else if (val != null && logExtOrder != null) {
+            return val.equals(logExtOrder);
         }
         return false;
     }
 
-    public StringBuilder setLogMove(ConfigurationGlobalsJoc joc) {
-        logMoveDir = null;
-        logMoveOrder = null;
-        logMoveTask = null;
+    public boolean isLogExtTaskEquals(LogExt val) {
+        if (val == null && logExtTask == null) {
+            return true;
+        } else if (val != null && logExtTask != null) {
+            return val.equals(logExtTask);
+        }
+        return false;
+    }
+
+    public StringBuilder setLogExt(ConfigurationGlobalsJoc joc) {
+        logExtDir = null;
+        logExtOrderHistory = null;
+        logExtOrder = null;
+        logExtTask = null;
 
         StringBuilder sb = new StringBuilder();
-        if (!SOSString.isEmpty(joc.getLogMoveDirectory().getValue())) {
-            logMoveDir = Paths.get(joc.getLogMoveDirectory().getValue()).toAbsolutePath();
-            if (!Files.exists(logMoveDir)) {
-                sb.append("[").append(joc.getLogMoveDirectory().getName()).append("=").append(logMoveDir).append(" not found]");
+        if (!SOSString.isEmpty(joc.getLogExtDirectory().getValue())) {
+            logExtDir = Paths.get(joc.getLogExtDirectory().getValue()).toAbsolutePath();
+            if (!Files.exists(logExtDir)) {
+                sb.append("[").append(joc.getLogExtDirectory().getName()).append("=").append(logExtDir).append(" not found]");
 
-                logMoveDir = null;
+                logExtDir = null;
+                return sb;
+            } else if (!SOSPath.isWritable(logExtDir)) {
+                sb.append("[").append(joc.getLogExtDirectory().getName()).append("=").append(logExtDir).append(" is not writable]");
+
+                logExtDir = null;
                 return sb;
             }
-            if (!SOSString.isEmpty(joc.getLogMoveOrder().getValue())) {
+            if (!SOSString.isEmpty(joc.getLogExtOrderHistory().getValue())) {
                 try {
-                    logMoveOrder = LogMove.valueOf(joc.getLogMoveOrder().getValue());
+                    logExtOrderHistory = LogExt.valueOf(joc.getLogExtOrderHistory().getValue());
                 } catch (Throwable e) {
-                    sb.append("[").append(joc.getLogMoveOrder().getName()).append("=").append(joc.getLogMoveOrder().getValue()).append(
+                    sb.append("[").append(joc.getLogExtOrderHistory().getName()).append("=").append(joc.getLogExtOrderHistory().getValue()).append(
                             " invalid value]");
                 }
             }
-            if (!SOSString.isEmpty(joc.getLogMoveTask().getValue())) {
+            if (!SOSString.isEmpty(joc.getLogExtOrder().getValue())) {
                 try {
-                    logMoveTask = LogMove.valueOf(joc.getLogMoveTask().getValue());
+                    logExtOrder = LogExt.valueOf(joc.getLogExtOrder().getValue());
                 } catch (Throwable e) {
-                    sb.append("[").append(joc.getLogMoveTask().getName()).append("=").append(joc.getLogMoveTask().getValue()).append(
+                    sb.append("[").append(joc.getLogExtOrder().getName()).append("=").append(joc.getLogExtOrder().getValue()).append(
                             " invalid value]");
+                }
+            }
+            if (!SOSString.isEmpty(joc.getLogExtTask().getValue())) {
+                try {
+                    logExtTask = LogExt.valueOf(joc.getLogExtTask().getValue());
+                } catch (Throwable e) {
+                    sb.append("[").append(joc.getLogExtTask().getName()).append("=").append(joc.getLogExtTask().getValue()).append(" invalid value]");
                 }
             }
         }
         return sb.length() == 0 ? null : sb;
     }
 
-    public Path getLogMoveDir() {
-        return logMoveDir;
+    public Path getLogExtDir() {
+        return logExtDir;
     }
 
-    public LogMove getLogMoveOrder() {
-        return logMoveOrder;
+    public LogExt getLogExtOrderHistory() {
+        return logExtOrderHistory;
     }
 
-    public LogMove getLogMoveTask() {
-        return logMoveTask;
+    public LogExt getLogExtOrder() {
+        return logExtOrder;
+    }
+
+    public LogExt getLogExtTask() {
+        return logExtTask;
     }
 
     public void setLogApplicableMBSize(int val) {

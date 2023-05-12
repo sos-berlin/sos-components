@@ -51,7 +51,7 @@ public class TestDailyPlanService {
         ConfigurationGlobals configurations = new ConfigurationGlobals();
         AConfigurationSection configuration = configurations.getConfigurationSection(DefaultSections.dailyplan);
 
-        service.start(getControllers(), configuration, StartupMode.manual_restart);
+        service.start(StartupMode.manual_restart, getControllers(), configuration);
         TestDailyPlanService.stopAfter(service, StartupMode.manual_restart, 13 * 60);
 
     }

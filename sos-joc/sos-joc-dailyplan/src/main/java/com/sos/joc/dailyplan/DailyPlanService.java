@@ -39,7 +39,7 @@ public class DailyPlanService extends AJocActiveMemberService {
     }
 
     @Override
-    public JocClusterAnswer start(List<ControllerConfiguration> controllers, AConfigurationSection globalSettings, StartupMode mode) {
+    public JocClusterAnswer start(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection globalSettings) {
         try {
             lastActivityStart = Instant.now();
 
@@ -100,7 +100,7 @@ public class DailyPlanService extends AJocActiveMemberService {
     }
 
     @Override
-    public void update(List<ControllerConfiguration> controllers, String controllerId, Action action) {
+    public void update(StartupMode mode, List<ControllerConfiguration> controllers, String controllerId, Action action) {
 
     }
 

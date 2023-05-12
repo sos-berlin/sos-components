@@ -38,8 +38,9 @@ import com.sos.joc.cluster.bean.history.HistoryOrderBean;
 import com.sos.joc.cluster.bean.history.HistoryOrderStepBean;
 import com.sos.joc.cluster.common.JocClusterUtil;
 import com.sos.joc.cluster.configuration.JocHistoryConfiguration;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
-import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc.LogMove;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc.LogExt;
 import com.sos.joc.db.history.DBItemHistoryAgent;
 import com.sos.joc.db.history.DBItemHistoryController;
 import com.sos.joc.db.history.DBItemHistoryLog;
@@ -114,6 +115,7 @@ import com.sos.joc.history.helper.HistoryCacheHandler;
 import com.sos.joc.history.helper.HistoryCacheHandler.CacheType;
 import com.sos.joc.history.helper.HistoryUtil;
 import com.sos.joc.history.helper.LogEntry;
+import com.sos.joc.history.helper.LogExtAsyncHandler;
 import com.sos.joc.history.helper.OrderStepProcessedResult;
 import com.sos.joc.model.history.order.Lock;
 import com.sos.joc.model.history.order.LockState;
@@ -148,6 +150,7 @@ public class HistoryModel {
     private ControllerConfiguration controllerConfiguration;
     private YadeHandler yadeHandler;
     private HistoryCacheHandler cacheHandler;
+    private final LogExtAsyncHandler logExtHandler;
     private String identifier;
     private final String variableName;
     private Long storedEventId;
@@ -187,6 +190,7 @@ public class HistoryModel {
         maxTransactions = historyConfiguration.getMaxTransactions();
         yadeHandler = new YadeHandler(controllerConfiguration.getCurrent().getId());
         cacheHandler = new HistoryCacheHandler(controllerConfiguration.getCurrent().getId(), identifier);
+        logExtHandler = new LogExtAsyncHandler(variableName + "_logExt");
     }
 
     public Long getEventId() throws Exception {
@@ -669,8 +673,12 @@ public class HistoryModel {
         return eventId.equals(Long.valueOf(0)) ? "0" : SOSDate.getTimeAsString(JocClusterUtil.eventId2Instant(eventId));
     }
 
-    public void close() {
+    public void close(StartupMode mode) {
         closed = true;
+
+        if (logExtHandler != null) {
+            logExtHandler.close(mode);
+        }
     }
 
     private void tryStoreCurrentState(DBLayerHistory dbLayer, Long eventId) throws Exception {
@@ -1704,66 +1712,94 @@ public class HistoryModel {
     }
 
     private void handleOrderLog(Path log, HistoryOrderBean hob) {
-        try {
-            boolean move = false;
-            if (hob.getParentId().equals(0L)) {
-                move = isMoveLogFile(historyConfiguration.getLogMoveOrder(), hob.getError());
-            }
-            if (move) {
-                StringBuilder sb = new StringBuilder();
-                sb.append("order.").append(hob.getWorkflowName());
-                sb.append(".").append(hob.getHistoryId());
-                // sb.append(".").append(hob.getOrderId());
-                sb.append(".log");
-                Path t = historyConfiguration.getLogMoveDir().resolve(sb.toString());
-                try {
-                    SOSPath.renameTo(log, t);
-                } catch (Throwable e) {
-                    LOGGER.warn(String.format("[handleOrderLog][%s][%s]%s", log, t, e.toString()), e);
-                    deleteLogFile(log);
-                }
+        if (hob.getParentId().equals(0L)) {
+            boolean extOH = isLogExt(historyConfiguration.getLogExtOrderHistory(), hob.getError());
+            boolean extO = isLogExt(historyConfiguration.getLogExtOrder(), hob.getError());
+            if (extOH || extO) {
+                // New Thread
+                handleMainOrderLogHistory(log, hob);
+                handleMainOrderLog(log, hob);
+                deleteLogOrderDirectory(log, hob.getOrderId());
             } else {
-                deleteLogFile(log);
+                deleteLogOrderDirectory(log, hob.getOrderId());
             }
+        } else {
+            deleteLogFile(log);
+        }
+    }
+
+    private void handleMainOrderLogHistory(Path log, HistoryOrderBean hob) {
+        // new Thread
+        StringBuilder sb = new StringBuilder();
+        sb.append("order.").append(hob.getWorkflowName());
+        sb.append(".").append(hob.getOrderId());
+        sb.append(".json");
+        Path t = historyConfiguration.getLogExtDir().resolve(sb.toString());
+        try {
+            SOSPath.copyFile(log, t);
         } catch (Throwable e) {
-            LOGGER.warn(String.format("[handleOrderLog][%s]%s", log, e.toString()), e);
+            LOGGER.warn(String.format("[handleMainOrderLogHistory][%s][%s]%s", log, t, e.toString()), e);
+        }
+    }
+
+    private void handleMainOrderLog(Path log, HistoryOrderBean hob) {
+        // new Thread
+        // TODO call API download order log
+        StringBuilder sb = new StringBuilder();
+        sb.append("order.").append(hob.getWorkflowName());
+        sb.append(".").append(hob.getOrderId());
+        sb.append(".log");
+        Path t = historyConfiguration.getLogExtDir().resolve(sb.toString());
+        try {
+            SOSPath.copyFile(log, t);
+        } catch (Throwable e) {
+            LOGGER.warn(String.format("[handleMainOrderLog][%s][%s]%s", log, t, e.toString()), e);
         }
     }
 
     private void handleTaskLog(Path log, HistoryOrderStepBean hosb) {
-        try {
-            if (isMoveLogFile(historyConfiguration.getLogMoveTask(), hosb.getError())) {
-                StringBuilder sb = new StringBuilder();
-                sb.append("task.").append(JocClusterUtil.getBasenameFromPath(hosb.getWorkflowPath()));
-                sb.append(".").append(hosb.getHistoryOrderMainParentId());
-                // sb.append(".").append(HistoryUtil.getMainOrderId(hosb.getOrderId()));
-                sb.append(".").append(hosb.getJobLabel());
-                sb.append(".").append(hosb.getHistoryId());
-                sb.append(".log");
-                Path t = historyConfiguration.getLogMoveDir().resolve(sb.toString());
-                try {
-                    SOSPath.renameTo(log, t);
-                } catch (Throwable e) {
-                    LOGGER.warn(String.format("[handleTaskLog][%s][%s]%s", log, t, e.toString()), e);
-                    deleteLogFile(log);
-                }
-            } else {
+        if (isLogExt(historyConfiguration.getLogExtTask(), hosb.getError())) {
+            // new Thread
+            StringBuilder sb = new StringBuilder();
+            sb.append("task.").append(JocClusterUtil.getBasenameFromPath(hosb.getWorkflowPath()));
+            sb.append(".").append(HistoryUtil.getMainOrderId(hosb.getOrderId()));
+            sb.append(".").append(hosb.getJobLabel());
+            sb.append(".").append(hosb.getHistoryId());
+            sb.append(".log");
+            Path t = historyConfiguration.getLogExtDir().resolve(sb.toString());
+            try {
+                SOSPath.copyFile(log, t);
+            } catch (Throwable e) {
+                LOGGER.warn(String.format("[handleTaskLog][%s][%s]%s", log, t, e.toString()), e);
+            } finally {
                 deleteLogFile(log);
             }
-        } catch (Throwable e) {
-            LOGGER.warn(String.format("[handleTaskLog][%s]%s", log, e.toString()), e);
+        } else {
+            deleteLogFile(log);
         }
     }
 
-    private void deleteLogFile(Path log) throws IOException {
+    private void deleteLogFile(Path log) {
         if (CLEANUP_LOG_FILES) {
-            Files.delete(log);
+            try {
+                Files.delete(log);
+            } catch (IOException e) {
+                LOGGER.warn(String.format("[%s][error on delete log file][%s]%s", identifier, log, e.toString()), e);
+            }
         }
     }
 
-    private boolean isMoveLogFile(LogMove lm, boolean failed) {
-        if (historyConfiguration.getLogMoveDir() != null && lm != null) {
-            switch (lm) {
+    private void deleteLogOrderDirectory(Path log, String orderId) {
+        try {
+            SOSPath.deleteIfExists(log.getParent());
+        } catch (Throwable e) {
+            LOGGER.warn(String.format("[%s][%s][error on delete order directory][%s]%s", identifier, orderId, log.getParent(), e.toString()), e);
+        }
+    }
+
+    private boolean isLogExt(LogExt v, boolean failed) {
+        if (historyConfiguration.getLogExtDir() != null && v != null) {
+            switch (v) {
             case all:
                 return true;
             case failed:
@@ -1925,13 +1961,8 @@ public class HistoryModel {
                             }
                         }
                     }
-
-                    handleTaskLog(file, hosb);
-
                 } else {// order
                     item.setFileContent(SOSPath.readFile(file, Collectors.joining(",", "[", "]")).getBytes(StandardCharsets.UTF_8));
-
-                    handleOrderLog(file, hob);
                 }
                 if (item != null) {
                     item.setCreated(new Date());
@@ -1940,9 +1971,13 @@ public class HistoryModel {
                     if (isTask) {
                         hosb.setLogId(item.getId());
                         dbLayer.setOrderStepLogId(hosb.getHistoryId(), hosb.getLogId());
+
+                        handleTaskLog(file, hosb);
                     } else {
                         hob.setLogId(item.getId());
                         dbLayer.setOrderLogId(hob.getHistoryId(), hob.getLogId());
+
+                        handleOrderLog(file, hob);
                     }
                 }
             } else {
@@ -2412,5 +2447,9 @@ public class HistoryModel {
 
     public HistoryCacheHandler getCacheHandler() {
         return cacheHandler;
+    }
+
+    public LogExtAsyncHandler getLogExtHandler() {
+        return logExtHandler;
     }
 }

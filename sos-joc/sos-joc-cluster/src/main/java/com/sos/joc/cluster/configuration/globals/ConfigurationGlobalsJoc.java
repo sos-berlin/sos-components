@@ -19,7 +19,7 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         dashboard, dailyplan, workflows, resources, history, auditlog, configuration, filetransfer, jobstreams, monitor;
     }
 
-    public static enum LogMove {
+    public static enum LogExt {
         all, failed, successful
     }
 
@@ -72,10 +72,12 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
             GlobalSettingsSectionValueType.BOOLEAN);
 
     // History - begin
-    private static final List<String> LOG_MOVE_VALUES = Stream.of(LogMove.values()).map(Enum::name).collect(Collectors.toList());
-    private ConfigurationEntry logMoveDirectory = new ConfigurationEntry("log_move_directory", "", GlobalSettingsSectionValueType.STRING);
-    private ConfigurationEntry logMoveOrder = new ConfigurationEntry("log_move_order", "", LOG_MOVE_VALUES, GlobalSettingsSectionValueType.LIST);
-    private ConfigurationEntry logMoveTask = new ConfigurationEntry("log_move_task", "", LOG_MOVE_VALUES, GlobalSettingsSectionValueType.LIST);
+    private static final List<String> LOG_EXT_VALUES = Stream.of(LogExt.values()).map(Enum::name).collect(Collectors.toList());
+    private ConfigurationEntry logExtDirectory = new ConfigurationEntry("log_ext_directory", "", GlobalSettingsSectionValueType.STRING);
+    private ConfigurationEntry logExtOrderHistory = new ConfigurationEntry("log_ext_order_history", "", LOG_EXT_VALUES,
+            GlobalSettingsSectionValueType.LIST);
+    private ConfigurationEntry logExtOrder = new ConfigurationEntry("log_ext_order", "", LOG_EXT_VALUES, GlobalSettingsSectionValueType.LIST);
+    private ConfigurationEntry logExtTask = new ConfigurationEntry("log_ext_task", "", LOG_EXT_VALUES, GlobalSettingsSectionValueType.LIST);
 
     private ConfigurationEntry logMaxDisplaySize = new ConfigurationEntry("log_maximum_display_size", "10",
             GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
@@ -125,9 +127,11 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         encoding.setOrdering(++index);
         disableWarningOnLicenseExpiration.setOrdering(++index);
 
-        logMoveDirectory.setOrdering(++index);
-        logMoveOrder.setOrdering(++index);
-        logMoveTask.setOrdering(++index);
+        logExtDirectory.setOrdering(++index);
+        logExtOrderHistory.setOrdering(++index);
+        logExtOrder.setOrdering(++index);
+        logExtTask.setOrdering(++index);
+
         logMaxDisplaySize.setOrdering(++index);
         logApplicableSize.setOrdering(++index);
         logMaxSize.setOrdering(++index);
@@ -189,16 +193,20 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         return disableWarningOnLicenseExpiration;
     }
 
-    public ConfigurationEntry getLogMoveDirectory() {
-        return logMoveDirectory;
+    public ConfigurationEntry getLogExtDirectory() {
+        return logExtDirectory;
     }
 
-    public ConfigurationEntry getLogMoveOrder() {
-        return logMoveOrder;
+    public ConfigurationEntry getLogExtOrderHistory() {
+        return logExtOrderHistory;
     }
 
-    public ConfigurationEntry getLogMoveTask() {
-        return logMoveTask;
+    public ConfigurationEntry getLogExtOrder() {
+        return logExtOrder;
+    }
+
+    public ConfigurationEntry getLogExtTask() {
+        return logExtTask;
     }
 
     public ConfigurationEntry getLogMaxSize() {

@@ -187,7 +187,7 @@ public class JocClusterService {
         JocClusterServiceLogger.setLogger();
         LOGGER.info(String.format("[ControllerAdded]%s", evt.getControllerId()));
         JocClusterServiceLogger.removeLogger();
-        updateControllerInfos(evt.getControllerId(), Action.ADDED);
+        updateControllerInfos(StartupMode.controller_added, evt.getControllerId(), Action.ADDED);
     }
 
     /** not occur during JOC start/stop */
@@ -199,7 +199,7 @@ public class JocClusterService {
         JocClusterServiceLogger.setLogger();
         LOGGER.info(String.format("[ControllerUpdated]%s", evt.getControllerId()));
         JocClusterServiceLogger.removeLogger();
-        updateControllerInfos(evt.getControllerId(), Action.UPDATED);
+        updateControllerInfos(StartupMode.controller_updated, evt.getControllerId(), Action.UPDATED);
     }
 
     /** not occur during JOC start/stop */
@@ -211,7 +211,7 @@ public class JocClusterService {
         JocClusterServiceLogger.setLogger();
         LOGGER.info(String.format("[ControllerRemoved]%s", evt.getControllerId()));
         JocClusterServiceLogger.removeLogger();
-        updateControllerInfos(evt.getControllerId(), Action.REMOVED);
+        updateControllerInfos(StartupMode.controller_removed, evt.getControllerId(), Action.REMOVED);
     }
 
     private boolean checkControllerEvent(ProxyEvent evt) {
@@ -275,14 +275,14 @@ public class JocClusterService {
                                 JocClusterServiceLogger.setLogger();
                                 LOGGER.info(String.format("[%s][%s]restart", StartupMode.settings_changed.name(), identifier));
                                 JocClusterServiceLogger.removeLogger();
-                                cluster.getActiveMemberHandler().restartService(identifier, StartupMode.settings_changed, section);
+                                cluster.getActiveMemberHandler().restartService(StartupMode.settings_changed, identifier, section);
                             }
                         }
                         if (sections.contains(DefaultSections.joc.name())) {
                             AConfigurationSection joc = Globals.configurationGlobals.getConfigurationSection(DefaultSections.joc);
                             if (joc != null) {
-                                cluster.getActiveMemberHandler().updateService(ClusterServices.history.name(), StartupMode.settings_changed, joc);
-                                cluster.getActiveMemberHandler().updateService(ClusterServices.monitor.name(), StartupMode.settings_changed, joc);
+                                cluster.getActiveMemberHandler().updateService(StartupMode.settings_changed, ClusterServices.history.name(), joc);
+                                cluster.getActiveMemberHandler().updateService(StartupMode.settings_changed, ClusterServices.monitor.name(), joc);
                             }
                         }
                     }
@@ -313,12 +313,12 @@ public class JocClusterService {
         }
     }
 
-    public void updateControllerInfos(String controllerId, Action action) {
+    public void updateControllerInfos(StartupMode mode, String controllerId, Action action) {
         if (cluster == null || !cluster.getActiveMemberHandler().isActive()) {
             return;
         }
         cluster.getActiveMemberHandler().updateControllerInfos();
-        cluster.getActiveMemberHandler().updateService(ClusterServices.history.name(), controllerId, action);
+        cluster.getActiveMemberHandler().updateService(mode, ClusterServices.history.name(), controllerId, action);
     }
 
     public JocClusterAnswer restartService(ClusterRestart r, StartupMode mode) {
@@ -334,18 +334,18 @@ public class JocClusterService {
         JocClusterAnswer answer = null;
         switch (r.getType()) {
         case history:
-            answer = cluster.getActiveMemberHandler().restartService(ClusterServices.history.name(), mode, null);
+            answer = cluster.getActiveMemberHandler().restartService(mode, ClusterServices.history.name(), null);
             break;
         case dailyplan:
-            answer = cluster.getActiveMemberHandler().restartService(ClusterServices.dailyplan.name(), mode, Globals.configurationGlobals
+            answer = cluster.getActiveMemberHandler().restartService(mode, ClusterServices.dailyplan.name(), Globals.configurationGlobals
                     .getConfigurationSection(DefaultSections.dailyplan));
             break;
         case cleanup:
-            answer = cluster.getActiveMemberHandler().restartService(ClusterServices.cleanup.name(), mode, Globals.configurationGlobals
+            answer = cluster.getActiveMemberHandler().restartService(mode, ClusterServices.cleanup.name(), Globals.configurationGlobals
                     .getConfigurationSection(DefaultSections.cleanup));
             break;
         case monitor:
-            answer = cluster.getActiveMemberHandler().restartService(ClusterServices.monitor.name(), mode, null);
+            answer = cluster.getActiveMemberHandler().restartService(mode, ClusterServices.monitor.name(), null);
             break;
         default:
             answer = JocCluster.getErrorAnswer(new Exception(String.format("%s restart not yet supported for %s", mode, r.getType())));
