@@ -50,7 +50,8 @@ public class SystemMonitoringModel {
     private static final int THREAD_POOL_CORE_POOL_SIZE = 1;
 
     private static final Set<String> SKIPPED_NOTIFIERS = new HashSet<>(Arrays.asList(SystemNotification.class.getName(), SystemNotifierModel.class
-            .getName(), SystemMonitoringModel.class.getName(), WebserviceConstants.AUDIT_LOGGER, "org.hibernate.engine.jdbc.spi.SqlExceptionHelper"));
+            .getName(), SystemMonitoringModel.class.getName(), WebserviceConstants.AUDIT_LOGGER, "org.hibernate.engine.jdbc.spi.SqlExceptionHelper",
+            "js7.common.system.ThreadPools"));
 
     private static final Set<String> SKIPPED_WARN_NOTIFIERS = new HashSet<>(Arrays.asList("js7.cluster.watch.ClusterWatchService"));
     private static final Map<String, Set<String>> SKIPPED_WARN_NOTIFIERS_BY_MESSAGE_START = Stream.of(new AbstractMap.SimpleEntry<>(
