@@ -1,6 +1,5 @@
 package com.sos.joc.security.impl;
 
-import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
@@ -17,19 +16,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.exc.StreamReadException;
-import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.auth.classes.SOSAuthHelper;
-import com.sos.auth.classes.SOSInitialPasswordSetting;
-import com.sos.auth.classes.SOSPasswordHasher;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.security.Fido2ConfirmationMail;
-import com.sos.joc.classes.security.SOSBlocklist;
 import com.sos.joc.db.authentication.DBItemIamAccount;
 import com.sos.joc.db.authentication.DBItemIamFido2Registration;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
@@ -46,9 +40,6 @@ import com.sos.joc.exceptions.JocInfoException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.security.accounts.AccountListFilter;
-import com.sos.joc.model.security.accounts.AccountsFilter;
-import com.sos.joc.model.security.blocklist.BlockedAccount;
-import com.sos.joc.model.security.blocklist.BlockedAccountsDeleteFilter;
 import com.sos.joc.model.security.fido2.CipherTypes;
 import com.sos.joc.model.security.fido2.Fido2Registration;
 import com.sos.joc.model.security.fido2.Fido2RegistrationFilter;
@@ -185,7 +176,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
                 throw new JocAuthenticationException("User " + fido2Registration.getAccountName() + " already exists");
             }
 
-            sendConfirmationEmail(dbItemIamIdentityService.getIdentityServiceName(), fido2Registration.getEmail());
+            sendConfirmationEmail(dbItemIamIdentityService.getIdentityServiceName(),dbItemIamFido2Registration, fido2Registration.getEmail());
 
             storeAuditLog(fido2Registration.getAuditLog(), CategoryType.IDENTITY);
             Globals.commit(sosHibernateSession);
@@ -588,11 +579,11 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
         return changeFlag(accessToken, body, null, true, API_CALL_REJECT);
     }
 
-    private void sendConfirmationEmail(String identityServiceName, String to) throws Exception {
+    private void sendConfirmationEmail(String identityServiceName, DBItemIamFido2Registration dbItemIamFido2Registration, String to) throws Exception {
         com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getIamProperties(identityServiceName);
 
         Fido2ConfirmationMail fido2ConfirmationMail = new Fido2ConfirmationMail(properties.getFido2());
-        fido2ConfirmationMail.sendMail(to);
+        fido2ConfirmationMail.sendMail(dbItemIamFido2Registration,to);
     }
 
     private String getProperty(String value, String defaultValue) {
