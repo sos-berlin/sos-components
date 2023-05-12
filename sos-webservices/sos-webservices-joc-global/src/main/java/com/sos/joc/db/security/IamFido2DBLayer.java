@@ -24,16 +24,12 @@ public class IamFido2DBLayer {
             query.setParameter("identityServiceId", filter.getIdentityServiceId());
         }
 
-        if (filter.getApproved() != null) {
-            query.setParameter("approved", filter.getApproved());
+        if (filter.getDeferred() != null) {
+            query.setParameter("deferred", filter.getDeferred());
         }
 
         if (filter.getConfirmed() != null) {
             query.setParameter("confirmed", filter.getConfirmed());
-        }
-
-        if (filter.getRejected() != null) {
-            query.setParameter("rejected", filter.getRejected());
         }
 
         if (filter.getAccountName() != null && !filter.getAccountName().isEmpty()) {
@@ -65,26 +61,21 @@ public class IamFido2DBLayer {
             where += and + " identityServiceId = :identityServiceId";
             and = " and ";
         }
-        if (filter.getApproved() != null) {
-            where += and + " approved = :approved";
+        if (filter.getDeferred() != null) {
+            where += and + " deferred = :deferred";
             and = " and ";
         }
         if (filter.getConfirmed() != null) {
             where += and + " confirmed = :confirmed";
             and = " and ";
         }
-        if (filter.getRejected() != null) {
-            where += and + " rejected = :rejected";
-            and = " and ";
-        }
-
         if (!where.trim().equals("")) {
             where = " where " + where;
         }
         return where;
     }
 
-    public List<DBItemIamFido2Registration> getIamAccountList(IamFido2RegistrationFilter filter, final int limit) throws SOSHibernateException {
+    public List<DBItemIamFido2Registration> getIamRegistrationList(IamFido2RegistrationFilter filter, final int limit) throws SOSHibernateException {
         Query<DBItemIamFido2Registration> query = sosHibernateSession.createQuery("from " + DBItemIamFido2Registration + getWhere(filter) + filter
                 .getOrderCriteria() + filter.getSortMode());
         bindParameters(filter, query);

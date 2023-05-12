@@ -49,9 +49,9 @@ public class Fido2ConfirmationMail {
 
         try {
 
-            if (!mail.send()) {
+           // if (!mail.send()) {
 
-            }
+           // }
         } catch (Throwable e) {
             throw e;
         } finally {

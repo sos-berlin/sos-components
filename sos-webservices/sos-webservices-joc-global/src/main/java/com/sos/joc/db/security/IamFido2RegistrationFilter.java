@@ -6,8 +6,7 @@ public class IamFido2RegistrationFilter extends SOSHibernateFilter {
     private Long identityServiceId;
     private String accountName;
     private Boolean confirmed;
-    private Boolean approved;
-    private Boolean rejected;
+    private Boolean deferred;
 
     public IamFido2RegistrationFilter() {
 
@@ -29,22 +28,6 @@ public class IamFido2RegistrationFilter extends SOSHibernateFilter {
         this.identityServiceId = identityServiceId;
     }
 
-    public Boolean getApproved() {
-        return approved;
-    }
-
-    public void setApproved(Boolean approved) {
-        this.approved = approved;
-    }
-
-    public Boolean getRejected() {
-        return rejected;
-    }
-
-    public void setRejected(Boolean rejected) {
-        this.rejected = rejected;
-    }
-
     public Boolean getConfirmed() {
         return confirmed;
     }
@@ -59,6 +42,16 @@ public class IamFido2RegistrationFilter extends SOSHibernateFilter {
 
     public void setAccountName(String accountName) {
         this.accountName = accountName;
+    }
+
+    
+    public Boolean getDeferred() {
+        return deferred;
+    }
+
+    
+    public void setDeferred(Boolean deferred) {
+        this.deferred = deferred;
     }
 
 }

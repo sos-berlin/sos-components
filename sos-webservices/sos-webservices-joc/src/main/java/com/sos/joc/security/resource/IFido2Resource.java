@@ -32,14 +32,14 @@ public interface IFido2Resource {
     public JOCDefaultResponse postFido2RegistrationDelete(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
 
     @POST
+    @Path("fido2registration/deferr")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse postFido2RegistrationDeferr(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
+
+    @POST
     @Path("fido2registration/approve")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postFido2RegistrationApprove(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
-
-    @POST
-    @Path("fido2registration/reject")
-    @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postFido2RegistrationReject(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
 
     @POST
     @Path("fido2registration/confirm")

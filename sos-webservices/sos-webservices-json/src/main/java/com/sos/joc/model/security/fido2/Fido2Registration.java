@@ -24,10 +24,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "email",
     "publicKey",
     "cipherType",
-    "approved",
-    "rejected",
+    "deferred",
     "confirmed",
-    "accessToken",
     "auditLog"
 })
 public class Fido2Registration {
@@ -75,23 +73,14 @@ public class Fido2Registration {
     @JsonProperty("cipherType")
     private CipherTypes cipherType;
     /**
-     * approved parameter
+     * deferred parameter
      * <p>
-     * true if the registration is approved
+     * true if the account is deferred
      * 
      */
-    @JsonProperty("approved")
-    @JsonPropertyDescription("true if the registration is approved")
-    private Boolean approved = false;
-    /**
-     * rejected parameter
-     * <p>
-     * true if the account is rejected
-     * 
-     */
-    @JsonProperty("rejected")
-    @JsonPropertyDescription("true if the account is rejected")
-    private Boolean rejected = false;
+    @JsonProperty("deferred")
+    @JsonPropertyDescription("true if the account is deferred")
+    private Boolean deferred = false;
     /**
      * confirmed parameter
      * <p>
@@ -101,14 +90,6 @@ public class Fido2Registration {
     @JsonProperty("confirmed")
     @JsonPropertyDescription("true if the registration is confirmed")
     private Boolean confirmed = false;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("accessToken")
-    private String accessToken;
     /**
      * auditParams
      * <p>
@@ -127,28 +108,24 @@ public class Fido2Registration {
 
     /**
      * 
+     * @param deferred
      * @param identityServiceName
-     * @param approved
      * @param auditLog
      * @param accountName
-     * @param rejected
      * @param publicKey
-     * @param accessToken
      * @param confirmed
      * @param email
      * @param cipherType
      */
-    public Fido2Registration(String identityServiceName, String accountName, String email, String publicKey, CipherTypes cipherType, Boolean approved, Boolean rejected, Boolean confirmed, String accessToken, AuditParams auditLog) {
+    public Fido2Registration(String identityServiceName, String accountName, String email, String publicKey, CipherTypes cipherType, Boolean deferred, Boolean confirmed, AuditParams auditLog) {
         super();
         this.identityServiceName = identityServiceName;
         this.accountName = accountName;
         this.email = email;
         this.publicKey = publicKey;
         this.cipherType = cipherType;
-        this.approved = approved;
-        this.rejected = rejected;
+        this.deferred = deferred;
         this.confirmed = confirmed;
-        this.accessToken = accessToken;
         this.auditLog = auditLog;
     }
 
@@ -267,47 +244,25 @@ public class Fido2Registration {
     }
 
     /**
-     * approved parameter
+     * deferred parameter
      * <p>
-     * true if the registration is approved
+     * true if the account is deferred
      * 
      */
-    @JsonProperty("approved")
-    public Boolean getApproved() {
-        return approved;
+    @JsonProperty("deferred")
+    public Boolean getDeferred() {
+        return deferred;
     }
 
     /**
-     * approved parameter
+     * deferred parameter
      * <p>
-     * true if the registration is approved
+     * true if the account is deferred
      * 
      */
-    @JsonProperty("approved")
-    public void setApproved(Boolean approved) {
-        this.approved = approved;
-    }
-
-    /**
-     * rejected parameter
-     * <p>
-     * true if the account is rejected
-     * 
-     */
-    @JsonProperty("rejected")
-    public Boolean getRejected() {
-        return rejected;
-    }
-
-    /**
-     * rejected parameter
-     * <p>
-     * true if the account is rejected
-     * 
-     */
-    @JsonProperty("rejected")
-    public void setRejected(Boolean rejected) {
-        this.rejected = rejected;
+    @JsonProperty("deferred")
+    public void setDeferred(Boolean deferred) {
+        this.deferred = deferred;
     }
 
     /**
@@ -330,28 +285,6 @@ public class Fido2Registration {
     @JsonProperty("confirmed")
     public void setConfirmed(Boolean confirmed) {
         this.confirmed = confirmed;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("accessToken")
-    public String getAccessToken() {
-        return accessToken;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("accessToken")
-    public void setAccessToken(String accessToken) {
-        this.accessToken = accessToken;
     }
 
     /**
@@ -378,12 +311,12 @@ public class Fido2Registration {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("accountName", accountName).append("email", email).append("publicKey", publicKey).append("cipherType", cipherType).append("approved", approved).append("rejected", rejected).append("confirmed", confirmed).append("accessToken", accessToken).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("accountName", accountName).append("email", email).append("publicKey", publicKey).append("cipherType", cipherType).append("deferred", deferred).append("confirmed", confirmed).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(identityServiceName).append(approved).append(auditLog).append(accountName).append(rejected).append(publicKey).append(accessToken).append(confirmed).append(email).append(cipherType).toHashCode();
+        return new HashCodeBuilder().append(deferred).append(identityServiceName).append(auditLog).append(accountName).append(publicKey).append(confirmed).append(email).append(cipherType).toHashCode();
     }
 
     @Override
@@ -395,7 +328,7 @@ public class Fido2Registration {
             return false;
         }
         Fido2Registration rhs = ((Fido2Registration) other);
-        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(approved, rhs.approved).append(auditLog, rhs.auditLog).append(accountName, rhs.accountName).append(rejected, rhs.rejected).append(publicKey, rhs.publicKey).append(accessToken, rhs.accessToken).append(confirmed, rhs.confirmed).append(email, rhs.email).append(cipherType, rhs.cipherType).isEquals();
+        return new EqualsBuilder().append(deferred, rhs.deferred).append(identityServiceName, rhs.identityServiceName).append(auditLog, rhs.auditLog).append(accountName, rhs.accountName).append(publicKey, rhs.publicKey).append(confirmed, rhs.confirmed).append(email, rhs.email).append(cipherType, rhs.cipherType).isEquals();
     }
 
 }

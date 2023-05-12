@@ -19,8 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "accountName",
     "identityServiceName",
-    "approved",
-    "rejected",
+    "deferred",
     "confirmed"
 })
 public class Fido2RegistrationListFilter {
@@ -42,10 +41,8 @@ public class Fido2RegistrationListFilter {
      */
     @JsonProperty("identityServiceName")
     private String identityServiceName;
-    @JsonProperty("approved")
-    private Boolean approved = false;
-    @JsonProperty("rejected")
-    private Boolean rejected = false;
+    @JsonProperty("deferred")
+    private Boolean deferred = false;
     @JsonProperty("confirmed")
     private Boolean confirmed = false;
 
@@ -58,18 +55,16 @@ public class Fido2RegistrationListFilter {
 
     /**
      * 
+     * @param deferred
      * @param identityServiceName
-     * @param approved
      * @param accountName
-     * @param rejected
      * @param confirmed
      */
-    public Fido2RegistrationListFilter(String accountName, String identityServiceName, Boolean approved, Boolean rejected, Boolean confirmed) {
+    public Fido2RegistrationListFilter(String accountName, String identityServiceName, Boolean deferred, Boolean confirmed) {
         super();
         this.accountName = accountName;
         this.identityServiceName = identityServiceName;
-        this.approved = approved;
-        this.rejected = rejected;
+        this.deferred = deferred;
         this.confirmed = confirmed;
     }
 
@@ -119,24 +114,14 @@ public class Fido2RegistrationListFilter {
         this.identityServiceName = identityServiceName;
     }
 
-    @JsonProperty("approved")
-    public Boolean getApproved() {
-        return approved;
+    @JsonProperty("deferred")
+    public Boolean getDeferred() {
+        return deferred;
     }
 
-    @JsonProperty("approved")
-    public void setApproved(Boolean approved) {
-        this.approved = approved;
-    }
-
-    @JsonProperty("rejected")
-    public Boolean getRejected() {
-        return rejected;
-    }
-
-    @JsonProperty("rejected")
-    public void setRejected(Boolean rejected) {
-        this.rejected = rejected;
+    @JsonProperty("deferred")
+    public void setDeferred(Boolean deferred) {
+        this.deferred = deferred;
     }
 
     @JsonProperty("confirmed")
@@ -151,12 +136,12 @@ public class Fido2RegistrationListFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("accountName", accountName).append("identityServiceName", identityServiceName).append("approved", approved).append("rejected", rejected).append("confirmed", confirmed).toString();
+        return new ToStringBuilder(this).append("accountName", accountName).append("identityServiceName", identityServiceName).append("deferred", deferred).append("confirmed", confirmed).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(identityServiceName).append(approved).append(accountName).append(rejected).append(confirmed).toHashCode();
+        return new HashCodeBuilder().append(deferred).append(identityServiceName).append(accountName).append(confirmed).toHashCode();
     }
 
     @Override
@@ -168,7 +153,7 @@ public class Fido2RegistrationListFilter {
             return false;
         }
         Fido2RegistrationListFilter rhs = ((Fido2RegistrationListFilter) other);
-        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(approved, rhs.approved).append(accountName, rhs.accountName).append(rejected, rhs.rejected).append(confirmed, rhs.confirmed).isEquals();
+        return new EqualsBuilder().append(deferred, rhs.deferred).append(identityServiceName, rhs.identityServiceName).append(accountName, rhs.accountName).append(confirmed, rhs.confirmed).isEquals();
     }
 
 }

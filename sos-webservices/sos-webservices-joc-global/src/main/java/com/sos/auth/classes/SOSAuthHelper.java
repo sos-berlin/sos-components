@@ -1,6 +1,7 @@
 package com.sos.auth.classes;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.security.SecureRandom;
 import java.security.cert.CertificateEncodingException;
 import java.util.ArrayList;
@@ -14,6 +15,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
 import javax.naming.InvalidNameException;
 
 import org.slf4j.Logger;
@@ -32,6 +36,7 @@ import com.sos.joc.db.authentication.DBItemIamPermissionWithName;
 import com.sos.joc.db.authentication.DBItemIamRole;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
+import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.db.security.IamAccountFilter;
@@ -42,11 +47,17 @@ import com.sos.joc.db.security.IamRoleFilter;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
+import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
 import jakarta.servlet.http.HttpServletRequest;
 
 public class SOSAuthHelper {
+
+    private static final String DEFAULT_PROFILE_ACCOUNT = "default_profile_account";
+    private static final String JOC = "joc";
+    private static final String VALUE = "value";
+    private static final String ROOT = "root";
 
     public static final List<String> SUPPORTED_SUBTYPES = Arrays.asList("gif", "jpeg", "png", "icon", "svg");
 
@@ -377,7 +388,8 @@ public class SOSAuthHelper {
         }
     }
 
-    public static DBItemIamIdentityService getIdentityServiceById(SOSHibernateSession sosHibernateSession, Long identityServiceId) throws SOSHibernateException {
+    public static DBItemIamIdentityService getIdentityServiceById(SOSHibernateSession sosHibernateSession, Long identityServiceId)
+            throws SOSHibernateException {
         if (identityServiceId == null) {
             return null;
         }
@@ -390,4 +402,58 @@ public class SOSAuthHelper {
         }
         return dbItemIamIdentityService;
     }
+
+    private static String getDefaultProfileName(SOSHibernateSession sosHibernateSession) throws SOSHibernateException {
+        JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
+        JocConfigurationFilter filter = new JocConfigurationFilter();
+        filter.setConfigurationType(ConfigurationType.GLOBALS.name());
+        DBItemJocConfiguration dbItem = jocConfigurationDBLayer.getJocConfiguration(filter, 0);
+
+        if (dbItem != null) {
+            JsonReader json = Json.createReader(new StringReader(dbItem.getConfigurationItem()));
+            JsonObject jsonObject = json.readObject();
+            if (jsonObject.getJsonObject(JOC) == null || jsonObject.getJsonObject(JOC).getJsonObject(DEFAULT_PROFILE_ACCOUNT) == null || jsonObject
+                    .getJsonObject(JOC).getJsonObject(DEFAULT_PROFILE_ACCOUNT).getString(VALUE) == null) {
+                return ROOT;
+            } else {
+                return jsonObject.getJsonObject(JOC).getJsonObject(DEFAULT_PROFILE_ACCOUNT).getString(VALUE);
+            }
+        } else {
+            return ROOT;
+        }
+    }
+
+    public static void storeDefaultProfile(SOSHibernateSession sosHibernateSession, String account) throws SOSHibernateException {
+        InventoryInstancesDBLayer inventoryInstancesDBLayer = new InventoryInstancesDBLayer(sosHibernateSession);
+        List<String> controllerIds = inventoryInstancesDBLayer.getControllerIds();
+        String defaultProfileName = getDefaultProfileName(sosHibernateSession);
+        JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
+        JocConfigurationFilter filter = new JocConfigurationFilter();
+        filter.setConfigurationType(ConfigurationType.PROFILE.name());
+
+        for (String controllerId : controllerIds) {
+            filter.setAccount(defaultProfileName);
+            filter.setControllerId(controllerId);
+            DBItemJocConfiguration dbItem = jocConfigurationDBLayer.getJocConfiguration(filter, 0);
+
+            if (dbItem != null) {
+                filter.setAccount(account);
+                DBItemJocConfiguration dbItemJocConfiguration = jocConfigurationDBLayer.getJocConfiguration(filter, 0);
+                if (dbItemJocConfiguration == null) {
+                    dbItemJocConfiguration = new DBItemJocConfiguration();
+                    dbItemJocConfiguration.setAccount(account);
+                    dbItemJocConfiguration.setConfigurationItem(dbItem.getConfigurationItem());
+                    dbItemJocConfiguration.setConfigurationType(dbItem.getConfigurationType());
+                    dbItemJocConfiguration.setControllerId(dbItem.getControllerId());
+                    dbItemJocConfiguration.setInstanceId(dbItem.getInstanceId());
+                    dbItemJocConfiguration.setName(dbItem.getName());
+                    dbItemJocConfiguration.setObjectType(dbItem.getObjectType());
+                    dbItemJocConfiguration.setShared(dbItem.getShared());
+                    jocConfigurationDBLayer.saveOrUpdateConfiguration(dbItemJocConfiguration);
+                }
+
+            }
+        }
+    }
+
 }

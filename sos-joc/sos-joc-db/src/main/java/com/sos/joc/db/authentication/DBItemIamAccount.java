@@ -34,6 +34,15 @@ public class DBItemIamAccount {
     @Column(name = "[ACCOUNT_PASSWORD]", nullable = false)
     private String accountPassword;
 
+    @Column(name = "[CHALLENGE]", nullable = true)
+    private String challenge;
+    
+    @Column(name = "[EMAIL]", nullable = true)
+    private String email;
+    
+    @Column(name = "[PUBLIC_KEY]", nullable = true)
+    private String publicKey;
+
     @Column(name = "[FORCE_PASSWORD_CHANGE]", nullable = false)
     @Type(type = "numeric_boolean")
     private Boolean forcePasswordChange;
@@ -92,6 +101,36 @@ public class DBItemIamAccount {
 
     public void setForcePasswordChange(Boolean forcePasswordChange) {
         this.forcePasswordChange = forcePasswordChange;
+    }
+
+    
+    public String getEmail() {
+        return email;
+    }
+
+    
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    
+    public String getPublicKey() {
+        return publicKey;
+    }
+
+    
+    public void setPublicKey(String publicKey) {
+        this.publicKey = publicKey;
+    }
+
+    
+    public String getChallenge() {
+        return challenge;
+    }
+
+    
+    public void setChallenge(String challenge) {
+        this.challenge = challenge;
     }
 
 }
