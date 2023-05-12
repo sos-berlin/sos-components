@@ -1,8 +1,6 @@
 package com.sos.joc.controllers.impl;
 
-import java.io.InputStream;
-import java.net.UnknownHostException;
-import java.nio.file.Paths;
+import java.net.URI;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
@@ -13,13 +11,9 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import javax.json.Json;
-
 import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.commons.util.SOSShell;
-import com.sos.commons.util.SOSString;
 import com.sos.controller.model.cluster.ClusterType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -53,16 +47,11 @@ import com.sos.joc.model.joc.DB;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
-import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.UriInfo;
 
 @Path("controller")
 public class ControllersResourceComponentsImpl extends JOCResourceImpl implements IControllersResourceComponents {
 
     private static final String API_CALL = "./controller/components";
-
-    @Context
-    UriInfo uriInfo;
 
     @Override
     public JOCDefaultResponse postComponents(String accessToken, byte[] filterBytes) {
@@ -116,32 +105,13 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
         }
     }
 
-    private String getUri(String hostname) {
-        String baseUri = uriInfo.getBaseUri().normalize().toString().replaceFirst("/joc/api(/.*)?$", "");
-        if (baseUri.matches("https?://localhost:.*") && hostname != null && !hostname.equals("unknown")) {
-            baseUri = baseUri.replaceFirst("^(https?://)localhost:", "$1" + hostname + ":");
-        }
-        return baseUri;
-    }
-
-    private String getHostname() {
-        String hostname = "unknown";
-        try {
-            hostname = SOSShell.getHostname();
-        } catch (UnknownHostException e) {
-            // LOGGER.error(e.toString(), e);
-        }
-        return hostname;
-    }
-
     private List<Cockpit> setCockpits(SOSHibernateSession connection, List<ControllerConnectionState> fakeControllerConnections,
             List<ControllerConnectionState> unknownControllerConnections) throws DBConnectionRefusedException, DBInvalidDataException {
         JocInstancesDBLayer dbLayer = new JocInstancesDBLayer(connection);
         List<DBItemJocInstance> instances = dbLayer.getJocInstances();
         DBItemJocCluster activeInstance = dbLayer.getCluster();
         List<Cockpit> cockpits = new ArrayList<>();
-        String hostname = getHostname();
-        String curMemberId = hostname + ":" + SOSString.hash256(Paths.get(System.getProperty("user.dir")).toString());
+        String curMemberId = Globals.getMemberId();
         if (instances != null) {
             Boolean isCluster = instances.size() > 1;
             InventoryOperatingSystemsDBLayer dbOsLayer = new InventoryOperatingSystemsDBLayer(connection);
@@ -151,7 +121,6 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
             if (operatingSystems != null) {
                 osMap = operatingSystems.stream().collect(Collectors.toMap(DBItemInventoryOperatingSystem::getId, Function.identity()));
             }
-            String version = readVersion();
             long nowSeconds = Instant.now().getEpochSecond();
             // TODO version should be in database
             for (DBItemJocInstance instance : instances) {
@@ -179,7 +148,7 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
                 }
                 cockpit.setStartedAt(instance.getStartedAt());
                 cockpit.setTitle(instance.getTitle());
-                cockpit.setVersion(version);
+                cockpit.setVersion(instance.getVersion() == null ? "unknown" : instance.getVersion());
                 cockpit.setLastHeartbeat(instance.getHeartBeat());
 
                 // determine ClusterNodeState
@@ -218,9 +187,9 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
                 }
 
                 if (cockpit.getCurrent()) {
-                    String uri = getUri(hostname);
-                    if (!uri.equals(instance.getUri())) {
-                        instance.setUri(uri);
+                    URI uri = Globals.servletBaseUri;
+                    if (uri != null && !uri.toString().equals(instance.getUri())) {
+                        instance.setUri(uri.toString());
                         dbLayer.update(instance);
                     }
                 }
@@ -230,19 +199,6 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
             }
         }
         return cockpits;
-    }
-
-    private static String readVersion() {
-        String versionFile = "/version.json";
-        try {
-            InputStream stream = ControllersResourceComponentsImpl.class.getClassLoader().getResourceAsStream(versionFile);
-            if (stream != null) {
-                return Json.createReader(stream).readObject().getString("version", "unknown");
-            }
-        } catch (Exception e) {
-            //
-        }
-        return "unknown";
     }
 
     private static DB getDB(SOSHibernateSession connection) throws SOSHibernateException {

@@ -123,8 +123,7 @@ public class JocsImpl extends JOCResourceImpl implements IJocsResource {
                     }
                     cockpit.setStartedAt(instance.getStartedAt());
                     cockpit.setTitle(instance.getTitle());
-                    // TODO only temp. delete Globals.curVersion later 
-                    cockpit.setVersion(instance.getVersion() == null ? Globals.curVersion : instance.getVersion());
+                    cockpit.setVersion(instance.getVersion() == null ? "unknown" : instance.getVersion());
                     cockpit.setLastHeartbeat(instance.getHeartBeat());
 
                     // determine ComponentState/ConnectionState depends on last heart beat
