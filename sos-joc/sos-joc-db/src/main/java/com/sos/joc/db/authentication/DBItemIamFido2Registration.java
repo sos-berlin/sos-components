@@ -36,6 +36,9 @@ public class DBItemIamFido2Registration {
     @Column(name = "[ACCOUNT_NAME]", nullable = false)
     private String accountName;
 
+    @Column(name = "[TOKEN]", nullable = false)
+    private String token;
+
     @Column(name = "[PUBLIC_KEY]", nullable = false)
     private String publicKey;
 
@@ -98,7 +101,11 @@ public class DBItemIamFido2Registration {
     }
 
     public void setApproved(Boolean approved) {
-        this.approved = approved;
+        if (approved == null) {
+            this.approved = false;
+        } else {
+            this.approved = approved;
+        }
     }
 
     public Boolean getRejected() {
@@ -106,7 +113,11 @@ public class DBItemIamFido2Registration {
     }
 
     public void setRejected(Boolean rejected) {
-        this.rejected = rejected;
+        if (rejected == null) {
+            this.rejected = false;
+        } else {
+            this.rejected = rejected;
+        }
     }
 
     public Boolean getConfirmed() {
@@ -114,7 +125,11 @@ public class DBItemIamFido2Registration {
     }
 
     public void setConfirmed(Boolean confirmed) {
-        this.confirmed = confirmed;
+        if (confirmed == null) {
+            this.confirmed = false;
+        } else {
+            this.confirmed = confirmed;
+        }
     }
 
     public String getAccountName() {
@@ -139,6 +154,16 @@ public class DBItemIamFido2Registration {
 
     public void setChallenge(String challenge) {
         this.challenge = challenge;
+    }
+
+    
+    public String getToken() {
+        return token;
+    }
+
+    
+    public void setToken(String token) {
+        this.token = token;
     }
 
 }

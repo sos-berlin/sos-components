@@ -161,12 +161,13 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             }
 
             dbItemIamFido2Registration.setConfirmed(fido2Registration.getConfirmed());
+            dbItemIamFido2Registration.setRejected(fido2Registration.getRejected());
             dbItemIamFido2Registration.setApproved(fido2Registration.getApproved());
             dbItemIamFido2Registration.setEmail(fido2Registration.getEmail());
             dbItemIamFido2Registration.setPublicKey(fido2Registration.getEmail());
-            dbItemIamFido2Registration.setRejected(fido2Registration.getRejected());
             dbItemIamFido2Registration.setAccountName(fido2Registration.getAccountName());
             dbItemIamFido2Registration.setIdentityServiceId(dbItemIamIdentityService.getId());
+            dbItemIamFido2Registration.setToken(SOSAuthHelper.createAccessToken());
             dbItemIamFido2Registration.setCreated(new Date());
 
             if (isNew) {
@@ -247,9 +248,9 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
         }
     }
 
-    private String getChallenge(DBItemIamFido2Registration dbItemIamFido2Registration, String identityServiceName, String challengeToken) throws InvalidKeyException,
-            BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException, NoSuchAlgorithmException, JsonMappingException,
-            JsonProcessingException, SOSHibernateException {
+    private String getChallenge(DBItemIamFido2Registration dbItemIamFido2Registration, String identityServiceName, String challengeToken)
+            throws InvalidKeyException, BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException, NoSuchAlgorithmException,
+            JsonMappingException, JsonProcessingException, SOSHibernateException {
 
         com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getIamProperties(identityServiceName);
 
@@ -291,8 +292,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             if (dbItemIamFido2Registration != null) {
                 if (dbItemIamFido2Registration.getApproved()) {
                     String challengeToken = SOSAuthHelper.createAccessToken();
-                    String challenge = getChallenge(dbItemIamFido2Registration, fido2RequestAuthentication
-                            .getIdentityServiceName(),challengeToken);
+                    String challenge = getChallenge(dbItemIamFido2Registration, fido2RequestAuthentication.getIdentityServiceName(), challengeToken);
                     dbItemIamFido2Registration.setChallenge(challengeToken);
                     fido2RequestAuthentication.setChallenge(challenge);
                     sosHibernateSession.update(dbItemIamFido2Registration);
@@ -515,7 +515,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
 
     @Override
     public JOCDefaultResponse postFido2RegistrationApprove(String accessToken, byte[] body) {
-        return changeFlag(accessToken, body, true, null, null, API_CALL_APPROVE);
+        return changeFlag(accessToken, body, true, false, null, API_CALL_APPROVE);
     }
 
     @Override

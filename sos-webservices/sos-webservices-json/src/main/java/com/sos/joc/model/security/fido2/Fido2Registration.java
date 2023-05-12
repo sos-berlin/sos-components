@@ -82,7 +82,7 @@ public class Fido2Registration {
      */
     @JsonProperty("approved")
     @JsonPropertyDescription("true if the registration is approved")
-    private Boolean approved;
+    private Boolean approved = false;
     /**
      * rejected parameter
      * <p>
@@ -91,7 +91,7 @@ public class Fido2Registration {
      */
     @JsonProperty("rejected")
     @JsonPropertyDescription("true if the account is rejected")
-    private Boolean rejected;
+    private Boolean rejected = false;
     /**
      * confirmed parameter
      * <p>
@@ -100,7 +100,7 @@ public class Fido2Registration {
      */
     @JsonProperty("confirmed")
     @JsonPropertyDescription("true if the registration is confirmed")
-    private Boolean confirmed;
+    private Boolean confirmed = false;
     /**
      * string without < and >
      * <p>

@@ -27,7 +27,7 @@ public class SOSInternAuthLogin implements ISOSLogin {
     public void login(SOSAuthCurrentAccount currentAccount, String pwd) {
         try {
             SOSInternAuthWebserviceCredentials sosInternAuthWebserviceCredentials = new SOSInternAuthWebserviceCredentials();
-            sosInternAuthWebserviceCredentials.setIdentityServiceId(identityService.getIdentityServiceId());
+            sosInternAuthWebserviceCredentials.setIdentityService(identityService);
             sosInternAuthWebserviceCredentials.setAccount(currentAccount.getAccountname());
             SOSInternAuthHandler sosInternAuthHandler = new SOSInternAuthHandler();
 
@@ -35,14 +35,7 @@ public class SOSInternAuthLogin implements ISOSLogin {
 
             boolean disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), currentAccount.getAccountname());
             if (!disabled && !identityService.isSecondFactor()) {
-                if (identityService.isSingleFactor()) {
-                    sosInternAuthAccessToken = sosInternAuthHandler.login(sosInternAuthWebserviceCredentials, pwd);
-                } else {
-                    if ((identityService.isTwoFactor() && SOSAuthHelper.checkCertificate(currentAccount.getHttpServletRequest(), currentAccount
-                            .getAccountname()))) {
-                        sosInternAuthAccessToken = sosInternAuthHandler.login(sosInternAuthWebserviceCredentials, pwd);
-                    }
-                }
+                sosInternAuthAccessToken = sosInternAuthHandler.login(currentAccount,sosInternAuthWebserviceCredentials, pwd);
             }
 
             sosInternAuthSubject = new SOSInternAuthSubject();

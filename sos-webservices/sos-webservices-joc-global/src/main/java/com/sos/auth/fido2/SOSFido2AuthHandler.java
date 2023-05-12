@@ -46,8 +46,8 @@ public class SOSFido2AuthHandler {
 
             DBItemIamFido2Registration dbItemIamFido2Registration = iamFido2DBLayer.getUniqueFido2Registration(filter);
 
-            if (dbItemIamFido2Registration != null && (dbItemIamFido2Registration.getChallenge().equals(sosFido2AuthWebserviceCredentials
-                    .getChallenge()))) {
+            if (dbItemIamFido2Registration != null && dbItemIamFido2Registration.getApproved() && !dbItemIamFido2Registration.getRejected()
+                    && (dbItemIamFido2Registration.getChallenge().equals(sosFido2AuthWebserviceCredentials.getChallenge()))) {
                 sosAuthAccessToken = new SOSAuthAccessToken();
                 sosAuthAccessToken.setAccessToken(SOSAuthHelper.createSessionId());
             }
