@@ -48,13 +48,9 @@ public class DBItemIamFido2Registration {
     @Column(name = "[CHALLENGE]", nullable = false)
     private String challenge;
 
-    @Column(name = "[APPROVED]", nullable = false)
+    @Column(name = "[DEFERRED]", nullable = false)
     @Type(type = "numeric_boolean")
-    private Boolean approved;
-
-    @Column(name = "[REJECTED]", nullable = false)
-    @Type(type = "numeric_boolean")
-    private Boolean rejected;
+    private Boolean deferred;
 
     @Column(name = "[CONFIRMED]", nullable = false)
     @Type(type = "numeric_boolean")
@@ -96,27 +92,15 @@ public class DBItemIamFido2Registration {
         this.email = email;
     }
 
-    public Boolean getApproved() {
-        return approved;
+    public Boolean getDeferred() {
+        return deferred;
     }
 
-    public void setApproved(Boolean approved) {
-        if (approved == null) {
-            this.approved = false;
+    public void setDeferred(Boolean deferred) {
+        if (deferred == null) {
+            this.deferred = false;
         } else {
-            this.approved = approved;
-        }
-    }
-
-    public Boolean getRejected() {
-        return rejected;
-    }
-
-    public void setRejected(Boolean rejected) {
-        if (rejected == null) {
-            this.rejected = false;
-        } else {
-            this.rejected = rejected;
+            this.deferred = deferred;
         }
     }
 
@@ -156,12 +140,10 @@ public class DBItemIamFido2Registration {
         this.challenge = challenge;
     }
 
-    
     public String getToken() {
         return token;
     }
 
-    
     public void setToken(String token) {
         this.token = token;
     }

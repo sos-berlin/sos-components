@@ -81,10 +81,6 @@ import com.sos.schema.JsonValidator;
 @Path("iam")
 public class AccountResourceImpl extends JOCResourceImpl implements IAccountResource {
 
-    private static final String VALUE = "value";
-    private static final String DEFAULT_PROFILE_ACCOUNT = "default_profile_account";
-    private static final String JOC = "joc";
-    private static final String ROOT = "root";
     private static final Logger LOGGER = LoggerFactory.getLogger(AccountResourceImpl.class);
     private static final String API_CALL_ACCOUNTS = "./iam/accounts";
     private static final String API_CALL_ACCOUNT_READ = "./iam/account";
@@ -132,6 +128,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             if (dbItemIamAccount != null) {
                 account.setDisabled(dbItemIamAccount.getDisabled());
                 account.setAccountName(accountFilter.getAccountName());
+                account.setEmail(dbItemIamAccount.getEmail());
                 account.setForcePasswordChange(dbItemIamAccount.getForcePasswordChange());
                 account.setIdentityServiceName(accountFilter.getIdentityServiceName());
                 List<DBItemIamPermissionWithName> roles = iamAccountDBLayer.getListOfRolesForAccountName(accountFilter.getAccountName(),
@@ -153,59 +150,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
         }
     }
 
-    private String getDefaultProfileName(SOSHibernateSession sosHibernateSession) throws SOSHibernateException {
-        JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
-        JocConfigurationFilter filter = new JocConfigurationFilter();
-        filter.setConfigurationType(ConfigurationType.GLOBALS.name());
-        DBItemJocConfiguration dbItem = jocConfigurationDBLayer.getJocConfiguration(filter, 0);
-
-        if (dbItem != null) {
-            JsonReader json = Json.createReader(new StringReader(dbItem.getConfigurationItem()));
-            JsonObject jsonObject = json.readObject();
-            if (jsonObject.getJsonObject(JOC) == null || jsonObject.getJsonObject(JOC).getJsonObject(DEFAULT_PROFILE_ACCOUNT) == null
-                    || jsonObject.getJsonObject(JOC).getJsonObject(DEFAULT_PROFILE_ACCOUNT).getString(VALUE) == null) {
-                return ROOT;
-            } else {
-                return jsonObject.getJsonObject(JOC).getJsonObject(DEFAULT_PROFILE_ACCOUNT).getString(VALUE);
-            }
-        } else {
-            return ROOT;
-        }
-    }
-
-    private void storeDefaultProfile(SOSHibernateSession sosHibernateSession, String account) throws SOSHibernateException {
-        InventoryInstancesDBLayer inventoryInstancesDBLayer = new InventoryInstancesDBLayer(sosHibernateSession);
-        List<String> controllerIds = inventoryInstancesDBLayer.getControllerIds();
-        String defaultProfileName = getDefaultProfileName(sosHibernateSession);
-        JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
-        JocConfigurationFilter filter = new JocConfigurationFilter();
-        filter.setConfigurationType(ConfigurationType.PROFILE.name());
-
-        for (String controllerId : controllerIds) {
-            filter.setAccount(defaultProfileName);
-            filter.setControllerId(controllerId);
-            DBItemJocConfiguration dbItem = jocConfigurationDBLayer.getJocConfiguration(filter, 0);
-
-            if (dbItem != null) {
-                filter.setAccount(account);
-                DBItemJocConfiguration dbItemAccount = jocConfigurationDBLayer.getJocConfiguration(filter, 0);
-                if (dbItemAccount == null) {
-                    dbItemAccount = new DBItemJocConfiguration();
-                    dbItemAccount.setAccount(account);
-                    dbItemAccount.setConfigurationItem(dbItem.getConfigurationItem());
-                    dbItemAccount.setConfigurationType(dbItem.getConfigurationType());
-                    dbItemAccount.setControllerId(dbItem.getControllerId());
-                    dbItemAccount.setInstanceId(dbItem.getInstanceId());
-                    dbItemAccount.setName(dbItem.getName());
-                    dbItemAccount.setObjectType(dbItem.getObjectType());
-                    dbItemAccount.setShared(dbItem.getShared());
-                    jocConfigurationDBLayer.saveOrUpdateConfiguration(dbItemAccount);
-                }
-
-            }
-        }
-    }
-
+    
     @Override
     public JOCDefaultResponse postAccountStore(String accessToken, byte[] body) {
         SOSHibernateSession sosHibernateSession = null;
@@ -298,7 +243,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
 
             if (newAccount) {
                 sosHibernateSession.save(dbItemIamAccount);
-                storeDefaultProfile(sosHibernateSession, account.getAccountName());
+                SOSAuthHelper.storeDefaultProfile(sosHibernateSession, account.getAccountName());
             } else {
                 sosHibernateSession.update(dbItemIamAccount);
             }

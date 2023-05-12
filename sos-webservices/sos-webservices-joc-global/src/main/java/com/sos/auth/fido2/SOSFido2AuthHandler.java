@@ -10,10 +10,10 @@ import com.sos.auth.sosintern.classes.SOSInternAuthLogin;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
-import com.sos.joc.db.authentication.DBItemIamFido2Registration;
+import com.sos.joc.db.authentication.DBItemIamAccount;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
-import com.sos.joc.db.security.IamFido2DBLayer;
-import com.sos.joc.db.security.IamFido2RegistrationFilter;
+import com.sos.joc.db.security.IamAccountDBLayer;
+import com.sos.joc.db.security.IamAccountFilter;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
@@ -39,15 +39,15 @@ public class SOSFido2AuthHandler {
                         .getIdentityServiceType() + ">");
             }
 
-            IamFido2DBLayer iamFido2DBLayer = new IamFido2DBLayer(sosHibernateSession);
-            IamFido2RegistrationFilter filter = new IamFido2RegistrationFilter();
+            IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
+            IamAccountFilter filter = new IamAccountFilter();
             filter.setIdentityServiceId(dbItemIamIdentityService.getId());
             filter.setAccountName(sosFido2AuthWebserviceCredentials.getAccount());
 
-            DBItemIamFido2Registration dbItemIamFido2Registration = iamFido2DBLayer.getUniqueFido2Registration(filter);
+            DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getUniqueAccount(filter);
 
-            if (dbItemIamFido2Registration != null && dbItemIamFido2Registration.getApproved() && !dbItemIamFido2Registration.getRejected()
-                    && (dbItemIamFido2Registration.getChallenge().equals(sosFido2AuthWebserviceCredentials.getChallenge()))) {
+            if (dbItemIamAccount != null  
+                    && (dbItemIamAccount.getChallenge().equals(sosFido2AuthWebserviceCredentials.getChallenge()))) {
                 sosAuthAccessToken = new SOSAuthAccessToken();
                 sosAuthAccessToken.setAccessToken(SOSAuthHelper.createSessionId());
             }
