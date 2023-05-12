@@ -100,16 +100,30 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
                 if (member == null) {
                     throw new DBMissingDataException(String.format("Couldn't find cluster member: %s", in.getMemberId()));
                 }
-                DBItemJocCluster activeMember = dbLayer.getCluster();
-                boolean isInactive = activeMember == null || !activeMember.getMemberId().equals(in.getMemberId());
-                if (isInactive && (member.getHeartBeat() == null || JocCluster.isHeartBeatExceeded(session.getCurrentUTCDateTime(), member
-                        .getHeartBeat()))) {
-                    // Long osId = member.getOsId();
-                    // TODO delete obsolete row in INV_OPERATING_SYSTEMS if not used with other controller or cluster instances
-                    session.delete(member);
-                    EventBus.getInstance().post(new ActiveClusterChangedEvent());
+                if (member.getApiServer()) {
+                    if (member.getHeartBeat() == null || JocCluster.isHeartBeatExceeded(session.getCurrentUTCDateTime(), member.getHeartBeat())) {
+                        // Long osId = member.getOsId();
+                        // TODO delete obsolete row in INV_OPERATING_SYSTEMS if not used with other controller or cluster instances
+                        session.delete(member);
+                        EventBus.getInstance().post(new ActiveClusterChangedEvent());
+                    } else {
+                        throw new JocBadRequestException(String.format("The last heartbeat of '%s#%d' is younger than one minute.", member
+                                .getClusterId(), member.getOrdering()));
+                    }
                 } else {
-                    throw new JocBadRequestException("The cluster member is either active or its last heartbeat is younger than one minute.");
+                    DBItemJocCluster activeMember = dbLayer.getCluster();
+                    boolean isInactive = activeMember == null || !activeMember.getMemberId().equals(in.getMemberId());
+                    if (isInactive && (member.getHeartBeat() == null || JocCluster.isHeartBeatExceeded(session.getCurrentUTCDateTime(), member
+                            .getHeartBeat()))) {
+                        // Long osId = member.getOsId();
+                        // TODO delete obsolete row in INV_OPERATING_SYSTEMS if not used with other controller or cluster instances
+                        session.delete(member);
+                        EventBus.getInstance().post(new ActiveClusterChangedEvent());
+                    } else {
+                        throw new JocBadRequestException(String.format(
+                                "The cluster member '%s#%d' is either active or its last heartbeat is younger than one minute.", member
+                                        .getClusterId(), member.getOrdering()));
+                    }
                 }
                 response = JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
             }
