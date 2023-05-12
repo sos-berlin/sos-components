@@ -1,8 +1,10 @@
 package com.sos.auth.sosintern.classes;
 
+import com.sos.auth.classes.SOSIdentityService;
+
 public class SOSInternAuthWebserviceCredentials {
 
-    private Long identityServiceId;
+    private SOSIdentityService identityService;
     private String account = "";
     
     public String getAccount() {
@@ -13,12 +15,12 @@ public class SOSInternAuthWebserviceCredentials {
         this.account = account;
     }
 
-    public Long getIdentityServiceId() {
-        return identityServiceId;
+    public SOSIdentityService getIdentityService() {
+        return identityService;
     }
 
-    public void setIdentityServiceId(Long identityServiceId) {
-        this.identityServiceId = identityServiceId;
+    public void setIdentityService(SOSIdentityService identityService) {
+        this.identityService = identityService;
     }
 
 }

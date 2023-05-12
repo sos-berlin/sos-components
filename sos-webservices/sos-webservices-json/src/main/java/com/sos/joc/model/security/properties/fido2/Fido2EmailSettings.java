@@ -19,7 +19,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "url",
     "body",
-    "subject"
+    "subject",
+    "nameOfJobResource"
 })
 public class Fido2EmailSettings {
 
@@ -47,6 +48,14 @@ public class Fido2EmailSettings {
      */
     @JsonProperty("subject")
     private String subject;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("nameOfJobResource")
+    private String nameOfJobResource;
 
     /**
      * No args constructor for use in serialization
@@ -58,14 +67,16 @@ public class Fido2EmailSettings {
     /**
      * 
      * @param subject
+     * @param nameOfJobResource
      * @param body
      * @param url
      */
-    public Fido2EmailSettings(String url, String body, String subject) {
+    public Fido2EmailSettings(String url, String body, String subject, String nameOfJobResource) {
         super();
         this.url = url;
         this.body = body;
         this.subject = subject;
+        this.nameOfJobResource = nameOfJobResource;
     }
 
     /**
@@ -134,14 +145,36 @@ public class Fido2EmailSettings {
         this.subject = subject;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("nameOfJobResource")
+    public String getNameOfJobResource() {
+        return nameOfJobResource;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("nameOfJobResource")
+    public void setNameOfJobResource(String nameOfJobResource) {
+        this.nameOfJobResource = nameOfJobResource;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("url", url).append("body", body).append("subject", subject).toString();
+        return new ToStringBuilder(this).append("url", url).append("body", body).append("subject", subject).append("nameOfJobResource", nameOfJobResource).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(body).append(url).append(subject).toHashCode();
+        return new HashCodeBuilder().append(nameOfJobResource).append(body).append(url).append(subject).toHashCode();
     }
 
     @Override
@@ -153,7 +186,7 @@ public class Fido2EmailSettings {
             return false;
         }
         Fido2EmailSettings rhs = ((Fido2EmailSettings) other);
-        return new EqualsBuilder().append(body, rhs.body).append(url, rhs.url).append(subject, rhs.subject).isEquals();
+        return new EqualsBuilder().append(nameOfJobResource, rhs.nameOfJobResource).append(body, rhs.body).append(url, rhs.url).append(subject, rhs.subject).isEquals();
     }
 
 }

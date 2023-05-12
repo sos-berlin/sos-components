@@ -95,7 +95,10 @@ public class Fido2ConfirmationMail {
     }
 
     private MailResource getMailResource() throws Exception {
-        String jobResourceName = "eMailDefault";
+        String jobResourceName = fido2Properties.getIamFido2EmailSettings().getNameOfJobResource();
+        if (jobResourceName == null || jobResourceName.isEmpty()) {
+            jobResourceName = "eMailDefault";
+        }
         SOSHibernateSession sosHibernateSession = null;
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("Fido2ConfirmationMail");
