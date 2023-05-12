@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -18,6 +19,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 
+import org.apache.commons.compress.utils.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -269,6 +271,34 @@ public class LogOrderContent {
         }
 
         return out;
+    }
+
+    public void toFile(Path targetFile) throws JsonParseException, JsonMappingException, JocConfigurationException, DBOpenSessionException,
+            DBMissingDataException, SOSHibernateException, IOException {
+        if (historyId == null) {
+            throw new JocMissingRequiredParameterException("undefined 'taskId'");
+        }
+        OrderLog ol = getLogFromDb();
+        if (ol == null) {
+            ol = getLogSnapshotFromHistoryService();
+        }
+        if (ol != null) {
+            final List<OrderLogEntry> logItems = ol.getLogEvents();
+            try (OutputStream out = Files.newOutputStream(targetFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+                for (OrderLogEntry i : logItems) {
+                    IOUtils.copy(getLogLine(i), out);
+
+                    if (i.getLogEvent() == EventType.OrderProcessingStarted) {
+                        // read tasklog
+                        LogTaskContent tl = new LogTaskContent(i.getTaskId());
+                        InputStream is = tl.getLogStream();
+                        if (is != null) {
+                            IOUtils.copy(is, out);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public static ByteArrayInputStream getLogLine(OrderLogEntry item) {

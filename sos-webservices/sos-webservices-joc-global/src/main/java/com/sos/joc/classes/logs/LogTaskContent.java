@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -18,8 +19,7 @@ import java.util.Map;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import jakarta.ws.rs.core.StreamingOutput;
-
+import org.apache.commons.compress.utils.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +38,8 @@ import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.job.TaskFilter;
 
+import jakarta.ws.rs.core.StreamingOutput;
+
 public class LogTaskContent {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LogTaskContent.class);
@@ -52,7 +54,7 @@ public class LogTaskContent {
     private Long eventId = null;
     private boolean complete = false;
     private SOSAuthFolderPermissions folderPermissions = null;
-    private Long maxLogSize = 10 * 1024 * 1024L; //10MB
+    private Long maxLogSize = 10 * 1024 * 1024L; // 10MB
 
     public LogTaskContent(TaskFilter taskFilter, SOSAuthFolderPermissions folderPermissions) {
         this.historyId = taskFilter.getTaskId();
@@ -66,7 +68,7 @@ public class LogTaskContent {
         this.folderPermissions = folderPermissions;
         this.maxLogSize = Globals.getConfigurationGlobalsJoc().getMaxDisplaySizeInBytes();
     }
-    
+
     public LogTaskContent(Long taskId) {
         this.historyId = taskId;
         this.maxLogSize = Globals.getConfigurationGlobalsJoc().getMaxDisplaySizeInBytes();
@@ -102,8 +104,8 @@ public class LogTaskContent {
                 StandardCharsets.UTF_8.name()), historyId);
     }
 
-    public StreamingOutput getStreamOutput(boolean forDownload) throws JocMissingRequiredParameterException, JocConfigurationException, DBOpenSessionException,
-            SOSHibernateException, DBMissingDataException, ControllerInvalidResponseDataException {
+    public StreamingOutput getStreamOutput(boolean forDownload) throws JocMissingRequiredParameterException, JocConfigurationException,
+            DBOpenSessionException, SOSHibernateException, DBMissingDataException, ControllerInvalidResponseDataException {
         if (historyId == null) {
             throw new JocMissingRequiredParameterException("undefined 'taskId'");
         }
@@ -190,7 +192,7 @@ public class LogTaskContent {
         complete = true;
         return new ByteArrayInputStream(s.getBytes(StandardCharsets.UTF_8));
     }
-    
+
     private InputStream getTooBigMessage(String kindOfLog) {
         String s = ZonedDateTime.now().format(formatter);
         float f = unCompressedLength.floatValue() / (1024 * 1024);
@@ -216,7 +218,20 @@ public class LogTaskContent {
         return null;
     }
 
-    private byte[] getLogFromDb(boolean forDownload) throws JocConfigurationException, DBOpenSessionException, SOSHibernateException, DBMissingDataException {
+    // !! not tested
+    public void toFile(Path targetFile) throws JocConfigurationException, DBOpenSessionException, DBMissingDataException, SOSHibernateException,
+            IOException {
+
+        InputStream is = getLogStream();
+        if (is != null) {
+            try (OutputStream out = Files.newOutputStream(targetFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+                IOUtils.copy(is, out);
+            }
+        }
+    }
+
+    private byte[] getLogFromDb(boolean forDownload) throws JocConfigurationException, DBOpenSessionException, SOSHibernateException,
+            DBMissingDataException {
         SOSHibernateSession connection = null;
         try {
             connection = Globals.createSosHibernateStatelessConnection("./task/log");
