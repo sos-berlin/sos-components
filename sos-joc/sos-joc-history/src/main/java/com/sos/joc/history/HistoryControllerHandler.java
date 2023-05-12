@@ -21,6 +21,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.cluster.configuration.JocHistoryConfiguration;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.history.controller.exception.HistoryFatalException;
@@ -158,7 +159,7 @@ public class HistoryControllerHandler {
         }
     }
 
-    public void start() {
+    public void start(StartupMode mode, ThreadGroup tg) {
         closed.set(false);
 
         String method = "start";
@@ -169,7 +170,7 @@ public class HistoryControllerHandler {
             executeGetEventId();
             lastActivityEnd.set(new Date().getTime());
             if (model.getStoredEventId() != null) {
-                start(new AtomicLong(model.getStoredEventId()));
+                start(mode, tg, new AtomicLong(model.getStoredEventId()));
             }
         } catch (Throwable e) {
             LOGGER.error(String.format("[%s][%s]%s", identifier, method, e.toString()), e);
@@ -177,11 +178,12 @@ public class HistoryControllerHandler {
         }
     }
 
-    private void start(AtomicLong eventId) throws Exception {
+    private void start(StartupMode mode, ThreadGroup tg, AtomicLong eventId) throws Exception {
         String method = getMethodName("start");
         LOGGER.info(String.format("%seventId=%s", method, eventId));
 
         initIntervals(model.getHistoryConfiguration());
+        model.getLogExtHandler().start(tg);
         api = ControllerApi.of(controllerConfig.getCurrent().getId(), ProxyUser.HISTORY);
         long errorCounter = 0;
         while (!closed.get()) {
@@ -217,7 +219,7 @@ public class HistoryControllerHandler {
                             if (config.getMaxStopProcessingOnErrors() > 0 && errorCounter >= config.getMaxStopProcessingOnErrors()) {
                                 HistoryFatalException hfe = new HistoryFatalException(controllerId, config.getMaxStopProcessingOnErrors(), ex);
                                 LOGGER.error(String.format("%s[errorCounter=%s]%s", method, errorCounter, hfe.toString()), hfe);
-                                close();
+                                close(mode);
                             } else {
                                 LOGGER.error(String.format("%s[errorCounter=%s]%s", method, errorCounter, ex.toString()), ex);
                             }
@@ -697,7 +699,7 @@ public class HistoryControllerHandler {
                 event = new FatEventOrderPromptAnswered(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
                         .getPosition());
                 break;
-            
+
             default:
                 event = new FatEventWithProblem(entry, new Exception("unknown type=" + entry.getEventType()));
                 break;
@@ -813,10 +815,10 @@ public class HistoryControllerHandler {
         return String.format("%s[%s]", prefix, name);
     }
 
-    public void close() {
+    public void close(StartupMode mode) {
         doClose();
         if (model != null) {
-            model.close();
+            model.close(mode);
         }
     }
 

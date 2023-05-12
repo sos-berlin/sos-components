@@ -43,7 +43,7 @@ import com.sos.joc.cluster.configuration.controller.ControllerConfiguration.Acti
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
-import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc.LogMove;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc.LogExt;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.cluster.service.active.AJocActiveMemberService;
@@ -84,10 +84,14 @@ public class HistoryService extends AJocActiveMemberService {
         return ProxyUser.HISTORY.getPwd();
     }
 
+    public static void setLogger() {
+        JocClusterServiceLogger.setLogger(IDENTIFIER);
+    }
+
     @Override
-    public JocClusterAnswer start(List<ControllerConfiguration> controllers, AConfigurationSection configuration, StartupMode mode) {
+    public JocClusterAnswer start(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration) {
         try {
-            JocClusterServiceLogger.setLogger(IDENTIFIER);
+            setLogger();
             LOGGER.info(String.format("[%s][%s]start...", getIdentifier(), mode));
 
             processingStarted.set(true);
@@ -95,7 +99,9 @@ public class HistoryService extends AJocActiveMemberService {
             checkLogDirectory();
             createFactory(getJocConfig().getHibernateConfiguration(), controllers.size());
             handleLogsOnStart(mode);
-            threadPool = Executors.newFixedThreadPool((controllers.size() + 1), new JocClusterThreadFactory(getThreadGroup(), IDENTIFIER));
+
+            ThreadGroup tg = getThreadGroup();
+            threadPool = Executors.newFixedThreadPool((controllers.size() + 1), new JocClusterThreadFactory(tg, IDENTIFIER));
             // JocClusterServiceLogger.clearAllLoggers();
 
             for (ControllerConfiguration controllerConfig : controllers) {
@@ -109,7 +115,7 @@ public class HistoryService extends AJocActiveMemberService {
                         JocClusterServiceLogger.setLogger(IDENTIFIER);
 
                         LOGGER.info(String.format("[%s][run]start...", controllerHandler.getIdentifier()));
-                        controllerHandler.start();
+                        controllerHandler.start(mode, tg);
                         LOGGER.info(String.format("[%s][run]end", controllerHandler.getIdentifier()));
 
                         // JocClusterServiceLogger.clearAllLoggers();
@@ -128,7 +134,7 @@ public class HistoryService extends AJocActiveMemberService {
     public JocClusterAnswer stop(StartupMode mode) {
         stop.set(true);
         try {
-            JocClusterServiceLogger.setLogger(IDENTIFIER);
+            setLogger();
             LOGGER.info(String.format("[%s][%s]stop...", getIdentifier(), mode));
             // JocClusterServiceLogger.clearAllLoggers();
 
@@ -168,17 +174,17 @@ public class HistoryService extends AJocActiveMemberService {
     }
 
     @Override
-    public void update(List<ControllerConfiguration> controllers, String controllerId, Action action) {
+    public void update(StartupMode mode, List<ControllerConfiguration> controllers, String controllerId, Action action) {
         Runnable task = new Runnable() {
 
             @Override
             public void run() {
-                JocClusterServiceLogger.setLogger(IDENTIFIER);
+                setLogger();
                 LOGGER.info(String.format("[%s][%s]start...", controllerId, action));
                 Optional<HistoryControllerHandler> oh = activeHandlers.stream().filter(c -> c.getControllerId().equals(controllerId)).findAny();
                 if (oh.isPresent()) {
                     HistoryControllerHandler h = oh.get();
-                    h.close();
+                    h.close(mode);
                     activeHandlers.remove(h);
                 }
                 HistoryControllerHandler h = null;
@@ -197,7 +203,7 @@ public class HistoryService extends AJocActiveMemberService {
                     adjustThreadPoolSize(newPoolSize > 0 ? newPoolSize : 1);
                 }
                 if (h != null) {
-                    h.start();
+                    h.start(mode, getThreadGroup());
                 }
                 LOGGER.info(String.format("[%s][%s]end", controllerId, action));
                 // JocClusterServiceLogger.clearAllLoggers();
@@ -208,12 +214,12 @@ public class HistoryService extends AJocActiveMemberService {
 
     @Override
     public void update(StartupMode mode, AConfigurationSection configuration) {
-        JocClusterServiceLogger.setLogger(IDENTIFIER);
+        setLogger();
         updateHistoryConfiguration();
     }
 
     private void setConfig() {
-        JocClusterServiceLogger.setLogger(IDENTIFIER);
+        setLogger();
         try {
             Properties conf = Globals.sosCockpitProperties == null ? new Properties() : Globals.sosCockpitProperties.getProperties();
             config = new JocHistoryConfiguration();
@@ -231,37 +237,39 @@ public class HistoryService extends AJocActiveMemberService {
         boolean result = false;
         if (cg != null) {
             ConfigurationGlobalsJoc joc = (ConfigurationGlobalsJoc) cg.getConfigurationSection(DefaultSections.joc);
-            String logMoveChanges = updateHistoryConfigLogMove(joc, onStart);
+            String logTransferChanges = updateHistoryConfigLogTransfer(joc, onStart);
             String logSizeChanges = updateHistoryConfigLogSize(joc, onStart);
-            result = logMoveChanges != null || logSizeChanges != null;
+            result = logTransferChanges != null || logSizeChanges != null;
             if (result && !onStart) {
-                String lmc = logMoveChanges == null ? "" : "[" + logMoveChanges + "]";
+                String ltc = logTransferChanges == null ? "" : "[" + logTransferChanges + "]";
                 String lsc = logSizeChanges == null ? "" : "[" + logSizeChanges + "]";
-                LOGGER.info(String.format("[%s]%s%s", StartupMode.settings_changed.name(), lmc, lsc));
+                LOGGER.info(String.format("[%s]%s%s", StartupMode.settings_changed.name(), ltc, lsc));
             }
         }
         return result;
     }
 
-    private String updateHistoryConfigLogMove(ConfigurationGlobalsJoc joc, boolean onStart) {
+    private String updateHistoryConfigLogTransfer(ConfigurationGlobalsJoc joc, boolean onStart) {
         if (joc == null) {
             return null;
         }
-        Path oldLogMoveDir = config.getLogMoveDir();
-        LogMove oldLogMoveOrder = config.getLogMoveOrder();
-        LogMove oldLogMoveTask = config.getLogMoveTask();
+        Path oldDir = config.getLogExtDir();
+        LogExt oldOrderHistory = config.getLogExtOrderHistory();
+        LogExt oldOrder = config.getLogExtOrder();
+        LogExt oldTask = config.getLogExtTask();
 
-        StringBuilder warn = config.setLogMove(joc);
+        StringBuilder warn = config.setLogExt(joc);
         if (warn != null) {
             LOGGER.warn(String.format("[%s]%s", StartupMode.settings_changed.name(), warn));
         }
-        boolean result = !config.isLogMoveDirEquals(oldLogMoveDir) || !config.isLogMoveOrderEquals(oldLogMoveOrder) || !config.isLogMoveTaskEquals(
-                oldLogMoveTask);
+        boolean result = !config.isLogExtDirEquals(oldDir) || !config.isLogExtOrderHistoryEquals(oldOrderHistory) || !config.isLogExtOrderEquals(
+                oldOrder) || !config.isLogExtTaskEquals(oldTask);
         if (result && !onStart) {
-            return String.format("[%s][old %s=%s,%s=%s,%s=%s][new %s=%s,%s=%s,%s=%s]", StartupMode.settings_changed.name(), joc.getLogMoveDirectory()
-                    .getName(), oldLogMoveDir, joc.getLogMoveOrder().getName(), oldLogMoveOrder, joc.getLogMoveTask().getName(), oldLogMoveTask, joc
-                            .getLogMoveDirectory().getName(), config.getLogMoveDir(), joc.getLogMoveOrder().getName(), config.getLogMoveOrder(), joc
-                                    .getLogMoveTask().getName(), config.getLogMoveTask());
+            return String.format("[%s][old %s=%s,%s=%s,%s=%s,%s=%s][new %s=%s,%s=%s,%s=%s,%s=%s]", StartupMode.settings_changed.name(), joc
+                    .getLogExtDirectory().getName(), oldDir, joc.getLogExtOrderHistory().getName(), oldOrderHistory, joc.getLogExtOrder().getName(),
+                    oldOrder, joc.getLogExtTask().getName(), oldTask, joc.getLogExtDirectory().getName(), config.getLogExtDir(), joc
+                            .getLogExtOrderHistory().getName(), config.getLogExtOrderHistory(), joc.getLogExtOrder().getName(), config
+                                    .getLogExtOrder(), joc.getLogExtTask().getName(), config.getLogExtTask());
         }
         return null;
     }
@@ -618,7 +626,7 @@ public class HistoryService extends AJocActiveMemberService {
                     public void run() {
                         JocClusterServiceLogger.setLogger(IDENTIFIER);
                         LOGGER.info(String.format("[%s][%s]start...", method, h.getIdentifier()));
-                        h.close();
+                        h.close(mode);
                         LOGGER.info(String.format("[%s][%s]end", method, h.getIdentifier()));
                         // JocClusterServiceLogger.clearAllLoggers();
                     }

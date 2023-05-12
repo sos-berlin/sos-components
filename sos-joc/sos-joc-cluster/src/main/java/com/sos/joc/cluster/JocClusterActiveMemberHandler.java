@@ -112,9 +112,9 @@ public class JocClusterActiveMemberHandler {
                             for (ControllerConfiguration m : controllers) {
                                 newControllers.add(m.copy(s.getControllerApiUser(), s.getControllerApiUserPassword()));
                             }
-                            answer = s.start(newControllers, configuration, mode);
+                            answer = s.start(mode, newControllers, configuration);
                         } else {
-                            answer = s.start(controllers, configuration, mode);
+                            answer = s.start(mode, controllers, configuration);
                         }
                     } else {
                         answer = s.stop(mode);
@@ -215,7 +215,7 @@ public class JocClusterActiveMemberHandler {
         cluster.readCurrentDbInfos();
     }
 
-    public void updateService(String identifier, String controllerId, Action action) {
+    public void updateService(StartupMode mode, String identifier, String controllerId, Action action) {
         Optional<IJocActiveMemberService> os = services.stream().filter(h -> h.getIdentifier().equals(identifier)).findAny();
         if (!os.isPresent()) {
             JocClusterServiceLogger.setLogger();
@@ -224,10 +224,10 @@ public class JocClusterActiveMemberHandler {
             return;
         }
         IJocActiveMemberService s = os.get();
-        s.update(cluster.getControllers(), controllerId, action);
+        s.update(mode, cluster.getControllers(), controllerId, action);
     }
 
-    public void updateService(String identifier, StartupMode mode, AConfigurationSection configuration) {
+    public void updateService(StartupMode mode, String identifier, AConfigurationSection configuration) {
         Optional<IJocActiveMemberService> os = services.stream().filter(h -> h.getIdentifier().equals(identifier)).findAny();
         if (!os.isPresent()) {
             JocClusterServiceLogger.setLogger();
@@ -239,7 +239,7 @@ public class JocClusterActiveMemberHandler {
         s.update(mode, configuration);
     }
 
-    public JocClusterAnswer restartService(String identifier, StartupMode mode, AConfigurationSection configuration) {
+    public JocClusterAnswer restartService(StartupMode mode, String identifier, AConfigurationSection configuration) {
         Optional<IJocActiveMemberService> os = services.stream().filter(h -> h.getIdentifier().equals(identifier)).findAny();
         if (!os.isPresent()) {
             return JocCluster.getErrorAnswer(new Exception(String.format("handler not found for %s", identifier)));
@@ -280,7 +280,7 @@ public class JocClusterActiveMemberHandler {
         JocClusterServiceLogger.removeLogger();
 
         try {
-            s.start(cluster.getControllers(), configuration, mode);
+            s.start(mode, cluster.getControllers(), configuration);
         } catch (Exception e) {
             JocClusterServiceLogger.setLogger();
             LOGGER.error(String.format("[%s][restart][%s]%s", mode, identifier, e.toString()), e);

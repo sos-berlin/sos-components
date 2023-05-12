@@ -51,7 +51,7 @@ public class CleanupService extends AJocActiveMemberService {
     }
 
     @Override
-    public JocClusterAnswer start(List<ControllerConfiguration> controllers, AConfigurationSection configuration, StartupMode mode) {
+    public JocClusterAnswer start(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration) {
         try {
             closed.set(false);
             lastActivityStart.set(new Date().getTime());
@@ -132,7 +132,7 @@ public class CleanupService extends AJocActiveMemberService {
     }
 
     @Override
-    public void update(List<ControllerConfiguration> controllers, String controllerId, Action action) {
+    public void update(StartupMode mode, List<ControllerConfiguration> controllers, String controllerId, Action action) {
 
     }
 

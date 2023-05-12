@@ -70,6 +70,18 @@ public class SOSPath {
         return !rep;
     }
 
+    // without check if exists and exception handling
+    public static boolean isWritable(Path path) {
+        if (path == null) {
+            return false;
+        }
+        if (Files.isDirectory(path)) {
+            return Files.isWritable(path) && Files.isExecutable(path);
+        } else {
+            return Files.isWritable(path);
+        }
+    }
+
     public static void appendFile(final Path source, final Path dest) throws IOException {
         copyFile(source, dest, true);
     }

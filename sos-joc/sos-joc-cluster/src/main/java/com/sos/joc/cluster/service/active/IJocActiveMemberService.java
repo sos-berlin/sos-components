@@ -11,7 +11,7 @@ import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 
 public interface IJocActiveMemberService {
 
-    public JocClusterAnswer start(List<ControllerConfiguration> controllers, AConfigurationSection configuration, StartupMode mode);
+    public JocClusterAnswer start(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration);
 
     public String getControllerApiUser();
 
@@ -25,7 +25,7 @@ public interface IJocActiveMemberService {
 
     public JocServiceAnswer getInfo();
 
-    public void update(List<ControllerConfiguration> controllers, String controllerId, Action action);
+    public void update(StartupMode mode, List<ControllerConfiguration> controllers, String controllerId, Action action);
 
     public void update(StartupMode mode, AConfigurationSection configuration);
 }
