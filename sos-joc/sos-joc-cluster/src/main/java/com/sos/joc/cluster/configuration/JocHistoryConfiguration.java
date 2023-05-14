@@ -14,7 +14,7 @@ import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.cluster.common.JocClusterUtil;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
-import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc.LogExt;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc.LogExtType;
 
 public class JocHistoryConfiguration implements Serializable {
 
@@ -50,9 +50,11 @@ public class JocHistoryConfiguration implements Serializable {
     private int maxStopProcessingOnErrors = 5;
 
     private Path logExtDir;
-    private LogExt logExtOrderHistory;
-    private LogExt logExtOrder;
-    private LogExt logExtTask;
+    private boolean logExtDirExists;
+    private boolean logExtDirWritable;
+    private LogExtType logExtOrderHistory;
+    private LogExtType logExtOrder;
+    private LogExtType logExtTask;
 
     // MB
     private int logApplicableMBSize = 500;
@@ -170,7 +172,7 @@ public class JocHistoryConfiguration implements Serializable {
         return false;
     }
 
-    public boolean isLogExtOrderHistoryEquals(LogExt val) {
+    public boolean isLogExtOrderHistoryEquals(LogExtType val) {
         if (val == null && logExtOrderHistory == null) {
             return true;
         } else if (val != null && logExtOrderHistory != null) {
@@ -179,7 +181,7 @@ public class JocHistoryConfiguration implements Serializable {
         return false;
     }
 
-    public boolean isLogExtOrderEquals(LogExt val) {
+    public boolean isLogExtOrderEquals(LogExtType val) {
         if (val == null && logExtOrder == null) {
             return true;
         } else if (val != null && logExtOrder != null) {
@@ -188,7 +190,7 @@ public class JocHistoryConfiguration implements Serializable {
         return false;
     }
 
-    public boolean isLogExtTaskEquals(LogExt val) {
+    public boolean isLogExtTaskEquals(LogExtType val) {
         if (val == null && logExtTask == null) {
             return true;
         } else if (val != null && logExtTask != null) {
@@ -199,6 +201,8 @@ public class JocHistoryConfiguration implements Serializable {
 
     public StringBuilder setLogExt(ConfigurationGlobalsJoc joc) {
         logExtDir = null;
+        logExtDirExists = false;
+        logExtDirWritable = false;
         logExtOrderHistory = null;
         logExtOrder = null;
         logExtTask = null;
@@ -206,20 +210,19 @@ public class JocHistoryConfiguration implements Serializable {
         StringBuilder sb = new StringBuilder();
         if (!SOSString.isEmpty(joc.getLogExtDirectory().getValue())) {
             logExtDir = Paths.get(joc.getLogExtDirectory().getValue()).toAbsolutePath();
-            if (!Files.exists(logExtDir)) {
+            if (Files.exists(logExtDir)) {
+                logExtDirExists = true;
+                if (SOSPath.isWritable(logExtDir)) {
+                    logExtDirWritable = true;
+                } else {
+                    sb.append("[").append(joc.getLogExtDirectory().getName()).append("=").append(logExtDir).append(" is not writable]");
+                }
+            } else {
                 sb.append("[").append(joc.getLogExtDirectory().getName()).append("=").append(logExtDir).append(" not found]");
-
-                logExtDir = null;
-                return sb;
-            } else if (!SOSPath.isWritable(logExtDir)) {
-                sb.append("[").append(joc.getLogExtDirectory().getName()).append("=").append(logExtDir).append(" is not writable]");
-
-                logExtDir = null;
-                return sb;
             }
             if (!SOSString.isEmpty(joc.getLogExtOrderHistory().getValue())) {
                 try {
-                    logExtOrderHistory = LogExt.valueOf(joc.getLogExtOrderHistory().getValue());
+                    logExtOrderHistory = LogExtType.valueOf(joc.getLogExtOrderHistory().getValue());
                 } catch (Throwable e) {
                     sb.append("[").append(joc.getLogExtOrderHistory().getName()).append("=").append(joc.getLogExtOrderHistory().getValue()).append(
                             " invalid value]");
@@ -227,7 +230,7 @@ public class JocHistoryConfiguration implements Serializable {
             }
             if (!SOSString.isEmpty(joc.getLogExtOrder().getValue())) {
                 try {
-                    logExtOrder = LogExt.valueOf(joc.getLogExtOrder().getValue());
+                    logExtOrder = LogExtType.valueOf(joc.getLogExtOrder().getValue());
                 } catch (Throwable e) {
                     sb.append("[").append(joc.getLogExtOrder().getName()).append("=").append(joc.getLogExtOrder().getValue()).append(
                             " invalid value]");
@@ -235,7 +238,7 @@ public class JocHistoryConfiguration implements Serializable {
             }
             if (!SOSString.isEmpty(joc.getLogExtTask().getValue())) {
                 try {
-                    logExtTask = LogExt.valueOf(joc.getLogExtTask().getValue());
+                    logExtTask = LogExtType.valueOf(joc.getLogExtTask().getValue());
                 } catch (Throwable e) {
                     sb.append("[").append(joc.getLogExtTask().getName()).append("=").append(joc.getLogExtTask().getValue()).append(" invalid value]");
                 }
@@ -244,19 +247,45 @@ public class JocHistoryConfiguration implements Serializable {
         return sb.length() == 0 ? null : sb;
     }
 
+    public boolean isLogExtDirAvailable() {
+        return logExtDirExists && logExtDirWritable;
+    }
+
+    public void checkLogExtDirAvailable() {
+        logExtDirExists = false;
+        logExtDirWritable = false;
+        if (logExtDir == null) {
+            return;
+        }
+        if (Files.exists(logExtDir)) {
+            logExtDirExists = true;
+            if (SOSPath.isWritable(logExtDir)) {
+                logExtDirWritable = true;
+            }
+        }
+    }
+
     public Path getLogExtDir() {
         return logExtDir;
     }
 
-    public LogExt getLogExtOrderHistory() {
+    public boolean isLogExtDirExists() {
+        return logExtDirExists;
+    }
+
+    public boolean isLogExtDirWritable() {
+        return logExtDirWritable;
+    }
+
+    public LogExtType getLogExtOrderHistory() {
         return logExtOrderHistory;
     }
 
-    public LogExt getLogExtOrder() {
+    public LogExtType getLogExtOrder() {
         return logExtOrder;
     }
 
-    public LogExt getLogExtTask() {
+    public LogExtType getLogExtTask() {
         return logExtTask;
     }
 

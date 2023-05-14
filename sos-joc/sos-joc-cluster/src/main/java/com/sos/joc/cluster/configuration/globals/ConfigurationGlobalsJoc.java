@@ -19,7 +19,7 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         dashboard, dailyplan, workflows, resources, history, auditlog, configuration, filetransfer, jobstreams, monitor;
     }
 
-    public static enum LogExt {
+    public static enum LogExtType {
         all, failed, successful
     }
 
@@ -72,7 +72,7 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
             GlobalSettingsSectionValueType.BOOLEAN);
 
     // History - begin
-    private static final List<String> LOG_EXT_VALUES = Stream.of(LogExt.values()).map(Enum::name).collect(Collectors.toList());
+    private static final List<String> LOG_EXT_VALUES = Stream.of(LogExtType.values()).map(Enum::name).collect(Collectors.toList());
     private ConfigurationEntry logExtDirectory = new ConfigurationEntry("log_ext_directory", "", GlobalSettingsSectionValueType.STRING);
     private ConfigurationEntry logExtOrderHistory = new ConfigurationEntry("log_ext_order_history", "", LOG_EXT_VALUES,
             GlobalSettingsSectionValueType.LIST);

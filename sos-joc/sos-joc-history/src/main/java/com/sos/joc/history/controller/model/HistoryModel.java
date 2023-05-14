@@ -37,10 +37,9 @@ import com.sos.joc.classes.history.HistoryPosition;
 import com.sos.joc.cluster.bean.history.HistoryOrderBean;
 import com.sos.joc.cluster.bean.history.HistoryOrderStepBean;
 import com.sos.joc.cluster.common.JocClusterUtil;
-import com.sos.joc.cluster.configuration.JocHistoryConfiguration;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
+import com.sos.joc.cluster.configuration.JocHistoryConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
-import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc.LogExt;
 import com.sos.joc.db.history.DBItemHistoryAgent;
 import com.sos.joc.db.history.DBItemHistoryController;
 import com.sos.joc.db.history.DBItemHistoryLog;
@@ -190,7 +189,7 @@ public class HistoryModel {
         maxTransactions = historyConfiguration.getMaxTransactions();
         yadeHandler = new YadeHandler(controllerConfiguration.getCurrent().getId());
         cacheHandler = new HistoryCacheHandler(controllerConfiguration.getCurrent().getId(), identifier);
-        logExtHandler = new LogExtAsyncHandler(variableName + "_logExt");
+        logExtHandler = new LogExtAsyncHandler(historyConfiguration, variableName + "_logExt");
     }
 
     public Long getEventId() throws Exception {
@@ -571,6 +570,7 @@ public class HistoryModel {
     // Another thread
     public void updateHistoryConfiguration(JocHistoryConfiguration config) {
         historyConfiguration = config;
+        // if(logExtHandler)
     }
 
     // OrderStarted
@@ -702,6 +702,8 @@ public class HistoryModel {
         dbLayer.updateControllerVariable(variableName, eventId);
         dbLayer.commit();
         storedEventId = eventId;
+
+        logExtHandler.process();
     }
 
     private void controllerReady(DBLayerHistory dbLayer, FatEventControllerReady event) throws Exception {
@@ -1711,106 +1713,52 @@ public class HistoryModel {
         return hosb;
     }
 
-    private void handleOrderLog(Path log, HistoryOrderBean hob) {
+    private void handleOrderLog(Path file, HistoryOrderBean hob) {
         if (hob.getParentId().equals(0L)) {
-            boolean extOH = isLogExt(historyConfiguration.getLogExtOrderHistory(), hob.getError());
-            boolean extO = isLogExt(historyConfiguration.getLogExtOrder(), hob.getError());
-            if (extOH || extO) {
-                // New Thread
-                handleMainOrderLogHistory(log, hob);
-                handleMainOrderLog(log, hob);
-                deleteLogOrderDirectory(log, hob.getOrderId());
+            boolean oh = logExtHandler.isLogExt(historyConfiguration.getLogExtOrderHistory(), hob.getError());
+            boolean o = logExtHandler.isLogExt(historyConfiguration.getLogExtOrder(), hob.getError());
+            if (oh || o) {
+                com.sos.joc.history.helper.LogExt.Type t = com.sos.joc.history.helper.LogExt.Type.order_history;
+                if (oh && o) {
+                    t = com.sos.joc.history.helper.LogExt.Type.order_all;
+                } else if (o) {
+                    t = com.sos.joc.history.helper.LogExt.Type.order;
+                }
+                logExtHandler.add(t, file, hob.getLogId(), hob.getWorkflowName(), hob.getOrderId(), hob.getHistoryId(), null, null);
             } else {
-                deleteLogOrderDirectory(log, hob.getOrderId());
+                deleteLogOrderDirectory(file, hob.getOrderId());
             }
         } else {
-            deleteLogFile(log);
+            deleteLogFile(file);
         }
     }
 
-    private void handleMainOrderLogHistory(Path log, HistoryOrderBean hob) {
-        // new Thread
-        StringBuilder sb = new StringBuilder();
-        sb.append("order.").append(hob.getWorkflowName());
-        sb.append(".").append(hob.getOrderId());
-        sb.append(".json");
-        Path t = historyConfiguration.getLogExtDir().resolve(sb.toString());
-        try {
-            SOSPath.copyFile(log, t);
-        } catch (Throwable e) {
-            LOGGER.warn(String.format("[handleMainOrderLogHistory][%s][%s]%s", log, t, e.toString()), e);
-        }
-    }
-
-    private void handleMainOrderLog(Path log, HistoryOrderBean hob) {
-        // new Thread
-        // TODO call API download order log
-        StringBuilder sb = new StringBuilder();
-        sb.append("order.").append(hob.getWorkflowName());
-        sb.append(".").append(hob.getOrderId());
-        sb.append(".log");
-        Path t = historyConfiguration.getLogExtDir().resolve(sb.toString());
-        try {
-            SOSPath.copyFile(log, t);
-        } catch (Throwable e) {
-            LOGGER.warn(String.format("[handleMainOrderLog][%s][%s]%s", log, t, e.toString()), e);
-        }
-    }
-
-    private void handleTaskLog(Path log, HistoryOrderStepBean hosb) {
-        if (isLogExt(historyConfiguration.getLogExtTask(), hosb.getError())) {
-            // new Thread
-            StringBuilder sb = new StringBuilder();
-            sb.append("task.").append(JocClusterUtil.getBasenameFromPath(hosb.getWorkflowPath()));
-            sb.append(".").append(HistoryUtil.getMainOrderId(hosb.getOrderId()));
-            sb.append(".").append(hosb.getJobLabel());
-            sb.append(".").append(hosb.getHistoryId());
-            sb.append(".log");
-            Path t = historyConfiguration.getLogExtDir().resolve(sb.toString());
-            try {
-                SOSPath.copyFile(log, t);
-            } catch (Throwable e) {
-                LOGGER.warn(String.format("[handleTaskLog][%s][%s]%s", log, t, e.toString()), e);
-            } finally {
-                deleteLogFile(log);
-            }
+    private void handleTaskLog(Path file, HistoryOrderStepBean hosb) {
+        if (logExtHandler.isLogExt(historyConfiguration.getLogExtTask(), hosb.getError())) {
+            logExtHandler.add(com.sos.joc.history.helper.LogExt.Type.task, file, hosb.getLogId(), JocClusterUtil.getBasenameFromPath(hosb
+                    .getWorkflowPath()), HistoryUtil.getMainOrderId(hosb.getOrderId()), hosb.getHistoryOrderMainParentId(), hosb.getHistoryId(), hosb
+                            .getJobLabel());
         } else {
-            deleteLogFile(log);
+            deleteLogFile(file);
         }
     }
 
-    private void deleteLogFile(Path log) {
+    private void deleteLogFile(Path file) {
         if (CLEANUP_LOG_FILES) {
             try {
-                Files.delete(log);
+                Files.delete(file);
             } catch (IOException e) {
-                LOGGER.warn(String.format("[%s][error on delete log file][%s]%s", identifier, log, e.toString()), e);
+                LOGGER.warn(String.format("[%s][error on delete log file][%s]%s", identifier, file, e.toString()), e);
             }
         }
     }
 
-    private void deleteLogOrderDirectory(Path log, String orderId) {
+    private void deleteLogOrderDirectory(Path file, String orderId) {
         try {
-            SOSPath.deleteIfExists(log.getParent());
+            SOSPath.deleteIfExists(file.getParent());
         } catch (Throwable e) {
-            LOGGER.warn(String.format("[%s][%s][error on delete order directory][%s]%s", identifier, orderId, log.getParent(), e.toString()), e);
+            LOGGER.warn(String.format("[%s][%s][error on delete order directory][%s]%s", identifier, orderId, file.getParent(), e.toString()), e);
         }
-    }
-
-    private boolean isLogExt(LogExt v, boolean failed) {
-        if (historyConfiguration.getLogExtDir() != null && v != null) {
-            switch (v) {
-            case all:
-                return true;
-            case failed:
-                return failed;
-            case successful:
-                return !failed;
-            default:
-                break;
-            }
-        }
-        return false;
     }
 
     private boolean isStartTimeAfterEndTime(Date startTime, Date endTime) {

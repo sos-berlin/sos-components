@@ -226,6 +226,10 @@ public class LogTaskContent {
         if (is != null) {
             try (OutputStream out = Files.newOutputStream(targetFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
                 IOUtils.copy(is, out);
+                try {
+                    is.close();
+                } catch (Throwable e) {
+                }
             }
         }
     }
