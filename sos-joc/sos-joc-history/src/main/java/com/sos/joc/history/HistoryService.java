@@ -43,7 +43,7 @@ import com.sos.joc.cluster.configuration.controller.ControllerConfiguration.Acti
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
-import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc.LogExt;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc.LogExtType;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.cluster.service.active.AJocActiveMemberService;
@@ -254,9 +254,9 @@ public class HistoryService extends AJocActiveMemberService {
             return null;
         }
         Path oldDir = config.getLogExtDir();
-        LogExt oldOrderHistory = config.getLogExtOrderHistory();
-        LogExt oldOrder = config.getLogExtOrder();
-        LogExt oldTask = config.getLogExtTask();
+        LogExtType oldOrderHistory = config.getLogExtOrderHistory();
+        LogExtType oldOrder = config.getLogExtOrder();
+        LogExtType oldTask = config.getLogExtTask();
 
         StringBuilder warn = config.setLogExt(joc);
         if (warn != null) {

@@ -993,6 +993,10 @@ public class JocCluster {
     }
 
     public static void shutdownThreadPool(StartupMode mode, ExecutorService threadPool, long awaitTerminationTimeout) {
+        shutdownThreadPool(mode, threadPool, awaitTerminationTimeout, true);
+    }
+
+    public static void shutdownThreadPool(StartupMode mode, ExecutorService threadPool, long awaitTerminationTimeout, boolean logLevelInfo) {
         String caller = SOSClassUtil.getMethodName(2);
 
         String logMode = mode == null ? "" : "[" + mode + "]";
@@ -1004,13 +1008,23 @@ public class JocCluster {
             threadPool.shutdown();// Disable new tasks from being submitted
             // Wait a while for existing tasks to terminate
             if (threadPool.awaitTermination(awaitTerminationTimeout, TimeUnit.SECONDS)) {
-                LOGGER.info(String.format("%s[shutdown][%s]thread pool has been shut down correctly", logMode, caller));
+                String msg = String.format("%s[shutdown][%s]thread pool has been shut down correctly", logMode, caller);
+                if (logLevelInfo) {
+                    LOGGER.info(msg);
+                } else {
+                    LOGGER.debug(msg);
+                }
             } else {
                 threadPool.shutdownNow();// Cancel currently executing tasks
                 // Wait a while for tasks to respond to being cancelled
                 if (threadPool.awaitTermination(3, TimeUnit.SECONDS)) {
-                    LOGGER.info(String.format("%s[shutdown][%s]thread pool has ended due to timeout of %ss on shutdown", logMode, caller,
-                            awaitTerminationTimeout));
+                    String msg = String.format("%s[shutdown][%s]thread pool has ended due to timeout of %ss on shutdown", logMode, caller,
+                            awaitTerminationTimeout);
+                    if (logLevelInfo) {
+                        LOGGER.info(msg);
+                    } else {
+                        LOGGER.debug(msg);
+                    }
                 } else {
                     LOGGER.info(String.format("%s[shutdown][%s]thread pool did not terminate due to timeout of %ss on shutdown", logMode, caller,
                             awaitTerminationTimeout));

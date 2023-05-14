@@ -294,6 +294,10 @@ public class LogOrderContent {
                         InputStream is = tl.getLogStream();
                         if (is != null) {
                             IOUtils.copy(is, out);
+                            try {
+                                is.close();
+                            } catch (Throwable e) {
+                            }
                         }
                     }
                 }
