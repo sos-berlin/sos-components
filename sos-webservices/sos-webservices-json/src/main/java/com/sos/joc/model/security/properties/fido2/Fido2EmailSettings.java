@@ -17,21 +17,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "url",
     "body",
     "subject",
     "nameOfJobResource"
 })
 public class Fido2EmailSettings {
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("url")
-    private String url;
     /**
      * string without < and >
      * <p>
@@ -69,36 +60,12 @@ public class Fido2EmailSettings {
      * @param subject
      * @param nameOfJobResource
      * @param body
-     * @param url
      */
-    public Fido2EmailSettings(String url, String body, String subject, String nameOfJobResource) {
+    public Fido2EmailSettings(String body, String subject, String nameOfJobResource) {
         super();
-        this.url = url;
         this.body = body;
         this.subject = subject;
         this.nameOfJobResource = nameOfJobResource;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("url")
-    public String getUrl() {
-        return url;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("url")
-    public void setUrl(String url) {
-        this.url = url;
     }
 
     /**
@@ -169,12 +136,12 @@ public class Fido2EmailSettings {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("url", url).append("body", body).append("subject", subject).append("nameOfJobResource", nameOfJobResource).toString();
+        return new ToStringBuilder(this).append("body", body).append("subject", subject).append("nameOfJobResource", nameOfJobResource).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(nameOfJobResource).append(body).append(url).append(subject).toHashCode();
+        return new HashCodeBuilder().append(nameOfJobResource).append(body).append(subject).toHashCode();
     }
 
     @Override
@@ -186,7 +153,7 @@ public class Fido2EmailSettings {
             return false;
         }
         Fido2EmailSettings rhs = ((Fido2EmailSettings) other);
-        return new EqualsBuilder().append(nameOfJobResource, rhs.nameOfJobResource).append(body, rhs.body).append(url, rhs.url).append(subject, rhs.subject).isEquals();
+        return new EqualsBuilder().append(nameOfJobResource, rhs.nameOfJobResource).append(body, rhs.body).append(subject, rhs.subject).isEquals();
     }
 
 }
