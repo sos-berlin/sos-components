@@ -80,7 +80,7 @@ public class Fido2Registration {
      */
     @JsonProperty("deferred")
     @JsonPropertyDescription("true if the account is deferred")
-    private Boolean deferred = false;
+    private Boolean deferred;
     /**
      * confirmed parameter
      * <p>
@@ -89,7 +89,7 @@ public class Fido2Registration {
      */
     @JsonProperty("confirmed")
     @JsonPropertyDescription("true if the registration is confirmed")
-    private Boolean confirmed = false;
+    private Boolean confirmed;
     /**
      * auditParams
      * <p>

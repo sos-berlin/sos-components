@@ -10,9 +10,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.mail.SOSMail;
 import com.sos.commons.util.SOSParameterSubstitutor;
+import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.jobresource.JobResource;
 import com.sos.joc.Globals;
@@ -35,15 +37,34 @@ public class Fido2ConfirmationMail {
         this.fido2Properties = fido2Properties;
     }
 
-    public void sendMail(DBItemIamFido2Registration dbItemIamFido2Registration, String to) throws Exception {
+    private String getJocBaseUri() {
+        try {
+            if (Globals.servletBaseUri != null) {
+                String hostname = SOSShell.getHostname();
+                String baseUri = Globals.servletBaseUri.normalize().toString().replaceFirst("/joc/api(/.*)?$", "");
+                if (baseUri.matches("https?://localhost:.*") && hostname != null) {
+                    baseUri = baseUri.replaceFirst("^(https?://)localhost:", "$1" + hostname + ":");
+                }
+                return baseUri;
+            }
+        } catch (Throwable e) {
+
+        }
+        return "";
+    }
+
+    
+    public void sendMail(DBItemIamFido2Registration dbItemIamFido2Registration, String to, String identityServiceName) throws Exception {
 
         init();
 
         Map<String, String> params = new HashMap<String, String>();
-        params.put("registration_verify_link", fido2Properties.getIamFido2EmailSettings().getUrl());
+        params.put("base_url", getJocBaseUri());
+        params.put("registration_verify_link", getJocBaseUri() + "/joc/#/email_verify?token=" + dbItemIamFido2Registration.getToken());
         params.put("token", dbItemIamFido2Registration.getToken());
         params.put("account_name", dbItemIamFido2Registration.getAccountName());
-        params.put("email_address", to);
+        params.put("registration_email_address", to);
+        params.put("fido2_identity_service", identityServiceName);
 
         String body = resolve(fido2Properties.getIamFido2EmailSettings().getBody(), params);
 

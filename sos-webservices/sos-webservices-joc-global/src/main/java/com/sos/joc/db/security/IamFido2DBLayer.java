@@ -36,6 +36,10 @@ public class IamFido2DBLayer {
             query.setParameter("accountName", filter.getAccountName());
         }
 
+        if (filter.getToken() != null && !filter.getToken().isEmpty()) {
+            query.setParameter("token", filter.getToken());
+        }
+
         return query;
     }
 
@@ -55,6 +59,10 @@ public class IamFido2DBLayer {
 
         if (filter.getAccountName() != null && !filter.getAccountName().isEmpty()) {
             where += and + " accountName = :accountName";
+            and = " and ";
+        }
+        if (filter.getToken() != null && !filter.getToken().isEmpty()) {
+            where += and + " token = :token";
             and = " and ";
         }
         if (filter.getIdentityServiceId() != null) {
@@ -125,4 +133,17 @@ public class IamFido2DBLayer {
         }
     }
 
+    public DBItemIamFido2Registration getFido2Registration(IamFido2RegistrationFilter filter) throws SOSHibernateException {
+        List<DBItemIamFido2Registration> fido2RegistrationList = null;
+        Query<DBItemIamFido2Registration> query = sosHibernateSession.createQuery("from " + DBItemIamFido2Registration + getWhere(filter) + filter
+                .getOrderCriteria() + filter.getSortMode());
+        bindParameters(filter, query);
+
+        fido2RegistrationList = query.getResultList();
+        if (fido2RegistrationList.size() != 1) {
+            return null;
+        } else {
+            return fido2RegistrationList.get(0);
+        }
+    }
 }

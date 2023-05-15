@@ -3,6 +3,7 @@ package com.sos.joc.model.security.fido2;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -41,10 +42,24 @@ public class Fido2RegistrationListFilter {
      */
     @JsonProperty("identityServiceName")
     private String identityServiceName;
+    /**
+     * deferred parameter
+     * <p>
+     * true if the account is deferred
+     * 
+     */
     @JsonProperty("deferred")
-    private Boolean deferred = false;
+    @JsonPropertyDescription("true if the account is deferred")
+    private Boolean deferred;
+    /**
+     * confirmed parameter
+     * <p>
+     * true if the registration is confirmed
+     * 
+     */
     @JsonProperty("confirmed")
-    private Boolean confirmed = false;
+    @JsonPropertyDescription("true if the registration is confirmed")
+    private Boolean confirmed;
 
     /**
      * No args constructor for use in serialization
@@ -114,21 +129,45 @@ public class Fido2RegistrationListFilter {
         this.identityServiceName = identityServiceName;
     }
 
+    /**
+     * deferred parameter
+     * <p>
+     * true if the account is deferred
+     * 
+     */
     @JsonProperty("deferred")
     public Boolean getDeferred() {
         return deferred;
     }
 
+    /**
+     * deferred parameter
+     * <p>
+     * true if the account is deferred
+     * 
+     */
     @JsonProperty("deferred")
     public void setDeferred(Boolean deferred) {
         this.deferred = deferred;
     }
 
+    /**
+     * confirmed parameter
+     * <p>
+     * true if the registration is confirmed
+     * 
+     */
     @JsonProperty("confirmed")
     public Boolean getConfirmed() {
         return confirmed;
     }
 
+    /**
+     * confirmed parameter
+     * <p>
+     * true if the registration is confirmed
+     * 
+     */
     @JsonProperty("confirmed")
     public void setConfirmed(Boolean confirmed) {
         this.confirmed = confirmed;
