@@ -1,6 +1,5 @@
 package com.sos.joc.controllers.impl;
 
-import java.net.URI;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
@@ -14,6 +13,7 @@ import java.util.stream.Collectors;
 import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSShell;
 import com.sos.controller.model.cluster.ClusterType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -187,8 +187,8 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
                 }
 
                 if (cockpit.getCurrent()) {
-                    URI uri = Globals.servletBaseUri;
-                    if (uri != null && !uri.toString().equals(instance.getUri())) {
+                    String uri = getJocBaseUri();
+                    if (!uri.isEmpty() && !uri.equals(instance.getUri())) {
                         instance.setUri(uri.toString());
                         dbLayer.update(instance);
                     }
@@ -199,6 +199,22 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
             }
         }
         return cockpits;
+    }
+    
+    private String getJocBaseUri() {
+        try {
+            if (Globals.servletBaseUri != null) {
+                String hostname = SOSShell.getHostname();
+                String baseUri = Globals.servletBaseUri.normalize().toString().replaceFirst("/joc/api(/.*)?$", "");
+                if (baseUri.matches("https?://localhost:?.*") && hostname != null) {
+                    baseUri = baseUri.replaceFirst("^(https?://)localhost(:?.*)*", "$1" + hostname + "$2");
+                }
+                return baseUri;
+            }
+        } catch (Throwable e) {
+            //
+        }
+        return "";
     }
 
     private static DB getDB(SOSHibernateSession connection) throws SOSHibernateException {
