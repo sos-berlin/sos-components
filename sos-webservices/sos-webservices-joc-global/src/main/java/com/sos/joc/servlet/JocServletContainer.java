@@ -28,6 +28,7 @@ import com.sos.joc.classes.documentation.JitlDocumentation;
 import com.sos.joc.classes.proxy.ClusterWatch;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.ProxyUser;
+import com.sos.joc.classes.quicksearch.QuickSearchStore;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.classes.workflow.WorkflowRefs;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
@@ -105,6 +106,7 @@ public class JocServletContainer extends ServletContainer {
         super.destroy();
         
         NotificationAppender.doNotify = false;
+        QuickSearchStore.close();
 
         // 1 - stop cluster
         JocClusterService.getInstance().stop(StartupMode.automatic, true);

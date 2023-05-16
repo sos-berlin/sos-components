@@ -11,11 +11,12 @@ import java.util.stream.Collectors;
 import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.quicksearch.QuickSearchRequest;
+import com.sos.joc.classes.quicksearch.QuickSearchStore;
 import com.sos.joc.db.inventory.InventorySearchDBLayer;
 import com.sos.joc.db.inventory.items.InventoryQuickSearchItem;
 import com.sos.joc.exceptions.JocException;
@@ -45,6 +46,7 @@ public class QuickSearchResourceImpl extends JOCResourceImpl implements IQuickSe
             ResponseQuickSearch answer = new ResponseQuickSearch();
             
             if (!in.getQuit()) {
+                in = QuickSearchStore.checkToken(in, accessToken);
                 answer.setResults(getBasicSearch(in, folderPermissions));
             } else {
                 answer.setResults(Collections.emptyList());
@@ -54,10 +56,16 @@ public class QuickSearchResourceImpl extends JOCResourceImpl implements IQuickSe
             answer.setDeliveryDate(Date.from(now));
             
             if (!in.getQuit()) {
-                answer.setToken(createToken(in, now));
-                // TODO store result in requested token
+                if (in.getToken() != null) {
+                    answer.setToken(in.getToken());
+                    QuickSearchStore.updateTimeStamp(in.getToken(), now.toEpochMilli());
+                } else {
+                    QuickSearchRequest result = new QuickSearchRequest(in.getSearch(), in.getReturnTypes(), answer.getResults());
+                    answer.setToken(result.createToken(accessToken));
+                    QuickSearchStore.putResult(answer.getToken(), result);
+                }
             } else {
-                // TODO delete stored result of requested token
+                QuickSearchStore.deleteResult(in.getToken());
             }
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (JocException e) {
@@ -72,8 +80,6 @@ public class QuickSearchResourceImpl extends JOCResourceImpl implements IQuickSe
             throws SOSHibernateException {
         SOSHibernateSession session = null;
         try {
-            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
-            InventorySearchDBLayer dbLayer = new InventorySearchDBLayer(session);
             
             // TODO only temp. for compatibility
             if (in.getReturnType() != null) {
@@ -83,7 +89,20 @@ public class QuickSearchResourceImpl extends JOCResourceImpl implements IQuickSe
                     in.getReturnTypes().add(in.getReturnType());
                 }
             }
-
+            
+            if (in.getToken() != null) {
+                List<ResponseBaseSearchItem> result = QuickSearchStore.getResult(in);
+                if (result != null) {
+                    return result;
+                } else {
+                    // obsolete token
+                    in.setToken(null);
+                }
+            }
+            
+            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+            InventorySearchDBLayer dbLayer = new InventorySearchDBLayer(session);
+            
             List<InventoryQuickSearchItem> items = dbLayer.getQuickSearchInventoryConfigurations(in.getReturnTypes(), in.getSearch());
 
             if (items != null) {
@@ -98,14 +117,6 @@ public class QuickSearchResourceImpl extends JOCResourceImpl implements IQuickSe
             }
         } finally {
             Globals.disconnect(session);
-        }
-    }
-
-    private static String createToken(final RequestQuickSearchFilter in, Instant now) {
-        if (!SOSString.isEmpty(in.getToken())) {
-            return in.getToken();
-        } else {
-            return SOSString.hash256(now.toString());
         }
     }
 }
