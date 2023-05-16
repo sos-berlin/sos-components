@@ -174,6 +174,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             dbItemIamFido2Registration.setCreated(new Date());
 
             if (isNew) {
+                LOGGER.info("FIDO2 registration requested");
                 sosHibernateSession.save(dbItemIamFido2Registration);
             } else {
                 throw new JocAuthenticationException("User " + fido2Registration.getAccountName() + " already exists");
@@ -482,6 +483,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
                 dbItemIamAccount.setEmail(dbItemIamFido2Registration.getEmail());
                 dbItemIamAccount.setPublicKey(dbItemIamFido2Registration.getPublicKey());
                 sosHibernateSession.save(dbItemIamAccount);
+                LOGGER.info("FIDO2 registration approved");
                 SOSAuthHelper.storeDefaultProfile(sosHibernateSession, accountName);
 
             }
@@ -539,6 +541,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
                 iamFido2RegistrationFilter.setAccountName(accountName);
                 DBItemIamFido2Registration dbItemIamFido2Registration = iamFido2DBLayer.getUniqueFido2Registration(iamFido2RegistrationFilter);
                 if (dbItemIamFido2Registration != null) {
+                    LOGGER.info("FIDO2 registration deferred");
                     dbItemIamFido2Registration.setDeferred(true);
                     sosHibernateSession.update(dbItemIamFido2Registration);
                 } else {
@@ -586,6 +589,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             iamFido2RegistrationFilter.setToken(fido2ConfirmationFilter.getToken());
             DBItemIamFido2Registration dbItemIamFido2Registration = iamFido2DBLayer.getFido2Registration(iamFido2RegistrationFilter);
             if (dbItemIamFido2Registration != null) {
+                LOGGER.info("FIDO2 registration confirmed");
                 dbItemIamFido2Registration.setConfirmed(true);
                 sosHibernateSession.update(dbItemIamFido2Registration);
             } else {
