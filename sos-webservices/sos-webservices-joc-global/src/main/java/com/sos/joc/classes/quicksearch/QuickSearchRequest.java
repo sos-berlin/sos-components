@@ -12,40 +12,56 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.common.SearchStringHelper;
-import com.sos.joc.model.inventory.search.RequestQuickSearchFilter;
+import com.sos.joc.model.inventory.search.RequestBaseQuickSearchFilter;
 import com.sos.joc.model.inventory.search.RequestSearchReturnType;
 import com.sos.joc.model.inventory.search.ResponseBaseSearchItem;
 
 public class QuickSearchRequest {
 
     private final String searchPrefix;
-    private final String returnTypes;
+    private final String additionalProperty; //returnTypes (./inventory/quick/search) or controllerId (./workflows/quick/search)
     private long timestamp = 0;
     private List<ResponseBaseSearchItem> result;
     
     public QuickSearchRequest(String searchPrefix, List<RequestSearchReturnType> returnTypes, List<ResponseBaseSearchItem> result) {
         this.searchPrefix = normalizeSearchString(searchPrefix);
-        this.returnTypes = normalizeReturnTypes(returnTypes);
+        this.additionalProperty = normalizeReturnTypes(returnTypes);
+        this.result = result == null ? Collections.emptyList() : result;
+        this.timestamp = Instant.now().toEpochMilli();
+    }
+    
+    public QuickSearchRequest(String searchPrefix, String controllerId, List<ResponseBaseSearchItem> result) {
+        this.searchPrefix = normalizeSearchString(searchPrefix);
+        this.additionalProperty = normalizeControllerId(controllerId);
         this.result = result == null ? Collections.emptyList() : result;
         this.timestamp = Instant.now().toEpochMilli();
     }
     
     public QuickSearchRequest(String searchPrefix, List<RequestSearchReturnType> returnTypes) {
         this.searchPrefix = normalizeSearchString(searchPrefix);
-        this.returnTypes = normalizeReturnTypes(returnTypes);
+        this.additionalProperty = normalizeReturnTypes(returnTypes);
+    }
+    
+    public QuickSearchRequest(String searchPrefix, String controllerId) {
+        this.searchPrefix = normalizeSearchString(searchPrefix);
+        this.additionalProperty = normalizeControllerId(controllerId);
     }
     
     public String createToken(String accessToken) {
-        return SOSString.hash256(searchPrefix + returnTypes + accessToken);
+        return SOSString.hash256(searchPrefix + additionalProperty + accessToken);
     }
     
     public static String createToken(String searchPrefix, List<RequestSearchReturnType> returnTypes, String accessToken) {
         return SOSString.hash256(normalizeSearchString(searchPrefix) + normalizeReturnTypes(returnTypes) + accessToken);
     }
     
+    public static String createToken(String searchPrefix, String controllerId, String accessToken) {
+        return SOSString.hash256(normalizeSearchString(searchPrefix) + controllerId + accessToken);
+    }
+    
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(searchPrefix).append(returnTypes).toHashCode();
+        return new HashCodeBuilder().append(searchPrefix).append(additionalProperty).toHashCode();
     }
 
     @Override
@@ -57,10 +73,11 @@ public class QuickSearchRequest {
             return false;
         }
         QuickSearchRequest rhs = ((QuickSearchRequest) other);
-        return new EqualsBuilder().append(searchPrefix, rhs.searchPrefix).append(returnTypes, rhs.returnTypes).isEquals();
+        return new EqualsBuilder().append(searchPrefix, rhs.searchPrefix).append(additionalProperty, rhs.additionalProperty).isEquals();
     }
     
-    protected List<ResponseBaseSearchItem> getNewResult(RequestQuickSearchFilter newSearch) {
+    protected List<ResponseBaseSearchItem> getNewResult(RequestBaseQuickSearchFilter newSearch, List<RequestSearchReturnType> returnTypes,
+            String controllerId) {
         if (newSearch == null) {
             return null;
         }
@@ -71,7 +88,8 @@ public class QuickSearchRequest {
         if (search.length() > searchPrefix.length()) {
             search = search.substring(0, searchPrefix.length());
         }
-        if (new QuickSearchRequest(search, newSearch.getReturnTypes()).equals(this)) {
+        String additionalProp = normalizeControllerId(controllerId) + normalizeReturnTypes(returnTypes);
+        if (new QuickSearchRequest(search, additionalProp).equals(this)) {
             search = normalizeSearchString(newSearch.getSearch());
             if (searchPrefix.equalsIgnoreCase(search)) {
                 return result;
@@ -98,6 +116,13 @@ public class QuickSearchRequest {
             return "";
         }
         return returnTypes.stream().map(RequestSearchReturnType::ordinal).distinct().sorted().map(i -> i + "").collect(Collectors.joining());
+    }
+    
+    private static String normalizeControllerId(String controllerId) {
+        if (controllerId == null) {
+            return "";
+        }
+        return controllerId;
     }
 
     protected void setTimestamp(long timestamp) {

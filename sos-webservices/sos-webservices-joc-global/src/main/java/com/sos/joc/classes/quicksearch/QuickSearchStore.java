@@ -8,8 +8,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
+import com.sos.joc.model.inventory.search.RequestBaseQuickSearchFilter;
 import com.sos.joc.model.inventory.search.RequestQuickSearchFilter;
+import com.sos.joc.model.inventory.search.RequestSearchReturnType;
 import com.sos.joc.model.inventory.search.ResponseBaseSearchItem;
+import com.sos.joc.model.workflow.search.DeployedWorkflowQuickSearchFilter;
 
 public class QuickSearchStore {
     
@@ -38,7 +41,15 @@ public class QuickSearchStore {
         return getInstance()._checkToken(request, accessToken);
     }
     
+    public static DeployedWorkflowQuickSearchFilter checkToken(DeployedWorkflowQuickSearchFilter request, String accessToken) {
+        return getInstance()._checkToken(request, accessToken);
+    }
+    
     public static void putResult(String token, RequestQuickSearchFilter request, List<ResponseBaseSearchItem> result) {
+        getInstance()._putResult(token, request, result);
+    }
+    
+    public static void putResult(String token, DeployedWorkflowQuickSearchFilter request, List<ResponseBaseSearchItem> result) {
         getInstance()._putResult(token, request, result);
     }
     
@@ -55,7 +66,11 @@ public class QuickSearchStore {
     }
     
     public static List<ResponseBaseSearchItem> getResult(RequestQuickSearchFilter request) {
-        return getInstance()._getResult(request);
+        return getInstance()._getResult(request, request.getReturnTypes(), null);
+    }
+    
+    public static List<ResponseBaseSearchItem> getResult(DeployedWorkflowQuickSearchFilter request) {
+        return getInstance()._getResult(request, null, request.getControllerId());
     }
     
     public static void deleteResult(String token) {
@@ -79,9 +94,32 @@ public class QuickSearchStore {
         return request;
     }
     
+    private DeployedWorkflowQuickSearchFilter _checkToken(DeployedWorkflowQuickSearchFilter request, String accessToken) {
+        if (request == null) {
+            return null;
+        }
+        if (request.getToken() != null) {
+            if (!results.containsKey(request.getToken())) {
+                request.setToken(null);
+            }
+        } else {
+            String token = QuickSearchRequest.createToken(request.getSearch(), request.getControllerId(), accessToken);
+            if (results.containsKey(token)) {
+                request.setToken(token);
+            }
+        }
+        return request;
+    }
+    
     private void _putResult(String token, RequestQuickSearchFilter request, List<ResponseBaseSearchItem> result) {
         if (result != null) {
             results.put(token, new QuickSearchRequest(request.getSearch(), request.getReturnTypes(), result));
+        }
+    }
+    
+    private void _putResult(String token, DeployedWorkflowQuickSearchFilter request, List<ResponseBaseSearchItem> result) {
+        if (result != null) {
+            results.put(token, new QuickSearchRequest(request.getSearch(), request.getControllerId(), result));
         }
     }
     
@@ -98,11 +136,12 @@ public class QuickSearchStore {
         }
     }
     
-    private List<ResponseBaseSearchItem> _getResult(RequestQuickSearchFilter request) {
+    private List<ResponseBaseSearchItem> _getResult(RequestBaseQuickSearchFilter request, List<RequestSearchReturnType> returnTypes,
+            String controllerId) {
         if (request != null && request.getToken() != null) {
             QuickSearchRequest result = results.get(request.getToken());
             if (result != null) {
-                List<ResponseBaseSearchItem> newResult =  result.getNewResult(request);
+                List<ResponseBaseSearchItem> newResult =  result.getNewResult(request, returnTypes, controllerId);
                 if (newResult == null) {
                     results.remove(request.getToken());
                     request.setToken(null);
