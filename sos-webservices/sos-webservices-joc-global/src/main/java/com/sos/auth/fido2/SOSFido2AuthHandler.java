@@ -1,5 +1,11 @@
 package com.sos.auth.fido2;
 
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,6 +16,7 @@ import com.sos.auth.sosintern.classes.SOSInternAuthLogin;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.security.SOSSecurityUtil;
 import com.sos.joc.db.authentication.DBItemIamAccount;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.security.IamAccountDBLayer;
@@ -24,7 +31,7 @@ public class SOSFido2AuthHandler {
     public SOSFido2AuthHandler() {
     }
 
-    public SOSAuthAccessToken login(SOSFido2AuthWebserviceCredentials sosFido2AuthWebserviceCredentials) throws SOSHibernateException {
+       public SOSAuthAccessToken login(SOSFido2AuthWebserviceCredentials sosFido2AuthWebserviceCredentials) throws SOSHibernateException, InvalidKeyException, SignatureException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException {
 
         SOSHibernateSession sosHibernateSession = null;
         try {
@@ -46,8 +53,7 @@ public class SOSFido2AuthHandler {
 
             DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getUniqueAccount(filter);
 
-            if (dbItemIamAccount != null  
-                    && (dbItemIamAccount.getChallenge().equals(sosFido2AuthWebserviceCredentials.getChallenge()))) {
+            if (dbItemIamAccount != null && SOSSecurityUtil.signatureVerified(dbItemIamAccount.getPublicKey(), dbItemIamAccount.getChallenge(), sosFido2AuthWebserviceCredentials.getSignature(), sosFido2AuthWebserviceCredentials.getAlgorithm())) {
                 sosAuthAccessToken = new SOSAuthAccessToken();
                 sosAuthAccessToken.setAccessToken(SOSAuthHelper.createSessionId());
             }

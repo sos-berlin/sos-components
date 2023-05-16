@@ -1,36 +1,20 @@
 package com.sos.joc.security.impl;
 
-import java.security.InvalidKeyException;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.X509EncodedKeySpec;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Date;
 import java.util.List;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.security.Fido2ConfirmationMail;
 import com.sos.joc.db.authentication.DBItemIamAccount;
-import com.sos.joc.db.authentication.DBItemIamBlockedAccount;
 import com.sos.joc.db.authentication.DBItemIamFido2Registration;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.security.IamAccountDBLayer;
@@ -61,7 +45,6 @@ import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 import com.sos.joc.model.security.properties.fido2.Fido2Attestation;
 import com.sos.joc.model.security.properties.fido2.Fido2Transports;
 import com.sos.joc.model.security.properties.fido2.Fido2Userverification;
-import com.sos.joc.security.classes.SOSRSAUtil;
 import com.sos.joc.security.resource.IFido2Resource;
 import com.sos.schema.JsonValidator;
 
@@ -268,22 +251,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
         }
     }
    
-
-    private String getChallenge(DBItemIamAccount dbItemAccount, String identityServiceName, String challengeToken) throws InvalidKeyException,
-            BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException, NoSuchAlgorithmException, JsonMappingException,
-            JsonProcessingException, SOSHibernateException {
-
-        com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getIamProperties(identityServiceName);
-
-        if (properties != null) {
-            if (properties.getFido2() != null) {
-                return Base64.getEncoder().encodeToString(SOSRSAUtil.encrypt(challengeToken, dbItemAccount.getPublicKey(),
-                        properties.getFido2().getIamFido2CipherType()));
-            }
-        }
-        throw new JocObjectNotExistException("No valid FIDO2 configuration for the identity service <" + identityServiceName + ">");
-    }
-
+ 
     @Override
     public JOCDefaultResponse postFido2RequestAuthentication(byte[] body) {
         SOSHibernateSession sosHibernateSession = null;
@@ -303,7 +271,8 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
                 throw new JocObjectNotExistException("Only allowed for Identity Service type FIDO2 " + "<" + dbItemIamIdentityService
                         .getIdentityServiceType() + ">");
             }
-
+            
+ 
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
             IamAccountFilter filter = new IamAccountFilter();
             filter.setAccountName(fido2RequestAuthentication.getAccountName());
@@ -313,9 +282,8 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             if (dbItemIamAccount != null) {
                 if (dbItemIamAccount.getPublicKey() != null) {
                     String challengeToken = SOSAuthHelper.createAccessToken();
-                    String challenge = getChallenge(dbItemIamAccount, fido2RequestAuthentication.getIdentityServiceName(), challengeToken);
                     dbItemIamAccount.setChallenge(challengeToken);
-                    fido2RequestAuthentication.setChallenge(challenge);
+                    fido2RequestAuthentication.setChallenge(challengeToken);
                     sosHibernateSession.update(dbItemIamAccount);
                 } else {
                     throw new JocObjectNotExistException("Registration <" + fido2RequestAuthentication.getAccountName() + " in identity service "

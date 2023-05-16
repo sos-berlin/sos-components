@@ -13,6 +13,9 @@ public class SOSLoginParameters {
     private String idToken;
     private String account;
     private String fido2Challenge;
+    private String algorithm;
+    private String signature;
+
     private SOSOpenIdWebserviceCredentials webserviceCredentials;
 
     public HttpServletRequest getRequest() {
@@ -85,6 +88,22 @@ public class SOSLoginParameters {
 
     public void setFido2Challenge(String fido2Challenge) {
         this.fido2Challenge = fido2Challenge;
+    }
+
+    public String getAlgorithm() {
+        return algorithm;
+    }
+
+    public void setAlgorithm(String algorithm) {
+        this.algorithm = algorithm;
+    }
+
+    public String getSignature() {
+        return signature;
+    }
+
+    public void setSignature(String signature) {
+        this.signature = signature;
     }
 
 }

@@ -180,7 +180,7 @@ public class SOSServicePermissionIam {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public JOCDefaultResponse loginPost(@Context HttpServletRequest request, @HeaderParam("Authorization") String basicAuthorization,
-            @HeaderParam("X-IDENTITY-SERVICE") String identityService, @HeaderParam("X-ID-TOKEN") String idToken,@HeaderParam("X-FIDO2-CHALLENGE") String fido2Challenge,
+            @HeaderParam("X-IDENTITY-SERVICE") String identityService, @HeaderParam("X-ID-TOKEN") String idToken,@HeaderParam("X-SIGNATURE") String signature,@HeaderParam("X-ALGORITHM") String algorithm,
             @QueryParam("account") String account, @QueryParam("pwd") String pwd) {
 
         if (Globals.sosCockpitProperties == null) {
@@ -207,12 +207,13 @@ public class SOSServicePermissionIam {
             }
             SOSLoginParameters sosLoginParameters = new SOSLoginParameters();
             sosLoginParameters.setIdToken(idToken);
-            sosLoginParameters.setFido2Challenge(fido2Challenge);
             sosLoginParameters.setBasicAuthorization(basicAuthorization);
             sosLoginParameters.setClientCertCN(clientCertCN);
             sosLoginParameters.setIdentityService(identityService);
             sosLoginParameters.setRequest(request);
             sosLoginParameters.setAccount(account);
+            sosLoginParameters.setAlgorithm(algorithm);
+            sosLoginParameters.setSignature(signature);
 
             return login(sosLoginParameters, pwd);
         } catch (JocAuthenticationException e) {
