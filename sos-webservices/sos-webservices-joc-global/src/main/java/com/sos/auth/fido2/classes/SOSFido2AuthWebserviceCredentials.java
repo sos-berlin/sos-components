@@ -5,6 +5,8 @@ public class SOSFido2AuthWebserviceCredentials {
     private Long identityServiceId;
     private String account = "";
     private String challenge = "";
+    private String signature = "";
+    private String algorithm = "";
 
     public String getAccount() {
         return account;
@@ -28,6 +30,25 @@ public class SOSFido2AuthWebserviceCredentials {
 
     public void setChallenge(String challenge) {
         this.challenge = challenge;
+    }
+
+    
+    public String getSignature() {
+        return signature;
+    }
+    
+    public void setSignature(String signature) {
+        this.signature = signature;
+    }
+
+    
+    public String getAlgorithm() {
+        return algorithm;
+    }
+
+    
+    public void setAlgorithm(String algorithm) {
+        this.algorithm = algorithm;
     }
 
 }
