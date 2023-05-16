@@ -3,6 +3,7 @@ package com.sos.joc.history;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.OptionalLong;
 import java.util.concurrent.TimeUnit;
@@ -41,9 +42,11 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventClusterCoupled;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventControllerReady;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventControllerShutDown;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventEmpty;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderAttached;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderBroken;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderCancelled;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderCaught;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderCyclingPrepared;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderFailed;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderFinished;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderForked;
@@ -135,6 +138,7 @@ public class HistoryControllerHandlerTest {
                 Long id = api.journalInfo().thenApply(o -> o.get().tornEventId()).get();
                 LOGGER.info(String.format("[tornEventId]%s", id));
             } catch (Throwable ee) {
+                LOGGER.error(String.format("[tornEventId]%s", ee.toString()), ee);
             }
             throw e;
         } finally {
@@ -147,7 +151,7 @@ public class HistoryControllerHandlerTest {
             LOGGER.info("[flux][START]");
             Flux<JEventAndControllerState<Event>> flux = api.eventFlux(eventBus, OptionalLong.of(eventId));
 
-            // flux = flux.doOnNext(e -> LOGGER.info(e.stampedEvent().value().event().getClass().getSimpleName()));
+            flux = flux.doOnNext(e -> LOGGER.info(e.stampedEvent().value().event().getClass().getSimpleName()));
             // flux = flux.doOnNext(e -> LOGGER.info(SOSString.toString(e)));
 
             flux = flux.filter(e -> HistoryEventType.fromValue(e.stampedEvent().value().event().getClass().getSimpleName()) != null);
@@ -219,6 +223,7 @@ public class HistoryControllerHandlerTest {
                 event = new FatEventClusterCoupled(entry.getEventId(), entry.getEventDate());
                 event.set(CONTROLLER_ID, cc.getActiveId(), cc.isPrimary());
                 break;
+
             case ControllerReady:
                 HistoryControllerReady cr = entry.getControllerReady();
 
@@ -263,11 +268,18 @@ public class HistoryControllerHandlerTest {
                 try {
                     OrderMoved om = (OrderMoved) entry.getEvent();
                     if (om.reason().isEmpty()) {
-                        event = new FatEventEmpty();
+                        order = entry.getCheckedOrder();
+                        List<Date> wfa = order.getWaitingForAdmission();
+                        if (wfa == null || wfa.size() == 0) {
+                            event = new FatEventEmpty();
+                        } else {
+                            event = new FatEventOrderMoved(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
+                                    .getPosition(), om, null, wfa, order.isStarted());
+                        }
                     } else {
                         order = entry.getCheckedOrderFromPreviousState();
                         event = new FatEventOrderMoved(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
-                                .getPosition(), om, order.getCurrentPositionInstruction(), order.isStarted());
+                                .getPosition(), om, order.getCurrentPositionInstruction(), null, order.isStarted());
                     }
                 } catch (Throwable e) {
                     try {
@@ -278,7 +290,27 @@ public class HistoryControllerHandlerTest {
                     }
                     event = new FatEventEmpty();
                 }
+
                 break;
+
+            case OrderAttached:
+                order = entry.getCheckedOrder();
+                List<Date> wfa = order.getWaitingForAdmission();
+                if (wfa == null || wfa.size() == 0) {
+                    event = new FatEventEmpty();
+                } else {
+                    event = new FatEventOrderAttached(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
+                            .getPosition(), wfa, order.isStarted());
+                }
+
+                break;
+
+            case OrderCyclingPrepared:
+                order = entry.getCheckedOrder();
+                event = new FatEventOrderCyclingPrepared(entry.getEventId(), entry.getEventDate(), order);
+
+                break;
+
             case OrderStarted:
                 order = entry.getCheckedOrder();
 
@@ -286,6 +318,7 @@ public class HistoryControllerHandlerTest {
                 event.set(order.getOrderId(), order.getWorkflowInfo().getPath(), order.getWorkflowInfo().getVersionId(), order.getWorkflowInfo()
                         .getPosition(), order.getArguments());
                 break;
+
             case OrderForked:
                 order = entry.getCheckedOrder();
                 JOrderForked jof = (JOrderForked) entry.getJOrderEvent();
@@ -324,7 +357,6 @@ public class HistoryControllerHandlerTest {
                 event = new FatEventOrderJoined(entry.getEventId(), entry.getEventDate());
                 event.set(order.getOrderId(), order.getWorkflowInfo().getPath(), order.getWorkflowInfo().getVersionId(), order.getWorkflowInfo()
                         .getPosition(), null, childs, order.getOutcomeInfo(joj.outcome()));
-
                 break;
 
             case OrderStepStdoutWritten:
@@ -455,7 +487,6 @@ public class HistoryControllerHandlerTest {
                 ol = order.getOrderLocks((OrderLocksAcquired) entry.getEvent());
                 event = new FatEventOrderLocksAcquired(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
                         .getPosition(), ol);
-
                 break;
 
             case OrderLocksQueued:
@@ -464,7 +495,6 @@ public class HistoryControllerHandlerTest {
                 ol = order.getOrderLocks((OrderLocksQueued) entry.getEvent());
                 event = new FatEventOrderLocksQueued(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
                         .getPosition(), ol);
-
                 break;
 
             case OrderLocksReleased:
@@ -473,21 +503,18 @@ public class HistoryControllerHandlerTest {
                 ol = order.getOrderLocks((OrderLocksReleased) entry.getEvent());
                 event = new FatEventOrderLocksReleased(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
                         .getPosition(), ol);
-
                 break;
 
             case OrderNoticesConsumed:
                 order = entry.getCheckedOrder();
                 event = new FatEventOrderNoticesConsumed(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
                         .getPosition(), ((OrderNoticesConsumed) entry.getEvent()).failed());
-
                 break;
 
             case OrderNoticesConsumptionStarted:
                 order = entry.getCheckedOrder();
                 event = new FatEventOrderNoticesConsumptionStarted(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order
                         .getWorkflowInfo().getPosition(), order.getConsumingNotices());
-
                 break;
 
             // if expected notice(s) exists
@@ -502,7 +529,6 @@ public class HistoryControllerHandlerTest {
                 order = entry.getCheckedOrder();
                 event = new FatEventOrderNoticesExpected(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
                         .getPosition(), order.getExpectNotices());
-
                 break;
 
             case OrderNoticePosted:
@@ -555,7 +581,9 @@ public class HistoryControllerHandlerTest {
     }
 
     private void deleteNotStartedOrderLog(HistoryOrder order) {
-        if (order == null || !order.isSuspended()) {
+        // TODO why check !order.isSuspended() ???
+        // if (order == null || !order.isSuspended()) {
+        if (order == null || order.getOrderId() == null) {
             return;
         }
         try {

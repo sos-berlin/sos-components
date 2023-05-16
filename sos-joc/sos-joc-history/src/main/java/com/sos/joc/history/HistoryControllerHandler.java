@@ -20,8 +20,8 @@ import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.ProxyUser;
-import com.sos.joc.cluster.configuration.JocHistoryConfiguration;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
+import com.sos.joc.cluster.configuration.JocHistoryConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.history.controller.exception.HistoryFatalException;
@@ -52,9 +52,11 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventClusterCoupled;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventControllerReady;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventControllerShutDown;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventEmpty;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderAttached;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderBroken;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderCancelled;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderCaught;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderCyclingPrepared;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderFailed;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderFinished;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderForked;
@@ -387,6 +389,7 @@ public class HistoryControllerHandler {
                 event = new FatEventClusterCoupled(entry.getEventId(), entry.getEventDate());
                 event.set(controllerConfig.getCurrent().getId(), cc.getActiveId(), cc.isPrimary());
                 break;
+
             case ControllerReady:
                 HistoryControllerReady cr = entry.getControllerReady();
 
@@ -431,11 +434,18 @@ public class HistoryControllerHandler {
                 try {
                     OrderMoved om = (OrderMoved) entry.getEvent();
                     if (om.reason().isEmpty()) {
-                        event = new FatEventEmpty();
+                        order = entry.getCheckedOrder();
+                        List<Date> wfa = order.getWaitingForAdmission();
+                        if (wfa == null || wfa.size() == 0) {
+                            event = new FatEventEmpty();
+                        } else {
+                            event = new FatEventOrderMoved(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
+                                    .getPosition(), om, null, wfa, order.isStarted());
+                        }
                     } else {
                         order = entry.getCheckedOrderFromPreviousState();
                         event = new FatEventOrderMoved(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
-                                .getPosition(), om, order.getCurrentPositionInstruction(), order.isStarted());
+                                .getPosition(), om, order.getCurrentPositionInstruction(), null, order.isStarted());
                     }
                 } catch (Throwable e) {
                     try {
@@ -447,6 +457,23 @@ public class HistoryControllerHandler {
                     event = new FatEventEmpty();
                 }
                 break;
+
+            case OrderAttached:
+                order = entry.getCheckedOrder();
+                List<Date> wfa = order.getWaitingForAdmission();
+                if (wfa == null || wfa.size() == 0) {
+                    event = new FatEventEmpty();
+                } else {
+                    event = new FatEventOrderAttached(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
+                            .getPosition(), wfa, order.isStarted());
+                }
+                break;
+
+            case OrderCyclingPrepared:
+                order = entry.getCheckedOrder();
+                event = new FatEventOrderCyclingPrepared(entry.getEventId(), entry.getEventDate(), order);
+                break;
+
             case OrderStarted:
                 order = entry.getCheckedOrder();
 
@@ -454,6 +481,7 @@ public class HistoryControllerHandler {
                 event.set(order.getOrderId(), order.getWorkflowInfo().getPath(), order.getWorkflowInfo().getVersionId(), order.getWorkflowInfo()
                         .getPosition(), order.getArguments());
                 break;
+
             case OrderForked:
                 order = entry.getCheckedOrder();
                 JOrderForked jof = (JOrderForked) entry.getJOrderEvent();
@@ -643,14 +671,12 @@ public class HistoryControllerHandler {
                 order = entry.getCheckedOrder();
                 event = new FatEventOrderNoticesConsumed(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
                         .getPosition(), ((OrderNoticesConsumed) entry.getEvent()).failed());
-
                 break;
 
             case OrderNoticesConsumptionStarted:
                 order = entry.getCheckedOrder();
                 event = new FatEventOrderNoticesConsumptionStarted(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order
                         .getWorkflowInfo().getPosition(), order.getConsumingNotices());
-
                 break;
 
             // if expected notice(s) exists
@@ -665,7 +691,6 @@ public class HistoryControllerHandler {
                 order = entry.getCheckedOrder();
                 event = new FatEventOrderNoticesExpected(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
                         .getPosition(), order.getExpectNotices());
-
                 break;
 
             case OrderNoticePosted:
@@ -717,7 +742,9 @@ public class HistoryControllerHandler {
     }
 
     private void deleteNotStartedOrderLog(HistoryOrder order) {
-        if (order == null || !order.isSuspended()) {
+        // TODO why check !order.isSuspended() ???
+        // if (order == null || !order.isSuspended()) {
+        if (order == null || order.getOrderId() == null) {
             return;
         }
         try {

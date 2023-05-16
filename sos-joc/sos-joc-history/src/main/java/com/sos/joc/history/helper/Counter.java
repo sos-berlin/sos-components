@@ -183,6 +183,8 @@ public class Counter {
         private int retrying = 0;
         @SuppressWarnings("unused")
         private int moved = 0;
+        @SuppressWarnings("unused")
+        private int attached = 0;
 
         public void addStarted() {
             started += 1;
@@ -274,6 +276,10 @@ public class Counter {
 
         public void addMoved() {
             moved += 1;
+        }
+
+        public void addAttached() {
+            attached += 1;
         }
     }
 

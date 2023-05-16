@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -76,6 +77,8 @@ import js7.data_for_java.order.JOrderEvent;
 import js7.data_for_java.order.JOrderEvent.JExpectedNotice;
 import js7.data_for_java.order.JOrderEvent.JOrderFailed;
 import js7.data_for_java.order.JOrderEvent.JOrderForked;
+import js7.data_for_java.order.JOrderObstacle;
+import js7.data_for_java.order.JOrderObstacle.WaitingForAdmission;
 import js7.data_for_java.subagent.JSubagentItem;
 import js7.data_for_java.workflow.JWorkflow;
 import js7.data_for_java.workflow.JWorkflowId;
@@ -242,6 +245,42 @@ public class HistoryEventEntry {
 
         public String getOrderId() {
             return orderId.string();
+        }
+
+        public State getOrderState() {
+            if (order == null) {
+                return null;
+            }
+            try {
+                return order.asScala().state();
+            } catch (Throwable e) {
+                LOGGER.warn(String.format("[%s][getOrderState]%s", getOrderId(), e.toString()), e);
+                return null;
+            }
+        }
+
+        public Set<JOrderObstacle> getOrderObstacles() {
+            try {
+                JControllerState s = eventAndState.state();
+                return getFromEither(s.orderToObstacles(orderId, s.instant()));
+            } catch (Throwable e) {
+                LOGGER.warn(String.format("[%s][getOrderObstacles]%s", getOrderId(), e.toString()), e);
+                return null;
+            }
+        }
+
+        public List<Date> getWaitingForAdmission() {
+            try {
+                Set<JOrderObstacle> o = getOrderObstacles();
+                if (o != null && o.size() > 0) {
+                    return o.parallelStream().filter(e -> (e instanceof JOrderObstacle.WaitingForAdmission)).map(e -> {
+                        return HistoryEventEntry.getDate(((WaitingForAdmission) e).asScala().until());
+                    }).filter(Objects::nonNull).collect(Collectors.toList());
+                }
+            } catch (Throwable e) {
+                LOGGER.warn(String.format("[%s][getWaitingForAdmission]%s", getOrderId(), e.toString()), e);
+            }
+            return null;
         }
 
         public OrderStartedInfo getOrderStartedInfo() {
@@ -540,7 +579,7 @@ public class HistoryEventEntry {
                 try {
                     JOrder jo = getCheckedOrderFromPreviousState().getJOrder();
                     this.scheduledFor = getScheduledFor(jo);
-                    this.maybePreviousStatesLogged = maybePreviousStatesLogged(jo);
+                    this.maybePreviousStatesLogged = true;// maybePreviousStatesLogged(jo);
                 } catch (Throwable e) {
                     LOGGER.warn(String.format("[%s][OrderStarted]%s", getOrderId(), e.toString()), e);
                 }
@@ -558,6 +597,7 @@ public class HistoryEventEntry {
                 return null;
             }
 
+            @SuppressWarnings("unused")
             private boolean maybePreviousStatesLogged(JOrder jo) {
                 if (jo != null) {
                     try {

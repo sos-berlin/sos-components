@@ -15,6 +15,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 
@@ -73,8 +74,10 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventAgentShutDown;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventClusterCoupled;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventControllerReady;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventControllerShutDown;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderAttached;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderCancelled;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderCaught;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderCyclingPrepared;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderForked;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderJoined;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderMoved;
@@ -122,6 +125,10 @@ import com.sos.joc.model.history.order.OrderLogEntry;
 import com.sos.joc.model.history.order.OrderLogEntryError;
 import com.sos.joc.model.history.order.OrderLogEntryInstruction;
 import com.sos.joc.model.history.order.OrderLogEntryLogLevel;
+import com.sos.joc.model.history.order.attached.Attached;
+import com.sos.joc.model.history.order.common.WaitingForAdmission;
+import com.sos.joc.model.history.order.cycle.Cycle;
+import com.sos.joc.model.history.order.cycle.CyclePrepared;
 import com.sos.joc.model.history.order.moved.Moved;
 import com.sos.joc.model.history.order.moved.MovedSkipped;
 import com.sos.joc.model.history.order.moved.MovedSkippedReason;
@@ -500,11 +507,18 @@ public class HistoryModel {
                         orderLogMoved(dbLayer, (FatEventOrderMoved) entry, EventType.OrderMoved);
                         counter.getOrder().addMoved();
                         break;
+                    case OrderAttached:
+                        orderLogAttached(dbLayer, (FatEventOrderAttached) entry, EventType.OrderAttached);
+                        counter.getOrder().addAttached();
+                        break;
                     case OrderPrompted:
                         orderLog(dbLayer, (FatEventOrderPrompted) entry, EventType.OrderPrompted);
                         break;
                     case OrderPromptAnswered:
                         orderLog(dbLayer, (FatEventOrderPromptAnswered) entry, EventType.OrderPromptAnswered);
+                        break;
+                    case OrderCyclingPrepared:
+                        orderLog(dbLayer, (FatEventOrderCyclingPrepared) entry, EventType.OrderCyclingPrepared);
                         break;
                     case EventWithProblem:
                         try {
@@ -977,9 +991,9 @@ public class HistoryModel {
             item.setMainParentId(item.getId()); // TODO see above
             dbLayer.setMainParentId(item.getId(), item.getMainParentId());
 
-            if (eo.maybePreviousStatesLogged()) {
-                handleNotStartedOrderLog(item.getOrderId(), item.getId());
-            }
+            // if (eo.maybePreviousStatesLogged()) {
+            handleNotStartedOrderLog(item.getOrderId(), item.getId());
+            // }
 
             LogEntry le = new LogEntry(OrderLogEntryLogLevel.MAIN, EventType.OrderStarted, eo.getEventDatetime(), null);
             CachedOrder co = new CachedOrder(item);
@@ -1015,7 +1029,7 @@ public class HistoryModel {
             if (notStartedOrderLog == null) {
                 return;
             }
-            if (Files.exists(notStartedOrderLog)) {
+            if (notStartedOrderLog.toFile().exists()) {
                 Path orderDir = HistoryUtil.getOrderLogDirectory(historyConfiguration.getLogDir(), mainParentId);
                 Path orderLog = HistoryUtil.getOrderLog(orderDir, mainParentId);
                 boolean removeNotStartedOrderLog = false;
@@ -1379,10 +1393,23 @@ public class HistoryModel {
         LogEntry le = new LogEntry(OrderLogEntryLogLevel.DETAIL, eventType, eo.getEventDatetime(), null);
 
         CachedOrder co = null;
-        if (eo.isOrderStarted()) {
+        if (eo.isStarted()) {
             co = cacheHandler.getOrderByCurrentOrderId(dbLayer, eo.getOrderId(), eo.getEventId());
         }
         le.onOrderMoved(co, eo);
+        storeLog2File(le);
+    }
+
+    private void orderLogAttached(DBLayerHistory dbLayer, FatEventOrderAttached eo, EventType eventType) throws Exception {
+        checkControllerTimezone(dbLayer);
+
+        LogEntry le = new LogEntry(OrderLogEntryLogLevel.DETAIL, eventType, eo.getEventDatetime(), null);
+
+        CachedOrder co = null;
+        if (eo.isStarted()) {
+            co = cacheHandler.getOrderByCurrentOrderId(dbLayer, eo.getOrderId(), eo.getEventId());
+        }
+        le.onOrderAttached(co, eo);
         storeLog2File(le);
     }
 
@@ -2105,15 +2132,41 @@ public class HistoryModel {
             mt.setPosition(le.getOrderMoved().getTo());
             m.setTo(mt);
 
-            MovedSkipped ms = new MovedSkipped();
-            ms.setInstruction(toOrderLogEntryInstruction(le.getOrderMoved().getInstruction()));
-            try {
-                ms.setReason(MovedSkippedReason.valueOf(le.getOrderMoved().getReason()));
-            } catch (Throwable e) {
-                ms.setReason(MovedSkippedReason.Unknown);
+            if (le.getOrderMoved().getReason() != null) {
+                MovedSkipped ms = new MovedSkipped();
+                ms.setInstruction(toOrderLogEntryInstruction(le.getOrderMoved().getInstruction()));
+                try {
+                    ms.setReason(MovedSkippedReason.valueOf(le.getOrderMoved().getReason()));
+                } catch (Throwable e) {
+                    ms.setReason(MovedSkippedReason.Unknown);
+                }
+                m.setSkipped(ms);
             }
-            m.setSkipped(ms);
+
+            if (le.getOrderMoved().getWaitingForAdmission() != null && le.getOrderMoved().getWaitingForAdmission().size() > 0) {
+                m.setWaitingForAdmission(getWaitingForAdmission(le.getOrderMoved().getWaitingForAdmission()));
+            }
+
             ole.setMoved(m);
+        } else if (le.getOrderAttached() != null) {
+            if (le.getOrderAttached().getWaitingForAdmission() != null && le.getOrderAttached().getWaitingForAdmission().size() > 0) {
+                Attached a = new Attached();
+                a.setWaitingForAdmission(getWaitingForAdmission(le.getOrderAttached().getWaitingForAdmission()));
+
+                ole.setAttached(a);
+            }
+        } else if (le.getOrderCyclingPrepared() != null) {
+            try {
+                Cycle c = new Cycle();
+                CyclePrepared cp = new CyclePrepared();
+                cp.setNext(getDateAsString(le.getOrderCyclingPrepared().getNext(), controllerTimezone));
+                cp.setEnd(getDateAsString(le.getOrderCyclingPrepared().getEnd(), controllerTimezone));
+                c.setPrepared(cp);
+                ole.setCycle(c);
+            } catch (Throwable t) {
+                LOGGER.info(String.format("[createOrderLogEntry][OrderCyclingPrepared][next=%s,end=%s]%s", le.getOrderCyclingPrepared().getNext(), le
+                        .getOrderCyclingPrepared().getEnd(), t.toString()));
+            }
         } else if (le.getInstruction() != null) {
             switch (le.getEventType()) {
             case OrderSuspended:
@@ -2129,6 +2182,18 @@ public class HistoryModel {
             ole.setQuestion(le.getQuestion());
         }
         return ole;
+    }
+
+    private WaitingForAdmission getWaitingForAdmission(List<Date> l) {
+        WaitingForAdmission w = new WaitingForAdmission();
+        w.setEntries(l.stream().map(e -> {
+            try {
+                return getDateAsString(e, controllerTimezone);
+            } catch (Throwable t) {
+                return null;
+            }
+        }).filter(Objects::nonNull).collect(Collectors.toList()));
+        return w;
     }
 
     private OrderLogEntryInstruction toOrderLogEntryInstruction(FatInstruction in) {
