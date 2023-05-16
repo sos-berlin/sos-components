@@ -1,4 +1,4 @@
-package com.sos.joc.inventory.impl;
+package com.sos.joc.workflows.impl;
 
 import java.time.Instant;
 import java.util.Collections;
@@ -14,31 +14,35 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.quicksearch.QuickSearchRequest;
 import com.sos.joc.classes.quicksearch.QuickSearchStore;
-import com.sos.joc.db.inventory.InventorySearchDBLayer;
+import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.inventory.items.InventoryQuickSearchItem;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IQuickSearchResource;
-import com.sos.joc.model.inventory.search.RequestQuickSearchFilter;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.search.ResponseBaseSearchItem;
 import com.sos.joc.model.inventory.search.ResponseQuickSearch;
+import com.sos.joc.model.workflow.search.DeployedWorkflowQuickSearchFilter;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
 
-@Path(JocInventory.APPLICATION_PATH)
-public class QuickSearchResourceImpl extends JOCResourceImpl implements IQuickSearchResource {
+@Path("workflows")
+public class WorkflowQuickSearchImpl extends JOCResourceImpl implements IQuickSearchResource {
+    
+    private static final String API_CALL = "./workflows/quick/search";
 
     @Override
     public JOCDefaultResponse postSearch(final String accessToken, final byte[] inBytes) {
         try {
-            initLogging(IMPL_PATH, inBytes, accessToken);
-            JsonValidator.validateFailFast(inBytes, RequestQuickSearchFilter.class);
-            RequestQuickSearchFilter in = Globals.objectMapper.readValue(inBytes, RequestQuickSearchFilter.class);
+            initLogging(API_CALL, inBytes, accessToken);
+            JsonValidator.validateFailFast(inBytes, DeployedWorkflowQuickSearchFilter.class);
+            DeployedWorkflowQuickSearchFilter in = Globals.objectMapper.readValue(inBytes, DeployedWorkflowQuickSearchFilter.class);
 
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getView());
+            String controllerId = in.getControllerId();
+            JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getWorkflows()
+                    .getView());
             if (response != null) {
                 return response;
             }
@@ -60,7 +64,7 @@ public class QuickSearchResourceImpl extends JOCResourceImpl implements IQuickSe
                     answer.setToken(in.getToken());
                     QuickSearchStore.updateTimeStamp(in.getToken(), now.toEpochMilli());
                 } else {
-                    QuickSearchRequest result = new QuickSearchRequest(in.getSearch(), in.getReturnTypes(), answer.getResults());
+                    QuickSearchRequest result = new QuickSearchRequest(in.getSearch(), controllerId, answer.getResults());
                     answer.setToken(result.createToken(accessToken));
                     QuickSearchStore.putResult(answer.getToken(), result);
                 }
@@ -76,7 +80,7 @@ public class QuickSearchResourceImpl extends JOCResourceImpl implements IQuickSe
         }
     }
 
-    private static List<ResponseBaseSearchItem> getBasicSearch(final RequestQuickSearchFilter in, final SOSAuthFolderPermissions folderPermissions)
+    private static List<ResponseBaseSearchItem> getBasicSearch(final DeployedWorkflowQuickSearchFilter in, final SOSAuthFolderPermissions folderPermissions)
             throws SOSHibernateException {
         SOSHibernateSession session = null;
         try {
@@ -92,9 +96,10 @@ public class QuickSearchResourceImpl extends JOCResourceImpl implements IQuickSe
             }
             
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
-            InventorySearchDBLayer dbLayer = new InventorySearchDBLayer(session);
+            DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
             
-            List<InventoryQuickSearchItem> items = dbLayer.getQuickSearchInventoryConfigurations(in.getReturnTypes(), in.getSearch());
+            List<InventoryQuickSearchItem> items = dbLayer.getQuickSearchInventoryConfigurations(in.getControllerId(), Collections.singleton(
+                    ConfigurationType.WORKFLOW.intValue()), in.getSearch());
 
             if (items != null) {
                 Predicate<InventoryQuickSearchItem> isPermitted = item -> folderPermissions.isPermittedForFolder(item.getFolder());
@@ -102,7 +107,7 @@ public class QuickSearchResourceImpl extends JOCResourceImpl implements IQuickSe
 //                if (in.getReturnType() == null) {
 //                    comp = comp.thenComparingInt(i -> i.getObjectType() == null ? 99 : i.getObjectType().intValue());
 //                }
-                return items.stream().filter(isPermitted).sorted(comp).collect(Collectors.toList());
+                return items.stream().filter(isPermitted).peek(item -> item.setObjectType(null)).sorted(comp).collect(Collectors.toList());
             } else {
                 return Collections.emptyList();
             }

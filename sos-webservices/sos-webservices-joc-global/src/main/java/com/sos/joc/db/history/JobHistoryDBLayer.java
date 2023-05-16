@@ -152,6 +152,7 @@ public class JobHistoryDBLayer {
         try {
             Query<Long> query = createQuery(new StringBuilder().append("select id from ").append(DBLayer.DBITEM_HISTORY_ORDERS).append(
                     getOrdersWhere()).append(" order by startTime desc").toString());
+            query.setMaxResults(1);
             return session.getSingleResult(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
