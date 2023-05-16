@@ -4,6 +4,7 @@ package com.sos.joc.model.history.order.moved;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.history.order.common.WaitingForAdmission;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -18,7 +19,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "to",
-    "skipped"
+    "skipped",
+    "waitingForAdmission"
 })
 public class Moved {
 
@@ -39,6 +41,14 @@ public class Moved {
      */
     @JsonProperty("skipped")
     private MovedSkipped skipped;
+    /**
+     * Moved
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("waitingForAdmission")
+    private WaitingForAdmission waitingForAdmission;
 
     /**
      * Mover To
@@ -86,14 +96,36 @@ public class Moved {
         this.skipped = skipped;
     }
 
+    /**
+     * Moved
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("waitingForAdmission")
+    public WaitingForAdmission getWaitingForAdmission() {
+        return waitingForAdmission;
+    }
+
+    /**
+     * Moved
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("waitingForAdmission")
+    public void setWaitingForAdmission(WaitingForAdmission waitingForAdmission) {
+        this.waitingForAdmission = waitingForAdmission;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("to", to).append("skipped", skipped).toString();
+        return new ToStringBuilder(this).append("to", to).append("skipped", skipped).append("waitingForAdmission", waitingForAdmission).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(to).append(skipped).toHashCode();
+        return new HashCodeBuilder().append(to).append(waitingForAdmission).append(skipped).toHashCode();
     }
 
     @Override
@@ -105,7 +137,7 @@ public class Moved {
             return false;
         }
         Moved rhs = ((Moved) other);
-        return new EqualsBuilder().append(to, rhs.to).append(skipped, rhs.skipped).isEquals();
+        return new EqualsBuilder().append(to, rhs.to).append(waitingForAdmission, rhs.waitingForAdmission).append(skipped, rhs.skipped).isEquals();
     }
 
 }

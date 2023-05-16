@@ -9,9 +9,11 @@ import js7.data.agent.AgentRefStateEvent.AgentShutDown$;
 import js7.data.cluster.ClusterEvent.ClusterCoupled;
 import js7.data.controller.ControllerEvent.ControllerReady;
 import js7.data.controller.ControllerEvent.ControllerShutDown$;
+import js7.data.order.OrderEvent.OrderAttached;
 import js7.data.order.OrderEvent.OrderBroken;
 import js7.data.order.OrderEvent.OrderCancelled$;
 import js7.data.order.OrderEvent.OrderCaught;
+import js7.data.order.OrderEvent.OrderCyclingPrepared;
 import js7.data.order.OrderEvent.OrderFailed;
 import js7.data.order.OrderEvent.OrderFinished;
 import js7.data.order.OrderEvent.OrderForked;
@@ -28,8 +30,8 @@ import js7.data.order.OrderEvent.OrderNoticesRead$;
 import js7.data.order.OrderEvent.OrderOutcomeAdded;
 import js7.data.order.OrderEvent.OrderProcessed;
 import js7.data.order.OrderEvent.OrderProcessingStarted;
-import js7.data.order.OrderEvent.OrderPrompted;
 import js7.data.order.OrderEvent.OrderPromptAnswered;
+import js7.data.order.OrderEvent.OrderPrompted;
 import js7.data.order.OrderEvent.OrderResumed;
 import js7.data.order.OrderEvent.OrderResumptionMarked;
 import js7.data.order.OrderEvent.OrderRetrying;
@@ -111,9 +113,13 @@ public enum HistoryEventType {
 
     OrderMoved(OrderMoved.class.getSimpleName()),
 
+    OrderAttached(OrderAttached.class.getSimpleName()),
+
     OrderPrompted(OrderPrompted.class.getSimpleName()),
 
     OrderPromptAnswered(OrderPromptAnswered.class.getSimpleName()),
+
+    OrderCyclingPrepared(OrderCyclingPrepared.class.getSimpleName()),
 
     OrderStepStarted(OrderProcessingStarted.class.getSimpleName()),
 

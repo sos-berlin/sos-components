@@ -11,8 +11,10 @@ import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryOrder.Order
 import com.sos.joc.history.controller.proxy.fatevent.AFatEventOrderBase;
 import com.sos.joc.history.controller.proxy.fatevent.AFatEventOrderLocks;
 import com.sos.joc.history.controller.proxy.fatevent.AFatEventOrderNotice;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderAttached;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderCaught;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderCaught.FatEventOrderCaughtCause;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderCyclingPrepared;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderMoved;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderPrompted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderRetrying;
@@ -55,6 +57,8 @@ public class LogEntry {
     private Date delayedUntil;
     private Caught caught;
     private FatEventOrderMoved orderMoved;
+    private FatEventOrderAttached orderAttached;
+    private FatEventOrderCyclingPrepared orderCyclingPrepared;
     private FatInstruction instruction;
     private Variables arguments;
     private String question;
@@ -84,6 +88,9 @@ public class LogEntry {
             break;
         case OrderPrompted:
             question = ((FatEventOrderPrompted) eo).getQuestion();
+            break;
+        case OrderCyclingPrepared:
+            orderCyclingPrepared = (FatEventOrderCyclingPrepared) eo;
             break;
         default:
             break;
@@ -142,6 +149,15 @@ public class LogEntry {
             onOrder(co, eo.getPosition(), null);
         }
         orderMoved = eo;
+    }
+
+    public void onOrderAttached(CachedOrder co, FatEventOrderAttached eo) {
+        if (co == null) {
+            onNotStartedOrder(eo.getOrderId(), eo.getPosition());
+        } else {
+            onOrder(co, eo.getPosition(), null);
+        }
+        orderAttached = eo;
     }
 
     public void setError(String state, CachedOrder co) {
@@ -399,6 +415,14 @@ public class LogEntry {
 
     public FatEventOrderMoved getOrderMoved() {
         return orderMoved;
+    }
+
+    public FatEventOrderAttached getOrderAttached() {
+        return orderAttached;
+    }
+
+    public FatEventOrderCyclingPrepared getOrderCyclingPrepared() {
+        return orderCyclingPrepared;
     }
 
     public void setArguments(Variables val) {

@@ -351,8 +351,9 @@ public class OrderNotifierModel {
         if (mn == null || mo == null) {
             return;
         }
-        EventBus.getInstance().post(new NotificationCreated(controllerId, mn.getId(), mn.getType(), mo.getWorkflowName(), mo.getOrderId(), mos
-                .getJobName(), mn.getCreated(), getPostEventMessage(mn, mo, mos)));
+        String jobName = mos == null ? "" : mos.getJobName();
+        EventBus.getInstance().post(new NotificationCreated(controllerId, mn.getId(), mn.getType(), mo.getWorkflowName(), mo.getOrderId(), jobName, mn
+                .getCreated(), getPostEventMessage(mn, mo, mos)));
     }
 
     // see com.sos.joc.monitoring.impl.OrderNotificationsImpl.getMessage

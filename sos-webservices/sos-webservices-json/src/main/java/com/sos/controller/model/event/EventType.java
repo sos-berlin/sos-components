@@ -14,6 +14,7 @@ public enum EventType {
     AgentReady("AgentReady"),
     OrderAdded("OrderAdded"),
     OrderAttachable("OrderAttachable"),
+    OrderAttached("OrderAttached"),
     OrderStarted("OrderStarted"),
     OrderTransferredToAgent("OrderTransferredToAgent"),
     OrderProcessingStarted("OrderProcessingStarted"),
@@ -53,7 +54,8 @@ public enum EventType {
     OrderNoticesExpected("OrderNoticesExpected"),
     OrderNoticePosted("OrderNoticePosted"),
     OrderPrompted("OrderPrompted"),
-    OrderPromptAnswered("OrderPromptAnswered");
+    OrderPromptAnswered("OrderPromptAnswered"),
+    OrderCyclingPrepared("OrderCyclingPrepared");
     private final String value;
     private final static Map<String, EventType> CONSTANTS = new HashMap<String, EventType>();
 
