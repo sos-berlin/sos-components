@@ -10,7 +10,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.mail.SOSMail;
 import com.sos.commons.util.SOSParameterSubstitutor;
@@ -53,7 +52,14 @@ public class Fido2ConfirmationMail {
         return "";
     }
 
-    
+    private String defaultBody() {
+        return "<body><style type='text/css'>.tg  {border-collapse:collapse;border-spacing:0;border-color:#bbb;}.tg td {font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#bbb;color:#594F4F;background-color:#E0FFEB;}.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#bbb;color:#493F3F;background-color:#9DE0AD}</style><table class='tg'>   <tr>   <th colspan='4'>FIDO2 Registration</th></tr><tr><td>E-Mail&nbsp:</td><td>${REGISTRATION_EMAIL_ADDRESS}</td>   <td>IdentityServie:</td><td>${FIDO2_IDENTITY_SERVICE}</td></tr><tr><th colspan='4'>Verification</th></tr><tr><td colspan='4'><a href='${REGISTRATION_VERIFY_LINK}'>Please verify your email address</a></td></tr></table></body>";
+    }
+
+    private String defaultSubject() {
+        return "FIDO2 Registration JOC Cockpit";
+    }
+
     public void sendMail(DBItemIamFido2Registration dbItemIamFido2Registration, String to, String identityServiceName) throws Exception {
 
         init();
@@ -66,10 +72,20 @@ public class Fido2ConfirmationMail {
         params.put("registration_email_address", to);
         params.put("fido2_identity_service", identityServiceName);
 
-        String body = resolve(fido2Properties.getIamFido2EmailSettings().getBody(), params);
+        String body = fido2Properties.getIamFido2EmailSettings().getBody();
+        if (body == null || body.isEmpty()) {
+            body = defaultBody();
+        }
+
+        body = resolve(body, params);
 
         mail.addRecipient(to);
-        mail.setSubject(resolve(fido2Properties.getIamFido2EmailSettings().getSubject(), params));
+
+        String subject = fido2Properties.getIamFido2EmailSettings().getSubject();
+        if (subject == null || subject.isEmpty()) {
+            subject = defaultSubject();
+        }
+        mail.setSubject(resolve(subject, params));
         mail.setBody(body);
 
         try {

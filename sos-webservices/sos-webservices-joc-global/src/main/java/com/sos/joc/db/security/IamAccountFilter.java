@@ -10,6 +10,7 @@ public class IamAccountFilter extends SOSHibernateFilter {
     private Long identityServiceId;
     private Long roleId;
     private String accountName;
+    private String email;
     private Boolean disabled;
 
     private String dateFrom;
@@ -82,6 +83,16 @@ public class IamAccountFilter extends SOSHibernateFilter {
 
     public void setTimeZone(String timeZone) {
         this.timeZone = timeZone;
+    }
+
+    
+    public String getEmail() {
+        return email;
+    }
+
+    
+    public void setEmail(String email) {
+        this.email = email;
     }
 
 }

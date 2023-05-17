@@ -3,9 +3,11 @@ package com.sos.auth.fido2.classes;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.Security;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +35,7 @@ public class SOSFido2AuthLogin implements ISOSLogin {
     }
 
     public void login(SOSAuthCurrentAccount currentAccount, String pwd) {
+ 
         try {
             SOSFido2AuthWebserviceCredentials sosFido2AuthWebserviceCredentials = new SOSFido2AuthWebserviceCredentials();
             sosFido2AuthWebserviceCredentials.setIdentityServiceId(identityService.getIdentityServiceId());

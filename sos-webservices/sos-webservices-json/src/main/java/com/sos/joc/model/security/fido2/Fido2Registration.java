@@ -23,7 +23,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "accountName",
     "email",
     "publicKey",
-    "cipherType",
+    "credentialId",
+    "clientDataJSON",
     "deferred",
     "confirmed",
     "auditLog"
@@ -65,13 +66,21 @@ public class Fido2Registration {
     @JsonProperty("publicKey")
     private String publicKey;
     /**
-     * Cipher Types
+     * string without < and >
      * <p>
      * 
      * 
      */
-    @JsonProperty("cipherType")
-    private CipherTypes cipherType;
+    @JsonProperty("credentialId")
+    private String credentialId;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("clientDataJSON")
+    private String clientDataJSON;
     /**
      * deferred parameter
      * <p>
@@ -108,22 +117,24 @@ public class Fido2Registration {
 
     /**
      * 
+     * @param clientDataJSON
      * @param deferred
      * @param identityServiceName
      * @param auditLog
      * @param accountName
+     * @param credentialId
      * @param publicKey
      * @param confirmed
      * @param email
-     * @param cipherType
      */
-    public Fido2Registration(String identityServiceName, String accountName, String email, String publicKey, CipherTypes cipherType, Boolean deferred, Boolean confirmed, AuditParams auditLog) {
+    public Fido2Registration(String identityServiceName, String accountName, String email, String publicKey, String credentialId, String clientDataJSON, Boolean deferred, Boolean confirmed, AuditParams auditLog) {
         super();
         this.identityServiceName = identityServiceName;
         this.accountName = accountName;
         this.email = email;
         this.publicKey = publicKey;
-        this.cipherType = cipherType;
+        this.credentialId = credentialId;
+        this.clientDataJSON = clientDataJSON;
         this.deferred = deferred;
         this.confirmed = confirmed;
         this.auditLog = auditLog;
@@ -222,25 +233,47 @@ public class Fido2Registration {
     }
 
     /**
-     * Cipher Types
+     * string without < and >
      * <p>
      * 
      * 
      */
-    @JsonProperty("cipherType")
-    public CipherTypes getCipherType() {
-        return cipherType;
+    @JsonProperty("credentialId")
+    public String getCredentialId() {
+        return credentialId;
     }
 
     /**
-     * Cipher Types
+     * string without < and >
      * <p>
      * 
      * 
      */
-    @JsonProperty("cipherType")
-    public void setCipherType(CipherTypes cipherType) {
-        this.cipherType = cipherType;
+    @JsonProperty("credentialId")
+    public void setCredentialId(String credentialId) {
+        this.credentialId = credentialId;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("clientDataJSON")
+    public String getClientDataJSON() {
+        return clientDataJSON;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("clientDataJSON")
+    public void setClientDataJSON(String clientDataJSON) {
+        this.clientDataJSON = clientDataJSON;
     }
 
     /**
@@ -311,12 +344,12 @@ public class Fido2Registration {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("accountName", accountName).append("email", email).append("publicKey", publicKey).append("cipherType", cipherType).append("deferred", deferred).append("confirmed", confirmed).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("accountName", accountName).append("email", email).append("publicKey", publicKey).append("credentialId", credentialId).append("clientDataJSON", clientDataJSON).append("deferred", deferred).append("confirmed", confirmed).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deferred).append(identityServiceName).append(auditLog).append(accountName).append(publicKey).append(confirmed).append(email).append(cipherType).toHashCode();
+        return new HashCodeBuilder().append(clientDataJSON).append(deferred).append(identityServiceName).append(auditLog).append(accountName).append(credentialId).append(publicKey).append(confirmed).append(email).toHashCode();
     }
 
     @Override
@@ -328,7 +361,7 @@ public class Fido2Registration {
             return false;
         }
         Fido2Registration rhs = ((Fido2Registration) other);
-        return new EqualsBuilder().append(deferred, rhs.deferred).append(identityServiceName, rhs.identityServiceName).append(auditLog, rhs.auditLog).append(accountName, rhs.accountName).append(publicKey, rhs.publicKey).append(confirmed, rhs.confirmed).append(email, rhs.email).append(cipherType, rhs.cipherType).isEquals();
+        return new EqualsBuilder().append(clientDataJSON, rhs.clientDataJSON).append(deferred, rhs.deferred).append(identityServiceName, rhs.identityServiceName).append(auditLog, rhs.auditLog).append(accountName, rhs.accountName).append(credentialId, rhs.credentialId).append(publicKey, rhs.publicKey).append(confirmed, rhs.confirmed).append(email, rhs.email).isEquals();
     }
 
 }
