@@ -15,7 +15,7 @@ import com.sos.joc.db.DBLayer;
 
 @Entity
 @Table(name = DBLayer.TABLE_IAM_ACCOUNTS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[IDENTITY_SERVICE_ID]", "[ACCOUNT_NAME]" }) })
-		
+
 @SequenceGenerator(name = DBLayer.TABLE_IAM_ACCOUNTS_SEQUENCE, sequenceName = DBLayer.TABLE_IAM_ACCOUNTS_SEQUENCE, allocationSize = 1)
 
 public class DBItemIamAccount {
@@ -36,12 +36,15 @@ public class DBItemIamAccount {
 
     @Column(name = "[CHALLENGE]", nullable = true)
     private String challenge;
-    
+
     @Column(name = "[EMAIL]", nullable = true)
     private String email;
-    
+
     @Column(name = "[PUBLIC_KEY]", nullable = true)
     private String publicKey;
+
+    @Column(name = "[CREDENTIAL_ID]", nullable = true)
+    private String credentialId;
 
     @Column(name = "[FORCE_PASSWORD_CHANGE]", nullable = false)
     @Type(type = "numeric_boolean")
@@ -52,14 +55,14 @@ public class DBItemIamAccount {
     private Boolean disabled;
 
     public Boolean getDisabled() {
-		return disabled;
-	}
+        return disabled;
+    }
 
-	public void setDisabled(Boolean disabled) {
-		this.disabled = disabled;
-	}
+    public void setDisabled(Boolean disabled) {
+        this.disabled = disabled;
+    }
 
-	public DBItemIamAccount() {
+    public DBItemIamAccount() {
 
     }
 
@@ -103,34 +106,36 @@ public class DBItemIamAccount {
         this.forcePasswordChange = forcePasswordChange;
     }
 
-    
     public String getEmail() {
         return email;
     }
 
-    
     public void setEmail(String email) {
         this.email = email;
     }
 
-    
     public String getPublicKey() {
         return publicKey;
     }
 
-    
     public void setPublicKey(String publicKey) {
         this.publicKey = publicKey;
     }
 
-    
     public String getChallenge() {
         return challenge;
     }
 
-    
     public void setChallenge(String challenge) {
         this.challenge = challenge;
+    }
+
+    public String getCredentialId() {
+        return credentialId;
+    }
+
+    public void setCredentialId(String credentialId) {
+        this.credentialId = credentialId;
     }
 
 }

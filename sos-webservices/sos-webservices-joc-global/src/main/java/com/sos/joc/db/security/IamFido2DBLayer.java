@@ -32,8 +32,16 @@ public class IamFido2DBLayer {
             query.setParameter("confirmed", filter.getConfirmed());
         }
 
+        if (filter.getCompleted() != null) {
+            query.setParameter("completed", filter.getCompleted());
+        }
+
         if (filter.getAccountName() != null && !filter.getAccountName().isEmpty()) {
             query.setParameter("accountName", filter.getAccountName());
+        }
+
+        if (filter.getEmail() != null && !filter.getEmail().isEmpty()) {
+            query.setParameter("email", filter.getEmail());
         }
 
         if (filter.getToken() != null && !filter.getToken().isEmpty()) {
@@ -61,12 +69,20 @@ public class IamFido2DBLayer {
             where += and + " accountName = :accountName";
             and = " and ";
         }
+        if (filter.getEmail() != null && !filter.getEmail().isEmpty()) {
+            where += and + " email = :email";
+            and = " and ";
+        }
         if (filter.getToken() != null && !filter.getToken().isEmpty()) {
             where += and + " token = :token";
             and = " and ";
         }
         if (filter.getIdentityServiceId() != null) {
             where += and + " identityServiceId = :identityServiceId";
+            and = " and ";
+        }
+        if (filter.getCompleted() != null) {
+            where += and + " completed = :completed";
             and = " and ";
         }
         if (filter.getDeferred() != null) {

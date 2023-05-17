@@ -60,6 +60,9 @@ public class IamAccountDBLayer {
         if (filter.getAccountName() != null && !filter.getAccountName().isEmpty()) {
             query.setParameter("accountName", filter.getAccountName());
         }
+        if (filter.getEmail() != null && !filter.getEmail().isEmpty()) {
+            query.setParameter("email", filter.getEmail());
+        }
         if (filter.getDateFrom() != null) {
             query.setParameter("from", filter.getDateFrom());
         }
@@ -195,6 +198,10 @@ public class IamAccountDBLayer {
         }
         if (filter.getAccountName() != null && !filter.getAccountName().isEmpty()) {
             where += and + " accountName = :accountName";
+            and = " and ";
+        }
+        if (filter.getEmail() != null && !filter.getEmail().isEmpty()) {
+            where += and + " email = :email";
             and = " and ";
         }
         if (filter.getDisabled() != null) {

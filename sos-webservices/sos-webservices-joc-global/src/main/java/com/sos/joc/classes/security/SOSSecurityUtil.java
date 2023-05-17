@@ -1,5 +1,6 @@
 package com.sos.joc.classes.security;
 
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -16,14 +17,13 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
-import com.sos.joc.db.authentication.DBItemIamAccount;
 import com.sos.joc.model.security.fido2.CipherTypes;
 
 public class SOSSecurityUtil {
 
-    private static PublicKey getPublicKey(String base64PublicKey, String alg) throws NoSuchAlgorithmException, InvalidKeySpecException {
+    private static PublicKey getPublicKey(String base64PublicKey, String alg) throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchProviderException {
         PublicKey publicKey = null;
-        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(base64PublicKey.getBytes()));
+        X509EncodedKeySpec  keySpec = new X509EncodedKeySpec (Base64.getUrlDecoder().decode(base64PublicKey.getBytes(StandardCharsets.UTF_8)));
         KeyFactory keyFactory = KeyFactory.getInstance(alg);
         publicKey = keyFactory.generatePublic(keySpec);
         return publicKey;
@@ -38,7 +38,12 @@ public class SOSSecurityUtil {
             cipherTypeString = cipherType.value();
         }
         Cipher cipher = Cipher.getInstance(cipherTypeString);
-        cipher.init(Cipher.ENCRYPT_MODE, getPublicKey(publicKey, alg));
+        try {
+            cipher.init(Cipher.ENCRYPT_MODE, getPublicKey(publicKey, alg));
+        } catch (NoSuchProviderException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         return cipher.doFinal(data.getBytes());
     }
 

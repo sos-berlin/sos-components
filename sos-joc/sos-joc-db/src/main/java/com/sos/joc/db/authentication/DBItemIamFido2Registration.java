@@ -39,8 +39,11 @@ public class DBItemIamFido2Registration {
     @Column(name = "[TOKEN]", nullable = false)
     private String token;
 
-    @Column(name = "[PUBLIC_KEY]", nullable = false)
+    @Column(name = "[PUBLIC_KEY]", nullable = true)
     private String publicKey;
+
+    @Column(name = "[CREDENTIAL_ID]", nullable = true)
+    private String credentialId;
 
     @Column(name = "[EMAIL]", nullable = false)
     private String email;
@@ -55,6 +58,10 @@ public class DBItemIamFido2Registration {
     @Column(name = "[CONFIRMED]", nullable = false)
     @Type(type = "numeric_boolean")
     private Boolean confirmed;
+
+    @Column(name = "[COMPLETED]", nullable = false)
+    @Type(type = "numeric_boolean")
+    private Boolean completed;
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[CREATED]", nullable = false)
@@ -146,6 +153,30 @@ public class DBItemIamFido2Registration {
 
     public void setToken(String token) {
         this.token = token;
+    }
+
+    
+    public String getCredentialId() {
+        return credentialId;
+    }
+
+    
+    public void setCredentialId(String credentialId) {
+        this.credentialId = credentialId;
+    }
+
+    
+    public Boolean getCompleted() {
+        return completed;
+    }
+
+    
+    public void setCompleted(Boolean completed) {
+        if (completed == null) {
+            this.completed = false;
+        } else {
+            this.completed = completed;
+        }
     }
 
 }

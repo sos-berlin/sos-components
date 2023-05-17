@@ -22,6 +22,11 @@ public interface IFido2Resource {
     public JOCDefaultResponse postFido2RequestRegistration(byte[] body);
 
     @POST
+    @Path("fido2registration/request_registration_start")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse postFido2RequestRegistrationStart(byte[] body);
+
+    @POST
     @Path("fido2/request_authentication")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postFido2RequestAuthentication(byte[] body);
