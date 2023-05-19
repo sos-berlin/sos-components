@@ -477,6 +477,10 @@ public class JS7ConverterHelper {
         return parent.resolve(js7Name + ".jobresource.json");
     }
 
+    public static Path getLockPath(Path parent, String js7Name) {
+        return parent.resolve(js7Name + ".lock.json");
+    }
+
     public static Path getJobTemplatePath(Path parent, String js7Name) {
         return parent.resolve(js7Name + ".jobtemplate.json");
     }
@@ -567,7 +571,7 @@ public class JS7ConverterHelper {
         return result;
     }
 
-    public static JS7ConverterResult convertLocks(JS7ConverterResult result, Map<String, Integer> locks) {
+    public static JS7ConverterResult convertLocks2RootFolder(JS7ConverterResult result, Map<String, Integer> locks) {
         for (Map.Entry<String, Integer> e : locks.entrySet()) {
             Lock l = new Lock();
             l.setTitle(e.getKey());

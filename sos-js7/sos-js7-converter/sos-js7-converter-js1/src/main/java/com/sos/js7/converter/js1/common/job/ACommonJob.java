@@ -143,7 +143,10 @@ public abstract class ACommonJob {
         NodeList l = xpath.selectNodes(node, "./" + ELEMENT_LOCK_USE);
         if (l != null && l.getLength() > 0) {
             for (int i = 0; i < l.getLength(); i++) {
-                this.lockUses.add(new LockUse(xpath, l.item(i)));
+                LockUse lu = new LockUse(pr, currentPath, xpath, l.item(i));
+                if (lu.getLock() != null) {
+                    this.lockUses.add(lu);
+                }
             }
         }
 
@@ -380,6 +383,10 @@ public abstract class ACommonJob {
 
     public String getStderrLogLevel() {
         return stderrLogLevel;
+    }
+
+    public boolean hasLockUses() {
+        return lockUses != null && lockUses.size() > 0;
     }
 
     public class Settings {

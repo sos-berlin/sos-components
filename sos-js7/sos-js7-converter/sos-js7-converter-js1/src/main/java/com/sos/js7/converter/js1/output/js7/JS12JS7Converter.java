@@ -43,6 +43,7 @@ import com.sos.inventory.model.instruction.Finish;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.Instructions;
+import com.sos.inventory.model.instruction.LockDemand;
 import com.sos.inventory.model.instruction.NamedJob;
 import com.sos.inventory.model.instruction.PostNotices;
 import com.sos.inventory.model.instruction.RetryCatch;
@@ -101,6 +102,7 @@ import com.sos.js7.converter.js1.common.jobchain.node.JobChainNodeFileOrderSourc
 import com.sos.js7.converter.js1.common.jobchain.node.JobChainNodeOnReturnCode;
 import com.sos.js7.converter.js1.common.json.calendars.JS1Calendar;
 import com.sos.js7.converter.js1.common.json.calendars.JS1Calendars;
+import com.sos.js7.converter.js1.common.lock.LockUse;
 import com.sos.js7.converter.js1.common.processclass.ProcessClass;
 import com.sos.js7.converter.js1.common.runtime.RunTime;
 import com.sos.js7.converter.js1.config.JS1ConverterConfig;
@@ -116,6 +118,8 @@ import com.sos.js7.converter.js1.output.js7.helper.JobHelper;
 import com.sos.js7.converter.js1.output.js7.helper.JobHelper.JavaJITLJobHelper;
 import com.sos.js7.converter.js1.output.js7.helper.JobHelper.ShellJobHelper;
 import com.sos.js7.converter.js1.output.js7.helper.JobTemplateHelper;
+import com.sos.js7.converter.js1.output.js7.helper.LockHelper;
+import com.sos.js7.converter.js1.output.js7.helper.NamedJobHelper;
 import com.sos.js7.converter.js1.output.js7.helper.ProcessClassFirstUsageHelper;
 import com.sos.js7.converter.js1.output.js7.helper.RunTimeHelper;
 import com.sos.js7.converter.js1.output.js7.helper.ScheduleHelper;
@@ -123,10 +127,13 @@ import com.sos.js7.converter.js1.output.js7.helper.WorkflowHelper;
 
 /** <br/>
  * TODO Locks<br/>
- * --- current JS7 state - 1 Lock support - generate 1 Lock, ignore/report following<br/>
- * TODO JobChain .config.xml - <br/>
- * --- params as node instructions<br/>
- * --- ... substitute variables <br/>
+ * --- JS7 - Lock definition<br/>
+ * ------------ capacity: <br />
+ * -------------- exclusive = ??? 1 <br/>
+ * -------------- shared = ??? <lock max_non_exclusive = "integer" <br/>
+ * ------- - Lock assigning<br/>
+ * ------------- exclusive = ??? weight=null <br/>
+ * ------------- shared = ??? weight=1 <br/>
  * TODO JobChainNodes:<br/>
  * ---- job_chain_node.job_chain<br/>
  * ---- file_order_sink - generate a fileOrderSing JITL Job(Move,Remove)<br/>
@@ -144,8 +151,6 @@ import com.sos.js7.converter.js1.output.js7.helper.WorkflowHelper;
  * TODO Cyclic Workflows Instructions<br/>
  * TODO Job (order) AdmissionTimes<br/>
  * ---- RunTime - without calendars or job chain jobs with a run time ...<br/>
- * TODO Java: Split/Join - done<br/>
- * TODO Java: Synchronizer<br/>
  * TODO Order state - Schedule start position<br/>
  * TODO YADE without settings - generate jobresource ... ? -<br/>
  */
@@ -190,6 +195,7 @@ public class JS12JS7Converter {
     private Map<Path, List<BoardHelper>> js7BoardHelpers = new HashMap<>();
     private Map<String, AgentHelper> js7Agents = new HashMap<>();
     private Map<Path, JobTemplateHelper> js7JobTemplateHelpers = new HashMap<>();
+    private Map<Path, LockHelper> js7LockHelpers = new HashMap<>();
     private Map<Path, String> js7SinkJobs = new HashMap<>();
     private Map<Path, String> js7JobResources = new HashMap<>();
     private Map<String, String> js7Calendars = new HashMap<>();
@@ -285,6 +291,11 @@ public class JS12JS7Converter {
                 OutputWriter.write(outputDir, result.getJobTemplates());
                 ConverterReport.INSTANCE.addSummaryRecord("JobTemplates", result.getJobTemplates().getItems().size());
             }
+            if (result.getLocks().getItems().size() > 0) {
+                LOGGER.info(String.format("[%s][JS7][write][locks]...", method));
+                OutputWriter.write(outputDir, result.getLocks());
+                ConverterReport.INSTANCE.addSummaryRecord("Locks", result.getLocks().getItems().size());
+            }
             // 4.1 - Summary Report
             ConverterReportWriter.writeSummaryReport(reportDir.resolve("converter_summary.csv"));
             LOGGER.info(String.format("[%s][[JS7][write][end]%s", method, SOSDate.getDuration(start, Instant.now())));
@@ -313,6 +324,7 @@ public class JS12JS7Converter {
         c.convertStandalone(result);
         c.convertJobChains(result);
         c.addJobResources(result);
+        c.addLocks(result);
         c.addSchedulesBasedOnJS1Schedule(result);
         c.convertAgents(result);
         c.convertCalendars(result);
@@ -649,6 +661,20 @@ public class JS12JS7Converter {
         });
     }
 
+    private void addLocks(JS7ConverterResult result) {
+        if (!CONFIG.getGenerateConfig().getLocks()) {
+            return;
+        }
+
+        js7LockHelpers.entrySet().forEach(e -> {
+            try {
+                result.add(e.getValue().getJS7Path(), e.getValue().getJS7Lock());
+            } catch (Throwable e1) {
+                ConverterReport.INSTANCE.addErrorRecord(e.getKey(), "lock=" + e.getValue(), e1);
+            }
+        });
+    }
+
     private void convertYade(JS7ConverterResult result) {
         if (pr.getYadeConfiguration() != null) {
             try {
@@ -729,7 +755,7 @@ public class JS12JS7Converter {
         w.setJobs(js);
 
         List<Instruction> in = new ArrayList<>();
-        in.add(getNamedJobInstruction(js1Job, js7Name, js7Name, null, null, null));
+        in.add(getNamedJobInstruction(js1Job, js7Name, js7Name, null, null, null).getInstruction());
         if (h == null) {
             in = getRetryInstructions(js1Job, in);
         } else {
@@ -1075,6 +1101,51 @@ public class JS12JS7Converter {
         return in;
     }
 
+    public com.sos.inventory.model.instruction.Lock getLockInstruction(ACommonJob job, NamedJob nj) {
+        if (!CONFIG.getGenerateConfig().getLocks() || !job.hasLockUses()) {
+            return null;
+        }
+        if (job.getLockUses() == null || job.getLockUses().size() == 0) {
+            return null;
+        }
+
+        com.sos.inventory.model.instruction.Lock l = new com.sos.inventory.model.instruction.Lock();
+        List<LockDemand> demands = new ArrayList<>();
+
+        long exclusive = job.getLockUses().stream().filter(e -> e.getExclusive()).count();
+        boolean onlyExclusive = exclusive == job.getLockUses().size();
+        boolean onlyShared = exclusive == 0;
+
+        for (LockUse lu : job.getLockUses()) {
+            LockHelper lh = js7LockHelpers.get(lu.getLock().getFile());
+            if (lh == null) {
+                lh = new LockHelper(this, lu);
+                js7LockHelpers.put(lu.getLock().getFile(), lh);
+            }
+            if (onlyExclusive) {
+                demands.add(new LockDemand(lh.getJS7Name(), null));
+            } else if (onlyShared) {
+                demands.add(new LockDemand(lh.getJS7Name(), 1));
+            } else {
+                // mix of exclusive,shared - set to shared
+                demands.add(new LockDemand(lh.getJS7Name(), 1));
+                if (lu.getExclusive()) {
+                    ConverterReport.INSTANCE.addWarningRecord(job.getPath(), "[multiple lock type detected]exclusive changed to shared", "[lock.use]"
+                            + lu);
+                }
+            }
+        }
+        if (demands.size() > 0) {
+            ArrayList<Instruction> al = new ArrayList<>();
+            al.add(nj);
+            l.setDemands(demands);
+            l.setLockedWorkflow(new Instructions(al));
+
+            return l;
+        }
+        return null;
+    }
+
     // TODO
     private List<Instruction> getCyclicWorkflowInstructions(ACommonJob job, List<Instruction> in) {
         if (!CONFIG.getGenerateConfig().getCyclicOrders() && job.getRunTime() != null) {
@@ -1143,7 +1214,7 @@ public class JS12JS7Converter {
         }
     }
 
-    public NamedJob getNamedJobInstruction(ACommonJob js1Job, String js7JobName, String js7JobLabel, Params jobChainConfigProcessParams,
+    public NamedJobHelper getNamedJobInstruction(ACommonJob js1Job, String js7JobName, String js7JobLabel, Params jobChainConfigProcessParams,
             SOSParameterSubstitutor ps, JobChain jobChain) {
         NamedJob nj = new NamedJob(js7JobName);
         nj.setLabel(js7JobLabel);
@@ -1254,7 +1325,7 @@ public class JS12JS7Converter {
                 nj.setDefaultArguments(env);
             }
         }
-        return nj;
+        return new NamedJobHelper(nj, getLockInstruction(js1Job, nj));
     }
 
     private String replaceJS1Values(String val) {
@@ -2866,14 +2937,13 @@ public class JS12JS7Converter {
                         ps.addKey(e.getKey(), e.getValue());
                     });
                 }
-                NamedJob nji = getNamedJobInstruction(job, h.getJS7JobName(), h.getJS7State(), hasConfigProcess ? jobChain.getConfig().getProcess()
-                        .get(h.getJS1State()) : null, ps, jobChain);
-
+                NamedJobHelper njh = getNamedJobInstruction(job, h.getJS7JobName(), h.getJS7State(), hasConfigProcess ? jobChain.getConfig()
+                        .getProcess().get(h.getJS1State()) : null, ps, jobChain);
+                NamedJob nji = njh.getNamedJob();
                 if (nji.getDefaultArguments() != null) {
                     jh.setJS7JobNodesDefaultArguments(nji.getDefaultArguments());
                 }
-
-                in.add(nji);
+                in.add(njh.getInstruction());
             }
 
             String onError = h.getOnError().toLowerCase();
