@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.w3c.dom.Node;
 
+import com.sos.commons.util.SOSString;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 
 public class Lock {
@@ -15,10 +16,13 @@ public class Lock {
     private final Integer maxNonExclusive;
     private final String name;
 
+    private final Path file;
+
     public Lock(Path file) throws Exception {
         Node node = JS7ConverterHelper.getDocumentRoot(file);
 
         Map<String, String> m = JS7ConverterHelper.attribute2map(node);
+        this.file = file;
         this.maxNonExclusive = JS7ConverterHelper.integerValue(m.get(ATTR_MAX_NON_EXCLUSIVE));
         this.name = m.get(ATTR_NAME);
     }
@@ -29,6 +33,15 @@ public class Lock {
 
     public String getName() {
         return name;
+    }
+
+    public Path getFile() {
+        return file;
+    }
+
+    @Override
+    public String toString() {
+        return SOSString.toString(this);
     }
 
 }

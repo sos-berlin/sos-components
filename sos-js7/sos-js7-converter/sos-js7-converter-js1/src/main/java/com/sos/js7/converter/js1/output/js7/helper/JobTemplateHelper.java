@@ -57,7 +57,8 @@ public class JobTemplateHelper {
             js7Names.put(n, 0);
         } else {
             c = c + 1;
-            js7Names.put(JS12JS7Converter.getDuplicateName(n, c), c);
+            js7Names.put(n, c);
+            n = JS12JS7Converter.getDuplicateName(n, c);
         }
         return n;
     }
