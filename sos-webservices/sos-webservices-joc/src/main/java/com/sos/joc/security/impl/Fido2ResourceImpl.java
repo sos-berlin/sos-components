@@ -176,7 +176,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
 
             dbItemIamFido2Registration.setCompleted(true);
             dbItemIamFido2Registration.setPublicKey(fido2Registration.getPublicKey());
-            dbItemIamFido2Registration.setCredentialId(fido2Registration.getClientDataJSON());
+            dbItemIamFido2Registration.setCredentialId(fido2Registration.getCredentialId());
             dbItemIamFido2Registration.setToken(SOSAuthHelper.createAccessToken());
             dbItemIamFido2Registration.setCreated(new Date());
 
