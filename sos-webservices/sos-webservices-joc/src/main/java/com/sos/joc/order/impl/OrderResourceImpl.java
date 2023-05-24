@@ -5,15 +5,18 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
-import jakarta.ws.rs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.order.OrderFilter;
@@ -22,13 +25,16 @@ import com.sos.joc.model.order.OrderV;
 import com.sos.joc.order.resource.IOrderResource;
 import com.sos.schema.JsonValidator;
 
+import jakarta.ws.rs.Path;
 import js7.data.order.OrderId;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
+import js7.data_for_java.workflow.JWorkflowId;
 
 @Path("order")
 public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(OrderResourceImpl.class);
     private static final String API_CALL = "./order";
     private final List<OrderStateText> orderStateWithRequirements = Arrays.asList(OrderStateText.PENDING, OrderStateText.SCHEDULED,
             OrderStateText.BLOCKED);
@@ -50,11 +56,13 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
             JOrder jOrder = currentState.idToOrder().get(OrderId.of(orderFilter.getOrderId()));
 
             if (jOrder != null) {
+                Map<List<Object>, String> positionToLabelsMap = getPositionToLabelsMap(orderFilter.getControllerId(), jOrder.workflowId());
                 Set<OrderId> waitingOrders = OrdersHelper.getWaitingForAdmissionOrderIds(Collections.singleton(jOrder.id()), currentState);
                 OrderV o = OrdersHelper.mapJOrderToOrderV(jOrder, currentState, orderFilter.getCompact(), folderPermissions.getListOfFolders(),
                         waitingOrders, Collections.singletonMap(jOrder.workflowId(), OrdersHelper.getFinalParameters(jOrder.workflowId(),
                                 currentState)), surveyDateInstant.toEpochMilli(), OrdersHelper.getDailyPlanTimeZone());
                 checkFolderPermissions(o.getWorkflowId().getPath());
+                o.setLabel(positionToLabelsMap.get(o.getPosition()));
                 if (orderStateWithRequirements.contains(o.getState().get_text())) {
                     o.setRequirements(OrdersHelper.getRequirements(jOrder, currentState));
                 }
@@ -70,6 +78,15 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
+    }
+    
+    private static Map<List<Object>, String> getPositionToLabelsMap(String controllerId, JWorkflowId workflowId) {
+        try {
+            return WorkflowsHelper.getPositionToLabelsMapFromDepHistory(controllerId, workflowId);
+        } catch (Exception e) {
+            LOGGER.warn("Cannot map order position to Workflow instruction label: ", e);
+            return Collections.emptyMap();
         }
     }
 

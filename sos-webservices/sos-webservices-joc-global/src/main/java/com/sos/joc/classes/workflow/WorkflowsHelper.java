@@ -226,12 +226,17 @@ public class WorkflowsHelper {
         }
     }
     
-    public static Map<String, List<Object>> getLabelToPositionsMapFromDepHistory(String controllerId, String workflowPath) {
+    public static Map<String, List<Object>> getLabelToPositionsMapFromDepHistory(String controllerId, String workflowPath, String workflowVersionId) {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection("GetPositionFromLabel");
             DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
-            DeployedContent config = dbLayer.getDeployedInventory(controllerId, ConfigurationType.WORKFLOW.intValue(), workflowPath);
+            DeployedContent config = null;
+            if (workflowVersionId == null || workflowVersionId.isEmpty()) {
+                config = dbLayer.getDeployedInventory(controllerId, ConfigurationType.WORKFLOW.intValue(), workflowPath);
+            } else {
+                config = dbLayer.getDeployedInventory(controllerId, ConfigurationType.WORKFLOW.intValue(), workflowPath, workflowVersionId);
+            }
             if (config != null) {
                 try {
                     return getLabelToPositionsMap(JocInventory.workflowContent2Workflow(config.getContent()));
@@ -245,7 +250,17 @@ public class WorkflowsHelper {
             Globals.disconnect(session);
         }
     }
-
+    
+    public static Map<List<Object>, String> getPositionToLabelsMapFromDepHistory(String controllerId, WorkflowId workflowId) {
+        Map<String, List<Object>> map = getLabelToPositionsMapFromDepHistory(controllerId, workflowId.getPath(), workflowId.getVersionId());
+        return map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey)); 
+    }
+    
+    public static Map<List<Object>, String> getPositionToLabelsMapFromDepHistory(String controllerId, JWorkflowId workflowId) {
+        Map<String, List<Object>> map = getLabelToPositionsMapFromDepHistory(controllerId, workflowId.path().string(), workflowId.versionId().string());
+        return map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey)); 
+    }
+    
     public static Set<Position> getWorkflowAddOrderPositions(com.sos.inventory.model.workflow.Workflow w) {
         if (w == null) {
             return null;

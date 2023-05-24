@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
@@ -21,8 +22,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import jakarta.ws.rs.Path;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +35,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowPaths;
+import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.CyclicOrderInfos;
@@ -46,6 +46,7 @@ import com.sos.joc.model.order.OrdersV;
 import com.sos.joc.orders.resource.IOrdersResource;
 import com.sos.schema.JsonValidator;
 
+import jakarta.ws.rs.Path;
 import js7.data.item.VersionedItemId;
 import js7.data.order.Order;
 import js7.data.order.OrderId;
@@ -80,6 +81,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             Set<WorkflowId> workflowIds = ordersFilter.getWorkflowIds();
             boolean withOrderIdFilter = orders != null && !orders.isEmpty();
             boolean withWorkflowIdFilter = workflowIds != null && !workflowIds.isEmpty();
+            boolean responseWithLabel = withWorkflowIdFilter && workflowIds.size() == 1;
             if (ordersFilter.getLimit() == null) {
                 ordersFilter.setLimit(10000);
             }
@@ -211,7 +213,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 orderStream = currentState.ordersBy(o -> orders.contains(o.id().string()));
                 blockedOrderStream = currentState.ordersBy(JOrderPredicates.and(o -> orders.contains(o.id().string()), blockedFilter));
 
-            } else if (workflowIds != null && !workflowIds.isEmpty()) {
+            } else if (withWorkflowIdFilter) {
                 ordersFilter.setRegex(null);
                 Predicate<WorkflowId> versionNotEmpty = w -> w.getVersionId() != null && !w.getVersionId().isEmpty();
                 Set<VersionedItemId<WorkflowPath>> workflowPaths = workflowIds.stream().filter(versionNotEmpty).map(w -> JWorkflowId.of(JocInventory
@@ -328,6 +330,9 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 }
             }
 
+            Map<List<Object>, String> positionToLabelsMap = responseWithLabel ? getPositionToLabelsMap(ordersFilter.getControllerId(), workflowIds
+                    .iterator().next()) : null;
+
             ConcurrentMap<JWorkflowId, Requirements> orderPreparations = new ConcurrentHashMap<>();
 
             Function<JOrder, OrderV> mapJOrderToOrderV = o -> {
@@ -335,6 +340,9 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     OrderV order = OrdersHelper.mapJOrderToOrderV(o, currentState, ordersFilter.getCompact(), null,
                             blockedButWaitingForAdmissionOrderIds, finalParamsPerWorkflow, surveyDateMillis, zoneId);
                     order.setCyclicOrder(cycleInfos.get(order.getOrderId()));
+                    if (responseWithLabel) {
+                        order.setLabel(positionToLabelsMap.get(order.getPosition()));
+                    }
                     if (orderStateWithRequirements.contains(order.getState().get_text())) {
                         if (!orderPreparations.containsKey(o.workflowId())) {
                             Requirements orderPreparation = OrdersHelper.getRequirements(o, currentState);
@@ -366,6 +374,15 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
+    }
+    
+    private static Map<List<Object>, String> getPositionToLabelsMap(String controllerId, WorkflowId workflowId) {
+        try {
+            return WorkflowsHelper.getPositionToLabelsMapFromDepHistory(controllerId, workflowId);
+        } catch (Exception e) {
+            LOGGER.warn("Cannot map order position to Workflow instruction label: ", e);
+            return Collections.emptyMap();
         }
     }
 

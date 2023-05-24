@@ -42,6 +42,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "subagentId",
     "cycleState",
     "expectedNotices",
+    "label",
     "position",
     "positionString",
     "positionIsImplicitEnd",
@@ -147,6 +148,13 @@ public class OrderV {
     @JsonPropertyDescription("if state._reason == EXPECTING_NOTICES")
     private List<ExpectedNotice> expectedNotices = null;
     /**
+     * a label is only in the response if the request restricts the orders to one workflow
+     * 
+     */
+    @JsonProperty("label")
+    @JsonPropertyDescription("a label is only in the response if the request restricts the orders to one workflow")
+    private String label;
+    /**
      * position
      * <p>
      * Actually, each even item is a string, each odd item is an integer
@@ -250,6 +258,7 @@ public class OrderV {
      * @param orderId
      * @param lastOutcome
      * @param positionIsImplicitEnd
+     * @param label
      * @param historicOutcome
      * @param positionString
      * @param endPositions
@@ -263,7 +272,7 @@ public class OrderV {
      * @param cycleState
      * @param cyclicOrder
      */
-    public OrderV(Date deliveryDate, Date surveyDate, String orderId, Variables arguments, WorkflowId workflowId, OrderState state, OrderMark marked, OrderAttachedState attachedState, String agentId, String subagentId, OrderCycleState cycleState, List<ExpectedNotice> expectedNotices, List<Object> position, String positionString, Boolean positionIsImplicitEnd, List<Object> endPositions, Long scheduledFor, Boolean scheduledNever, String question, Outcome lastOutcome, List<HistoricOutcome> historicOutcome, Requirements requirements, CyclicOrderInfos cyclicOrder) {
+    public OrderV(Date deliveryDate, Date surveyDate, String orderId, Variables arguments, WorkflowId workflowId, OrderState state, OrderMark marked, OrderAttachedState attachedState, String agentId, String subagentId, OrderCycleState cycleState, List<ExpectedNotice> expectedNotices, String label, List<Object> position, String positionString, Boolean positionIsImplicitEnd, List<Object> endPositions, Long scheduledFor, Boolean scheduledNever, String question, Outcome lastOutcome, List<HistoricOutcome> historicOutcome, Requirements requirements, CyclicOrderInfos cyclicOrder) {
         super();
         this.deliveryDate = deliveryDate;
         this.surveyDate = surveyDate;
@@ -277,6 +286,7 @@ public class OrderV {
         this.subagentId = subagentId;
         this.cycleState = cycleState;
         this.expectedNotices = expectedNotices;
+        this.label = label;
         this.position = position;
         this.positionString = positionString;
         this.positionIsImplicitEnd = positionIsImplicitEnd;
@@ -533,6 +543,24 @@ public class OrderV {
     }
 
     /**
+     * a label is only in the response if the request restricts the orders to one workflow
+     * 
+     */
+    @JsonProperty("label")
+    public String getLabel() {
+        return label;
+    }
+
+    /**
+     * a label is only in the response if the request restricts the orders to one workflow
+     * 
+     */
+    @JsonProperty("label")
+    public void setLabel(String label) {
+        this.label = label;
+    }
+
+    /**
      * position
      * <p>
      * Actually, each even item is a string, each odd item is an integer
@@ -752,12 +780,12 @@ public class OrderV {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("orderId", orderId).append("arguments", arguments).append("workflowId", workflowId).append("state", state).append("marked", marked).append("attachedState", attachedState).append("agentId", agentId).append("subagentId", subagentId).append("cycleState", cycleState).append("expectedNotices", expectedNotices).append("position", position).append("positionString", positionString).append("positionIsImplicitEnd", positionIsImplicitEnd).append("endPositions", endPositions).append("scheduledFor", scheduledFor).append("scheduledNever", scheduledNever).append("question", question).append("lastOutcome", lastOutcome).append("historicOutcome", historicOutcome).append("requirements", requirements).append("cyclicOrder", cyclicOrder).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("orderId", orderId).append("arguments", arguments).append("workflowId", workflowId).append("state", state).append("marked", marked).append("attachedState", attachedState).append("agentId", agentId).append("subagentId", subagentId).append("cycleState", cycleState).append("expectedNotices", expectedNotices).append("label", label).append("position", position).append("positionString", positionString).append("positionIsImplicitEnd", positionIsImplicitEnd).append("endPositions", endPositions).append("scheduledFor", scheduledFor).append("scheduledNever", scheduledNever).append("question", question).append("lastOutcome", lastOutcome).append("historicOutcome", historicOutcome).append("requirements", requirements).append("cyclicOrder", cyclicOrder).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(marked).append(attachedState).append(expectedNotices).append(agentId).append(scheduledNever).append(requirements).append(surveyDate).append(question).append(orderId).append(lastOutcome).append(positionIsImplicitEnd).append(historicOutcome).append(positionString).append(endPositions).append(scheduledFor).append(arguments).append(subagentId).append(state).append(position).append(deliveryDate).append(workflowId).append(cycleState).append(cyclicOrder).toHashCode();
+        return new HashCodeBuilder().append(attachedState).append(expectedNotices).append(agentId).append(scheduledNever).append(orderId).append(lastOutcome).append(historicOutcome).append(positionString).append(scheduledFor).append(state).append(deliveryDate).append(cycleState).append(cyclicOrder).append(marked).append(requirements).append(surveyDate).append(question).append(positionIsImplicitEnd).append(label).append(endPositions).append(arguments).append(subagentId).append(position).append(workflowId).toHashCode();
     }
 
     @Override
@@ -769,7 +797,7 @@ public class OrderV {
             return false;
         }
         OrderV rhs = ((OrderV) other);
-        return new EqualsBuilder().append(marked, rhs.marked).append(attachedState, rhs.attachedState).append(expectedNotices, rhs.expectedNotices).append(agentId, rhs.agentId).append(scheduledNever, rhs.scheduledNever).append(requirements, rhs.requirements).append(surveyDate, rhs.surveyDate).append(question, rhs.question).append(orderId, rhs.orderId).append(lastOutcome, rhs.lastOutcome).append(positionIsImplicitEnd, rhs.positionIsImplicitEnd).append(historicOutcome, rhs.historicOutcome).append(positionString, rhs.positionString).append(endPositions, rhs.endPositions).append(scheduledFor, rhs.scheduledFor).append(arguments, rhs.arguments).append(subagentId, rhs.subagentId).append(state, rhs.state).append(position, rhs.position).append(deliveryDate, rhs.deliveryDate).append(workflowId, rhs.workflowId).append(cycleState, rhs.cycleState).append(cyclicOrder, rhs.cyclicOrder).isEquals();
+        return new EqualsBuilder().append(attachedState, rhs.attachedState).append(expectedNotices, rhs.expectedNotices).append(agentId, rhs.agentId).append(scheduledNever, rhs.scheduledNever).append(orderId, rhs.orderId).append(lastOutcome, rhs.lastOutcome).append(historicOutcome, rhs.historicOutcome).append(positionString, rhs.positionString).append(scheduledFor, rhs.scheduledFor).append(state, rhs.state).append(deliveryDate, rhs.deliveryDate).append(cycleState, rhs.cycleState).append(cyclicOrder, rhs.cyclicOrder).append(marked, rhs.marked).append(requirements, rhs.requirements).append(surveyDate, rhs.surveyDate).append(question, rhs.question).append(positionIsImplicitEnd, rhs.positionIsImplicitEnd).append(label, rhs.label).append(endPositions, rhs.endPositions).append(arguments, rhs.arguments).append(subagentId, rhs.subagentId).append(position, rhs.position).append(workflowId, rhs.workflowId).isEquals();
     }
 
 }
