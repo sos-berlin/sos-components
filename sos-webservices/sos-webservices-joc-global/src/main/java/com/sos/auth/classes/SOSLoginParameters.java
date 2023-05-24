@@ -12,8 +12,8 @@ public class SOSLoginParameters {
     private String identityService;
     private String idToken;
     private String account;
-    private String fido2Challenge;
-    private String algorithm;
+    private String authenticatorData;
+    private String clientDataJson;
     private String signature;
 
     private SOSOpenIdWebserviceCredentials webserviceCredentials;
@@ -79,23 +79,7 @@ public class SOSLoginParameters {
     }
 
     public boolean isFIDO2Login() {
-        return (getIdentityService() != null && !getIdentityService().equals("") && getFido2Challenge() != null && !getFido2Challenge().equals(""));
-    }
-
-    public String getFido2Challenge() {
-        return fido2Challenge;
-    }
-
-    public void setFido2Challenge(String fido2Challenge) {
-        this.fido2Challenge = fido2Challenge;
-    }
-
-    public String getAlgorithm() {
-        return algorithm;
-    }
-
-    public void setAlgorithm(String algorithm) {
-        this.algorithm = algorithm;
+        return (getIdentityService() != null && !getIdentityService().equals("") && getSignature() != null && !getAuthenticatorData().equals(""));
     }
 
     public String getSignature() {
@@ -104,6 +88,25 @@ public class SOSLoginParameters {
 
     public void setSignature(String signature) {
         this.signature = signature;
+    }
+
+    
+    public String getClientDataJson() {
+        return clientDataJson;
+    }
+
+    public void setClientDataJson(String clientDataJson) {
+        this.clientDataJson = clientDataJson;
+    }
+
+    
+    public String getAuthenticatorData() {
+        return authenticatorData;
+    }
+
+    
+    public void setAuthenticatorData(String authenticatorData) {
+        this.authenticatorData = authenticatorData;
     }
 
 }

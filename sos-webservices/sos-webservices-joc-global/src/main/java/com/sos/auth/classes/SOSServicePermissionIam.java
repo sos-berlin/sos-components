@@ -2,8 +2,6 @@ package com.sos.auth.classes;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -180,7 +178,9 @@ public class SOSServicePermissionIam {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public JOCDefaultResponse loginPost(@Context HttpServletRequest request, @HeaderParam("Authorization") String basicAuthorization,
-            @HeaderParam("X-IDENTITY-SERVICE") String identityService, @HeaderParam("X-ID-TOKEN") String idToken,@HeaderParam("X-SIGNATURE") String signature,@HeaderParam("X-ALGORITHM") String algorithm,
+            @HeaderParam("X-IDENTITY-SERVICE") String identityService, @HeaderParam("X-ID-TOKEN") String idToken,@HeaderParam("X-SIGNATURE") String signature,
+            @HeaderParam("X-AUTHENTICATOR-DATA") String authenticatorData,
+            @HeaderParam("X-CLIENT-DATA-JSON:") String clientDataJson,
             @QueryParam("account") String account, @QueryParam("pwd") String pwd) {
 
         if (Globals.sosCockpitProperties == null) {
@@ -212,7 +212,8 @@ public class SOSServicePermissionIam {
             sosLoginParameters.setIdentityService(identityService);
             sosLoginParameters.setRequest(request);
             sosLoginParameters.setAccount(account);
-            sosLoginParameters.setAlgorithm(algorithm);
+            sosLoginParameters.setClientDataJson(clientDataJson);
+            sosLoginParameters.setAuthenticatorData(authenticatorData);
             sosLoginParameters.setSignature(signature);
 
             return login(sosLoginParameters, pwd);
@@ -504,7 +505,7 @@ public class SOSServicePermissionIam {
 
     }
 
-    private SOSAuthCurrentAccount getUserFromHeaderOrQuery(String basicAuthorization, String clientCertCN, String user)
+    private SOSAuthCurrentAccount getUserFromHeaderOrQuery(String basicAuthorization, String clientCertCN, String account)
             throws UnsupportedEncodingException, JocException {
         String authorization = EMPTY_STRING;
 
@@ -522,16 +523,16 @@ public class SOSServicePermissionIam {
         int idx = authorization.indexOf(':');
         if (idx == -1) {
             if (!basicAuthorization.isEmpty()) {
-                user = authorization;
+                account = authorization;
             }
         } else {
-            user = authorization.substring(0, idx);
+            account = authorization.substring(0, idx);
         }
 
-        if (user.isEmpty() && clientCertCN != null) {
-            user = clientCertCN;
+        if (account.isEmpty() && clientCertCN != null) {
+            account = clientCertCN;
         }
-        return new SOSAuthCurrentAccount(user, !authorization.equals(EMPTY_STRING));
+        return new SOSAuthCurrentAccount(account, !authorization.equals(EMPTY_STRING));
     }
 
     private String getPwdFromHeaderOrQuery(String basicAuthorization, String pwd) throws UnsupportedEncodingException, JocException {

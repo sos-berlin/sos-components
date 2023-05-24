@@ -1,5 +1,7 @@
 package com.sos.auth.fido2;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -31,7 +33,8 @@ public class SOSFido2AuthHandler {
     public SOSFido2AuthHandler() {
     }
 
-       public SOSAuthAccessToken login(SOSFido2AuthWebserviceCredentials sosFido2AuthWebserviceCredentials) throws SOSHibernateException, InvalidKeyException, SignatureException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException {
+    public SOSAuthAccessToken login(SOSFido2AuthWebserviceCredentials sosFido2AuthWebserviceCredentials) throws SOSHibernateException,
+            InvalidKeyException, SignatureException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException, IOException {
 
         SOSHibernateSession sosHibernateSession = null;
         try {
@@ -52,10 +55,23 @@ public class SOSFido2AuthHandler {
             filter.setAccountName(sosFido2AuthWebserviceCredentials.getAccount());
 
             DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getUniqueAccount(filter);
+            if (dbItemIamAccount != null) {
 
-            if (dbItemIamAccount != null && SOSSecurityUtil.signatureVerified(dbItemIamAccount.getPublicKey(), dbItemIamAccount.getChallenge(), sosFido2AuthWebserviceCredentials.getSignature(), sosFido2AuthWebserviceCredentials.getAlgorithm())) {
-                sosAuthAccessToken = new SOSAuthAccessToken();
-                sosAuthAccessToken.setAccessToken(SOSAuthHelper.createSessionId());
+                String pKey = dbItemIamAccount.getPublicKey();
+
+                byte[] clientDataJsonDecoded = java.util.Base64.getDecoder().decode(sosFido2AuthWebserviceCredentials.getClientDataJson());
+                byte[] authenticatorDataDecoded = java.util.Base64.getDecoder().decode(sosFido2AuthWebserviceCredentials.getAuthenticatorData());
+                byte[] clientDataJsonDecodedHash = SOSSecurityUtil.getDigestBytes(clientDataJsonDecoded, "SHA-256");
+                ByteArrayOutputStream output = new ByteArrayOutputStream();
+
+                output.write(authenticatorDataDecoded);
+                output.write(clientDataJsonDecodedHash);
+
+                byte[] out = output.toByteArray();
+                if (SOSSecurityUtil.signatureVerified(pKey, out, sosFido2AuthWebserviceCredentials.getSignature(), "SHA256withECDSA")) {
+                    sosAuthAccessToken = new SOSAuthAccessToken();
+                    sosAuthAccessToken.setAccessToken(SOSAuthHelper.createSessionId());
+                }
             }
             return sosAuthAccessToken;
         } finally {

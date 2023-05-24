@@ -1,13 +1,12 @@
 package com.sos.auth.fido2.classes;
 
+import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.security.Security;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +17,6 @@ import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.fido2.SOSFido2AuthHandler;
 import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSLogin;
-import com.sos.auth.sosintern.SOSInternAuthHandler;
 import com.sos.auth.sosintern.classes.SOSInternAuthSubject;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 
@@ -35,14 +33,14 @@ public class SOSFido2AuthLogin implements ISOSLogin {
     }
 
     public void login(SOSAuthCurrentAccount currentAccount, String pwd) {
- 
+
         try {
             SOSFido2AuthWebserviceCredentials sosFido2AuthWebserviceCredentials = new SOSFido2AuthWebserviceCredentials();
             sosFido2AuthWebserviceCredentials.setIdentityServiceId(identityService.getIdentityServiceId());
             sosFido2AuthWebserviceCredentials.setAccount(currentAccount.getAccountname());
-            sosFido2AuthWebserviceCredentials.setChallenge(currentAccount.getSosLoginParameters().getFido2Challenge());
-            sosFido2AuthWebserviceCredentials.setAlgorithm(currentAccount.getSosLoginParameters().getAlgorithm());
+            sosFido2AuthWebserviceCredentials.setClientDataJson(currentAccount.getSosLoginParameters().getClientDataJson());
             sosFido2AuthWebserviceCredentials.setSignature(currentAccount.getSosLoginParameters().getSignature());
+            sosFido2AuthWebserviceCredentials.setAuthenticatorData(currentAccount.getSosLoginParameters().getAuthenticatorData());
 
             SOSFido2AuthHandler sosFido2AuthHandler = new SOSFido2AuthHandler();
 
@@ -71,7 +69,8 @@ public class SOSFido2AuthLogin implements ISOSLogin {
                 sosInternAuthSubject.setAccessToken(sosFido2AuthAccessToken.getAccessToken());
             }
 
-        } catch (SOSHibernateException | InvalidKeyException | SignatureException | NoSuchAlgorithmException | NoSuchProviderException | InvalidKeySpecException e) {
+        } catch (SOSHibernateException | InvalidKeyException | SignatureException | NoSuchAlgorithmException | NoSuchProviderException
+                | InvalidKeySpecException | IOException e) {
             LOGGER.error("", e);
         }
 
