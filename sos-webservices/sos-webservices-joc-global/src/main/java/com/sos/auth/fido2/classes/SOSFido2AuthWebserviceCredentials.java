@@ -4,17 +4,9 @@ public class SOSFido2AuthWebserviceCredentials {
 
     private Long identityServiceId;
     private String account = "";
-    private String challenge = "";
     private String signature = "";
-    private String algorithm = "";
-
-    public String getAccount() {
-        return account;
-    }
-
-    public void setAccount(String account) {
-        this.account = account;
-    }
+    private String clientDataJson = "";
+    private String authenticatorData;
 
     public Long getIdentityServiceId() {
         return identityServiceId;
@@ -24,31 +16,36 @@ public class SOSFido2AuthWebserviceCredentials {
         this.identityServiceId = identityServiceId;
     }
 
-    public String getChallenge() {
-        return challenge;
+    public String getAccount() {
+        return account;
     }
 
-    public void setChallenge(String challenge) {
-        this.challenge = challenge;
+    public void setAccount(String account) {
+        this.account = account;
     }
 
-    
     public String getSignature() {
         return signature;
     }
-    
+
     public void setSignature(String signature) {
         this.signature = signature;
     }
 
-    
-    public String getAlgorithm() {
-        return algorithm;
+    public String getClientDataJson() {
+        return clientDataJson;
     }
 
-    
-    public void setAlgorithm(String algorithm) {
-        this.algorithm = algorithm;
+    public void setClientDataJson(String clientDataJson) {
+        this.clientDataJson = clientDataJson;
+    }
+
+    public String getAuthenticatorData() {
+        return authenticatorData;
+    }
+
+    public void setAuthenticatorData(String authenticatorData) {
+        this.authenticatorData = authenticatorData;
     }
 
 }
