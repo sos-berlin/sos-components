@@ -90,16 +90,16 @@ public class QuickSearchRequest {
         }
         String additionalProp = normalizeControllerId(controllerId) + normalizeReturnTypes(returnTypes);
         if (new QuickSearchRequest(search, additionalProp).equals(this)) {
-            search = normalizeSearchString(newSearch.getSearch());
-            if (searchPrefix.equalsIgnoreCase(search)) {
+            final String search2 = normalizeSearchString(newSearch.getSearch());
+            if (searchPrefix.equalsIgnoreCase(search2)) {
                 return result;
             }
-            if (SearchStringHelper.isGlobPattern(search)) {
-                String regexSearch = search.replaceAll("\\*", ".*").replaceAll("\\?", ".") + ".*";
+            if (SearchStringHelper.isGlobPattern(search2)) {
+                String regexSearch = "^" + search2.replaceAll("\\*", ".*").replaceAll("\\?", ".") + ".*$";
                 Predicate<String> pattern = Pattern.compile(regexSearch, Pattern.CASE_INSENSITIVE).asPredicate();
                 return result.stream().filter(s -> pattern.test(s.getName())).collect(Collectors.toList());
             }
-            return result.stream().filter(s -> s.getName().toLowerCase().startsWith(newSearch.getSearch())).collect(Collectors.toList());
+            return result.stream().filter(s -> s.getName().toLowerCase().startsWith(search2)).collect(Collectors.toList());
         }
         return null;
     }
