@@ -39,6 +39,7 @@ import com.sos.joc.exceptions.JocInfoException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.security.accounts.AccountListFilter;
+import com.sos.joc.model.security.fido2.Fido2AddDevice;
 import com.sos.joc.model.security.fido2.Fido2ConfirmationFilter;
 import com.sos.joc.model.security.fido2.Fido2Registration;
 import com.sos.joc.model.security.fido2.Fido2RegistrationFilter;
@@ -46,6 +47,7 @@ import com.sos.joc.model.security.fido2.Fido2RegistrationListFilter;
 import com.sos.joc.model.security.fido2.Fido2RegistrationStartResponse;
 import com.sos.joc.model.security.fido2.Fido2Registrations;
 import com.sos.joc.model.security.fido2.Fido2RegistrationsFilter;
+import com.sos.joc.model.security.fido2.Fido2RemoveDevices;
 import com.sos.joc.model.security.fido2.Fido2RequestAuthentication;
 import com.sos.joc.model.security.fido2.Fido2RequestAuthenticationResponse;
 import com.sos.joc.model.security.identityservice.Fido2IdentityProvider;
@@ -65,6 +67,8 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
     private static final String CHALLENGE = "challenge";
     private static final Logger LOGGER = LoggerFactory.getLogger(Fido2ResourceImpl.class);
     private static final String API_CALL_FIDO2_REGISTRATIONS = "./iam/fido2registrations";
+    private static final String API_CALL_FIDO2_REMOVE_DEVICES = "./iam/fido2/remove_devices";
+    private static final String API_CALL_FIDO2_ADD_DEVICE = "./iam/fido2/add_device";
     private static final String API_CALL_FIDO2_REGISTRATION_READ = "./iam/fido2registration";
     private static final String API_CALL_FIDO2_REGISTRATION_STORE = "./iam/fido2registration/store";
     private static final String API_CALL_FIDO2_REGISTRATION_DELETE = "./iam/fido2registration/delete";
@@ -204,6 +208,111 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             sendConfirmationEmail(dbItemIamIdentityService.getIdentityServiceName(), dbItemIamFido2Registration, fido2Registration.getEmail());
 
             storeAuditLog(fido2Registration.getAuditLog(), CategoryType.IDENTITY);
+            Globals.commit(sosHibernateSession);
+
+            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            Globals.rollback(sosHibernateSession);
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            Globals.rollback(sosHibernateSession);
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(sosHibernateSession);
+        }
+    }
+
+    @Override
+    public JOCDefaultResponse postFido2AddDevice(byte[] body) {
+        SOSHibernateSession sosHibernateSession = null;
+        try {
+
+            Fido2AddDevice fido2AddDevice = Globals.objectMapper.readValue(body, Fido2AddDevice.class);
+
+            initLogging(API_CALL_FIDO2_ADD_DEVICE, null);
+            JsonValidator.validateFailFast(body, Fido2AddDevice.class);
+
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_FIDO2_REGISTRATION_STORE);
+            sosHibernateSession.setAutoCommit(false);
+            sosHibernateSession.beginTransaction();
+
+            DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, fido2AddDevice
+                    .getIdentityServiceName());
+
+            if (!IdentityServiceTypes.FIDO_2.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+                throw new JocObjectNotExistException("Only allowed for Identity Service type FIDO2 " + "<" + dbItemIamIdentityService
+                        .getIdentityServiceType() + ">");
+            }
+
+            IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
+            IamAccountFilter iamAccountFilter = new IamAccountFilter();
+            iamAccountFilter.setAccountName(fido2AddDevice.getAccountName());
+            iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
+
+            DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getUniqueAccount(iamAccountFilter);
+            if (dbItemIamAccount == null) {
+                throw new JocBadRequestException("Account does not exist in " + "<" + dbItemIamIdentityService.getIdentityServiceName() + ">");
+            }
+
+            DBItemIamFido2Devices dbItemIamFido2Devices = new DBItemIamFido2Devices();
+            dbItemIamFido2Devices.setAccountId(dbItemIamAccount.getId());
+            dbItemIamFido2Devices.setPublicKey(fido2AddDevice.getPublicKey());
+            sosHibernateSession.save(dbItemIamFido2Devices);
+
+            storeAuditLog(fido2AddDevice.getAuditLog(), CategoryType.IDENTITY);
+            Globals.commit(sosHibernateSession);
+
+            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            Globals.rollback(sosHibernateSession);
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            Globals.rollback(sosHibernateSession);
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(sosHibernateSession);
+        }
+    }
+
+    @Override
+    public JOCDefaultResponse postFido2RemoveDevices(byte[] body) {
+        SOSHibernateSession sosHibernateSession = null;
+        try {
+
+            Fido2RemoveDevices fido2RemoveDevices = Globals.objectMapper.readValue(body, Fido2RemoveDevices.class);
+
+            initLogging(API_CALL_FIDO2_REMOVE_DEVICES, null);
+            JsonValidator.validateFailFast(body, Fido2RemoveDevices.class);
+
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_FIDO2_REGISTRATION_STORE);
+            sosHibernateSession.setAutoCommit(false);
+            sosHibernateSession.beginTransaction();
+
+            DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, fido2RemoveDevices
+                    .getIdentityServiceName());
+
+            if (!IdentityServiceTypes.FIDO_2.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+                throw new JocObjectNotExistException("Only allowed for Identity Service type FIDO2 " + "<" + dbItemIamIdentityService
+                        .getIdentityServiceType() + ">");
+            }
+
+            IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
+            IamAccountFilter iamAccountFilter = new IamAccountFilter();
+            iamAccountFilter.setAccountName(fido2RemoveDevices.getAccountName());
+            iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
+
+            DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getUniqueAccount(iamAccountFilter);
+            if (dbItemIamAccount == null) {
+                throw new JocBadRequestException("Account does not exist in " + "<" + dbItemIamIdentityService.getIdentityServiceName() + ">");
+            }
+
+            iamAccountFilter = new IamAccountFilter();
+            iamAccountFilter.setId(dbItemIamAccount.getId());
+            iamAccountDBLayer.deleteDevices(iamAccountFilter);
+
+            storeAuditLog(fido2RemoveDevices.getAuditLog(), CategoryType.IDENTITY);
             Globals.commit(sosHibernateSession);
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -621,12 +730,12 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
                 dbItemIamAccount.setForcePasswordChange(false);
                 dbItemIamAccount.setEmail(dbItemIamFido2Registration.getEmail());
                 DBItemIamFido2Devices dbItemIamFido2Devices = new DBItemIamFido2Devices();
-               
+
                 sosHibernateSession.save(dbItemIamAccount);
                 dbItemIamFido2Devices.setAccountId(dbItemIamAccount.getId());
                 dbItemIamFido2Devices.setPublicKey(dbItemIamFido2Registration.getPublicKey());
                 sosHibernateSession.save(dbItemIamFido2Devices);
-                
+
                 LOGGER.info("FIDO2 registration approved");
                 SOSAuthHelper.storeDefaultProfile(sosHibernateSession, accountName);
 
