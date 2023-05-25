@@ -38,7 +38,6 @@ import com.sos.joc.exceptions.JocInfoException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.security.accounts.AccountListFilter;
-import com.sos.joc.model.security.fido2.CipherTypes;
 import com.sos.joc.model.security.fido2.Fido2ConfirmationFilter;
 import com.sos.joc.model.security.fido2.Fido2Registration;
 import com.sos.joc.model.security.fido2.Fido2RegistrationFilter;
@@ -367,10 +366,6 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
                         identityProvider.setIamFido2Attestation(Fido2Attestation.valueOf(getProperty(properties.getFido2().getIamFido2Attestation()
                                 .value(), "")));
                         identityProvider.setIdentityServiceName(identityServiceFilter.getIdentityServiceName());
-                        if (properties.getFido2() != null) {
-                            identityProvider.setIamCipherType(CipherTypes.valueOf(getProperty(properties.getFido2().getIamFido2CipherType().value(),
-                                    "")));
-                        }
                     }
                 }
             }
@@ -428,7 +423,6 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
                         + " in identity service " + fido2RequestAuthentication.getIdentityServiceName() + ">");
             }
 
-             
             Globals.commit(sosHibernateSession);
 
             Fido2RequestAuthenticationResponse fido2RequestAuthenticationResponse = new Fido2RequestAuthenticationResponse();

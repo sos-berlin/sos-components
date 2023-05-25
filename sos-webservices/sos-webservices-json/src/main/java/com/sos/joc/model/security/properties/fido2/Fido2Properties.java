@@ -4,7 +4,6 @@ package com.sos.joc.model.security.properties.fido2;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.security.fido2.CipherTypes;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -22,8 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "iamFido2Timeout",
     "iamFido2Attestation",
     "iamFido2Transports",
-    "iamFido2EmailSettings",
-    "iamFido2CipherType"
+    "iamFido2EmailSettings"
 })
 public class Fido2Properties {
 
@@ -67,14 +65,6 @@ public class Fido2Properties {
      */
     @JsonProperty("iamFido2EmailSettings")
     private Fido2EmailSettings iamFido2EmailSettings;
-    /**
-     * Cipher Types
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("iamFido2CipherType")
-    private CipherTypes iamFido2CipherType;
 
     /**
      * No args constructor for use in serialization
@@ -88,18 +78,16 @@ public class Fido2Properties {
      * @param iamFido2EmailSettings
      * @param iamFido2Attestation
      * @param iamFido2Timeout
-     * @param iamFido2CipherType
      * @param iamFido2Transports
      * @param iamFido2UserVerification
      */
-    public Fido2Properties(Fido2Userverification iamFido2UserVerification, Integer iamFido2Timeout, Fido2Attestation iamFido2Attestation, Fido2Transports iamFido2Transports, Fido2EmailSettings iamFido2EmailSettings, CipherTypes iamFido2CipherType) {
+    public Fido2Properties(Fido2Userverification iamFido2UserVerification, Integer iamFido2Timeout, Fido2Attestation iamFido2Attestation, Fido2Transports iamFido2Transports, Fido2EmailSettings iamFido2EmailSettings) {
         super();
         this.iamFido2UserVerification = iamFido2UserVerification;
         this.iamFido2Timeout = iamFido2Timeout;
         this.iamFido2Attestation = iamFido2Attestation;
         this.iamFido2Transports = iamFido2Transports;
         this.iamFido2EmailSettings = iamFido2EmailSettings;
-        this.iamFido2CipherType = iamFido2CipherType;
     }
 
     /**
@@ -212,36 +200,14 @@ public class Fido2Properties {
         this.iamFido2EmailSettings = iamFido2EmailSettings;
     }
 
-    /**
-     * Cipher Types
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("iamFido2CipherType")
-    public CipherTypes getIamFido2CipherType() {
-        return iamFido2CipherType;
-    }
-
-    /**
-     * Cipher Types
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("iamFido2CipherType")
-    public void setIamFido2CipherType(CipherTypes iamFido2CipherType) {
-        this.iamFido2CipherType = iamFido2CipherType;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("iamFido2UserVerification", iamFido2UserVerification).append("iamFido2Timeout", iamFido2Timeout).append("iamFido2Attestation", iamFido2Attestation).append("iamFido2Transports", iamFido2Transports).append("iamFido2EmailSettings", iamFido2EmailSettings).append("iamFido2CipherType", iamFido2CipherType).toString();
+        return new ToStringBuilder(this).append("iamFido2UserVerification", iamFido2UserVerification).append("iamFido2Timeout", iamFido2Timeout).append("iamFido2Attestation", iamFido2Attestation).append("iamFido2Transports", iamFido2Transports).append("iamFido2EmailSettings", iamFido2EmailSettings).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(iamFido2EmailSettings).append(iamFido2Attestation).append(iamFido2Timeout).append(iamFido2CipherType).append(iamFido2Transports).append(iamFido2UserVerification).toHashCode();
+        return new HashCodeBuilder().append(iamFido2EmailSettings).append(iamFido2Attestation).append(iamFido2Transports).append(iamFido2Timeout).append(iamFido2UserVerification).toHashCode();
     }
 
     @Override
@@ -253,7 +219,7 @@ public class Fido2Properties {
             return false;
         }
         Fido2Properties rhs = ((Fido2Properties) other);
-        return new EqualsBuilder().append(iamFido2EmailSettings, rhs.iamFido2EmailSettings).append(iamFido2Attestation, rhs.iamFido2Attestation).append(iamFido2Timeout, rhs.iamFido2Timeout).append(iamFido2CipherType, rhs.iamFido2CipherType).append(iamFido2Transports, rhs.iamFido2Transports).append(iamFido2UserVerification, rhs.iamFido2UserVerification).isEquals();
+        return new EqualsBuilder().append(iamFido2EmailSettings, rhs.iamFido2EmailSettings).append(iamFido2Attestation, rhs.iamFido2Attestation).append(iamFido2Transports, rhs.iamFido2Transports).append(iamFido2Timeout, rhs.iamFido2Timeout).append(iamFido2UserVerification, rhs.iamFido2UserVerification).isEquals();
     }
 
 }
