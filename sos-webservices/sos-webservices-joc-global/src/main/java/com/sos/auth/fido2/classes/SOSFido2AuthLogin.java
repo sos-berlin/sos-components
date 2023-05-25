@@ -46,15 +46,36 @@ public class SOSFido2AuthLogin implements ISOSLogin {
 
             SOSAuthAccessToken sosFido2AuthAccessToken = null;
 
-            boolean disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), currentAccount.getAccountname());
-            if (!disabled && !identityService.isSecondFactor()) {
-                if (identityService.isSingleFactor()) {
-                    sosFido2AuthAccessToken = sosFido2AuthHandler.login(sosFido2AuthWebserviceCredentials);
-                } else {
-                    if ((identityService.isTwoFactor() && SOSAuthHelper.checkCertificate(currentAccount.getHttpServletRequest(), currentAccount
-                            .getAccountname()))) {
+            if ((currentAccount.getSosLoginParameters().getClientDataJson() != null) && (currentAccount.getSosLoginParameters()
+                    .getSignature() != null) && (currentAccount.getSosLoginParameters().getAuthenticatorData() != null)) {
+
+                boolean disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), currentAccount.getAccountname());
+                if (!disabled && !identityService.isSecondFactor()) {
+                    if (identityService.isSingleFactor()) {
                         sosFido2AuthAccessToken = sosFido2AuthHandler.login(sosFido2AuthWebserviceCredentials);
+                    } else {
+                        if ((identityService.isTwoFactor() && SOSAuthHelper.checkCertificate(currentAccount.getHttpServletRequest(), currentAccount
+                                .getAccountname()))) {
+                            sosFido2AuthAccessToken = sosFido2AuthHandler.login(sosFido2AuthWebserviceCredentials);
+                        }
                     }
+                } else {
+                    if (disabled) {
+                        LOGGER.debug(identityService.getIdentityServiceName() + " is disabled");
+                    }
+                    if (identityService.isSecondFactor()) {
+                        LOGGER.info(identityService.getIdentityServiceName() + " isSecondFactor");
+                    }
+                }
+            } else {
+                if (currentAccount.getSosLoginParameters().getClientDataJson() != null) {
+                    LOGGER.info("-- getClientDataJson is null");
+                }
+                if (currentAccount.getSosLoginParameters().getSignature() != null) {
+                    LOGGER.info("-- getSignature is null");
+                }
+                if (currentAccount.getSosLoginParameters().getAuthenticatorData() != null) {
+                    LOGGER.info("-- getAuthenticatorData is null");
                 }
             }
 
@@ -70,7 +91,9 @@ public class SOSFido2AuthLogin implements ISOSLogin {
             }
 
         } catch (SOSHibernateException | InvalidKeyException | SignatureException | NoSuchAlgorithmException | NoSuchProviderException
-                | InvalidKeySpecException | IOException e) {
+                | InvalidKeySpecException |
+
+                IOException e) {
             LOGGER.error("", e);
         }
 

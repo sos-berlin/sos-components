@@ -71,8 +71,9 @@ public class SOSServicePermissionIam {
     private static final String UTC = "UTC";
     private static final String EMPTY_STRING = "";
     private static final String ACCESS_TOKEN_EXPECTED = "Access token header expected";
-    private static final String AUTHORIZATION_HEADER_WITH_BASIC_BASED64PART_EXPECTED = "Authorization header with basic based64part expected";
+    private static final String ACCOUNT_IS_EMPTY = "No account is specified";
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSServicePermissionIam.class);
+    private static final String AUTHORIZATION_HEADER_WITH_BASIC_BASED64PART_EXPECTED = "Authorization header with basic based64part expected";
     private static final String ThreadCtx = "authentication";
 
     @Context
@@ -180,7 +181,7 @@ public class SOSServicePermissionIam {
     public JOCDefaultResponse loginPost(@Context HttpServletRequest request, @HeaderParam("Authorization") String basicAuthorization,
             @HeaderParam("X-IDENTITY-SERVICE") String identityService, @HeaderParam("X-ID-TOKEN") String idToken,@HeaderParam("X-SIGNATURE") String signature,
             @HeaderParam("X-AUTHENTICATOR-DATA") String authenticatorData,
-            @HeaderParam("X-CLIENT-DATA-JSON:") String clientDataJson,
+            @HeaderParam("X-CLIENT-DATA-JSON") String clientDataJson,
             @QueryParam("account") String account, @QueryParam("pwd") String pwd) {
 
         if (Globals.sosCockpitProperties == null) {
@@ -625,6 +626,8 @@ public class SOSServicePermissionIam {
                                 }
                             }
                         }
+                    }else {
+                        
                     }
 
                     if (currentAccount.getCurrentSubject() == null) {
@@ -821,6 +824,10 @@ public class SOSServicePermissionIam {
 
         if (currentAccount == null || !currentAccount.withAuthorization()) {
             return JOCDefaultResponse.responseStatusJSError(AUTHORIZATION_HEADER_WITH_BASIC_BASED64PART_EXPECTED);
+        }
+        
+        if (sosLoginParameters.getAccount() == null || sosLoginParameters.getAccount().isEmpty()){
+            return JOCDefaultResponse.responseStatusJSError(ACCOUNT_IS_EMPTY);
         }
 
         currentAccount.setSosLoginParameters(sosLoginParameters);

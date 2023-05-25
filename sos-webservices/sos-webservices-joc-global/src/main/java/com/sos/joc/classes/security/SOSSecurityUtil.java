@@ -13,15 +13,21 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.sos.auth.fido2.SOSFido2AuthHandler;
+
 // import org.apache.commons.codec.binary.Base64;
 
 public class SOSSecurityUtil {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SOSSecurityUtil.class);
 
     private static PublicKey getPublicKey(String base64PublicKey, String alg) throws NoSuchAlgorithmException, InvalidKeySpecException,
             NoSuchProviderException {
 
         PublicKey publicKey = null;
-        String publicKeyPEM = base64PublicKey.replace("-----BEGIN PUBLIC KEY-----", "").replaceAll(System.lineSeparator(), "").replace(
+        String publicKeyPEM = base64PublicKey.replace("-----BEGIN PUBLIC KEY-----", "").replace("\n", "").replace("\r", "").replace(
                 "-----END PUBLIC KEY-----", "");
 
         byte[] decoded = Base64.getDecoder().decode(publicKeyPEM);
@@ -134,6 +140,7 @@ public class SOSSecurityUtil {
     public static boolean signatureVerified(String publicKeyBase64, byte[] message, String signaturBase64, String alg) throws InvalidKeyException,
             SignatureException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException {
         if (alg == null || publicKeyBase64 == null || message == null || signaturBase64 == null) {
+            LOGGER.info("-- something is null");
             return false;
         }
         PublicKey publicKey = getPublicKey(publicKeyBase64, getAlg(alg));
