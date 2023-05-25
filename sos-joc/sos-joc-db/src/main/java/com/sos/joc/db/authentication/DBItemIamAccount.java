@@ -40,9 +40,6 @@ public class DBItemIamAccount {
     @Column(name = "[EMAIL]", nullable = true)
     private String email;
 
-    @Column(name = "[PUBLIC_KEY]", nullable = true)
-    private String publicKey;
-
     @Column(name = "[CREDENTIAL_ID]", nullable = true)
     private String credentialId;
 
@@ -112,14 +109,6 @@ public class DBItemIamAccount {
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public String getPublicKey() {
-        return publicKey;
-    }
-
-    public void setPublicKey(String publicKey) {
-        this.publicKey = publicKey;
     }
 
     public String getChallenge() {

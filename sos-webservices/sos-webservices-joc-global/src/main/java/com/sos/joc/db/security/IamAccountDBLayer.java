@@ -21,6 +21,7 @@ import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.authentication.DBItemIamPermission;
 import com.sos.joc.db.authentication.DBItemIamPermissionWithName;
 import com.sos.joc.db.authentication.DBItemIamRole;
+import com.sos.joc.db.authentication.DBItemIamFido2Devices;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.favorite.FavoriteDBLayer;
 import com.sos.joc.db.keys.DBLayerKeys;
@@ -33,6 +34,7 @@ public class IamAccountDBLayer {
     private static final String DBItemIamBlockedAccount = com.sos.joc.db.authentication.DBItemIamBlockedAccount.class.getSimpleName();
     private static final String DBItemIamRole = com.sos.joc.db.authentication.DBItemIamRole.class.getSimpleName();
     private static final String DBItemIamAccount2Roles = com.sos.joc.db.authentication.DBItemIamAccount2Roles.class.getSimpleName();
+    private static final String DBItemIamFido2Devices = com.sos.joc.db.authentication.DBItemIamFido2Devices.class.getSimpleName();
     private static final String DBItemIamPermission = com.sos.joc.db.authentication.DBItemIamPermission.class.getSimpleName();
 
     private final SOSHibernateSession sosHibernateSession;
@@ -234,6 +236,15 @@ public class IamAccountDBLayer {
 
         List<DBItemIamAccount> iamAccountList = query.getResultList();
         return iamAccountList == null ? Collections.emptyList() : iamAccountList;
+    }
+
+    public List<DBItemIamFido2Devices> getListOfFido2Devices(Long accountId) throws SOSHibernateException {
+        Query<DBItemIamFido2Devices> query = sosHibernateSession.createQuery("from " + DBItemIamFido2Devices + " where accountId=:accountId");
+
+        query.setParameter("accountId", accountId);
+
+        List<DBItemIamFido2Devices> iamAccount2RoleList = sosHibernateSession.getResultList(query);
+        return iamAccount2RoleList == null ? Collections.emptyList() : iamAccount2RoleList;
     }
 
     public List<DBItemIamAccount2Roles> getListOfRoles(Long accountId) throws SOSHibernateException {

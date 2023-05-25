@@ -8,6 +8,7 @@ import com.sos.commons.util.SOSClassList;
 import com.sos.joc.db.authentication.DBItemIamAccount;
 import com.sos.joc.db.authentication.DBItemIamAccount2Roles;
 import com.sos.joc.db.authentication.DBItemIamBlockedAccount;
+import com.sos.joc.db.authentication.DBItemIamFido2Devices;
 import com.sos.joc.db.authentication.DBItemIamFido2Registration;
 import com.sos.joc.db.authentication.DBItemIamHistory;
 import com.sos.joc.db.authentication.DBItemIamHistoryDetails;
@@ -296,6 +297,10 @@ public class DBLayer implements Serializable {
     public static final String TABLE_IAM_ACCOUNTS = "IAM_ACCOUNTS";
     public static final String TABLE_IAM_ACCOUNTS_SEQUENCE = "SEQ_IAM_ACCOUNTS";
 
+    public static final String DBITEM_IAM_FIDO2_DEVICES = DBItemIamFido2Devices.class.getSimpleName();
+    public static final String TABLE_IAM_FIDO2_DEVICES = "IAM_FIDO2_DEVICES";
+    public static final String TABLE_IAM_FIDO2_DEVICES_SEQUENCE = "SEQ_IAM_FIDO2_DEVICES";
+
     public static final String DBITEM_IAM_FIDO2_REGISTRATIONS = DBItemIamFido2Registration.class.getSimpleName();
     public static final String TABLE_IAM_FIDO2_REGISTRATIONS = "IAM_FIDO2_REGISTRATIONS";
     public static final String TABLE_IAM_FIDO2_REGISTRATIONS_SEQUENCE = "SEQ_IAM_FIDO2_REGISTRATIONS";
@@ -485,6 +490,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemIamPermission.class);
         cl.add(DBItemIamRole.class);
         cl.add(DBItemIamFido2Registration.class);
+        cl.add(DBItemIamFido2Devices.class);
 
         cl.merge(getHistoryClassMapping().getClasses());
         cl.merge(getOrderInitatorClassMapping().getClasses());
