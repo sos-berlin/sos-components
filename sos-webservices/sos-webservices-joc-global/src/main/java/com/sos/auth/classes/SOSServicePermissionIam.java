@@ -179,10 +179,9 @@ public class SOSServicePermissionIam {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public JOCDefaultResponse loginPost(@Context HttpServletRequest request, @HeaderParam("Authorization") String basicAuthorization,
-            @HeaderParam("X-IDENTITY-SERVICE") String identityService, @HeaderParam("X-ID-TOKEN") String idToken,@HeaderParam("X-SIGNATURE") String signature,
-            @HeaderParam("X-AUTHENTICATOR-DATA") String authenticatorData,
-            @HeaderParam("X-CLIENT-DATA-JSON") String clientDataJson,
-            @QueryParam("account") String account, @QueryParam("pwd") String pwd) {
+            @HeaderParam("X-IDENTITY-SERVICE") String identityService, @HeaderParam("X-ID-TOKEN") String idToken,
+            @HeaderParam("X-SIGNATURE") String signature, @HeaderParam("X-AUTHENTICATOR-DATA") String authenticatorData,
+            @HeaderParam("X-CLIENT-DATA-JSON") String clientDataJson, @QueryParam("account") String account, @QueryParam("pwd") String pwd) {
 
         if (Globals.sosCockpitProperties == null) {
             Globals.sosCockpitProperties = new JocCockpitProperties();
@@ -604,7 +603,6 @@ public class SOSServicePermissionIam {
                     List<DBItemIamIdentityService> listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
 
                     currentAccount.initFolders();
-                    
 
                     if (!currentAccount.getSosLoginParameters().isOIDCLogin()) {
 
@@ -626,8 +624,8 @@ public class SOSServicePermissionIam {
                                 }
                             }
                         }
-                    }else {
-                        
+                    } else {
+
                     }
 
                     if (currentAccount.getCurrentSubject() == null) {
@@ -799,7 +797,7 @@ public class SOSServicePermissionIam {
                     webserviceCredentials.setIdToken(sosLoginParameters.getIdToken());
                     SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials);
                     String account = sosOpenIdHandler.decodeIdToken(sosLoginParameters.getIdToken());
-                    sosLoginParameters.setAccount(account);                  
+                    sosLoginParameters.setAccount(account);
                     sosLoginParameters.setWebserviceCredentials(webserviceCredentials);
 
                 } else {
@@ -825,8 +823,8 @@ public class SOSServicePermissionIam {
         if (currentAccount == null || !currentAccount.withAuthorization()) {
             return JOCDefaultResponse.responseStatusJSError(AUTHORIZATION_HEADER_WITH_BASIC_BASED64PART_EXPECTED);
         }
-        
-        if (sosLoginParameters.getAccount() == null || sosLoginParameters.getAccount().isEmpty()){
+
+        if (currentAccount.getAccountname() == null || currentAccount.getAccountname().isEmpty()) {
             return JOCDefaultResponse.responseStatusJSError(ACCOUNT_IS_EMPTY);
         }
 

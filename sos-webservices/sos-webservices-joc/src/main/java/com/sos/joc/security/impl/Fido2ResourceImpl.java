@@ -22,6 +22,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.security.Fido2ConfirmationMail;
 import com.sos.joc.db.authentication.DBItemIamAccount;
+import com.sos.joc.db.authentication.DBItemIamFido2Devices;
 import com.sos.joc.db.authentication.DBItemIamFido2Registration;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.security.IamAccountDBLayer;
@@ -406,10 +407,11 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             filter.setAccountName(fido2RequestAuthentication.getAccountName());
             filter.setIdentityServiceId(dbItemIamIdentityService.getId());
 
+            String challengeToken = SOSAuthHelper.createAccessToken();
             DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getUniqueAccount(filter);
             if (dbItemIamAccount != null) {
-                if (dbItemIamAccount.getPublicKey() != null) {
-                    String challengeToken = SOSAuthHelper.createAccessToken();
+                List<DBItemIamFido2Devices> listOfFido2Devices = iamAccountDBLayer.getListOfFido2Devices(dbItemIamAccount.getId());
+                if (listOfFido2Devices.size() > 0) {
                     dbItemIamAccount.setChallenge(challengeToken);
                     fido2RequestAuthentication.setChallenge(challengeToken);
                     sosHibernateSession.update(dbItemIamAccount);
@@ -426,8 +428,8 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             Globals.commit(sosHibernateSession);
 
             Fido2RequestAuthenticationResponse fido2RequestAuthenticationResponse = new Fido2RequestAuthenticationResponse();
-            fido2RequestAuthenticationResponse.setChallenge(SOSAuthHelper.createAccessToken());
             fido2RequestAuthenticationResponse.setCredentialId(dbItemIamAccount.getCredentialId());
+            fido2RequestAuthenticationResponse.setChallenge(challengeToken);
             com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getIamProperties(fido2RequestAuthentication
                     .getIdentityServiceName());
             properties.getFido2().setIamFido2EmailSettings(null);
@@ -618,8 +620,13 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
                 dbItemIamAccount.setCredentialId(dbItemIamFido2Registration.getCredentialId());
                 dbItemIamAccount.setForcePasswordChange(false);
                 dbItemIamAccount.setEmail(dbItemIamFido2Registration.getEmail());
-                dbItemIamAccount.setPublicKey(dbItemIamFido2Registration.getPublicKey());
+                DBItemIamFido2Devices dbItemIamFido2Devices = new DBItemIamFido2Devices();
+               
                 sosHibernateSession.save(dbItemIamAccount);
+                dbItemIamFido2Devices.setAccountId(dbItemIamAccount.getId());
+                dbItemIamFido2Devices.setPublicKey(dbItemIamFido2Registration.getPublicKey());
+                sosHibernateSession.save(dbItemIamFido2Devices);
+                
                 LOGGER.info("FIDO2 registration approved");
                 SOSAuthHelper.storeDefaultProfile(sosHibernateSession, accountName);
 
