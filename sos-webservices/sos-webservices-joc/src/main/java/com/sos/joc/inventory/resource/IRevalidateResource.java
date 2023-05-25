@@ -1,5 +1,8 @@
 package com.sos.joc.inventory.resource;
 
+import com.sos.joc.classes.JOCDefaultResponse;
+import com.sos.joc.classes.inventory.JocInventory;
+
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.POST;
@@ -7,12 +10,9 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
-import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.inventory.JocInventory;
-
 public interface IRevalidateResource {
 
-    public static final String PATH = "revalidate";
+    public static final String PATH = "revalidate/folder";
     public static final String IMPL_PATH = JocInventory.getResourceImplPath(PATH);
 
     @POST

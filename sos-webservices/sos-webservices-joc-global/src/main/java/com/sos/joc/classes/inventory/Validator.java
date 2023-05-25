@@ -131,8 +131,8 @@ public class Validator {
      * @throws JocConfigurationException */
     public static void validate(ConfigurationType type, byte[] configBytes) throws SOSJsonSchemaException, IOException, SOSHibernateException,
             JocConfigurationException {
-        validate(type, configBytes, (IConfigurationObject) Globals.objectMapper.readValue(configBytes, JocInventory.CLASS_MAPPING.get(type)), null,
-                null);
+        validate(type, configBytes, (IConfigurationObject) Globals.objectMapper.readValue(configBytes, JocInventory.CLASS_MAPPING.get(type)),
+                (InventoryDBLayer) null, null);
     }
 
     /** @param type
@@ -143,7 +143,7 @@ public class Validator {
      * @throws JocConfigurationException */
     public static void validate(ConfigurationType type, IConfigurationObject config) throws SOSJsonSchemaException, IOException,
             SOSHibernateException, JocConfigurationException {
-        validate(type, Globals.objectMapper.writeValueAsBytes(config), config, null, null);
+        validate(type, Globals.objectMapper.writeValueAsBytes(config), config, (InventoryDBLayer) null, null);
     }
 
     private static void validate(ConfigurationType type, byte[] configBytes, IConfigurationObject config, InventoryDBLayer dbLayer,
@@ -248,6 +248,77 @@ public class Validator {
             }
         }
     }
+    
+    public static void revalidate(ConfigurationType type, byte[] configBytes, IConfigurationObject config,
+            Map<ConfigurationType, Set<String>> invObjNames, Map<String, String> workflowJsonsByName, Set<String> visibleAgentNames)
+            throws SOSJsonSchemaException, IOException, JocConfigurationException {
+        JsonValidator.validate(configBytes, URI.create(JocInventory.SCHEMA_LOCATION.get(type)));
+        if (ConfigurationType.WORKFLOW.equals(type) || ConfigurationType.SCHEDULE.equals(type) || ConfigurationType.FILEORDERSOURCE.equals(type)
+                || ConfigurationType.JOBTEMPLATE.equals(type)) {
+            if (ConfigurationType.WORKFLOW.equals(type)) {
+                String json = new String(configBytes, StandardCharsets.UTF_8);
+                InventoryAgentInstancesDBLayer agentDBLayer = null;
+                Workflow workflow = (Workflow) config;
+                List<String> jobResources = validateWorkflowJobs(workflow, invObjNames.getOrDefault(ConfigurationType.INCLUDESCRIPT, Collections
+                        .emptySet()));
+                if (workflow.getJobResourceNames() != null) {
+                    jobResources.addAll(workflow.getJobResourceNames());
+                }
+                validateOrderPreparation(workflow.getOrderPreparation());
+                Jobs jobs = workflow.getJobs() == null ? new Jobs() : workflow.getJobs();
+                Set<String> invalidAgentRefs = getInvalidAgentRefs(json, agentDBLayer, visibleAgentNames);
+                hasLicense = AgentHelper.hasClusterLicense();
+                validateInstructions(workflow.getInstructions(), "instructions", jobs, workflow.getOrderPreparation(), new HashMap<String, String>(),
+                        invalidAgentRefs, invObjNames.getOrDefault(ConfigurationType.NOTICEBOARD, Collections.emptySet()), false, workflowJsonsByName);
+                validateLockRefs(json, invObjNames.getOrDefault(ConfigurationType.LOCK, Collections.emptySet()));
+                validateJobResourceRefs(jobResources, invObjNames.getOrDefault(ConfigurationType.JOBRESOURCE, Collections.emptySet()));
+            } else if (ConfigurationType.SCHEDULE.equals(type)) {
+                Schedule schedule = (Schedule) config;
+                validateCalendarRefs(schedule, invObjNames.getOrDefault(ConfigurationType.WORKINGDAYSCALENDAR, Collections.emptySet()), invObjNames
+                        .getOrDefault(ConfigurationType.NONWORKINGDAYSCALENDAR, Collections.emptySet()));
+
+                schedule = JocInventory.setWorkflowNames(schedule);
+                int namesSize = schedule.getWorkflowNames().size();
+                if (namesSize == 0) {
+                    throw new JocConfigurationException("Missing assigned Workflows");
+                }
+                String position = "$.workflowNames";
+                for (String workflowName : schedule.getWorkflowNames()) {
+                    String json = validateWorkflowRef(workflowName, workflowJsonsByName, position);
+                    Workflow w = Globals.objectMapper.readValue(json, Workflow.class);
+                    Requirements r = w.getOrderPreparation();
+                    if (namesSize >= JocInventory.SCHEDULE_MIN_MULTIPLE_WORKFLOWS_SIZE) {// check only multiple workflows
+                        if (r != null && r.getParameters() != null && r.getParameters().getAdditionalProperties() != null && r.getParameters()
+                                .getAdditionalProperties().size() > 0) {
+                            throw new JocConfigurationException(String.format(
+                                    "%s: Multiple workflows with order variables are not permitted: schedule=%s, workflowName=%s, %s order variables",
+                                    position, schedule.getPath(), workflowName, r.getParameters().getAdditionalProperties().size()));
+                        }
+                    }
+                    validateOrderParameterisations(schedule.getOrderParameterisations(), r, w, "$.variableSets.orderParameterisations");
+                }
+            } else if (ConfigurationType.FILEORDERSOURCE.equals(type)) {
+                FileOrderSource fileOrderSource = (FileOrderSource) config;
+                validateWorkflowRef(fileOrderSource.getWorkflowName(), workflowJsonsByName, "$.workflowName");
+                if (fileOrderSource.getDirectoryExpr() != null) {
+                    validateExpression("$.directoryExpr: ", fileOrderSource.getDirectoryExpr());
+                }
+                if (fileOrderSource.getPattern() != null) {
+                    try {
+                        Pattern.compile(fileOrderSource.getPattern());
+                    } catch (PatternSyntaxException e) {
+                        throw new JocConfigurationException("$.pattern: " + e.getMessage());
+                    }
+                }
+            } else if (ConfigurationType.JOBTEMPLATE.equals(type)) {
+                JobTemplate jobTemplate = (JobTemplate) config;
+                validateJobTemplateJob(jobTemplate, invObjNames.getOrDefault(ConfigurationType.INCLUDESCRIPT, Collections.emptySet()));
+                // TODO something like validateOrderPreparation(workflow.getOrderPreparation());
+                validateJobResourceRefs(jobTemplate.getJobResourceNames(), invObjNames.getOrDefault(ConfigurationType.JOBRESOURCE, Collections
+                        .emptySet()));
+            }
+        }
+    }
 
     private static void validateJobResourceRefs(List<String> jobResources, InventoryDBLayer dbLayer) throws SOSHibernateException {
         if (jobResources != null && !jobResources.isEmpty()) {
@@ -264,14 +335,33 @@ public class Validator {
             }
         }
     }
+    
+    private static void validateJobResourceRefs(List<String> jobResources, Set<String> allJobResourceNames) throws JocConfigurationException {
+        if (jobResources != null && !jobResources.isEmpty()) {
+            Set<String> jobResourcesCopy = new HashSet<>(jobResources);
+            jobResourcesCopy.removeAll(allJobResourceNames);
+            if (!jobResourcesCopy.isEmpty()) {
+                throw new JocConfigurationException("Missing assigned JobResources: " + jobResourcesCopy.toString());
+            }
+        }
+    }
 
     private static String validateWorkflowRef(String workflowName, InventoryDBLayer dbLayer, String position) throws JocConfigurationException,
             SOSHibernateException {
-        List<DBItemInventoryConfiguration> workflowPaths = dbLayer.getConfigurationByName(workflowName, ConfigurationType.WORKFLOW.intValue());
-        if (workflowPaths == null || !workflowPaths.stream().anyMatch(w -> workflowName.equals(w.getName()))) {
+        List<DBItemInventoryConfiguration> workflows = dbLayer.getConfigurationByName(workflowName, ConfigurationType.WORKFLOW.intValue());
+        if (workflows == null || !workflows.stream().anyMatch(w -> workflowName.equals(w.getName()))) {
             throw new JocConfigurationException(position + ": Missing assigned Workflow: " + workflowName);
         }
-        return workflowPaths.get(0).getContent();
+        return workflows.get(0).getContent();
+    }
+    
+    private static String validateWorkflowRef(String workflowName, Map<String, String> workflowJsons, String position)
+            throws JocConfigurationException {
+        String wJson = workflowJsons.get(workflowName);
+        if (wJson == null) {
+            throw new JocConfigurationException(position + ": Missing assigned Workflow: " + workflowName);
+        }
+        return wJson;
     }
 
     private static void validateCalendarRefs(Schedule schedule, InventoryDBLayer dbLayer) throws SOSHibernateException, JocConfigurationException {
@@ -288,6 +378,19 @@ public class Validator {
             throw new JocConfigurationException("Missing assigned Calendars: " + calendarNames.toString());
         }
 
+    }
+    
+    private static void validateCalendarRefs(Schedule schedule, Set<String> allWorkingDaysCalendarNames, Set<String> allNonWorkingDaysCalendarNames) throws JocConfigurationException {
+        List<String> calendarNames = schedule.getCalendars().stream().map(AssignedCalendars::getCalendarName).distinct().collect(Collectors.toList());
+        if (schedule.getNonWorkingDayCalendars() != null && !schedule.getNonWorkingDayCalendars().isEmpty()) {
+            calendarNames.addAll(schedule.getNonWorkingDayCalendars().stream().map(AssignedNonWorkingDayCalendars::getCalendarName).collect(Collectors
+                    .toSet()));
+        }
+        calendarNames.removeAll(allWorkingDaysCalendarNames);
+        calendarNames.removeAll(allNonWorkingDaysCalendarNames);
+        if (!calendarNames.isEmpty()) {
+            throw new JocConfigurationException("Missing assigned Calendars: " + calendarNames.toString());
+        }
     }
 
 //    private static void validateAgentRefs(String json, InventoryAgentInstancesDBLayer dbLayer, Set<String> visibleAgentNames)
@@ -373,6 +476,22 @@ public class Validator {
                 if (!locks.isEmpty()) {
                     throw new JocConfigurationException("Missing assigned Locks: " + locks.toString());
                 }
+            }
+        }
+    }
+    
+    private static void validateLockRefs(String json, Set<String> allLockNames) throws JocConfigurationException {
+        Matcher m = Pattern.compile("\"lockName\"\\s*:\\s*\"([^\"]+)\"").matcher(json);
+        Set<String> locks = new HashSet<>();
+        while (m.find()) {
+            if (m.group(1) != null && !m.group(1).isEmpty()) {
+                locks.add(m.group(1));
+            }
+        }
+        if (!locks.isEmpty()) {
+            locks.removeAll(allLockNames);
+            if (!locks.isEmpty()) {
+                throw new JocConfigurationException("Missing assigned Locks: " + locks.toString());
             }
         }
     }
@@ -583,7 +702,7 @@ public class Validator {
     }
 
     private static void validateInstructions(Collection<Instruction> instructions, String position, Jobs jobs, Requirements orderPreparation,
-            Map<String, String> labels, Set<String> invalidAgentRefs, List<String> boardNames, boolean forkListExist, InventoryDBLayer dbLayer)
+            Map<String, String> labels, Set<String> invalidAgentRefs, Collection<String> boardNames, boolean forkListExist, InventoryDBLayer dbLayer)
             throws SOSJsonSchemaException, JsonProcessingException, IOException, JocConfigurationException, SOSHibernateException {
         if (instructions != null) {
             int index = 0;
@@ -846,6 +965,281 @@ public class Validator {
                     if (opts.getBlock() != null) {
                         validateInstructions(opts.getBlock().getInstructions(), instPosition + "block.instructions", jobs, orderPreparation, labels,
                                 invalidAgentRefs, boardNames, forkListExist, dbLayer);
+                    }
+                    break;
+                default:
+                    break;
+                }
+                index++;
+            }
+        }
+    }
+    
+    private static void validateInstructions(Collection<Instruction> instructions, String position, Jobs jobs, Requirements orderPreparation,
+            Map<String, String> labels, Set<String> invalidAgentRefs, Collection<String> boardNames, boolean forkListExist,
+            Map<String, String> allWorkflowJsonsByName) throws SOSJsonSchemaException, JsonProcessingException, IOException,
+            JocConfigurationException {
+        if (instructions != null) {
+            int index = 0;
+            for (Instruction inst : instructions) {
+                String instPosition = position + "[" + index + "].";
+                if (inst.getLabel() != null) {
+                    if (labels.containsKey(inst.getLabel())) {
+                        throw new SOSJsonSchemaException("$." + instPosition + "label: duplicate label '" + inst.getLabel() + "' with " + labels.get(
+                                inst.getLabel()));
+                    } else {
+                        labels.put(inst.getLabel(), "$." + instPosition + "label");
+                    }
+                }
+                boolean unLicensedForkList = inst.getTYPE().equals(InstructionType.FORKLIST) && !hasLicense;
+                try {
+                    if (unLicensedForkList) {
+                        JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(inst), URI.create(
+                                JocInventory.FORKLIST_SCHEMA_WITHOUT_LICENSE), true);
+                    } else {
+                        JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(inst), URI.create(JocInventory.INSTRUCTION_SCHEMA_LOCATION.get(
+                                inst.getTYPE())), true);
+                    }
+                } catch (SOSJsonSchemaException e) {
+                    String msg = e.getMessage();
+                    //improve message: [$.children: is missing but it is required, $.childToId: is missing but it is required, $.subagentClusterId: is missing but it is required, $.subagentClusterIdExpr: is missing but it is required]
+                    if (inst.getTYPE().equals(InstructionType.FORKLIST) && hasLicense && msg.contains("$.children")) {
+                        msg = "[($.children and $.childToId) or ($.agentName and $.subagentClusterId) or ($.agentName and $.subagentClusterIdExpr) are missing but required]";
+                    }
+                    throw new SOSJsonSchemaException(msg.replaceAll("(\\$\\.)", "$1" + instPosition));
+                }
+                switch (inst.getTYPE()) {
+                case EXECUTE_NAMED:
+                    NamedJob nj = inst.cast();
+                    testJavaNameRules("$." + instPosition, "jobName", nj.getJobName());
+                    Job j = jobs.getAdditionalProperties().get(nj.getJobName());
+                    if (j == null) {
+                        throw new SOSJsonSchemaException("$." + instPosition + "jobName: job '" + nj.getJobName()
+                                + "' doesn't exist. Found jobs are: " + jobs.getAdditionalProperties().keySet().toString());
+                    }
+                    if (invalidAgentRefs.contains(j.getAgentName())) {
+                        throw new JocConfigurationException("$." + instPosition + "agentName: Missing assigned Agent: " + j.getAgentName());
+                    }
+                    testJavaNameRules("$." + instPosition, "label", nj.getLabel());
+//                    if (labels.containsKey(nj.getLabel())) {
+//                        throw new SOSJsonSchemaException("$." + instPosition + "label: duplicate label '" + nj.getLabel() + "' with " + labels.get(nj
+//                                .getLabel()));
+//                    } else {
+//                        labels.put(nj.getLabel(), "$." + instPosition + "label");
+//                    }
+                    // validateArguments(nj.getDefaultArguments(), orderPreparation, "$." + instPosition + "defaultArguments");
+                    // validateArgumentKeys(nj.getDefaultArguments(), "$." + instPosition + "defaultArguments");
+                    validateEmptyExpressions(nj.getDefaultArguments(), "$." + instPosition + "defaultArguments", ClusterSettings
+                            .getAllowEmptyArguments(Globals.getConfigurationGlobalsJoc()));
+                    break;
+                case FORK:
+                    ForkJoin fj = inst.cast();
+                    int branchIndex = 0;
+                    String branchPosition = instPosition + "branches";
+                    
+                    Map<String, String> resultKeys = new HashMap<>();
+                    List<String> branchIds = new ArrayList<>();
+                    
+                    for (Branch branch : fj.getBranches()) {
+                        String branchId = branch.getId();
+                        if (branchId != null) {
+                            int otherBranchIndex = branchIds.indexOf(branchId);
+                            if (otherBranchIndex > -1) {
+                                throw new JocConfigurationException("$." + branchPosition + "[" + branchIndex + "].id: duplicate branch id with $."
+                                        + branchPosition + "[" + otherBranchIndex + "].id");
+                            } else {
+                                branchIds.add(branchId);
+                            }
+                        }
+                        BranchWorkflow bw = branch.getWorkflow();
+                        if (bw != null) {
+                            if (bw.getResult() != null && bw.getResult().getAdditionalProperties() != null) {
+                                String branchInstPosition = branchPosition + "[" + branchIndex + "].workflow";
+                                for (Map.Entry<String, String> entry : bw.getResult().getAdditionalProperties().entrySet()) {
+                                    validateExpression("$." + branchInstPosition + ".result", entry.getKey(), entry.getValue());
+                                    if (entry.getKey() != null) {
+                                        if (resultKeys.containsKey(entry.getKey())) {
+                                            throw new JocConfigurationException("$." + branchInstPosition + ".result: duplicate key '" + entry
+                                                    .getKey() + "': already used in " + resultKeys.get(entry.getKey()));
+                                        } else {
+                                            resultKeys.put(entry.getKey(), branchInstPosition);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        branchIndex++;
+                    }
+                    resultKeys = null;
+                    branchIndex = 0;
+                    for (Branch branch : fj.getBranches()) {
+                        String branchInstPosition = branchPosition + "[" + branchIndex + "].";
+                        if (branch.getWorkflow() != null) {
+                            validateInstructions(branch.getWorkflow().getInstructions(), branchInstPosition + "instructions", jobs,
+                                    orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, allWorkflowJsonsByName);
+                        }
+                        branchIndex++;
+                    }
+                    break;
+                case FORKLIST:
+                    if (forkListExist) {
+                        throw new JocConfigurationException("$." + instPosition + "ForkList instructions can not be nested.");
+                    }
+                    ForkList fl = inst.cast();
+                    if (!unLicensedForkList && fl.getAgentName() != null) {
+                        testJavaNameRules("$." + instPosition, "subagentIdVariable", fl.getSubagentIdVariable());
+                        validateExpression("$." + instPosition + "subagentClusterIdExpr: ", fl.getSubagentClusterIdExpr());
+                        if (invalidAgentRefs.contains(fl.getAgentName())) {
+                            throw new JocConfigurationException("$." + instPosition + "agentName: Missing assigned Agent: " + fl.getAgentName());
+                        }
+                    }
+                    if (fl.getWorkflow() != null) {
+                        firstChildIsForkInstruction(fl.getWorkflow().getInstructions(), instPosition + "workflow.instructions", "ForkList");
+                        validateInstructions(fl.getWorkflow().getInstructions(), instPosition + "workflow.instructions", jobs, orderPreparation,
+                                labels, invalidAgentRefs, boardNames, true, allWorkflowJsonsByName);
+                    }
+                    break;
+                case IF:
+                    IfElse ifElse = inst.cast();
+                    validateExpression("$." + instPosition + "predicate: ", ifElse.getPredicate());
+                    if (ifElse.getThen() != null) {
+                        validateInstructions(ifElse.getThen().getInstructions(), instPosition + "then.instructions", jobs, orderPreparation,
+                                labels, invalidAgentRefs, boardNames, forkListExist, allWorkflowJsonsByName);
+                    }
+                    if (ifElse.getElse() != null) {
+                        validateInstructions(ifElse.getElse().getInstructions(), instPosition + "else.instructions", jobs, orderPreparation,
+                                labels, invalidAgentRefs, boardNames, forkListExist, allWorkflowJsonsByName);
+                    }
+                    break;
+                case TRY:
+                    TryCatch tryCatch = inst.cast();
+                    if (tryCatch.getTry() != null) {
+                        validateInstructions(tryCatch.getTry().getInstructions(), instPosition + "try.instructions", jobs, orderPreparation, labels,
+                                invalidAgentRefs, boardNames, forkListExist, allWorkflowJsonsByName);
+                    }
+                    if (tryCatch.getCatch() != null) {
+                        validateInstructions(tryCatch.getCatch().getInstructions(), instPosition + "catch.instructions", jobs, orderPreparation,
+                                labels, invalidAgentRefs, boardNames, forkListExist, allWorkflowJsonsByName);
+                    }
+                    break;
+                case LOCK:
+                    Lock lock = inst.cast();
+                    if (lock.getLockedWorkflow() != null) {
+                    validateInstructions(lock.getLockedWorkflow().getInstructions(), instPosition + "lockedWorkflow.instructions", jobs,
+                            orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, allWorkflowJsonsByName);
+                    }
+                    break;
+                case PROMPT:
+                    Prompt prompt = inst.cast();
+                    validateExpression("$." + instPosition + "question:", prompt.getQuestion());
+                    break;
+                case ADD_ORDER:
+                    AddOrder ao = inst.cast();
+                    String json = validateWorkflowRef(ao.getWorkflowName(), allWorkflowJsonsByName, "$." + instPosition + "workflowName");
+                    if (json != null) {
+                        Workflow workflowOfAddOrder = Globals.objectMapper.readValue(json, Workflow.class);
+                        try {
+                            OrdersHelper.checkArguments(ao.getArguments(), workflowOfAddOrder.getOrderPreparation());
+                        } catch (Exception e) {
+                            throw new JocConfigurationException("$." + instPosition + "arguments: " + e.getMessage());
+                        }
+                        
+                        if (ao.getStartPosition() != null || (ao.getEndPositions() != null && !ao.getEndPositions().isEmpty())) {
+                            Set<Position> availablePositions = WorkflowsHelper.getWorkflowAddOrderPositions(workflowOfAddOrder);
+                            Map<List<Object>, String> posLabelMap = availablePositions.stream().collect(Collectors.toMap(Position::getPosition,
+                                    pos -> pos.getLabel() != null ? pos.getLabel() : ""));
+                            
+                            checkAddOrderPositions(ao.getStartPosition(), posLabelMap, "$." + instPosition);
+                            if (ao.getEndPositions() != null) {
+                                ao.getEndPositions().forEach(endP -> checkAddOrderPositions(endP, posLabelMap, "$." + instPosition));
+                            }
+                        }
+                    }
+                    break;
+                case CONSUME_NOTICES:
+                    ConsumeNotices cns = inst.cast();
+                    String cnsNamesExpr = cns.getNoticeBoardNames();
+                    String cnsNamesExpr2 = cnsNamesExpr.replaceAll("'[^']*'", "true").replaceAll("\"[^\"]*\"", "true");
+                    Either<Problem, JExpression> cnsE = JExpression.parse(cnsNamesExpr2);
+                    if (cnsE.isLeft()) {
+                        throw new JocConfigurationException("$." + instPosition + "noticeBoardNames: " + cnsE.getLeft().message().replace("true", "'...'"));
+                    }
+                    List<String> cnsNames = NoticeToNoticesConverter.expectNoticeBoardsToList(cnsNamesExpr);
+                    cnsNames.removeAll(boardNames);
+                    if (boardNames.isEmpty() || !cnsNames.isEmpty()) {
+                        throw new JocConfigurationException("$." + instPosition + "noticeBoardNames: Missing assigned Notice Boards: " + cnsNames
+                                .toString());
+                    }
+                    if (cns.getSubworkflow() != null && cns.getSubworkflow().getInstructions() != null) {
+                        validateInstructions(cns.getSubworkflow().getInstructions(), instPosition + "subworkflow.instructions", jobs,
+                                orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, allWorkflowJsonsByName);
+                    }
+                    break;
+                case POST_NOTICE:
+                    PostNotice pn = inst.cast();
+                    String pnName = pn.getNoticeBoardName();
+                    if (boardNames.isEmpty() || !boardNames.contains(pnName)) {
+                        throw new JocConfigurationException("$." + instPosition + "noticeBoardName: Missing assigned Notice Board: " + pnName);
+                    }
+                    break;
+                case POST_NOTICES:
+                    PostNotices pns = inst.cast();
+                    List<String> pnsNames = new ArrayList<>(pns.getNoticeBoardNames());
+                    pnsNames.removeAll(boardNames);
+                    if (boardNames.isEmpty() || !pnsNames.isEmpty()) {
+                        throw new JocConfigurationException("$." + instPosition + "noticeBoardNames: Missing assigned Notice Boards: " + pnsNames
+                                .toString());
+                    }
+                    break;
+                case EXPECT_NOTICE:
+                    ExpectNotice en = inst.cast();
+                    String enName = en.getNoticeBoardName();
+                    if (boardNames.isEmpty() || !boardNames.contains(enName)) {
+                        throw new JocConfigurationException("$." + instPosition + "noticeBoardName: Missing assigned Notice Board: " + enName);
+                    }
+                    break;
+                case EXPECT_NOTICES:
+                    ExpectNotices ens = inst.cast();
+                    String ensNamesExpr = ens.getNoticeBoardNames();
+                    String ensNamesExpr2 = ensNamesExpr.replaceAll("'[^']*'", "true").replaceAll("\"[^\"]*\"", "true");
+                    Either<Problem, JExpression> enE = JExpression.parse(ensNamesExpr2);
+                    if (enE.isLeft()) {
+                        throw new JocConfigurationException("$." + instPosition + "noticeBoardNames: " + enE.getLeft().message().replace("true", "'...'"));
+                    }
+                    List<String> ensNames = NoticeToNoticesConverter.expectNoticeBoardsToList(ensNamesExpr);
+                    ensNames.removeAll(boardNames);
+                    if (boardNames.isEmpty() || !ensNames.isEmpty()) {
+                        throw new JocConfigurationException("$." + instPosition + "noticeBoardNames: Missing assigned Notice Boards: " + ensNames
+                                .toString());
+                    }
+                    break;
+                case CYCLE:
+                    Cycle cycle = inst.cast();
+                    if (cycle.getCycleWorkflow() != null) {
+                        validateInstructions(cycle.getCycleWorkflow().getInstructions(), instPosition + "cycleWorkflow.instructions", jobs,
+                                orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, allWorkflowJsonsByName);
+                    }
+                    break;
+                case STICKY_SUBAGENT:
+                    if (!hasLicense) {
+                        throw new JocConfigurationException("$." + instPosition + "StickySubagent instruction needs license");
+                    }
+                    StickySubagent sticky = inst.cast();
+                    validateExpression("$." + instPosition + "subagentClusterIdExpr: ", sticky.getSubagentClusterIdExpr());
+                    if (invalidAgentRefs.contains(sticky.getAgentName())) {
+                        throw new JocConfigurationException("$." + instPosition + "agentName: Missing assigned Agent: " + sticky.getAgentName());
+                    }
+                    if (sticky.getSubworkflow() != null) {
+                        firstChildIsForkInstruction(sticky.getSubworkflow().getInstructions(), instPosition + "subworkflow.instructions", "StickySubagent");
+                        validateInstructions(sticky.getSubworkflow().getInstructions(), instPosition + "subworkflow.instructions", jobs,
+                                orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, allWorkflowJsonsByName);
+                    }
+                    break;
+                case OPTIONS:
+                    Options opts = inst.cast();
+                    if (opts.getBlock() != null) {
+                        validateInstructions(opts.getBlock().getInstructions(), instPosition + "block.instructions", jobs, orderPreparation, labels,
+                                invalidAgentRefs, boardNames, forkListExist, allWorkflowJsonsByName);
                     }
                     break;
                 default:
