@@ -121,9 +121,23 @@ public class IamAccountDBLayer {
                 deleteAccount2Role(filterCascade);
                 deletePermission(filterCascade);
                 deleteProfile(filter);
+                deleteDevices(filter);
             }
         }
         return iamAccountList.size();
+    }
+    
+    public int deleteDevices(IamAccountFilter filter) throws SOSHibernateException {
+        IamAccountFilter filterDelete = new IamAccountFilter();
+        filterDelete.setId(filter.getId());
+        String hql = "delete from " + DBItemIamFido2Devices + getWhere(filterDelete);
+        Query<DBItemIamAccount> query = null;
+        int row = 0;
+        query = sosHibernateSession.createQuery(hql);
+        query = bindParameters(filterDelete, query);
+
+        row = query.executeUpdate();
+        return row;
     }
 
     private int deletePermission(IamAccountFilter filter) throws SOSHibernateException {

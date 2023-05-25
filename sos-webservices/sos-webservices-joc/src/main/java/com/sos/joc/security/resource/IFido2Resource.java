@@ -32,6 +32,16 @@ public interface IFido2Resource {
     public JOCDefaultResponse postFido2RequestAuthentication(byte[] body);
 
     @POST
+    @Path("fido2/add_device")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse postFido2AddDevice(byte[] body);
+
+    @POST
+    @Path("fido2/remove_devices")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse postFido2RemoveDevices(byte[] body);
+
+    @POST
     @Path("fido2registration/delete")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postFido2RegistrationDelete(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
