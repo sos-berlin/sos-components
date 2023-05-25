@@ -61,7 +61,6 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
-import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.search.DBItemSearchWorkflow;
 import com.sos.joc.event.EventBus;
@@ -69,12 +68,10 @@ import com.sos.joc.event.bean.inventory.InventoryEvent;
 import com.sos.joc.event.bean.inventory.InventoryFolderEvent;
 import com.sos.joc.event.bean.inventory.InventoryTrashEvent;
 import com.sos.joc.event.bean.inventory.InventoryTrashFolderEvent;
-import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocMissingCommentException;
 import com.sos.joc.model.SuffixPrefix;
@@ -84,8 +81,6 @@ import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFilter;
 import com.sos.joc.model.inventory.folder.Folder;
-import com.sos.joc.model.inventory.validate.Report;
-import com.sos.joc.model.inventory.validate.ReportItem;
 
 public class JocInventory {
 
@@ -1411,113 +1406,4 @@ public class JocInventory {
         }
         return workflows;
     }
-    
-    public static Report revalidate(Collection<ConfigurationType> types, InventoryDBLayer dbLayer, JocError jocError, DBItemJocAuditLog dbAuditLog)
-            throws SOSHibernateException {
-
-        List<ConfigurationType> revalidateOrder = Arrays.asList(ConfigurationType.LOCK, ConfigurationType.INCLUDESCRIPT,
-                ConfigurationType.NOTICEBOARD, ConfigurationType.JOBRESOURCE, ConfigurationType.NONWORKINGDAYSCALENDAR,
-                ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.JOBTEMPLATE, ConfigurationType.WORKFLOW,
-                ConfigurationType.FILEORDERSOURCE, ConfigurationType.SCHEDULE);
-        
-        if (types == null || types.isEmpty()) {
-            types = revalidateOrder; 
-        }
-        
-        SOSHibernateSession session = null;
-        Set<String> agentNames = null;
-        Report report = new Report();
-        Set<ReportItem> valids = new HashSet<>();
-        Set<ReportItem> invalids = new HashSet<>();
-        Set<ReportItem> errornous = new HashSet<>();
-        List<AuditLogDetail> auditDetails = new ArrayList<>();
-        try {
-            if (dbLayer == null) {
-                session = Globals.createSosHibernateStatelessConnection("revalidate");
-                dbLayer = new InventoryDBLayer(session);
-            }
-            if (types.contains(ConfigurationType.WORKFLOW)) {
-                InventoryAgentInstancesDBLayer agentDbLayer = new InventoryAgentInstancesDBLayer(dbLayer.getSession());
-                agentNames = agentDbLayer.getVisibleAgentNames();
-            }
-            for (ConfigurationType type : revalidateOrder) {
-                if (!types.contains(type)) {
-                    continue;
-                }
-                List<DBItemInventoryConfiguration> dbItems = dbLayer.getConfigurationsByType(Collections.singleton(type.intValue()));
-                if (dbItems != null) {
-                    for (DBItemInventoryConfiguration dbItem : dbItems) {
-                        LOGGER.info("revalidate " + type.value() + ": " + dbItem.getPath());
-                        ReportItem reportItem = new ReportItem();
-                        reportItem.setValid(dbItem.getValid());
-                        reportItem.setPath(dbItem.getPath());
-                        reportItem.setName(dbItem.getName());
-                        reportItem.setObjectType(type);
-                        reportItem.setTitle(dbItem.getTitle());
-                        try {
-                            IConfigurationObject conf = content2IJSObject(dbItem.getContent(), type);
-                            try {
-                                Validator.validate(type, conf, dbLayer, agentNames);
-                                reportItem.setValid(true);
-                                if (!dbItem.getValid()) {
-                                    dbItem.setValid(true);
-                                    if (dbAuditLog != null) {
-                                        dbItem.setAuditLogId(dbAuditLog.getId()); 
-                                    }
-                                    try {
-                                        //simulate updateConfiguration(dbLayer, dbItem, conf);
-                                        valids.add(reportItem);
-                                        if (dbAuditLog != null) {
-                                            auditDetails.add(new AuditLogDetail(dbItem.getPath(), dbItem.getType()));
-                                        }
-                                    } catch (Exception e1) {
-                                        reportItem.setError(new BulkError(LOGGER).get(e1, jocError, dbItem.getPath()));
-                                        errornous.add(reportItem);
-                                    }
-                                }
-                            } catch (Throwable e2) {
-                                reportItem.setValid(false);
-                                reportItem.setInvalidMsg(e2.getMessage());
-                                if (dbItem.getValid()) {
-                                    dbItem.setValid(false);
-                                    dbItem.setDeployed(false);
-                                    dbItem.setReleased(false);
-                                    if (dbAuditLog != null) {
-                                        dbItem.setAuditLogId(dbAuditLog.getId()); 
-                                    }
-                                    //simulate updateConfiguration(dbLayer, dbItem, conf);
-                                    invalids.add(reportItem);
-                                    if (dbAuditLog != null) {
-                                        auditDetails.add(new AuditLogDetail(dbItem.getPath(), dbItem.getType()));
-                                    }
-                                }
-                            }
-                        } catch (Exception e) {
-                            reportItem.setError(new BulkError(LOGGER).get(e, jocError, dbItem.getPath()));
-                            errornous.add(reportItem);
-                        }
-                    }
-                }
-            }
-            
-            if (dbAuditLog != null && !auditDetails.isEmpty()) {
-                JocAuditLog.storeAuditLogDetails(auditDetails, dbLayer.getSession(), dbAuditLog);
-            }
-            
-            if (!errornous.isEmpty()) {
-                report.setErroneousObjs(errornous);
-            }
-            if (!valids.isEmpty()) {
-                report.setValidObjs(valids);
-            }
-            if (!invalids.isEmpty()) {
-                report.setInvalidObjs(invalids);
-            }
-            
-            return report;
-        } finally {
-            Globals.disconnect(session);
-        }
-    }
-    
 }
