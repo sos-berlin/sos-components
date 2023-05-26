@@ -21,6 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "identityServiceName",
     "accountName",
     "publicKey",
+    "credentialId",
     "auditLog"
 })
 public class Fido2AddDevice {
@@ -53,6 +54,15 @@ public class Fido2AddDevice {
     @JsonProperty("publicKey")
     private String publicKey;
     /**
+     * string without < and >
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("credentialId")
+    private String credentialId;
+    /**
      * auditParams
      * <p>
      * 
@@ -73,13 +83,15 @@ public class Fido2AddDevice {
      * @param identityServiceName
      * @param auditLog
      * @param accountName
+     * @param credentialId
      * @param publicKey
      */
-    public Fido2AddDevice(String identityServiceName, String accountName, String publicKey, AuditParams auditLog) {
+    public Fido2AddDevice(String identityServiceName, String accountName, String publicKey, String credentialId, AuditParams auditLog) {
         super();
         this.identityServiceName = identityServiceName;
         this.accountName = accountName;
         this.publicKey = publicKey;
+        this.credentialId = credentialId;
         this.auditLog = auditLog;
     }
 
@@ -156,6 +168,30 @@ public class Fido2AddDevice {
     }
 
     /**
+     * string without < and >
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("credentialId")
+    public String getCredentialId() {
+        return credentialId;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("credentialId")
+    public void setCredentialId(String credentialId) {
+        this.credentialId = credentialId;
+    }
+
+    /**
      * auditParams
      * <p>
      * 
@@ -179,12 +215,12 @@ public class Fido2AddDevice {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("accountName", accountName).append("publicKey", publicKey).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("accountName", accountName).append("publicKey", publicKey).append("credentialId", credentialId).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(identityServiceName).append(publicKey).append(auditLog).append(accountName).toHashCode();
+        return new HashCodeBuilder().append(credentialId).append(identityServiceName).append(publicKey).append(auditLog).append(accountName).toHashCode();
     }
 
     @Override
@@ -196,7 +232,7 @@ public class Fido2AddDevice {
             return false;
         }
         Fido2AddDevice rhs = ((Fido2AddDevice) other);
-        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(publicKey, rhs.publicKey).append(auditLog, rhs.auditLog).append(accountName, rhs.accountName).isEquals();
+        return new EqualsBuilder().append(credentialId, rhs.credentialId).append(identityServiceName, rhs.identityServiceName).append(publicKey, rhs.publicKey).append(auditLog, rhs.auditLog).append(accountName, rhs.accountName).isEquals();
     }
 
 }

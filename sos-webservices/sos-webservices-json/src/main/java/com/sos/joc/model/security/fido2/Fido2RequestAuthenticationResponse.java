@@ -1,6 +1,8 @@
 
 package com.sos.joc.model.security.fido2;
 
+import java.util.ArrayList;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -18,20 +20,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "credentialId",
+    "credentialIds",
     "challenge",
     "fido2Properties"
 })
 public class Fido2RequestAuthenticationResponse {
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("credentialId")
-    private String credentialId;
+    @JsonProperty("credentialIds")
+    private List<String> credentialIds = new ArrayList<String>();
     /**
      * string without < and >
      * <p>
@@ -59,36 +55,24 @@ public class Fido2RequestAuthenticationResponse {
     /**
      * 
      * @param fido2Properties
-     * @param credentialId
      * @param challenge
+     * @param credentialIds
      */
-    public Fido2RequestAuthenticationResponse(String credentialId, String challenge, Fido2Properties fido2Properties) {
+    public Fido2RequestAuthenticationResponse(List<String> credentialIds, String challenge, Fido2Properties fido2Properties) {
         super();
-        this.credentialId = credentialId;
+        this.credentialIds = credentialIds;
         this.challenge = challenge;
         this.fido2Properties = fido2Properties;
     }
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("credentialId")
-    public String getCredentialId() {
-        return credentialId;
+    @JsonProperty("credentialIds")
+    public List<String> getCredentialIds() {
+        return credentialIds;
     }
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("credentialId")
-    public void setCredentialId(String credentialId) {
-        this.credentialId = credentialId;
+    @JsonProperty("credentialIds")
+    public void setCredentialIds(List<String> credentialIds) {
+        this.credentialIds = credentialIds;
     }
 
     /**
@@ -137,12 +121,12 @@ public class Fido2RequestAuthenticationResponse {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("credentialId", credentialId).append("challenge", challenge).append("fido2Properties", fido2Properties).toString();
+        return new ToStringBuilder(this).append("credentialIds", credentialIds).append("challenge", challenge).append("fido2Properties", fido2Properties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(credentialId).append(challenge).append(fido2Properties).toHashCode();
+        return new HashCodeBuilder().append(challenge).append(credentialIds).append(fido2Properties).toHashCode();
     }
 
     @Override
@@ -154,7 +138,7 @@ public class Fido2RequestAuthenticationResponse {
             return false;
         }
         Fido2RequestAuthenticationResponse rhs = ((Fido2RequestAuthenticationResponse) other);
-        return new EqualsBuilder().append(credentialId, rhs.credentialId).append(challenge, rhs.challenge).append(fido2Properties, rhs.fido2Properties).isEquals();
+        return new EqualsBuilder().append(challenge, rhs.challenge).append(credentialIds, rhs.credentialIds).append(fido2Properties, rhs.fido2Properties).isEquals();
     }
 
 }

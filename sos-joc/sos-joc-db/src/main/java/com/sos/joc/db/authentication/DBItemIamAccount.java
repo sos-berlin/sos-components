@@ -40,9 +40,6 @@ public class DBItemIamAccount {
     @Column(name = "[EMAIL]", nullable = true)
     private String email;
 
-    @Column(name = "[CREDENTIAL_ID]", nullable = true)
-    private String credentialId;
-
     @Column(name = "[FORCE_PASSWORD_CHANGE]", nullable = false)
     @Type(type = "numeric_boolean")
     private Boolean forcePasswordChange;
@@ -119,12 +116,5 @@ public class DBItemIamAccount {
         this.challenge = challenge;
     }
 
-    public String getCredentialId() {
-        return credentialId;
-    }
-
-    public void setCredentialId(String credentialId) {
-        this.credentialId = credentialId;
-    }
 
 }
