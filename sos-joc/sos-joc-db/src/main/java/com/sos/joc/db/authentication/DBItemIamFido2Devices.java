@@ -28,7 +28,7 @@ public class DBItemIamFido2Devices {
     @Column(name = "[PUBLIC_KEY]", nullable = false)
     private String publicKey;
 
-    @Column(name = "[CREDEDENTIAL_ID]", nullable = false)
+    @Column(name = "[CREDENTIAL_ID]", nullable = false)
     private String credentialId;
 
     public Long getId() {

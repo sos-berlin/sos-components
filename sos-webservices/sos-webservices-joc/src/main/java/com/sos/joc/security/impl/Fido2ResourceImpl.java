@@ -191,7 +191,10 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
                     JsonReader jsonReaderClientData = Json.createReader(new StringReader(clientDataJson));
                     JsonObject jsonClientData = jsonReaderClientData.readObject();
                     String challenge = jsonClientData.getString(CHALLENGE, "");
-                    if (!challenge.equals(dbItemIamFido2Registration.getChallenge())) {
+                    byte[] challengeDecoded = Base64.getDecoder().decode(challenge);
+                    String challengeDecodedString = new String(challengeDecoded, StandardCharsets.UTF_8);
+                     
+                    if (!challengeDecodedString.equals(dbItemIamFido2Registration.getChallenge())) {
                         iamFido2DBLayer.delete(iamFido2RegistrationFilter);
                         throw new JocBadRequestException("Challenge does not match. The FIDO2 registration cannot be completed..");
                     }
@@ -520,6 +523,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             filter.setIdentityServiceId(dbItemIamIdentityService.getId());
 
             String challengeToken = SOSAuthHelper.createAccessToken();
+            
             DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getUniqueAccount(filter);
             if (dbItemIamAccount != null) {
                 List<DBItemIamFido2Devices> listOfFido2Devices = iamAccountDBLayer.getListOfFido2Devices(dbItemIamAccount.getId());
