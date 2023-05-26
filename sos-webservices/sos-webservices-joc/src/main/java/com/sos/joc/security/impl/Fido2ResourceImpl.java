@@ -258,6 +258,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             DBItemIamFido2Devices dbItemIamFido2Devices = new DBItemIamFido2Devices();
             dbItemIamFido2Devices.setAccountId(dbItemIamAccount.getId());
             dbItemIamFido2Devices.setPublicKey(fido2AddDevice.getPublicKey());
+            dbItemIamFido2Devices.setCredentialId(fido2AddDevice.getCredentialId());
             sosHibernateSession.save(dbItemIamFido2Devices);
 
             storeAuditLog(fido2AddDevice.getAuditLog(), CategoryType.IDENTITY);
@@ -468,9 +469,11 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
 
                 if (properties != null) {
                     if (properties.getFido2() != null) {
+                        identityProvider.setIamFido2Transports(new ArrayList<Fido2Transports>());
                         identityProvider.setIamFido2Timeout(getProperty(properties.getFido2().getIamFido2Timeout()));
-                        identityProvider.setIamFido2Transports(Fido2Transports.valueOf(getProperty(properties.getFido2().getIamFido2Transports()
-                                .value(), "")));
+                        for (Fido2Transports fido2Transport : properties.getFido2().getIamFido2Transports()) {
+                            identityProvider.getIamFido2Transports().add(fido2Transport);
+                        }
                         identityProvider.setIamFido2UserVerification(Fido2Userverification.valueOf(getProperty(properties.getFido2()
                                 .getIamFido2UserVerification().value(), "")));
                         identityProvider.setIamFido2Attestation(Fido2Attestation.valueOf(getProperty(properties.getFido2().getIamFido2Attestation()
@@ -536,8 +539,13 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
 
             Globals.commit(sosHibernateSession);
 
+            List<DBItemIamFido2Devices> listOfDevices = iamAccountDBLayer.getListOfFido2Devices(dbItemIamAccount.getId());
+
             Fido2RequestAuthenticationResponse fido2RequestAuthenticationResponse = new Fido2RequestAuthenticationResponse();
-            fido2RequestAuthenticationResponse.setCredentialId(dbItemIamAccount.getCredentialId());
+            fido2RequestAuthenticationResponse.setCredentialIds(new ArrayList<String>());
+            for (DBItemIamFido2Devices device : listOfDevices) {
+                fido2RequestAuthenticationResponse.getCredentialIds().add(device.getCredentialId());
+            }
             fido2RequestAuthenticationResponse.setChallenge(challengeToken);
             com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getIamProperties(fido2RequestAuthentication
                     .getIdentityServiceName());
@@ -726,7 +734,6 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
                 dbItemIamAccount.setIdentityServiceId(dbItemIamIdentityService.getId());
                 dbItemIamAccount.setDisabled(false);
                 dbItemIamAccount.setAccountPassword("********");
-                dbItemIamAccount.setCredentialId(dbItemIamFido2Registration.getCredentialId());
                 dbItemIamAccount.setForcePasswordChange(false);
                 dbItemIamAccount.setEmail(dbItemIamFido2Registration.getEmail());
                 DBItemIamFido2Devices dbItemIamFido2Devices = new DBItemIamFido2Devices();
@@ -734,6 +741,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
                 sosHibernateSession.save(dbItemIamAccount);
                 dbItemIamFido2Devices.setAccountId(dbItemIamAccount.getId());
                 dbItemIamFido2Devices.setPublicKey(dbItemIamFido2Registration.getPublicKey());
+                dbItemIamFido2Devices.setCredentialId(dbItemIamFido2Registration.getCredentialId());
                 sosHibernateSession.save(dbItemIamFido2Devices);
 
                 LOGGER.info("FIDO2 registration approved");

@@ -1,6 +1,8 @@
 
 package com.sos.joc.model.security.identityservice;
 
+import java.util.ArrayList;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -61,14 +63,8 @@ public class Fido2IdentityProvider {
      */
     @JsonProperty("iamFido2Attestation")
     private Fido2Attestation iamFido2Attestation;
-    /**
-     * Fido2 Transports
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("iamFido2Transports")
-    private Fido2Transports iamFido2Transports;
+    private List<Fido2Transports> iamFido2Transports = new ArrayList<Fido2Transports>();
     /**
      * string without < and >
      * <p>
@@ -94,7 +90,7 @@ public class Fido2IdentityProvider {
      * @param iamFido2Transports
      * @param iamFido2UserVerification
      */
-    public Fido2IdentityProvider(String identityServiceName, Fido2Userverification iamFido2UserVerification, Integer iamFido2Timeout, Fido2Attestation iamFido2Attestation, Fido2Transports iamFido2Transports, String iamIconUrl) {
+    public Fido2IdentityProvider(String identityServiceName, Fido2Userverification iamFido2UserVerification, Integer iamFido2Timeout, Fido2Attestation iamFido2Attestation, List<Fido2Transports> iamFido2Transports, String iamIconUrl) {
         super();
         this.identityServiceName = identityServiceName;
         this.iamFido2UserVerification = iamFido2UserVerification;
@@ -192,25 +188,13 @@ public class Fido2IdentityProvider {
         this.iamFido2Attestation = iamFido2Attestation;
     }
 
-    /**
-     * Fido2 Transports
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("iamFido2Transports")
-    public Fido2Transports getIamFido2Transports() {
+    public List<Fido2Transports> getIamFido2Transports() {
         return iamFido2Transports;
     }
 
-    /**
-     * Fido2 Transports
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("iamFido2Transports")
-    public void setIamFido2Transports(Fido2Transports iamFido2Transports) {
+    public void setIamFido2Transports(List<Fido2Transports> iamFido2Transports) {
         this.iamFido2Transports = iamFido2Transports;
     }
 

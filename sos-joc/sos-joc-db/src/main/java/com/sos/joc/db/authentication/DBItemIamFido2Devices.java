@@ -28,6 +28,9 @@ public class DBItemIamFido2Devices {
     @Column(name = "[PUBLIC_KEY]", nullable = false)
     private String publicKey;
 
+    @Column(name = "[CREDEDENTIAL_ID]", nullable = false)
+    private String credentialId;
+
     public Long getId() {
         return id;
     }
@@ -50,6 +53,14 @@ public class DBItemIamFido2Devices {
 
     public void setPublicKey(String publicKey) {
         this.publicKey = publicKey;
+    }
+
+    public String getCredentialId() {
+        return credentialId;
+    }
+
+    public void setCredentialId(String credentialId) {
+        this.credentialId = credentialId;
     }
 
 }
