@@ -71,9 +71,12 @@ public class SOSFido2AuthHandler {
                 JsonReader jsonReader = Json.createReader(new StringReader(clientDataJson));
                 JsonObject jsonHeader = jsonReader.readObject();
                 String challenge = jsonHeader.getString("challenge", "");
-                if (!challenge.equals(dbItemIamAccount.getChallenge())) {
+                byte[] challengeDecoded = Base64.getDecoder().decode(challenge);
+                String challengeDecodedString = new String(challengeDecoded, StandardCharsets.UTF_8);
+
+                if (!challengeDecodedString.equals(dbItemIamAccount.getChallenge())) {
                     LOGGER.info("FIDO2 login with <wrong challenge>");
-//                    return null;
+                    return null;
                 }
 
                 byte[] authenticatorDataDecoded = java.util.Base64.getDecoder().decode(sosFido2AuthWebserviceCredentials.getAuthenticatorData());

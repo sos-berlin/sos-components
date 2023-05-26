@@ -1,6 +1,5 @@
 package com.sos.joc.security.impl;
 
-import java.io.StringReader;
 import java.security.KeyStore;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -10,11 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import jakarta.ws.rs.Path;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +29,6 @@ import com.sos.auth.vault.classes.SOSVaultAccountCredentials;
 import com.sos.auth.vault.classes.SOSVaultLogin;
 import com.sos.auth.vault.classes.SOSVaultWebserviceCredentials;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -48,10 +41,6 @@ import com.sos.joc.db.authentication.DBItemIamBlockedAccount;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.authentication.DBItemIamPermissionWithName;
 import com.sos.joc.db.authentication.DBItemIamRole;
-import com.sos.joc.db.configuration.JocConfigurationDbLayer;
-import com.sos.joc.db.configuration.JocConfigurationFilter;
-import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
-import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.db.security.IamAccountFilter;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
@@ -61,7 +50,6 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocInfoException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.security.accounts.Account;
 import com.sos.joc.model.security.accounts.AccountChangePassword;
 import com.sos.joc.model.security.accounts.AccountFilter;
@@ -77,6 +65,8 @@ import com.sos.joc.model.security.configuration.permissions.Permissions;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 import com.sos.joc.security.resource.IAccountResource;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("iam")
 public class AccountResourceImpl extends JOCResourceImpl implements IAccountResource {
@@ -150,7 +140,6 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
         }
     }
 
-    
     @Override
     public JOCDefaultResponse postAccountStore(String accessToken, byte[] body) {
         SOSHibernateSession sosHibernateSession = null;
@@ -459,6 +448,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                 account.setForcePasswordChange(dbItemIamAccount.getForcePasswordChange());
                 account.setIdentityServiceName(accountFilter.getIdentityServiceName());
                 account.setBlocked(blockedAccounts.get(dbItemIamAccount.getAccountName()) != null);
+                account.setEmail(dbItemIamAccount.getEmail());
                 List<DBItemIamAccount2RoleWithName> listOfRoles = iamAccountDBLayer.getListOfRolesWithName(dbItemIamAccount);
                 account.setRoles(new ArrayList<String>());
                 for (DBItemIamAccount2RoleWithName dbItemIamAccount2RoleWithName : listOfRoles) {
