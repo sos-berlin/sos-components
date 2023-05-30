@@ -53,7 +53,7 @@ public class SOSFido2AuthHandler {
             DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityServiceById(sosHibernateSession,
                     sosFido2AuthWebserviceCredentials.getIdentityServiceId());
 
-            if (!IdentityServiceTypes.FIDO_2.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+            if (!IdentityServiceTypes.FIDO.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
                 throw new JocObjectNotExistException("Only allowed for Identity Service type FIDO2 " + "<" + dbItemIamIdentityService
                         .getIdentityServiceType() + ">");
             }
@@ -91,7 +91,8 @@ public class SOSFido2AuthHandler {
 
                 for (DBItemIamFido2Devices dbItemIamFido2Devices : listOfFido2Devices) {
                     String pKey = dbItemIamFido2Devices.getPublicKey();
-                    if (SOSSecurityUtil.signatureVerified(pKey, out, sosFido2AuthWebserviceCredentials.getSignature(), "SHA256withECDSA")) {
+//                    if (SOSSecurityUtil.signatureVerified(pKey, out, sosFido2AuthWebserviceCredentials.getSignature(), "SHA256withECDSA")) {
+                        if (SOSSecurityUtil.signatureVerified(pKey, out, sosFido2AuthWebserviceCredentials.getSignature(), dbItemIamFido2Devices.getAlgorithm())) {
                         sosAuthAccessToken = new SOSAuthAccessToken();
                         sosAuthAccessToken.setAccessToken(SOSAuthHelper.createSessionId());
                         break;

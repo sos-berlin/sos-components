@@ -23,6 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "accountName",
     "email",
     "publicKey",
+    "jwk",
     "credentialId",
     "clientDataJSON",
     "deferred",
@@ -65,6 +66,14 @@ public class Fido2Registration {
      */
     @JsonProperty("publicKey")
     private String publicKey;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("jwk")
+    private String jwk;
     /**
      * string without < and >
      * <p>
@@ -126,13 +135,15 @@ public class Fido2Registration {
      * @param publicKey
      * @param confirmed
      * @param email
+     * @param jwk
      */
-    public Fido2Registration(String identityServiceName, String accountName, String email, String publicKey, String credentialId, String clientDataJSON, Boolean deferred, Boolean confirmed, AuditParams auditLog) {
+    public Fido2Registration(String identityServiceName, String accountName, String email, String publicKey, String jwk, String credentialId, String clientDataJSON, Boolean deferred, Boolean confirmed, AuditParams auditLog) {
         super();
         this.identityServiceName = identityServiceName;
         this.accountName = accountName;
         this.email = email;
         this.publicKey = publicKey;
+        this.jwk = jwk;
         this.credentialId = credentialId;
         this.clientDataJSON = clientDataJSON;
         this.deferred = deferred;
@@ -230,6 +241,28 @@ public class Fido2Registration {
     @JsonProperty("publicKey")
     public void setPublicKey(String publicKey) {
         this.publicKey = publicKey;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("jwk")
+    public String getJwk() {
+        return jwk;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("jwk")
+    public void setJwk(String jwk) {
+        this.jwk = jwk;
     }
 
     /**
@@ -344,12 +377,12 @@ public class Fido2Registration {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("accountName", accountName).append("email", email).append("publicKey", publicKey).append("credentialId", credentialId).append("clientDataJSON", clientDataJSON).append("deferred", deferred).append("confirmed", confirmed).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("accountName", accountName).append("email", email).append("publicKey", publicKey).append("jwk", jwk).append("credentialId", credentialId).append("clientDataJSON", clientDataJSON).append("deferred", deferred).append("confirmed", confirmed).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(clientDataJSON).append(deferred).append(identityServiceName).append(auditLog).append(accountName).append(credentialId).append(publicKey).append(confirmed).append(email).toHashCode();
+        return new HashCodeBuilder().append(clientDataJSON).append(deferred).append(identityServiceName).append(auditLog).append(accountName).append(credentialId).append(publicKey).append(confirmed).append(email).append(jwk).toHashCode();
     }
 
     @Override
@@ -361,7 +394,7 @@ public class Fido2Registration {
             return false;
         }
         Fido2Registration rhs = ((Fido2Registration) other);
-        return new EqualsBuilder().append(clientDataJSON, rhs.clientDataJSON).append(deferred, rhs.deferred).append(identityServiceName, rhs.identityServiceName).append(auditLog, rhs.auditLog).append(accountName, rhs.accountName).append(credentialId, rhs.credentialId).append(publicKey, rhs.publicKey).append(confirmed, rhs.confirmed).append(email, rhs.email).isEquals();
+        return new EqualsBuilder().append(clientDataJSON, rhs.clientDataJSON).append(deferred, rhs.deferred).append(identityServiceName, rhs.identityServiceName).append(auditLog, rhs.auditLog).append(accountName, rhs.accountName).append(credentialId, rhs.credentialId).append(publicKey, rhs.publicKey).append(confirmed, rhs.confirmed).append(email, rhs.email).append(jwk, rhs.jwk).isEquals();
     }
 
 }

@@ -21,6 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "identityServiceName",
     "accountName",
     "publicKey",
+    "jwk",
     "credentialId",
     "auditLog"
 })
@@ -57,6 +58,14 @@ public class Fido2AddDevice {
      * string without < and >
      * <p>
      * 
+     * 
+     */
+    @JsonProperty("jwk")
+    private String jwk;
+    /**
+     * string without < and >
+     * <p>
+     * 
      * (Required)
      * 
      */
@@ -85,12 +94,14 @@ public class Fido2AddDevice {
      * @param accountName
      * @param credentialId
      * @param publicKey
+     * @param jwk
      */
-    public Fido2AddDevice(String identityServiceName, String accountName, String publicKey, String credentialId, AuditParams auditLog) {
+    public Fido2AddDevice(String identityServiceName, String accountName, String publicKey, String jwk, String credentialId, AuditParams auditLog) {
         super();
         this.identityServiceName = identityServiceName;
         this.accountName = accountName;
         this.publicKey = publicKey;
+        this.jwk = jwk;
         this.credentialId = credentialId;
         this.auditLog = auditLog;
     }
@@ -171,6 +182,28 @@ public class Fido2AddDevice {
      * string without < and >
      * <p>
      * 
+     * 
+     */
+    @JsonProperty("jwk")
+    public String getJwk() {
+        return jwk;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("jwk")
+    public void setJwk(String jwk) {
+        this.jwk = jwk;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
      * (Required)
      * 
      */
@@ -215,12 +248,12 @@ public class Fido2AddDevice {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("accountName", accountName).append("publicKey", publicKey).append("credentialId", credentialId).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("accountName", accountName).append("publicKey", publicKey).append("jwk", jwk).append("credentialId", credentialId).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(credentialId).append(identityServiceName).append(publicKey).append(auditLog).append(accountName).toHashCode();
+        return new HashCodeBuilder().append(identityServiceName).append(auditLog).append(accountName).append(credentialId).append(publicKey).append(jwk).toHashCode();
     }
 
     @Override
@@ -232,7 +265,7 @@ public class Fido2AddDevice {
             return false;
         }
         Fido2AddDevice rhs = ((Fido2AddDevice) other);
-        return new EqualsBuilder().append(credentialId, rhs.credentialId).append(identityServiceName, rhs.identityServiceName).append(publicKey, rhs.publicKey).append(auditLog, rhs.auditLog).append(accountName, rhs.accountName).isEquals();
+        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(auditLog, rhs.auditLog).append(accountName, rhs.accountName).append(credentialId, rhs.credentialId).append(publicKey, rhs.publicKey).append(jwk, rhs.jwk).isEquals();
     }
 
 }

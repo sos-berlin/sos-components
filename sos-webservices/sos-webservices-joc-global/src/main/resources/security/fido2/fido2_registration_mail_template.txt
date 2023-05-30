@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <style>.tg  {border-collapse:collapse;border-spacing:0;border-color:#bbb;}.tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#bbb;color:#594F4F;background-color:#fff;}.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:bold;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#bbb;color:#fff;background-color:#9DE0AD}</style>
+        <style>.tg  {border-collapse:collapse;border-spacing:0;border-color:#bbb;}.tg td {font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#bbb;color:#594F4F;background-color:#E0FFEB;}.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#bbb;color:#493F3F;background-color:#9DE0AD}</style>
+        <title>JS7 JobScheduler Notification</title>
+    </head>
+    <body>
+        <table class="tg">
+            <tr>
+                <th colspan="2">
+                    <p><b>Registration for access to JS7 JobScheduler is pending</b></p>
+                </th>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <p>You recently requested registration of your FIDO2 security key for authentication with JS7 JobScheduler.</p>
+                    <p>During registration you specified the following information:</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>E-Mail Address:</p>
+                </td>
+                <td>
+                    <p>${REGISTRATION_EMAIL_ADDRESS}</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>Identity Service:</p>
+                </td>
+                <td>
+                    <p>${FIDO2_IDENTITY_SERVICE}</p>
+                </td>
+            </tr>
+            <tr>
+                <th colspan="2">
+                    <p><b>E-Mail Verification</b></p>
+                </th>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <p>To complete registration you are asked to confirm your e-mail address.</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p><b>Follow this link to confirm your e-mail address:</b></p>
+                </td>
+                <td>
+                    <p>
+                        <a href="${REGISTRATION_VERIFY_LINK}">${REGISTRATION_VERIFY_LINK}</a>
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <p>Please check if the indicated link corresponds to the site that you did use for registration.</p>
+                    <p>If in doubt then do not follow the link and contact your JS7 administrator. Please do not respond to this message.</p>
+                </td>
+            </tr>
+        </table>
+    </body>
+</html>

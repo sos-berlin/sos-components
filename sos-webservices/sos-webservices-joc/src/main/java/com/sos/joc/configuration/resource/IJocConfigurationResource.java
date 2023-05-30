@@ -8,8 +8,7 @@ import jakarta.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 
- 
-public interface IJocConfigurationResource{
+public interface IJocConfigurationResource {
 
     @POST
     @Path("save")
@@ -25,7 +24,7 @@ public interface IJocConfigurationResource{
     @Path("share")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postShareConfiguration(@HeaderParam("X-Access-Token") String xAccessToken, byte[] configuration);
-    
+
     @POST
     @Path("make_private")
     @Produces({ MediaType.APPLICATION_JSON })

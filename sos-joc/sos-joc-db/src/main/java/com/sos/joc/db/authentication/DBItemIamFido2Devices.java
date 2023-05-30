@@ -28,6 +28,9 @@ public class DBItemIamFido2Devices {
     @Column(name = "[PUBLIC_KEY]", nullable = false)
     private String publicKey;
 
+    @Column(name = "[ALGORITHM]", nullable = false)
+    private String algorithm;
+
     @Column(name = "[CREDENTIAL_ID]", nullable = false)
     private String credentialId;
 
@@ -61,6 +64,14 @@ public class DBItemIamFido2Devices {
 
     public void setCredentialId(String credentialId) {
         this.credentialId = credentialId;
+    }
+
+    public String getAlgorithm() {
+        return algorithm;
+    }
+
+    public void setAlgorithm(String algorithm) {
+        this.algorithm = algorithm;
     }
 
 }

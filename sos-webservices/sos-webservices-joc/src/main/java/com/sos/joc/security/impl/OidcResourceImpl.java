@@ -111,7 +111,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
             }
 
             listOfIdentityServices.clear();
-            filter.setIamIdentityServiceType(IdentityServiceTypes.FIDO_2);
+            filter.setIamIdentityServiceType(IdentityServiceTypes.FIDO);
             filter.setSecondFactor(false);
             listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
 

@@ -318,7 +318,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.VAULT_JOC_ACTIVE);
             identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.KEYCLOAK);
             identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.KEYCLOAK_JOC);
-            identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.FIDO_2);
+            identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.FIDO);
             identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.CERTIFICATE);
             identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.OIDC);
 

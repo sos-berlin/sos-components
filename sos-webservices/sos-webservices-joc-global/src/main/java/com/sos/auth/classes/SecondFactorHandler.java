@@ -24,7 +24,7 @@ public class SecondFactorHandler {
                         secondFactor = true;
                     }
                 } else {
-                    if (dbItemSecondFactor.getIdentityServiceType().equals(IdentityServiceTypes.FIDO_2.value())) {
+                    if (dbItemSecondFactor.getIdentityServiceType().equals(IdentityServiceTypes.FIDO.value())) {
                         secondFactor = true;
                     } else {
                         throw new JocObjectNotExistException("no valid second factor identity service found. Wrong type " + "<" + dbItemSecondFactor

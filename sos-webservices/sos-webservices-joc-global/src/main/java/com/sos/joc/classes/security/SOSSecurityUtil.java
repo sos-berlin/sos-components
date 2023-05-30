@@ -1,6 +1,8 @@
 package com.sos.joc.classes.security;
 
+import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.MessageDigest;
@@ -13,14 +15,17 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.sos.auth.fido2.SOSFido2AuthHandler;
 
 // import org.apache.commons.codec.binary.Base64;
 
 public class SOSSecurityUtil {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSSecurityUtil.class);
 
     private static PublicKey getPublicKey(String base64PublicKey, String alg) throws NoSuchAlgorithmException, InvalidKeySpecException,
@@ -49,66 +54,38 @@ public class SOSSecurityUtil {
         }
         if (sAlg.toUpperCase().endsWith("WITHRSA")) {
             alg = "RSA";
-        }
+        }   
         return alg;
     }
 
-    public static String getAlgFromIANACOSEAlg(long alg) {
-        switch ((int) alg) {
-        case -65535:
-            return "SHA1withRSA";
-        case -257:
-            return "SHA256withRSA";
-        case -258:
-            return "SHA384withRSA";
-        case -259:
-            return "SHA512withRSA";
-        case -37:
-            return "SHA256withRSAandMGF1";
-        case -38:
-            return "SHA384withRSAandMGF1";
-        case -39:
-            return "SHA512withRSAandMGF1";
-        case -7:
-            return "SHA256withECDSA";
-        case -35:
-            return "SHA384withECDSA";
-        case -36:
-            return "SHA512withECDSA";
-        case -8:
-            return "NONEwithECDSA";
-        case -43:
-            return "SHA256withECDSA";
-        default:
-            throw new UnsupportedOperationException("Unsupported Algorithm: " + alg);
+    public static String getAlgFromJwk(String jwk) {
+        String jwkDecoded = new String(Base64.getUrlDecoder().decode(jwk.getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
+        JsonReader jsonReaderJwkDecoded = Json.createReader(new StringReader(jwkDecoded));
+        JsonObject jsonJwk = jsonReaderJwkDecoded.readObject();
+        String crv = jsonJwk.getString("crv", "");
+        String kty = jsonJwk.getString("kty", "");
+        String alg = "";
+        if (kty.equals("RSA")) {
+            alg = "SHA256withRSA";
         }
-    }
 
-    public static String getCurveFromFIDOECCCurveID(long curveID) {
-        switch ((int) curveID) {
-        case 1:
-            return "P-256";
-        case 2:
-            return "P-384";
-        case 3:
-            return "P-521";
-        case 6:
-            return "Curve25519";
-        default:
-            throw new UnsupportedOperationException("Unsupported Curve" + curveID);
+        if (kty.equals("EC")) {
+            switch (crv) {
+            case "P-256":
+                alg = "SHA256withECDSA";
+                break;
+            case "P-512":
+                alg = "SHA512withECDSA";
+                break;
+            case "P-384":
+                alg = "SHA3846withECDSA";
+                break;
+            default:
+                alg = "SHA256withECDSA";
+                break;
+            }
         }
-    }
-
-    public static String getHashAlgFromIANACOSEAlg(long alg) {
-        if (alg == -65535) {
-            return "SHA-1";
-        } else if (alg == -257) {
-            return "SHA-256";
-        } else if (alg == -7) {
-            return "SHA-256";
-        } else {
-            throw new UnsupportedOperationException("Unsupported Algorithm" + alg);
-        }
+        return alg;
     }
 
     public static byte[] getDigestBytes(byte[] input, String algorithm) throws NoSuchAlgorithmException, NoSuchProviderException,
