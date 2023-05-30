@@ -1,6 +1,7 @@
 package com.sos.auth.classes;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.security.SecureRandom;
 import java.security.cert.CertificateEncodingException;
@@ -12,6 +13,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.UUID;
 
@@ -27,6 +29,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.auth.client.ClientCertificateHandler;
+import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
@@ -374,7 +377,7 @@ public class SOSAuthHelper {
             JocConfigurationFilter jocConfigurationFilter = new JocConfigurationFilter();
             jocConfigurationFilter.setConfigurationType(SOSAuthHelper.CONFIGURATION_TYPE_IAM);
             jocConfigurationFilter.setName(identityServiceName);
-            jocConfigurationFilter.setObjectType(IdentityServiceTypes.FIDO_2.value());
+            jocConfigurationFilter.setObjectType(IdentityServiceTypes.FIDO.value());
             List<DBItemJocConfiguration> listOfJocConfigurations = jocConfigurationDBLayer.getJocConfigurationList(jocConfigurationFilter, 0);
             if (listOfJocConfigurations.size() == 1) {
                 DBItemJocConfiguration dbItem = listOfJocConfigurations.get(0);
@@ -454,6 +457,18 @@ public class SOSAuthHelper {
 
             }
         }
+    }
+    
+    public static String getContentFromResource(String resourceName) throws SOSException, IOException {
+        InputStream textStream2 = SOSAuthHelper.class.getResourceAsStream(resourceName);
+        if (textStream2 == null) {
+            throw new SOSException("Could not find resource " + resourceName);
+        }
+        Scanner s =  new Scanner(textStream2, "UTF-8"); 
+        String text = s.useDelimiter("\\A").next();
+        textStream2.close();
+        s.close();
+        return text;
     }
 
 }

@@ -456,7 +456,7 @@ public class SOSServicePermissionIam {
                 sosLogin = new SOSCertificateAuthLogin();
                 LOGGER.debug("Login with identity service certificate");
                 break;
-            case FIDO_2:
+            case FIDO:
                 sosLogin = new SOSFido2AuthLogin();
                 LOGGER.debug("Login with identity service sosintern");
                 break;

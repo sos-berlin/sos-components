@@ -6,10 +6,12 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.List;
 
 import javax.json.Json;
 import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
 
 import org.slf4j.Logger;
@@ -21,16 +23,22 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.security.Fido2ConfirmationMail;
+import com.sos.joc.classes.security.SOSSecurityUtil;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.db.authentication.DBItemIamAccount;
 import com.sos.joc.db.authentication.DBItemIamFido2Devices;
 import com.sos.joc.db.authentication.DBItemIamFido2Registration;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
+import com.sos.joc.db.configuration.JocConfigurationDbLayer;
+import com.sos.joc.db.configuration.JocConfigurationFilter;
+import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.db.security.IamAccountFilter;
 import com.sos.joc.db.security.IamFido2DBLayer;
 import com.sos.joc.db.security.IamFido2RegistrationFilter;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
+import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocAuthenticationException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocError;
@@ -38,6 +46,9 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocInfoException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.audit.CategoryType;
+import com.sos.joc.model.configuration.Configuration;
+import com.sos.joc.model.configuration.Configuration200;
+import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.security.accounts.AccountListFilter;
 import com.sos.joc.model.security.fido2.Fido2AddDevice;
 import com.sos.joc.model.security.fido2.Fido2ConfirmationFilter;
@@ -54,6 +65,8 @@ import com.sos.joc.model.security.identityservice.Fido2IdentityProvider;
 import com.sos.joc.model.security.identityservice.IdentityServiceFilter;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 import com.sos.joc.model.security.properties.fido2.Fido2Attestation;
+import com.sos.joc.model.security.properties.fido2.Fido2EmailSettings;
+import com.sos.joc.model.security.properties.fido2.Fido2Properties;
 import com.sos.joc.model.security.properties.fido2.Fido2Transports;
 import com.sos.joc.model.security.properties.fido2.Fido2Userverification;
 import com.sos.joc.security.resource.IFido2Resource;
@@ -64,8 +77,14 @@ import jakarta.ws.rs.Path;
 @Path("iam")
 public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource {
 
+    private static final String _7_BIT = "7-bit";
+    private static final String TEXT_HTML = "text/html";
+    private static final String ISO_8859_1 = "ISO-8859-1";
+    private static final String SECURITY_FIDO2_FIDO2_REGISTRATION_MAIL_TEMPLATE_TXT = "/security/fido2/fido2_registration_mail_template.txt";
+    private static final String SECURITY_FIDO2_FIDO2_ACCESS_MAIL_TEMPLATE_TXT = "/security/fido2/fido2_access_mail_template.txt";
     private static final String CHALLENGE = "challenge";
     private static final Logger LOGGER = LoggerFactory.getLogger(Fido2ResourceImpl.class);
+    private static final String API_CALL_FIDO2_CONFIGURATION = "./iam/fido2configuration";
     private static final String API_CALL_FIDO2_REGISTRATIONS = "./iam/fido2registrations";
     private static final String API_CALL_FIDO2_REMOVE_DEVICES = "./iam/fido2/remove_devices";
     private static final String API_CALL_FIDO2_ADD_DEVICE = "./iam/fido2/add_device";
@@ -99,7 +118,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, fido2RegistrationFilter
                     .getIdentityServiceName());
 
-            if (!IdentityServiceTypes.FIDO_2.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+            if (!IdentityServiceTypes.FIDO.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
                 throw new JocObjectNotExistException("Only allowed for Identity Service type FIDO2 " + "<" + dbItemIamIdentityService
                         .getIdentityServiceType() + ">");
             }
@@ -150,7 +169,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, fido2Registration
                     .getIdentityServiceName());
 
-            if (!IdentityServiceTypes.FIDO_2.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+            if (!IdentityServiceTypes.FIDO.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
                 throw new JocObjectNotExistException("Only allowed for Identity Service type FIDO2 " + "<" + dbItemIamIdentityService
                         .getIdentityServiceType() + ">");
             }
@@ -180,6 +199,8 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
 
             dbItemIamFido2Registration.setCompleted(true);
             dbItemIamFido2Registration.setPublicKey(fido2Registration.getPublicKey());
+
+            dbItemIamFido2Registration.setAlgorithm(SOSSecurityUtil.getAlgFromJwk(fido2Registration.getJwk()));
             dbItemIamFido2Registration.setCredentialId(fido2Registration.getCredentialId());
             dbItemIamFido2Registration.setToken(SOSAuthHelper.createAccessToken());
             dbItemIamFido2Registration.setCreated(new Date());
@@ -193,7 +214,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
                     String challenge = jsonClientData.getString(CHALLENGE, "");
                     byte[] challengeDecoded = Base64.getDecoder().decode(challenge);
                     String challengeDecodedString = new String(challengeDecoded, StandardCharsets.UTF_8);
-                     
+
                     if (!challengeDecodedString.equals(dbItemIamFido2Registration.getChallenge())) {
                         iamFido2DBLayer.delete(iamFido2RegistrationFilter);
                         throw new JocBadRequestException("Challenge does not match. The FIDO2 registration cannot be completed..");
@@ -243,7 +264,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, fido2AddDevice
                     .getIdentityServiceName());
 
-            if (!IdentityServiceTypes.FIDO_2.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+            if (!IdentityServiceTypes.FIDO.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
                 throw new JocObjectNotExistException("Only allowed for Identity Service type FIDO2 " + "<" + dbItemIamIdentityService
                         .getIdentityServiceType() + ">");
             }
@@ -261,6 +282,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             DBItemIamFido2Devices dbItemIamFido2Devices = new DBItemIamFido2Devices();
             dbItemIamFido2Devices.setAccountId(dbItemIamAccount.getId());
             dbItemIamFido2Devices.setPublicKey(fido2AddDevice.getPublicKey());
+            dbItemIamFido2Devices.setAlgorithm(SOSSecurityUtil.getAlgFromJwk(fido2AddDevice.getJwk()));
             dbItemIamFido2Devices.setCredentialId(fido2AddDevice.getCredentialId());
             sosHibernateSession.save(dbItemIamFido2Devices);
 
@@ -297,7 +319,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, fido2RemoveDevices
                     .getIdentityServiceName());
 
-            if (!IdentityServiceTypes.FIDO_2.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+            if (!IdentityServiceTypes.FIDO.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
                 throw new JocObjectNotExistException("Only allowed for Identity Service type FIDO2 " + "<" + dbItemIamIdentityService
                         .getIdentityServiceType() + ">");
             }
@@ -349,7 +371,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, fido2Registration
                     .getIdentityServiceName());
 
-            if (!IdentityServiceTypes.FIDO_2.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+            if (!IdentityServiceTypes.FIDO.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
                 throw new JocObjectNotExistException("Only allowed for Identity Service type FIDO2 " + "<" + dbItemIamIdentityService
                         .getIdentityServiceType() + ">");
             }
@@ -458,7 +480,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_IDENTITY_CLIENTS);
             IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
             IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
-            filter.setIamIdentityServiceType(IdentityServiceTypes.FIDO_2);
+            filter.setIamIdentityServiceType(IdentityServiceTypes.FIDO);
             filter.setDisabled(false);
             filter.setIdentityServiceName(identityServiceFilter.getIdentityServiceName());
             List<DBItemIamIdentityService> listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
@@ -512,7 +534,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, fido2RequestAuthentication
                     .getIdentityServiceName());
 
-            if (!IdentityServiceTypes.FIDO_2.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+            if (!IdentityServiceTypes.FIDO.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
                 throw new JocObjectNotExistException("Only allowed for Identity Service type FIDO2 " + "<" + dbItemIamIdentityService
                         .getIdentityServiceType() + ">");
             }
@@ -523,7 +545,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             filter.setIdentityServiceId(dbItemIamIdentityService.getId());
 
             String challengeToken = SOSAuthHelper.createAccessToken();
-            
+
             DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getUniqueAccount(filter);
             if (dbItemIamAccount != null) {
                 List<DBItemIamFido2Devices> listOfFido2Devices = iamAccountDBLayer.getListOfFido2Devices(dbItemIamAccount.getId());
@@ -593,7 +615,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, fido2RegistrationsFilter
                     .getIdentityServiceName());
 
-            if (!IdentityServiceTypes.FIDO_2.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+            if (!IdentityServiceTypes.FIDO.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
                 throw new JocObjectNotExistException("Only allowed for Identity Service type FIDO2 " + "<" + dbItemIamIdentityService
                         .getIdentityServiceType() + ">");
             }
@@ -641,7 +663,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, accountFilter
                     .getIdentityServiceName());
 
-            if (!IdentityServiceTypes.FIDO_2.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+            if (!IdentityServiceTypes.FIDO.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
                 throw new JocObjectNotExistException("Only allowed for Identity Service type FIDO2 " + "<" + dbItemIamIdentityService
                         .getIdentityServiceType() + ">");
             }
@@ -702,7 +724,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, fido2RegistrationsFilter
                     .getIdentityServiceName());
 
-            if (!IdentityServiceTypes.FIDO_2.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+            if (!IdentityServiceTypes.FIDO.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
                 throw new JocObjectNotExistException("Only allowed for Identity Service type FIDO2 " + "<" + dbItemIamIdentityService
                         .getIdentityServiceType() + ">");
             }
@@ -745,10 +767,19 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
                 sosHibernateSession.save(dbItemIamAccount);
                 dbItemIamFido2Devices.setAccountId(dbItemIamAccount.getId());
                 dbItemIamFido2Devices.setPublicKey(dbItemIamFido2Registration.getPublicKey());
+                dbItemIamFido2Devices.setAlgorithm(dbItemIamFido2Registration.getAlgorithm());
                 dbItemIamFido2Devices.setCredentialId(dbItemIamFido2Registration.getCredentialId());
                 sosHibernateSession.save(dbItemIamFido2Devices);
 
                 LOGGER.info("FIDO2 registration approved");
+
+                com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getIamProperties(dbItemIamIdentityService
+                        .getIdentityServiceName());
+
+                Fido2ConfirmationMail fido2ConfirmationMail = new Fido2ConfirmationMail(properties.getFido2());
+                fido2ConfirmationMail.sendAccessMail(dbItemIamFido2Registration, dbItemIamAccount.getEmail(), dbItemIamIdentityService
+                        .getIdentityServiceName());
+
                 SOSAuthHelper.storeDefaultProfile(sosHibernateSession, accountName);
 
             }
@@ -791,7 +822,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, fido2RegistrationsFilter
                     .getIdentityServiceName());
 
-            if (!IdentityServiceTypes.FIDO_2.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+            if (!IdentityServiceTypes.FIDO.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
                 throw new JocObjectNotExistException("Only allowed for Identity Service type FIDO2 " + "<" + dbItemIamIdentityService
                         .getIdentityServiceType() + ">");
             }
@@ -881,12 +912,112 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
         }
     }
 
+    private Configuration setConfigurationValues(DBItemJocConfiguration dbItem, String controllerId) {
+        Configuration config = new Configuration();
+        config.setId(dbItem.getId());
+        config.setAccount(dbItem.getAccount());
+        if (dbItem.getConfigurationType() != null) {
+            config.setConfigurationType(ConfigurationType.fromValue(dbItem.getConfigurationType()));
+        }
+        config.setConfigurationItem(dbItem.getConfigurationItem());
+        config.setObjectType(dbItem.getObjectType());
+        config.setShared(dbItem.getShared());
+        config.setName(dbItem.getName());
+        if (dbItem.getControllerId() != null && !dbItem.getControllerId().isEmpty()) {
+            config.setControllerId(dbItem.getControllerId());
+        } else {
+            config.setControllerId(controllerId);
+        }
+        return config;
+    }
+
+    @Override
+    public JOCDefaultResponse postReadFido2Configuration(String accessToken, byte[] body) {
+        SOSHibernateSession connection = null;
+        try {
+            initLogging(API_CALL_FIDO2_CONFIGURATION, body, accessToken);
+            JsonValidator.validateFailFast(body, Configuration.class);
+            Configuration configuration = Globals.objectMapper.readValue(body, Configuration.class);
+
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+
+            connection = Globals.createSosHibernateStatelessConnection(API_CALL_FIDO2_CONFIGURATION);
+            JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(connection);
+
+            DBItemJocConfiguration dbItem = null;
+            JocConfigurationFilter filter = new JocConfigurationFilter();
+            filter.setConfigurationType(configuration.getConfigurationType().value());
+            filter.setName(configuration.getName());
+            filter.setObjectType(configuration.getObjectType());
+            List<DBItemJocConfiguration> listOfdbItemJocConfiguration = jocConfigurationDBLayer.getJocConfigurations(filter, 0);
+            if (listOfdbItemJocConfiguration.size() == 1) {
+                dbItem = listOfdbItemJocConfiguration.get(0);
+            } else {
+                dbItem = new DBItemJocConfiguration();
+                dbItem.setConfigurationType(configuration.getConfigurationType().value());
+                dbItem.setName(configuration.getName());
+                dbItem.setObjectType(configuration.getObjectType());
+                dbItem.setConfigurationItem("{}");
+                dbItem.setAccount(configuration.getAccount());
+            }
+            com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(dbItem.getConfigurationItem(),
+                    com.sos.joc.model.security.properties.Properties.class);
+            
+            if (properties.getFido2() == null) {
+                properties.setFido2(new Fido2Properties());
+            }
+            if (properties.getFido2().getIamFido2EmailSettings() == null) {
+                properties.getFido2().setIamFido2EmailSettings(new Fido2EmailSettings());
+            }
+
+            if (properties.getFido2().getIamFido2EmailSettings().getBodyAccess() == null || properties.getFido2().getIamFido2EmailSettings()
+                    .getBodyAccess().isEmpty()) {
+                properties.getFido2().getIamFido2EmailSettings().setBodyAccess(SOSAuthHelper.getContentFromResource(SECURITY_FIDO2_FIDO2_ACCESS_MAIL_TEMPLATE_TXT));
+            }
+            if (properties.getFido2().getIamFido2EmailSettings().getBodyRegistration() == null || properties.getFido2().getIamFido2EmailSettings()
+                    .getBodyRegistration().isEmpty()) {
+                properties.getFido2().getIamFido2EmailSettings().setBodyRegistration(SOSAuthHelper.getContentFromResource(SECURITY_FIDO2_FIDO2_REGISTRATION_MAIL_TEMPLATE_TXT));
+            }
+            if (properties.getFido2().getIamFido2EmailSettings().getCharset() == null || properties.getFido2().getIamFido2EmailSettings().getCharset()
+                    .isEmpty()) {
+                properties.getFido2().getIamFido2EmailSettings().setCharset(ISO_8859_1);
+            }
+            if (properties.getFido2().getIamFido2EmailSettings().getContentType() == null || properties.getFido2().getIamFido2EmailSettings()
+                    .getContentType().isEmpty()) {
+                properties.getFido2().getIamFido2EmailSettings().setContentType(TEXT_HTML);
+            }
+            if (properties.getFido2().getIamFido2EmailSettings().getEncoding() == null || properties.getFido2().getIamFido2EmailSettings()
+                    .getEncoding().isEmpty()) {
+                properties.getFido2().getIamFido2EmailSettings().setEncoding(_7_BIT);
+            }
+
+            dbItem.setConfigurationItem(Globals.objectMapper.writeValueAsString(properties));
+            Configuration200 entity = new Configuration200();
+            entity.setDeliveryDate(Date.from(Instant.now()));
+            Configuration conf = setConfigurationValues(dbItem, configuration.getControllerId());
+
+            entity.setConfiguration(conf);
+            return JOCDefaultResponse.responseStatus200(entity);
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(connection);
+        }
+
+    }
+
     private void sendConfirmationEmail(String identityServiceName, DBItemIamFido2Registration dbItemIamFido2Registration, String to)
             throws Exception {
         com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getIamProperties(identityServiceName);
 
         Fido2ConfirmationMail fido2ConfirmationMail = new Fido2ConfirmationMail(properties.getFido2());
-        fido2ConfirmationMail.sendMail(dbItemIamFido2Registration, to, identityServiceName);
+        fido2ConfirmationMail.sendRegistrationMail(dbItemIamFido2Registration, to, identityServiceName);
     }
 
     private String getProperty(String value, String defaultValue) {

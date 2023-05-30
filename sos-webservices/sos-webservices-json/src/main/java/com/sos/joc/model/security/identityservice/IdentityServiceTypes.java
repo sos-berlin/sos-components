@@ -17,7 +17,7 @@ public enum IdentityServiceTypes {
     LDAP("LDAP"),
     LDAP_JOC("LDAP-JOC"),
     OIDC("OIDC"),
-    FIDO_2("FIDO2"),
+    FIDO("FIDO"),
     JOC("JOC"),
     CERTIFICATE("CERTIFICATE");
     private final String value;

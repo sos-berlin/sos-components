@@ -6,7 +6,6 @@ import java.util.Map;
 
 import javax.mail.MessagingException;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +29,6 @@ public class Fido2ConfirmationMail {
     private static final boolean QUEUE_MAIL_ON_ERROR = false;
     private SOSMail mail = null;
     private Fido2Properties fido2Properties;
-    private JobResource jobResource;
 
     public Fido2ConfirmationMail(Fido2Properties fido2Properties) throws Exception {
         this.fido2Properties = fido2Properties;
@@ -52,15 +50,22 @@ public class Fido2ConfirmationMail {
         return "";
     }
 
-    private String defaultBody() {
-        return "<body><style type='text/css'>.tg  {border-collapse:collapse;border-spacing:0;border-color:#bbb;}.tg td {font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#bbb;color:#594F4F;background-color:#E0FFEB;}.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#bbb;color:#493F3F;background-color:#9DE0AD}</style><table class='tg'>   <tr>   <th colspan='4'>FIDO2 Registration</th></tr><tr><td>E-Mail&nbsp:</td><td>${REGISTRATION_EMAIL_ADDRESS}</td>   <td>IdentityServie:</td><td>${FIDO2_IDENTITY_SERVICE}</td></tr><tr><th colspan='4'>Verification</th></tr><tr><td colspan='4'><a href='${REGISTRATION_VERIFY_LINK}'>Please verify your email address</a></td></tr></table></body>";
-    }
-
     private String defaultSubject() {
-        return "FIDO2 Registration JOC Cockpit";
+        return "FIDO2 JOC Cockpit";
     }
 
-    public void sendMail(DBItemIamFido2Registration dbItemIamFido2Registration, String to, String identityServiceName) throws Exception {
+    public void sendRegistrationMail(DBItemIamFido2Registration dbItemIamFido2Registration, String to, String identityServiceName) throws Exception {
+        sendMail(dbItemIamFido2Registration, fido2Properties.getIamFido2EmailSettings().getBodyRegistration(), fido2Properties
+                .getIamFido2EmailSettings().getSubjectRegistration(), to, identityServiceName);
+    }
+
+    public void sendAccessMail(DBItemIamFido2Registration dbItemIamFido2Registration, String to, String identityServiceName) throws Exception {
+        sendMail(dbItemIamFido2Registration, fido2Properties.getIamFido2EmailSettings().getBodyAccess(), fido2Properties.getIamFido2EmailSettings()
+                .getSubjectAccess(), to, identityServiceName);
+    }
+
+    private void sendMail(DBItemIamFido2Registration dbItemIamFido2Registration, String body, String subject, String to, String identityServiceName)
+            throws Exception {
 
         init();
 
@@ -72,16 +77,10 @@ public class Fido2ConfirmationMail {
         params.put("registration_email_address", to);
         params.put("fido2_identity_service", identityServiceName);
 
-        String body = fido2Properties.getIamFido2EmailSettings().getBody();
-        if (body == null || body.isEmpty()) {
-            body = defaultBody();
-        }
-
         body = resolve(body, params);
 
         mail.addRecipient(to);
 
-        String subject = fido2Properties.getIamFido2EmailSettings().getSubject();
         if (subject == null || subject.isEmpty()) {
             subject = defaultSubject();
         }
@@ -100,14 +99,6 @@ public class Fido2ConfirmationMail {
                 mail.clearRecipients();
             } catch (Exception e) {
             }
-        }
-    }
-
-    private String getJobResourceArgument(JobResource jobResource, String key) {
-        if (jobResource == null) {
-            return "";
-        } else {
-            return StringUtils.strip(StringUtils.strip(jobResource.getArguments().getAdditionalProperties().get(key), "\""), "'");
         }
     }
 
@@ -150,7 +141,6 @@ public class Fido2ConfirmationMail {
                 throw new JocObjectNotExistException("Couldn't find the Job Ressource <" + jobResourceName + ">");
             }
 
-            jobResource = Globals.objectMapper.readValue(listOfJobRessourcen.get(0).getJsonContent(), JobResource.class);
             MailResource mr = new MailResource();
             mr.parse(jobResourceName, listOfJobRessourcen.get(0).getJsonContent());
 
@@ -169,19 +159,13 @@ public class Fido2ConfirmationMail {
     }
 
     private void setMailHeaders(MailResource res) throws Exception {
-        if (!SOSString.isEmpty(getJobResourceArgument(jobResource, "content-type"))) {
-            mail.setContentType(getJobResourceArgument(jobResource, "content-type"));
-        }
-        if (!SOSString.isEmpty(getJobResourceArgument(jobResource, "charset"))) {
-            mail.setCharset(getJobResourceArgument(jobResource, "charset"));
-        }
-        if (!SOSString.isEmpty(getJobResourceArgument(jobResource, "encoding"))) {
-            mail.setEncoding(getJobResourceArgument(jobResource, "encoding"));
-        }
+
+        mail.setCharset(fido2Properties.getIamFido2EmailSettings().getCharset());
+        mail.setEncoding(fido2Properties.getIamFido2EmailSettings().getEncoding());
+        mail.setContentType(fido2Properties.getIamFido2EmailSettings().getContentType());
 
         addFrom(res);
-
-        setMailPriority();
+        setMailPriority(fido2Properties.getIamFido2EmailSettings().getPriority());
 
     }
 
@@ -192,11 +176,11 @@ public class Fido2ConfirmationMail {
         }
     }
 
-    private void setMailPriority() throws MessagingException {
-        if (SOSString.isEmpty(getJobResourceArgument(jobResource, "priority"))) {
+    private void setMailPriority(String priority) throws MessagingException {
+        if (SOSString.isEmpty(priority)) {
             return;
         }
-        switch (getJobResourceArgument(jobResource, "priority").toUpperCase()) {
+        switch (priority.toUpperCase()) {
         case "HIGHEST":
             mail.setPriorityHighest();
             break;

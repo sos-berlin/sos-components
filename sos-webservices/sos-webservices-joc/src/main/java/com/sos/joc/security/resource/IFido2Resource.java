@@ -71,4 +71,10 @@ public interface IFido2Resource {
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postIdentityFido2client(byte[] body);
     
+    @POST
+    @Path("fido2/configuration")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse postReadFido2Configuration(@HeaderParam("X-Access-Token") String xAccessToken, byte[] configuration);
+
+    
 }

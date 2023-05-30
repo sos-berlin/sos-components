@@ -42,6 +42,9 @@ public class DBItemIamFido2Registration {
     @Column(name = "[PUBLIC_KEY]", nullable = true)
     private String publicKey;
 
+    @Column(name = "[ALGORTITHM]", nullable = true)
+    private String algorithm;
+
     @Column(name = "[CREDENTIAL_ID]", nullable = true)
     private String credentialId;
 
@@ -155,28 +158,32 @@ public class DBItemIamFido2Registration {
         this.token = token;
     }
 
-    
     public String getCredentialId() {
         return credentialId;
     }
 
-    
     public void setCredentialId(String credentialId) {
         this.credentialId = credentialId;
     }
 
-    
     public Boolean getCompleted() {
         return completed;
     }
 
-    
     public void setCompleted(Boolean completed) {
         if (completed == null) {
             this.completed = false;
         } else {
             this.completed = completed;
         }
+    }
+
+    public String getAlgorithm() {
+        return algorithm;
+    }
+
+    public void setAlgorithm(String algorithm) {
+        this.algorithm = algorithm;
     }
 
 }
