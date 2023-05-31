@@ -6,12 +6,10 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
-import java.util.EnumSet;
 import java.util.List;
 
 import javax.json.Json;
 import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
 
 import org.slf4j.Logger;
@@ -24,7 +22,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.security.Fido2ConfirmationMail;
 import com.sos.joc.classes.security.SOSSecurityUtil;
-import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.db.authentication.DBItemIamAccount;
 import com.sos.joc.db.authentication.DBItemIamFido2Devices;
 import com.sos.joc.db.authentication.DBItemIamFido2Registration;
@@ -38,7 +35,6 @@ import com.sos.joc.db.security.IamFido2DBLayer;
 import com.sos.joc.db.security.IamFido2RegistrationFilter;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
-import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocAuthenticationException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocError;
@@ -65,8 +61,7 @@ import com.sos.joc.model.security.identityservice.Fido2IdentityProvider;
 import com.sos.joc.model.security.identityservice.IdentityServiceFilter;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 import com.sos.joc.model.security.properties.fido2.Fido2Attestation;
-import com.sos.joc.model.security.properties.fido2.Fido2EmailSettings;
-import com.sos.joc.model.security.properties.fido2.Fido2Properties;
+import com.sos.joc.model.security.properties.fido2.Fido2ResidentKey;
 import com.sos.joc.model.security.properties.fido2.Fido2Transports;
 import com.sos.joc.model.security.properties.fido2.Fido2Userverification;
 import com.sos.joc.security.resource.IFido2Resource;
@@ -77,11 +72,6 @@ import jakarta.ws.rs.Path;
 @Path("iam")
 public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource {
 
-    private static final String _7_BIT = "7-bit";
-    private static final String TEXT_HTML = "text/html";
-    private static final String ISO_8859_1 = "ISO-8859-1";
-    private static final String SECURITY_FIDO2_FIDO2_REGISTRATION_MAIL_TEMPLATE_TXT = "/security/fido2/fido2_registration_mail_template.txt";
-    private static final String SECURITY_FIDO2_FIDO2_ACCESS_MAIL_TEMPLATE_TXT = "/security/fido2/fido2_access_mail_template.txt";
     private static final String CHALLENGE = "challenge";
     private static final Logger LOGGER = LoggerFactory.getLogger(Fido2ResourceImpl.class);
     private static final String API_CALL_FIDO2_CONFIGURATION = "./iam/fido2configuration";
@@ -229,7 +219,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
                 throw new JocAuthenticationException("FIDO2 registration request for " + fido2Registration.getAccountName() + " not startet");
             }
 
-            sendConfirmationEmail(dbItemIamIdentityService.getIdentityServiceName(), dbItemIamFido2Registration, fido2Registration.getEmail());
+            sendRegistrationMail(dbItemIamIdentityService.getIdentityServiceName(), dbItemIamFido2Registration, fido2Registration.getEmail());
 
             storeAuditLog(fido2Registration.getAuditLog(), CategoryType.IDENTITY);
             Globals.commit(sosHibernateSession);
@@ -502,6 +492,8 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
                         identityProvider.setIamFido2UserVerification(Fido2Userverification.valueOf(getProperty(properties.getFido2()
                                 .getIamFido2UserVerification().value(), "")));
                         identityProvider.setIamFido2Attestation(Fido2Attestation.valueOf(getProperty(properties.getFido2().getIamFido2Attestation()
+                                .value(), "")));
+                        identityProvider.setIamFido2ResidentKey(Fido2ResidentKey.valueOf(getProperty(properties.getFido2().getIamFido2ResidentKey()
                                 .value(), "")));
                         identityProvider.setIdentityServiceName(identityServiceFilter.getIdentityServiceName());
                     }
@@ -966,41 +958,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(dbItem.getConfigurationItem(),
                     com.sos.joc.model.security.properties.Properties.class);
 
-            if (properties.getFido2() == null) {
-                properties.setFido2(new Fido2Properties());
-            }
-            if (properties.getFido2().getIamFido2EmailSettings() == null) {
-                properties.getFido2().setIamFido2EmailSettings(new Fido2EmailSettings());
-            }
-
-            if (properties.getFido2().getIamFido2EmailSettings().getBodyAccess() == null || properties.getFido2().getIamFido2EmailSettings()
-                    .getBodyAccess().isEmpty()) {
-                properties.getFido2().getIamFido2EmailSettings().setBodyAccess(SOSAuthHelper.getContentFromResource(
-                        SECURITY_FIDO2_FIDO2_ACCESS_MAIL_TEMPLATE_TXT));
-            }
-            if (properties.getFido2().getIamFido2EmailSettings().getBodyRegistration() == null || properties.getFido2().getIamFido2EmailSettings()
-                    .getBodyRegistration().isEmpty()) {
-                properties.getFido2().getIamFido2EmailSettings().setBodyRegistration(SOSAuthHelper.getContentFromResource(
-                        SECURITY_FIDO2_FIDO2_REGISTRATION_MAIL_TEMPLATE_TXT));
-            }
-            if (properties.getFido2().getIamFido2EmailSettings().getCharset() == null || properties.getFido2().getIamFido2EmailSettings().getCharset()
-                    .isEmpty()) {
-                properties.getFido2().getIamFido2EmailSettings().setCharset(ISO_8859_1);
-            }
-            if (properties.getFido2().getIamFido2EmailSettings().getContentType() == null || properties.getFido2().getIamFido2EmailSettings()
-                    .getContentType().isEmpty()) {
-                properties.getFido2().getIamFido2EmailSettings().setContentType(TEXT_HTML);
-            }
-            if (properties.getFido2().getIamFido2EmailSettings().getEncoding() == null || properties.getFido2().getIamFido2EmailSettings()
-                    .getEncoding().isEmpty()) {
-                properties.getFido2().getIamFido2EmailSettings().setEncoding(_7_BIT);
-            }
-            if (properties.getFido2().getIamFido2EmailSettings().getSendMailToConfirm() == null) {
-                properties.getFido2().getIamFido2EmailSettings().setSendMailToConfirm(true);
-            }
-            if (properties.getFido2().getIamFido2EmailSettings().getSendMailToNotifySuccessfulRegistration() == null) {
-                properties.getFido2().getIamFido2EmailSettings().setSendMailToNotifySuccessfulRegistration(true);
-            }
+            properties = SOSAuthHelper.setDefaultEmailSettings(properties);
 
             dbItem.setConfigurationItem(Globals.objectMapper.writeValueAsString(properties));
             Configuration200 entity = new Configuration200();
@@ -1020,8 +978,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
 
     }
 
-    private void sendConfirmationEmail(String identityServiceName, DBItemIamFido2Registration dbItemIamFido2Registration, String to)
-            throws Exception {
+    private void sendRegistrationMail(String identityServiceName, DBItemIamFido2Registration dbItemIamFido2Registration, String to) throws Exception {
         com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getIamProperties(identityServiceName);
 
         Fido2ConfirmationMail fido2ConfirmationMail = new Fido2ConfirmationMail(properties.getFido2());
