@@ -42,7 +42,7 @@ public class DBItemIamFido2Registration {
     @Column(name = "[PUBLIC_KEY]", nullable = true)
     private String publicKey;
 
-    @Column(name = "[ALGORTITHM]", nullable = true)
+    @Column(name = "[ALGORITHM]", nullable = true)
     private String algorithm;
 
     @Column(name = "[CREDENTIAL_ID]", nullable = true)
