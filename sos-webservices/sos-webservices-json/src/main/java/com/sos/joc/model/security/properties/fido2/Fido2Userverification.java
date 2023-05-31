@@ -8,8 +8,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum Fido2Userverification {
 
+    DISCOURAGED("DISCOURAGED"),
     PREFERRED("PREFERRED"),
-    DISCOURAGE("DISCOURAGE"),
     REQUIRED("REQUIRED");
     private final String value;
     private final static Map<String, Fido2Userverification> CONSTANTS = new HashMap<String, Fido2Userverification>();

@@ -3,6 +3,7 @@ package com.sos.joc.model.security.properties.fido2;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -21,6 +22,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "subjectRegistration",
     "bodyAccess",
     "subjectAccess",
+    "sendMailToConfirm",
+    "sendMailToNotifySuccessfulRegistration",
     "contentType",
     "charset",
     "encoding",
@@ -61,6 +64,24 @@ public class Fido2EmailSettings {
      */
     @JsonProperty("subjectAccess")
     private String subjectAccess;
+    /**
+     * sendMailToConfirm parameter
+     * <p>
+     * true if the confirmation email should be sent
+     * 
+     */
+    @JsonProperty("sendMailToConfirm")
+    @JsonPropertyDescription("true if the confirmation email should be sent")
+    private Boolean sendMailToConfirm;
+    /**
+     * sendMailToConfirm parameter
+     * <p>
+     * true if the confirmation email should be sent
+     * 
+     */
+    @JsonProperty("sendMailToNotifySuccessfulRegistration")
+    @JsonPropertyDescription("true if the confirmation email should be sent")
+    private Boolean sendMailToNotifySuccessfulRegistration;
     /**
      * string without < and >
      * <p>
@@ -112,21 +133,25 @@ public class Fido2EmailSettings {
     /**
      * 
      * @param bodyRegistration
+     * @param sendMailToConfirm
      * @param charset
      * @param subjectRegistration
      * @param subjectAccess
+     * @param sendMailToNotifySuccessfulRegistration
      * @param bodyAccess
      * @param nameOfJobResource
      * @param encoding
      * @param priority
      * @param contentType
      */
-    public Fido2EmailSettings(String bodyRegistration, String subjectRegistration, String bodyAccess, String subjectAccess, String contentType, String charset, String encoding, String priority, String nameOfJobResource) {
+    public Fido2EmailSettings(String bodyRegistration, String subjectRegistration, String bodyAccess, String subjectAccess, Boolean sendMailToConfirm, Boolean sendMailToNotifySuccessfulRegistration, String contentType, String charset, String encoding, String priority, String nameOfJobResource) {
         super();
         this.bodyRegistration = bodyRegistration;
         this.subjectRegistration = subjectRegistration;
         this.bodyAccess = bodyAccess;
         this.subjectAccess = subjectAccess;
+        this.sendMailToConfirm = sendMailToConfirm;
+        this.sendMailToNotifySuccessfulRegistration = sendMailToNotifySuccessfulRegistration;
         this.contentType = contentType;
         this.charset = charset;
         this.encoding = encoding;
@@ -220,6 +245,50 @@ public class Fido2EmailSettings {
     @JsonProperty("subjectAccess")
     public void setSubjectAccess(String subjectAccess) {
         this.subjectAccess = subjectAccess;
+    }
+
+    /**
+     * sendMailToConfirm parameter
+     * <p>
+     * true if the confirmation email should be sent
+     * 
+     */
+    @JsonProperty("sendMailToConfirm")
+    public Boolean getSendMailToConfirm() {
+        return sendMailToConfirm;
+    }
+
+    /**
+     * sendMailToConfirm parameter
+     * <p>
+     * true if the confirmation email should be sent
+     * 
+     */
+    @JsonProperty("sendMailToConfirm")
+    public void setSendMailToConfirm(Boolean sendMailToConfirm) {
+        this.sendMailToConfirm = sendMailToConfirm;
+    }
+
+    /**
+     * sendMailToConfirm parameter
+     * <p>
+     * true if the confirmation email should be sent
+     * 
+     */
+    @JsonProperty("sendMailToNotifySuccessfulRegistration")
+    public Boolean getSendMailToNotifySuccessfulRegistration() {
+        return sendMailToNotifySuccessfulRegistration;
+    }
+
+    /**
+     * sendMailToConfirm parameter
+     * <p>
+     * true if the confirmation email should be sent
+     * 
+     */
+    @JsonProperty("sendMailToNotifySuccessfulRegistration")
+    public void setSendMailToNotifySuccessfulRegistration(Boolean sendMailToNotifySuccessfulRegistration) {
+        this.sendMailToNotifySuccessfulRegistration = sendMailToNotifySuccessfulRegistration;
     }
 
     /**
@@ -334,12 +403,12 @@ public class Fido2EmailSettings {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("bodyRegistration", bodyRegistration).append("subjectRegistration", subjectRegistration).append("bodyAccess", bodyAccess).append("subjectAccess", subjectAccess).append("contentType", contentType).append("charset", charset).append("encoding", encoding).append("priority", priority).append("nameOfJobResource", nameOfJobResource).toString();
+        return new ToStringBuilder(this).append("bodyRegistration", bodyRegistration).append("subjectRegistration", subjectRegistration).append("bodyAccess", bodyAccess).append("subjectAccess", subjectAccess).append("sendMailToConfirm", sendMailToConfirm).append("sendMailToNotifySuccessfulRegistration", sendMailToNotifySuccessfulRegistration).append("contentType", contentType).append("charset", charset).append("encoding", encoding).append("priority", priority).append("nameOfJobResource", nameOfJobResource).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(bodyRegistration).append(charset).append(subjectRegistration).append(subjectAccess).append(bodyAccess).append(nameOfJobResource).append(encoding).append(priority).append(contentType).toHashCode();
+        return new HashCodeBuilder().append(bodyRegistration).append(sendMailToConfirm).append(charset).append(subjectRegistration).append(subjectAccess).append(sendMailToNotifySuccessfulRegistration).append(bodyAccess).append(nameOfJobResource).append(encoding).append(priority).append(contentType).toHashCode();
     }
 
     @Override
@@ -351,7 +420,7 @@ public class Fido2EmailSettings {
             return false;
         }
         Fido2EmailSettings rhs = ((Fido2EmailSettings) other);
-        return new EqualsBuilder().append(bodyRegistration, rhs.bodyRegistration).append(charset, rhs.charset).append(subjectRegistration, rhs.subjectRegistration).append(subjectAccess, rhs.subjectAccess).append(bodyAccess, rhs.bodyAccess).append(nameOfJobResource, rhs.nameOfJobResource).append(encoding, rhs.encoding).append(priority, rhs.priority).append(contentType, rhs.contentType).isEquals();
+        return new EqualsBuilder().append(bodyRegistration, rhs.bodyRegistration).append(sendMailToConfirm, rhs.sendMailToConfirm).append(charset, rhs.charset).append(subjectRegistration, rhs.subjectRegistration).append(subjectAccess, rhs.subjectAccess).append(sendMailToNotifySuccessfulRegistration, rhs.sendMailToNotifySuccessfulRegistration).append(bodyAccess, rhs.bodyAccess).append(nameOfJobResource, rhs.nameOfJobResource).append(encoding, rhs.encoding).append(priority, rhs.priority).append(contentType, rhs.contentType).isEquals();
     }
 
 }

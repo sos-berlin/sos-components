@@ -22,6 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "iamFido2UserVerification",
     "iamFido2Timeout",
     "iamFido2Attestation",
+    "iamFido2ResidenKey",
     "iamFido2Transports",
     "iamFido2EmailSettings"
 })
@@ -51,6 +52,14 @@ public class Fido2Properties {
      */
     @JsonProperty("iamFido2Attestation")
     private Fido2Attestation iamFido2Attestation;
+    /**
+     * Fido2 User Verification
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("iamFido2ResidenKey")
+    private Fido2Userverification iamFido2ResidenKey;
     @JsonProperty("iamFido2Transports")
     private List<Fido2Transports> iamFido2Transports = new ArrayList<Fido2Transports>();
     /**
@@ -76,12 +85,14 @@ public class Fido2Properties {
      * @param iamFido2Timeout
      * @param iamFido2Transports
      * @param iamFido2UserVerification
+     * @param iamFido2ResidenKey
      */
-    public Fido2Properties(Fido2Userverification iamFido2UserVerification, Integer iamFido2Timeout, Fido2Attestation iamFido2Attestation, List<Fido2Transports> iamFido2Transports, Fido2EmailSettings iamFido2EmailSettings) {
+    public Fido2Properties(Fido2Userverification iamFido2UserVerification, Integer iamFido2Timeout, Fido2Attestation iamFido2Attestation, Fido2Userverification iamFido2ResidenKey, List<Fido2Transports> iamFido2Transports, Fido2EmailSettings iamFido2EmailSettings) {
         super();
         this.iamFido2UserVerification = iamFido2UserVerification;
         this.iamFido2Timeout = iamFido2Timeout;
         this.iamFido2Attestation = iamFido2Attestation;
+        this.iamFido2ResidenKey = iamFido2ResidenKey;
         this.iamFido2Transports = iamFido2Transports;
         this.iamFido2EmailSettings = iamFido2EmailSettings;
     }
@@ -152,6 +163,28 @@ public class Fido2Properties {
         this.iamFido2Attestation = iamFido2Attestation;
     }
 
+    /**
+     * Fido2 User Verification
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("iamFido2ResidenKey")
+    public Fido2Userverification getIamFido2ResidenKey() {
+        return iamFido2ResidenKey;
+    }
+
+    /**
+     * Fido2 User Verification
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("iamFido2ResidenKey")
+    public void setIamFido2ResidenKey(Fido2Userverification iamFido2ResidenKey) {
+        this.iamFido2ResidenKey = iamFido2ResidenKey;
+    }
+
     @JsonProperty("iamFido2Transports")
     public List<Fido2Transports> getIamFido2Transports() {
         return iamFido2Transports;
@@ -186,12 +219,12 @@ public class Fido2Properties {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("iamFido2UserVerification", iamFido2UserVerification).append("iamFido2Timeout", iamFido2Timeout).append("iamFido2Attestation", iamFido2Attestation).append("iamFido2Transports", iamFido2Transports).append("iamFido2EmailSettings", iamFido2EmailSettings).toString();
+        return new ToStringBuilder(this).append("iamFido2UserVerification", iamFido2UserVerification).append("iamFido2Timeout", iamFido2Timeout).append("iamFido2Attestation", iamFido2Attestation).append("iamFido2ResidenKey", iamFido2ResidenKey).append("iamFido2Transports", iamFido2Transports).append("iamFido2EmailSettings", iamFido2EmailSettings).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(iamFido2EmailSettings).append(iamFido2Attestation).append(iamFido2Transports).append(iamFido2Timeout).append(iamFido2UserVerification).toHashCode();
+        return new HashCodeBuilder().append(iamFido2EmailSettings).append(iamFido2Attestation).append(iamFido2Timeout).append(iamFido2Transports).append(iamFido2UserVerification).append(iamFido2ResidenKey).toHashCode();
     }
 
     @Override
@@ -203,7 +236,7 @@ public class Fido2Properties {
             return false;
         }
         Fido2Properties rhs = ((Fido2Properties) other);
-        return new EqualsBuilder().append(iamFido2EmailSettings, rhs.iamFido2EmailSettings).append(iamFido2Attestation, rhs.iamFido2Attestation).append(iamFido2Transports, rhs.iamFido2Transports).append(iamFido2Timeout, rhs.iamFido2Timeout).append(iamFido2UserVerification, rhs.iamFido2UserVerification).isEquals();
+        return new EqualsBuilder().append(iamFido2EmailSettings, rhs.iamFido2EmailSettings).append(iamFido2Attestation, rhs.iamFido2Attestation).append(iamFido2Timeout, rhs.iamFido2Timeout).append(iamFido2Transports, rhs.iamFido2Transports).append(iamFido2UserVerification, rhs.iamFido2UserVerification).append(iamFido2ResidenKey, rhs.iamFido2ResidenKey).isEquals();
     }
 
 }
