@@ -373,8 +373,7 @@ public class SOSAuthHelper {
         return 0L;
     }
 
-    public static com.sos.joc.model.security.properties.Properties getIamProperties(String identityServiceName) throws SOSHibernateException,
-            JsonMappingException, JsonProcessingException {
+    public static com.sos.joc.model.security.properties.Properties getIamProperties(String identityServiceName) throws SOSException, IOException {
         SOSHibernateSession sosHibernateSession = null;
 
         try {
@@ -390,7 +389,7 @@ public class SOSAuthHelper {
                 DBItemJocConfiguration dbItem = listOfJocConfigurations.get(0);
                 com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(dbItem.getConfigurationItem(),
                         com.sos.joc.model.security.properties.Properties.class);
-                properties = SOSAuthHelper.setDefaultEmailSettings(properties);
+                properties = setDefaultEmailSettings(properties);
                 return properties;
             }
             return null;
