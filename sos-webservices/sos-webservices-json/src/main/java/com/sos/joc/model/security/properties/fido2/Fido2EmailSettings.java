@@ -65,7 +65,7 @@ public class Fido2EmailSettings {
     @JsonProperty("subjectAccess")
     private String subjectAccess;
     /**
-     * sendMailToConfirm parameter
+     * sendMailTo Confirm parameter
      * <p>
      * true if the confirmation email should be sent
      * 
@@ -74,13 +74,13 @@ public class Fido2EmailSettings {
     @JsonPropertyDescription("true if the confirmation email should be sent")
     private Boolean sendMailToConfirm;
     /**
-     * sendMailToConfirm parameter
+     * Successful Registration parameter
      * <p>
-     * true if the confirmation email should be sent
+     * true if the email for successful registration should be sent
      * 
      */
     @JsonProperty("sendMailToNotifySuccessfulRegistration")
-    @JsonPropertyDescription("true if the confirmation email should be sent")
+    @JsonPropertyDescription("true if the email for successful registration should be sent")
     private Boolean sendMailToNotifySuccessfulRegistration;
     /**
      * string without < and >
@@ -248,7 +248,7 @@ public class Fido2EmailSettings {
     }
 
     /**
-     * sendMailToConfirm parameter
+     * sendMailTo Confirm parameter
      * <p>
      * true if the confirmation email should be sent
      * 
@@ -259,7 +259,7 @@ public class Fido2EmailSettings {
     }
 
     /**
-     * sendMailToConfirm parameter
+     * sendMailTo Confirm parameter
      * <p>
      * true if the confirmation email should be sent
      * 
@@ -270,9 +270,9 @@ public class Fido2EmailSettings {
     }
 
     /**
-     * sendMailToConfirm parameter
+     * Successful Registration parameter
      * <p>
-     * true if the confirmation email should be sent
+     * true if the email for successful registration should be sent
      * 
      */
     @JsonProperty("sendMailToNotifySuccessfulRegistration")
@@ -281,9 +281,9 @@ public class Fido2EmailSettings {
     }
 
     /**
-     * sendMailToConfirm parameter
+     * Successful Registration parameter
      * <p>
-     * true if the confirmation email should be sent
+     * true if the email for successful registration should be sent
      * 
      */
     @JsonProperty("sendMailToNotifySuccessfulRegistration")

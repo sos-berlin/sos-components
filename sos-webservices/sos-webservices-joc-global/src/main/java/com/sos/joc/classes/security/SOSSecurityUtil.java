@@ -22,7 +22,6 @@ import javax.json.JsonReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
- 
 public class SOSSecurityUtil {
 
     private static final String UTF_8 = "UTF-8";
@@ -46,8 +45,7 @@ public class SOSSecurityUtil {
             NoSuchProviderException {
 
         PublicKey publicKey = null;
-        String publicKeyPEM = base64PublicKey.replace(BEGIN_PUBLIC_KEY, "").replace("\n", "").replace("\r", "").replace(
-                END_PUBLIC_KEY, "");
+        String publicKeyPEM = base64PublicKey.replace(BEGIN_PUBLIC_KEY, "").replace("\n", "").replace("\r", "").replace(END_PUBLIC_KEY, "");
 
         byte[] decoded = Base64.getDecoder().decode(publicKeyPEM);
 
