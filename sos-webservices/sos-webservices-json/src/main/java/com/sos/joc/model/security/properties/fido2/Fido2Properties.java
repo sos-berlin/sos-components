@@ -53,13 +53,13 @@ public class Fido2Properties {
     @JsonProperty("iamFido2Attestation")
     private Fido2Attestation iamFido2Attestation;
     /**
-     * Fido2 User Verification
+     * Fido2 Resident Key
      * <p>
      * 
      * 
      */
     @JsonProperty("iamFido2ResidentKey")
-    private Fido2Userverification iamFido2ResidentKey;
+    private Fido2ResidentKey iamFido2ResidentKey;
     @JsonProperty("iamFido2Transports")
     private List<Fido2Transports> iamFido2Transports = new ArrayList<Fido2Transports>();
     /**
@@ -87,7 +87,7 @@ public class Fido2Properties {
      * @param iamFido2Transports
      * @param iamFido2UserVerification
      */
-    public Fido2Properties(Fido2Userverification iamFido2UserVerification, Integer iamFido2Timeout, Fido2Attestation iamFido2Attestation, Fido2Userverification iamFido2ResidentKey, List<Fido2Transports> iamFido2Transports, Fido2EmailSettings iamFido2EmailSettings) {
+    public Fido2Properties(Fido2Userverification iamFido2UserVerification, Integer iamFido2Timeout, Fido2Attestation iamFido2Attestation, Fido2ResidentKey iamFido2ResidentKey, List<Fido2Transports> iamFido2Transports, Fido2EmailSettings iamFido2EmailSettings) {
         super();
         this.iamFido2UserVerification = iamFido2UserVerification;
         this.iamFido2Timeout = iamFido2Timeout;
@@ -164,24 +164,24 @@ public class Fido2Properties {
     }
 
     /**
-     * Fido2 User Verification
+     * Fido2 Resident Key
      * <p>
      * 
      * 
      */
     @JsonProperty("iamFido2ResidentKey")
-    public Fido2Userverification getIamFido2ResidentKey() {
+    public Fido2ResidentKey getIamFido2ResidentKey() {
         return iamFido2ResidentKey;
     }
 
     /**
-     * Fido2 User Verification
+     * Fido2 Resident Key
      * <p>
      * 
      * 
      */
     @JsonProperty("iamFido2ResidentKey")
-    public void setIamFido2ResidentKey(Fido2Userverification iamFido2ResidentKey) {
+    public void setIamFido2ResidentKey(Fido2ResidentKey iamFido2ResidentKey) {
         this.iamFido2ResidentKey = iamFido2ResidentKey;
     }
 

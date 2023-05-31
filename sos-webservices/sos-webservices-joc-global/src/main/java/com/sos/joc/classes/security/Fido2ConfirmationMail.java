@@ -9,6 +9,7 @@ import javax.mail.MessagingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.mail.SOSMail;
 import com.sos.commons.util.SOSParameterSubstitutor;

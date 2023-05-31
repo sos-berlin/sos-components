@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.security.properties.fido2.Fido2Attestation;
+import com.sos.joc.model.security.properties.fido2.Fido2ResidentKey;
 import com.sos.joc.model.security.properties.fido2.Fido2Transports;
 import com.sos.joc.model.security.properties.fido2.Fido2Userverification;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -26,6 +27,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "iamFido2UserVerification",
     "iamFido2Timeout",
     "iamFido2Attestation",
+    "iamFido2ResidentKey",
     "iamFido2Transports",
     "iamIconUrl"
 })
@@ -63,6 +65,14 @@ public class Fido2IdentityProvider {
      */
     @JsonProperty("iamFido2Attestation")
     private Fido2Attestation iamFido2Attestation;
+    /**
+     * Fido2 Resident Key
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("iamFido2ResidentKey")
+    private Fido2ResidentKey iamFido2ResidentKey;
     @JsonProperty("iamFido2Transports")
     private List<Fido2Transports> iamFido2Transports = new ArrayList<Fido2Transports>();
     /**
@@ -87,15 +97,17 @@ public class Fido2IdentityProvider {
      * @param identityServiceName
      * @param iamIconUrl
      * @param iamFido2Timeout
+     * @param iamFido2ResidentKey
      * @param iamFido2Transports
      * @param iamFido2UserVerification
      */
-    public Fido2IdentityProvider(String identityServiceName, Fido2Userverification iamFido2UserVerification, Integer iamFido2Timeout, Fido2Attestation iamFido2Attestation, List<Fido2Transports> iamFido2Transports, String iamIconUrl) {
+    public Fido2IdentityProvider(String identityServiceName, Fido2Userverification iamFido2UserVerification, Integer iamFido2Timeout, Fido2Attestation iamFido2Attestation, Fido2ResidentKey iamFido2ResidentKey, List<Fido2Transports> iamFido2Transports, String iamIconUrl) {
         super();
         this.identityServiceName = identityServiceName;
         this.iamFido2UserVerification = iamFido2UserVerification;
         this.iamFido2Timeout = iamFido2Timeout;
         this.iamFido2Attestation = iamFido2Attestation;
+        this.iamFido2ResidentKey = iamFido2ResidentKey;
         this.iamFido2Transports = iamFido2Transports;
         this.iamIconUrl = iamIconUrl;
     }
@@ -188,6 +200,28 @@ public class Fido2IdentityProvider {
         this.iamFido2Attestation = iamFido2Attestation;
     }
 
+    /**
+     * Fido2 Resident Key
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("iamFido2ResidentKey")
+    public Fido2ResidentKey getIamFido2ResidentKey() {
+        return iamFido2ResidentKey;
+    }
+
+    /**
+     * Fido2 Resident Key
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("iamFido2ResidentKey")
+    public void setIamFido2ResidentKey(Fido2ResidentKey iamFido2ResidentKey) {
+        this.iamFido2ResidentKey = iamFido2ResidentKey;
+    }
+
     @JsonProperty("iamFido2Transports")
     public List<Fido2Transports> getIamFido2Transports() {
         return iamFido2Transports;
@@ -222,12 +256,12 @@ public class Fido2IdentityProvider {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("iamFido2UserVerification", iamFido2UserVerification).append("iamFido2Timeout", iamFido2Timeout).append("iamFido2Attestation", iamFido2Attestation).append("iamFido2Transports", iamFido2Transports).append("iamIconUrl", iamIconUrl).toString();
+        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("iamFido2UserVerification", iamFido2UserVerification).append("iamFido2Timeout", iamFido2Timeout).append("iamFido2Attestation", iamFido2Attestation).append("iamFido2ResidentKey", iamFido2ResidentKey).append("iamFido2Transports", iamFido2Transports).append("iamIconUrl", iamIconUrl).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(iamFido2Attestation).append(identityServiceName).append(iamIconUrl).append(iamFido2Timeout).append(iamFido2Transports).append(iamFido2UserVerification).toHashCode();
+        return new HashCodeBuilder().append(iamFido2Attestation).append(identityServiceName).append(iamIconUrl).append(iamFido2Timeout).append(iamFido2ResidentKey).append(iamFido2Transports).append(iamFido2UserVerification).toHashCode();
     }
 
     @Override
@@ -239,7 +273,7 @@ public class Fido2IdentityProvider {
             return false;
         }
         Fido2IdentityProvider rhs = ((Fido2IdentityProvider) other);
-        return new EqualsBuilder().append(iamFido2Attestation, rhs.iamFido2Attestation).append(identityServiceName, rhs.identityServiceName).append(iamIconUrl, rhs.iamIconUrl).append(iamFido2Timeout, rhs.iamFido2Timeout).append(iamFido2Transports, rhs.iamFido2Transports).append(iamFido2UserVerification, rhs.iamFido2UserVerification).isEquals();
+        return new EqualsBuilder().append(iamFido2Attestation, rhs.iamFido2Attestation).append(identityServiceName, rhs.identityServiceName).append(iamIconUrl, rhs.iamIconUrl).append(iamFido2Timeout, rhs.iamFido2Timeout).append(iamFido2ResidentKey, rhs.iamFido2ResidentKey).append(iamFido2Transports, rhs.iamFido2Transports).append(iamFido2UserVerification, rhs.iamFido2UserVerification).isEquals();
     }
 
 }
