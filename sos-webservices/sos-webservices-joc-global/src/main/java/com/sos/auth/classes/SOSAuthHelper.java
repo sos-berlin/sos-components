@@ -52,6 +52,8 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
+import com.sos.joc.model.security.properties.fido2.Fido2EmailSettings;
+import com.sos.joc.model.security.properties.fido2.Fido2Properties;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -61,6 +63,11 @@ public class SOSAuthHelper {
     private static final String JOC = "joc";
     private static final String VALUE = "value";
     private static final String ROOT = "root";
+    private static final String _7_BIT = "7-bit";
+    private static final String TEXT_HTML = "text/html";
+    private static final String ISO_8859_1 = "ISO-8859-1";
+    private static final String SECURITY_FIDO2_FIDO2_REGISTRATION_MAIL_TEMPLATE_TXT = "/security/fido2/fido2_registration_mail_template.txt";
+    private static final String SECURITY_FIDO2_FIDO2_ACCESS_MAIL_TEMPLATE_TXT = "/security/fido2/fido2_access_mail_template.txt";
 
     public static final List<String> SUPPORTED_SUBTYPES = Arrays.asList("gif", "jpeg", "png", "icon", "svg");
 
@@ -383,6 +390,7 @@ public class SOSAuthHelper {
                 DBItemJocConfiguration dbItem = listOfJocConfigurations.get(0);
                 com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(dbItem.getConfigurationItem(),
                         com.sos.joc.model.security.properties.Properties.class);
+                properties = SOSAuthHelper.setDefaultEmailSettings(properties);
                 return properties;
             }
             return null;
@@ -458,17 +466,56 @@ public class SOSAuthHelper {
             }
         }
     }
-    
+
     public static String getContentFromResource(String resourceName) throws SOSException, IOException {
         InputStream textStream2 = SOSAuthHelper.class.getResourceAsStream(resourceName);
         if (textStream2 == null) {
             throw new SOSException("Could not find resource " + resourceName);
         }
-        Scanner s =  new Scanner(textStream2, "UTF-8"); 
+        Scanner s = new Scanner(textStream2, "UTF-8");
         String text = s.useDelimiter("\\A").next();
         textStream2.close();
         s.close();
         return text;
+    }
+
+    public static com.sos.joc.model.security.properties.Properties setDefaultEmailSettings(
+            com.sos.joc.model.security.properties.Properties properties) throws SOSException, IOException {
+        if (properties.getFido2() == null) {
+            properties.setFido2(new Fido2Properties());
+        }
+        if (properties.getFido2().getIamFido2EmailSettings() == null) {
+            properties.getFido2().setIamFido2EmailSettings(new Fido2EmailSettings());
+        }
+
+        if (properties.getFido2().getIamFido2EmailSettings().getBodyAccess() == null || properties.getFido2().getIamFido2EmailSettings()
+                .getBodyAccess().isEmpty()) {
+            properties.getFido2().getIamFido2EmailSettings().setBodyAccess(getContentFromResource(SECURITY_FIDO2_FIDO2_ACCESS_MAIL_TEMPLATE_TXT));
+        }
+        if (properties.getFido2().getIamFido2EmailSettings().getBodyRegistration() == null || properties.getFido2().getIamFido2EmailSettings()
+                .getBodyRegistration().isEmpty()) {
+            properties.getFido2().getIamFido2EmailSettings().setBodyRegistration(getContentFromResource(
+                    SECURITY_FIDO2_FIDO2_REGISTRATION_MAIL_TEMPLATE_TXT));
+        }
+        if (properties.getFido2().getIamFido2EmailSettings().getCharset() == null || properties.getFido2().getIamFido2EmailSettings().getCharset()
+                .isEmpty()) {
+            properties.getFido2().getIamFido2EmailSettings().setCharset(ISO_8859_1);
+        }
+        if (properties.getFido2().getIamFido2EmailSettings().getContentType() == null || properties.getFido2().getIamFido2EmailSettings()
+                .getContentType().isEmpty()) {
+            properties.getFido2().getIamFido2EmailSettings().setContentType(TEXT_HTML);
+        }
+        if (properties.getFido2().getIamFido2EmailSettings().getEncoding() == null || properties.getFido2().getIamFido2EmailSettings().getEncoding()
+                .isEmpty()) {
+            properties.getFido2().getIamFido2EmailSettings().setEncoding(_7_BIT);
+        }
+        if (properties.getFido2().getIamFido2EmailSettings().getSendMailToConfirm() == null) {
+            properties.getFido2().getIamFido2EmailSettings().setSendMailToConfirm(true);
+        }
+        if (properties.getFido2().getIamFido2EmailSettings().getSendMailToNotifySuccessfulRegistration() == null) {
+            properties.getFido2().getIamFido2EmailSettings().setSendMailToNotifySuccessfulRegistration(true);
+        }
+        return properties;
     }
 
 }
