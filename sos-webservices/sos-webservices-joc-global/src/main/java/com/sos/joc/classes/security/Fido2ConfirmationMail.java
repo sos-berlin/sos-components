@@ -55,13 +55,19 @@ public class Fido2ConfirmationMail {
     }
 
     public void sendRegistrationMail(DBItemIamFido2Registration dbItemIamFido2Registration, String to, String identityServiceName) throws Exception {
-        sendMail(dbItemIamFido2Registration, fido2Properties.getIamFido2EmailSettings().getBodyRegistration(), fido2Properties
-                .getIamFido2EmailSettings().getSubjectRegistration(), to, identityServiceName);
+        if (fido2Properties.getIamFido2EmailSettings().getSendMailToConfirm()) {
+            sendMail(dbItemIamFido2Registration, fido2Properties.getIamFido2EmailSettings().getBodyRegistration(), fido2Properties
+
+                    .getIamFido2EmailSettings().getSubjectRegistration(), to, identityServiceName);
+        }
     }
 
     public void sendAccessMail(DBItemIamFido2Registration dbItemIamFido2Registration, String to, String identityServiceName) throws Exception {
-        sendMail(dbItemIamFido2Registration, fido2Properties.getIamFido2EmailSettings().getBodyAccess(), fido2Properties.getIamFido2EmailSettings()
-                .getSubjectAccess(), to, identityServiceName);
+        if (fido2Properties.getIamFido2EmailSettings().getSendMailToNotifySuccessfulRegistration()) {
+            sendMail(dbItemIamFido2Registration, fido2Properties.getIamFido2EmailSettings().getBodyAccess(), fido2Properties
+                    .getIamFido2EmailSettings().getSubjectAccess(), to, identityServiceName);
+        }
+
     }
 
     private void sendMail(DBItemIamFido2Registration dbItemIamFido2Registration, String body, String subject, String to, String identityServiceName)
