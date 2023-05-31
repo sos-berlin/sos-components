@@ -965,7 +965,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             }
             com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(dbItem.getConfigurationItem(),
                     com.sos.joc.model.security.properties.Properties.class);
-            
+
             if (properties.getFido2() == null) {
                 properties.setFido2(new Fido2Properties());
             }
@@ -975,11 +975,13 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
 
             if (properties.getFido2().getIamFido2EmailSettings().getBodyAccess() == null || properties.getFido2().getIamFido2EmailSettings()
                     .getBodyAccess().isEmpty()) {
-                properties.getFido2().getIamFido2EmailSettings().setBodyAccess(SOSAuthHelper.getContentFromResource(SECURITY_FIDO2_FIDO2_ACCESS_MAIL_TEMPLATE_TXT));
+                properties.getFido2().getIamFido2EmailSettings().setBodyAccess(SOSAuthHelper.getContentFromResource(
+                        SECURITY_FIDO2_FIDO2_ACCESS_MAIL_TEMPLATE_TXT));
             }
             if (properties.getFido2().getIamFido2EmailSettings().getBodyRegistration() == null || properties.getFido2().getIamFido2EmailSettings()
                     .getBodyRegistration().isEmpty()) {
-                properties.getFido2().getIamFido2EmailSettings().setBodyRegistration(SOSAuthHelper.getContentFromResource(SECURITY_FIDO2_FIDO2_REGISTRATION_MAIL_TEMPLATE_TXT));
+                properties.getFido2().getIamFido2EmailSettings().setBodyRegistration(SOSAuthHelper.getContentFromResource(
+                        SECURITY_FIDO2_FIDO2_REGISTRATION_MAIL_TEMPLATE_TXT));
             }
             if (properties.getFido2().getIamFido2EmailSettings().getCharset() == null || properties.getFido2().getIamFido2EmailSettings().getCharset()
                     .isEmpty()) {
@@ -992,6 +994,12 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             if (properties.getFido2().getIamFido2EmailSettings().getEncoding() == null || properties.getFido2().getIamFido2EmailSettings()
                     .getEncoding().isEmpty()) {
                 properties.getFido2().getIamFido2EmailSettings().setEncoding(_7_BIT);
+            }
+            if (properties.getFido2().getIamFido2EmailSettings().getSendMailToConfirm() == null) {
+                properties.getFido2().getIamFido2EmailSettings().setSendMailToConfirm(true);
+            }
+            if (properties.getFido2().getIamFido2EmailSettings().getSendMailToNotifySuccessfulRegistration() == null) {
+                properties.getFido2().getIamFido2EmailSettings().setSendMailToNotifySuccessfulRegistration(true);
             }
 
             dbItem.setConfigurationItem(Globals.objectMapper.writeValueAsString(properties));

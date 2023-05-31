@@ -22,18 +22,32 @@ import javax.json.JsonReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// import org.apache.commons.codec.binary.Base64;
-
+ 
 public class SOSSecurityUtil {
 
+    private static final String UTF_8 = "UTF-8";
+    private static final String END_PUBLIC_KEY = "-----END PUBLIC KEY-----";
+    private static final String BEGIN_PUBLIC_KEY = "-----BEGIN PUBLIC KEY-----";
+    private static final String WITHRSA = "WITHRSA";
+    private static final String WITHECDSA = "WITHECDSA";
+    private static final String WITHDSA = "WITHDSA";
+    private static final String RSA = "RSA";
+    private static final String KTY = "kty";
+    private static final String CRV = "crv";
+    private static final String SHA256WITH_RSA = "SHA256withRSA";
+    private static final String EC = "EC";
+    private static final String P_256 = "P-256";
+    private static final String SHA3846WITH_ECDSA = "SHA3846withECDSA";
+    private static final String SHA512WITH_ECDSA = "SHA512withECDSA";
+    private static final String SHA256WITH_ECDSA = "SHA256withECDSA";
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSSecurityUtil.class);
 
     private static PublicKey getPublicKey(String base64PublicKey, String alg) throws NoSuchAlgorithmException, InvalidKeySpecException,
             NoSuchProviderException {
 
         PublicKey publicKey = null;
-        String publicKeyPEM = base64PublicKey.replace("-----BEGIN PUBLIC KEY-----", "").replace("\n", "").replace("\r", "").replace(
-                "-----END PUBLIC KEY-----", "");
+        String publicKeyPEM = base64PublicKey.replace(BEGIN_PUBLIC_KEY, "").replace("\n", "").replace("\r", "").replace(
+                END_PUBLIC_KEY, "");
 
         byte[] decoded = Base64.getDecoder().decode(publicKeyPEM);
 
@@ -44,45 +58,49 @@ public class SOSSecurityUtil {
     }
 
     private static String getAlg(String sAlg) {
-        String alg = "EC";
+        String alg = EC;
 
-        if (sAlg.toUpperCase().endsWith("WITHDSA")) {
+        if (sAlg.toUpperCase().endsWith(WITHDSA)) {
             alg = "DSA";
         }
-        if (sAlg.toUpperCase().endsWith("WITHECDSA")) {
-            alg = "EC";
+        if (sAlg.toUpperCase().endsWith(WITHECDSA)) {
+            alg = EC;
         }
-        if (sAlg.toUpperCase().endsWith("WITHRSA")) {
-            alg = "RSA";
-        }   
+        if (sAlg.toUpperCase().endsWith(WITHRSA)) {
+            alg = RSA;
+        }
         return alg;
     }
 
     public static String getAlgFromJwk(String jwk) {
-        String jwkDecoded = new String(Base64.getUrlDecoder().decode(jwk.getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
-        JsonReader jsonReaderJwkDecoded = Json.createReader(new StringReader(jwkDecoded));
-        JsonObject jsonJwk = jsonReaderJwkDecoded.readObject();
-        String crv = jsonJwk.getString("crv", "");
-        String kty = jsonJwk.getString("kty", "");
         String alg = "";
-        if (kty.equals("RSA")) {
-            alg = "SHA256withRSA";
-        }
+        if (jwk == null || jwk.isEmpty()) {
+            alg = SHA256WITH_ECDSA;
+        } else {
+            String jwkDecoded = new String(Base64.getUrlDecoder().decode(jwk.getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
+            JsonReader jsonReaderJwkDecoded = Json.createReader(new StringReader(jwkDecoded));
+            JsonObject jsonJwk = jsonReaderJwkDecoded.readObject();
+            String crv = jsonJwk.getString(CRV, "");
+            String kty = jsonJwk.getString(KTY, "");
+            if (kty.equals(RSA)) {
+                alg = SHA256WITH_RSA;
+            }
 
-        if (kty.equals("EC")) {
-            switch (crv) {
-            case "P-256":
-                alg = "SHA256withECDSA";
-                break;
-            case "P-512":
-                alg = "SHA512withECDSA";
-                break;
-            case "P-384":
-                alg = "SHA3846withECDSA";
-                break;
-            default:
-                alg = "SHA256withECDSA";
-                break;
+            if (kty.equals(EC)) {
+                switch (crv) {
+                case P_256:
+                    alg = SHA256WITH_ECDSA;
+                    break;
+                case "P-512":
+                    alg = SHA512WITH_ECDSA;
+                    break;
+                case "P-384":
+                    alg = SHA3846WITH_ECDSA;
+                    break;
+                default:
+                    alg = SHA256WITH_ECDSA;
+                    break;
+                }
             }
         }
         return alg;
@@ -100,7 +118,7 @@ public class SOSSecurityUtil {
             UnsupportedEncodingException {
 
         MessageDigest digest = MessageDigest.getInstance(algorithm);
-        byte[] digestbytes = digest.digest(Input.getBytes("UTF-8"));
+        byte[] digestbytes = digest.digest(Input.getBytes(UTF_8));
         String dig = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(digestbytes);
         return dig;
     }
@@ -110,14 +128,13 @@ public class SOSSecurityUtil {
 
         MessageDigest digest;
         digest = MessageDigest.getInstance(algorithm);
-        byte[] digestbytes = digest.digest(Input.getBytes("UTF-8"));
+        byte[] digestbytes = digest.digest(Input.getBytes(UTF_8));
         return digestbytes;
     }
 
     public static boolean signatureVerified(String publicKeyBase64, byte[] message, String signaturBase64, String alg) throws InvalidKeyException,
             SignatureException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException {
         if (alg == null || publicKeyBase64 == null || message == null || signaturBase64 == null) {
-            LOGGER.info("-- something is null");
             return false;
         }
         PublicKey publicKey = getPublicKey(publicKeyBase64, getAlg(alg));
