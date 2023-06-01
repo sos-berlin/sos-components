@@ -59,4 +59,5 @@ public class SOSFido2AuthWebserviceCredentials {
         this.requestId = requestId;
     }
 
+ 
 }

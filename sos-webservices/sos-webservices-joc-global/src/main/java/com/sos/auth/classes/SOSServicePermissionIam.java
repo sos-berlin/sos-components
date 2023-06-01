@@ -749,114 +749,119 @@ public class SOSServicePermissionIam {
 
     protected JOCDefaultResponse login(SOSLoginParameters sosLoginParameters, String pwd) throws Exception {
         SOSHibernateSession sosHibernateSession = null;
+        try {
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection("Login Fido2 Handler");
 
-        Globals.setServletBaseUri(uriInfo);
+            Globals.setServletBaseUri(uriInfo);
 
-        if (Globals.sosCockpitProperties == null) {
-            Globals.sosCockpitProperties = new JocCockpitProperties();
-        }
+            if (Globals.sosCockpitProperties == null) {
+                Globals.sosCockpitProperties = new JocCockpitProperties();
+            }
 
-        Globals.jocTimeZone = TimeZone.getDefault();
-        Globals.setProperties();
-        com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getGlobalIamProperties();
-        if (properties != null) {
-            Globals.iamSessionTimeout = SOSAuthHelper.getGlobalIamProperties().getSessionTimeout();
-        }
+            Globals.jocTimeZone = TimeZone.getDefault();
+            Globals.setProperties();
+            com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getGlobalIamProperties();
+            if (properties != null) {
+                Globals.iamSessionTimeout = SOSAuthHelper.getGlobalIamProperties().getSessionTimeout();
+            }
 
-        if (sosLoginParameters.getBasicAuthorization() == null || sosLoginParameters.getBasicAuthorization().isEmpty()) {
-            if (sosLoginParameters.getAccount() == null) {
-                if (sosLoginParameters.getIdToken() != null && !sosLoginParameters.getIdToken().isEmpty()) {
+            if (sosLoginParameters.getBasicAuthorization() == null || sosLoginParameters.getBasicAuthorization().isEmpty()) {
+                if (sosLoginParameters.getAccount() == null) {
+                    if (sosLoginParameters.getIdToken() != null && !sosLoginParameters.getIdToken().isEmpty()) {
 
-                    SOSAuthHelper.getIdentityService(sosLoginParameters.getIdentityService());
-                    SOSOpenIdWebserviceCredentials webserviceCredentials = new SOSOpenIdWebserviceCredentials();
-                    SOSIdentityService sosIdentityService = new SOSIdentityService(sosLoginParameters.getIdentityService(),
-                            IdentityServiceTypes.OIDC);
-                    webserviceCredentials.setValuesFromProfile(sosIdentityService);
-                    webserviceCredentials.setIdToken(sosLoginParameters.getIdToken());
-                    SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials);
-                    String account = sosOpenIdHandler.decodeIdToken(sosLoginParameters.getIdToken());
-                    sosLoginParameters.setAccount(account);
-                    sosLoginParameters.setSOSOpenIdWebserviceCredentials(webserviceCredentials);
+                        SOSAuthHelper.getIdentityService(sosLoginParameters.getIdentityService());
+                        SOSOpenIdWebserviceCredentials webserviceCredentials = new SOSOpenIdWebserviceCredentials();
+                        SOSIdentityService sosIdentityService = new SOSIdentityService(sosLoginParameters.getIdentityService(),
+                                IdentityServiceTypes.OIDC);
+                        webserviceCredentials.setValuesFromProfile(sosIdentityService);
+                        webserviceCredentials.setIdToken(sosLoginParameters.getIdToken());
+                        SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials);
+                        String account = sosOpenIdHandler.decodeIdToken(sosLoginParameters.getIdToken());
+                        sosLoginParameters.setAccount(account);
+                        sosLoginParameters.setSOSOpenIdWebserviceCredentials(webserviceCredentials);
 
-                } else {
-                    sosLoginParameters.setAccount(sosLoginParameters.getClientCertCN());
+                    } else {
+                        sosLoginParameters.setAccount(sosLoginParameters.getClientCertCN());
+                    }
                 }
-            }
-            if (pwd == null) {
-                pwd = "";
-            }
+                if (pwd == null) {
+                    pwd = "";
+                }
 
-            String s = sosLoginParameters.getAccount() + ":" + pwd;
-            byte[] authEncBytes = org.apache.commons.codec.binary.Base64.encodeBase64(s.getBytes());
-            String authStringEnc = new String(authEncBytes);
-            sosLoginParameters.setBasicAuthorization("Basic " + authStringEnc);
-        }
-
-        if (sosLoginParameters.getCredentialId() != null && !sosLoginParameters.getCredentialId().isEmpty()) {
-            IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
-            DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getAccountFromCredentialId(sosLoginParameters.getCredentialId());
-            if (dbItemIamAccount != null) {
-                byte[] authEncBytes = org.apache.commons.codec.binary.Base64.encodeBase64(dbItemIamAccount.getAccountName().getBytes());
+                String s = sosLoginParameters.getAccount() + ":" + pwd;
+                byte[] authEncBytes = org.apache.commons.codec.binary.Base64.encodeBase64(s.getBytes());
                 String authStringEnc = new String(authEncBytes);
                 sosLoginParameters.setBasicAuthorization("Basic " + authStringEnc);
+            }
+
+            if (sosLoginParameters.getCredentialId() != null && !sosLoginParameters.getCredentialId().isEmpty()) {
+                IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
+                DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getAccountFromCredentialId(sosLoginParameters.getCredentialId());
+                if (dbItemIamAccount != null) {
+                    byte[] authEncBytes = org.apache.commons.codec.binary.Base64.encodeBase64(dbItemIamAccount.getAccountName().getBytes());
+                    String authStringEnc = new String(authEncBytes);
+                    sosLoginParameters.setBasicAuthorization("Basic " + authStringEnc);
+                } else {
+                    LOGGER.info("Could not find account for credential-id <" + sosLoginParameters.getCredentialId() + ">");
+                }
+            }
+
+            TimeZone.setDefault(TimeZone.getTimeZone(UTC));
+
+            SOSAuthCurrentAccount currentAccount = getUserFromHeaderOrQuery(sosLoginParameters.getBasicAuthorization(), sosLoginParameters
+                    .getClientCertCN(), sosLoginParameters.getAccount());
+            String password = getPwdFromHeaderOrQuery(sosLoginParameters.getBasicAuthorization(), pwd);
+
+            if (currentAccount == null || !currentAccount.withAuthorization()) {
+                return JOCDefaultResponse.responseStatusJSError(AUTHORIZATION_HEADER_WITH_BASIC_BASED64PART_EXPECTED);
+            }
+
+            if (currentAccount.getAccountname() == null || currentAccount.getAccountname().isEmpty()) {
+                return JOCDefaultResponse.responseStatusJSError(ACCOUNT_IS_EMPTY);
+            }
+
+            currentAccount.setSosLoginParameters(sosLoginParameters);
+
+            SOSAuthCurrentAccountAnswer sosAuthCurrentUserAnswer = null;
+
+            sosAuthCurrentUserAnswer = authenticate(currentAccount, password);
+
+            if (sosLoginParameters.getRequest() != null) {
+                sosAuthCurrentUserAnswer.setCallerIpAddress(sosLoginParameters.getRequest().getRemoteAddr());
+                sosAuthCurrentUserAnswer.setCallerHostName(sosLoginParameters.getRequest().getRemoteHost());
+            }
+
+            LOGGER.debug(String.format("Method: %s, Account: %s", "login", currentAccount.getAccountname()));
+            JocAuditLog jocAuditLog = new JocAuditLog(currentAccount.getAccountname(), "./login");
+            AuditParams audit = new AuditParams();
+
+            if (Globals.jocWebserviceDataContainer.getCurrentAccountsList() != null) {
+                Globals.jocWebserviceDataContainer.getCurrentAccountsList().removeTimedOutAccount(currentAccount.getAccountname());
+
+                if (Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler() != null) {
+                    Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler().endExecution();
+                    do {
+                    } while (Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler().isAlive());
+                }
+                Globals.jocWebserviceDataContainer.setSosAuthAccessTokenHandler(new SOSAuthAccessTokenHandler());
+                Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler().start();
+
+                audit.setComment(currentAccount.getRolesAsString());
+            }
+            if (!sosAuthCurrentUserAnswer.isAuthenticated()) {
+                audit.setComment("===> Failed login");
+                jocAuditLog.logAuditMessage(audit);
+                return JOCDefaultResponse.responseStatus401(sosAuthCurrentUserAnswer);
             } else {
-                LOGGER.info("Could not find account for credential-id <" + sosLoginParameters.getCredentialId() + ">");
+                jocAuditLog.logAuditMessage(audit);
+                SOSSessionHandler sosSessionHandler = new SOSSessionHandler(currentAccount);
+                return JOCDefaultResponse.responseStatus200WithHeaders(sosAuthCurrentUserAnswer, sosAuthCurrentUserAnswer.getAccessToken(),
+                        sosSessionHandler.getTimeout());
             }
+        } finally {
+            Globals.disconnect(sosHibernateSession);
+
         }
-
-        TimeZone.setDefault(TimeZone.getTimeZone(UTC));
-
-        SOSAuthCurrentAccount currentAccount = getUserFromHeaderOrQuery(sosLoginParameters.getBasicAuthorization(), sosLoginParameters
-                .getClientCertCN(), sosLoginParameters.getAccount());
-        String password = getPwdFromHeaderOrQuery(sosLoginParameters.getBasicAuthorization(), pwd);
-
-        if (currentAccount == null || !currentAccount.withAuthorization()) {
-            return JOCDefaultResponse.responseStatusJSError(AUTHORIZATION_HEADER_WITH_BASIC_BASED64PART_EXPECTED);
-        }
-
-        if (currentAccount.getAccountname() == null || currentAccount.getAccountname().isEmpty()) {
-            return JOCDefaultResponse.responseStatusJSError(ACCOUNT_IS_EMPTY);
-        }
-
-        currentAccount.setSosLoginParameters(sosLoginParameters);
-
-        SOSAuthCurrentAccountAnswer sosAuthCurrentUserAnswer = null;
-
-        sosAuthCurrentUserAnswer = authenticate(currentAccount, password);
-
-        if (sosLoginParameters.getRequest() != null) {
-            sosAuthCurrentUserAnswer.setCallerIpAddress(sosLoginParameters.getRequest().getRemoteAddr());
-            sosAuthCurrentUserAnswer.setCallerHostName(sosLoginParameters.getRequest().getRemoteHost());
-        }
-
-        LOGGER.debug(String.format("Method: %s, Account: %s", "login", currentAccount.getAccountname()));
-        JocAuditLog jocAuditLog = new JocAuditLog(currentAccount.getAccountname(), "./login");
-        AuditParams audit = new AuditParams();
-
-        if (Globals.jocWebserviceDataContainer.getCurrentAccountsList() != null) {
-            Globals.jocWebserviceDataContainer.getCurrentAccountsList().removeTimedOutAccount(currentAccount.getAccountname());
-
-            if (Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler() != null) {
-                Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler().endExecution();
-                do {
-                } while (Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler().isAlive());
-            }
-            Globals.jocWebserviceDataContainer.setSosAuthAccessTokenHandler(new SOSAuthAccessTokenHandler());
-            Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler().start();
-
-            audit.setComment(currentAccount.getRolesAsString());
-        }
-        if (!sosAuthCurrentUserAnswer.isAuthenticated()) {
-            audit.setComment("===> Failed login");
-            jocAuditLog.logAuditMessage(audit);
-            return JOCDefaultResponse.responseStatus401(sosAuthCurrentUserAnswer);
-        } else {
-            jocAuditLog.logAuditMessage(audit);
-            SOSSessionHandler sosSessionHandler = new SOSSessionHandler(currentAccount);
-            return JOCDefaultResponse.responseStatus200WithHeaders(sosAuthCurrentUserAnswer, sosAuthCurrentUserAnswer.getAccessToken(),
-                    sosSessionHandler.getTimeout());
-        }
-
     }
 
     private void resetTimeOut(SOSAuthCurrentAccount currentAccount) throws SessionNotExistException {

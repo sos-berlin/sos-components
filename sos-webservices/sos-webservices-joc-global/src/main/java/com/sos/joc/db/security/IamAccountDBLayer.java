@@ -59,7 +59,7 @@ public class IamAccountDBLayer {
             query.setParameter("roleId", filter.getRoleId());
         }
         if (filter.getRequestId() != null) {
-            query.setParameter("requestId", filter.getRequestId());
+            query.setParameter("id", filter.getRequestId());
         }
         if (filter.getDisabled() != null) {
             query.setParameter("disabled", filter.getDisabled());
@@ -210,7 +210,7 @@ public class IamAccountDBLayer {
             and = " and ";
         }
         if (filter.getRequestId() != null) {
-            where += and + " requestId = :requestId";
+            where += and + " id = :id";
             and = " and ";
         }
         if (filter.getRoleId() != null) {
