@@ -30,7 +30,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "folders",
     "states",
     "instructionStates",
-    "regex"
+    "regex",
+    "agentNames"
 })
 public class WorkflowsFilter {
 
@@ -75,6 +76,8 @@ public class WorkflowsFilter {
     @JsonProperty("regex")
     @JsonPropertyDescription("regular expression to filter Controller objects by matching the path")
     private String regex;
+    @JsonProperty("agentNames")
+    private List<String> agentNames = new ArrayList<String>();
 
     /**
      * controllerId
@@ -196,14 +199,24 @@ public class WorkflowsFilter {
         this.regex = regex;
     }
 
+    @JsonProperty("agentNames")
+    public List<String> getAgentNames() {
+        return agentNames;
+    }
+
+    @JsonProperty("agentNames")
+    public void setAgentNames(List<String> agentNames) {
+        this.agentNames = agentNames;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("workflowIds", workflowIds).append("compact", compact).append("folders", folders).append("states", states).append("instructionStates", instructionStates).append("regex", regex).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("workflowIds", workflowIds).append("compact", compact).append("folders", folders).append("states", states).append("instructionStates", instructionStates).append("regex", regex).append("agentNames", agentNames).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowIds).append(regex).append(folders).append(controllerId).append(compact).append(states).append(instructionStates).toHashCode();
+        return new HashCodeBuilder().append(workflowIds).append(regex).append(folders).append(controllerId).append(compact).append(agentNames).append(states).append(instructionStates).toHashCode();
     }
 
     @Override
@@ -215,7 +228,7 @@ public class WorkflowsFilter {
             return false;
         }
         WorkflowsFilter rhs = ((WorkflowsFilter) other);
-        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(regex, rhs.regex).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(states, rhs.states).append(instructionStates, rhs.instructionStates).isEquals();
+        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(regex, rhs.regex).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(agentNames, rhs.agentNames).append(states, rhs.states).append(instructionStates, rhs.instructionStates).isEquals();
     }
 
 }
