@@ -354,6 +354,12 @@ public class WorkflowsHelper {
             Predicate<String> regex = Pattern.compile(workflowsFilter.getRegex().replaceAll("%", ".*"), Pattern.CASE_INSENSITIVE).asPredicate();
             contentsStream = contentsStream.filter(w -> regex.test(w.getName()) || regex.test(w.getTitle()));
         }
+        
+        if (workflowsFilter.getAgentNames() != null && !workflowsFilter.getAgentNames().isEmpty()) {
+            Predicate<String> pred = Pattern.compile("\"agentName\"\\s*:\\s*\"" + String.join("|", workflowsFilter.getAgentNames()) + "\"",
+                    Pattern.CASE_INSENSITIVE).asPredicate();
+            contentsStream = contentsStream.filter(w -> pred.test(w.getContent()));
+        }
 
         return contentsStream;
     }

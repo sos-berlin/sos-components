@@ -8,7 +8,6 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.controller.model.command.Abort;
 import com.sos.controller.model.command.ClusterAction;
 import com.sos.controller.model.command.Command;
