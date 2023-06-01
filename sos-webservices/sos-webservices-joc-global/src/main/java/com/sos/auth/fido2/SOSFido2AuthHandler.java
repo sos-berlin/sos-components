@@ -50,6 +50,8 @@ public class SOSFido2AuthHandler {
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(SOSInternAuthLogin.class.getName());
             sosHibernateSession.setAutoCommit(false);
+            sosHibernateSession.beginTransaction();
+
             SOSAuthAccessToken sosAuthAccessToken = null;
 
             DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityServiceById(sosHibernateSession,
@@ -80,7 +82,7 @@ public class SOSFido2AuthHandler {
                     LOGGER.info("FIDO login with <wrong challenge>");
                     return null;
                 }
-                iamAccountDBLayer.getFido2DeleteRequest(filter);
+           //     iamAccountDBLayer.getFido2DeleteRequest(filter);
                 
                 Globals.commit(sosHibernateSession);
                 byte[] authenticatorDataDecoded = java.util.Base64.getDecoder().decode(sosFido2AuthWebserviceCredentials.getAuthenticatorData());
@@ -91,8 +93,13 @@ public class SOSFido2AuthHandler {
                 output.write(clientDataJsonDecodedHash);
 
                 byte[] out = output.toByteArray();
-                List<DBItemIamFido2Devices> listOfFido2Devices = iamAccountDBLayer.getListOfFido2Devices(dbItemIamFido2Requests.getId());
+                
+                IamAccountFilter iamAccountFilter = new IamAccountFilter();
+                iamAccountFilter.setAccountName(sosFido2AuthWebserviceCredentials.getAccount());
+                iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
+                DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getUniqueAccount(iamAccountFilter);
 
+                List<DBItemIamFido2Devices> listOfFido2Devices = iamAccountDBLayer.getListOfFido2Devices(dbItemIamAccount.getId());
                 for (DBItemIamFido2Devices dbItemIamFido2Devices : listOfFido2Devices) {
                     String pKey = dbItemIamFido2Devices.getPublicKey();
                     if (SOSSecurityUtil.signatureVerified(pKey, out, sosFido2AuthWebserviceCredentials.getSignature(), dbItemIamFido2Devices
