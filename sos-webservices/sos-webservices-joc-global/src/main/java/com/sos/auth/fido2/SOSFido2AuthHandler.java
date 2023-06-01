@@ -29,6 +29,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.security.SOSSecurityUtil;
 import com.sos.joc.db.authentication.DBItemIamAccount;
 import com.sos.joc.db.authentication.DBItemIamFido2Devices;
+import com.sos.joc.db.authentication.DBItemIamFido2Requests;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.db.security.IamAccountFilter;
@@ -48,23 +49,24 @@ public class SOSFido2AuthHandler {
         SOSHibernateSession sosHibernateSession = null;
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(SOSInternAuthLogin.class.getName());
+            sosHibernateSession.setAutoCommit(false);
             SOSAuthAccessToken sosAuthAccessToken = null;
 
             DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityServiceById(sosHibernateSession,
                     sosFido2AuthWebserviceCredentials.getIdentityServiceId());
 
             if (!IdentityServiceTypes.FIDO.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
-                throw new JocObjectNotExistException("Only allowed for Identity Service type FIDO2 " + "<" + dbItemIamIdentityService
+                throw new JocObjectNotExistException("Only allowed for Identity Service type FIDO " + "<" + dbItemIamIdentityService
                         .getIdentityServiceType() + ">");
             }
 
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
             IamAccountFilter filter = new IamAccountFilter();
             filter.setIdentityServiceId(dbItemIamIdentityService.getId());
-            filter.setAccountName(sosFido2AuthWebserviceCredentials.getAccount());
+            filter.setRequestId(sosFido2AuthWebserviceCredentials.getRequestId());
 
-            DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getUniqueAccount(filter);
-            if (dbItemIamAccount != null) {
+            DBItemIamFido2Requests dbItemIamFido2Requests = iamAccountDBLayer.getFido2Request(filter);
+            if (dbItemIamFido2Requests != null) {
                 byte[] clientDataJsonDecoded = Base64.getDecoder().decode(sosFido2AuthWebserviceCredentials.getClientDataJson());
 
                 String clientDataJson = new String(clientDataJsonDecoded, StandardCharsets.UTF_8);
@@ -74,11 +76,13 @@ public class SOSFido2AuthHandler {
                 byte[] challengeDecoded = Base64.getDecoder().decode(challenge);
                 String challengeDecodedString = new String(challengeDecoded, StandardCharsets.UTF_8);
 
-                if (!challengeDecodedString.equals(dbItemIamAccount.getChallenge())) {
-                    LOGGER.info("FIDO2 login with <wrong challenge>");
+                if (!challengeDecodedString.equals(dbItemIamFido2Requests.getChallenge())) {
+                    LOGGER.info("FIDO login with <wrong challenge>");
                     return null;
                 }
-
+                iamAccountDBLayer.getFido2DeleteRequest(filter);
+                
+                Globals.commit(sosHibernateSession);
                 byte[] authenticatorDataDecoded = java.util.Base64.getDecoder().decode(sosFido2AuthWebserviceCredentials.getAuthenticatorData());
                 byte[] clientDataJsonDecodedHash = SOSSecurityUtil.getDigestBytes(clientDataJsonDecoded, "SHA-256");
                 ByteArrayOutputStream output = new ByteArrayOutputStream();
@@ -87,12 +91,12 @@ public class SOSFido2AuthHandler {
                 output.write(clientDataJsonDecodedHash);
 
                 byte[] out = output.toByteArray();
-                List<DBItemIamFido2Devices> listOfFido2Devices = iamAccountDBLayer.getListOfFido2Devices(dbItemIamAccount.getId());
+                List<DBItemIamFido2Devices> listOfFido2Devices = iamAccountDBLayer.getListOfFido2Devices(dbItemIamFido2Requests.getId());
 
                 for (DBItemIamFido2Devices dbItemIamFido2Devices : listOfFido2Devices) {
                     String pKey = dbItemIamFido2Devices.getPublicKey();
-//                    if (SOSSecurityUtil.signatureVerified(pKey, out, sosFido2AuthWebserviceCredentials.getSignature(), "SHA256withECDSA")) {
-                        if (SOSSecurityUtil.signatureVerified(pKey, out, sosFido2AuthWebserviceCredentials.getSignature(), dbItemIamFido2Devices.getAlgorithm())) {
+                    if (SOSSecurityUtil.signatureVerified(pKey, out, sosFido2AuthWebserviceCredentials.getSignature(), dbItemIamFido2Devices
+                            .getAlgorithm())) {
                         sosAuthAccessToken = new SOSAuthAccessToken();
                         sosAuthAccessToken.setAccessToken(SOSAuthHelper.createSessionId());
                         break;

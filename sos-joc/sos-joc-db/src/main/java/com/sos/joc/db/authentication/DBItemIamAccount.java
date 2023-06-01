@@ -34,9 +34,6 @@ public class DBItemIamAccount {
     @Column(name = "[ACCOUNT_PASSWORD]", nullable = false)
     private String accountPassword;
 
-    @Column(name = "[CHALLENGE]", nullable = true)
-    private String challenge;
-
     @Column(name = "[EMAIL]", nullable = true)
     private String email;
 
@@ -106,14 +103,6 @@ public class DBItemIamAccount {
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public String getChallenge() {
-        return challenge;
-    }
-
-    public void setChallenge(String challenge) {
-        this.challenge = challenge;
     }
 
 

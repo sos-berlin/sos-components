@@ -10,6 +10,7 @@ import com.sos.joc.db.authentication.DBItemIamAccount2Roles;
 import com.sos.joc.db.authentication.DBItemIamBlockedAccount;
 import com.sos.joc.db.authentication.DBItemIamFido2Devices;
 import com.sos.joc.db.authentication.DBItemIamFido2Registration;
+import com.sos.joc.db.authentication.DBItemIamFido2Requests;
 import com.sos.joc.db.authentication.DBItemIamHistory;
 import com.sos.joc.db.authentication.DBItemIamHistoryDetails;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
@@ -305,6 +306,10 @@ public class DBLayer implements Serializable {
     public static final String TABLE_IAM_FIDO2_REGISTRATIONS = "IAM_FIDO2_REGISTRATIONS";
     public static final String TABLE_IAM_FIDO2_REGISTRATIONS_SEQUENCE = "SEQ_IAM_FIDO2_REGISTRATIONS";
 
+    public static final String DBITEM_IAM_FIDO2_REQUESTS = DBItemIamFido2Requests.class.getSimpleName();
+    public static final String TABLE_IAM_FIDO2_REQUESTS = "IAM_FIDO2_REQUESTS";
+    public static final String TABLE_IAM_FIDO2_REQUESTS_SEQUENCE = "SEQ_IAM_FIDO2__REQUESTS";
+
     public static final String DBITEM_IAM_HISTORY = DBItemIamHistory.class.getSimpleName();
     public static final String TABLE_IAM_HISTORY = "IAM_HISTORY";
     public static final String TABLE_IAM_HISTORY_SEQUENCE = "SEQ_IAM_HISTORY";
@@ -490,6 +495,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemIamPermission.class);
         cl.add(DBItemIamRole.class);
         cl.add(DBItemIamFido2Registration.class);
+        cl.add(DBItemIamFido2Requests.class);
         cl.add(DBItemIamFido2Devices.class);
 
         cl.merge(getHistoryClassMapping().getClasses());

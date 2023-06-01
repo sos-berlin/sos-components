@@ -38,7 +38,6 @@ public class Fido2RequestAuthentication {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("accountName")
@@ -110,7 +109,6 @@ public class Fido2RequestAuthentication {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("accountName")
@@ -122,7 +120,6 @@ public class Fido2RequestAuthentication {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("accountName")

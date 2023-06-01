@@ -32,6 +32,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.classes.audit.JocAuditLog;
+import com.sos.joc.db.authentication.DBItemIamAccount;
 import com.sos.joc.db.authentication.DBItemIamBlockedAccount;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
@@ -181,7 +182,8 @@ public class SOSServicePermissionIam {
     public JOCDefaultResponse loginPost(@Context HttpServletRequest request, @HeaderParam("Authorization") String basicAuthorization,
             @HeaderParam("X-IDENTITY-SERVICE") String identityService, @HeaderParam("X-ID-TOKEN") String idToken,
             @HeaderParam("X-SIGNATURE") String signature, @HeaderParam("X-AUTHENTICATOR-DATA") String authenticatorData,
-            @HeaderParam("X-CLIENT-DATA-JSON") String clientDataJson, @QueryParam("account") String account, @QueryParam("pwd") String pwd) {
+            @HeaderParam("X-CLIENT-DATA-JSON") String clientDataJson, @HeaderParam("X-CREDENTIAL-ID") String credentialId,
+            @HeaderParam("X-REQUEST-ID") String requestId, @QueryParam("account") String account, @QueryParam("pwd") String pwd) {
 
         if (Globals.sosCockpitProperties == null) {
             Globals.sosCockpitProperties = new JocCockpitProperties();
@@ -215,6 +217,14 @@ public class SOSServicePermissionIam {
             sosLoginParameters.setClientDataJson(clientDataJson);
             sosLoginParameters.setAuthenticatorData(authenticatorData);
             sosLoginParameters.setSignature(signature);
+            sosLoginParameters.setCredentialId(credentialId);
+            if (requestId != null && !requestId.isEmpty()) {
+                try {
+                    sosLoginParameters.setRequestId(Long.valueOf(requestId));
+                } catch (NumberFormatException e) {
+                    LOGGER.warn("Invalid number format for requestId");
+                }
+            }
 
             return login(sosLoginParameters, pwd);
         } catch (JocAuthenticationException e) {
@@ -738,58 +748,26 @@ public class SOSServicePermissionIam {
     }
 
     protected JOCDefaultResponse login(SOSLoginParameters sosLoginParameters, String pwd) throws Exception {
+        SOSHibernateSession sosHibernateSession = null;
+
         Globals.setServletBaseUri(uriInfo);
 
         if (Globals.sosCockpitProperties == null) {
             Globals.sosCockpitProperties = new JocCockpitProperties();
         }
+
         Globals.jocTimeZone = TimeZone.getDefault();
         Globals.setProperties();
-
-        SOSHibernateSession sosHibernateSession = null;
-        try {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection("login");
-            DBItemJocConfiguration dbItem = null;
-            JocConfigurationFilter filter = new JocConfigurationFilter();
-            filter.setConfigurationType(SOSAuthHelper.CONFIGURATION_TYPE_IAM);
-            filter.setObjectType(SOSAuthHelper.OBJECT_TYPE_IAM_GENERAL);
-            JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
-            List<DBItemJocConfiguration> listOfDbItemJocConfiguration = jocConfigurationDBLayer.getJocConfigurations(filter, 0);
-            if (listOfDbItemJocConfiguration.size() == 1) {
-                dbItem = listOfDbItemJocConfiguration.get(0);
-                com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(dbItem.getConfigurationItem(),
-                        com.sos.joc.model.security.properties.Properties.class);
-                Globals.iamSessionTimeout = properties.getSessionTimeout();
-            }
-        } catch (Exception e) {
-            LOGGER.error("", e);
-        } finally {
-            Globals.disconnect(sosHibernateSession);
+        com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getGlobalIamProperties();
+        if (properties != null) {
+            Globals.iamSessionTimeout = SOSAuthHelper.getGlobalIamProperties().getSessionTimeout();
         }
 
         if (sosLoginParameters.getBasicAuthorization() == null || sosLoginParameters.getBasicAuthorization().isEmpty()) {
             if (sosLoginParameters.getAccount() == null) {
                 if (sosLoginParameters.getIdToken() != null && !sosLoginParameters.getIdToken().isEmpty()) {
 
-                    sosHibernateSession = Globals.createSosHibernateStatelessConnection("login");
-                    try {
-                        IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
-                        IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
-                        filter.setIdentityServiceName(sosLoginParameters.getIdentityService());
-                        filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC);
-                        DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(filter);
-
-                        if (dbItemIamIdentityService == null) {
-                            throw new Exception("Identity Service not found: " + sosLoginParameters.getIdentityService());
-                        }
-
-                        if (dbItemIamIdentityService.getDisabled()) {
-                            throw new Exception("Identity Service " + sosLoginParameters.getIdentityService() + " is disabled");
-                        }
-                    } finally {
-                        Globals.disconnect(sosHibernateSession);
-                    }
-
+                    SOSAuthHelper.getIdentityService(sosLoginParameters.getIdentityService());
                     SOSOpenIdWebserviceCredentials webserviceCredentials = new SOSOpenIdWebserviceCredentials();
                     SOSIdentityService sosIdentityService = new SOSIdentityService(sosLoginParameters.getIdentityService(),
                             IdentityServiceTypes.OIDC);
@@ -798,7 +776,7 @@ public class SOSServicePermissionIam {
                     SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials);
                     String account = sosOpenIdHandler.decodeIdToken(sosLoginParameters.getIdToken());
                     sosLoginParameters.setAccount(account);
-                    sosLoginParameters.setWebserviceCredentials(webserviceCredentials);
+                    sosLoginParameters.setSOSOpenIdWebserviceCredentials(webserviceCredentials);
 
                 } else {
                     sosLoginParameters.setAccount(sosLoginParameters.getClientCertCN());
@@ -812,6 +790,18 @@ public class SOSServicePermissionIam {
             byte[] authEncBytes = org.apache.commons.codec.binary.Base64.encodeBase64(s.getBytes());
             String authStringEnc = new String(authEncBytes);
             sosLoginParameters.setBasicAuthorization("Basic " + authStringEnc);
+        }
+
+        if (sosLoginParameters.getCredentialId() != null && !sosLoginParameters.getCredentialId().isEmpty()) {
+            IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
+            DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getAccountFromCredentialId(sosLoginParameters.getCredentialId());
+            if (dbItemIamAccount != null) {
+                byte[] authEncBytes = org.apache.commons.codec.binary.Base64.encodeBase64(dbItemIamAccount.getAccountName().getBytes());
+                String authStringEnc = new String(authEncBytes);
+                sosLoginParameters.setBasicAuthorization("Basic " + authStringEnc);
+            } else {
+                LOGGER.info("Could not find account for credential-id <" + sosLoginParameters.getCredentialId() + ">");
+            }
         }
 
         TimeZone.setDefault(TimeZone.getTimeZone(UTC));
