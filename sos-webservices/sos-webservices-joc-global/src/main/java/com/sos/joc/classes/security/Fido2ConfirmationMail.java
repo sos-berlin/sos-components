@@ -78,12 +78,13 @@ public class Fido2ConfirmationMail {
 
         Map<String, String> params = new HashMap<String, String>();
         params.put("base_url", getJocBaseUri());
+        params.put("joc_href", getJocBaseUri() +"/joc/#/login");
         params.put("registration_verify_link", getJocBaseUri() + "/joc/#/email_verify?token=" + dbItemIamFido2Registration.getToken());
         params.put("token", dbItemIamFido2Registration.getToken());
         params.put("account_name", dbItemIamFido2Registration.getAccountName());
         params.put("registration_email_address", to);
         params.put("fido2_identity_service", identityServiceName);
-
+ 
         body = resolve(body, params);
 
         mail.addRecipient(to);

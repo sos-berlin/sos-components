@@ -25,6 +25,7 @@ import com.sos.joc.classes.security.SOSSecurityUtil;
 import com.sos.joc.db.authentication.DBItemIamAccount;
 import com.sos.joc.db.authentication.DBItemIamFido2Devices;
 import com.sos.joc.db.authentication.DBItemIamFido2Registration;
+import com.sos.joc.db.authentication.DBItemIamFido2Requests;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
@@ -531,45 +532,43 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
                         .getIdentityServiceType() + ">");
             }
 
-            IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
-            IamAccountFilter filter = new IamAccountFilter();
-            filter.setAccountName(fido2RequestAuthentication.getAccountName());
-            filter.setIdentityServiceId(dbItemIamIdentityService.getId());
+            Fido2RequestAuthenticationResponse fido2RequestAuthenticationResponse = new Fido2RequestAuthenticationResponse();
+            fido2RequestAuthenticationResponse.setChallenge(SOSAuthHelper.createAccessToken());
 
-            String challengeToken = SOSAuthHelper.createAccessToken();
+            if (fido2RequestAuthentication.getAccountName() != null) {
+                IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
+                IamAccountFilter filter = new IamAccountFilter();
+                filter.setAccountName(fido2RequestAuthentication.getAccountName());
+                filter.setIdentityServiceId(dbItemIamIdentityService.getId());
 
-            DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getUniqueAccount(filter);
-            if (dbItemIamAccount != null) {
-                List<DBItemIamFido2Devices> listOfFido2Devices = iamAccountDBLayer.getListOfFido2Devices(dbItemIamAccount.getId());
-                if (listOfFido2Devices.size() > 0) {
-                    dbItemIamAccount.setChallenge(challengeToken);
-                    fido2RequestAuthentication.setChallenge(challengeToken);
-                    sosHibernateSession.update(dbItemIamAccount);
+                DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getUniqueAccount(filter);
+                if (dbItemIamAccount != null) {
+                    List<DBItemIamFido2Devices> listOfFido2Devices = iamAccountDBLayer.getListOfFido2Devices(dbItemIamAccount.getId());
+                    if (listOfFido2Devices.size() == 0) {
+                        throw new JocObjectNotExistException("Registration <" + fido2RequestAuthentication.getAccountName() + " in identity service "
+                                + fido2RequestAuthentication.getIdentityServiceName() + "> is not approved");
+                    }
                 } else {
-                    throw new JocObjectNotExistException("Registration <" + fido2RequestAuthentication.getAccountName() + " in identity service "
-                            + fido2RequestAuthentication.getIdentityServiceName() + "> is not approved");
+                    throw new JocObjectNotExistException("Couldn't find the account <" + fido2RequestAuthentication.getAccountName()
+                            + " in identity service " + fido2RequestAuthentication.getIdentityServiceName() + ">");
                 }
 
-            } else {
-                throw new JocObjectNotExistException("Couldn't find the account <" + fido2RequestAuthentication.getAccountName()
-                        + " in identity service " + fido2RequestAuthentication.getIdentityServiceName() + ">");
+                List<DBItemIamFido2Devices> listOfDevices = iamAccountDBLayer.getListOfFido2Devices(dbItemIamAccount.getId());
+
+                fido2RequestAuthenticationResponse.setCredentialIds(new ArrayList<String>());
+                for (DBItemIamFido2Devices device : listOfDevices) {
+                    fido2RequestAuthenticationResponse.getCredentialIds().add(device.getCredentialId());
+                }
             }
 
+            DBItemIamFido2Requests dbItemIamFido2Requests = new DBItemIamFido2Requests();
+            dbItemIamFido2Requests.setChallenge(fido2RequestAuthenticationResponse.getChallenge());
+            dbItemIamFido2Requests.setCreated(new Date());
+            dbItemIamFido2Requests.setIdentityServiceId(dbItemIamIdentityService.getId());
+            sosHibernateSession.save(dbItemIamFido2Requests);
+            fido2RequestAuthenticationResponse.setRequestId(dbItemIamFido2Requests.getId());
             Globals.commit(sosHibernateSession);
 
-            List<DBItemIamFido2Devices> listOfDevices = iamAccountDBLayer.getListOfFido2Devices(dbItemIamAccount.getId());
-
-            Fido2RequestAuthenticationResponse fido2RequestAuthenticationResponse = new Fido2RequestAuthenticationResponse();
-            fido2RequestAuthenticationResponse.setCredentialIds(new ArrayList<String>());
-            for (DBItemIamFido2Devices device : listOfDevices) {
-                fido2RequestAuthenticationResponse.getCredentialIds().add(device.getCredentialId());
-            }
-            fido2RequestAuthenticationResponse.setChallenge(challengeToken);
-            com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getIamProperties(fido2RequestAuthentication
-                    .getIdentityServiceName());
-            properties.getFido2().setIamFido2EmailSettings(null);
-
-            fido2RequestAuthenticationResponse.setFido2Properties(properties.getFido2());
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(fido2RequestAuthenticationResponse));
 
         } catch (

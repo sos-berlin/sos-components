@@ -15,8 +15,9 @@ public class SOSLoginParameters {
     private String authenticatorData;
     private String clientDataJson;
     private String signature;
-
-    private SOSOpenIdWebserviceCredentials webserviceCredentials;
+    private String credentialId;
+    private Long requestId;
+    private SOSOpenIdWebserviceCredentials sosOpenIdWebserviceCredentials;
 
     public HttpServletRequest getRequest() {
         return request;
@@ -66,12 +67,12 @@ public class SOSLoginParameters {
         this.idToken = idToken;
     }
 
-    public SOSOpenIdWebserviceCredentials getWebserviceCredentials() {
-        return webserviceCredentials;
+    public SOSOpenIdWebserviceCredentials getSOSOpenIdWebserviceCredentials() {
+        return sosOpenIdWebserviceCredentials;
     }
 
-    public void setWebserviceCredentials(SOSOpenIdWebserviceCredentials webserviceCredentials) {
-        this.webserviceCredentials = webserviceCredentials;
+    public void setSOSOpenIdWebserviceCredentials(SOSOpenIdWebserviceCredentials sosOpenIdWebserviceCredentials) {
+        this.sosOpenIdWebserviceCredentials = sosOpenIdWebserviceCredentials;
     }
 
     public boolean isOIDCLogin() {
@@ -90,7 +91,6 @@ public class SOSLoginParameters {
         this.signature = signature;
     }
 
-    
     public String getClientDataJson() {
         return clientDataJson;
     }
@@ -99,14 +99,28 @@ public class SOSLoginParameters {
         this.clientDataJson = clientDataJson;
     }
 
-    
     public String getAuthenticatorData() {
         return authenticatorData;
     }
 
-    
     public void setAuthenticatorData(String authenticatorData) {
         this.authenticatorData = authenticatorData;
+    }
+
+    public String getCredentialId() {
+        return credentialId;
+    }
+
+    public void setCredentialId(String credentialId) {
+        this.credentialId = credentialId;
+    }
+
+    public Long getRequestId() {
+        return requestId;
+    }
+
+    public void setRequestId(Long requestId) {
+        this.requestId = requestId;
     }
 
 }

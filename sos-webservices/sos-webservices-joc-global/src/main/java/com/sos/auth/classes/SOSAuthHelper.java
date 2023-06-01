@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import javax.json.Json;
@@ -33,6 +34,7 @@ import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.db.authentication.DBItemIamAccount;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.authentication.DBItemIamPermissionWithName;
@@ -54,11 +56,15 @@ import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 import com.sos.joc.model.security.properties.fido2.Fido2EmailSettings;
 import com.sos.joc.model.security.properties.fido2.Fido2Properties;
+import com.sos.joc.model.security.properties.fido2.Fido2Userverification;
 
 import jakarta.servlet.http.HttpServletRequest;
 
 public class SOSAuthHelper {
 
+    private static final String JS7_REGISTRATION_WITH_JS7_JOB_SCHEDULER_IS_COMPLETED = "JS7: Registration with JS7 JobScheduler is completed";
+    private static final String JS7_CONFIRM_E_MAIL_ADDRESS_FOR_REGISTRATION_WITH_JS7_JOB_SCHEDULER =
+            "JS7: Confirm e-mail address for registration with JS7 JobScheduler";
     private static final String DEFAULT_PROFILE_ACCOUNT = "default_profile_account";
     private static final String JOC = "joc";
     private static final String VALUE = "value";
@@ -483,6 +489,7 @@ public class SOSAuthHelper {
         if (properties.getFido2() == null) {
             properties.setFido2(new Fido2Properties());
         }
+
         if (properties.getFido2().getIamFido2EmailSettings() == null) {
             properties.getFido2().setIamFido2EmailSettings(new Fido2EmailSettings());
         }
@@ -496,6 +503,18 @@ public class SOSAuthHelper {
             properties.getFido2().getIamFido2EmailSettings().setBodyRegistration(getContentFromResource(
                     SECURITY_FIDO2_FIDO2_REGISTRATION_MAIL_TEMPLATE_TXT));
         }
+
+        if (properties.getFido2().getIamFido2EmailSettings().getSubjectRegistration() == null || properties.getFido2().getIamFido2EmailSettings()
+                .getSubjectRegistration().isEmpty()) {
+            properties.getFido2().getIamFido2EmailSettings().setSubjectRegistration(
+                    JS7_CONFIRM_E_MAIL_ADDRESS_FOR_REGISTRATION_WITH_JS7_JOB_SCHEDULER);
+        }
+
+        if (properties.getFido2().getIamFido2EmailSettings().getSubjectAccess() == null || properties.getFido2().getIamFido2EmailSettings()
+                .getSubjectAccess().isEmpty()) {
+            properties.getFido2().getIamFido2EmailSettings().setSubjectAccess(JS7_REGISTRATION_WITH_JS7_JOB_SCHEDULER_IS_COMPLETED);
+        }
+
         if (properties.getFido2().getIamFido2EmailSettings().getCharset() == null || properties.getFido2().getIamFido2EmailSettings().getCharset()
                 .isEmpty()) {
             properties.getFido2().getIamFido2EmailSettings().setCharset(ISO_8859_1);
@@ -517,4 +536,54 @@ public class SOSAuthHelper {
         return properties;
     }
 
+    public static com.sos.joc.model.security.properties.Properties getGlobalIamProperties() {
+        SOSHibernateSession sosHibernateSession = null;
+        try {
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection("login");
+            DBItemJocConfiguration dbItem = null;
+            JocConfigurationFilter filter = new JocConfigurationFilter();
+            filter.setConfigurationType(SOSAuthHelper.CONFIGURATION_TYPE_IAM);
+            filter.setObjectType(SOSAuthHelper.OBJECT_TYPE_IAM_GENERAL);
+            JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
+            List<DBItemJocConfiguration> listOfDbItemJocConfiguration = jocConfigurationDBLayer.getJocConfigurations(filter, 0);
+            if (listOfDbItemJocConfiguration.size() == 1) {
+                dbItem = listOfDbItemJocConfiguration.get(0);
+                com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(dbItem.getConfigurationItem(),
+                        com.sos.joc.model.security.properties.Properties.class);
+                return properties;
+            }
+        } catch (Exception e) {
+            LOGGER.error("", e);
+        } finally {
+            Globals.disconnect(sosHibernateSession);
+        }
+        return null;
+
+    }
+
+    public static DBItemIamIdentityService getIdentityService(String identityServiceName) throws Exception {
+        SOSHibernateSession sosHibernateSession = null;
+        DBItemIamIdentityService dbItemIamIdentityService = null;
+
+        sosHibernateSession = Globals.createSosHibernateStatelessConnection("login");
+        try {
+            IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
+            IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
+            filter.setIdentityServiceName(identityServiceName);
+            filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC);
+            dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(filter);
+
+            if (dbItemIamIdentityService == null) {
+                throw new Exception("Identity Service not found: " + identityServiceName);
+            }
+
+            if (dbItemIamIdentityService.getDisabled()) {
+                throw new Exception("Identity Service " + identityServiceName + " is disabled");
+            }
+        } finally {
+            Globals.disconnect(sosHibernateSession);
+        }
+        return dbItemIamIdentityService;
+
+    }
 }
