@@ -82,12 +82,6 @@ public class Fido2Registration {
      */
     @JsonProperty("credentialId")
     private String credentialId;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("clientDataJSON")
     private String clientDataJSON;
     /**
@@ -287,23 +281,11 @@ public class Fido2Registration {
         this.credentialId = credentialId;
     }
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("clientDataJSON")
     public String getClientDataJSON() {
         return clientDataJSON;
     }
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("clientDataJSON")
     public void setClientDataJSON(String clientDataJSON) {
         this.clientDataJSON = clientDataJSON;
