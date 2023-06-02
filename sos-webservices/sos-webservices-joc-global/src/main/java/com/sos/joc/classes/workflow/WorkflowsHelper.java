@@ -72,6 +72,7 @@ import com.sos.joc.db.deploy.DeployedConfigurationFilter;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -340,8 +341,8 @@ public class WorkflowsHelper {
         return contents;
     }
 
-    public static Stream<DeployedContent> getDeployedContentsStream(WorkflowsFilter workflowsFilter, List<DeployedContent> contents,
-            Set<Folder> permittedFolders) {
+    public static Stream<DeployedContent> getDeployedContentsStream(WorkflowsFilter workflowsFilter, DeployedConfigurationDBLayer dbLayer,
+            List<DeployedContent> contents, Set<Folder> permittedFolders) {
 
         Stream<DeployedContent> contentsStream = contents.parallelStream().distinct();
         boolean withoutFilter = (workflowsFilter.getFolders() == null || workflowsFilter.getFolders().isEmpty()) && (workflowsFilter
@@ -354,9 +355,32 @@ public class WorkflowsHelper {
             Predicate<String> regex = Pattern.compile(workflowsFilter.getRegex().replaceAll("%", ".*"), Pattern.CASE_INSENSITIVE).asPredicate();
             contentsStream = contentsStream.filter(w -> regex.test(w.getName()) || regex.test(w.getTitle()));
         }
-        
+
         if (workflowsFilter.getAgentNames() != null && !workflowsFilter.getAgentNames().isEmpty()) {
-            Predicate<String> pred = Pattern.compile("\"agentName\"\\s*:\\s*\"" + String.join("|", workflowsFilter.getAgentNames()) + "\"",
+            InventoryAgentInstancesDBLayer agentDbLayer = new InventoryAgentInstancesDBLayer(dbLayer.getSession());
+            Map<String, Set<String>> agentNamesAndAliasesPerId = agentDbLayer.getAgentWithAliasesByControllerIds(Collections.singleton(workflowsFilter
+                    .getControllerId())).get(workflowsFilter.getControllerId());
+            
+            Set<String> agentNamesAndAliases = new HashSet<>();
+            if (agentNamesAndAliasesPerId != null) {
+//                for (String agentName : workflowsFilter.getAgentNames()) {
+//                    for (Set<String> a : agentNamesAndAliasesPerId.values()) {
+//                        if (a.contains(agentName)) {
+//                            agentNamesAndAliases.addAll(a);
+//                            break;
+//                        }
+//                    }
+//                }
+                agentNamesAndAliasesPerId.forEach((k, v) -> {
+                    Set<String> copy = new HashSet<>(v);
+                    copy.retainAll(workflowsFilter.getAgentNames());
+                    if (!copy.isEmpty()) {
+                        agentNamesAndAliases.addAll(v);
+                    }
+                });
+            }
+
+            Predicate<String> pred = Pattern.compile("\"agentName\"\\s*:\\s*\"" + String.join("|", agentNamesAndAliases) + "\"",
                     Pattern.CASE_INSENSITIVE).asPredicate();
             contentsStream = contentsStream.filter(w -> pred.test(w.getContent()));
         }
