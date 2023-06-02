@@ -51,6 +51,10 @@ public class DeployedConfigurationDBLayer {
         setRegexpParamPrefixSuffix();
     }
     
+    public SOSHibernateSession getSession() {
+        return session;
+    }
+    
     public List<InventoryQuickSearchItem> getQuickSearchInventoryConfigurations(String controllerId, Collection<Integer> types, String search)
             throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select path as path, type as type, folder as folder, name as name from ").append(

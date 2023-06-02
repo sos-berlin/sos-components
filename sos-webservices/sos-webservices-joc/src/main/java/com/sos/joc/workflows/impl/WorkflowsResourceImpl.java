@@ -93,7 +93,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
             Set<Folder> permittedFolders, JocError jocError) {
         boolean compact = workflowsFilter.getCompact() == Boolean.TRUE;
         List<DeployedContent> contents = WorkflowsHelper.getDeployedContents(workflowsFilter, dbLayer, currentstate, permittedFolders);
-        Stream<DeployedContent> contentsStream = WorkflowsHelper.getDeployedContentsStream(workflowsFilter, contents, permittedFolders);
+        Stream<DeployedContent> contentsStream = WorkflowsHelper.getDeployedContentsStream(workflowsFilter, dbLayer, contents, permittedFolders);
         
         String controllerId = workflowsFilter.getControllerId();
         // TODO should be permantly stored and updated by events
