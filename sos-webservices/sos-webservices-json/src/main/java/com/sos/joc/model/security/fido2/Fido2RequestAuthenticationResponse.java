@@ -36,13 +36,13 @@ public class Fido2RequestAuthenticationResponse {
     @JsonProperty("challenge")
     private String challenge;
     /**
-     * non negative long
+     * string without < and >
      * <p>
      * 
      * 
      */
     @JsonProperty("requestId")
-    private Long requestId;
+    private String requestId;
 
     /**
      * No args constructor for use in serialization
@@ -57,7 +57,7 @@ public class Fido2RequestAuthenticationResponse {
      * @param challenge
      * @param credentialIds
      */
-    public Fido2RequestAuthenticationResponse(List<String> credentialIds, String challenge, Long requestId) {
+    public Fido2RequestAuthenticationResponse(List<String> credentialIds, String challenge, String requestId) {
         super();
         this.credentialIds = credentialIds;
         this.challenge = challenge;
@@ -97,24 +97,24 @@ public class Fido2RequestAuthenticationResponse {
     }
 
     /**
-     * non negative long
+     * string without < and >
      * <p>
      * 
      * 
      */
     @JsonProperty("requestId")
-    public Long getRequestId() {
+    public String getRequestId() {
         return requestId;
     }
 
     /**
-     * non negative long
+     * string without < and >
      * <p>
      * 
      * 
      */
     @JsonProperty("requestId")
-    public void setRequestId(Long requestId) {
+    public void setRequestId(String requestId) {
         this.requestId = requestId;
     }
 

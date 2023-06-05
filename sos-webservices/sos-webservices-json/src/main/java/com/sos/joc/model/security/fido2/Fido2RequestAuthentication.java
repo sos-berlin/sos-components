@@ -20,6 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "identityServiceName",
     "accountName",
+    "origin",
     "challenge",
     "auditLog"
 })
@@ -42,6 +43,14 @@ public class Fido2RequestAuthentication {
      */
     @JsonProperty("accountName")
     private String accountName;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("origin")
+    private String origin;
     /**
      * string without < and >
      * <p>
@@ -71,12 +80,14 @@ public class Fido2RequestAuthentication {
      * @param identityServiceName
      * @param auditLog
      * @param accountName
+     * @param origin
      * @param challenge
      */
-    public Fido2RequestAuthentication(String identityServiceName, String accountName, String challenge, AuditParams auditLog) {
+    public Fido2RequestAuthentication(String identityServiceName, String accountName, String origin, String challenge, AuditParams auditLog) {
         super();
         this.identityServiceName = identityServiceName;
         this.accountName = accountName;
+        this.origin = origin;
         this.challenge = challenge;
         this.auditLog = auditLog;
     }
@@ -133,6 +144,28 @@ public class Fido2RequestAuthentication {
      * 
      * 
      */
+    @JsonProperty("origin")
+    public String getOrigin() {
+        return origin;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("origin")
+    public void setOrigin(String origin) {
+        this.origin = origin;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("challenge")
     public String getChallenge() {
         return challenge;
@@ -173,12 +206,12 @@ public class Fido2RequestAuthentication {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("accountName", accountName).append("challenge", challenge).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("accountName", accountName).append("origin", origin).append("challenge", challenge).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(challenge).append(identityServiceName).append(auditLog).append(accountName).toHashCode();
+        return new HashCodeBuilder().append(challenge).append(identityServiceName).append(auditLog).append(accountName).append(origin).toHashCode();
     }
 
     @Override
@@ -190,7 +223,7 @@ public class Fido2RequestAuthentication {
             return false;
         }
         Fido2RequestAuthentication rhs = ((Fido2RequestAuthentication) other);
-        return new EqualsBuilder().append(challenge, rhs.challenge).append(identityServiceName, rhs.identityServiceName).append(auditLog, rhs.auditLog).append(accountName, rhs.accountName).isEquals();
+        return new EqualsBuilder().append(challenge, rhs.challenge).append(identityServiceName, rhs.identityServiceName).append(auditLog, rhs.auditLog).append(accountName, rhs.accountName).append(origin, rhs.origin).isEquals();
     }
 
 }

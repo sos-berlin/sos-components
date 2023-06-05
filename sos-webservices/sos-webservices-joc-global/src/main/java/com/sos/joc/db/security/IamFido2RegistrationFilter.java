@@ -5,6 +5,7 @@ public class IamFido2RegistrationFilter extends SOSHibernateFilter {
     private Long id;
     private Long identityServiceId;
     private String accountName;
+    private String origin;
     private String email;
     private String token;
     private Boolean completed;
@@ -47,44 +48,46 @@ public class IamFido2RegistrationFilter extends SOSHibernateFilter {
         this.accountName = accountName;
     }
 
-    
     public Boolean getDeferred() {
         return deferred;
     }
 
-    
     public void setDeferred(Boolean deferred) {
         this.deferred = deferred;
     }
 
-    
     public String getToken() {
         return token;
     }
 
-    
     public void setToken(String token) {
         this.token = token;
     }
 
-    
     public String getEmail() {
         return email;
     }
 
-    
     public void setEmail(String email) {
         this.email = email;
     }
 
-    
     public Boolean getCompleted() {
         return completed;
     }
 
-    
     public void setCompleted(Boolean completed) {
         this.completed = completed;
+    }
+
+    
+    public String getOrigin() {
+        return origin;
+    }
+
+    
+    public void setOrigin(String origin) {
+        this.origin = origin;
     }
 
 }

@@ -1,0 +1,107 @@
+package com.sos.joc.db.security;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.hibernate.query.Query;
+
+import com.sos.commons.hibernate.SOSHibernate;
+import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.joc.Globals;
+import com.sos.joc.db.authentication.DBItemIamAccount;
+import com.sos.joc.db.authentication.DBItemIamAccount2RoleWithName;
+import com.sos.joc.db.authentication.DBItemIamAccount2Roles;
+import com.sos.joc.db.authentication.DBItemIamBlockedAccount;
+import com.sos.joc.db.authentication.DBItemIamIdentityService;
+import com.sos.joc.db.authentication.DBItemIamPermission;
+import com.sos.joc.db.authentication.DBItemIamPermissionWithName;
+import com.sos.joc.db.authentication.DBItemIamRole;
+import com.sos.joc.db.authentication.DBItemIamFido2Requests;
+import com.sos.joc.db.configuration.JocConfigurationDbLayer;
+import com.sos.joc.db.favorite.FavoriteDBLayer;
+import com.sos.joc.db.keys.DBLayerKeys;
+import com.sos.joc.model.common.JocSecurityLevel;
+import com.sos.joc.model.configuration.ConfigurationType;
+
+public class IamFido2RequestDBLayer {
+
+    private static final String DBItemIamAccount = com.sos.joc.db.authentication.DBItemIamAccount.class.getSimpleName();
+    private static final String DBItemIamFido2Requests = com.sos.joc.db.authentication.DBItemIamFido2Requests.class.getSimpleName();
+
+    private final SOSHibernateSession sosHibernateSession;
+
+    public IamFido2RequestDBLayer(SOSHibernateSession session) {
+        this.sosHibernateSession = session;
+    }
+
+    private <T> Query<T> bindParameters(IamFido2RequestsFilter filter, Query<T> query) {
+        if (filter.getId() != null ) {
+            query.setParameter("id", filter.getId());
+        }
+        if (filter.getIdentityServiceId() != null) {
+            query.setParameter("identityServiceId", filter.getIdentityServiceId());
+        }
+        if (filter.getRequestId() != null && !filter.getRequestId().isEmpty())) {
+            query.setParameter("requestId", filter.getRequestId());
+        }
+
+        return query;
+
+    }
+
+ 
+
+    private String getWhere(IamFido2RequestsFilter filter) {
+        String where = " ";
+        String and = "";
+        if (filter.getIdentityServiceId() != null) {
+            where += and + " identityServiceId = :identityServiceId";
+            and = " and ";
+        }
+        if (filter.getRequestId() != null && !filter.getRequestId().isEmpty()) {
+            where += and + " requestId = :requestId";
+            and = " and ";
+        }
+        if (filter.getId() != null) {
+            where += and + " accountId = :accountId";
+            and = " and ";
+        }
+        if (!where.trim().equals("")) {
+            where = " where " + where;
+        }
+        return where;
+    }
+
+ 
+
+    public DBItemIamFido2Requests getFido2Request(IamFido2RequestsFilter filter) throws SOSHibernateException {
+        List<DBItemIamFido2Requests> requestList = null;
+        Query<DBItemIamFido2Requests> query = sosHibernateSession.createQuery("from " + DBItemIamFido2Requests + getWhere(filter));
+        bindParameters(filter, query);
+
+        requestList = query.getResultList();
+        if (requestList.size() == 0) {
+            return null;
+        } else {
+            return requestList.get(0);
+        }
+    }
+
+    public int getFido2DeleteRequest(IamFido2RequestsFilter filter) throws SOSHibernateException {
+        String hql = "delete from " + DBItemIamFido2Requests + getWhere(filter);
+        Query<DBItemIamFido2Requests> query = null;
+        int row = 0;
+        query = sosHibernateSession.createQuery(hql);
+        query = bindParameters(filter, query);
+
+        row = query.executeUpdate();
+        return row;
+    }
+
+ 
+}

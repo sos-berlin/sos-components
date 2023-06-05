@@ -34,6 +34,9 @@ public class DBItemIamFido2Devices {
     @Column(name = "[CREDENTIAL_ID]", nullable = false)
     private String credentialId;
 
+    @Column(name = "[ORIGIN]", nullable = false)
+    private String origin;
+
     public Long getId() {
         return id;
     }
@@ -72,6 +75,16 @@ public class DBItemIamFido2Devices {
 
     public void setAlgorithm(String algorithm) {
         this.algorithm = algorithm;
+    }
+
+    
+    public String getOrigin() {
+        return origin;
+    }
+
+    
+    public void setOrigin(String origin) {
+        this.origin = origin;
     }
 
 }

@@ -40,6 +40,10 @@ public class IamFido2DBLayer {
             query.setParameter("accountName", filter.getAccountName());
         }
 
+        if (filter.getOrigin() != null && !filter.getOrigin().isEmpty()) {
+            query.setParameter("origin", filter.getOrigin());
+        }
+
         if (filter.getEmail() != null && !filter.getEmail().isEmpty()) {
             query.setParameter("email", filter.getEmail());
         }
@@ -65,6 +69,10 @@ public class IamFido2DBLayer {
         String where = " ";
         String and = "";
 
+        if (filter.getOrigin() != null && !filter.getOrigin().isEmpty()) {
+            where += and + " origin = :origin";
+            and = " and ";
+        }
         if (filter.getAccountName() != null && !filter.getAccountName().isEmpty()) {
             where += and + " accountName = :accountName";
             and = " and ";
@@ -134,6 +142,9 @@ public class IamFido2DBLayer {
             return null;
         }
         if ((filter.getIdentityServiceId() == null)) {
+            return null;
+        }
+        if ((filter.getOrigin() == null)) {
             return null;
         }
         List<DBItemIamFido2Registration> fido2RegistrationList = null;
