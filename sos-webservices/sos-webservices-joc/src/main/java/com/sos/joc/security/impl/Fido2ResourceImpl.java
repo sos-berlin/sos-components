@@ -36,8 +36,6 @@ import com.sos.joc.db.security.IamFido2DBLayer;
 import com.sos.joc.db.security.IamFido2DevicesDBLayer;
 import com.sos.joc.db.security.IamFido2DevicesFilter;
 import com.sos.joc.db.security.IamFido2RegistrationFilter;
-import com.sos.joc.db.security.IamFido2RequestDBLayer;
-import com.sos.joc.db.security.IamFido2RequestsFilter;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.exceptions.JocAuthenticationException;
@@ -172,6 +170,14 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
                         .getIdentityServiceType() + ">");
             }
 
+            byte[] clientDataJsonDecoded = Base64.getDecoder().decode(fido2Registration.getClientDataJSON());
+
+            String clientDataJson = new String(clientDataJsonDecoded, StandardCharsets.UTF_8);
+            JsonReader jsonReader = Json.createReader(new StringReader(clientDataJson));
+            JsonObject jsonClientData = jsonReader.readObject();
+            String origin = jsonClientData.getString(ORIGIN, "");
+            String challenge = jsonClientData.getString(CHALLENGE, "");
+
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
             IamAccountFilter iamAccountFilter = new IamAccountFilter();
             iamAccountFilter.setAccountName(fido2Registration.getAccountName());
@@ -183,7 +189,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
                 IamFido2DevicesDBLayer iamFido2DevicesDBLayer = new IamFido2DevicesDBLayer(sosHibernateSession);
                 IamFido2DevicesFilter filter = new IamFido2DevicesFilter();
                 filter.setAccountId(dbItemIamAccount.getId());
-                filter.setOrigin(fido2Registration.getOrigin());
+                filter.setOrigin(origin);
                 List<DBItemIamFido2Devices> listOfDevices = iamFido2DevicesDBLayer.getListOfFido2Devices(filter);
 
                 if (listOfDevices.size() > 0) {
@@ -197,6 +203,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             IamFido2RegistrationFilter iamFido2RegistrationFilter = new IamFido2RegistrationFilter();
             iamFido2RegistrationFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
             iamFido2RegistrationFilter.setAccountName(fido2Registration.getAccountName());
+            iamFido2RegistrationFilter.setOrigin(origin);
             DBItemIamFido2Registration dbItemIamFido2Registration = iamFido2DBLayer.getUniqueFido2Registration(iamFido2RegistrationFilter);
             boolean isNew = false;
             if (dbItemIamFido2Registration == null) {
@@ -215,12 +222,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             if (!isNew) {
                 String s = fido2Registration.getClientDataJSON();
                 if (s != null) {
-                    String clientDataJson = new String(Base64.getUrlDecoder().decode(s.getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
-                    JsonReader jsonReaderClientData = Json.createReader(new StringReader(clientDataJson));
-                    JsonObject jsonClientData = jsonReaderClientData.readObject();
-                    String challenge = jsonClientData.getString(CHALLENGE, "");
-                    dbItemIamFido2Registration.setOrigin(jsonClientData.getString(ORIGIN, ""));
-
+                    dbItemIamFido2Registration.setOrigin(origin);
                     byte[] challengeDecoded = Base64.getDecoder().decode(challenge);
                     String challengeDecodedString = new String(challengeDecoded, StandardCharsets.UTF_8);
 
@@ -473,6 +475,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             dbItemIamFido2Registration.setAccountName(fido2Registration.getAccountName());
             dbItemIamFido2Registration.setIdentityServiceId(dbItemIamIdentityService.getId());
             dbItemIamFido2Registration.setChallenge(fido2RegistrationStartResponse.getChallenge());
+            dbItemIamFido2Registration.setOrigin(fido2Registration.getOrigin());
             dbItemIamFido2Registration.setCreated(new Date());
 
             if (isNew) {

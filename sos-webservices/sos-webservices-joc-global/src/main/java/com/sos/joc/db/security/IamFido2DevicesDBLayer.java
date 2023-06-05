@@ -71,6 +71,9 @@ public class IamFido2DevicesDBLayer {
             and = " and ";
         }
 
+        if (!where.trim().equals("")) {
+            where = " where " + where;
+        }
         return where;
     }
 

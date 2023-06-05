@@ -811,7 +811,7 @@ public class SOSServicePermissionIam {
             }
 
             if (currentAccount.getAccountname() == null || currentAccount.getAccountname().isEmpty()) {
-                return JOCDefaultResponse.responseStatusJSError(ACCOUNT_IS_EMPTY);
+                //return JOCDefaultResponse.responseStatusJSError(ACCOUNT_IS_EMPTY);
             }
 
             currentAccount.setSosLoginParameters(sosLoginParameters);
