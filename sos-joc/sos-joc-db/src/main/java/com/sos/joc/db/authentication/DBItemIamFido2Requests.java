@@ -32,6 +32,9 @@ public class DBItemIamFido2Requests {
     @Column(name = "[CHALLENGE]", nullable = false)
     private String challenge;
 
+    @Column(name = "[REQUEST_ID]", nullable = false)
+    private String requestId;
+
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[CREATED]", nullable = false)
     private Date created;
@@ -68,5 +71,12 @@ public class DBItemIamFido2Requests {
         this.challenge = challenge;
     }
 
+    public String getRequestId() {
+        return requestId;
+    }
+
+    public void setRequestId(String requestId) {
+        this.requestId = requestId;
+    }
 
 }

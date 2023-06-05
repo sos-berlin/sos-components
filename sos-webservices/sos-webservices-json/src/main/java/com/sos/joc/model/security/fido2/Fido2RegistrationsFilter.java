@@ -21,7 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "identityServiceName",
-    "accountNames",
+    "accounts",
     "deferred",
     "confirmed",
     "auditLog"
@@ -37,13 +37,8 @@ public class Fido2RegistrationsFilter {
      */
     @JsonProperty("identityServiceName")
     private String identityServiceName;
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("accountNames")
-    private List<String> accountNames = new ArrayList<String>();
+    @JsonProperty("accounts")
+    private List<Fido2RegistrationAccount> accounts = new ArrayList<Fido2RegistrationAccount>();
     @JsonProperty("deferred")
     private Boolean deferred = false;
     @JsonProperty("confirmed")
@@ -69,13 +64,13 @@ public class Fido2RegistrationsFilter {
      * @param deferred
      * @param identityServiceName
      * @param auditLog
+     * @param accounts
      * @param confirmed
-     * @param accountNames
      */
-    public Fido2RegistrationsFilter(String identityServiceName, List<String> accountNames, Boolean deferred, Boolean confirmed, AuditParams auditLog) {
+    public Fido2RegistrationsFilter(String identityServiceName, List<Fido2RegistrationAccount> accounts, Boolean deferred, Boolean confirmed, AuditParams auditLog) {
         super();
         this.identityServiceName = identityServiceName;
-        this.accountNames = accountNames;
+        this.accounts = accounts;
         this.deferred = deferred;
         this.confirmed = confirmed;
         this.auditLog = auditLog;
@@ -105,24 +100,14 @@ public class Fido2RegistrationsFilter {
         this.identityServiceName = identityServiceName;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("accountNames")
-    public List<String> getAccountNames() {
-        return accountNames;
+    @JsonProperty("accounts")
+    public List<Fido2RegistrationAccount> getAccounts() {
+        return accounts;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("accountNames")
-    public void setAccountNames(List<String> accountNames) {
-        this.accountNames = accountNames;
+    @JsonProperty("accounts")
+    public void setAccounts(List<Fido2RegistrationAccount> accounts) {
+        this.accounts = accounts;
     }
 
     @JsonProperty("deferred")
@@ -169,12 +154,12 @@ public class Fido2RegistrationsFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("accountNames", accountNames).append("deferred", deferred).append("confirmed", confirmed).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("accounts", accounts).append("deferred", deferred).append("confirmed", confirmed).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deferred).append(identityServiceName).append(auditLog).append(confirmed).append(accountNames).toHashCode();
+        return new HashCodeBuilder().append(deferred).append(identityServiceName).append(accounts).append(auditLog).append(confirmed).toHashCode();
     }
 
     @Override
@@ -186,7 +171,7 @@ public class Fido2RegistrationsFilter {
             return false;
         }
         Fido2RegistrationsFilter rhs = ((Fido2RegistrationsFilter) other);
-        return new EqualsBuilder().append(deferred, rhs.deferred).append(identityServiceName, rhs.identityServiceName).append(auditLog, rhs.auditLog).append(confirmed, rhs.confirmed).append(accountNames, rhs.accountNames).isEquals();
+        return new EqualsBuilder().append(deferred, rhs.deferred).append(identityServiceName, rhs.identityServiceName).append(accounts, rhs.accounts).append(auditLog, rhs.auditLog).append(confirmed, rhs.confirmed).isEquals();
     }
 
 }

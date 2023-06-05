@@ -10,7 +10,6 @@ public class IamAccountFilter extends SOSHibernateFilter {
     private Long identityServiceId;
     private Long roleId;
     private String accountName;
-    private Long requestId;
     private String email;
     private Boolean disabled;
 
@@ -92,14 +91,6 @@ public class IamAccountFilter extends SOSHibernateFilter {
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public Long getRequestId() {
-        return requestId;
-    }
-
-    public void setRequestId(Long requestId) {
-        this.requestId = requestId;
     }
 
 }

@@ -218,13 +218,7 @@ public class SOSServicePermissionIam {
             sosLoginParameters.setAuthenticatorData(authenticatorData);
             sosLoginParameters.setSignature(signature);
             sosLoginParameters.setCredentialId(credentialId);
-            if (requestId != null && !requestId.isEmpty()) {
-                try {
-                    sosLoginParameters.setRequestId(Long.valueOf(requestId));
-                } catch (NumberFormatException e) {
-                    LOGGER.warn("Invalid number format for requestId");
-                }
-            }
+            sosLoginParameters.setRequestId(requestId);
 
             return login(sosLoginParameters, pwd);
         } catch (JocAuthenticationException e) {

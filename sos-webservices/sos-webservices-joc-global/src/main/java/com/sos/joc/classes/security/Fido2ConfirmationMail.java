@@ -9,13 +9,11 @@ import javax.mail.MessagingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.mail.SOSMail;
 import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
-import com.sos.inventory.model.jobresource.JobResource;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.monitoring.mail.MailResource;
 import com.sos.joc.db.authentication.DBItemIamFido2Registration;
@@ -63,7 +61,7 @@ public class Fido2ConfirmationMail {
         }
     }
 
-    public void sendAccessMail(DBItemIamFido2Registration dbItemIamFido2Registration, String to, String identityServiceName) throws Exception {
+    public void sendRegistrationApprovedMail(DBItemIamFido2Registration dbItemIamFido2Registration, String to, String identityServiceName) throws Exception {
         if (fido2Properties.getIamFido2EmailSettings().getSendMailToNotifySuccessfulRegistration()) {
             sendMail(dbItemIamFido2Registration, fido2Properties.getIamFido2EmailSettings().getBodyAccess(), fido2Properties
                     .getIamFido2EmailSettings().getSubjectAccess(), to, identityServiceName);

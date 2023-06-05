@@ -72,8 +72,8 @@ public class SOSAuthHelper {
     private static final String _7_BIT = "7-bit";
     private static final String TEXT_HTML = "text/html";
     private static final String ISO_8859_1 = "ISO-8859-1";
-    private static final String SECURITY_FIDO2_FIDO2_REGISTRATION_MAIL_TEMPLATE_TXT = "/security/fido2/fido2_registration_mail_template.txt";
-    private static final String SECURITY_FIDO2_FIDO2_ACCESS_MAIL_TEMPLATE_TXT = "/security/fido2/fido2_access_mail_template.txt";
+    private static final String SECURITY_FIDO2_FIDO2_REGISTRATION_MAIL_TEMPLATE_TXT = "/security/fido2/fido2_mail_template_approved.txt";
+    private static final String SECURITY_FIDO2_FIDO2_ACCESS_MAIL_TEMPLATE_TXT = "/security/fido2/fido2_mail_template_confirmation.txt";
 
     public static final List<String> SUPPORTED_SUBTYPES = Arrays.asList("gif", "jpeg", "png", "icon", "svg");
 
@@ -489,7 +489,7 @@ public class SOSAuthHelper {
         if (properties.getFido2() == null) {
             properties.setFido2(new Fido2Properties());
         }
-
+        
         if (properties.getFido2().getIamFido2EmailSettings() == null) {
             properties.getFido2().setIamFido2EmailSettings(new Fido2EmailSettings());
         }

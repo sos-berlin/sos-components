@@ -33,12 +33,12 @@ public class SOSSecurityUtil {
     private static final String RSA = "RSA";
     private static final String KTY = "kty";
     private static final String CRV = "crv";
-    private static final String SHA256WITH_RSA = "SHA256withRSA";
+    private static final String SHA256WITHRSA = "SHA256withRSA";
     private static final String EC = "EC";
     private static final String P_256 = "P-256";
-    private static final String SHA3846WITH_ECDSA = "SHA3846withECDSA";
-    private static final String SHA512WITH_ECDSA = "SHA512withECDSA";
-    private static final String SHA256WITH_ECDSA = "SHA256withECDSA";
+    private static final String SHA3846WITHECDSA = "SHA3846withECDSA";
+    private static final String SHA512WITHECDSA = "SHA512withECDSA";
+    private static final String SHA256WITHECDSA = "SHA256withECDSA";
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSSecurityUtil.class);
 
     private static PublicKey getPublicKey(String base64PublicKey, String alg) throws NoSuchAlgorithmException, InvalidKeySpecException,
@@ -73,7 +73,7 @@ public class SOSSecurityUtil {
     public static String getAlgFromJwk(String jwk) {
         String alg = "";
         if (jwk == null || jwk.isEmpty()) {
-            alg = SHA256WITH_ECDSA;
+            alg = SHA256WITHECDSA;
         } else {
             String jwkDecoded = new String(Base64.getUrlDecoder().decode(jwk.getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
             JsonReader jsonReaderJwkDecoded = Json.createReader(new StringReader(jwkDecoded));
@@ -81,22 +81,22 @@ public class SOSSecurityUtil {
             String crv = jsonJwk.getString(CRV, "");
             String kty = jsonJwk.getString(KTY, "");
             if (kty.equals(RSA)) {
-                alg = SHA256WITH_RSA;
+                alg = SHA256WITHRSA;
             }
 
             if (kty.equals(EC)) {
                 switch (crv) {
                 case P_256:
-                    alg = SHA256WITH_ECDSA;
+                    alg = SHA256WITHECDSA;
                     break;
                 case "P-512":
-                    alg = SHA512WITH_ECDSA;
+                    alg = SHA512WITHECDSA;
                     break;
                 case "P-384":
-                    alg = SHA3846WITH_ECDSA;
+                    alg = SHA3846WITHECDSA;
                     break;
                 default:
-                    alg = SHA256WITH_ECDSA;
+                    alg = SHA256WITHECDSA;
                     break;
                 }
             }
