@@ -38,11 +38,14 @@ import com.sos.joc.exceptions.JocImportException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
+import com.sos.joc.inventory.impl.RevalidateResourceImpl;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.inventory.validate.Report;
+import com.sos.joc.model.inventory.validate.ReportItem;
 import com.sos.joc.model.joc.JocMetaInfo;
 import com.sos.joc.model.publish.ArchiveFormat;
 import com.sos.joc.model.publish.ImportFilter;
@@ -246,23 +249,30 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                     });
                 }
             }
-            ImportUtils.validateAndUpdate(storedConfigurations, agentNames, hibernateSession);
-            // post events
-            storedConfigurations.stream().map(DBItemInventoryConfiguration::getPath).map(path -> Paths.get(path).getParent()).distinct()
-                .forEach(path -> JocInventory.postEvent(path.toString().replace('\\', '/')));
-            // post folder events
-            if(filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
-                storedConfigurations.stream().map(DBItemInventoryConfiguration::getFolder)
-                .map(path -> Paths.get(path)).distinct()
-                .peek(targetParentFolder -> JocInventory.postFolderEvent(targetParentFolder.toString().replace('\\', '/')))
-                .map(parent -> parent.toString().replace('\\', '/').replaceFirst(filter.getTargetFolder(), ""))
-                .forEach(sourceFolder -> JocInventory.postFolderEvent(sourceFolder));
-            } else {
-                storedConfigurations.stream().map(DBItemInventoryConfiguration::getFolder)
-                .map(path -> Paths.get(path)).distinct()
-                .forEach(targetParentFolder -> JocInventory.postFolderEvent(targetParentFolder.toString().replace('\\', '/')));
-            }
-            CompletableFuture.runAsync(() -> ImportUtils.revalidateInvalidInvConfigurations(storedConfigurations));
+            
+            InventoryDBLayer invDbLayer = new InventoryDBLayer(hibernateSession);
+            List<DBItemInventoryConfiguration> invalidDBItems = invDbLayer.getAllInvalidConfigurations();
+            CompletableFuture.runAsync(() -> {
+                Report report = new Report();
+                try {
+                    report = RevalidateResourceImpl.revalidate(invalidDBItems, getJocError());
+                } catch (Exception e) {
+                    LOGGER.error("", e);
+                }
+                // post events
+                Stream.concat(storedConfigurations.stream().map(DBItemInventoryConfiguration::getPath), report.getValidObjs().stream()
+                        .map(ReportItem::getPath)).map(JOCResourceImpl::getParent).distinct().forEach(JocInventory::postEvent);
+                // post folder events
+                if(filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
+                    storedConfigurations.stream().map(DBItemInventoryConfiguration::getFolder).distinct()
+                    .peek(JocInventory::postFolderEvent)
+                    .map(parent -> parent.replaceFirst(filter.getTargetFolder(), ""))
+                    .forEach(JocInventory::postFolderEvent);
+                } else {
+                    storedConfigurations.stream().map(DBItemInventoryConfiguration::getFolder).distinct()
+                    .forEach(JocInventory::postFolderEvent);
+                }
+            });
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
