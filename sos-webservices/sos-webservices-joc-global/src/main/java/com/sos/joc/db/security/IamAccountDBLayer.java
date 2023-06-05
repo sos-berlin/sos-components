@@ -21,6 +21,7 @@ import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.authentication.DBItemIamPermission;
 import com.sos.joc.db.authentication.DBItemIamPermissionWithName;
 import com.sos.joc.db.authentication.DBItemIamRole;
+import com.sos.joc.db.authentication.DBItemIamFido2Devices;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.favorite.FavoriteDBLayer;
 import com.sos.joc.db.keys.DBLayerKeys;
@@ -251,7 +252,6 @@ public class IamAccountDBLayer {
         return iamAccountList == null ? Collections.emptyList() : iamAccountList;
     }
 
-  
     public List<DBItemIamAccount2Roles> getListOfRoles(Long accountId) throws SOSHibernateException {
         Query<DBItemIamAccount2Roles> query = sosHibernateSession.createQuery("from " + DBItemIamAccount2Roles + " where accountId=:accountId");
 
@@ -472,6 +472,19 @@ public class IamAccountDBLayer {
         } else {
             return accountList.get(0);
         }
+    }
+
+    public DBItemIamAccount getAccountFromCredentialId(String credentialId) throws SOSHibernateException {
+        DBItemIamAccount dbItemIamAccount = null;
+        Query<DBItemIamFido2Devices> query = sosHibernateSession.createQuery("from " + DBItemIamFido2Devices + " where credentialId=:credentialId");
+
+        query.setParameter("credentialId", credentialId);
+
+        List<DBItemIamFido2Devices> iamFido2Devices = sosHibernateSession.getResultList(query);
+        if (iamFido2Devices.size() == 1) {
+            dbItemIamAccount = sosHibernateSession.get(DBItemIamAccount.class, iamFido2Devices.get(0).getAccountId());
+        }
+        return dbItemIamAccount;
     }
 
     public boolean deleteRoleCascading(String role, Long identityServiceId) throws SOSHibernateException {
