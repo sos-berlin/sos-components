@@ -489,7 +489,7 @@ public class SOSAuthHelper {
         if (properties.getFido2() == null) {
             properties.setFido2(new Fido2Properties());
         }
-
+        
         if (properties.getFido2().getIamFido2EmailSettings() == null) {
             properties.getFido2().setIamFido2EmailSettings(new Fido2EmailSettings());
         }

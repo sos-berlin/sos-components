@@ -48,6 +48,9 @@ public class DBItemIamFido2Registration {
     @Column(name = "[CREDENTIAL_ID]", nullable = true)
     private String credentialId;
 
+    @Column(name = "[ORIGIN]", nullable = true)
+    private String origin;
+
     @Column(name = "[EMAIL]", nullable = false)
     private String email;
 
@@ -184,6 +187,16 @@ public class DBItemIamFido2Registration {
 
     public void setAlgorithm(String algorithm) {
         this.algorithm = algorithm;
+    }
+
+    
+    public String getOrigin() {
+        return origin;
+    }
+
+    
+    public void setOrigin(String origin) {
+        this.origin = origin;
     }
 
 }
