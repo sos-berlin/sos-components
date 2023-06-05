@@ -18,7 +18,7 @@ import com.sos.joc.db.DBLayer;
 public class DBItemIamFido2Devices {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_IAM_ACCOUNTS_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_IAM_FIDO2_DEVICES_SEQUENCE)
     @Column(name = "[ID]")
     private Long id;
 
