@@ -7,7 +7,7 @@ public class SOSFido2AuthWebserviceCredentials {
     private String signature = "";
     private String clientDataJson = "";
     private String authenticatorData;
-    private Long requestId;
+    private String requestId;
 
     public Long getIdentityServiceId() {
         return identityServiceId;
@@ -50,12 +50,12 @@ public class SOSFido2AuthWebserviceCredentials {
     }
 
     
-    public Long getRequestId() {
+    public String getRequestId() {
         return requestId;
     }
 
     
-    public void setRequestId(Long requestId) {
+    public void setRequestId(String requestId) {
         this.requestId = requestId;
     }
 
