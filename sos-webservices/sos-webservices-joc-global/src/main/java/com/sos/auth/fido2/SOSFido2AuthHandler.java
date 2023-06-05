@@ -33,6 +33,10 @@ import com.sos.joc.db.authentication.DBItemIamFido2Requests;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.db.security.IamAccountFilter;
+import com.sos.joc.db.security.IamFido2DevicesDBLayer;
+import com.sos.joc.db.security.IamFido2DevicesFilter;
+import com.sos.joc.db.security.IamFido2RequestDBLayer;
+import com.sos.joc.db.security.IamFido2RequestsFilter;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
@@ -63,11 +67,14 @@ public class SOSFido2AuthHandler {
             }
 
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
-            IamAccountFilter filter = new IamAccountFilter();
-            filter.setIdentityServiceId(dbItemIamIdentityService.getId());
-            filter.setRequestId(sosFido2AuthWebserviceCredentials.getRequestId());
+            IamFido2DevicesDBLayer iamFido2DevicesDBLayer = new IamFido2DevicesDBLayer(sosHibernateSession);
+            IamFido2DevicesFilter iamFido2DevicesFilter = new IamFido2DevicesFilter();
+            IamFido2RequestDBLayer iamFido2RequestDBLayer = new IamFido2RequestDBLayer(sosHibernateSession);
+            IamFido2RequestsFilter iamFido2RequestsFilter = new IamFido2RequestsFilter();
+            iamFido2RequestsFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
+            iamFido2RequestsFilter.setRequestId(sosFido2AuthWebserviceCredentials.getRequestId());
 
-            DBItemIamFido2Requests dbItemIamFido2Requests = iamAccountDBLayer.getFido2Request(filter);
+            DBItemIamFido2Requests dbItemIamFido2Requests = iamFido2RequestDBLayer.getFido2Request(iamFido2RequestsFilter);
             if (dbItemIamFido2Requests != null) {
                 byte[] clientDataJsonDecoded = Base64.getDecoder().decode(sosFido2AuthWebserviceCredentials.getClientDataJson());
 
@@ -75,6 +82,7 @@ public class SOSFido2AuthHandler {
                 JsonReader jsonReader = Json.createReader(new StringReader(clientDataJson));
                 JsonObject jsonHeader = jsonReader.readObject();
                 String challenge = jsonHeader.getString("challenge", "");
+                String origin = jsonHeader.getString("origin", "");
                 byte[] challengeDecoded = Base64.getDecoder().decode(challenge);
                 String challengeDecodedString = new String(challengeDecoded, StandardCharsets.UTF_8);
 
@@ -82,8 +90,8 @@ public class SOSFido2AuthHandler {
                     LOGGER.info("FIDO login with <wrong challenge>");
                     return null;
                 }
-           //     iamAccountDBLayer.getFido2DeleteRequest(filter);
-                
+                // iamAccountDBLayer.getFido2DeleteRequest(filter);
+
                 Globals.commit(sosHibernateSession);
                 byte[] authenticatorDataDecoded = java.util.Base64.getDecoder().decode(sosFido2AuthWebserviceCredentials.getAuthenticatorData());
                 byte[] clientDataJsonDecodedHash = SOSSecurityUtil.getDigestBytes(clientDataJsonDecoded, "SHA-256");
@@ -93,13 +101,14 @@ public class SOSFido2AuthHandler {
                 output.write(clientDataJsonDecodedHash);
 
                 byte[] out = output.toByteArray();
-                
+
                 IamAccountFilter iamAccountFilter = new IamAccountFilter();
                 iamAccountFilter.setAccountName(sosFido2AuthWebserviceCredentials.getAccount());
                 iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
                 DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getUniqueAccount(iamAccountFilter);
-
-                List<DBItemIamFido2Devices> listOfFido2Devices = iamAccountDBLayer.getListOfFido2Devices(dbItemIamAccount.getId());
+                iamFido2DevicesFilter.setAccountId(dbItemIamAccount.getId());
+                iamFido2DevicesFilter.setOrigin(origin);
+                List<DBItemIamFido2Devices> listOfFido2Devices = iamFido2DevicesDBLayer.getListOfFido2Devices(iamFido2DevicesFilter);
                 for (DBItemIamFido2Devices dbItemIamFido2Devices : listOfFido2Devices) {
                     String pKey = dbItemIamFido2Devices.getPublicKey();
                     if (SOSSecurityUtil.signatureVerified(pKey, out, sosFido2AuthWebserviceCredentials.getSignature(), dbItemIamFido2Devices

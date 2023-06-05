@@ -16,7 +16,7 @@ public class SOSLoginParameters {
     private String clientDataJson;
     private String signature;
     private String credentialId;
-    private Long requestId;
+    private String requestId;
     private SOSOpenIdWebserviceCredentials sosOpenIdWebserviceCredentials;
 
     public HttpServletRequest getRequest() {
@@ -115,11 +115,11 @@ public class SOSLoginParameters {
         this.credentialId = credentialId;
     }
 
-    public Long getRequestId() {
+    public String getRequestId() {
         return requestId;
     }
 
-    public void setRequestId(Long requestId) {
+    public void setRequestId(String requestId) {
         this.requestId = requestId;
     }
 
