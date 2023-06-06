@@ -61,7 +61,16 @@ public class Fido2ConfirmationMail {
         }
     }
 
-    public void sendRegistrationApprovedMail(DBItemIamFido2Registration dbItemIamFido2Registration, String to, String identityServiceName) throws Exception {
+    public void sendConfirmedMail(DBItemIamFido2Registration dbItemIamFido2Registration, String identityServiceName) throws Exception {
+        if (fido2Properties.getIamFido2EmailSettings().getSendMailToNotifyConfirmationReceived()) {
+            sendMail(dbItemIamFido2Registration, fido2Properties.getIamFido2EmailSettings().getBodyConfirmed(), fido2Properties
+                    .getIamFido2EmailSettings().getSubjectConfirmed(), fido2Properties.getIamFido2EmailSettings().getReceiptConfirmed(),
+                    identityServiceName);
+        }
+    }
+
+    public void sendRegistrationApprovedMail(DBItemIamFido2Registration dbItemIamFido2Registration, String to, String identityServiceName)
+            throws Exception {
         if (fido2Properties.getIamFido2EmailSettings().getSendMailToNotifySuccessfulRegistration()) {
             sendMail(dbItemIamFido2Registration, fido2Properties.getIamFido2EmailSettings().getBodyAccess(), fido2Properties
                     .getIamFido2EmailSettings().getSubjectAccess(), to, identityServiceName);
@@ -76,13 +85,13 @@ public class Fido2ConfirmationMail {
 
         Map<String, String> params = new HashMap<String, String>();
         params.put("base_url", getJocBaseUri());
-        params.put("joc_href", getJocBaseUri() +"/joc/#/login");
+        params.put("joc_href", getJocBaseUri() + "/joc/#/login");
         params.put("registration_verify_link", getJocBaseUri() + "/joc/#/email_verify?token=" + dbItemIamFido2Registration.getToken());
         params.put("token", dbItemIamFido2Registration.getToken());
         params.put("account_name", dbItemIamFido2Registration.getAccountName());
-        params.put("registration_email_address", to);
+        params.put("registration_email_address", dbItemIamFido2Registration.getEmail());
         params.put("fido2_identity_service", identityServiceName);
- 
+
         body = resolve(body, params);
 
         mail.addRecipient(to);

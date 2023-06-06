@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.auth.classes.SOSAuthHelper;
+import com.sos.auth.fido2.classes.SOSFido2ClientData;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -170,13 +171,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
                         .getIdentityServiceType() + ">");
             }
 
-            byte[] clientDataJsonDecoded = Base64.getDecoder().decode(fido2Registration.getClientDataJSON());
-
-            String clientDataJson = new String(clientDataJsonDecoded, StandardCharsets.UTF_8);
-            JsonReader jsonReader = Json.createReader(new StringReader(clientDataJson));
-            JsonObject jsonClientData = jsonReader.readObject();
-            String origin = jsonClientData.getString(ORIGIN, "");
-            String challenge = jsonClientData.getString(CHALLENGE, "");
+            SOSFido2ClientData sosFido2ClientData = new SOSFido2ClientData(fido2Registration.getClientDataJSON());
 
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
             IamAccountFilter iamAccountFilter = new IamAccountFilter();
@@ -189,7 +184,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
                 IamFido2DevicesDBLayer iamFido2DevicesDBLayer = new IamFido2DevicesDBLayer(sosHibernateSession);
                 IamFido2DevicesFilter filter = new IamFido2DevicesFilter();
                 filter.setAccountId(dbItemIamAccount.getId());
-                filter.setOrigin(origin);
+                filter.setOrigin(sosFido2ClientData.getOrigin());
                 List<DBItemIamFido2Devices> listOfDevices = iamFido2DevicesDBLayer.getListOfFido2Devices(filter);
 
                 if (listOfDevices.size() > 0) {
@@ -203,7 +198,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             IamFido2RegistrationFilter iamFido2RegistrationFilter = new IamFido2RegistrationFilter();
             iamFido2RegistrationFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
             iamFido2RegistrationFilter.setAccountName(fido2Registration.getAccountName());
-            iamFido2RegistrationFilter.setOrigin(origin);
+            iamFido2RegistrationFilter.setOrigin(sosFido2ClientData.getOrigin());
             DBItemIamFido2Registration dbItemIamFido2Registration = iamFido2DBLayer.getUniqueFido2Registration(iamFido2RegistrationFilter);
             boolean isNew = false;
             if (dbItemIamFido2Registration == null) {
@@ -222,8 +217,8 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             if (!isNew) {
                 String s = fido2Registration.getClientDataJSON();
                 if (s != null) {
-                    dbItemIamFido2Registration.setOrigin(origin);
-                    byte[] challengeDecoded = Base64.getDecoder().decode(challenge);
+                    dbItemIamFido2Registration.setOrigin(sosFido2ClientData.getOrigin());
+                    byte[] challengeDecoded = Base64.getDecoder().decode(sosFido2ClientData.getChallenge());
                     String challengeDecodedString = new String(challengeDecoded, StandardCharsets.UTF_8);
 
                     if (!challengeDecodedString.equals(dbItemIamFido2Registration.getChallenge())) {
@@ -956,6 +951,11 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
 
             Globals.commit(sosHibernateSession);
 
+            DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityServiceById(sosHibernateSession, dbItemIamFido2Registration
+                    .getIdentityServiceId());
+
+            sendConfirmedMail(dbItemIamIdentityService.getIdentityServiceName(), dbItemIamFido2Registration);
+
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
 
         } catch (JocException e) {
@@ -1051,6 +1051,13 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
 
         Fido2ConfirmationMail fido2ConfirmationMail = new Fido2ConfirmationMail(properties.getFido2());
         fido2ConfirmationMail.sendRegistrationMail(dbItemIamFido2Registration, to, identityServiceName);
+    }
+
+    private void sendConfirmedMail(String identityServiceName, DBItemIamFido2Registration dbItemIamFido2Registration) throws Exception {
+        com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getIamProperties(identityServiceName);
+
+        Fido2ConfirmationMail fido2ConfirmationMail = new Fido2ConfirmationMail(properties.getFido2());
+        fido2ConfirmationMail.sendConfirmedMail(dbItemIamFido2Registration, identityServiceName);
     }
 
     private String getProperty(String value, String defaultValue) {

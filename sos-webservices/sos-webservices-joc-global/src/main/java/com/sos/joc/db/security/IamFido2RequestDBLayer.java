@@ -10,7 +10,6 @@ import com.sos.joc.db.authentication.DBItemIamFido2Requests;
 
 public class IamFido2RequestDBLayer {
 
-    private static final String DBItemIamAccount = com.sos.joc.db.authentication.DBItemIamAccount.class.getSimpleName();
     private static final String DBItemIamFido2Requests = com.sos.joc.db.authentication.DBItemIamFido2Requests.class.getSimpleName();
 
     private final SOSHibernateSession sosHibernateSession;
@@ -72,7 +71,7 @@ public class IamFido2RequestDBLayer {
         }
     }
 
-    public int getFido2DeleteRequest(IamFido2RequestsFilter filter) throws SOSHibernateException {
+    public int deleteFido2Request(IamFido2RequestsFilter filter) throws SOSHibernateException {
         String hql = "delete from " + DBItemIamFido2Requests + getWhere(filter);
         Query<DBItemIamFido2Requests> query = null;
         int row = 0;

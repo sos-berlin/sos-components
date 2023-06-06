@@ -37,6 +37,11 @@ public class Fido2RegistrationsFilter {
      */
     @JsonProperty("identityServiceName")
     private String identityServiceName;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("accounts")
     private List<Fido2RegistrationAccount> accounts = new ArrayList<Fido2RegistrationAccount>();
     @JsonProperty("deferred")
@@ -100,11 +105,21 @@ public class Fido2RegistrationsFilter {
         this.identityServiceName = identityServiceName;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("accounts")
     public List<Fido2RegistrationAccount> getAccounts() {
         return accounts;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("accounts")
     public void setAccounts(List<Fido2RegistrationAccount> accounts) {
         this.accounts = accounts;

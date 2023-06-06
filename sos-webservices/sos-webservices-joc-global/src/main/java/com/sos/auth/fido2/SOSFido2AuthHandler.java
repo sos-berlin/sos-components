@@ -2,19 +2,12 @@ package com.sos.auth.fido2;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.StringReader;
-import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.Base64;
 import java.util.List;
-
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.auth.classes.SOSAuthAccessToken;
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.fido2.classes.SOSFido2AuthWebserviceCredentials;
+import com.sos.auth.fido2.classes.SOSFido2ClientData;
 import com.sos.auth.sosintern.classes.SOSInternAuthLogin;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -76,25 +70,20 @@ public class SOSFido2AuthHandler {
 
             DBItemIamFido2Requests dbItemIamFido2Requests = iamFido2RequestDBLayer.getFido2Request(iamFido2RequestsFilter);
             if (dbItemIamFido2Requests != null) {
-                byte[] clientDataJsonDecoded = Base64.getDecoder().decode(sosFido2AuthWebserviceCredentials.getClientDataJson());
 
-                String clientDataJson = new String(clientDataJsonDecoded, StandardCharsets.UTF_8);
-                JsonReader jsonReader = Json.createReader(new StringReader(clientDataJson));
-                JsonObject jsonHeader = jsonReader.readObject();
-                String challenge = jsonHeader.getString("challenge", "");
-                String origin = jsonHeader.getString("origin", "");
-                byte[] challengeDecoded = Base64.getDecoder().decode(challenge);
-                String challengeDecodedString = new String(challengeDecoded, StandardCharsets.UTF_8);
+                SOSFido2ClientData sosFido2ClientData = new SOSFido2ClientData(sosFido2AuthWebserviceCredentials.getClientDataJson());
 
-                if (!challengeDecodedString.equals(dbItemIamFido2Requests.getChallenge())) {
+
+                if (!sosFido2ClientData.getChallengeDecodedString().equals(dbItemIamFido2Requests.getChallenge())) {
                     LOGGER.info("FIDO login with <wrong challenge>");
                     return null;
                 }
-                // iamAccountDBLayer.getFido2DeleteRequest(filter);
+                
+                iamFido2RequestDBLayer.deleteFido2Request(iamFido2RequestsFilter);
 
                 Globals.commit(sosHibernateSession);
                 byte[] authenticatorDataDecoded = java.util.Base64.getDecoder().decode(sosFido2AuthWebserviceCredentials.getAuthenticatorData());
-                byte[] clientDataJsonDecodedHash = SOSSecurityUtil.getDigestBytes(clientDataJsonDecoded, "SHA-256");
+                byte[] clientDataJsonDecodedHash = SOSSecurityUtil.getDigestBytes(sosFido2ClientData.getClientDataJsonDecoded(), "SHA-256");
                 ByteArrayOutputStream output = new ByteArrayOutputStream();
 
                 output.write(authenticatorDataDecoded);
@@ -107,7 +96,7 @@ public class SOSFido2AuthHandler {
                 iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
                 DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getUniqueAccount(iamAccountFilter);
                 iamFido2DevicesFilter.setAccountId(dbItemIamAccount.getId());
-                iamFido2DevicesFilter.setOrigin(origin);
+                iamFido2DevicesFilter.setOrigin(sosFido2ClientData.getOrigin());
                 List<DBItemIamFido2Devices> listOfFido2Devices = iamFido2DevicesDBLayer.getListOfFido2Devices(iamFido2DevicesFilter);
                 for (DBItemIamFido2Devices dbItemIamFido2Devices : listOfFido2Devices) {
                     String pKey = dbItemIamFido2Devices.getPublicKey();
