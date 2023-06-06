@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -43,6 +44,8 @@ import com.sos.joc.model.agent.SubAgent;
 import com.sos.joc.model.agent.SubAgentId;
 import com.sos.joc.model.agent.SubagentCluster;
 import com.sos.joc.model.agent.SubagentDirectorType;
+
+import js7.data.platform.PlatformInfo;
 
 public class AgentStoreUtils {
     
@@ -519,7 +522,7 @@ public class AgentStoreUtils {
     }
     
     @Subscribe({ AgentVersionUpdatedEvent.class })
-    public void updateAgentVersion(AgentVersionUpdatedEvent event) {
+    public static void updateAgentVersion(AgentVersionUpdatedEvent event) {
         SOSHibernateSession connection = null;
         LOGGER.trace("AgentReadyEvent received -> update version of agent instance if neccessary.");
         try {
@@ -555,9 +558,13 @@ public class AgentStoreUtils {
             closeDBConnection(connection);
         }
     }
+    
+    public static void updateAgentVersion(String agentId, Optional<PlatformInfo> pOpt) {
+        pOpt.ifPresent(p -> updateAgentVersion(new AgentVersionUpdatedEvent(agentId, p.js7Version().string(), p.java().version())));
+    }
 
     @Subscribe({ SubagentVersionUpdatedEvent.class })
-    public void updateSubagentVersion(SubagentVersionUpdatedEvent event) {
+    public static void updateSubagentVersion(SubagentVersionUpdatedEvent event) {
         SOSHibernateSession connection = null;
         LOGGER.trace("AgentReadyEvent received -> update version of agent instance if neccessary.");
         try {
@@ -592,6 +599,10 @@ public class AgentStoreUtils {
         } finally {
             closeDBConnection(connection);
         }
+    }
+    
+    public static void updateSubagentVersion(String agentId, String subagentId, Optional<PlatformInfo> pOpt) {
+        pOpt.ifPresent(p -> updateSubagentVersion(new SubagentVersionUpdatedEvent(agentId, subagentId, p.js7Version().string(), p.java().version())));
     }
 
     private static SOSHibernateSession initDBConnection() {
