@@ -35,9 +35,6 @@ import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.db.authentication.DBItemIamAccount;
 import com.sos.joc.db.authentication.DBItemIamBlockedAccount;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
-import com.sos.joc.db.configuration.JocConfigurationDbLayer;
-import com.sos.joc.db.configuration.JocConfigurationFilter;
-import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.db.security.IamAccountFilter;
 import com.sos.joc.db.security.IamHistoryDbLayer;
@@ -796,7 +793,11 @@ public class SOSServicePermissionIam {
                     String authStringEnc = new String(authEncBytes);
                     sosLoginParameters.setBasicAuthorization("Basic " + authStringEnc);
                 } else {
-                    LOGGER.info("Could not find account for credential-id <" + sosLoginParameters.getCredentialId() + ">");
+                    SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = new SOSAuthCurrentAccountAnswer();
+                    sosAuthCurrentAccountAnswer.setIsAuthenticated(false);
+                    sosAuthCurrentAccountAnswer.setMessage("Could not find account for credential-id <" + sosLoginParameters.getCredentialId() + ">");
+                    sosAuthCurrentAccountAnswer.setIdentityService(sosLoginParameters.getIdentityService());
+                    throw new JocAuthenticationException(sosAuthCurrentAccountAnswer);
                 }
             }
 

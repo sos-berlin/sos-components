@@ -42,6 +42,7 @@ public class SOSFido2AuthLogin implements ISOSLogin {
             sosFido2AuthWebserviceCredentials.setSignature(currentAccount.getSosLoginParameters().getSignature());
             sosFido2AuthWebserviceCredentials.setAuthenticatorData(currentAccount.getSosLoginParameters().getAuthenticatorData());
             sosFido2AuthWebserviceCredentials.setRequestId(currentAccount.getSosLoginParameters().getRequestId());
+            sosFido2AuthWebserviceCredentials.setCredentialId(currentAccount.getSosLoginParameters().getCredentialId());
 
             SOSFido2AuthHandler sosFido2AuthHandler = new SOSFido2AuthHandler();
 
