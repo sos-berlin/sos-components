@@ -9,6 +9,9 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import jakarta.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -35,6 +38,7 @@ import com.sos.schema.JsonValidator;
 public class ClientServerCertImpl extends JOCResourceImpl implements ICreateClientServerCert {
 
     private static String API_CALL = "./authentication/certificate/create";
+    private static final Logger LOGGER = LoggerFactory.getLogger(ClientServerCertImpl.class);
 
     @Override
     public JOCDefaultResponse postCreateClientServerCert(String token, byte[] filter) {
@@ -57,6 +61,8 @@ public class ClientServerCertImpl extends JOCResourceImpl implements ICreateClie
                     hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
                     InventoryInstancesDBLayer controllerDbLayer = new InventoryInstancesDBLayer(hibernateSession);
                     InventoryAgentInstancesDBLayer agentDbLayer = new InventoryAgentInstancesDBLayer(hibernateSession);
+                    LOGGER.info("agentId: " + onetimeToken.getAgentId());
+                    LOGGER.info("controllerId: " + onetimeToken.getControllerId());
                     if (createCsrFilter.getDnOnly()) {
                         response.setDNs(getDns(onetimeToken, controllerDbLayer, agentDbLayer));
                     } else {
@@ -87,6 +93,8 @@ public class ClientServerCertImpl extends JOCResourceImpl implements ICreateClie
             } else {
                 throw new JocAuthenticationException("No valid one-time token(s) found!");
             }
+            response.setControllerId(onetimeToken.getControllerId());
+            response.setAgentId(onetimeToken.getAgentId());
             return JOCDefaultResponse.responseStatus200(response);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
