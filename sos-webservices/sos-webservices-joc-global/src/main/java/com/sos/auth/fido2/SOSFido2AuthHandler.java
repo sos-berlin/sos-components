@@ -73,12 +73,11 @@ public class SOSFido2AuthHandler {
 
                 SOSFido2ClientData sosFido2ClientData = new SOSFido2ClientData(sosFido2AuthWebserviceCredentials.getClientDataJson());
 
-
                 if (!sosFido2ClientData.getChallengeDecodedString().equals(dbItemIamFido2Requests.getChallenge())) {
                     LOGGER.info("FIDO login with <wrong challenge>");
                     return null;
                 }
-                
+
                 iamFido2RequestDBLayer.deleteFido2Request(iamFido2RequestsFilter);
 
                 Globals.commit(sosHibernateSession);
@@ -97,14 +96,15 @@ public class SOSFido2AuthHandler {
                 DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getUniqueAccount(iamAccountFilter);
                 iamFido2DevicesFilter.setAccountId(dbItemIamAccount.getId());
                 iamFido2DevicesFilter.setOrigin(sosFido2ClientData.getOrigin());
+                iamFido2DevicesFilter.setCredentialId(sosFido2AuthWebserviceCredentials.getCredentialId());
                 List<DBItemIamFido2Devices> listOfFido2Devices = iamFido2DevicesDBLayer.getListOfFido2Devices(iamFido2DevicesFilter);
-                for (DBItemIamFido2Devices dbItemIamFido2Devices : listOfFido2Devices) {
+                if (listOfFido2Devices.size() == 1) {
+                    DBItemIamFido2Devices dbItemIamFido2Devices = listOfFido2Devices.get(0);
                     String pKey = dbItemIamFido2Devices.getPublicKey();
                     if (SOSSecurityUtil.signatureVerified(pKey, out, sosFido2AuthWebserviceCredentials.getSignature(), dbItemIamFido2Devices
                             .getAlgorithm())) {
                         sosAuthAccessToken = new SOSAuthAccessToken();
                         sosAuthAccessToken.setAccessToken(SOSAuthHelper.createSessionId());
-                        break;
                     }
                 }
             }
