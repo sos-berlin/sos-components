@@ -5,12 +5,12 @@ public class SubagentVersionUpdatedEvent extends AgentVersionEvent {
     
     public SubagentVersionUpdatedEvent(String agentId, String subagentId, String version) {
         super("SubagentVersionUpdated", agentId, version);
-        putVariable("subagentId", agentId);
+        putVariable("subagentId", subagentId);
     }
     
     public SubagentVersionUpdatedEvent(String agentId, String subagentId, String version, String javaVersion) {
         super("SubagentVersionUpdated", agentId, version, javaVersion);
-        putVariable("subagentId", agentId);
+        putVariable("subagentId", subagentId);
     }
     
     public String getSubagentId() {
