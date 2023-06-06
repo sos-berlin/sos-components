@@ -22,7 +22,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "jocKeyPair",
     "caCert",
-    "DNs"
+    "DNs",
+    "controllerId",
+    "agentId"
 })
 public class RolloutResponse {
 
@@ -38,6 +40,10 @@ public class RolloutResponse {
     private String caCert;
     @JsonProperty("DNs")
     private List<String> dNs = new ArrayList<String>();
+    @JsonProperty("controllerId")
+    private String controllerId;
+    @JsonProperty("agentId")
+    private String agentId;
 
     /**
      * SOS Key Pair
@@ -81,14 +87,34 @@ public class RolloutResponse {
         this.dNs = dNs;
     }
 
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
+    }
+
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
+    }
+
+    @JsonProperty("agentId")
+    public String getAgentId() {
+        return agentId;
+    }
+
+    @JsonProperty("agentId")
+    public void setAgentId(String agentId) {
+        this.agentId = agentId;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jocKeyPair", jocKeyPair).append("caCert", caCert).append("dNs", dNs).toString();
+        return new ToStringBuilder(this).append("jocKeyPair", jocKeyPair).append("caCert", caCert).append("dNs", dNs).append("controllerId", controllerId).append("agentId", agentId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(dNs).append(caCert).append(jocKeyPair).toHashCode();
+        return new HashCodeBuilder().append(dNs).append(agentId).append(caCert).append(controllerId).append(jocKeyPair).toHashCode();
     }
 
     @Override
@@ -100,7 +126,7 @@ public class RolloutResponse {
             return false;
         }
         RolloutResponse rhs = ((RolloutResponse) other);
-        return new EqualsBuilder().append(dNs, rhs.dNs).append(caCert, rhs.caCert).append(jocKeyPair, rhs.jocKeyPair).isEquals();
+        return new EqualsBuilder().append(dNs, rhs.dNs).append(agentId, rhs.agentId).append(caCert, rhs.caCert).append(controllerId, rhs.controllerId).append(jocKeyPair, rhs.jocKeyPair).isEquals();
     }
 
 }

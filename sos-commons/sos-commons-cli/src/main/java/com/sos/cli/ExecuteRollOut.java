@@ -4,14 +4,17 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.net.InetAddress;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
@@ -96,15 +99,21 @@ public class ExecuteRollOut {
     private static final String PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY = "js7.web.https.truststores";
     private static final String PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH = "file";
     private static final String PRIVATE_CONF_JS7_PARAM_TRUSTORES_SUB_STOREPWD = "store-password";
-    private static final String PRIVATE_CONF_JS7_PARAM_DN = "js7.auth.users.Controller.distinguished-names"; 
+    private static final String PRIVATE_CONF_JS7_PARAM_DN = "js7.auth.users.controller.distinguished-names"; 
+    private static final String PRIVATE_CONF_JS7_PARAM_USERS = "js7.auth.users."; 
+    private static final String PRIVATE_CONF_JS7_PARAM_DISTINGUISHED_NAMES = ".distinguished-names"; 
     private static final String DEFAULT_KEYSTORE_FILENAME = "https-keystore.p12";
     private static final String DEFAULT_TRUSTSTORE_FILENAME = "https-truststore.p12";
+    private static final String DEFAULT_KEYSTORE_PATH = "${js7.config-directory}\"/private/https-keystore.p12\"";
+    private static final String DEFAULT_TRUSTSTORE_PATH = "${js7.config-directory}\"/private/https-truststore.p12\"";
+    private static final String DEFAULT_STORE_PWD = "jobscheduler";
     private static final ConfigParseOptions PARSE_OPTIONS = ConfigParseOptions.defaults().setSyntax(ConfigSyntax.CONF);
-    private static final ConfigRenderOptions RENDER_OPTIONS = ConfigRenderOptions.concise().setComments(true).setOriginComments(false).setFormatted(true)
-            .setJson(false);
-    private static final ConfigResolveOptions RESOLVE_OPTIONS = ConfigResolveOptions.noSystem().setUseSystemEnvironment(false).setAllowUnresolved(true);
-//    private static final List<String> CONFIG_DIRECTORY_KEYS = Arrays.asList("js7.configuration.trusted-signature-keys", "js7.web.https.keystore",
-//            "js7.web.https.truststores");
+    private static final ConfigRenderOptions RENDER_OPTIONS = ConfigRenderOptions.concise().setComments(true).setOriginComments(false)
+            .setFormatted(true).setJson(false);
+    private static final ConfigResolveOptions RESOLVE_OPTIONS = ConfigResolveOptions.noSystem().setUseSystemEnvironment(false)
+            .setAllowUnresolved(true);
+//    private static final List<String> CONFIG_DIRECTORY_KEYS = Arrays.asList("js7.configuration.trusted-signature-keys", 
+//            "js7.web.https.keystore", "js7.web.https.truststores");
     private static SOSRestApiClient client;
     private static String token;
     private static String subjectDN;
@@ -134,8 +143,10 @@ public class ExecuteRollOut {
     private static Config resolved;
     private static Config toUpdate;
     private static boolean dnOnly = false;
-    private static ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
-            SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
+    private static ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .configure(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true)
+            .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+            .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
 
 
     public static void main(String[] args) throws Exception {
@@ -200,6 +211,7 @@ public class ExecuteRollOut {
                 }
             }
             readConfig();
+//            setKeyStoreCredentials();
             try {
                 createClient();
                 String response = callWebService();
@@ -230,6 +242,43 @@ public class ExecuteRollOut {
         }
     }
     
+    private static KeyStore createKeyStore (boolean isKeystore)
+            throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
+        KeyStore keystore = null;
+        Path path = null;
+        String passwd = null;
+        if(isKeystore) {
+            if(targetKeystore != null && !targetKeystore.isEmpty()) {
+                path = Paths.get(targetKeystore);
+            } else {
+                path = Paths.get(confDir).resolve(PRIVATE_FOLDER_NAME).resolve(DEFAULT_KEYSTORE_FILENAME);
+            }
+            if(targetKeystorePasswd != null) {
+                passwd = targetKeystorePasswd;
+            } else {
+                passwd = DEFAULT_STORE_PWD;
+            }
+        } else {
+            if(targetTruststore != null && !targetTruststore.isEmpty()) {
+                path = Paths.get(targetTruststore);
+            } else {
+                path = Paths.get(confDir).resolve(PRIVATE_FOLDER_NAME).resolve(DEFAULT_TRUSTSTORE_FILENAME);
+            }
+            if(targetTruststorePasswd != null) {
+                passwd = targetTruststorePasswd;
+            } else {
+                passwd = DEFAULT_STORE_PWD;
+            }
+        }
+        Files.createDirectories(path.getParent());
+        keystore = KeyStore.getInstance(KeystoreType.PKCS12.value().toLowerCase());
+        try (OutputStream os = Files.newOutputStream(path)){
+            keystore.load(null, passwd.toCharArray());
+            keystore.store(os, passwd.toCharArray());
+        }
+        return keystore;
+    }
+    
     private static String parseErrorResponse(String response) throws IOException {
 //      ^.*code\":\"(.*)\",\"message\":\"([.[^\"]]*)(.*)$
         Pattern pattern = Pattern.compile("^.*code\\\":\\\"(.*)\\\",\\\"message\\\":\\\"([.[^\\\"]]*).*$");
@@ -253,36 +302,51 @@ public class ExecuteRollOut {
     }
     
     private static void updatePrivateConf (Config config, RolloutResponse response) throws Exception {
+        String dnPath = PRIVATE_CONF_JS7_PARAM_DN;
+        if(response.getControllerId() != null) {
+            dnPath = PRIVATE_CONF_JS7_PARAM_USERS + response.getControllerId() + PRIVATE_CONF_JS7_PARAM_DISTINGUISHED_NAMES;
+        } else if (response.getAgentId() != null) {
+            dnPath = PRIVATE_CONF_JS7_PARAM_USERS + response.getAgentId() + PRIVATE_CONF_JS7_PARAM_DISTINGUISHED_NAMES;
+        }
         if (response.getJocKeyPair() != null) {
             X509Certificate  certificate = KeyUtil.getX509Certificate(response.getJocKeyPair().getCertificate());
             String subjectDN = certificate.getSubjectDN().getName();
-            if (config.hasPath(PRIVATE_CONF_JS7_PARAM_DN)) {
-                List<String> dns = config.getStringList(PRIVATE_CONF_JS7_PARAM_DN);
-                dns.add(subjectDN);
+            if (config.hasPath(dnPath)) {
+                List<String> dns = config.getStringList(dnPath);
+                if (!dns.contains(subjectDN)) {
+                    dns.add(subjectDN);
+                }
                 ConfigValue value = ConfigValueFactory.fromAnyRef(dns);
-                toUpdate = config.withValue(PRIVATE_CONF_JS7_PARAM_DN, value);
+                toUpdate = config.withValue(dnPath, value);
             } else {
                 List<String> newValues = new ArrayList<String>();
                 newValues.add(subjectDN);
                 ConfigValue value = ConfigValueFactory.fromIterable(newValues);
-                toUpdate = config.withValue(PRIVATE_CONF_JS7_PARAM_DN, value);
+                toUpdate = config.withValue(dnPath, value);
             }
         } else if (response.getDNs() != null && !response.getDNs().isEmpty()){
-            if (config.hasPath(PRIVATE_CONF_JS7_PARAM_DN)) {
-                List<String> dns = config.getStringList(PRIVATE_CONF_JS7_PARAM_DN);
+            if (config.hasPath(dnPath)) {
+                List<String> dns = config.getStringList(dnPath);
                 ConfigValue value = ConfigValueFactory.fromAnyRef(dns);
-                toUpdate = config.withValue(PRIVATE_CONF_JS7_PARAM_DN, value);
+                toUpdate = config.withValue(dnPath, value);
             } else {
                 List<String> newValues = new ArrayList<String>();
                 ConfigValue value = ConfigValueFactory.fromIterable(newValues);
-                toUpdate = config.withValue(PRIVATE_CONF_JS7_PARAM_DN, value);
+                toUpdate = config.withValue(dnPath, value);
             }
         }
+        // TODO: add js7.web section if not exists
+        
         saveConfigToFile(toUpdate);
+    }
+    
+    private static void addJs7WebSectionIfNotExists(final Config config) {
+        
     }
     
     private static void saveConfigToFile(final Config config) throws IOException {
         final String configAsHoconString = config.root().render(RENDER_OPTIONS);
+        configAsHoconString.replace(confDir, "${" + PRIVATE_CONF_JS7_PARAM_CONFDIR + "}");
         Files.write(Paths.get(confDir).resolve(PRIVATE_FOLDER_NAME).resolve(PRIVATE_CONF_FILENAME), configAsHoconString.getBytes());
     }
     
@@ -307,6 +371,25 @@ public class ExecuteRollOut {
         }
     }
 
+    private static void setKeystoreCredentials() throws Exception {
+        KeyStore keyStore = null;
+        KeyStore trustStore = null;
+        String alias = "";
+        if (targetKeystore != null && !targetKeystore.isEmpty()) {
+            // args
+            keyStore = KeyStoreUtil.readKeyStore(targetKeystore, KeystoreType.fromValue(targetKeystoreType), targetKeystorePasswd);
+            alias = keyAlias;
+        } else if (resolved != null) {
+            // private.conf
+            KeyStoreCredentials credentials = readKeystoreCredentials(resolved);
+            keyStore = KeyStoreUtil.readKeyStore(credentials.getPath(), KeystoreType.PKCS12, credentials.getStorePwd());
+        } else {
+            //default
+            // TODO: create default path
+            keyStore = KeyStoreUtil.readKeyStore("", KeystoreType.PKCS12, null);
+        }
+    }
+    
     private static void addKeyAndCertToStore(RolloutResponse rolloutResponse) throws Exception {
         KeyStore targetKeyStore = null;
         KeyStore targetTrustStore = null;
@@ -316,6 +399,11 @@ public class ExecuteRollOut {
             X509Certificate rootCaCertificate = KeyUtil.getX509Certificate(rolloutResponse.getCaCert());
             Certificate[] chain = new Certificate[] {certificate, rootCaCertificate}; 
             if (targetKeystore != null && !targetKeystore.isEmpty()) {
+                Path targetKeystorePath = Paths.get(targetKeystore);
+                boolean fileAlreadyExist = Files.exists(targetKeystorePath);
+                if (!fileAlreadyExist) {
+                    targetKeyStore = createKeyStore(true);
+                }
                 targetKeyStore = KeyStoreUtil.readKeyStore(targetKeystore, KeystoreType.fromValue(targetKeystoreType), targetKeystorePasswd);
                 if (targetKeyStore != null) {
                     if (keyAlias != null && !keyAlias.isEmpty()) {
@@ -342,6 +430,10 @@ public class ExecuteRollOut {
                 System.err.println(String.format("no keystore found. Parameter <%1$s> is required.", TRG_KEYSTORE));
             }
             if (targetTruststore != null && !targetTruststore.isEmpty()) {
+                boolean fileAlreadyExist = Files.exists(Paths.get(targetTruststore));
+                if (!fileAlreadyExist) {
+                    targetTrustStore = createKeyStore(false);
+                }
                 targetTrustStore = KeyStoreUtil.readTrustStore(targetTruststore, KeystoreType.fromValue(targetTruststoreType), targetTruststorePasswd);
                 if (targetTrustStore != null) {
                     if (caAlias != null && !caAlias.isEmpty()) {
@@ -431,21 +523,31 @@ public class ExecuteRollOut {
             
             List<KeyStoreCredentials> truststoresCredentials = readTruststoreCredentials(resolved);
             System.out.println("read Trustore from: " + resolved.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY).get(0).getString(PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH));
-            Optional<KeyStore> truststoreOptional = truststoresCredentials.stream().filter(item -> item.getPath().endsWith(DEFAULT_TRUSTSTORE_FILENAME)).map(item -> {
-                try {
-                    return KeyStoreUtil.readTrustStore(item.getPath(), KeystoreType.PKCS12, item.getStorePwd());
-                } catch (Exception e) {
-                    return null;
-                }
-            }).filter(Objects::nonNull).findAny();
+            Optional<KeyStore> truststoreOptional = truststoresCredentials.stream()
+                    .filter(item -> item.getPath().endsWith(DEFAULT_TRUSTSTORE_FILENAME)).map(item -> {
+                        try {
+                            return KeyStoreUtil.readTrustStore(item.getPath(), KeystoreType.PKCS12, item.getStorePwd());
+                        } catch (Exception e) {
+                            return null;
+                        }
+                    }).filter(Objects::nonNull).findAny();
             KeyStore truststore = null; 
             if (truststoreOptional.isPresent()) {
                 truststore = truststoreOptional.get();
+            } else {
+                truststore = createKeyStore(false);
             }
             KeyStoreCredentials credentials = readKeystoreCredentials(resolved);
-//            KeyStoreCredentials credentials = readKeystoreCredentials(toUpdate);
             System.out.println("read Keystore from: " + resolved.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_FILEPATH));
-            KeyStore keystore = KeyStoreUtil.readKeyStore(credentials.getPath(), KeystoreType.PKCS12, credentials.getStorePwd());
+            KeyStore keystore;
+            try {
+                keystore = KeyStoreUtil.readKeyStore(credentials.getPath(), KeystoreType.PKCS12, credentials.getStorePwd());
+            } catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {
+                keystore = null;
+            }
+            if(keystore == null) {
+                keystore = createKeyStore(true);
+            }
             if (keystore != null && truststore != null) {
                 client.setSSLContext(keystore, credentials.getKeyPwd().toCharArray(), credentials.getKeyStoreAlias(), truststore);
             }
@@ -532,6 +634,21 @@ public class ExecuteRollOut {
         String hostname = InetAddress.getLocalHost().getCanonicalHostName();
         return client.postRestService(jocUri.resolve(WS_API), createRequestBody(subjectDN, hostname));
     }
+    
+    private static String getPriorizedKeystoreKey() {
+        // priorities: args -> private.conf -> default
+        return null;
+    }
+
+    private static String getPriorizedKeystoreEntryKey() {
+        // priorities: args -> private.conf -> default
+        return null;
+    }
+
+    private static String getPriorizedTruststoreKey() {
+        // priorities: args -> private.conf -> default
+        return null;
+    }
 
     private static void printUsage(){
         System.out.println();
@@ -567,5 +684,23 @@ public class ExecuteRollOut {
         System.out.printf("  %-29s | %s%n", TS_ALIAS + "=", "Alias used to store the ca certificate in both, the target keystore and truststore.");
         System.out.println();
     }
-
+    
+    private class PriorizedKeyStoreCredentials {
+        
+        private KeyStore keystore;
+        private KeyStore truststore;
+        
+        public PriorizedKeyStoreCredentials (KeyStore keystore, KeyStore truststore) {
+            this.keystore = keystore;
+            this.truststore = truststore;
+        }
+        
+        public KeyStore getKeystore() {
+            return this.keystore;
+        }
+        
+        public KeyStore getTruststore() {
+            return this.truststore;
+        }
+    }
 }

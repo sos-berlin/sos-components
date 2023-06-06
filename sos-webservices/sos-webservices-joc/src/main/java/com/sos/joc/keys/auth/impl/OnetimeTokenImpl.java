@@ -88,6 +88,9 @@ public class OnetimeTokenImpl extends JOCResourceImpl implements IOnetimeToken {
                     OnetimeToken token = new OnetimeToken();
                     token.setValidUntil(validUntil);
                     token.setAgentId(agentId);
+                    if(controllerId != null && !controllerId.isEmpty()) {
+                        token.setControllerId(controllerId);
+                    }
                     token.setUUID(UUID.randomUUID().toString());
                     onetimeTokens.getTokens().add(token);
                     response.getTokens().add(token);
