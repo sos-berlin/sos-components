@@ -97,7 +97,9 @@ public class CheckHistoryJob extends ABlockingInternalJob<CheckHistoryJobArgumen
         CheckHistoryJobArguments arguments = new CheckHistoryJobArguments();
         arguments.setQuery("isStarted(startedFrom=-1d,startedTo=0d) or isCompleted or isCompleted");
         arguments.setQuery("isCompletedSuccessful(startedFrom=2023-01-22T01:00:00+02:00) " );
-        arguments.setQuery("isCompletedSuccessful oR isCompletedFailed");
+        arguments.setQuery("isCompletedSuccessful(startedFrom=2022-05-05T01:00:00.000Z)");
+        arguments.setQuery("isCompletedSuccessful(startedFrom=2023-01-22T01:00:00+02:00) " );
+        arguments.setQuery("isStarted(startedFrom=-1d,startedTo=0d) oR isCompleted Or isCompleted");
         // arguments.setQuery("isCompleted(startedFrom=-100d, count>5)");
 
         // arguments.setQuery("lastCompletedSuccessful");
