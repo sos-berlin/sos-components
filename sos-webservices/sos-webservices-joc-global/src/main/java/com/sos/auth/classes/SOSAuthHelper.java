@@ -56,14 +56,16 @@ import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 import com.sos.joc.model.security.properties.fido2.Fido2EmailSettings;
 import com.sos.joc.model.security.properties.fido2.Fido2Properties;
+import com.sos.joc.model.security.properties.fido2.Fido2ResidentKey;
 import com.sos.joc.model.security.properties.fido2.Fido2Userverification;
 
 import jakarta.servlet.http.HttpServletRequest;
 
 public class SOSAuthHelper {
 
-    private static final String JS7_REGISTRATION_WITH_JS7_JOB_SCHEDULER_IS_COMPLETED = "JS7: Registration with JS7 JobScheduler is completed";
-    private static final String JS7_CONFIRMATION_RECEIVED = "JS7: FIDO2 Confirmation received";
+    private static final String JS7_SUBJECT_REGISTRATION_WITH_JS7_JOB_SCHEDULER_IS_APPROVED = "JS7: Registration with JS7 JobScheduler is completed";
+    private static final String JS7_SUBJECT_REGISTRATION_WITH_JS7_JOB_SCHEDULER_CONFIRMATION = "JS7: Registration with JS7 JobScheduler";
+    private static final String JS7_SUBJECT_REGISTRATION_WITH_JS7_JOB_SCHEDULER_CONFIRMED = "JS7: FIDO2 Confirmation received";
     private static final String JS7_CONFIRM_E_MAIL_ADDRESS_FOR_REGISTRATION_WITH_JS7_JOB_SCHEDULER =
             "JS7: Confirm e-mail address for registration with JS7 JobScheduler";
     private static final String DEFAULT_PROFILE_ACCOUNT = "default_profile_account";
@@ -73,9 +75,9 @@ public class SOSAuthHelper {
     private static final String _7_BIT = "7-bit";
     private static final String TEXT_HTML = "text/html";
     private static final String ISO_8859_1 = "ISO-8859-1";
-    private static final String SECURITY_FIDO2_REGISTRATION_MAIL_TEMPLATE_TXT = "/security/fido2/fido2_mail_template_approved.txt";
-    private static final String SECURITY_FIDO2_ACCESS_MAIL_TEMPLATE_TXT = "/security/fido2/fido2_mail_template_confirmation.txt";
-    private static final String SECURITY_FIDO2_CONFIRMED_MAIL_TEMPLATE_TXT = "/security/fido2/fido2_mail_template_confirmed.txt";
+    private static final String SECURITY_BODY_FIDO2_APPROVED_MAIL_TEMPLATE_TXT = "/security/fido2/fido2_mail_template_approved.txt";
+    private static final String SECURITY_BODY_FIDO2_CONFIRMATION_MAIL_TEMPLATE_TXT = "/security/fido2/fido2_mail_template_confirmation.txt";
+    private static final String SECURITY_BODY_FIDO2_CONFIRMED_MAIL_TEMPLATE_TXT = "/security/fido2/fido2_mail_template_confirmed.txt";
 
     public static final List<String> SUPPORTED_SUBTYPES = Arrays.asList("gif", "jpeg", "png", "icon", "svg");
 
@@ -397,7 +399,7 @@ public class SOSAuthHelper {
                 DBItemJocConfiguration dbItem = listOfJocConfigurations.get(0);
                 com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(dbItem.getConfigurationItem(),
                         com.sos.joc.model.security.properties.Properties.class);
-                properties = setDefaultEmailSettings(properties);
+                properties = setDefaultFIDO2Settings(properties);
                 return properties;
             }
             return null;
@@ -486,8 +488,9 @@ public class SOSAuthHelper {
         return text;
     }
 
-    public static com.sos.joc.model.security.properties.Properties setDefaultEmailSettings(
+    public static com.sos.joc.model.security.properties.Properties setDefaultFIDO2Settings(
             com.sos.joc.model.security.properties.Properties properties) throws SOSException, IOException {
+
         if (properties.getFido2() == null) {
             properties.setFido2(new Fido2Properties());
         }
@@ -498,32 +501,33 @@ public class SOSAuthHelper {
 
         if (properties.getFido2().getIamFido2EmailSettings().getBodyAccess() == null || properties.getFido2().getIamFido2EmailSettings()
                 .getBodyAccess().isEmpty()) {
-            properties.getFido2().getIamFido2EmailSettings().setBodyAccess(getContentFromResource(SECURITY_FIDO2_ACCESS_MAIL_TEMPLATE_TXT));
+            properties.getFido2().getIamFido2EmailSettings().setBodyAccess(getContentFromResource(SECURITY_BODY_FIDO2_APPROVED_MAIL_TEMPLATE_TXT));
         }
         if (properties.getFido2().getIamFido2EmailSettings().getBodyRegistration() == null || properties.getFido2().getIamFido2EmailSettings()
                 .getBodyRegistration().isEmpty()) {
             properties.getFido2().getIamFido2EmailSettings().setBodyRegistration(getContentFromResource(
-                    SECURITY_FIDO2_REGISTRATION_MAIL_TEMPLATE_TXT));
+                    SECURITY_BODY_FIDO2_CONFIRMATION_MAIL_TEMPLATE_TXT));
         }
+
         if (properties.getFido2().getIamFido2EmailSettings().getBodyConfirmed() == null || properties.getFido2().getIamFido2EmailSettings()
                 .getBodyConfirmed().isEmpty()) {
-            properties.getFido2().getIamFido2EmailSettings().setBodyConfirmed(getContentFromResource(SECURITY_FIDO2_CONFIRMED_MAIL_TEMPLATE_TXT));
+            properties.getFido2().getIamFido2EmailSettings().setBodyConfirmed(getContentFromResource(
+                    SECURITY_BODY_FIDO2_CONFIRMED_MAIL_TEMPLATE_TXT));
         }
 
         if (properties.getFido2().getIamFido2EmailSettings().getSubjectRegistration() == null || properties.getFido2().getIamFido2EmailSettings()
                 .getSubjectRegistration().isEmpty()) {
-            properties.getFido2().getIamFido2EmailSettings().setSubjectRegistration(
-                    JS7_CONFIRM_E_MAIL_ADDRESS_FOR_REGISTRATION_WITH_JS7_JOB_SCHEDULER);
+            properties.getFido2().getIamFido2EmailSettings().setSubjectRegistration(JS7_SUBJECT_REGISTRATION_WITH_JS7_JOB_SCHEDULER_CONFIRMATION);
         }
 
         if (properties.getFido2().getIamFido2EmailSettings().getSubjectAccess() == null || properties.getFido2().getIamFido2EmailSettings()
                 .getSubjectAccess().isEmpty()) {
-            properties.getFido2().getIamFido2EmailSettings().setSubjectAccess(JS7_REGISTRATION_WITH_JS7_JOB_SCHEDULER_IS_COMPLETED);
+            properties.getFido2().getIamFido2EmailSettings().setSubjectAccess(JS7_SUBJECT_REGISTRATION_WITH_JS7_JOB_SCHEDULER_IS_APPROVED);
         }
 
         if (properties.getFido2().getIamFido2EmailSettings().getSubjectConfirmed() == null || properties.getFido2().getIamFido2EmailSettings()
                 .getSubjectConfirmed().isEmpty()) {
-            properties.getFido2().getIamFido2EmailSettings().setSubjectConfirmed(JS7_CONFIRMATION_RECEIVED);
+            properties.getFido2().getIamFido2EmailSettings().setSubjectConfirmed(JS7_SUBJECT_REGISTRATION_WITH_JS7_JOB_SCHEDULER_CONFIRMED);
         }
 
         if (properties.getFido2().getIamFido2EmailSettings().getCharset() == null || properties.getFido2().getIamFido2EmailSettings().getCharset()
@@ -546,6 +550,15 @@ public class SOSAuthHelper {
         }
         if (properties.getFido2().getIamFido2EmailSettings().getSendMailToNotifyConfirmationReceived() == null) {
             properties.getFido2().getIamFido2EmailSettings().setSendMailToNotifyConfirmationReceived(false);
+        }
+        if (properties.getFido2().getIamFido2ResidentKey() == null) {
+            properties.getFido2().setIamFido2ResidentKey(Fido2ResidentKey.REQUIRED);
+        }
+        if (properties.getFido2().getIamFido2UserVerification() == null) {
+            properties.getFido2().setIamFido2UserVerification(Fido2Userverification.REQUIRED);
+        }
+        if (properties.getFido2().getIamFido2Timeout() == null) {
+            properties.getFido2().setIamFido2Timeout(60);
         }
         return properties;
     }
