@@ -1,16 +1,11 @@
 package com.sos.joc.security.impl;
 
-import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
-
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
 
 import org.hibernate.exception.LockAcquisitionException;
 import org.slf4j.Logger;
@@ -66,7 +61,6 @@ import com.sos.joc.model.security.fido2.Fido2RequestAuthenticationResponse;
 import com.sos.joc.model.security.identityservice.Fido2IdentityProvider;
 import com.sos.joc.model.security.identityservice.IdentityServiceFilter;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
-import com.sos.joc.model.security.properties.fido2.Fido2Attestation;
 import com.sos.joc.model.security.properties.fido2.Fido2ResidentKey;
 import com.sos.joc.model.security.properties.fido2.Fido2Transports;
 import com.sos.joc.model.security.properties.fido2.Fido2Userverification;
@@ -78,8 +72,6 @@ import jakarta.ws.rs.Path;
 @Path("iam")
 public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource {
 
-    private static final String ORIGIN = "origin";
-    private static final String CHALLENGE = "challenge";
     private static final Logger LOGGER = LoggerFactory.getLogger(Fido2ResourceImpl.class);
     private static final String API_CALL_FIDO2_CONFIGURATION = "./iam/fido2configuration";
     private static final String API_CALL_FIDO2_REGISTRATIONS = "./iam/fido2registrations";
@@ -543,8 +535,6 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
                         }
                         identityProvider.setIamFido2UserVerification(Fido2Userverification.valueOf(getProperty(properties.getFido2()
                                 .getIamFido2UserVerification().value(), "")));
-                        identityProvider.setIamFido2Attestation(Fido2Attestation.valueOf(getProperty(properties.getFido2().getIamFido2Attestation()
-                                .value(), "")));
                         identityProvider.setIamFido2ResidentKey(Fido2ResidentKey.valueOf(getProperty(properties.getFido2().getIamFido2ResidentKey()
                                 .value(), "")));
                         identityProvider.setIdentityServiceName(identityServiceFilter.getIdentityServiceName());
@@ -1040,7 +1030,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(dbItem.getConfigurationItem(),
                     com.sos.joc.model.security.properties.Properties.class);
 
-            properties = SOSAuthHelper.setDefaultEmailSettings(properties);
+            properties = SOSAuthHelper.setDefaultFIDO2Settings(properties);
 
             dbItem.setConfigurationItem(Globals.objectMapper.writeValueAsString(properties));
             Configuration200 entity = new Configuration200();
