@@ -51,7 +51,17 @@
 
 		<dependency>
 			<groupId>org.linguafranca.pwdb</groupId>
-			<artifactId>KeePassJava2</artifactId>
+			<artifactId>KeePassJava2-kdb</artifactId>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.linguafranca.pwdb</groupId>
+			<artifactId>KeePassJava2-dom</artifactId>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.linguafranca.pwdb</groupId>
+			<artifactId>KeePassJava2-jaxb</artifactId>
 		</dependency>
 		
     	<dependency>

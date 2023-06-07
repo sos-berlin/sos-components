@@ -22,7 +22,7 @@ public class SSHProviderUtil {
                     .getKeepassAttachmentPropertyName()));
         }
         try {
-            String pk = new String(kd.getAttachment(ke, args.getKeepassAttachmentPropertyName()), "UTF-8");
+            String pk = new String(kd.getHandler().getAttachment(ke, args.getKeepassAttachmentPropertyName()), "UTF-8");
             return sshClient.loadKeys(pk, null, SOSString.isEmpty(args.getPassphrase().getValue()) ? null : getPasswordFinder(args.getPassphrase()
                     .getValue()));
         } catch (Exception e) {
