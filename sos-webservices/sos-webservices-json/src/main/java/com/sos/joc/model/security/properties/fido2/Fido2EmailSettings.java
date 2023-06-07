@@ -28,6 +28,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "bccAccess",
     "bodyConfirmed",
     "subjectConfirmed",
+    "ccConfirmed",
+    "bccConfirmed",
     "receiptConfirmed",
     "sendMailToConfirm",
     "sendMailToNotifySuccessfulRegistration",
@@ -126,6 +128,22 @@ public class Fido2EmailSettings {
      * 
      * 
      */
+    @JsonProperty("ccConfirmed")
+    private String ccConfirmed;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("bccConfirmed")
+    private String bccConfirmed;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("receiptConfirmed")
     private String receiptConfirmed;
     /**
@@ -205,11 +223,13 @@ public class Fido2EmailSettings {
 
     /**
      * 
+     * @param bccConfirmed
      * @param bodyRegistration
      * @param sendMailToConfirm
      * @param charset
      * @param subjectRegistration
      * @param bodyConfirmed
+     * @param ccConfirmed
      * @param bccRegistration
      * @param subjectAccess
      * @param ccRegistration
@@ -225,7 +245,7 @@ public class Fido2EmailSettings {
      * @param nameOfJobResource
      * @param contentType
      */
-    public Fido2EmailSettings(String bodyRegistration, String subjectRegistration, String ccRegistration, String bccRegistration, String bodyAccess, String subjectAccess, String ccAccess, String bccAccess, String bodyConfirmed, String subjectConfirmed, String receiptConfirmed, Boolean sendMailToConfirm, Boolean sendMailToNotifySuccessfulRegistration, Boolean sendMailToNotifyConfirmationReceived, String contentType, String charset, String encoding, String priority, String nameOfJobResource) {
+    public Fido2EmailSettings(String bodyRegistration, String subjectRegistration, String ccRegistration, String bccRegistration, String bodyAccess, String subjectAccess, String ccAccess, String bccAccess, String bodyConfirmed, String subjectConfirmed, String ccConfirmed, String bccConfirmed, String receiptConfirmed, Boolean sendMailToConfirm, Boolean sendMailToNotifySuccessfulRegistration, Boolean sendMailToNotifyConfirmationReceived, String contentType, String charset, String encoding, String priority, String nameOfJobResource) {
         super();
         this.bodyRegistration = bodyRegistration;
         this.subjectRegistration = subjectRegistration;
@@ -237,6 +257,8 @@ public class Fido2EmailSettings {
         this.bccAccess = bccAccess;
         this.bodyConfirmed = bodyConfirmed;
         this.subjectConfirmed = subjectConfirmed;
+        this.ccConfirmed = ccConfirmed;
+        this.bccConfirmed = bccConfirmed;
         this.receiptConfirmed = receiptConfirmed;
         this.sendMailToConfirm = sendMailToConfirm;
         this.sendMailToNotifySuccessfulRegistration = sendMailToNotifySuccessfulRegistration;
@@ -474,6 +496,50 @@ public class Fido2EmailSettings {
      * 
      * 
      */
+    @JsonProperty("ccConfirmed")
+    public String getCcConfirmed() {
+        return ccConfirmed;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("ccConfirmed")
+    public void setCcConfirmed(String ccConfirmed) {
+        this.ccConfirmed = ccConfirmed;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("bccConfirmed")
+    public String getBccConfirmed() {
+        return bccConfirmed;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("bccConfirmed")
+    public void setBccConfirmed(String bccConfirmed) {
+        this.bccConfirmed = bccConfirmed;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("receiptConfirmed")
     public String getReceiptConfirmed() {
         return receiptConfirmed;
@@ -668,12 +734,12 @@ public class Fido2EmailSettings {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("bodyRegistration", bodyRegistration).append("subjectRegistration", subjectRegistration).append("ccRegistration", ccRegistration).append("bccRegistration", bccRegistration).append("bodyAccess", bodyAccess).append("subjectAccess", subjectAccess).append("ccAccess", ccAccess).append("bccAccess", bccAccess).append("bodyConfirmed", bodyConfirmed).append("subjectConfirmed", subjectConfirmed).append("receiptConfirmed", receiptConfirmed).append("sendMailToConfirm", sendMailToConfirm).append("sendMailToNotifySuccessfulRegistration", sendMailToNotifySuccessfulRegistration).append("sendMailToNotifyConfirmationReceived", sendMailToNotifyConfirmationReceived).append("contentType", contentType).append("charset", charset).append("encoding", encoding).append("priority", priority).append("nameOfJobResource", nameOfJobResource).toString();
+        return new ToStringBuilder(this).append("bodyRegistration", bodyRegistration).append("subjectRegistration", subjectRegistration).append("ccRegistration", ccRegistration).append("bccRegistration", bccRegistration).append("bodyAccess", bodyAccess).append("subjectAccess", subjectAccess).append("ccAccess", ccAccess).append("bccAccess", bccAccess).append("bodyConfirmed", bodyConfirmed).append("subjectConfirmed", subjectConfirmed).append("ccConfirmed", ccConfirmed).append("bccConfirmed", bccConfirmed).append("receiptConfirmed", receiptConfirmed).append("sendMailToConfirm", sendMailToConfirm).append("sendMailToNotifySuccessfulRegistration", sendMailToNotifySuccessfulRegistration).append("sendMailToNotifyConfirmationReceived", sendMailToNotifyConfirmationReceived).append("contentType", contentType).append("charset", charset).append("encoding", encoding).append("priority", priority).append("nameOfJobResource", nameOfJobResource).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(bodyRegistration).append(sendMailToConfirm).append(charset).append(subjectRegistration).append(bodyConfirmed).append(bccRegistration).append(subjectAccess).append(ccRegistration).append(encoding).append(priority).append(ccAccess).append(receiptConfirmed).append(sendMailToNotifySuccessfulRegistration).append(bccAccess).append(subjectConfirmed).append(bodyAccess).append(sendMailToNotifyConfirmationReceived).append(nameOfJobResource).append(contentType).toHashCode();
+        return new HashCodeBuilder().append(bccConfirmed).append(bodyRegistration).append(sendMailToConfirm).append(charset).append(subjectRegistration).append(bodyConfirmed).append(ccConfirmed).append(bccRegistration).append(subjectAccess).append(ccRegistration).append(encoding).append(priority).append(ccAccess).append(receiptConfirmed).append(sendMailToNotifySuccessfulRegistration).append(bccAccess).append(subjectConfirmed).append(bodyAccess).append(sendMailToNotifyConfirmationReceived).append(nameOfJobResource).append(contentType).toHashCode();
     }
 
     @Override
@@ -685,7 +751,7 @@ public class Fido2EmailSettings {
             return false;
         }
         Fido2EmailSettings rhs = ((Fido2EmailSettings) other);
-        return new EqualsBuilder().append(bodyRegistration, rhs.bodyRegistration).append(sendMailToConfirm, rhs.sendMailToConfirm).append(charset, rhs.charset).append(subjectRegistration, rhs.subjectRegistration).append(bodyConfirmed, rhs.bodyConfirmed).append(bccRegistration, rhs.bccRegistration).append(subjectAccess, rhs.subjectAccess).append(ccRegistration, rhs.ccRegistration).append(encoding, rhs.encoding).append(priority, rhs.priority).append(ccAccess, rhs.ccAccess).append(receiptConfirmed, rhs.receiptConfirmed).append(sendMailToNotifySuccessfulRegistration, rhs.sendMailToNotifySuccessfulRegistration).append(bccAccess, rhs.bccAccess).append(subjectConfirmed, rhs.subjectConfirmed).append(bodyAccess, rhs.bodyAccess).append(sendMailToNotifyConfirmationReceived, rhs.sendMailToNotifyConfirmationReceived).append(nameOfJobResource, rhs.nameOfJobResource).append(contentType, rhs.contentType).isEquals();
+        return new EqualsBuilder().append(bccConfirmed, rhs.bccConfirmed).append(bodyRegistration, rhs.bodyRegistration).append(sendMailToConfirm, rhs.sendMailToConfirm).append(charset, rhs.charset).append(subjectRegistration, rhs.subjectRegistration).append(bodyConfirmed, rhs.bodyConfirmed).append(ccConfirmed, rhs.ccConfirmed).append(bccRegistration, rhs.bccRegistration).append(subjectAccess, rhs.subjectAccess).append(ccRegistration, rhs.ccRegistration).append(encoding, rhs.encoding).append(priority, rhs.priority).append(ccAccess, rhs.ccAccess).append(receiptConfirmed, rhs.receiptConfirmed).append(sendMailToNotifySuccessfulRegistration, rhs.sendMailToNotifySuccessfulRegistration).append(bccAccess, rhs.bccAccess).append(subjectConfirmed, rhs.subjectConfirmed).append(bodyAccess, rhs.bodyAccess).append(sendMailToNotifyConfirmationReceived, rhs.sendMailToNotifyConfirmationReceived).append(nameOfJobResource, rhs.nameOfJobResource).append(contentType, rhs.contentType).isEquals();
     }
 
 }

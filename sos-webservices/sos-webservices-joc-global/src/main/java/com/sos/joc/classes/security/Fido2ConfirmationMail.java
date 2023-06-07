@@ -55,31 +55,36 @@ public class Fido2ConfirmationMail {
 
     public void sendRegistrationMail(DBItemIamFido2Registration dbItemIamFido2Registration, String to, String identityServiceName) throws Exception {
         if (fido2Properties.getIamFido2EmailSettings().getSendMailToConfirm()) {
+            String cc = fido2Properties.getIamFido2EmailSettings().getCcRegistration();
+            String bcc = fido2Properties.getIamFido2EmailSettings().getBccRegistration();
             sendMail(dbItemIamFido2Registration, fido2Properties.getIamFido2EmailSettings().getBodyRegistration(), fido2Properties
-
-                    .getIamFido2EmailSettings().getSubjectRegistration(), to, identityServiceName);
+                    .getIamFido2EmailSettings().getSubjectRegistration(), to, cc, bcc, identityServiceName);
         }
     }
 
     public void sendConfirmedMail(DBItemIamFido2Registration dbItemIamFido2Registration, String identityServiceName) throws Exception {
         if (fido2Properties.getIamFido2EmailSettings().getSendMailToNotifyConfirmationReceived()) {
+            String to = fido2Properties.getIamFido2EmailSettings().getReceiptConfirmed();
+            String cc = fido2Properties.getIamFido2EmailSettings().getCcConfirmed();
+            String bcc = fido2Properties.getIamFido2EmailSettings().getBccConfirmed();
             sendMail(dbItemIamFido2Registration, fido2Properties.getIamFido2EmailSettings().getBodyConfirmed(), fido2Properties
-                    .getIamFido2EmailSettings().getSubjectConfirmed(), fido2Properties.getIamFido2EmailSettings().getReceiptConfirmed(),
-                    identityServiceName);
+                    .getIamFido2EmailSettings().getSubjectConfirmed(), to, cc, bcc, identityServiceName);
         }
     }
 
     public void sendRegistrationApprovedMail(DBItemIamFido2Registration dbItemIamFido2Registration, String to, String identityServiceName)
             throws Exception {
         if (fido2Properties.getIamFido2EmailSettings().getSendMailToNotifySuccessfulRegistration()) {
+            String cc = fido2Properties.getIamFido2EmailSettings().getCcAccess();
+            String bcc = fido2Properties.getIamFido2EmailSettings().getBccAccess();
             sendMail(dbItemIamFido2Registration, fido2Properties.getIamFido2EmailSettings().getBodyAccess(), fido2Properties
-                    .getIamFido2EmailSettings().getSubjectAccess(), to, identityServiceName);
+                    .getIamFido2EmailSettings().getSubjectAccess(), to, cc, bcc, identityServiceName);
         }
 
     }
 
-    private void sendMail(DBItemIamFido2Registration dbItemIamFido2Registration, String body, String subject, String to, String identityServiceName)
-            throws Exception {
+    private void sendMail(DBItemIamFido2Registration dbItemIamFido2Registration, String body, String subject, String to, String cc, String bcc,
+            String identityServiceName) throws Exception {
 
         init();
 
@@ -95,6 +100,12 @@ public class Fido2ConfirmationMail {
         body = resolve(body, params);
 
         mail.addRecipient(to);
+        if (cc != null && !cc.isEmpty()) {
+            mail.addAttachment(cc);
+        }
+        if (bcc != null && !bcc.isEmpty()) {
+            mail.addAttachment(bcc);
+        }
 
         if (subject == null || subject.isEmpty()) {
             subject = defaultSubject();

@@ -12,6 +12,7 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 
+import org.hibernate.exception.LockAcquisitionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -249,6 +250,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             Globals.rollback(sosHibernateSession);
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
+            Globals.rollback(sosHibernateSession);
             Globals.disconnect(sosHibernateSession);
         }
     }
@@ -448,13 +450,23 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             iamFido2RegistrationFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
             iamFido2RegistrationFilter.setEmail(fido2Registration.getEmail());
             iamFido2RegistrationFilter.setCompleted(false);
-            iamFido2DBLayer.delete(iamFido2RegistrationFilter);
+            iamFido2RegistrationFilter.setOrigin(fido2Registration.getOrigin());
+            try {
+                iamFido2DBLayer.delete(iamFido2RegistrationFilter);
+            } catch (LockAcquisitionException e) {
+                Globals.rollback(sosHibernateSession);
+            }
 
             iamFido2RegistrationFilter = new IamFido2RegistrationFilter();
             iamFido2RegistrationFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
             iamFido2RegistrationFilter.setAccountName(fido2Registration.getAccountName());
+            iamFido2RegistrationFilter.setOrigin(fido2Registration.getOrigin());
             iamFido2RegistrationFilter.setCompleted(false);
-            iamFido2DBLayer.delete(iamFido2RegistrationFilter);
+            try {
+                iamFido2DBLayer.delete(iamFido2RegistrationFilter);
+            } catch (LockAcquisitionException e) {
+                Globals.rollback(sosHibernateSession);
+            }
 
             DBItemIamFido2Registration dbItemIamFido2Registration = iamFido2DBLayer.getUniqueFido2Registration(iamFido2RegistrationFilter);
             boolean isNew = false;
@@ -463,18 +475,17 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
                 isNew = true;
             }
 
-            dbItemIamFido2Registration.setConfirmed(false);
-            dbItemIamFido2Registration.setCompleted(false);
-            dbItemIamFido2Registration.setDeferred(false);
-            dbItemIamFido2Registration.setEmail(fido2Registration.getEmail());
-            dbItemIamFido2Registration.setAccountName(fido2Registration.getAccountName());
-            dbItemIamFido2Registration.setIdentityServiceId(dbItemIamIdentityService.getId());
-            dbItemIamFido2Registration.setChallenge(fido2RegistrationStartResponse.getChallenge());
-            dbItemIamFido2Registration.setOrigin(fido2Registration.getOrigin());
-            dbItemIamFido2Registration.setCreated(new Date());
-
             if (isNew) {
                 LOGGER.info("FIDO2 registration request start");
+                dbItemIamFido2Registration.setConfirmed(false);
+                dbItemIamFido2Registration.setCompleted(false);
+                dbItemIamFido2Registration.setDeferred(false);
+                dbItemIamFido2Registration.setEmail(fido2Registration.getEmail());
+                dbItemIamFido2Registration.setAccountName(fido2Registration.getAccountName());
+                dbItemIamFido2Registration.setIdentityServiceId(dbItemIamIdentityService.getId());
+                dbItemIamFido2Registration.setChallenge(fido2RegistrationStartResponse.getChallenge());
+                dbItemIamFido2Registration.setOrigin(fido2Registration.getOrigin());
+                dbItemIamFido2Registration.setCreated(new Date());
                 sosHibernateSession.save(dbItemIamFido2Registration);
             } else {
                 throw new JocAuthenticationException("Registration request already exists");
@@ -493,6 +504,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             Globals.rollback(sosHibernateSession);
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
+            Globals.rollback(sosHibernateSession);
             Globals.disconnect(sosHibernateSession);
         }
     }
@@ -681,6 +693,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
+            Globals.rollback(sosHibernateSession);
             Globals.disconnect(sosHibernateSession);
         }
     }
@@ -851,6 +864,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             Globals.rollback(sosHibernateSession);
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
+            Globals.rollback(sosHibernateSession);
             Globals.disconnect(sosHibernateSession);
         }
         return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
