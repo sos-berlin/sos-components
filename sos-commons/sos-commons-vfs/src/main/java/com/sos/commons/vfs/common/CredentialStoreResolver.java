@@ -52,8 +52,8 @@ public class CredentialStoreResolver {
             return false;
         }
 
-        SOSKeePassPath keePassPath = new SOSKeePassPath(args.getKeepassDatabase().isKDBX(), arg.getValue().toString(), args.getCredentialStore()
-                .getEntryPath().getValue());
+        SOSKeePassPath keePassPath = new SOSKeePassPath(args.getKeepassDatabase().getHandler().isKdbx(), arg.getValue().toString(), args
+                .getCredentialStore().getEntryPath().getValue());
         if (keePassPath.isValid()) {
             Entry<?, ?, ?, ?> entry = getEntry(args, keePassPath.getEntryPath());
             if (entry != null) {
@@ -66,7 +66,8 @@ public class CredentialStoreResolver {
     }
 
     private static void setDatabase(AProviderArguments args) throws Exception {
-        SOSKeePassDatabase kpd = new SOSKeePassDatabase(SOSPath.toAbsolutePath(args.getCredentialStore().getFile().getValue()));
+        SOSKeePassDatabase kpd = new SOSKeePassDatabase(SOSPath.toAbsolutePath(args.getCredentialStore().getFile().getValue()), SOSKeePassDatabase
+                .getModule(args.getCredentialStore().getModule().getValue()));
         Path keyFile = null;
         if (args.getCredentialStore().getKeyFile().getValue() != null) {
             Path cskf = SOSPath.toAbsolutePath(args.getCredentialStore().getKeyFile().getValue());
@@ -116,8 +117,8 @@ public class CredentialStoreResolver {
         if (arg.getName() == null || arg.getValue() == null) {// intern
             return lastEntry;
         }
-        SOSKeePassPath keePassPath = new SOSKeePassPath(args.getKeepassDatabase().isKDBX(), arg.getValue().toString(), args.getCredentialStore()
-                .getEntryPath().getValue());
+        SOSKeePassPath keePassPath = new SOSKeePassPath(args.getKeepassDatabase().getHandler().isKdbx(), arg.getValue().toString(), args
+                .getCredentialStore().getEntryPath().getValue());
         Entry<?, ?, ?, ?> entry = null;
         String fileName = args.getCredentialStore().getFile().getValue().toString();
         String argName = arg.getName();

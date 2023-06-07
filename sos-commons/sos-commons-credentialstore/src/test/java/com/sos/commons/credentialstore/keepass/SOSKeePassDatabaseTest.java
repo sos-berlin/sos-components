@@ -2,12 +2,19 @@ package com.sos.commons.credentialstore.keepass;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
 
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.linguafranca.pwdb.Entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.sos.commons.credentialstore.keepass.SOSKeePassDatabase.Module;
+import com.sos.commons.util.SOSDate;
+import com.sos.commons.util.SOSPath;
+import com.sos.commons.util.SOSString;
 
 public class SOSKeePassDatabaseTest {
 
@@ -21,16 +28,13 @@ public class SOSKeePassDatabaseTest {
     @Ignore
     @Test
     public void getMainUriKeePass1CompositeKeyTest() throws Exception {
-
         String uri = "cs://server/SFTP/my_server@user?file=" + DIR + "/keepassX-test.kdb";
-
         SOSKeePassDatabase.main(new String[] { uri });
     }
 
     @Ignore
     @Test
     public void getMainUriPropertyTest() throws Exception {
-
         String databaseName = "kdbx-p-f.kdbx";
 
         String uri = "cs://server/SFTP/my_server@my test?file=" + DIR + "/" + databaseName + "&password=test";
@@ -40,7 +44,6 @@ public class SOSKeePassDatabaseTest {
     @Ignore
     @Test
     public void getMainUriAttachmentTest() throws Exception {
-
         String databaseName = "kdbx-p-f.kdbx";
 
         String uri = "cs://server/SFTP/my_server@attachment?file=" + DIR + "/" + databaseName + "&password=test";
@@ -51,12 +54,76 @@ public class SOSKeePassDatabaseTest {
     @Ignore
     @Test
     public void getDefaultKeyFileTest() throws Exception {
-
         String databaseName = "kdbx-p-f.kdbx";
-
         Path key = SOSKeePassDatabase.getDefaultKeyFile(Paths.get(DIR).resolve(databaseName));
-
         LOGGER.info(SOSKeePassDatabase.getFilePath(key));
     }
 
+    @Ignore
+    @Test
+    public void loadDOM() throws Exception {
+        Path kpf = Paths.get(DIR).resolve("kdbx-p-f.kdbx");
+        Path kpk = Paths.get(DIR).resolve("kdbx-p-f.key");
+
+        Instant start = Instant.now();
+        SOSKeePassDatabase kb = new SOSKeePassDatabase(kpf, Module.DOM);
+        kb.load("test", kpk);
+        Entry<?, ?, ?, ?> e = kb.getEntryByPath("/server/SFTP/my_server");
+        LOGGER.info("[DOM]" + SOSDate.getDuration(start, Instant.now()));
+        LOGGER.info("[DOM]" + SOSString.toString(e));
+    }
+
+    @Ignore
+    @Test
+    public void loadModuleBinaryKey() throws Exception {
+        Module m = null;// Module.JAXB;
+
+        Path kpf = Paths.get(DIR).resolve("keepass_2.50-p-binary.key.kdbx");
+        Path kpk = Paths.get(DIR).resolve("keepass_2.50-p-binary.key.png");
+
+        Instant start = Instant.now();
+
+        SOSKeePassDatabase kb = new SOSKeePassDatabase(kpf, m);
+        kb.load("test", kpk);
+        Entry<?, ?, ?, ?> e = kb.getEntryByPath("/server/SFTP/my_server");
+
+        Path copy = kpf.getParent().resolve(kpf.getFileName() + ".copy.kdbx");
+        SOSPath.deleteIfExists(copy);
+
+        kb.getHandler().setProperty(e, "custom_field", "xxx");
+        kb.getHandler().createEntry("/server/new_path/new_sub_path/new_entry");
+        kb.saveAs(copy);
+
+        // kb.exportAttachment2File(e, Paths.get(DIR).resolve("logo.png"));
+        LOGGER.info(String.format("[%s]%s", m, SOSDate.getDuration(start, Instant.now())));
+        LOGGER.info(String.format("[%s]%s", m, SOSString.toString(e)));
+        LOGGER.info(String.format("[%s]%s", m, e.getProperty("custom_field")));
+    }
+
+    @Ignore
+    @Test
+    public void testWithCustomData() throws Exception {
+        // see https://change.sos-berlin.com/browse/YADE-539
+        Module m = null;// Module.JAXB;
+
+        Path kpf = Paths.get(DIR).resolve("keepass-p-custom.data.kdbx");
+
+        Instant start = Instant.now();
+
+        SOSKeePassDatabase kb = new SOSKeePassDatabase(kpf, m);
+        kb.load("12345");
+        Entry<?, ?, ?, ?> e = kb.getEntryByPath("/YADE/yade/myEntry");
+
+        Path copy = kpf.getParent().resolve(kpf.getFileName() + ".copy.kdbx");
+        SOSPath.deleteIfExists(copy);
+
+        kb.getHandler().setProperty(e, "custom_field", "xxx");
+        kb.getHandler().createEntry("server/new_path/new_sub_path/new_entry");
+        kb.saveAs(copy);
+
+        // kb.exportAttachment2File(e, Paths.get(DIR).resolve("logo.png"));
+        LOGGER.info(String.format("[%s]%s", m, SOSDate.getDuration(start, Instant.now())));
+        LOGGER.info(String.format("[%s]%s", m, SOSString.toString(e)));
+        LOGGER.info(String.format("[%s]%s", m, e.getProperty("custom_field")));
+    }
 }

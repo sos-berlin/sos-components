@@ -5,7 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.google.common.base.Splitter;
-
+import com.sos.commons.credentialstore.keepass.db.kdb.SOSKdbHandler;
 import com.sos.commons.util.SOSString;
 
 public class SOSKeePassPath {
@@ -22,7 +22,8 @@ public class SOSKeePassPath {
     public static final String QUERY_PARAMETER_CREATE_ENTRY = "create_entry";
     public static final String QUERY_PARAMETER_SET_PROPERTY = "set_property"; // '&' and '=' characters not allowed
     public static final String QUERY_PARAMETER_STDOUT_ON_SET_BINARY_PROPERTY = "stdout_on_set_binary_property";
-
+    // module=dom,simple
+    public static final String QUERY_PARAMETER_MODULE = "module";
     // if a query param value contains the & or = character, this characters must be masked to avoid an query split exception
     // example: ...&set_property=X '&' Y
     // will be evaluated to ...&set_property=X & Y
@@ -75,7 +76,7 @@ public class SOSKeePassPath {
         if (SOSString.isEmpty(file)) {
             _error = String.format("missing query parameter '%s'", QUERY_PARAMETER_FILE);
         } else {
-            parse(file.toLowerCase().endsWith(".kdbx"), uri.substring(0, t), null);
+            parse(SOSKeePassDatabase.isKdbx(file), uri.substring(0, t), null);
         }
     }
 
@@ -127,7 +128,7 @@ public class SOSKeePassPath {
             _entry = path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
         }
         if (_entry != null) {
-            _entryPath = isKdbx ? _entry : "/" + SOSKeePassDatabase.KDB_ROOT_GROUP_NAME + _entry;
+            _entryPath = isKdbx ? _entry : "/" + SOSKdbHandler.KDB_ROOT_GROUP_NAME + _entry;
         }
     }
 

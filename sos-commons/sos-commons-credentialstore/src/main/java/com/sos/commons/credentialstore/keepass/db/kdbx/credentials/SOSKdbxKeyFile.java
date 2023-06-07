@@ -1,4 +1,4 @@
-package com.sos.commons.credentialstore.keepass.extensions.credentials;
+package com.sos.commons.credentialstore.keepass.db.kdbx.credentials;
 
 import java.io.InputStream;
 
@@ -16,7 +16,7 @@ import com.sos.commons.credentialstore.keepass.exceptions.SOSKeePassKeyFileParse
 
 public class SOSKdbxKeyFile {
 
-     private static XPath xpath = XPathFactory.newInstance().newXPath();
+    private static XPath xpath = XPathFactory.newInstance().newXPath();
 
     /** Load a key from an InputStream with a KDBX XML key file.
      * 
