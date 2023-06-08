@@ -547,7 +547,7 @@ public class JsonSerializer {
                 case FINISH:
                     Finish fi = inst.cast();
                     //fi.setMessage(quoteString(fi.getMessage()));
-                    fi.setUnsuccessful(defaultToNull(fi.getUnsuccessful(), Boolean.FALSE));
+                    //fi.setUnsuccessful(defaultToNull(fi.getUnsuccessful(), Boolean.FALSE));
                     break;
                 case EXECUTE_NAMED:
                     NamedJob nj = inst.cast();
