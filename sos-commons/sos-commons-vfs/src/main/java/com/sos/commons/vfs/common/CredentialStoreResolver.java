@@ -67,7 +67,7 @@ public class CredentialStoreResolver {
 
     private static void setDatabase(AProviderArguments args) throws Exception {
         SOSKeePassDatabase kpd = new SOSKeePassDatabase(SOSPath.toAbsolutePath(args.getCredentialStore().getFile().getValue()), SOSKeePassDatabase
-                .getModule(args.getCredentialStore().getModule().getValue()));
+                .getModule(args.getCredentialStore().getKeePassModule().getValue()));
         Path keyFile = null;
         if (args.getCredentialStore().getKeyFile().getValue() != null) {
             Path cskf = SOSPath.toAbsolutePath(args.getCredentialStore().getKeyFile().getValue());
