@@ -28,7 +28,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "disabled",
     "deployed",
     "withGenerateSubagentCluster",
-    "ordering"
+    "ordering",
+    "version"
 })
 public class SubAgent {
 
@@ -94,6 +95,14 @@ public class SubAgent {
         "position"
     })
     private Integer ordering;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("version")
+    private String version;
 
     /**
      * string without < and >
@@ -151,7 +160,7 @@ public class SubAgent {
     @JsonProperty("url")
     public String getUrl() {
         if (url != null && !"/".equals(url) && url.endsWith("/")) {
-            url = url.replaceFirst("/$", ""); 
+            url = url.replaceFirst("/$", "");
         }
         return url;
     }
@@ -276,14 +285,36 @@ public class SubAgent {
         this.ordering = ordering;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("version")
+    public String getVersion() {
+        return version;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("version")
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentId", agentId).append("subagentId", subagentId).append("url", url).append("isDirector", isDirector).append("title", title).append("syncState", syncState).append("disabled", disabled).append("deployed", deployed).append("withGenerateSubagentCluster", withGenerateSubagentCluster).append("ordering", ordering).toString();
+        return new ToStringBuilder(this).append("agentId", agentId).append("subagentId", subagentId).append("url", url).append("isDirector", isDirector).append("title", title).append("syncState", syncState).append("disabled", disabled).append("deployed", deployed).append("withGenerateSubagentCluster", withGenerateSubagentCluster).append("ordering", ordering).append("version", version).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentId).append(ordering).append(isDirector).append(syncState).append(deployed).append(withGenerateSubagentCluster).append(subagentId).append(disabled).append(title).append(url).toHashCode();
+        return new HashCodeBuilder().append(agentId).append(ordering).append(isDirector).append(syncState).append(deployed).append(withGenerateSubagentCluster).append(subagentId).append(disabled).append(title).append(version).append(url).toHashCode();
     }
 
     @Override
@@ -295,7 +326,7 @@ public class SubAgent {
             return false;
         }
         SubAgent rhs = ((SubAgent) other);
-        return new EqualsBuilder().append(agentId, rhs.agentId).append(ordering, rhs.ordering).append(isDirector, rhs.isDirector).append(syncState, rhs.syncState).append(deployed, rhs.deployed).append(withGenerateSubagentCluster, rhs.withGenerateSubagentCluster).append(subagentId, rhs.subagentId).append(disabled, rhs.disabled).append(title, rhs.title).append(url, rhs.url).isEquals();
+        return new EqualsBuilder().append(agentId, rhs.agentId).append(ordering, rhs.ordering).append(isDirector, rhs.isDirector).append(syncState, rhs.syncState).append(deployed, rhs.deployed).append(withGenerateSubagentCluster, rhs.withGenerateSubagentCluster).append(subagentId, rhs.subagentId).append(disabled, rhs.disabled).append(title, rhs.title).append(version, rhs.version).append(url, rhs.url).isEquals();
     }
 
 }

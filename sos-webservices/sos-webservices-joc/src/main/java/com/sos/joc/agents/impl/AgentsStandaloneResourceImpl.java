@@ -119,6 +119,7 @@ public class AgentsStandaloneResourceImpl extends JOCResourceImpl implements IAg
                     agent.setSyncState(AgentHelper.getSyncState(agentsOnController.get(dbAgent.getControllerId()), dbAgent));
                     agent.setControllerId(dbAgent.getControllerId());
                     agent.setUrl(dbAgent.getUri());
+                    agent.setVersion(dbAgent.getVersion());
                     agent.setOrdering(++position);
                     soloAgents.add(agent);
                 }

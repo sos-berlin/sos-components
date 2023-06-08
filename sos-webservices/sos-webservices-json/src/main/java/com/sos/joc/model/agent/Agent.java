@@ -31,7 +31,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "disabled",
     "syncState",
     "deployed",
-    "ordering"
+    "ordering",
+    "version"
 })
 public class Agent {
 
@@ -97,6 +98,14 @@ public class Agent {
     private Boolean deployed = false;
     @JsonProperty("ordering")
     private Integer ordering;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("version")
+    private String version;
 
     /**
      * controllerId
@@ -188,7 +197,7 @@ public class Agent {
     @JsonProperty("url")
     public String getUrl() {
         if (url != null && !"/".equals(url) && url.endsWith("/")) {
-            url = url.replaceFirst("/$", ""); 
+            url = url.replaceFirst("/$", "");
         }
         return url;
     }
@@ -289,14 +298,36 @@ public class Agent {
         this.ordering = ordering;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("version")
+    public String getVersion() {
+        return version;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("version")
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("agentName", agentName).append("agentNameAliases", agentNameAliases).append("url", url).append("title", title).append("hidden", hidden).append("disabled", disabled).append("syncState", syncState).append("deployed", deployed).append("ordering", ordering).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("agentName", agentName).append("agentNameAliases", agentNameAliases).append("url", url).append("title", title).append("hidden", hidden).append("disabled", disabled).append("syncState", syncState).append("deployed", deployed).append("ordering", ordering).append("version", version).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentId).append(controllerId).append(hidden).append(agentNameAliases).append(ordering).append(syncState).append(agentName).append(deployed).append(title).append(url).append(disabled).toHashCode();
+        return new HashCodeBuilder().append(agentId).append(controllerId).append(hidden).append(agentNameAliases).append(ordering).append(syncState).append(agentName).append(deployed).append(title).append(version).append(url).append(disabled).toHashCode();
     }
 
     @Override
@@ -308,7 +339,7 @@ public class Agent {
             return false;
         }
         Agent rhs = ((Agent) other);
-        return new EqualsBuilder().append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(hidden, rhs.hidden).append(agentNameAliases, rhs.agentNameAliases).append(ordering, rhs.ordering).append(syncState, rhs.syncState).append(agentName, rhs.agentName).append(deployed, rhs.deployed).append(title, rhs.title).append(url, rhs.url).append(disabled, rhs.disabled).isEquals();
+        return new EqualsBuilder().append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(hidden, rhs.hidden).append(agentNameAliases, rhs.agentNameAliases).append(ordering, rhs.ordering).append(syncState, rhs.syncState).append(agentName, rhs.agentName).append(deployed, rhs.deployed).append(title, rhs.title).append(version, rhs.version).append(url, rhs.url).append(disabled, rhs.disabled).isEquals();
     }
 
 }

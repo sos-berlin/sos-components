@@ -112,6 +112,7 @@ public class AgentsExportImpl extends JOCResourceImpl implements IAgentsExport {
         clAgent.setSyncState(null);
         clAgent.setTitle(agentInstance.getTitle());
         clAgent.setUrl(agentInstance.getUri());
+        clAgent.setVersion(agentInstance.getVersion());
         subagents.stream().forEach(subagent -> {
             SubAgent subAgent = new SubAgent();
             subAgent.setAgentId(agentInstance.getAgentId());
@@ -123,6 +124,7 @@ public class AgentsExportImpl extends JOCResourceImpl implements IAgentsExport {
             subAgent.setSyncState(null);
             subAgent.setTitle(subagent.getTitle());
             subAgent.setUrl(subagent.getUri());
+            subAgent.setVersion(subagent.getVersion());
             // Ask Olli
             subAgent.setWithGenerateSubagentCluster(null);
             clAgent.getSubagents().add(subAgent); 
@@ -143,6 +145,7 @@ public class AgentsExportImpl extends JOCResourceImpl implements IAgentsExport {
         standalone.setOrdering(agentInstance.getOrdering());
         standalone.setSyncState(null);
         standalone.setTitle(agentInstance.getTitle());
+        standalone.setVersion(agentInstance.getVersion());
         standalone.setUrl(agentInstance.getUri());
         return standalone;
     }
