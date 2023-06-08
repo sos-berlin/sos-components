@@ -29,4 +29,10 @@ public interface IAgentCommandResource {
     @Produces({ "application/json" })
     public JOCDefaultResponse delete(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
     
+    @POST
+    @Path("cluster/switchover")
+    @Consumes("application/json")
+    @Produces({ "application/json" })
+    public JOCDefaultResponse switchover(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    
 }

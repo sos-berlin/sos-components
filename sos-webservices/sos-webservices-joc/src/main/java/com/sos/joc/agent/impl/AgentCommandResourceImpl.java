@@ -10,6 +10,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.controller.model.cluster.ClusterState;
+import com.sos.controller.model.cluster.ClusterType;
+import com.sos.controller.model.command.ClusterSwitchOver;
 import com.sos.joc.Globals;
 import com.sos.joc.agent.resource.IAgentCommandResource;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -20,6 +23,7 @@ import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.agent.AgentInventoryEvent;
+import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.AgentCommand;
@@ -32,6 +36,7 @@ import js7.data.agent.AgentPath;
 import js7.data.controller.ControllerCommand;
 import js7.data.subagent.SubagentId;
 import js7.data_for_java.agent.JAgentRef;
+import js7.data_for_java.agent.JAgentRefState;
 import js7.data_for_java.controller.JControllerCommand;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.item.JUpdateItemOperation;
@@ -44,6 +49,7 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
 
     private static final String API_CALL_RESET = "./agent/reset";
     private static final String API_CALL_REMOVE = "./agent/delete";
+    private static final String API_CALL_SWITCHOVER = "./agent/cluster/switchover";
     private static final Logger LOGGER = LoggerFactory.getLogger(AgentCommandResourceImpl.class);
 
     @Override
@@ -124,6 +130,46 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
                 });
             } else {
                 deleteAgentInstance(agentId, accessToken, getJocError(), controllerId);
+            }
+
+            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
+    }
+    
+    @Override
+    public JOCDefaultResponse switchover(String accessToken, byte[] filterBytes) {
+        try {
+            initLogging(API_CALL_SWITCHOVER, filterBytes, accessToken);
+            JsonValidator.validateFailFast(filterBytes, AgentCommand.class);
+            AgentCommand agentCommand = Globals.objectMapper.readValue(filterBytes, AgentCommand.class);
+            
+            String controllerId = agentCommand.getControllerId();
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(controllerId, accessToken).getSwitchOver());
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+            
+            storeAuditLog(agentCommand.getAuditLog(), agentCommand.getControllerId(), CategoryType.CONTROLLER);
+            
+            String agentId = agentCommand.getAgentId();
+            JAgentRefState agentState = Proxy.of(controllerId).currentState().pathToAgentRefState().get(AgentPath.of(agentId));
+            
+            if (agentState != null) {
+                ClusterState clusterState = Globals.objectMapper.readValue(agentState.clusterState().toJson(), ClusterState.class);
+                if (clusterState == null || ClusterType.EMPTY.equals(clusterState.getTYPE())) {
+                    throw new JocBadRequestException("There is no Agent director cluster with the Id: " + agentId);
+                } else if (!ClusterType.COUPLED.equals(clusterState.getTYPE())) {
+                    throw new JocBadRequestException("Switchover is not available because the Agent director cluster is not coupled");
+                }
+                ControllerApi.of(controllerId).executeCommandJson(Globals.objectMapper.writeValueAsString(new ClusterSwitchOver(agentId))).thenAccept(
+                        e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), controllerId));
+            } else {
+                throw new JocBadRequestException("An Agent '" + agentId + "' is not deployed at the Controller '" + controllerId + "'");
             }
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
