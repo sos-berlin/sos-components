@@ -76,7 +76,7 @@ public class Properties {
     @JsonProperty("oidc")
     private OidcProperties oidc;
     /**
-     * FIDO2 Connect Properties
+     * FIDO2 Properties
      * <p>
      * 
      * 
@@ -243,7 +243,7 @@ public class Properties {
     }
 
     /**
-     * FIDO2 Connect Properties
+     * FIDO2 Properties
      * <p>
      * 
      * 
@@ -254,7 +254,7 @@ public class Properties {
     }
 
     /**
-     * FIDO2 Connect Properties
+     * FIDO2 Properties
      * <p>
      * 
      * 

@@ -539,6 +539,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
                                 .value(), "")));
                         identityProvider.setIdentityServiceName(identityServiceFilter.getIdentityServiceName());
                         identityProvider.setIamFido2RequireAccount(properties.getFido2().getRequireAccount());
+                        identityProvider.setIamFido2Attachment(properties.getFido2().getIamFido2Attachment());
                     }
                 }
             }
