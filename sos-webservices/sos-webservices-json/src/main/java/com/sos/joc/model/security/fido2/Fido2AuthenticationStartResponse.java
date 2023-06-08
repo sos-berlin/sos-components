@@ -41,7 +41,7 @@ public class Fido2AuthenticationStartResponse {
     @JsonProperty("credentialId")
     private String credentialId;
     /**
-     * FIDO2 Connect Properties
+     * FIDO2 Properties
      * <p>
      * 
      * 
@@ -114,7 +114,7 @@ public class Fido2AuthenticationStartResponse {
     }
 
     /**
-     * FIDO2 Connect Properties
+     * FIDO2 Properties
      * <p>
      * 
      * 
@@ -125,7 +125,7 @@ public class Fido2AuthenticationStartResponse {
     }
 
     /**
-     * FIDO2 Connect Properties
+     * FIDO2 Properties
      * <p>
      * 
      * 

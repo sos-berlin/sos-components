@@ -32,7 +32,7 @@ public class Fido2RegistrationStartResponse {
     @JsonProperty("challenge")
     private String challenge;
     /**
-     * FIDO2 Connect Properties
+     * FIDO2 Properties
      * <p>
      * 
      * 
@@ -81,7 +81,7 @@ public class Fido2RegistrationStartResponse {
     }
 
     /**
-     * FIDO2 Connect Properties
+     * FIDO2 Properties
      * <p>
      * 
      * 
@@ -92,7 +92,7 @@ public class Fido2RegistrationStartResponse {
     }
 
     /**
-     * FIDO2 Connect Properties
+     * FIDO2 Properties
      * <p>
      * 
      * 
