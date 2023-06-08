@@ -26,10 +26,9 @@ public class SOSKeePassDatabase {
         DOM, JAXB
     };
 
-    public static final Module DEFAULT_MODULE = Module.DOM;
+    public static final Module DEFAULT_MODULE = Module.JAXB;
 
     public static final String ENV_VAR_APPDATA_PATH = "APPDATA_PATH";
-    public static final String ENV_VAR_CREDENTIAL_STORE_MODULE = "CREDENTIAL_STORE_MODULE";
     public static final String STANDARD_PROPERTY_NAME_ATTACHMENT = "Attachment";
 
     private SOSKeePassPath _keepassPath;
@@ -379,10 +378,7 @@ public class SOSKeePassDatabase {
 
     public static Module getModule(String m) {
         if (m == null) {
-            m = System.getenv(ENV_VAR_CREDENTIAL_STORE_MODULE);
-            if (SOSString.isEmpty(m)) {
-                return DEFAULT_MODULE;
-            }
+            return DEFAULT_MODULE;
         }
         try {
             return Module.valueOf(m.toUpperCase());
