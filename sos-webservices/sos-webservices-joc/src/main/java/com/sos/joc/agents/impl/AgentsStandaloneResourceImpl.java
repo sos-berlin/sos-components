@@ -120,6 +120,7 @@ public class AgentsStandaloneResourceImpl extends JOCResourceImpl implements IAg
                     agent.setIsClusterWatcher(dbAgent.getIsWatcher());
                     agent.setControllerId(dbAgent.getControllerId());
                     agent.setUrl(dbAgent.getUri());
+                    agent.setVersion(dbAgent.getVersion());
                     agent.setOrdering(++position);
                     soloAgents.add(agent);
                 }

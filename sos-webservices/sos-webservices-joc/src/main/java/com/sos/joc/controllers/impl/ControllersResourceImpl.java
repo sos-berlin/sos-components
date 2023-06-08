@@ -125,6 +125,7 @@ public class ControllersResourceImpl extends JOCResourceImpl implements IControl
                     agent.setHidden(a.getHidden());
                     agent.setDisabled(a.getDisabled());
                     agent.setIsClusterWatcher(a.getIsWatcher());
+                    agent.setVersion(a.getVersion());
 //                  if (clusterAgentIds.contains(a.getAgentId())) {
 //                      agent.setUrl(null);
 //                  } else {

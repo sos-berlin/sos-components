@@ -46,6 +46,7 @@ public class JS7AgentHelper {
         a.setSyncState(agent.getSyncState());
         a.setTitle(agent.getTitle());
         a.setUrl(agent.getUrl());
+        a.setVersion(agent.getVersion());
         return a;
     }
 
@@ -67,6 +68,7 @@ public class JS7AgentHelper {
         a.setSyncState(agent.getSyncState());
         a.setTitle(agent.getTitle());
         a.setUrl(agent.getUrl());
+        a.setVersion(agent.getVersion());
 
         a.setSubagents(copySubagents(agent.getSubagents()));
         return a;
