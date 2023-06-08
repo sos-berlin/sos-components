@@ -27,7 +27,7 @@ public class Finish
     @JsonProperty("message")
     private String message;
     @JsonProperty("unsuccessful")
-    private Boolean unsuccessful = false;
+    private Boolean unsuccessful;
 
     /**
      * No args constructor for use in serialization
