@@ -25,7 +25,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "iamFido2ResidentKey",
     "iamFido2Attachment",
     "iamFido2Transports",
-    "requireAccount",
+    "iamFido2requireAccount",
     "iamFido2EmailSettings"
 })
 public class Fido2Properties {
@@ -72,8 +72,8 @@ public class Fido2Properties {
     private Fido2Attachment iamFido2Attachment;
     @JsonProperty("iamFido2Transports")
     private List<Fido2Transports> iamFido2Transports = new ArrayList<Fido2Transports>();
-    @JsonProperty("requireAccount")
-    private Boolean requireAccount = false;
+    @JsonProperty("iamFido2requireAccount")
+    private Boolean iamFido2requireAccount = false;
     /**
      * Fido2 Email Settings
      * <p>
@@ -96,12 +96,12 @@ public class Fido2Properties {
      * @param iamFidoProtocolType
      * @param iamFido2Timeout
      * @param iamFido2ResidentKey
-     * @param requireAccount
      * @param iamFido2Transports
      * @param iamFido2UserVerification
      * @param iamFido2Attachment
+     * @param iamFido2requireAccount
      */
-    public Fido2Properties(Fido2Userverification iamFido2UserVerification, Integer iamFido2Timeout, FidoProtocolType iamFidoProtocolType, Fido2ResidentKey iamFido2ResidentKey, Fido2Attachment iamFido2Attachment, List<Fido2Transports> iamFido2Transports, Boolean requireAccount, Fido2EmailSettings iamFido2EmailSettings) {
+    public Fido2Properties(Fido2Userverification iamFido2UserVerification, Integer iamFido2Timeout, FidoProtocolType iamFidoProtocolType, Fido2ResidentKey iamFido2ResidentKey, Fido2Attachment iamFido2Attachment, List<Fido2Transports> iamFido2Transports, Boolean iamFido2requireAccount, Fido2EmailSettings iamFido2EmailSettings) {
         super();
         this.iamFido2UserVerification = iamFido2UserVerification;
         this.iamFido2Timeout = iamFido2Timeout;
@@ -109,7 +109,7 @@ public class Fido2Properties {
         this.iamFido2ResidentKey = iamFido2ResidentKey;
         this.iamFido2Attachment = iamFido2Attachment;
         this.iamFido2Transports = iamFido2Transports;
-        this.requireAccount = requireAccount;
+        this.iamFido2requireAccount = iamFido2requireAccount;
         this.iamFido2EmailSettings = iamFido2EmailSettings;
     }
 
@@ -233,14 +233,14 @@ public class Fido2Properties {
         this.iamFido2Transports = iamFido2Transports;
     }
 
-    @JsonProperty("requireAccount")
-    public Boolean getRequireAccount() {
-        return requireAccount;
+    @JsonProperty("iamFido2requireAccount")
+    public Boolean getIamFido2requireAccount() {
+        return iamFido2requireAccount;
     }
 
-    @JsonProperty("requireAccount")
-    public void setRequireAccount(Boolean requireAccount) {
-        this.requireAccount = requireAccount;
+    @JsonProperty("iamFido2requireAccount")
+    public void setIamFido2requireAccount(Boolean iamFido2requireAccount) {
+        this.iamFido2requireAccount = iamFido2requireAccount;
     }
 
     /**
@@ -267,12 +267,12 @@ public class Fido2Properties {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("iamFido2UserVerification", iamFido2UserVerification).append("iamFido2Timeout", iamFido2Timeout).append("iamFidoProtocolType", iamFidoProtocolType).append("iamFido2ResidentKey", iamFido2ResidentKey).append("iamFido2Attachment", iamFido2Attachment).append("iamFido2Transports", iamFido2Transports).append("requireAccount", requireAccount).append("iamFido2EmailSettings", iamFido2EmailSettings).toString();
+        return new ToStringBuilder(this).append("iamFido2UserVerification", iamFido2UserVerification).append("iamFido2Timeout", iamFido2Timeout).append("iamFidoProtocolType", iamFidoProtocolType).append("iamFido2ResidentKey", iamFido2ResidentKey).append("iamFido2Attachment", iamFido2Attachment).append("iamFido2Transports", iamFido2Transports).append("iamFido2requireAccount", iamFido2requireAccount).append("iamFido2EmailSettings", iamFido2EmailSettings).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(iamFido2EmailSettings).append(iamFidoProtocolType).append(iamFido2Timeout).append(iamFido2ResidentKey).append(requireAccount).append(iamFido2Transports).append(iamFido2UserVerification).append(iamFido2Attachment).toHashCode();
+        return new HashCodeBuilder().append(iamFido2EmailSettings).append(iamFidoProtocolType).append(iamFido2Timeout).append(iamFido2ResidentKey).append(iamFido2Transports).append(iamFido2UserVerification).append(iamFido2Attachment).append(iamFido2requireAccount).toHashCode();
     }
 
     @Override
@@ -284,7 +284,7 @@ public class Fido2Properties {
             return false;
         }
         Fido2Properties rhs = ((Fido2Properties) other);
-        return new EqualsBuilder().append(iamFido2EmailSettings, rhs.iamFido2EmailSettings).append(iamFidoProtocolType, rhs.iamFidoProtocolType).append(iamFido2Timeout, rhs.iamFido2Timeout).append(iamFido2ResidentKey, rhs.iamFido2ResidentKey).append(requireAccount, rhs.requireAccount).append(iamFido2Transports, rhs.iamFido2Transports).append(iamFido2UserVerification, rhs.iamFido2UserVerification).append(iamFido2Attachment, rhs.iamFido2Attachment).isEquals();
+        return new EqualsBuilder().append(iamFido2EmailSettings, rhs.iamFido2EmailSettings).append(iamFidoProtocolType, rhs.iamFidoProtocolType).append(iamFido2Timeout, rhs.iamFido2Timeout).append(iamFido2ResidentKey, rhs.iamFido2ResidentKey).append(iamFido2Transports, rhs.iamFido2Transports).append(iamFido2UserVerification, rhs.iamFido2UserVerification).append(iamFido2Attachment, rhs.iamFido2Attachment).append(iamFido2requireAccount, rhs.iamFido2requireAccount).isEquals();
     }
 
 }

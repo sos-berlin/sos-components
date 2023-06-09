@@ -178,7 +178,7 @@ public class SOSServicePermissionIam {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public JOCDefaultResponse loginPost(@Context HttpServletRequest request, @HeaderParam("Authorization") String basicAuthorization,
-            @HeaderParam("X-AUTHORIZATION") String firstAuthorization, @HeaderParam("X-1ST-IDENTITY-SERVICE") String firstIdentityService,
+            @HeaderParam("X-1ST-IDENTITY-SERVICE") String firstIdentityService,
             @HeaderParam("X-IDENTITY-SERVICE") String identityService, @HeaderParam("X-ID-TOKEN") String idToken,
             @HeaderParam("X-SIGNATURE") String signature, @HeaderParam("X-AUTHENTICATOR-DATA") String authenticatorData,
             @HeaderParam("X-CLIENT-DATA-JSON") String clientDataJson, @HeaderParam("X-CREDENTIAL-ID") String credentialId,
@@ -209,7 +209,6 @@ public class SOSServicePermissionIam {
             SOSLoginParameters sosLoginParameters = new SOSLoginParameters();
             sosLoginParameters.setIdToken(idToken);
             sosLoginParameters.setBasicAuthorization(basicAuthorization);
-            sosLoginParameters.setFirstAuthorization(firstAuthorization);
             sosLoginParameters.setClientCertCN(clientCertCN);
             sosLoginParameters.setIdentityService(identityService);
             sosLoginParameters.setFirstIdentityService(firstIdentityService);
@@ -832,10 +831,7 @@ public class SOSServicePermissionIam {
                 }
             }
 
-            if (sosLoginParameters.getFirstAuthorization() != null && !sosLoginParameters.getFirstAuthorization().isEmpty()) {
-                sosLoginParameters.setBasicAuthorization(sosLoginParameters.getFirstAuthorization());
-            }
-
+           
             TimeZone.setDefault(TimeZone.getTimeZone(UTC));
 
             SOSAuthCurrentAccount currentAccount = getUserFromHeaderOrQuery(sosLoginParameters.getBasicAuthorization(), sosLoginParameters

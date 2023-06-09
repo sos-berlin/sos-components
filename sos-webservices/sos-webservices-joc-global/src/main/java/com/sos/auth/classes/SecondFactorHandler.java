@@ -65,7 +65,6 @@ public class SecondFactorHandler {
                                     secondFactorSuccess = false;
                                 }
                                 secondFactorSuccess = sosFido2AuthAccessToken != null;
-                                secondFactorSuccess = true;
                             }
                         }
                     } else {
