@@ -17,14 +17,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "agentId"
+    "agentPath"
 })
 public class ClusterSwitchOver
     extends Command
 {
 
-    @JsonProperty("agentId")
-    private String agentId;
+    @JsonProperty("agentPath")
+    private String agentPath;
 
     /**
      * No args constructor for use in serialization
@@ -35,31 +35,31 @@ public class ClusterSwitchOver
 
     /**
      * 
-     * @param agentId
+     * @param agentPath
      */
-    public ClusterSwitchOver(String agentId) {
+    public ClusterSwitchOver(String agentPath) {
         super();
-        this.agentId = agentId;
+        this.agentPath = agentPath;
     }
 
-    @JsonProperty("agentId")
-    public String getAgentId() {
-        return agentId;
+    @JsonProperty("agentPath")
+    public String getAgentPath() {
+        return agentPath;
     }
 
-    @JsonProperty("agentId")
-    public void setAgentId(String agentId) {
-        this.agentId = agentId;
+    @JsonProperty("agentPath")
+    public void setAgentPath(String agentPath) {
+        this.agentPath = agentPath;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("agentId", agentId).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("agentPath", agentPath).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(agentId).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(agentPath).toHashCode();
     }
 
     @Override
@@ -71,7 +71,7 @@ public class ClusterSwitchOver
             return false;
         }
         ClusterSwitchOver rhs = ((ClusterSwitchOver) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(agentId, rhs.agentId).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(agentPath, rhs.agentPath).isEquals();
     }
 
 }
