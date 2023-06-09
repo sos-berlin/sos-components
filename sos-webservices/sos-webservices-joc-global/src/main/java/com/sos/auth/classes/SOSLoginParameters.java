@@ -8,8 +8,10 @@ public class SOSLoginParameters {
 
     private HttpServletRequest request;
     private String basicAuthorization;
+    private String firstAuthorization;
     private String clientCertCN;
     private String identityService;
+    private String firstIdentityService;
     private String idToken;
     private String account;
     private String authenticatorData;
@@ -121,6 +123,34 @@ public class SOSLoginParameters {
 
     public void setRequestId(String requestId) {
         this.requestId = requestId;
+    }
+
+    public boolean authorizationHeaderIsEmpty() {
+        return (basicAuthorization == null || basicAuthorization.isEmpty() || basicAuthorization.equals("Basic"));
+    }
+
+    
+    public String getFirstAuthorization() {
+        return firstAuthorization;
+    }
+
+    
+    public void setFirstAuthorization(String firstAuthorization) {
+        this.firstAuthorization = firstAuthorization;
+    }
+
+    
+    public String getFirstIdentityService() {
+        return firstIdentityService;
+    }
+
+    
+    public void setFirstIdentityService(String firstIdentityService) {
+        this.firstIdentityService = firstIdentityService;
+    }
+
+    public boolean isSecondPathOfTwoFactor() {
+        return firstAuthorization != null && firstIdentityService != null && !firstAuthorization.isEmpty() && !firstIdentityService.isEmpty();
     }
 
 }

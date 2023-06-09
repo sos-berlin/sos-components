@@ -7,11 +7,13 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.Type;
 
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.model.security.identityservice.IdentityServiceAuthenticationScheme;
 
 @Entity
 @Table(name = DBLayer.TABLE_IAM_IDENTITY_SERVICES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[IDENTITY_SERVICE_NAME]"}) })
@@ -142,6 +144,10 @@ public class DBItemIamIdentityService {
         this.secondFactorIsId = secondFactorIsId;
     }
 
+    @Transient
+    public boolean isTwoFactor(){
+        return authenticationScheme.equals(IdentityServiceAuthenticationScheme.TWO_FACTOR.value());
+    }
     
     
 

@@ -73,14 +73,14 @@ public class SOSFido2AuthHandler {
 
                 SOSFido2ClientData sosFido2ClientData = new SOSFido2ClientData(sosFido2AuthWebserviceCredentials.getClientDataJson());
 
+                iamFido2RequestDBLayer.deleteFido2Request(iamFido2RequestsFilter);
+                Globals.commit(sosHibernateSession);
+
                 if (!sosFido2ClientData.getChallengeDecodedString().equals(dbItemIamFido2Requests.getChallenge())) {
                     LOGGER.info("FIDO login with <wrong challenge>");
                     return null;
                 }
 
-                iamFido2RequestDBLayer.deleteFido2Request(iamFido2RequestsFilter);
-
-                Globals.commit(sosHibernateSession);
                 byte[] authenticatorDataDecoded = java.util.Base64.getDecoder().decode(sosFido2AuthWebserviceCredentials.getAuthenticatorData());
                 byte[] clientDataJsonDecodedHash = SOSSecurityUtil.getDigestBytes(sosFido2ClientData.getClientDataJsonDecoded(), "SHA-256");
                 ByteArrayOutputStream output = new ByteArrayOutputStream();

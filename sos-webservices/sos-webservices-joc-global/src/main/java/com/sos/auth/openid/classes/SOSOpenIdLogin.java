@@ -42,8 +42,7 @@ public class SOSOpenIdLogin implements ISOSLogin {
 
                 boolean disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), currentAccount.getAccountname());
 
-                if (!disabled && (!identityService.isTwoFactor() || (SOSAuthHelper.checkCertificate(currentAccount.getHttpServletRequest(),
-                        currentAccount.getAccountname())))) {
+                if (!disabled) {
                     sosOpenIdAccountAccessToken = sosOpenIdHandler.login();
                 }
 

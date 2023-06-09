@@ -38,7 +38,7 @@ public class SOSCertificateAuthLogin implements ISOSLogin {
             SOSAuthAccessToken sosCertificateAuthAccessToken = null;
 
             boolean disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), currentAccount.getAccountname());
-            if (!disabled && !identityService.isSecondFactor()) {
+            if (!disabled) {
                 if (identityService.isSingleFactor()) {
                     sosCertificateAuthAccessToken = sosCertificateAuthHandler.login(sosCertificateAuthWebserviceCredentials);
                     if (SOSAuthHelper.checkCertificate(currentAccount.getHttpServletRequest(), currentAccount.getAccountname())) {
@@ -46,8 +46,6 @@ public class SOSCertificateAuthLogin implements ISOSLogin {
                         sosCertificateAuthAccessToken = new SOSAuthAccessToken();
                         sosCertificateAuthAccessToken.setAccessToken(UUID.randomUUID().toString());
                     }
-                } else {
-                    // TODO: Second Factor
                 }
             }
 

@@ -14,10 +14,8 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.db.authentication.DBItemIamAccount;
-import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.db.security.IamAccountFilter;
-import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
 public class SOSInternAuthHandler {
 
@@ -34,29 +32,22 @@ public class SOSInternAuthHandler {
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(SOSInternAuthLogin.class.getName());
             SOSAuthAccessToken sosAuthAccessToken = null;
-            boolean proceed = true;
-            if (sosInternAuthWebserviceCredentials.getIdentityService().isTwoFactor()) {
-                proceed = SecondFactorHandler.checkSecondFactor(currentAccount, sosInternAuthWebserviceCredentials.getIdentityService()
-                        .getIdentityServiceId());
+
+            IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
+            forcePasswordChange = false;
+            IamAccountFilter filter = new IamAccountFilter();
+            filter.setAccountName(sosInternAuthWebserviceCredentials.getAccount());
+            filter.setIdentityServiceId(sosInternAuthWebserviceCredentials.getIdentityService().getIdentityServiceId());
+
+            DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getIamAccountByName(filter);
+
+            if (dbItemIamAccount != null && (SOSPasswordHasher.verify(password, dbItemIamAccount.getAccountPassword())) && !dbItemIamAccount
+                    .getDisabled()) {
+                sosAuthAccessToken = new SOSAuthAccessToken();
+                sosAuthAccessToken.setAccessToken(SOSAuthHelper.createSessionId());
+                forcePasswordChange = dbItemIamAccount.getForcePasswordChange();
             }
 
-            if (proceed) {
-
-                IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
-                forcePasswordChange = false;
-                IamAccountFilter filter = new IamAccountFilter();
-                filter.setAccountName(sosInternAuthWebserviceCredentials.getAccount());
-                filter.setIdentityServiceId(sosInternAuthWebserviceCredentials.getIdentityService().getIdentityServiceId());
-
-                DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getIamAccountByName(filter);
-
-                if (dbItemIamAccount != null && (SOSPasswordHasher.verify(password, dbItemIamAccount.getAccountPassword())) && !dbItemIamAccount
-                        .getDisabled()) {
-                    sosAuthAccessToken = new SOSAuthAccessToken();
-                    sosAuthAccessToken.setAccessToken(SOSAuthHelper.createSessionId());
-                    forcePasswordChange = dbItemIamAccount.getForcePasswordChange();
-                }
-            }
             return sosAuthAccessToken;
         } finally {
             Globals.disconnect(sosHibernateSession);

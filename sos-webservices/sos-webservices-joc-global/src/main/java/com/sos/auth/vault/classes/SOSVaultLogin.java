@@ -60,8 +60,7 @@ public class SOSVaultLogin implements ISOSLogin {
 
             disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), currentAccount.getAccountname());
 
-            if (!disabled && (identityService.isSingleFactor() || (SOSAuthHelper.checkCertificate(currentAccount.getHttpServletRequest(), currentAccount
-                    .getAccountname())))) {
+            if (!disabled) {
                 sosVaultAccountAccessToken = sosVaultHandler.login(identityService.getIdentyServiceType(), pwd);
             }
 

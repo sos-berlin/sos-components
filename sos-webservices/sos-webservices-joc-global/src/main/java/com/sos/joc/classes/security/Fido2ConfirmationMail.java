@@ -95,7 +95,7 @@ public class Fido2ConfirmationMail {
         params.put("token", dbItemIamFido2Registration.getToken());
         params.put("account_name", dbItemIamFido2Registration.getAccountName());
         params.put("registration_email_address", dbItemIamFido2Registration.getEmail());
-        params.put("fido2_identity_service", identityServiceName);
+        params.put("fido_identity_service", identityServiceName);
 
         body = resolve(body, params);
 

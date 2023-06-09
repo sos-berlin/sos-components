@@ -34,6 +34,7 @@ public class SOSLdapWebserviceCredentials {
     private String systemUser;
     private String systemPassword;
     private SOSLdapLoginUserName sosLdapLoginUserName;
+    private SOSIdentityService identityService;
 
     private Integer readTimeout;
     private Integer connectTimeout;
@@ -337,6 +338,16 @@ public class SOSLdapWebserviceCredentials {
 
     public String getSystemPassword() {
         return systemPassword;
+    }
+
+    
+    public SOSIdentityService getIdentityService() {
+        return identityService;
+    }
+
+    
+    public void setIdentityService(SOSIdentityService identityService) {
+        this.identityService = identityService;
     }
 
 }

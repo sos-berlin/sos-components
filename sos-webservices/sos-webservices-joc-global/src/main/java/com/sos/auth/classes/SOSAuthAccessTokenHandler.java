@@ -71,7 +71,7 @@ public class SOSAuthAccessTokenHandler extends Thread {
                 SOSAuthCurrentAccount currentAccount = Globals.jocWebserviceDataContainer.getCurrentAccountsList().getAccount(accessToken);
 
                 if (currentAccount.isAuthenticated()) {
-                    switch (currentAccount.getIdentityServices().getIdentyServiceType()) {
+                    switch (currentAccount.getIdentityService().getIdentyServiceType()) {
 
                     case KEYCLOAK:
                     case KEYCLOAK_JOC:

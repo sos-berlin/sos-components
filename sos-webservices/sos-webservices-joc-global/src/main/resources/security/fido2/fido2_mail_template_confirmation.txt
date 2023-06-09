@@ -15,7 +15,7 @@
             </tr>
             <tr>
                 <td colspan="2">
-                    <p>You recently requested registration of your FIDO2 security key for authentication with JS7 JobScheduler.</p>
+                    <p>You recently requested registration of your security device for authentication with JS7 JobScheduler.</p>
                     <p>During registration you specified the following information:</p>
                 </td>
             </tr>
@@ -32,7 +32,7 @@
                     <p>Identity Service:</p>
                 </td>
                 <td>
-                    <p>${FIDO2_IDENTITY_SERVICE}</p>
+                    <p>${FIDO_IDENTITY_SERVICE}</p>
                 </td>
             </tr>
             <tr>

@@ -1,16 +1,20 @@
 package com.sos.auth.classes;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.model.security.identityservice.IdentityServiceAuthenticationScheme;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
 public class SOSIdentityService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(SOSIdentityService.class);
+
     private Long identityServiceId;
     private String identityServiceName;
     private IdentityServiceTypes identyServiceType;
-    private IdentityServiceAuthenticationScheme identityServiceAuthenticationScheme;
-    private boolean secondFactor;
+    private DBItemIamIdentityService dbItemIamIdentityService;
 
     public SOSIdentityService(Long identityServiceId, String identityServiceName, IdentityServiceTypes identyServiceType) {
         super();
@@ -34,8 +38,7 @@ public class SOSIdentityService {
             this.identyServiceType = IdentityServiceTypes.UNKNOWN;
         }
         this.identityServiceId = dbItemIamIdentityService.getId();
-        this.identityServiceAuthenticationScheme = IdentityServiceAuthenticationScheme.fromValue(dbItemIamIdentityService.getAuthenticationScheme());
-
+        this.dbItemIamIdentityService = dbItemIamIdentityService;
     }
 
     public String getIdentityServiceName() {
@@ -63,28 +66,19 @@ public class SOSIdentityService {
     }
 
     public IdentityServiceAuthenticationScheme getIdentityServiceAuthenticationScheme() {
-        return identityServiceAuthenticationScheme;
+        if (dbItemIamIdentityService == null) {
+            return IdentityServiceAuthenticationScheme.SINGLE_FACTOR;
+        } else {
+            return IdentityServiceAuthenticationScheme.fromValue(dbItemIamIdentityService.getAuthenticationScheme());
+        }
     }
-
-    public void setIdentityServiceAuthenticationScheme(IdentityServiceAuthenticationScheme identityServiceAuthenticationScheme) {
-        this.identityServiceAuthenticationScheme = identityServiceAuthenticationScheme;
-    }
-
-    public boolean isSecondFactor() {
-        return secondFactor;
-    }
-
-    public void setSecondFactor(boolean secondFactor) {
-        this.secondFactor = secondFactor;
-    }
-
 
     public boolean isTwoFactor() {
-        return (identityServiceAuthenticationScheme == IdentityServiceAuthenticationScheme.TWO_FACTOR);
+        return (this.getIdentityServiceAuthenticationScheme() == IdentityServiceAuthenticationScheme.TWO_FACTOR);
     }
 
     public boolean isSingleFactor() {
-        return (identityServiceAuthenticationScheme == IdentityServiceAuthenticationScheme.SINGLE_FACTOR);
+        return (this.getIdentityServiceAuthenticationScheme() == IdentityServiceAuthenticationScheme.SINGLE_FACTOR);
     }
 
     @Override
@@ -112,5 +106,5 @@ public class SOSIdentityService {
         return true;
     }
 
-  
+     
 }
