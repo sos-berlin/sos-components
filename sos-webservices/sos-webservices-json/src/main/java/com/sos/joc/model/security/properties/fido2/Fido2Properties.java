@@ -113,7 +113,7 @@ public class Fido2Properties {
         this.iamFido2EmailSettings = iamFido2EmailSettings;
     }
 
-    /**
+    /** 
      * Fido2 User Verification
      * <p>
      * 

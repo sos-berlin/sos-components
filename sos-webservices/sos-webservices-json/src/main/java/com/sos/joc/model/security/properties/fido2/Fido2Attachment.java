@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum Fido2Attachment {
 
     PLATFORM("PLATFORM"),
-    ROAMING("ROAMING");
+    ROAMING("ROAMING"); 
     private final String value;
     private final static Map<String, Fido2Attachment> CONSTANTS = new HashMap<String, Fido2Attachment>();
 

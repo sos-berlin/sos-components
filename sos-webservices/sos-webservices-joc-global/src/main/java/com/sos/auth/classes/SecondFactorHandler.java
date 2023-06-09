@@ -67,7 +67,7 @@ public class SecondFactorHandler {
                                 secondFactorSuccess = sosFido2AuthAccessToken != null;
                             }
                         }
-                    } else {
+                    } else { 
                         throw new JocObjectNotExistException("no valid second factor identity service found. Wrong type " + "<" + dbItemSecondFactor
                                 .getIdentityServiceType() + ">");
                     }

@@ -192,7 +192,7 @@ public class SOSServicePermissionIam {
 
         MDC.put("context", ThreadCtx);
         String clientCertCN = null;
-        try {
+        try { 
             if (request != null) {
                 try {
                     ClientCertificateHandler clientCertHandler = new ClientCertificateHandler(request);

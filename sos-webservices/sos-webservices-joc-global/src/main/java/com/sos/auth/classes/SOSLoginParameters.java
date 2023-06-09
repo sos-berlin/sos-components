@@ -108,7 +108,7 @@ public class SOSLoginParameters {
         this.authenticatorData = authenticatorData;
     }
 
-    public String getCredentialId() {
+    public String getCredentialId() { 
         return credentialId;
     }
 
