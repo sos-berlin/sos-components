@@ -3,7 +3,9 @@ package com.sos.joc.keys.auth.impl;
 import java.io.UnsupportedEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -70,22 +72,30 @@ public class ClientServerCertImpl extends JOCResourceImpl implements ICreateClie
                         if (onetimeToken.getAgentId() != null) {
                             DBItemInventoryAgentInstance agent = agentDbLayer.getAgentInstance(onetimeToken.getAgentId());
                             agent.setCertificate(response.getJocKeyPair().getCertificate());
+                            agent.setModified(Date.from(Instant.now()));
                             hibernateSession.update(agent);
+                            response.setControllerId(agent.getControllerId());
+                            response.setAgentId(onetimeToken.getAgentId());
                         } else if (onetimeToken.getControllerId() != null) {
                             List<DBItemInventoryJSInstance> controllers = controllerDbLayer.getInventoryInstancesByControllerId(onetimeToken.getControllerId());
                             if (controllers.size() == 1) { //standalone
                                 controllers.get(0).setCertificate(response.getJocKeyPair().getCertificate());
+                                controllers.get(0).setModified(Date.from(Instant.now()));
                                 hibernateSession.update(controllers.get(0));
                             } else { // cluster
                                 for (DBItemInventoryJSInstance controller : controllers) {
                                     if(controller.getClusterUri() != null && controller.getClusterUri().equals(onetimeToken.getURI())) {
                                         controller.setCertificate(response.getJocKeyPair().getCertificate());
+                                        controller.setModified(Date.from(Instant.now()));
                                         hibernateSession.update(controller);
                                     }
                                 }
                             }
-                            response.setDNs(getDns(onetimeToken, controllerDbLayer, agentDbLayer));
+                            response.setControllerId(onetimeToken.getControllerId());
+                            response.setAgentId(null);
+//                            response.setDNs(getDns(onetimeToken, controllerDbLayer, agentDbLayer));
                         }
+                        response.setDNs(getDns(onetimeToken, controllerDbLayer, agentDbLayer));
                     }
                 } else {
                     throw new JocAuthenticationException(String.format("One-time token %1$s couldn't find or has expired and was removed from the system.", token));
@@ -93,8 +103,8 @@ public class ClientServerCertImpl extends JOCResourceImpl implements ICreateClie
             } else {
                 throw new JocAuthenticationException("No valid one-time token(s) found!");
             }
-            response.setControllerId(onetimeToken.getControllerId());
-            response.setAgentId(onetimeToken.getAgentId());
+//            response.setControllerId(onetimeToken.getControllerId());
+//            response.setAgentId(onetimeToken.getAgentId());
             return JOCDefaultResponse.responseStatus200(response);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -119,14 +129,13 @@ public class ClientServerCertImpl extends JOCResourceImpl implements ICreateClie
         if (token.getAgentId() != null) {
             DBItemInventoryAgentInstance agent = agentDbLayer.getAgentInstance(token.getAgentId());
             List<DBItemInventoryJSInstance> controllers = controllerDbLayer.getInventoryInstancesByControllerId(agent.getControllerId());
-            List<X509Certificate> certs = controllers.stream().map(controller -> {
+            dNs =  controllers.stream().map(controller -> {
                 try {
                     return KeyUtil.getX509Certificate(controller.getCertificate());
                 } catch (CertificateException | UnsupportedEncodingException e) {
                     return null;
                 }
-            }).filter(Objects::nonNull).collect(Collectors.toList());
-            dNs = certs.stream().map(cert -> cert.getSubjectDN().getName()).collect(Collectors.toList());
+            }).filter(Objects::nonNull).map(cert -> cert.getSubjectDN().getName()).collect(Collectors.toList());
         } else if (token.getControllerId() != null) {
             List<DBItemInventoryJSInstance> controllers = controllerDbLayer.getInventoryInstancesByControllerId(token.getControllerId());
             for (DBItemInventoryJSInstance controller : controllers) {
