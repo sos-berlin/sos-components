@@ -541,7 +541,7 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
                         identityProvider.setIamFido2ResidentKey(Fido2ResidentKey.valueOf(getProperty(properties.getFido2().getIamFido2ResidentKey()
                                 .value(), "")));
                         identityProvider.setIdentityServiceName(identityServiceFilter.getIdentityServiceName());
-                        identityProvider.setIamFido2RequireAccount(properties.getFido2().getRequireAccount());
+                        identityProvider.setIamFido2RequireAccount(properties.getFido2().getIamFido2requireAccount());
                         identityProvider.setIamFido2Attachment(properties.getFido2().getIamFido2Attachment());
                     }
                 }
