@@ -7,11 +7,13 @@ import java.util.Map;
 import java.util.Set;
 
 import com.sos.inventory.model.common.Variables;
+import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.job.Job;
 import com.sos.js7.converter.commons.config.json.JS7Agent;
 import com.sos.js7.converter.commons.report.ConverterReport;
 import com.sos.js7.converter.js1.common.Script;
 import com.sos.js7.converter.js1.common.job.ACommonJob;
+import com.sos.js7.converter.js1.common.job.StandaloneJob;
 import com.sos.js7.converter.js1.common.jobchain.JobChain;
 
 public class JobHelper {
@@ -41,17 +43,21 @@ public class JobHelper {
     public static final String JS1_JAVA_JITL_YADE_DMZ_JOB = "sos.scheduler.jade.SOSJade4DMZJSAdapter";
 
     private final ACommonJob js1Job;
+    private final boolean standalone;
 
     private JavaJITLJobHelper javaJITLJob;
     private ShellJobHelper shellJob;
     private Job js7Job;
     private JS7Agent js7Agent;
     private Variables js7OrderVariables;
+    private Environment js7JobEnvironment = new Environment();
+    private Environment js7JobArgumentsNotQuotedValues = new Environment();
 
     private String language;
 
     public JobHelper(ACommonJob js1Job, JobChain jobChain) {
         this.js1Job = js1Job;
+        this.standalone = js1Job != null && (js1Job instanceof StandaloneJob);
         this.language = js1Job.getScript().getLanguage() == null ? "shell" : js1Job.getScript().getLanguage().toLowerCase();
         switch (language) {
         case "java":
@@ -183,6 +189,26 @@ public class JobHelper {
 
     public Variables getJS7OrderVariables() {
         return js7OrderVariables;
+    }
+
+    public void addJS7JobEnvironment(String name, String value) {
+        js7JobEnvironment.getAdditionalProperties().put(name, value);
+    }
+
+    public Environment getJS7JobEnvironment() {
+        return js7JobEnvironment;
+    }
+
+    public void addJS7JobArgumentNotQuotedValue(String name, String value) {
+        js7JobArgumentsNotQuotedValues.getAdditionalProperties().put(name, value);
+    }
+
+    public Environment getJS7JobArgumentsNotQuotedValues() {
+        return js7JobArgumentsNotQuotedValues;
+    }
+
+    public boolean isStandalone() {
+        return standalone;
     }
 
     public class JavaJITLJobHelper {

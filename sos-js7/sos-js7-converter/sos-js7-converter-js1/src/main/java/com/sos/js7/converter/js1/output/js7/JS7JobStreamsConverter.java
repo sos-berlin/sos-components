@@ -202,7 +202,7 @@ public class JS7JobStreamsConverter {
                     set.setOrderName(workflowName);
                     Variables vs = new Variables();
                     for (NameValuePair nv : starter.getParams()) {
-                        vs.setAdditionalProperty(nv.getName(), js7Converter.getParamValue(nv.getValue()));
+                        vs.setAdditionalProperty(nv.getName(), js7Converter.getQuotedAndReplacedParamValue(nv.getValue()));
                     }
                     set.setVariables(vs);
                     l.add(set);
