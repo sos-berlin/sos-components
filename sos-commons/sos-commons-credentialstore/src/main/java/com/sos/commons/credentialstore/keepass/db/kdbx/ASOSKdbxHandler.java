@@ -66,22 +66,20 @@ public abstract class ASOSKdbxHandler extends ASOSKeePassHandler {
     }
 
     @Override
-    public byte[] getAttachment(Entry<?, ?, ?, ?> entry, String propertyName) throws SOSKeePassAttachmentException {
-        if (entry == null) {
-            return null;
-        }
+    public byte[] getBinaryProperty(Entry<?, ?, ?, ?> entry, String propertyName) throws SOSKeePassAttachmentException {
         try {
             if (propertyName == null) {
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug(String.format("[getAttachment][%s]get first BinaryProperty", entry.getPath()));
-                }
                 List<String> l = entry.getBinaryPropertyNames();
                 if (l != null && l.size() > 0) {
-                    return entry.getBinaryProperty(l.get(0));
+                    String fa = l.get(0);
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug(String.format("[getBinaryProperty][%s][first BinaryProperty]%s", entry.getPath(), fa));
+                    }
+                    return entry.getBinaryProperty(fa);
                 }
             } else {
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug(String.format("[getAttachment][%s][%s]get BinaryProperty", entry.getPath(), propertyName));
+                    LOGGER.debug(String.format("[getBinaryProperty][%s][BinaryProperty]%s", entry.getPath(), propertyName));
                 }
                 return entry.getBinaryProperty(propertyName);
             }

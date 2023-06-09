@@ -140,7 +140,7 @@ public class SOSKeePassDatabase {
     }
 
     /** V1 KDB - returns the attachment data, V2 KDBX - returns the attachment data of the propertyName */
-    private byte[] getAttachment(final Entry<?, ?, ?, ?> entry, String propertyName) throws SOSKeePassDatabaseException {
+    public byte[] getAttachment(final Entry<?, ?, ?, ?> entry, String propertyName) throws SOSKeePassDatabaseException {
         if (entry == null) {
             throw new SOSKeePassEntryNotFoundException("entry is null");
         }
@@ -150,7 +150,7 @@ public class SOSKeePassDatabase {
         if (propertyName != null && propertyName.equalsIgnoreCase(STANDARD_PROPERTY_NAME_ATTACHMENT)) {
             propertyName = null;
         }
-        byte[] data = _handler.getAttachment(entry, propertyName);
+        byte[] data = _handler.getBinaryProperty(entry, propertyName);
         if (data == null || data.length == 0) {
             if (propertyName == null) {
                 throw new SOSKeePassAttachmentException(String.format("[%s]attachment not found or is 0 bytes", entry.getPath()));

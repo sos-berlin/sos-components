@@ -17,7 +17,7 @@ import com.sos.commons.credentialstore.keepass.exceptions.SOSKeePassAttachmentEx
 import com.sos.commons.credentialstore.keepass.exceptions.SOSKeePassDatabaseException;
 
 public abstract class ASOSKeePassHandler {
-
+  
     public static final int ICON_INDEX_NEW_GROUP = 48; // folder icon
     public static final int ICON_INDEX_NEW_ENTRY = 0; // key icon
 
@@ -33,11 +33,11 @@ public abstract class ASOSKeePassHandler {
 
     public abstract Entry<?, ?, ?, ?> getEntryByPath(final String path);
 
-    public abstract byte[] getAttachment(final Entry<?, ?, ?, ?> entry, String propertyName) throws SOSKeePassAttachmentException;
-
     public abstract Entry<?, ?, ?, ?> createEntry(String entryPath) throws SOSKeePassDatabaseException;
 
     public abstract void saveAs(Path file) throws SOSKeePassDatabaseException;
+
+    public abstract byte[] getBinaryProperty(final Entry<?, ?, ?, ?> entry, String propertyName) throws SOSKeePassAttachmentException;
 
     public abstract Entry<?, ?, ?, ?> setBinaryProperty(SOSKeePassPath path, Entry<?, ?, ?, ?> entry, Path attachment)
             throws SOSKeePassDatabaseException;

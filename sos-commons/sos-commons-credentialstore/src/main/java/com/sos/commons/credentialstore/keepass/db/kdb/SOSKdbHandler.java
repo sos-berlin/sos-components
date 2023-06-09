@@ -135,10 +135,7 @@ public class SOSKdbHandler extends ASOSKeePassHandler {
     }
 
     @Override
-    public byte[] getAttachment(Entry<?, ?, ?, ?> entry, String propertyName) throws SOSKeePassAttachmentException {
-        if (entry == null) {
-            return null;
-        }
+    public byte[] getBinaryProperty(Entry<?, ?, ?, ?> entry, String propertyName) throws SOSKeePassAttachmentException {
         try {
             return ((KdbEntry) entry).getBinaryData();
         } catch (Throwable e) {

@@ -93,7 +93,7 @@ public class SOSKeePassResolver {
             SOSKeePassDatabase d = init(path);
             String val;
             if (path.isAttachment() || path.getPropertyName().equals(SOSKeePassDatabase.STANDARD_PROPERTY_NAME_ATTACHMENT)) {
-                val = new String(d.getHandler().getAttachment(d.getEntry(), path.getPropertyName()));
+                val = new String(d.getAttachment(d.getEntry(), path.getPropertyName()));
             } else {
                 val = d.getEntry().getProperty(path.getPropertyName());
                 if (val == null) {
@@ -113,7 +113,7 @@ public class SOSKeePassResolver {
         }
         SOSKeePassDatabase d = init(path);
         if (path.isAttachment() || path.getPropertyName().equals(SOSKeePassDatabase.STANDARD_PROPERTY_NAME_ATTACHMENT)) {
-            return d.getHandler().getAttachment(d.getEntry(), path.getPropertyName());
+            return d.getAttachment(d.getEntry(), path.getPropertyName());
         }
         return null;
     }
