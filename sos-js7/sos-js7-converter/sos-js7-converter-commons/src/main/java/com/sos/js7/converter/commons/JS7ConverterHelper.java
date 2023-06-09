@@ -374,38 +374,42 @@ public class JS7ConverterHelper {
                 "\r")) {/* because '-parsing removes \r */
             return new StringBuilder().append("'").append(val).append("'").toString();
         } else {
-            StringBuilder sb = new StringBuilder();
-            sb.append("\"");
-            char[] arr = val.toCharArray();
-            for (int i = 0; i < arr.length; i++) {
-                char c = arr[i];
-                switch (c) {
-                case '\\':
-                    sb.append("\\\\");
-                    break;
-                case '"':
-                    sb.append("\\\"");
-                    break;
-                case '$':
-                    sb.append("\\$");
-                    break;
-                case '\r':
-                    sb.append("\\r");
-                    break;
-                case '\n':
-                    sb.append("\\n");
-                    break;
-                case '\t':
-                    sb.append("\\t");
-                    break;
-                default:
-                    sb.append(c);
-                    break;
-                }
-            }
-            sb.append("\"");
-            return sb.toString();
+            return doubleQuoteStringValue4JS7(val);
         }
+    }
+
+    public static String doubleQuoteStringValue4JS7(String val) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("\"");
+        char[] arr = val.toCharArray();
+        for (int i = 0; i < arr.length; i++) {
+            char c = arr[i];
+            switch (c) {
+            case '\\':
+                sb.append("\\\\");
+                break;
+            case '"':
+                sb.append("\\\"");
+                break;
+            case '$':
+                sb.append("\\$");
+                break;
+            case '\r':
+                sb.append("\\r");
+                break;
+            case '\n':
+                sb.append("\\n");
+                break;
+            case '\t':
+                sb.append("\\t");
+                break;
+            default:
+                sb.append(c);
+                break;
+            }
+        }
+        sb.append("\"");
+        return sb.toString();
     }
 
     private static boolean hasQuotedChars(String val) {
