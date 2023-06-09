@@ -72,11 +72,13 @@ public class SOSLdapHandler {
             env.put(Context.SECURITY_PRINCIPAL, sosLdapWebserviceCredentials.getSecurityPrincipal());
             env.put(Context.SECURITY_CREDENTIALS, password);
             env.put(SOSAuthHelper.COM_SUN_JNDI_LDAP_READ_TIMEOUT, sosLdapWebserviceCredentials.getReadTimeout());
-            
-            LOGGER.debug("LDAP read timeout " + SOSAuthHelper.COM_SUN_JNDI_LDAP_READ_TIMEOUT  + ":" +  sosLdapWebserviceCredentials.getReadTimeout() + "ms");
+
+            LOGGER.debug("LDAP read timeout " + SOSAuthHelper.COM_SUN_JNDI_LDAP_READ_TIMEOUT + ":" + sosLdapWebserviceCredentials.getReadTimeout()
+                    + "ms");
             if (sosLdapWebserviceCredentials.getConnectTimeout() != null && !sosLdapWebserviceCredentials.getConnectTimeout().isEmpty()) {
                 env.put(SOSAuthHelper.COM_SUN_JNDI_LDAP_CONNECT_TIMEOUT, sosLdapWebserviceCredentials.getConnectTimeout());
-                LOGGER.debug("LDAP connect timeout " + SOSAuthHelper.COM_SUN_JNDI_LDAP_CONNECT_TIMEOUT  + ":" +  sosLdapWebserviceCredentials.getConnectTimeout() + "ms");
+                LOGGER.debug("LDAP connect timeout " + SOSAuthHelper.COM_SUN_JNDI_LDAP_CONNECT_TIMEOUT + ":" + sosLdapWebserviceCredentials
+                        .getConnectTimeout() + "ms");
             }
             if (sosLdapWebserviceCredentials.isSSL()) {
                 env.put("java.naming.ldap.factory.socket", "com.sos.auth.ldap.classes.SOSLdapSSLSocketFactory");
@@ -93,8 +95,7 @@ public class SOSLdapHandler {
         }
     }
 
-    public SOSAuthAccessToken login(SOSLdapWebserviceCredentials sosLdapWebserviceCredentials, IdentityServiceTypes identityServiceType,
-            String password) throws SOSHibernateException {
+    public SOSAuthAccessToken login(SOSLdapWebserviceCredentials sosLdapWebserviceCredentials, String password) throws SOSHibernateException {
         if (Globals.withHostnameVerification) {
             System.setProperty("com.sun.jndi.ldap.object.disableEndpointIdentification", "false");
             LOGGER.info("hostname verification is enabled");
@@ -104,6 +105,8 @@ public class SOSLdapHandler {
         }
 
         SOSAuthAccessToken sosAuthAccessToken = null;
+
+        IdentityServiceTypes identityServiceType = sosLdapWebserviceCredentials.getIdentityService().getIdentyServiceType();
         try {
 
             if (identityServiceType == IdentityServiceTypes.LDAP_JOC) {
@@ -160,6 +163,7 @@ public class SOSLdapHandler {
             msg = "IOException: error when trying to create the ldap context >> " + s;
             LOGGER.info(msg);
         }
+
         return sosAuthAccessToken;
     }
 

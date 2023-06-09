@@ -33,6 +33,7 @@ public class SOSLdapLogin implements ISOSLogin {
         try {
 
             SOSLdapWebserviceCredentials sosLdapWebserviceCredentials = new SOSLdapWebserviceCredentials();
+            sosLdapWebserviceCredentials.setIdentityService(identityService);
             sosLdapWebserviceCredentials.setAccount(currentAccount.getAccountname());
             sosLdapWebserviceCredentials.setValuesFromProfile(identityService);
 
@@ -45,8 +46,8 @@ public class SOSLdapLogin implements ISOSLogin {
                 disabled = false;
             }
 
-            if (!disabled && (!identityService.isTwoFactor() || (SOSAuthHelper.checkCertificate(currentAccount.getHttpServletRequest(), currentAccount.getAccountname())))) {
-                sosAuthAccessToken = sosLdapHandler.login(sosLdapWebserviceCredentials, identityService.getIdentyServiceType(), pwd);
+            if (!disabled) {
+                sosAuthAccessToken = sosLdapHandler.login(sosLdapWebserviceCredentials, pwd);
             }
 
             sosLdapSubject = new SOSLdapSubject();
@@ -60,9 +61,9 @@ public class SOSLdapLogin implements ISOSLogin {
                 if (IdentityServiceTypes.LDAP_JOC == identityService.getIdentyServiceType()) {
                     sosLdapSubject.setPermissionAndRoles(null, currentAccount.getAccountname(), identityService);
                 } else {
-                    sosLdapSubject.setPermissionAndRoles(sosLdapHandler.getGroupRolesMapping(sosLdapWebserviceCredentials), currentAccount.getAccountname(), identityService);
+                    sosLdapSubject.setPermissionAndRoles(sosLdapHandler.getGroupRolesMapping(sosLdapWebserviceCredentials), currentAccount
+                            .getAccountname(), identityService);
                 }
-
             }
 
         } catch (SOSHibernateException e) {

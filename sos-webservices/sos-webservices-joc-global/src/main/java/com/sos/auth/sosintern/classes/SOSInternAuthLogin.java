@@ -34,7 +34,7 @@ public class SOSInternAuthLogin implements ISOSLogin {
             SOSAuthAccessToken sosInternAuthAccessToken = null;
 
             boolean disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), currentAccount.getAccountname());
-            if (!disabled && !identityService.isSecondFactor()) {
+            if (!disabled) {
                 sosInternAuthAccessToken = sosInternAuthHandler.login(currentAccount,sosInternAuthWebserviceCredentials, pwd);
             }
 
