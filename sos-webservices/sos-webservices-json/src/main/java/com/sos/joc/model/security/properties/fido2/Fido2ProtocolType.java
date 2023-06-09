@@ -6,22 +6,21 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum Fido2Attestation {
+public enum Fido2ProtocolType {
 
-    DIRECT("DIRECT"),
-    ENTERPRISE("ENTERPRISE"),
-    INDIRECT("INDIRECT"),
-    NONE("NONE");
+    FIDO_2("FIDO2"),
+    U_2_F("U2F"),
+    PASSKEY("PASSKEY");
     private final String value;
-    private final static Map<String, Fido2Attestation> CONSTANTS = new HashMap<String, Fido2Attestation>();
+    private final static Map<String, Fido2ProtocolType> CONSTANTS = new HashMap<String, Fido2ProtocolType>();
 
     static {
-        for (Fido2Attestation c: values()) {
+        for (Fido2ProtocolType c: values()) {
             CONSTANTS.put(c.value, c);
         }
     }
 
-    private Fido2Attestation(String value) {
+    private Fido2ProtocolType(String value) {
         this.value = value;
     }
 
@@ -36,8 +35,8 @@ public enum Fido2Attestation {
     }
 
     @JsonCreator
-    public static Fido2Attestation fromValue(String value) {
-        Fido2Attestation constant = CONSTANTS.get(value);
+    public static Fido2ProtocolType fromValue(String value) {
+        Fido2ProtocolType constant = CONSTANTS.get(value);
         if (constant == null) {
             throw new IllegalArgumentException(value);
         } else {

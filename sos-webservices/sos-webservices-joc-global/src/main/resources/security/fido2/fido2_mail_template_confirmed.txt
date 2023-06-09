@@ -2,20 +2,21 @@
 <html lang="en">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <style>.tg {border-collapse:collapse;border-spacing:0;border-color:#aaa;}.tg td {font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#aaa;color:#333;background-color:#fff;}.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:bold;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#aaa;color:#fff;background-color:#f38630}</style>
-        <style>.tg {border-collapse:collapse;border-spacing:0;border-color:#aaa;}.tg td {font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#aaa;color:#333;background-color:#fff;}.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#aaa;color:#fff;background-color:#f38630}</style>
+        <style>.tg {border-collapse:collapse;border-spacing:0;border-color:#aaa;}.tg td {font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#aaa;color:#333;background-color:#fff;}.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:bold;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#aaa;color:#fff;background-color:#0000FF}</style>
+        <style>.tg {border-collapse:collapse;border-spacing:0;border-color:#aaa;}.tg td {font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#aaa;color:#333;background-color:#fff;}.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#aaa;color:#fff;background-color:#0000FF}</style>
         <title>JS7 JobScheduler Notification</title>
     </head>
     <body>
         <table class="tg">
             <tr>
                 <th colspan="2">
-                    <p><b>Confirmation for access to JS7 JobScheduler received</b></p>
+                    <p><b>Confirmation of E-Mail address for user access to JS7 JobScheduler received</b></p>
                 </th>
             </tr>
             <tr>
                 <td colspan="2">
-                    <p>A confirmation is received with the following information:</p>
+                    <p>A user recently requested registration with the FIDO Identity Service for authentication with JS7 JobScheduler.</p>
+                    <p>The user confirmed the following registration details:</p>
                 </td>
             </tr>
             <tr>
@@ -31,15 +32,25 @@
                     <p>Identity Service:</p>
                 </td>
                 <td>
-                    <p>${FIDO2_IDENTITY_SERVICE}</p>
+                    <p>${FIDO_IDENTITY_SERVICE}</p>
                 </td>
             </tr>
             <tr>
-                <th colspan="2">
-                    <p><b>E-Mail Verification</b></p>
-                </th>
+                <td>
+                    <p><b>Please consider to approve or deny the user's registration request in the JS7 JobScheduler site:</b></p>
+                </td>
+                <td>
+                    <p>
+                        <a href="${JOC_HREF}">${JOC_HREF}</a>
+                    </p>
+                </td>
             </tr>
-            
+            <tr>
+                <td colspan="2">
+                    <p>Please check if the indicated link corresponds to the site that you use for JS7 JobScheduler.</p>
+                    <p>If in doubt then do not follow the link. Please do not respond to this message.</p>
+                </td>
+            </tr>
         </table>
     </body>
 </html>

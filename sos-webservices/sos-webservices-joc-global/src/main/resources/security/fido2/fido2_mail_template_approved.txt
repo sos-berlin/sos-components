@@ -2,8 +2,8 @@
 <html lang="en">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <style>.tg  {border-collapse:collapse;border-spacing:0;border-color:#bbb;}.tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#bbb;color:#594F4F;background-color:#fff;}.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:bold;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#bbb;color:#fff;background-color:#9DE0AD}</style>
-        <style>.tg  {border-collapse:collapse;border-spacing:0;border-color:#bbb;}.tg td {font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#bbb;color:#594F4F;background-color:#E0FFEB;}.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#bbb;color:#493F3F;background-color:#9DE0AD}</style>
+        <style>.tg {border-collapse:collapse;border-spacing:0;border-color:#aaa;}.tg td {font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#aaa;color:#333;background-color:#fff;}.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:bold;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#aaa;color:#000000;background-color:#9DE0AD}</style>
+        <style>.tg {border-collapse:collapse;border-spacing:0;border-color:#aaa;}.tg td {font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#aaa;color:#333;background-color:#fff;}.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#aaa;color:#000000;background-color:#9DE0AD}</style>
         <title>JS7 JobScheduler Notification</title>
     </head>
     <body>
@@ -15,7 +15,7 @@
             </tr>
             <tr>
                 <td colspan="2">
-                    <p>You recently requested registration of your FIDO2 security key for authentication with JS7 JobScheduler.</p>
+                    <p>You recently requested registration of your security device for authentication with JS7 JobScheduler.</p>
                     <p>During registration you specified the following information:</p>
                 </td>
             </tr>
@@ -32,7 +32,7 @@
                     <p>Identity Service:</p>
                 </td>
                 <td>
-                    <p>${FIDO2_IDENTITY_SERVICE}</p>
+                    <p>${FIDO_IDENTITY_SERVICE}</p>
                 </td>
             </tr>
             <tr>
@@ -42,7 +42,7 @@
             </tr>
             <tr>
                 <td colspan="2">
-                    <p>Your FIDO2 security key has been registered.</p>
+                    <p>Your security device has been registered.</p>
                 </td>
             </tr>
             <tr>
