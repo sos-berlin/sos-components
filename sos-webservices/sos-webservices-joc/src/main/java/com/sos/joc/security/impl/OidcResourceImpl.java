@@ -112,7 +112,6 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
 
             listOfIdentityServices.clear();
             filter.setIamIdentityServiceType(IdentityServiceTypes.FIDO);
-            filter.setSecondFactor(false);
             listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
 
             for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
@@ -134,7 +133,11 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
                         }
                     }
                 }
+                if (dbItemIamIdentityService.getSecondFactor()) {
+                    identityProviders.getFido2ndFactorServiceItems().add(fido2IdentityProvider);
+                }else {
                 identityProviders.getFido2ServiceItems().add(fido2IdentityProvider);
+                }
             }
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityProviders));
         } catch (JocException e) {
