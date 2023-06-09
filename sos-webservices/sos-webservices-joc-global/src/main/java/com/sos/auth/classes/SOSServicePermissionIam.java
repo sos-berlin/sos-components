@@ -43,6 +43,7 @@ import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.exceptions.JocAuthenticationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocWaitForSecondFactorException;
 import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.security.configuration.SecurityConfiguration;
@@ -177,6 +178,7 @@ public class SOSServicePermissionIam {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public JOCDefaultResponse loginPost(@Context HttpServletRequest request, @HeaderParam("Authorization") String basicAuthorization,
+            @HeaderParam("X-AUTHORIZATION") String firstAuthorization, @HeaderParam("X-1ST-IDENTITY-SERVICE") String firstIdentityService,
             @HeaderParam("X-IDENTITY-SERVICE") String identityService, @HeaderParam("X-ID-TOKEN") String idToken,
             @HeaderParam("X-SIGNATURE") String signature, @HeaderParam("X-AUTHENTICATOR-DATA") String authenticatorData,
             @HeaderParam("X-CLIENT-DATA-JSON") String clientDataJson, @HeaderParam("X-CREDENTIAL-ID") String credentialId,
@@ -207,8 +209,10 @@ public class SOSServicePermissionIam {
             SOSLoginParameters sosLoginParameters = new SOSLoginParameters();
             sosLoginParameters.setIdToken(idToken);
             sosLoginParameters.setBasicAuthorization(basicAuthorization);
+            sosLoginParameters.setFirstAuthorization(firstAuthorization);
             sosLoginParameters.setClientCertCN(clientCertCN);
             sosLoginParameters.setIdentityService(identityService);
+            sosLoginParameters.setFirstIdentityService(firstIdentityService);
             sosLoginParameters.setRequest(request);
             sosLoginParameters.setAccount(account);
             sosLoginParameters.setClientDataJson(clientDataJson);
@@ -459,7 +463,7 @@ public class SOSServicePermissionIam {
                 break;
             case FIDO:
                 sosLogin = new SOSFido2AuthLogin();
-                LOGGER.debug("Login with identity service sosintern");
+                LOGGER.debug("Login with identity service fido");
                 break;
             case OIDC:
                 sosLogin = new SOSOpenIdLogin();
@@ -470,13 +474,18 @@ public class SOSServicePermissionIam {
                 LOGGER.debug("Login with identity service sosintern");
             }
 
-            sosLogin.setIdentityService(new SOSIdentityService(dbItemIdentityService));
+            SOSIdentityService sosIdentityService = new SOSIdentityService(dbItemIdentityService);
+
+            sosLogin.setIdentityService(sosIdentityService);
             sosLogin.login(currentAccount, password);
 
             ISOSAuthSubject sosAuthSubject = sosLogin.getCurrentSubject();
+            if (!SecondFactorHandler.checkSecondFactor(currentAccount, dbItemIdentityService.getIdentityServiceName())) {
+                sosAuthSubject = null;
+            }
 
             currentAccount.setCurrentSubject(sosAuthSubject);
-            currentAccount.setIdentityServices(new SOSIdentityService(dbItemIdentityService.getId(), dbItemIdentityService.getIdentityServiceName(),
+            currentAccount.setIdentityService(new SOSIdentityService(dbItemIdentityService.getId(), dbItemIdentityService.getIdentityServiceName(),
                     identityServiceType));
 
             if (sosAuthSubject == null || !sosAuthSubject.isAuthenticated()) {
@@ -488,9 +497,22 @@ public class SOSServicePermissionIam {
 
                 throw new JocAuthenticationException(sosAuthCurrentAccountAnswer);
             }
-            SOSSessionHandler sosSessionHandler = new SOSSessionHandler(currentAccount);
-            String accessToken = sosSessionHandler.getAccessToken().toString();
 
+            if (!currentAccount.getSosLoginParameters().isSecondPathOfTwoFactor() && sosIdentityService.isTwoFactor()) {
+                DBItemIamIdentityService dbItemSecondFactor = SecondFactorHandler.getSecondFactor(dbItemIdentityService);
+                SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = new SOSAuthCurrentAccountAnswer(currentAccount.getAccountname());
+                sosAuthCurrentAccountAnswer.setIsAuthenticated(true);
+                sosAuthCurrentAccountAnswer.setAccessToken("");
+                sosAuthCurrentAccountAnswer.setMessage("Second factor needed");
+                sosAuthCurrentAccountAnswer.setIdentityService(identityServiceType.name() + ":" + identityServiceName);
+                sosAuthCurrentAccountAnswer.setSecondFactoridentityService(dbItemSecondFactor.getIdentityServiceName());
+ 
+                throw new JocWaitForSecondFactorException(sosAuthCurrentAccountAnswer);
+
+            }
+            SOSSessionHandler sosSessionHandler = new SOSSessionHandler(currentAccount);
+
+            String accessToken = sosSessionHandler.getAccessToken().toString();
             currentAccount.setAccessToken(identityServiceName, accessToken);
             Globals.jocWebserviceDataContainer.getCurrentAccountsList().addAccount(currentAccount);
 
@@ -600,6 +622,7 @@ public class SOSServicePermissionIam {
                     filter.setDisabled(false);
                     filter.setRequired(true);
                     filter.setSecondFactor(false);
+                    filter.setIdentityServiceName(currentAccount.getSosLoginParameters().getFirstIdentityService());
 
                     List<DBItemIamIdentityService> listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
 
@@ -625,8 +648,6 @@ public class SOSServicePermissionIam {
                                 }
                             }
                         }
-                    } else {
-
                     }
 
                     if (currentAccount.getCurrentSubject() == null) {
@@ -651,6 +672,7 @@ public class SOSServicePermissionIam {
                                 currentAccount.setRoles(securityConfiguration);
 
                                 if (msg.isEmpty()) {
+
                                     LOGGER.info("Login with Identity Service " + dbItemIamIdentityService.getIdentityServiceName() + " successful.");
                                     addFolder(currentAccount);
                                     break;
@@ -661,7 +683,14 @@ public class SOSServicePermissionIam {
                                 msg = e.getMessage();
                                 authenticationResult.put(dbItemIamIdentityService.getIdentityServiceName(), msg);
                                 continue;
+                            } catch (JocWaitForSecondFactorException e) {
+                                LOGGER.debug("First factor with Identity Service " + dbItemIamIdentityService.getIdentityServiceName()
+                                        + " successful.");
+                                msg = e.getMessage();
+                                authenticationResult.put(dbItemIamIdentityService.getIdentityServiceName(), msg);
+                                return e.getSosAuthCurrentAccountAnswer();
                             }
+
                         }
 
                     }
@@ -692,8 +721,8 @@ public class SOSServicePermissionIam {
             SOSAuthCurrentAccountAnswer sosAuthCurrentUserAnswer = new SOSAuthCurrentAccountAnswer(currentAccount.getAccountname());
             if (currentAccount.getCurrentSubject() == null || !currentAccount.getCurrentSubject().isAuthenticated()) {
                 sosAuthCurrentUserAnswer.setIsAuthenticated(false);
-                if (currentAccount.getIdentityServices() != null) {
-                    sosAuthCurrentUserAnswer.setIdentityService(currentAccount.getIdentityServices().getIdentityServiceName());
+                if (currentAccount.getIdentityService() != null) {
+                    sosAuthCurrentUserAnswer.setIdentityService(currentAccount.getIdentityService().getIdentityServiceName());
                 } else {
                     sosAuthCurrentUserAnswer.setIdentityService("");
                 }
@@ -713,8 +742,9 @@ public class SOSServicePermissionIam {
             sosAuthCurrentUserAnswer.setSessionTimeout(sosSessionHandler.getTimeout());
             sosAuthCurrentUserAnswer.setCallerHostName(currentAccount.getCallerHostName());
             sosAuthCurrentUserAnswer.setCallerIpAddress(currentAccount.getCallerIpAddress());
-            sosAuthCurrentUserAnswer.setIdentityService(currentAccount.getIdentityServices().getIdentyServiceType() + ":" + currentAccount
-                    .getIdentityServices().getIdentityServiceName());
+            sosAuthCurrentUserAnswer.setIdentityService(currentAccount.getIdentityService().getIdentyServiceType() + ":" + currentAccount
+                    .getIdentityService().getIdentityServiceName());
+
             sosAuthCurrentUserAnswer.setMessage(msg);
 
             LOGGER.debug("CallerIpAddress=" + currentAccount.getCallerIpAddress());
@@ -741,7 +771,7 @@ public class SOSServicePermissionIam {
     protected JOCDefaultResponse login(SOSLoginParameters sosLoginParameters, String pwd) throws Exception {
         SOSHibernateSession sosHibernateSession = null;
         try {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection("Login Fido2 Handler");
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection("Login Fido Handler");
 
             Globals.setServletBaseUri(uriInfo);
 
@@ -761,15 +791,15 @@ public class SOSServicePermissionIam {
                     if (sosLoginParameters.getIdToken() != null && !sosLoginParameters.getIdToken().isEmpty()) {
 
                         SOSAuthHelper.getIdentityService(sosLoginParameters.getIdentityService());
-                        SOSOpenIdWebserviceCredentials webserviceCredentials = new SOSOpenIdWebserviceCredentials();
+                        SOSOpenIdWebserviceCredentials sosOpenIdWebserviceCredentials = new SOSOpenIdWebserviceCredentials();
                         SOSIdentityService sosIdentityService = new SOSIdentityService(sosLoginParameters.getIdentityService(),
                                 IdentityServiceTypes.OIDC);
-                        webserviceCredentials.setValuesFromProfile(sosIdentityService);
-                        webserviceCredentials.setIdToken(sosLoginParameters.getIdToken());
-                        SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials);
+                        sosOpenIdWebserviceCredentials.setValuesFromProfile(sosIdentityService);
+                        sosOpenIdWebserviceCredentials.setIdToken(sosLoginParameters.getIdToken());
+                        SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(sosOpenIdWebserviceCredentials);
                         String account = sosOpenIdHandler.decodeIdToken(sosLoginParameters.getIdToken());
                         sosLoginParameters.setAccount(account);
-                        sosLoginParameters.setSOSOpenIdWebserviceCredentials(webserviceCredentials);
+                        sosLoginParameters.setSOSOpenIdWebserviceCredentials(sosOpenIdWebserviceCredentials);
 
                     } else {
                         sosLoginParameters.setAccount(sosLoginParameters.getClientCertCN());
@@ -785,7 +815,8 @@ public class SOSServicePermissionIam {
                 sosLoginParameters.setBasicAuthorization("Basic " + authStringEnc);
             }
 
-            if (sosLoginParameters.getCredentialId() != null && !sosLoginParameters.getCredentialId().isEmpty()) {
+            if (sosLoginParameters.authorizationHeaderIsEmpty() && sosLoginParameters.getCredentialId() != null && !sosLoginParameters
+                    .getCredentialId().isEmpty()) {
                 IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
                 DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getAccountFromCredentialId(sosLoginParameters.getCredentialId());
                 if (dbItemIamAccount != null) {
@@ -801,6 +832,10 @@ public class SOSServicePermissionIam {
                 }
             }
 
+            if (sosLoginParameters.getFirstAuthorization() != null && !sosLoginParameters.getFirstAuthorization().isEmpty()) {
+                sosLoginParameters.setBasicAuthorization(sosLoginParameters.getFirstAuthorization());
+            }
+
             TimeZone.setDefault(TimeZone.getTimeZone(UTC));
 
             SOSAuthCurrentAccount currentAccount = getUserFromHeaderOrQuery(sosLoginParameters.getBasicAuthorization(), sosLoginParameters
@@ -809,10 +844,6 @@ public class SOSServicePermissionIam {
 
             if (currentAccount == null || !currentAccount.withAuthorization()) {
                 return JOCDefaultResponse.responseStatusJSError(AUTHORIZATION_HEADER_WITH_BASIC_BASED64PART_EXPECTED);
-            }
-
-            if (currentAccount.getAccountname() == null || currentAccount.getAccountname().isEmpty()) {
-                //return JOCDefaultResponse.responseStatusJSError(ACCOUNT_IS_EMPTY);
             }
 
             currentAccount.setSosLoginParameters(sosLoginParameters);

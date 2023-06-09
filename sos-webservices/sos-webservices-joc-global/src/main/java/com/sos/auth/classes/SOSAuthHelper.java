@@ -65,9 +65,7 @@ public class SOSAuthHelper {
 
     private static final String JS7_SUBJECT_REGISTRATION_WITH_JS7_JOB_SCHEDULER_IS_APPROVED = "JS7: Registration with JS7 JobScheduler is completed";
     private static final String JS7_SUBJECT_REGISTRATION_WITH_JS7_JOB_SCHEDULER_CONFIRMATION = "JS7: Registration with JS7 JobScheduler";
-    private static final String JS7_SUBJECT_REGISTRATION_WITH_JS7_JOB_SCHEDULER_CONFIRMED = "JS7: FIDO2 Confirmation received";
-    private static final String JS7_CONFIRM_E_MAIL_ADDRESS_FOR_REGISTRATION_WITH_JS7_JOB_SCHEDULER =
-            "JS7: Confirm e-mail address for registration with JS7 JobScheduler";
+    private static final String JS7_SUBJECT_REGISTRATION_WITH_JS7_JOB_SCHEDULER_CONFIRMED = "JS7: Registration with JS7 JobScheduler confirmed";
     private static final String DEFAULT_PROFILE_ACCOUNT = "default_profile_account";
     private static final String JOC = "joc";
     private static final String VALUE = "value";
@@ -118,8 +116,8 @@ public class SOSAuthHelper {
     public static String getIdentityServiceAccessToken(String accessToken) {
         if (Globals.jocWebserviceDataContainer != null && Globals.jocWebserviceDataContainer.getCurrentAccountsList() != null) {
             SOSAuthCurrentAccount sosAuthCurrentAccount = Globals.jocWebserviceDataContainer.getCurrentAccountsList().getAccount(accessToken);
-            if (sosAuthCurrentAccount != null && sosAuthCurrentAccount.getIdentityServices() != null) {
-                return sosAuthCurrentAccount.getAccessToken(sosAuthCurrentAccount.getIdentityServices().getIdentityServiceName());
+            if (sosAuthCurrentAccount != null && sosAuthCurrentAccount.getIdentityService() != null) {
+                return sosAuthCurrentAccount.getAccessToken(sosAuthCurrentAccount.getIdentityService().getIdentityServiceName());
             }
         }
         return null;
@@ -343,6 +341,9 @@ public class SOSAuthHelper {
 
     public static DBItemIamIdentityService getIdentityService(SOSHibernateSession sosHibernateSession, String identityServiceName)
             throws SOSHibernateException {
+        if (identityServiceName == null) {
+            return null;
+        }
         IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
         IamIdentityServiceFilter iamIdentityServiceFilter = new IamIdentityServiceFilter();
         iamIdentityServiceFilter.setIdentityServiceName(identityServiceName);

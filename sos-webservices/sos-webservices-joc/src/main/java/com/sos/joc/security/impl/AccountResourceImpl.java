@@ -538,7 +538,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                 ISOSAuthSubject sosAuthSubject = sosLogin.getCurrentSubject();
 
                 currentAccount.setCurrentSubject(sosAuthSubject);
-                currentAccount.setIdentityServices(new SOSIdentityService(dbItemIamIdentityServiceEntry.getId(), dbItemIamIdentityServiceEntry
+                currentAccount.setIdentityService(new SOSIdentityService(dbItemIamIdentityServiceEntry.getId(), dbItemIamIdentityServiceEntry
                         .getIdentityServiceName(), sosIdentityService.getIdentyServiceType()));
 
                 SecurityConfiguration securityConfiguration = sosPermissionMerger.addIdentityService(sosIdentityService);

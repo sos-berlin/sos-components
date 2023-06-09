@@ -52,22 +52,10 @@ public class SOSFido2AuthLogin implements ISOSLogin {
                     .getSignature() != null) && (currentAccount.getSosLoginParameters().getAuthenticatorData() != null)) {
 
                 boolean disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), currentAccount.getAccountname());
-                if (!disabled && !identityService.isSecondFactor()) {
-                    if (identityService.isSingleFactor()) {
-                        sosFido2AuthAccessToken = sosFido2AuthHandler.login(sosFido2AuthWebserviceCredentials);
-                    } else {
-                        if ((identityService.isTwoFactor() && SOSAuthHelper.checkCertificate(currentAccount.getHttpServletRequest(), currentAccount
-                                .getAccountname()))) {
-                            sosFido2AuthAccessToken = sosFido2AuthHandler.login(sosFido2AuthWebserviceCredentials);
-                        }
-                    }
+                if (!disabled) {
+                    sosFido2AuthAccessToken = sosFido2AuthHandler.login(sosFido2AuthWebserviceCredentials);
                 } else {
-                    if (disabled) {
-                        LOGGER.debug(identityService.getIdentityServiceName() + " is disabled");
-                    }
-                    if (identityService.isSecondFactor()) {
-                        LOGGER.info(identityService.getIdentityServiceName() + " isSecondFactor");
-                    }
+                    LOGGER.debug(identityService.getIdentityServiceName() + " is disabled");
                 }
             } else {
                 if (currentAccount.getSosLoginParameters().getClientDataJson() != null) {

@@ -419,6 +419,9 @@ public class Fido2ResourceImpl extends JOCResourceImpl implements IFido2Resource
             Fido2RegistrationStartResponse fido2RegistrationStartResponse = new Fido2RegistrationStartResponse();
 
             com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getIamProperties(fido2Registration.getIdentityServiceName());
+            if (properties.getFido2() == null) {
+                throw new JocBadRequestException("FIDO Identity Service is not configured");
+            }
             properties.getFido2().setIamFido2EmailSettings(null);
 
             fido2RegistrationStartResponse.setFido2Properties(properties.getFido2());

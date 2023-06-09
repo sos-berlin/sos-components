@@ -47,6 +47,9 @@ public class SOSAuthCurrentAccountAnswer {
     @JsonProperty("identityService")
     private String identityService;
     
+    @JsonProperty("secondFactoridentityService")
+    private String secondFactoridentityService;
+    
     @JsonIgnore
     private String apiCall;
 
@@ -201,6 +204,16 @@ public class SOSAuthCurrentAccountAnswer {
     public String toString() {
         return String.format("Account: %s Role: %s hasRole: %s Permission: %s isPermitted: %s -- AccessToken=%s", this.account, this.role,
                 this.hasRole, this.permission, this.isPermittet, this.accessToken);
+    }
+
+    
+    public String getSecondFactoridentityService() {
+        return secondFactoridentityService;
+    }
+
+    
+    public void setSecondFactoridentityService(String secondFactoridentityService) {
+        this.secondFactoridentityService = secondFactoridentityService;
     }
 
 }
