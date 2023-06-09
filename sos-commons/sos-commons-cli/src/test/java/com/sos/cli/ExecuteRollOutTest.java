@@ -239,11 +239,11 @@ public class ExecuteRollOutTest {
     }
 
     @Test
-    // @Ignore
+    @Ignore
     public void testMainWithArgumentsForAgentConfig20230420() throws Exception {
         ExecuteRollOut.main(createAgentArgsLocalConfigTest());
     }
-
+    
     private String[] createAgentArgsConfigTest() {
         System.setProperty(ExecuteRollOut.PRIVATE_CONF_JS7_PARAM_CONFDIR, "C:/sp/devel/js7/testing/2023-03-03/agent/config");
         String dn = "CN=agent, OU=development, O=SOS, C=DE, L=Berlin, ST=Berlin";
@@ -263,7 +263,7 @@ public class ExecuteRollOutTest {
         //// String targetTruststore = "C:/sp/devel/js7/testing/2023-03-03/agent/config/private/https-truststore.p12";
         // String targetTrustoreType = "PKCS12";
         // String targetTruststorePassw = "jobscheduler";
-        String token = "5dfd290f-5695-4ced-88df-1c822ebb9263";
+        String token = "126ff5c7-1ea2-405f-9b8a-490c8da6ab97";
         String keystoreAlias = "agent";
         String truststoreAlias = "sp root ca";
         String san = "agent.sos, agent, sp.sos, sp";
@@ -290,14 +290,14 @@ public class ExecuteRollOutTest {
     private String[] createControllerArgsConfigTest() {
         String dn = "CN=sp, OU=development, O=SOS, C=DE, L=Berlin, ST=Berlin";
         String jocUri = "http://sp.sos:4444";
-        String targetKeystore = "C:/sp/devel/js7/testing/CLI/controller/withHTTP/https-keystore.p12";
+        String targetKeystore = "C:/sp/devel/js7/testing/2023-04-20/agent/config/private/https-keystore.p12";
         String targetKeystoreType = "PKCS12";
         String targetKeystorePassw = "jobscheduler";
         String targetKeystoreEntryPassw = "jobscheduler";
-        String targetTruststore = "C:/sp/devel/js7/testing/CLI/controller/withHTTP/https-truststore.p12";
+        String targetTruststore = "C:/sp/devel/js7/testing/2023-04-20/agent/config/private/https-truststore.p12";
         String targetTrustoreType = "PKCS12";
         String targetTruststorePassw = "jobscheduler";
-        String token = "73bfc4b8-3f15-44b9-a75b-cdb44aec8f4b";
+        String token = "30b47b41-48ce-49d7-8f5b-ec3230695e3b";
         String keystoreAlias = "sp";
         String truststoreAlias = "sp root ca";
         String san = "sp.sos, sp";
@@ -309,7 +309,7 @@ public class ExecuteRollOutTest {
 
     private String[] createAgentArgsLocalConfigTest() {
         System.setProperty(ExecuteRollOut.PRIVATE_CONF_JS7_PARAM_CONFDIR, "C:/sp/devel/js7/testing/2023-04-20/agent/config");
-        String dn = "CN=standalone, OU=development, O=SOS, C=DE, L=Berlin, ST=Berlin";
+        String dn = "CN=standaloneAgentID, OU=development, O=SOS, C=DE, L=Berlin, ST=Berlin";
         String jocUri = "http://sp.sos:4444";
         // String srcKeystore = "C:/sp/devel/js7/testing/2023-03-03/https-keystore.p12";
         // String srcKeystoreType = "PKCS12";
@@ -326,7 +326,7 @@ public class ExecuteRollOutTest {
          String targetTruststore = "C:/sp/devel/js7/testing/2023-04-20/agent/config/private/https-truststore.p12";
          String targetTrustoreType = "PKCS12";
          String targetTruststorePassw = "jobscheduler";
-        String token = "19f9a7db-a09c-4c95-8dd9-cabb4ffc56f3";
+        String token = "fcf98625-0a3a-4017-913c-eaea4e25cc76";
         String keystoreAlias = "standalone";
         String truststoreAlias = "sp root ca";
         String san = "standalone.sos, standalone, sp.sos, sp";
