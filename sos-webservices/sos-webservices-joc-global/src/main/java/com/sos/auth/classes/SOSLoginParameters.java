@@ -124,7 +124,7 @@ public class SOSLoginParameters {
         this.requestId = requestId;
     }
 
-    public boolean authorizationHeaderIsEmpty() {
+    public boolean basicAuthorizationHeaderIsEmpty() {
         return (basicAuthorization == null || basicAuthorization.isEmpty() || basicAuthorization.equals("Basic"));
     }
 
