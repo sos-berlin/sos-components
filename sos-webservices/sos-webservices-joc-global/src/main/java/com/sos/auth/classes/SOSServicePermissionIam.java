@@ -178,11 +178,11 @@ public class SOSServicePermissionIam {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public JOCDefaultResponse loginPost(@Context HttpServletRequest request, @HeaderParam("Authorization") String basicAuthorization,
-            @HeaderParam("X-1ST-IDENTITY-SERVICE") String firstIdentityService,
-            @HeaderParam("X-IDENTITY-SERVICE") String identityService, @HeaderParam("X-ID-TOKEN") String idToken,
-            @HeaderParam("X-SIGNATURE") String signature, @HeaderParam("X-AUTHENTICATOR-DATA") String authenticatorData,
-            @HeaderParam("X-CLIENT-DATA-JSON") String clientDataJson, @HeaderParam("X-CREDENTIAL-ID") String credentialId,
-            @HeaderParam("X-REQUEST-ID") String requestId, @QueryParam("account") String account, @QueryParam("pwd") String pwd) {
+            @HeaderParam("X-1ST-IDENTITY-SERVICE") String firstIdentityService, @HeaderParam("X-IDENTITY-SERVICE") String identityService,
+            @HeaderParam("X-ID-TOKEN") String idToken, @HeaderParam("X-SIGNATURE") String signature,
+            @HeaderParam("X-AUTHENTICATOR-DATA") String authenticatorData, @HeaderParam("X-CLIENT-DATA-JSON") String clientDataJson,
+            @HeaderParam("X-CREDENTIAL-ID") String credentialId, @HeaderParam("X-REQUEST-ID") String requestId, @QueryParam("account") String account,
+            @QueryParam("pwd") String pwd) {
 
         if (Globals.sosCockpitProperties == null) {
             Globals.sosCockpitProperties = new JocCockpitProperties();
@@ -192,7 +192,7 @@ public class SOSServicePermissionIam {
 
         MDC.put("context", ThreadCtx);
         String clientCertCN = null;
-        try { 
+        try {
             if (request != null) {
                 try {
                     ClientCertificateHandler clientCertHandler = new ClientCertificateHandler(request);
@@ -505,7 +505,7 @@ public class SOSServicePermissionIam {
                 sosAuthCurrentAccountAnswer.setMessage("Second factor needed");
                 sosAuthCurrentAccountAnswer.setIdentityService(identityServiceType.name() + ":" + identityServiceName);
                 sosAuthCurrentAccountAnswer.setSecondFactoridentityService(dbItemSecondFactor.getIdentityServiceName());
- 
+
                 throw new JocWaitForSecondFactorException(sosAuthCurrentAccountAnswer);
 
             }
@@ -785,53 +785,54 @@ public class SOSServicePermissionIam {
                 Globals.iamSessionTimeout = SOSAuthHelper.getGlobalIamProperties().getSessionTimeout();
             }
 
-            if (sosLoginParameters.getBasicAuthorization() == null || sosLoginParameters.getBasicAuthorization().isEmpty()) {
-                if (sosLoginParameters.getAccount() == null) {
-                    if (sosLoginParameters.getIdToken() != null && !sosLoginParameters.getIdToken().isEmpty()) {
+            if (sosLoginParameters.basicAuthorizationHeaderIsEmpty()) {
+                if (sosLoginParameters.getCredentialId() != null && !sosLoginParameters.getCredentialId().isEmpty()) {
 
-                        SOSAuthHelper.getIdentityService(sosLoginParameters.getIdentityService());
-                        SOSOpenIdWebserviceCredentials sosOpenIdWebserviceCredentials = new SOSOpenIdWebserviceCredentials();
-                        SOSIdentityService sosIdentityService = new SOSIdentityService(sosLoginParameters.getIdentityService(),
-                                IdentityServiceTypes.OIDC);
-                        sosOpenIdWebserviceCredentials.setValuesFromProfile(sosIdentityService);
-                        sosOpenIdWebserviceCredentials.setIdToken(sosLoginParameters.getIdToken());
-                        SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(sosOpenIdWebserviceCredentials);
-                        String account = sosOpenIdHandler.decodeIdToken(sosLoginParameters.getIdToken());
-                        sosLoginParameters.setAccount(account);
-                        sosLoginParameters.setSOSOpenIdWebserviceCredentials(sosOpenIdWebserviceCredentials);
-
+                    IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
+                    DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getAccountFromCredentialId(sosLoginParameters.getCredentialId());
+                    if (dbItemIamAccount != null) {
+                        byte[] authEncBytes = org.apache.commons.codec.binary.Base64.encodeBase64(dbItemIamAccount.getAccountName().getBytes());
+                        String authStringEnc = new String(authEncBytes);
+                        sosLoginParameters.setBasicAuthorization("Basic " + authStringEnc);
                     } else {
-                        sosLoginParameters.setAccount(sosLoginParameters.getClientCertCN());
+                        SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = new SOSAuthCurrentAccountAnswer();
+                        sosAuthCurrentAccountAnswer.setIsAuthenticated(false);
+                        sosAuthCurrentAccountAnswer.setMessage("Could not find account for credential-id <" + sosLoginParameters.getCredentialId()
+                                + ">");
+                        sosAuthCurrentAccountAnswer.setIdentityService(sosLoginParameters.getIdentityService());
+                        throw new JocAuthenticationException(sosAuthCurrentAccountAnswer);
                     }
-                }
-                if (pwd == null) {
-                    pwd = "";
-                }
 
-                String s = sosLoginParameters.getAccount() + ":" + pwd;
-                byte[] authEncBytes = org.apache.commons.codec.binary.Base64.encodeBase64(s.getBytes());
-                String authStringEnc = new String(authEncBytes);
-                sosLoginParameters.setBasicAuthorization("Basic " + authStringEnc);
-            }
+                } else {
+                    if (sosLoginParameters.getAccount() == null) {
+                        if (sosLoginParameters.getIdToken() != null && !sosLoginParameters.getIdToken().isEmpty()) {
 
-            if (sosLoginParameters.authorizationHeaderIsEmpty() && sosLoginParameters.getCredentialId() != null && !sosLoginParameters
-                    .getCredentialId().isEmpty()) {
-                IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
-                DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getAccountFromCredentialId(sosLoginParameters.getCredentialId());
-                if (dbItemIamAccount != null) {
-                    byte[] authEncBytes = org.apache.commons.codec.binary.Base64.encodeBase64(dbItemIamAccount.getAccountName().getBytes());
+                            SOSAuthHelper.getIdentityService(sosLoginParameters.getIdentityService());
+                            SOSOpenIdWebserviceCredentials sosOpenIdWebserviceCredentials = new SOSOpenIdWebserviceCredentials();
+                            SOSIdentityService sosIdentityService = new SOSIdentityService(sosLoginParameters.getIdentityService(),
+                                    IdentityServiceTypes.OIDC);
+                            sosOpenIdWebserviceCredentials.setValuesFromProfile(sosIdentityService);
+                            sosOpenIdWebserviceCredentials.setIdToken(sosLoginParameters.getIdToken());
+                            SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(sosOpenIdWebserviceCredentials);
+                            String account = sosOpenIdHandler.decodeIdToken(sosLoginParameters.getIdToken());
+                            sosLoginParameters.setAccount(account);
+                            sosLoginParameters.setSOSOpenIdWebserviceCredentials(sosOpenIdWebserviceCredentials);
+
+                        } else {
+                            sosLoginParameters.setAccount(sosLoginParameters.getClientCertCN());
+                        }
+                    }
+                    if (pwd == null) {
+                        pwd = "";
+                    }
+
+                    String s = sosLoginParameters.getAccount() + ":" + pwd;
+                    byte[] authEncBytes = org.apache.commons.codec.binary.Base64.encodeBase64(s.getBytes());
                     String authStringEnc = new String(authEncBytes);
                     sosLoginParameters.setBasicAuthorization("Basic " + authStringEnc);
-                } else {
-                    SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = new SOSAuthCurrentAccountAnswer();
-                    sosAuthCurrentAccountAnswer.setIsAuthenticated(false);
-                    sosAuthCurrentAccountAnswer.setMessage("Could not find account for credential-id <" + sosLoginParameters.getCredentialId() + ">");
-                    sosAuthCurrentAccountAnswer.setIdentityService(sosLoginParameters.getIdentityService());
-                    throw new JocAuthenticationException(sosAuthCurrentAccountAnswer);
                 }
             }
 
-           
             TimeZone.setDefault(TimeZone.getTimeZone(UTC));
 
             SOSAuthCurrentAccount currentAccount = getUserFromHeaderOrQuery(sosLoginParameters.getBasicAuthorization(), sosLoginParameters
