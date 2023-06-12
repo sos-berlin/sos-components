@@ -141,4 +141,7 @@ public class SOSLoginParameters {
         return firstIdentityService != null && !firstIdentityService.isEmpty();
     }
 
+    public boolean isFirstPathOfTwoFactor() {
+        return !isSecondPathOfTwoFactor();
+    }
 }

@@ -16,7 +16,9 @@ import com.sos.auth.fido2.classes.SOSFido2AuthWebserviceCredentials;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
+import com.sos.joc.db.authentication.DBItemIamAccount;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
+import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
@@ -41,12 +43,14 @@ public class SecondFactorHandler {
                     }
                 } else {
                     if (dbItemSecondFactor.getIdentityServiceType().equals(IdentityServiceTypes.FIDO.value())) {
-                        if (!currentAccount.getSosLoginParameters().isSecondPathOfTwoFactor()) {
+                        if (currentAccount.getSosLoginParameters().isFirstPathOfTwoFactor()) {
                             secondFactorSuccess = true;
                         } else {
+                            IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
+                            DBItemIamAccount dbItemIamAccountSecond = iamAccountDBLayer.getAccountFromCredentialId(currentAccount.getSosLoginParameters().getCredentialId());
                             SOSFido2AuthWebserviceCredentials sosFido2AuthWebserviceCredentials = new SOSFido2AuthWebserviceCredentials();
                             sosFido2AuthWebserviceCredentials.setIdentityServiceId(dbItemSecondFactor.getId());
-                            sosFido2AuthWebserviceCredentials.setAccount(currentAccount.getAccountname());
+                            sosFido2AuthWebserviceCredentials.setAccount(dbItemIamAccountSecond.getAccountName());
                             sosFido2AuthWebserviceCredentials.setClientDataJson(currentAccount.getSosLoginParameters().getClientDataJson());
                             sosFido2AuthWebserviceCredentials.setSignature(currentAccount.getSosLoginParameters().getSignature());
                             sosFido2AuthWebserviceCredentials.setAuthenticatorData(currentAccount.getSosLoginParameters().getAuthenticatorData());
