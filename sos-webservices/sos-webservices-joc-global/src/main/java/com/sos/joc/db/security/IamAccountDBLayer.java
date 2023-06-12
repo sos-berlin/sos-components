@@ -485,10 +485,10 @@ public class IamAccountDBLayer {
             dbItemIamAccount = sosHibernateSession.get(DBItemIamAccount.class, iamFido2Devices.get(0).getAccountId());
             if (dbItemIamAccount.getDisabled()){
                 return null;
-            }
+            } 
         }
-        return dbItemIamAccount;
-    }
+        return dbItemIamAccount; 
+    } 
 
     public boolean deleteRoleCascading(String role, Long identityServiceId) throws SOSHibernateException {
         DBItemIamRole dbItemIamRole = this.getRoleByName(role, identityServiceId);
