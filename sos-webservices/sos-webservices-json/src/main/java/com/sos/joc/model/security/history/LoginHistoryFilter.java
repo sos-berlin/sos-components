@@ -54,12 +54,12 @@ public class LoginHistoryFilter {
     /**
      * string without < and >
      * <p>
-     * 
+     * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
      */
     @JsonProperty("timeZone")
+    @JsonPropertyDescription("see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones")
     private String timeZone;
-    
 
     /**
      * No args constructor for use in serialization
@@ -152,7 +152,7 @@ public class LoginHistoryFilter {
     /**
      * string without < and >
      * <p>
-     * 
+     * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
      */
     @JsonProperty("timeZone")
@@ -163,7 +163,7 @@ public class LoginHistoryFilter {
     /**
      * string without < and >
      * <p>
-     * 
+     * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
      */
     @JsonProperty("timeZone")

@@ -49,11 +49,11 @@ public class SecurityConfigurationAccount {
     /**
      * disabled parameter
      * <p>
-     * true if the account is disabled
+     * controls if the object is disabled
      * 
      */
     @JsonProperty("disabled")
-    @JsonPropertyDescription("true if the account is disabled")
+    @JsonPropertyDescription("controls if the object is disabled")
     private Boolean disabled = false;
     /**
      * non negative long
@@ -171,7 +171,7 @@ public class SecurityConfigurationAccount {
     /**
      * disabled parameter
      * <p>
-     * true if the account is disabled
+     * controls if the object is disabled
      * 
      */
     @JsonProperty("disabled")
@@ -182,7 +182,7 @@ public class SecurityConfigurationAccount {
     /**
      * disabled parameter
      * <p>
-     * true if the account is disabled
+     * controls if the object is disabled
      * 
      */
     @JsonProperty("disabled")
