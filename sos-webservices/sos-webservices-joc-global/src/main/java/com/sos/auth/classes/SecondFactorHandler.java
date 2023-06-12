@@ -47,31 +47,42 @@ public class SecondFactorHandler {
                             secondFactorSuccess = true;
                         } else {
                             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
-                            DBItemIamAccount dbItemIamAccountSecond = iamAccountDBLayer.getAccountFromCredentialId(currentAccount.getSosLoginParameters().getCredentialId());
-                            SOSFido2AuthWebserviceCredentials sosFido2AuthWebserviceCredentials = new SOSFido2AuthWebserviceCredentials();
-                            sosFido2AuthWebserviceCredentials.setIdentityServiceId(dbItemSecondFactor.getId());
-                            sosFido2AuthWebserviceCredentials.setAccount(dbItemIamAccountSecond.getAccountName());
-                            sosFido2AuthWebserviceCredentials.setClientDataJson(currentAccount.getSosLoginParameters().getClientDataJson());
-                            sosFido2AuthWebserviceCredentials.setSignature(currentAccount.getSosLoginParameters().getSignature());
-                            sosFido2AuthWebserviceCredentials.setAuthenticatorData(currentAccount.getSosLoginParameters().getAuthenticatorData());
-                            sosFido2AuthWebserviceCredentials.setRequestId(currentAccount.getSosLoginParameters().getRequestId());
-                            sosFido2AuthWebserviceCredentials.setCredentialId(currentAccount.getSosLoginParameters().getCredentialId());
-                            SOSFido2AuthHandler sosFido2AuthHandler = new SOSFido2AuthHandler();
-                            SOSAuthAccessToken sosFido2AuthAccessToken = null;
-                            if ((currentAccount.getSosLoginParameters().getClientDataJson() != null) && (currentAccount.getSosLoginParameters()
-                                    .getSignature() != null) && (currentAccount.getSosLoginParameters().getAuthenticatorData() != null)) {
+                            DBItemIamAccount dbItemIamAccountSecond = iamAccountDBLayer.getAccountFromCredentialId(currentAccount
+                                    .getSosLoginParameters().getCredentialId());
+                            if (dbItemIamAccountSecond == null) {
+                                LOGGER.warn("Could not find Account for credendial-id <" + currentAccount.getSosLoginParameters().getCredentialId()
+                                        + "<");
+                                secondFactorSuccess = false;
+                            } else {
+                                SOSFido2AuthWebserviceCredentials sosFido2AuthWebserviceCredentials = new SOSFido2AuthWebserviceCredentials();
+                                sosFido2AuthWebserviceCredentials.setIdentityServiceId(dbItemSecondFactor.getId());
+                                sosFido2AuthWebserviceCredentials.setAccount(dbItemIamAccountSecond.getAccountName());
+                                sosFido2AuthWebserviceCredentials.setClientDataJson(currentAccount.getSosLoginParameters().getClientDataJson());
+                                sosFido2AuthWebserviceCredentials.setSignature(currentAccount.getSosLoginParameters().getSignature());
+                                sosFido2AuthWebserviceCredentials.setAuthenticatorData(currentAccount.getSosLoginParameters().getAuthenticatorData());
+                                sosFido2AuthWebserviceCredentials.setRequestId(currentAccount.getSosLoginParameters().getRequestId());
+                                sosFido2AuthWebserviceCredentials.setCredentialId(currentAccount.getSosLoginParameters().getCredentialId());
+                                SOSFido2AuthHandler sosFido2AuthHandler = new SOSFido2AuthHandler();
+                                SOSAuthAccessToken sosFido2AuthAccessToken = null;
+                                if ((currentAccount.getSosLoginParameters().getClientDataJson() != null) && (currentAccount.getSosLoginParameters()
+                                        .getSignature() != null) && (currentAccount.getSosLoginParameters().getAuthenticatorData() != null)) {
 
-                                try {
-                                    sosFido2AuthAccessToken = sosFido2AuthHandler.login(sosFido2AuthWebserviceCredentials);
-                                } catch (InvalidKeyException | SignatureException | NoSuchAlgorithmException | NoSuchProviderException
-                                        | InvalidKeySpecException | IOException e) {
-                                    LOGGER.error("", e);
+                                    try {
+                                        sosFido2AuthAccessToken = sosFido2AuthHandler.login(sosFido2AuthWebserviceCredentials);
+                                        secondFactorSuccess = sosFido2AuthAccessToken != null;
+                                    } catch (InvalidKeyException | SignatureException | NoSuchAlgorithmException | NoSuchProviderException
+                                            | InvalidKeySpecException | IOException e) {
+                                        LOGGER.error("", e);
+                                        secondFactorSuccess = false;
+                                    }
+                                    secondFactorSuccess = sosFido2AuthAccessToken != null;
+                                }else {
                                     secondFactorSuccess = false;
+                                    LOGGER.warn("Missing FIDO headers for 2nd factor authentication");
                                 }
-                                secondFactorSuccess = sosFido2AuthAccessToken != null;
                             }
                         }
-                    } else { 
+                    } else {
                         throw new JocObjectNotExistException("no valid second factor identity service found. Wrong type " + "<" + dbItemSecondFactor
                                 .getIdentityServiceType() + ">");
                     }
