@@ -307,15 +307,15 @@ public class JsonValidator {
             put("com.sos.joc.model.security.accounts.AccountRename", "security/accounts/accountRename-schema.json");
             put("com.sos.joc.model.security.accounts.Account", "security/accounts/account-schema.json");
 
-            put("com.sos.joc.model.security.fido2.Fido2RegistrationListFilter", "security/fido2/fido2RegistrationListFilter-schema.json");
-            put("com.sos.joc.model.security.fido2.Fido2RegistrationsFilter", "security/fido2/fido2RegistrationsFilter-schema.json");
-            put("com.sos.joc.model.security.fido2.Fido2RegistrationFilter", "security/fido2/fido2RegistrationFilter-schema.json");
-            put("com.sos.joc.model.security.fido2.Fido2ConfirmationFilter", "security/fido2/fido2ConfirmationFilter-schema.json");
-            put("com.sos.joc.model.security.fido2.Fido2Registration", "security/fido2/fido2Registration-schema.json");
-            put("com.sos.joc.model.security.fido2.Fido2Registrations", "security/fido2/fido2Registrations-schema.json");
-            put("com.sos.joc.model.security.fido2.Fido2RequestAuthentication", "security/fido2/fido2RequestAuthentication-schema.json");
-            put("com.sos.joc.model.security.fido2.Fido2AddDevice", "security/fido2/fido2AddDevice-schema.json");
-            put("com.sos.joc.model.security.fido2.Fido2RemoveDevices", "security/fido2/fido2RemoveDevices-schema.json");
+            put("com.sos.joc.model.security.fido.FidoRegistrationListFilter", "security/fido/fidoRegistrationListFilter-schema.json");
+            put("com.sos.joc.model.security.fido.FidoRegistrationsFilter", "security/fido/fidoRegistrationsFilter-schema.json");
+            put("com.sos.joc.model.security.fido.FidoRegistrationFilter", "security/fido/fidoRegistrationFilter-schema.json");
+            put("com.sos.joc.model.security.fido.FidoConfirmationFilter", "security/fido/fidoConfirmationFilter-schema.json");
+            put("com.sos.joc.model.security.fido.FidoRegistration", "security/fido/fidoRegistration-schema.json");
+            put("com.sos.joc.model.security.fido.FidoRegistrations", "security/fido/fidoRegistrations-schema.json");
+            put("com.sos.joc.model.security.fido.FidoRequestAuthentication", "security/fido/fidoRequestAuthentication-schema.json");
+            put("com.sos.joc.model.security.fido.FidoAddDevice", "security/fido/fidoAddDevice-schema.json");
+            put("com.sos.joc.model.security.fido.FidoRemoveDevices", "security/fido/fidoRemoveDevices-schema.json");
 
             put("com.sos.joc.model.security.roles.RoleListFilter", "security/roles/roleListFilter-schema.json");
             put("com.sos.joc.model.security.roles.RolesFilter", "security/roles/rolesFilter-schema.json");

@@ -476,9 +476,11 @@ public class IamAccountDBLayer {
 
     public DBItemIamAccount getAccountFromCredentialId(String credentialId) throws SOSHibernateException {
         DBItemIamAccount dbItemIamAccount = null;
-        Query<DBItemIamFido2Devices> query = sosHibernateSession.createQuery("from " + DBItemIamFido2Devices + " where credentialId=:credentialId");
+        Query<DBItemIamFido2Devices> query = sosHibernateSession.createQuery("from " + DBItemIamFido2Devices + " where disabled=:disabled and credentialId=:credentialId");
 
         query.setParameter("credentialId", credentialId);
+        query.setParameter("disabled", false);
+
 
         List<DBItemIamFido2Devices> iamFido2Devices = sosHibernateSession.getResultList(query);
         if (iamFido2Devices.size() == 1) {

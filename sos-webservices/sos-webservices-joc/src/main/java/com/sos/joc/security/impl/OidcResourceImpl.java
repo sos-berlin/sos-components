@@ -34,7 +34,7 @@ import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.security.identityservice.Fido2IdentityProvider;
+import com.sos.joc.model.security.identityservice.FidoIdentityProvider;
 import com.sos.joc.model.security.identityservice.IdentityProviders;
 import com.sos.joc.model.security.identityservice.IdentityServiceFilter;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
@@ -115,28 +115,28 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
             listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
 
             for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
-                Fido2IdentityProvider fido2IdentityProvider = new Fido2IdentityProvider();
-                fido2IdentityProvider.setIdentityServiceName(dbItemIamIdentityService.getIdentityServiceName());
+                FidoIdentityProvider fidoIdentityProvider = new FidoIdentityProvider();
+                fidoIdentityProvider.setIdentityServiceName(dbItemIamIdentityService.getIdentityServiceName());
 
                 com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getIamProperties(dbItemIamIdentityService
                         .getIdentityServiceName());
 
                 if (properties != null) {
-                    if (properties.getFido2() != null) {
+                    if (properties.getFido() != null) {
 
                         DocumentationDBLayer dbLayer = new DocumentationDBLayer(sosHibernateSession);
                         String iconPath = DocumentationDBLayer.SOS_IMAGES_FOLDER + "/" + dbItemIamIdentityService.getIdentityServiceName();
                         DBItemDocumentation dbItemDocumentation = dbLayer.getDocumentation(iconPath);
                         if (dbItemDocumentation != null) {
-                            fido2IdentityProvider.setIamIconUrl("/iam/icon/" + JOCJsonCommand.urlEncodedPath(fido2IdentityProvider
+                            fidoIdentityProvider.setIamIconUrl("/iam/icon/" + JOCJsonCommand.urlEncodedPath(fidoIdentityProvider
                                     .getIdentityServiceName()));
                         }
                     }
                 }
                 if (dbItemIamIdentityService.getSecondFactor()) {
-                    identityProviders.getFido2ndFactorServiceItems().add(fido2IdentityProvider);
+                    identityProviders.getFido2ndFactorServiceItems().add(fidoIdentityProvider);
                 }else {
-                identityProviders.getFido2ServiceItems().add(fido2IdentityProvider);
+                identityProviders.getFidoServiceItems().add(fidoIdentityProvider);
                 }
             }
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityProviders));

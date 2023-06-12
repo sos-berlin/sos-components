@@ -16,7 +16,7 @@ import org.slf4j.MDC;
 
 import com.sos.auth.certificate.classes.SOSCertificateAuthLogin;
 import com.sos.auth.client.ClientCertificateHandler;
-import com.sos.auth.fido2.classes.SOSFido2AuthLogin;
+import com.sos.auth.fido.classes.SOSFidoAuthLogin;
 import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSLogin;
 import com.sos.auth.keycloak.classes.SOSKeycloakLogin;
@@ -43,6 +43,7 @@ import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.exceptions.JocAuthenticationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.exceptions.JocWaitForSecondFactorException;
 import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.audit.AuditParams;
@@ -461,7 +462,7 @@ public class SOSServicePermissionIam {
                 LOGGER.debug("Login with identity service certificate");
                 break;
             case FIDO:
-                sosLogin = new SOSFido2AuthLogin();
+                sosLogin = new SOSFidoAuthLogin();
                 LOGGER.debug("Login with identity service fido");
                 break;
             case OIDC:
@@ -477,10 +478,15 @@ public class SOSServicePermissionIam {
 
             sosLogin.setIdentityService(sosIdentityService);
             sosLogin.login(currentAccount, password);
+            String msg = sosLogin.getMsg();
 
             ISOSAuthSubject sosAuthSubject = sosLogin.getCurrentSubject();
-            if (!SecondFactorHandler.checkSecondFactor(currentAccount, dbItemIdentityService.getIdentityServiceName())) {
-                sosAuthSubject = null;
+            try {
+                if (!SecondFactorHandler.checkSecondFactor(currentAccount, dbItemIdentityService.getIdentityServiceName())) {
+                    sosAuthSubject = null;
+                }
+            } catch (JocObjectNotExistException | JocAuthenticationException e) {
+                msg = e.getMessage();
             }
 
             currentAccount.setCurrentSubject(sosAuthSubject);
@@ -490,7 +496,7 @@ public class SOSServicePermissionIam {
             if (sosAuthSubject == null || !sosAuthSubject.isAuthenticated()) {
                 SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = new SOSAuthCurrentAccountAnswer(currentAccount.getAccountname());
                 sosAuthCurrentAccountAnswer.setIsAuthenticated(false);
-                sosAuthCurrentAccountAnswer.setMessage(sosLogin.getMsg());
+                sosAuthCurrentAccountAnswer.setMessage(msg);
                 sosAuthCurrentAccountAnswer.setIdentityService(identityServiceType.name() + ":" + identityServiceName);
                 currentAccount.setCurrentSubject(null);
 

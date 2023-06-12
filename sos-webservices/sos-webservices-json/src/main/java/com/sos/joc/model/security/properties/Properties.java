@@ -4,7 +4,7 @@ package com.sos.joc.model.security.properties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.security.properties.fido2.Fido2Properties;
+import com.sos.joc.model.security.properties.fido.FidoProperties;
 import com.sos.joc.model.security.properties.keycloak.KeycloakProperties;
 import com.sos.joc.model.security.properties.ldap.LdapProperties;
 import com.sos.joc.model.security.properties.oidc.OidcProperties;
@@ -28,7 +28,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "vault",
     "keycloak",
     "oidc",
-    "fido2",
+    "fido",
     "ldap"
 })
 public class Properties {
@@ -76,13 +76,13 @@ public class Properties {
     @JsonProperty("oidc")
     private OidcProperties oidc;
     /**
-     * FIDO2 Properties
+     * FIDO Properties
      * <p>
      * 
      * 
      */
-    @JsonProperty("fido2")
-    private Fido2Properties fido2;
+    @JsonProperty("fido")
+    private FidoProperties fido;
     /**
      * Ldap Properties
      * <p>
@@ -101,16 +101,16 @@ public class Properties {
 
     /**
      * 
+     * @param fido
      * @param keycloak
      * @param initialPassword
      * @param ldap
      * @param minPasswordLength
      * @param sessionTimeout
-     * @param fido2
      * @param oidc
      * @param vault
      */
-    public Properties(String initialPassword, Long minPasswordLength, Integer sessionTimeout, VaultProperties vault, KeycloakProperties keycloak, OidcProperties oidc, Fido2Properties fido2, LdapProperties ldap) {
+    public Properties(String initialPassword, Long minPasswordLength, Integer sessionTimeout, VaultProperties vault, KeycloakProperties keycloak, OidcProperties oidc, FidoProperties fido, LdapProperties ldap) {
         super();
         this.initialPassword = initialPassword;
         this.minPasswordLength = minPasswordLength;
@@ -118,7 +118,7 @@ public class Properties {
         this.vault = vault;
         this.keycloak = keycloak;
         this.oidc = oidc;
-        this.fido2 = fido2;
+        this.fido = fido;
         this.ldap = ldap;
     }
 
@@ -243,25 +243,25 @@ public class Properties {
     }
 
     /**
-     * FIDO2 Properties
+     * FIDO Properties
      * <p>
      * 
      * 
      */
-    @JsonProperty("fido2")
-    public Fido2Properties getFido2() {
-        return fido2;
+    @JsonProperty("fido")
+    public FidoProperties getFido() {
+        return fido;
     }
 
     /**
-     * FIDO2 Properties
+     * FIDO Properties
      * <p>
      * 
      * 
      */
-    @JsonProperty("fido2")
-    public void setFido2(Fido2Properties fido2) {
-        this.fido2 = fido2;
+    @JsonProperty("fido")
+    public void setFido(FidoProperties fido) {
+        this.fido = fido;
     }
 
     /**
@@ -288,12 +288,12 @@ public class Properties {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("initialPassword", initialPassword).append("minPasswordLength", minPasswordLength).append("sessionTimeout", sessionTimeout).append("vault", vault).append("keycloak", keycloak).append("oidc", oidc).append("fido2", fido2).append("ldap", ldap).toString();
+        return new ToStringBuilder(this).append("initialPassword", initialPassword).append("minPasswordLength", minPasswordLength).append("sessionTimeout", sessionTimeout).append("vault", vault).append("keycloak", keycloak).append("oidc", oidc).append("fido", fido).append("ldap", ldap).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(keycloak).append(initialPassword).append(ldap).append(minPasswordLength).append(sessionTimeout).append(fido2).append(oidc).append(vault).toHashCode();
+        return new HashCodeBuilder().append(fido).append(keycloak).append(initialPassword).append(ldap).append(minPasswordLength).append(sessionTimeout).append(oidc).append(vault).toHashCode();
     }
 
     @Override
@@ -305,7 +305,7 @@ public class Properties {
             return false;
         }
         Properties rhs = ((Properties) other);
-        return new EqualsBuilder().append(keycloak, rhs.keycloak).append(initialPassword, rhs.initialPassword).append(ldap, rhs.ldap).append(minPasswordLength, rhs.minPasswordLength).append(sessionTimeout, rhs.sessionTimeout).append(fido2, rhs.fido2).append(oidc, rhs.oidc).append(vault, rhs.vault).isEquals();
+        return new EqualsBuilder().append(fido, rhs.fido).append(keycloak, rhs.keycloak).append(initialPassword, rhs.initialPassword).append(ldap, rhs.ldap).append(minPasswordLength, rhs.minPasswordLength).append(sessionTimeout, rhs.sessionTimeout).append(oidc, rhs.oidc).append(vault, rhs.vault).isEquals();
     }
 
 }
