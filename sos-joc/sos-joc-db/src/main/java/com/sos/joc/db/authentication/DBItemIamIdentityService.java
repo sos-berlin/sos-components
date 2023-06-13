@@ -146,7 +146,7 @@ public class DBItemIamIdentityService {
 
     @Transient
     public boolean isTwoFactor(){
-        return authenticationScheme.equals(IdentityServiceAuthenticationScheme.TWO_FACTOR.value());
+        return authenticationScheme.equals(IdentityServiceAuthenticationScheme.TWO_FACTOR.value()) && secondFactorIsId != null;
     }
     
     

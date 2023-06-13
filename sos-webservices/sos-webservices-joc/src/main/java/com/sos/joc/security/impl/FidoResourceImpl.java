@@ -1055,17 +1055,25 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
     }
 
     private void sendRegistrationMail(String identityServiceName, DBItemIamFido2Registration dbItemIamFido2Registration, String to) throws Exception {
-        com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getIamProperties(identityServiceName);
+        try {
+            com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getIamProperties(identityServiceName);
 
-        FidoConfirmationMail fidoConfirmationMail = new FidoConfirmationMail(properties.getFido());
-        fidoConfirmationMail.sendRegistrationMail(dbItemIamFido2Registration, to, identityServiceName);
+            FidoConfirmationMail fidoConfirmationMail = new FidoConfirmationMail(properties.getFido());
+            fidoConfirmationMail.sendRegistrationMail(dbItemIamFido2Registration, to, identityServiceName);
+        } catch (Exception e) {
+            LOGGER.error("", e);
+        }
     }
 
     private void sendConfirmedMail(String identityServiceName, DBItemIamFido2Registration dbItemIamFido2Registration) throws Exception {
-        com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getIamProperties(identityServiceName);
+        try {
+            com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getIamProperties(identityServiceName);
 
-        FidoConfirmationMail fidoConfirmationMail = new FidoConfirmationMail(properties.getFido());
-        fidoConfirmationMail.sendConfirmedMail(dbItemIamFido2Registration, identityServiceName);
+            FidoConfirmationMail fidoConfirmationMail = new FidoConfirmationMail(properties.getFido());
+            fidoConfirmationMail.sendConfirmedMail(dbItemIamFido2Registration, identityServiceName);
+        } catch (Exception e) {
+            LOGGER.error("", e);
+        }
     }
 
     private String getProperty(String value, String defaultValue) {
