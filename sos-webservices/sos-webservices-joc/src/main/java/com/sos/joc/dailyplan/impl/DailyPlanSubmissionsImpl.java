@@ -7,9 +7,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
-import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
@@ -28,6 +25,8 @@ import com.sos.joc.model.dailyplan.submissions.SubmissionsRequest;
 import com.sos.joc.model.dailyplan.submissions.SubmissionsResponse;
 import com.sos.joc.model.dailyplan.submissions.items.SubmissionItem;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path(WebservicePaths.DAILYPLAN)
 public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements IDailyPlanSubmissionsResource {
