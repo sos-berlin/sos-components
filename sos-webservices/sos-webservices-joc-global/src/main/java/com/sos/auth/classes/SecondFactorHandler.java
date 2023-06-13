@@ -39,11 +39,14 @@ public class SecondFactorHandler {
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(SecondFactorHandler.class.getName());
             DBItemIamIdentityService dbItemIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, identityServiceName);
-            boolean secondFactorSuccess = true;
+            boolean secondFactorSuccess = false;
 
             if (dbItemIdentityService != null && dbItemIdentityService.isTwoFactor()) {
                 DBItemIamIdentityService dbItemSecondFactor = SOSAuthHelper.getIdentityServiceById(sosHibernateSession, dbItemIdentityService
                         .getSecondFactorIsId());
+                if (dbItemSecondFactor == null) {
+                    throw new JocObjectNotExistException("2nd factor: Could not find Account for identity-service-id");
+                }
                 if (dbItemSecondFactor.getIdentityServiceType().equals(IdentityServiceTypes.CERTIFICATE.value())) {
                     if (SOSAuthHelper.checkCertificate(currentAccount.getHttpServletRequest(), currentAccount.getAccountname())) {
                         secondFactorSuccess = true;
@@ -102,6 +105,8 @@ public class SecondFactorHandler {
                                 + dbItemSecondFactor.getIdentityServiceType() + ">");
                     }
                 }
+            } else {
+                secondFactorSuccess = true;
             }
             return secondFactorSuccess;
         } finally {

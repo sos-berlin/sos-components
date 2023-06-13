@@ -164,6 +164,11 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             } else {
                 dbItemIamIdentityService.setSecondFactor(false);
             }
+
+            if (dbItemIamIdentityService.getAuthenticationScheme().equals(IdentityServiceAuthenticationScheme.SINGLE_FACTOR.value())) {
+                dbItemIamIdentityService.setSecondFactorIsId(null);
+            }
+
             if (dbItemIamIdentityService.getId() == null) {
                 sosHibernateSession.save(dbItemIamIdentityService);
             } else {
