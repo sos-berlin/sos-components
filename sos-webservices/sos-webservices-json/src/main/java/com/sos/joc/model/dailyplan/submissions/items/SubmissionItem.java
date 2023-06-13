@@ -45,15 +45,15 @@ public class SubmissionItem {
     @JsonProperty("submissionHistoryId")
     private Long submissionHistoryId;
     /**
-     * timestamp
+     * date
      * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * ISO date YYYY-MM-DD
      * (Required)
      * 
      */
     @JsonProperty("dailyPlanDate")
-    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    private Date dailyPlanDate;
+    @JsonPropertyDescription("ISO date YYYY-MM-DD")
+    private String dailyPlanDate;
     /**
      * timestamp
      * <p>
@@ -114,26 +114,26 @@ public class SubmissionItem {
     }
 
     /**
-     * timestamp
+     * date
      * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * ISO date YYYY-MM-DD
      * (Required)
      * 
      */
     @JsonProperty("dailyPlanDate")
-    public Date getDailyPlanDate() {
+    public String getDailyPlanDate() {
         return dailyPlanDate;
     }
 
     /**
-     * timestamp
+     * date
      * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * ISO date YYYY-MM-DD
      * (Required)
      * 
      */
     @JsonProperty("dailyPlanDate")
-    public void setDailyPlanDate(Date dailyPlanDate) {
+    public void setDailyPlanDate(String dailyPlanDate) {
         this.dailyPlanDate = dailyPlanDate;
     }
 
