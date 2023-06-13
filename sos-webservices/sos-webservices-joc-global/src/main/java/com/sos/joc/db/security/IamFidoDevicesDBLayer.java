@@ -44,13 +44,14 @@ public class IamFidoDevicesDBLayer {
         String hql = "delete from " + DBItemIamFido2Devices + getWhere(filterDelete);
         Query<DBItemIamAccount> query = null;
         int row = 0;
-        query = sosHibernateSession.createQuery(hql);
-        query = bindParameters(filterDelete, query);
+        if (accountId != null) {
+            query = sosHibernateSession.createQuery(hql);
+            query = bindParameters(filterDelete, query);
 
-        row = query.executeUpdate();
+            row = query.executeUpdate();
+        }
         return row;
     }
-        
 
     private String getWhere(IamFidoDevicesFilter filter) {
         String where = " ";
