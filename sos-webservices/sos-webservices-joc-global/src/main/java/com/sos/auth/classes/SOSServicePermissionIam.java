@@ -486,6 +486,7 @@ public class SOSServicePermissionIam {
                     sosAuthSubject = null;
                 }
             } catch (JocObjectNotExistException | JocAuthenticationException e) {
+                sosAuthSubject = null;
                 msg = e.getMessage();
             }
 
