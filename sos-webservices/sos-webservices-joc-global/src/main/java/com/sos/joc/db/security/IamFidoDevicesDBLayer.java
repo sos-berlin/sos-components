@@ -38,9 +38,9 @@ public class IamFidoDevicesDBLayer {
 
     }
 
-    public int delete(IamFidoDevicesFilter filter) throws SOSHibernateException {
+    public int delete(Long accountId) throws SOSHibernateException {
         IamFidoDevicesFilter filterDelete = new IamFidoDevicesFilter();
-        filterDelete.setId(filter.getId());
+        filterDelete.setAccountId(accountId);
         String hql = "delete from " + DBItemIamFido2Devices + getWhere(filterDelete);
         Query<DBItemIamAccount> query = null;
         int row = 0;
@@ -50,6 +50,7 @@ public class IamFidoDevicesDBLayer {
         row = query.executeUpdate();
         return row;
     }
+        
 
     private String getWhere(IamFidoDevicesFilter filter) {
         String where = " ";

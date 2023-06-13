@@ -335,9 +335,8 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
                 throw new JocBadRequestException("Account does not exist in " + "<" + dbItemIamIdentityService.getIdentityServiceName() + ">");
             }
 
-            iamAccountFilter = new IamAccountFilter();
-            iamAccountFilter.setId(dbItemIamAccount.getId());
-            iamAccountDBLayer.deleteDevices(iamAccountFilter);
+            IamFidoDevicesDBLayer iamFidoDevicesDBLayer = new IamFidoDevicesDBLayer(sosHibernateSession);
+            iamFidoDevicesDBLayer.delete(iamAccountFilter.getId());
 
             storeAuditLog(fidoRemoveDevices.getAuditLog(), CategoryType.IDENTITY);
             Globals.commit(sosHibernateSession);
