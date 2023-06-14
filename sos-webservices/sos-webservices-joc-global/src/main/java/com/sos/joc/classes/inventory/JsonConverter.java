@@ -412,9 +412,9 @@ public class JsonConverter {
                             var.setAdditionalProperty("returnCode", 1);
                             sFinish.setOutcome(new com.sos.sign.model.common.Outcome("Failed", finish.getMessage(), var));
                         } else {
-                            if (finish.getMessage() != null && !finish.getMessage().isEmpty()) {
-                                var.setAdditionalProperty("returnMessage", finish.getMessage());
-                            }
+//                            if (finish.getMessage() != null && !finish.getMessage().isEmpty()) {
+//                                var.setAdditionalProperty("returnMessage", finish.getMessage());
+//                            }
                             var.setAdditionalProperty("returnCode", 0);
                             sFinish.setOutcome(new com.sos.sign.model.common.Outcome("Succeeded", null, var));
                         }
