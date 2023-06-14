@@ -181,37 +181,6 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
                 sosHibernateSession.update(dbItemIamIdentityService);
             }
 
-            if (identityService.getIdentityServiceType().equals(IdentityServiceTypes.FIDO)) {
-                if (!dbItemIamIdentityService.getSecondFactor()) {
-                    com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getIamProperties(dbItemIamIdentityService
-                            .getIdentityServiceName());
-                    if (properties != null && properties.getFido() != null) {
-                        if (properties.getFido().getIamFidoProtocolType().equals(FidoProtocolType.U_2_F)) {
-                            properties.getFido().setIamFidoProtocolType(FidoProtocolType.FIDO_2);
-                            properties.getFido().setIamFidoResidentKey(FidoResidentKey.REQUIRED);
-                            properties.getFido().setIamFidoUserVerification(FidoUserverification.REQUIRED);
-                            properties.getFido().setIamFidoAttachment(FidoAttachment.ROAMING);
-
-                            JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
-
-                            JocConfigurationFilter jocConfigurationFilter = new JocConfigurationFilter();
-                            jocConfigurationFilter.setAccount(ConfigurationGlobals.ACCOUNT);
-                            jocConfigurationFilter.setConfigurationType("IAM");
-                            jocConfigurationFilter.setControllerId(ConfigurationGlobals.CONTROLLER_ID);
-                            jocConfigurationFilter.setName(identityService.getIdentityServiceName());
-                            jocConfigurationFilter.setObjectType("FIDO");
-                            List<DBItemJocConfiguration> result = jocConfigurationDBLayer.getJocConfigurationList(jocConfigurationFilter, 1);
-                            if (result != null && !result.isEmpty()) {
-                                DBItemJocConfiguration dbItemJocConfiguration = result.get(0);
-                                dbItemJocConfiguration.setConfigurationItem(Globals.objectMapper.writeValueAsString(properties));
-                                sosHibernateSession.update(dbItemJocConfiguration);
-                            }
-                        }
-                    }
-
-                }
-            }
-
             storeAuditLog(identityService.getAuditLog(), CategoryType.IDENTITY);
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityService));

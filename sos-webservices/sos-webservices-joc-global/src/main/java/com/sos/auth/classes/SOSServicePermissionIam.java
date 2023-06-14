@@ -481,13 +481,12 @@ public class SOSServicePermissionIam {
             String msg = sosLogin.getMsg();
 
             ISOSAuthSubject sosAuthSubject = sosLogin.getCurrentSubject();
-            boolean secondFactorSuccess = false;
+            Boolean secondFactorSuccess = null;
             try {
-                if (!SOSSecondFactorHandler.checkSecondFactor(currentAccount, dbItemIdentityService.getIdentityServiceName())) {
+                secondFactorSuccess = SOSSecondFactorHandler.checkSecondFactor(currentAccount, dbItemIdentityService.getIdentityServiceName());
+                if (secondFactorSuccess != null && !secondFactorSuccess) {
                     sosAuthSubject = null;
-                }else {
-                    secondFactorSuccess = true;
-                }
+                } 
             } catch (JocObjectNotExistException | JocAuthenticationException e) {
                 sosAuthSubject = null;
                 msg = e.getMessage();
@@ -507,7 +506,7 @@ public class SOSServicePermissionIam {
                 throw new JocAuthenticationException(sosAuthCurrentAccountAnswer);
             }
 
-            if (!secondFactorSuccess && !currentAccount.getSosLoginParameters().isSecondPathOfTwoFactor() && sosIdentityService.isTwoFactor()) {
+            if (secondFactorSuccess==null && !currentAccount.getSosLoginParameters().isSecondPathOfTwoFactor() && sosIdentityService.isTwoFactor()) {
                 DBItemIamIdentityService dbItemSecondFactor = SOSSecondFactorHandler.getSecondFactor(dbItemIdentityService);
                 SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = new SOSAuthCurrentAccountAnswer(currentAccount.getAccountname());
                 sosAuthCurrentAccountAnswer.setIsAuthenticated(true);

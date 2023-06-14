@@ -28,13 +28,13 @@ public class SOSSecondFactorHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSSecondFactorHandler.class);
 
-    public static boolean checkSecondFactor(SOSAuthCurrentAccount currentAccount, String identityServiceName) throws SOSHibernateException {
+    public static Boolean checkSecondFactor(SOSAuthCurrentAccount currentAccount, String identityServiceName) throws SOSHibernateException {
 
         SOSHibernateSession sosHibernateSession = null;
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(SOSSecondFactorHandler.class.getName());
             DBItemIamIdentityService dbItemIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, identityServiceName);
-            boolean secondFactorSuccess = false;
+            Boolean secondFactorSuccess = null;
 
             if (dbItemIdentityService != null && dbItemIdentityService.isTwoFactor()) {
                 DBItemIamIdentityService dbItemSecondFactor = SOSAuthHelper.getIdentityServiceById(sosHibernateSession, dbItemIdentityService
@@ -46,13 +46,12 @@ public class SOSSecondFactorHandler {
                     if (SOSAuthHelper.checkCertificate(currentAccount.getHttpServletRequest(), currentAccount.getAccountname())) {
                         secondFactorSuccess = true;
                     }else {
+                        secondFactorSuccess = false;
                         LOGGER.info("Could not verify second factor certificate" );
                     }
                 } else {
                     if (dbItemSecondFactor.getIdentityServiceType().equals(IdentityServiceTypes.FIDO.value())) {
-                        if (currentAccount.getSosLoginParameters().isFirstPathOfTwoFactor()) {
-                            secondFactorSuccess = true;
-                        } else {
+                        if (currentAccount.getSosLoginParameters().isSecondPathOfTwoFactor()) {
                             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
                             DBItemIamAccount dbItemIamAccountSecond = iamAccountDBLayer.getAccountFromCredentialId(currentAccount
                                     .getSosLoginParameters().getCredentialId());
@@ -90,7 +89,6 @@ public class SOSSecondFactorHandler {
                                             LOGGER.error("", e);
                                             secondFactorSuccess = false;
                                         }
-                                        secondFactorSuccess = sosFido2AuthAccessToken != null;
                                     } else {
                                         throw new JocAuthenticationException("2nd factor: Missing FIDO headers for 2nd factor authentication");
                                     }
@@ -102,9 +100,7 @@ public class SOSSecondFactorHandler {
                                 + dbItemSecondFactor.getIdentityServiceType() + ">");
                     }
                 }
-            } else {
-                secondFactorSuccess = true;
-            }
+            } 
             return secondFactorSuccess;
         } finally {
             Globals.disconnect(sosHibernateSession);
