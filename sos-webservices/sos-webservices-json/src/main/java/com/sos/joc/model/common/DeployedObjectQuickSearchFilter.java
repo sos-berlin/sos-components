@@ -1,5 +1,5 @@
 
-package com.sos.joc.model.workflow.search;
+package com.sos.joc.model.common;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -11,7 +11,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * Filter workflow search
+ * Filter deployed objects search
  * <p>
  * 
  * 
@@ -20,7 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "controllerId"
 })
-public class DeployedWorkflowQuickSearchFilter
+public class DeployedObjectQuickSearchFilter
     extends RequestBaseQuickSearchFilter
 {
 
@@ -28,6 +28,7 @@ public class DeployedWorkflowQuickSearchFilter
      * controllerId
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -37,6 +38,7 @@ public class DeployedWorkflowQuickSearchFilter
      * controllerId
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -48,6 +50,7 @@ public class DeployedWorkflowQuickSearchFilter
      * controllerId
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -70,10 +73,10 @@ public class DeployedWorkflowQuickSearchFilter
         if (other == this) {
             return true;
         }
-        if ((other instanceof DeployedWorkflowQuickSearchFilter) == false) {
+        if ((other instanceof DeployedObjectQuickSearchFilter) == false) {
             return false;
         }
-        DeployedWorkflowQuickSearchFilter rhs = ((DeployedWorkflowQuickSearchFilter) other);
+        DeployedObjectQuickSearchFilter rhs = ((DeployedObjectQuickSearchFilter) other);
         return new EqualsBuilder().appendSuper(super.equals(other)).append(controllerId, rhs.controllerId).isEquals();
     }
 
