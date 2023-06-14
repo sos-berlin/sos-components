@@ -4,8 +4,6 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 
-import jakarta.ws.rs.Path;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +16,6 @@ import com.sos.joc.db.authentication.DBItemIamBlockedAccount;
 import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.db.security.IamAccountFilter;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.security.blocklist.BlockedAccount;
 import com.sos.joc.model.security.blocklist.BlockedAccounts;
@@ -26,6 +23,8 @@ import com.sos.joc.model.security.blocklist.BlockedAccountsDeleteFilter;
 import com.sos.joc.model.security.blocklist.BlockedAccountsFilter;
 import com.sos.joc.security.resource.IBlocklistResource;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("iam")
 public class BlocklistResourceImpl extends JOCResourceImpl implements IBlocklistResource {
