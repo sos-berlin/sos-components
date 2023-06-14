@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
@@ -30,6 +31,7 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.search.RequestSearchAdvancedItem;
 import com.sos.joc.model.inventory.search.RequestSearchReturnType;
 
+
 public class InventorySearchDBLayer extends DBLayer {
 
     private static final long serialVersionUID = 1L;
@@ -44,7 +46,14 @@ public class InventorySearchDBLayer extends DBLayer {
     
     public List<InventoryQuickSearchItem> getQuickSearchInventoryConfigurations(Collection<RequestSearchReturnType> types, String search)
             throws SOSHibernateException {
-        return getQuickSearchInventoryConfigurations(requestSearchReturnTypesToConfigurationTypeIntValues(types), search);
+        return getQuickSearchInventoryConfigurations(requestSearchReturnTypesToConfigurationTypeIntValues(types), search,
+                DBLayer.DBITEM_INV_CONFIGURATIONS);
+    }
+
+    public List<InventoryQuickSearchItem> getQuickSearchReleasedConfigurations(Collection<RequestSearchReturnType> types, String search)
+            throws SOSHibernateException {
+        return getQuickSearchInventoryConfigurations(requestSearchReturnTypesToConfigurationTypeIntValues(types), search,
+                DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
     }
     
     private static List<Integer> requestSearchReturnTypesToConfigurationTypeIntValues(Collection<RequestSearchReturnType> types) {
@@ -52,21 +61,21 @@ public class InventorySearchDBLayer extends DBLayer {
             return Collections.emptyList();
         }
         boolean hasCalendar = types.contains(RequestSearchReturnType.CALENDAR);
+        Stream<RequestSearchReturnType> typesStream = types.stream().distinct();
         if (hasCalendar) {
-            types.remove(RequestSearchReturnType.CALENDAR);
+            typesStream = typesStream.filter(r -> !r.equals(RequestSearchReturnType.CALENDAR));
         }
-        List<Integer> intTypes = types.stream().distinct().map(RequestSearchReturnType::value).map(ConfigurationType::valueOf).map(
-                ConfigurationType::intValue).collect(Collectors.toList());
+        List<Integer> intTypes = typesStream.map(RequestSearchReturnType::value).map(ConfigurationType::fromValue).map(ConfigurationType::intValue)
+                .collect(Collectors.toList());
         if (hasCalendar) {
             intTypes.addAll(JocInventory.getCalendarTypes());
         }
         return intTypes;
     }
 
-    private List<InventoryQuickSearchItem> getQuickSearchInventoryConfigurations(List<Integer> types, String search)
+    private List<InventoryQuickSearchItem> getQuickSearchInventoryConfigurations(List<Integer> types, String search, String table)
             throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select path as path, type as type, folder as folder, name as name from ").append(
-                DBLayer.DBITEM_INV_CONFIGURATIONS);
+        StringBuilder hql = new StringBuilder("select path as path, type as type, folder as folder, name as name from ").append(table);
         List<String> whereClause = new ArrayList<>();
         if (types != null && !types.isEmpty()) {
             if (types.size() > 1) {

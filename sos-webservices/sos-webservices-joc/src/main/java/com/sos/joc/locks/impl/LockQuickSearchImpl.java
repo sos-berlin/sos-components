@@ -1,4 +1,4 @@
-package com.sos.joc.workflows.impl;
+package com.sos.joc.locks.impl;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -13,10 +13,10 @@ import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
 
-@Path("workflows")
-public class WorkflowQuickSearchImpl extends JOCResourceImpl implements IQuickSearchResource {
+@Path("locks")
+public class LockQuickSearchImpl extends JOCResourceImpl implements IQuickSearchResource {
     
-    private static final String API_CALL = "./workflows/quick/search";
+    private static final String API_CALL = "./locks/quick/search";
 
     @Override
     public JOCDefaultResponse postSearch(final String accessToken, final byte[] inBytes) {
@@ -26,13 +26,11 @@ public class WorkflowQuickSearchImpl extends JOCResourceImpl implements IQuickSe
             DeployedObjectQuickSearchFilter in = Globals.objectMapper.readValue(inBytes, DeployedObjectQuickSearchFilter.class);
 
             String controllerId = in.getControllerId();
-            JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getWorkflows()
-                    .getView());
+            JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getLocks().getView());
             if (response != null) {
                 return response;
             }
-            
-            ResponseQuickSearch answer = QuickSearchStore.getAnswer(in, ConfigurationType.WORKFLOW, accessToken, folderPermissions);
+            ResponseQuickSearch answer = QuickSearchStore.getAnswer(in, ConfigurationType.LOCK, accessToken, folderPermissions);
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
