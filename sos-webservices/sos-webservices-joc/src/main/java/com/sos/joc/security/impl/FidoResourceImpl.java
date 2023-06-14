@@ -357,6 +357,8 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
     @Override
     public JOCDefaultResponse postFidoRequestRegistrationStart(byte[] body) {
         SOSHibernateSession sosHibernateSession = null;
+        FidoRegistrationStartResponse fido2RegistrationStartResponse = new FidoRegistrationStartResponse();
+
         try {
 
             FidoRegistration fidoRegistration = Globals.objectMapper.readValue(body, FidoRegistration.class);
@@ -372,7 +374,7 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
                     .getIdentityServiceName());
 
             if (!IdentityServiceTypes.FIDO.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
-                throw new JocObjectNotExistException("Only allowed for Identity Service type FIDO2 " + "<" + dbItemIamIdentityService
+                throw new JocAuthenticationException("Only allowed for Identity Service type FIDO " + "<" + dbItemIamIdentityService
                         .getIdentityServiceType() + ">");
             }
 
@@ -391,8 +393,8 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
                 List<DBItemIamFido2Devices> listOfDevices = iamFido2DevicesDBLayer.getListOfFidoDevices(filter);
 
                 if (listOfDevices.size() > 0) {
-                    throw new JocBadRequestException("Account is already registered for " + "<" + dbItemIamIdentityService.getIdentityServiceName()
-                            + "/" + fidoRegistration.getOrigin() + ">");
+                    throw new JocAuthenticationException("Account is already registered for " + "<" + dbItemIamIdentityService
+                            .getIdentityServiceName() + "/" + fidoRegistration.getOrigin() + ">");
                 }
             }
             iamAccountFilter = new IamAccountFilter();
@@ -410,16 +412,14 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
                 List<DBItemIamFido2Devices> listOfDevices = iamFido2DevicesDBLayer.getListOfFidoDevices(filter);
 
                 if (listOfDevices.size() > 0) {
-                    throw new JocBadRequestException("Email is already registered in" + "<" + dbItemIamIdentityService.getIdentityServiceName()
+                    throw new JocAuthenticationException("Email is already registered in" + "<" + dbItemIamIdentityService.getIdentityServiceName()
                             + ">");
                 }
             }
 
-            FidoRegistrationStartResponse fido2RegistrationStartResponse = new FidoRegistrationStartResponse();
-
             com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getIamProperties(fidoRegistration.getIdentityServiceName());
             if (properties.getFido() == null) {
-                throw new JocBadRequestException("FIDO Identity Service is not configured");
+                throw new JocAuthenticationException("FIDO Identity Service is not configured");
             }
             properties.getFido().setIamFidoEmailSettings(null);
 
@@ -436,8 +436,20 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
 
             List<DBItemIamFido2Registration> listOfRegistrations = iamFidoDBLayer.getIamRegistrationList(iamFidoRegistrationFilter, 0);
             if (listOfRegistrations.size() > 0) {
-                throw new JocBadRequestException("There is already a registration request for the email <" + fidoRegistration.getEmail() + "> in <"
-                        + dbItemIamIdentityService.getIdentityServiceName() + "/" + fidoRegistration.getOrigin() + ">");
+                throw new JocAuthenticationException("There is already a registration request for the email <" + fidoRegistration.getEmail()
+                        + "> in <" + dbItemIamIdentityService.getIdentityServiceName() + "/" + fidoRegistration.getOrigin() + ">");
+            }
+
+            iamFidoRegistrationFilter = new IamFidoRegistrationFilter();
+            iamFidoRegistrationFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
+            iamFidoRegistrationFilter.setCompleted(true);
+            iamFidoRegistrationFilter.setAccountName(fidoRegistration.getAccountName());
+            iamFidoRegistrationFilter.setOrigin(fidoRegistration.getOrigin());
+
+            listOfRegistrations = iamFidoDBLayer.getIamRegistrationList(iamFidoRegistrationFilter, 0);
+            if (listOfRegistrations.size() > 0) {
+                throw new JocAuthenticationException("There is already a registration request for the account <" + fidoRegistration.getAccountName()
+                        + "> in <" + dbItemIamIdentityService.getIdentityServiceName() + "/" + fidoRegistration.getOrigin() + ">");
             }
 
             iamFidoRegistrationFilter = new IamFidoRegistrationFilter();
@@ -490,6 +502,11 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(fido2RegistrationStartResponse));
 
+        } catch (JocAuthenticationException e) {
+            e.getError().setLogAsInfo(true);
+            e.addErrorMetaInfo(getJocError());
+            Globals.rollback(sosHibernateSession);
+            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             Globals.rollback(sosHibernateSession);

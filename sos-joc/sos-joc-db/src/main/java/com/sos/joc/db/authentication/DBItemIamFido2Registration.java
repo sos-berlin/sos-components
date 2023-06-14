@@ -19,7 +19,7 @@ import com.sos.joc.db.DBLayer;
 
 @Entity
 @Table(name = DBLayer.TABLE_IAM_FIDO2_REGISTRATIONS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[IDENTITY_SERVICE_ID]",
-        "[ACCOUNT_NAME]" }) })
+        "[ACCOUNT_NAME]" , "[ORIGIN]" }) })
 
 @SequenceGenerator(name = DBLayer.TABLE_IAM_FIDO2_REGISTRATIONS_SEQUENCE, sequenceName = DBLayer.TABLE_IAM_FIDO2_REGISTRATIONS_SEQUENCE, allocationSize = 1)
 
