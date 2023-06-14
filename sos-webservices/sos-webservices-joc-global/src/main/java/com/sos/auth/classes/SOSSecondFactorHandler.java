@@ -6,16 +6,11 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.auth.fido.SOSFidoAuthHandler;
-import com.sos.auth.fido.classes.SOSFidoAuthLogin;
 import com.sos.auth.fido.classes.SOSFidoAuthWebserviceCredentials;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -29,15 +24,15 @@ import com.sos.joc.exceptions.JocAuthenticationException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
-public class SecondFactorHandler {
+public class SOSSecondFactorHandler {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SecondFactorHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SOSSecondFactorHandler.class);
 
     public static boolean checkSecondFactor(SOSAuthCurrentAccount currentAccount, String identityServiceName) throws SOSHibernateException {
 
         SOSHibernateSession sosHibernateSession = null;
         try {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(SecondFactorHandler.class.getName());
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection(SOSSecondFactorHandler.class.getName());
             DBItemIamIdentityService dbItemIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, identityServiceName);
             boolean secondFactorSuccess = false;
 
@@ -50,6 +45,8 @@ public class SecondFactorHandler {
                 if (dbItemSecondFactor.getIdentityServiceType().equals(IdentityServiceTypes.CERTIFICATE.value())) {
                     if (SOSAuthHelper.checkCertificate(currentAccount.getHttpServletRequest(), currentAccount.getAccountname())) {
                         secondFactorSuccess = true;
+                    }else {
+                        LOGGER.info("Could not verify second factor certificate" );
                     }
                 } else {
                     if (dbItemSecondFactor.getIdentityServiceType().equals(IdentityServiceTypes.FIDO.value())) {
@@ -119,7 +116,7 @@ public class SecondFactorHandler {
         SOSHibernateSession sosHibernateSession = null;
         DBItemIamIdentityService dbItemSecondFactor = null;
         try {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(SecondFactorHandler.class.getName());
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection(SOSSecondFactorHandler.class.getName());
 
             if (dbItemIdentityService != null && dbItemIdentityService.isTwoFactor()) {
                 dbItemSecondFactor = SOSAuthHelper.getIdentityServiceById(sosHibernateSession, dbItemIdentityService.getSecondFactorIsId());

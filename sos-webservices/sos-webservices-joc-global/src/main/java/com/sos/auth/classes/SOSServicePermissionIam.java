@@ -481,9 +481,12 @@ public class SOSServicePermissionIam {
             String msg = sosLogin.getMsg();
 
             ISOSAuthSubject sosAuthSubject = sosLogin.getCurrentSubject();
+            boolean secondFactorSuccess = false;
             try {
-                if (!SecondFactorHandler.checkSecondFactor(currentAccount, dbItemIdentityService.getIdentityServiceName())) {
+                if (!SOSSecondFactorHandler.checkSecondFactor(currentAccount, dbItemIdentityService.getIdentityServiceName())) {
                     sosAuthSubject = null;
+                }else {
+                    secondFactorSuccess = true;
                 }
             } catch (JocObjectNotExistException | JocAuthenticationException e) {
                 sosAuthSubject = null;
@@ -504,8 +507,8 @@ public class SOSServicePermissionIam {
                 throw new JocAuthenticationException(sosAuthCurrentAccountAnswer);
             }
 
-            if (!currentAccount.getSosLoginParameters().isSecondPathOfTwoFactor() && sosIdentityService.isTwoFactor()) {
-                DBItemIamIdentityService dbItemSecondFactor = SecondFactorHandler.getSecondFactor(dbItemIdentityService);
+            if (!secondFactorSuccess && !currentAccount.getSosLoginParameters().isSecondPathOfTwoFactor() && sosIdentityService.isTwoFactor()) {
+                DBItemIamIdentityService dbItemSecondFactor = SOSSecondFactorHandler.getSecondFactor(dbItemIdentityService);
                 SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = new SOSAuthCurrentAccountAnswer(currentAccount.getAccountname());
                 sosAuthCurrentAccountAnswer.setIsAuthenticated(true);
                 sosAuthCurrentAccountAnswer.setAccessToken("");
@@ -720,6 +723,9 @@ public class SOSServicePermissionIam {
             } catch (JocAuthenticationException e) {
                 msg = e.getMessage();
                 LOGGER.info(e.getSosAuthCurrentAccountAnswer().getIdentityService());
+                LOGGER.info(e.getMessage());
+            } catch (Exception e) {
+                msg = e.getMessage();
                 LOGGER.info(e.getMessage());
             } finally {
                 Globals.disconnect(sosHibernateSession);
