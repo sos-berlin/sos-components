@@ -27,9 +27,12 @@ import com.sos.joc.classes.calendar.DailyPlanCalendar;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.configuration.resource.IJocConfigurationResource;
+import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
+import com.sos.joc.db.security.IamIdentityServiceDBLayer;
+import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.configuration.ConfigurationGlobalsChanged;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -43,6 +46,8 @@ import com.sos.joc.model.configuration.ConfigurationOk;
 import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.configuration.globals.GlobalSettings;
 import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
+import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
+import com.sos.joc.model.security.properties.fido.FidoProtocolType;
 import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
 
@@ -158,52 +163,69 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                     }
                 } else {
                     // Calendar for controller
-                    //try {
-                        Optional<JsonObject> oldObj = getOldJsonObject(oldConfiguration);
-                        updateControllerCalendar = !oldObj.isPresent() || oldObj.get().get(DefaultSections.dailyplan.name()) == null;
-                        if (!updateControllerCalendar) {
-                            JsonReader rdr = Json.createReader(new StringReader(configuration.getConfigurationItem()));
-                            JsonObject obj = rdr.readObject();
+                    // try {
+                    Optional<JsonObject> oldObj = getOldJsonObject(oldConfiguration);
+                    updateControllerCalendar = !oldObj.isPresent() || oldObj.get().get(DefaultSections.dailyplan.name()) == null;
+                    if (!updateControllerCalendar) {
+                        JsonReader rdr = Json.createReader(new StringReader(configuration.getConfigurationItem()));
+                        JsonObject obj = rdr.readObject();
 
-                            JsonObject oldDailyPlan = oldObj.get().getJsonObject(DefaultSections.dailyplan.name());
-                            JsonObject curDailyPlan = obj.getJsonObject(DefaultSections.dailyplan.name());
-                            if (curDailyPlan != null) {
-                                String oldTimeZone = oldDailyPlan == null || oldDailyPlan.getJsonObject("time_zone") == null ? "" : oldDailyPlan
-                                        .getJsonObject("time_zone").getString("value", "");
-                                String oldPeriodBegin = oldDailyPlan == null || oldDailyPlan.getJsonObject("period_begin") == null ? "" : oldDailyPlan
-                                        .getJsonObject("period_begin").getString("value", "");
-                                String curTimeZone = curDailyPlan.getJsonObject("time_zone") == null ? oldTimeZone : curDailyPlan.getJsonObject(
-                                        "time_zone").getString("value", oldTimeZone);
-                                String curPeriodBegin = curDailyPlan.getJsonObject("period_begin") == null ? oldPeriodBegin : curDailyPlan
-                                        .getJsonObject("period_begin").getString("value", oldPeriodBegin);
-                                if (curPeriodBegin != null && !curPeriodBegin.isEmpty()) {
-                                    long periodBeginOffset = DailyPlanCalendar.convertPeriodBeginToSeconds(curPeriodBegin);
-                                    if (periodBeginOffset < 0 || periodBeginOffset >= TimeUnit.DAYS.toMillis(1)) {
-                                        throw new JocBadRequestException("Invalid 'dailyplan.period_begin': " + curPeriodBegin);
-                                    }
-                                }
-                                String curStartTime = curDailyPlan.getJsonObject("start_time") == null ? null : curDailyPlan.getJsonObject(
-                                        "start_time").getString("value");
-                                if (curStartTime != null && !curStartTime.isEmpty()){
-                                    long curStartTimeOffset = DailyPlanCalendar.convertTimeToSeconds(curStartTime, "start_time");
-                                    if (curStartTimeOffset < 0 || curStartTimeOffset >= TimeUnit.DAYS.toMillis(1)) {
-                                        throw new JocBadRequestException("Invalid 'dailyplan.start_time': " + curStartTime);
-                                    }
-                                }
-                                if (!curTimeZone.equals(oldTimeZone) || !curPeriodBegin.equals(oldPeriodBegin)) {
-                                    updateControllerCalendar = true;
-                                    LOGGER.info("DailyPlan settings are changed. Calendar has to be updated.");
+                        JsonObject oldDailyPlan = oldObj.get().getJsonObject(DefaultSections.dailyplan.name());
+                        JsonObject curDailyPlan = obj.getJsonObject(DefaultSections.dailyplan.name());
+                        if (curDailyPlan != null) {
+                            String oldTimeZone = oldDailyPlan == null || oldDailyPlan.getJsonObject("time_zone") == null ? "" : oldDailyPlan
+                                    .getJsonObject("time_zone").getString("value", "");
+                            String oldPeriodBegin = oldDailyPlan == null || oldDailyPlan.getJsonObject("period_begin") == null ? "" : oldDailyPlan
+                                    .getJsonObject("period_begin").getString("value", "");
+                            String curTimeZone = curDailyPlan.getJsonObject("time_zone") == null ? oldTimeZone : curDailyPlan.getJsonObject(
+                                    "time_zone").getString("value", oldTimeZone);
+                            String curPeriodBegin = curDailyPlan.getJsonObject("period_begin") == null ? oldPeriodBegin : curDailyPlan.getJsonObject(
+                                    "period_begin").getString("value", oldPeriodBegin);
+                            if (curPeriodBegin != null && !curPeriodBegin.isEmpty()) {
+                                long periodBeginOffset = DailyPlanCalendar.convertPeriodBeginToSeconds(curPeriodBegin);
+                                if (periodBeginOffset < 0 || periodBeginOffset >= TimeUnit.DAYS.toMillis(1)) {
+                                    throw new JocBadRequestException("Invalid 'dailyplan.period_begin': " + curPeriodBegin);
                                 }
                             }
+                            String curStartTime = curDailyPlan.getJsonObject("start_time") == null ? null : curDailyPlan.getJsonObject("start_time")
+                                    .getString("value");
+                            if (curStartTime != null && !curStartTime.isEmpty()) {
+                                long curStartTimeOffset = DailyPlanCalendar.convertTimeToSeconds(curStartTime, "start_time");
+                                if (curStartTimeOffset < 0 || curStartTimeOffset >= TimeUnit.DAYS.toMillis(1)) {
+                                    throw new JocBadRequestException("Invalid 'dailyplan.start_time': " + curStartTime);
+                                }
+                            }
+                            if (!curTimeZone.equals(oldTimeZone) || !curPeriodBegin.equals(oldPeriodBegin)) {
+                                updateControllerCalendar = true;
+                                LOGGER.info("DailyPlan settings are changed. Calendar has to be updated.");
+                            }
                         }
-//                    } catch (Exception e) {
-//                        //
-//                    }
+                    }
+                    // } catch (Exception e) {
+                    // //
+                    // }
                 }
                 break;
             case IAM:
                 if (!getJocPermissions(accessToken).getAdministration().getAccounts().getManage()) {
                     return accessDeniedResponse();
+                }
+                if (configuration.getObjectType().equalsIgnoreCase(IdentityServiceTypes.FIDO.value())) {
+                    com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(configuration.getConfigurationItem(),
+                            com.sos.joc.model.security.properties.Properties.class);
+                    if (properties.getFido() != null) {
+                        if (properties.getFido().getIamFidoProtocolType().equals(FidoProtocolType.U_2_F)) {
+                            IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(connection);
+                            IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
+                            filter.setIdentityServiceName(configuration.getName());
+                            DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(filter);
+                            if (dbItemIamIdentityService != null) {
+                                dbItemIamIdentityService.setSecondFactor(true);
+                                dbItemIamIdentityService.setRequired(false);
+                                connection.update(dbItemIamIdentityService);
+                            }
+                        }
+                    }
                 }
                 dbControllerId = ConfigurationGlobals.CONTROLLER_ID;
                 account = ConfigurationGlobals.ACCOUNT;
@@ -260,6 +282,8 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                     dbItem.setShared(shouldBeShared);
                 }
                 break;
+            case GIT:
+                break;
             }
 
             dbItem.setConfigurationType(configuration.getConfigurationType().name());
@@ -281,7 +305,8 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 DailyPlanCalendar.getInstance().updateDailyPlanCalendar(configuration.getControllerId(), accessToken, getJocError());
             }
 
-            if (configuration.getConfigurationType() != ConfigurationType.SETTING && configuration.getConfigurationType() != ConfigurationType.CUSTOMIZATION && configuration.getConfigurationType() != ConfigurationType.PROFILE ) {
+            if (configuration.getConfigurationType() != ConfigurationType.SETTING && configuration
+                    .getConfigurationType() != ConfigurationType.CUSTOMIZATION && configuration.getConfigurationType() != ConfigurationType.PROFILE) {
                 storeAuditLog(configuration.getAuditLog(), CategoryType.SETTINGS);
             }
 
