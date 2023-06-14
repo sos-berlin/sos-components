@@ -75,6 +75,9 @@ public class DBItemJocInstance extends DBItem {
     @Column(name = "[VERSION]", nullable = true)
     private String version;
 
+    @Column(name = "[CERTIFICATE]", nullable = true)
+    private String certificate;
+
     public Long getId() {
         return id;
     }
@@ -202,6 +205,14 @@ public class DBItemJocInstance extends DBItem {
             val = val.substring(0, 30);
         }
         version = val;
+    }
+    
+    public String getCertificate() {
+        return certificate;
+    }
+    
+    public void setCertificate(String certificate) {
+        this.certificate = certificate;
     }
 
 }
