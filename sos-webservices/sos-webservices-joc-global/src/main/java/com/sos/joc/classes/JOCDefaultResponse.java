@@ -411,7 +411,7 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
             logOutput += e.getCause().toString();
         }
         if (e.getError() == null || e.getError().getApiCall() == null) {
-            if (!e.getError().isLogAsInfo()) {
+            if (e.getError() == null || !e.getError().isLogAsInfo()) {
                 LOGGER.error(logOutput, e);
             }
         } else {
