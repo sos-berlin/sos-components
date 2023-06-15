@@ -147,10 +147,9 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            FidoRegistration fidoRegistration = Globals.objectMapper.readValue(body, FidoRegistration.class);
-
             initLogging(API_CALL_FIDO_REGISTRATION_STORE, null);
             JsonValidator.validateFailFast(body, FidoRegistration.class);
+            FidoRegistration fidoRegistration = Globals.objectMapper.readValue(body, FidoRegistration.class);
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_FIDO_REGISTRATION_STORE);
             sosHibernateSession.setAutoCommit(false);
@@ -252,10 +251,9 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            FidoAddDevice fidoAddDevice = Globals.objectMapper.readValue(body, FidoAddDevice.class);
-
             initLogging(API_CALL_FIDO_ADD_DEVICE, null);
             JsonValidator.validateFailFast(body, FidoAddDevice.class);
+            FidoAddDevice fidoAddDevice = Globals.objectMapper.readValue(body, FidoAddDevice.class);
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_FIDO_REGISTRATION_STORE);
             sosHibernateSession.setAutoCommit(false);
@@ -308,10 +306,9 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
         SOSHibernateSession sosHibernateSession = null;
         try {
 
-            FidoRemoveDevices fidoRemoveDevices = Globals.objectMapper.readValue(body, FidoRemoveDevices.class);
-
             initLogging(API_CALL_FIDO_REMOVE_DEVICES, null);
             JsonValidator.validateFailFast(body, FidoRemoveDevices.class);
+            FidoRemoveDevices fidoRemoveDevices = Globals.objectMapper.readValue(body, FidoRemoveDevices.class);
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_FIDO_REGISTRATION_STORE);
             sosHibernateSession.setAutoCommit(false);
@@ -361,10 +358,9 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
 
         try {
 
-            FidoRegistration fidoRegistration = Globals.objectMapper.readValue(body, FidoRegistration.class);
-
             initLogging(API_CALL_FIDO_REGISTRATION_STORE, null);
             JsonValidator.validateFailFast(body, FidoRegistration.class);
+            FidoRegistration fidoRegistration = Globals.objectMapper.readValue(body, FidoRegistration.class);
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_FIDO_REGISTRATION_STORE);
             sosHibernateSession.setAutoCommit(false);
@@ -526,8 +522,8 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
         try {
 
             initLogging(API_CALL_IDENTITY_CLIENTS, body);
-            IdentityServiceFilter identityServiceFilter = Globals.objectMapper.readValue(body, IdentityServiceFilter.class);
             JsonValidator.validateFailFast(body, IdentityServiceFilter.class);
+            IdentityServiceFilter identityServiceFilter = Globals.objectMapper.readValue(body, IdentityServiceFilter.class);
 
             checkRequiredParameter("identityServiceName", identityServiceFilter.getIdentityServiceName());
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_IDENTITY_CLIENTS);
@@ -580,8 +576,8 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
 
         try {
             initLogging(API_CALL_REQUEST_AUTHENTICATION, body);
-            FidoRequestAuthentication fidoRequestAuthentication = Globals.objectMapper.readValue(body, FidoRequestAuthentication.class);
             JsonValidator.validateFailFast(body, FidoRequestAuthentication.class);
+            FidoRequestAuthentication fidoRequestAuthentication = Globals.objectMapper.readValue(body, FidoRequestAuthentication.class);
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_REQUEST_AUTHENTICATION);
             sosHibernateSession.setAutoCommit(false);
@@ -952,8 +948,8 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
         try {
 
             initLogging(API_CALL_CONFIRM, body);
-            fidoConfirmationFilter = Globals.objectMapper.readValue(body, FidoConfirmationFilter.class);
             JsonValidator.validateFailFast(body, FidoConfirmationFilter.class);
+            fidoConfirmationFilter = Globals.objectMapper.readValue(body, FidoConfirmationFilter.class);
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_CONFIRM);
             sosHibernateSession.setAutoCommit(false);

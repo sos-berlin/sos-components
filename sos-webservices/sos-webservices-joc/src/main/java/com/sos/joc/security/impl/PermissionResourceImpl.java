@@ -50,8 +50,8 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
 		try {
 
 			initLogging(API_CALL_PERMISSION_READ, body, accessToken);
-			PermissionFilter permissionFilter = Globals.objectMapper.readValue(body, PermissionFilter.class);
 			JsonValidator.validateFailFast(body, PermissionFilter.class);
+            PermissionFilter permissionFilter = Globals.objectMapper.readValue(body, PermissionFilter.class);
 
 			JOCDefaultResponse jocDefaultResponse = initPermissions("",
 					getJocPermissions(accessToken).getAdministration().getAccounts().getView());
@@ -110,8 +110,8 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
 		try {
 
 			initLogging(API_CALL_PERMISSIONS_STORE, body, accessToken);
-			Permissions permissions = Globals.objectMapper.readValue(body, Permissions.class);
 			JsonValidator.validateFailFast(body, Permissions.class);
+            Permissions permissions = Globals.objectMapper.readValue(body, Permissions.class);
 
 			JOCDefaultResponse jocDefaultResponse = initPermissions("",
 					getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
@@ -285,8 +285,8 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
 		try {
 
 			initLogging(API_CALL_PERMISSIONS, body, accessToken);
-			PermissionListFilter permissionFilter = Globals.objectMapper.readValue(body, PermissionListFilter.class);
 			JsonValidator.validateFailFast(body, PermissionListFilter.class);
+            PermissionListFilter permissionFilter = Globals.objectMapper.readValue(body, PermissionListFilter.class);
 
 			JOCDefaultResponse jocDefaultResponse = initPermissions("",
 					getJocPermissions(accessToken).getAdministration().getAccounts().getView());

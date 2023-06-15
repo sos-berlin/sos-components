@@ -410,9 +410,15 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
             errorOutput += e.getCause().getMessage();
             logOutput += e.getCause().toString();
         }
+        boolean logAsInfo = false;
+        if (e.getError() != null) {
+            logAsInfo = e.getError().isLogAsInfo();
+        }
         if (e.getError() == null || e.getError().getApiCall() == null) {
-            if (e.getError() == null || !e.getError().isLogAsInfo()) {
+            if (!logAsInfo) {
                 LOGGER.error(logOutput, e);
+            } else {
+                LOGGER.info(logOutput);
             }
         } else {
             LOGGER.error(MarkerFactory.getMarker(e.getError().getApiCall()), logOutput, e);

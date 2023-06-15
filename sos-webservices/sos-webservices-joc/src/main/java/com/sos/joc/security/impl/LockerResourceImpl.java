@@ -36,8 +36,8 @@ public class LockerResourceImpl extends JOCResourceImpl implements ILockerResour
     public JOCDefaultResponse postLockerGet(byte[] body) {
         try {
             initLogging(API_CALL_LOCKER_GET, body);
-            LockerFilter lockerFilter = Globals.objectMapper.readValue(body, LockerFilter.class);
             JsonValidator.validateFailFast(body, LockerFilter.class);
+            LockerFilter lockerFilter = Globals.objectMapper.readValue(body, LockerFilter.class);
 
             Locker locker = new Locker();
             locker.setKey(lockerFilter.getKey());
@@ -68,8 +68,8 @@ public class LockerResourceImpl extends JOCResourceImpl implements ILockerResour
     public JOCDefaultResponse postLockerPut(byte[] body) {
         try {
             initLogging(API_CALL_LOCKER_PUT, body);
-            Locker locker = Globals.objectMapper.readValue(body, Locker.class);
             JsonValidator.validateFailFast(body, Locker.class);
+            Locker locker = Globals.objectMapper.readValue(body, Locker.class);
             SOSLocker sosLocker = Globals.jocWebserviceDataContainer.getSOSLocker();
             if (SOSAuthHelper.getCountAccounts() * 3 < sosLocker.getCount()) {
                 throw new JocException(new JocError("No more lockers availabe. Maximum reached"));
@@ -96,8 +96,8 @@ public class LockerResourceImpl extends JOCResourceImpl implements ILockerResour
         try {
 
             initLogging(API_CALL_LOCKER_RENEW, body);
-            LockerFilter lockerFilter = Globals.objectMapper.readValue(body, LockerFilter.class);
             JsonValidator.validateFailFast(body, Locker.class);
+            LockerFilter lockerFilter = Globals.objectMapper.readValue(body, LockerFilter.class);
             Globals.jocWebserviceDataContainer.getSOSLocker().renewContent(lockerFilter.getKey());
             refreshTimer();
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(lockerFilter));
@@ -114,8 +114,8 @@ public class LockerResourceImpl extends JOCResourceImpl implements ILockerResour
         try {
 
             initLogging(API_CALL_LOCKER_REMOVE, body);
-            LockerFilter lockerFilter = Globals.objectMapper.readValue(body, LockerFilter.class);
             JsonValidator.validateFailFast(body, Locker.class);
+            LockerFilter lockerFilter = Globals.objectMapper.readValue(body, LockerFilter.class);
             Globals.jocWebserviceDataContainer.getSOSLocker().removeContent(lockerFilter.getKey());
             refreshTimer();
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(lockerFilter));
