@@ -736,7 +736,12 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             IamAccountFilter iamAccountFilter = new IamAccountFilter();
 
             if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.JOC
-                    .toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+                    .toString().equals(dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.KEYCLOAK_JOC.toString().equals(
+                            dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.OIDC.toString().equals(dbItemIamIdentityService
+                                    .getIdentityServiceType()) || IdentityServiceTypes.LDAP_JOC.toString().equals(dbItemIamIdentityService
+                                            .getIdentityServiceType()) || IdentityServiceTypes.VAULT_JOC.toString().equals(dbItemIamIdentityService
+                                                    .getIdentityServiceType()) || IdentityServiceTypes.FIDO.toString().equals(dbItemIamIdentityService
+                                                            .getIdentityServiceType())) {
 
                 iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
                 for (String accountName : accountsFilter.getAccountNames()) {
@@ -747,7 +752,10 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                             dbItemIamAccount.setDisabled(disable);
                         }
                         if (forcePasswordChange != null) {
-                            dbItemIamAccount.setForcePasswordChange(forcePasswordChange);
+                            if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType())
+                                    || IdentityServiceTypes.JOC.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+                                dbItemIamAccount.setForcePasswordChange(forcePasswordChange);
+                            }
                         }
                         sosHibernateSession.update(dbItemIamAccount);
                     } else {
