@@ -13,11 +13,9 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
-import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.exceptions.JocException;
@@ -30,10 +28,6 @@ import com.sos.joc.model.security.identityservice.IdentityServiceRename;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 import com.sos.joc.model.security.identityservice.IdentityServices;
 import com.sos.joc.model.security.identityservice.IdentityServicesFilter;
-import com.sos.joc.model.security.properties.fido.FidoAttachment;
-import com.sos.joc.model.security.properties.fido.FidoProtocolType;
-import com.sos.joc.model.security.properties.fido.FidoResidentKey;
-import com.sos.joc.model.security.properties.fido.FidoUserverification;
 import com.sos.joc.security.resource.IIdentityServiceResource;
 import com.sos.schema.JsonValidator;
 
@@ -56,8 +50,8 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
         try {
 
             initLogging(API_CALL_SERVICES_READ, body, accessToken);
-            IdentityServiceFilter identityServiceFilter = Globals.objectMapper.readValue(body, IdentityServiceFilter.class);
             JsonValidator.validateFailFast(body, IdentityServiceFilter.class);
+            IdentityServiceFilter identityServiceFilter = Globals.objectMapper.readValue(body, IdentityServiceFilter.class);
 
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
@@ -119,8 +113,8 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
         try {
 
             initLogging(API_CALL_SERVICES_STORE, body, accessToken);
-            IdentityService identityService = Globals.objectMapper.readValue(body, IdentityService.class);
             JsonValidator.validateFailFast(body, IdentityServiceFilter.class);
+            IdentityService identityService = Globals.objectMapper.readValue(body, IdentityService.class);
 
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
             if (jocDefaultResponse != null) {
@@ -202,8 +196,8 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
         try {
 
             initLogging(API_CALL_SERVICES_STORE, body, accessToken);
-            IdentityServiceRename identityServiceRename = Globals.objectMapper.readValue(body, IdentityServiceRename.class);
             JsonValidator.validateFailFast(body, IdentityServiceRename.class);
+            IdentityServiceRename identityServiceRename = Globals.objectMapper.readValue(body, IdentityServiceRename.class);
 
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
             if (jocDefaultResponse != null) {
@@ -257,8 +251,8 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
         SOSHibernateSession sosHibernateSession = null;
         try {
             initLogging(API_CALL_SERVICES_DELETE, body, accessToken);
-            IdentityServiceFilter identityServiceFilter = Globals.objectMapper.readValue(body, IdentityServiceFilter.class);
             JsonValidator.validateFailFast(body, IdentityServiceFilter.class);
+            IdentityServiceFilter identityServiceFilter = Globals.objectMapper.readValue(body, IdentityServiceFilter.class);
 
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
             if (jocDefaultResponse != null) {
@@ -309,8 +303,8 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
         try {
 
             initLogging(API_CALL_SERVICES, body, accessToken);
-            IdentityServiceFilter identityServiceFilter = Globals.objectMapper.readValue(body, IdentityServiceFilter.class);
             JsonValidator.validateFailFast(body, IdentityServiceFilter.class);
+            IdentityServiceFilter identityServiceFilter = Globals.objectMapper.readValue(body, IdentityServiceFilter.class);
 
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
@@ -384,8 +378,8 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
         try {
 
             initLogging(API_CALL_SERVICES_REORDER, body, accessToken);
-            IdentityServicesFilter identityServices = Globals.objectMapper.readValue(body, IdentityServicesFilter.class);
             JsonValidator.validateFailFast(body, IdentityServicesFilter.class);
+            IdentityServicesFilter identityServices = Globals.objectMapper.readValue(body, IdentityServicesFilter.class);
 
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
             if (jocDefaultResponse != null) {

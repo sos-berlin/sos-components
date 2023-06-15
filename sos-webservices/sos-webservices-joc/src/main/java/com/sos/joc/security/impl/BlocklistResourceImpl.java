@@ -40,9 +40,8 @@ public class BlocklistResourceImpl extends JOCResourceImpl implements IBlocklist
         SOSHibernateSession sosHibernateSession = null;
         try {
 
+            initLogging(API_CALL_BLOCKLIST_STORE, body, accessToken);
             BlockedAccount blockedAccount = Globals.objectMapper.readValue(body, BlockedAccount.class);
-
-            initLogging(API_CALL_BLOCKLIST_STORE, Globals.objectMapper.writeValueAsBytes(blockedAccount), accessToken);
             JsonValidator.validateFailFast(body, BlockedAccount.class);
 
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());

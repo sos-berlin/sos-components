@@ -50,8 +50,8 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
         try {
 
             initLogging(API_CALL_ROLE_READ, body, accessToken);
-            RoleFilter roleFilter = Globals.objectMapper.readValue(body, RoleFilter.class);
             JsonValidator.validateFailFast(body, RoleFilter.class);
+            RoleFilter roleFilter = Globals.objectMapper.readValue(body, RoleFilter.class);
 
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
@@ -98,8 +98,8 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
         try {
 
             initLogging(API_CALL_ROLE_STORE, body, accessToken);
-            RoleStore roleStore = Globals.objectMapper.readValue(body, RoleStore.class);
             JsonValidator.validateFailFast(body, Role.class);
+            RoleStore roleStore = Globals.objectMapper.readValue(body, RoleStore.class);
 
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
             if (jocDefaultResponse != null) {
@@ -264,8 +264,8 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
         try {
 
             initLogging(API_CALL_ROLES, body, accessToken);
-            RoleListFilter roleListFilter = Globals.objectMapper.readValue(body, RoleListFilter.class);
             JsonValidator.validateFailFast(body, RoleListFilter.class);
+            RoleListFilter roleListFilter = Globals.objectMapper.readValue(body, RoleListFilter.class);
 
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
@@ -311,8 +311,8 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
         try {
 
             initLogging(API_CALL_ROLE_STORE, body, accessToken);
-            RolesFilter roles = Globals.objectMapper.readValue(body, RolesFilter.class);
             JsonValidator.validateFailFast(body, RolesFilter.class);
+            RolesFilter roles = Globals.objectMapper.readValue(body, RolesFilter.class);
 
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
             if (jocDefaultResponse != null) {
