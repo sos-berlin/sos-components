@@ -63,6 +63,7 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
                                 currentState)), surveyDateInstant.toEpochMilli(), OrdersHelper.getDailyPlanTimeZone());
                 checkFolderPermissions(o.getWorkflowId().getPath());
                 o.setLabel(positionToLabelsMap.get(o.getPosition()));
+                o.setHasChildOrders(currentState.orderIds().stream().map(OrderId::string).anyMatch(s -> s.startsWith(o.getOrderId() + "|")));
                 if (orderStateWithRequirements.contains(o.getState().get_text())) {
                     o.setRequirements(OrdersHelper.getRequirements(jOrder, currentState));
                 }

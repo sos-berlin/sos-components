@@ -25,6 +25,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.joc.Globals;
@@ -36,6 +37,8 @@ import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
+import com.sos.joc.db.history.HistoryFilter;
+import com.sos.joc.db.history.JobHistoryDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.CyclicOrderInfos;
@@ -67,6 +70,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
 
     @Override
     public JOCDefaultResponse postOrders(String accessToken, byte[] filterBytes) {
+        SOSHibernateSession connection = null;
         try {
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrdersFilterV.class);
@@ -82,6 +86,8 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             boolean withOrderIdFilter = orders != null && !orders.isEmpty();
             boolean withWorkflowIdFilter = workflowIds != null && !workflowIds.isEmpty();
             boolean responseWithLabel = withWorkflowIdFilter && workflowIds.size() == 1;
+            boolean withStateDate = ordersFilter.getStateDateFrom() != null || ordersFilter.getStateDateTo() != null;
+            boolean orderStreamIsEmpty = false;
             if (ordersFilter.getLimit() == null) {
                 ordersFilter.setLimit(10000);
             }
@@ -234,6 +240,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             } else if (withFolderFilter && (folders == null || folders.isEmpty())) {
                 // no folder permissions
                 // orderStream = currentState.ordersBy(JOrderPredicates.none());
+                orderStreamIsEmpty = true;
             } else {
                 if (notCycledOrderFilter != null) {
                     orderStream = currentState.ordersBy(notCycledOrderFilter);
@@ -329,10 +336,25 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     orderStream = orderStream.limit(ordersFilter.getLimit().longValue());
                 }
             }
+            
+            if (withStateDate && !orderStreamIsEmpty) {
+                connection = Globals.createSosHibernateStatelessConnection(API_CALL);
+                HistoryFilter filter = new HistoryFilter();
+                filter.setControllerIds(Collections.singleton(ordersFilter.getControllerId()));
+                filter.addFolders(folders);
+                filter.setOrderState(states);
+                filter.setStateFrom(JobSchedulerDate.getDateFrom(ordersFilter.getStateDateFrom(), ordersFilter.getTimeZone()));
+                filter.setStateTo(JobSchedulerDate.getDateTo(ordersFilter.getStateDateTo(), ordersFilter.getTimeZone()));
+                JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(connection, filter);
+                List<String> stateDateOrderIds = dbLayer.getOrderIds();
+
+                orderStream = orderStream.filter(o -> stateDateOrderIds.contains(o.id().string()));
+            }
 
             Map<List<Object>, String> positionToLabelsMap = responseWithLabel ? getPositionToLabelsMap(ordersFilter.getControllerId(), workflowIds
                     .iterator().next()) : null;
 
+            Set<String> childOrders = OrdersHelper.getChildOrders(currentState);
             ConcurrentMap<JWorkflowId, Requirements> orderPreparations = new ConcurrentHashMap<>();
 
             Function<JOrder, OrderV> mapJOrderToOrderV = o -> {
@@ -340,6 +362,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     OrderV order = OrdersHelper.mapJOrderToOrderV(o, currentState, ordersFilter.getCompact(), null,
                             blockedButWaitingForAdmissionOrderIds, finalParamsPerWorkflow, surveyDateMillis, zoneId);
                     order.setCyclicOrder(cycleInfos.get(order.getOrderId()));
+                    order.setHasChildOrders(childOrders.stream().anyMatch(s -> s.startsWith(order.getOrderId() + "|")));
                     if (responseWithLabel) {
                         order.setLabel(positionToLabelsMap.get(order.getPosition()));
                     }
@@ -374,6 +397,8 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(connection);
         }
     }
     
