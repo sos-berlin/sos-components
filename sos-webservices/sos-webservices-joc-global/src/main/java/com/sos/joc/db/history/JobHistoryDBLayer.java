@@ -30,6 +30,7 @@ import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.HistoryStateText;
+import com.sos.joc.model.order.OrderStateText;
 
 public class JobHistoryDBLayer {
 
@@ -197,6 +198,21 @@ public class JobHistoryDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
+    
+    public List<String> getOrderIds() throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            Query<String> query = createQuery(new StringBuilder().append("select orderId from ").append(DBLayer.DBITEM_HISTORY_ORDERS).append(
+                    getOrdersWhere()).toString());
+            if (filter.getLimit() > 0) {
+                query.setMaxResults(filter.getLimit());
+            }
+            return executeResultList(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
 
     public List<DBItemHistoryOrder> getOrderForkChilds(Long orderId) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
@@ -351,12 +367,27 @@ public class JobHistoryDBLayer {
                 and = " and";
             }
             
+            if (filter.getStateFrom() != null) {
+                where.append(and).append(" stateTime >= :stateTimeFrom");
+                and = " and";
+            }
+ 
+            if (filter.getStateTo() != null) {
+                where.append(and).append(" stateTime < :stateTimeTo");
+                and = " and";
+            }
+            
             if (filter.getStates() != null && !filter.getStates().isEmpty()) {
                 clause = filter.getStates().stream().map(state -> STATEMAP.get(state)).collect(Collectors.joining(" or "));
                 if (filter.getStates().size() > 1) {
                     clause = "(" + clause + ")";
                 }
                 where.append(and).append(" ").append(clause);
+                and = " and";
+            }
+            
+            if (filter.getOrderStates() != null && !filter.getOrderStates().isEmpty()) {
+                where.append(and).append(" state in (:orderStates)");
                 and = " and";
             }
 
@@ -525,6 +556,15 @@ public class JobHistoryDBLayer {
         }
         if (filter.getEndTo() != null) {
             query.setParameter("endTimeTo", filter.getEndTo(), TemporalType.TIMESTAMP);
+        }
+        if (filter.getStateFrom() != null) {
+            query.setParameter("stateTimeFrom", filter.getStateFrom(), TemporalType.TIMESTAMP);
+        }
+        if (filter.getStateTo() != null) {
+            query.setParameter("stateTimeTo", filter.getStateTo(), TemporalType.TIMESTAMP);
+        }
+        if (filter.getOrderStates() != null && !filter.getOrderStates().isEmpty()) {
+            query.setParameterList("orderStates", filter.getOrderStates().stream().map(OrderStateText::intValue).collect(Collectors.toSet()));
         }
         if (filter.getCriticalities() != null && !filter.getCriticalities().isEmpty()) {
             query.setParameterList("criticalities", filter.getCriticalities());

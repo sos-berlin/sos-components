@@ -11,12 +11,15 @@ import java.util.stream.Collectors;
 import com.sos.inventory.model.job.JobCriticality;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.HistoryStateText;
+import com.sos.joc.model.order.OrderStateText;
 
 public class HistoryFilter {
     
     private Set<Long> historyIds;
     private Date executedFrom;
     private Date executedTo;
+    private Date stateFrom;
+    private Date stateTo;
     private Date startTime;
     private Date endTime;
     private Date endFrom;
@@ -42,6 +45,7 @@ public class HistoryFilter {
     private Collection<String> agentIds;
     private Set<Folder> folders;
     private Set<HistoryStateText> states;
+    private Set<OrderStateText> orderStates;
     private Set<String> criticalities;
     private Map<String, Set<String>> orders;
 //    private Map<String, Set<String>> excludedOrders;
@@ -143,6 +147,18 @@ public class HistoryFilter {
         return states;
     }
     
+    public void setOrderState(Collection<OrderStateText> states) {
+        if (states != null) {
+            this.orderStates = states.stream().collect(Collectors.toSet());
+        } else {
+            this.orderStates = null;
+        }
+    }
+    
+    public Set<OrderStateText> getOrderStates() {
+        return orderStates;
+    }
+    
     public void setCriticalities(Collection<JobCriticality> criticalities) {
         if (criticalities != null) {
             this.criticalities = criticalities.stream().map(c -> c.value().toLowerCase()).collect(Collectors.toSet());
@@ -169,6 +185,22 @@ public class HistoryFilter {
 
     public Date getExecutedTo() {
         return executedTo;
+    }
+    
+    public void setStateFrom(Date stateFrom) {
+        this.stateFrom = stateFrom;
+    }
+
+    public Date getStateFrom() {
+        return stateFrom;
+    }
+    
+    public void setStateTo(Date stateTo) {
+        this.stateTo = stateTo;
+    }
+
+    public Date getStateTo() {
+        return stateTo;
     }
 
     public void setControllerIds(Collection<String> controllerIds) {

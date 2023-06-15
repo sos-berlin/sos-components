@@ -33,6 +33,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "states",
     "folders",
     "dateTo",
+    "stateDateFrom",
+    "stateDateTo",
     "timeZone",
     "scheduledNever",
     "limit"
@@ -91,6 +93,24 @@ public class OrdersFilterV {
     @JsonProperty("dateTo")
     @JsonPropertyDescription("0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp")
     private String dateTo;
+    /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
+    @JsonProperty("stateDateFrom")
+    @JsonPropertyDescription("0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp")
+    private String stateDateFrom;
+    /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
+    @JsonProperty("stateDateTo")
+    @JsonPropertyDescription("0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp")
+    private String stateDateTo;
     /**
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
@@ -256,6 +276,50 @@ public class OrdersFilterV {
     }
 
     /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
+    @JsonProperty("stateDateFrom")
+    public String getStateDateFrom() {
+        return stateDateFrom;
+    }
+
+    /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
+    @JsonProperty("stateDateFrom")
+    public void setStateDateFrom(String stateDateFrom) {
+        this.stateDateFrom = stateDateFrom;
+    }
+
+    /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
+    @JsonProperty("stateDateTo")
+    public String getStateDateTo() {
+        return stateDateTo;
+    }
+
+    /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
+    @JsonProperty("stateDateTo")
+    public void setStateDateTo(String stateDateTo) {
+        this.stateDateTo = stateDateTo;
+    }
+
+    /**
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
      */
@@ -311,12 +375,12 @@ public class OrdersFilterV {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderIds", orderIds).append("workflowIds", workflowIds).append("compact", compact).append("regex", regex).append("states", states).append("folders", folders).append("dateTo", dateTo).append("timeZone", timeZone).append("scheduledNever", scheduledNever).append("limit", limit).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderIds", orderIds).append("workflowIds", workflowIds).append("compact", compact).append("regex", regex).append("states", states).append("folders", folders).append("dateTo", dateTo).append("stateDateFrom", stateDateFrom).append("stateDateTo", stateDateTo).append("timeZone", timeZone).append("scheduledNever", scheduledNever).append("limit", limit).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowIds).append(regex).append(scheduledNever).append(folders).append(controllerId).append(compact).append(dateTo).append(limit).append(timeZone).append(orderIds).append(states).toHashCode();
+        return new HashCodeBuilder().append(workflowIds).append(scheduledNever).append(folders).append(controllerId).append(compact).append(timeZone).append(states).append(stateDateFrom).append(regex).append(dateTo).append(limit).append(orderIds).append(stateDateTo).toHashCode();
     }
 
     @Override
@@ -328,7 +392,7 @@ public class OrdersFilterV {
             return false;
         }
         OrdersFilterV rhs = ((OrdersFilterV) other);
-        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(regex, rhs.regex).append(scheduledNever, rhs.scheduledNever).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(timeZone, rhs.timeZone).append(orderIds, rhs.orderIds).append(states, rhs.states).isEquals();
+        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(scheduledNever, rhs.scheduledNever).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(timeZone, rhs.timeZone).append(states, rhs.states).append(stateDateFrom, rhs.stateDateFrom).append(regex, rhs.regex).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(orderIds, rhs.orderIds).append(stateDateTo, rhs.stateDateTo).isEquals();
     }
 
 }
