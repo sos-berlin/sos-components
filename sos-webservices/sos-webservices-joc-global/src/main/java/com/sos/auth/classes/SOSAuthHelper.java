@@ -399,9 +399,10 @@ public class SOSAuthHelper {
                         com.sos.joc.model.security.properties.Properties.class);
                 properties = setDefaultFIDO2Settings(properties);
                 return properties;
-            }
-            return null;
-        } finally {
+            }else {
+                return new com.sos.joc.model.security.properties.Properties();
+             }
+         } finally {
             Globals.disconnect(sosHibernateSession);
         }
     }

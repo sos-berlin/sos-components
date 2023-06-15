@@ -9,7 +9,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum FidoProtocolType {
 
     FIDO_2("FIDO2"),
-    U_2_F("U2F"),
     PASSKEY("PASSKEY");
     private final String value;
     private final static Map<String, FidoProtocolType> CONSTANTS = new HashMap<String, FidoProtocolType>();

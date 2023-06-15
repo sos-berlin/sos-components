@@ -14,7 +14,9 @@ public class JocError extends Err{
     
     @JsonIgnore
     private String apiCall = null;
-
+    
+    @JsonIgnore
+    private boolean logAsInfo=false;
 
     @JsonIgnore
     public JocError() {
@@ -108,5 +110,15 @@ public class JocError extends Err{
             s.append(str).append(" ");
         }
         return s.toString().trim();
+    }
+
+    
+    public boolean isLogAsInfo() {
+        return logAsInfo;
+    }
+
+    
+    public void setLogAsInfo(boolean logAsInfo) {
+        this.logAsInfo = logAsInfo;
     }
 }

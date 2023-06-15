@@ -210,23 +210,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 if (!getJocPermissions(accessToken).getAdministration().getAccounts().getManage()) {
                     return accessDeniedResponse();
                 }
-                if (configuration.getObjectType().equalsIgnoreCase(IdentityServiceTypes.FIDO.value())) {
-                    com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(configuration.getConfigurationItem(),
-                            com.sos.joc.model.security.properties.Properties.class);
-                    if (properties.getFido() != null) {
-                        if (properties.getFido().getIamFidoProtocolType().equals(FidoProtocolType.U_2_F)) {
-                            IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(connection);
-                            IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
-                            filter.setIdentityServiceName(configuration.getName());
-                            DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(filter);
-                            if (dbItemIamIdentityService != null) {
-                                dbItemIamIdentityService.setSecondFactor(true);
-                                dbItemIamIdentityService.setRequired(false);
-                                connection.update(dbItemIamIdentityService);
-                            }
-                        }
-                    }
-                }
+
                 dbControllerId = ConfigurationGlobals.CONTROLLER_ID;
                 account = ConfigurationGlobals.ACCOUNT;
                 storeAuditLog(configuration.getAuditLog(), CategoryType.IDENTITY);

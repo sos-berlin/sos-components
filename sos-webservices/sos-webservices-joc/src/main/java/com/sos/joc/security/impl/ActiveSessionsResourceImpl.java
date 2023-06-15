@@ -37,9 +37,9 @@ public class ActiveSessionsResourceImpl extends JOCResourceImpl implements IActi
 		try {
 
 			initLogging(API_CALL_SESSIONS, body, accessToken);
-			ActiveSessionsFilter activeSessionsFilter = Globals.objectMapper.readValue(body,
-					ActiveSessionsFilter.class);
 			JsonValidator.validateFailFast(body, ActiveSessionsFilter.class);
+            ActiveSessionsFilter activeSessionsFilter = Globals.objectMapper.readValue(body,
+                    ActiveSessionsFilter.class);
 
 			JOCDefaultResponse jocDefaultResponse = initPermissions("",
 					getJocPermissions(accessToken).getAdministration().getAccounts().getView());

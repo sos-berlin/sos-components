@@ -18,6 +18,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -255,7 +256,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         final Set<JOrder> jOrders = getJOrders(action, orderStream, controllerId, folderPermissions.getListOfFolders(), withOrders);
 
         if (!jOrders.isEmpty()) {
-            command(currentState, action, modifyOrders, dbAuditLog, jOrders.stream().map(JOrder::id).collect(Collectors.toSet())).thenAccept(
+            command(currentState, action, modifyOrders, dbAuditLog, jOrders).thenAccept(
                     either -> {
                         ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
                         if (either.isRight()) {
@@ -398,7 +399,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         }
 
         if (!positionOpt.isPresent() && !withVariables) {
-            command(currentState, Action.RESUME, modifyOrders, dbAuditLog, jOrders.stream().map(JOrder::id).collect(Collectors.toSet())).thenAccept(
+            command(currentState, Action.RESUME, modifyOrders, dbAuditLog, jOrders).thenAccept(
                     either -> {
                         ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
                         if (either.isRight()) {
@@ -627,12 +628,17 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     }
 
     private CompletableFuture<Either<Problem, Void>> command(JControllerState currentState, Action action, ModifyOrders modifyOrders,
-            DBItemJocAuditLog dbAuditLog, Set<OrderId> oIds) throws SOSHibernateException {
+            DBItemJocAuditLog dbAuditLog, Set<JOrder> jOrders) throws SOSHibernateException {
 
         String controllerId = modifyOrders.getControllerId();
+        Stream<OrderId> oIdsStream = jOrders.stream().map(JOrder::id);
 
         switch (action) {
         case CANCEL:
+            if (modifyOrders.getDeep() == Boolean.TRUE) {
+                oIdsStream = Stream.concat(oIdsStream, getChildren(currentState, jOrders));
+            }
+            Set<OrderId> oIds = oIdsStream.collect(Collectors.toSet());
             return OrdersHelper.cancelOrders(modifyOrders, oIds).thenApply(either -> {
                 // TODO @uwe: This update must be removed when dailyplan service receives events for order state changes
                 if (either.isRight()) {
@@ -642,25 +648,34 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             });
 
         case RESUME:
-            return ControllerApi.of(controllerId).resumeOrders(oIds, true);
+            return ControllerApi.of(controllerId).resumeOrders(oIdsStream.collect(Collectors.toSet()), true);
 
         case SUSPEND:
+            if (modifyOrders.getDeep() == Boolean.TRUE) {
+                oIdsStream = Stream.concat(oIdsStream, getChildren(currentState, jOrders));
+            }
             if (modifyOrders.getKill() == Boolean.TRUE) {
-                return ControllerApi.of(controllerId).suspendOrders(oIds, JSuspensionMode.kill());
+                return ControllerApi.of(controllerId).suspendOrders(oIdsStream.collect(Collectors.toSet()), JSuspensionMode.kill());
             } else {
-                return ControllerApi.of(controllerId).suspendOrders(oIds);
+                return ControllerApi.of(controllerId).suspendOrders(oIdsStream.collect(Collectors.toSet()));
             }
 
         case ANSWER_PROMPT:
             // No bulk operation in API
             JControllerApi api = ControllerApi.of(controllerId);
-            oIds.stream().map(oId -> JControllerCommand.apply(new ControllerCommand.AnswerOrderPrompt(oId))).forEach(command -> api.executeCommand(
+            oIdsStream.map(oId -> JControllerCommand.apply(new ControllerCommand.AnswerOrderPrompt(oId))).forEach(command -> api.executeCommand(
                     command).thenAccept(either -> ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId)));
             return CompletableFuture.supplyAsync(() -> Either.right(null));
 
         default: // case REMOVE_WHEN_TERMINATED
-            return ControllerApi.of(controllerId).deleteOrdersWhenTerminated(oIds);
+            return ControllerApi.of(controllerId).deleteOrdersWhenTerminated(jOrders.stream().map(JOrder::id).collect(Collectors.toSet()));
         }
+    }
+    
+    private Stream<OrderId> getChildren(JControllerState currentState, Set<JOrder> jOrders) {
+        String regex = jOrders.stream().map(JOrder::id).map(OrderId::string).map(str -> str + "|").map(Pattern::quote).collect(Collectors
+                .joining("|", "(", ").*"));
+        return currentState.ordersBy(o -> o.id().string().matches(regex)).map(JOrder::id);
     }
 
     private void updateDailyPlan(Set<OrderId> oIds, String controllerId) {
