@@ -6,6 +6,9 @@ import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.util.SOSShell;
 import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
 import com.sos.joc.db.joc.DBItemJocInstance;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.JOCEvent;
+import com.sos.joc.event.bean.cluster.NewJocAddedEvent;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.db.DBLayerJocCluster;
@@ -29,6 +32,7 @@ public class JocInstance {
             DBItemInventoryOperatingSystem osItem = getOS(dbLayer, config.getHostname());
             DBItemJocInstance item = dbLayer.getInstance(config.getMemberId());
             Date now = dbLayer.getNowUTC();
+            boolean isNew = false;
             if (item == null) {
                 item = new DBItemJocInstance();
                 item.setMemberId(config.getMemberId());
@@ -45,6 +49,7 @@ public class JocInstance {
                 item.setApiServer(config.isApiServer());
                 item.setVersion(config.getVersion());
                 dbLayer.getSession().save(item);
+                isNew = true;
             } else {
                 if (StartupMode.automatic.equals(mode)) {
                     item.setSecurityLevel(config.getSecurityLevel().name());
@@ -62,6 +67,9 @@ public class JocInstance {
                 config.setUri(item.getUri());
             }
             dbLayer.getSession().commit();
+            if(isNew) {
+                EventBus.getInstance().post(new NewJocAddedEvent(item.getId(), item.getClusterId(), item.getMemberId(), item.getOrdering()));
+            }
             return item;
         } catch (Exception e) {
             if (dbLayer != null) {

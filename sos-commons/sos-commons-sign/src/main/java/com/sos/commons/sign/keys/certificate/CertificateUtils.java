@@ -7,10 +7,13 @@ import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.bouncycastle.asn1.x500.AttributeTypeAndValue;
 import org.bouncycastle.asn1.x500.RDN;
@@ -196,6 +199,13 @@ public abstract class CertificateUtils {
 	    String encodedCert = new String(encoder.encode(cert.getEncoded()));
 	    // prettify certificate string
 	    return SOSKeyConstants.CERTIFICATE_HEADER + lineSeparator + encodedCert + lineSeparator + SOSKeyConstants.CERTIFICATE_FOOTER;
+	}
+	
+	public static String getDistinguishedName (X509Certificate cert) throws CertificateEncodingException {
+	    X500Name x500name = new JcaX509CertificateHolder(cert).getSubject();
+	    List<String> rdns =  Arrays.asList(x500name.toString().split(","));
+	    Collections.reverse(rdns);
+	    return rdns.stream().collect(Collectors.joining(", "));
 	}
 	
     public static String extractDistinguishedNameQualifier (X509Certificate cert) throws CertificateEncodingException {
