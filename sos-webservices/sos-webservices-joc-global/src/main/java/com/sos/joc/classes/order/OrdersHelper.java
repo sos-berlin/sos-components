@@ -397,6 +397,7 @@ public class OrdersHelper {
         }
         o.setAttachedState(oItem.getAttachedState());
         o.setOrderId(oItem.getId());
+        o.setHasChildOrders(null);
 
         List<HistoricOutcome> outcomes = oItem.getHistoricOutcomes();
         if (outcomes != null && !outcomes.isEmpty()) {
@@ -1083,6 +1084,10 @@ public class OrdersHelper {
     public static ConcurrentMap<OrderId, JOrder> getWaitingForAdmissionOrders(Collection<JOrder> blockedOrders, JControllerState controllerState) {
         Set<OrderId> ids = getWaitingForAdmissionOrderIds(blockedOrders.stream().map(JOrder::id).collect(Collectors.toSet()), controllerState);
         return blockedOrders.parallelStream().filter(o -> ids.contains(o.id())).collect(Collectors.toConcurrentMap(JOrder::id, Function.identity()));
+    }
+    
+    public static Set<String> getChildOrders(JControllerState currentState) {
+        return currentState.orderIds().stream().map(OrderId::string).filter(s -> s.contains("|")).collect(Collectors.toSet());
     }
 
     public static Optional<Boolean> orderIsInImplicitEnd(JOrder o, JControllerState controllerState) {

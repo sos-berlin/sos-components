@@ -52,31 +52,13 @@ public class JocException extends RuntimeException {
         this.error.setMessage(message);
     }
     
-    public void addErrorMetaInfo(String ...metaInfos) {
-        if (this.error == null) {
-            this.error = new JocError(); 
-        }
-        this.error.addMetaInfoOnTop(metaInfos);
-    }
-    
     public void addErrorMetaInfo(JocError error) {
         if (this.error == null) {
             this.error = new JocError(); 
         }
         this.error.addMetaInfoOnTop(error.getMetaInfo());
         error.getMetaInfo().clear();
-    }
-    
-    public void appendErrorMetaInfo(String ...metaInfos) {
-        if (this.error == null) {
-            this.error = new JocError(); 
-        }
-        this.error.appendMetaInfo(metaInfos);
-    }
-    
-    public void setErrorMessageAndAddMetaInfo(String message, String ...metaInfos) {
-        setErrorMessage(message);
-        this.error.addMetaInfoOnTop(metaInfos);
+        this.error.setApiCall(error.getApiCall());
     }
 
 }
