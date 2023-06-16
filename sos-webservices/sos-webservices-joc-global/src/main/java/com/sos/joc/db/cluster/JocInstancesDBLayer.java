@@ -103,4 +103,19 @@ public class JocInstancesDBLayer {
         }
     }
 
+    public DBItemJocInstance getInstance(String clusterId, Integer ordering) throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_JOC_INSTANCES).append(" where ")
+                    .append("clusterId = :clusterId ")
+                    .append("and ordering = :ordering");
+            Query<DBItemJocInstance> query = session.createQuery(hql.toString());
+            query.setParameter("clusterId", clusterId);
+            query.setParameter("ordering", ordering);
+            return session.getSingleResult(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
 }
