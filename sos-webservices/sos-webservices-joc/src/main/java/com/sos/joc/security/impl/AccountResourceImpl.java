@@ -263,7 +263,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                 }
             }
 
-            if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+            if (IdentityServiceTypes.VAULT_JOC_ACTIVE.value().equals(dbItemIamIdentityService.getIdentityServiceType())) {
                 SOSVaultWebserviceCredentials webserviceCredentials = new SOSVaultWebserviceCredentials();
                 SOSIdentityService sosIdentityService = new SOSIdentityService(dbItemIamIdentityService);
                 webserviceCredentials.setValuesFromProfile(sosIdentityService);
@@ -602,10 +602,10 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
         IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
         IamAccountFilter iamAccountFilter = new IamAccountFilter();
 
-        if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.JOC
-                .toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+        if (IdentityServiceTypes.VAULT_JOC_ACTIVE.value().equals(dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.JOC
+                .value().equals(dbItemIamIdentityService.getIdentityServiceType())) {
             SOSVaultWebserviceCredentials webserviceCredentials = new SOSVaultWebserviceCredentials();
-            if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+            if (IdentityServiceTypes.VAULT_JOC_ACTIVE.value().equals(dbItemIamIdentityService.getIdentityServiceType())) {
                 SOSIdentityService sosIdentityService = new SOSIdentityService(dbItemIamIdentityService);
                 webserviceCredentials.setValuesFromProfile(sosIdentityService);
             }
@@ -653,7 +653,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                 dbItemIamAccount.setAccountPassword(SOSPasswordHasher.hash(password));
                 sosHibernateSession.update(dbItemIamAccount);
 
-                if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+                if (IdentityServiceTypes.VAULT_JOC_ACTIVE.value().equals(dbItemIamIdentityService.getIdentityServiceType())) {
                     storeInVault(webserviceCredentials, null, account.getAccountName(), password);
                 }
             } else {
@@ -735,12 +735,12 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
             IamAccountFilter iamAccountFilter = new IamAccountFilter();
 
-            if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.JOC
-                    .toString().equals(dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.KEYCLOAK_JOC.toString().equals(
-                            dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.OIDC.toString().equals(dbItemIamIdentityService
-                                    .getIdentityServiceType()) || IdentityServiceTypes.LDAP_JOC.toString().equals(dbItemIamIdentityService
-                                            .getIdentityServiceType()) || IdentityServiceTypes.VAULT_JOC.toString().equals(dbItemIamIdentityService
-                                                    .getIdentityServiceType()) || IdentityServiceTypes.FIDO.toString().equals(dbItemIamIdentityService
+            if (IdentityServiceTypes.VAULT_JOC_ACTIVE.value().equals(dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.JOC
+                    .value().equals(dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.KEYCLOAK_JOC.value().equals(
+                            dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.OIDC.value().equals(dbItemIamIdentityService
+                                    .getIdentityServiceType()) || IdentityServiceTypes.LDAP_JOC.value().equals(dbItemIamIdentityService
+                                            .getIdentityServiceType()) || IdentityServiceTypes.VAULT_JOC.value().equals(dbItemIamIdentityService
+                                                    .getIdentityServiceType()) || IdentityServiceTypes.FIDO.value().equals(dbItemIamIdentityService
                                                             .getIdentityServiceType())) {
 
                 iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
@@ -752,8 +752,8 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                             dbItemIamAccount.setDisabled(disable);
                         }
                         if (forcePasswordChange != null) {
-                            if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType())
-                                    || IdentityServiceTypes.JOC.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+                            if (IdentityServiceTypes.VAULT_JOC_ACTIVE.value().equals(dbItemIamIdentityService.getIdentityServiceType())
+                                    || IdentityServiceTypes.JOC.value().equals(dbItemIamIdentityService.getIdentityServiceType())) {
                                 dbItemIamAccount.setForcePasswordChange(forcePasswordChange);
                             }
                         }

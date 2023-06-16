@@ -25,6 +25,9 @@ public class DBItemIamFido2Devices {
     @Column(name = "[ACCOUNT_ID]", nullable = false)
     private Long accountId;
 
+    @Column(name = "[IDENTITY_SERVICE_ID]", nullable = false)
+    private Long identityServiceId;
+
     @Column(name = "[PUBLIC_KEY]", nullable = false)
     private String publicKey;
 
@@ -77,14 +80,20 @@ public class DBItemIamFido2Devices {
         this.algorithm = algorithm;
     }
 
-    
     public String getOrigin() {
         return origin;
     }
 
-    
     public void setOrigin(String origin) {
         this.origin = origin;
+    }
+
+    public Long getIdentityServiceId() {
+        return identityServiceId;
+    }
+
+    public void setIdentityServiceId(Long identityServiceId) {
+        this.identityServiceId = identityServiceId;
     }
 
 }
