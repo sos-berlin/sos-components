@@ -4,6 +4,7 @@ public class IamFidoDevicesFilter extends SOSHibernateFilter {
 
     private Long id;
     private Long accountId;
+    private Long identityServiceId;
     private String credentialId;
     private String origin;
 
@@ -43,6 +44,16 @@ public class IamFidoDevicesFilter extends SOSHibernateFilter {
     
     public void setOrigin(String origin) {
         this.origin = origin;
+    }
+
+    
+    public Long getIdentityServiceId() {
+        return identityServiceId;
+    }
+
+    
+    public void setIdentityServiceId(Long identityServiceId) {
+        this.identityServiceId = identityServiceId;
     }
 
 }

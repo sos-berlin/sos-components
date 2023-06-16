@@ -27,6 +27,9 @@ public class IamFidoDevicesDBLayer {
         if (filter.getAccountId() != null) {
             query.setParameter("accountId", filter.getAccountId());
         }
+        if (filter.getIdentityServiceId() != null) {
+            query.setParameter("identityServiceId", filter.getIdentityServiceId());
+        }
         if (filter.getOrigin() != null && !filter.getOrigin().isEmpty()) {
             query.setParameter("origin", filter.getOrigin());
         }
@@ -62,6 +65,10 @@ public class IamFidoDevicesDBLayer {
         }
         if (filter.getAccountId() != null) {
             where += and + " accountId = :accountId";
+            and = " and ";
+        }
+        if (filter.getIdentityServiceId() != null) {
+            where += and + " identityServiceId = :identityServiceId";
             and = " and ";
         }
         if (filter.getCredentialId() != null && !filter.getCredentialId().isEmpty()) {

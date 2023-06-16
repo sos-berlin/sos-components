@@ -108,7 +108,7 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
                     .getIdentityServiceName());
 
             if (!IdentityServiceTypes.FIDO.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
-                throw new JocObjectNotExistException("Only allowed for Identity Service type FIDO2 " + "<" + dbItemIamIdentityService
+                throw new JocAuthenticationException("Only allowed for Identity Service type FIDO2 " + "<" + dbItemIamIdentityService
                         .getIdentityServiceType() + ">");
             }
 
@@ -132,6 +132,10 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
             }
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(fidoRegistration));
 
+        } catch (JocAuthenticationException e) {
+            getJocError().setLogAsInfo(true);
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -180,8 +184,8 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
                 List<DBItemIamFido2Devices> listOfDevices = iamFidoDevicesDBLayer.getListOfFidoDevices(filter);
 
                 if (listOfDevices.size() > 0) {
-                    throw new JocBadRequestException("Account is already registered for " + "<" + dbItemIamIdentityService.getIdentityServiceName()
-                            + ">");
+                    throw new JocAuthenticationException("Account is already registered for " + "<" + dbItemIamIdentityService
+                            .getIdentityServiceName() + ">");
                 }
             }
 
@@ -215,10 +219,10 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
 
                     if (!challengeDecodedString.equals(dbItemIamFido2Registration.getChallenge())) {
                         iamFidoDBLayer.delete(iamFidoRegistrationFilter);
-                        throw new JocBadRequestException("Challenge does not match. The FIDO registration cannot be completed..");
+                        throw new JocAuthenticationException("Challenge does not match. The FIDO registration cannot be completed..");
                     }
                 } else {
-                    throw new JocBadRequestException("Challenge does not match. The FIDO registration cannot be completed..");
+                    throw new JocAuthenticationException("Challenge does not match. The FIDO registration cannot be completed..");
                 }
 
                 LOGGER.info("FIDO registration requested completed");
@@ -233,6 +237,11 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
             Globals.commit(sosHibernateSession);
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+        } catch (JocAuthenticationException e) {
+            getJocError().setLogAsInfo(true);
+            e.addErrorMetaInfo(getJocError());
+            Globals.rollback(sosHibernateSession);
+            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             Globals.rollback(sosHibernateSession);
@@ -263,7 +272,7 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
                     .getIdentityServiceName());
 
             if (!IdentityServiceTypes.FIDO.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
-                throw new JocObjectNotExistException("Only allowed for Identity Service type FIDO2 " + "<" + dbItemIamIdentityService
+                throw new JocAuthenticationException("Only allowed for Identity Service type FIDO2 " + "<" + dbItemIamIdentityService
                         .getIdentityServiceType() + ">");
             }
 
@@ -274,7 +283,7 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
 
             DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getUniqueAccount(iamAccountFilter);
             if (dbItemIamAccount == null) {
-                throw new JocBadRequestException("Account does not exist in " + "<" + dbItemIamIdentityService.getIdentityServiceName() + ">");
+                throw new JocObjectNotExistException("Account does not exist in " + "<" + dbItemIamIdentityService.getIdentityServiceName() + ">");
             }
 
             DBItemIamFido2Devices dbItemIamFido2Devices = new DBItemIamFido2Devices();
@@ -289,6 +298,11 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
             Globals.commit(sosHibernateSession);
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+        } catch (JocAuthenticationException e) {
+            getJocError().setLogAsInfo(true);
+            e.addErrorMetaInfo(getJocError());
+            Globals.rollback(sosHibernateSession);
+            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             Globals.rollback(sosHibernateSession);
@@ -318,7 +332,7 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
                     .getIdentityServiceName());
 
             if (!IdentityServiceTypes.FIDO.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
-                throw new JocObjectNotExistException("Only allowed for Identity Service type FIDO " + "<" + dbItemIamIdentityService
+                throw new JocAuthenticationException("Only allowed for Identity Service type FIDO " + "<" + dbItemIamIdentityService
                         .getIdentityServiceType() + ">");
             }
 
@@ -329,7 +343,7 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
 
             DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getUniqueAccount(iamAccountFilter);
             if (dbItemIamAccount == null) {
-                throw new JocBadRequestException("Account does not exist in " + "<" + dbItemIamIdentityService.getIdentityServiceName() + ">");
+                throw new JocObjectNotExistException("Account does not exist in " + "<" + dbItemIamIdentityService.getIdentityServiceName() + ">");
             }
 
             IamFidoDevicesDBLayer iamFidoDevicesDBLayer = new IamFidoDevicesDBLayer(sosHibernateSession);
@@ -339,6 +353,11 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
             Globals.commit(sosHibernateSession);
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+        } catch (JocAuthenticationException e) {
+            getJocError().setLogAsInfo(true);
+            e.addErrorMetaInfo(getJocError());
+            Globals.rollback(sosHibernateSession);
+            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             Globals.rollback(sosHibernateSession);
@@ -586,43 +605,43 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
                     .getIdentityServiceName());
 
             if (!IdentityServiceTypes.FIDO.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
-                throw new JocObjectNotExistException("Only allowed for Identity Service type FIDO2 " + "<" + dbItemIamIdentityService
+                throw new JocAuthenticationException("Only allowed for Identity Service type FIDO2 " + "<" + dbItemIamIdentityService
                         .getIdentityServiceType() + ">");
             }
 
             FidoRequestAuthenticationResponse fidoRequestAuthenticationResponse = new FidoRequestAuthenticationResponse();
             fidoRequestAuthenticationResponse.setChallenge(SOSAuthHelper.createAccessToken());
 
-            if (fidoRequestAuthentication.getAccountName() != null) {
-                IamFidoDevicesDBLayer iamFidoDevicesDBLayer = new IamFidoDevicesDBLayer(sosHibernateSession);
-                IamFidoDevicesFilter iamFidoDevicesFilter = new IamFidoDevicesFilter();
-                IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
-                IamAccountFilter filter = new IamAccountFilter();
-                filter.setAccountName(fidoRequestAuthentication.getAccountName());
-                filter.setIdentityServiceId(dbItemIamIdentityService.getId());
+            IamFidoDevicesDBLayer iamFidoDevicesDBLayer = new IamFidoDevicesDBLayer(sosHibernateSession);
+            IamFidoDevicesFilter iamFidoDevicesFilter = new IamFidoDevicesFilter();
+            IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
+            IamAccountFilter filter = new IamAccountFilter();
+            filter.setAccountName(fidoRequestAuthentication.getAccountName());
+            filter.setIdentityServiceId(dbItemIamIdentityService.getId());
 
-                DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getUniqueAccount(filter);
-                if (dbItemIamAccount != null) {
-                    iamFidoDevicesFilter.setAccountId(dbItemIamAccount.getId());
-                    iamFidoDevicesFilter.setOrigin(fidoRequestAuthentication.getOrigin());
+            DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getUniqueAccount(filter);
+            if (dbItemIamAccount == null && filter.getAccountName() != null) {
+                throw new JocObjectNotExistException("Couldn't find the account <" + fidoRequestAuthentication.getAccountName()
+                        + " in identity service " + fidoRequestAuthentication.getIdentityServiceName() + ">");
+            }
 
-                    List<DBItemIamFido2Devices> listOfFido2Devices = iamFidoDevicesDBLayer.getListOfFidoDevices(iamFidoDevicesFilter);
-                    if (listOfFido2Devices.size() == 0) {
-                        throw new JocObjectNotExistException("Registration <" + fidoRequestAuthentication.getAccountName() + " in identity service "
-                                + fidoRequestAuthentication.getIdentityServiceName() + "/" + fidoRequestAuthentication.getOrigin()
-                                + "> is not approved");
-                    }
-                } else {
-                    throw new JocObjectNotExistException("Couldn't find the account <" + fidoRequestAuthentication.getAccountName()
-                            + " in identity service " + fidoRequestAuthentication.getIdentityServiceName() + ">");
-                }
+            if (dbItemIamAccount != null) {
+                iamFidoDevicesFilter.setAccountId(dbItemIamAccount.getId());
+            }
 
-                List<DBItemIamFido2Devices> listOfDevices = iamFidoDevicesDBLayer.getListOfFidoDevices(iamFidoDevicesFilter);
+            iamFidoDevicesFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
+            iamFidoDevicesFilter.setOrigin(fidoRequestAuthentication.getOrigin());
+            List<DBItemIamFido2Devices> listOfFido2Devices = iamFidoDevicesDBLayer.getListOfFidoDevices(iamFidoDevicesFilter);
+            if (listOfFido2Devices.size() == 0) {
+                throw new JocAuthenticationException("Registration <" + fidoRequestAuthentication.getAccountName() + " in identity service "
+                        + fidoRequestAuthentication.getIdentityServiceName() + "/" + fidoRequestAuthentication.getOrigin() + "> is not approved");
+            }
 
-                fidoRequestAuthenticationResponse.setCredentialIds(new ArrayList<String>());
-                for (DBItemIamFido2Devices device : listOfDevices) {
-                    fidoRequestAuthenticationResponse.getCredentialIds().add(device.getCredentialId());
-                }
+            List<DBItemIamFido2Devices> listOfDevices = iamFidoDevicesDBLayer.getListOfFidoDevices(iamFidoDevicesFilter);
+
+            fidoRequestAuthenticationResponse.setCredentialIds(new ArrayList<String>());
+            for (DBItemIamFido2Devices device : listOfDevices) {
+                fidoRequestAuthenticationResponse.getCredentialIds().add(device.getCredentialId());
             }
 
             DBItemIamFido2Requests dbItemIamFido2Requests = new DBItemIamFido2Requests();
@@ -636,9 +655,12 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(fidoRequestAuthenticationResponse));
 
-        } catch (
-
-        JocException e) {
+        } catch (JocAuthenticationException e) {
+            getJocError().setLogAsInfo(true);
+            e.addErrorMetaInfo(getJocError());
+            Globals.rollback(sosHibernateSession);
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             Globals.rollback(sosHibernateSession);
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -672,7 +694,7 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
                     .getIdentityServiceName());
 
             if (!IdentityServiceTypes.FIDO.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
-                throw new JocObjectNotExistException("Only allowed for Identity Service type FIDO2 " + "<" + dbItemIamIdentityService
+                throw new JocAuthenticationException("Only allowed for Identity Service type FIDO2 " + "<" + dbItemIamIdentityService
                         .getIdentityServiceType() + ">");
             }
 
@@ -693,6 +715,10 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
             storeAuditLog(fidoRegistrationsFilter.getAuditLog(), CategoryType.IDENTITY);
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+        } catch (JocAuthenticationException e) {
+            getJocError().setLogAsInfo(true);
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -723,7 +749,7 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
                     .getIdentityServiceName());
 
             if (!IdentityServiceTypes.FIDO.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
-                throw new JocObjectNotExistException("Only allowed for Identity Service type FIDO2 " + "<" + dbItemIamIdentityService
+                throw new JocAuthenticationException("Only allowed for Identity Service type FIDO2 " + "<" + dbItemIamIdentityService
                         .getIdentityServiceType() + ">");
             }
 
@@ -752,9 +778,11 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
             }
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(fidoRegistrations));
-        } catch (
-
-        JocException e) {
+        } catch (JocAuthenticationException e) {
+            getJocError().setLogAsInfo(true);
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
@@ -785,7 +813,7 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
                     .getIdentityServiceName());
 
             if (!IdentityServiceTypes.FIDO.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
-                throw new JocObjectNotExistException("Only allowed for Identity Service type FIDO " + "<" + dbItemIamIdentityService
+                throw new JocAuthenticationException("Only allowed for Identity Service type FIDO " + "<" + dbItemIamIdentityService
                         .getIdentityServiceType() + ">");
             }
 
@@ -862,6 +890,11 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
             }
 
             Globals.commit(sosHibernateSession);
+        } catch (JocAuthenticationException e) {
+            getJocError().setLogAsInfo(true);
+            e.addErrorMetaInfo(getJocError());
+            Globals.rollback(sosHibernateSession);
+            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             Globals.rollback(sosHibernateSession);
@@ -898,7 +931,7 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
                     .getIdentityServiceName());
 
             if (!IdentityServiceTypes.FIDO.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
-                throw new JocObjectNotExistException("Only allowed for Identity Service type FIDO2 " + "<" + dbItemIamIdentityService
+                throw new JocAuthenticationException("Only allowed for Identity Service type FIDO2 " + "<" + dbItemIamIdentityService
                         .getIdentityServiceType() + ">");
             }
 
@@ -927,6 +960,11 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
 
+        } catch (JocAuthenticationException e) {
+            getJocError().setLogAsInfo(true);
+            e.addErrorMetaInfo(getJocError());
+            Globals.rollback(sosHibernateSession);
+            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             Globals.rollback(sosHibernateSession);
