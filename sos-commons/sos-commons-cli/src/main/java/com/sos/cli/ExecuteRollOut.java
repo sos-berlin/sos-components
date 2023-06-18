@@ -51,6 +51,7 @@ import com.sos.commons.sign.keys.keyStore.KeystoreType;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.model.publish.CreateCSRFilter;
 import com.sos.joc.model.publish.RolloutResponse;
+import com.sos.joc.model.publish.rollout.items.JocConf;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigFactory;
@@ -96,6 +97,7 @@ public class ExecuteRollOut {
     private static final String SRC_CA_CERT = "--source-ca-cert";
     private static final String PRIVATE_FOLDER_NAME = "private";
     private static final String PRIVATE_CONF_FILENAME = "private.conf";
+    private static final String PRIVATE_CONF_JS7_PARAM_WEB = "js7.web";
     private static final String PRIVATE_CONF_JS7_PARAM_JOCURL = "js7.web.joc.url";
     private static final String PRIVATE_CONF_JS7_PARAM_KEYSTORE_FILEPATH = "js7.web.https.keystore.file";
     private static final String PRIVATE_CONF_JS7_PARAM_KEYSTORE_KEYPWD = "js7.web.https.keystore.key-password";
@@ -105,8 +107,8 @@ public class ExecuteRollOut {
     private static final String PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH = "file";
     private static final String PRIVATE_CONF_JS7_PARAM_TRUSTORES_SUB_STOREPWD = "store-password";
     private static final String PRIVATE_CONF_JS7_PARAM_DN = "js7.auth.users.controller.distinguished-names"; 
-    private static final String PRIVATE_CONF_JS7_PARAM_USERS = "js7.auth.users."; 
-    private static final String PRIVATE_CONF_JS7_PARAM_DISTINGUISHED_NAMES = ".distinguished-names"; 
+    private static final String PRIVATE_CONF_JS7_PARAM_USERS = "js7.auth.users"; 
+    private static final String PRIVATE_CONF_JS7_PARAM_DISTINGUISHED_NAMES = "distinguished-names"; 
     private static final String DEFAULT_KEYSTORE_FILENAME = "https-keystore.p12";
     private static final String DEFAULT_TRUSTSTORE_FILENAME = "https-truststore.p12";
     private static final String DEFAULT_KEYSTORE_PATH = "${js7.config-directory}\"/private/https-keystore.p12\"";
@@ -311,27 +313,75 @@ public class ExecuteRollOut {
     private static void updatePrivateConf (Config config, RolloutResponse response) throws Exception {
         String dnPath = PRIVATE_CONF_JS7_PARAM_DN;
         if(response.getControllerId() != null) {
-            dnPath = PRIVATE_CONF_JS7_PARAM_USERS + response.getControllerId() + PRIVATE_CONF_JS7_PARAM_DISTINGUISHED_NAMES;
+            dnPath = PRIVATE_CONF_JS7_PARAM_USERS + "." + response.getControllerId() + "." + PRIVATE_CONF_JS7_PARAM_DISTINGUISHED_NAMES;
         }
         if (config.hasPath(dnPath)) {
-            List<String> dns = config.getStringList(dnPath);
-            for (String dn : response.getDNs()) {
-                if(!dns.contains(dn)) {
-                    dns.add(dn);
+            config = addToExistingList(config, dnPath, response.getDNs());
+        } else {
+            config = addToNewList(config, dnPath, response.getDNs());
+        }
+        // TODO: add js7.web section if not exists
+        if(response.getJocConfs() != null) {
+            for (JocConf joc : response.getJocConfs()) {
+                if(response.getAgentId() == null) {
+                    dnPath = PRIVATE_CONF_JS7_PARAM_USERS + "." + joc.getJocId().toUpperCase() + "." + PRIVATE_CONF_JS7_PARAM_DISTINGUISHED_NAMES;
+                    if(config.hasPath(dnPath)) {
+                        config = addToExistingList(config, dnPath, joc.getDN());
+                    } else {
+                        config = addToNewList(config, dnPath, joc.getDN());
+                    }
+                } else {
+                    String webPath = PRIVATE_CONF_JS7_PARAM_WEB + "." + joc.getJocId() + ".url";
+                    if (config.hasPath(webPath)) {
+                        try {
+                            config = addToExistingList(config, webPath, joc.getUrl());
+                        } catch (Exception e) {
+                            if (config.getString(webPath).equals(joc.getUrl())) {
+                                continue;
+                            } else {
+                                List<String> newValues = new ArrayList<String>();
+                                newValues.add(config.getString(webPath));
+                                newValues.add(joc.getUrl());
+                                config = addToNewList(config, webPath, newValues);
+                            }
+                        }
+                    } else {
+                        config = addToNewList(config, webPath, joc.getUrl());
+                    }
                 }
             }
-            ConfigValue value = ConfigValueFactory.fromAnyRef(dns);
-            toUpdate = config.withValue(dnPath, value);
-        } else {
-            List<String> newValues = new ArrayList<String>();
-            newValues.addAll(response.getDNs());
-            ConfigValue value = ConfigValueFactory.fromIterable(newValues);
-            toUpdate = config.withValue(dnPath, value);
         }
-
-        // TODO: add js7.web section if not exists
-        
-        saveConfigToFile(toUpdate);
+        saveConfigToFile(config);
+    }
+    
+    private static Config addToExistingList (Config config, String configPath, String value) {
+        List<String> values = new ArrayList<String>();
+        values.add(value);
+        return addToExistingList(config, configPath, values);
+    }
+    
+    private static Config addToExistingList (Config config, String configPath, List<String> newValues) {
+        List<String> values = config.getStringList(configPath);
+        for (String value : newValues) {
+            if(!values.contains(value)) {
+                values.add(value);
+            }
+        }
+        ConfigValue configValue = ConfigValueFactory.fromAnyRef(values);
+        return config.withValue(configPath, configValue);
+    }
+    
+    private static Config addToNewList (Config config, String configPath, String value) {
+        List<String> values = new ArrayList<String>();
+        values.add(value);
+        return addToNewList(config, configPath, values);
+    }
+    
+    private static Config addToNewList (Config config, String configPath, List<String> values) {
+        List<String> newValues = new ArrayList<String>();
+        newValues.addAll(values);
+        ConfigValue configValue = ConfigValueFactory.fromIterable(newValues);
+        return config.withValue(configPath, configValue);
     }
     
     private static void addJs7WebSectionIfNotExists(final Config config) {
@@ -494,12 +544,6 @@ public class ExecuteRollOut {
             ConfigList truststoreList = ConfigValueFactory.fromIterable(truststores);
             ConfigValue truststorePathsValue = ConfigValueFactory.fromIterable(truststoreList);
             toUpdate = toUpdate.withValue(PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY, truststorePathsValue);
-//            ConfigValue truststoreValue = ConfigFactory.empty();
-//            ConfigValue truststorePathValue = ConfigValueFactory.fromAnyRef(targetTruststore);
-//            truststoreValue.withValue(PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH, truststorePathValue);
-//            ConfigValue truststorePasswdValue = ConfigValueFactory.fromAnyRef(targetTruststorePasswd);
-//            truststoreValue.withValue(PRIVATE_CONF_JS7_PARAM_TRUSTORES_SUB_STOREPWD, truststorePasswdValue);
-//            truststores.add(truststoreValue);
         }
     }
     
@@ -566,7 +610,7 @@ public class ExecuteRollOut {
                             }
                         }).filter(Objects::nonNull).findAny();
             } catch (Exception e) {
-                System.out.println("No configuration setting found for key 'js7.web.https.truststores' in private.conf, create new Truststore at default location.");
+                System.out.println("create new Truststore at default location.");
                 truststoreOptional = Optional.empty();
             }
             KeyStore truststore = null; 
@@ -581,7 +625,7 @@ public class ExecuteRollOut {
                 System.out.println("read Keystore from: " + resolved.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_FILEPATH));
                 keystore = KeyStoreUtil.readKeyStore(credentials.getPath(), KeystoreType.PKCS12, credentials.getStorePwd());
             } catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | ConfigException | IOException e) {
-                System.out.println("No configuration setting found for key 'js7.web.https.keystore' in private.conf, create new Keystore at default location.");
+                System.out.println("create new Keystore at default location.");
                 keystore = null;
             }
             if(keystore == null) {
@@ -661,6 +705,7 @@ public class ExecuteRollOut {
         CreateCSRFilter filter = new CreateCSRFilter();
         filter.setDn(dn);
         filter.setHostname(hostname);
+        filter.setHostname("sp");
         filter.setSan(san);
         filter.setDnOnly(dnOnly);
         return mapper.writeValueAsString(filter);

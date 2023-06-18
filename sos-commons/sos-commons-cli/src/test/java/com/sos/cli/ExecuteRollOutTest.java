@@ -233,7 +233,7 @@ public class ExecuteRollOutTest {
     }
 
     @Test
-    // @Ignore
+    @Ignore
     public void testMainWithArgumentsForAgentConfig() throws Exception {
         ExecuteRollOut.main(createAgentArgsConfigTest());
     }
@@ -244,6 +244,12 @@ public class ExecuteRollOutTest {
         ExecuteRollOut.main(createAgentArgsLocalConfigTest());
     }
     
+    @Test
+    @Ignore
+    public void testLocalMainForController() throws Exception {
+        ExecuteRollOut.main(createControllerArgsConfigLocalTest());
+    }
+
     private String[] createAgentArgsConfigTest() {
         System.setProperty(ExecuteRollOut.PRIVATE_CONF_JS7_PARAM_CONFDIR, "C:/sp/devel/js7/testing/2023-03-03/agent/config");
         String dn = "CN=agent, OU=development, O=SOS, C=DE, L=Berlin, ST=Berlin";
@@ -290,6 +296,7 @@ public class ExecuteRollOutTest {
     private String[] createControllerArgsConfigTest() {
         String dn = "CN=sp, OU=development, O=SOS, C=DE, L=Berlin, ST=Berlin";
         String jocUri = "http://sp.sos:4444";
+//        String jocUri = "http://sp.sos:44443";
         String targetKeystore = "C:/sp/devel/js7/testing/2023-04-20/agent/config/private/https-keystore.p12";
         String targetKeystoreType = "PKCS12";
         String targetKeystorePassw = "jobscheduler";
@@ -297,7 +304,7 @@ public class ExecuteRollOutTest {
         String targetTruststore = "C:/sp/devel/js7/testing/2023-04-20/agent/config/private/https-truststore.p12";
         String targetTrustoreType = "PKCS12";
         String targetTruststorePassw = "jobscheduler";
-        String token = "30b47b41-48ce-49d7-8f5b-ec3230695e3b";
+        String token = "4ff9b0ea-1da8-46f5-bbf0-1c3c5e487b7a";
         String keystoreAlias = "sp";
         String truststoreAlias = "sp root ca";
         String san = "sp.sos, sp";
@@ -307,37 +314,69 @@ public class ExecuteRollOutTest {
                 "--target-truststore-pass=" + targetTruststorePassw, "--key-alias=" + keystoreAlias, "--ca-alias=" + truststoreAlias };
     }
 
-    private String[] createAgentArgsLocalConfigTest() {
-        System.setProperty(ExecuteRollOut.PRIVATE_CONF_JS7_PARAM_CONFDIR, "C:/sp/devel/js7/testing/2023-04-20/agent/config");
-        String dn = "CN=standaloneAgentID, OU=development, O=SOS, C=DE, L=Berlin, ST=Berlin";
+    private String[] createControllerArgsConfigLocalTest() {
+        System.setProperty(ExecuteRollOut.PRIVATE_CONF_JS7_PARAM_CONFDIR, "C:/sp/devel/js7/testing/2023-06-18/controller/config");
+        String token = "fd9f8ed2-6ef6-4de0-96c3-0bfaa33a52df";
+        String dn = "CN=sp, OU=development-test, O=SOS, C=DE, L=Berlin, ST=Berlin";
         String jocUri = "http://sp.sos:4444";
-        // String srcKeystore = "C:/sp/devel/js7/testing/2023-03-03/https-keystore.p12";
-        // String srcKeystoreType = "PKCS12";
-        // String srcKeystorePassw = "";
-        // String srcKeystoreEntryPassw = "";
-        // String srcTruststore = "C:/ProgramData/sos-berlin.com/js7/agent_3334/config/private/https-truststore.p12";
-        // String srcTruststore = "C:/sp/devel/js7/testing/2023-03-03/https-truststore.p12";
-        // String srcTrustoreType = "PKCS12";
-        // String srcTruststorePassw = "";
-         String targetKeystore = "C:/sp/devel/js7/testing/2023-04-20/agent/config/private/https-keystore.p12";
-         String targetKeystoreType = "PKCS12";
-         String targetKeystorePassw = "jobscheduler";
-         String targetKeystoreEntryPassw = "jobscheduler";
-         String targetTruststore = "C:/sp/devel/js7/testing/2023-04-20/agent/config/private/https-truststore.p12";
-         String targetTrustoreType = "PKCS12";
-         String targetTruststorePassw = "jobscheduler";
-        String token = "fcf98625-0a3a-4017-913c-eaea4e25cc76";
-        String keystoreAlias = "standalone";
+        String src = "C:/ProgramData/sos-berlin.com/js7/controller/controller/config/private"; 
+        String srcKeystore = "C:/ProgramData/sos-berlin.com/js7/controller/controller/config/private/https-keystore.p12";
+        String srcKeystoreType = "PKCS12";
+        String srcKeystorePassw = "jobscheduler";
+        String srcKeystoreEntryPassw = "jobscheduler";
+        String srcTruststore = "C:/ProgramData/sos-berlin.com/js7/controller/controller/config/private/https-truststore.p12";
+        String srcTrustoreType = "PKCS12";
+        String srcTruststorePassw = "jobscheduler";
+        String targetKeystore = "C:/sp/devel/js7/testing/2023-06-18/controller/config/private/https-keystore.p12";
+        String targetKeystoreType = "PKCS12";
+        String targetKeystorePassw = "jobscheduler";
+        String targetKeystoreEntryPassw = "jobscheduler";
+        String targetTruststore = "C:/sp/devel/js7/testing/2023-06-18/controller/config/private/https-truststore.p12";
+        String targetTrustoreType = "PKCS12";
+        String targetTruststorePassw = "jobscheduler";
+        String keystoreAlias = "sp";
         String truststoreAlias = "sp root ca";
-        String san = "standalone.sos, standalone, sp.sos, sp";
+        String san = "sp.sos, sp";
+        return new String[] { "--token=" + token, "--joc-uri=" + jocUri, "--san=" + san, "--subject-dn=" + dn, "--source-keystore=" + srcKeystore,
+                "--source-keystore-type=" + srcKeystoreType, "--source-keystore-pass=" + srcKeystorePassw,
+                "--source-keystore-entry-pass=" + srcKeystoreEntryPassw, "--source-truststore=" + srcTruststore,
+                "--source-truststore-type=" + srcTrustoreType, "--source-truststore-pass=" + srcTruststorePassw,
+                "--target-keystore=" + targetKeystore, "--target-keystore-type=" + targetKeystoreType,
+                "--target-keystore-pass=" + targetKeystorePassw, "--target-keystore-entry-pass=" + targetKeystoreEntryPassw,
+                "--target-truststore=" + targetTruststore, "--target-truststore-type=" + targetTrustoreType,
+                "--target-truststore-pass=" + targetTruststorePassw, "--key-alias=" + keystoreAlias, "--ca-alias=" + truststoreAlias };
+    }
+
+    private String[] createAgentArgsLocalConfigTest() {
+        System.setProperty(ExecuteRollOut.PRIVATE_CONF_JS7_PARAM_CONFDIR, "C:/sp/devel/js7/testing/2023-06-18/agent/config");
+        String token = "b60c26f1-aed2-4fe6-a45f-01a772f9ba03";
+        String dn = "CN=sp, OU=development, O=SOS, C=DE, L=Berlin, ST=Berlin";
+        String jocUri = "http://sp.sos:4444";
+        String srcKeystore = "C:/ProgramData/sos-berlin.com/js7/agent_2222/config/private/https-keystore.p12";
+        String srcKeystoreType = "PKCS12";
+        String srcKeystorePassw = "jobscheduler";
+        String srcKeystoreEntryPassw = "jobscheduler";
+        String srcTruststore = "C:/ProgramData/sos-berlin.com/js7/agent_2222/config/private/https-truststore.p12";
+        String srcTrustoreType = "PKCS12";
+        String srcTruststorePassw = "jobscheduler";
+        String targetKeystore = "C:/sp/devel/js7/testing/2023-06-18/agent/config/private/https-keystore.p12";
+        String targetKeystoreType = "PKCS12";
+        String targetKeystorePassw = "jobscheduler";
+        String targetKeystoreEntryPassw = "jobscheduler";
+        String targetTruststore = "C:/sp/devel/js7/testing/2023-06-18/agent/config/private/https-truststore.p12";
+        String targetTrustoreType = "PKCS12";
+        String targetTruststorePassw = "jobscheduler";
+        String keystoreAlias = "sp";
+        String truststoreAlias = "sp root ca";
+        String san = "sp.sos, sp";
         return new String[] { "--token=" + token, "--joc-uri=" + jocUri, "--san=" + san,
-                // "--source-keystore=" + srcKeystore,
-                // "--source-keystore-type=" + srcKeystoreType,
-                // "--source-keystore-pass=" + srcKeystorePassw,
-                // "--source-keystore-entry-pass=" + srcKeystoreEntryPassw,
-                // "--source-truststore=" + srcTruststore,
-                // "--source-truststore-type=" + srcTrustoreType,
-                // "--source-truststore-pass=" + srcTruststorePassw,
+                "--source-keystore=" + srcKeystore,
+                "--source-keystore-type=" + srcKeystoreType,
+                "--source-keystore-pass=" + srcKeystorePassw,
+                "--source-keystore-entry-pass=" + srcKeystoreEntryPassw,
+                "--source-truststore=" + srcTruststore,
+                "--source-truststore-type=" + srcTrustoreType,
+                "--source-truststore-pass=" + srcTruststorePassw,
                 "--subject-dn=" + dn, 
                 "--target-keystore=" + targetKeystore, 
                 "--target-keystore-type=" + targetKeystoreType, 
