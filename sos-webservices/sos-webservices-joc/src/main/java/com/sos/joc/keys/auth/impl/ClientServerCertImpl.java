@@ -1,12 +1,16 @@
 package com.sos.joc.keys.auth.impl;
 
 import java.io.UnsupportedEncodingException;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -18,14 +22,17 @@ import jakarta.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.sign.keys.certificate.CertificateUtils;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.db.cluster.JocInstancesDBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
+import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.exceptions.JocAuthenticationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.auth.resource.ICreateClientServerCert;
@@ -33,6 +40,7 @@ import com.sos.joc.keys.auth.token.OnetimeTokens;
 import com.sos.joc.model.auth.token.OnetimeToken;
 import com.sos.joc.model.publish.CreateCSRFilter;
 import com.sos.joc.model.publish.RolloutResponse;
+import com.sos.joc.model.publish.rollout.items.JocConf;
 import com.sos.joc.publish.util.ClientServerCertificateUtil;
 import com.sos.schema.JsonValidator;
 
@@ -63,11 +71,11 @@ public class ClientServerCertImpl extends JOCResourceImpl implements ICreateClie
                     hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
                     InventoryInstancesDBLayer controllerDbLayer = new InventoryInstancesDBLayer(hibernateSession);
                     InventoryAgentInstancesDBLayer agentDbLayer = new InventoryAgentInstancesDBLayer(hibernateSession);
-                    LOGGER.info("agentId: " + onetimeToken.getAgentId());
-                    LOGGER.info("controllerId: " + onetimeToken.getControllerId());
-                    if (createCsrFilter.getDnOnly()) {
-                        response.setDNs(getDns(onetimeToken, controllerDbLayer, agentDbLayer));
-                    } else {
+                    LOGGER.debug("agentId: " + onetimeToken.getAgentId());
+                    LOGGER.debug("controllerId: " + onetimeToken.getControllerId());
+                    response.setDNs(getDnsForControllerAgents(onetimeToken, controllerDbLayer, agentDbLayer));
+                    response.setJocConfs(getJocConfs(new JocInstancesDBLayer(hibernateSession)));
+                    if (!createCsrFilter.getDnOnly()) {
                         response = ClientServerCertificateUtil.createClientServerAuthKeyPair(hibernateSession, createCsrFilter);
                         if (onetimeToken.getAgentId() != null) {
                             DBItemInventoryAgentInstance agent = agentDbLayer.getAgentInstance(onetimeToken.getAgentId());
@@ -93,9 +101,9 @@ public class ClientServerCertImpl extends JOCResourceImpl implements ICreateClie
                             }
                             response.setControllerId(onetimeToken.getControllerId());
                             response.setAgentId(null);
-//                            response.setDNs(getDns(onetimeToken, controllerDbLayer, agentDbLayer));
+                            response.setJocConfs(getJocConfs(new JocInstancesDBLayer(hibernateSession)));
                         }
-                        response.setDNs(getDns(onetimeToken, controllerDbLayer, agentDbLayer));
+                        response.setDNs(getDnsForControllerAgents(onetimeToken, controllerDbLayer, agentDbLayer));
                     }
                 } else {
                     throw new JocAuthenticationException(String.format("One-time token %1$s couldn't find or has expired and was removed from the system.", token));
@@ -103,8 +111,6 @@ public class ClientServerCertImpl extends JOCResourceImpl implements ICreateClie
             } else {
                 throw new JocAuthenticationException("No valid one-time token(s) found!");
             }
-//            response.setControllerId(onetimeToken.getControllerId());
-//            response.setAgentId(onetimeToken.getAgentId());
             return JOCDefaultResponse.responseStatus200(response);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -123,7 +129,7 @@ public class ClientServerCertImpl extends JOCResourceImpl implements ICreateClie
         }
     }
 
-    private List<String> getDns(OnetimeToken token, InventoryInstancesDBLayer controllerDbLayer, InventoryAgentInstancesDBLayer agentDbLayer)
+    private List<String> getDnsForControllerAgents(OnetimeToken token, InventoryInstancesDBLayer controllerDbLayer, InventoryAgentInstancesDBLayer agentDbLayer)
             throws SOSHibernateException {
         List<String> dNs = new ArrayList<String>();
         if (token.getAgentId() != null) {
@@ -151,4 +157,43 @@ public class ClientServerCertImpl extends JOCResourceImpl implements ICreateClie
         }
         return dNs;
     }
+    
+    private List<JocConf> getJocConfs(JocInstancesDBLayer dbLayer) throws CertificateEncodingException, CertificateException, UnsupportedEncodingException {
+//        List<DBItemJocInstance> jocDbitems = dbLayer.getInstances();
+//        Map<String, List<JocConf>> jocConfsByClusterId = Collections.emptyMap();
+//        for (DBItemJocInstance jocInstance : jocDbitems) {
+//            if(jocInstance.getCertificate() != null) {
+//                String clusterId = jocInstance.getClusterId();
+//                JocConf conf = new JocConf();
+//                conf.setJocId(clusterId);
+//                conf.setUrl(jocInstance.getUri());
+//                conf.setDN(CertificateUtils.getDistinguishedName(KeyUtil.getX509Certificate(jocInstance.getCertificate())));
+//                if (jocConfsByClusterId.isEmpty()) {
+//                    jocConfsByClusterId = new HashMap<String, List<JocConf>>();
+//                }
+//                if(!jocConfsByClusterId.containsKey(clusterId)) {
+//                    jocConfsByClusterId.put(clusterId, Collections.emptyList());
+//                } 
+//                if(jocConfsByClusterId.get(clusterId).isEmpty()) {
+//                    List<JocConf> jocConfs = new ArrayList<JocConf>();
+//                }
+//                jocConfsByClusterId.get(clusterId).add(conf);
+//            }
+//        }
+        return dbLayer.getInstances().stream().map(jocInstance -> {
+            JocConf conf = new JocConf();
+                conf.setJocId(jocInstance.getClusterId());
+                conf.setUrl(jocInstance.getUri());
+                try {
+                    X509Certificate cert = KeyUtil.getX509Certificate(jocInstance.getCertificate());
+                    String dn = CertificateUtils.getDistinguishedName(cert);
+                    conf.setDN(dn);
+                } catch (CertificateException | UnsupportedEncodingException e) {
+                    throw new JocException(e);
+                }
+            return conf;
+        }).collect(Collectors.toList());
+//        return jocConfsByClusterId;
+    }
+    
 }

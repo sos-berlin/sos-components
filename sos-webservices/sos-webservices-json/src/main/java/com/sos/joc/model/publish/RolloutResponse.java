@@ -6,6 +6,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.publish.rollout.items.JocConf;
 import com.sos.joc.model.sign.JocKeyPair;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -24,7 +25,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "caCert",
     "DNs",
     "controllerId",
-    "agentId"
+    "agentId",
+    "jocConfs"
 })
 public class RolloutResponse {
 
@@ -44,6 +46,8 @@ public class RolloutResponse {
     private String controllerId;
     @JsonProperty("agentId")
     private String agentId;
+    @JsonProperty("jocConfs")
+    private List<JocConf> jocConfs = new ArrayList<JocConf>();
 
     /**
      * SOS Key Pair
@@ -107,14 +111,24 @@ public class RolloutResponse {
         this.agentId = agentId;
     }
 
+    @JsonProperty("jocConfs")
+    public List<JocConf> getJocConfs() {
+        return jocConfs;
+    }
+
+    @JsonProperty("jocConfs")
+    public void setJocConfs(List<JocConf> jocConfs) {
+        this.jocConfs = jocConfs;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jocKeyPair", jocKeyPair).append("caCert", caCert).append("dNs", dNs).append("controllerId", controllerId).append("agentId", agentId).toString();
+        return new ToStringBuilder(this).append("jocKeyPair", jocKeyPair).append("caCert", caCert).append("dNs", dNs).append("controllerId", controllerId).append("agentId", agentId).append("jocConfs", jocConfs).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(dNs).append(agentId).append(caCert).append(controllerId).append(jocKeyPair).toHashCode();
+        return new HashCodeBuilder().append(agentId).append(caCert).append(controllerId).append(jocConfs).append(dNs).append(jocKeyPair).toHashCode();
     }
 
     @Override
@@ -126,7 +140,7 @@ public class RolloutResponse {
             return false;
         }
         RolloutResponse rhs = ((RolloutResponse) other);
-        return new EqualsBuilder().append(dNs, rhs.dNs).append(agentId, rhs.agentId).append(caCert, rhs.caCert).append(controllerId, rhs.controllerId).append(jocKeyPair, rhs.jocKeyPair).isEquals();
+        return new EqualsBuilder().append(agentId, rhs.agentId).append(caCert, rhs.caCert).append(controllerId, rhs.controllerId).append(jocConfs, rhs.jocConfs).append(dNs, rhs.dNs).append(jocKeyPair, rhs.jocKeyPair).isEquals();
     }
 
 }
