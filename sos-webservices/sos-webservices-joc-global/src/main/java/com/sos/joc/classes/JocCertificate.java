@@ -81,7 +81,7 @@ public class JocCertificate {
         String keyStoreAlias = Globals.sosCockpitProperties.getProperty("keystore_alias", "");
         LOGGER.debug("KeyStore alias: " + keyStoreAlias);
         LOGGER.debug("reading KeyStore from " + keyStorePath);
-        if(Files.exists(keyStorePath)) {
+        if(keyStorePath != null &&  Files.exists(keyStorePath)) {
             try {
                 KeyStore keystore = KeyStoreUtil.readKeyStore(keyStorePath, KeystoreType.fromValue(keyStoreType), keyStorePw);
                 X509Certificate certificate =  KeyStoreUtil.getX509CertificateFromKeyStore(keystore, keyStoreAlias);
