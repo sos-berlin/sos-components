@@ -73,7 +73,8 @@ public class AgentsResourceReassignImpl extends JOCResourceImpl implements IAgen
                 Stream<JUpdateItemOperation> a = agents.keySet().stream().map(JUpdateItemOperation::addOrChangeSimple);
                 Stream<JUpdateItemOperation> s = agents.values().stream().flatMap(List::stream).map(JUpdateItemOperation::addOrChangeSimple);
 
-                proxy.api().updateItems(Flux.concat(Flux.fromStream(a), Flux.fromStream(s))).thenAccept(e -> {
+                //proxy.api().updateItems(Flux.concat(Flux.fromStream(a), Flux.fromStream(s))).thenAccept(e -> {
+                proxy.api().updateItems(Flux.fromIterable(Stream.concat(a, s).collect(Collectors.toSet()))).thenAccept(e -> {
                     ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), null);
                     if (e.isRight()) {
                         SOSHibernateSession connection1 = null;

@@ -218,7 +218,7 @@ public class ProxyContext {
                     Stream<JUpdateItemOperation> a = agents.keySet().stream().map(JUpdateItemOperation::addOrChangeSimple);
                     Stream<JUpdateItemOperation> s = agents.values().stream().flatMap(List::stream).map(JUpdateItemOperation::addOrChangeSimple);
 
-                    p.api().updateItems(Flux.concat(Flux.fromStream(a), Flux.fromStream(s))).thenAccept(e -> {
+                    p.api().updateItems(Flux.fromIterable(Stream.concat(a, s).collect(Collectors.toSet()))).thenAccept(e -> {
                         if (e.isLeft()) {
                             LOGGER.error(ProblemHelper.getErrorMessage(e.getLeft()));
                         } else {

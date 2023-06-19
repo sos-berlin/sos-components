@@ -78,7 +78,7 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_JOBS);
             DocumentationDBLayer docDbLayer = new DocumentationDBLayer(sosHibernateSession);
-            List<DBItemDocumentation> jitlDocs = docDbLayer.getDocumentations(Collections.singleton("xml").stream(), JitlDocumentation.FOLDER, false,
+            List<DBItemDocumentation> jitlDocs = docDbLayer.getDocumentations(Collections.singleton("xml"), JitlDocumentation.FOLDER, false,
                     true);
             Jobs jobs = new Jobs();
             if (jitlDocs != null) {
