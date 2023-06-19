@@ -36,7 +36,6 @@ import com.sos.joc.db.security.IamFidoRegistrationFilter;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.exceptions.JocAuthenticationException;
-import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocInfoException;
@@ -292,6 +291,7 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
             dbItemIamFido2Devices.setAlgorithm(SOSSecurityUtil.getAlgFromJwk(fidoAddDevice.getJwk()));
             dbItemIamFido2Devices.setCredentialId(fidoAddDevice.getCredentialId());
             dbItemIamFido2Devices.setOrigin(fidoAddDevice.getOrigin());
+            dbItemIamFido2Devices.setIdentityServiceId(dbItemIamIdentityService.getId());
             sosHibernateSession.save(dbItemIamFido2Devices);
 
             storeAuditLog(fidoAddDevice.getAuditLog(), CategoryType.IDENTITY);
@@ -870,6 +870,7 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
                 dbItemIamFido2Devices.setPublicKey(dbItemIamFido2Registration.getPublicKey());
                 dbItemIamFido2Devices.setAlgorithm(dbItemIamFido2Registration.getAlgorithm());
                 dbItemIamFido2Devices.setCredentialId(dbItemIamFido2Registration.getCredentialId());
+                dbItemIamFido2Devices.setIdentityServiceId(dbItemIamIdentityService.getId());
                 dbItemIamFido2Devices.setOrigin(account.getOrigin());
                 sosHibernateSession.save(dbItemIamFido2Devices);
 
