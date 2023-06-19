@@ -5,11 +5,6 @@ import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.Set;
@@ -22,12 +17,7 @@ import org.glassfish.jersey.servlet.ServletContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.commons.sign.keys.certificate.CertificateUtils;
-import com.sos.commons.sign.keys.key.KeyUtil;
-import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
-import com.sos.commons.sign.keys.keyStore.KeystoreType;
 import com.sos.commons.util.SOSShell;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCertificate;
@@ -46,8 +36,6 @@ import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.db.DbInstaller;
 import com.sos.joc.db.cluster.CheckInstance;
-import com.sos.joc.db.cluster.JocInstancesDBLayer;
-import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.log4j2.NotificationAppender;
 
@@ -87,7 +75,7 @@ public class JocServletContainer extends ServletContainer {
             CheckInstance.stopJOC();
             throw new ServletException(e);
         }
-        updateCertificate();
+        JocCertificate.updateCertificate();
         DailyPlanCalendar.getInstance();
         Proxies.startAll(Globals.sosCockpitProperties, ProxyUser.JOC);
         CompletableFuture.runAsync(() -> JitlDocumentation.saveOrUpdate());
@@ -224,9 +212,4 @@ public class JocServletContainer extends ServletContainer {
         }
     }
 
-    private void updateCertificate() {
-        JocCertificate jocCertificate = JocCertificate.getInstance();
-        jocCertificate.updateCertificate();
-    }
-    
 }
