@@ -106,59 +106,59 @@ public class ImportUtils {
     public static final String JOC_META_INFO_FILENAME = "meta_inf";
 
     
-    public static UpdateableConfigurationObject createUpdateableConfiguration(DBItemInventoryConfiguration existingConfiguration, 
-    		ConfigurationObject configuration, Map<ConfigurationType, List<ConfigurationObject>> configurations, String prefix, String suffix, String targetFolder, DBLayerDeploy dbLayer)
-    				throws SOSHibernateException {
+    public static UpdateableConfigurationObject createUpdateableConfiguration(DBItemInventoryConfiguration existingConfiguration,
+            ConfigurationObject configuration, Map<ConfigurationType, List<ConfigurationObject>> configurations, String prefix, String suffix,
+            String targetFolder, DBLayerDeploy dbLayer) throws SOSHibernateException {
 
-    	ConfigurationGlobalsJoc clusterSettings = Globals.getConfigurationGlobalsJoc();
-    	SuffixPrefix suffixPrefix = null;
-    	// prefix/suffix will always be added to the configurations name if not empty, even if no previous configuration exist
-    	if (existingConfiguration != null) {
-    		suffixPrefix = JocInventory.getSuffixPrefix(suffix, prefix, ClusterSettings.getImportSuffixPrefix(clusterSettings),
-                    clusterSettings.getImportSuffix().getDefault(), existingConfiguration.getName(), configuration.getObjectType(),
+        ConfigurationGlobalsJoc clusterSettings = Globals.getConfigurationGlobalsJoc();
+        SuffixPrefix suffixPrefix = null;
+        // prefix/suffix will always be added to the configurations name if not empty, even if no previous configuration exist
+        if (existingConfiguration != null) {
+            suffixPrefix = JocInventory.getSuffixPrefix(suffix, prefix, ClusterSettings.getImportSuffixPrefix(clusterSettings),
+                    clusterSettings.getImportSuffix().getDefault(), existingConfiguration.getName(), configuration.getObjectType(), 
                     new InventoryDBLayer(dbLayer.getSession()));
-    	} else {
-    		suffixPrefix = JocInventory.getSuffixPrefix(suffix, prefix, ClusterSettings.getImportSuffixPrefix(clusterSettings),
-                    clusterSettings.getImportSuffix().getDefault(), configuration.getName(), configuration.getObjectType(),
+        } else {
+            suffixPrefix = JocInventory.getSuffixPrefix(suffix, prefix, ClusterSettings.getImportSuffixPrefix(clusterSettings), 
+                    clusterSettings.getImportSuffix().getDefault(), configuration.getName(), configuration.getObjectType(), 
                     new InventoryDBLayer(dbLayer.getSession()));
-    	}
+        }
         final List<String> replace = JocInventory.getSearchReplace(suffixPrefix);
         final String oldName = configuration.getName();
         final String newName = configuration.getName().replaceFirst(replace.get(0), replace.get(1));
         Set<ConfigurationObject> referencedBy = new HashSet<ConfigurationObject>();
-        
+
         switch (configuration.getObjectType()) {
-	    	case LOCK:
-	    		referencedBy.addAll(getUsedWorkflowsFromArchiveByLockId(oldName, configurations.get(ConfigurationType.WORKFLOW)));
-	    		break;
-	    	case NOTICEBOARD:
-                referencedBy.addAll(getUsedWorkflowsFromArchiveByBoardName(oldName, configurations.get(ConfigurationType.WORKFLOW)));
-	    	    break;
-        	case WORKFLOW:
-                referencedBy.addAll(getUsedFileOrderSourcesFromArchiveByWorkflowName(oldName, configurations.get(ConfigurationType.FILEORDERSOURCE)));
-                referencedBy.addAll(getUsedSchedulesFromArchiveByWorkflowName(oldName, configurations.get(ConfigurationType.SCHEDULE)));
-                referencedBy.addAll(getUsedWorkflowsFromArchiveByWorkflowName(oldName, configurations.get(ConfigurationType.WORKFLOW)));
-        		break;
-        	case WORKINGDAYSCALENDAR:
-        	case NONWORKINGDAYSCALENDAR:
-        		referencedBy.addAll(getUsedSchedulesFromArchiveByCalendarName(oldName, configurations.get(ConfigurationType.SCHEDULE)));
-        		break;
-        	case JOBRESOURCE:
-                referencedBy.addAll(getUsedWorkflowsFromArchiveByJobResourceName(oldName, configurations.get(ConfigurationType.WORKFLOW)));
-                referencedBy.addAll(getUsedJobTemplatesFromArchiveByJobResourcesName(oldName, configurations.get(ConfigurationType.JOBTEMPLATE)));
-                break;
-            case JOBTEMPLATE:
-        	    referencedBy.addAll(getUsedWorkflowsFromArchiveByJobTemplateName(oldName, configurations.get(ConfigurationType.WORKFLOW)));
-        	    break;
-            case INCLUDESCRIPT:
-                referencedBy.addAll(getUsedWorkflowsFromArchiveByIncludeScriptName(oldName, configurations.get(ConfigurationType.WORKFLOW)));
-                break;
-    		default:
-    			break;
+        case LOCK:
+            referencedBy.addAll(getUsedWorkflowsFromArchiveByLockId(oldName, configurations.get(ConfigurationType.WORKFLOW)));
+            break;
+        case NOTICEBOARD:
+            referencedBy.addAll(getUsedWorkflowsFromArchiveByBoardName(oldName, configurations.get(ConfigurationType.WORKFLOW)));
+            break;
+        case WORKFLOW:
+            referencedBy.addAll(getUsedFileOrderSourcesFromArchiveByWorkflowName(oldName, configurations.get(ConfigurationType.FILEORDERSOURCE)));
+            referencedBy.addAll(getUsedSchedulesFromArchiveByWorkflowName(oldName, configurations.get(ConfigurationType.SCHEDULE)));
+            referencedBy.addAll(getUsedWorkflowsFromArchiveByWorkflowName(oldName, configurations.get(ConfigurationType.WORKFLOW)));
+            break;
+        case WORKINGDAYSCALENDAR:
+        case NONWORKINGDAYSCALENDAR:
+            referencedBy.addAll(getUsedSchedulesFromArchiveByCalendarName(oldName, configurations.get(ConfigurationType.SCHEDULE)));
+            break;
+        case JOBRESOURCE:
+            referencedBy.addAll(getUsedWorkflowsFromArchiveByJobResourceName(oldName, configurations.get(ConfigurationType.WORKFLOW)));
+            referencedBy.addAll(getUsedJobTemplatesFromArchiveByJobResourcesName(oldName, configurations.get(ConfigurationType.JOBTEMPLATE)));
+            break;
+        case JOBTEMPLATE:
+            referencedBy.addAll(getUsedWorkflowsFromArchiveByJobTemplateName(oldName, configurations.get(ConfigurationType.WORKFLOW)));
+            break;
+        case INCLUDESCRIPT:
+            referencedBy.addAll(getUsedWorkflowsFromArchiveByIncludeScriptName(oldName, configurations.get(ConfigurationType.WORKFLOW)));
+            break;
+        default:
+            break;
         }
         return new UpdateableConfigurationObject(configuration, existingConfiguration, oldName, newName, referencedBy, targetFolder);
     }
-    
+
     public static void replaceReferences (UpdateableConfigurationObject updateableItem) {
     	
 //    	Date now = Date.from(Instant.now());
@@ -330,6 +330,9 @@ public class ImportUtils {
     }
     
     private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByWorkflowName (String name, List<ConfigurationObject> configurations) {
+        if(configurations == null) {
+            return Collections.emptySet();
+        }
         Predicate<String> hasWorkflow = Pattern.compile("\"workflowName\"\\s*:\\s*\"" + name + "\"").asPredicate();
         return configurations.stream().filter(item -> ConfigurationType.WORKFLOW.equals(item.getObjectType()))
                 .map(item -> {
@@ -345,10 +348,10 @@ public class ImportUtils {
     }
 
     private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByLockId (String name, List<ConfigurationObject> configurations) {
-        Predicate<String> hasLock = Pattern.compile("\"lockName\"\\s*:\\s*\"" + name + "\"").asPredicate();
         if(configurations == null) {
             return Collections.emptySet();
         }
+        Predicate<String> hasLock = Pattern.compile("\"lockName\"\\s*:\\s*\"" + name + "\"").asPredicate();
         return configurations.stream().map(item -> {
                     try {
                         if (hasLock.test(Globals.objectMapper.writeValueAsString(item.getConfiguration()))) {
@@ -363,6 +366,9 @@ public class ImportUtils {
 
     private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByBoardName (String name, List<ConfigurationObject> configurations) {
         Predicate<String> hasNoticeBoard = Pattern.compile("\"(?:noticeB|b)oardName\"\\s*:\\s*\"" + name + "\"").asPredicate();
+        if(configurations == null) {
+            return Collections.emptySet();
+        }
         return configurations.stream().map(item -> {
                     try {
                         Workflow wf = (Workflow)item.getConfiguration();
@@ -383,6 +389,9 @@ public class ImportUtils {
     }
     
     private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByJobResourceName (String name, List<ConfigurationObject> configurations) {
+        if(configurations == null) {
+            return Collections.emptySet();
+        }
         return configurations.stream().map(item -> {
                     Workflow wf = (Workflow) item.getConfiguration();
                     if (wf.getJobResourceNames() != null && wf.getJobResourceNames().contains(name)) {
@@ -400,6 +409,9 @@ public class ImportUtils {
     }
 
     private static Set<ConfigurationObject> getUsedJobTemplatesFromArchiveByJobResourcesName (String name, List<ConfigurationObject> configurations) {
+        if(configurations == null) {
+            return Collections.emptySet();
+        }
         return configurations.stream().map(item -> {
             JobTemplate jt = (JobTemplate)item.getConfiguration();
             if (jt.getJobResourceNames() != null && jt.getJobResourceNames().contains(name)) {
@@ -416,6 +428,9 @@ public class ImportUtils {
 
     
     private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByJobTemplateName (String name, List<ConfigurationObject> configurations) {
+        if(configurations == null) {
+            return Collections.emptySet();
+        }
         return configurations.stream().map(item -> {
                     Workflow wf = (Workflow) item.getConfiguration();
                     if (wf.getJobs() != null && wf.getJobs().getAdditionalProperties() != null) {
@@ -431,6 +446,9 @@ public class ImportUtils {
     }
     
     private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByIncludeScriptName (String name, List<ConfigurationObject> configurations) {
+        if(configurations == null) {
+            return Collections.emptySet();
+        }
         Predicate<String> hasScriptInclude = Pattern.compile(JsonConverter.scriptIncludeComments + JsonConverter.scriptInclude + "[ \t]+" + name
                 + "\\s*").asPredicate();
         return configurations.stream().map(item -> {
@@ -446,11 +464,24 @@ public class ImportUtils {
     }
 
     private static Set<ConfigurationObject> getUsedFileOrderSourcesFromArchiveByWorkflowName (String name, List<ConfigurationObject> configurations) {
-    	return configurations.stream().filter(item -> ConfigurationType.FILEORDERSOURCE.equals(item.getObjectType())
-    			&& ((FileOrderSourceEdit)item).getConfiguration().getWorkflowName().equals(name)).collect(Collectors.toSet());
+//        Set<ConfigurationObject> returnValues = new HashSet<ConfigurationObject>();
+//        for(ConfigurationObject item : configurations) {
+//            if (ConfigurationType.FILEORDERSOURCE.equals(item.getObjectType()) && ((FileOrderSourceEdit)item).getConfiguration().getWorkflowName().equals(name)) {
+//                returnValues.add(item);
+//            }
+//        }
+//        return returnValues;
+        if(configurations == null) {
+            return Collections.emptySet();
+        }
+        return configurations.stream().filter(item -> ConfigurationType.FILEORDERSOURCE.equals(item.getObjectType()) 
+                && ((FileOrderSourceEdit) item).getConfiguration().getWorkflowName().equals(name)).collect(Collectors.toSet());
     }
 
     private static Set<ConfigurationObject> getUsedSchedulesFromArchiveByWorkflowName (String name, List<ConfigurationObject> configurations) {
+        if(configurations == null) {
+            return Collections.emptySet();
+        }
         return configurations.stream()
                 .filter(item -> (((ScheduleEdit)item).getConfiguration().getWorkflowNames() != null 
                     && ((ScheduleEdit)item).getConfiguration().getWorkflowNames().contains(name))
@@ -458,30 +489,32 @@ public class ImportUtils {
                 .collect(Collectors.toSet());
     }
 
-    private static Set<ConfigurationObject> getUsedSchedulesFromArchiveByCalendarName (String name, List<ConfigurationObject> configurations) {
-    	return configurations.stream()
-    			.map(item -> {
-    	    		if (ConfigurationType.SCHEDULE.equals(item.getObjectType())) {
-    	    			List<AssignedCalendars> assignedCalendars = ((ScheduleEdit)item).getConfiguration().getCalendars();
-    	    			List<AssignedNonWorkingDayCalendars> assignedNonWorkingDaysCalendars = 
-    	    					((ScheduleEdit)item).getConfiguration().getNonWorkingDayCalendars();
-    	    			if (assignedCalendars != null) {
-        	    			for (AssignedCalendars calendar : assignedCalendars) {
-        	    				if (calendar.getCalendarName().equals(name)) {
-        	    					return item;
-        	    				}
-        	    			}
-    	    			}
-    	    			if (assignedNonWorkingDaysCalendars != null) {
-        	    			for (AssignedNonWorkingDayCalendars calendar : assignedNonWorkingDaysCalendars) {
-        	    				if (calendar.getCalendarName().equals(name)) {
-        	    					return item;
-        	    				}
-        	    			}
-    	    			}
-    	    		}
-    	    		return null;
-    			}).filter(Objects::nonNull).collect(Collectors.toSet());
+    private static Set<ConfigurationObject> getUsedSchedulesFromArchiveByCalendarName(String name, List<ConfigurationObject> configurations) {
+        if (configurations == null) {
+            return Collections.emptySet();
+        }
+        return configurations.stream().map(item -> {
+            if (ConfigurationType.SCHEDULE.equals(item.getObjectType())) {
+                List<AssignedCalendars> assignedCalendars = ((ScheduleEdit) item).getConfiguration().getCalendars();
+                List<AssignedNonWorkingDayCalendars> assignedNonWorkingDaysCalendars = ((ScheduleEdit) item).getConfiguration()
+                        .getNonWorkingDayCalendars();
+                if (assignedCalendars != null) {
+                    for (AssignedCalendars calendar : assignedCalendars) {
+                        if (calendar.getCalendarName().equals(name)) {
+                            return item;
+                        }
+                    }
+                }
+                if (assignedNonWorkingDaysCalendars != null) {
+                    for (AssignedNonWorkingDayCalendars calendar : assignedNonWorkingDaysCalendars) {
+                        if (calendar.getCalendarName().equals(name)) {
+                            return item;
+                        }
+                    }
+                }
+            }
+            return null;
+        }).filter(Objects::nonNull).collect(Collectors.toSet());
     }
     
     public static List<ConfigurationType> getImportOrder() {
