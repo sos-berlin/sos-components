@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.SOSShell;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCJsonCommand;
+import com.sos.joc.classes.JocCertificate;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.agent.AgentHelper;
 import com.sos.joc.classes.proxy.Proxies;
@@ -37,6 +38,7 @@ public class JocServletContainer extends ServletContainer {
         SOSShell.printSystemInfos();
         SOSShell.printJVMInfos();
         Globals.readUnmodifiables();
+        updateCertificate();
         try {
             Globals.setProperties();
         } catch (Exception e) {
@@ -61,4 +63,10 @@ public class JocServletContainer extends ServletContainer {
         }
     }
 
+    private void updateCertificate() {
+        System.setProperty("jetty.base", "C:\\ProgramData\\sos-berlin.com\\js7\\joc\\jetty_base");
+        JocCertificate jocCertificate = JocCertificate.getInstance();
+        jocCertificate.updateCertificate();
+    }
+    
 }
