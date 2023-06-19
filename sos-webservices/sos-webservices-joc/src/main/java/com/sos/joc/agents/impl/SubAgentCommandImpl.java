@@ -8,9 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import jakarta.ws.rs.Path;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +37,7 @@ import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
 
 import io.vavr.control.Either;
+import jakarta.ws.rs.Path;
 import js7.base.web.Uri;
 import js7.data.agent.AgentPath;
 import js7.data.controller.ControllerCommand;
@@ -99,8 +97,8 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
                             + "') cannot be deleted. Change the primary director or delete the whole Agent cluster.");
                 });
 
-                final Stream<JUpdateItemOperation> subAgents = subAgentsMap.get(true).stream().map(SubagentId::of).map(
-                        JUpdateItemOperation::deleteSimple);
+                final Set<JUpdateItemOperation> subAgents = subAgentsMap.get(true).stream().map(SubagentId::of).map(
+                        JUpdateItemOperation::deleteSimple).collect(Collectors.toSet());
                 
                 // if secondary director will be deleted then change the AgentRef settings in that way that only the primary is specified.
                 // and add to delete command
@@ -109,7 +107,7 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
 //                                s -> JAgentRef.of(AgentPath.of(s.getAgentId()), SubagentId.of(s.getSubAgentId()))).map(
 //                                        JUpdateItemOperation::addOrChangeSimple).collect(Collectors.toList()));
 
-                proxy.api().updateItems(Flux.fromStream(subAgents)).thenAccept(e -> {
+                proxy.api().updateItems(Flux.fromIterable(subAgents)).thenAccept(e -> {
                     ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), null);
                     if (e.isRight()) {
                         SOSHibernateSession connection1 = null;
@@ -183,10 +181,10 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
                             + "') cannot be revoked. Change the primary director or revoke the whole Agent cluster.");
                 });
 
-                final Stream<JUpdateItemOperation> subAgents = subAgentsMap.get(true).stream().map(SubagentId::of).map(
-                        JUpdateItemOperation::deleteSimple);
+                final Set<JUpdateItemOperation> subAgents = subAgentsMap.get(true).stream().map(SubagentId::of).map(
+                        JUpdateItemOperation::deleteSimple).collect(Collectors.toSet());
                 
-                proxy.api().updateItems(Flux.fromStream(subAgents)).thenAccept(e -> {
+                proxy.api().updateItems(Flux.fromIterable(subAgents)).thenAccept(e -> {
                     ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), null);
                     if (e.isRight()) {
                         SOSHibernateSession connection1 = null;
@@ -312,11 +310,11 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
             if (subAgentsMap.containsKey(true)) {
                 
                 final List<String> subagentIds = subAgentsMap.get(true);
-                final Stream<JUpdateItemOperation> subAgents = dbSubAgents.stream().filter(s -> subagentIds.contains(s.getSubAgentId())).map(
+                final Set<JUpdateItemOperation> subAgents = dbSubAgents.stream().filter(s -> subagentIds.contains(s.getSubAgentId())).map(
                         s -> JSubagentItem.of(SubagentId.of(s.getSubAgentId()), AgentPath.of(s.getAgentId()), Uri.of(s.getUri()), disabled)).map(
-                                JUpdateItemOperation::addOrChangeSimple);
+                                JUpdateItemOperation::addOrChangeSimple).collect(Collectors.toSet());
 
-                proxy.api().updateItems(Flux.fromStream(subAgents)).thenAccept(e -> {
+                proxy.api().updateItems(Flux.fromIterable(subAgents)).thenAccept(e -> {
                     ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), null);
                     if (e.isRight()) {
                         SOSHibernateSession connection1 = null;

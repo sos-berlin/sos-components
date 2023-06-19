@@ -668,7 +668,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             return CompletableFuture.supplyAsync(() -> Either.right(null));
 
         default: // case REMOVE_WHEN_TERMINATED
-            return ControllerApi.of(controllerId).deleteOrdersWhenTerminated(jOrders.stream().map(JOrder::id).collect(Collectors.toSet()));
+            return ControllerApi.of(controllerId).deleteOrdersWhenTerminated(oIdsStream.collect(Collectors.toSet()));
         }
     }
     
