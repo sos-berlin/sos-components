@@ -43,13 +43,19 @@ public class JocCertificate {
         return jocCert;
     }
 
+    public static synchronized void updateCertificate() {
+        try {
+            JocCertificate jocCertificate = JocCertificate.getInstance();
+            jocCertificate.updateCertificate(null, Globals.getClusterId(), Globals.getMemberId(), Globals.getOrdering());
+        } catch (Exception e) {
+            LOGGER.warn(e.toString(), e);
+        }
+    }
+
+    
     @Subscribe({ NewJocAddedEvent.class })
     public synchronized void updateCertificate (NewJocAddedEvent event) {
         updateCertificate(event.getJocId(), event.getClusterId(), event.getMemberId(), event.getOrdering());
-    }
-    
-    public synchronized void updateCertificate () {
-        updateCertificate(null, Globals.getClusterId(), Globals.getMemberId(), Globals.getOrdering());
     }
     
     private synchronized void updateCertificate(Long jocId, String clusterId, String memberId, Integer ordering) {
@@ -77,11 +83,10 @@ public class JocCertificate {
         String keyStorePw = Globals.sosCockpitProperties.getProperty("keystore_password", "jobscheduler");
         String keyStoreType = Globals.sosCockpitProperties.getProperty("keystore_type", "PKCS12");
         LOGGER.debug("KeyStore type: " + keyStoreType);
-//        String keyStoreEntryPw = Globals.sosCockpitProperties.getProperty("key_password", "jobscheduler");
         String keyStoreAlias = Globals.sosCockpitProperties.getProperty("keystore_alias", "");
         LOGGER.debug("KeyStore alias: " + keyStoreAlias);
-        LOGGER.debug("reading KeyStore from " + keyStorePath);
         if(keyStorePath != null &&  Files.exists(keyStorePath)) {
+            LOGGER.debug("reading KeyStore from " + keyStorePath);
             try {
                 KeyStore keystore = KeyStoreUtil.readKeyStore(keyStorePath, KeystoreType.fromValue(keyStoreType), keyStorePw);
                 X509Certificate certificate =  KeyStoreUtil.getX509CertificateFromKeyStore(keystore, keyStoreAlias);
