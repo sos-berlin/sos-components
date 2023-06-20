@@ -11,9 +11,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import jakarta.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
@@ -34,6 +31,7 @@ import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
+import jakarta.ws.rs.Path;
 import js7.data.agent.AgentPath;
 import js7.data.subagent.SubagentId;
 import js7.data_for_java.agent.JAgentRef;
@@ -210,11 +208,11 @@ public class AgentsStandaloneCommandImpl extends JOCResourceImpl implements IAge
             }
             if (!directors.isEmpty()) {
 
-                final Stream<JUpdateItemOperation> subAgents = directors.values().stream().map(s -> subagentsOnController.get(s)).filter(
+                final Set<JUpdateItemOperation> subAgents = directors.values().stream().map(s -> subagentsOnController.get(s)).filter(
                         Objects::nonNull).map(s -> JSubagentItem.of(s.id(), s.agentPath(), s.uri(), disabled)).map(
-                                JUpdateItemOperation::addOrChangeSimple);
+                                JUpdateItemOperation::addOrChangeSimple).collect(Collectors.toSet());
 
-                proxy.api().updateItems(Flux.fromStream(subAgents)).thenAccept(e -> {
+                proxy.api().updateItems(Flux.fromIterable(subAgents)).thenAccept(e -> {
                     ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), null);
                     if (e.isRight()) {
                         SOSHibernateSession connection1 = null;

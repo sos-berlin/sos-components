@@ -48,13 +48,14 @@ public class DocumentationsResourceImpl extends JOCResourceImpl implements IDocu
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DocumentationDBLayer dbLayer = new DocumentationDBLayer(sosHibernateSession);
             List<DBItemDocumentation> dbDocs = new ArrayList<DBItemDocumentation>();
-            Stream<String> types = null;
+            Set<String> types = null;
             if (documentationsFilter.getTypes() != null && !documentationsFilter.getTypes().isEmpty()) {
                 if (documentationsFilter.getTypes().contains("assigntypes")) {
                     documentationsFilter.getTypes().remove("assigntypes");
-                    types = Stream.concat(documentationsFilter.getTypes().stream(), DocumentationHelper.ASSIGN_TYPES.stream());
+                    types = Stream.concat(documentationsFilter.getTypes().stream(), DocumentationHelper.ASSIGN_TYPES.stream()).map(
+                            String::toLowerCase).collect(Collectors.toSet());
                 } else {
-                    types = documentationsFilter.getTypes().stream();
+                    types = documentationsFilter.getTypes().stream().map(String::toLowerCase).collect(Collectors.toSet());
                 }
             }
             boolean onlyWithAssignReference = documentationsFilter.getOnlyWithAssignReference() == Boolean.TRUE;

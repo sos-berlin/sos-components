@@ -1,6 +1,7 @@
 package com.sos.joc.db.documentation;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -227,7 +228,7 @@ public class DocumentationDBLayer {
         return getDocumentations(null, folder, false, onlyWithAssignReference);
     }
 
-    public List<DBItemDocumentation> getDocumentations(Stream<String> types, String folder, boolean recursive, boolean onlyWithAssignReference)
+    public List<DBItemDocumentation> getDocumentations(Collection<String> types, String folder, boolean recursive, boolean onlyWithAssignReference)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
@@ -242,7 +243,7 @@ public class DocumentationDBLayer {
                     clauses.add("folder = :folder");
                 }
             }
-            if (types != null) {
+            if (types != null && !types.isEmpty()) {
                 clauses.add("type in (:types)");
             }
             if (onlyWithAssignReference) {
@@ -263,8 +264,8 @@ public class DocumentationDBLayer {
                     query.setParameter("folder", folder);
                 }
             }
-            if (types != null) {
-                query.setParameterList("types", types.map(String::toLowerCase).collect(Collectors.toSet()));
+            if (types != null && !types.isEmpty()) {
+                query.setParameterList("types", types);
             }
             if (onlyWithAssignReference) {
                 query.setParameter("isRef", true);

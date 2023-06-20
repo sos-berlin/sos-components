@@ -29,10 +29,10 @@ public class SOSCheckJavaVariableName {
     private static final Predicate<String> halfFullWidthPunctuationAndSymbolChars = halfFullWidthPunctuationAndSymbolCharsPattern.asPredicate();
     
 //    private static final Predicate<String> digits = Pattern.compile("\\d").asPredicate();
-    private static final Pattern leadingHyphensAndDotsPattern = Pattern.compile("^[.-]");
-    private static final Predicate<String> leadingHyphensAndDots = leadingHyphensAndDotsPattern.asPredicate();
-    private static final Pattern trailingHyphensAndDotsPattern = Pattern.compile("[.-]$");
-    private static final Predicate<String> trailingHyphensAndDots = trailingHyphensAndDotsPattern.asPredicate();
+    private static final Pattern leadingHyphensDotsAndUnderlinesPattern = Pattern.compile("^[_.-]");
+    private static final Predicate<String> leadingHyphensDotsAndUnderlines = leadingHyphensDotsAndUnderlinesPattern.asPredicate();
+    private static final Pattern trailingHyphensDotsAndUnderlinesPattern = Pattern.compile("[_.-]$");
+    private static final Predicate<String> trailingHyphensDotsAndUnderlines = trailingHyphensDotsAndUnderlinesPattern.asPredicate();
     private static final Pattern consecutiveHyphensAndDotsPattern = Pattern.compile("\\.\\.+|--+");
     private static final Predicate<String> consecutiveHyphensAndDots = consecutiveHyphensAndDotsPattern.asPredicate();
 
@@ -51,7 +51,7 @@ public class SOSCheckJavaVariableName {
             put(Result.RESERVED, "'%s': '%s' is a reserved word and must not be used");
             put(Result.EMPTY, "'%s' must not be empty");
             //put(Result.DIGIT, "'%s': '%s' must not begin with a number");
-            put(Result.LEADING_OR_TRAILING, "'%s': '%s' must not begin or end with a hypen or dot");
+            put(Result.LEADING_OR_TRAILING, "'%s': '%s' must not begin or end with a hyphen, dot or underline");
             put(Result.IN_A_ROW, "'%s': '%s' must not contain consecutive hyphens or dots");
             put(Result.SPACE, "Spaces are not allowed in '%s': '%s'");
         }
@@ -95,7 +95,7 @@ public class SOSCheckJavaVariableName {
 //        if (digits.test(value.substring(0, 1))) {
 //            return errorMessages.get(Result.DIGIT);
 //        }
-        if (leadingHyphensAndDots.test(value) || trailingHyphensAndDots.test(value)) {
+        if (leadingHyphensDotsAndUnderlines.test(value) || trailingHyphensDotsAndUnderlines.test(value)) {
             return errorMessages.get(Result.LEADING_OR_TRAILING);
         }
         if (consecutiveHyphensAndDots.test(value)) {
@@ -120,8 +120,8 @@ public class SOSCheckJavaVariableName {
         value = value.replaceAll("\\s+", "-");
         value = value.replaceAll("--+", "-");
         value = value.replaceAll("\\.\\.+", ".");
-        value = leadingHyphensAndDotsPattern.matcher(value).replaceAll("");
-        value = trailingHyphensAndDotsPattern.matcher(value).replaceAll("");
+        value = leadingHyphensDotsAndUnderlinesPattern.matcher(value).replaceAll("");
+        value = trailingHyphensDotsAndUnderlinesPattern.matcher(value).replaceAll("");
         if (javaReservedWords.contains(value)) {
             value = value.substring(0, 1).toUpperCase() + value.substring(1);
         }

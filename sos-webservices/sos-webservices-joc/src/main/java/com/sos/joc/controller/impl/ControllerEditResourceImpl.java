@@ -443,7 +443,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                     controllerApi = ControllerApi.of(controllerId);
                 }
 
-                controllerApi.updateItems(Flux.fromStream(agentWatchers.stream().map(a -> {
+                controllerApi.updateItems(Flux.fromIterable(agentWatchers.stream().map(a -> {
                     JAgentRef agentRef = knownAgents.get(AgentPath.of(a.getAgentId()));
 
                     String subagentIdFromRequest = a.getAgentId();
@@ -457,7 +457,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                     return Arrays.asList(JUpdateItemOperation.addOrChangeSimple(createAgent(a, subagentId)), JUpdateItemOperation
                             .addOrChangeSimple(createSubagentDirector(a, subagentId)));
                 
-                }).flatMap(List::stream))).thenAccept(e -> {
+                }).flatMap(List::stream).collect(Collectors.toSet()))).thenAccept(e -> {
                     ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), null);
                     if (e.isRight()) {
                         SOSHibernateSession connection1 = null;
