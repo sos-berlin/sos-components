@@ -70,6 +70,7 @@ public class ExecuteRollOut {
     
     public static final String PRIVATE_CONF_JS7_PARAM_CONFDIR = "js7.config-directory";
 
+    private static final String DEFAULT_DN_WITHOUT_CN = ", OU=default, O=default, C=DE, L=Berlin, ST=Berlin";
     private static final String WS_API = "/joc/api/authentication/certificate/create";
     private static final String HELP = "--help";
     private static final String DN_ONLY = "--dn-only";
@@ -223,8 +224,29 @@ public class ExecuteRollOut {
                     dnOnly = true;
                 }
             }
+            String hostname = InetAddress.getLocalHost().getCanonicalHostName(); 
+            if(subjectDN == null || subjectDN.isEmpty()) {
+                String container = "";
+                if(hostname.contains(".")) {
+                    container = "CN=" + hostname.substring(0, hostname.indexOf("."));// automatically determined
+                } else {
+                    container = "CN=" + hostname;// automatically determined
+                }
+                String organizationUnit = "OU=" + "Default"; // cannot be automatically determined
+                String organization = "O=" + "Default"; // cannot be automatically determined
+                String location = "L=" + "Default"; // cannot be automatically determined
+                String state = "ST=" + "Default"; // cannot be automatically determined
+                String country = "C=" + System.getProperty("user.country");// automatically determined
+                subjectDN = Arrays.asList(hostname, organizationUnit, organization, location, state, country).stream().collect(Collectors.joining(", "));
+            }
+            if(san == null | san.isEmpty()) {
+                if(hostname.contains(".")) {
+                    san = hostname + ", " + hostname.substring(0, hostname.indexOf("."));
+                } else {
+                    san = hostname;
+                }
+            }
             readConfig();
-//            setKeyStoreCredentials();
             try {
                 createClient();
                 String response = callWebService();
@@ -765,7 +787,11 @@ public class ExecuteRollOut {
         String hostname = InetAddress.getLocalHost().getCanonicalHostName();
         String response = "";
         if(jocUri != null) {
-            return client.postRestService(jocUri.resolve(WS_API), createRequestBody(subjectDN, hostname));
+            if(subjectDN != null && !subjectDN.isEmpty()) {
+                return client.postRestService(jocUri.resolve(WS_API), createRequestBody(subjectDN, hostname));
+            } else {
+                
+            }
         } else if (!jocUris.isEmpty()) {
             for (URI uri : jocUris) {
                 try {
