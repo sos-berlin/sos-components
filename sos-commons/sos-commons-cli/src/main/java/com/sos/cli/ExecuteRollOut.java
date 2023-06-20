@@ -41,7 +41,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.sos.commons.exception.SOSException;
 import com.sos.commons.httpclient.SOSRestApiClient;
+import com.sos.commons.httpclient.exception.SOSConnectionRefusedException;
 import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.certificate.CertificateUtils;
 import com.sos.commons.sign.keys.key.KeyUtil;
@@ -99,6 +101,7 @@ public class ExecuteRollOut {
     private static final String PRIVATE_CONF_FILENAME = "private.conf";
     private static final String PRIVATE_CONF_JS7_PARAM_WEB = "js7.web";
     private static final String PRIVATE_CONF_JS7_PARAM_JOCURL = "js7.web.joc.url";
+    private static final String PRIVATE_CONF_JS7_PARAM_API_SERVER = "js7.web.api-server";
     private static final String PRIVATE_CONF_JS7_PARAM_KEYSTORE_FILEPATH = "js7.web.https.keystore.file";
     private static final String PRIVATE_CONF_JS7_PARAM_KEYSTORE_KEYPWD = "js7.web.https.keystore.key-password";
     private static final String PRIVATE_CONF_JS7_PARAM_KEYSTORE_STOREPWD = "js7.web.https.keystore.store-password";
@@ -128,6 +131,7 @@ public class ExecuteRollOut {
     private static String subjectDN;
     private static String san;
     private static URI jocUri;
+    private static List<URI> jocUris = new ArrayList<URI>();;
     private static String srcKeystore;
     private static String srcKeystoreType = "PKCS12";
     private static String srcKeystorePasswd;
@@ -224,6 +228,9 @@ public class ExecuteRollOut {
             try {
                 createClient();
                 String response = callWebService();
+                if(client.getHttpResponse() == null) {
+                    throw new Exception("no connection to any api-server url could be established, latest error: " + response);
+                }
                 if (client.statusCode() != 200) {
                     String message = "";
                     try {
@@ -290,24 +297,28 @@ public class ExecuteRollOut {
     
     private static String parseErrorResponse(String response) throws IOException {
 //      ^.*code\":\"(.*)\",\"message\":\"([.[^\"]]*)(.*)$
-        Pattern pattern = Pattern.compile("^.*code\\\":\\\"(.*)\\\",\\\"message\\\":\\\"([.[^\\\"]]*).*$");
-        String code = "";
-        String message = "";
-        Reader reader = new StringReader(response);
-        BufferedReader buff = new BufferedReader(reader);
-        String line = null;
-        while ((line = buff.readLine()) != null) {
-            if (line.trim().length() == 0) {
-                continue;
+        try {
+            Pattern pattern = Pattern.compile("^.*code\\\":\\\"(.*)\\\",\\\"message\\\":\\\"([.[^\\\"]]*).*$");
+            String code = "";
+            String message = "";
+            Reader reader = new StringReader(response);
+            BufferedReader buff = new BufferedReader(reader);
+            String line = null;
+            while ((line = buff.readLine()) != null) {
+                if (line.trim().length() == 0) {
+                    continue;
+                }
+                Matcher matcher = pattern.matcher(line);
+                if(matcher.matches()) {
+                    code = matcher.group(1);
+                    message = matcher.group(2);
+                    continue;
+                }
             }
-            Matcher matcher = pattern.matcher(line);
-            if(matcher.matches()) {
-                code = matcher.group(1);
-                message = matcher.group(2);
-                continue;
-            }
+            return code + " : " + message;
+        } catch (Exception e) {
+            return response;
         }
-        return code + " : " + message;
     }
     
     private static void updatePrivateConf (Config config, RolloutResponse response) throws Exception {
@@ -320,7 +331,6 @@ public class ExecuteRollOut {
         } else {
             config = addToNewList(config, dnPath, response.getDNs());
         }
-        // TODO: add js7.web section if not exists
         if(response.getJocConfs() != null) {
             for (JocConf joc : response.getJocConfs()) {
                 if(response.getAgentId() == null) {
@@ -384,10 +394,6 @@ public class ExecuteRollOut {
         return config.withValue(configPath, configValue);
     }
     
-    private static void addJs7WebSectionIfNotExists(final Config config) {
-        
-    }
-    
     private static void saveConfigToFile(final Config config) throws IOException {
         String configAsHoconString = config.root().render(RENDER_OPTIONS);
         configAsHoconString = configAsHoconString.replace(confDir, "${" + PRIVATE_CONF_JS7_PARAM_CONFDIR + "}");
@@ -429,7 +435,6 @@ public class ExecuteRollOut {
             keyStore = KeyStoreUtil.readKeyStore(credentials.getPath(), KeystoreType.PKCS12, credentials.getStorePwd());
         } else {
             //default
-            // TODO: create default path
             keyStore = KeyStoreUtil.readKeyStore("", KeystoreType.PKCS12, null);
         }
     }
@@ -587,14 +592,46 @@ public class ExecuteRollOut {
             }
             String jocUriFromConfig = "";
             try {
+                // old state of agents private.conf path=js7.web.joc.url - type=String
+                // e.g. js7.web.joc{"url"="https://hostname:port"}
                 jocUriFromConfig = resolved.getString(PRIVATE_CONF_JS7_PARAM_JOCURL);
                 System.out.println("JOC Url (private.conf): " + jocUriFromConfig);
             } catch (Exception e) {}
             if (!SOSString.isEmpty(jocUriFromConfig) && jocUri == null) {
                 jocUri = URI.create(jocUriFromConfig);
+            } else {
+                if(resolved.hasPath(PRIVATE_CONF_JS7_PARAM_API_SERVER)) {
+                    try {
+                        // current state of agents private.conf path js7.web.api-server.url - type=String
+                        // e.g. js7.web.api-server {"url"="https://hostname:port"}
+                        String uri = resolved.getString(PRIVATE_CONF_JS7_PARAM_API_SERVER + ".url");
+                        jocUri = URI.create(uri);
+                    } catch (Exception e) {
+                        try {
+                            // possible future state of agents private.conf path js7.web.api-server.url - type StringList
+                            // e.g. js7.web.api-server.url= ["https://hostname:port","https://hostname2:port2"]
+                            // or js7.web.api-server { url= ["https://hostname:port","https://hostname2:port2"]}
+                            List<String> uris = resolved.getStringList(PRIVATE_CONF_JS7_PARAM_API_SERVER + ".url");
+                            for(String uri : uris) {
+                                URI url = URI.create(uri);
+                                jocUris.add(url);
+                            }
+                        } catch (Exception e1) {
+                            // possible future state of agents private.conf path js7.web.api-server - type ConfigList
+                            // e.g. js7.web.api-server= [{"url" = "https://hostname:port"},{"url" = "https://hostname2:port2"}]
+                            List<Config> objects = (List<Config>) resolved.getConfigList(PRIVATE_CONF_JS7_PARAM_API_SERVER);
+                            for(Config cfg : objects) {
+                                if(cfg.hasPath("url")) {
+                                    URI url = URI.create(cfg.getString("url"));
+                                    jocUris.add(url);
+                                }
+                            }
+                        }
+                    }
+                }
             }
-            if (jocUri == null) {
-                throw new Exception("missing jocUri");
+            if (jocUri == null && jocUris.isEmpty()) {
+                throw new Exception("missing api-server url");
             }
             
             List<KeyStoreCredentials> truststoresCredentials = readTruststoreCredentials(resolved);
@@ -716,7 +753,28 @@ public class ExecuteRollOut {
         client.addHeader("Content-Type", "application/json");
         client.addHeader("Accept", "application/json");
         String hostname = InetAddress.getLocalHost().getCanonicalHostName();
-        return client.postRestService(jocUri.resolve(WS_API), createRequestBody(subjectDN, hostname));
+        String response = "";
+        if(jocUri != null) {
+            return client.postRestService(jocUri.resolve(WS_API), createRequestBody(subjectDN, hostname));
+        } else if (!jocUris.isEmpty()) {
+            for (URI uri : jocUris) {
+                try {
+                    response = client.postRestService(uri.resolve(WS_API), createRequestBody(subjectDN, hostname));
+                } catch(SOSConnectionRefusedException e) {
+                    response = e.getMessage();
+                    continue;
+                } catch (JsonProcessingException | InvalidNameException | SOSException e) {
+                    response = e.getMessage();
+                    continue;
+                }
+                if (client.statusCode() != 200) {
+                    continue;
+                } else {
+                    return response;
+                }
+            }
+        }
+        return response;
     }
     
     private static String getPriorizedKeystoreKey() {

@@ -349,7 +349,7 @@ public class ExecuteRollOutTest {
 
     private String[] createAgentArgsLocalConfigTest() {
         System.setProperty(ExecuteRollOut.PRIVATE_CONF_JS7_PARAM_CONFDIR, "C:/sp/devel/js7/testing/2023-06-18/agent/config");
-        String token = "b60c26f1-aed2-4fe6-a45f-01a772f9ba03";
+        String token = "3b9abae3-7de6-4107-8310-d9f9ff9c1e47";
         String dn = "CN=sp, OU=development, O=SOS, C=DE, L=Berlin, ST=Berlin";
         String jocUri = "http://sp.sos:4444";
         String srcKeystore = "C:/ProgramData/sos-berlin.com/js7/agent_2222/config/private/https-keystore.p12";
