@@ -286,11 +286,19 @@ public class ExecuteRollOut {
                 passwd = DEFAULT_STORE_PWD;
             }
         }
-        Files.createDirectories(path.getParent());
+        if(!Files.exists(path.getParent())) {
+            Files.createDirectories(path.getParent());
+        }
         keystore = KeyStore.getInstance(KeystoreType.PKCS12.value().toLowerCase());
-        try (OutputStream os = Files.newOutputStream(path)){
-            keystore.load(null, passwd.toCharArray());
-            keystore.store(os, passwd.toCharArray());
+        if(!Files.exists(path)) {
+            try (OutputStream os = Files.newOutputStream(path)){
+                keystore.load(null, passwd.toCharArray());
+                keystore.store(os, passwd.toCharArray());
+            }
+        } else {
+            try (OutputStream os = Files.newOutputStream(path)){
+                keystore.load(Files.newInputStream(path), passwd.toCharArray());
+            }
         }
         return keystore;
     }
@@ -396,7 +404,8 @@ public class ExecuteRollOut {
     
     private static void saveConfigToFile(final Config config) throws IOException {
         String configAsHoconString = config.root().render(RENDER_OPTIONS);
-        configAsHoconString = configAsHoconString.replace(confDir, "${" + PRIVATE_CONF_JS7_PARAM_CONFDIR + "}");
+        configAsHoconString = configAsHoconString.replaceAll("\"(" + Pattern.quote(confDir) + "|" + Pattern.quote("${" + PRIVATE_CONF_JS7_PARAM_CONFDIR + "}")+ ")",
+                "\\${" + PRIVATE_CONF_JS7_PARAM_CONFDIR + "}\"");
         Files.write(Paths.get(confDir).resolve(PRIVATE_FOLDER_NAME).resolve(PRIVATE_CONF_FILENAME), configAsHoconString.getBytes());
     }
     
@@ -637,9 +646,10 @@ public class ExecuteRollOut {
             List<KeyStoreCredentials> truststoresCredentials = readTruststoreCredentials(resolved);
             Optional<KeyStore> truststoreOptional = null;
             try {
-                System.out.println("read Trustore from: " + resolved.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY).get(0).getString(PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH));
-                truststoreOptional = truststoresCredentials.stream()
-                        .filter(item -> item.getPath().endsWith(DEFAULT_TRUSTSTORE_FILENAME)).map(item -> {
+                System.out.println("read Trustore from: " 
+                        + resolved.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY).get(0).getString(PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH));
+                truststoreOptional = truststoresCredentials.stream().filter(item -> item.getPath().endsWith(DEFAULT_TRUSTSTORE_FILENAME))
+                        .map(item -> {
                             try {
                                 return KeyStoreUtil.readTrustStore(item.getPath(), KeystoreType.PKCS12, item.getStorePwd());
                             } catch (Exception e) {
