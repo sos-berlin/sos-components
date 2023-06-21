@@ -43,17 +43,11 @@ import com.sos.joc.exceptions.JocException;
 public class SOSOpenIdHandler {
 
     private static final String PREFERRED_USERNAME = "preferred_username";
-
     private static final String EMAIL = "email";
-
     private static final String CLAIMS_SUPPORTED = "claims_supported";
-
     private static final String WELL_KNOWN_OPENID_CONFIGURATION = "/.well-known/openid-configuration";
-
     private static final String JWKS_URI_ENDPOINT = "jwks_uri";
-
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSOpenIdHandler.class);
-
     private static final String EXPIRATION_FIELD = "exp";
     private static final String ISS_FIELD = "iss";
     private static final String AUD_FIELD = "aud";

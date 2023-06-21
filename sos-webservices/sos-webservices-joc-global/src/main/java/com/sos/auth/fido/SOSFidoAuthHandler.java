@@ -94,6 +94,10 @@ public class SOSFidoAuthHandler {
                 iamAccountFilter.setAccountName(sosFidoAuthWebserviceCredentials.getAccount());
                 iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
                 DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getUniqueAccount(iamAccountFilter);
+                if (dbItemIamAccount == null) {
+                    throw new JocObjectNotExistException("Could not find account for given credential-id");
+                    
+                }
                 iamFidoDevicesFilter.setAccountId(dbItemIamAccount.getId());
                 iamFidoDevicesFilter.setOrigin(sosFidoClientData.getOrigin());
                 iamFidoDevicesFilter.setCredentialId(sosFidoAuthWebserviceCredentials.getCredentialId());

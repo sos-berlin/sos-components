@@ -1,9 +1,12 @@
 package com.sos.joc.security.impl;
 
 import java.io.InputStream;
+import java.net.SocketException;
+import java.net.URI;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
@@ -11,7 +14,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.auth.classes.SOSAuthHelper;
+import com.sos.auth.classes.SOSFormCaller;
+import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCJsonCommand;
@@ -28,6 +34,7 @@ import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.documentation.impl.DocumentationResourceImpl;
 import com.sos.joc.documentations.impl.DocumentationsImportResourceImpl;
+import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
@@ -39,6 +46,8 @@ import com.sos.joc.model.security.identityservice.IdentityProviders;
 import com.sos.joc.model.security.identityservice.IdentityServiceFilter;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 import com.sos.joc.model.security.identityservice.OidcIdentityProvider;
+import com.sos.joc.model.security.oidc.OidcToken;
+import com.sos.joc.model.security.oidc.OidcTokenAnswer;
 import com.sos.joc.security.resource.IOidcResource;
 import com.sos.schema.JsonValidator;
 
@@ -49,6 +58,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OidcResourceImpl.class);
 
+    private static final String API_CALL_TOKEN = "./iam/oidc/token";
     private static final String API_CALL_IDENTITY_PROVIDERS = "./iam/identityproviders";
     private static final String API_CALL_IDENTITY_CLIENTS = "./iam/identitycliens";
     private static final String API_CALL_IMPORT_ICON = "./iam/import";
@@ -135,8 +145,8 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
                 }
                 if (dbItemIamIdentityService.getSecondFactor()) {
                     identityProviders.getFido2ndFactorServiceItems().add(fidoIdentityProvider);
-                }else {
-                identityProviders.getFidoServiceItems().add(fidoIdentityProvider);
+                } else {
+                    identityProviders.getFidoServiceItems().add(fidoIdentityProvider);
                 }
             }
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityProviders));
@@ -192,6 +202,57 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
             }
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityProvider));
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(sosHibernateSession);
+        }
+    }
+
+
+    @Override
+    public JOCDefaultResponse postToken(byte[] body) {
+        SOSHibernateSession sosHibernateSession = null;
+        try {
+
+            initLogging(API_CALL_TOKEN, body);
+            JsonValidator.validateFailFast(body, IdentityServiceFilter.class);
+            OidcToken oidcToken = Globals.objectMapper.readValue(body, OidcToken.class);
+
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_IDENTITY_CLIENTS);
+            IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
+            IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
+            filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC);
+            filter.setDisabled(false);
+            filter.setIdentityServiceName(oidcToken.getIdentityServiceName());
+            List<DBItemIamIdentityService> listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
+
+            OidcTokenAnswer oidcTokenAnswer = new OidcTokenAnswer();
+            if (listOfIdentityServices.size() > 0) {
+                JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
+                JocConfigurationFilter jocConfigurationFilter = new JocConfigurationFilter();
+                jocConfigurationFilter.setConfigurationType(SOSAuthHelper.CONFIGURATION_TYPE_IAM);
+                jocConfigurationFilter.setName(listOfIdentityServices.get(0).getIdentityServiceName());
+                jocConfigurationFilter.setObjectType(IdentityServiceTypes.OIDC.value());
+                List<DBItemJocConfiguration> listOfJocConfigurations = jocConfigurationDBLayer.getJocConfigurationList(jocConfigurationFilter, 0);
+                if (listOfJocConfigurations.size() == 1) {
+                    DBItemJocConfiguration dbItem = listOfJocConfigurations.get(0);
+                    com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(dbItem.getConfigurationItem(),
+                            com.sos.joc.model.security.properties.Properties.class);
+
+                    if (properties.getOidc() != null) {
+                         URI uri=null;
+                        Map<String,String> params = null;
+                        
+                       String response = SOSFormCaller.getFormResponse(true, uri, params, "xAccessToken", null);
+                    }
+                }
+            }
+
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(oidcTokenAnswer));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
