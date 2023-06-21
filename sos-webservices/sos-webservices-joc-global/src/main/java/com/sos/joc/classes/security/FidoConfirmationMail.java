@@ -101,10 +101,10 @@ public class FidoConfirmationMail {
 
         mail.addRecipient(to);
         if (cc != null && !cc.isEmpty()) {
-            mail.addAttachment(cc);
+            mail.addCC(cc);
         }
         if (bcc != null && !bcc.isEmpty()) {
-            mail.addAttachment(bcc);
+            mail.addBCC(bcc);
         }
 
         if (subject == null || subject.isEmpty()) {
