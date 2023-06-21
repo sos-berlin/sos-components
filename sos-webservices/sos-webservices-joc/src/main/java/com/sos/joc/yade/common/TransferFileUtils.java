@@ -32,14 +32,21 @@ public class TransferFileUtils {
         if (!SOSString.isEmpty(item.getTargetPath())) {
             file.setTargetName(getBasenameFromPath(item.getTargetPath()));
         }
-        file.setState(getState(TransferEntryState.fromValue(item.getState())));
+        file.setState(getState(item.getState()));
         file.setSurveyDate(item.getModificationDate());
         return file;
     }
 
-    public static FileTransferState getState(TransferEntryState val) {
+    private static FileTransferState getState(Integer val) {
+        TransferEntryState entryState = null;
+        try {
+            entryState = TransferEntryState.fromValue(val);
+        } catch (Throwable e) {
+            entryState = TransferEntryState.UNKNOWN;
+        }
+
         FileTransferState state = new FileTransferState();
-        switch (val) {
+        switch (entryState) {
         // severity=FINISHED
         case TRANSFERRED:
             state.set_text(FileTransferStateText.TRANSFERRED);
@@ -114,7 +121,8 @@ public class TransferFileUtils {
         return state;
     }
 
-    public static Integer getState(FileTransferStateText val) {
+    @SuppressWarnings("unused")
+    private static Integer getState(FileTransferStateText val) {
         switch (val) {
         case UNDEFINED:
             return TransferEntryState.UNKNOWN.intValue();
