@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -18,6 +20,7 @@ import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue.ReturnType;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.job.JobCriticality;
+import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
@@ -111,6 +114,41 @@ public class InventorySearchDBLayer extends DBLayer {
             query.setParameter("search", SearchStringHelper.globToSqlPattern(search.toLowerCase() + '%').replaceAll("%%+", "%"));
         }
         return getSession().getResultList(query);
+    }
+
+    public Stream<InventoryQuickSearchItem> getQuickSearchReleasedSchedulesWithDeployedWorkflows(String controllerId, String search,
+            Collection<String> workflowNames) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
+        hql.append(" where type=:type");
+        if (!SOSString.isEmpty(search) && !search.equals(FIND_ALL)) {
+            hql.append(" and lower(name) like :search");
+        }
+        Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
+        if (!SOSString.isEmpty(search) && !search.equals(FIND_ALL)) {
+            // (only) on the right hand side always %
+            query.setParameter("search", SearchStringHelper.globToSqlPattern(search.toLowerCase() + '%').replaceAll("%%+", "%"));
+        }
+        List<DBItemInventoryReleasedConfiguration> result = getSession().getResultList(query);
+        if (result == null) {
+            return Stream.empty();
+        }
+        Predicate<DBItemInventoryReleasedConfiguration> hasDeployedWorkflows = i -> {
+            try {
+                Schedule schedule = (Schedule) JocInventory.content2IJSObject(i.getContent(), ConfigurationType.SCHEDULE);
+                return schedule.getWorkflowNames().stream().anyMatch(w -> workflowNames.contains(w));
+            } catch (Exception e) {
+                return false;
+            }
+        };
+        Function<DBItemInventoryReleasedConfiguration, InventoryQuickSearchItem> mapper = i -> {
+            InventoryQuickSearchItem searchItem = new InventoryQuickSearchItem();
+            searchItem.setFolder(i.getFolder());
+            searchItem.setName(i.getName());
+            searchItem.setPath(i.getPath());
+            return searchItem;
+        };
+        return result.stream().filter(hasDeployedWorkflows).map(mapper);
     }
 
     public List<InventorySearchItem> getBasicSearchInventoryConfigurations(RequestSearchReturnType type, String search, List<String> folders)

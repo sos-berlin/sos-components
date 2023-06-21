@@ -10,6 +10,8 @@ public class InventoryQuickSearchItem extends ResponseBaseSearchItem {
     private Integer type;
     @JsonIgnore
     private String folder;
+    @JsonIgnore
+    private String lowerCasePath;
 
     @JsonIgnore
     public Integer getType() {
@@ -32,5 +34,16 @@ public class InventoryQuickSearchItem extends ResponseBaseSearchItem {
 
     public void setFolder(String val) {
         folder = val;
+    }
+    
+    @JsonIgnore
+    public String getLowerCasePath() {
+        return lowerCasePath;
+    }
+
+    @Override
+    public void setPath(String val) {
+        super.setPath(val);
+        lowerCasePath = (val != null) ? val.toLowerCase() : null;
     }
 }

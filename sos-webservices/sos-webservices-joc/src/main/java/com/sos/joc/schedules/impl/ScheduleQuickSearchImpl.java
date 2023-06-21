@@ -8,6 +8,8 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.quicksearch.QuickSearchStore;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IQuickSearchResource;
+import com.sos.joc.model.common.DeployedObjectQuickSearchFilter;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.search.RequestQuickSearchFilter;
 import com.sos.joc.model.inventory.search.RequestSearchReturnType;
 import com.sos.joc.model.inventory.search.ResponseQuickSearch;
@@ -25,15 +27,21 @@ public class ScheduleQuickSearchImpl extends JOCResourceImpl implements IQuickSe
         try {
             initLogging(API_CALL, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, RequestQuickSearchFilter.class);
-            RequestQuickSearchFilter in = Globals.objectMapper.readValue(inBytes, RequestQuickSearchFilter.class);
+            DeployedObjectQuickSearchFilter in = Globals.objectMapper.readValue(inBytes, DeployedObjectQuickSearchFilter.class);
 
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getDailyPlan().getView());
+            String controllerId = in.getControllerId();
+            JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getOrders().getView());
             if (response != null) {
                 return response;
             }
             
-            in.setReturnTypes(Collections.singletonList(RequestSearchReturnType.SCHEDULE));
-            ResponseQuickSearch answer = QuickSearchStore.getAnswer(in, accessToken, folderPermissions, false);
+            RequestQuickSearchFilter filter = new RequestQuickSearchFilter();
+            filter.setReturnTypes(Collections.singletonList(RequestSearchReturnType.SCHEDULE));
+            filter.setQuit(in.getQuit());
+            filter.setSearch(in.getSearch());
+            filter.setToken(in.getToken());
+            
+            ResponseQuickSearch answer = QuickSearchStore.getAnswer(filter, accessToken, folderPermissions, false, controllerId);
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
