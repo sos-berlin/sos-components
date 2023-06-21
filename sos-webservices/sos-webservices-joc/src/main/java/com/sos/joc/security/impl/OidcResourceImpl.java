@@ -46,8 +46,6 @@ import com.sos.joc.model.security.identityservice.IdentityProviders;
 import com.sos.joc.model.security.identityservice.IdentityServiceFilter;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 import com.sos.joc.model.security.identityservice.OidcIdentityProvider;
-import com.sos.joc.model.security.oidc.OidcToken;
-import com.sos.joc.model.security.oidc.OidcTokenAnswer;
 import com.sos.joc.security.resource.IOidcResource;
 import com.sos.schema.JsonValidator;
 
