@@ -14,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.auth.classes.SOSAuthHelper;
-import com.sos.auth.classes.SOSFormCaller;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.httpclient.SOSRestApiClient;
