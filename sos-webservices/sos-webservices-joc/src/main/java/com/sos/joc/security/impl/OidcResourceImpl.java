@@ -212,57 +212,6 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
         }
     }
 
-
-    @Override
-    public JOCDefaultResponse postToken(byte[] body) {
-        SOSHibernateSession sosHibernateSession = null;
-        try {
-
-            initLogging(API_CALL_TOKEN, body);
-            JsonValidator.validateFailFast(body, IdentityServiceFilter.class);
-            OidcToken oidcToken = Globals.objectMapper.readValue(body, OidcToken.class);
-
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_IDENTITY_CLIENTS);
-            IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
-            IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
-            filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC);
-            filter.setDisabled(false);
-            filter.setIdentityServiceName(oidcToken.getIdentityServiceName());
-            List<DBItemIamIdentityService> listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
-
-            OidcTokenAnswer oidcTokenAnswer = new OidcTokenAnswer();
-            if (listOfIdentityServices.size() > 0) {
-                JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
-                JocConfigurationFilter jocConfigurationFilter = new JocConfigurationFilter();
-                jocConfigurationFilter.setConfigurationType(SOSAuthHelper.CONFIGURATION_TYPE_IAM);
-                jocConfigurationFilter.setName(listOfIdentityServices.get(0).getIdentityServiceName());
-                jocConfigurationFilter.setObjectType(IdentityServiceTypes.OIDC.value());
-                List<DBItemJocConfiguration> listOfJocConfigurations = jocConfigurationDBLayer.getJocConfigurationList(jocConfigurationFilter, 0);
-                if (listOfJocConfigurations.size() == 1) {
-                    DBItemJocConfiguration dbItem = listOfJocConfigurations.get(0);
-                    com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(dbItem.getConfigurationItem(),
-                            com.sos.joc.model.security.properties.Properties.class);
-
-                    if (properties.getOidc() != null) {
-                         URI uri=null;
-                        Map<String,String> params = null;
-                        
-                       String response = SOSFormCaller.getFormResponse(true, uri, params, "xAccessToken", null);
-                    }
-                }
-            }
-
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(oidcTokenAnswer));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
-        } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-        } finally {
-            Globals.disconnect(sosHibernateSession);
-        }
-    }
-
     @Override
     public JOCDefaultResponse postImportDocumentations(String xAccessToken, String identityServiceName, FormDataBodyPart file, String timeSpent,
             String ticketLink, String comment) {

@@ -23,11 +23,6 @@ public interface IOidcResource {
     public JOCDefaultResponse postIdentityproviders();
 
     @POST
-    @Path("oidc/token")
-    @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postToken(byte[] body);
-
-    @POST
     @Path("identityclient")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postIdentityclient(byte[] body);
