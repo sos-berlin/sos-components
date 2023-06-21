@@ -191,8 +191,8 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
         transfer.setId(item.getId());
         transfer.setControllerId(item.getControllerId());
         transfer.setHistoryId(item.getHistoryOrderStepId());
-        transfer.set_operation(Operation.fromValue(Yade.TransferOperation.fromValue(item.getOperation()).name()));
-        transfer.setState(getState(Yade.TransferState.fromValue(item.getState())));
+        transfer.set_operation(getOperation(item.getOperation()));
+        transfer.setState(getState(item.getState()));
         transfer.setProfile(item.getProfileName());
         transfer.setNumOfFiles(item.getNumOfFiles());
         transfer.setStart(item.getStart());
@@ -215,28 +215,23 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
         return transfer;
     }
 
-    private ProtocolFragment getProtocolFragment(JocDBLayerYade dbLayer, Long id) throws SOSHibernateException {
-        ProtocolFragment pf = null;
-        if (id != null) {
-            pf = protocolFragments.get(id);
-            if (pf == null) {
-                DBItemYadeProtocol protocol = dbLayer.getProtocolById(id);
-                if (protocol != null) {
-                    pf = new ProtocolFragment();
-                    pf.setAccount(protocol.getAccount());
-                    pf.setHost(protocol.getHostname());
-                    pf.setPort(protocol.getPort());
-                    pf.setProtocol(Protocol.fromValue(Yade.TransferProtocol.fromValue(protocol.getProtocol()).name()));
-                    protocolFragments.put(id, pf);
-                }
-            }
+    private Operation getOperation(Integer val) {
+        try {
+            return Operation.fromValue(Yade.TransferOperation.fromValue(val).name());
+        } catch (Throwable e) {
+            return Operation.UNKNOWN;
         }
-        return pf;
     }
 
-    private TransferState getState(Yade.TransferState value) {
+    private TransferState getState(Integer val) {
+        Yade.TransferState yadeState = null;
+        try {
+            yadeState = Yade.TransferState.fromValue(val);
+        } catch (Throwable e) {
+            yadeState = Yade.TransferState.UNKNOWN;
+        }
         TransferState state = new TransferState();
-        switch (value) {
+        switch (yadeState) {
         case SUCCESSFUL:
             state.setSeverity(OrdersHelper.getHistoryStateSeverity(OrderStateText.FINISHED));
             state.set_text(TransferStateText.SUCCESSFUL);
@@ -251,6 +246,33 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
             return state;
         default:
             return null;
+        }
+    }
+
+    private ProtocolFragment getProtocolFragment(JocDBLayerYade dbLayer, Long id) throws SOSHibernateException {
+        ProtocolFragment pf = null;
+        if (id != null) {
+            pf = protocolFragments.get(id);
+            if (pf == null) {
+                DBItemYadeProtocol protocol = dbLayer.getProtocolById(id);
+                if (protocol != null) {
+                    pf = new ProtocolFragment();
+                    pf.setAccount(protocol.getAccount());
+                    pf.setHost(protocol.getHostname());
+                    pf.setPort(protocol.getPort());
+                    pf.setProtocol(getProtocol(protocol.getProtocol()));
+                    protocolFragments.put(id, pf);
+                }
+            }
+        }
+        return pf;
+    }
+
+    private Protocol getProtocol(Integer val) {
+        try {
+            return Protocol.fromValue(Yade.TransferProtocol.fromValue(val).name());
+        } catch (Throwable e) {
+            return Protocol.UNKNOWN;
         }
     }
 }

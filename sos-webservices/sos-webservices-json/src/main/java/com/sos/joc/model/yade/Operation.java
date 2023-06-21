@@ -8,13 +8,14 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum Operation {
 
+    UNKNOWN("UNKNOWN"),
     COPY("COPY"),
     MOVE("MOVE"),
     GETLIST("GETLIST"),
     RENAME("RENAME"),
     COPYTOINTERNET("COPYTOINTERNET"),
     COPYFROMINTERNET("COPYFROMINTERNET"),
-    UNKNOWN("UNKNOWN");
+    REMOVE("REMOVE");
     private final String value;
     private final static Map<String, Operation> CONSTANTS = new HashMap<String, Operation>();
 
