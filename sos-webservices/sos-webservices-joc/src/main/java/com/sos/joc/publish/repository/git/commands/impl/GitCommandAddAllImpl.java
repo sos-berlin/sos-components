@@ -70,8 +70,8 @@ public class GitCommandAddAllImpl extends JOCResourceImpl implements IGitCommand
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
-        } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } catch (Throwable t) {
+            return JOCDefaultResponse.responseStatusJSError(t, getJocError());
         } finally {
             Globals.disconnect(hibernateSession);
         }
