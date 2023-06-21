@@ -521,11 +521,10 @@ public class ExportUtils {
                                 extension = ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString();
                                 Workflow workflow = (Workflow) deployable.getContent();
                                 workflow.setVersionId(commitId);
+                                workflow.setPath(Paths.get(deployable.getPath()).getFileName().toString());
                                 if (controllerId != null && updateableAgentNames != null) {
                                     PublishUtils.replaceAgentNameWithAgentId(workflow, updateableAgentNames, controllerId);
                                 }
-                                workflow.setPath(Paths.get(deployable.getPath()).getFileName().toString());
-                                // workflow.setPath(deployable.getPath());
                                 contentBytes = JsonSerializer.serializeAsBytes(workflow);
                                 break;
                             case JOBRESOURCE:
