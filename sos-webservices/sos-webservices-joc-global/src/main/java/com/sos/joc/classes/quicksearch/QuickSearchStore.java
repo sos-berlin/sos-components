@@ -1,6 +1,7 @@
 package com.sos.joc.classes.quicksearch;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -17,8 +18,10 @@ import java.util.stream.Stream;
 import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
+import com.sos.joc.db.deploy.DeployedConfigurationFilter;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.db.inventory.InventorySearchDBLayer;
 import com.sos.joc.db.inventory.items.InventoryQuickSearchItem;
@@ -95,11 +98,16 @@ public class QuickSearchStore {
     
     public static ResponseQuickSearch getAnswer(RequestQuickSearchFilter in, final String accessToken,
             final SOSAuthFolderPermissions folderPermissions, boolean forInventory) throws SOSHibernateException {
+        return getAnswer(in, accessToken, folderPermissions, forInventory, null);
+    }
+    
+    public static ResponseQuickSearch getAnswer(RequestQuickSearchFilter in, final String accessToken,
+            final SOSAuthFolderPermissions folderPermissions, boolean forInventory, String controllerId) throws SOSHibernateException {
         ResponseQuickSearch answer = new ResponseQuickSearch();
 
         if (!in.getQuit()) {
             in = checkToken(in, accessToken);
-            answer.setResults(getBasicReleasedOrInventoryObjectsSearch(in, folderPermissions, forInventory));
+            answer.setResults(getBasicReleasedOrInventoryObjectsSearch(in, folderPermissions, forInventory, controllerId));
         } else {
             answer.setResults(Collections.emptyList());
         }
@@ -265,7 +273,7 @@ public class QuickSearchStore {
     }
     
     private static List<ResponseBaseSearchItem> getBasicReleasedOrInventoryObjectsSearch(RequestQuickSearchFilter in,
-            final SOSAuthFolderPermissions folderPermissions, boolean forInventory) throws SOSHibernateException {
+            final SOSAuthFolderPermissions folderPermissions, boolean forInventory, String controllerId) throws SOSHibernateException {
         SOSHibernateSession session = null;
         try {
 
@@ -281,6 +289,7 @@ public class QuickSearchStore {
 
             session = Globals.createSosHibernateStatelessConnection("QuickSearch");
             List<InventoryQuickSearchItem> items = null;
+            Stream<InventoryQuickSearchItem> itemsStream = null;
             
             if (forInventory) {
                 InventorySearchDBLayer dbLayer = new InventorySearchDBLayer(session);
@@ -290,19 +299,34 @@ public class QuickSearchStore {
                 if (in.getReturnTypes() == null) {
                     DocumentationDBLayer dbLayer = new DocumentationDBLayer(session);
                     items = dbLayer.getQuickSearchDocus(in.getSearch());
+                } else if (in.getReturnTypes().get(0).equals(RequestSearchReturnType.SCHEDULE)) {
+                    // get deployed WorkflowNames of controllerId
+                    DeployedConfigurationFilter dbFilter = new DeployedConfigurationFilter();
+                    dbFilter.setControllerId(controllerId);
+                    dbFilter.setObjectTypes(Collections.singleton(DeployType.WORKFLOW.intValue()));
+                    DeployedConfigurationDBLayer depDbLayer = new DeployedConfigurationDBLayer(session);
+                    Collection<String> workflowNames = depDbLayer.getDeployedNames(dbFilter).getOrDefault(DeployType.WORKFLOW.intValue(), Collections
+                            .emptyMap()).values();
+
+                    InventorySearchDBLayer dbLayer = new InventorySearchDBLayer(session);
+                    itemsStream = dbLayer.getQuickSearchReleasedSchedulesWithDeployedWorkflows(controllerId, in.getSearch(), workflowNames);
                 } else {
                     InventorySearchDBLayer dbLayer = new InventorySearchDBLayer(session);
                     items = dbLayer.getQuickSearchReleasedConfigurations(in.getReturnTypes(), in.getSearch());
                 }
             }
-
+            
             if (items != null) {
+                itemsStream = items.stream();
+            }
+
+            if (itemsStream != null) {
                 Predicate<InventoryQuickSearchItem> isPermitted = item -> folderPermissions.isPermittedForFolder(item.getFolder());
-                Comparator<InventoryQuickSearchItem> comp = Comparator.comparing(InventoryQuickSearchItem::getPath);
+                Comparator<InventoryQuickSearchItem> comp = Comparator.comparing(InventoryQuickSearchItem::getLowerCasePath);
                 // if (in.getReturnType() == null) {
                 // comp = comp.thenComparingInt(i -> i.getObjectType() == null ? 99 : i.getObjectType().intValue());
                 // }
-                Stream<InventoryQuickSearchItem> stream = items.stream().filter(isPermitted);
+                Stream<InventoryQuickSearchItem> stream = itemsStream.filter(isPermitted);
                 if (!forInventory) {
                     stream = stream.peek(item -> item.setObjectType(null));
                 }
@@ -338,7 +362,7 @@ public class QuickSearchStore {
 
             if (items != null) {
                 Predicate<InventoryQuickSearchItem> isPermitted = item -> folderPermissions.isPermittedForFolder(item.getFolder());
-                Comparator<InventoryQuickSearchItem> comp = Comparator.comparing(InventoryQuickSearchItem::getPath);
+                Comparator<InventoryQuickSearchItem> comp = Comparator.comparing(InventoryQuickSearchItem::getLowerCasePath);
                 // if (in.getReturnType() == null) {
                 // comp = comp.thenComparingInt(i -> i.getObjectType() == null ? 99 : i.getObjectType().intValue());
                 // }

@@ -10,9 +10,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
@@ -36,11 +33,9 @@ import jakarta.ws.rs.Path;
 @Path(WebservicePaths.SCHEDULES)
 public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesResource {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SchedulesImpl.class);
 
     @Override
     public JOCDefaultResponse postSchedules(String accessToken, byte[] filterBytes) {
-        LOGGER.debug("reading list of schedules");
         try {
             initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ScheduleSelector.class);
