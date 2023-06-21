@@ -348,7 +348,7 @@ public class ExportUtils {
                                 workflow.setVersionId(commitId);
                                 // determine agent names to be replaced
                                 if (controllerId != null && updateableAgentNames != null) {
-                                    workflow.setPath(deployable.getPath());
+                                    workflow.setPath(Paths.get(deployable.getPath()).getFileName().toString());
                                     PublishUtils.replaceAgentNameWithAgentId(workflow, updateableAgentNames, controllerId);
                                 }
                                 workflow.setPath(Paths.get(deployable.getPath()).getFileName().toString());
