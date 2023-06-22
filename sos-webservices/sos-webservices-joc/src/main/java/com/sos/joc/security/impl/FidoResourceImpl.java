@@ -640,8 +640,14 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
             List<DBItemIamFido2Devices> listOfDevices = iamFidoDevicesDBLayer.getListOfFidoDevices(iamFidoDevicesFilter);
 
             fidoRequestAuthenticationResponse.setCredentialIds(new ArrayList<String>());
+            filter = new IamAccountFilter();
+
             for (DBItemIamFido2Devices device : listOfDevices) {
-                fidoRequestAuthenticationResponse.getCredentialIds().add(device.getCredentialId());
+                filter.setId(device.getAccountId());
+                dbItemIamAccount = sosHibernateSession.get(DBItemIamAccount.class, device.getAccountId());
+                if (dbItemIamAccount != null) {
+                    fidoRequestAuthenticationResponse.getCredentialIds().add(device.getCredentialId());
+                }
             }
 
             DBItemIamFido2Requests dbItemIamFido2Requests = new DBItemIamFido2Requests();
@@ -875,13 +881,17 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
                 sosHibernateSession.save(dbItemIamFido2Devices);
 
                 LOGGER.info("FIDO2 registration approved");
+                try {
 
-                com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getIamProperties(dbItemIamIdentityService
-                        .getIdentityServiceName());
+                    com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getIamProperties(dbItemIamIdentityService
+                            .getIdentityServiceName());
 
-                FidoConfirmationMail fidoConfirmationMail = new FidoConfirmationMail(properties.getFido());
-                fidoConfirmationMail.sendRegistrationApprovedMail(dbItemIamFido2Registration, dbItemIamAccount.getEmail(), dbItemIamIdentityService
-                        .getIdentityServiceName());
+                    FidoConfirmationMail fidoConfirmationMail = new FidoConfirmationMail(properties.getFido());
+                    fidoConfirmationMail.sendRegistrationApprovedMail(dbItemIamFido2Registration, dbItemIamAccount.getEmail(),
+                            dbItemIamIdentityService.getIdentityServiceName());
+                } catch (Exception e) {
+                    LOGGER.error("", e);
+                }
 
                 SOSAuthHelper.storeDefaultProfile(sosHibernateSession, account.getAccountName());
 

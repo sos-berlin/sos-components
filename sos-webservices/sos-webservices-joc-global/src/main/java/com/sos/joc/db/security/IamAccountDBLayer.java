@@ -122,7 +122,7 @@ public class IamAccountDBLayer {
                 deletePermission(filterCascade);
                 deleteProfile(filter);
                 IamFidoDevicesDBLayer iamFidoDevicesDBLayer = new IamFidoDevicesDBLayer(sosHibernateSession);
-                iamFidoDevicesDBLayer.delete(filter.getId());
+                iamFidoDevicesDBLayer.delete(filterCascade.getId());
              }
         }
         return iamAccountList.size();
