@@ -239,7 +239,7 @@ public class ExecuteRollOut {
                 String country = "C=" + System.getProperty("user.country");// automatically determined
                 subjectDN = Arrays.asList(hostname, organizationUnit, organization, location, state, country).stream().collect(Collectors.joining(", "));
             }
-            if(san == null | san.isEmpty()) {
+            if(san == null || san.isEmpty()) {
                 if(hostname.contains(".")) {
                     san = hostname + ", " + hostname.substring(0, hostname.indexOf("."));
                 } else {
