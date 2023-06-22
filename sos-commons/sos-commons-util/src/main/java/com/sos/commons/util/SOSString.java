@@ -82,7 +82,7 @@ public class SOSString {
             } else if (SOSReflection.isEnum(clazz)) {
                 sb.append(clazzSimpleName);
                 Enum<?> e = (Enum<?>) o;
-                sb.append("[name=");
+                sb.append("[");
                 sb.append(e.name());
                 sb.append("]");
             } else if (o instanceof Collection<?>) {
@@ -117,13 +117,14 @@ public class SOSString {
                     sb.append(val);
                 }
             } else {
-                if (o.getClass().getCanonicalName().matches(TO_STRING_JAVA_INTERNAL_REGEX)) {
+                String clazzCanonicalName = clazz.getCanonicalName();// can be null
+                if (clazzCanonicalName != null && clazzCanonicalName.matches(TO_STRING_JAVA_INTERNAL_REGEX)) {
                     sb.append(o.toString());
                 } else {
                     List<String> r = new ArrayList<>();
-                    // final Field[] fields = o.getClass().getDeclaredFields();
+                    // final Field[] fields = clazz.getDeclaredFields();
                     // Arrays.sort(fields, Comparator.comparing(Field::getName));
-                    final List<Field> fields = SOSReflection.getAllDeclaredFields(o.getClass());
+                    final List<Field> fields = SOSReflection.getAllDeclaredFields(clazz);
                     for (Field field : fields) {
                         final String fn = field.getName();
                         if (fn.indexOf('$') != -1) {// reject field from inner class
