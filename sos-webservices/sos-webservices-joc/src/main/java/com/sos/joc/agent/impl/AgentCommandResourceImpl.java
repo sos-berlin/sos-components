@@ -13,6 +13,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.cluster.ClusterState;
 import com.sos.controller.model.cluster.ClusterType;
 import com.sos.controller.model.command.ClusterSwitchOver;
+import com.sos.controller.model.command.ConfirmAgentClusterNodeLoss;
 import com.sos.joc.Globals;
 import com.sos.joc.agent.resource.IAgentCommandResource;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -50,6 +51,7 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
     private static final String API_CALL_RESET = "./agent/reset";
     private static final String API_CALL_REMOVE = "./agent/delete";
     private static final String API_CALL_SWITCHOVER = "./agent/cluster/switchover";
+    private static final String API_CALL_CONFIRMNODELOSS = "./agent/cluster/confirm_node_loss";
     private static final Logger LOGGER = LoggerFactory.getLogger(AgentCommandResourceImpl.class);
 
     @Override
@@ -168,6 +170,53 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
                 }
                 ControllerApi.of(controllerId).executeCommandJson(Globals.objectMapper.writeValueAsString(new ClusterSwitchOver(agentId))).thenAccept(
                         e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), controllerId));
+            } else {
+                throw new JocBadRequestException("An Agent '" + agentId + "' is not deployed at the Controller '" + controllerId + "'");
+            }
+
+            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
+    }
+    
+    @Override
+    public JOCDefaultResponse confirmNodeLoss(String accessToken, byte[] filterBytes) {
+        try {
+            initLogging(API_CALL_CONFIRMNODELOSS, filterBytes, accessToken);
+            JsonValidator.validateFailFast(filterBytes, AgentCommand.class);
+            AgentCommand agentCommand = Globals.objectMapper.readValue(filterBytes, AgentCommand.class);
+            
+            String controllerId = agentCommand.getControllerId();
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(controllerId, accessToken).getSwitchOver());
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+            
+            checkRequiredParameter("lostNodeId", agentCommand.getLostDirector());
+            
+            storeAuditLog(agentCommand.getAuditLog(), agentCommand.getControllerId(), CategoryType.CONTROLLER);
+            
+            String agentId = agentCommand.getAgentId();
+            JAgentRefState agentState = Proxy.of(controllerId).currentState().pathToAgentRefState().get(AgentPath.of(agentId));
+            
+            if (agentState != null) {
+                ClusterState clusterState = Globals.objectMapper.readValue(agentState.clusterState().toJson(), ClusterState.class);
+                if (clusterState == null || ClusterType.EMPTY.equals(clusterState.getTYPE())) {
+                    throw new JocBadRequestException("There is no Agent director cluster with the Id: " + agentId);
+                }
+                String lossNodeId = agentCommand.getLostDirector().equals(AgentCommand.LostDirector.PRIMARY_DIRECTOR) ? "Primary" : "Backup";
+                String user = null;
+                try {
+                    user = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname().trim();
+                } catch (Exception e) {
+                    user = Globals.getJocId();
+                }
+                ControllerApi.of(controllerId).executeCommandJson(Globals.objectMapper.writeValueAsString(new ConfirmAgentClusterNodeLoss(agentId,
+                        lossNodeId, user))).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), controllerId));
             } else {
                 throw new JocBadRequestException("An Agent '" + agentId + "' is not deployed at the Controller '" + controllerId + "'");
             }

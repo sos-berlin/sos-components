@@ -35,4 +35,10 @@ public interface IAgentCommandResource {
     @Produces({ "application/json" })
     public JOCDefaultResponse switchover(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
     
+    @POST
+    @Path("cluster/confirm_node_loss")
+    @Consumes("application/json")
+    @Produces({ "application/json" })
+    public JOCDefaultResponse confirmNodeLoss(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    
 }

@@ -18,6 +18,7 @@ public enum CommandType {
     REPLACE_REPO("ReplaceRepo"),
     UPDATE_REPO("UpdateRepo"),
     CLUSTER_SWITCH_OVER("ClusterSwitchOver"),
+    CONFIRM_CLUSTER_NODE_LOSS("ConfirmClusterNodeLoss"),
     CLUSTER_APPOINT_NODES("ClusterAppointNodes"),
     RELEASE_EVENTS("ReleaseEvents"),
     RESET_AGENT("ResetAgent"),
