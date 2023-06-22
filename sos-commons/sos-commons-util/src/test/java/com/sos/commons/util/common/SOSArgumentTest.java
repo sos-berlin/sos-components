@@ -18,12 +18,12 @@ public class SOSArgumentTest {
     @Test
     public void test() {
         TestArguments ta = new TestArguments();
-        ta.getMyArray().setValue(new Path[] { Paths.get("xxx") });
+        ta.getMyPathArray().setValue(new Path[] { Paths.get("xxx") });
 
         LOGGER.info("[value][string][masked]" + ta.getMyPassword().getDisplayValue());
-        LOGGER.info("[value][array]" + ta.getMyArray().getDisplayValue());
+        LOGGER.info("[value][array]" + ta.getMyPathArray().getDisplayValue());
 
-        LOGGER.info("[isEmpty][array]" + ta.getMyArray().isEmpty());
+        LOGGER.info("[isEmpty][array]" + ta.getMyPathArray().isEmpty());
         LOGGER.info("[isEmpty][map]" + ta.getMyMap().isEmpty());
         LOGGER.info("[isEmpty][list]" + ta.getMyList().isEmpty());
     }
