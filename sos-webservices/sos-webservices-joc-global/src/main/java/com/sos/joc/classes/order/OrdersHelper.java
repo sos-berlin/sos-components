@@ -773,6 +773,7 @@ public class OrdersHelper {
         // JOC-1453 consider labels
         final List<Object> startPosition = getPosition(dailyplanModifyOrder.getStartPosition(), labelMap);
         final List<List<Object>> endPositions = getPositions(dailyplanModifyOrder.getEndPositions(), labelMap);
+        final boolean forceJobAdmission = dailyplanModifyOrder.getForceJobAdmission() == Boolean.TRUE;
 
         Function<JOrder, Either<Err419, FreshOrder>> mapper = order -> {
             Either<Err419, FreshOrder> either = null;
@@ -811,7 +812,7 @@ public class OrdersHelper {
                 Set<JPositionOrLabel> endPoss = getEndPositions(endPositions, reachablePositions, JavaConverters.asJava(order.asScala()
                         .stopPositions()));
 
-                FreshOrder o = new FreshOrder(order.id(), order.workflowId().path(), args, scheduledFor, startPos, endPoss, zoneId);
+                FreshOrder o = new FreshOrder(order.id(), order.workflowId().path(), args, scheduledFor, startPos, endPoss, forceJobAdmission, zoneId);
                 auditLogDetails.add(new AuditLogDetail(workflowPath, order.id().string(), controllerId));
                 either = Either.right(o);
             } catch (Exception ex) {
@@ -916,7 +917,8 @@ public class OrdersHelper {
         return oldOrderId.replaceFirst("^(#\\d{4}-\\d{2}-\\d{2}#[A-Z])\\d{10,11}(-.+)$", "$1" + newUniqueOrderIdPart + "$2");
     }
 
-    public static JFreshOrder mapToFreshOrder(AddOrder order, ZoneId zoneId, Optional<JPositionOrLabel> startPos, Set<JPositionOrLabel> endPoss) {
+    public static JFreshOrder mapToFreshOrder(AddOrder order, ZoneId zoneId, Optional<JPositionOrLabel> startPos, Set<JPositionOrLabel> endPoss,
+            boolean forceJobAdmission) {
         if (zoneId == null) {
             zoneId = getDailyPlanTimeZone();
         }
@@ -927,12 +929,12 @@ public class OrdersHelper {
         // scheduledFor = Optional.of(Instant.now());
         // }
         return mapToFreshOrder(OrderId.of(orderId), WorkflowPath.of(JocInventory.pathToName(order.getWorkflowPath())),
-                variablesToScalaValuedArguments(order.getArguments()), scheduledFor, startPos, endPoss);
+                variablesToScalaValuedArguments(order.getArguments()), scheduledFor, startPos, endPoss, forceJobAdmission);
     }
 
     private static JFreshOrder mapToFreshOrder(OrderId orderId, WorkflowPath workflowPath, Map<String, Value> args, Optional<Instant> scheduledFor,
-            Optional<JPositionOrLabel> startPos, Set<JPositionOrLabel> endPoss) {
-        return JFreshOrder.of(orderId, workflowPath, scheduledFor, args, true, startPos, endPoss);
+            Optional<JPositionOrLabel> startPos, Set<JPositionOrLabel> endPoss, boolean forceJobAdmission) {
+        return JFreshOrder.of(orderId, workflowPath, scheduledFor, args, true, forceJobAdmission, startPos, endPoss);
     }
 
     public static Map<String, Value> variablesToScalaValuedArguments(Variables vars) {

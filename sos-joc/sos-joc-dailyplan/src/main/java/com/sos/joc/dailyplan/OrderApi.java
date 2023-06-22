@@ -105,8 +105,9 @@ public class OrderApi {
             }
         }
         Map<String, Value> arguments = OrdersHelper.variablesToScalaValuedArguments(order.getArguments());
-        return JFreshOrder.of(OrderId.of(order.getId()), WorkflowPath.of(order.getWorkflowPath()), scheduledFor, arguments, false, startPosition,
-                endPositions);
+        boolean forceJobAdmission = order.getForceJobAdmission() == Boolean.TRUE;
+        return JFreshOrder.of(OrderId.of(order.getId()), WorkflowPath.of(order.getWorkflowPath()), scheduledFor, arguments, false, forceJobAdmission,
+                startPosition, endPositions);
     }
 
     public static Set<PlannedOrder> addOrdersToController(StartupMode startupMode, String controllerId, String dailyPlanDate,

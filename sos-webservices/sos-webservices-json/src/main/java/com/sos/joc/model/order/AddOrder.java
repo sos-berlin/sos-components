@@ -27,7 +27,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "timeZone",
     "arguments",
     "startPosition",
-    "endPositions"
+    "endPositions",
+    "forceJobAdmission"
 })
 public class AddOrder {
 
@@ -54,10 +55,11 @@ public class AddOrder {
     /**
      * string without < and >
      * <p>
-     * 
+     * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
      */
     @JsonProperty("timeZone")
+    @JsonPropertyDescription("see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones")
     private String timeZone;
     /**
      * key-value pairs
@@ -72,6 +74,8 @@ public class AddOrder {
     private Object startPosition;
     @JsonProperty("endPositions")
     private List<Object> endPositions = new ArrayList<Object>();
+    @JsonProperty("forceJobAdmission")
+    private Boolean forceJobAdmission = false;
 
     @JsonProperty("orderName")
     public String getOrderName() {
@@ -132,7 +136,7 @@ public class AddOrder {
     /**
      * string without < and >
      * <p>
-     * 
+     * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
      */
     @JsonProperty("timeZone")
@@ -143,7 +147,7 @@ public class AddOrder {
     /**
      * string without < and >
      * <p>
-     * 
+     * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
      */
     @JsonProperty("timeZone")
@@ -201,14 +205,24 @@ public class AddOrder {
         this.endPositions = endPositions;
     }
 
+    @JsonProperty("forceJobAdmission")
+    public Boolean getForceJobAdmission() {
+        return forceJobAdmission;
+    }
+
+    @JsonProperty("forceJobAdmission")
+    public void setForceJobAdmission(Boolean forceJobAdmission) {
+        this.forceJobAdmission = forceJobAdmission;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("orderName", orderName).append("workflowPath", workflowPath).append("scheduledFor", scheduledFor).append("timeZone", timeZone).append("arguments", arguments).append("startPosition", startPosition).append("endPositions", endPositions).toString();
+        return new ToStringBuilder(this).append("orderName", orderName).append("workflowPath", workflowPath).append("scheduledFor", scheduledFor).append("timeZone", timeZone).append("arguments", arguments).append("startPosition", startPosition).append("endPositions", endPositions).append("forceJobAdmission", forceJobAdmission).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(endPositions).append(workflowPath).append(scheduledFor).append(timeZone).append(arguments).append(startPosition).append(orderName).toHashCode();
+        return new HashCodeBuilder().append(endPositions).append(workflowPath).append(scheduledFor).append(timeZone).append(forceJobAdmission).append(arguments).append(startPosition).append(orderName).toHashCode();
     }
 
     @Override
@@ -220,7 +234,7 @@ public class AddOrder {
             return false;
         }
         AddOrder rhs = ((AddOrder) other);
-        return new EqualsBuilder().append(endPositions, rhs.endPositions).append(workflowPath, rhs.workflowPath).append(scheduledFor, rhs.scheduledFor).append(timeZone, rhs.timeZone).append(arguments, rhs.arguments).append(startPosition, rhs.startPosition).append(orderName, rhs.orderName).isEquals();
+        return new EqualsBuilder().append(endPositions, rhs.endPositions).append(workflowPath, rhs.workflowPath).append(scheduledFor, rhs.scheduledFor).append(timeZone, rhs.timeZone).append(forceJobAdmission, rhs.forceJobAdmission).append(arguments, rhs.arguments).append(startPosition, rhs.startPosition).append(orderName, rhs.orderName).isEquals();
     }
 
 }

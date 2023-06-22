@@ -349,6 +349,14 @@ public class DailyPlanRunner extends TimerTask {
             String accessToken) throws JsonParseException, JsonMappingException, DBConnectionRefusedException, DBInvalidDataException,
             DBMissingDataException, JocConfigurationException, DBOpenSessionException, IOException, ParseException, SOSException, URISyntaxException,
             ControllerConnectionResetException, ControllerConnectionRefusedException, InterruptedException, ExecutionException, TimeoutException {
+        submitOrders(startupMode, controllerId, items, dailyPlanDate, false, jocError, accessToken);
+    }
+    
+    public void submitOrders(StartupMode startupMode, String controllerId, List<DBItemDailyPlanOrder> items, String dailyPlanDate,
+            Boolean forceJobAdmission, JocError jocError, String accessToken) throws JsonParseException, JsonMappingException,
+            DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
+            IOException, ParseException, SOSException, URISyntaxException, ControllerConnectionResetException, ControllerConnectionRefusedException,
+            InterruptedException, ExecutionException, TimeoutException {
 
         SOSHibernateSession session = null;
         try {
@@ -399,7 +407,7 @@ public class DailyPlanRunner extends TimerTask {
                 DailyPlanScheduleWorkflow dailyPlanScheduleWorkflow = new DailyPlanScheduleWorkflow(item.getWorkflowName(), item.getWorkflowPath(),
                         null);
                 FreshOrder freshOrder = buildFreshOrder(dailyPlanDate, schedule, dailyPlanScheduleWorkflow, orderParameterisation, item
-                        .getPlannedStart().getTime(), item.getStartMode());
+                        .getPlannedStart().getTime(), item.getStartMode(), forceJobAdmission);
                 freshOrder.setId(item.getOrderId());
 
                 DailyPlanSchedule dailyPlanSchedule = new DailyPlanSchedule(schedule, Arrays.asList(dailyPlanScheduleWorkflow));
@@ -675,13 +683,14 @@ public class DailyPlanRunner extends TimerTask {
     }
 
     private FreshOrder buildFreshOrder(String dailyPlanDate, Schedule schedule, DailyPlanScheduleWorkflow scheduleWorkflow,
-            OrderParameterisation orderParameterisation, Long startTime, Integer startMode) throws SOSInvalidDataException {
+            OrderParameterisation orderParameterisation, Long startTime, Integer startMode, Boolean forceJobAdmission) throws SOSInvalidDataException {
         FreshOrder order = new FreshOrder();
         order.setId(DailyPlanHelper.buildOrderId(dailyPlanDate, schedule, orderParameterisation, startTime, startMode));
         order.setScheduledFor(startTime);
         order.setArguments(orderParameterisation.getVariables());
         order.setWorkflowPath(scheduleWorkflow.getName());
         order.setPositions(orderParameterisation.getPositions());
+        order.setForceJobAdmission(forceJobAdmission);
         return order;
     }
 
@@ -969,7 +978,7 @@ public class DailyPlanRunner extends TimerTask {
                                         for (DailyPlanScheduleWorkflow sw : dailyPlanSchedule.getWorkflows()) {
 
                                             FreshOrder freshOrder = buildFreshOrder(dailyPlanDate, dailyPlanSchedule.getSchedule(), sw,
-                                                    orderParameterisation, periodEntry.getKey(), startMode);
+                                                    orderParameterisation, periodEntry.getKey(), startMode, false);
 
                                             if (!fromService) {
                                                 schedule.setSubmitOrderToControllerWhenPlanned(settings.isSubmit());
