@@ -12,23 +12,7 @@
 	</parent>
 
 	<artifactId>sos-commons-util</artifactId>
-	
-	<build>
-    	<plugins>
-    		<plugin>
-    			<groupId>org.apache.maven.plugins</groupId>
-    			<artifactId>maven-jar-plugin</artifactId>
-    			<configuration>
-        			<archive>
-            			<manifestEntries>
-                			<Add-Opens>java.base/java.lang</Add-Opens>
-            			</manifestEntries>
-        			</archive>
-    			</configuration>
-			</plugin>
-		</plugins>
-	</build>
-	
+
 	<dependencies>
 
 		<!-- SOS Dependencies -->
@@ -43,7 +27,7 @@
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
 		</dependency>
-
+		
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-compress</artifactId>
@@ -55,15 +39,15 @@
 		</dependency>
 
 		<dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-slf4j-impl</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-        	<groupId>org.apache.logging.log4j</groupId>
-        	<artifactId>log4j-core</artifactId>
-        	<scope>test</scope>
-      	</dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-slf4j-impl</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+			<scope>test</scope>
+		</dependency>
 
 		<dependency>
 			<groupId>com.typesafe</groupId>
