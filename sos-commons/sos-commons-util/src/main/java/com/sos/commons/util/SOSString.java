@@ -8,15 +8,11 @@ import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -124,9 +120,10 @@ public class SOSString {
                 if (o.getClass().getCanonicalName().matches(TO_STRING_JAVA_INTERNAL_REGEX)) {
                     sb.append(o.toString());
                 } else {
-                    Set<String> r = new HashSet<>();
-                    final Field[] fields = o.getClass().getDeclaredFields();
-                    Arrays.sort(fields, Comparator.comparing(Field::getName));
+                    List<String> r = new ArrayList<>();
+                    // final Field[] fields = o.getClass().getDeclaredFields();
+                    // Arrays.sort(fields, Comparator.comparing(Field::getName));
+                    final List<Field> fields = SOSReflection.getAllDeclaredFields(o.getClass());
                     for (Field field : fields) {
                         final String fn = field.getName();
                         if (fn.indexOf('$') != -1) {// reject field from inner class
