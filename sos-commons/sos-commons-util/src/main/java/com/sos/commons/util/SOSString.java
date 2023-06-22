@@ -160,7 +160,7 @@ public class SOSString {
             }
             return sb.toString();
         } catch (Throwable t) {
-            t.printStackTrace();
+            // t.printStackTrace();
             // return TO_STRING_UNKNOWN_VALUE instead of o.toString() to avoid StackOverflowException(if o.toString() uses SOSString.toString)
             return TO_STRING_UNKNOWN_VALUE;
         }
