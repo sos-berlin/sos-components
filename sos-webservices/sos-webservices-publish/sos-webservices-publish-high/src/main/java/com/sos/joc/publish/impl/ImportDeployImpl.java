@@ -144,10 +144,9 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             String controllerId = filter.getControllerId();
             String commitId = null;
             if (objectsWithSignature != null && !objectsWithSignature.isEmpty()) {
-                ControllerObject config = objectsWithSignature.keySet().stream().findFirst().get();
+                ControllerObject config = objectsWithSignature.keySet().iterator().next();
                 switch (config.getObjectType()) {
                 case WORKFLOW:
-//                    commitId = Globals.objectMapper.readValue(config.getSignedContent(), Workflow.class).getVersionId();
                     commitId = getCommitId(config);
                     break;
                 case LOCK:
@@ -157,7 +156,6 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 case JOBCLASS:
                     break;
                 default:
-//                    commitId = Globals.objectMapper.readValue(config.getSignedContent(), Workflow.class).getVersionId();
                     commitId = getCommitId(config);
                 }
             }
@@ -201,13 +199,13 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                     importedObjects.put(config, null);
                     break;
                 case FILEORDERSOURCE:
-                	DBItemInventoryConfiguration fosDbItem = dbLayer.getConfigurationByPath(config.getPath(), ConfigurationType.FILEORDERSOURCE);
+                    DBItemInventoryConfiguration fosDbItem = dbLayer.getConfigurationByPath(config.getPath(), ConfigurationType.FILEORDERSOURCE);
                     if (fosDbItem == null) {
                         throw new JocDeployException(String.format(
                                 "The configuration with path %1$s does not exist in the current JOC instance. Deployment is not allowed!", config.getPath()));
                     }
-                	objectsToCheckPathRenaming.add(fosDbItem);
-                	importedObjects.put(config, null);
+                    objectsToCheckPathRenaming.add(fosDbItem);
+                    importedObjects.put(config, null);
                 case NOTICEBOARD:
                     DBItemInventoryConfiguration boardDbItem = dbLayer.getConfigurationByPath(config.getPath(), ConfigurationType.NOTICEBOARD);
                     if (boardDbItem == null) {
@@ -280,7 +278,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
     }
     
     private static final void checkCommitId(DBLayerDeploy dbLayer, String commitId, String controllerId) {
-        if (commitId == null) {
+        if (commitId == null || commitId.isEmpty()) {
             throw new JocDeployException("No versionId found in configuration. Deployment will not be processed.");
         }else {
             Boolean alreadyExists = false;
