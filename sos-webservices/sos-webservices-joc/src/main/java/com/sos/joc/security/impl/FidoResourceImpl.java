@@ -632,7 +632,7 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
             iamFidoDevicesFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
             iamFidoDevicesFilter.setOrigin(fidoRequestAuthentication.getOrigin());
             List<DBItemIamFido2Devices> listOfFido2Devices = iamFidoDevicesDBLayer.getListOfFidoDevices(iamFidoDevicesFilter);
-            if (listOfFido2Devices.size() == 0) {
+            if (listOfFido2Devices.size() == 0 && fidoRequestAuthentication.getAccountName() != null) {
                 throw new JocAuthenticationException("Registration <" + fidoRequestAuthentication.getAccountName() + " in identity service "
                         + fidoRequestAuthentication.getIdentityServiceName() + "/" + fidoRequestAuthentication.getOrigin() + "> is not approved");
             }
