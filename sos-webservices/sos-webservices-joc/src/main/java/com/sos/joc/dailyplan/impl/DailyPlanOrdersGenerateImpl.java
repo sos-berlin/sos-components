@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -31,7 +32,9 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.common.FolderPath;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.order.OrdersHelper;
+import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.dailyplan.DailyPlanRunner;
@@ -44,6 +47,7 @@ import com.sos.joc.dailyplan.common.PlannedOrderKey;
 import com.sos.joc.dailyplan.db.DBBeanReleasedSchedule2DeployedWorkflow;
 import com.sos.joc.dailyplan.db.DBLayerSchedules;
 import com.sos.joc.dailyplan.resource.IDailyPlanOrdersGenerateResource;
+import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -57,6 +61,7 @@ import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.generate.GenerateRequest;
 import com.sos.joc.model.dailyplan.generate.items.PathItem;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
@@ -116,14 +121,16 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
         Set<String> workflowSingles = null;
         if (in.getSchedulePaths() != null) {
             scheduleFolders = FolderPath.filterByUniqueFolder(in.getSchedulePaths().getFolders());
-            scheduleSingles = FolderPath.filterByFolders(scheduleFolders, in.getSchedulePaths().getSingles());
+            // Plaster, um Schedulenamen statt Pfade zu akzeptieren
+            scheduleSingles = FolderPath.filterByFolders(scheduleFolders, getScheduleSinglePaths(in.getSchedulePaths().getSingles()));
         }
 
         final Set<Folder> permittedFolders = addPermittedFolder(null);
         Map<String, Boolean> checkedFolders = new HashMap<>();
         if (in.getWorkflowPaths() != null) {
             workflowFolders = FolderPath.filterByUniqueFolder(in.getWorkflowPaths().getFolders());
-            workflowSingles = FolderPath.filterByFolders(workflowFolders, in.getWorkflowPaths().getSingles());
+            // Plaster, um Workflownamen statt Pfade zu akzeptieren
+            workflowSingles = FolderPath.filterByFolders(workflowFolders, getWorflowSinglePaths(in.getWorkflowPaths().getSingles()));
 
             if (workflowFolders != null && workflowFolders.size() > 0) {
                 Set<String> toRemove = new HashSet<>();
@@ -172,6 +179,28 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
         }
 
         return true;
+    }
+    
+    private List<String> getScheduleSinglePaths(List<String> scheduleSingles) throws SOSHibernateException {
+        if (scheduleSingles == null) {
+            return null;
+        }
+        SOSHibernateSession session = null;
+        try {
+            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+            return dbLayer.getReleasedConfigurationPaths(scheduleSingles.stream().map(JocInventory::pathToName).distinct().collect(Collectors.toList()), ConfigurationType.SCHEDULE);
+        } finally {
+            Globals.disconnect(session);
+        }
+    }
+    
+    private List<String> getWorflowSinglePaths(List<String> workflowSingles) throws SOSHibernateException {
+        if (workflowSingles == null) {
+            return null;
+        }
+        return workflowSingles.stream().map(JocInventory::pathToName).map(WorkflowPaths::getPath).filter(Objects::nonNull).distinct().collect(
+                Collectors.toList());
     }
 
     private Collection<DailyPlanSchedule> getSchedules(DailyPlanRunner runner, String controllerId, Set<Folder> scheduleFolders,
