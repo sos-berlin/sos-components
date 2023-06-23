@@ -16,7 +16,6 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPublicKeySpec;
 import java.time.Instant;
 import java.util.Base64;
-import java.util.HashMap;
 import java.util.Map;
 
 import javax.json.Json;
@@ -43,17 +42,10 @@ import com.sos.joc.exceptions.JocException;
 public class SOSOpenIdHandler {
 
     private static final String PREFERRED_USERNAME = "preferred_username";
-
     private static final String EMAIL = "email";
-
     private static final String CLAIMS_SUPPORTED = "claims_supported";
-
-    private static final String WELL_KNOWN_OPENID_CONFIGURATION = "/.well-known/openid-configuration";
-
     private static final String JWKS_URI_ENDPOINT = "jwks_uri";
-
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSOpenIdHandler.class);
-
     private static final String EXPIRATION_FIELD = "exp";
     private static final String ISS_FIELD = "iss";
     private static final String AUD_FIELD = "aud";
@@ -68,6 +60,7 @@ public class SOSOpenIdHandler {
     private JsonObject jsonPayload;
     private KeyStore truststore = null;
     private String accountIdentifier = null;
+    private String openidConfiguration;
 
     public SOSOpenIdHandler(SOSOpenIdWebserviceCredentials webserviceCredentials) throws Exception {
         this.webserviceCredentials = webserviceCredentials;
@@ -162,15 +155,16 @@ public class SOSOpenIdHandler {
 
     }
 
-    public String getAccountIdentifier() throws SocketException, SOSException {
+    private String getAccountIdentifier() throws SocketException, SOSException {
         String result = "";
         if ((webserviceCredentials.getUserAttribute() != null) && (!webserviceCredentials.getUserAttribute().isEmpty())) {
             return webserviceCredentials.getUserAttribute();
         }
 
-        URI requestUri = URI.create(webserviceCredentials.getAuthenticationUrl() + WELL_KNOWN_OPENID_CONFIGURATION);
-        String configurationResponse = getFormResponse(false, requestUri, null, null);
-        JsonReader jsonReaderConfigurationResponse = Json.createReader(new StringReader(configurationResponse));
+        Base64.Decoder decoder = Base64.getUrlDecoder();
+        openidConfiguration = new String(decoder.decode(webserviceCredentials.getOpenidConfiguration()));
+
+        JsonReader jsonReaderConfigurationResponse = Json.createReader(new StringReader(openidConfiguration));
         JsonObject jsonConfigurationResponse = jsonReaderConfigurationResponse.readObject();
         JsonArray claimsSupported = jsonConfigurationResponse.getJsonArray(CLAIMS_SUPPORTED);
         if (claimsSupported != null && claimsSupported.size() > 0) {
@@ -211,31 +205,15 @@ public class SOSOpenIdHandler {
         String aud = null;
         String iss = null;
 
-        URI requestUri = URI.create(webserviceCredentials.getAuthenticationUrl() + WELL_KNOWN_OPENID_CONFIGURATION);
-        String configurationResponse = "";
-        configurationResponse = getFormResponse(false, requestUri, null, null);
-        JsonReader jsonReaderConfigurationResponse = Json.createReader(new StringReader(configurationResponse));
+        URI requestUri = null;
+        Base64.Decoder decoder = Base64.getUrlDecoder();
+
+        openidConfiguration = new String(decoder.decode(webserviceCredentials.getOpenidConfiguration()));
+
+        JsonReader jsonReaderConfigurationResponse = Json.createReader(new StringReader(openidConfiguration));
         JsonObject jsonConfigurationResponse = jsonReaderConfigurationResponse.readObject();
-        String tokenVerificationEndpoint = "";
 
         String certEndpoit = jsonConfigurationResponse.getString(JWKS_URI_ENDPOINT, "");
-
-        boolean tokenIsActive = true;
-        if ((tokenVerificationEndpoint != null) && !tokenVerificationEndpoint.isEmpty()) {
-            requestUri = URI.create(tokenVerificationEndpoint);
-            String tokenVerificationResponse = "";
-
-            Map<String, String> body = new HashMap<String, String>();
-            body.put("client_id", webserviceCredentials.getClientId());
-            body.put("client_secret", webserviceCredentials.getClientSecret());
-            body.put("token", webserviceCredentials.getIdToken());
-            tokenVerificationResponse = getFormResponse(true, requestUri, body, null);
-
-            JsonReader jsonReaderTokenVerificationResponse = Json.createReader(new StringReader(tokenVerificationResponse));
-            JsonObject jsonTokenVerificationResponse = jsonReaderTokenVerificationResponse.readObject();
-            tokenIsActive = jsonTokenVerificationResponse.getBoolean("active", false);
-        }
-
         if (jsonHeader == null) {
             this.decodeIdToken(webserviceCredentials.getIdToken());
         }
@@ -258,7 +236,6 @@ public class SOSOpenIdHandler {
         }
 
         boolean valid = true;
-        valid = valid && tokenIsActive;
         valid = valid && webserviceCredentials.getClientId().equals(aud);
         valid = valid && webserviceCredentials.getAuthenticationUrl().equals(iss);
         valid = valid && webserviceCredentials.getAccount().equals(account);

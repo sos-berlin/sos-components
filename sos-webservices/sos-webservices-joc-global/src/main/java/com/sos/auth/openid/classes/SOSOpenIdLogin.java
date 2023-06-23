@@ -34,20 +34,25 @@ public class SOSOpenIdLogin implements ISOSLogin {
             if (currentAccount.getSosLoginParameters().getIdToken() != null) {
 
                 SOSOpenIdWebserviceCredentials webserviceCredentials = currentAccount.getSosLoginParameters().getSOSOpenIdWebserviceCredentials();
+                if (webserviceCredentials == null) {
+                    LOGGER.error("Wrong Headers for OIDC Login");
+                } else {
+                    webserviceCredentials.setOpenidConfiguration(currentAccount.getSosLoginParameters().getOpenidConfiguration());
 
-                SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials);
-                String accountName = sosOpenIdHandler.decodeIdToken(webserviceCredentials.getIdToken());
-                currentAccount.setAccountName(accountName);
-                webserviceCredentials.setAccount(accountName);
+                    SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials);
+                    String accountName = sosOpenIdHandler.decodeIdToken(webserviceCredentials.getIdToken());
+                    currentAccount.setAccountName(accountName);
+                    webserviceCredentials.setAccount(accountName);
 
-                boolean disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), currentAccount.getAccountname());
+                    boolean disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), currentAccount.getAccountname());
 
-                if (!disabled) {
-                    sosOpenIdAccountAccessToken = sosOpenIdHandler.login();
+                    if (!disabled) {
+                        sosOpenIdAccountAccessToken = sosOpenIdHandler.login();
+                    }
+
                 }
-
+                sosOpenIdSubject = new SOSOpenIdSubject(currentAccount, identityService);
             }
-            sosOpenIdSubject = new SOSOpenIdSubject(currentAccount, identityService);
             if (sosOpenIdAccountAccessToken == null || sosOpenIdAccountAccessToken.getAccessToken() == null || sosOpenIdAccountAccessToken
                     .getAccessToken().isEmpty()) {
                 sosOpenIdSubject.setAuthenticated(false);
