@@ -29,7 +29,8 @@ public class SOSOpenIdWebserviceCredentials {
     private String clientSecret;
     private String clientId;
     private String providerName;
-    private String userAttribute; 
+    private String userAttribute;
+    private String openidConfiguration;
 
     private String truststorePath = "";
     private String truststorePassword = "";
@@ -39,7 +40,6 @@ public class SOSOpenIdWebserviceCredentials {
         return authenticationUrl;
     }
 
-    
     public String getUserAttribute() {
         return userAttribute;
     }
@@ -174,5 +174,13 @@ public class SOSOpenIdWebserviceCredentials {
 
     public void setIdToken(String idToken) {
         this.idToken = idToken;
+    }
+
+    public String getOpenidConfiguration() {
+        return openidConfiguration;
+    }
+
+    public void setOpenidConfiguration(String openidConfiguration) {
+        this.openidConfiguration = openidConfiguration;
     }
 }

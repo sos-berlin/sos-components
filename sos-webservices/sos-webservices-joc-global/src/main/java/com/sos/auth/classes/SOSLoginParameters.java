@@ -18,6 +18,7 @@ public class SOSLoginParameters {
     private String signature;
     private String credentialId;
     private String requestId;
+    private String openidConfiguration;
     private SOSOpenIdWebserviceCredentials sosOpenIdWebserviceCredentials;
 
     public HttpServletRequest getRequest() {
@@ -143,5 +144,25 @@ public class SOSLoginParameters {
 
     public boolean isFirstPathOfTwoFactor() {
         return !isSecondPathOfTwoFactor();
+    }
+
+    
+    public String getOpenidConfiguration() {
+        return openidConfiguration;
+    }
+
+    
+    public void setOpenidConfiguration(String openidConfiguration) {
+        this.openidConfiguration = openidConfiguration;
+    }
+
+    
+    public SOSOpenIdWebserviceCredentials getSosOpenIdWebserviceCredentials() {
+        return sosOpenIdWebserviceCredentials;
+    }
+
+    
+    public void setSosOpenIdWebserviceCredentials(SOSOpenIdWebserviceCredentials sosOpenIdWebserviceCredentials) {
+        this.sosOpenIdWebserviceCredentials = sosOpenIdWebserviceCredentials;
     }
 }

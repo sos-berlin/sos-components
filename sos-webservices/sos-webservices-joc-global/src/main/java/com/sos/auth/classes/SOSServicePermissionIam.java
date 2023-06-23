@@ -181,6 +181,7 @@ public class SOSServicePermissionIam {
     public JOCDefaultResponse loginPost(@Context HttpServletRequest request, @HeaderParam("Authorization") String basicAuthorization,
             @HeaderParam("X-1ST-IDENTITY-SERVICE") String firstIdentityService, @HeaderParam("X-IDENTITY-SERVICE") String identityService,
             @HeaderParam("X-ID-TOKEN") String idToken, @HeaderParam("X-SIGNATURE") String signature,
+            @HeaderParam("X-OPENID-CONFIGURATION") String openidConfiguration,
             @HeaderParam("X-AUTHENTICATOR-DATA") String authenticatorData, @HeaderParam("X-CLIENT-DATA-JSON") String clientDataJson,
             @HeaderParam("X-CREDENTIAL-ID") String credentialId, @HeaderParam("X-REQUEST-ID") String requestId, @QueryParam("account") String account,
             @QueryParam("pwd") String pwd) {
@@ -216,6 +217,7 @@ public class SOSServicePermissionIam {
             sosLoginParameters.setRequest(request);
             sosLoginParameters.setAccount(account);
             sosLoginParameters.setClientDataJson(clientDataJson);
+            sosLoginParameters.setOpenidConfiguration(openidConfiguration);
             sosLoginParameters.setAuthenticatorData(authenticatorData);
             sosLoginParameters.setSignature(signature);
             sosLoginParameters.setCredentialId(credentialId);
@@ -825,6 +827,7 @@ public class SOSServicePermissionIam {
                                     IdentityServiceTypes.OIDC);
                             sosOpenIdWebserviceCredentials.setValuesFromProfile(sosIdentityService);
                             sosOpenIdWebserviceCredentials.setIdToken(sosLoginParameters.getIdToken());
+                            sosOpenIdWebserviceCredentials.setOpenidConfiguration(sosLoginParameters.getOpenidConfiguration());
                             SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(sosOpenIdWebserviceCredentials);
                             String account = sosOpenIdHandler.decodeIdToken(sosLoginParameters.getIdToken());
                             sosLoginParameters.setAccount(account);
