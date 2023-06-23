@@ -1010,6 +1010,54 @@ public class InventoryDBLayer extends DBLayer {
             return result;
         }
     }
+    
+    public List<String> getReleasedConfigurationPaths(List<String> names, ConfigurationType type)
+            throws SOSHibernateException {
+        if (names == null) {
+            names = Collections.emptyList();
+        }
+        int namesSize = names.size();
+        if (namesSize > SOSHibernate.LIMIT_IN_CLAUSE) {
+            List<String> result = new ArrayList<>();
+            for (int i = 0; i < names.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                result.addAll(getReleasedConfigurationPaths(SOSHibernate.getInClausePartition(i, names), type));
+            }
+            return result;
+        } else {
+            StringBuilder hql = new StringBuilder("select path from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" ");
+            hql.append("where type=:type ");
+            switch (namesSize) {
+            case 0:
+                break;
+            case 1:
+                hql.append("and name=:name");
+                break;
+            default:
+                hql.append("and name in (:names)");
+                break;
+            }
+
+            Query<String> query = getSession().createQuery(hql.toString());
+            switch (namesSize) {
+            case 0:
+                break;
+            case 1:
+                query.setParameter("name", names.get(0));
+                break;
+            default:
+                query.setParameterList("names", names);
+                break;
+            }
+
+            query.setParameter("type", type.intValue());
+
+            List<String> result = getSession().getResultList(query);
+            if (result == null) {
+                return Collections.emptyList();
+            }
+            return result;
+        }
+    }
 
     public List<DBItemInventoryConfiguration> getFolderContent(String folder, boolean recursive, Collection<Integer> types, boolean isDescriptor)
             throws SOSHibernateException {
