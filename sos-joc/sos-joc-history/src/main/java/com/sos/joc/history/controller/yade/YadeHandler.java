@@ -98,7 +98,7 @@ public class YadeHandler {
         item.setSourceProtocolId(getProtocolId(session, result.getSource()));
         item.setTargetProtocolId(getProtocolId(session, result.getTarget()));
         item.setJumpProtocolId(getProtocolId(session, result.getJump()));
-        item.setOperation(Yade.TransferOperation.fromValue(result.getOperation()).intValue());
+        item.setOperation(getOperation(result.getOperation()));
         item.setProfileName(result.getProfile());
         item.setStart(Date.from(result.getStart()));
         item.setEnd(Date.from(result.getEnd()));
@@ -109,6 +109,13 @@ public class YadeHandler {
 
         session.save(item);
         return item.getId();
+    }
+
+    private Integer getOperation(String val) {
+        if (val != null && val.equalsIgnoreCase("delete")) {// Workaround
+            return Yade.TransferOperation.REMOVE.intValue();
+        }
+        return Yade.TransferOperation.fromValue(val).intValue();
     }
 
     private void saveTransferEntries(SOSHibernateSession session, Long transferId, List<YadeTransferResultEntry> entries)
