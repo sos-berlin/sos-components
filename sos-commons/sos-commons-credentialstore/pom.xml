@@ -63,7 +63,12 @@
 			<groupId>org.linguafranca.pwdb</groupId>
 			<artifactId>KeePassJava2-jaxb</artifactId>
 		</dependency>
-		
+      <!-- KeePass makes use of Guava 19, to use current guava version the next dependency is needed -->
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId> 
+      </dependency>
+
     	<dependency>
   			<groupId>javax.xml.bind</groupId>
   			<artifactId>jaxb-api</artifactId>
