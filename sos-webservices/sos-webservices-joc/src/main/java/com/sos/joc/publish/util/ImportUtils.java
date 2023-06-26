@@ -569,6 +569,7 @@ public class ImportUtils {
                     signaturePaths.add(signaturePath);
                 }
             }
+            objects.stream().forEach(item -> objectsWithSignature.put(item, null));
 //            objects.stream().forEach(item -> {
 //                objectsWithSignature.put(item, signaturePaths.stream().filter(item2 -> item2.getObjectPath().equals(item.getPath())).findFirst()
 //                        .get());
@@ -700,6 +701,7 @@ public class ImportUtils {
                     signaturePaths.add(signaturePath);
                 }
             }
+            objects.stream().forEach(item -> objectsWithSignature.put(item, null));
             for(ControllerObject item : objects) {
                 for (SignaturePath item2 : signaturePaths) {
                     if(item2.getObjectPath().equals(item.getPath())) {
