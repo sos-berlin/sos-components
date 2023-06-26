@@ -237,11 +237,10 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
             JControllerState currentstate = proxy.currentState();
             JSubagentItem subagent = currentstate.idToSubagentItem().get(SubagentId.of(subAgentCommand.getSubagentId()));
             if (subagent != null) {
-                boolean subagentIsDirector = false; //currentstate.pathToAgentRef().get(subagent.agentPath()).directors().contains(subagent.id());
+                boolean subagentIsDirector = currentstate.pathToAgentRef().get(subagent.agentPath()).directors().contains(subagent.id());
                 JControllerCommand resetSubagentCommand = null;
                 if (subagentIsDirector) {
-                    resetSubagentCommand = JControllerCommand.apply(new ControllerCommand.ResetAgent(subagent.agentPath(), subAgentCommand
-                            .getForce() == Boolean.TRUE));
+                    LOGGER.info("Reset SubAgent of a Director Agent is ignored.");
                 } else {
                     resetSubagentCommand = JControllerCommand.apply(new ControllerCommand.ResetSubagent(subagent.id(), subAgentCommand
                             .getForce() == Boolean.TRUE));
