@@ -67,6 +67,8 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
     private static final String API_CALL = "./orders";
     private final List<OrderStateText> orderStateWithRequirements = Arrays.asList(OrderStateText.PENDING, OrderStateText.BLOCKED,
             OrderStateText.SUSPENDED);
+    private final List<OrderStateText> allowedStateDateStates = Arrays.asList(OrderStateText.INPROGRESS, OrderStateText.RUNNING,
+            OrderStateText.FAILED, OrderStateText.FINISHED, OrderStateText.CANCELLED);
 
     @Override
     public JOCDefaultResponse postOrders(String accessToken, byte[] filterBytes) {
@@ -105,6 +107,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             Long surveyDateMillis = surveyDateInstant.toEpochMilli();
 
             List<OrderStateText> states = ordersFilter.getStates();
+            boolean stateDateDisallowed = states.stream().anyMatch(s -> !allowedStateDateStates.contains(s));
             // BLOCKED is not a Controller state. It needs a special handling. These are SCHEDULED with scheduledFor in the past
             final boolean withStatesFilter = states != null && !states.isEmpty();
             final boolean lookingForBlocked = withStatesFilter && states.contains(OrderStateText.BLOCKED);
@@ -337,7 +340,18 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 }
             }
             
-            if (withStateDate && !orderStreamIsEmpty) {
+            if (withStateDate && !orderStreamIsEmpty && !stateDateDisallowed) {
+                String regex = "[+-]?(\\d+)\\s*([smhdwMy])"; // relative date with only one unit
+                if (ordersFilter.getStateDateFrom() != null) {
+                    if (ordersFilter.getStateDateFrom().trim().matches(regex)) {
+                        ordersFilter.setStateDateFrom(ordersFilter.getStateDateFrom().trim().replaceFirst(regex, "-$1$2"));
+                    }
+                }
+                if (ordersFilter.getStateDateTo() != null) {
+                    if (ordersFilter.getStateDateTo().trim().matches(regex)) {
+                        ordersFilter.setStateDateTo(ordersFilter.getStateDateTo().trim().replaceFirst(regex, "-$1$2"));
+                    }
+                }
                 connection = Globals.createSosHibernateStatelessConnection(API_CALL);
                 HistoryFilter filter = new HistoryFilter();
                 filter.setControllerIds(Collections.singleton(ordersFilter.getControllerId()));
