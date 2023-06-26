@@ -1233,27 +1233,28 @@ try {
     public DBItemDepSignatures saveOrUpdateSignature(Long invConfId, SignaturePath signaturePath, String account, DeployType type)
             throws SOSHibernateException {
         DBItemDepSignatures dbItemSig = getSignature(invConfId);
-        String signature = signaturePath.getSignature().getSignatureString();
-        if (signature != null && !signature.isEmpty()) {
-            if (dbItemSig != null) {
-                dbItemSig.setAccount(account);
-                dbItemSig.setSignature(signature);
-                dbItemSig.setDepHistoryId(null);
-                dbItemSig.setModified(Date.from(Instant.now()));
-                session.update(dbItemSig);
-            } else {
-                dbItemSig = new DBItemDepSignatures();
-                dbItemSig.setAccount(account);
-                dbItemSig.setSignature(signature);
-                dbItemSig.setDepHistoryId(null);
-                dbItemSig.setInvConfigurationId(invConfId);
-                dbItemSig.setModified(Date.from(Instant.now()));
-                session.save(dbItemSig);
-            }
-            return dbItemSig;
-        } else {
-            return null;
+        if(signaturePath != null) {
+            String signature = signaturePath.getSignature().getSignatureString();
+            if (signature != null && !signature.isEmpty()) {
+                if (dbItemSig != null) {
+                    dbItemSig.setAccount(account);
+                    dbItemSig.setSignature(signature);
+                    dbItemSig.setDepHistoryId(null);
+                    dbItemSig.setModified(Date.from(Instant.now()));
+                    session.update(dbItemSig);
+                } else {
+                    dbItemSig = new DBItemDepSignatures();
+                    dbItemSig.setAccount(account);
+                    dbItemSig.setSignature(signature);
+                    dbItemSig.setDepHistoryId(null);
+                    dbItemSig.setInvConfigurationId(invConfId);
+                    dbItemSig.setModified(Date.from(Instant.now()));
+                    session.save(dbItemSig);
+                }
+                return dbItemSig;
+            }     
         }
+        return null;
     }
 
     public DBItemDepSignatures getSignature(long invConfId) throws SOSHibernateException {
