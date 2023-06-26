@@ -569,10 +569,18 @@ public class ImportUtils {
                     signaturePaths.add(signaturePath);
                 }
             }
-            objects.stream().forEach(item -> {
-                objectsWithSignature.put(item, signaturePaths.stream().filter(item2 -> item2.getObjectPath().equals(item.getPath())).findFirst()
-                        .get());
-            });
+//            objects.stream().forEach(item -> {
+//                objectsWithSignature.put(item, signaturePaths.stream().filter(item2 -> item2.getObjectPath().equals(item.getPath())).findFirst()
+//                        .get());
+//            });
+            for(ControllerObject item : objects) {
+                for (SignaturePath item2 : signaturePaths) {
+                    if(item2.getObjectPath().equals(item.getPath())) {
+                        objectsWithSignature.put(item, item2);
+                        break;
+                    }
+                }
+            }
         } finally {
             if (zipStream != null) {
                 try {
@@ -692,10 +700,18 @@ public class ImportUtils {
                     signaturePaths.add(signaturePath);
                 }
             }
-            objects.stream().forEach(item -> {
-                objectsWithSignature.put(item, signaturePaths.stream().filter(item2 -> item2.getObjectPath().equals(item.getPath())).findFirst()
-                        .get());
-            });
+            for(ControllerObject item : objects) {
+                for (SignaturePath item2 : signaturePaths) {
+                    if(item2.getObjectPath().equals(item.getPath())) {
+                        objectsWithSignature.put(item, item2);
+                        break;
+                    }
+                }
+            }
+//            objects.stream().forEach(item -> {
+//                objectsWithSignature.put(item, signaturePaths.stream().filter(item2 -> item2.getObjectPath().equals(item.getPath())).findFirst()
+//                        .get());
+//            });
         } finally {
             try {
                 if (tarArchiveInputStream != null) {
