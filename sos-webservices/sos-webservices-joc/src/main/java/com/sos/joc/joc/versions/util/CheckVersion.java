@@ -31,6 +31,7 @@ public class CheckVersion {
             // value : List of controller versions partially compatible with the given joc version
             put("2.4.1", Arrays.asList());
             put("2.5.0", Arrays.asList());
+            put("2.6.0", Arrays.asList());
         }
     });
     private static final Map<String, List<String>> controllerCompatibleAgentExemptions = Collections.unmodifiableMap(new HashMap<String, List<String>>(){
@@ -40,6 +41,7 @@ public class CheckVersion {
             // value : List of agent versions partially compatible with the given controller version
             put("2.4.1", Arrays.asList());
             put("2.5.0", Arrays.asList("2.5.1"));
+            put("2.6.0", Arrays.asList());
         }
     });
     
