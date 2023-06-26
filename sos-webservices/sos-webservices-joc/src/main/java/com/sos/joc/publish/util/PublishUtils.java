@@ -758,7 +758,9 @@ public abstract class PublishUtils {
                     newDeployedObject.setInventoryConfigurationId(original.getId());
                     break;
                 }
-                newDeployedObject.setSignedContent(entry.getValue().getSignature());
+                if(entry.getValue() != null) {
+                    newDeployedObject.setSignedContent(entry.getValue().getSignature());
+                }
                 if (newDeployedObject.getSignedContent() == null || newDeployedObject.getSignedContent().isEmpty()) {
                     newDeployedObject.setSignedContent(".");
                 }
