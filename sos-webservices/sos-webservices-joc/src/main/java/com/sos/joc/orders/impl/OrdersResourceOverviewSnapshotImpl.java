@@ -211,7 +211,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
                             entry -> entry.getValue())));
             map.put(OrderStateText.BLOCKED, numOfBlockedOrders);
             map.put(OrderStateText.PENDING, numOfPendingOrders);
-            map.put(OrderStateText.SCHEDULED, numOfFreshOrders - numOfBlockedOrders - numOfWaitingForAdmissionOrders);
+            map.put(OrderStateText.SCHEDULED, Math.max(0, numOfFreshOrders - numOfBlockedOrders - numOfWaitingForAdmissionOrders));
             OrdersHelper.groupByStateClasses.values().stream().distinct().forEach(state -> map.putIfAbsent(state, 0));
 
             summary.setBlocked(map.getOrDefault(OrderStateText.BLOCKED, 0));
