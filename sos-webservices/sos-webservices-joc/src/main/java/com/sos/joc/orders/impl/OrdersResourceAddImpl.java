@@ -161,7 +161,8 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     Set<JPositionOrLabel> endPoss = OrdersHelper.getEndPosition(order.getEndPositions(), labelMap, reachablePositions);
                     // TODO check if endPos not before startPos
                     
-                    JFreshOrder o = OrdersHelper.mapToFreshOrder(order, zoneId, startPos, endPoss);
+                    boolean forceJobAdmission = order.getForceJobAdmission() == Boolean.TRUE;
+                    JFreshOrder o = OrdersHelper.mapToFreshOrder(order, zoneId, startPos, endPoss, forceJobAdmission);
                     auditLogDetails.add(new AuditLogDetail(WorkflowPaths.getPath(order.getWorkflowPath()), o.id().string(), controllerId));
                     either = Either.right(o);
                 } catch (Exception ex) {

@@ -569,7 +569,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                     sessionNew.close();
                     sessionNew = null;
 
-                    submitOrdersToController(toSubmit);
+                    submitOrdersToController(toSubmit, in.getForceJobAdmission());
                     notifyAndStoreAuditLogDetails(in, items, auditlog);
                 } catch (IOException | DBConnectionRefusedException | DBInvalidDataException | DBMissingDataException | JocConfigurationException
                         | DBOpenSessionException | ControllerConnectionResetException | ControllerConnectionRefusedException | ParseException
@@ -716,7 +716,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 sessionNew = null;
 
                 if (toSubmit.size() > 0) {
-                    submitOrdersToController(toSubmit);
+                    submitOrdersToController(toSubmit, in.getForceJobAdmission());
                 }
 
                 EventBus.getInstance().post(new DailyPlanEvent(in.getControllerId(), in.getDailyPlanDate()));
@@ -948,7 +948,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         }
     }
 
-    private void submitOrdersToController(List<DBItemDailyPlanOrder> items) throws JsonParseException, JsonMappingException,
+    private void submitOrdersToController(List<DBItemDailyPlanOrder> items, Boolean forceJobAdmission) throws JsonParseException, JsonMappingException,
             DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
             ControllerConnectionResetException, ControllerConnectionRefusedException, IOException, ParseException, SOSException, URISyntaxException,
             InterruptedException, ExecutionException, TimeoutException {
@@ -964,7 +964,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             settings.setPeriodBegin(getSettings().getPeriodBegin());
 
             DailyPlanRunner runner = new DailyPlanRunner(settings);
-            runner.submitOrders(StartupMode.manual, items.get(0).getControllerId(), items, null, getJocError(), getAccessToken());
+            runner.submitOrders(StartupMode.manual, items.get(0).getControllerId(), items, null, forceJobAdmission, getJocError(), getAccessToken());
         }
     }
 

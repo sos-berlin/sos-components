@@ -66,6 +66,7 @@ public class PojosTest {
         order.setWorkflowPath("/test");
         order.setScheduledFor(1488888000000L);
         order.setArguments(vars);
+        order.setForceJobAdmission(null);
         vars.setAdditionalProperty("hallo", "welt");
         vars.setAdditionalProperty("hello", "world");
 //        System.out.println(objectMapper.writeValueAsString(order));
