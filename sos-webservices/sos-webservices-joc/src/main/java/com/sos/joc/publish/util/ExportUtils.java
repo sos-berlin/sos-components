@@ -512,7 +512,6 @@ public class ExportUtils {
                     bOut = new BufferedOutputStream(output);
                     gzipOut = new GZIPOutputStream(bOut);
                     tarOut = new TarArchiveOutputStream(gzipOut);
-                    tarOut.setLongFileMode(TarArchiveOutputStream.LONGFILE_GNU);
                     byte[] contentBytes = null;
                     if (deployables != null && !deployables.isEmpty()) {
                         for (ControllerObject deployable : deployables) {
@@ -611,7 +610,7 @@ public class ExportUtils {
     }
 
     public static StreamingOutput writeTarGzipFileShallow(Set<ConfigurationObject> configurations, DBLayerDeploy dbLayer, Version jocVersion,
-            Version apiVersion, Version inventoryVersion) {
+            Version apiVersion, Version inventoryVersion) throws Exception {
         StreamingOutput streamingOutput = new StreamingOutput() {
 
             @Override
@@ -623,7 +622,6 @@ public class ExportUtils {
                     bOut = new BufferedOutputStream(output);
                     gzipOut = new GZIPOutputStream(bOut);
                     tarOut = new TarArchiveOutputStream(gzipOut);
-                    tarOut.setLongFileMode(TarArchiveOutputStream.LONGFILE_GNU);
                     String content = null;
                     if (configurations != null && !configurations.isEmpty()) {
                         for (ConfigurationObject deployable : configurations) {
