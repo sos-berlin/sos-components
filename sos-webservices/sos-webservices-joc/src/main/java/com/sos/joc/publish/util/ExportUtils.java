@@ -512,6 +512,7 @@ public class ExportUtils {
                     bOut = new BufferedOutputStream(output);
                     gzipOut = new GZIPOutputStream(bOut);
                     tarOut = new TarArchiveOutputStream(gzipOut);
+                    tarOut.setLongFileMode(TarArchiveOutputStream.LONGFILE_GNU);
                     byte[] contentBytes = null;
                     if (deployables != null && !deployables.isEmpty()) {
                         for (ControllerObject deployable : deployables) {
@@ -622,6 +623,7 @@ public class ExportUtils {
                     bOut = new BufferedOutputStream(output);
                     gzipOut = new GZIPOutputStream(bOut);
                     tarOut = new TarArchiveOutputStream(gzipOut);
+                    tarOut.setLongFileMode(TarArchiveOutputStream.LONGFILE_GNU);
                     String content = null;
                     if (configurations != null && !configurations.isEmpty()) {
                         for (ConfigurationObject deployable : configurations) {
@@ -673,7 +675,7 @@ public class ExportUtils {
                             }
                         }
                     }
-                    JocMetaInfo jocMetaInfo = createJocMetaInfo(jocVersion, apiVersion, inventoryVersion);
+                     JocMetaInfo jocMetaInfo = createJocMetaInfo(jocVersion, apiVersion, inventoryVersion);
                     if (!ImportUtils.isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
                         String zipEntryName = ImportUtils.JOC_META_INFO_FILENAME;
                         TarArchiveEntry entry = new TarArchiveEntry(zipEntryName);
