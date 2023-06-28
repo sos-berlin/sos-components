@@ -14,14 +14,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.function.date.SOSHibernateSecondsDiff;
 import com.sos.commons.util.SOSString;
+import com.sos.controller.model.order.FreshOrder;
 import com.sos.inventory.model.schedule.OrderParameterisation;
-import com.sos.inventory.model.schedule.OrderPositions;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.order.OrdersHelper;
@@ -974,7 +973,7 @@ public class DBLayerDailyPlannedOrders {
         item.setCalendarId(plannedOrder.getCalendarId());
         item.setCreated(JobSchedulerDate.nowInUtc());
         item.setExpectedEnd(new Date(plannedOrder.getFreshOrder().getScheduledFor() + plannedOrder.getAverageDuration()));
-        item.setOrderParameterisation(getOrderParameterisation(plannedOrder.getFreshOrder().getPositions()));
+        item.setOrderParameterisation(getOrderParameterisation(plannedOrder.getFreshOrder()));
         item.setModified(JobSchedulerDate.nowInUtc());
 
         if (nr != 0) {// cyclic
@@ -995,12 +994,16 @@ public class DBLayerDailyPlannedOrders {
         return item;
     }
 
-    private String getOrderParameterisation(OrderPositions p) throws JsonProcessingException {
-        if (p == null) {
+    private String getOrderParameterisation(FreshOrder order) throws JsonProcessingException {
+        if (order == null) {
+            return null;
+        }
+        if (order.getPositions() == null && order.getForceJobAdmission() != Boolean.TRUE) {
             return null;
         }
         OrderParameterisation op = new OrderParameterisation();
-        op.setPositions(p);
+        op.setPositions(order.getPositions());
+        op.setForceJobAdmission(order.getForceJobAdmission());
         return Globals.objectMapper.writeValueAsString(op);
     }
 

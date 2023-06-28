@@ -26,9 +26,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
+
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.exception.SOSMissingDataException;
@@ -349,7 +349,7 @@ public class DailyPlanRunner extends TimerTask {
             String accessToken) throws JsonParseException, JsonMappingException, DBConnectionRefusedException, DBInvalidDataException,
             DBMissingDataException, JocConfigurationException, DBOpenSessionException, IOException, ParseException, SOSException, URISyntaxException,
             ControllerConnectionResetException, ControllerConnectionRefusedException, InterruptedException, ExecutionException, TimeoutException {
-        submitOrders(startupMode, controllerId, items, dailyPlanDate, false, jocError, accessToken);
+        submitOrders(startupMode, controllerId, items, dailyPlanDate, null, jocError, accessToken);
     }
     
     public void submitOrders(StartupMode startupMode, String controllerId, List<DBItemDailyPlanOrder> items, String dailyPlanDate,
@@ -400,6 +400,10 @@ public class DailyPlanRunner extends TimerTask {
                 if (item.getOrderParameterisation() != null) {
                     OrderParameterisation storedOP = Globals.objectMapper.readValue(item.getOrderParameterisation(), OrderParameterisation.class);
                     orderParameterisation.setPositions(storedOP.getPositions());
+                    orderParameterisation.setForceJobAdmission(storedOP.getForceJobAdmission());
+                }
+                if (forceJobAdmission != null) {
+                    orderParameterisation.setForceJobAdmission(forceJobAdmission); 
                 }
                 orderParameterisation.setVariables(variables);
                 schedule.getOrderParameterisations().add(orderParameterisation);
@@ -407,7 +411,7 @@ public class DailyPlanRunner extends TimerTask {
                 DailyPlanScheduleWorkflow dailyPlanScheduleWorkflow = new DailyPlanScheduleWorkflow(item.getWorkflowName(), item.getWorkflowPath(),
                         null);
                 FreshOrder freshOrder = buildFreshOrder(dailyPlanDate, schedule, dailyPlanScheduleWorkflow, orderParameterisation, item
-                        .getPlannedStart().getTime(), item.getStartMode(), forceJobAdmission);
+                        .getPlannedStart().getTime(), item.getStartMode());
                 freshOrder.setId(item.getOrderId());
 
                 DailyPlanSchedule dailyPlanSchedule = new DailyPlanSchedule(schedule, Arrays.asList(dailyPlanScheduleWorkflow));
@@ -683,14 +687,14 @@ public class DailyPlanRunner extends TimerTask {
     }
 
     private FreshOrder buildFreshOrder(String dailyPlanDate, Schedule schedule, DailyPlanScheduleWorkflow scheduleWorkflow,
-            OrderParameterisation orderParameterisation, Long startTime, Integer startMode, Boolean forceJobAdmission) throws SOSInvalidDataException {
+            OrderParameterisation orderParameterisation, Long startTime, Integer startMode) throws SOSInvalidDataException {
         FreshOrder order = new FreshOrder();
         order.setId(DailyPlanHelper.buildOrderId(dailyPlanDate, schedule, orderParameterisation, startTime, startMode));
         order.setScheduledFor(startTime);
         order.setArguments(orderParameterisation.getVariables());
         order.setWorkflowPath(scheduleWorkflow.getName());
         order.setPositions(orderParameterisation.getPositions());
-        order.setForceJobAdmission(forceJobAdmission);
+        order.setForceJobAdmission(orderParameterisation.getForceJobAdmission());
         return order;
     }
 
@@ -978,7 +982,7 @@ public class DailyPlanRunner extends TimerTask {
                                         for (DailyPlanScheduleWorkflow sw : dailyPlanSchedule.getWorkflows()) {
 
                                             FreshOrder freshOrder = buildFreshOrder(dailyPlanDate, dailyPlanSchedule.getSchedule(), sw,
-                                                    orderParameterisation, periodEntry.getKey(), startMode, false);
+                                                    orderParameterisation, periodEntry.getKey(), startMode);
 
                                             if (!fromService) {
                                                 schedule.setSubmitOrderToControllerWhenPlanned(settings.isSubmit());

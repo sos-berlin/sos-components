@@ -21,7 +21,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "orderName",
     "variables",
-    "positions"
+    "positions",
+    "forceJobAdmission"
 })
 public class OrderParameterisation {
 
@@ -51,6 +52,8 @@ public class OrderParameterisation {
     @JsonProperty("positions")
     @JsonPropertyDescription("start and end position")
     private OrderPositions positions;
+    @JsonProperty("forceJobAdmission")
+    private Boolean forceJobAdmission;
 
     /**
      * string without < and >
@@ -118,14 +121,24 @@ public class OrderParameterisation {
         this.positions = positions;
     }
 
+    @JsonProperty("forceJobAdmission")
+    public Boolean getForceJobAdmission() {
+        return forceJobAdmission;
+    }
+
+    @JsonProperty("forceJobAdmission")
+    public void setForceJobAdmission(Boolean forceJobAdmission) {
+        this.forceJobAdmission = forceJobAdmission;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("orderName", orderName).append("variables", variables).append("positions", positions).toString();
+        return new ToStringBuilder(this).append("orderName", orderName).append("variables", variables).append("positions", positions).append("forceJobAdmission", forceJobAdmission).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(variables).append(positions).append(orderName).toHashCode();
+        return new HashCodeBuilder().append(forceJobAdmission).append(variables).append(positions).append(orderName).toHashCode();
     }
 
     @Override
@@ -137,7 +150,7 @@ public class OrderParameterisation {
             return false;
         }
         OrderParameterisation rhs = ((OrderParameterisation) other);
-        return new EqualsBuilder().append(variables, rhs.variables).append(positions, rhs.positions).append(orderName, rhs.orderName).isEquals();
+        return new EqualsBuilder().append(forceJobAdmission, rhs.forceJobAdmission).append(variables, rhs.variables).append(positions, rhs.positions).append(orderName, rhs.orderName).isEquals();
     }
 
 }

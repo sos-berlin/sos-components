@@ -545,7 +545,7 @@ public class JsonSerializer {
                     f.setUncatchable(defaultToNull(f.getUncatchable(), Boolean.FALSE));
                     break;
                 case FINISH:
-                    Finish fi = inst.cast();
+                    //Finish fi = inst.cast();
                     //fi.setMessage(quoteString(fi.getMessage()));
                     //fi.setUnsuccessful(defaultToNull(fi.getUnsuccessful(), Boolean.FALSE));
                     break;
@@ -658,6 +658,7 @@ public class JsonSerializer {
                 case ADD_ORDER:
                     AddOrder ao = inst.cast();
                     ao.setArguments(emptyVarsToNull(ao.getArguments()));
+                    ao.setForceJobAdmission(defaultToNull(ao.getForceJobAdmission(), Boolean.FALSE));
                     ao.setRemainWhenTerminated(defaultToNull(ao.getRemainWhenTerminated(), Boolean.FALSE));
                     break;
                 case CYCLE:
@@ -768,6 +769,7 @@ public class JsonSerializer {
                             defaultToNull((String) ao.getStartPosition(), "");
                         }
                     }
+                    ao.setForceJobAdmission(defaultToNull(ao.getForceJobAdmission(), Boolean.FALSE));
                     //Is not optional: ao.setDeleteWhenTerminated(defaultToNull(ao.getDeleteWhenTerminated(), Boolean.TRUE));
                     break;
                 case CYCLE:

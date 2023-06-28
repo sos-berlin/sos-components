@@ -159,7 +159,7 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
                     Globals.disconnect(session);
                 }
 
-                runner.submitOrders(StartupMode.manual, controllerId, items, null, getJocError(), getAccessToken());
+                runner.submitOrders(StartupMode.manual, controllerId, items, null, getJocError(), accessToken);
 
                 if (withEvent) {
                     EventBus.getInstance().post(new DailyPlanEvent(controllerId, in.getDailyPlanDateFrom())); //TODO consider getDailyPlanDateTo
