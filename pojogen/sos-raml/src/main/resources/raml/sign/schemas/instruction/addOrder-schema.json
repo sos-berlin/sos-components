@@ -48,6 +48,9 @@
     			{"$ref": "../../../inventory/schemas/common/string255Required-schema.json"}
     		]
      	}
+    },
+    "forceJobAdmission": {
+    	"type": "boolean"	
     }
   },
   "additionalProperties": false
