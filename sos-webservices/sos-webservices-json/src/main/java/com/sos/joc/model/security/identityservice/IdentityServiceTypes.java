@@ -17,6 +17,7 @@ public enum IdentityServiceTypes {
     LDAP("LDAP"),
     LDAP_JOC("LDAP-JOC"),
     OIDC("OIDC"),
+    OIDC_JOC("OIDC-JOC"),
     FIDO("FIDO"),
     JOC("JOC"),
     CERTIFICATE("CERTIFICATE");

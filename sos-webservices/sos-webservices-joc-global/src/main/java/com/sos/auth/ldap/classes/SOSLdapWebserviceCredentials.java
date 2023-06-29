@@ -21,7 +21,6 @@ import com.sos.joc.model.security.properties.ldap.LdapGroupRolesMappingItem;
 
 public class SOSLdapWebserviceCredentials {
 
-    private static final String COM_SUN_JNDI_LDAP_CONNECT_TIMEOUT = "com.sun.jndi.ldap.connect.timeout";
     private static final String DEFAULT_USER_DN_TEMPLATE = "{0}";
     private static final String DEFAULT_GROUP_NAME_ATTRIBUTE = "memberOf";
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSLdapWebserviceCredentials.class);

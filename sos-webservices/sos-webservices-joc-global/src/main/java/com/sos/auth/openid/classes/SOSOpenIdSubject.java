@@ -82,8 +82,9 @@ public class SOSOpenIdSubject implements ISOSAuthSubject {
     public void setAccessToken(SOSOpenIdAccountAccessToken accessToken) {
         getOpenIdSession().setAccessToken(accessToken);
     }
-
-    public void setPermissionAndRoles(String accountName) throws SOSHibernateException {
+ 
+    
+    public void setPermissionAndRoles(Set<String> setOfTokenRoles, String accountName) throws SOSHibernateException {
         SOSHibernateSession sosHibernateSession = null;
         try {
             setOfRoles = new HashSet<String>();
@@ -91,10 +92,14 @@ public class SOSOpenIdSubject implements ISOSAuthSubject {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSSecurityDBConfiguration");
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
 
-            List<DBItemIamPermissionWithName> listOfRoles = iamAccountDBLayer.getListOfRolesForAccountName(accountName, identityService
-                    .getIdentityServiceId());
-            for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfRoles) {
-                setOfRoles.add(dbItemSOSPermissionWithName.getRoleName());
+            if (IdentityServiceTypes.OIDC_JOC == identityService.getIdentyServiceType()) {
+                List<DBItemIamPermissionWithName> listOfRoles = iamAccountDBLayer.getListOfRolesForAccountName(accountName, identityService
+                        .getIdentityServiceId());
+                for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfRoles) {
+                    setOfRoles.add(dbItemSOSPermissionWithName.getRoleName());
+                }
+            } else {
+                setOfRoles.addAll(setOfTokenRoles);
             }
 
             List<DBItemIamPermissionWithName> listOfPermissions = iamAccountDBLayer.getListOfPermissionsFromRoleNames(setOfRoles, identityService

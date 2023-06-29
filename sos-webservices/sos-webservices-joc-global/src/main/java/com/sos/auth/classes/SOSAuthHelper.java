@@ -587,7 +587,7 @@ public class SOSAuthHelper {
 
     }
 
-    public static DBItemIamIdentityService getIdentityService(String identityServiceName) throws Exception {
+    public static DBItemIamIdentityService getCheckIdentityService(String identityServiceName) throws Exception {
         SOSHibernateSession sosHibernateSession = null;
         DBItemIamIdentityService dbItemIamIdentityService = null;
 
@@ -596,7 +596,6 @@ public class SOSAuthHelper {
             IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
             IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
             filter.setIdentityServiceName(identityServiceName);
-            filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC);
             dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(filter);
 
             if (dbItemIamIdentityService == null) {
