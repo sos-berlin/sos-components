@@ -219,7 +219,8 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                 dbItemIamAccount.setAccountPassword("********");
             }
             dbItemIamAccount.setIdentityServiceId(dbItemIamIdentityService.getId());
-            if (!dbItemIamIdentityService.getIdentityServiceType().equals(IdentityServiceTypes.OIDC.value())) {
+            if (!dbItemIamIdentityService.getIdentityServiceType().equals(IdentityServiceTypes.OIDC.value()) && !dbItemIamIdentityService
+                    .getIdentityServiceType().equals(IdentityServiceTypes.OIDC_JOC.value())) {
                 if (sosInitialPasswordSetting.getInitialPassword().equals(password)) {
                     dbItemIamAccount.setForcePasswordChange(true);
                 } else {
@@ -737,11 +738,12 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
 
             if (IdentityServiceTypes.VAULT_JOC_ACTIVE.value().equals(dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.JOC
                     .value().equals(dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.KEYCLOAK_JOC.value().equals(
-                            dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.OIDC.value().equals(dbItemIamIdentityService
-                                    .getIdentityServiceType()) || IdentityServiceTypes.LDAP_JOC.value().equals(dbItemIamIdentityService
-                                            .getIdentityServiceType()) || IdentityServiceTypes.VAULT_JOC.value().equals(dbItemIamIdentityService
-                                                    .getIdentityServiceType()) || IdentityServiceTypes.FIDO.value().equals(dbItemIamIdentityService
-                                                            .getIdentityServiceType())) {
+                            dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.OIDC_JOC.value().equals(
+                                    dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.OIDC.value().equals(
+                                            dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.LDAP_JOC.value().equals(
+                                                    dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.VAULT_JOC.value()
+                                                            .equals(dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.FIDO
+                                                                    .value().equals(dbItemIamIdentityService.getIdentityServiceType())) {
 
                 iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
                 for (String accountName : accountsFilter.getAccountNames()) {
