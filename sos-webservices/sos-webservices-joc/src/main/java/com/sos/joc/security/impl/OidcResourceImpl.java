@@ -2,6 +2,7 @@ package com.sos.joc.security.impl;
 
 import java.io.InputStream;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -76,7 +77,12 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
             IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
             filter.setDisabled(false);
             filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC);
-            List<DBItemIamIdentityService> listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
+            List<DBItemIamIdentityService> listOfIdentityServicesOIdc = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
+            filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC_JOC);
+            List<DBItemIamIdentityService> listOfIdentityServicesOIdcJoc = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
+            List<DBItemIamIdentityService> listOfIdentityServices = new ArrayList<DBItemIamIdentityService>();
+            listOfIdentityServices.addAll(listOfIdentityServicesOIdcJoc);
+            listOfIdentityServices.addAll(listOfIdentityServicesOIdc);
 
             for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
                 OidcIdentityProvider oidcIdentityProvider = new OidcIdentityProvider();
@@ -166,7 +172,12 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
             filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC);
             filter.setDisabled(false);
             filter.setIdentityServiceName(identityServiceFilter.getIdentityServiceName());
-            List<DBItemIamIdentityService> listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
+            List<DBItemIamIdentityService> listOfIdentityServicesOidc = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
+            filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC_JOC);
+            List<DBItemIamIdentityService> listOfIdentityServicesOidcJoc = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
+            List<DBItemIamIdentityService> listOfIdentityServices = new ArrayList<DBItemIamIdentityService>();
+            listOfIdentityServices.addAll(listOfIdentityServicesOidc);
+            listOfIdentityServices.addAll(listOfIdentityServicesOidcJoc);
 
             OidcIdentityProvider identityProvider = new OidcIdentityProvider();
             if (listOfIdentityServices.size() > 0) {

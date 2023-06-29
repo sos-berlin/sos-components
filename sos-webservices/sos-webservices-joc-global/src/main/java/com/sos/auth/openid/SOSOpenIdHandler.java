@@ -16,7 +16,11 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPublicKeySpec;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -205,7 +209,6 @@ public class SOSOpenIdHandler {
         String aud = null;
         String iss = null;
 
-        URI requestUri = null;
         Base64.Decoder decoder = Base64.getUrlDecoder();
 
         openidConfiguration = new String(decoder.decode(webserviceCredentials.getOpenidConfiguration()));
@@ -325,6 +328,66 @@ public class SOSOpenIdHandler {
 
         } catch (Exception e) {
             LOGGER.warn(String.format("Could not decode jwt id-token"));
+            throw e;
+        } finally {
+            if (jsonReaderHeader != null) {
+                jsonReaderHeader.close();
+                jsonReaderPayload.close();
+            }
+        }
+    }
+
+    public Set<String> getTokenRoles() {
+
+        Set<String> roles = new HashSet<String>();
+        JsonReader jsonReaderHeader = null;
+        JsonReader jsonReaderPayload = null;
+        String idToken = webserviceCredentials.getIdToken();
+
+        try {
+
+            String[] accessTokenParts = idToken.split("\\.");
+            Base64.Decoder decoder = Base64.getUrlDecoder();
+
+            String header = new String(decoder.decode(accessTokenParts[0]));
+            String payload = new String(decoder.decode(accessTokenParts[1]));
+
+            jsonReaderHeader = Json.createReader(new StringReader(header));
+            jsonReaderPayload = Json.createReader(new StringReader(payload));
+            jsonHeader = jsonReaderHeader.readObject();
+            jsonPayload = jsonReaderPayload.readObject();
+
+            if (webserviceCredentials.getClaims() != null) {
+
+                for (String claim : webserviceCredentials.getClaims()) {
+                    JsonArray array = jsonPayload.getJsonArray(claim);
+                    if (array != null) {
+                        for (int i = 0; i < array.size(); i++) {
+                            String group = array.getString(i);
+                            LOGGER.debug("--------- account is member of group:" + group);
+                            Map<String, List<String>> groupRolesMap = webserviceCredentials.getGroupRolesMap();
+                            if (groupRolesMap != null) {
+                                List<String> mappedRoles = groupRolesMap.get(group);
+                                if (mappedRoles != null) {
+                                    for (String mappedRole : mappedRoles) {
+                                        LOGGER.info("--------- role added:" + mappedRole);
+                                        roles.add(mappedRole);
+                                    }
+                                } else {
+                                    LOGGER.debug("---------  group:" + group + " not found in group/roles mapping");
+                                }
+                            }
+                        }
+                    } else {
+                        LOGGER.info("Configured claim <" + claim + "> not found in JWT Id-Token");
+                    }
+                }
+            }
+
+            return roles;
+
+        } catch (Exception e) {
+            LOGGER.warn(String.format("Could not decode jwt id-token:" + idToken + "\r\n" + e.getMessage()));
             throw e;
         } finally {
             if (jsonReaderHeader != null) {

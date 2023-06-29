@@ -44,15 +44,6 @@ public class DailyPlanOrderVariablesImpl extends JOCResourceImpl implements IDai
             OrderVariables answer = new OrderVariables();
             if (item != null && item.getVariableValue() != null) {
                 answer.setVariables(Globals.objectMapper.readValue(item.getVariableValue(), Variables.class));
-                /*
-                 * for (DBItemDailyPlanVariables orderVariable : listOfOrderVariables) { switch (VariableType.fromValue(orderVariable.getVariableType())) { case
-                 * STRING: variables.setAdditionalProperty(orderVariable.getVariableName(), orderVariable.getVariableValue()); break; case INTEGER:
-                 * variables.setAdditionalProperty(orderVariable.getVariableName(), Integer.parseInt(orderVariable.getVariableValue())); break; case DOUBLE:
-                 * variables.setAdditionalProperty(orderVariable.getVariableName(), Double.parseDouble(orderVariable.getVariableValue())); break; case
-                 * BIGDECIMAL: variables.setAdditionalProperty(orderVariable.getVariableName(), new BigDecimal(orderVariable.getVariableValue().replaceAll(",",
-                 * ""))); break; case BOOLEAN: variables.setAdditionalProperty(orderVariable.getVariableName(),
-                 * Boolean.parseBoolean(orderVariable.getVariableValue())); break; } }
-                 */
             } else {
                 // TODO @ur throw exception
             }

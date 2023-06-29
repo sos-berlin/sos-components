@@ -1,6 +1,8 @@
 package com.sos.auth.openid.classes;
 
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +15,7 @@ import com.sos.auth.interfaces.ISOSLogin;
 import com.sos.auth.openid.SOSOpenIdHandler;
 import com.sos.commons.exception.SOSException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
 public class SOSOpenIdLogin implements ISOSLogin {
 
@@ -31,6 +34,7 @@ public class SOSOpenIdLogin implements ISOSLogin {
 
         try {
             SOSOpenIdAccountAccessToken sosOpenIdAccountAccessToken = null;
+            Set<String> setOfTokenRoles = new HashSet<String>();
             if (currentAccount.getSosLoginParameters().getIdToken() != null) {
 
                 SOSOpenIdWebserviceCredentials webserviceCredentials = currentAccount.getSosLoginParameters().getSOSOpenIdWebserviceCredentials();
@@ -48,11 +52,14 @@ public class SOSOpenIdLogin implements ISOSLogin {
 
                     if (!disabled) {
                         sosOpenIdAccountAccessToken = sosOpenIdHandler.login();
+                        if (sosOpenIdAccountAccessToken != null) {
+                            setOfTokenRoles = sosOpenIdHandler.getTokenRoles();
+                        }
                     }
 
                 }
-                sosOpenIdSubject = new SOSOpenIdSubject(currentAccount, identityService);
             }
+            sosOpenIdSubject = new SOSOpenIdSubject(currentAccount, identityService);
             if (sosOpenIdAccountAccessToken == null || sosOpenIdAccountAccessToken.getAccessToken() == null || sosOpenIdAccountAccessToken
                     .getAccessToken().isEmpty()) {
                 sosOpenIdSubject.setAuthenticated(false);
@@ -60,7 +67,14 @@ public class SOSOpenIdLogin implements ISOSLogin {
             } else {
                 sosOpenIdSubject.setAuthenticated(true);
                 sosOpenIdSubject.setAccessToken(sosOpenIdAccountAccessToken);
-                sosOpenIdSubject.setPermissionAndRoles(currentAccount.getAccountname());
+                if (IdentityServiceTypes.OIDC_JOC == identityService.getIdentyServiceType()) {
+                    sosOpenIdSubject.setPermissionAndRoles(null, currentAccount.getAccountname());
+                } else {
+                    if (IdentityServiceTypes.OIDC == identityService.getIdentyServiceType()) {
+                        sosOpenIdSubject.setPermissionAndRoles(setOfTokenRoles, currentAccount.getAccountname());
+                    }
+                }
+
             }
 
         } catch (IOException e) {

@@ -2,7 +2,10 @@ package com.sos.auth.openid.classes;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +20,7 @@ import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
+import com.sos.joc.model.security.properties.oidc.OidcGroupRolesMappingItem;
 
 public class SOSOpenIdWebserviceCredentials {
 
@@ -35,6 +39,8 @@ public class SOSOpenIdWebserviceCredentials {
     private String truststorePath = "";
     private String truststorePassword = "";
     private KeystoreType truststoreType = null;
+    private Map<String, List<String>> groupRolesMap;
+    private List<String> claims;
 
     public String getAuthenticationUrl() {
         return authenticationUrl;
@@ -78,6 +84,10 @@ public class SOSOpenIdWebserviceCredentials {
 
     public String getProviderName() {
         return providerName;
+    }
+
+    public Map<String, List<String>> getGroupRolesMap() {
+        return groupRolesMap;
     }
 
     private String getProperty(String value, String defaultValue) {
@@ -134,6 +144,23 @@ public class SOSOpenIdWebserviceCredentials {
                     userAttribute = getProperty(properties.getOidc().getIamOidcUserAttribute(), "");
                 }
 
+                if (groupRolesMap == null) {
+                    if (properties.getOidc().getIamOidcGroupRolesMap() != null && properties.getOidc().getIamOidcGroupRolesMap().getItems() != null) {
+                        groupRolesMap = new HashMap<String, List<String>>();
+                        for (OidcGroupRolesMappingItem entry : properties.getOidc().getIamOidcGroupRolesMap().getItems()) {
+                            groupRolesMap.put(entry.getOidcGroup(), entry.getRoles());
+                        }
+                    }
+                }
+                if (claims == null) {
+                    if (properties.getOidc().getIamOidcGroupClaims() != null) {
+                        claims = new ArrayList<String>();
+                        for (String claim : properties.getOidc().getIamOidcGroupClaims()) {
+                            claims.add(claim);
+                        }
+                    }
+                }
+
                 String truststorePathGui = getProperty(properties.getOidc().getIamOidcTruststorePath(), "");
                 String truststorePassGui = getProperty(properties.getOidc().getIamOidcTruststorePassword(), "");
                 String tTypeGui = getProperty(properties.getOidc().getIamOidcTruststoreType(), "");
@@ -182,5 +209,9 @@ public class SOSOpenIdWebserviceCredentials {
 
     public void setOpenidConfiguration(String openidConfiguration) {
         this.openidConfiguration = openidConfiguration;
+    }
+
+    public List<String> getClaims() {
+        return claims;
     }
 }
