@@ -200,7 +200,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
             filter.setDisabled(false);
             filter.setIdentityServiceName(identityServiceFilter.getIdentityServiceName());
             List<DBItemIamIdentityService> listOfIdentityServicesOidc = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
-            filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC_JOC);
+            filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC);
             List<DBItemIamIdentityService> listOfIdentityServicesOidcJoc = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
 
             OidcIdentityProvider identityProvider = new OidcIdentityProvider();
@@ -214,7 +214,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
                 identityProvider.setIdentityServiceName(listOfIdentityServicesOidcJoc.get(0).getIdentityServiceName());
 
                 jocConfigurationFilter.setName(listOfIdentityServicesOidcJoc.get(0).getIdentityServiceName());
-                jocConfigurationFilter.setObjectType(IdentityServiceTypes.OIDC.value());
+                jocConfigurationFilter.setObjectType(IdentityServiceTypes.OIDC_JOC.value());
                 List<DBItemJocConfiguration> listOfJocConfigurations = jocConfigurationDBLayer.getJocConfigurationList(jocConfigurationFilter, 0);
                 if (listOfJocConfigurations.size() == 1) {
                     DBItemJocConfiguration dbItem = listOfJocConfigurations.get(0);
