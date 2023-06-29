@@ -56,7 +56,7 @@ public class JobArgument<T> extends SOSArgument<T> {
     }
 
     public enum Type {
-        KNOWN, UNKNOWN;
+        DECLARED, NOT_DECLARED;
     }
 
     private final List<String> nameAliases;
@@ -91,16 +91,16 @@ public class JobArgument<T> extends SOSArgument<T> {
 
     public JobArgument(String name, boolean required, T defaultValue, DisplayMode displayMode, List<String> nameAliases) {
         super(name, required, defaultValue, displayMode);
-        this.type = Type.KNOWN;
+        this.type = Type.DECLARED;
         this.valueSource = ValueSource.JAVA;
         this.nameAliases = nameAliases;
     }
 
-    /* internal usage - unknown Arguments */
+    /* internal usage - not declared Arguments */
     protected JobArgument(String name, T value, ValueSource valueSource) {
         this(name, false, null, DisplayMode.UNKNOWN, null);
         setValue(value);
-        this.type = Type.UNKNOWN;
+        this.type = Type.NOT_DECLARED;
         this.valueSource = valueSource;
     }
 
@@ -108,7 +108,7 @@ public class JobArgument<T> extends SOSArgument<T> {
     protected JobArgument(SOSArgument<T> arg, java.lang.reflect.Type clazzType) {
         super(arg);
         setValue(arg.getValue());
-        this.type = Type.KNOWN;
+        this.type = Type.DECLARED;
         this.valueSource = ValueSource.JAVA;
         this.nameAliases = null;
         this.clazzType = clazzType;

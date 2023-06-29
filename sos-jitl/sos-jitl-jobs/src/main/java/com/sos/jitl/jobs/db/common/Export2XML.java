@@ -55,17 +55,13 @@ public class Export2XML {
                 writer.write("    </ROW>" + NEW_LINE);
                 dataRows++;
 
-                if (logger != null) {
-                    int count = dataRows;
-                    if (count % 1_000 == 0) {
-                        logger.info("[export]%s entries processed ...", count);
-                    }
+                int count = dataRows;
+                if (count % 1_000 == 0) {
+                    logger.info("[export]%s entries processed ...", count);
                 }
             }
             writer.write("</RESULTSET>");
-            if (logger != null) {
-                logger.info("[export][%s]total data rows written=%s, duration=%s", outputFile, dataRows, SOSDate.getDuration(start, Instant.now()));
-            }
+            logger.info("[export][%s]total data rows written=%s, duration=%s", outputFile, dataRows, SOSDate.getDuration(start, Instant.now()));
         } catch (Throwable e) {
             removeOutputFile = true;
             String f = outputFile.toString();

@@ -9,9 +9,9 @@ import java.util.stream.Stream;
 
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
-import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.JobArgument;
 import com.sos.jitl.jobs.common.JobArguments;
+import com.sos.jitl.jobs.common.JobHelper;
 import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
 
 public class PLSQLJobArguments extends JobArguments {
@@ -20,7 +20,7 @@ public class PLSQLJobArguments extends JobArguments {
         CSV, XML, JSON
     }
 
-    private JobArgument<Path> hibernateFile = new JobArgument<Path>("hibernate_configuration_file", false, Job.getAgentHibernateFile());
+    private JobArgument<Path> hibernateFile = new JobArgument<Path>("hibernate_configuration_file", false, JobHelper.getAgentHibernateFile());
     private JobArgument<String> command = new JobArgument<String>("command", false);
     private JobArgument<String> commandScriptFile = new JobArgument<String>("command_script_file", false);
     private JobArgument<String> variableParserRegExpr = new JobArgument<String>("variable_parser_reg_expr", false,

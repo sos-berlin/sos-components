@@ -8,6 +8,7 @@ public class TestJob extends TestJobSuperClass {
 
     @Override
     public JOutcome.Completed onOrderProcess(JobStep<TestJobArguments> step) throws Exception {
+        step.getLogger().info("info from job onOrderProcess");
         return step.success();
     }
 }

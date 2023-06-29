@@ -19,10 +19,10 @@ public class FileNotExistsJob extends ABlockingInternalJob<FileOperationsJobArgu
 
     @Override
     public JOutcome.Completed onOrderProcess(JobStep<FileOperationsJobArguments> step) throws Exception {
-        AFileOperationsJob.checkArguments(step.getArguments());
+        AFileOperationsJob.checkArguments(step.getDeclaredArguments());
 
         FileOperationsImpl fo = new FileOperationsImpl(step.getLogger());
-        FileOperationsJobArguments args = step.getArguments();
+        FileOperationsJobArguments args = step.getDeclaredArguments();
         boolean result = !fo.existsFile(new File(args.getSourceFile().getValue()), args.getFileSpec().getValue(), args.getRecursive().getValue(),
                 Pattern.CASE_INSENSITIVE, args.getMinFileAge().getValue(), args.getMaxFileAge().getValue(), args.getMinFileSize().getValue(), args
                         .getMaxFileSize().getValue(), args.getSkipFirstFiles().getValue(), args.getSkipLastFiles().getValue());

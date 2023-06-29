@@ -1,13 +1,14 @@
 package com.sos.jitl.jobs.db.oracle;
 
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
 import com.sos.jitl.jobs.common.UnitTestJobHelper;
 import com.sos.jitl.jobs.db.oracle.PLSQLJobArguments.ResultSetAs;
 
@@ -20,21 +21,18 @@ public class PLSQLJobTest {
     @Ignore
     @Test
     public void test() throws Exception {
-        PLSQLJobArguments args = new PLSQLJobArguments();
-        args.setCommand("select 1 from dual");
-        // args.setCommand("select * from SOS_TEST_SLEEP_VIEW");
-        args.setHibernateFile(Paths.get("src/test/resources/hibernate.cfg.xml"));
+        Map<String, Object> args = new HashMap<>();
+        args.put("hibernate_configuration_file", Paths.get("src/test/resources/hibernate.cfg.xml"));
+        args.put("command", "select 1 from dual");
+        args.put("resultset_as", ResultSetAs.XML);
+        args.put("result_file", Paths.get("src/test/resources/plsqljob_export.xml"));
 
-        // Export
-        args.setResultSetAs(ResultSetAs.XML);
-        args.setResultFile(Paths.get("src/test/resources/plsqljob_export.xml"));
+        // args.put("credential_store_file", "db.kdbx");
+        // args.put("credential_store_key_file", "db.kdbx.key");
+        // args.put("credential_store_password", "...secret...");
+        // args.put("credential_store_entry_path", "/sos/my_path");
 
-        // TODO cs support
-        SOSCredentialStoreArguments csArgs = new SOSCredentialStoreArguments();
-        csArgs.setEntryPath(null);
-
-        PLSQLJob job = new PLSQLJob(null);
-        UnitTestJobHelper<PLSQLJobArguments> h = new UnitTestJobHelper<>(job);
+        UnitTestJobHelper<PLSQLJobArguments> h = new UnitTestJobHelper<>(new PLSQLJob(null));
         JOutcome.Completed result = h.onOrderProcess(args);
         LOGGER.info("###############################################");
         LOGGER.info(String.format("[RESULT]%s", result));

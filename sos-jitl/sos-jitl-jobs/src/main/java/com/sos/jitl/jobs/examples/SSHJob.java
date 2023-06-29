@@ -15,8 +15,8 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
 
     @Override
     public Completed onOrderProcess(JobStep<SSHJobArguments> step) throws Exception {
-        SSHProviderArguments providerArgs = step.getAppArguments(SSHProviderArguments.class);
-        SSHProvider provider = new SSHProvider(providerArgs, step.getAppArguments(SOSCredentialStoreArguments.class));
+        SSHProviderArguments providerArgs = step.getIncludedArguments(SSHProviderArguments.class);
+        SSHProvider provider = new SSHProvider(providerArgs, step.getIncludedArguments(SOSCredentialStoreArguments.class));
         step.setPayload(provider);
         try {
             step.getLogger().info("[connect]%s:%s ...", providerArgs.getHost().getDisplayValue(), providerArgs.getPort().getDisplayValue());
@@ -24,7 +24,7 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
             step.getLogger().info("[connected][%s:%s]%s", providerArgs.getHost().getDisplayValue(), providerArgs.getPort().getDisplayValue(), provider
                     .getServerInfo().toString());
 
-            if (!step.getArguments().getCommand().isEmpty()) {
+            if (!step.getDeclaredArguments().getCommand().isEmpty()) {
                 executeCommand(provider, step);
             }
         } catch (Throwable e) {
@@ -39,8 +39,8 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
     }
 
     private void executeCommand(SSHProvider provider, JobStep<SSHJobArguments> step) {
-        step.getLogger().info("[execute command]%s", step.getArguments().getCommand().getDisplayValue());
-        SOSCommandResult r = provider.executeCommand(step.getArguments().getCommand().getValue());
+        step.getLogger().info("[execute command]%s", step.getDeclaredArguments().getCommand().getDisplayValue());
+        SOSCommandResult r = provider.executeCommand(step.getDeclaredArguments().getCommand().getValue());
 
         step.getLogger().info("[exitCode]%s", r.getExitCode());
         if (!SOSString.isEmpty(r.getStdOut())) {

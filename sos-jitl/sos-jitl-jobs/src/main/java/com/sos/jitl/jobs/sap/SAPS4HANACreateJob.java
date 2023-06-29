@@ -3,7 +3,6 @@ package com.sos.jitl.jobs.sap;
 import java.util.Collections;
 import java.util.Map;
 
-import com.sos.jitl.jobs.common.JobArgument.Type;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.common.JobStep;
 import com.sos.jitl.jobs.exception.SOSJobProblemException;
@@ -26,18 +25,19 @@ public class SAPS4HANACreateJob extends ASAPS4HANAJob {
 
     @Override
     public Completed onOrderProcess(JobStep<CommonJobArguments> step) throws Exception {
-        CommonJobArguments args = step.getArguments();
+        CommonJobArguments args = step.getDeclaredArguments();
         execute(step, args, RunIds.Scope.JOB);
-        return step.success(0);
+        return step.success();
     }
-    
+
     @Override
-    public void createInactiveSchedule(JobStep<CommonJobArguments> step, CommonJobArguments args, HttpClient httpClient, JobLogger logger) throws Exception {
-        Map<String, Object> unknownArgs = com.sos.jitl.jobs.common.Job.asNameValueMap(step.getAllCurrentArguments(Type.UNKNOWN));
-        logger.info(unknownArgs.toString());
+    public void createInactiveSchedule(JobStep<CommonJobArguments> step, CommonJobArguments args, HttpClient httpClient, JobLogger logger)
+            throws Exception {
+        Map<String, Object> notDeclaredArgs = step.getAllNotDeclaredArgumentsAsNameValueMap();
+        logger.info(notDeclaredArgs.toString());
         ScheduleData data = new ScheduleData();
-        unknownArgs.entrySet().stream().filter(arg -> !arg.getKey().startsWith("js7")).filter(arg -> arg
-                .getValue() instanceof String).forEach(arg -> data.setAdditionalProperty(arg.getKey(), (String) arg.getValue()));
+        notDeclaredArgs.entrySet().stream().filter(arg -> !arg.getKey().startsWith("js7")).filter(arg -> arg.getValue() instanceof String).forEach(
+                arg -> data.setAdditionalProperty(arg.getKey(), (String) arg.getValue()));
         Schedule schedule = new Schedule().withActive(false).withData(data).withDescription(setScheduleDescription(step));
         Job job = new Job().withAction(args.getActionEndpoint().getValue().toString()).withHttpMethod(args.getActionEndpointHTTPMethod().getValue())
                 .withActive(true).withDescription(args.getJobDescription().getValue()).withName(getJobName(step)).withSchedules(Collections
@@ -53,5 +53,5 @@ public class SAPS4HANACreateJob extends ASAPS4HANAJob {
     private static String getJobName(JobStep<CommonJobArguments> step) throws SOSJobProblemException {
         return String.format("%s#%s", step.getWorkflowName(), step.getJobInstructionLabel());
     }
-    
+
 }

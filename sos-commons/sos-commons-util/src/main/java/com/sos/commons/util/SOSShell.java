@@ -69,7 +69,7 @@ public class SOSShell {
     }
 
     public static SOSCommandResult executeCommand(String script, Charset encoding, SOSTimeout timeout, SOSEnv env) {
-        SOSCommandResult result = new SOSCommandResult(script, getEncoding(encoding));
+        SOSCommandResult result = new SOSCommandResult(script, getEncoding(encoding), timeout);
         try {
             ProcessBuilder pb = new ProcessBuilder(getCommand(script));
             if (env != null && env.getLocalEnvs().size() > 0) {

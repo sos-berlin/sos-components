@@ -31,6 +31,7 @@ import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.common.JobStep;
+import com.sos.jitl.jobs.common.JobStepOutcome;
 import com.sos.jitl.jobs.ssh.exception.SOSJobSSHException;
 import com.sos.jitl.jobs.ssh.util.SSHJobUtil;
 
@@ -42,22 +43,22 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
 
     @Override
     public Completed onOrderProcess(JobStep<SSHJobArguments> step) throws Exception {
-        
-        SSHProviderArguments providerArgs = step.getAppArguments(SSHProviderArguments.class);
-        SSHProvider provider = new SSHProvider(providerArgs, step.getAppArguments(SOSCredentialStoreArguments.class));
+
+        SSHProviderArguments providerArgs = step.getIncludedArguments(SSHProviderArguments.class);
+        SSHProvider provider = new SSHProvider(providerArgs, step.getIncludedArguments(SOSCredentialStoreArguments.class));
         step.setPayload(provider);
-        SSHJobArguments jobArgs = step.getArguments();
+        SSHJobArguments jobArgs = step.getDeclaredArguments();
 
         SOSEnv envVars = new SOSEnv();
         JobLogger logger = step.getLogger();
-        Map<String, Object> outcomes = new HashMap<String, Object>();
         String returnValuesFileName = "sos-ssh-return-values-" + UUID.randomUUID() + ".txt";
         String resolvedReturnValuesFileName = null;
         boolean isWindowsShell = false;
         String delimiter = null;
         List<String> tempFilesToDelete = new ArrayList<String>();
         List<Path> localTempFilesToDelete = new ArrayList<Path>();
-        
+
+        JobStepOutcome outcome = step.newJobStepOutcome();
         SOSCommandResult result = null;
         /** steps - read agent environment variables - export some of them - execute command, script, remote script - set return values */
         try {
@@ -67,18 +68,18 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
                     .getServerInfo().toString());
             isWindowsShell = provider.getServerInfo().hasWindowsShell();
             delimiter = isWindowsShell ? SSHJobUtil.DEFAULT_WINDOWS_DELIMITER : SSHJobUtil.DEFAULT_LINUX_DELIMITER;
-            if(jobArgs.getCommandDelimiter().isDirty()) {
+            if (jobArgs.getCommandDelimiter().isDirty()) {
                 delimiter = jobArgs.getCommandDelimiter().getValue();
             }
-            
+
             Map<String, String> allEnvVars = Collections.emptyMap();
             if (jobArgs.getCreateEnvVars().getValue()) {
                 Map<String, String> js7EnvVars = SSHJobUtil.getJS7EnvVars();
                 Map<String, String> envVarsOfWorkflowParameters = SSHJobUtil.getWorkflowParamsAsEnvVars(step, jobArgs);
-                Map<String,String> stepEnvVars = SSHJobUtil.getJobResourceEnvVars(step);
-                allEnvVars = Stream.of(js7EnvVars, envVarsOfWorkflowParameters, stepEnvVars).flatMap(map -> map.entrySet().stream())
-                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-                Map<String,String> resolved = resolveReturnValuesFilename(jobArgs, tempFilesToDelete, returnValuesFileName, isWindowsShell, logger);
+                Map<String, String> stepEnvVars = SSHJobUtil.getJobResourceEnvVars(step);
+                allEnvVars = Stream.of(js7EnvVars, envVarsOfWorkflowParameters, stepEnvVars).flatMap(map -> map.entrySet().stream()).collect(
+                        Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                Map<String, String> resolved = resolveReturnValuesFilename(jobArgs, tempFilesToDelete, returnValuesFileName, isWindowsShell, logger);
                 resolvedReturnValuesFileName = resolved.get(resolved.keySet().toArray()[0]);
                 allEnvVars.putAll(resolved);
                 envVars.setLocalEnvs(allEnvVars);// ??? local?global
@@ -90,7 +91,7 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
                     logSosEnvVars(envVarsOfWorkflowParameters, logger);
                 }
             } else {
-                Map<String,String> resolved = resolveReturnValuesFilename(jobArgs, tempFilesToDelete, returnValuesFileName, isWindowsShell, logger);
+                Map<String, String> resolved = resolveReturnValuesFilename(jobArgs, tempFilesToDelete, returnValuesFileName, isWindowsShell, logger);
                 resolvedReturnValuesFileName = resolved.get(resolved.keySet().toArray()[0]);
                 envVars.setLocalEnvs(resolved);
             }
@@ -98,7 +99,7 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
             if (!jobArgs.getCommand().isEmpty()) {
                 commands = splitCommands(jobArgs, logger);
                 // new feature 2022-04-05, SP
-                if(!jobArgs.getCommandScriptFile().isEmpty()) {
+                if (!jobArgs.getCommandScriptFile().isEmpty()) {
                     String remoteCmdScriptFilepath = createRemoteCommandScript(provider, jobArgs, tempFilesToDelete, localTempFilesToDelete,
                             isWindowsShell, logger);
                     envVars.getLocalEnvs().put("JS7_SSH_TMP_SCRIPT_FILE", remoteCmdScriptFilepath);
@@ -136,23 +137,23 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
                 result = provider.executeCommand(command, envVars);
 
                 if (!SOSString.isEmpty(result.getStdOut())) {
-                    outcomes.put("std_out", result.getStdOut());
+                    outcome.putVariable("std_out", result.getStdOut());
                     logger.info("[stdOut] %s", result.getStdOut());
                 }
                 if (!SOSString.isEmpty(result.getStdErr())) {
-                    outcomes.put("std_err", result.getStdErr());
+                    outcome.putVariable("std_err", result.getStdErr());
                     logger.error("[stdErr] %s", result.getStdErr());
                 }
                 logger.info("[returnCode] %s", result.getExitCode());
-                outcomes.put("exit_code", result.getExitCode());
-                outcomes.put("returnCode", result.getExitCode());
+                outcome.putVariable("exit_code", result.getExitCode());
+                outcome.putVariable("returnCode", result.getExitCode());
                 if (result.getException() != null) {
-                    outcomes.put("exception", result.getException());
+                    outcome.putVariable("exception", result.getException());
                     logger.info("[exception] %s", SOSString.toString(result.getException()));
                 }
             }
             if (resolvedReturnValuesFileName != null) {
-                outcomes.putAll(executePostCommand(jobArgs, provider, resolvedReturnValuesFileName, isWindowsShell, logger));
+                outcome.getVariables().putAll(executePostCommand(jobArgs, provider, resolvedReturnValuesFileName, isWindowsShell, logger));
             }
         } catch (Throwable e) {
             if (jobArgs.getRaiseExceptionOnError().getValue()) {
@@ -190,10 +191,10 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
             }
             if (result != null) {
                 SSHJobUtil.checkStdErr(result.getStdErr(), jobArgs, logger);
-                SSHJobUtil.checkExitCode(result.getExitCode(), jobArgs, outcomes, logger);
+                SSHJobUtil.checkExitCode(result.getExitCode(), jobArgs, outcome, logger);
             }
         }
-        return step.success(outcomes);
+        return step.success(outcome);
     }
 
     private String[] splitCommands(SSHJobArguments jobArgs, JobLogger logger) {
@@ -210,8 +211,8 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
         } else if (!jobArgs.getCommandScriptFile().isEmpty()) {
             logger.info("[execute command script file]%s", jobArgs.getCommandScriptFile().getDisplayValue());
             String commandScript = new String(Files.readAllBytes(Paths.get(jobArgs.getCommandScriptFile().getValue())));
-            return putCommandScriptFile(SSHJobUtil.substituteVariables(parameterSubstitutor, commandScript), provider, jobArgs,
-                    tempFilesToDelete, localTempFilesToDelete, isWindowsShell, logger);
+            return putCommandScriptFile(SSHJobUtil.substituteVariables(parameterSubstitutor, commandScript), provider, jobArgs, tempFilesToDelete,
+                    localTempFilesToDelete, isWindowsShell, logger);
         }
         return null;
     }
@@ -256,14 +257,14 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
         // handler.putFile(source, target, 0700);
         return target;
     }
-    
+
     private void addLocalTemporaryFilesToDelete(final String filepath, List<Path> localTempFilesToDelete, JobLogger logger) {
         if (!SOSString.isEmpty(filepath)) {
             localTempFilesToDelete.add(Paths.get(filepath));
             logger.debug(String.format("local file %s marked for deletion", filepath));
         }
     }
-    
+
     private void addTemporaryFilesToDelete(final String filepath, List<String> tempFilesToDelete, JobLogger logger) {
         if (!SOSString.isEmpty(filepath)) {
             tempFilesToDelete.add(filepath);
@@ -357,9 +358,9 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
             tempFilesToDelete.clear();
         }
     }
-    
+
     private void deleteLocalTempFiles(List<Path> localTempFilesToDelete, JobLogger logger) {
-        if(localTempFilesToDelete != null && !localTempFilesToDelete.isEmpty()) {
+        if (localTempFilesToDelete != null && !localTempFilesToDelete.isEmpty()) {
             for (Path tempFile : localTempFilesToDelete) {
                 try {
                     if (logger.isDebugEnabled()) {
@@ -369,7 +370,7 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
                 } catch (IOException e) {
                     logger.warn(String.format("error ocurred deleting %1$s locally: ", tempFile.toString()), e);
                 }
-                
+
             }
         }
     }

@@ -57,6 +57,7 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
         this(null);
     }
 
+    /** e.g. for jobContext.jobArguments() or getAgentSystemEncoding */
     public ABlockingInternalJob(JobContext jobContext) {
         this.jobContext = jobContext;
     }
@@ -129,21 +130,21 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
                         A args = createJobArguments(exceptions, jobStep);
                         jobStep.init(args);
 
-                        mockLevel = jobStep.getArguments().getMockLevel().getValue();
+                        mockLevel = jobStep.getDeclaredArguments().getMockLevel().getValue();
                         switch (mockLevel) {
                         case OFF:
                             jobStep.logParameterization(null);
                             checkExceptions(jobStep, exceptions);
                             return onOrderProcess(jobStep);
                         case ERROR:
-                            jobStep.logParameterization(String.format("Mock Execution: %s=%s.", jobStep.getArguments().getMockLevel().getName(),
-                                    mockLevel));
+                            jobStep.logParameterization(String.format("Mock Execution: %s=%s.", jobStep.getDeclaredArguments().getMockLevel()
+                                    .getName(), mockLevel));
                             checkExceptions(jobStep, exceptions);
                             return jobStep.success();
                         case INFO:
                         default:
-                            jobStep.logParameterization(String.format("Mock Execution: %s=%s.", jobStep.getArguments().getMockLevel().getName(),
-                                    mockLevel));
+                            jobStep.logParameterization(String.format("Mock Execution: %s=%s.", jobStep.getDeclaredArguments().getMockLevel()
+                                    .getName(), mockLevel));
                             return jobStep.success();
                         }
                     } catch (Throwable e) {
@@ -153,8 +154,8 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
                             return jobStep.failed(e.toString(), e);
                         case INFO:
                         default:
-                            jobStep.getLogger().info(String.format("Mock Execution: %s=%s, Exception: %s", jobStep.getArguments().getMockLevel()
-                                    .getName(), mockLevel, e.toString()));
+                            jobStep.getLogger().info(String.format("Mock Execution: %s=%s, Exception: %s", jobStep.getDeclaredArguments()
+                                    .getMockLevel().getName(), mockLevel, e.toString()));
                             return jobStep.success();
                         }
                     }
@@ -270,7 +271,7 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
     private Map<String, Object> mergeJobAndStepArguments(final JobStep<A> step) {
         Map<String, Object> map = null;
         if (step == null) {
-            map = Job.convert(jobContext.jobArguments());
+            map = JobHelper.convert(jobContext.jobArguments());
         } else {
             Set<Entry<String, Value>> stepArgs = step.getInternalStep().arguments().entrySet();
             Set<Entry<String, Value>> orderArgs = step.getInternalStep().order().arguments().entrySet();
@@ -281,7 +282,7 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
             } else {
                 stream = Stream.concat(Stream.concat(jobContext.jobArguments().entrySet().stream(), stepArgs.stream()), orderArgs.stream());
             }
-            map = Job.convert(stream.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (value1, value2) -> value2)));
+            map = JobHelper.convert(stream.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (value1, value2) -> value2)));
         }
         return map;
     }
@@ -300,8 +301,8 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
         Map<String, JobDetailValue> lastSucceededOutcomes = step == null ? null : step.getLastSucceededOutcomes();
         Map<String, JobDetailValue> jobResources = step == null ? null : step.getJobResourcesValues();
 
-        if (instance.getAppArguments() != null && instance.getAppArguments().size() > 0) {
-            for (Map.Entry<String, List<JobArgument>> e : instance.getAppArguments().entrySet()) {
+        if (instance.getIncludedArguments() != null && instance.getIncludedArguments().size() > 0) {
+            for (Map.Entry<String, List<JobArgument>> e : instance.getIncludedArguments().entrySet()) {
                 for (JobArgument arg : e.getValue()) {
                     arg.setPayload(e.getKey());
                     setJobArgument(step, map, lastSucceededOutcomes, jobResources, arg, null);
@@ -315,7 +316,7 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
     private A setJobArguments(List<SOSJobArgumentException> exceptions, final JobStep<A> step, Map<String, Object> map,
             Map<String, JobDetailValue> lastSucceededOutcomes, Map<String, JobDetailValue> jobResources, A instance) throws Exception {
 
-        List<Field> fields = Job.getJobArgumentFields(instance);
+        List<Field> fields = JobHelper.getJobArgumentFields(instance);
         for (Field field : fields) {
             try {
                 field.setAccessible(true);
@@ -410,7 +411,7 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
     private Object getNamedValue(final JobStep<A> step, final String name) throws SOSJobProblemException {
         Optional<Either<Problem, Value>> opt = step.getInternalStep().namedValue(name);
         if (opt.isPresent()) {
-            return Job.getValue(Job.getFromEither(opt.get()));
+            return JobHelper.getValue(JobHelper.getFromEither(opt.get()));
         }
         return null;
     }

@@ -1,7 +1,6 @@
 package com.sos.jitl.jobs.checkhistory.classes;
 
 import com.sos.commons.exception.SOSException;
-import com.sos.jitl.jobs.common.Globals;
 import com.sos.jitl.jobs.common.JobLogger;
 
 public class ParameterResolver {
@@ -52,22 +51,22 @@ public class ParameterResolver {
                 case "startedfrom":
                     paramStartedFrom = true;
                     startedFrom = pValue;
-                    Globals.debug(logger, "startedFrom=" + startedFrom);
+                    logger.debug("startedFrom=" + startedFrom);
                     break;
                 case "startedto":
                     paramStartedTo = true;
                     startedTo = pValue;
-                    Globals.debug(logger, "startedTo=" + startedTo);
+                    logger.debug("startedTo=" + startedTo);
                     break;
                 case "completedfrom":
                     paramCompletedFrom = true;
                     completedFrom = pValue;
-                    Globals.debug(logger, "completedFrom=" + completedFrom);
+                    logger.debug("completedFrom=" + completedFrom);
                     break;
                 case "completedto":
                     paramCompletedTo = true;
                     completedTo = pValue;
-                    Globals.debug(logger, "completedto=" + completedTo);
+                    logger.debug("completedto=" + completedTo);
                     break;
                 case "count":
                     try {
@@ -99,10 +98,10 @@ public class ParameterResolver {
                         paramCount = true;
 
                     } catch (NumberFormatException e) {
-                        Globals.log(logger, "Not a valid number:" + pValue);
+                        logger.info("Not a valid number:" + pValue);
                         count = 0;
                     }
-                    Globals.debug(logger, "completedto=" + completedTo);
+                    logger.debug("completedto=" + completedTo);
                     break;
                 default:
                     if (!pName.isEmpty()) {
