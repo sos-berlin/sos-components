@@ -714,9 +714,9 @@ public class HistoryEventEntry {
             private OutcomeInfo(Outcome outcome) {
                 if (outcome instanceof Completed) {
                     Completed c = (Completed) outcome;
-                    handleNamedValues(c);
                     isSucceeded = c.isSucceeded();
                     isFailed = !isSucceeded; // c.isFailed();
+                    handleNamedValues(c);
                     if (isFailed) {
                         type = OutcomeType.failed;
                         if (outcome instanceof Failed) {
@@ -772,12 +772,21 @@ public class HistoryEventEntry {
                 if (c.namedValues() != null) {
                     namedValues = JavaConverters.asJava(c.namedValues());
                     try {
-                        Value rt = namedValues.get(NAMED_NAME_RETURN_CODE);
-                        if (rt != null) {
-                            returnCode = Integer.parseInt(rt.toString());
+                        Value vrt = namedValues.get(NAMED_NAME_RETURN_CODE);
+                        if (vrt != null) {
+                            String rt = vrt.toString();
+                            if (!SOSString.isEmpty(rt) && !rt.equals("\"\"")) {
+                                returnCode = Integer.parseInt(rt.toString());
+                            }
                         }
                     } catch (Throwable e) {
-                        LOGGER.error(String.format("[can't extract returnCode][%s]", SOSString.toString(namedValues), e.toString()), e);
+                        String pos = "";
+                        try {
+                            pos = "[" + getWorkflowInfo().getPosition().asString() + "]";
+                        } catch (Throwable ex) {
+                        }
+                        LOGGER.warn(String.format("[%s][%s]%s[isSucceeded=%s][can't extract returnCode][%s]", getOrderId(), eventType, pos,
+                                isSucceeded, SOSString.toString(namedValues), e.toString()), e);
                     }
                 }
             }
