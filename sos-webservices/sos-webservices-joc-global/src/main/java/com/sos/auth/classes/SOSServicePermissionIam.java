@@ -669,7 +669,13 @@ public class SOSServicePermissionIam {
                                 filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC);
                                 filter.setIdentityServiceName(currentAccount.getSosLoginParameters().getIdentityService());
                             }
-                            listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
+                            List<DBItemIamIdentityService> listOfIdentityServicesOidc = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
+                            filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC_JOC);
+                            List<DBItemIamIdentityService> listOfIdentityServicesOidcJoc = iamIdentityServiceDBLayer.getIdentityServiceList(filter,
+                                    0);
+                            listOfIdentityServices.addAll(listOfIdentityServicesOidc);
+                            listOfIdentityServices.addAll(listOfIdentityServicesOidcJoc);
+
                             if (listOfIdentityServices.size() == 0) {
                                 LOGGER.info("No enabled Identity Service is configured.");
                             }
