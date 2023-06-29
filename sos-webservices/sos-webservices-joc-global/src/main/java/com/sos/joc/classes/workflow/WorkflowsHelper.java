@@ -963,8 +963,8 @@ public class WorkflowsHelper {
                 case POST_NOTICES:
                     PostNotices pns = inst.cast();
                     if (pns.getNoticeBoardNames() != null) {
-                        pns.getNoticeBoardNames().removeIf(pnb -> oldNewBoardNames.keySet().contains(pnb) || oldNewBoardNames.values().contains(pnb));
-                        pns.getNoticeBoardNames().addAll(oldNewBoardNames.values().stream().filter(s -> !s.isEmpty()).collect(Collectors.toSet()));
+                        pns.setNoticeBoardNames(pns.getNoticeBoardNames().stream().map(pnb -> oldNewBoardNames.getOrDefault(pnb, pnb)).filter(
+                                pnb -> !pnb.isEmpty()).collect(Collectors.toList()));
                     }
                     break;
                 case STICKY_SUBAGENT:
