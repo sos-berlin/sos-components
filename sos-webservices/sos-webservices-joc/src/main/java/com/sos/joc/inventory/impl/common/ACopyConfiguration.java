@@ -252,6 +252,7 @@ public abstract class ACopyConfiguration extends JOCResourceImpl {
                     for (DBItemInventoryConfiguration item : oldDBFolderContent) {
                         item.setAuditLogId(dbAuditLog.getId());
                         String json = item.getContent();
+                        boolean jsonIsChanged = true;
                         switch (item.getTypeAsEnum()) {
                         case WORKFLOW:
                             for (Map.Entry<String, String> oldNewName : oldToNewName.getOrDefault(ConfigurationType.LOCK, Collections.emptyMap())
@@ -355,10 +356,13 @@ public abstract class ACopyConfiguration extends JOCResourceImpl {
                                 }
                             }
                         default:
+                            jsonIsChanged = false;
                             break;
                         }
-                        item.setContent(json);
-                        JocInventory.updateConfiguration(dbLayer, item);
+                        if (jsonIsChanged) {
+                            item.setContent(json);
+                            JocInventory.updateConfiguration(dbLayer, item);
+                        }
                     }
                 }
                 
