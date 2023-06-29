@@ -100,6 +100,14 @@ public class JOCResourceImpl {
         return jocError;
     }
 
+    public JocError getJocErrorWithPrintMetaInfoAndClear(Logger logger) {
+        if(jocError != null && jocError.getMetaInfo() != null && !jocError.getMetaInfo().isEmpty()) {
+            logger.info(jocError.printMetaInfo());
+            jocError.getMetaInfo().clear();
+        }
+        return jocError;
+    }
+
     public Date getDateFromString(String dateString) {
         Date date = null;
         try {
