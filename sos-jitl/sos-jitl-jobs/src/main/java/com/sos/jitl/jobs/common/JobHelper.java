@@ -9,6 +9,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
@@ -21,7 +24,11 @@ import js7.data.value.NumberValue;
 import js7.data.value.StringValue;
 import js7.data.value.Value;
 
-public class Job {
+public class JobHelper {
+
+    public static ObjectMapper OBJECT_MAPPER = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
+            DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true).configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(
+                    SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
 
     public static final String NAMED_NAME_RETURN_CODE = "returnCode";
 
@@ -35,9 +42,9 @@ public class Job {
     public static final String VAR_NAME_JOB_INSTRUCTION_LABEL = "js7Label";
     public static final String VAR_NAME_JOB_NAME = "js7JobName";
 
-    private static final String ENV_NAME_AGENT_HOME = "JS7_AGENT_HOME";
-    private static final String ENV_NAME_AGENT_CONFIG_DIR = "JS7_AGENT_CONFIG_DIR";
-    private static final String ENV_NAME_AGENT_WORK_DIR = "JS7_AGENT_WORK_DIR";
+    public static final String ENV_NAME_AGENT_HOME = "JS7_AGENT_HOME";
+    public static final String ENV_NAME_AGENT_CONFIG_DIR = "JS7_AGENT_CONFIG_DIR";
+    public static final String ENV_NAME_AGENT_WORK_DIR = "JS7_AGENT_WORK_DIR";
 
     public static Path getAgentHome() {
         return getPath(System.getenv(ENV_NAME_AGENT_HOME));
@@ -56,7 +63,7 @@ public class Job {
     }
 
     public static Path getAgentHibernateFile() {
-        return Job.getAgentConfigDir().resolve("hibernate.cfg.xml").normalize();
+        return getAgentConfigDir().resolve("hibernate.cfg.xml").normalize();
     }
 
     public static long getTimeAsSeconds(final JobArgument<String> arg) {
@@ -98,7 +105,7 @@ public class Job {
         return map.entrySet().stream().filter(a -> a.getValue().getValue() != null).collect(Collectors.toMap(a -> a.getKey(), a -> a.getValue()
                 .getValue()));
     }
-    
+
     public static Map<String, Object> asNameValueMap(JobArguments o) {
         List<Field> fields = getJobArgumentFields(o);
         Map<String, Object> map = new HashMap<>();

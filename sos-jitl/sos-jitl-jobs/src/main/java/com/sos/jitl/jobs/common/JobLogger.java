@@ -153,6 +153,10 @@ public class JobLogger {
         error(throwable2String(msg, e));
     }
 
+    public void error(Throwable e) {
+        error(throwable2String(null, e));
+    }
+
     protected void error2allLogger(final String msg, final Throwable e) {
         Throwable ex = handleException(e);
         if (ex != null) {
@@ -245,8 +249,12 @@ public class JobLogger {
         if (e == null) {
             return msg;
         }
-        StringBuilder sb = new StringBuilder(msg);
-        sb.append("\n").append(SOSString.toString(e)).toString();
+        StringBuilder sb = new StringBuilder();
+        if (!SOSString.isEmpty(msg)) {
+            sb.append(msg);
+            sb.append("\n");
+        }
+        sb.append(SOSString.toString(e));
         return sb.toString();
     }
 }

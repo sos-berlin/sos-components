@@ -18,11 +18,11 @@ public class CanWriteJob extends AFileOperationsJob {
 
     @Override
     public JOutcome.Completed onOrderProcess(JobStep<FileOperationsJobArguments> step) throws Exception {
-        checkArguments(step.getArguments());
+        checkArguments(step.getDeclaredArguments());
 
         FileOperationsImpl fo = new FileOperationsImpl(step.getLogger());
-        boolean result = fo.canWrite(new File(step.getArguments().getSourceFile().getValue()), step.getArguments().getFileSpec().getValue(),
-                Pattern.CASE_INSENSITIVE);
+        boolean result = fo.canWrite(new File(step.getDeclaredArguments().getSourceFile().getValue()), step.getDeclaredArguments().getFileSpec()
+                .getValue(), Pattern.CASE_INSENSITIVE);
         return handleResult(step, fo.getResultList(), result);
     }
 

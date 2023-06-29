@@ -31,13 +31,13 @@ public class FileExistsJob extends ABlockingInternalJob<FileOperationsJobFileExi
 
     @Override
     public JOutcome.Completed onOrderProcess(JobStep<FileOperationsJobFileExistsArguments> step) throws Exception {
-        AFileOperationsJob.checkArguments(step.getArguments());
+        AFileOperationsJob.checkArguments(step.getDeclaredArguments());
 
         FileOperationsImpl fo = new FileOperationsImpl(step.getLogger());
-        FileOperationsJobFileExistsArguments args = step.getArguments();
+        FileOperationsJobFileExistsArguments args = step.getDeclaredArguments();
         boolean result = fo.existsFile(new File(args.getSourceFile().getValue()), args.getFileSpec().getValue(), args.getRecursive().getValue(),
                 Pattern.CASE_INSENSITIVE, args.getMinFileAge().getValue(), args.getMaxFileAge().getValue(), args.getMinFileSize().getValue(), args
-                        .getMaxFileSize().getValue(), step.getArguments().getSkipFirstFiles().getValue(), args.getSkipLastFiles().getValue());
+                        .getMaxFileSize().getValue(), args.getSkipFirstFiles().getValue(), args.getSkipLastFiles().getValue());
         if (result) {
             result = checkSteadyStateOfFiles(step.getLogger(), args, fo.getResultList());
         }

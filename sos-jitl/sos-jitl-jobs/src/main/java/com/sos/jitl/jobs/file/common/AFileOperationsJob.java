@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
-import com.sos.jitl.jobs.common.Job;
+import com.sos.jitl.jobs.common.JobHelper;
 import com.sos.jitl.jobs.common.JobStep;
 import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
 import com.sos.jitl.jobs.file.exception.SOSFileOperationsException;
@@ -52,7 +52,7 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
             throws Exception {
 
         boolean isDebugEnabled = step.getLogger().isDebugEnabled();
-        FileOperationsJobArguments args = step.getArguments();
+        FileOperationsJobArguments args = step.getDeclaredArguments();
         int size = 0;
         String fileList = "";
         if (files != null && files.size() > 0) {
@@ -84,7 +84,7 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
                 return step.failed(msg, args.getReturnResultSet(), args.getReturnResultSetSize());
             }
         }
-        return step.success(result ? Job.DEFAULT_RETURN_CODE_SUCCEEDED : 1, args.getReturnResultSet(), args.getReturnResultSetSize());
+        return step.success(result ? JobHelper.DEFAULT_RETURN_CODE_SUCCEEDED : 1, args.getReturnResultSet(), args.getReturnResultSetSize());
     }
 
     private static boolean compareIntValues(final String comparator, final int left, final int right) throws Exception {

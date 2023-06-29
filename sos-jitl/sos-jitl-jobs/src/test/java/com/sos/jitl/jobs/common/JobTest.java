@@ -124,8 +124,8 @@ public class JobTest {
         SSHProviderArguments sftpArgs = new SSHProviderArguments();
         JobArguments a = new JobArguments(sftpArgs);
 
-        if (a.getAppArguments() != null && a.getAppArguments().size() > 0) {
-            a.getAppArguments().entrySet().stream().forEach(e -> {
+        if (a.getIncludedArguments() != null && a.getIncludedArguments().size() > 0) {
+            a.getIncludedArguments().entrySet().stream().forEach(e -> {
                 for (JobArgument<?> arg : e.getValue()) {
                     // LOGGER.info(arg.getName());
                     if (arg.getName().equals("protocol")) {
@@ -157,7 +157,7 @@ public class JobTest {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private static void setArguments(Map<String, Object> map, JobArguments o) {
-        List<Field> fields = Job.getJobArgumentFields(o);
+        List<Field> fields = JobHelper.getJobArgumentFields(o);
         for (Field field : fields) {
             try {
                 field.setAccessible(true);

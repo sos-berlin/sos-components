@@ -3,7 +3,7 @@ package com.sos.jitl.jobs.maintenance.classes;
 import java.util.List;
 
 import com.sos.commons.exception.SOSException;
-import com.sos.jitl.jobs.common.Globals;
+import com.sos.jitl.jobs.common.JobHelper;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.jocapi.ApiExecutor;
 import com.sos.jitl.jobs.jocapi.ApiResponse;
@@ -36,14 +36,14 @@ public class MaintenanceWindowExecuter {
         if (apiResponse.getStatusCode() == 200) {
             answer = apiResponse.getResponseBody();
         } else {
-            MaintenanceErrorResponse maintenanceErrorResponse = Globals.objectMapper.readValue(apiResponse.getResponseBody(),
+            MaintenanceErrorResponse maintenanceErrorResponse = JobHelper.OBJECT_MAPPER.readValue(apiResponse.getResponseBody(),
                     MaintenanceErrorResponse.class);
             throw new SOSException(String.format("Status Code: %s : Error: %s %s %s", apiResponse.getStatusCode(), maintenanceErrorResponse.getError()
                     .getMessage(), maintenanceErrorResponse.getMessage(), maintenanceErrorResponse.getRole()));
         }
 
-        Globals.debug(logger, "answer=" + answer);
-        Controllers controllers = Globals.objectMapper.readValue(answer, Controllers.class);
+        logger.debug("answer=" + answer);
+        Controllers controllers = JobHelper.OBJECT_MAPPER.readValue(answer, Controllers.class);
         for (Controller controller : controllers.getControllers()) {
             if (!defControllerId.isEmpty() & !defControllerId.equals(controller.getControllerId())) {
                 defControllerId = "";
@@ -53,12 +53,12 @@ public class MaintenanceWindowExecuter {
                 defControllerId = controller.getControllerId();
             }
         }
-        
+
         if (!defControllerId.isEmpty()) {
-            Globals.debug(logger, "ControllerId from Webservice");
+            logger.debug("ControllerId from Webservice");
             return defControllerId;
         } else {
-            Globals.debug(logger, "ControllerId from Arguments");
+            logger.debug("ControllerId from Arguments");
             return controllerId;
         }
     }
@@ -67,64 +67,63 @@ public class MaintenanceWindowExecuter {
         ControllerIdReq controllerIdReq = new ControllerIdReq();
         controllerIdReq.setControllerId(controllerId);
 
-        String body = Globals.objectMapper.writeValueAsString(controllerIdReq);
+        String body = JobHelper.OBJECT_MAPPER.writeValueAsString(controllerIdReq);
 
         ApiResponse apiResponse = apiExecutor.post(accessToken, "/joc/api/controller/components", body);
         String answer = null;
         if (apiResponse.getStatusCode() == 200) {
             answer = apiResponse.getResponseBody();
         } else {
-            MaintenanceErrorResponse maintenanceErrorResponse = Globals.objectMapper.readValue(apiResponse.getResponseBody(),
+            MaintenanceErrorResponse maintenanceErrorResponse = JobHelper.OBJECT_MAPPER.readValue(apiResponse.getResponseBody(),
                     MaintenanceErrorResponse.class);
             throw new SOSException(String.format("Status Code: %s : Error: %s %s %s", apiResponse.getStatusCode(), maintenanceErrorResponse.getError()
                     .getMessage(), maintenanceErrorResponse.getMessage(), maintenanceErrorResponse.getRole()));
         }
 
-        Globals.debug(logger, body);
-        Globals.debug(logger, "answer=" + answer);
-        Components components = Globals.objectMapper.readValue(answer, Components.class);
+        logger.debug(body);
+        logger.debug("answer=" + answer);
 
-        return components;
+        return JobHelper.OBJECT_MAPPER.readValue(answer, Components.class);
     }
 
     public void switchOverController(String accessToken, String controllerId) throws Exception {
         ControllerIdReq controllerIdReq = new ControllerIdReq();
         controllerIdReq.setControllerId(controllerId);
 
-        String body = Globals.objectMapper.writeValueAsString(controllerIdReq);
+        String body = JobHelper.OBJECT_MAPPER.writeValueAsString(controllerIdReq);
 
         ApiResponse apiResponse = apiExecutor.post(accessToken, "/joc/api/controller/cluster/switchover", body);
         String answer = null;
         if (apiResponse.getStatusCode() == 200) {
             answer = apiResponse.getResponseBody();
         } else {
-            MaintenanceErrorResponse maintenanceErrorResponse = Globals.objectMapper.readValue(apiResponse.getResponseBody(),
+            MaintenanceErrorResponse maintenanceErrorResponse = JobHelper.OBJECT_MAPPER.readValue(apiResponse.getResponseBody(),
                     MaintenanceErrorResponse.class);
             throw new SOSException(String.format("Status Code: %s : Error: %s %s %s", apiResponse.getStatusCode(), maintenanceErrorResponse.getError()
                     .getMessage(), maintenanceErrorResponse.getMessage(), maintenanceErrorResponse.getRole()));
         }
-        Globals.debug(logger, body);
-        Globals.debug(logger, "answer=" + answer);
+        logger.debug(body);
+        logger.debug("answer=" + answer);
     }
 
     public void switchOverJoc(String accessToken, String memberId) throws Exception {
         ClusterSwitchMember clusterSwitchMember = new ClusterSwitchMember();
         clusterSwitchMember.setMemberId(memberId);
 
-        String body = Globals.objectMapper.writeValueAsString(clusterSwitchMember);
+        String body = JobHelper.OBJECT_MAPPER.writeValueAsString(clusterSwitchMember);
 
         ApiResponse apiResponse = apiExecutor.post(accessToken, "/joc/api/joc/cluster/switch_member", body);
         String answer = null;
         if (apiResponse.getStatusCode() == 200) {
             answer = apiResponse.getResponseBody();
         } else {
-            MaintenanceErrorResponse maintenanceErrorResponse = Globals.objectMapper.readValue(apiResponse.getResponseBody(),
+            MaintenanceErrorResponse maintenanceErrorResponse = JobHelper.OBJECT_MAPPER.readValue(apiResponse.getResponseBody(),
                     MaintenanceErrorResponse.class);
             throw new SOSException(String.format("Status Code: %s : Error: %s %s %s", apiResponse.getStatusCode(), maintenanceErrorResponse.getError()
                     .getMessage(), maintenanceErrorResponse.getMessage(), maintenanceErrorResponse.getRole()));
         }
-        Globals.debug(logger, body);
-        Globals.debug(logger, "answer=" + answer);
+        logger.debug(body);
+        logger.debug("answer=" + answer);
     }
 
     public void enOrDisableSubAgent(String accessToken, boolean enable, String controllerId, List<String> subagentIds) throws Exception {
@@ -132,7 +131,7 @@ public class MaintenanceWindowExecuter {
         subAgentsCommand.setControllerId(controllerId);
         subAgentsCommand.setSubagentIds(subagentIds);
 
-        String body = Globals.objectMapper.writeValueAsString(subAgentsCommand);
+        String body = JobHelper.OBJECT_MAPPER.writeValueAsString(subAgentsCommand);
         String answer = "";
 
         ApiResponse apiResponse = null;
@@ -145,14 +144,14 @@ public class MaintenanceWindowExecuter {
         if (apiResponse.getStatusCode() == 200) {
             answer = apiResponse.getResponseBody();
         } else {
-            MaintenanceErrorResponse maintenanceErrorResponse = Globals.objectMapper.readValue(apiResponse.getResponseBody(),
+            MaintenanceErrorResponse maintenanceErrorResponse = JobHelper.OBJECT_MAPPER.readValue(apiResponse.getResponseBody(),
                     MaintenanceErrorResponse.class);
             throw new SOSException(String.format("Status Code: %s : Error: %s %s %s", apiResponse.getStatusCode(), maintenanceErrorResponse.getError()
                     .getMessage(), maintenanceErrorResponse.getMessage(), maintenanceErrorResponse.getRole()));
         }
 
-        Globals.debug(logger, body);
-        Globals.debug(logger, "answer=" + answer);
+        logger.debug(body);
+        logger.debug("answer=" + answer);
     }
 
     public void enOrDisableAgent(String accessToken, boolean enable, String controllerId, List<String> agentIds) throws Exception {
@@ -160,7 +159,7 @@ public class MaintenanceWindowExecuter {
         deployAgents.setControllerId(controllerId);
         deployAgents.setAgentIds(agentIds);
 
-        String body = Globals.objectMapper.writeValueAsString(deployAgents);
+        String body = JobHelper.OBJECT_MAPPER.writeValueAsString(deployAgents);
         String answer = "";
 
         ApiResponse apiResponse = null;
@@ -173,13 +172,13 @@ public class MaintenanceWindowExecuter {
         if (apiResponse.getStatusCode() == 200) {
             answer = apiResponse.getResponseBody();
         } else {
-            MaintenanceErrorResponse maintenanceErrorResponse = Globals.objectMapper.readValue(apiResponse.getResponseBody(),
+            MaintenanceErrorResponse maintenanceErrorResponse = JobHelper.OBJECT_MAPPER.readValue(apiResponse.getResponseBody(),
                     MaintenanceErrorResponse.class);
             throw new SOSException(String.format("Status Code: %s : Error: %s %s %s", apiResponse.getStatusCode(), maintenanceErrorResponse.getError()
                     .getMessage(), maintenanceErrorResponse.getMessage(), maintenanceErrorResponse.getRole()));
         }
-        Globals.debug(logger, body);
-        Globals.debug(logger, "answer=" + answer);
+        logger.debug(body);
+        logger.debug("answer=" + answer);
     }
 
     public AgentsV getAgents(String accessToken, String controllerId) throws Exception {
@@ -187,23 +186,22 @@ public class MaintenanceWindowExecuter {
         readAgentsV.setControllerId(controllerId);
         readAgentsV.setOnlyVisibleAgents(false);
 
-        String body = Globals.objectMapper.writeValueAsString(readAgentsV);
+        String body = JobHelper.OBJECT_MAPPER.writeValueAsString(readAgentsV);
 
         ApiResponse apiResponse = apiExecutor.post(accessToken, "/joc/api/agents", body);
         String answer = "";
         if (apiResponse.getStatusCode() == 200) {
             answer = apiResponse.getResponseBody();
         } else {
-            MaintenanceErrorResponse maintenanceErrorResponse = Globals.objectMapper.readValue(apiResponse.getResponseBody(),
+            MaintenanceErrorResponse maintenanceErrorResponse = JobHelper.OBJECT_MAPPER.readValue(apiResponse.getResponseBody(),
                     MaintenanceErrorResponse.class);
             throw new SOSException(String.format("Status Code: %s : Error: %s %s %s", apiResponse.getStatusCode(), maintenanceErrorResponse.getError()
                     .getMessage(), maintenanceErrorResponse.getMessage(), maintenanceErrorResponse.getRole()));
         }
-        Globals.debug(logger, body);
-        Globals.debug(logger, "answer=" + answer);
-        AgentsV agentsV = Globals.objectMapper.readValue(answer, AgentsV.class);
+        logger.debug(body);
+        logger.debug("answer=" + answer);
 
-        return agentsV;
+        return JobHelper.OBJECT_MAPPER.readValue(answer, AgentsV.class);
     }
 
     /*

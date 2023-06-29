@@ -3,7 +3,6 @@ package com.sos.jitl.jobs.monitoring.classes;
 import java.util.List;
 
 import com.sos.commons.exception.SOSException;
-import com.sos.jitl.jobs.common.Globals;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.joc.model.agent.AgentV;
 import com.sos.joc.model.agent.SubagentV;
@@ -285,7 +284,7 @@ public class MonitoringChecker {
             return monitoringCheckReturn;
 
         } catch (Exception e) {
-            Globals.error(logger, "", e);
+            logger.error(e);
             throw e;
         }
 

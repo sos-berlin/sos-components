@@ -1,6 +1,5 @@
 package com.sos.jitl.jobs.maintenance.classes;
 
-import com.sos.commons.exception.SOSException;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.jocapi.ApiExecutor;
 import com.sos.jitl.jobs.jocapi.ApiResponse;
