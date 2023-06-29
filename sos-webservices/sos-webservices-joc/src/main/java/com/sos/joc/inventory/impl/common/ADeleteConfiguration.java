@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.schedule.Schedule;
@@ -225,16 +226,11 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
     public JOCDefaultResponse deleteFolder(String accessToken, RequestFolder in, boolean forDescriptors, String request) throws Exception {
         SOSHibernateSession session = null;
         try {
-            //DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
             JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
-            
             session = Globals.createSosHibernateStatelessConnection(request);
             session.setAutoCommit(false);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             session.beginTransaction();
-
-            // TODO auditLogDetails
-            
             DBItemInventoryConfigurationTrash config = null;
             if(forDescriptors) {
                 config = JocInventory.getTrashConfiguration(dbLayer, null, in.getPath(), ConfigurationType.DESCRIPTORFOLDER, folderPermissions);
@@ -245,7 +241,6 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             Globals.commit(session);
             JocInventory.postTrashEvent(config.getFolder());
             JocInventory.postTrashFolderEvent(config.getPath());
-
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (Throwable e) {
             Globals.rollback(session);
@@ -294,24 +289,24 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                     for (DBItemInventoryConfiguration schedule : schedules) {
                         schedule.setReleased(false);
                         schedule.setValid(false);
-                        try {
-                            dbLayer.getSession().update(schedule);
-                        } catch (SOSHibernateException e) {
-                            throw new JocSosHibernateException(e);
-                        }
+                        dbLayer.getSession().update(schedule);
                         DBItemInventoryReleasedConfiguration releasedSchedule = dbLayer.getReleasedItemByConfigurationId(schedule.getId());
-                        try {
-                            Schedule scheduleObject = Globals.objectMapper.readValue(releasedSchedule.getContent(), Schedule.class);
-                            scheduleObject.setPlanOrderAutomatically(false);
-                            scheduleObject.setSubmitOrderToControllerWhenPlanned(false);
-                            releasedSchedule.setContent(Globals.objectMapper.writeValueAsString(scheduleObject));
-                            dbLayer.getSession().update(releasedSchedule);
-                        } catch (Exception e) {
-                            LOGGER.warn(e.getMessage());
+                        if (releasedSchedule != null) {
+                            try {
+                                Schedule scheduleObject = Globals.objectMapper.readValue(releasedSchedule.getContent(), Schedule.class);
+                                scheduleObject.setPlanOrderAutomatically(false);
+                                scheduleObject.setSubmitOrderToControllerWhenPlanned(false);
+                                releasedSchedule.setContent(Globals.objectMapper.writeValueAsString(scheduleObject));
+                                dbLayer.getSession().update(releasedSchedule);
+                            } catch (JsonProcessingException e) {
+                                getJocErrorWithPrintMetaInfoAndClear(LOGGER);
+                                LOGGER.warn(e.getMessage());
+                            } 
                         } 
                     }
                 }
             } catch (SOSHibernateException e) {
+                getJocErrorWithPrintMetaInfoAndClear(LOGGER);
                 LOGGER.warn(e.getMessage());
             }
         }
@@ -344,25 +339,21 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                             try {
                                 boolean successful = deleteOrdersImpl.deleteOrders(orderFilter, xAccessToken, false, false);
                                 if (!successful) {
-                                    JocError je = getJocError();
-                                    if (je != null && je.printMetaInfo() != null) {
-                                        LOGGER.info(je.printMetaInfo());
-                                    }
+                                    getJocErrorWithPrintMetaInfoAndClear(LOGGER);
                                     LOGGER.warn("Order delete failed due to missing permission.");
                                 }
                             } catch (SOSHibernateException e) {
+                                getJocErrorWithPrintMetaInfoAndClear(LOGGER);
                                 LOGGER.warn("Order delete failed due to: ", e.getMessage());
                             }
                         } else {
-                            JocError je = getJocError();
-                            if (je != null && je.printMetaInfo() != null) {
-                                LOGGER.info(je.printMetaInfo());
-                            }
+                            getJocErrorWithPrintMetaInfoAndClear(LOGGER);
                             LOGGER.warn("Order cancel failed due to missing permission.");
                         }
                     });
                 }
             } catch (Exception e) {
+                getJocErrorWithPrintMetaInfoAndClear(LOGGER);
                 LOGGER.warn(e.getMessage());
             }
         }
