@@ -102,7 +102,7 @@ public class ExecuteRollOut {
     private static final String PRIVATE_CONF_FILENAME = "private.conf";
     private static final String PRIVATE_CONF_JS7_PARAM_WEB = "js7.web";
     private static final String PRIVATE_CONF_JS7_PARAM_JOCURL = "js7.web.joc.url";
-    private static final String PRIVATE_CONF_JS7_PARAM_API_SERVER = "js7.web.api-server";
+    private static final String PRIVATE_CONF_JS7_PARAM_API_SERVER = "js7.api-server";
     private static final String PRIVATE_CONF_JS7_PARAM_KEYSTORE_FILEPATH = "js7.web.https.keystore.file";
     private static final String PRIVATE_CONF_JS7_PARAM_KEYSTORE_KEYPWD = "js7.web.https.keystore.key-password";
     private static final String PRIVATE_CONF_JS7_PARAM_KEYSTORE_STOREPWD = "js7.web.https.keystore.store-password";
