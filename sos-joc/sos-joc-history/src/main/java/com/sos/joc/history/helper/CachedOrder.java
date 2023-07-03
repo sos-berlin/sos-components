@@ -148,6 +148,10 @@ public class CachedOrder {
         lastStepError = val;
     }
 
+    public void resetLastStepError() {
+        lastStepError = null;
+    }
+
     public void setLastStepError(LogEntry le) {
         setLastStepError(le, null);
     }
