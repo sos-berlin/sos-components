@@ -13,6 +13,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,6 +82,7 @@ import js7.data.item.VersionedEvent.VersionedItemAddedOrChanged;
 import js7.data.item.VersionedItemId;
 import js7.data.item.VersionedItemPath;
 import js7.data.lock.LockPath;
+import js7.data.node.NodeId;
 import js7.data.order.OrderEvent;
 import js7.data.order.OrderEvent.OrderAdded;
 import js7.data.order.OrderEvent.OrderBroken;
@@ -143,6 +145,7 @@ public class EventService {
     private volatile ConcurrentMap<String, WorkflowId> orders = new ConcurrentHashMap<>();
     private volatile CopyOnWriteArraySet<String> uncoupledAgents = new CopyOnWriteArraySet<>();
     private volatile CopyOnWriteArraySet<String> uncoupledSubagents = new CopyOnWriteArraySet<>();
+    private volatile ConcurrentMap<String, NodeId> lostNodeIds = new ConcurrentHashMap<>();
     private AtomicBoolean burstFilter = new AtomicBoolean(true);
     private static final EnumSet<NotificationType> notificationFailureTypes = EnumSet.of(NotificationType.ERROR, NotificationType.WARNING);
 
@@ -397,12 +400,15 @@ public class EventService {
         if (!evt.onlyProblem()) {
             addEvent(createControllerEvent(evt.getEventId() / 1000));
         }
-        String msg = "Loss of '" + evt.getNodeId().toUpperCase() + "' instance in Controller Cluster '" + evt.getControllerId() + "' requires confirmation";
         String message = evt.getMessage();
-        if (message == null) {
-            message = msg;
-        } else {
-            message = msg + ": " + message;
+        if (evt.getNodeId() != null) {
+            String msg = "Loss of '" + evt.getNodeId().toUpperCase() + "' instance in Controller Cluster '" + evt.getControllerId()
+                    + "' requires confirmation";
+            if (message == null) {
+                message = msg;
+            } else {
+                message = msg + ": " + message;
+            }
         }
         addEvent(createNodeLossProblem(evt.getEventId() / 1000, evt.getControllerId(), message));
     }
@@ -549,6 +555,21 @@ public class EventService {
                 String agentPath = ((AgentPath) key).string();
                 addEvent(createAgentEvent(eventId, agentPath, "AgentCoupling"));
                 uncoupledAgents.remove(agentPath);
+            } else if (evt instanceof AgentRefStateEvent.AgentClusterWatchManuallyConfirmed$) {
+                String agentPath = ((AgentPath) key).string();
+                addEvent(createAgentEvent(eventId, agentPath));
+                // TODO cleanup stored lostNostId for repeated events
+                lostNodeIds.remove(agentPath);
+                uncoupledAgents.remove(agentPath);
+            } else if (evt instanceof AgentRefStateEvent.AgentClusterWatchConfirmationRequired) {
+                String agentPath = ((AgentPath) key).string();
+                AgentRefStateEvent.AgentClusterWatchConfirmationRequired clusterWatchEvt = (AgentRefStateEvent.AgentClusterWatchConfirmationRequired) evt;
+                ClusterEvent.ClusterNodeLostEvent e = clusterWatchEvt.event();
+                // TODO store lostNostId for confirm command and for repeated events
+                lostNodeIds.putIfAbsent(agentPath, e.lostNodeId());
+                addEvent(createNodeLossProblem(eventId));
+                addEvent(createAgentEvent(eventId, agentPath));
+                uncoupledAgents.remove(agentPath);
             } else if (evt instanceof AgentRefStateEvent && !(evt instanceof AgentRefStateEvent.AgentEventsObserved)) {
                 String agentPath = ((AgentPath) key).string();
                 addEvent(createAgentEvent(eventId, agentPath));
@@ -663,6 +684,20 @@ public class EventService {
         evt.setObjectType(EventType.PROBLEM);
         evt.setPath(controllerId);
         evt.setMessage(message);
+        return evt;
+    }
+    
+    private EventSnapshot createNodeLossProblem(long eventId) {
+        if (lostNodeIds.isEmpty()) {
+            return null;
+        }
+        EventSnapshot evt = new EventSnapshot();
+        evt.setEventId(eventId);
+        evt.setEventType("NodeLossProblemEvent");
+        evt.setObjectType(EventType.PROBLEM);
+        evt.setPath(controllerId);
+        evt.setMessage(lostNodeIds.entrySet().stream().map(e -> "'" + e.getValue() + "' director in Agent Cluster '" + e.getKey() + "'").collect(
+                Collectors.joining(", ", "Loss of ", " requires confirmation")));
         return evt;
     }
 

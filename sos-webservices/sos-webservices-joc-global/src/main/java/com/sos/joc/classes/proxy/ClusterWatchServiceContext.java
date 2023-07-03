@@ -1,18 +1,19 @@
 package com.sos.joc.classes.proxy;
 
 import java.time.Instant;
-import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.proxy.ClusterNodeLossEvent;
 import com.sos.joc.exceptions.ControllerConflictException;
 import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.JocBadRequestException;
+import com.sos.joc.exceptions.JocError;
 
 import js7.base.problem.Problem;
 import js7.cluster.watch.ClusterWatchService;
@@ -21,7 +22,6 @@ import js7.data.cluster.ClusterState;
 import js7.data.cluster.ClusterWatchId;
 import js7.data.node.NodeId;
 import js7.proxy.javaapi.JControllerApi;
-import js7.proxy.javaapi.eventbus.JStandardEventBus;
 import scala.jdk.javaapi.OptionConverters;
 
 public class ClusterWatchServiceContext {
@@ -40,14 +40,8 @@ public class ClusterWatchServiceContext {
             ExecutionException {
         this.controllerId = controllerId;
         this.controllerApi = controllerApi;
-        this.service = controllerApi.startClusterWatch(ClusterWatchId.of(clusterWatchId), startEventbus()).get();
+        this.service = controllerApi.startClusterWatch(ClusterWatchId.of(clusterWatchId), this::onNodeLossNotConfirmedProblem).get();
         logClusterState(primaryId, backupId);
-    }
-    
-    private JStandardEventBus<ClusterNodeLossNotConfirmedProblem> startEventbus() {
-        JStandardEventBus<ClusterNodeLossNotConfirmedProblem> eventBus = JControllerApi.newClusterWatchEventBus();
-        eventBus.subscribe(Collections.singleton(ClusterNodeLossNotConfirmedProblem.class), this::onNodeLossNotConfirmedProblem);
-        return eventBus;
     }
     
     private void onNodeLossNotConfirmedProblem(ClusterNodeLossNotConfirmedProblem problem) {
@@ -63,12 +57,6 @@ public class ClusterWatchServiceContext {
     }
     
     protected NodeId getClusterNodeLoss() {
-//        if (OptionConverters.toJava(service.clusterNodeLossEventToBeConfirmed(primaryId)).isPresent()) {
-//            return primaryId;
-//        }
-//        if (OptionConverters.toJava(service.clusterNodeLossEventToBeConfirmed(backupId)).isPresent()) {
-//            return backupId;
-//        }
         return lossNode;
     }
     
@@ -78,8 +66,8 @@ public class ClusterWatchServiceContext {
         return m == null ? Optional.empty() : Optional.of(m);
     }
     
-    protected void confirmNodeLoss(NodeId lossNodeId, String confirmer) throws ControllerObjectNotExistException, ControllerConflictException,
-            JocBadRequestException {
+    protected void confirmNodeLoss(NodeId lossNodeId, String confirmer, String accessToken, JocError jocError)
+            throws ControllerObjectNotExistException {
         if (lossNodeId == null) {
             throw new ControllerObjectNotExistException("Missing cluster node id");
         }
@@ -93,16 +81,25 @@ public class ClusterWatchServiceContext {
 //            throw new ControllerConflictException("The cluster node with id '" + lossNodeId.string() + "' is not lost.");
 //        } else {
             LOGGER.info("[ClusterWatchService] send service.confirmNodeLoss(" + lossNodeId.string() + ")");
-            scala.util.Either<Problem,?> checked = service.manuallyConfirmNodeLoss(lossNodeId, confirmer);
-            if (checked.isLeft()) {
-                throw new JocBadRequestException(checked.left().toOption().get().toString());
-                //throw new JocBadRequestException(OptionConverters.toJava(checked.left().toOption()).get().toString());
-            } else {
-                burstFilter = null;
-                lossNode = null;
-                message = null;
-                logClusterState(lossNodeId);
-            }
+            controllerApi.manuallyConfirmNodeLoss(lossNodeId, confirmer).thenAccept(either -> {
+                ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, controllerId);
+                if (either.isRight()) {
+                    burstFilter = null;
+                    lossNode = null;
+                    message = null;
+                    logClusterState(lossNodeId);
+                }
+            });
+//            scala.util.Either<Problem,?> checked = service.manuallyConfirmNodeLoss(lossNodeId, confirmer);
+//            if (checked.isLeft()) {
+//                throw new JocBadRequestException(checked.left().toOption().get().toString());
+//                //throw new JocBadRequestException(OptionConverters.toJava(checked.left().toOption()).get().toString());
+//            } else {
+//                burstFilter = null;
+//                lossNode = null;
+//                message = null;
+//                logClusterState(lossNodeId);
+//            }
 //        }
 //        if (service.clusterNodeLossEventToBeConfirmed(lossNodeId).isDefined()) {
 //            ClusterNodeLostEvent clusterNodeLostEvent = service.clusterNodeLossEventToBeConfirmed(lossNodeId).get();

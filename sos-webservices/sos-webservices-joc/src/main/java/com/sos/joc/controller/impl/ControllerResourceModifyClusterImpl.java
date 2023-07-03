@@ -126,7 +126,7 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
             }
 
             storeAuditLog(body.getAuditLog(), controllerId, CategoryType.CONTROLLER);
-            ClusterWatch.getInstance().confirmNodeLoss(controllerId, getAccount());
+            ClusterWatch.getInstance().confirmNodeLoss(controllerId, getAccount(), accessToken, getJocError());
             
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {

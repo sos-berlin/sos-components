@@ -206,11 +206,11 @@ public class ClusterWatch {
         return getClusterNodeLoss(controllerId) != null;
     }
     
-    public void confirmNodeLoss(String controllerId, String confirmer) throws JocBadRequestException {
+    public void confirmNodeLoss(String controllerId, String confirmer, String accessToken, JocError jocError) throws JocBadRequestException {
         if (isWatched(controllerId)) {
             NodeId nodeId = startedWatches.get(controllerId).getClusterNodeLoss();
             if (nodeId != null) {
-                startedWatches.get(controllerId).confirmNodeLoss(nodeId, confirmer);
+                startedWatches.get(controllerId).confirmNodeLoss(nodeId, confirmer, accessToken, jocError);
             } else {
                 throw new JocBadRequestException("Couldn't determine loss node of Controller cluster '" + controllerId + "'."); 
             }
