@@ -35,7 +35,7 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
 
     public InfoJob(JobContext jobContext) {
         super(jobContext);
-        LOGGER.info("[CONSTRUCTOR]jobArguments=" + JobHelper.convert(getJobContext().jobArguments()));
+        LOGGER.info("[CONSTRUCTOR]jobArguments=" + JobHelper.asJavaValues(getJobContext().jobArguments()));
     }
 
     @Override
@@ -76,7 +76,7 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
         }
         step.getLogger().info("----------JOB Instance-----------------");
         step.getLogger().info("[scala][jobContext.jobArguments()]" + getJobContext().jobArguments());
-        step.getLogger().info("[java][jobContext.jobArguments()]" + JobHelper.convert(getJobContext().jobArguments()));
+        step.getLogger().info("[java][jobContext.jobArguments()]" + JobHelper.asJavaValues(getJobContext().jobArguments()));
 
         step.getLogger().info("----------Workflow-----------------");
         step.getLogger().info("[java][name]" + step.getWorkflowName());
@@ -87,7 +87,7 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
         step.getLogger().info("----------ORDER-----------------");
         step.getLogger().info("[java][id]" + step.getOrderId());
         step.getLogger().info("[scala][step.order().arguments()]" + step.getInternalStep().order().arguments());
-        step.getLogger().info("[java][step.order().arguments()]" + JobHelper.convert(step.getInternalStep().order().arguments()));
+        step.getLogger().info("[java][step.order().arguments()]" + JobHelper.asJavaValues(step.getInternalStep().order().arguments()));
         // step.asScala().scope().evaluator().eval(NamedValue.MODULE$.)
 
         step.getLogger().info("----------ORDER JOB RESOURCES-----------------");
@@ -122,7 +122,7 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
         step.getLogger().info("[java][agentId]" + step.getAgentId());
         step.getLogger().info("[java][name]" + step.getJobName());
         step.getLogger().info("[scala][step.arguments()]" + step.getInternalStep().arguments());
-        step.getLogger().info("[java][step.arguments()]" + JobHelper.convert(step.getInternalStep().arguments()));
+        step.getLogger().info("[java][step.arguments()]" + JobHelper.asJavaValues(step.getInternalStep().arguments()));
 
         step.getLogger().info("----------NODE/STEP GET ARGUMENT BY NAME-----------------");
         step.getLogger().info("[scala][step.getInternalStep().namedValue(%s)]%s", args.getStringArgument().getName(), step.getInternalStep()
@@ -193,7 +193,6 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
             outcome.putVariable("test_LocalDate_value", LocalDate.now());
 
             step.getLogger().info("[SUCCESS][java][step outcome]%s", outcome);
-            step.getLogger().info("[SUCCESS][scala][step outcome]%s", step.convert4engine(outcome.getVariables()));
             return step.success(outcome);
             // step.getLogger().info("[SUCCESS]");
             // return step.success();
