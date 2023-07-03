@@ -271,7 +271,7 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
     private Map<String, Object> mergeJobAndStepArguments(final JobStep<A> step) {
         Map<String, Object> map = null;
         if (step == null) {
-            map = JobHelper.convert(jobContext.jobArguments());
+            map = JobHelper.asJavaValues(jobContext.jobArguments());
         } else {
             Set<Entry<String, Value>> stepArgs = step.getInternalStep().arguments().entrySet();
             Set<Entry<String, Value>> orderArgs = step.getInternalStep().order().arguments().entrySet();
@@ -282,7 +282,7 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
             } else {
                 stream = Stream.concat(Stream.concat(jobContext.jobArguments().entrySet().stream(), stepArgs.stream()), orderArgs.stream());
             }
-            map = JobHelper.convert(stream.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (value1, value2) -> value2)));
+            map = JobHelper.asJavaValues(stream.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (value1, value2) -> value2)));
         }
         return map;
     }
@@ -411,7 +411,7 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
     private Object getNamedValue(final JobStep<A> step, final String name) throws SOSJobProblemException {
         Optional<Either<Problem, Value>> opt = step.getInternalStep().namedValue(name);
         if (opt.isPresent()) {
-            return JobHelper.getValue(JobHelper.getFromEither(opt.get()));
+            return JobHelper.asJavaValue(JobHelper.getFromEither(opt.get()));
         }
         return null;
     }

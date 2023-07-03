@@ -2,12 +2,10 @@ package com.sos.jitl.jobs.common;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -15,9 +13,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSParameterSubstitutor;
-import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.ASOSArguments;
 import com.sos.commons.util.common.SOSArgument;
@@ -35,9 +31,7 @@ import js7.data.job.JobResourcePath;
 import js7.data.order.HistoricOutcome;
 import js7.data.order.Outcome;
 import js7.data.order.Outcome.Completed;
-import js7.data.value.BooleanValue;
 import js7.data.value.NumberValue;
-import js7.data.value.StringValue;
 import js7.data.value.Value;
 import js7.data_for_java.order.JOutcome;
 import js7.launcher.forjava.internal.BlockingInternalJob;
@@ -214,12 +208,6 @@ public class JobStep<A extends JobArguments> {
         return SOSArgumentHelper.getDisplayValue(value, ar.getDisplayMode());
     }
 
-    public Map<String, JobArgument<A>> getAllArguments(JobArgument.Type type) {
-        getAllArguments();
-        return allArguments.entrySet().stream().filter(a -> a.getValue().getType().equals(type)).collect(Collectors.toMap(Map.Entry::getKey,
-                Map.Entry::getValue));
-    }
-
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public Map<String, JobArgument<A>> getAllArguments() {
         if (allArguments != null) {
@@ -258,7 +246,7 @@ public class JobStep<A extends JobArguments> {
         }
         if (internalStep != null) {
             // preference 2 - Order Variables (Node Arguments are unknown)
-            Map<String, Object> o = JobHelper.convert(internalStep.order().arguments());
+            Map<String, Object> o = JobHelper.asJavaValues(internalStep.order().arguments());
             if (o != null && o.size() > 0) {
                 o.entrySet().stream().forEach(e -> {
                     if (!allArguments.containsKey(e.getKey())) {
@@ -267,7 +255,7 @@ public class JobStep<A extends JobArguments> {
                 });
             }
             // preference 3 - JobArgument
-            Map<String, Object> j = JobHelper.convert(internalStep.arguments());
+            Map<String, Object> j = JobHelper.asJavaValues(internalStep.arguments());
             if (j != null && j.size() > 0) {
                 j.entrySet().stream().forEach(e -> {
                     if (!allArguments.containsKey(e.getKey())) {
@@ -297,6 +285,12 @@ public class JobStep<A extends JobArguments> {
         }
 
         return allArguments;
+    }
+
+    public Map<String, JobArgument<A>> getAllArguments(JobArgument.Type type) {
+        getAllArguments();
+        return allArguments.entrySet().stream().filter(a -> a.getValue().getType().equals(type)).collect(Collectors.toMap(Map.Entry::getKey,
+                Map.Entry::getValue));
     }
 
     public Map<String, Object> getAllArgumentsAsNameValueMap() {
@@ -479,7 +473,7 @@ public class JobStep<A extends JobArguments> {
         if (outcomes == null || outcomes.size() == 0) {
             return JOutcome.succeeded(mapResult(null, returnCode));
         }
-        return JOutcome.succeeded(mapResult(convert4engine(outcomes), returnCode));
+        return JOutcome.succeeded(mapResult(JobHelper.asEngineValues(outcomes), returnCode));
     }
 
     public JOutcome.Completed failed() {
@@ -531,7 +525,7 @@ public class JobStep<A extends JobArguments> {
         if (outcomes == null || outcomes.size() == 0) {
             return failed(returnCode, msg);
         }
-        return failedWithMap(returnCode, msg, convert4engine(outcomes));
+        return failedWithMap(returnCode, msg, JobHelper.asEngineValues(outcomes));
     }
 
     private JOutcome.Completed failedWithMap(final Integer returnCode, final String msg, final Map<String, Value> outcomes) {
@@ -590,60 +584,6 @@ public class JobStep<A extends JobArguments> {
         return map;
     }
 
-    public Map<String, Value> convert4engine(final Map<String, Object> map) {
-        Map<String, Value> result = new HashMap<>();
-        if (map == null || map.size() == 0) {
-            return result;
-        }
-
-        // Collectors.toMap throws an exception when duplicate or value is null
-        // return map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> getEngineValue(e.getValue())));
-        map.entrySet().forEach(e -> {
-            result.put(e.getKey(), getEngineValue(e.getValue()));
-        });
-        return result;
-    }
-
-    private Value getEngineValue(final Object o) {
-        if (o == null) {
-            return StringValue.of("");
-        }
-        if (o instanceof Value) {
-            return (Value) o;
-        } else if (o instanceof String) {
-            return StringValue.of((String) o);
-        } else if (o instanceof Boolean) {
-            return BooleanValue.of(((Boolean) o).booleanValue());
-        } else if (o instanceof Integer) {
-            return NumberValue.of((Integer) o);
-        } else if (o instanceof Long) {
-            return NumberValue.of(((Long) o).longValue());
-        } else if (o instanceof Double) {
-            return NumberValue.of(BigDecimal.valueOf((Double) o));
-        } else if (o instanceof BigDecimal) {
-            return NumberValue.of((BigDecimal) o);
-        } else if (o instanceof Date) {
-            return getDateAsStringValue((Date) o);
-        } else if (SOSReflection.isList(o.getClass())) {
-            // TODO use ListValue?
-            List<?> l = (List<?>) o;
-            String s = (String) l.stream().map(e -> {
-                return e.toString();
-            }).collect(Collectors.joining(SOSArgumentHelper.LIST_VALUE_DELIMITER));
-            return StringValue.of(s);
-        }
-        return StringValue.of(o.toString());
-    }
-
-    private Value getDateAsStringValue(Date date) {
-        try {
-            return StringValue.of(SOSDate.getDateTimeAsString(date));
-        } catch (Throwable e) {
-            logger.warn(e.toString(), e);
-            return StringValue.of(date == null ? "" : date.toString());
-        }
-    }
-
     private Map<String, Map<String, JobDetailValue>> historicOutcomes2map() {
         List<HistoricOutcome> l = getHistoricOutcomes();
         if (l == null || l.size() == 0) {
@@ -663,7 +603,7 @@ public class JobStep<A extends JobArguments> {
                     } else {
                         map = new HashMap<String, JobDetailValue>();
                     }
-                    Map<String, Object> m = JobHelper.convert(JavaConverters.asJava(c.namedValues()));
+                    Map<String, Object> m = JobHelper.asJavaValues(JavaConverters.asJava(c.namedValues()));
                     if (m != null) {
                         for (Map.Entry<String, Object> entry : m.entrySet()) {
                             map.remove(entry.getKey());
@@ -692,7 +632,7 @@ public class JobStep<A extends JobArguments> {
             String resourceName = e.getKey().string();
             e.getValue().entrySet().stream().forEach(ee -> {
                 if (!resultMap.containsKey(ee.getKey()) && ee.getValue().isRight()) {
-                    resultMap.put(ee.getKey(), new JobDetailValue(resourceName, JobHelper.getValue(ee.getValue().get())));
+                    resultMap.put(ee.getKey(), new JobDetailValue(resourceName, JobHelper.asJavaValue(ee.getValue().get())));
                 }
             });
         });
@@ -744,7 +684,7 @@ public class JobStep<A extends JobArguments> {
         Map<String, Object> map = null;
         if (internalStep != null) {
             // ORDER Variables
-            map = JobHelper.convert(internalStep.order().arguments());
+            map = JobHelper.asJavaValues(internalStep.order().arguments());
             if (map != null && map.size() > 0) {
                 logger.log(logLevel, String.format(" %s:", ValueSource.ORDER.getHeader()));
                 map.entrySet().stream().forEach(e -> {
@@ -763,7 +703,7 @@ public class JobStep<A extends JobArguments> {
         }
         if (internalStep != null) {
             // JOB Arguments
-            map = JobHelper.convert(internalStep.arguments());
+            map = JobHelper.asJavaValues(internalStep.arguments());
             if (map != null && map.size() > 0) {
                 logger.log(logLevel, String.format(" %s:", ValueSource.JOB.getHeader()));
                 map.entrySet().stream().forEach(e -> {
@@ -798,7 +738,7 @@ public class JobStep<A extends JobArguments> {
 
     private void logJobContextArguments(LogLevel logLevel) {
         if (jobContext != null) {
-            Map<String, Object> map = JobHelper.convert(jobContext.jobArguments());
+            Map<String, Object> map = JobHelper.asJavaValues(jobContext.jobArguments());
             if (map != null && map.size() > 0) {
                 logger.log(logLevel, String.format(" %s:", ValueSource.JOB_ARGUMENT.getHeader()));
                 map.entrySet().stream().forEach(e -> {

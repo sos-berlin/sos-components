@@ -1,9 +1,11 @@
 package com.sos.jitl.jobs.common;
 
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +17,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
+import com.sos.commons.util.common.SOSArgumentHelper;
 import com.sos.jitl.jobs.exception.SOSJobProblemException;
 
 import io.vavr.control.Either;
@@ -66,25 +69,14 @@ public class JobHelper {
         return getAgentConfigDir().resolve("hibernate.cfg.xml").normalize();
     }
 
-    public static long getTimeAsSeconds(final JobArgument<String> arg) {
-        return SOSDate.getTimeAsSeconds(SOSString.isEmpty(arg.getValue()) ? arg.getDefaultValue() : arg.getValue());
-    }
-
-    public static Map<String, Object> convert(final Map<String, Value> map) {
+    public static Map<String, Object> asJavaValues(final Map<String, Value> map) {
         if (map == null || map.size() == 0) {
             return Collections.emptyMap();
         }
-        return map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> getValue(e.getValue())));
+        return map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> asJavaValue(e.getValue())));
     }
 
-    public static <T> T getFromEither(final Either<Problem, T> either) throws SOSJobProblemException {
-        if (either.isLeft()) {
-            throw new SOSJobProblemException(either.getLeft());
-        }
-        return either.get();
-    }
-
-    public static Object getValue(final Value o) {
+    public static Object asJavaValue(final Value o) {
         if (o == null) {
             return null;
         }
@@ -98,7 +90,51 @@ public class JobHelper {
         return o;
     }
 
-    public static <A> Map<String, Object> asNameValueMap(Map<String, JobArgument<A>> map) {
+    protected static Map<String, Value> asEngineValues(final Map<String, Object> map) {
+        Map<String, Value> result = new HashMap<>();
+        if (map == null || map.size() == 0) {
+            return result;
+        }
+        // Collectors.toMap throws an exception when duplicate or value is null
+        // return map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> getEngineValue(e.getValue())));
+        map.entrySet().forEach(e -> {
+            result.put(e.getKey(), asEngineValue(e.getValue()));
+        });
+        return result;
+    }
+
+    private static Value asEngineValue(final Object o) {
+        if (o == null) {
+            return StringValue.of("");
+        }
+        if (o instanceof Value) {
+            return (Value) o;
+        } else if (o instanceof String) {
+            return StringValue.of((String) o);
+        } else if (o instanceof Boolean) {
+            return BooleanValue.of(((Boolean) o).booleanValue());
+        } else if (o instanceof Integer) {
+            return NumberValue.of((Integer) o);
+        } else if (o instanceof Long) {
+            return NumberValue.of(((Long) o).longValue());
+        } else if (o instanceof Double) {
+            return NumberValue.of(BigDecimal.valueOf((Double) o));
+        } else if (o instanceof BigDecimal) {
+            return NumberValue.of((BigDecimal) o);
+        } else if (o instanceof Date) {
+            return getDateAsStringValue((Date) o);
+        } else if (SOSReflection.isList(o.getClass())) {
+            // TODO use ListValue?
+            List<?> l = (List<?>) o;
+            String s = (String) l.stream().map(e -> {
+                return e.toString();
+            }).collect(Collectors.joining(SOSArgumentHelper.LIST_VALUE_DELIMITER));
+            return StringValue.of(s);
+        }
+        return StringValue.of(o.toString());
+    }
+
+    protected static <A> Map<String, Object> asNameValueMap(Map<String, JobArgument<A>> map) {
         if (map == null || map.size() == 0) {
             return Collections.emptyMap();
         }
@@ -106,7 +142,8 @@ public class JobHelper {
                 .getValue()));
     }
 
-    public static Map<String, Object> asNameValueMap(JobArguments o) {
+    @SuppressWarnings("unused")
+    private static Map<String, Object> asNameValueMap(JobArguments o) {
         List<Field> fields = getJobArgumentFields(o);
         Map<String, Object> map = new HashMap<>();
         for (Field field : fields) {
@@ -130,13 +167,33 @@ public class JobHelper {
         return map;
     }
 
-    public static List<Field> getJobArgumentFields(JobArguments o) {
+    protected static List<Field> getJobArgumentFields(JobArguments o) {
         return SOSReflection.getAllDeclaredFields(o.getClass()).stream().filter(f -> f.getType().equals(JobArgument.class)).collect(Collectors
                 .toList());
     }
 
+    protected static List<Field> getJobStepOutcomeVariableFields(JobArguments o) {
+        return SOSReflection.getAllDeclaredFields(o.getClass()).stream().filter(f -> f.getType().equals(JobStepOutcomeVariable.class)).collect(
+                Collectors.toList());
+    }
+
+    protected static <T> T getFromEither(final Either<Problem, T> either) throws SOSJobProblemException {
+        if (either.isLeft()) {
+            throw new SOSJobProblemException(either.getLeft());
+        }
+        return either.get();
+    }
+
     private static Path getPath(String val) {
         return Paths.get(val == null ? "." : val);
+    }
+
+    private static Value getDateAsStringValue(Date date) {
+        try {
+            return StringValue.of(SOSDate.getDateTimeAsString(date));
+        } catch (Throwable e) {
+            return StringValue.of(date == null ? "" : date.toString());
+        }
     }
 
 }

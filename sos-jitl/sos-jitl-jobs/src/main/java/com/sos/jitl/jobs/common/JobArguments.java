@@ -25,7 +25,7 @@ public class JobArguments {
     private Map<String, List<JobArgument>> includedArguments;
 
     public JobArguments(ASOSArguments... args) {
-        setAppArguments(args);
+        setIncludedArguments(args);
     }
 
     public JobArgument<LogLevel> getLogLevel() {
@@ -42,7 +42,7 @@ public class JobArguments {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private void setAppArguments(ASOSArguments... args) {
+    private void setIncludedArguments(ASOSArguments... args) {
         if (args == null || args.length == 0) {
             return;
         }

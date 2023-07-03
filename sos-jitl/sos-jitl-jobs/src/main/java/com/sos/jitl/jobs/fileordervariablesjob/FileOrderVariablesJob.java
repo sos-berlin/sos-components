@@ -18,7 +18,7 @@ public class FileOrderVariablesJob extends ABlockingInternalJob<FileOrderVariabl
     public JOutcome.Completed onOrderProcess(JobStep<FileOrderVariablesJobArguments> step) throws Exception {
         Map<String, Object> allArgs = step.getAllArgumentsAsNameValueMap();
         if (step.getInternalStep() != null) {
-            Object obj = JobHelper.getValue(step.getInternalStep().order().arguments().get("file"));
+            Object obj = JobHelper.asJavaValue(step.getInternalStep().order().arguments().get("file"));
             if (obj instanceof String) {
                 String s = (String) obj;
                 step.getDeclaredArguments().setJs7SourceFile(s);
