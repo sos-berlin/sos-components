@@ -126,7 +126,7 @@ public class ProblemHelper {
         }
     }
 
-    private static JocException getExceptionOfProblem(Problem problem) throws JocException {
+    public static JocException getExceptionOfProblem(Problem problem) throws JocException {
         switch (problem.httpStatusCode()) {
         case 409:
             // duplicate orders are ignored by controller -> 409 is no longer transmitted

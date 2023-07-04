@@ -10,16 +10,14 @@ import org.slf4j.LoggerFactory;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.proxy.ClusterNodeLossEvent;
-import com.sos.joc.exceptions.ControllerConflictException;
 import com.sos.joc.exceptions.ControllerObjectNotExistException;
-import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocError;
 
 import js7.base.problem.Problem;
 import js7.cluster.watch.ClusterWatchService;
-import js7.cluster.watch.api.ClusterWatchProblems.ClusterNodeLossNotConfirmedProblem;
 import js7.data.cluster.ClusterState;
 import js7.data.cluster.ClusterWatchId;
+import js7.data.cluster.ClusterWatchProblems;
 import js7.data.node.NodeId;
 import js7.proxy.javaapi.JControllerApi;
 import scala.jdk.javaapi.OptionConverters;
@@ -44,7 +42,7 @@ public class ClusterWatchServiceContext {
         logClusterState(primaryId, backupId);
     }
     
-    private void onNodeLossNotConfirmedProblem(ClusterNodeLossNotConfirmedProblem problem) {
+    private void onNodeLossNotConfirmedProblem(ClusterWatchProblems.ClusterNodeLossNotConfirmedProblem problem) {
         lossNode = problem.event().lostNodeId();
         message = problem.messageWithCause();
         Instant now = Instant.now();

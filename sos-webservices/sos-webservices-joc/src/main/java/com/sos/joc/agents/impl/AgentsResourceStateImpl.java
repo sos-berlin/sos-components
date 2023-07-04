@@ -59,8 +59,10 @@ import js7.base.problem.Problem;
 import js7.base.version.Version;
 import js7.data.agent.AgentPath;
 import js7.data.agent.AgentRefState;
+import js7.data.cluster.ClusterWatchProblems;
 import js7.data.controller.ControllerCommand;
 import js7.data.delegate.DelegateCouplingState;
+import js7.data.node.NodeId;
 import js7.data.order.Order;
 import js7.data.order.OrderId;
 import js7.data.platform.PlatformInfo;
@@ -73,6 +75,7 @@ import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrderPredicates;
 import js7.data_for_java.subagent.JSubagentItemState;
 import js7.proxy.javaapi.JControllerProxy;
+import scala.collection.JavaConverters;
 import scala.compat.java8.OptionConverters;
 
 @Path("agents")
@@ -114,6 +117,17 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
             put("reset", AgentStateReason.RESET);
             put("resetcommand", AgentStateReason.RESET);
             put("restarted", AgentStateReason.RESTARTED);
+        }
+    });
+    
+    private static final Map<String, SubagentDirectorType> subagentDirectors = Collections.unmodifiableMap(new HashMap<String, SubagentDirectorType>() {
+
+        private static final long serialVersionUID = 1L;
+
+        {
+            put("primary", SubagentDirectorType.PRIMARY_DIRECTOR);
+            put("backup", SubagentDirectorType.SECONDARY_DIRECTOR);
+            
         }
     });
 
@@ -202,7 +216,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
 
                     Map<AgentPath, JAgentRefState> agentRefStates = currentState.pathToAgentRefState();
                     Map<SubagentId, JSubagentItemState> subagentItemStates = currentState.idToSubagentItemState();
-                    Map<String, ClusterType> agentClusterStates = new HashMap<>();
+                    Map<String, ClusterState> agentClusterStates = new HashMap<>();
                     
 
                     for (Map.Entry<String, List<DBItemInventorySubAgentInstance>> dbSubagents : dbSubagentsPerAgent.entrySet()) {
@@ -217,20 +231,30 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                             
                             JAgentRefState jAgentRefState = agentRefStates.get(AgentPath.of(dbSubagents.getKey()));
                             ClusterState clusterState = getClusterState(jAgentRefState);
-                            agentClusterStates.put(dbSubagents.getKey(), getClusterStateType(clusterState));
+                            agentClusterStates.put(dbSubagents.getKey(), clusterState);
 
                             subagentsPerAgentId.put(dbSubagents.getKey(), dbSubagents.getValue().stream().sorted(Comparator.comparingInt(
                                     DBItemInventorySubAgentInstance::getOrdering)).map(dbSubAgent -> {
                                         SubagentV subagent = mapDbSubagentToAgentV(dbSubAgent);
                                         subagent.setState(getState(AgentStateText.UNKNOWN, null));
                                         
+                                        Optional<SubagentDirectorType> subagentIsLost = Optional.empty();
+                                        if (ClusterType.NODE_LOSS_TO_BE_CONFIRMED.equals(clusterState.getTYPE()) && clusterState.getLostNodeId() != null) {
+                                            if (subagent.getIsDirector().equals(subagentDirectors.get(clusterState.getLostNodeId().toLowerCase()))) {
+                                                subagentIsLost = Optional.of(subagent.getIsDirector());
+                                            }
+                                        }
+                                        
                                         if (Proxies.isCoupled(controllerId)) {
                                             if (SubagentDirectorType.NO_DIRECTOR.equals(dbSubAgent.getDirectorAsEnum())) {
-                                                addSubagentState(subagent, dbSubAgent, subagentItemStates);
+                                                addSubagentState(subagent, dbSubAgent, subagentItemStates, subagentIsLost);
 
                                             } else {
-                                                boolean isActive = isActive(clusterState, dbSubAgent.getUri());
+                                                boolean isActive = isActive(clusterState, dbSubAgent);
                                                 subagent.setClusterNodeState(States.getClusterNodeState(isActive));
+                                                if (subagentIsLost.isPresent()) {
+                                                    subagent.setClusterNodeState(States.getClusterNodeState(false));
+                                                }
                                                 if (isActive && jAgentRefState != null) {
                                                     LOGGER.debug("Agent '" + dbSubAgent.getAgentId() + "',  state = " + jAgentRefState.toJson());
                                                     AgentRefState agentRefState = jAgentRefState.asScala();
@@ -240,12 +264,14 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                                                     Optional<Problem> optProblem = OptionConverters.toJava(agentRefState.problem());
                                                     if (optProblem.isPresent()) {
                                                         subagent.setErrorMessage(ProblemHelper.getErrorMessage(optProblem.get()));
+                                                    } else if (subagentIsLost.isPresent()) {
+                                                        subagent.setErrorMessage("This director is lost. Requires confirmation");
                                                     }
-                                                    AgentStateText stateText = getAgentStateText(couplingState, optProblem);
+                                                    AgentStateText stateText = getAgentStateText(couplingState, optProblem, subagentIsLost);
                                                     AgentStateReason stateReason = getAgentReasonText(couplingState, optProblem);
                                                     subagent.setState(getState(stateText, stateReason));
                                                 } else {
-                                                    addSubagentState(subagent, dbSubAgent, subagentItemStates);
+                                                    addSubagentState(subagent, dbSubAgent, subagentItemStates, subagentIsLost);
                                                 }
                                             }
                                         }
@@ -312,11 +338,14 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                             }
                             agent.setRunningTasks(agent.getSubagents().stream().mapToInt(SubagentV::getRunningTasks).sum());
                             agent.setOrders(null);
-                            
-                            agent.setClusterState(States.getClusterState(agentClusterStates.get(dbAgent.getAgentId())));
+
+                            agent.setClusterState(States.getClusterState(getClusterStateType(agentClusterStates.get(dbAgent.getAgentId())),
+                                    getClusterLostNodeId(agentClusterStates.get(dbAgent.getAgentId()))));
                         }
                         return agent;
                     }).filter(Objects::nonNull).sorted(Comparator.comparingInt(AgentV::getRunningTasks).reversed()).collect(Collectors.toList()));
+                    
+                    //agentClusterStates.entrySet().stream().filter(e -> e.getValue().getLostNodeId() != null).collect(Collectors.joining(controllerId, accessToken, controllerId))
 
                 } catch (ControllerConnectionRefusedException e1) {
                     for (Map.Entry<String, List<DBItemInventorySubAgentInstance>> dbSubagents : dbSubagentsPerAgent.entrySet()) {
@@ -462,11 +491,18 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
         agent.setIsDirector(dbSubagent.getDirectorAsEnum());
         return agent;
     }
-
+    
     private static AgentStateText getAgentStateText(DelegateCouplingState couplingState, Optional<Problem> optProblem) {
+        return getAgentStateText(couplingState, optProblem, Optional.empty());
+    }
+
+    private static AgentStateText getAgentStateText(DelegateCouplingState couplingState, Optional<Problem> optProblem,
+            Optional<SubagentDirectorType> subagentIsLost) {
         if (couplingState instanceof DelegateCouplingState.ShutDown$) {
             return AgentStateText.SHUTDOWN;
         } else if (optProblem.isPresent()) {
+            return AgentStateText.COUPLINGFAILED;
+        } else if (subagentIsLost.isPresent()) {
             return AgentStateText.COUPLINGFAILED;
         } else if (couplingState instanceof DelegateCouplingState.Coupled$) {
             return AgentStateText.COUPLED;
@@ -497,6 +533,12 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
         if (jAgentRefState != null) {
             try {
                 clusterState = Globals.objectMapper.readValue(jAgentRefState.clusterState().toJson(), ClusterState.class);
+                Map<NodeId, ClusterWatchProblems.ClusterNodeLossNotConfirmedProblem> lostNodeIds = JavaConverters.asJava(jAgentRefState.asScala()
+                        .nodeToClusterNodeProblem());
+                if (!lostNodeIds.isEmpty()) {
+                    clusterState.setTYPE(ClusterType.NODE_LOSS_TO_BE_CONFIRMED);
+                    clusterState.setLostNodeId(lostNodeIds.values().iterator().next().event().lostNodeId().string());
+                }
             } catch (Exception e) {
                 LOGGER.error("", e);
             }
@@ -508,7 +550,11 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
         return clusterState == null ? null : clusterState.getTYPE();
     }
     
-    private static boolean isActive(ClusterState clusterState, String subagentUri) {
+    private static Optional<String> getClusterLostNodeId(ClusterState clusterState) {
+        return clusterState == null || clusterState.getLostNodeId() == null ? Optional.empty() : Optional.of(clusterState.getLostNodeId());
+    }
+    
+    private static boolean isActive(ClusterState clusterState, DBItemInventorySubAgentInstance subagent) {
         boolean isActive = false;
         if (clusterState != null) {
             switch (clusterState.getTYPE()) {
@@ -516,9 +562,12 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                 isActive = true;
                 break;
             default:
-                String activeClusterUri = clusterState.getSetting().getIdToUri().getAdditionalProperties()
-                        .get(clusterState.getSetting().getActiveId());
-                isActive = activeClusterUri.equalsIgnoreCase(subagentUri);
+                String activeClusterUri = clusterState.getSetting().getIdToUri().getAdditionalProperties().get(clusterState.getSetting()
+                        .getActiveId());
+                isActive = activeClusterUri.equalsIgnoreCase(subagent.getUri());
+                if (!isActive && subagent.getIsDirector().equals(subagentDirectors.get(clusterState.getSetting().getActiveId().toLowerCase()))) {
+                    isActive = true;
+                }
                 break;
             }
         }
@@ -526,7 +575,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
     }
     
     private static SubagentV addSubagentState(SubagentV subagent, DBItemInventorySubAgentInstance dbSubAgent,
-            Map<SubagentId, JSubagentItemState> subagentItemStates) {
+            Map<SubagentId, JSubagentItemState> subagentItemStates, Optional<SubagentDirectorType> subagentIsLost) {
         AgentStateText stateText = AgentStateText.UNKNOWN;
         AgentStateReason stateReason = null;
         JSubagentItemState jSubagentItemState = subagentItemStates.get(SubagentId.of(dbSubAgent.getSubAgentId()));
@@ -539,8 +588,10 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
             Optional<Problem> optProblem = OptionConverters.toJava(subagentItemState.problem());
             if (optProblem.isPresent()) {
                 subagent.setErrorMessage(ProblemHelper.getErrorMessage(optProblem.get()));
+            } else if (subagentIsLost.isPresent()) {
+                subagent.setErrorMessage("This director is lost. Requires confirmation");
             }
-            stateText = getAgentStateText(couplingState, optProblem);
+            stateText = getAgentStateText(couplingState, optProblem, subagentIsLost);
             stateReason = getAgentReasonText(couplingState, optProblem);
         }
         subagent.setState(getState(stateText, stateReason));

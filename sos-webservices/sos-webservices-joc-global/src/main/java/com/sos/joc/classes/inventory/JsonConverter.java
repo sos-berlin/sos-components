@@ -24,6 +24,7 @@ import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.instruction.AddOrder;
 import com.sos.inventory.model.instruction.ConsumeNotices;
 import com.sos.inventory.model.instruction.Cycle;
+import com.sos.inventory.model.instruction.Fail;
 import com.sos.inventory.model.instruction.Finish;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.ForkList;
@@ -401,6 +402,25 @@ public class JsonConverter {
                     } else if (cn.getSubworkflow() != null && cn.getSubworkflow().getInstructions() != null) {
                         convertInstructions(controllerId, workflowName, cn.getSubworkflow().getInstructions(), sCn.getSubworkflow().getInstructions(),
                                 addOrderIndex, zoneId);
+                    }
+                    break;
+                case FAIL:
+                    com.sos.sign.model.instruction.Fail sFail = signInstruction.cast();
+                    if (sFail.getNamedValues() != null && sFail.getNamedValues().getAdditionalProperties() != null) {
+                        Object returnCode = sFail.getNamedValues().getAdditionalProperties().get("returnCode");
+                        if (returnCode != null) {
+                            if (!(returnCode instanceof Integer)) {
+                                if (returnCode instanceof String) { 
+                                    try {
+                                        sFail.getNamedValues().setAdditionalProperty("returnCode", Integer.valueOf((String) returnCode));
+                                    } catch (Exception e) {
+                                        sFail.getNamedValues().removeAdditionalProperty("returnCode");
+                                    }
+                                } else {
+                                    sFail.getNamedValues().removeAdditionalProperty("returnCode");
+                                }
+                            }
+                        }
                     }
                     break;
                 case FINISH:

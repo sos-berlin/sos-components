@@ -113,6 +113,12 @@ public class States {
         return clusterState;
     }
     
+    public static ClusterState getClusterState(ClusterType state, Optional<String> lostNodeId) {
+        ClusterState clusterState = getClusterState(state);
+        lostNodeId.ifPresent(s -> clusterState.setLossNode(s));
+        return clusterState;
+    }
+    
     public static DBItemInventoryJSInstance getActiveControllerNode(List<DBItemInventoryJSInstance> controllerInstances, JClusterState jClusterState)
             throws JsonParseException, JsonMappingException, IOException {
         DBItemInventoryJSInstance controllerInstance = null;

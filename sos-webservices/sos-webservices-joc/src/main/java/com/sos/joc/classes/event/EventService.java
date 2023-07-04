@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.workflow.WorkflowId;
+import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.event.EventServiceFactory.EventCondition;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.ClusterWatch;
@@ -66,6 +67,7 @@ import js7.data.agent.AgentRefStateEvent;
 import js7.data.board.BoardEvent;
 import js7.data.board.BoardPath;
 import js7.data.cluster.ClusterEvent;
+import js7.data.cluster.ClusterWatchProblems;
 import js7.data.controller.ControllerEvent;
 import js7.data.event.Event;
 import js7.data.event.KeyedEvent;
@@ -155,6 +157,8 @@ public class EventService {
         startEventService();
         ClusterWatch.getInstance().getAndCleanLastMessage(controllerId).ifPresent(m -> addEvent(createNodeLossProblem(Instant.now().toEpochMilli()
                 / 1000, controllerId, m)));
+        
+        //TODO init lostNodeIds
     }
 
     protected void close() {
@@ -564,10 +568,10 @@ public class EventService {
             } else if (evt instanceof AgentRefStateEvent.AgentClusterWatchConfirmationRequired) {
                 String agentPath = ((AgentPath) key).string();
                 AgentRefStateEvent.AgentClusterWatchConfirmationRequired clusterWatchEvt = (AgentRefStateEvent.AgentClusterWatchConfirmationRequired) evt;
-                ClusterEvent.ClusterNodeLostEvent e = clusterWatchEvt.event();
+                ClusterWatchProblems.ClusterNodeLossNotConfirmedProblem problem = clusterWatchEvt.problem();
                 // TODO store lostNostId for confirm command and for repeated events
-                lostNodeIds.putIfAbsent(agentPath, e.lostNodeId());
-                addEvent(createNodeLossProblem(eventId));
+                lostNodeIds.putIfAbsent(agentPath, problem.event().lostNodeId());
+                addEvent(createNodeLossProblem(eventId, problem));
                 addEvent(createAgentEvent(eventId, agentPath));
                 uncoupledAgents.remove(agentPath);
             } else if (evt instanceof AgentRefStateEvent && !(evt instanceof AgentRefStateEvent.AgentEventsObserved)) {
@@ -687,7 +691,7 @@ public class EventService {
         return evt;
     }
     
-    private EventSnapshot createNodeLossProblem(long eventId) {
+    private EventSnapshot createNodeLossProblem(long eventId, ClusterWatchProblems.ClusterNodeLossNotConfirmedProblem problem) {
         if (lostNodeIds.isEmpty()) {
             return null;
         }
@@ -696,6 +700,10 @@ public class EventService {
         evt.setEventType("NodeLossProblemEvent");
         evt.setObjectType(EventType.PROBLEM);
         evt.setPath(controllerId);
+//        String message = ProblemHelper.getErrorMessage(problem);
+//        if (message == null) {
+//            //TODO ???
+//        }
         evt.setMessage(lostNodeIds.entrySet().stream().map(e -> "'" + e.getValue() + "' director in Agent Cluster '" + e.getKey() + "'").collect(
                 Collectors.joining(", ", "Loss of ", " requires confirmation")));
         return evt;

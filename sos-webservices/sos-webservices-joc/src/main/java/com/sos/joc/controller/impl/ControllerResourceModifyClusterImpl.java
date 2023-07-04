@@ -3,11 +3,11 @@ package com.sos.joc.controller.impl;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.cluster.ClusterState;
 import com.sos.controller.model.cluster.ClusterType;
-import com.sos.controller.model.command.ClusterSwitchOver;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -27,6 +27,7 @@ import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
+import js7.data_for_java.controller.JControllerCommand;
 
 @Path("controller")
 public class ControllerResourceModifyClusterImpl extends JOCResourceImpl implements IControllerResourceModifyCluster {
@@ -63,9 +64,8 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
             if (clusterState == null || !ClusterType.COUPLED.equals(clusterState.getTYPE())) {
                 throw new JocBadRequestException("Switchover is not available because the cluster is not coupled");
             }
-
-            ControllerApi.of(controllerId).executeCommandJson(Globals.objectMapper.writeValueAsString(new ClusterSwitchOver()))
-                    .thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), controllerId));
+            ControllerApi.of(controllerId).executeCommand(JControllerCommand.clusterSwitchover(Optional.empty())).thenAccept(e -> ProblemHelper
+                    .postProblemEventIfExist(e, getAccessToken(), getJocError(), controllerId));
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {

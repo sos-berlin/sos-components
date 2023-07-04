@@ -4,9 +4,6 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.Date;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -27,6 +24,8 @@ import com.sos.schema.exception.SOSJsonSchemaException;
 import io.vavr.control.Either;
 import jakarta.ws.rs.Path;
 import js7.base.problem.Problem;
+import js7.data.controller.ControllerCommand;
+import js7.data_for_java.controller.JControllerCommand;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.workflow.JWorkflow;
 import js7.data_for_java.workflow.JWorkflowId;
@@ -36,7 +35,6 @@ import js7.proxy.javaapi.JControllerProxy;
 public class WorkflowModifyImpl extends JOCResourceImpl implements IWorkflowModify {
 
     private static final String API_CALL = "./workflow/";
-    private static final Logger LOGGER = LoggerFactory.getLogger(WorkflowModifyImpl.class);
 
     private enum Action {
         TRANSITION, TRANFER
@@ -104,14 +102,8 @@ public class WorkflowModifyImpl extends JOCResourceImpl implements IWorkflowModi
         }
         checkFolderPermissions(WorkflowPaths.getPath(workflowId.path().string()));
 
-        String json = getCommandJson(workflowId);
-        LOGGER.debug("send command: " + json);
-        proxy.api().executeCommandJson(json).thenAccept(either -> thenAcceptHandler(either, proxy, controllerId, workflow.id(), dbAuditLog));
-    }
-    
-    private static String getCommandJson(JWorkflowId workflowId) {
-        return String.format("{\"TYPE\":\"TransferOrders\",\"workflowId\":{\"path\":\"%s\",\"versionId\":\"%s\"}}", workflowId.path()
-                .string(), workflowId.versionId().string());
+        proxy.api().executeCommand(JControllerCommand.transferOrders(workflowId)).thenAccept(either -> thenAcceptHandler(either, proxy, controllerId,
+                workflow.id(), dbAuditLog));
     }
     
     private ModifyWorkflow initRequest(Action action, String accessToken, byte[] filterBytes) throws SOSJsonSchemaException, IOException {
@@ -120,8 +112,8 @@ public class WorkflowModifyImpl extends JOCResourceImpl implements IWorkflowModi
         return Globals.objectMapper.readValue(filterBytes, ModifyWorkflow.class);
     }
 
-    private void thenAcceptHandler(Either<Problem, String> either, JControllerProxy proxy, String controllerId, JWorkflowId workflowId,
-            DBItemJocAuditLog dbAuditLog) {
+    private void thenAcceptHandler(Either<Problem, ControllerCommand.Response> either, JControllerProxy proxy, String controllerId,
+            JWorkflowId workflowId, DBItemJocAuditLog dbAuditLog) {
         ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
         if (either.isRight()) {
             WorkflowsHelper.storeAuditLogDetailsFromWorkflowPath(workflowId.path(), dbAuditLog, controllerId).thenAccept(either2 -> ProblemHelper

@@ -1,9 +1,11 @@
 
 package com.sos.controller.model.cluster;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -31,6 +33,8 @@ public class ClusterState {
     private ClusterType tYPE;
     @JsonProperty("setting")
     private ClusterSetting setting;
+    @JsonIgnore
+    private String lostNodeId;
 
     /**
      * No args constructor for use in serialization
@@ -78,6 +82,15 @@ public class ClusterState {
     @JsonProperty("setting")
     public void setSetting(ClusterSetting setting) {
         this.setting = setting;
+    }
+    
+    @JsonIgnore
+    public String getLostNodeId() {
+        return lostNodeId;
+    }
+
+    public void setLostNodeId(String lostNodeId) {
+        this.lostNodeId = lostNodeId;
     }
 
     @Override

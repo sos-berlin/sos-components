@@ -3,6 +3,7 @@ package com.sos.joc.agent.impl;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -35,6 +36,8 @@ import io.vavr.control.Either;
 import jakarta.ws.rs.Path;
 import js7.data.agent.AgentPath;
 import js7.data.controller.ControllerCommand;
+import js7.data.controller.ControllerCommand.ConfirmClusterNodeLoss;
+import js7.data.node.NodeId;
 import js7.data.subagent.SubagentId;
 import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.agent.JAgentRefState;
@@ -168,7 +171,7 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
                 } else if (!ClusterType.COUPLED.equals(clusterState.getTYPE())) {
                     throw new JocBadRequestException("Switchover is not available because the Agent director cluster is not coupled");
                 }
-                ControllerApi.of(controllerId).executeCommandJson(Globals.objectMapper.writeValueAsString(new ClusterSwitchOver(agentId))).thenAccept(
+                ControllerApi.of(controllerId).executeCommand(JControllerCommand.clusterSwitchover(Optional.of(AgentPath.of(agentId)))).thenAccept(
                         e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), controllerId));
             } else {
                 throw new JocBadRequestException("An Agent '" + agentId + "' is not deployed at the Controller '" + controllerId + "'");
@@ -215,8 +218,8 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
                 } catch (Exception e) {
                     user = Globals.getJocId();
                 }
-                ControllerApi.of(controllerId).executeCommandJson(Globals.objectMapper.writeValueAsString(new ConfirmAgentClusterNodeLoss(agentId,
-                        lossNodeId, user))).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), controllerId));
+                ControllerApi.of(controllerId).executeCommand(JControllerCommand.confirmClusterNodeLoss(AgentPath.of(agentId), NodeId.of(lossNodeId),
+                        user)).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), controllerId));
             } else {
                 throw new JocBadRequestException("An Agent '" + agentId + "' is not deployed at the Controller '" + controllerId + "'");
             }
