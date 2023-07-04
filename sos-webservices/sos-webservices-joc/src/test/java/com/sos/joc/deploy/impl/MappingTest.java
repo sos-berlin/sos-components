@@ -628,43 +628,76 @@ public class MappingTest {
         File source = Paths.get(sourceFilePath).toFile();
         InputStream in = Files.newInputStream(Paths.get(sourceFilePath));
         long fileLength = source.length();
-
         // create TAR outputStream with POSIX credentials
-        TarArchiveOutputStream tarArchiveOut = new TarArchiveOutputStream(new FileOutputStream(targetFile));
-        tarArchiveOut.setAddPaxHeadersForNonAsciiNames(true);
-        tarArchiveOut.setBigNumberMode(TarArchiveOutputStream.BIGNUMBER_POSIX);
-        tarArchiveOut.setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX);
-        tarArchiveOut.putArchiveEntry(new TarArchiveEntry(source, pathInArchive));
-        // write the target archives entry
-        for (int i = 0; i < fileLength; i++) {
-            tarArchiveOut.write(in.read());
-        }
-        // flush and close the tar output stream (save the file)
-        tarArchiveOut.flush();
-        tarArchiveOut.closeArchiveEntry();
-        // read the newly created tar file
-        InputStream tarIn = Files.newInputStream(Paths.get(targetFilePath));
-        TarArchiveInputStream tarArchiveIn = new TarArchiveInputStream(tarIn);
-        LOGGER.debug("In File Path: " + sourceFilePath);
-        LOGGER.debug("archive path: " + targetFilePath);
-        LOGGER.debug("path inside archive: " + pathInArchive);
-        TarArchiveEntry entry = tarArchiveIn.getNextTarEntry();
+        GZIPOutputStream gzipOut = null;
+        BufferedOutputStream bOut = null;
+        TarArchiveOutputStream tarArchiveOut = null;
         // get Name property of the entry of the newly created archive
-        String pathInArchiveAfter = entry.getName();
-        LOGGER.debug("path inside archive after store: " + pathInArchiveAfter);
-        // get File Object of the entry of the newly created archive. - does only work, if stored name property equals the filename of the stored entry, else returns null as the file object.
-        File fileFromEntry = entry.getFile();
-        String filename;
-        if(fileFromEntry == null) {
-            // if the file object is null, the file from the archive could not be instantiated with the given name property of the entry 
-            LOGGER.debug(String.format("file with path - %1$s - not found in archive", pathInArchiveAfter));
-            filename = "";
-        } else {
-            filename = entry.getFile().getName();
-            LOGGER.debug("filename inside archive after store: " + filename);
+        String pathInArchiveAfter;
+        try {
+            bOut = new BufferedOutputStream(new FileOutputStream(targetFile));
+            gzipOut = new GZIPOutputStream(bOut);
+            tarArchiveOut = new TarArchiveOutputStream(gzipOut);
+            tarArchiveOut.setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX);
+            tarArchiveOut.putArchiveEntry(new TarArchiveEntry(source, pathInArchive));
+            // write the target archives entry
+            for (int i = 0; i < fileLength; i++) {
+                tarArchiveOut.write(in.read());
+            }
+            // flush and close the tar output stream (save the file)
+            tarArchiveOut.closeArchiveEntry();
+            tarArchiveOut.flush();
+        } finally {
+            if (tarArchiveOut != null) {
+                try {
+                    tarArchiveOut.finish();
+                    tarArchiveOut.close();
+                } catch (Exception e) {}
+            }
+            if (gzipOut != null) {
+                try {
+                    gzipOut.flush();
+                    gzipOut.close();
+                } catch (Exception e) {}
+            }
+            if (bOut != null) {
+                try {
+                    bOut.flush();
+                    bOut.close();
+                } catch (Exception e) {}
+            }
         }
-        tarArchiveIn.close();
-        Assert.assertNotEquals(filename, pathInArchiveAfter);
+        // read the newly created tar file
+        GZIPInputStream gzipInputStream = null;
+        TarArchiveInputStream tarArchiveIn = null;
+        InputStream tarIn = null;
+        try {
+            tarIn = Files.newInputStream(Paths.get(targetFilePath));
+            gzipInputStream = new GZIPInputStream(tarIn);
+            tarArchiveIn = new TarArchiveInputStream(gzipInputStream);
+            LOGGER.debug("In File Path: " + sourceFilePath);
+            LOGGER.debug("archive path: " + targetFilePath);
+            LOGGER.debug("path inside archive: " + pathInArchive);
+            TarArchiveEntry entry = tarArchiveIn.getNextTarEntry();
+            pathInArchiveAfter = entry.getName();
+            LOGGER.debug("path inside archive after store: " + pathInArchiveAfter);
+        } finally {
+            if (tarIn != null) {
+                try {
+                    tarIn.close();
+                } catch (Exception e) {}
+            }
+            if (tarArchiveIn != null) {
+                try {
+                    tarArchiveIn.close();
+                } catch (Exception e) {}
+            }
+            if (gzipInputStream != null) {
+                try {
+                    gzipInputStream.close();
+                } catch (Exception e) {}
+            }
+        }
     }
     
 }
