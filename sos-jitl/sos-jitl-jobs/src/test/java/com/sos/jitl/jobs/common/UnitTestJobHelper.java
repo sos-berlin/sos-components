@@ -93,9 +93,9 @@ public class UnitTestJobHelper<A extends JobArguments> {
             setDefaultEnvVar(JobHelper.ENV_NAME_AGENT_CONFIG_DIR, "");
             setDefaultEnvVar(JobHelper.ENV_NAME_AGENT_WORK_DIR, "");
         } catch (Throwable e) {
-            LOGGER.warn(String.format(
+            LOGGER.info(String.format(
                     "[can't set env][use 'Run Configurations -> Environment' instead or allow access with '--add-opens java.base/java.util=ALL-UNNAMED']%s",
-                    e.toString()), e);
+                    e.toString()));
         }
     }
 
