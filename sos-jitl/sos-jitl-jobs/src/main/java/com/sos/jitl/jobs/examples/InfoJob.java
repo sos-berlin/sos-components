@@ -109,7 +109,7 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
 
         step.getLogger().info("----------ORDER HISTORIC OUTCOME-----------------");
         step.getLogger().info("-ENGINE HISTORIC OUTCOME-----------------");
-        List<HistoricOutcome> list = step.getHistoricOutcomes();
+        List<HistoricOutcome> list = step.getEngineHistoricOutcomes();
         for (HistoricOutcome ho : list) {
             step.getLogger().info("[scala]" + SOSString.toString(ho));
         }

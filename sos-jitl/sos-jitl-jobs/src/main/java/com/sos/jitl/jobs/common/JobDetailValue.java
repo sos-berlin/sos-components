@@ -17,4 +17,12 @@ public class JobDetailValue {
     public String getSource() {
         return source;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("value=").append(value == null ? "" : value);
+        sb.append(",source=").append(source == null ? "" : source);
+        return sb.toString();
+    }
 }

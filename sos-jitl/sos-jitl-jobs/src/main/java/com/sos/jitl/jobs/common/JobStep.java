@@ -121,7 +121,7 @@ public class JobStep<A extends JobArguments> {
         return declaredArguments;
     }
 
-    public List<HistoricOutcome> getHistoricOutcomes() {
+    public List<HistoricOutcome> getEngineHistoricOutcomes() {
         if (internalStep == null) {
             return null;
         }
@@ -237,7 +237,7 @@ public class JobStep<A extends JobArguments> {
         Map<String, JobDetailValue> lso = getLastSucceededOutcomes();
         if (lso != null && lso.size() > 0) {
             lso.entrySet().stream().forEach(e -> {
-                if (!allArguments.containsKey(e.getKey())) {
+                if (!allArguments.containsKey(e.getKey()) && !JobHelper.NAMED_NAME_RETURN_CODE.equals(e.getKey())) {
                     ValueSource vs = ValueSource.LAST_SUCCEEDED_OUTCOME;
                     vs.setDetails(e.getValue().getSource());
                     allArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue().getValue(), vs));
@@ -585,7 +585,7 @@ public class JobStep<A extends JobArguments> {
     }
 
     private Map<String, Map<String, JobDetailValue>> historicOutcomes2map() {
-        List<HistoricOutcome> l = getHistoricOutcomes();
+        List<HistoricOutcome> l = getEngineHistoricOutcomes();
         if (l == null || l.size() == 0) {
             return Collections.emptyMap();
         }
@@ -610,7 +610,7 @@ public class JobStep<A extends JobArguments> {
                             map.put(entry.getKey(), new JobDetailValue(ho.position().toString(), entry.getValue()));
                         }
                     }
-                    map.remove(JobHelper.NAMED_NAME_RETURN_CODE);
+                    // map.remove(JobHelper.NAMED_NAME_RETURN_CODE);
                     resultMap.put(key, map);
                 }
             }
