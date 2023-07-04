@@ -239,7 +239,8 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                                         subagent.setState(getState(AgentStateText.UNKNOWN, null));
                                         
                                         Optional<SubagentDirectorType> subagentIsLost = Optional.empty();
-                                        if (ClusterType.NODE_LOSS_TO_BE_CONFIRMED.equals(clusterState.getTYPE()) && clusterState.getLostNodeId() != null) {
+                                        if (clusterState != null && ClusterType.NODE_LOSS_TO_BE_CONFIRMED.equals(clusterState.getTYPE())
+                                                && clusterState.getLostNodeId() != null) {
                                             if (subagent.getIsDirector().equals(subagentDirectors.get(clusterState.getLostNodeId().toLowerCase()))) {
                                                 subagentIsLost = Optional.of(subagent.getIsDirector());
                                             }
