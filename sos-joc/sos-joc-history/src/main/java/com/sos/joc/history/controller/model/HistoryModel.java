@@ -534,7 +534,7 @@ public class HistoryModel {
                     counter.addProcessed();
                     lastSuccessEventId = eventId;
                 } catch (HistoryModelOrderNotFoundException | HistoryModelOrderStepNotFoundException e) { // TODO ask proxy
-                    LOGGER.warn(String.format("[%s][%s][%s][failed]%s[%s]", identifier, method, entry.getType(), e.toString(), SOSString.toString(
+                    LOGGER.info(String.format("[%s][%s][%s][failed]%s[%s]", identifier, method, entry.getType(), e.toString(), SOSString.toString(
                             entry)));
                     counter.addProcessed();
                     lastSuccessEventId = eventId;
