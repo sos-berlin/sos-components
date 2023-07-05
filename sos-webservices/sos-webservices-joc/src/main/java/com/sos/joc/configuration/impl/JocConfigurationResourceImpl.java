@@ -8,7 +8,6 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -24,6 +23,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.calendar.DailyPlanCalendar;
+import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.configuration.resource.IJocConfigurationResource;
@@ -33,7 +33,6 @@ import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.configuration.ConfigurationGlobalsChanged;
 import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
@@ -43,6 +42,7 @@ import com.sos.joc.model.configuration.ConfigurationOk;
 import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.configuration.globals.GlobalSettings;
 import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
+import com.sos.joc.settings.impl.StoreSettingsImpl;
 import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
 
@@ -157,48 +157,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                         //
                     }
                 } else {
-                    // Calendar for controller
-                    // try {
-                    Optional<JsonObject> oldObj = getOldJsonObject(oldConfiguration);
-                    updateControllerCalendar = !oldObj.isPresent() || oldObj.get().get(DefaultSections.dailyplan.name()) == null;
-                    if (!updateControllerCalendar) {
-                        JsonReader rdr = Json.createReader(new StringReader(configuration.getConfigurationItem()));
-                        JsonObject obj = rdr.readObject();
-
-                        JsonObject oldDailyPlan = oldObj.get().getJsonObject(DefaultSections.dailyplan.name());
-                        JsonObject curDailyPlan = obj.getJsonObject(DefaultSections.dailyplan.name());
-                        if (curDailyPlan != null) {
-                            String oldTimeZone = oldDailyPlan == null || oldDailyPlan.getJsonObject("time_zone") == null ? "" : oldDailyPlan
-                                    .getJsonObject("time_zone").getString("value", "");
-                            String oldPeriodBegin = oldDailyPlan == null || oldDailyPlan.getJsonObject("period_begin") == null ? "" : oldDailyPlan
-                                    .getJsonObject("period_begin").getString("value", "");
-                            String curTimeZone = curDailyPlan.getJsonObject("time_zone") == null ? oldTimeZone : curDailyPlan.getJsonObject(
-                                    "time_zone").getString("value", oldTimeZone);
-                            String curPeriodBegin = curDailyPlan.getJsonObject("period_begin") == null ? oldPeriodBegin : curDailyPlan.getJsonObject(
-                                    "period_begin").getString("value", oldPeriodBegin);
-                            if (curPeriodBegin != null && !curPeriodBegin.isEmpty()) {
-                                long periodBeginOffset = DailyPlanCalendar.convertPeriodBeginToSeconds(curPeriodBegin);
-                                if (periodBeginOffset < 0 || periodBeginOffset >= TimeUnit.DAYS.toMillis(1)) {
-                                    throw new JocBadRequestException("Invalid 'dailyplan.period_begin': " + curPeriodBegin);
-                                }
-                            }
-                            String curStartTime = curDailyPlan.getJsonObject("start_time") == null ? null : curDailyPlan.getJsonObject("start_time")
-                                    .getString("value");
-                            if (curStartTime != null && !curStartTime.isEmpty()) {
-                                long curStartTimeOffset = DailyPlanCalendar.convertTimeToSeconds(curStartTime, "start_time");
-                                if (curStartTimeOffset < 0 || curStartTimeOffset >= TimeUnit.DAYS.toMillis(1)) {
-                                    throw new JocBadRequestException("Invalid 'dailyplan.start_time': " + curStartTime);
-                                }
-                            }
-                            if (!curTimeZone.equals(oldTimeZone) || !curPeriodBegin.equals(oldPeriodBegin)) {
-                                updateControllerCalendar = true;
-                                LOGGER.info("DailyPlan settings are changed. Calendar has to be updated.");
-                            }
-                        }
-                    }
-                    // } catch (Exception e) {
-                    // //
-                    // }
+                    updateControllerCalendar = StoreSettingsImpl.updateControllerCalendar(accessToken, configuration.getConfigurationItem(), oldConfiguration);
                 }
                 break;
             case IAM:
@@ -281,7 +240,10 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                         getJocError());
             }
             if (updateControllerCalendar) {
-                DailyPlanCalendar.getInstance().updateDailyPlanCalendar(configuration.getControllerId(), accessToken, getJocError());
+                // TODO: call for every known controller
+                Proxies.getControllerDbInstances().keySet().stream().forEach(controllerId -> DailyPlanCalendar.getInstance().updateDailyPlanCalendar(
+                        controllerId, accessToken, getJocError()));
+                // DailyPlanCalendar.getInstance().updateDailyPlanCalendar(configuration.getControllerId(), accessToken, getJocError());
             }
 
             if (configuration.getConfigurationType() != ConfigurationType.SETTING && configuration
