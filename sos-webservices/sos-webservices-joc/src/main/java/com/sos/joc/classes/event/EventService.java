@@ -13,14 +13,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.workflow.WorkflowId;
-import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.agent.AgentClusterWatch;
 import com.sos.joc.classes.event.EventServiceFactory.EventCondition;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.ClusterWatch;
@@ -28,6 +27,7 @@ import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
+import com.sos.joc.event.bean.agent.AgentClusterNodeLossEvent;
 import com.sos.joc.event.bean.agent.AgentInventoryEvent;
 import com.sos.joc.event.bean.auditlog.AuditlogChangedEvent;
 import com.sos.joc.event.bean.auditlog.AuditlogWorkflowEvent;
@@ -84,7 +84,6 @@ import js7.data.item.VersionedEvent.VersionedItemAddedOrChanged;
 import js7.data.item.VersionedItemId;
 import js7.data.item.VersionedItemPath;
 import js7.data.lock.LockPath;
-import js7.data.node.NodeId;
 import js7.data.order.OrderEvent;
 import js7.data.order.OrderEvent.OrderAdded;
 import js7.data.order.OrderEvent.OrderBroken;
@@ -106,9 +105,9 @@ import js7.data.order.OrderEvent.OrderResumed;
 import js7.data.order.OrderEvent.OrderResumptionMarked;
 import js7.data.order.OrderEvent.OrderRetrying;
 import js7.data.order.OrderEvent.OrderStarted$;
+import js7.data.order.OrderEvent.OrderStopped$;
 import js7.data.order.OrderEvent.OrderSuspended$;
 import js7.data.order.OrderEvent.OrderSuspensionMarked;
-import js7.data.order.OrderEvent.OrderStopped$;
 import js7.data.order.OrderEvent.OrderTerminated;
 import js7.data.order.OrderEvent.OrderTransferred;
 import js7.data.order.OrderId;
@@ -147,7 +146,6 @@ public class EventService {
     private volatile ConcurrentMap<String, WorkflowId> orders = new ConcurrentHashMap<>();
     private volatile CopyOnWriteArraySet<String> uncoupledAgents = new CopyOnWriteArraySet<>();
     private volatile CopyOnWriteArraySet<String> uncoupledSubagents = new CopyOnWriteArraySet<>();
-    private volatile ConcurrentMap<String, NodeId> lostNodeIds = new ConcurrentHashMap<>();
     private AtomicBoolean burstFilter = new AtomicBoolean(true);
     private static final EnumSet<NotificationType> notificationFailureTypes = EnumSet.of(NotificationType.ERROR, NotificationType.WARNING);
 
@@ -159,6 +157,7 @@ public class EventService {
                 / 1000, controllerId, m)));
         
         //TODO init lostNodeIds
+        AgentClusterWatch.init(controllerId);
     }
 
     protected void close() {
@@ -417,6 +416,16 @@ public class EventService {
         addEvent(createNodeLossProblem(evt.getEventId() / 1000, evt.getControllerId(), message));
     }
     
+    @Subscribe({ AgentClusterNodeLossEvent.class })
+    public void createEvent(AgentClusterNodeLossEvent evt) {
+        if (controllerId.equals(evt.getControllerId())) {
+            // if (!evt.onlyProblem()) {
+            // addEvent(createControllerEvent(evt.getEventId() / 1000));
+            // }
+            addEvent(createNodeLossProblem(evt.getEventId() / 1000, evt.getControllerId(), evt.getMessage()));
+        }
+    }
+    
     @Subscribe({ ProxyCoupled.class })
     public void createEvent(ProxyCoupled evt) {
         if (controllerId.equals(evt.getControllerId())) {
@@ -563,17 +572,16 @@ public class EventService {
                 String agentPath = ((AgentPath) key).string();
                 addEvent(createAgentEvent(eventId, agentPath));
                 // TODO cleanup stored lostNostId for repeated events
-                lostNodeIds.remove(agentPath);
+                AgentClusterWatch.clean(controllerId, (AgentPath) key);
                 uncoupledAgents.remove(agentPath);
             } else if (evt instanceof AgentRefStateEvent.AgentClusterWatchConfirmationRequired) {
-                String agentPath = ((AgentPath) key).string();
+                AgentPath agentPath = (AgentPath) key;
                 AgentRefStateEvent.AgentClusterWatchConfirmationRequired clusterWatchEvt = (AgentRefStateEvent.AgentClusterWatchConfirmationRequired) evt;
                 ClusterWatchProblems.ClusterNodeLossNotConfirmedProblem problem = clusterWatchEvt.problem();
                 // TODO store lostNostId for confirm command and for repeated events
-                lostNodeIds.putIfAbsent(agentPath, problem.event().lostNodeId());
-                addEvent(createNodeLossProblem(eventId, problem));
-                addEvent(createAgentEvent(eventId, agentPath));
-                uncoupledAgents.remove(agentPath);
+                addEvent(createNodeLossProblem(eventId, agentPath, problem));
+                addEvent(createAgentEvent(eventId, agentPath.string()));
+                uncoupledAgents.remove(agentPath.string());
             } else if (evt instanceof AgentRefStateEvent && !(evt instanceof AgentRefStateEvent.AgentEventsObserved)) {
                 String agentPath = ((AgentPath) key).string();
                 addEvent(createAgentEvent(eventId, agentPath));
@@ -691,21 +699,14 @@ public class EventService {
         return evt;
     }
     
-    private EventSnapshot createNodeLossProblem(long eventId, ClusterWatchProblems.ClusterNodeLossNotConfirmedProblem problem) {
-        if (lostNodeIds.isEmpty()) {
-            return null;
-        }
+    private EventSnapshot createNodeLossProblem(long eventId, AgentPath agentPath, ClusterWatchProblems.ClusterNodeLossNotConfirmedProblem problem) {
+        String msg = AgentClusterWatch.put(controllerId, agentPath, problem);
         EventSnapshot evt = new EventSnapshot();
         evt.setEventId(eventId);
         evt.setEventType("NodeLossProblemEvent");
         evt.setObjectType(EventType.PROBLEM);
         evt.setPath(controllerId);
-//        String message = ProblemHelper.getErrorMessage(problem);
-//        if (message == null) {
-//            //TODO ???
-//        }
-        evt.setMessage(lostNodeIds.entrySet().stream().map(e -> "'" + e.getValue() + "' director in Agent Cluster '" + e.getKey() + "'").collect(
-                Collectors.joining(", ", "Loss of ", " requires confirmation")));
+        evt.setMessage(msg);
         return evt;
     }
 

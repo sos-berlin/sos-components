@@ -22,6 +22,7 @@ import com.sos.commons.util.SOSShell;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCertificate;
 import com.sos.joc.classes.JocCockpitProperties;
+import com.sos.joc.classes.agent.AgentClusterWatch;
 import com.sos.joc.classes.agent.AgentStoreUtils;
 import com.sos.joc.classes.calendar.DailyPlanCalendar;
 import com.sos.joc.classes.cluster.JocClusterService;
@@ -108,6 +109,7 @@ public class JocServletContainer extends ServletContainer {
         
         NotificationAppender.doNotify = false;
         QuickSearchStore.close();
+        AgentClusterWatch.close();
 
         // 1 - stop cluster
         JocClusterService.getInstance().stop(StartupMode.automatic, true);
