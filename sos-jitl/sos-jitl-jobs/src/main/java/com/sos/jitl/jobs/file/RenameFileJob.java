@@ -17,7 +17,7 @@ public class RenameFileJob extends AFileOperationsJob {
 
     @Override
     public JOutcome.Completed onOrderProcess(JobStep<FileOperationsJobArguments> step) throws Exception {
-        FileOperationsJobArguments args = step.getArguments();
+        FileOperationsJobArguments args = step.getDeclaredArguments();
         checkArguments(args);
         setFlags(args);
 

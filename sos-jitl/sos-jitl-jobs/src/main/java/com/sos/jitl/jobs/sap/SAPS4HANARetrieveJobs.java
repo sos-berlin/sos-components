@@ -1,7 +1,6 @@
 package com.sos.jitl.jobs.sap;
 
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
-import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.common.JobStep;
 import com.sos.jitl.jobs.sap.common.CommonJobArguments;
 import com.sos.jitl.jobs.sap.common.Globals;
@@ -18,12 +17,19 @@ public class SAPS4HANARetrieveJobs extends ABlockingInternalJob<CommonJobArgumen
 
     @Override
     public Completed onOrderProcess(JobStep<CommonJobArguments> step) throws Exception {
-        JobLogger logger = step.getLogger();
-        HttpClient httpClient = new HttpClient(step.getArguments(), logger);
-        ResponseJobs result = httpClient.retrieveJobs();
-        logger.info("result: \n" + Globals.objectMapperPrettyPrint.writeValueAsString(result));
-        httpClient.closeHttpClient();
-        return step.success(0);
+        HttpClient httpClient = null;
+        try {
+            httpClient = new HttpClient(step.getDeclaredArguments(), step.getLogger());
+            ResponseJobs result = httpClient.retrieveJobs();
+            step.getLogger().info("result: \n" + Globals.objectMapperPrettyPrint.writeValueAsString(result));
+            return step.success();
+        } catch (Throwable e) {
+            throw e;
+        } finally {
+            if (httpClient != null) {
+                httpClient.closeHttpClient();
+            }
+        }
     }
 
 }

@@ -1246,10 +1246,11 @@ public class HistoryModel {
                 if (eventType.equals(EventType.OrderJoined) && co.getLastStepError() == null) {
                     setError = false;
                 }
-
                 if (setError) {
                     le.setError(co, outcome);
                 }
+            } else if (outcome.isSucceeded()) {
+                co.resetLastStepError();
             }
         }
         if (!le.isError()) {
@@ -1258,7 +1259,6 @@ public class HistoryModel {
                 le.setReturnCode(co.getLastStepError().getReturnCode());
             }
         }
-
         if (le.isError()) {
             co.setLastStepError(le);
             if (isDebugEnabled) {

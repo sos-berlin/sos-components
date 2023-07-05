@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.sos.commons.exception.SOSException;
-import com.sos.jitl.jobs.common.Globals;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.jocapi.ApiExecutor;
 import com.sos.jitl.jobs.jocapi.ApiResponse;
@@ -20,6 +19,7 @@ import com.sos.jitl.jobs.monitoring.classes.MonitoringCheckReturn;
 import com.sos.jitl.jobs.monitoring.classes.MonitoringChecker;
 import com.sos.jitl.jobs.monitoring.classes.MonitoringParameters;
 import com.sos.jitl.jobs.monitoring.classes.MonitoringWebserviceExecuter;
+import com.sos.jitl.jobs.sap.common.Globals;
 import com.sos.joc.model.agent.AgentV;
 import com.sos.joc.model.jitl.monitoring.MonitoringControllerStatus;
 import com.sos.joc.model.jitl.monitoring.MonitoringJocStatus;
@@ -44,7 +44,7 @@ public class ExecuteMonitoring {
         try {
             ApiResponse apiResponse = apiExecutor.login();
             accessToken = apiResponse.getAccessToken();
-            
+
             MonitoringWebserviceExecuter monitoringWebserviceExecuter = new MonitoringWebserviceExecuter(logger, apiExecutor);
             MonitoringControllerStatus monitoringControllerStatus = monitoringWebserviceExecuter.getControllerStatus(accessToken, args
                     .getControllerId());
@@ -62,8 +62,8 @@ public class ExecuteMonitoring {
             monitoringStatus.setOrderSummary(ordersHistoricSummary);
 
             return monitoringStatus;
-        } catch (Exception e) {
-            Globals.error(logger, "", e);
+        } catch (Throwable e) {
+            logger.error(e);
             throw e;
         } finally {
             if (accessToken != null) {
@@ -90,14 +90,14 @@ public class ExecuteMonitoring {
             filename = args.getMonitorReportDir() + "/monitor." + monitoringParameters.getMonitorFileReportDate() + ".alert.json";
         }
         monitoringParameters.setMonitorReportFile(filename);
-        Globals.debug(logger, "Report Filename: " + filename);
+        logger.debug("Report Filename: " + filename);
 
         String output = Globals.objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(monitoringStatus);
         try (PrintWriter outWriter = new PrintWriter(filename)) {
-            Globals.log(logger, output);
+            logger.info(output);
             outWriter.println(output);
-        } catch (Exception e) {
-            Globals.error(logger, "", e);
+        } catch (Throwable e) {
+            logger.error(e);
         }
 
         long count = 0;

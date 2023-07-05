@@ -6,8 +6,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,6 +17,7 @@ import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.JobStep;
+import com.sos.jitl.jobs.common.JobStepOutcome;
 import com.sos.jitl.jobs.db.common.Export2CSV;
 import com.sos.jitl.jobs.db.common.Export2JSON;
 import com.sos.jitl.jobs.db.common.Export2XML;
@@ -36,12 +35,11 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
 
     @Override
     public JOutcome.Completed onOrderProcess(JobStep<PLSQLJobArguments> step) throws Exception {
-        step.getArguments().checkRequired();
+        step.getDeclaredArguments().checkRequired();
 
         Connection conn = null;
         try {
             conn = getConnection(step);
-
             return step.success(process(step, conn));
         } catch (Throwable e) {
             throw e;
@@ -56,8 +54,8 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
     }
 
     private Connection getConnection(JobStep<PLSQLJobArguments> step) throws Exception {
-        PLSQLJobArguments args = step.getArguments();
-        SOSCredentialStoreArguments csArgs = step.getAppArguments(SOSCredentialStoreArguments.class);
+        PLSQLJobArguments args = step.getDeclaredArguments();
+        SOSCredentialStoreArguments csArgs = step.getIncludedArguments(SOSCredentialStoreArguments.class);
         if (args.useHibernateFile()) {
             if (!Files.exists(args.getHibernateFile())) {
                 throw new SOSHibernateConfigurationException(String.format("hibernate config file not found: %s", args.getHibernateFile()));
@@ -100,9 +98,9 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
         return connection;
     }
 
-    private Map<String, Object> process(JobStep<PLSQLJobArguments> step, final Connection connection) throws Exception {
+    private JobStepOutcome process(JobStep<PLSQLJobArguments> step, final Connection connection) throws Exception {
 
-        PLSQLJobArguments args = step.getArguments();
+        PLSQLJobArguments args = step.getDeclaredArguments();
         String plsql = "";
         if ((args.getCommand() != null) && !args.getCommand().isEmpty()) {
             plsql = args.getCommand();
@@ -113,9 +111,9 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
         plsql = unescapeXML(plsql).replace("\r\n", "\n");
         step.getLogger().info(String.format("substituted Statement: %s", plsql));
 
-        Map<String, Object> result = new HashMap<String, Object>();
-        result.put(DBMS_OUTPUT, "");
-        result.put(STD_OUT_OUTPUT, "");
+        JobStepOutcome outcome = step.newJobStepOutcome();
+        outcome.putVariable(DBMS_OUTPUT, "");
+        outcome.putVariable(STD_OUT_OUTPUT, "");
 
         DbmsOutput out = null;
         CallableStatement cs = null;
@@ -130,8 +128,8 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
             step.getLogger().info(output);
 
             if (output != null) {
-                result.put(DBMS_OUTPUT, output);
-                result.put(STD_OUT_OUTPUT, output);
+                outcome.putVariable(DBMS_OUTPUT, output);
+                outcome.putVariable(STD_OUT_OUTPUT, output);
 
                 int regExpFlags = Pattern.CASE_INSENSITIVE + Pattern.MULTILINE + Pattern.DOTALL;
                 Pattern regExprPattern = Pattern.compile(args.getVariableParserRegExpr(), regExpFlags);
@@ -141,7 +139,7 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
                 for (String string : arr) {
                     Matcher matcher = regExprPattern.matcher(string);
                     if (matcher.matches() && matcher.group().length() >= 2) {
-                        result.put(matcher.group(1), matcher.group(2).trim());
+                        outcome.putVariable(matcher.group(1), matcher.group(2).trim());
                         found = true;
                     }
                 }
@@ -185,7 +183,7 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
                 cs = null;
             }
         }
-        return result;
+        return outcome;
     }
 
     private String unescapeXML(final String stringValue) {

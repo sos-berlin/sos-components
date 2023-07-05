@@ -4,13 +4,13 @@ import java.nio.file.Path;
 
 import com.sos.jitl.jobs.common.JobArgument;
 import com.sos.jitl.jobs.common.JobArguments;
-import com.sos.jitl.jobs.common.JobOutcomeVariable;
+import com.sos.jitl.jobs.common.JobStepOutcomeVariable;
 
 public class FileOperationsJobArguments extends JobArguments {
 
     /* JOB Outcome - return values */
-    private JobOutcomeVariable<String> returnResultSet = new JobOutcomeVariable<String>("file_operations_result_set");
-    private JobOutcomeVariable<Integer> returnResultSetSize = new JobOutcomeVariable<Integer>("file_operations_result_set_size");
+    private JobStepOutcomeVariable<String> returnResultSet = new JobStepOutcomeVariable<String>("file_operations_result_set");
+    private JobStepOutcomeVariable<Integer> returnResultSetSize = new JobStepOutcomeVariable<Integer>("file_operations_result_set_size");
 
     /* JOB internal arguments */
     private JobArgument<Integer> flags = new JobArgument<Integer>(null, false, 0); // internal usage
@@ -49,11 +49,11 @@ public class FileOperationsJobArguments extends JobArguments {
     private JobArgument<String> raiseErrorIfResultSetIs = new JobArgument<String>("raise_error_if_result_set_is", false);
     private JobArgument<Path> resultSetFile = new JobArgument<Path>("result_set_file", false);
 
-    public JobOutcomeVariable<String> getReturnResultSet() {
+    public JobStepOutcomeVariable<String> getReturnResultSet() {
         return returnResultSet;
     }
 
-    public JobOutcomeVariable<Integer> getReturnResultSetSize() {
+    public JobStepOutcomeVariable<Integer> getReturnResultSetSize() {
         return returnResultSetSize;
     }
 

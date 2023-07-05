@@ -25,10 +25,10 @@ public class SAPS4HANACreateSchedule extends ASAPS4HANAJob {
 
     @Override
     public Completed onOrderProcess(JobStep<CommonJobArguments> step) throws Exception {
-        CommonJobArguments args = step.getArguments();
+        CommonJobArguments args = step.getDeclaredArguments();
         checkJobIdName(args.getJobId(), args.getJobName());
         execute(step, args, RunIds.Scope.SCHEDULE);
-        return step.success(0);
+        return step.success();
     }
     
     @Override

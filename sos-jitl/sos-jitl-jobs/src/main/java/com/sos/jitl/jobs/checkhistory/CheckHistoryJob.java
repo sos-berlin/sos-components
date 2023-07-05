@@ -1,15 +1,9 @@
 package com.sos.jitl.jobs.checkhistory;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
 import com.sos.jitl.jobs.checkhistory.classes.HistoryItem;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
-import com.sos.jitl.jobs.common.Globals;
-import com.sos.jitl.jobs.common.JitlJobReturn;
-import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.common.JobStep;
+import com.sos.jitl.jobs.common.JobStepOutcome;
 
 import js7.data_for_java.order.JOutcome;
 
@@ -21,39 +15,27 @@ public class CheckHistoryJob extends ABlockingInternalJob<CheckHistoryJobArgumen
 
     @Override
     public JOutcome.Completed onOrderProcess(JobStep<CheckHistoryJobArguments> step) throws Exception {
-
-        try {
-            JitlJobReturn jitlJobReturn = process(step, step.getArguments());
-            return step.success(jitlJobReturn.getExitCode(), jitlJobReturn.getResultMap());
-
-        } catch (Throwable e) {
-            throw e;
-        }
+        return step.success(process(step, step.getDeclaredArguments()));
     }
 
-    private JitlJobReturn process(JobStep<CheckHistoryJobArguments> step, CheckHistoryJobArguments args) throws Exception {
-        JobLogger logger = null;
-        if (step != null) {
-            logger = step.getLogger();
-        }
-        JitlJobReturn checkHistoryJobReturn = new JitlJobReturn();
-        checkHistoryJobReturn.setExitCode(0);
-        Map<String, Object> resultMap = new HashMap<String, Object>();
-        resultMap.put("js7CheckHistoryResult", false);
-        resultMap.put("js7CheckHistoryResultControllerId", "");
-        resultMap.put("js7CheckHistoryResultWorkflow", "");
-        resultMap.put("js7CheckHistoryResultJob", "");
-        resultMap.put("js7CheckHistoryResultStarted", "");
-        resultMap.put("js7CheckHistoryResultCompleted", "");
+    private JobStepOutcome process(JobStep<CheckHistoryJobArguments> step, CheckHistoryJobArguments args) throws Exception {
+        JobStepOutcome outcome = step.newJobStepOutcome();
+
+        outcome.putVariable("js7CheckHistoryResult", false);
+        outcome.putVariable("js7CheckHistoryResultControllerId", "");
+        outcome.putVariable("js7CheckHistoryResultWorkflow", "");
+        outcome.putVariable("js7CheckHistoryResultJob", "");
+        outcome.putVariable("js7CheckHistoryResultStarted", "");
+        outcome.putVariable("js7CheckHistoryResultCompleted", "");
 
         String query = args.getQuery();
-        resultMap.put("js7CheckHistoryQuery", query);
-        resultMap.put("js7CheckHistoryQueryControllerId", args.getControllerId());
-        resultMap.put("js7CheckHistoryQueryWorkflow", args.getWorkflow());
-        resultMap.put("js7CheckHistoryQueryJob", args.getJob());
-        Globals.debug(logger, String.format("check history: %s will be executed.", query));
+        outcome.putVariable("js7CheckHistoryQuery", query);
+        outcome.putVariable("js7CheckHistoryQueryControllerId", args.getControllerId());
+        outcome.putVariable("js7CheckHistoryQueryWorkflow", args.getWorkflow());
+        outcome.putVariable("js7CheckHistoryQueryJob", args.getJob());
+        step.getLogger().debug(String.format("check history: %s will be executed.", query));
 
-        HistoryInfo historyInfo = new HistoryInfo(logger, args);
+        HistoryInfo historyInfo = new HistoryInfo(step.getLogger(), args);
         HistoryItem historyItem = historyInfo.queryHistory();
 
         String name = args.getWorkflow();
@@ -69,53 +51,26 @@ public class CheckHistoryJob extends ABlockingInternalJob<CheckHistoryJobArgumen
             boolean result = historyItem.getResult();
             if (result) {
                 String s = args.getQuery() + "(" + name + ") ==> true";
-                Globals.debug(logger, s);
-                resultMap.put("js7CheckHistoryResultString", s);
-                checkHistoryJobReturn.setExitCode(0);
-                resultMap.put("js7CheckHistoryResult", true);
-                resultMap.put("js7CheckHistoryResultControllerId", historyItem.getControllerId());
-                resultMap.put("js7CheckHistoryResultStarted", historyItem.getStartTime());
-                resultMap.put("js7CheckHistoryResultCompleted", historyItem.getEndTime());
-                resultMap.put("js7CheckHistoryResultWorkflow", historyItem.getWorkflow());
-                resultMap.put("js7CheckHistoryResultJob", historyItem.getJob());
+                step.getLogger().debug(s);
+                outcome.putVariable("js7CheckHistoryResultString", s);
+                outcome.putVariable("js7CheckHistoryResult", true);
+                outcome.putVariable("js7CheckHistoryResultControllerId", historyItem.getControllerId());
+                outcome.putVariable("js7CheckHistoryResultStarted", historyItem.getStartTime());
+                outcome.putVariable("js7CheckHistoryResultCompleted", historyItem.getEndTime());
+                outcome.putVariable("js7CheckHistoryResultWorkflow", historyItem.getWorkflow());
+                outcome.putVariable("js7CheckHistoryResultJob", historyItem.getJob());
 
+                // outcome.setReturnCode(0); //default
             } else {
                 String s = args.getQuery() + "(" + name + ") ==> false";
-                Globals.debug(logger, s);
-                resultMap.put("js7CheckHistoryResultString", s);
-                checkHistoryJobReturn.setExitCode(1);
-                resultMap.put("js7CheckHistoryResult", false);
+                step.getLogger().debug(s);
+
+                outcome.putVariable("js7CheckHistoryResultString", s);
+                outcome.putVariable("js7CheckHistoryResult", false);
+
+                outcome.setReturnCode(1);
             }
         }
-        checkHistoryJobReturn.setResultMap(resultMap);
-
-        return checkHistoryJobReturn;
-    }
-
-    public static void main(String[] args) {
-
-        CheckHistoryJobArguments arguments = new CheckHistoryJobArguments();
-        arguments.setQuery("isStarted(startedFrom=-1d,startedTo=0d) or isCompleted or isCompleted");
-        arguments.setQuery("isCompletedSuccessful(startedFrom=2023-01-22T01:00:00+02:00) " );
-        arguments.setQuery("isCompletedSuccessful(startedFrom=2022-05-05T01:00:00.000Z)");
-        arguments.setQuery("isCompletedSuccessful(startedFrom=2023-01-22T01:00:00+02:00) " );
-        arguments.setQuery("isStarted(startedFrom=-1d,startedTo=0d) oR isCompleted Or isCompleted");
-        // arguments.setQuery("isCompleted(startedFrom=-100d, count>5)");
-
-        // arguments.setQuery("lastCompletedSuccessful");
-        // arguments.setJob("job2");
-        // arguments.setJob("jobCheckHistory2");
-        arguments.setWorkflow("exercise1");
-
-        CheckHistoryJob checkHistoryJob = new CheckHistoryJob(null);
-
-        try {
-            checkHistoryJob.process(null, arguments);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            System.exit(0);
-        }
+        return outcome;
     }
 }

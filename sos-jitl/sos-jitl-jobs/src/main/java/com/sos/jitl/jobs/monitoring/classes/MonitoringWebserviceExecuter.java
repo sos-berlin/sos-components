@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.exception.SOSException;
-import com.sos.jitl.jobs.common.Globals;
+import com.sos.jitl.jobs.common.JobHelper;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.jocapi.ApiExecutor;
 import com.sos.jitl.jobs.jocapi.ApiResponse;
@@ -46,15 +46,15 @@ public class MonitoringWebserviceExecuter {
         if (apiResponse.getStatusCode() == 200) {
             answer = apiResponse.getResponseBody();
         } else {
-            MonitoringErrorResponse monitoringErrorResponse = Globals.objectMapper.readValue(apiResponse.getResponseBody(),
+            MonitoringErrorResponse monitoringErrorResponse = JobHelper.OBJECT_MAPPER.readValue(apiResponse.getResponseBody(),
                     MonitoringErrorResponse.class);
             throw new SOSException(String.format("Status Code: %s : Error: %s %s", apiResponse.getStatusCode(), monitoringErrorResponse.getError()
                     .getMessage(), monitoringErrorResponse.getMessage()));
         }
 
-        Globals.debug(logger, body);
-        Globals.debug(logger, "answer=" + answer);
-        JobScheduler200 volatileStatus = Globals.objectMapper.readValue(answer, JobScheduler200.class);
+        logger.debug(body);
+        logger.debug("answer=" + answer);
+        JobScheduler200 volatileStatus = JobHelper.OBJECT_MAPPER.readValue(answer, JobScheduler200.class);
 
         return volatileStatus.getController();
     }
@@ -66,15 +66,15 @@ public class MonitoringWebserviceExecuter {
         if (apiResponse.getStatusCode() == 200) {
             answer = apiResponse.getResponseBody();
         } else {
-            MonitoringErrorResponse monitoringErrorResponse = Globals.objectMapper.readValue(apiResponse.getResponseBody(),
+            MonitoringErrorResponse monitoringErrorResponse = JobHelper.OBJECT_MAPPER.readValue(apiResponse.getResponseBody(),
                     MonitoringErrorResponse.class);
             throw new SOSException(String.format("Status Code: %s : Error: %s %s", apiResponse.getStatusCode(), monitoringErrorResponse.getError()
                     .getMessage(), monitoringErrorResponse.getMessage()));
         }
 
-        Globals.debug(logger, body);
-        Globals.debug(logger, "answer=" + answer);
-        JobSchedulerP200 permanentStatus = Globals.objectMapper.readValue(answer, JobSchedulerP200.class);
+        logger.debug(body);
+        logger.debug("answer=" + answer);
+        JobSchedulerP200 permanentStatus = JobHelper.OBJECT_MAPPER.readValue(answer, JobSchedulerP200.class);
 
         return permanentStatus.getController();
     }
@@ -86,15 +86,15 @@ public class MonitoringWebserviceExecuter {
         if (apiResponse.getStatusCode() == 200) {
             answer = apiResponse.getResponseBody();
         } else {
-            MonitoringErrorResponse monitoringErrorResponse = Globals.objectMapper.readValue(apiResponse.getResponseBody(),
+            MonitoringErrorResponse monitoringErrorResponse = JobHelper.OBJECT_MAPPER.readValue(apiResponse.getResponseBody(),
                     MonitoringErrorResponse.class);
             throw new SOSException(String.format("Status Code: %s : Error: %s %s", apiResponse.getStatusCode(), monitoringErrorResponse.getError()
                     .getMessage(), monitoringErrorResponse.getMessage()));
         }
 
-        Globals.debug(logger, body);
-        Globals.debug(logger, "answer=" + answer);
-        Controllers permanentStatus = Globals.objectMapper.readValue(answer, Controllers.class);
+        logger.debug(body);
+        logger.debug("answer=" + answer);
+        Controllers permanentStatus = JobHelper.OBJECT_MAPPER.readValue(answer, Controllers.class);
 
         return permanentStatus;
     }
@@ -103,22 +103,22 @@ public class MonitoringWebserviceExecuter {
 
         ControllerIdReq controllerIdReq = new ControllerIdReq();
         controllerIdReq.setControllerId(controllerId);
-        String body = Globals.objectMapper.writeValueAsString(controllerIdReq);
+        String body = JobHelper.OBJECT_MAPPER.writeValueAsString(controllerIdReq);
 
         ApiResponse apiResponse = apiExecutor.post(accessToken, "/joc/api/controller/components", body);
         String answer = null;
         if (apiResponse.getStatusCode() == 200) {
             answer = apiResponse.getResponseBody();
         } else {
-            MonitoringErrorResponse monitoringErrorResponse = Globals.objectMapper.readValue(apiResponse.getResponseBody(),
+            MonitoringErrorResponse monitoringErrorResponse = JobHelper.OBJECT_MAPPER.readValue(apiResponse.getResponseBody(),
                     MonitoringErrorResponse.class);
             throw new SOSException(String.format("Status Code: %s : Error: %s %s", apiResponse.getStatusCode(), monitoringErrorResponse.getError()
                     .getMessage(), monitoringErrorResponse.getMessage()));
         }
 
-        Globals.debug(logger, body);
-        Globals.debug(logger, "answer=" + answer);
-        Components components = Globals.objectMapper.readValue(answer, Components.class);
+        logger.debug(body);
+        logger.debug("answer=" + answer);
+        Components components = JobHelper.OBJECT_MAPPER.readValue(answer, Components.class);
 
         MonitoringJocStatus monitoringJocStatus = new MonitoringJocStatus();
         for (Cockpit cockpit : components.getJocs()) {
@@ -137,7 +137,7 @@ public class MonitoringWebserviceExecuter {
     public MonitoringControllerStatus getControllerStatus(String accessToken, String controllerId) throws Exception {
         ControllerIdReq controllerIdReq = new ControllerIdReq();
         controllerIdReq.setControllerId(controllerId);
-        String body = Globals.objectMapper.writeValueAsString(controllerIdReq);
+        String body = JobHelper.OBJECT_MAPPER.writeValueAsString(controllerIdReq);
 
         JobSchedulerP permanentStatus = getPermanentControllerStatus(body, accessToken, controllerId);
         Controller volatileStatus = getVolatileControllerStatus(body, accessToken, controllerId);
@@ -169,22 +169,22 @@ public class MonitoringWebserviceExecuter {
         ReadAgentsV readAgentsV = new ReadAgentsV();
         readAgentsV.setCompact(true);
         readAgentsV.setControllerId(controllerId);
-        String body = Globals.objectMapper.writeValueAsString(readAgentsV);
+        String body = JobHelper.OBJECT_MAPPER.writeValueAsString(readAgentsV);
 
         ApiResponse apiResponse = apiExecutor.post(accessToken, "/joc/api/agents", body);
         String answer = null;
         if (apiResponse.getStatusCode() == 200) {
             answer = apiResponse.getResponseBody();
         } else {
-            MonitoringErrorResponse monitoringErrorResponse = Globals.objectMapper.readValue(apiResponse.getResponseBody(),
+            MonitoringErrorResponse monitoringErrorResponse = JobHelper.OBJECT_MAPPER.readValue(apiResponse.getResponseBody(),
                     MonitoringErrorResponse.class);
             throw new SOSException(String.format("Status Code: %s : Error: %s %s", apiResponse.getStatusCode(), monitoringErrorResponse.getError()
                     .getMessage(), monitoringErrorResponse.getMessage()));
         }
 
-        Globals.debug(logger, body);
-        Globals.debug(logger, "answer=" + answer);
-        AgentsV agentsV = Globals.objectMapper.readValue(answer, AgentsV.class);
+        logger.debug(body);
+        logger.debug("answer=" + answer);
+        AgentsV agentsV = JobHelper.OBJECT_MAPPER.readValue(answer, AgentsV.class);
         return agentsV.getAgents();
 
     }
@@ -193,44 +193,44 @@ public class MonitoringWebserviceExecuter {
         OrdersFilterV ordersFilterV = new OrdersFilterV();
         ordersFilterV.setControllerId(controllerId);
         ordersFilterV.setDateTo("1d");
-        String body = Globals.objectMapper.writeValueAsString(ordersFilterV);
+        String body = JobHelper.OBJECT_MAPPER.writeValueAsString(ordersFilterV);
 
         ApiResponse apiResponse = apiExecutor.post(accessToken, "/joc/api/orders/overview/snapshot", body);
         String answer = null;
         if (apiResponse.getStatusCode() == 200) {
             answer = apiResponse.getResponseBody();
         } else {
-            MonitoringErrorResponse monitoringErrorResponse = Globals.objectMapper.readValue(apiResponse.getResponseBody(),
+            MonitoringErrorResponse monitoringErrorResponse = JobHelper.OBJECT_MAPPER.readValue(apiResponse.getResponseBody(),
                     MonitoringErrorResponse.class);
             throw new SOSException(String.format("Status Code: %s : Error: %s %s", apiResponse.getStatusCode(), monitoringErrorResponse.getError()
                     .getMessage(), monitoringErrorResponse.getMessage()));
         }
 
-        Globals.debug(logger, body);
-        Globals.debug(logger, "answer=" + answer);
-        OrdersSnapshot ordersSnapshot = Globals.objectMapper.readValue(answer, OrdersSnapshot.class);
+        logger.debug(body);
+        logger.debug("answer=" + answer);
+        OrdersSnapshot ordersSnapshot = JobHelper.OBJECT_MAPPER.readValue(answer, OrdersSnapshot.class);
         return ordersSnapshot.getOrders();
     }
 
     public OrdersHistoricSummary getJS7OrderSummary(String accessToken, String controllerId) throws JsonProcessingException, SOSException {
         OrdersFilterV ordersFilterV = new OrdersFilterV();
         ordersFilterV.setControllerId(controllerId);
-        String body = Globals.objectMapper.writeValueAsString(ordersFilterV);
+        String body = JobHelper.OBJECT_MAPPER.writeValueAsString(ordersFilterV);
 
         ApiResponse apiResponse = apiExecutor.post(accessToken, "/joc/api/orders/overview/snapshot", body);
         String answer = null;
         if (apiResponse.getStatusCode() == 200) {
             answer = apiResponse.getResponseBody();
         } else {
-            MonitoringErrorResponse monitoringErrorResponse = Globals.objectMapper.readValue(apiResponse.getResponseBody(),
+            MonitoringErrorResponse monitoringErrorResponse = JobHelper.OBJECT_MAPPER.readValue(apiResponse.getResponseBody(),
                     MonitoringErrorResponse.class);
             throw new SOSException(String.format("Status Code: %s : Error: %s %s", apiResponse.getStatusCode(), monitoringErrorResponse.getError()
                     .getMessage(), monitoringErrorResponse.getMessage()));
         }
 
-        Globals.debug(logger, body);
-        Globals.debug(logger, "answer=" + answer);
-        OrdersOverView ordersOverView = Globals.objectMapper.readValue(answer, OrdersOverView.class);
+        logger.debug(body);
+        logger.debug("answer=" + answer);
+        OrdersOverView ordersOverView = JobHelper.OBJECT_MAPPER.readValue(answer, OrdersOverView.class);
         return ordersOverView.getOrders();
     }
 

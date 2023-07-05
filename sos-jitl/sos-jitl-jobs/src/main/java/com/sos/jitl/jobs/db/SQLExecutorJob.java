@@ -4,7 +4,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.ResultSet;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -13,6 +12,7 @@ import com.sos.commons.hibernate.SOSHibernateSQLExecutor;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.JobStep;
+import com.sos.jitl.jobs.common.JobStepOutcome;
 import com.sos.jitl.jobs.db.SQLExecutorJobArguments.ResultSetAsVariables;
 import com.sos.jitl.jobs.db.common.Export2CSV;
 import com.sos.jitl.jobs.db.common.Export2JSON;
@@ -32,15 +32,15 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
         try {
-            factory = new SOSHibernateFactory(step.getArguments().getHibernateFile().getValue());
+            factory = new SOSHibernateFactory(step.getDeclaredArguments().getHibernateFile().getValue());
             factory.setIdentifier(SQLExecutorJob.class.getSimpleName());
             factory.build();
             session = factory.openStatelessSession();
             step.setPayload(session);
 
-            Map<String, Object> map = process(step, session);
-            step.getLogger().info("result: " + map);
-            return step.success(map);
+            JobStepOutcome outcome = process(step, session);
+            step.getLogger().info("result: " + outcome.getVariables());
+            return step.success(outcome);
         } catch (Throwable e) {
             throw e;
         } finally {
@@ -53,8 +53,8 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
         }
     }
 
-    private Map<String, Object> process(JobStep<SQLExecutorJobArguments> step, final SOSHibernateSession session) throws Exception {
-        SQLExecutorJobArguments args = step.getArguments();
+    private JobStepOutcome process(JobStep<SQLExecutorJobArguments> step, final SOSHibernateSession session) throws Exception {
+        SQLExecutorJobArguments args = step.getDeclaredArguments();
         SOSHibernateSQLExecutor executor = session.getSQLExecutor();
         List<String> statements = null;
         try {
@@ -69,26 +69,27 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
             statements = executor.getStatements(args.getCommand());
         }
 
-        Map<String, Object> map = new HashMap<String, Object>();
+        JobStepOutcome outcome = step.newJobStepOutcome();
         session.beginTransaction();
         for (String statement : statements) {
             step.getLogger().info("executing database statement: %s", statement);
             if (SOSHibernateSQLExecutor.isResultListQuery(statement, args.getExecReturnsResultset())) {
-                executeResultSet(step, executor, statement, map);
+                executeResultSet(step, executor, statement, outcome);
             } else {
                 executor.executeUpdate(statement);
             }
         }
         session.commit();
-        return map;
+
+        return outcome;
     }
 
     private void executeResultSet(JobStep<SQLExecutorJobArguments> step, final SOSHibernateSQLExecutor executor, final String statement,
-            Map<String, Object> map) throws Exception {
+            JobStepOutcome outcome) throws Exception {
         ResultSet rs = null;
         StringBuilder warning = new StringBuilder();
         try {
-            SQLExecutorJobArguments args = step.getArguments();
+            SQLExecutorJobArguments args = step.getDeclaredArguments();
 
             rs = executor.getResultSet(statement);
 
@@ -146,7 +147,7 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
                                 if (step.getLogger().isDebugEnabled()) {
                                     step.getLogger().debug("[set outcome]%s=%s", paramKey, paramValue);
                                 }
-                                map.put(paramKey, paramValue);
+                                outcome.putVariable(paramKey, paramValue);
                             }
                         } else {
                             if (rowCount == 1) {
@@ -155,7 +156,7 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
                                     if (step.getLogger().isDebugEnabled()) {
                                         step.getLogger().debug("[set outcome]%s=%s", key, value);
                                     }
-                                    map.put(key, value);
+                                    outcome.putVariable(key, value);
                                 }
                             }
                         }

@@ -3,7 +3,16 @@ package com.sos.joc.deploy.impl;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,9 +21,16 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import javax.persistence.TemporalType;
 
+import org.apache.commons.compress.archivers.ArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
+import org.apache.commons.compress.archivers.tar.TarFile;
 import org.hibernate.query.Query;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -30,16 +46,20 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.inventory.model.descriptor.DeploymentDescriptor;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.exceptions.JocConfigurationException;
+import com.sos.joc.exceptions.JocImportException;
 import com.sos.joc.model.agent.transfer.AgentExportFilter;
 import com.sos.joc.model.agent.transfer.AgentImportFilter;
+import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.release.ReleasableRecallFilter;
+import com.sos.joc.model.joc.JocMetaInfo;
 import com.sos.joc.model.joc.VersionsFilter;
 import com.sos.joc.model.notification.DeleteNotificationFilter;
 import com.sos.joc.model.notification.ReadNotificationFilter;
@@ -57,6 +77,9 @@ import com.sos.schema.exception.SOSJsonSchemaException;
 import com.sos.sign.model.instruction.IfElse;
 import com.sos.sign.model.instruction.NamedJob;
 import com.sos.sign.model.workflow.Workflow;
+
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.StreamingOutput;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class MappingTest {
@@ -588,4 +611,93 @@ public class MappingTest {
         LOGGER.info( "json valid: " + valid);
         assertTrue(valid);
     }
+    
+    @Test
+    public void testTarOutputStream () throws IOException {
+        // file path of the archive file to write
+        String targetFilePath = "target/created_test_files/targetArchive.tar.gz";
+        // create parent folder if not exists
+        if(!Files.exists(Paths.get("target/created_test_files"))) {
+            Files.createDirectory(Paths.get("target/created_test_files"));
+        }
+        File targetFile = new File(targetFilePath);
+        // file path of the source file to put into the archive
+        String sourceFilePath = "src/test/resources/12345678901234567890123456789012345678901234567890/1234567890123456789012345678901234567890/shortFilenameWithLongPath.txt";
+        // file path of the target file in the archive
+        String pathInArchive = "12345678901234567890123456789012345678901234567890/1234567890123456789012345678901234567890/shortFilenameWithLongPath.txt";
+        File source = Paths.get(sourceFilePath).toFile();
+        InputStream in = Files.newInputStream(Paths.get(sourceFilePath));
+        long fileLength = source.length();
+        // create TAR outputStream with POSIX credentials
+        GZIPOutputStream gzipOut = null;
+        BufferedOutputStream bOut = null;
+        TarArchiveOutputStream tarArchiveOut = null;
+        // get Name property of the entry of the newly created archive
+        String pathInArchiveAfter;
+        try {
+            bOut = new BufferedOutputStream(new FileOutputStream(targetFile));
+            gzipOut = new GZIPOutputStream(bOut);
+            tarArchiveOut = new TarArchiveOutputStream(gzipOut);
+            tarArchiveOut.setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX);
+            tarArchiveOut.putArchiveEntry(new TarArchiveEntry(source, pathInArchive));
+            // write the target archives entry
+            for (int i = 0; i < fileLength; i++) {
+                tarArchiveOut.write(in.read());
+            }
+            // flush and close the tar output stream (save the file)
+            tarArchiveOut.closeArchiveEntry();
+            tarArchiveOut.flush();
+        } finally {
+            if (tarArchiveOut != null) {
+                try {
+                    tarArchiveOut.finish();
+                    tarArchiveOut.close();
+                } catch (Exception e) {}
+            }
+            if (gzipOut != null) {
+                try {
+                    gzipOut.flush();
+                    gzipOut.close();
+                } catch (Exception e) {}
+            }
+            if (bOut != null) {
+                try {
+                    bOut.flush();
+                    bOut.close();
+                } catch (Exception e) {}
+            }
+        }
+        // read the newly created tar file
+        GZIPInputStream gzipInputStream = null;
+        TarArchiveInputStream tarArchiveIn = null;
+        InputStream tarIn = null;
+        try {
+            tarIn = Files.newInputStream(Paths.get(targetFilePath));
+            gzipInputStream = new GZIPInputStream(tarIn);
+            tarArchiveIn = new TarArchiveInputStream(gzipInputStream);
+            LOGGER.debug("In File Path: " + sourceFilePath);
+            LOGGER.debug("archive path: " + targetFilePath);
+            LOGGER.debug("path inside archive: " + pathInArchive);
+            TarArchiveEntry entry = tarArchiveIn.getNextTarEntry();
+            pathInArchiveAfter = entry.getName();
+            LOGGER.debug("path inside archive after store: " + pathInArchiveAfter);
+        } finally {
+            if (tarIn != null) {
+                try {
+                    tarIn.close();
+                } catch (Exception e) {}
+            }
+            if (tarArchiveIn != null) {
+                try {
+                    tarArchiveIn.close();
+                } catch (Exception e) {}
+            }
+            if (gzipInputStream != null) {
+                try {
+                    gzipInputStream.close();
+                } catch (Exception e) {}
+            }
+        }
+    }
+    
 }

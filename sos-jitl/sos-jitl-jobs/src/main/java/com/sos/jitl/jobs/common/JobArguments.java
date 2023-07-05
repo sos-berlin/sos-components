@@ -22,10 +22,10 @@ public class JobArguments {
     private JobArgument<MockLevel> mockLevel = new JobArgument<MockLevel>("mock_level", false, MockLevel.OFF);
 
     @SuppressWarnings("rawtypes")
-    private Map<String, List<JobArgument>> appArguments;
+    private Map<String, List<JobArgument>> includedArguments;
 
     public JobArguments(ASOSArguments... args) {
-        setAppArguments(args);
+        setIncludedArguments(args);
     }
 
     public JobArgument<LogLevel> getLogLevel() {
@@ -37,16 +37,16 @@ public class JobArguments {
     }
 
     @SuppressWarnings("rawtypes")
-    protected Map<String, List<JobArgument>> getAppArguments() {
-        return appArguments;
+    protected Map<String, List<JobArgument>> getIncludedArguments() {
+        return includedArguments;
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private void setAppArguments(ASOSArguments... args) {
+    private void setIncludedArguments(ASOSArguments... args) {
         if (args == null || args.length == 0) {
             return;
         }
-        appArguments = new HashMap<>();
+        includedArguments = new HashMap<>();
         for (ASOSArguments arg : args) {
             List<JobArgument> l = arg.getArgumentFields().stream().map(f -> {
                 try {
@@ -65,7 +65,7 @@ public class JobArguments {
                     return null;
                 }
             }).filter(Objects::nonNull).collect(Collectors.toList());
-            appArguments.put(arg.getIdentifier(), l);
+            includedArguments.put(arg.getIdentifier(), l);
         }
     }
 }

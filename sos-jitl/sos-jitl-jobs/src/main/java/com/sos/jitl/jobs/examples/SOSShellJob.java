@@ -12,8 +12,9 @@ import js7.data_for_java.order.JOutcome;
 
 public class SOSShellJob extends ABlockingInternalJob<SOSShellJobArguments> {
 
-    public SOSShellJob(JobContext jobContext) {
-        super(jobContext);
+    // use this constructor because of getAgentSystemEncoding
+    public SOSShellJob(JobContext context) {
+        super(context);
     }
 
     @Override
@@ -22,7 +23,7 @@ public class SOSShellJob extends ABlockingInternalJob<SOSShellJobArguments> {
         step.getLogger().info("[AGENT]systemEncoding=" + getAgentSystemEncoding());
         step.getLogger().info("");
 
-        SOSShellJobArguments args = step.getArguments();
+        SOSShellJobArguments args = step.getDeclaredArguments();
         step.getLogger().info("----------USAGE-----------------");
         step.getLogger().info("declare and set order/step variables:");
         step.getLogger().info("     (String, required) \"%s\"=echo xyz", args.getCommand().getName());

@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.sos.commons.exception.SOSException;
-import com.sos.jitl.jobs.common.Globals;
 import com.sos.jitl.jobs.common.JobLogger;
 
 public class ExecuteFileOrderVariables {
@@ -57,7 +56,7 @@ public class ExecuteFileOrderVariables {
 
             return variables;
         } catch (Exception e) {
-            Globals.error(logger, "", e);
+            logger.error("getVariables", e);
             throw e;
         }
 

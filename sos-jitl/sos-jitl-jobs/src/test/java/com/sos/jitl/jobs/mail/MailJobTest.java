@@ -2,6 +2,8 @@ package com.sos.jitl.jobs.mail;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Ignore;
@@ -11,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.mail.SOSMailReceiver.Protocol;
 import com.sos.commons.util.common.SOSTimeout;
-import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.UnitTestJobHelper;
 import com.sos.jitl.jobs.mail.MailInboxArguments.ActionAfterProcess;
 import com.sos.jitl.jobs.mail.MailInboxArguments.ActionProcess;
@@ -24,19 +25,20 @@ public class MailJobTest {
 
     @Ignore
     @Test
-    public void testMailJobOnOrderProcess() throws Exception {
-        MailJobArgumentsTest args = new MailJobArgumentsTest();
-        args.setMailSmtpHost("localhost");
-        args.setMailSmtpPort("25");
-        args.setSubject("My Mail Subject");
-        args.setBody("My Mail body");
+    public void testMailJob() throws Exception {
 
-        args.setTo("JS7@localhost.com");
-        args.setFrom("JS7@localhost");
+        Map<String, Object> args = new HashMap<>();
+        args.put("mail.smtp.host", "localhost");
+        args.put("mail.smtp.port", "25");
+        args.put("subject", "My Mail Subject");
+        args.put("body", "My Mail Body");
+        args.put("to", "JS7@localhost");
+        args.put("from", "JS7@localhost");
 
-        MailJob job = new MailJob(null);
+        // args.put("credential_store_file", "db.kdbx");
+
         // for unit tests only
-        UnitTestJobHelper<MailJobArguments> h = new UnitTestJobHelper<>(job);
+        UnitTestJobHelper<MailJobArguments> h = new UnitTestJobHelper<>(new MailJob(null));
         // creates a new thread for each new onOrderProcess call
         JOutcome.Completed result = h.onOrderProcess(args);
         LOGGER.info("###############################################");
@@ -45,54 +47,24 @@ public class MailJobTest {
 
     @Ignore
     @Test
-    public void testMailJobProcess() throws Exception {
-        MailJobArgumentsTest args = new MailJobArgumentsTest();
-        args.setMailSmtpHost("localhost");
-        args.setMailSmtpPort("25");
-        args.setSubject("My Mail Subject");
-        args.setBody("My Mail body");
-
-        args.setTo("JS7@localhost.com");
-        args.setFrom("JS7@localhost");
-
-        MailJob job = new MailJob(null);
-        UnitTestJobHelper<MailJobArguments> h = new UnitTestJobHelper<>(job);
-        // the "old" code:
-        // extra function "process" - because a step was null when unit test
-        // job.process(null, args);
-        // it is no more necessary (the second "args" is no longer needed because of h.newJobStep(args))
-        job.process(h.newJobStep(args), args);
-    }
-
-    @Ignore
-    @Test
     public void testInboxJob() throws Exception {
-        MailInboxArguments args = new MailInboxArguments();
+        Map<String, Object> args = new HashMap<>();
+        args.put("mail.store.protocol", Protocol.imap);
+        args.put("mail.imap.host", "localhost");
+        args.put("mail.imap.ssl.enable", true);
+        // args.put("mail.imap.port", "143");993
+        args.put("mail.imap.user", "JS7@localhost.com");
+        args.put("mail.imap.password", "...secret...");
 
-        // arguments.getLogLevel().setValue(LogLevel.TRACE);
+        args.put("mail_source_folders", Arrays.asList("Drafts", "Templates"));
+        args.put("min_mail_age", "02:00");
+        args.put("mail_post_action", ActionAfterProcess.mark_as_read);
+        args.put("mail_action", Collections.singletonList(ActionProcess.dump));
+        args.put("mail_file_directory", "C:/tmp/mailTest");
 
-        args.getMailProtocol().setValue(Protocol.imap);
-        args.getMailHost().setValue("localhost");
-        args.getMailPassword().setValue("...secret...");
-        args.getMailUser().setValue("JS7@localhost.com");
-        args.getMailSSL().setValue(true);
-        args.setDefaultMailPort();
-
-        args.getMailMessageFolder().setValue(Arrays.asList("Drafts", "Templates"));
-        args.getMinMailAge().setValue("02:00");
-        args.getAfterProcessMail().setValue(ActionAfterProcess.mark_as_read);
-        // arguments.getMailSubjectFilter().setValue("test");
-        // arguments.getCopyMailToFile().setValue(true);
-        args.getAction().setValue(Collections.singletonList(ActionProcess.dump));
-        args.getMailDirectoryName().setValue("C:/tmp/mailTest");
-
-        LOGGER.info(Job.asNameValueMap(args).toString());
-
-        MailInboxJob job = new MailInboxJob(null);
-        UnitTestJobHelper<MailInboxArguments> h = new UnitTestJobHelper<>(job);
+        UnitTestJobHelper<MailInboxArguments> h = new UnitTestJobHelper<>(new MailInboxJob(null));
         JOutcome.Completed result = h.onOrderProcess(args, new SOSTimeout(5, TimeUnit.MINUTES));
         LOGGER.info("###############################################");
         LOGGER.info(String.format("[RESULT]%s", result));
     }
-
 }

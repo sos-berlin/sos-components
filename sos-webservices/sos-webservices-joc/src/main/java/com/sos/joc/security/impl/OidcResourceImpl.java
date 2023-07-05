@@ -196,11 +196,12 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_IDENTITY_CLIENTS);
             IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
             IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
-            filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC);
             filter.setDisabled(false);
+            filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC);
             filter.setIdentityServiceName(identityServiceFilter.getIdentityServiceName());
             List<DBItemIamIdentityService> listOfIdentityServicesOidc = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
-            filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC);
+            
+            filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC_JOC);
             List<DBItemIamIdentityService> listOfIdentityServicesOidcJoc = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
 
             OidcIdentityProvider identityProvider = new OidcIdentityProvider();

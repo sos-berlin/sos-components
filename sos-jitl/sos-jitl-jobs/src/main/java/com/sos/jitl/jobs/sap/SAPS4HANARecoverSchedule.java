@@ -35,7 +35,7 @@ public class SAPS4HANARecoverSchedule extends ABlockingInternalJob<CommonJobArgu
     @Override
     public Completed onOrderProcess(JobStep<CommonJobArguments> step) throws Exception {
         JobLogger logger = step.getLogger();
-        CommonJobArguments args = step.getArguments();
+        CommonJobArguments args = step.getDeclaredArguments();
         
         // file pattern "workflow#joblabelorderId.json"
         Predicate<Path> fileFilter = p -> p.getFileName().toString().endsWith(".json") && Files.isRegularFile(p); 

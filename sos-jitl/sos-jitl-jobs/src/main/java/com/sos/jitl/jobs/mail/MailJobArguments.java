@@ -9,30 +9,30 @@ import com.sos.jitl.jobs.common.JobArguments;
 
 public class MailJobArguments extends JobArguments {
 
-    protected JobArgument<String> mailSmtpHost = new JobArgument<String>("mail.smtp.host", true);
-    protected JobArgument<String> mailSmtpPort = new JobArgument<String>("mail.smtp.port", false);
-    protected JobArgument<String> mailSmtpUser = new JobArgument<String>("mail.smtp.user", false);
-    protected JobArgument<String> mailSmtpPassword = new JobArgument<String>("mail.smtp.password", false, DisplayMode.MASKED);
-    protected JobArgument<String> securityProtocol = new JobArgument<String>("security_protocol", false);
+    private JobArgument<String> mailSmtpHost = new JobArgument<String>("mail.smtp.host", true);
+    private JobArgument<String> mailSmtpPort = new JobArgument<String>("mail.smtp.port", false);
+    private JobArgument<String> mailSmtpUser = new JobArgument<String>("mail.smtp.user", false);
+    private JobArgument<String> mailSmtpPassword = new JobArgument<String>("mail.smtp.password", false, DisplayMode.MASKED);
+    private JobArgument<String> securityProtocol = new JobArgument<String>("security_protocol", false);
 
-    protected JobArgument<String> from = new JobArgument<String>("from", false);
-    protected JobArgument<String> fromName = new JobArgument<String>("from_name", false);
-    protected JobArgument<String> replyTo = new JobArgument<String>("reply_to", false);
-    protected JobArgument<String> to = new JobArgument<String>("to", true);
-    protected JobArgument<String> cc = new JobArgument<String>("cc", false);
-    protected JobArgument<String> bcc = new JobArgument<String>("bcc", false);
-    protected JobArgument<String> subject = new JobArgument<String>("subject", false);
-    protected JobArgument<String> body = new JobArgument<String>("body", false);
+    private JobArgument<String> from = new JobArgument<String>("from", false);
+    private JobArgument<String> fromName = new JobArgument<String>("from_name", false);
+    private JobArgument<String> replyTo = new JobArgument<String>("reply_to", false);
+    private JobArgument<String> to = new JobArgument<String>("to", true);
+    private JobArgument<String> cc = new JobArgument<String>("cc", false);
+    private JobArgument<String> bcc = new JobArgument<String>("bcc", false);
+    private JobArgument<String> subject = new JobArgument<String>("subject", false);
+    private JobArgument<String> body = new JobArgument<String>("body", false);
 
-    protected JobArgument<String> contentType = new JobArgument<String>("content_type", false);
-    protected JobArgument<String> charset = new JobArgument<String>("charset", false, "utf-8");
-    protected JobArgument<String> encoding = new JobArgument<String>("encoding", false);
+    private JobArgument<String> contentType = new JobArgument<String>("content_type", false);
+    private JobArgument<String> charset = new JobArgument<String>("charset", false, "utf-8");
+    private JobArgument<String> encoding = new JobArgument<String>("encoding", false);
 
-    protected JobArgument<String> attachmentCharset = new JobArgument<String>("attachment_charset", false);
-    protected JobArgument<String> attachmentContentType = new JobArgument<String>("attachment_content_type", false);
-    protected JobArgument<String> attachmentEncoding = new JobArgument<String>("attachment_encoding", false);
-    protected JobArgument<Boolean> cleanupAttachment = new JobArgument<Boolean>("cleanup_attachment", false, false);
-    protected JobArgument<List<String>> attachment = new JobArgument<List<String>>("attachment", false);
+    private JobArgument<String> attachmentCharset = new JobArgument<String>("attachment_charset", false);
+    private JobArgument<String> attachmentContentType = new JobArgument<String>("attachment_content_type", false);
+    private JobArgument<String> attachmentEncoding = new JobArgument<String>("attachment_encoding", false);
+    private JobArgument<Boolean> cleanupAttachment = new JobArgument<Boolean>("cleanup_attachment", false, false);
+    private JobArgument<List<String>> attachment = new JobArgument<List<String>>("attachment", false);
 
     public MailJobArguments() {
         super(new SOSCredentialStoreArguments());

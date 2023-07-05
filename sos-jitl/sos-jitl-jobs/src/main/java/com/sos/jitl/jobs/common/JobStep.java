@@ -2,12 +2,10 @@ package com.sos.jitl.jobs.common;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -15,15 +13,14 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSParameterSubstitutor;
-import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.ASOSArguments;
 import com.sos.commons.util.common.SOSArgument;
 import com.sos.commons.util.common.SOSArgumentHelper;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 import com.sos.commons.vfs.common.AProvider;
+import com.sos.jitl.jobs.common.JobArgument.Type;
 import com.sos.jitl.jobs.common.JobArgument.ValueSource;
 import com.sos.jitl.jobs.common.JobLogger.LogLevel;
 import com.sos.jitl.jobs.exception.SOSJobProblemException;
@@ -34,9 +31,7 @@ import js7.data.job.JobResourcePath;
 import js7.data.order.HistoricOutcome;
 import js7.data.order.Outcome;
 import js7.data.order.Outcome.Completed;
-import js7.data.value.BooleanValue;
 import js7.data.value.NumberValue;
-import js7.data.value.StringValue;
 import js7.data.value.Value;
 import js7.data_for_java.order.JOutcome;
 import js7.launcher.forjava.internal.BlockingInternalJob;
@@ -55,11 +50,12 @@ public class JobStep<A extends JobArguments> {
     private final JobLogger logger;
     private final String threadName;
 
-    private A arguments;
+    private A declaredArguments;
     private Map<String, Map<String, JobDetailValue>> lastOutcomes;
     private Map<String, JobDetailValue> jobResourcesValues;
-    private List<JobArgument<A>> knownArguments;
-    private Map<String, JobArgument<A>> allCurrentArguments;
+    private List<JobArgument<A>> allDeclaredArguments;
+    private Map<String, JobArgument<A>> allArguments;
+    private Map<String, Object> unitTestNotDeclaredArguments;
     private Map<String, Object> payload;
 
     private String controllerId;
@@ -77,12 +73,16 @@ public class JobStep<A extends JobArguments> {
         this.internalStep = step;
         this.logger = new JobLogger(internalStep, getStepInfo());
         this.threadName = Thread.currentThread().getName();
-
     }
 
     protected void init(A arguments) {
-        this.arguments = arguments;
+        this.declaredArguments = arguments;
         this.logger.init(arguments);
+    }
+
+    protected void init(A arguments, Map<String, Object> unitTestNotDeclaredArguments) {
+        init(arguments);
+        this.unitTestNotDeclaredArguments = unitTestNotDeclaredArguments;
     }
 
     protected String getThreadName() {
@@ -117,11 +117,11 @@ public class JobStep<A extends JobArguments> {
         return logger;
     }
 
-    public A getArguments() {
-        return arguments;
+    public A getDeclaredArguments() {
+        return declaredArguments;
     }
 
-    public List<HistoricOutcome> getHistoricOutcomes() {
+    public List<HistoricOutcome> getEngineHistoricOutcomes() {
         if (internalStep == null) {
             return null;
         }
@@ -150,13 +150,13 @@ public class JobStep<A extends JobArguments> {
         return getLastOutcomes().get(Outcome.Failed.class.getSimpleName());
     }
 
-    private Map<JobArgument.ValueSource, List<String>> argumentsInfoBySetter() throws Exception {
-        setKnownArguments();
-        if (knownArguments == null || knownArguments.size() == 0) {
+    private Map<JobArgument.ValueSource, List<String>> declaredArgumentsInfoBySetter() throws Exception {
+        setAllDeclaredArguments();
+        if (allDeclaredArguments == null || allDeclaredArguments.size() == 0) {
             return null;
         }
         Map<JobArgument.ValueSource, List<String>> map = new HashMap<JobArgument.ValueSource, List<String>>();
-        for (JobArgument<?> arg : knownArguments) {
+        for (JobArgument<?> arg : allDeclaredArguments) {
             List<String> l;
             ValueSource key = arg.getValueSource();
             if (map.containsKey(key)) {
@@ -183,55 +183,49 @@ public class JobStep<A extends JobArguments> {
         return map;
     }
 
-    public JobArgument<A> getKnownArgument(String name) {
-        setKnownArguments();
-        if (knownArguments != null) {
-            return knownArguments.stream().filter(a -> a.getName().equals(name) || (a.getNameAliases() != null && a.getNameAliases().contains(name)))
-                    .findAny().orElse(null);
+    private JobArgument<A> getDeclaredArgument(String name) {
+        setAllDeclaredArguments();
+        if (allDeclaredArguments != null) {
+            return allDeclaredArguments.stream().filter(a -> a.getName().equals(name) || (a.getNameAliases() != null && a.getNameAliases().contains(
+                    name))).findAny().orElse(null);
         }
         return null;
     }
 
-    public Object getDisplayValue(String name) {
-        JobArgument<?> ar = getKnownArgument(name);
+    private String getDisplayValue(String name) {
+        JobArgument<?> ar = getDeclaredArgument(name);
         if (ar == null) {
             return DisplayMode.UNKNOWN.getValue();
         }
         return ar.getDisplayValue();
     }
 
-    public Object getDisplayValue(String name, Object value) {
-        JobArgument<?> ar = getKnownArgument(name);
+    private String getDisplayValue(String name, Object value) {
+        JobArgument<?> ar = getDeclaredArgument(name);
         if (ar == null) {
             return DisplayMode.UNKNOWN.getValue();
         }
         return SOSArgumentHelper.getDisplayValue(value, ar.getDisplayMode());
     }
 
-    public Map<String, JobArgument<A>> getAllCurrentArguments(JobArgument.Type type) {
-        getAllCurrentArguments();
-        return allCurrentArguments.entrySet().stream().filter(a -> a.getValue().getType().equals(type)).collect(Collectors.toMap(Map.Entry::getKey,
-                Map.Entry::getValue));
-    }
-
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public Map<String, JobArgument<A>> getAllCurrentArguments() {
-        if (allCurrentArguments != null) {
-            return allCurrentArguments;
+    public Map<String, JobArgument<A>> getAllArguments() {
+        if (allArguments != null) {
+            return allArguments;
         }
 
-        allCurrentArguments = new HashMap<>();
+        allArguments = new HashMap<>();
         // KNOWN Arguments
-        setKnownArguments();
-        if (knownArguments != null && knownArguments.size() > 0) {
-            knownArguments.stream().forEach(a -> {
-                if (!allCurrentArguments.containsKey(a.getName())) {
-                    allCurrentArguments.put(a.getName(), a);
+        setAllDeclaredArguments();
+        if (allDeclaredArguments != null && allDeclaredArguments.size() > 0) {
+            allDeclaredArguments.stream().forEach(a -> {
+                if (!allArguments.containsKey(a.getName())) {
+                    allArguments.put(a.getName(), a);
                 }
                 if (a.getNameAliases() != null) {
                     for (String n : a.getNameAliases()) {
-                        if (!allCurrentArguments.containsKey(n)) {
-                            allCurrentArguments.put(n, a);
+                        if (!allArguments.containsKey(n)) {
+                            allArguments.put(n, a);
                         }
                     }
                 }
@@ -243,29 +237,29 @@ public class JobStep<A extends JobArguments> {
         Map<String, JobDetailValue> lso = getLastSucceededOutcomes();
         if (lso != null && lso.size() > 0) {
             lso.entrySet().stream().forEach(e -> {
-                if (!allCurrentArguments.containsKey(e.getKey())) {
+                if (!allArguments.containsKey(e.getKey()) && !JobHelper.NAMED_NAME_RETURN_CODE.equals(e.getKey())) {
                     ValueSource vs = ValueSource.LAST_SUCCEEDED_OUTCOME;
                     vs.setDetails(e.getValue().getSource());
-                    allCurrentArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue().getValue(), vs));
+                    allArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue().getValue(), vs));
                 }
             });
         }
         if (internalStep != null) {
             // preference 2 - Order Variables (Node Arguments are unknown)
-            Map<String, Object> o = Job.convert(internalStep.order().arguments());
+            Map<String, Object> o = JobHelper.asJavaValues(internalStep.order().arguments());
             if (o != null && o.size() > 0) {
                 o.entrySet().stream().forEach(e -> {
-                    if (!allCurrentArguments.containsKey(e.getKey())) {
-                        allCurrentArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue(), ValueSource.ORDER));
+                    if (!allArguments.containsKey(e.getKey())) {
+                        allArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue(), ValueSource.ORDER));
                     }
                 });
             }
             // preference 3 - JobArgument
-            Map<String, Object> j = Job.convert(internalStep.arguments());
+            Map<String, Object> j = JobHelper.asJavaValues(internalStep.arguments());
             if (j != null && j.size() > 0) {
                 j.entrySet().stream().forEach(e -> {
-                    if (!allCurrentArguments.containsKey(e.getKey())) {
-                        allCurrentArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue(), ValueSource.JOB));
+                    if (!allArguments.containsKey(e.getKey())) {
+                        allArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue(), ValueSource.JOB));
                     }
                 });
             }
@@ -274,29 +268,52 @@ public class JobStep<A extends JobArguments> {
         Map<String, JobDetailValue> resources = getJobResourcesValues();
         if (resources != null && resources.size() > 0) {
             resources.entrySet().stream().forEach(e -> {
-                if (!allCurrentArguments.containsKey(e.getKey())) {
+                if (!allArguments.containsKey(e.getKey())) {
                     ValueSource vs = ValueSource.JOB_RESOURCE;
                     vs.setDetails(e.getValue().getSource());
-                    allCurrentArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue().getValue(), vs));
+                    allArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue().getValue(), vs));
                 }
             });
         }
-        return allCurrentArguments;
+
+        if (unitTestNotDeclaredArguments != null) {
+            unitTestNotDeclaredArguments.entrySet().stream().forEach(e -> {
+                if (!allArguments.containsKey(e.getKey())) {
+                    allArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue(), ValueSource.JOB_ARGUMENT));
+                }
+            });
+        }
+
+        return allArguments;
+    }
+
+    public Map<String, JobArgument<A>> getAllArguments(JobArgument.Type type) {
+        getAllArguments();
+        return allArguments.entrySet().stream().filter(a -> a.getValue().getType().equals(type)).collect(Collectors.toMap(Map.Entry::getKey,
+                Map.Entry::getValue));
+    }
+
+    public Map<String, Object> getAllArgumentsAsNameValueMap() {
+        return JobHelper.asNameValueMap(getAllArguments());
+    }
+
+    public Map<String, Object> getAllNotDeclaredArgumentsAsNameValueMap() {
+        return JobHelper.asNameValueMap(getAllArguments(Type.NOT_DECLARED));
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private void setKnownArguments() {
-        if (arguments == null) {
-            knownArguments = null;
+    private void setAllDeclaredArguments() {
+        if (declaredArguments == null) {
+            allDeclaredArguments = null;
             return;
         }
-        if (knownArguments == null) {
-            List<Field> fields = Job.getJobArgumentFields(arguments);
+        if (allDeclaredArguments == null) {
+            List<Field> fields = JobHelper.getJobArgumentFields(declaredArguments);
             List<JobArgument<A>> l = new ArrayList<JobArgument<A>>();
             for (Field field : fields) {
                 try {
                     field.setAccessible(true);
-                    JobArgument<A> arg = (JobArgument<A>) field.get(arguments);
+                    JobArgument<A> arg = (JobArgument<A>) field.get(declaredArguments);
                     if (arg != null) {
                         if (arg.getName() == null) {// internal usage
                             continue;
@@ -307,26 +324,26 @@ public class JobStep<A extends JobArguments> {
                     logger.warn2allLogger(String.format("[%s.%s][can't read field]%s", getClass().getName(), field.getName(), e.toString()), e);
                 }
             }
-            if (arguments.getAppArguments() != null && arguments.getAppArguments().size() > 0) {
-                for (Map.Entry<String, List<JobArgument>> e : arguments.getAppArguments().entrySet()) {
+            if (declaredArguments.getIncludedArguments() != null && declaredArguments.getIncludedArguments().size() > 0) {
+                for (Map.Entry<String, List<JobArgument>> e : declaredArguments.getIncludedArguments().entrySet()) {
                     for (JobArgument arg : e.getValue()) {
                         l.add(arg);
                     }
                 }
             }
-            knownArguments = l;
+            allDeclaredArguments = l;
         }
     }
 
     @SuppressWarnings("rawtypes")
-    public <T extends ASOSArguments> T getAppArguments(Class<T> clazz) throws InstantiationException, IllegalAccessException,
+    public <T extends ASOSArguments> T getIncludedArguments(Class<T> clazz) throws InstantiationException, IllegalAccessException,
             IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
-        setKnownArguments();
+        setAllDeclaredArguments();
         T instance = clazz.getDeclaredConstructor().newInstance();
-        if (arguments.getAppArguments() == null) {
+        if (declaredArguments.getIncludedArguments() == null) {
             return instance;
         }
-        List<SOSArgument> args = knownArguments.stream().filter(a -> a.getPayload() != null && a.getPayload().equals(clazz.getName())).map(
+        List<SOSArgument> args = allDeclaredArguments.stream().filter(a -> a.getPayload() != null && a.getPayload().equals(clazz.getName())).map(
                 a -> (SOSArgument) a).collect(Collectors.toList());
 
         if (args != null) {
@@ -370,7 +387,7 @@ public class JobStep<A extends JobArguments> {
             if (internalStep == null) {
                 return null;
             }
-            agentId = Job.getFromEither(internalStep.order().attached()).string();
+            agentId = JobHelper.getFromEither(internalStep.order().attached()).string();
         }
         return agentId;
     }
@@ -380,7 +397,7 @@ public class JobStep<A extends JobArguments> {
             if (internalStep == null) {
                 return null;
             }
-            jobName = Job.getFromEither(internalStep.workflow().checkedJobName(internalStep.order().workflowPosition().position())).toString();
+            jobName = JobHelper.getFromEither(internalStep.workflow().checkedJobName(internalStep.order().workflowPosition().position())).toString();
         }
         return jobName;
     }
@@ -429,76 +446,38 @@ public class JobStep<A extends JobArguments> {
     }
 
     public JOutcome.Completed success() {
-        return success(Job.DEFAULT_RETURN_CODE_SUCCEEDED);
+        return success(JobHelper.DEFAULT_RETURN_CODE_SUCCEEDED);
     }
 
     public JOutcome.Completed success(final Integer returnCode) {
         return success(returnCode, new HashMap<String, Object>());
     }
 
-    public JOutcome.Completed success(final String outcomeVarKey, final Object outcomeVarValue) {
-        return success(Job.DEFAULT_RETURN_CODE_SUCCEEDED, outcomeVarKey, outcomeVarValue);
-    }
-
-    public JOutcome.Completed success(final Integer returnCode, final String outcomeVarKey, final Object outcomeVarValue) {
-        Map<String, Object> map = new HashMap<>();
-        if (outcomeVarKey != null && outcomeVarValue != null) {
-            map.put(outcomeVarKey, outcomeVarValue);
+    public JOutcome.Completed success(final JobStepOutcome outcome) {
+        if (outcome == null) {
+            return success();
         }
-        return success(returnCode, map);
+        Integer rc = outcome.getReturnCode() == null ? JobHelper.DEFAULT_RETURN_CODE_SUCCEEDED : outcome.getReturnCode();
+        return success(rc, outcome.getVariables());
     }
 
-    public JOutcome.Completed success(final JobOutcomeVariable<?>... outcomes) {
-        return success(Job.DEFAULT_RETURN_CODE_SUCCEEDED, outcomes);
+    public JOutcome.Completed success(final JobStepOutcomeVariable<?>... outcomes) {
+        return success(JobHelper.DEFAULT_RETURN_CODE_SUCCEEDED, outcomes);
     }
 
-    public JOutcome.Completed success(final Integer returnCode, final JobOutcomeVariable<?>... outcomes) {
+    public JOutcome.Completed success(final Integer returnCode, final JobStepOutcomeVariable<?>... outcomes) {
         return success(returnCode, getMap(outcomes));
     }
 
-    public JOutcome.Completed success(final Map<String, Object> outcomes) {
-        return success(Job.DEFAULT_RETURN_CODE_SUCCEEDED, outcomes);
-    }
-
-    public JOutcome.Completed success(final Integer returnCode, final Map<String, Object> outcomes) {
+    private JOutcome.Completed success(final Integer returnCode, final Map<String, Object> outcomes) {
         if (outcomes == null || outcomes.size() == 0) {
             return JOutcome.succeeded(mapResult(null, returnCode));
         }
-        return JOutcome.succeeded(mapResult(convert4engine(outcomes), returnCode));
-    }
-
-    public JOutcome.Completed failed(final String msg, final String outcomeVarKey, final Object outcomeVarValue) {
-        return failed(Job.DEFAULT_RETURN_CODE_FAILED, msg, outcomeVarKey, outcomeVarValue);
-    }
-
-    public JOutcome.Completed failed(final Integer returnCode, final String msg, final String outcomeVarKey, final Object outcomeVarValue) {
-        if (outcomeVarKey != null && outcomeVarValue != null) {
-            return failedWithMap(returnCode, msg, convert4engine(Collections.singletonMap(outcomeVarKey, outcomeVarValue)));
-        }
-        return failed(returnCode, msg);
-    }
-
-    public JOutcome.Completed failed(final String msg, JobOutcomeVariable<?>... outcomes) {
-        return failed(Job.DEFAULT_RETURN_CODE_FAILED, msg, outcomes);
-    }
-
-    public JOutcome.Completed failed(final Integer returnCode, final String msg, JobOutcomeVariable<?>... outcomes) {
-        return failed(returnCode, msg, getMap(outcomes));
-    }
-
-    public JOutcome.Completed failed(final String msg, final Map<String, Object> outcomes) {
-        return failed(Job.DEFAULT_RETURN_CODE_FAILED, msg, outcomes);
-    }
-
-    public JOutcome.Completed failed(final Integer returnCode, final String msg, final Map<String, Object> outcomes) {
-        if (outcomes == null || outcomes.size() == 0) {
-            return failed(returnCode, msg);
-        }
-        return failedWithMap(returnCode, msg, convert4engine(outcomes));
+        return JOutcome.succeeded(mapResult(JobHelper.asEngineValues(outcomes), returnCode));
     }
 
     public JOutcome.Completed failed() {
-        return failed(Job.DEFAULT_RETURN_CODE_FAILED);
+        return failed(JobHelper.DEFAULT_RETURN_CODE_FAILED);
     }
 
     public JOutcome.Completed failed(final Integer returnCode) {
@@ -506,7 +485,7 @@ public class JobStep<A extends JobArguments> {
     }
 
     public JOutcome.Completed failed(final String msg) {
-        return failed(Job.DEFAULT_RETURN_CODE_FAILED, msg);
+        return failed(JobHelper.DEFAULT_RETURN_CODE_FAILED, msg);
     }
 
     public JOutcome.Completed failed(final Integer returnCode, final String msg) {
@@ -516,7 +495,7 @@ public class JobStep<A extends JobArguments> {
     }
 
     public JOutcome.Completed failed(final String msg, Throwable e) {
-        return failed(Job.DEFAULT_RETURN_CODE_FAILED, msg, e);
+        return failed(JobHelper.DEFAULT_RETURN_CODE_FAILED, msg, e);
     }
 
     public JOutcome.Completed failed(final Integer returnCode, final String msg, Throwable e) {
@@ -524,6 +503,29 @@ public class JobStep<A extends JobArguments> {
         Throwable ex = logger.handleException(e);
         logger.failed2slf4j(e.toString(), ex);
         return JOutcome.failed(logger.throwable2String(fm, ex), mapResult(null, returnCode));
+    }
+
+    public JOutcome.Completed failed(final JobStepOutcome outcome) {
+        if (outcome == null) {
+            return failed();
+        }
+        Integer rc = outcome.getReturnCode() == null ? JobHelper.DEFAULT_RETURN_CODE_SUCCEEDED : outcome.getReturnCode();
+        return failed(rc, outcome.getMessage(), outcome.getVariables());
+    }
+
+    public JOutcome.Completed failed(final String msg, JobStepOutcomeVariable<?>... outcomes) {
+        return failed(JobHelper.DEFAULT_RETURN_CODE_FAILED, msg, outcomes);
+    }
+
+    public JOutcome.Completed failed(final Integer returnCode, final String msg, JobStepOutcomeVariable<?>... outcomes) {
+        return failed(returnCode, msg, getMap(outcomes));
+    }
+
+    private JOutcome.Completed failed(final Integer returnCode, final String msg, final Map<String, Object> outcomes) {
+        if (outcomes == null || outcomes.size() == 0) {
+            return failed(returnCode, msg);
+        }
+        return failedWithMap(returnCode, msg, JobHelper.asEngineValues(outcomes));
     }
 
     private JOutcome.Completed failedWithMap(final Integer returnCode, final String msg, final Map<String, Value> outcomes) {
@@ -534,10 +536,10 @@ public class JobStep<A extends JobArguments> {
 
     private Map<String, Value> mapResult(Map<String, Value> map, Integer returnCode) {
         if (map == null || map.size() == 0) {
-            map = Collections.singletonMap(Job.NAMED_NAME_RETURN_CODE, NumberValue.of(returnCode));
+            map = Collections.singletonMap(JobHelper.NAMED_NAME_RETURN_CODE, NumberValue.of(returnCode));
         } else {
             // override
-            map.put(Job.NAMED_NAME_RETURN_CODE, NumberValue.of(returnCode));
+            map.put(JobHelper.NAMED_NAME_RETURN_CODE, NumberValue.of(returnCode));
         }
         return map;
     }
@@ -546,17 +548,17 @@ public class JobStep<A extends JobArguments> {
         if (internalStep == null) {
             return null;
         }
-        return Job.getFromEither(internalStep.env());
+        return JobHelper.getFromEither(internalStep.env());
     }
 
     public String replaceVars(Path path) throws Exception {
-        Map<String, Object> vars = Job.asNameValueMap(getAllCurrentArguments());
-        put(vars, Job.VAR_NAME_CONTROLLER_ID, getControllerId());
-        put(vars, Job.VAR_NAME_ORDER_ID, getOrderId());
-        put(vars, Job.VAR_NAME_WORKFLOW_PATH, getWorkflowName());
-        put(vars, Job.VAR_NAME_WORKFLOW_POSITION, getWorkflowPosition());
-        put(vars, Job.VAR_NAME_JOB_INSTRUCTION_LABEL, getJobInstructionLabel());
-        put(vars, Job.VAR_NAME_JOB_NAME, getJobName());
+        Map<String, Object> vars = JobHelper.asNameValueMap(getAllArguments());
+        put(vars, JobHelper.VAR_NAME_CONTROLLER_ID, getControllerId());
+        put(vars, JobHelper.VAR_NAME_ORDER_ID, getOrderId());
+        put(vars, JobHelper.VAR_NAME_WORKFLOW_PATH, getWorkflowName());
+        put(vars, JobHelper.VAR_NAME_WORKFLOW_POSITION, getWorkflowPosition());
+        put(vars, JobHelper.VAR_NAME_JOB_INSTRUCTION_LABEL, getJobInstructionLabel());
+        put(vars, JobHelper.VAR_NAME_JOB_NAME, getJobName());
 
         SOSParameterSubstitutor ps = new SOSParameterSubstitutor(true, "${", "}");
         vars.entrySet().forEach(e -> {
@@ -571,9 +573,9 @@ public class JobStep<A extends JobArguments> {
         }
     }
 
-    private Map<String, Object> getMap(JobOutcomeVariable<?>... outcomes) {
+    private Map<String, Object> getMap(JobStepOutcomeVariable<?>... outcomes) {
         Map<String, Object> map = new HashMap<String, Object>();
-        for (JobOutcomeVariable<?> var : outcomes) {
+        for (JobStepOutcomeVariable<?> var : outcomes) {
             if (var.getName() == null || var.getValue() == null) {
                 continue;
             }
@@ -582,62 +584,8 @@ public class JobStep<A extends JobArguments> {
         return map;
     }
 
-    public Map<String, Value> convert4engine(final Map<String, Object> map) {
-        Map<String, Value> result = new HashMap<>();
-        if (map == null || map.size() == 0) {
-            return result;
-        }
-
-        // Collectors.toMap throws an exception when duplicate or value is null
-        // return map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> getEngineValue(e.getValue())));
-        map.entrySet().forEach(e -> {
-            result.put(e.getKey(), getEngineValue(e.getValue()));
-        });
-        return result;
-    }
-
-    private Value getEngineValue(final Object o) {
-        if (o == null) {
-            return StringValue.of("");
-        }
-        if (o instanceof Value) {
-            return (Value) o;
-        } else if (o instanceof String) {
-            return StringValue.of((String) o);
-        } else if (o instanceof Boolean) {
-            return BooleanValue.of(((Boolean) o).booleanValue());
-        } else if (o instanceof Integer) {
-            return NumberValue.of((Integer) o);
-        } else if (o instanceof Long) {
-            return NumberValue.of(((Long) o).longValue());
-        } else if (o instanceof Double) {
-            return NumberValue.of(BigDecimal.valueOf((Double) o));
-        } else if (o instanceof BigDecimal) {
-            return NumberValue.of((BigDecimal) o);
-        } else if (o instanceof Date) {
-            return getDateAsStringValue((Date) o);
-        } else if (SOSReflection.isList(o.getClass())) {
-            // TODO use ListValue?
-            List<?> l = (List<?>) o;
-            String s = (String) l.stream().map(e -> {
-                return e.toString();
-            }).collect(Collectors.joining(SOSArgumentHelper.LIST_VALUE_DELIMITER));
-            return StringValue.of(s);
-        }
-        return StringValue.of(o.toString());
-    }
-
-    private Value getDateAsStringValue(Date date) {
-        try {
-            return StringValue.of(SOSDate.getDateTimeAsString(date));
-        } catch (Throwable e) {
-            logger.warn(e.toString(), e);
-            return StringValue.of(date == null ? "" : date.toString());
-        }
-    }
-
     private Map<String, Map<String, JobDetailValue>> historicOutcomes2map() {
-        List<HistoricOutcome> l = getHistoricOutcomes();
+        List<HistoricOutcome> l = getEngineHistoricOutcomes();
         if (l == null || l.size() == 0) {
             return Collections.emptyMap();
         }
@@ -655,14 +603,14 @@ public class JobStep<A extends JobArguments> {
                     } else {
                         map = new HashMap<String, JobDetailValue>();
                     }
-                    Map<String, Object> m = Job.convert(JavaConverters.asJava(c.namedValues()));
+                    Map<String, Object> m = JobHelper.asJavaValues(JavaConverters.asJava(c.namedValues()));
                     if (m != null) {
                         for (Map.Entry<String, Object> entry : m.entrySet()) {
                             map.remove(entry.getKey());
                             map.put(entry.getKey(), new JobDetailValue(ho.position().toString(), entry.getValue()));
                         }
                     }
-                    map.remove(Job.NAMED_NAME_RETURN_CODE);
+                    // map.remove(JobHelper.NAMED_NAME_RETURN_CODE);
                     resultMap.put(key, map);
                 }
             }
@@ -684,7 +632,7 @@ public class JobStep<A extends JobArguments> {
             String resourceName = e.getKey().string();
             e.getValue().entrySet().stream().forEach(ee -> {
                 if (!resultMap.containsKey(ee.getKey()) && ee.getValue().isRight()) {
-                    resultMap.put(ee.getKey(), new JobDetailValue(resourceName, Job.getValue(ee.getValue().get())));
+                    resultMap.put(ee.getKey(), new JobDetailValue(resourceName, JobHelper.asJavaValue(ee.getValue().get())));
                 }
             });
         });
@@ -698,8 +646,8 @@ public class JobStep<A extends JobArguments> {
             } else {
                 logger.info(mockMessage + " Job Parameterization:");
             }
-            setKnownArguments();
-            Map<ValueSource, List<String>> map = argumentsInfoBySetter();
+            setAllDeclaredArguments();
+            Map<ValueSource, List<String>> map = declaredArgumentsInfoBySetter();
             if (map == null || map.size() == 0) {
                 infoResultingArguments();
 
@@ -724,7 +672,7 @@ public class JobStep<A extends JobArguments> {
 
     protected void logParameterizationOnRequiredArgumentMissingException() {
         try {
-            setKnownArguments();
+            setAllDeclaredArguments();
             logArguments(LogLevel.INFO);
             logAllResultingArguments(LogLevel.INFO);
         } catch (Exception e) {
@@ -733,16 +681,19 @@ public class JobStep<A extends JobArguments> {
     }
 
     private void logArguments(LogLevel logLevel) throws Exception {
-        // ORDER Variables
-        Map<String, Object> map = Job.convert(internalStep.order().arguments());
-        if (map != null && map.size() > 0) {
-            logger.log(logLevel, String.format(" %s:", ValueSource.ORDER.getHeader()));
-            map.entrySet().stream().forEach(e -> {
-                logger.log(logLevel, "    %s=%s", e.getKey(), getDisplayValue(e.getKey(), e.getValue()));
-            });
+        Map<String, Object> map = null;
+        if (internalStep != null) {
+            // ORDER Variables
+            map = JobHelper.asJavaValues(internalStep.order().arguments());
+            if (map != null && map.size() > 0) {
+                logger.log(logLevel, String.format(" %s:", ValueSource.ORDER.getHeader()));
+                map.entrySet().stream().forEach(e -> {
+                    logger.log(logLevel, "    %s=%s", e.getKey(), getDisplayValue(e.getKey(), e.getValue()));
+                });
+            }
         }
         // ORDER or Node arguments
-        setKnownArguments();
+        setAllDeclaredArguments();
         List<JobArgument<A>> orderOrNode = getOrderOrNodeArguments();
         if (orderOrNode != null && orderOrNode.size() > 0) {
             logger.log(logLevel, String.format(" %s:", ValueSource.ORDER_OR_NODE.getHeader()));
@@ -750,13 +701,15 @@ public class JobStep<A extends JobArguments> {
                 logger.log(logLevel, "    " + a.toString());
             });
         }
-        // JOB Arguments
-        map = Job.convert(internalStep.arguments());
-        if (map != null && map.size() > 0) {
-            logger.log(logLevel, String.format(" %s:", ValueSource.JOB.getHeader()));
-            map.entrySet().stream().forEach(e -> {
-                logger.log(logLevel, "    %s=%s", e.getKey(), getDisplayValue(e.getKey(), e.getValue()));
-            });
+        if (internalStep != null) {
+            // JOB Arguments
+            map = JobHelper.asJavaValues(internalStep.arguments());
+            if (map != null && map.size() > 0) {
+                logger.log(logLevel, String.format(" %s:", ValueSource.JOB.getHeader()));
+                map.entrySet().stream().forEach(e -> {
+                    logger.log(logLevel, "    %s=%s", e.getKey(), getDisplayValue(e.getKey(), e.getValue()));
+                });
+            }
         }
         // JOB Resources
         Map<String, JobDetailValue> resources = getJobResourcesValues();
@@ -772,10 +725,10 @@ public class JobStep<A extends JobArguments> {
     }
 
     private List<JobArgument<A>> getOrderOrNodeArguments() {
-        if (knownArguments == null) {
+        if (allDeclaredArguments == null) {
             return null;
         }
-        return knownArguments.stream().filter(a -> {
+        return allDeclaredArguments.stream().filter(a -> {
             if (a.getValueSource().equals(ValueSource.ORDER_OR_NODE)) {
                 return true;
             }
@@ -785,7 +738,7 @@ public class JobStep<A extends JobArguments> {
 
     private void logJobContextArguments(LogLevel logLevel) {
         if (jobContext != null) {
-            Map<String, Object> map = Job.convert(jobContext.jobArguments());
+            Map<String, Object> map = JobHelper.asJavaValues(jobContext.jobArguments());
             if (map != null && map.size() > 0) {
                 logger.log(logLevel, String.format(" %s:", ValueSource.JOB_ARGUMENT.getHeader()));
                 map.entrySet().stream().forEach(e -> {
@@ -815,11 +768,11 @@ public class JobStep<A extends JobArguments> {
     }
 
     private void infoResultingArguments() throws Exception {
-        if (knownArguments == null || knownArguments.size() == 0) {
+        if (allDeclaredArguments == null || allDeclaredArguments.size() == 0) {
             return;
         }
         logger.info(String.format("%s:", ValueSource.JAVA.getHeader()));
-        knownArguments.stream().filter(a -> {
+        allDeclaredArguments.stream().filter(a -> {
             if (a.isDirty()) {
                 return true;
             } else {
@@ -857,12 +810,28 @@ public class JobStep<A extends JobArguments> {
     }
 
     private void logAllResultingArguments(LogLevel logLevel) throws Exception {
-        if (knownArguments == null || knownArguments.size() == 0) {
+        if (unitTestNotDeclaredArguments != null && unitTestNotDeclaredArguments.size() > 0) {
+            logger.log(logLevel, String.format(" All %s(Unit-Test NotDeclaredArguments):", ValueSource.JAVA.getHeader()));
+            unitTestNotDeclaredArguments.entrySet().stream().forEach(a -> {
+                logger.log(logLevel, "    " + a.toString());
+            });
+        }
+
+        if (allDeclaredArguments == null || allDeclaredArguments.size() == 0) {
             return;
         }
         logger.log(logLevel, String.format(" All %s:", ValueSource.JAVA.getHeader()));
-        knownArguments.stream().forEach(a -> {
+        allDeclaredArguments.stream().forEach(a -> {
             logger.log(logLevel, "    " + a.toString());
         });
     }
+
+    public JobStepOutcome newJobStepOutcome() {
+        return new JobStepOutcome();
+    }
+
+    public JobStepOutcome newJobStepOutcome(Map<String, Object> variables) {
+        return new JobStepOutcome(variables);
+    }
+
 }
