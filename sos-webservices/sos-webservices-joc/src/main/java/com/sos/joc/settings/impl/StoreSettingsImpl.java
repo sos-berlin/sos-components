@@ -3,11 +3,13 @@ package com.sos.joc.settings.impl;
 import java.io.StringReader;
 import java.time.Instant;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import javax.json.Json;
 import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
 
 import org.slf4j.Logger;
@@ -19,10 +21,12 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.calendar.DailyPlanCalendar;
 import com.sos.joc.classes.proxy.Proxies;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.exceptions.JocBadRequestException;
+import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.configuration.ConfigurationType;
@@ -36,7 +40,6 @@ import jakarta.ws.rs.Path;
 public class StoreSettingsImpl extends JOCResourceImpl implements IStoreSettings {
 
     private static final String API_CALL = "./settings/store";
-    private static final String DEFAULT_EMPTY_VAL = ".";
     private static final Logger LOGGER = LoggerFactory.getLogger(StoreSettingsImpl.class);
 
     @Override
@@ -46,24 +49,30 @@ public class StoreSettingsImpl extends JOCResourceImpl implements IStoreSettings
             initLogging(API_CALL, storeSettingsFilter, accessToken);
             JsonValidator.validate(storeSettingsFilter, StoreSettingsFilter.class);
             StoreSettingsFilter filter = Globals.objectMapper.readValue(storeSettingsFilter, StoreSettingsFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getSettings().getManage());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            boolean settingsPermission = getJocPermissions(accessToken).getAdministration().getSettings().getManage();
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             storeAuditLog(filter.getAuditLog(), CategoryType.SETTINGS);
             JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(hibernateSession);
             DBItemJocConfiguration cfg = new DBItemJocConfiguration();
-            cfg.setAccount(DEFAULT_EMPTY_VAL);
-            cfg.setControllerId(null);
+            cfg.setAccount(ConfigurationGlobals.ACCOUNT);
+            cfg.setControllerId(ConfigurationGlobals.CONTROLLER_ID);
             cfg.setConfigurationType(ConfigurationType.GLOBALS.value());
             cfg.setConfigurationItem(filter.getConfigurationItem());
             cfg.setName(null);
             cfg.setObjectType(null);
-            cfg.setShared(false);
+            cfg.setShared(ConfigurationGlobals.SHARED);
             // read old Settings and call updateControllerCalendar
             DBItemJocConfiguration oldCfg = jocConfigurationDBLayer.getGlobalSettingsConfiguration();
-            if (updateControllerCalendar(accessToken, cfg.getConfigurationItem(), oldCfg.getConfigurationItem())) {
+            String oldConfigurationItem = oldCfg == null ? ConfigurationGlobals.DEFAULT_CONFIGURATION_ITEM : oldCfg.getConfigurationItem();
+            
+            if (!settingsPermission) {
+                // store only user settings without permissions
+                cfg.setConfigurationItem(updateOnlyUserSection(cfg.getConfigurationItem(), oldConfigurationItem, getJocError()));
+            } else if (dailyPlanHasChanged(cfg.getConfigurationItem(), oldConfigurationItem)) {
                 // TODO: call for every known controller
                 Proxies.getControllerDbInstances().keySet().stream().forEach(controllerId -> 
                     DailyPlanCalendar.getInstance().updateDailyPlanCalendar(controllerId, accessToken, getJocError()));
@@ -80,7 +89,43 @@ public class StoreSettingsImpl extends JOCResourceImpl implements IStoreSettings
         }
     }
     
-    public static boolean updateControllerCalendar(String accessToken, String configurationItem, String oldConfigurationItem) {
+    public static String updateOnlyUserSection(String configurationItem, String oldConfigurationItem, JocError jocError) {
+        // store only user settings without permissions
+        try {
+            boolean onlyUserSection = false;
+            JsonReader rdr = Json.createReader(new StringReader(configurationItem));
+            JsonObject obj = rdr.readObject();
+            Optional<JsonObject> oldObj = getOldJsonObject(oldConfigurationItem);
+            JsonObjectBuilder builder = Json.createObjectBuilder();
+            for (DefaultSections ds : EnumSet.allOf(DefaultSections.class)) {
+                if (!ds.equals(DefaultSections.user)) {
+                    if (oldObj.isPresent() && oldObj.get().get(ds.name()) != null) {
+                        builder.add(ds.name(), oldObj.get().get(ds.name()));
+                        onlyUserSection = true;
+                    }
+                } else {
+                    if (obj.get(ds.name()) != null) {
+                        builder.add(ds.name(), obj.get(ds.name()));
+                    } else if (oldObj.isPresent() && oldObj.get().get(ds.name()) != null) {
+                        builder.add(ds.name(), oldObj.get().get(ds.name()));
+                    }
+                }
+            }
+            if (onlyUserSection) {
+                if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
+                    LOGGER.info(jocError.printMetaInfo());
+                    jocError.clearMetaInfo();
+                }
+                LOGGER.info("Due to missing permissions only settings of the 'user' section were considered.");
+            }
+            return builder.build().toString();
+        } catch (Exception e) {
+            //
+        }
+        return configurationItem;
+    }
+    
+    public static boolean dailyPlanHasChanged(String configurationItem, String oldConfigurationItem) {
         boolean updateControllerCalendar = false;
         // Calendar for controller
         Optional<JsonObject> oldObj = getOldJsonObject(oldConfigurationItem);
@@ -126,8 +171,12 @@ public class StoreSettingsImpl extends JOCResourceImpl implements IStoreSettings
     private static Optional<JsonObject> getOldJsonObject(String oldConfiguration) {
         Optional<JsonObject> oldObj = Optional.empty();
         if (oldConfiguration != null) {
-            JsonReader oldRdr = Json.createReader(new StringReader(oldConfiguration));
-            oldObj = Optional.of(oldRdr.readObject());
+            try {
+                JsonReader oldRdr = Json.createReader(new StringReader(oldConfiguration));
+                oldObj = Optional.of(oldRdr.readObject());
+            } catch (Exception e) {
+                //
+            }
         }
         return oldObj;
     }

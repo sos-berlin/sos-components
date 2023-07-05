@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Optional;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -125,39 +124,10 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
 
                 if (!getJocPermissions(accessToken).getAdministration().getSettings().getManage()) {
                     // store only user settings without permissions
-                    try {
-                        boolean onlyUserSection = false;
-                        JsonReader rdr = Json.createReader(new StringReader(configuration.getConfigurationItem()));
-                        JsonObject obj = rdr.readObject();
-                        Optional<JsonObject> oldObj = getOldJsonObject(oldConfiguration);
-                        JsonObjectBuilder builder = Json.createObjectBuilder();
-                        for (DefaultSections ds : EnumSet.allOf(DefaultSections.class)) {
-                            if (!ds.equals(DefaultSections.user)) {
-                                if (oldObj.isPresent() && oldObj.get().get(ds.name()) != null) {
-                                    builder.add(ds.name(), oldObj.get().get(ds.name()));
-                                    onlyUserSection = true;
-                                }
-                            } else {
-                                if (obj.get(ds.name()) != null) {
-                                    builder.add(ds.name(), obj.get(ds.name()));
-                                } else if (oldObj.isPresent() && oldObj.get().get(ds.name()) != null) {
-                                    builder.add(ds.name(), oldObj.get().get(ds.name()));
-                                }
-                            }
-                        }
-                        configuration.setConfigurationItem(builder.build().toString());
-                        if (onlyUserSection) {
-                            if (getJocError() != null && !getJocError().getMetaInfo().isEmpty()) {
-                                LOGGER.info(getJocError().printMetaInfo());
-                                getJocError().clearMetaInfo();
-                            }
-                            LOGGER.info("Due to missing permissions only settings of the 'user' section were considered.");
-                        }
-                    } catch (Exception e) {
-                        //
-                    }
+                    configuration.setConfigurationItem(StoreSettingsImpl.updateOnlyUserSection(configuration.getConfigurationItem(), oldConfiguration,
+                            getJocError()));
                 } else {
-                    updateControllerCalendar = StoreSettingsImpl.updateControllerCalendar(accessToken, configuration.getConfigurationItem(), oldConfiguration);
+                    updateControllerCalendar = StoreSettingsImpl.dailyPlanHasChanged(configuration.getConfigurationItem(), oldConfiguration);
                 }
                 break;
             case IAM:
@@ -614,19 +584,6 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             config.setControllerId(controllerId);
         }
         return config;
-    }
-
-    private static Optional<JsonObject> getOldJsonObject(String oldConfiguration) {
-        Optional<JsonObject> oldObj = Optional.empty();
-        if (oldConfiguration != null) {
-            try {
-                JsonReader oldRdr = Json.createReader(new StringReader(oldConfiguration));
-                oldObj = Optional.of(oldRdr.readObject());
-            } catch (Exception e) {
-                //
-            }
-        }
-        return oldObj;
     }
 
 }
