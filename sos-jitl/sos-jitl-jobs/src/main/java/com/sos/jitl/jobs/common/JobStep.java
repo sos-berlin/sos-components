@@ -457,8 +457,7 @@ public class JobStep<A extends JobArguments> {
         if (outcome == null) {
             return success();
         }
-        Integer rc = outcome.getReturnCode() == null ? JobHelper.DEFAULT_RETURN_CODE_SUCCEEDED : outcome.getReturnCode();
-        return success(rc, outcome.getVariables());
+        return success(outcome.getReturnCode(), outcome.getVariables());
     }
 
     public JOutcome.Completed success(final JobStepOutcomeVariable<?>... outcomes) {
@@ -471,9 +470,9 @@ public class JobStep<A extends JobArguments> {
 
     private JOutcome.Completed success(final Integer returnCode, final Map<String, Object> outcomes) {
         if (outcomes == null || outcomes.size() == 0) {
-            return JOutcome.succeeded(mapResult(null, returnCode));
+            return JOutcome.succeeded(mapResult(null, getReturnCodeSucceeded(returnCode)));
         }
-        return JOutcome.succeeded(mapResult(JobHelper.asEngineValues(outcomes), returnCode));
+        return JOutcome.succeeded(mapResult(JobHelper.asEngineValues(outcomes), getReturnCodeSucceeded(returnCode)));
     }
 
     public JOutcome.Completed failed() {
@@ -491,7 +490,7 @@ public class JobStep<A extends JobArguments> {
     public JOutcome.Completed failed(final Integer returnCode, final String msg) {
         String fm = SOSString.isEmpty(msg) ? "" : msg;
         logger.failed2slf4j(fm);
-        return JOutcome.failed(fm, mapResult(null, returnCode));
+        return JOutcome.failed(fm, mapResult(null, getReturnCodeFailed(returnCode)));
     }
 
     public JOutcome.Completed failed(final String msg, Throwable e) {
@@ -502,15 +501,14 @@ public class JobStep<A extends JobArguments> {
         String fm = SOSString.isEmpty(msg) ? "" : msg;
         Throwable ex = logger.handleException(e);
         logger.failed2slf4j(e.toString(), ex);
-        return JOutcome.failed(logger.throwable2String(fm, ex), mapResult(null, returnCode));
+        return JOutcome.failed(logger.throwable2String(fm, ex), mapResult(null, getReturnCodeFailed(returnCode)));
     }
 
     public JOutcome.Completed failed(final JobStepOutcome outcome) {
         if (outcome == null) {
             return failed();
         }
-        Integer rc = outcome.getReturnCode() == null ? JobHelper.DEFAULT_RETURN_CODE_SUCCEEDED : outcome.getReturnCode();
-        return failed(rc, outcome.getMessage(), outcome.getVariables());
+        return failed(outcome.getReturnCode(), outcome.getMessage(), outcome.getVariables());
     }
 
     public JOutcome.Completed failed(final String msg, JobStepOutcomeVariable<?>... outcomes) {
@@ -531,7 +529,7 @@ public class JobStep<A extends JobArguments> {
     private JOutcome.Completed failedWithMap(final Integer returnCode, final String msg, final Map<String, Value> outcomes) {
         String fm = SOSString.isEmpty(msg) ? "" : msg;
         logger.failed2slf4j(fm, outcomes);
-        return JOutcome.failed(fm, mapResult(outcomes, returnCode));
+        return JOutcome.failed(fm, mapResult(outcomes, getReturnCodeFailed(returnCode)));
     }
 
     private Map<String, Value> mapResult(Map<String, Value> map, Integer returnCode) {
@@ -542,6 +540,20 @@ public class JobStep<A extends JobArguments> {
             map.put(JobHelper.NAMED_NAME_RETURN_CODE, NumberValue.of(returnCode));
         }
         return map;
+    }
+
+    private Integer getReturnCodeSucceeded(Integer returnCode) {
+        if (returnCode == null) {
+            return JobHelper.DEFAULT_RETURN_CODE_SUCCEEDED;
+        }
+        return returnCode;
+    }
+
+    private Integer getReturnCodeFailed(Integer returnCode) {
+        if (returnCode == null) {
+            return JobHelper.DEFAULT_RETURN_CODE_FAILED;
+        }
+        return returnCode;
     }
 
     public Map<String, String> getEnv() throws SOSJobProblemException {

@@ -7,8 +7,8 @@ import com.sos.commons.util.SOSString;
 
 public class JobStepOutcome {
 
-    private Integer returnCode = JobHelper.DEFAULT_RETURN_CODE_SUCCEEDED;
     private Map<String, Object> variables = new HashMap<>();
+    private Integer returnCode;
     private String message;
     private boolean failed;
 
