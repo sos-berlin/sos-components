@@ -42,7 +42,6 @@ public class GraalVMJob extends ABlockingInternalJob<GraalVMJobArguments> {
             bindings.put("polyglot.js.allowHostAccess", true);
             bindings.put("polyglot.js.allowHostClassLookup", true);
             bindings.put("step", step);
-            bindings.put("logger", step.getLogger());
             bindings.put("outcome", outcome);
             String script = getScript(step.getDeclaredArguments());
             if (script != null) {

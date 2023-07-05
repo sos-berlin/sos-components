@@ -1,3 +1,4 @@
+var logger = step.getLogger();
 logger.info("----------------------------Infos--");
 logger.info("controllerId=" + step.getControllerId());
 logger.info("agentId=" + step.getAgentId());

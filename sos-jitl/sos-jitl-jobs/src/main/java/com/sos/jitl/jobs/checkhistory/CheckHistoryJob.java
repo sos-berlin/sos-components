@@ -60,7 +60,7 @@ public class CheckHistoryJob extends ABlockingInternalJob<CheckHistoryJobArgumen
                 outcome.putVariable("js7CheckHistoryResultWorkflow", historyItem.getWorkflow());
                 outcome.putVariable("js7CheckHistoryResultJob", historyItem.getJob());
 
-                // outcome.setReturnCode(0); //default
+                outcome.setReturnCode(0);// default by success
             } else {
                 String s = args.getQuery() + "(" + name + ") ==> false";
                 step.getLogger().debug(s);
