@@ -569,11 +569,11 @@ public class EventService {
                 addEvent(createAgentEvent(eventId, agentPath, "AgentCoupling"));
                 uncoupledAgents.remove(agentPath);
             } else if (evt instanceof AgentRefStateEvent.AgentClusterWatchManuallyConfirmed$) {
-                String agentPath = ((AgentPath) key).string();
-                addEvent(createAgentEvent(eventId, agentPath));
+                AgentPath agentPath = (AgentPath) key;
+                //don't send event because ClusterWatch has still "old" cluster state: addEvent(createAgentEvent(eventId, agentPath));
                 // TODO cleanup stored lostNostId for repeated events
-                AgentClusterWatch.clean(controllerId, (AgentPath) key);
-                uncoupledAgents.remove(agentPath);
+                AgentClusterWatch.clean(controllerId, agentPath);
+                uncoupledAgents.remove(agentPath.string());
             } else if (evt instanceof AgentRefStateEvent.AgentClusterWatchConfirmationRequired) {
                 AgentPath agentPath = (AgentPath) key;
                 AgentRefStateEvent.AgentClusterWatchConfirmationRequired clusterWatchEvt = (AgentRefStateEvent.AgentClusterWatchConfirmationRequired) evt;

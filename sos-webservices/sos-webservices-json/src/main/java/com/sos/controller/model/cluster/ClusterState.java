@@ -33,8 +33,6 @@ public class ClusterState {
     private ClusterType tYPE;
     @JsonProperty("setting")
     private ClusterSetting setting;
-    @JsonIgnore
-    private String lostNodeId;
 
     /**
      * No args constructor for use in serialization
@@ -84,15 +82,6 @@ public class ClusterState {
         this.setting = setting;
     }
     
-    @JsonIgnore
-    public String getLostNodeId() {
-        return lostNodeId;
-    }
-
-    public void setLostNodeId(String lostNodeId) {
-        this.lostNodeId = lostNodeId;
-    }
-
     @Override
     public String toString() {
         return new ToStringBuilder(this).append("tYPE", tYPE).append("setting", setting).toString();

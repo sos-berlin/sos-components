@@ -60,6 +60,10 @@ public class AgentClusterWatch {
         AgentClusterWatch.getInstance()._clean(controllerId, agentPath);
     }
     
+    public static Optional<NodeId> getLostNodeId(String controllerId, AgentPath agentPath, JAgentRefState agentRefState) {
+        return AgentClusterWatch.getInstance()._getLostNodeId(controllerId, agentPath, agentRefState);
+    }
+    
     public static void getMessage(String controllerId, AgentPath agentPath) {
         AgentClusterWatch.getInstance()._clean(controllerId, agentPath);
     }
@@ -75,10 +79,10 @@ public class AgentClusterWatch {
     private void _init(String controllerId) {
         try {
             lostNodes.put(controllerId, Proxy.of(controllerId).currentState().pathToAgentRefState().entrySet().stream()
-                    .filter(e -> getLostNodeId(e.getValue()).isPresent())
+                    .filter(e -> _getLostNodeId(e.getValue()).isPresent())
                     .peek(e -> LOGGER.error(String.format(logMessageFormat, e.getKey().string(), 
                             controllerId, e.getValue().problem().map(p -> p.messageWithCause()).orElse(""))))
-                    .collect(Collectors.toConcurrentMap(e -> e.getKey(), e -> getLostNodeId(e.getValue()).get())));
+                    .collect(Collectors.toConcurrentMap(e -> e.getKey(), e -> _getLostNodeId(e.getValue()).get())));
             if (!lostNodes.get(controllerId).isEmpty()) {
                 EventBus.getInstance().post(getAgentClusterNodeLossEvent(controllerId, lostNodes.get(controllerId)));
                 startTimer();
@@ -88,7 +92,19 @@ public class AgentClusterWatch {
         }
     }
     
-    private Optional<NodeId> getLostNodeId(JAgentRefState agentRefState) {
+    private Optional<NodeId> _getLostNodeId(String controllerId, AgentPath agentPath, JAgentRefState agentRefState) {
+        try {
+            return Optional.of(lostNodes.get(controllerId).get(agentPath));
+        } catch (Throwable e) {
+            try {
+                return _getLostNodeId(agentRefState);
+            } catch (Throwable e1) {
+            }
+        }
+        return Optional.empty();
+    }
+    
+    private Optional<NodeId> _getLostNodeId(JAgentRefState agentRefState) {
         Map<NodeId, ClusterWatchProblems.ClusterNodeLossNotConfirmedProblem> lostNodeIds = JavaConverters.asJava(agentRefState.asScala()
                 .nodeToClusterNodeProblem());
         if (!lostNodeIds.isEmpty()) {
@@ -157,7 +173,8 @@ public class AgentClusterWatch {
     
     private String getMessage(String controllerId, ConcurrentMap<AgentPath, NodeId> lostNodesPerController) {
         return lostNodesPerController.entrySet().stream().map(e -> String.format(eventMessageFragmentFormat, e.getValue().string(), e.getKey()
-                .string(), controllerId)).collect(Collectors.joining(", ", "[AgentClusterWatchService] Loss of ", " requires confirmation"));
+                .string(), controllerId)).collect(Collectors.joining(", ", "[AgentClusterWatchService] ClusterNodeLossNotConfirmedProblem: Loss of ",
+                        " requires user confirmation"));
     }
     
 }

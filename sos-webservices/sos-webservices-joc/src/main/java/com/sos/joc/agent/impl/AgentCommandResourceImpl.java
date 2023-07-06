@@ -13,13 +13,12 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.cluster.ClusterState;
 import com.sos.controller.model.cluster.ClusterType;
-import com.sos.controller.model.command.ClusterSwitchOver;
-import com.sos.controller.model.command.ConfirmAgentClusterNodeLoss;
 import com.sos.joc.Globals;
 import com.sos.joc.agent.resource.IAgentCommandResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.agent.AgentClusterWatch;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
@@ -36,7 +35,6 @@ import io.vavr.control.Either;
 import jakarta.ws.rs.Path;
 import js7.data.agent.AgentPath;
 import js7.data.controller.ControllerCommand;
-import js7.data.controller.ControllerCommand.ConfirmClusterNodeLoss;
 import js7.data.node.NodeId;
 import js7.data.subagent.SubagentId;
 import js7.data_for_java.agent.JAgentRef;
@@ -199,26 +197,30 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
                 return jocDefaultResponse;
             }
             
-            checkRequiredParameter("lostNodeId", agentCommand.getLostDirector());
+            //checkRequiredParameter("lostNodeId", agentCommand.getLostDirector());
+            //String lossNodeIdFromRequest = AgentCommand.LostDirector.PRIMARY_DIRECTOR.equals(agentCommand.getLostDirector()) ? "Primary" : "Backup";
             
             storeAuditLog(agentCommand.getAuditLog(), agentCommand.getControllerId(), CategoryType.CONTROLLER);
             
             String agentId = agentCommand.getAgentId();
-            JAgentRefState agentState = Proxy.of(controllerId).currentState().pathToAgentRefState().get(AgentPath.of(agentId));
+            JControllerProxy proxy = Proxy.of(controllerId);
+            AgentPath agentPath = AgentPath.of(agentId);
+            JAgentRefState agentState = proxy.currentState().pathToAgentRefState().get(agentPath);
             
             if (agentState != null) {
                 ClusterState clusterState = Globals.objectMapper.readValue(agentState.clusterState().toJson(), ClusterState.class);
                 if (clusterState == null || ClusterType.EMPTY.equals(clusterState.getTYPE())) {
                     throw new JocBadRequestException("There is no Agent director cluster with the Id: " + agentId);
                 }
-                String lossNodeId = agentCommand.getLostDirector().equals(AgentCommand.LostDirector.PRIMARY_DIRECTOR) ? "Primary" : "Backup";
+                NodeId nodeId = AgentClusterWatch.getLostNodeId(controllerId, agentPath, agentState).orElseThrow(() -> new JocBadRequestException(
+                        "The Agent cluster '" + agentId + "' doesn't lost a director node"));
                 String user = null;
                 try {
                     user = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname().trim();
                 } catch (Exception e) {
                     user = Globals.getJocId();
                 }
-                ControllerApi.of(controllerId).executeCommand(JControllerCommand.confirmClusterNodeLoss(AgentPath.of(agentId), NodeId.of(lossNodeId),
+                proxy.api().executeCommand(JControllerCommand.confirmClusterNodeLoss(AgentPath.of(agentId), nodeId,
                         user)).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), controllerId));
             } else {
                 throw new JocBadRequestException("An Agent '" + agentId + "' is not deployed at the Controller '" + controllerId + "'");
