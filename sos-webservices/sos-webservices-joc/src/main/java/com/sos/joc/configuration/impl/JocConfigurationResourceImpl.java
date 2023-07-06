@@ -211,9 +211,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             }
             if (updateControllerCalendar) {
                 // TODO: call for every known controller
-                Proxies.getControllerDbInstances().keySet().stream().forEach(controllerId -> DailyPlanCalendar.getInstance().updateDailyPlanCalendar(
-                        controllerId, accessToken, getJocError()));
-                // DailyPlanCalendar.getInstance().updateDailyPlanCalendar(configuration.getControllerId(), accessToken, getJocError());
+                DailyPlanCalendar.getInstance().updateDailyPlanCalendar(configuration.getControllerId(), accessToken, getJocError());
             }
 
             if (configuration.getConfigurationType() != ConfigurationType.SETTING && configuration

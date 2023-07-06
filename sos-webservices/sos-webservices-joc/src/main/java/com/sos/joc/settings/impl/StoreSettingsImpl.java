@@ -74,8 +74,7 @@ public class StoreSettingsImpl extends JOCResourceImpl implements IStoreSettings
                 cfg.setConfigurationItem(updateOnlyUserSection(cfg.getConfigurationItem(), oldConfigurationItem, getJocError()));
             } else if (dailyPlanHasChanged(cfg.getConfigurationItem(), oldConfigurationItem)) {
                 // TODO: call for every known controller
-                Proxies.getControllerDbInstances().keySet().stream().forEach(controllerId -> 
-                    DailyPlanCalendar.getInstance().updateDailyPlanCalendar(controllerId, accessToken, getJocError()));
+                DailyPlanCalendar.getInstance().updateDailyPlanCalendar(null, accessToken, getJocError());
             }
             jocConfigurationDBLayer.saveOrUpdateGlobalSettingsConfiguration(cfg, oldCfg);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
