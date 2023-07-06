@@ -2,7 +2,6 @@ package com.sos.joc.classes.calendar;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.ZoneId;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -143,7 +142,7 @@ public class DailyPlanCalendar {
         }
         JCalendar oldCalendar = knownCalendars.get(dailyPlanCalendarPath);
         if (oldCalendar != null) {
-            if (oldCalendar.timezone().equals(newCalendar.timezone()) && oldCalendar.dateOffset().equals(newCalendar.dateOffset())) {
+            if (oldCalendar.dateOffset().equals(newCalendar.dateOffset())) {
                 return true;
             }
         }
@@ -151,11 +150,11 @@ public class DailyPlanCalendar {
     }
     
     private static JCalendar getDailyPlanCalendar(ConfigurationGlobalsDailyPlan conf) {
-        return getCalendar(getValue(conf.getTimeZone()), convertPeriodBeginToSeconds(getValue(conf.getPeriodBegin())));
+        return getCalendar(convertPeriodBeginToSeconds(getValue(conf.getPeriodBegin())));
     }
     
-    private static JCalendar getCalendar(String timezone, long dateOffset) {
-        return JCalendar.of(dailyPlanCalendarPath, ZoneId.of(timezone), Duration.ofSeconds(dateOffset), "#([^#]+)#.*", "yyyy-MM-dd");
+    private static JCalendar getCalendar(long dateOffset) {
+        return JCalendar.of(dailyPlanCalendarPath, Duration.ofSeconds(dateOffset), "#([^#]+)#.*", "yyyy-MM-dd");
     }
     
     public static long convertPeriodBeginToSeconds(String periodBegin) {
