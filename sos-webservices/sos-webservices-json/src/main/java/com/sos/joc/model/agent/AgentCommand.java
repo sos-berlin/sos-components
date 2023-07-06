@@ -26,7 +26,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "controllerId",
     "agentId",
     "force",
-    "lostDirector",
     "auditLog"
 })
 public class AgentCommand {
@@ -56,13 +55,6 @@ public class AgentCommand {
     @JsonProperty("force")
     @JsonPropertyDescription("only relevant for reset agent")
     private Boolean force = false;
-    /**
-     * only relevant for /agent/cluster/confirm_node_loss
-     * 
-     */
-    @JsonProperty("lostDirector")
-    @JsonPropertyDescription("only relevant for /agent/cluster/confirm_node_loss")
-    private AgentCommand.LostDirector lostDirector;
     /**
      * auditParams
      * <p>
@@ -139,24 +131,6 @@ public class AgentCommand {
     }
 
     /**
-     * only relevant for /agent/cluster/confirm_node_loss
-     * 
-     */
-    @JsonProperty("lostDirector")
-    public AgentCommand.LostDirector getLostDirector() {
-        return lostDirector;
-    }
-
-    /**
-     * only relevant for /agent/cluster/confirm_node_loss
-     * 
-     */
-    @JsonProperty("lostDirector")
-    public void setLostDirector(AgentCommand.LostDirector lostDirector) {
-        this.lostDirector = lostDirector;
-    }
-
-    /**
      * auditParams
      * <p>
      * 
@@ -180,12 +154,12 @@ public class AgentCommand {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("force", force).append("lostDirector", lostDirector).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("force", force).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentId).append(force).append(controllerId).append(auditLog).append(lostDirector).toHashCode();
+        return new HashCodeBuilder().append(agentId).append(force).append(controllerId).append(auditLog).toHashCode();
     }
 
     @Override
@@ -197,7 +171,7 @@ public class AgentCommand {
             return false;
         }
         AgentCommand rhs = ((AgentCommand) other);
-        return new EqualsBuilder().append(agentId, rhs.agentId).append(force, rhs.force).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(lostDirector, rhs.lostDirector).isEquals();
+        return new EqualsBuilder().append(agentId, rhs.agentId).append(force, rhs.force).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).isEquals();
     }
 
     public enum LostDirector {
