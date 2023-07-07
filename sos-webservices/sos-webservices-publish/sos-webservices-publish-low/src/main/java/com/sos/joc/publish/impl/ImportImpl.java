@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -109,6 +110,9 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             }
             if (filter.getOverwrite() && (filter.getSuffix() != null || filter.getPrefix() != null)) {
             	throw new JocImportException("conflicting arguments: overwrite=true - no prefix/suffix allowed!");
+            }
+            if (filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
+                SOSCheckJavaVariableName.testFolder("target folder", filter.getTargetFolder());
             }
             
             DBItemJocAuditLog dbAuditItem = storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
