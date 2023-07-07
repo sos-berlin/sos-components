@@ -9,7 +9,7 @@ import com.sos.jitl.jobs.checkhistory.classes.HistoryFilter;
 import com.sos.jitl.jobs.checkhistory.classes.HistoryItem;
 import com.sos.jitl.jobs.checkhistory.classes.HistoryWebserviceExecuter;
 import com.sos.jitl.jobs.checkhistory.classes.ParameterResolver;
-import com.sos.jitl.jobs.common.JobLogger;
+import com.sos.jitl.jobs.common.OrderProcessStepLogger;
 import com.sos.jitl.jobs.jocapi.ApiExecutor;
 import com.sos.jitl.jobs.jocapi.ApiResponse;
 import com.sos.joc.model.common.HistoryStateText;
@@ -21,9 +21,9 @@ import com.sos.joc.model.order.OrdersFilter;
 public class HistoryInfo {
 
     private CheckHistoryJobArguments args;
-    private JobLogger logger;
+    private OrderProcessStepLogger logger;
 
-    public HistoryInfo(JobLogger logger, CheckHistoryJobArguments args) {
+    public HistoryInfo(OrderProcessStepLogger logger, CheckHistoryJobArguments args) {
         this.args = args;
         this.logger = logger;
     }

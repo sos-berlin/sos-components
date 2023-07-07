@@ -14,8 +14,8 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.httpclient.exception.SOSBadRequestException;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
-import com.sos.jitl.jobs.common.JobLogger;
-import com.sos.jitl.jobs.common.JobStep;
+import com.sos.jitl.jobs.common.OrderProcessStep;
+import com.sos.jitl.jobs.common.OrderProcessStepLogger;
 import com.sos.jitl.jobs.sap.common.CommonJobArguments;
 import com.sos.jitl.jobs.sap.common.Globals;
 import com.sos.jitl.jobs.sap.common.HttpClient;
@@ -24,8 +24,6 @@ import com.sos.jitl.jobs.sap.common.bean.RunIds;
 import com.sos.jitl.jobs.sap.common.bean.ScheduleDescription;
 import com.sos.jitl.jobs.sap.common.bean.ScheduleLog;
 
-import js7.data_for_java.order.JOutcome.Completed;
-
 public class SAPS4HANARecoverSchedule extends ABlockingInternalJob<CommonJobArguments> {
 
     public SAPS4HANARecoverSchedule(JobContext jobContext) {
@@ -33,14 +31,14 @@ public class SAPS4HANARecoverSchedule extends ABlockingInternalJob<CommonJobArgu
     }
 
     @Override
-    public Completed onOrderProcess(JobStep<CommonJobArguments> step) throws Exception {
-        JobLogger logger = step.getLogger();
+    public void onOrderProcess(OrderProcessStep<CommonJobArguments> step) throws Exception {
+        OrderProcessStepLogger logger = step.getLogger();
         CommonJobArguments args = step.getDeclaredArguments();
-        
+
         // file pattern "workflow#joblabelorderId.json"
-        Predicate<Path> fileFilter = p -> p.getFileName().toString().endsWith(".json") && Files.isRegularFile(p); 
+        Predicate<Path> fileFilter = p -> p.getFileName().toString().endsWith(".json") && Files.isRegularFile(p);
         Set<Path> statusFiles = Files.walk(Globals.getStatusFileDirectory(args)).filter(fileFilter).collect(Collectors.toSet());
-        
+
         if (statusFiles.isEmpty()) {
             logger.info("Nothing to do");
         } else {
@@ -76,29 +74,29 @@ public class SAPS4HANARecoverSchedule extends ABlockingInternalJob<CommonJobArgu
 
             httpClient.closeHttpClient();
         }
-        return step.success(0);
+        step.getOutcome().setReturnCode(0);
     }
 
-    private static boolean checkSchedule(RunIds runIds, ScheduleDescription desc, HttpClient httpClient, JobLogger logger) throws SOSException,
-            JsonParseException, JsonMappingException, IOException {
-        
+    private static boolean checkSchedule(RunIds runIds, ScheduleDescription desc, HttpClient httpClient, OrderProcessStepLogger logger)
+            throws SOSException, JsonParseException, JsonMappingException, IOException {
+
         ScheduleLog scheduleLog = new ScheduleLog().withRunStatus("UNKNOWN");
         try {
             ResponseSchedule respSchedule = httpClient.retrieveSchedule(runIds.getJobId(), runIds.getScheduleId());
-            
+
             if (respSchedule.getLogs().isEmpty()) {
                 // should not occur - no run log exists
                 logger.warn("No run log exists. Schedule will be deleted.");
                 return true;
-                
+
             } else {
-                
+
                 try {
                     desc = Globals.objectMapper.readValue(respSchedule.getDescription(), ScheduleDescription.class);
                 } catch (Exception e) {
                     logger.warn("Error at reading the Schedule's description: " + e.toString());
                 }
-                
+
                 scheduleLog = respSchedule.getLogs().get(0);
                 if ("COMPLETED".equals(scheduleLog.getRunStatus())) {
                     // TODO how we get this to history log of origin orderId
@@ -108,7 +106,7 @@ public class SAPS4HANARecoverSchedule extends ABlockingInternalJob<CommonJobArgu
                 } else if ("SCHEDULED".equals(scheduleLog.getRunStatus())) {
                     logger.info("RunStatus '%s': %s", scheduleLog.getRunStatus(), scheduleLog.getAdditionalProperties().get("scheduledTimestamp"));
                     if (respSchedule.getActive() != Boolean.TRUE) {
-                        
+
                         // schedule is inactive
                         Instant now = Instant.now();
                         Long created = desc.getCreated();
@@ -128,7 +126,7 @@ public class SAPS4HANARecoverSchedule extends ABlockingInternalJob<CommonJobArgu
                     logger.info("RunStatus '%s'", scheduleLog.getRunStatus());
                     // logger.trace(Globals.objectMapperPrettyPrint.writeValueAsString(scheduleLog));
                 }
-                
+
             }
         } catch (SOSBadRequestException e) {
             if (404 == e.getHttpCode()) {

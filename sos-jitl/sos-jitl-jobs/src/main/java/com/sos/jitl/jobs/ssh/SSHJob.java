@@ -29,20 +29,17 @@ import com.sos.commons.util.common.SOSEnv;
 import com.sos.commons.vfs.ssh.SSHProvider;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
-import com.sos.jitl.jobs.common.JobLogger;
-import com.sos.jitl.jobs.common.JobStep;
-import com.sos.jitl.jobs.common.JobStepOutcome;
+import com.sos.jitl.jobs.common.OrderProcessStep;
+import com.sos.jitl.jobs.common.OrderProcessStepLogger;
 import com.sos.jitl.jobs.ssh.exception.SOSJobSSHException;
 import com.sos.jitl.jobs.ssh.util.SSHJobUtil;
-
-import js7.data_for_java.order.JOutcome.Completed;
 
 public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
 
     private SOSParameterSubstitutor parameterSubstitutor = new SOSParameterSubstitutor();
 
     @Override
-    public Completed onOrderProcess(JobStep<SSHJobArguments> step) throws Exception {
+    public void onOrderProcess(OrderProcessStep<SSHJobArguments> step) throws Exception {
 
         SSHProviderArguments providerArgs = step.getIncludedArguments(SSHProviderArguments.class);
         SSHProvider provider = new SSHProvider(providerArgs, step.getIncludedArguments(SOSCredentialStoreArguments.class));
@@ -50,7 +47,7 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
         SSHJobArguments jobArgs = step.getDeclaredArguments();
 
         SOSEnv envVars = new SOSEnv();
-        JobLogger logger = step.getLogger();
+        OrderProcessStepLogger logger = step.getLogger();
         String returnValuesFileName = "sos-ssh-return-values-" + UUID.randomUUID() + ".txt";
         String resolvedReturnValuesFileName = null;
         boolean isWindowsShell = false;
@@ -58,7 +55,6 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
         List<String> tempFilesToDelete = new ArrayList<String>();
         List<Path> localTempFilesToDelete = new ArrayList<Path>();
 
-        JobStepOutcome outcome = step.newJobStepOutcome();
         SOSCommandResult result = null;
         /** steps - read agent environment variables - export some of them - execute command, script, remote script - set return values */
         try {
@@ -137,23 +133,23 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
                 result = provider.executeCommand(command, envVars);
 
                 if (!SOSString.isEmpty(result.getStdOut())) {
-                    outcome.putVariable("std_out", result.getStdOut());
+                    step.getOutcome().putVariable("std_out", result.getStdOut());
                     logger.info("[stdOut] %s", result.getStdOut());
                 }
                 if (!SOSString.isEmpty(result.getStdErr())) {
-                    outcome.putVariable("std_err", result.getStdErr());
+                    step.getOutcome().putVariable("std_err", result.getStdErr());
                     logger.error("[stdErr] %s", result.getStdErr());
                 }
                 logger.info("[returnCode] %s", result.getExitCode());
-                outcome.putVariable("exit_code", result.getExitCode());
-                outcome.putVariable("returnCode", result.getExitCode());
+                step.getOutcome().putVariable("exit_code", result.getExitCode());
+                step.getOutcome().putVariable("returnCode", result.getExitCode());
                 if (result.getException() != null) {
-                    outcome.putVariable("exception", result.getException());
+                    step.getOutcome().putVariable("exception", result.getException());
                     logger.info("[exception] %s", SOSString.toString(result.getException()));
                 }
             }
             if (resolvedReturnValuesFileName != null) {
-                outcome.getVariables().putAll(executePostCommand(jobArgs, provider, resolvedReturnValuesFileName, isWindowsShell, logger));
+                step.getOutcome().getVariables().putAll(executePostCommand(jobArgs, provider, resolvedReturnValuesFileName, isWindowsShell, logger));
             }
         } catch (Throwable e) {
             if (jobArgs.getRaiseExceptionOnError().getValue()) {
@@ -191,19 +187,18 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
             }
             if (result != null) {
                 SSHJobUtil.checkStdErr(result.getStdErr(), jobArgs, logger);
-                SSHJobUtil.checkExitCode(result.getExitCode(), jobArgs, outcome, logger);
+                SSHJobUtil.checkExitCode(result.getExitCode(), jobArgs, step.getOutcome(), logger);
             }
         }
-        return step.success(outcome);
     }
 
-    private String[] splitCommands(SSHJobArguments jobArgs, JobLogger logger) {
+    private String[] splitCommands(SSHJobArguments jobArgs, OrderProcessStepLogger logger) {
         logger.info("[execute commands]%s", jobArgs.getCommand().getDisplayValue());
         return jobArgs.getCommand().getValue().split(jobArgs.getCommandDelimiter().getValue());
     }
 
     private String createRemoteCommandScript(SSHProvider provider, SSHJobArguments jobArgs, List<String> tempFilesToDelete,
-            List<Path> localTempFilesToDelete, boolean isWindowsShell, JobLogger logger) throws Exception {
+            List<Path> localTempFilesToDelete, boolean isWindowsShell, OrderProcessStepLogger logger) throws Exception {
         if (!jobArgs.getCommandScript().isEmpty()) {
             logger.info("[execute command script]%s", jobArgs.getCommandScript().getDisplayValue());
             return putCommandScriptFile(SSHJobUtil.substituteVariables(parameterSubstitutor, jobArgs.getCommandScript().getValue()), provider,
@@ -217,14 +212,14 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
         return null;
     }
 
-    private void logSosEnvVars(Map<String, String> env, JobLogger logger) {
+    private void logSosEnvVars(Map<String, String> env, OrderProcessStepLogger logger) {
         logger.debug("%-30s | %s", "KEY", "VALUE");
         for (Map.Entry<String, String> entry : env.entrySet()) {
             logger.debug("%-30s | %s", entry.getKey(), entry.getValue());
         }
     }
 
-    private void logWorkflowCredentials(JobStep<SSHJobArguments> step) throws Exception {
+    private void logWorkflowCredentials(OrderProcessStep<SSHJobArguments> step) throws Exception {
         step.getLogger().debug("Order ID that startet the Job: %s", step.getOrderId());
         step.getLogger().debug("Workflow name the Job is running in: %s", step.getWorkflowName());
         step.getLogger().debug("Workflow position of the Job: %s", step.getWorkflowPosition());
@@ -232,7 +227,7 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
     }
 
     private String putCommandScriptFile(String content, SSHProvider provider, SSHJobArguments jobArgs, List<String> tempFilesToDelete,
-            List<Path> localTempFilesToDelete, boolean isWindowsShell, JobLogger logger) throws Exception {
+            List<Path> localTempFilesToDelete, boolean isWindowsShell, OrderProcessStepLogger logger) throws Exception {
         if (!isWindowsShell) {
             content = content.replaceAll("(?m)\r", "");
         }
@@ -258,14 +253,14 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
         return target;
     }
 
-    private void addLocalTemporaryFilesToDelete(final String filepath, List<Path> localTempFilesToDelete, JobLogger logger) {
+    private void addLocalTemporaryFilesToDelete(final String filepath, List<Path> localTempFilesToDelete, OrderProcessStepLogger logger) {
         if (!SOSString.isEmpty(filepath)) {
             localTempFilesToDelete.add(Paths.get(filepath));
             logger.debug(String.format("local file %s marked for deletion", filepath));
         }
     }
 
-    private void addTemporaryFilesToDelete(final String filepath, List<String> tempFilesToDelete, JobLogger logger) {
+    private void addTemporaryFilesToDelete(final String filepath, List<String> tempFilesToDelete, OrderProcessStepLogger logger) {
         if (!SOSString.isEmpty(filepath)) {
             tempFilesToDelete.add(filepath);
             logger.debug(String.format("remote file %s marked for deletion", filepath));
@@ -273,7 +268,7 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
     }
 
     private Map<String, String> resolveReturnValuesFilename(SSHJobArguments jobArgs, List<String> tempFilesToDelete, String returnValuesFileName,
-            boolean isWindowsShell, JobLogger logger) {
+            boolean isWindowsShell, OrderProcessStepLogger logger) {
         String resolvedReturnValuesFileName = SSHJobUtil.resolve(jobArgs, returnValuesFileName, isWindowsShell);
         addTemporaryFilesToDelete(resolvedReturnValuesFileName, tempFilesToDelete, logger);
         Map<String, String> retVal = new HashMap<String, String>();
@@ -282,7 +277,7 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
     }
 
     private Map<String, Object> executePostCommand(SSHJobArguments jobArgs, SSHProvider provider, String resolvedReturnValuesFileName,
-            boolean isWindowsShell, JobLogger logger) {
+            boolean isWindowsShell, OrderProcessStepLogger logger) {
         Map<String, Object> outcomes = new HashMap<String, Object>();
         try {
             String postCommandRead = null;
@@ -330,7 +325,7 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
     }
 
     private void deleteTempFiles(SSHJobArguments jobArgs, SSHProvider provider, List<String> tempFilesToDelete, boolean isWindowsShell,
-            JobLogger logger) {
+            OrderProcessStepLogger logger) {
         if (tempFilesToDelete != null && !tempFilesToDelete.isEmpty()) {
             for (String file : tempFilesToDelete) {
                 if (logger.isDebugEnabled()) {
@@ -359,7 +354,7 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
         }
     }
 
-    private void deleteLocalTempFiles(List<Path> localTempFilesToDelete, JobLogger logger) {
+    private void deleteLocalTempFiles(List<Path> localTempFilesToDelete, OrderProcessStepLogger logger) {
         if (localTempFilesToDelete != null && !localTempFilesToDelete.isEmpty()) {
             for (Path tempFile : localTempFilesToDelete) {
                 try {

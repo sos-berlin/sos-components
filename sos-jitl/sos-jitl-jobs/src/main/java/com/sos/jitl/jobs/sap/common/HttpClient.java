@@ -22,7 +22,6 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.JsonStructure;
-import jakarta.ws.rs.core.UriBuilder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +32,7 @@ import com.sos.commons.exception.SOSException;
 import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.commons.httpclient.exception.SOSBadRequestException;
 import com.sos.commons.httpclient.exception.SOSSSLException;
-import com.sos.jitl.jobs.common.JobLogger;
+import com.sos.jitl.jobs.common.OrderProcessStepLogger;
 import com.sos.jitl.jobs.exception.SOSJobArgumentException;
 import com.sos.jitl.jobs.sap.common.bean.Job;
 import com.sos.jitl.jobs.sap.common.bean.ResponseJob;
@@ -42,12 +41,14 @@ import com.sos.jitl.jobs.sap.common.bean.ResponseSchedule;
 import com.sos.jitl.jobs.sap.common.bean.Schedule;
 import com.sos.jitl.jobs.sap.common.bean.ScheduleLog;
 
+import jakarta.ws.rs.core.UriBuilder;
+
 public class HttpClient extends SOSRestApiClient {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(HttpClient.class);
     private final static String csrfTokenHeaderKey = "X-CSRF-Token";
     private final static String sapClientQueryKey = "sap-client";
-    private final JobLogger jobLogger;
+    private final OrderProcessStepLogger processStepLogger;
     private final URI uri;
     private final String sapClient;
     private String csrfToken = null;
@@ -58,17 +59,17 @@ public class HttpClient extends SOSRestApiClient {
             SOSSSLException, IOException {
         this.uri = jobArgs.getUri().getValue();
         this.sapClient = jobArgs.getMandant().getValue();
-        this.jobLogger = null;
+        this.processStepLogger = null;
         isDebugEnabled = LOGGER.isDebugEnabled();
         setProperties(jobArgs);
     }
 
-    public HttpClient(CommonJobArguments jobArgs, JobLogger jobLogger) throws SOSJobArgumentException, KeyStoreException, NoSuchAlgorithmException,
+    public HttpClient(CommonJobArguments jobArgs, OrderProcessStepLogger processStepLogger) throws SOSJobArgumentException, KeyStoreException, NoSuchAlgorithmException,
             CertificateException, SOSSSLException, IOException {
         this.uri = jobArgs.getUri().getValue();
         this.sapClient = jobArgs.getMandant().getValue();
-        this.jobLogger = jobLogger;
-        if (jobLogger == null) {
+        this.processStepLogger = processStepLogger;
+        if (processStepLogger == null) {
             isDebugEnabled = LOGGER.isDebugEnabled();
         } else {
             isDebugEnabled = true; // TODO change if it works: jobLogger.isDebugEnabled();
@@ -609,8 +610,8 @@ public class HttpClient extends SOSRestApiClient {
 //    }
     
     private void logInfo(String format, Object... msg) {
-        if (jobLogger != null) {
-            jobLogger.info(format, msg);
+        if (processStepLogger != null) {
+            processStepLogger.info(format, msg);
         } else {
             if (msg.length == 0) {
                 LOGGER.info(format); 
@@ -621,9 +622,9 @@ public class HttpClient extends SOSRestApiClient {
     }
 
     private void logDebug(String format, Object... msg) {
-        if (jobLogger != null) {
+        if (processStepLogger != null) {
             // TODO change jobLogger.debug if it works
-            jobLogger.info(format, msg);
+            processStepLogger.info(format, msg);
         } else {
             if (msg.length == 0) {
                 LOGGER.debug(format); 
@@ -634,9 +635,9 @@ public class HttpClient extends SOSRestApiClient {
     }
     
     private void logWarn(String format, Object... msg) {
-        if (jobLogger != null) {
+        if (processStepLogger != null) {
             // TODO change jobLogger.warn if it works
-            jobLogger.info(format, msg);
+            processStepLogger.info(format, msg);
         } else {
             if (msg.length == 0) {
                 LOGGER.warn(format); 

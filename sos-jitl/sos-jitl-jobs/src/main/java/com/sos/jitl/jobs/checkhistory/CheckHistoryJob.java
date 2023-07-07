@@ -2,10 +2,8 @@ package com.sos.jitl.jobs.checkhistory;
 
 import com.sos.jitl.jobs.checkhistory.classes.HistoryItem;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
-import com.sos.jitl.jobs.common.JobStep;
-import com.sos.jitl.jobs.common.JobStepOutcome;
-
-import js7.data_for_java.order.JOutcome;
+import com.sos.jitl.jobs.common.OrderProcessStep;
+import com.sos.jitl.jobs.common.OrderProcessStepOutcome;
 
 public class CheckHistoryJob extends ABlockingInternalJob<CheckHistoryJobArguments> {
 
@@ -14,12 +12,12 @@ public class CheckHistoryJob extends ABlockingInternalJob<CheckHistoryJobArgumen
     }
 
     @Override
-    public JOutcome.Completed onOrderProcess(JobStep<CheckHistoryJobArguments> step) throws Exception {
-        return step.success(process(step, step.getDeclaredArguments()));
+    public void onOrderProcess(OrderProcessStep<CheckHistoryJobArguments> step) throws Exception {
+        process(step, step.getDeclaredArguments());
     }
 
-    private JobStepOutcome process(JobStep<CheckHistoryJobArguments> step, CheckHistoryJobArguments args) throws Exception {
-        JobStepOutcome outcome = step.newJobStepOutcome();
+    private OrderProcessStepOutcome process(OrderProcessStep<CheckHistoryJobArguments> step, CheckHistoryJobArguments args) throws Exception {
+        OrderProcessStepOutcome outcome = step.getOutcome();
 
         outcome.putVariable("js7CheckHistoryResult", false);
         outcome.putVariable("js7CheckHistoryResultControllerId", "");

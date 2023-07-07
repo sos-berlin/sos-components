@@ -1,23 +1,20 @@
 package com.sos.jitl.jobs.common;
 
-import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.exception.ISOSRequiredArgumentMissingException;
 import com.sos.commons.util.SOSString;
 
-import js7.data.value.Value;
 import js7.launcher.forjava.internal.BlockingInternalJob;
 
-public class JobLogger {
+public class OrderProcessStepLogger {
 
     public enum LogLevel {
         INFO, DEBUG, TRACE, WARN, ERROR
     }
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JobLogger.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(OrderProcessStepLogger.class);
     private static final String LOG_LEVEL_INFO = LogLevel.INFO.name();
     private static final String LOG_LEVEL_DEBUG = LogLevel.DEBUG.name();
     private static final String LOG_LEVEL_TRACE = LogLevel.TRACE.name();
@@ -25,13 +22,12 @@ public class JobLogger {
     private static final String LOG_LEVEL_ERROR = LogLevel.ERROR.name();
 
     private final BlockingInternalJob.Step step;
-    private final String stepInfo;
+
     private boolean isDebugEnabled;
     private boolean isTraceEnabled;
 
-    protected JobLogger(BlockingInternalJob.Step step, String stepInfo) {
+    protected OrderProcessStepLogger(BlockingInternalJob.Step step) {
         this.step = step;
-        this.stepInfo = stepInfo;
     }
 
     protected void init(Object args) {
@@ -125,10 +121,10 @@ public class JobLogger {
         warn(warn2String(msg, e));
     }
 
-    protected void warn2allLogger(final String msg, Throwable e) {
+    protected void warn2allLogger(String stepInfo, final String msg, Throwable e) {
         Throwable ex = handleException(e);
         if (ex != null) {
-            warn2slf4j(msg, ex);
+            warn2slf4j(stepInfo, msg, ex);
             warn(warn2String(msg, ex));
         }
     }
@@ -157,10 +153,10 @@ public class JobLogger {
         error(throwable2String(null, e));
     }
 
-    protected void error2allLogger(final String msg, final Throwable e) {
+    protected void error2allLogger(final String stepInfo, final String msg, final Throwable e) {
         Throwable ex = handleException(e);
         if (ex != null) {
-            error2slf4j(msg, ex);
+            error2slf4j(stepInfo, msg, ex);
             error(throwable2String(msg, ex));
         }
     }
@@ -213,7 +209,7 @@ public class JobLogger {
         return isTraceEnabled;
     }
 
-    protected String warn2String(String msg, Throwable e) {
+    private String warn2String(String msg, Throwable e) {
         return throwable2String(msg, e);
     }
 
@@ -224,24 +220,19 @@ public class JobLogger {
         return e;
     }
 
-    protected void failed2slf4j(String msg) {
+    protected void failed2slf4j(String stepInfo, String msg) {
         LOGGER.error(String.format("[failed]%s%s", stepInfo, SOSString.isEmpty(msg) ? "" : msg));
     }
 
-    // TODO
-    protected void failed2slf4j(String msg, Map<String, Value> returnValues) {
-        LOGGER.error(String.format("[failed]%s%s", stepInfo, msg));
-    }
-
-    protected void failed2slf4j(String msg, Throwable e) {
+    protected void failed2slf4j(String stepInfo, String msg, Throwable e) {
         LOGGER.error(String.format("[failed]%s%s", stepInfo, msg), e);
     }
 
-    private void warn2slf4j(String msg, Throwable e) {
+    private void warn2slf4j(String stepInfo, String msg, Throwable e) {
         LOGGER.warn(String.format("%s%s", stepInfo, msg), e);
     }
 
-    private void error2slf4j(String msg, Throwable e) {
+    private void error2slf4j(String stepInfo, String msg, Throwable e) {
         LOGGER.error(String.format("%s%s", stepInfo, msg), e);
     }
 

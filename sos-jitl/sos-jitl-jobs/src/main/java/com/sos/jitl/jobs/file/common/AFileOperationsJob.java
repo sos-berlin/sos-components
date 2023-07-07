@@ -9,11 +9,10 @@ import java.util.stream.Collectors;
 
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.JobHelper;
-import com.sos.jitl.jobs.common.JobStep;
+import com.sos.jitl.jobs.common.OrderProcessStep;
+import com.sos.jitl.jobs.common.OrderProcessStepOutcome;
 import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
 import com.sos.jitl.jobs.file.exception.SOSFileOperationsException;
-
-import js7.data_for_java.order.JOutcome;
 
 public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperationsJobArguments> {
 
@@ -48,8 +47,7 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
         args.setFlags(flags);
     }
 
-    public static JOutcome.Completed handleResult(JobStep<? extends FileOperationsJobArguments> step, List<File> files, boolean result)
-            throws Exception {
+    public static void handleResult(OrderProcessStep<? extends FileOperationsJobArguments> step, List<File> files, boolean result) throws Exception {
 
         boolean isDebugEnabled = step.getLogger().isDebugEnabled();
         FileOperationsJobArguments args = step.getDeclaredArguments();
@@ -77,14 +75,22 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
                         .getResultSetFile().getName()));
             }
         }
+
+        OrderProcessStepOutcome outcome = step.getOutcome();
+        outcome.putVariable(args.getReturnResultSet());
+        outcome.putVariable(args.getReturnResultSetSize());
+
         if (!args.getRaiseErrorIfResultSetIs().isEmpty()) {
             if (compareIntValues(args.getRaiseErrorIfResultSetIs().getValue(), size, args.getExpectedSizeOfResultSet().getValue())) {
                 String msg = String.format("no of hits in result set '%s'  is '%s' expected '%s'", size, args.getRaiseErrorIfResultSetIs().getValue(),
                         args.getExpectedSizeOfResultSet().getValue());
-                return step.failed(msg, args.getReturnResultSet(), args.getReturnResultSetSize());
+
+                outcome.setFailed();
+                outcome.setMessage(msg);
+                return;
             }
         }
-        return step.success(result ? JobHelper.DEFAULT_RETURN_CODE_SUCCEEDED : 1, args.getReturnResultSet(), args.getReturnResultSetSize());
+        outcome.setReturnCode(result ? JobHelper.DEFAULT_RETURN_CODE_SUCCEEDED : 1);
     }
 
     private static boolean compareIntValues(final String comparator, final int left, final int right) throws Exception {

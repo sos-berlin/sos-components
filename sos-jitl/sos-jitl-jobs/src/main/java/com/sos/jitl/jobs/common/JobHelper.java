@@ -90,7 +90,7 @@ public class JobHelper {
         return o;
     }
 
-    protected static Map<String, Value> asEngineValues(final Map<String, Object> map) {
+    public static Map<String, Value> asEngineValues(final Map<String, Object> map) {
         Map<String, Value> result = new HashMap<>();
         if (map == null || map.size() == 0) {
             return result;
@@ -134,7 +134,7 @@ public class JobHelper {
         return StringValue.of(o.toString());
     }
 
-    protected static <A> Map<String, Object> asNameValueMap(Map<String, JobArgument<A>> map) {
+    public static <A> Map<String, Object> asNameValueMap(Map<String, JobArgument<A>> map) {
         if (map == null || map.size() == 0) {
             return Collections.emptyMap();
         }
@@ -167,17 +167,18 @@ public class JobHelper {
         return map;
     }
 
-    protected static List<Field> getJobArgumentFields(JobArguments o) {
+    public static List<Field> getJobArgumentFields(JobArguments o) {
         return SOSReflection.getAllDeclaredFields(o.getClass()).stream().filter(f -> f.getType().equals(JobArgument.class)).collect(Collectors
                 .toList());
     }
 
-    protected static List<Field> getJobStepOutcomeVariableFields(JobArguments o) {
-        return SOSReflection.getAllDeclaredFields(o.getClass()).stream().filter(f -> f.getType().equals(JobStepOutcomeVariable.class)).collect(
-                Collectors.toList());
+    @SuppressWarnings("unused")
+    private static List<Field> getOrderProcessStepOutcomeVariableFields(JobArguments o) {
+        return SOSReflection.getAllDeclaredFields(o.getClass()).stream().filter(f -> f.getType().equals(OrderProcessStepOutcomeVariable.class))
+                .collect(Collectors.toList());
     }
 
-    protected static <T> T getFromEither(final Either<Problem, T> either) throws SOSJobProblemException {
+    public static <T> T getFromEither(final Either<Problem, T> either) throws SOSJobProblemException {
         if (either.isLeft()) {
             throw new SOSJobProblemException(either.getLeft());
         }

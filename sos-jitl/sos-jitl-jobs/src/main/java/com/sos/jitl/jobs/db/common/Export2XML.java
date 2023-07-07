@@ -17,14 +17,14 @@ import com.sos.commons.hibernate.SOSHibernateSQLExecutor;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.xml.SOSXML;
-import com.sos.jitl.jobs.common.JobLogger;
+import com.sos.jitl.jobs.common.OrderProcessStepLogger;
 
 public class Export2XML {
 
     private static final String NEW_LINE = "\r\n";
     private static final Pattern NUMERIC_PATTERN = Pattern.compile("-?\\d+(\\.\\d+)?");
 
-    public static void export(ResultSet resultSet, Path outputFile, JobLogger logger) throws Exception {
+    public static void export(ResultSet resultSet, Path outputFile, OrderProcessStepLogger logger) throws Exception {
         if (resultSet == null) {
             throw new Exception("missing ResultSet");
         }

@@ -13,11 +13,9 @@ import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments.SOSCre
 import com.sos.commons.mail.SOSMailReceiver;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.JobArgument;
-import com.sos.jitl.jobs.common.JobStep;
+import com.sos.jitl.jobs.common.OrderProcessStep;
 import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
 import com.sos.jitl.jobs.mail.MailInboxArguments.ActionProcess;
-
-import js7.data_for_java.order.JOutcome;
 
 public class MailInboxJob extends ABlockingInternalJob<MailInboxArguments> {
 
@@ -28,27 +26,28 @@ public class MailInboxJob extends ABlockingInternalJob<MailInboxArguments> {
     }
 
     @Override
-    public void onStart(MailInboxArguments args) throws Exception {
+    public void onStart() throws Exception {
 
         String mailStoreProtocolPropValue = System.getProperty(MAIL_STORE_PROTOCOL_KEY);
         if (mailStoreProtocolPropValue != null && !mailStoreProtocolPropValue.isEmpty()) {
             Set<String> availableProtocols = EnumSet.allOf(SOSMailReceiver.Protocol.class).stream().map(SOSMailReceiver.Protocol::name).collect(
                     Collectors.toSet());
             if (availableProtocols.contains(mailStoreProtocolPropValue)) {
-                JobArgument<SOSMailReceiver.Protocol> mailStoreProtocol = args.getMailProtocol();
-                mailStoreProtocol.setDefaultValue(SOSMailReceiver.Protocol.valueOf(mailStoreProtocolPropValue));
-                mailStoreProtocol.setRequired(false);
+                if (getJobEnvironment().getDeclaredArguments() != null) {
+                    JobArgument<SOSMailReceiver.Protocol> mailStoreProtocol = getJobEnvironment().getDeclaredArguments().getMailProtocol();
+                    mailStoreProtocol.setDefaultValue(SOSMailReceiver.Protocol.valueOf(mailStoreProtocolPropValue));
+                    mailStoreProtocol.setRequired(false);
+                }
             }
         }
     }
 
     @Override
-    public JOutcome.Completed onOrderProcess(JobStep<MailInboxArguments> step) throws Exception {
+    public void onOrderProcess(OrderProcessStep<MailInboxArguments> step) throws Exception {
         process(step, step.getDeclaredArguments());
-        return step.success();
     }
 
-    private void process(JobStep<MailInboxArguments> step, MailInboxArguments args) throws Exception {
+    private void process(OrderProcessStep<MailInboxArguments> step, MailInboxArguments args) throws Exception {
         if (args.getAction().getValue().contains(ActionProcess.dump)) {
             args.getMailDirectoryName().setRequired(true);
         }

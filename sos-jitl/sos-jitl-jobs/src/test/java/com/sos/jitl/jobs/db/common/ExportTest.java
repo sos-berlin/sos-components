@@ -57,13 +57,13 @@ public class ExportTest {
                 rs = executor.getResultSet(statement);
                 switch (type) {
                 case CSV:
-                    Export2CSV.export(rs, outputFile, UnitTestJobHelper.newJobLogger());
+                    Export2CSV.export(rs, outputFile, UnitTestJobHelper.newLogger());
                     break;
                 case XML:
-                    Export2XML.export(rs, outputFile, UnitTestJobHelper.newJobLogger());
+                    Export2XML.export(rs, outputFile, UnitTestJobHelper.newLogger());
                     break;
                 case JSON:
-                    Export2JSON.export(rs, outputFile, UnitTestJobHelper.newJobLogger());
+                    Export2JSON.export(rs, outputFile, UnitTestJobHelper.newLogger());
                     break;
                 default:
                     break;

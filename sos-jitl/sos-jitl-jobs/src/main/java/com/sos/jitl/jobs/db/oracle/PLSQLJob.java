@@ -16,13 +16,10 @@ import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments.SOSCre
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
-import com.sos.jitl.jobs.common.JobStep;
-import com.sos.jitl.jobs.common.JobStepOutcome;
+import com.sos.jitl.jobs.common.OrderProcessStep;
 import com.sos.jitl.jobs.db.common.Export2CSV;
 import com.sos.jitl.jobs.db.common.Export2JSON;
 import com.sos.jitl.jobs.db.common.Export2XML;
-
-import js7.data_for_java.order.JOutcome;
 
 public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
 
@@ -34,13 +31,13 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
     }
 
     @Override
-    public JOutcome.Completed onOrderProcess(JobStep<PLSQLJobArguments> step) throws Exception {
+    public void onOrderProcess(OrderProcessStep<PLSQLJobArguments> step) throws Exception {
         step.getDeclaredArguments().checkRequired();
 
         Connection conn = null;
         try {
             conn = getConnection(step);
-            return step.success(process(step, conn));
+            process(step, conn);
         } catch (Throwable e) {
             throw e;
         } finally {
@@ -53,7 +50,7 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
         }
     }
 
-    private Connection getConnection(JobStep<PLSQLJobArguments> step) throws Exception {
+    private Connection getConnection(OrderProcessStep<PLSQLJobArguments> step) throws Exception {
         PLSQLJobArguments args = step.getDeclaredArguments();
         SOSCredentialStoreArguments csArgs = step.getIncludedArguments(SOSCredentialStoreArguments.class);
         if (args.useHibernateFile()) {
@@ -98,7 +95,7 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
         return connection;
     }
 
-    private JobStepOutcome process(JobStep<PLSQLJobArguments> step, final Connection connection) throws Exception {
+    private void process(OrderProcessStep<PLSQLJobArguments> step, final Connection connection) throws Exception {
 
         PLSQLJobArguments args = step.getDeclaredArguments();
         String plsql = "";
@@ -111,9 +108,8 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
         plsql = unescapeXML(plsql).replace("\r\n", "\n");
         step.getLogger().info(String.format("substituted Statement: %s", plsql));
 
-        JobStepOutcome outcome = step.newJobStepOutcome();
-        outcome.putVariable(DBMS_OUTPUT, "");
-        outcome.putVariable(STD_OUT_OUTPUT, "");
+        step.getOutcome().putVariable(DBMS_OUTPUT, "");
+        step.getOutcome().putVariable(STD_OUT_OUTPUT, "");
 
         DbmsOutput out = null;
         CallableStatement cs = null;
@@ -128,8 +124,8 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
             step.getLogger().info(output);
 
             if (output != null) {
-                outcome.putVariable(DBMS_OUTPUT, output);
-                outcome.putVariable(STD_OUT_OUTPUT, output);
+                step.getOutcome().putVariable(DBMS_OUTPUT, output);
+                step.getOutcome().putVariable(STD_OUT_OUTPUT, output);
 
                 int regExpFlags = Pattern.CASE_INSENSITIVE + Pattern.MULTILINE + Pattern.DOTALL;
                 Pattern regExprPattern = Pattern.compile(args.getVariableParserRegExpr(), regExpFlags);
@@ -139,7 +135,7 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
                 for (String string : arr) {
                     Matcher matcher = regExprPattern.matcher(string);
                     if (matcher.matches() && matcher.group().length() >= 2) {
-                        outcome.putVariable(matcher.group(1), matcher.group(2).trim());
+                        step.getOutcome().putVariable(matcher.group(1), matcher.group(2).trim());
                         found = true;
                     }
                 }
@@ -183,7 +179,6 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
                 cs = null;
             }
         }
-        return outcome;
     }
 
     private String unescapeXML(final String stringValue) {

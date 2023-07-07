@@ -3,8 +3,8 @@ package com.sos.jitl.jobs.sap;
 import java.util.Optional;
 
 import com.sos.jitl.jobs.common.JobArgument;
-import com.sos.jitl.jobs.common.JobLogger;
-import com.sos.jitl.jobs.common.JobStep;
+import com.sos.jitl.jobs.common.OrderProcessStep;
+import com.sos.jitl.jobs.common.OrderProcessStepLogger;
 import com.sos.jitl.jobs.exception.SOSJobException;
 import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
 import com.sos.jitl.jobs.sap.common.ASAPS4HANAJob;
@@ -15,8 +15,6 @@ import com.sos.jitl.jobs.sap.common.bean.ResponseSchedule;
 import com.sos.jitl.jobs.sap.common.bean.RunIds;
 import com.sos.jitl.jobs.sap.common.bean.Schedule;
 
-import js7.data_for_java.order.JOutcome.Completed;
-
 public class SAPS4HANACreateSchedule extends ASAPS4HANAJob {
 
     public SAPS4HANACreateSchedule(JobContext jobContext) {
@@ -24,15 +22,14 @@ public class SAPS4HANACreateSchedule extends ASAPS4HANAJob {
     }
 
     @Override
-    public Completed onOrderProcess(JobStep<CommonJobArguments> step) throws Exception {
+    public void onOrderProcess(OrderProcessStep<CommonJobArguments> step) throws Exception {
         CommonJobArguments args = step.getDeclaredArguments();
         checkJobIdName(args.getJobId(), args.getJobName());
         execute(step, args, RunIds.Scope.SCHEDULE);
-        return step.success();
     }
     
     @Override
-    public void createInactiveSchedule(JobStep<CommonJobArguments> step, CommonJobArguments args, HttpClient httpClient, JobLogger logger) throws Exception {
+    public void createInactiveSchedule(OrderProcessStep<CommonJobArguments> step, CommonJobArguments args, HttpClient httpClient, OrderProcessStepLogger logger) throws Exception {
         httpClient.fetchCSRFToken();
         ResponseJob job = httpClient.retrieveJob(args.getJobId().getValue(), args.getJobName().getValue());
         args.setIJobId(job.getJobId());

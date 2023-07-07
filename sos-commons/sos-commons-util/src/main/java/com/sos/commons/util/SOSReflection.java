@@ -36,7 +36,24 @@ public class SOSReflection {
         memberValues.put(key, newValue);
     }
 
+    public static List<Field> getFields(Class<?> type) {
+        if (type == null) {
+            return null;
+        }
+        return Arrays.asList(type.getFields());
+    }
+
+    public static List<Field> getDeclaredFields(Class<?> type) {
+        if (type == null) {
+            return null;
+        }
+        return Arrays.asList(type.getDeclaredFields());
+    }
+
     public static List<Field> getAllDeclaredFields(Class<?> type) {
+        if (type == null) {
+            return null;
+        }
         List<Field> result = new ArrayList<>();
         for (Class<?> c = type; c != null; c = c.getSuperclass()) {
             result.addAll(Arrays.asList(c.getDeclaredFields()));
@@ -44,11 +61,40 @@ public class SOSReflection {
         return result;
     }
 
+    public static List<Method> getDeclaredMethods(Class<?> type) {
+        if (type == null) {
+            return null;
+        }
+        return Arrays.asList(type.getDeclaredMethods());
+    }
+
     public static List<Method> getAllDeclaredMethods(Class<?> type) {
+        if (type == null) {
+            return null;
+        }
         List<Method> result = new ArrayList<>();
         for (Class<?> c = type; c != null; c = c.getSuperclass()) {
             result.addAll(Arrays.asList(c.getDeclaredMethods()));
         }
+        return result;
+    }
+
+    public static List<Method> getMethods(Class<?> type) {
+        if (type == null) {
+            return null;
+        }
+        return Arrays.asList(type.getMethods());
+    }
+
+    public static List<Method> getAllMethods(Class<?> type) {
+        if (type == null) {
+            return null;
+        }
+        List<Method> result = new ArrayList<>();
+        for (Class<?> c = type; c != null; c = c.getSuperclass()) {
+            result.addAll(Arrays.asList(c.getMethods()));
+        }
+        //result.sort(Comparator.comparing(Method::getName));
         return result;
     }
 

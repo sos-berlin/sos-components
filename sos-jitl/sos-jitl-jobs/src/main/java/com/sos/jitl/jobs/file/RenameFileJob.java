@@ -2,12 +2,10 @@ package com.sos.jitl.jobs.file;
 
 import java.util.regex.Pattern;
 
-import com.sos.jitl.jobs.common.JobStep;
+import com.sos.jitl.jobs.common.OrderProcessStep;
 import com.sos.jitl.jobs.file.common.AFileOperationsJob;
 import com.sos.jitl.jobs.file.common.FileOperationsJobArguments;
 import com.sos.jitl.jobs.file.common.FileOperationsRenameImpl;
-
-import js7.data_for_java.order.JOutcome;
 
 public class RenameFileJob extends AFileOperationsJob {
 
@@ -16,7 +14,7 @@ public class RenameFileJob extends AFileOperationsJob {
     }
 
     @Override
-    public JOutcome.Completed onOrderProcess(JobStep<FileOperationsJobArguments> step) throws Exception {
+    public void onOrderProcess(OrderProcessStep<FileOperationsJobArguments> step) throws Exception {
         FileOperationsJobArguments args = step.getDeclaredArguments();
         checkArguments(args);
         setFlags(args);
@@ -28,7 +26,7 @@ public class RenameFileJob extends AFileOperationsJob {
                                 .getSkipFirstFiles().getValue(), args.getSkipLastFiles().getValue(), args.getSortCriteria().getValue(), args
                                         .getSortOrder().getValue());
 
-        return handleResult(step, fo.getResultList(), result > 0);
+        handleResult(step, fo.getResultList(), result > 0);
     }
 
 }

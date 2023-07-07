@@ -22,7 +22,7 @@ import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 import com.sos.commons.vfs.common.AProvider;
 import com.sos.jitl.jobs.common.JobArgument.Type;
 import com.sos.jitl.jobs.common.JobArgument.ValueSource;
-import com.sos.jitl.jobs.common.JobLogger.LogLevel;
+import com.sos.jitl.jobs.common.OrderProcessStepLogger.LogLevel;
 import com.sos.jitl.jobs.exception.SOSJobProblemException;
 
 import io.vavr.control.Either;
@@ -35,24 +35,23 @@ import js7.data.value.NumberValue;
 import js7.data.value.Value;
 import js7.data_for_java.order.JOutcome;
 import js7.launcher.forjava.internal.BlockingInternalJob;
-import js7.launcher.forjava.internal.BlockingInternalJob.JobContext;
 import scala.collection.JavaConverters;
 
-public class JobStep<A extends JobArguments> {
+public class OrderProcessStep<A extends JobArguments> {
 
     protected static final String PAYLOAD_NAME_HIBERNATE_SESSION = "hibernate_session";
     protected static final String PAYLOAD_NAME_SQL_CONNECTION = "sql_connection";
     protected static final String PAYLOAD_NAME_VFS_PROVIDER = "vfs_provider";
 
-    private final String jobClassName;
-    private final JobContext jobContext;
+    private final JobEnvironment<A> jobEnvironment;
     private final BlockingInternalJob.Step internalStep;
-    private final JobLogger logger;
+    private final OrderProcessStepLogger logger;
+    private final OrderProcessStepOutcome outcome;
     private final String threadName;
 
     private A declaredArguments;
-    private Map<String, Map<String, JobDetailValue>> lastOutcomes;
-    private Map<String, JobDetailValue> jobResourcesValues;
+    private Map<String, Map<String, DetailValue>> lastOutcomes;
+    private Map<String, DetailValue> jobResourcesValues;
     private List<JobArgument<A>> allDeclaredArguments;
     private Map<String, JobArgument<A>> allArguments;
     private Map<String, Object> unitTestNotDeclaredArguments;
@@ -66,13 +65,14 @@ public class JobStep<A extends JobArguments> {
     private String workflowName;
     private String workflowVersionId;
     private String workflowPosition;
+    private String stepInfo;
 
-    protected JobStep(String jobClassName, JobContext jobContext, BlockingInternalJob.Step step) {
-        this.jobClassName = jobClassName;
-        this.jobContext = jobContext;
+    protected OrderProcessStep(JobEnvironment<A> jobEnvironment, BlockingInternalJob.Step step) {
+        this.jobEnvironment = jobEnvironment;
         this.internalStep = step;
-        this.logger = new JobLogger(internalStep, getStepInfo());
+        this.logger = new OrderProcessStepLogger(internalStep);
         this.threadName = Thread.currentThread().getName();
+        this.outcome = new OrderProcessStepOutcome();
     }
 
     protected void init(A arguments) {
@@ -93,7 +93,8 @@ public class JobStep<A extends JobArguments> {
         payload = Collections.singletonMap(PAYLOAD_NAME_HIBERNATE_SESSION, session);
     }
 
-    public void setPayload(Connection conn) {
+    @SuppressWarnings("unused")
+    private void setPayload(Connection conn) {
         payload = Collections.singletonMap(PAYLOAD_NAME_SQL_CONNECTION, conn);
     }
 
@@ -101,19 +102,11 @@ public class JobStep<A extends JobArguments> {
         payload = Collections.singletonMap(PAYLOAD_NAME_VFS_PROVIDER, provider);
     }
 
-    public void setPayload(Map<String, Object> val) {
-        payload = val;
-    }
-
     public Map<String, Object> getPayload() {
         return payload;
     }
 
-    public BlockingInternalJob.Step getInternalStep() {
-        return internalStep;
-    }
-
-    public JobLogger getLogger() {
+    public OrderProcessStepLogger getLogger() {
         return logger;
     }
 
@@ -121,32 +114,25 @@ public class JobStep<A extends JobArguments> {
         return declaredArguments;
     }
 
-    public List<HistoricOutcome> getEngineHistoricOutcomes() {
-        if (internalStep == null) {
-            return null;
-        }
-        return JavaConverters.asJava(internalStep.order().asScala().historicOutcomes());
-    }
-
-    public Map<String, Map<String, JobDetailValue>> getLastOutcomes() {
+    public Map<String, Map<String, DetailValue>> getLastOutcomes() {
         if (lastOutcomes == null) {
             lastOutcomes = historicOutcomes2map();
         }
         return lastOutcomes;
     }
 
-    public Map<String, JobDetailValue> getJobResourcesValues() {
+    public Map<String, DetailValue> getJobResourcesArgumentsAsNameDetailValueMap() {
         if (jobResourcesValues == null) {
             jobResourcesValues = jobResources2map();
         }
         return jobResourcesValues;
     }
 
-    public Map<String, JobDetailValue> getLastSucceededOutcomes() {
+    public Map<String, DetailValue> getLastSucceededOutcomes() {
         return getLastOutcomes().get(Outcome.Succeeded.class.getSimpleName());
     }
 
-    public Map<String, JobDetailValue> getLastFailedOutcomes() {
+    public Map<String, DetailValue> getLastFailedOutcomes() {
         return getLastOutcomes().get(Outcome.Failed.class.getSimpleName());
     }
 
@@ -181,6 +167,10 @@ public class JobStep<A extends JobArguments> {
 
         }
         return map;
+    }
+
+    protected BlockingInternalJob.Step getInternalStep() {
+        return internalStep;
     }
 
     private JobArgument<A> getDeclaredArgument(String name) {
@@ -234,7 +224,7 @@ public class JobStep<A extends JobArguments> {
         // UNKNOWN Arguments
         // for preference see ABlockingJob.createJobArguments
         // preference 1 (HIGHEST) - Succeeded Outcomes
-        Map<String, JobDetailValue> lso = getLastSucceededOutcomes();
+        Map<String, DetailValue> lso = getLastSucceededOutcomes();
         if (lso != null && lso.size() > 0) {
             lso.entrySet().stream().forEach(e -> {
                 if (!allArguments.containsKey(e.getKey()) && !JobHelper.NAMED_NAME_RETURN_CODE.equals(e.getKey())) {
@@ -265,7 +255,7 @@ public class JobStep<A extends JobArguments> {
             }
         }
         // preference 4 (LOWEST) - JobResources
-        Map<String, JobDetailValue> resources = getJobResourcesValues();
+        Map<String, DetailValue> resources = getJobResourcesArgumentsAsNameDetailValueMap();
         if (resources != null && resources.size() > 0) {
             resources.entrySet().stream().forEach(e -> {
                 if (!allArguments.containsKey(e.getKey())) {
@@ -297,8 +287,15 @@ public class JobStep<A extends JobArguments> {
         return JobHelper.asNameValueMap(getAllArguments());
     }
 
-    public Map<String, Object> getAllNotDeclaredArgumentsAsNameValueMap() {
+    public Map<String, Object> getNotDeclaredArgumentsAsNameValueMap() {
         return JobHelper.asNameValueMap(getAllArguments(Type.NOT_DECLARED));
+    }
+
+    public Map<String, Object> getOrderArgumentsAsNameValueMap() {
+        if (internalStep == null) {
+            return Collections.emptyMap();
+        }
+        return JobHelper.asJavaValues(internalStep.order().arguments());
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -321,7 +318,8 @@ public class JobStep<A extends JobArguments> {
                         l.add(arg);
                     }
                 } catch (Throwable e) {
-                    logger.warn2allLogger(String.format("[%s.%s][can't read field]%s", getClass().getName(), field.getName(), e.toString()), e);
+                    logger.warn2allLogger(getStepInfo(), String.format("[%s.%s][can't read field]%s", getClass().getName(), field.getName(), e
+                            .toString()), e);
                 }
             }
             if (declaredArguments.getIncludedArguments() != null && declaredArguments.getIncludedArguments().size() > 0) {
@@ -353,13 +351,16 @@ public class JobStep<A extends JobArguments> {
     }
 
     private String getStepInfo() {
-        try {
-            return String.format("[Order %s][Workflow %s, versionId=%s, pos=%s][Job %s, agent=%s, class=%s]", getOrderId(), getWorkflowName(),
-                    getWorkflowVersionId(), getWorkflowPosition(), getJobName(), getAgentId(), jobClassName);
-        } catch (SOSJobProblemException e) {
-            return String.format("[Workflow %s, versionId=%s, pos=%s][Job class=%s]", getWorkflowName(), getWorkflowVersionId(),
-                    getWorkflowPosition(), jobClassName);
+        if (stepInfo == null) {
+            try {
+                stepInfo = String.format("[Order %s][Workflow %s, versionId=%s, pos=%s][Job %s, agent=%s, class=%s]", getOrderId(), getWorkflowName(),
+                        getWorkflowVersionId(), getWorkflowPosition(), getJobName(), getAgentId(), getClass().getName());
+            } catch (SOSJobProblemException e) {
+                stepInfo = String.format("[Workflow %s, versionId=%s, pos=%s][Job class=%s]", getWorkflowName(), getWorkflowVersionId(),
+                        getWorkflowPosition(), getClass().getName());
+            }
         }
+        return stepInfo;
     }
 
     public String getControllerId() {
@@ -372,7 +373,7 @@ public class JobStep<A extends JobArguments> {
         return controllerId;
     }
 
-    public String getOrderId() throws SOSJobProblemException {
+    public String getOrderId() {
         if (orderId == null) {
             if (internalStep == null) {
                 return null;
@@ -402,7 +403,7 @@ public class JobStep<A extends JobArguments> {
         return jobName;
     }
 
-    public String getJobInstructionLabel() throws SOSJobProblemException {
+    public String getJobInstructionLabel() {
         if (jobInstructionLabel == null) {
             if (internalStep == null) {
                 return null;
@@ -445,94 +446,32 @@ public class JobStep<A extends JobArguments> {
         return workflowPosition;
     }
 
-    public JOutcome.Completed success() {
-        return success(JobHelper.DEFAULT_RETURN_CODE_SUCCEEDED);
+    protected JOutcome.Completed processed() {
+        return outcome.isFailed() ? failed() : success();
     }
 
-    public JOutcome.Completed success(final Integer returnCode) {
-        return success(returnCode, new HashMap<String, Object>());
+    protected JOutcome.Completed success() {
+        return JOutcome.succeeded(mapProcessResult(outcome.hasVariables() ? JobHelper.asEngineValues(outcome.getVariables()) : null,
+                getReturnCodeSucceeded(outcome.getReturnCode())));
     }
 
-    public JOutcome.Completed success(final JobStepOutcome outcome) {
-        if (outcome == null) {
-            return success();
-        }
-        return success(outcome.getReturnCode(), outcome.getVariables());
+    private JOutcome.Completed failed() {
+        String fm = SOSString.isEmpty(outcome.getMessage()) ? "" : outcome.getMessage();
+        logger.failed2slf4j(getStepInfo(), fm);
+        return JOutcome.failed(fm, mapProcessResult(outcome.hasVariables() ? JobHelper.asEngineValues(outcome.getVariables()) : null,
+                getReturnCodeFailed(outcome.getReturnCode())));
     }
 
-    public JOutcome.Completed success(final JobStepOutcomeVariable<?>... outcomes) {
-        return success(JobHelper.DEFAULT_RETURN_CODE_SUCCEEDED, outcomes);
-    }
-
-    public JOutcome.Completed success(final Integer returnCode, final JobStepOutcomeVariable<?>... outcomes) {
-        return success(returnCode, getMap(outcomes));
-    }
-
-    private JOutcome.Completed success(final Integer returnCode, final Map<String, Object> outcomes) {
-        if (outcomes == null || outcomes.size() == 0) {
-            return JOutcome.succeeded(mapResult(null, getReturnCodeSucceeded(returnCode)));
-        }
-        return JOutcome.succeeded(mapResult(JobHelper.asEngineValues(outcomes), getReturnCodeSucceeded(returnCode)));
-    }
-
-    public JOutcome.Completed failed() {
-        return failed(JobHelper.DEFAULT_RETURN_CODE_FAILED);
-    }
-
-    public JOutcome.Completed failed(final Integer returnCode) {
-        return failed(returnCode, null);
-    }
-
-    public JOutcome.Completed failed(final String msg) {
-        return failed(JobHelper.DEFAULT_RETURN_CODE_FAILED, msg);
-    }
-
-    public JOutcome.Completed failed(final Integer returnCode, final String msg) {
-        String fm = SOSString.isEmpty(msg) ? "" : msg;
-        logger.failed2slf4j(fm);
-        return JOutcome.failed(fm, mapResult(null, getReturnCodeFailed(returnCode)));
-    }
-
-    public JOutcome.Completed failed(final String msg, Throwable e) {
-        return failed(JobHelper.DEFAULT_RETURN_CODE_FAILED, msg, e);
-    }
-
-    public JOutcome.Completed failed(final Integer returnCode, final String msg, Throwable e) {
+    protected JOutcome.Completed failed(final String msg, Throwable e) {
+        // return failed(JobHelper.DEFAULT_RETURN_CODE_FAILED, msg, e);
         String fm = SOSString.isEmpty(msg) ? "" : msg;
         Throwable ex = logger.handleException(e);
-        logger.failed2slf4j(e.toString(), ex);
-        return JOutcome.failed(logger.throwable2String(fm, ex), mapResult(null, getReturnCodeFailed(returnCode)));
+        logger.failed2slf4j(getStepInfo(), e.toString(), ex);
+        return JOutcome.failed(logger.throwable2String(fm, ex), mapProcessResult(null, getReturnCodeFailed(JobHelper.DEFAULT_RETURN_CODE_FAILED)));
+
     }
 
-    public JOutcome.Completed failed(final JobStepOutcome outcome) {
-        if (outcome == null) {
-            return failed();
-        }
-        return failed(outcome.getReturnCode(), outcome.getMessage(), outcome.getVariables());
-    }
-
-    public JOutcome.Completed failed(final String msg, JobStepOutcomeVariable<?>... outcomes) {
-        return failed(JobHelper.DEFAULT_RETURN_CODE_FAILED, msg, outcomes);
-    }
-
-    public JOutcome.Completed failed(final Integer returnCode, final String msg, JobStepOutcomeVariable<?>... outcomes) {
-        return failed(returnCode, msg, getMap(outcomes));
-    }
-
-    private JOutcome.Completed failed(final Integer returnCode, final String msg, final Map<String, Object> outcomes) {
-        if (outcomes == null || outcomes.size() == 0) {
-            return failed(returnCode, msg);
-        }
-        return failedWithMap(returnCode, msg, JobHelper.asEngineValues(outcomes));
-    }
-
-    private JOutcome.Completed failedWithMap(final Integer returnCode, final String msg, final Map<String, Value> outcomes) {
-        String fm = SOSString.isEmpty(msg) ? "" : msg;
-        logger.failed2slf4j(fm, outcomes);
-        return JOutcome.failed(fm, mapResult(outcomes, getReturnCodeFailed(returnCode)));
-    }
-
-    private Map<String, Value> mapResult(Map<String, Value> map, Integer returnCode) {
+    private Map<String, Value> mapProcessResult(Map<String, Value> map, Integer returnCode) {
         if (map == null || map.size() == 0) {
             map = Collections.singletonMap(JobHelper.NAMED_NAME_RETURN_CODE, NumberValue.of(returnCode));
         } else {
@@ -585,41 +524,37 @@ public class JobStep<A extends JobArguments> {
         }
     }
 
-    private Map<String, Object> getMap(JobStepOutcomeVariable<?>... outcomes) {
-        Map<String, Object> map = new HashMap<String, Object>();
-        for (JobStepOutcomeVariable<?> var : outcomes) {
-            if (var.getName() == null || var.getValue() == null) {
-                continue;
-            }
-            map.put(var.getName(), var.getValue());
+    private List<HistoricOutcome> getEngineHistoricOutcomes() {
+        if (internalStep == null) {
+            return null;
         }
-        return map;
+        return JavaConverters.asJava(internalStep.order().asScala().historicOutcomes());
     }
 
-    private Map<String, Map<String, JobDetailValue>> historicOutcomes2map() {
+    private Map<String, Map<String, DetailValue>> historicOutcomes2map() {
         List<HistoricOutcome> l = getEngineHistoricOutcomes();
         if (l == null || l.size() == 0) {
             return Collections.emptyMap();
         }
 
-        Map<String, Map<String, JobDetailValue>> resultMap = new HashMap<String, Map<String, JobDetailValue>>();
+        Map<String, Map<String, DetailValue>> resultMap = new HashMap<String, Map<String, DetailValue>>();
         for (HistoricOutcome ho : l) {
             Outcome outcome = ho.outcome();
             if (outcome instanceof Completed) {
                 Completed c = (Completed) outcome;
                 if (c.namedValues() != null) {
                     String key = outcome.getClass().getSimpleName();
-                    Map<String, JobDetailValue> map = new HashMap<String, JobDetailValue>();
+                    Map<String, DetailValue> map = new HashMap<>();
                     if (resultMap.containsKey(key)) {
                         map = resultMap.get(key);
                     } else {
-                        map = new HashMap<String, JobDetailValue>();
+                        map = new HashMap<String, DetailValue>();
                     }
                     Map<String, Object> m = JobHelper.asJavaValues(JavaConverters.asJava(c.namedValues()));
                     if (m != null) {
                         for (Map.Entry<String, Object> entry : m.entrySet()) {
                             map.remove(entry.getKey());
-                            map.put(entry.getKey(), new JobDetailValue(ho.position().toString(), entry.getValue()));
+                            map.put(entry.getKey(), new DetailValue(ho.position().toString(), entry.getValue()));
                         }
                     }
                     // map.remove(JobHelper.NAMED_NAME_RETURN_CODE);
@@ -630,8 +565,8 @@ public class JobStep<A extends JobArguments> {
         return resultMap;
     }
 
-    private Map<String, JobDetailValue> jobResources2map() {
-        Map<String, JobDetailValue> resultMap = new LinkedHashMap<>();
+    private Map<String, DetailValue> jobResources2map() {
+        Map<String, DetailValue> resultMap = new LinkedHashMap<>();
         if (internalStep == null) {
             return resultMap;
         }
@@ -644,7 +579,7 @@ public class JobStep<A extends JobArguments> {
             String resourceName = e.getKey().string();
             e.getValue().entrySet().stream().forEach(ee -> {
                 if (!resultMap.containsKey(ee.getKey()) && ee.getValue().isRight()) {
-                    resultMap.put(ee.getKey(), new JobDetailValue(resourceName, JobHelper.asJavaValue(ee.getValue().get())));
+                    resultMap.put(ee.getKey(), new DetailValue(resourceName, JobHelper.asJavaValue(ee.getValue().get())));
                 }
             });
         });
@@ -664,7 +599,7 @@ public class JobStep<A extends JobArguments> {
                 infoResultingArguments();
 
                 if (logger.isDebugEnabled()) {
-                    logJobContextArguments(LogLevel.DEBUG);
+                    logJobEnvironmentArguments(LogLevel.DEBUG);
                     logOutcomes(LogLevel.DEBUG);
                     logAllResultingArguments(LogLevel.DEBUG);
                 }
@@ -678,7 +613,7 @@ public class JobStep<A extends JobArguments> {
             }
 
         } catch (Throwable e) {
-            logger.error2allLogger(e.toString(), e);
+            logger.error2allLogger(getStepInfo(), e.toString(), e);
         }
     }
 
@@ -688,7 +623,7 @@ public class JobStep<A extends JobArguments> {
             logArguments(LogLevel.INFO);
             logAllResultingArguments(LogLevel.INFO);
         } catch (Exception e) {
-            logger.error2allLogger(e.toString(), e);
+            logger.error2allLogger(getStepInfo(), e.toString(), e);
         }
     }
 
@@ -724,15 +659,15 @@ public class JobStep<A extends JobArguments> {
             }
         }
         // JOB Resources
-        Map<String, JobDetailValue> resources = getJobResourcesValues();
+        Map<String, DetailValue> resources = getJobResourcesArgumentsAsNameDetailValueMap();
         if (resources != null && resources.size() > 0) {
             logger.log(logLevel, String.format(" %s:", ValueSource.JOB_RESOURCE.getHeader()));
             resources.entrySet().stream().forEach(e -> {
-                JobDetailValue v = e.getValue();
+                DetailValue v = e.getValue();
                 logger.log(logLevel, "    %s=%s (resource=%s)", e.getKey(), getDisplayValue(e.getKey(), v.getValue()), v.getSource());
             });
         }
-        logJobContextArguments(logLevel);
+        logJobEnvironmentArguments(logLevel);
         logOutcomes(logLevel);
     }
 
@@ -748,9 +683,9 @@ public class JobStep<A extends JobArguments> {
         }).collect(Collectors.toList());
     }
 
-    private void logJobContextArguments(LogLevel logLevel) {
-        if (jobContext != null) {
-            Map<String, Object> map = JobHelper.asJavaValues(jobContext.jobArguments());
+    private void logJobEnvironmentArguments(LogLevel logLevel) {
+        if (jobEnvironment != null) {
+            Map<String, Object> map = jobEnvironment.getAllArgumentsAsNameValueMap();
             if (map != null && map.size() > 0) {
                 logger.log(logLevel, String.format(" %s:", ValueSource.JOB_ARGUMENT.getHeader()));
                 map.entrySet().stream().forEach(e -> {
@@ -762,7 +697,7 @@ public class JobStep<A extends JobArguments> {
 
     private void logOutcomes(LogLevel logLevel) {
         // OUTCOME succeeded
-        Map<String, JobDetailValue> map = getLastSucceededOutcomes();
+        Map<String, DetailValue> map = getLastSucceededOutcomes();
         if (map != null && map.size() > 0) {
             logger.log(logLevel, String.format(" %s:", ValueSource.LAST_SUCCEEDED_OUTCOME.getHeader()));
             map.entrySet().stream().forEach(e -> {
@@ -838,12 +773,8 @@ public class JobStep<A extends JobArguments> {
         });
     }
 
-    public JobStepOutcome newJobStepOutcome() {
-        return new JobStepOutcome();
-    }
-
-    public JobStepOutcome newJobStepOutcome(Map<String, Object> variables) {
-        return new JobStepOutcome(variables);
+    public OrderProcessStepOutcome getOutcome() {
+        return outcome;
     }
 
 }

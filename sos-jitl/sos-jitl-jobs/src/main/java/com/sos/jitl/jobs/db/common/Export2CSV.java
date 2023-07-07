@@ -14,15 +14,15 @@ import org.apache.commons.csv.QuoteMode;
 import com.sos.commons.hibernate.SOSHibernateSQLExecutor;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSPath;
-import com.sos.jitl.jobs.common.JobLogger;
+import com.sos.jitl.jobs.common.OrderProcessStepLogger;
 
 public class Export2CSV {
 
-    public static void export(ResultSet resultSet, Path outputFile, JobLogger logger) throws Exception {
+    public static void export(ResultSet resultSet, Path outputFile, OrderProcessStepLogger logger) throws Exception {
         export(resultSet, outputFile, null, logger);
     }
 
-    public static void export(ResultSet resultSet, Path outputFile, Builder builder, JobLogger logger) throws Exception {
+    public static void export(ResultSet resultSet, Path outputFile, Builder builder, OrderProcessStepLogger logger) throws Exception {
         if (resultSet == null) {
             throw new Exception("missing ResultSet");
         }

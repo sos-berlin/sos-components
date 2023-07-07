@@ -1,6 +1,6 @@
 package com.sos.jitl.jobs.maintenance.classes;
 
-import com.sos.jitl.jobs.common.JobLogger;
+import com.sos.jitl.jobs.common.OrderProcessStepLogger;
 import com.sos.jitl.jobs.jocapi.ApiExecutor;
 import com.sos.jitl.jobs.jocapi.ApiResponse;
 import com.sos.jitl.jobs.maintenance.MaintenanceWindowJobArguments;
@@ -12,9 +12,9 @@ import com.sos.joc.model.joc.Cockpit;
 public class MaintenanceWindowImpl {
 
     private MaintenanceWindowJobArguments args;
-    private JobLogger logger;
+    private OrderProcessStepLogger logger;
 
-    public MaintenanceWindowImpl(JobLogger logger, MaintenanceWindowJobArguments args) {
+    public MaintenanceWindowImpl(OrderProcessStepLogger logger, MaintenanceWindowJobArguments args) {
         this.args = args;
         this.logger = logger;
     }

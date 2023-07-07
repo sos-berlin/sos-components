@@ -6,14 +6,14 @@ import javax.mail.MessagingException;
 
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
 import com.sos.commons.mail.SOSMailReceiver;
-import com.sos.jitl.jobs.common.JobLogger;
+import com.sos.jitl.jobs.common.OrderProcessStepLogger;
 
 
 public class MailReceiver extends SOSMailReceiver {
     
-    private final JobLogger jobLogger;
+    private final OrderProcessStepLogger jobLogger;
 
-    public MailReceiver(Protocol protocol, Map<String, Object> mailProperties, JobLogger logger) throws SOSRequiredArgumentMissingException {
+    public MailReceiver(Protocol protocol, Map<String, Object> mailProperties, OrderProcessStepLogger logger) throws SOSRequiredArgumentMissingException {
         super(protocol, mailProperties);
         this.jobLogger = logger;
     }

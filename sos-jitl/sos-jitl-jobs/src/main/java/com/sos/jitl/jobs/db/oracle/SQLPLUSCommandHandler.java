@@ -15,8 +15,8 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.common.SOSCommandResult;
-import com.sos.jitl.jobs.common.JobLogger;
-import com.sos.jitl.jobs.common.JobStepOutcome;
+import com.sos.jitl.jobs.common.OrderProcessStepLogger;
+import com.sos.jitl.jobs.common.OrderProcessStepOutcome;
 
 public class SQLPLUSCommandHandler {
 
@@ -24,9 +24,9 @@ public class SQLPLUSCommandHandler {
     private static final String EXIT_CODE = "exitCode";
     private static final String SQL_ERROR = "sql_error";
     private Map<String, Object> variables = new HashMap<>();
-    private JobLogger logger = null;
+    private OrderProcessStepLogger logger = null;
 
-    public SQLPLUSCommandHandler(Map<String, Object> variables, JobLogger logger) {
+    public SQLPLUSCommandHandler(Map<String, Object> variables, OrderProcessStepLogger logger) {
         this.variables.putAll(variables);
         this.logger = logger;
     }
@@ -65,7 +65,7 @@ public class SQLPLUSCommandHandler {
 
     }
 
-    public String[] getVariables(SQLPlusJobArguments args, SOSCommandResult sosCommandResult, JobStepOutcome outcome, String[] stdOutStringArray) {
+    public String[] getVariables(SQLPlusJobArguments args, SOSCommandResult sosCommandResult, OrderProcessStepOutcome outcome, String[] stdOutStringArray) {
 
         int intRegExpFlags = Pattern.CASE_INSENSITIVE + Pattern.MULTILINE + Pattern.DOTALL;
 
@@ -88,7 +88,7 @@ public class SQLPLUSCommandHandler {
         return stdOutStringArray;
     }
 
-    public void handleMessages(SQLPlusJobArguments args, SOSCommandResult sosCommandResult, JobStepOutcome outcome, String[] stdOutStringArray)
+    public void handleMessages(SQLPlusJobArguments args, SOSCommandResult sosCommandResult, OrderProcessStepOutcome outcome, String[] stdOutStringArray)
             throws Exception {
         int intRegExpFlags = Pattern.CASE_INSENSITIVE + Pattern.MULTILINE + Pattern.DOTALL;
 
@@ -152,7 +152,7 @@ public class SQLPLUSCommandHandler {
         }
     }
 
-    private void log(JobLogger logger, String log) {
+    private void log(OrderProcessStepLogger logger, String log) {
         if (logger != null) {
             logger.info(log);
         } else {
@@ -160,7 +160,7 @@ public class SQLPLUSCommandHandler {
         }
     }
 
-    private void debug(JobLogger logger, String log) {
+    private void debug(OrderProcessStepLogger logger, String log) {
         if (logger != null) {
             logger.debug(log);
         } else {

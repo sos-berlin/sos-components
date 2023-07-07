@@ -1,11 +1,11 @@
 package com.sos.jitl.jobs.common;
 
-public class JobStepOutcomeVariable<T> {
+public class OrderProcessStepOutcomeVariable<T> {
 
     private final String name;
     private T value;
 
-    public JobStepOutcomeVariable(String name) {
+    public OrderProcessStepOutcomeVariable(String name) {
         this.name = name;
     }
 

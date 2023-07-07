@@ -27,7 +27,7 @@ import com.sos.commons.mail.SOSMailReceiver;
 import com.sos.commons.mail.SOSMimeMessage;
 import com.sos.commons.util.SOSDate;
 import com.sos.jitl.jobs.common.JobArgument;
-import com.sos.jitl.jobs.common.JobLogger;
+import com.sos.jitl.jobs.common.OrderProcessStepLogger;
 import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
 import com.sos.jitl.jobs.mail.MailInboxArguments.ActionProcess;
 
@@ -36,12 +36,12 @@ public class MailProcessor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MailProcessor.class);
     private final MailInboxArguments args;
-    private final JobLogger jobLogger;
+    private final OrderProcessStepLogger jobLogger;
     private Folder inFolder;
     private Folder targetFolder;
     private Date dateMinAge = null;
     
-    public MailProcessor(MailInboxArguments args, JobLogger logger) {
+    public MailProcessor(MailInboxArguments args, OrderProcessStepLogger logger) {
         this.args = args;
         this.jobLogger = logger;
         setMinAgeDate();

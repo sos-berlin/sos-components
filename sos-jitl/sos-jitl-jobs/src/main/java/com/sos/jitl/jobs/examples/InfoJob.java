@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -15,19 +14,11 @@ import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments.SOSCre
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
+import com.sos.jitl.jobs.common.DetailValue;
 import com.sos.jitl.jobs.common.JobArgument;
-import com.sos.jitl.jobs.common.JobDetailValue;
-import com.sos.jitl.jobs.common.JobHelper;
-import com.sos.jitl.jobs.common.JobLogger;
-import com.sos.jitl.jobs.common.JobStep;
-import com.sos.jitl.jobs.common.JobStepOutcome;
-
-import io.vavr.control.Either;
-import js7.base.problem.Problem;
-import js7.data.job.JobResourcePath;
-import js7.data.order.HistoricOutcome;
-import js7.data.value.Value;
-import js7.data_for_java.order.JOutcome;
+import com.sos.jitl.jobs.common.OrderProcessStep;
+import com.sos.jitl.jobs.common.OrderProcessStepLogger;
+import com.sos.jitl.jobs.common.OrderProcessStepOutcome;
 
 public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
 
@@ -35,21 +26,21 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
 
     public InfoJob(JobContext jobContext) {
         super(jobContext);
-        LOGGER.info("[CONSTRUCTOR]jobArguments=" + JobHelper.asJavaValues(getJobContext().jobArguments()));
+        LOGGER.info("[CONSTRUCTOR]arguments=" + getJobEnvironment().getAllArgumentsAsNameValueMap());
     }
 
     @Override
-    public void onStart(InfoJobArguments args) throws Exception {
+    public void onStart() throws Exception {
         LOGGER.info("start");
     }
 
     @Override
-    public void onStop(InfoJobArguments args) {
+    public void onStop() {
         LOGGER.info("stop");
     }
 
     @Override
-    public JOutcome.Completed onOrderProcess(JobStep<InfoJobArguments> step) throws Exception {
+    public void onOrderProcess(OrderProcessStep<InfoJobArguments> step) throws Exception {
         InfoJobArguments args = step.getDeclaredArguments();
 
         step.getLogger().info("----------USAGE-----------------");
@@ -75,8 +66,7 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
             step.getLogger().trace("job TRACE message");
         }
         step.getLogger().info("----------JOB Instance-----------------");
-        step.getLogger().info("[scala][jobContext.jobArguments()]" + getJobContext().jobArguments());
-        step.getLogger().info("[java][jobContext.jobArguments()]" + JobHelper.asJavaValues(getJobContext().jobArguments()));
+        step.getLogger().info("[scala][jobEnvironment.getAllArgumentsAsNameValueMap()]" + getJobEnvironment().getAllArgumentsAsNameValueMap());
 
         step.getLogger().info("----------Workflow-----------------");
         step.getLogger().info("[java][name]" + step.getWorkflowName());
@@ -86,33 +76,17 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
 
         step.getLogger().info("----------ORDER-----------------");
         step.getLogger().info("[java][id]" + step.getOrderId());
-        step.getLogger().info("[scala][step.order().arguments()]" + step.getInternalStep().order().arguments());
-        step.getLogger().info("[java][step.order().arguments()]" + JobHelper.asJavaValues(step.getInternalStep().order().arguments()));
+        step.getLogger().info("[java][step.getOrderArgumentsAsNameValueMap]" + step.getOrderArgumentsAsNameValueMap());
         // step.asScala().scope().evaluator().eval(NamedValue.MODULE$.)
 
-        step.getLogger().info("----------ORDER JOB RESOURCES-----------------");
-        step.getLogger().info("-ENGINE JOB RESOURCES-----------------");
-        Map<JobResourcePath, Map<String, Either<Problem, Value>>> jobResources = step.getInternalStep().jobResourceToNameToCheckedValue();
-        jobResources.entrySet().stream().forEach(e -> {
-            step.getLogger().info(" " + e.getKey().string() + ":");
-            e.getValue().entrySet().stream().filter(ee -> ee.getValue().isRight()).forEach(ee -> {
-                step.getLogger().info("[scala]%s=%s", ee.getKey(), ee.getValue().get());
-            });
-        });
         // Either<Problem,Value> checkedValue = step.byJobResourceAndName(JobResourcePath.of("MY-JOB-RESOURCE"), "stringSetting");
         step.getLogger().info("-CONVERTED JOB RESOURCES------------------");
-        Map<String, JobDetailValue> resources = step.getJobResourcesValues();
+        Map<String, DetailValue> resources = step.getJobResourcesArgumentsAsNameDetailValueMap();
         resources.entrySet().stream().forEach(e -> {
-            JobDetailValue v = e.getValue();
+            DetailValue v = e.getValue();
             step.getLogger().info(" %s=%s (job resource=%s)", e.getKey(), v.getValue(), v.getSource());
         });
 
-        step.getLogger().info("----------ORDER HISTORIC OUTCOME-----------------");
-        step.getLogger().info("-ENGINE HISTORIC OUTCOME-----------------");
-        List<HistoricOutcome> list = step.getEngineHistoricOutcomes();
-        for (HistoricOutcome ho : list) {
-            step.getLogger().info("[scala]" + SOSString.toString(ho));
-        }
         step.getLogger().info("-CONVERTED HISTORIC OUTCOME (last var values)-----------------");
         step.getLogger().info("[java][all]" + step.getLastOutcomes());
         step.getLogger().info("[java][succeeded]" + step.getLastSucceededOutcomes());
@@ -121,13 +95,7 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
         step.getLogger().info("----------NODE/STEP-----------------");
         step.getLogger().info("[java][agentId]" + step.getAgentId());
         step.getLogger().info("[java][name]" + step.getJobName());
-        step.getLogger().info("[scala][step.arguments()]" + step.getInternalStep().arguments());
-        step.getLogger().info("[java][step.arguments()]" + JobHelper.asJavaValues(step.getInternalStep().arguments()));
-
-        step.getLogger().info("----------NODE/STEP GET ARGUMENT BY NAME-----------------");
-        step.getLogger().info("[scala][step.getInternalStep().namedValue(%s)]%s", args.getStringArgument().getName(), step.getInternalStep()
-                .namedValue(args.getStringArgument().getName()));
-
+      
         step.getLogger().info("----------ALL CURRENT declared/not declared argumens-----------------");
         Map<String, JobArgument<InfoJobArguments>> allcmap = step.getAllArguments();
         allcmap.entrySet().stream().forEach(e -> {
@@ -161,23 +129,21 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
 
         step.getLogger().info("----------RETURN-----------------");
         if (args.getRedefineShowEnv().getValue() || !args.getReturnVariables().isEmpty()) {
-            JobStepOutcome outcome = step.newJobStepOutcome();
             if (args.getRedefineShowEnv().getValue()) {
-                outcome.putVariable(args.getShowEnv().getName(), !args.getShowEnv().getValue());
+                step.getOutcome().putVariable(args.getShowEnv().getName(), !args.getShowEnv().getValue());
             }
             if (args.getReturnVariables().getValue() != null) {
                 String[] arr = args.getReturnVariables().getValue().split("__");
                 for (String val : arr) {
                     String[] valArr = val.trim().split("_");
                     if (valArr.length > 1) {
-                        outcome.putVariable(valArr[0].trim(), valArr[1].trim());
+                        step.getOutcome().putVariable(valArr[0].trim(), valArr[1].trim());
                     }
                 }
             }
-            step.getLogger().info("[SUCCESS]set step outcome: %s", outcome.getVariables());
-            return step.success(outcome);
+            step.getLogger().info("[SUCCESS]set step outcome: %s", step.getOutcome().getVariables());
         } else {
-            JobStepOutcome outcome = step.newJobStepOutcome();
+            OrderProcessStepOutcome outcome = step.getOutcome();
             outcome.putVariable("test", "my_test");
             outcome.putVariable("test_null_value", null);
             outcome.putVariable("test_boolean_value", true);
@@ -193,13 +159,12 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
             outcome.putVariable("test_LocalDate_value", LocalDate.now());
 
             step.getLogger().info("[SUCCESS][java][step outcome]%s", outcome);
-            return step.success(outcome);
             // step.getLogger().info("[SUCCESS]");
             // return step.success();
         }
     }
 
-    private void printEnvs(JobLogger logger) {
+    private void printEnvs(OrderProcessStepLogger logger) {
         logger.info("----------ENV-----------------");
         logger.info("    JS7");
         System.getenv().entrySet().stream().filter(e -> e.getKey().startsWith("JS7")).forEach(e -> {

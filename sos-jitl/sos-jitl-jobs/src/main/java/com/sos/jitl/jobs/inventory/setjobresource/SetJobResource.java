@@ -1,6 +1,6 @@
 package com.sos.jitl.jobs.inventory.setjobresource;
 
-import com.sos.jitl.jobs.common.JobLogger;
+import com.sos.jitl.jobs.common.OrderProcessStepLogger;
 import com.sos.jitl.jobs.jocapi.ApiExecutor;
 import com.sos.jitl.jobs.jocapi.ApiResponse;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -9,9 +9,9 @@ import com.sos.joc.model.inventory.read.RequestFilter;
 public class SetJobResource {
 
     private SetJobResourceJobArguments args;
-    private JobLogger logger;
+    private OrderProcessStepLogger logger;
 
-    public SetJobResource(JobLogger logger, SetJobResourceJobArguments args) {
+    public SetJobResource(OrderProcessStepLogger logger, SetJobResourceJobArguments args) {
         this.args = args;
         this.logger = logger;
     }
