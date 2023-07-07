@@ -1292,14 +1292,16 @@ public class ImportUtils {
                     continue;
                 }
                 String entryName = entry.getName().replace('\\', '/');
-                if (entryName.endsWith(AGENT_FILE_EXTENSION)) {
+                String filename = Paths.get(entryName).getFileName().toString();
+                SOSCheckJavaVariableName.test("filename of archive entry", filename);
+                if (filename.endsWith(AGENT_FILE_EXTENSION)) {
                     ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
                     byte[] binBuffer = new byte[8192];
                     int binRead = 0;
                     while ((binRead = zipStream.read(binBuffer, 0, 8192)) >= 0) {
                         outBuffer.write(binBuffer, 0, binRead);
                     }
-                    Agent fromArchive = createAgentFromArchiveFileEntry(outBuffer, entryName);
+                    Agent fromArchive = createAgentFromArchiveFileEntry(outBuffer, filename);
                     if (fromArchive != null) {
                         agents.add(fromArchive);
                     }
@@ -1332,14 +1334,16 @@ public class ImportUtils {
                     continue;
                 }
                 String entryName = entry.getName().replace('\\', '/');
-                if (entryName.endsWith(AGENT_FILE_EXTENSION)) {
+                String filename = Paths.get(entryName).getFileName().toString();
+                SOSCheckJavaVariableName.test("filename of archive entry", filename);
+                if (filename.endsWith(AGENT_FILE_EXTENSION)) {
                     ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
                     byte[] binBuffer = new byte[8192];
                     int binRead = 0;
                     while ((binRead = tarArchiveInputStream.read(binBuffer, 0, 8192)) >= 0) {
                         outBuffer.write(binBuffer, 0, binRead);
                     }
-                    Agent fromArchive = createAgentFromArchiveFileEntry(outBuffer, entryName);
+                    Agent fromArchive = createAgentFromArchiveFileEntry(outBuffer, filename);
                     if (fromArchive != null) {
                         agents.add(fromArchive);
                     }
@@ -1361,9 +1365,9 @@ public class ImportUtils {
         return agents;
     }
 
-    private static Agent createAgentFromArchiveFileEntry(ByteArrayOutputStream outBuffer, String entryName)
+    private static Agent createAgentFromArchiveFileEntry(ByteArrayOutputStream outBuffer, String filename)
             throws JsonParseException, JsonMappingException, IOException {
-        String agentId = entryName.replace(AGENT_FILE_EXTENSION, "");
+        String agentId = filename.replace(AGENT_FILE_EXTENSION, "");
         Agent agent = Globals.objectMapper.readValue(outBuffer.toByteArray(), Agent.class);
         if(agent.getAgentCluster() != null) {
             if(!agentId.equals(agent.getAgentCluster().getAgentId())) {

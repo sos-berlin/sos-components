@@ -16,7 +16,6 @@ import java.util.Set;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
-import jakarta.ws.rs.Path;
 
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.slf4j.Logger;
@@ -55,6 +54,8 @@ import com.sos.joc.model.inventory.convert.ConvertCronFilter;
 import com.sos.joc.model.inventory.workflow.WorkflowEdit;
 import com.sos.schema.JsonValidator;
 import com.sos.webservices.order.initiator.model.ScheduleEdit;
+
+import jakarta.ws.rs.Path;
 
 @Path("inventory")
 public class ConvertCronImpl extends JOCResourceImpl implements IConvertCronResource {
@@ -109,6 +110,8 @@ public class ConvertCronImpl extends JOCResourceImpl implements IConvertCronReso
                 //default folder
                 filter.setFolder("/");
             }
+            
+            SOSCheckJavaVariableName.testFolder("folder", filter.getFolder());
             
             // process uploaded cron file
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);

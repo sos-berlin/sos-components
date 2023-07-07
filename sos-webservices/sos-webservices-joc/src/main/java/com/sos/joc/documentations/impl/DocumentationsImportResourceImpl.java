@@ -17,6 +17,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.common.FilenameSanitizer;
 import com.sos.joc.classes.documentation.DocumentationHelper;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
@@ -71,6 +72,9 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
             if (folder == null || folder.isEmpty()) {
                 folder = "/";
             }
+            
+            FilenameSanitizer.test("folder", folder);
+            
             if (!folderPermissions.isPermittedForFolder(folder)) {
                 throw new JocFolderPermissionsException(folder);
             }
@@ -78,7 +82,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBItemJocAuditLog dbAudit = storeAuditLog(auditLog, null, CategoryType.DOCUMENTATIONS, connection);
             String filename = URLDecoder.decode(body.getContentDisposition().getFileName(), "UTF-8");
-
+            
             postImportDocumentations(folder, filename, body, new DocumentationDBLayer(connection), dbAudit);
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -95,6 +99,8 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
     public static void postImportDocumentations(String folder, String filename, FormDataBodyPart body, DocumentationDBLayer dbLayer,
             DBItemJocAuditLog dbAudit) throws DBConnectionRefusedException, DBInvalidDataException, JocUnsupportedFileTypeException,
             JocConfigurationException, DBOpenSessionException, SOSHibernateException, IOException {
+
+        FilenameSanitizer.test("file", filename);
 
         InputStream stream = null;
         try {

@@ -26,6 +26,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
+import com.sos.joc.classes.common.FilenameSanitizer;
 import com.sos.joc.db.documentation.DBItemDocumentation;
 import com.sos.joc.db.documentation.DBItemDocumentationImage;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
@@ -124,6 +125,7 @@ public class DocumentationHelper {
                     continue;
                 }
                 String entryName = entry.getName().replace('\\', '/');
+                FilenameSanitizer.test("filename of an archive entry", entryName);
                 ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
                 byte[] binBuffer = new byte[8192];
                 int binRead = 0;

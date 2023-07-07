@@ -110,6 +110,16 @@ public class SOSCheckJavaVariableName {
         return null;
     }
     
+    public static String checkFolder(String value) {
+        if (value != null && !value.isEmpty()) {
+            String v = value.replaceAll("[\\\\/]", "");
+            if (!v.isEmpty()) {
+                return check(v);
+            }
+        }
+        return null;
+    }
+    
     public static String makeStringRuleConform(String value) {
         if (value == null || value.isEmpty()) {
             return "";
@@ -138,6 +148,13 @@ public class SOSCheckJavaVariableName {
      */
     public static void test(String key, String value) throws IllegalArgumentException {
         String errorMessage = check(value);
+        if (errorMessage != null) {
+            throw new IllegalArgumentException(String.format(errorMessage, key, value));
+        }
+    }
+    
+    public static void testFolder(String key, String value) throws IllegalArgumentException {
+        String errorMessage = checkFolder(value);
         if (errorMessage != null) {
             throw new IllegalArgumentException(String.format(errorMessage, key, value));
         }
