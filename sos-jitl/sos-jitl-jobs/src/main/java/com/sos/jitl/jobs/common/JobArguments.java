@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 import com.sos.commons.util.common.ASOSArguments;
 import com.sos.commons.util.common.SOSArgument;
-import com.sos.jitl.jobs.common.JobLogger.LogLevel;
+import com.sos.jitl.jobs.common.OrderProcessStepLogger.LogLevel;
 
 public class JobArguments {
 

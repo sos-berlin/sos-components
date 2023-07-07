@@ -1,7 +1,7 @@
 package com.sos.jitl.jobs.checkhistory.classes;
 
 import com.sos.jitl.jobs.common.JobHelper;
-import com.sos.jitl.jobs.common.JobLogger;
+import com.sos.jitl.jobs.common.OrderProcessStepLogger;
 import com.sos.jitl.jobs.jocapi.ApiExecutor;
 import com.sos.jitl.jobs.jocapi.ApiResponse;
 import com.sos.joc.model.job.JobsFilter;
@@ -14,9 +14,9 @@ import com.sos.joc.model.order.OrdersFilter;
 public class HistoryWebserviceExecuter {
 
     private ApiExecutor apiExecutor;
-    private JobLogger logger;
+    private OrderProcessStepLogger logger;
 
-    public HistoryWebserviceExecuter(JobLogger logger, ApiExecutor apiExecutor) {
+    public HistoryWebserviceExecuter(OrderProcessStepLogger logger, ApiExecutor apiExecutor) {
         super();
         this.apiExecutor = apiExecutor;
         this.logger = logger;

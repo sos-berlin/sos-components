@@ -10,9 +10,9 @@ import java.util.stream.Collectors;
 
 import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.jitl.jobs.common.JobArgument;
-import com.sos.jitl.jobs.common.JobLogger;
-import com.sos.jitl.jobs.common.JobStep;
-import com.sos.jitl.jobs.common.JobStepOutcome;
+import com.sos.jitl.jobs.common.OrderProcessStep;
+import com.sos.jitl.jobs.common.OrderProcessStepLogger;
+import com.sos.jitl.jobs.common.OrderProcessStepOutcome;
 import com.sos.jitl.jobs.exception.SOSJobProblemException;
 import com.sos.jitl.jobs.ssh.SSHJobArguments;
 import com.sos.jitl.jobs.ssh.exception.SOSJobSSHException;
@@ -99,7 +99,7 @@ public class SSHJobUtil {
         return parameterSubstitutor;
     }
 
-    public static void checkStdErr(String stdErr, SSHJobArguments jobArgs, JobLogger logger) throws SOSJobSSHException {
+    public static void checkStdErr(String stdErr, SSHJobArguments jobArgs, OrderProcessStepLogger logger) throws SOSJobSSHException {
         if (jobArgs.getRaiseExceptionOnError().getValue()) {
             if (stdErr.length() > 0) {
                 if (jobArgs.getIgnoreStdErr().getValue()) {
@@ -111,7 +111,7 @@ public class SSHJobUtil {
         }
     }
 
-    public static void checkExitCode(Integer exitCode, SSHJobArguments jobArgs, JobStepOutcome outcome, JobLogger logger) throws SOSJobSSHException {
+    public static void checkExitCode(Integer exitCode, SSHJobArguments jobArgs, OrderProcessStepOutcome outcome, OrderProcessStepLogger logger) throws SOSJobSSHException {
         if (exitCode != null) {
             outcome.putVariable("exit_code", exitCode);
             if (!exitCode.equals(Integer.valueOf(0))) {
@@ -129,7 +129,7 @@ public class SSHJobUtil {
         }
     }
 
-    public static Map<String, String> getWorkflowParamsAsEnvVars(JobStep<SSHJobArguments> step, SSHJobArguments jobArgs) {
+    public static Map<String, String> getWorkflowParamsAsEnvVars(OrderProcessStep<SSHJobArguments> step, SSHJobArguments jobArgs) {
         Map<String, JobArgument<SSHJobArguments>> allArguments = step.getAllArguments().entrySet().stream().filter(e -> !e.getValue().getValueSource()
                 .equals(JobArgument.ValueSource.JOB_RESOURCE)).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         if (jobArgs.getFilterRegex().getValue().isEmpty()) {
@@ -162,7 +162,7 @@ public class SSHJobUtil {
         }
     }
 
-    public static Map<String, String> getJobResourceEnvVars(JobStep<SSHJobArguments> step) throws SOSJobProblemException {
+    public static Map<String, String> getJobResourceEnvVars(OrderProcessStep<SSHJobArguments> step) throws SOSJobProblemException {
         return step.getEnv().entrySet().stream().collect(Collectors.toMap(e -> JS7_WORKFLOW_VARIABLES_ENVVAR_PREFIX + e.getKey().toUpperCase(),
                 Map.Entry::getValue));
     }

@@ -15,11 +15,11 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.sos.commons.hibernate.SOSHibernateSQLExecutor;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSPath;
-import com.sos.jitl.jobs.common.JobLogger;
+import com.sos.jitl.jobs.common.OrderProcessStepLogger;
 
 public class Export2JSON {
 
-    public static void export(ResultSet resultSet, Path outputFile, JobLogger logger) throws Exception {
+    public static void export(ResultSet resultSet, Path outputFile, OrderProcessStepLogger logger) throws Exception {
         if (resultSet == null) {
             throw new Exception("missing ResultSet");
         }

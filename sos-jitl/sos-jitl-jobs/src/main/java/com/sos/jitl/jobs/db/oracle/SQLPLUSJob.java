@@ -17,11 +17,9 @@ import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.SOSTimeout;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
-import com.sos.jitl.jobs.common.JobStep;
-import com.sos.jitl.jobs.common.JobStepOutcome;
+import com.sos.jitl.jobs.common.OrderProcessStep;
+import com.sos.jitl.jobs.common.OrderProcessStepOutcome;
 import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
-
-import js7.data_for_java.order.JOutcome;
 
 public class SQLPLUSJob extends ABlockingInternalJob<SQLPlusJobArguments> {
 
@@ -32,14 +30,14 @@ public class SQLPLUSJob extends ABlockingInternalJob<SQLPlusJobArguments> {
     }
 
     @Override
-    public JOutcome.Completed onOrderProcess(JobStep<SQLPlusJobArguments> step) throws Exception {
+    public void onOrderProcess(OrderProcessStep<SQLPlusJobArguments> step) throws Exception {
         if (SOSString.isEmpty(step.getDeclaredArguments().getCommandScriptFile()) & SOSString.isEmpty(step.getDeclaredArguments().getCommand())) {
             throw new SOSJobRequiredArgumentMissingException("command is empty. please check the   \"command_script_file\" or \"command\"parameter.");
         }
-        return step.success(process(step, step.getDeclaredArguments(), step.getIncludedArguments(SOSCredentialStoreArguments.class)));
+        process(step, step.getDeclaredArguments(), step.getIncludedArguments(SOSCredentialStoreArguments.class));
     }
 
-    private JobStepOutcome process(JobStep<SQLPlusJobArguments> step, SQLPlusJobArguments args, SOSCredentialStoreArguments csArgs) throws Exception {
+    private void process(OrderProcessStep<SQLPlusJobArguments> step, SQLPlusJobArguments args, SOSCredentialStoreArguments csArgs) throws Exception {
         args.checkRequired();
 
         if (csArgs.getFile().getValue() != null) {
@@ -53,7 +51,7 @@ public class SQLPLUSJob extends ABlockingInternalJob<SQLPlusJobArguments> {
         step.getLogger().debug("dbUser: " + args.getDbUser());
         step.getLogger().debug("dbPassword: " + args.getDbPassword().getDisplayValue());
 
-        Map<String, Object> variables = step.getAllNotDeclaredArgumentsAsNameValueMap();
+        Map<String, Object> variables = step.getNotDeclaredArgumentsAsNameValueMap();
 
         SQLPLUSCommandHandler sqlPlusCommandHandler = new SQLPLUSCommandHandler(variables, step.getLogger());
         File tempFile = File.createTempFile("sos", ".sql");
@@ -62,10 +60,10 @@ public class SQLPLUSJob extends ABlockingInternalJob<SQLPlusJobArguments> {
 
         SOSCommandResult sosCommandResult = null;
         if (args.getTimeout() == 0) {
-            sosCommandResult = SOSShell.executeCommand(args.getCommandLine(tempFileName), getAgentSystemEncoding());
+            sosCommandResult = SOSShell.executeCommand(args.getCommandLine(tempFileName), getJobEnvironment().getSystemEncoding());
         } else {
             SOSTimeout sosTimeout = new SOSTimeout(args.getTimeout(), TimeUnit.SECONDS);
-            sosCommandResult = SOSShell.executeCommand(args.getCommandLine(tempFileName), getAgentSystemEncoding(), sosTimeout);
+            sosCommandResult = SOSShell.executeCommand(args.getCommandLine(tempFileName), getJobEnvironment().getSystemEncoding(), sosTimeout);
         }
 
         final String conNL = System.getProperty("line.separator");
@@ -74,7 +72,7 @@ public class SQLPLUSJob extends ABlockingInternalJob<SQLPlusJobArguments> {
         step.getLogger().info(String.format("[stdout]%s", stdOut));
         String[] stdOutStringArray = stdOut.split(conNL);
 
-        JobStepOutcome outcome = step.newJobStepOutcome();
+        OrderProcessStepOutcome outcome = step.getOutcome();
         sqlPlusCommandHandler.getVariables(args, sosCommandResult, outcome, stdOutStringArray);
         sqlPlusCommandHandler.handleMessages(args, sosCommandResult, outcome, stdOutStringArray);
         try {
@@ -82,8 +80,6 @@ public class SQLPLUSJob extends ABlockingInternalJob<SQLPlusJobArguments> {
         } catch (IOException ioException) {
             LOGGER.warn("File " + tempFileName + " could not deleted");
         }
-
-        return outcome;
     }
 
 }

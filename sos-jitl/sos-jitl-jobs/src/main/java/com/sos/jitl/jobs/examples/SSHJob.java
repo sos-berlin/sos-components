@@ -6,15 +6,13 @@ import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.vfs.ssh.SSHProvider;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
-import com.sos.jitl.jobs.common.JobStep;
+import com.sos.jitl.jobs.common.OrderProcessStep;
 import com.sos.jitl.jobs.ssh.SSHJobArguments;
-
-import js7.data_for_java.order.JOutcome.Completed;
 
 public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
 
     @Override
-    public Completed onOrderProcess(JobStep<SSHJobArguments> step) throws Exception {
+    public void onOrderProcess(OrderProcessStep<SSHJobArguments> step) throws Exception {
         SSHProviderArguments providerArgs = step.getIncludedArguments(SSHProviderArguments.class);
         SSHProvider provider = new SSHProvider(providerArgs, step.getIncludedArguments(SOSCredentialStoreArguments.class));
         step.setPayload(provider);
@@ -35,10 +33,9 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
                 step.getLogger().info("[disconnected]%s:%s", providerArgs.getHost().getDisplayValue(), providerArgs.getPort().getDisplayValue());
             }
         }
-        return step.success();
     }
 
-    private void executeCommand(SSHProvider provider, JobStep<SSHJobArguments> step) {
+    private void executeCommand(SSHProvider provider, OrderProcessStep<SSHJobArguments> step) {
         step.getLogger().info("[execute command]%s", step.getDeclaredArguments().getCommand().getDisplayValue());
         SOSCommandResult r = provider.executeCommand(step.getDeclaredArguments().getCommand().getValue());
 

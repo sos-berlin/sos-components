@@ -6,9 +6,7 @@ import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.SOSTimeout;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
-import com.sos.jitl.jobs.common.JobStep;
-
-import js7.data_for_java.order.JOutcome;
+import com.sos.jitl.jobs.common.OrderProcessStep;
 
 public class SOSShellJob extends ABlockingInternalJob<SOSShellJobArguments> {
 
@@ -18,9 +16,9 @@ public class SOSShellJob extends ABlockingInternalJob<SOSShellJobArguments> {
     }
 
     @Override
-    public JOutcome.Completed onOrderProcess(JobStep<SOSShellJobArguments> step) throws Exception {
+    public void onOrderProcess(OrderProcessStep<SOSShellJobArguments> step) throws Exception {
         step.getLogger().info("");
-        step.getLogger().info("[AGENT]systemEncoding=" + getAgentSystemEncoding());
+        step.getLogger().info("[AGENT]systemEncoding=" + getJobEnvironment().getSystemEncoding());
         step.getLogger().info("");
 
         SOSShellJobArguments args = step.getDeclaredArguments();
@@ -55,8 +53,7 @@ public class SOSShellJob extends ABlockingInternalJob<SOSShellJobArguments> {
         step.getLogger().info("[exception]%s", result.getException());
         step.getLogger().info("[encoding]%s", result.getEncoding());
         step.getLogger().info("[timeout]%s", result.getTimeout());
-        return step.success();
-
+ 
     }
 
 }

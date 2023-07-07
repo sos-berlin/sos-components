@@ -8,15 +8,15 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.sos.commons.exception.SOSException;
-import com.sos.jitl.jobs.common.JobLogger;
+import com.sos.jitl.jobs.common.OrderProcessStepLogger;
 
 public class ExecuteFileOrderVariables {
 
     private FileOrderVariablesJobArguments args;
     private Map<String, Object> jobArguments = new HashMap<>();
-    private JobLogger logger;
+    private OrderProcessStepLogger logger;
 
-    public ExecuteFileOrderVariables(JobLogger logger, Map<String, Object> jobArguments, FileOrderVariablesJobArguments args) {
+    public ExecuteFileOrderVariables(OrderProcessStepLogger logger, Map<String, Object> jobArguments, FileOrderVariablesJobArguments args) {
         this.args = args;
         this.logger = logger;
         this.jobArguments = jobArguments;

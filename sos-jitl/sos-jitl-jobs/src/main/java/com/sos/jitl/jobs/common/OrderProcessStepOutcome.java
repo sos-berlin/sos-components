@@ -5,18 +5,16 @@ import java.util.Map;
 
 import com.sos.commons.util.SOSString;
 
-public class JobStepOutcome {
+public class OrderProcessStepOutcome {
 
-    private Map<String, Object> variables = new HashMap<>();
+    private final Map<String, Object> variables;
+
     private Integer returnCode;
     private String message;
     private boolean failed;
 
-    protected JobStepOutcome() {
-    }
-
-    protected JobStepOutcome(Map<String, Object> variables) {
-        this.variables = variables;
+    protected OrderProcessStepOutcome() {
+        this.variables = new HashMap<>();
     }
 
     public Integer getReturnCode() {
@@ -25,6 +23,13 @@ public class JobStepOutcome {
 
     public void setReturnCode(Integer val) {
         returnCode = val;
+    }
+
+    public void putVariable(OrderProcessStepOutcomeVariable<?> var) {
+        if (var == null) {
+            return;
+        }
+        variables.put(var.getName(), var.getValue());
     }
 
     public void putVariable(String name, Object val) {
@@ -49,6 +54,10 @@ public class JobStepOutcome {
 
     public boolean isFailed() {
         return failed;
+    }
+
+    protected boolean hasVariables() {
+        return variables != null && variables.size() > 0;
     }
 
     @Override

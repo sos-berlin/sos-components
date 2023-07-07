@@ -10,7 +10,7 @@ public class SOSArgumentHelper {
 
     public enum DisplayMode {
 
-        MASKED("********"), UNMASKED, UNKNOWN("<hidden>");
+        NONE("<...>"), MASKED("********"), UNMASKED, UNKNOWN("<hidden>");
 
         private final String value;
 
@@ -36,6 +36,8 @@ public class SOSArgumentHelper {
             return null;
         }
         switch (mode) {
+        case NONE:
+            return DisplayMode.NONE.getValue();
         case UNMASKED:
             if (value instanceof List) {
                 List<?> l = (List<?>) value;

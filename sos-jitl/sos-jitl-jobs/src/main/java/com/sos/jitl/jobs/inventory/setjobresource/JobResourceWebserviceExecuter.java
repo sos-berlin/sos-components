@@ -11,7 +11,7 @@ import java.util.List;
 import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.jobresource.JobResource;
 import com.sos.jitl.jobs.common.JobHelper;
-import com.sos.jitl.jobs.common.JobLogger;
+import com.sos.jitl.jobs.common.OrderProcessStepLogger;
 import com.sos.jitl.jobs.jocapi.ApiExecutor;
 import com.sos.jitl.jobs.jocapi.ApiResponse;
 import com.sos.joc.model.controller.ControllerIds;
@@ -25,9 +25,9 @@ import com.sos.joc.model.publish.DeployablesValidFilter;
 public class JobResourceWebserviceExecuter {
 
     private ApiExecutor apiExecutor;
-    private JobLogger logger;
+    private OrderProcessStepLogger logger;
 
-    public JobResourceWebserviceExecuter(JobLogger logger, ApiExecutor apiExecutor) {
+    public JobResourceWebserviceExecuter(OrderProcessStepLogger logger, ApiExecutor apiExecutor) {
         super();
         this.apiExecutor = apiExecutor;
         this.logger = logger;

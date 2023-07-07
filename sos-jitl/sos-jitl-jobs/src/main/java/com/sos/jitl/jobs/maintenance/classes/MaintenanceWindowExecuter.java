@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.sos.commons.exception.SOSException;
 import com.sos.jitl.jobs.common.JobHelper;
-import com.sos.jitl.jobs.common.JobLogger;
+import com.sos.jitl.jobs.common.OrderProcessStepLogger;
 import com.sos.jitl.jobs.jocapi.ApiExecutor;
 import com.sos.jitl.jobs.jocapi.ApiResponse;
 import com.sos.joc.model.agent.AgentsV;
@@ -20,9 +20,9 @@ import com.sos.joc.model.controller.Controllers;
 public class MaintenanceWindowExecuter {
 
     private ApiExecutor apiExecutor;
-    private JobLogger logger;
+    private OrderProcessStepLogger logger;
 
-    public MaintenanceWindowExecuter(JobLogger logger, ApiExecutor apiExecutor) {
+    public MaintenanceWindowExecuter(OrderProcessStepLogger logger, ApiExecutor apiExecutor) {
         super();
         this.apiExecutor = apiExecutor;
         this.logger = logger;

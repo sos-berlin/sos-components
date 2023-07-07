@@ -11,15 +11,13 @@ import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSQLExecutor;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
-import com.sos.jitl.jobs.common.JobStep;
-import com.sos.jitl.jobs.common.JobStepOutcome;
+import com.sos.jitl.jobs.common.OrderProcessStep;
+import com.sos.jitl.jobs.common.OrderProcessStepOutcome;
 import com.sos.jitl.jobs.db.SQLExecutorJobArguments.ResultSetAsVariables;
 import com.sos.jitl.jobs.db.common.Export2CSV;
 import com.sos.jitl.jobs.db.common.Export2JSON;
 import com.sos.jitl.jobs.db.common.Export2XML;
 import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
-
-import js7.data_for_java.order.JOutcome;
 
 public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments> {
 
@@ -28,7 +26,7 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
     }
 
     @Override
-    public JOutcome.Completed onOrderProcess(JobStep<SQLExecutorJobArguments> step) throws Exception {
+    public void onOrderProcess(OrderProcessStep<SQLExecutorJobArguments> step) throws Exception {
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
         try {
@@ -38,9 +36,8 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
             session = factory.openStatelessSession();
             step.setPayload(session);
 
-            JobStepOutcome outcome = process(step, session);
-            step.getLogger().info("result: " + outcome.getVariables());
-            return step.success(outcome);
+            process(step, session);
+            step.getLogger().info("result: " + step.getOutcome().getVariables());
         } catch (Throwable e) {
             throw e;
         } finally {
@@ -53,7 +50,7 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
         }
     }
 
-    private JobStepOutcome process(JobStep<SQLExecutorJobArguments> step, final SOSHibernateSession session) throws Exception {
+    private void process(OrderProcessStep<SQLExecutorJobArguments> step, final SOSHibernateSession session) throws Exception {
         SQLExecutorJobArguments args = step.getDeclaredArguments();
         SOSHibernateSQLExecutor executor = session.getSQLExecutor();
         List<String> statements = null;
@@ -69,23 +66,20 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
             statements = executor.getStatements(args.getCommand());
         }
 
-        JobStepOutcome outcome = step.newJobStepOutcome();
         session.beginTransaction();
         for (String statement : statements) {
             step.getLogger().info("executing database statement: %s", statement);
             if (SOSHibernateSQLExecutor.isResultListQuery(statement, args.getExecReturnsResultset())) {
-                executeResultSet(step, executor, statement, outcome);
+                executeResultSet(step, executor, statement, step.getOutcome());
             } else {
                 executor.executeUpdate(statement);
             }
         }
         session.commit();
-
-        return outcome;
     }
 
-    private void executeResultSet(JobStep<SQLExecutorJobArguments> step, final SOSHibernateSQLExecutor executor, final String statement,
-            JobStepOutcome outcome) throws Exception {
+    private void executeResultSet(OrderProcessStep<SQLExecutorJobArguments> step, final SOSHibernateSQLExecutor executor, final String statement,
+            OrderProcessStepOutcome outcome) throws Exception {
         ResultSet rs = null;
         StringBuilder warning = new StringBuilder();
         try {

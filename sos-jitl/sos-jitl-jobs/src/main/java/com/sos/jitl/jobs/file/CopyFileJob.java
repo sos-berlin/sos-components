@@ -2,13 +2,11 @@ package com.sos.jitl.jobs.file;
 
 import java.util.regex.Pattern;
 
-import com.sos.jitl.jobs.common.JobStep;
+import com.sos.jitl.jobs.common.OrderProcessStep;
 import com.sos.jitl.jobs.file.common.AFileOperationsJob;
 import com.sos.jitl.jobs.file.common.FileOperationsCopyImpl;
 import com.sos.jitl.jobs.file.common.FileOperationsJobArguments;
 import com.sos.jitl.jobs.file.exception.SOSFileOperationsException;
-
-import js7.data_for_java.order.JOutcome;
 
 public class CopyFileJob extends AFileOperationsJob {
 
@@ -17,7 +15,7 @@ public class CopyFileJob extends AFileOperationsJob {
     }
 
     @Override
-    public JOutcome.Completed onOrderProcess(JobStep<FileOperationsJobArguments> step) throws Exception {
+    public void onOrderProcess(OrderProcessStep<FileOperationsJobArguments> step) throws Exception {
         FileOperationsJobArguments args = step.getDeclaredArguments();
         checkArguments(args);
         setFlags(args);
@@ -48,7 +46,7 @@ public class CopyFileJob extends AFileOperationsJob {
             }
             files += doFileOperation(args, fo, source, target);
         }
-        return handleResult(step, fo.getResultList(), files > 0);
+        handleResult(step, fo.getResultList(), files > 0);
     }
 
     private int doFileOperation(final FileOperationsJobArguments args, FileOperationsCopyImpl fo, final String strSource, final String strTarget)

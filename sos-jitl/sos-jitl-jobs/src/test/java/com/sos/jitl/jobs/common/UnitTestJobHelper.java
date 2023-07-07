@@ -44,6 +44,15 @@ public class UnitTestJobHelper<A extends JobArguments> {
         setModifiableEnvironment();
     }
 
+    public void onStart(Map<String, Object> args) throws Exception {
+        job.getJobEnvironment().setDeclaredArguments(toArgs(args).instance);
+        job.onStart();
+    }
+
+    public void onStop() throws Exception {
+        job.onStop();
+    }
+
     public JOutcome.Completed onOrderProcess(Map<String, Object> args) throws Exception {
         return onOrderProcess(args, null);
     }
@@ -52,19 +61,21 @@ public class UnitTestJobHelper<A extends JobArguments> {
         if (timeout == null) {
             timeout = new SOSTimeout(2, TimeUnit.MINUTES);
         }
-        final JobStep<A> step = newJobStep(args);
+
+        final OrderProcessStep<A> step = newOrderProcessStep(args);
         return CompletableFuture.supplyAsync(() -> {
             try {
                 step.logParameterization(null);
-                return this.job.onOrderProcess(step);
-            } catch (Exception e) {
+                this.job.onOrderProcess(step);
+                return step.processed();
+            } catch (Throwable e) {
                 return step.failed(e.toString(), e);
             }
         }).get(timeout.getInterval(), timeout.getTimeUnit());
     }
 
-    public static JobLogger newJobLogger() {
-        JobLogger l = new JobLogger(null, null);
+    public static OrderProcessStepLogger newLogger() {
+        OrderProcessStepLogger l = new OrderProcessStepLogger(null);
         l.init(null);
         return l;
     }
@@ -75,9 +86,9 @@ public class UnitTestJobHelper<A extends JobArguments> {
         }
     }
 
-    private JobStep<A> newJobStep(Map<String, Object> args) throws Exception {
-        JobStep<A> step = new JobStep<A>(job.getClass().getName(), job.getJobContext(), null);
-        ArgumentsResult r = toArgs(step, args);
+    private OrderProcessStep<A> newOrderProcessStep(Map<String, Object> args) throws Exception {
+        OrderProcessStep<A> step = new OrderProcessStep<A>(job.getJobEnvironment(), null);
+        ArgumentsResult r = toArgs(args);
         step.init(r.instance, r.notDeclared);
         return step;
     }
@@ -106,7 +117,7 @@ public class UnitTestJobHelper<A extends JobArguments> {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private ArgumentsResult toArgs(JobStep<A> step, Map<String, Object> args) throws Exception {
+    private ArgumentsResult toArgs(Map<String, Object> args) throws Exception {
         A instance = getJobArgumensClass().getDeclaredConstructor().newInstance();
 
         if (instance.getIncludedArguments() != null && instance.getIncludedArguments().size() > 0) {
@@ -125,7 +136,7 @@ public class UnitTestJobHelper<A extends JobArguments> {
             }
         }
 
-        Set<String> declared = setArguments(step, args, instance);
+        Set<String> declared = setArguments(args, instance);
         ArgumentsResult r = new ArgumentsResult();
         r.instance = instance;
         r.notDeclared = args.entrySet().stream().filter(e -> !declared.contains(e.getKey())).collect(Collectors.toMap(Map.Entry::getKey,
@@ -135,7 +146,7 @@ public class UnitTestJobHelper<A extends JobArguments> {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private Set<String> setArguments(JobStep<A> step, Map<String, Object> map, JobArguments o) {
+    private Set<String> setArguments(Map<String, Object> map, JobArguments o) {
         List<Field> fields = JobHelper.getJobArgumentFields(o);
         Set<String> known = new HashSet<>();
         for (Field field : fields) {

@@ -1,11 +1,9 @@
 package com.sos.jitl.jobs.examples;
 
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
-import com.sos.jitl.jobs.common.JobStep;
+import com.sos.jitl.jobs.common.OrderProcessStep;
 import com.sos.jitl.jobs.jocapi.ApiExecutor;
 import com.sos.jitl.jobs.jocapi.ApiResponse;
-
-import js7.data_for_java.order.JOutcome;
 
 public class JocApiJob extends ABlockingInternalJob<JocApiJobArguments> {
 
@@ -14,7 +12,7 @@ public class JocApiJob extends ABlockingInternalJob<JocApiJobArguments> {
     }
 
     @Override
-    public JOutcome.Completed onOrderProcess(JobStep<JocApiJobArguments> step) throws Exception {
+    public void onOrderProcess(OrderProcessStep<JocApiJobArguments> step) throws Exception {
         ApiExecutor ex = new ApiExecutor(step.getLogger());
         try {
             ApiResponse apiResponse = ex.login();
@@ -52,6 +50,5 @@ public class JocApiJob extends ABlockingInternalJob<JocApiJobArguments> {
         } finally {
             ex.close();
         }
-        return step.success();
     }
 }

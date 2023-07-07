@@ -1,6 +1,6 @@
 package com.sos.jitl.jobs.monitoring.classes;
 
-import com.sos.jitl.jobs.common.JobLogger;
+import com.sos.jitl.jobs.common.OrderProcessStepLogger;
 
 public class MonitoringCheckReturn {
 
@@ -43,7 +43,7 @@ public class MonitoringCheckReturn {
         this.count = count;
     }
 
-    public void setErrorMessage(JobLogger logger, String message) {
+    public void setErrorMessage(OrderProcessStepLogger logger, String message) {
         logger.warn(message);
         this.message = message;
         this.success = false;

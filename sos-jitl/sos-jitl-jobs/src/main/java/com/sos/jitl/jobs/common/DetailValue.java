@@ -1,11 +1,11 @@
 package com.sos.jitl.jobs.common;
 
-public class JobDetailValue {
+public class DetailValue {
 
     private final Object value;
     private final String source;
 
-    protected JobDetailValue(String source, Object value) {
+    protected DetailValue(String source, Object value) {
         this.source = source;
         this.value = value;
     }

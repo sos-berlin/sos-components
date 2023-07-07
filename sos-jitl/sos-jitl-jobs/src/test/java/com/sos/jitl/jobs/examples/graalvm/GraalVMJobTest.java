@@ -26,6 +26,8 @@ public class GraalVMJobTest {
     public void test() throws Exception {
         LOGGER.info(SOSShell.getJVMInfos());
 
+       
+        
         List<ScriptEngineFactory> factories = (new ScriptEngineManager()).getEngineFactories();
         for (ScriptEngineFactory factory : factories) {
             LOGGER.info(String.format("[ScriptEngineFactory]engineName=%s, engineVersion=%s, name=%s", factory.getEngineName(), factory
@@ -36,12 +38,16 @@ public class GraalVMJobTest {
         }
 
         Map<String, Object> args = new HashMap<>();
-        args.put("script_file", "src/test/resources/jobs/examples/graalvm/GraalVMJob.js");
+        //args.put("script_file_on_start", "src/test/resources/jobs/examples/graalvm/GraalVMJob-onStart.js");
+        //args.put("script_file_on_stop", "src/test/resources/jobs/examples/graalvm/GraalVMJob-onStop.js");
+        args.put("script_file_on_order_process", "src/test/resources/jobs/examples/graalvm/GraalVMJob-onOrderProcess.js");
 
         UnitTestJobHelper<GraalVMJobArguments> h = new UnitTestJobHelper<>(new GraalVMJob(null));
 
+        h.onStart(args);
         JOutcome.Completed result = h.onOrderProcess(args);
         LOGGER.info("###############################################");
-        LOGGER.info(String.format("[RESULT]%s", result));
+        LOGGER.info(String.format("[onOrderProcess][RESULT]%s", result));
+        h.onStop();
     }
 }

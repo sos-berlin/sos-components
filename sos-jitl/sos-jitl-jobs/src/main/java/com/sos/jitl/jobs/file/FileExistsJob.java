@@ -14,14 +14,12 @@ import java.util.regex.Pattern;
 
 import com.sos.commons.util.SOSDate;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
-import com.sos.jitl.jobs.common.JobLogger;
-import com.sos.jitl.jobs.common.JobStep;
+import com.sos.jitl.jobs.common.OrderProcessStep;
+import com.sos.jitl.jobs.common.OrderProcessStepLogger;
 import com.sos.jitl.jobs.file.common.AFileOperationsJob;
 import com.sos.jitl.jobs.file.common.FileOperationsImpl;
 import com.sos.jitl.jobs.file.common.FileOperationsJobFileExistsArguments;
 import com.sos.jitl.jobs.file.exception.SOSFileOperationsException;
-
-import js7.data_for_java.order.JOutcome;
 
 public class FileExistsJob extends ABlockingInternalJob<FileOperationsJobFileExistsArguments> {
 
@@ -30,7 +28,7 @@ public class FileExistsJob extends ABlockingInternalJob<FileOperationsJobFileExi
     }
 
     @Override
-    public JOutcome.Completed onOrderProcess(JobStep<FileOperationsJobFileExistsArguments> step) throws Exception {
+    public void onOrderProcess(OrderProcessStep<FileOperationsJobFileExistsArguments> step) throws Exception {
         AFileOperationsJob.checkArguments(step.getDeclaredArguments());
 
         FileOperationsImpl fo = new FileOperationsImpl(step.getLogger());
@@ -41,10 +39,11 @@ public class FileExistsJob extends ABlockingInternalJob<FileOperationsJobFileExi
         if (result) {
             result = checkSteadyStateOfFiles(step.getLogger(), args, fo.getResultList());
         }
-        return AFileOperationsJob.handleResult(step, fo.getResultList(), result);
+        AFileOperationsJob.handleResult(step, fo.getResultList(), result);
     }
 
-    public boolean checkSteadyStateOfFiles(JobLogger logger, FileOperationsJobFileExistsArguments args, List<File> files) throws Exception {
+    public boolean checkSteadyStateOfFiles(OrderProcessStepLogger logger, FileOperationsJobFileExistsArguments args, List<File> files)
+            throws Exception {
         if (files == null || files.size() == 0 || args.getSteadyStateCount().getValue() <= 0) {
             return true;
         }

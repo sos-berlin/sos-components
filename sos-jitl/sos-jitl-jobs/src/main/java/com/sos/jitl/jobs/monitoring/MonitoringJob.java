@@ -5,13 +5,10 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
-import com.sos.jitl.jobs.common.JobStep;
-import com.sos.jitl.jobs.common.JobStepOutcome;
+import com.sos.jitl.jobs.common.OrderProcessStep;
 import com.sos.jitl.jobs.monitoring.classes.MonitoringCheckReturn;
 import com.sos.jitl.jobs.monitoring.classes.MonitoringParameters;
 import com.sos.joc.model.jitl.monitoring.MonitoringStatus;
-
-import js7.data_for_java.order.JOutcome;
 
 public class MonitoringJob extends ABlockingInternalJob<MonitoringJobArguments> {
 
@@ -23,11 +20,11 @@ public class MonitoringJob extends ABlockingInternalJob<MonitoringJobArguments> 
     }
 
     @Override
-    public JOutcome.Completed onOrderProcess(JobStep<MonitoringJobArguments> step) throws Exception {
-        return step.success(process(step, step.getDeclaredArguments()));
+    public void onOrderProcess(OrderProcessStep<MonitoringJobArguments> step) throws Exception {
+        process(step, step.getDeclaredArguments());
     }
 
-    private JobStepOutcome process(JobStep<MonitoringJobArguments> step, MonitoringJobArguments args) throws Exception {
+    private void process(OrderProcessStep<MonitoringJobArguments> step, MonitoringJobArguments args) throws Exception {
         if (args.getControllerId() == null || args.getControllerId().isEmpty()) {
             step.getLogger().info("Setting controller_id=" + step.getControllerId());
             args.setControllerId(step.getControllerId());
@@ -55,12 +52,10 @@ public class MonitoringJob extends ABlockingInternalJob<MonitoringJobArguments> 
         step.getLogger().info("monitor report date: " + monitoringParameters.getMonitorSubjectReportDate());
         step.getLogger().info("monitor report file: " + monitoringParameters.getMonitorReportFile());
 
-        JobStepOutcome outcome = step.newJobStepOutcome();
-        outcome.putVariable("monitor_report_date", monitoringParameters.getMonitorSubjectReportDate());
-        outcome.putVariable("monitor_report_file", monitoringParameters.getMonitorReportFile());
-        outcome.putVariable("subject", monitoringCheckReturn.getSubject());
-        outcome.putVariable("body", monitoringCheckReturn.getBody());
-        outcome.putVariable("result", monitoringCheckReturn.getCount());
-        return outcome;
+        step.getOutcome().putVariable("monitor_report_date", monitoringParameters.getMonitorSubjectReportDate());
+        step.getOutcome().putVariable("monitor_report_file", monitoringParameters.getMonitorReportFile());
+        step.getOutcome().putVariable("subject", monitoringCheckReturn.getSubject());
+        step.getOutcome().putVariable("body", monitoringCheckReturn.getBody());
+        step.getOutcome().putVariable("result", monitoringCheckReturn.getCount());
     }
 }

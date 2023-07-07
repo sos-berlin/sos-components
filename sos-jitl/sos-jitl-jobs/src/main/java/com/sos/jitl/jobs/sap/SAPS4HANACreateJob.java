@@ -3,8 +3,8 @@ package com.sos.jitl.jobs.sap;
 import java.util.Collections;
 import java.util.Map;
 
-import com.sos.jitl.jobs.common.JobLogger;
-import com.sos.jitl.jobs.common.JobStep;
+import com.sos.jitl.jobs.common.OrderProcessStep;
+import com.sos.jitl.jobs.common.OrderProcessStepLogger;
 import com.sos.jitl.jobs.exception.SOSJobProblemException;
 import com.sos.jitl.jobs.sap.common.ASAPS4HANAJob;
 import com.sos.jitl.jobs.sap.common.CommonJobArguments;
@@ -15,8 +15,6 @@ import com.sos.jitl.jobs.sap.common.bean.RunIds;
 import com.sos.jitl.jobs.sap.common.bean.Schedule;
 import com.sos.jitl.jobs.sap.common.bean.ScheduleData;
 
-import js7.data_for_java.order.JOutcome.Completed;
-
 public class SAPS4HANACreateJob extends ASAPS4HANAJob {
 
     public SAPS4HANACreateJob(JobContext jobContext) {
@@ -24,16 +22,15 @@ public class SAPS4HANACreateJob extends ASAPS4HANAJob {
     }
 
     @Override
-    public Completed onOrderProcess(JobStep<CommonJobArguments> step) throws Exception {
+    public void onOrderProcess(OrderProcessStep<CommonJobArguments> step) throws Exception {
         CommonJobArguments args = step.getDeclaredArguments();
         execute(step, args, RunIds.Scope.JOB);
-        return step.success();
     }
 
     @Override
-    public void createInactiveSchedule(JobStep<CommonJobArguments> step, CommonJobArguments args, HttpClient httpClient, JobLogger logger)
+    public void createInactiveSchedule(OrderProcessStep<CommonJobArguments> step, CommonJobArguments args, HttpClient httpClient, OrderProcessStepLogger logger)
             throws Exception {
-        Map<String, Object> notDeclaredArgs = step.getAllNotDeclaredArgumentsAsNameValueMap();
+        Map<String, Object> notDeclaredArgs = step.getNotDeclaredArgumentsAsNameValueMap();
         logger.info(notDeclaredArgs.toString());
         ScheduleData data = new ScheduleData();
         notDeclaredArgs.entrySet().stream().filter(arg -> !arg.getKey().startsWith("js7")).filter(arg -> arg.getValue() instanceof String).forEach(
@@ -50,7 +47,7 @@ public class SAPS4HANACreateJob extends ASAPS4HANAJob {
         logger.info("Schedule jobId=%d scheduleId=%s is created", respJob.getJobId(), respJob.getSchedules().get(0).getScheduleId());
     }
 
-    private static String getJobName(JobStep<CommonJobArguments> step) throws SOSJobProblemException {
+    private static String getJobName(OrderProcessStep<CommonJobArguments> step) throws SOSJobProblemException {
         return String.format("%s#%s", step.getWorkflowName(), step.getJobInstructionLabel());
     }
 

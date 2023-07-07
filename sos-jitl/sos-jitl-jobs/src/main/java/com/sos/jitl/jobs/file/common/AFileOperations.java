@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import com.sos.commons.util.SOSDate;
-import com.sos.jitl.jobs.common.JobLogger;
+import com.sos.jitl.jobs.common.OrderProcessStepLogger;
 import com.sos.jitl.jobs.file.exception.SOSFileOperationsException;
 
 public abstract class AFileOperations {
@@ -37,11 +37,11 @@ public abstract class AFileOperations {
 
     private final int BUFF_SIZE = 100000;
     private final byte[] buffer = new byte[BUFF_SIZE];
-    private final JobLogger logger;
+    private final OrderProcessStepLogger logger;
 
     private List<File> resultList = null;
 
-    public AFileOperations(JobLogger logger) {
+    public AFileOperations(OrderProcessStepLogger logger) {
         this.logger = logger;
         this.resultList = new ArrayList<File>();
     }
@@ -1056,7 +1056,7 @@ public abstract class AFileOperations {
         return resultList;
     }
 
-    public JobLogger getLogger() {
+    public OrderProcessStepLogger getLogger() {
         return logger;
     }
 

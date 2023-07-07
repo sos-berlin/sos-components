@@ -38,7 +38,7 @@ import com.sos.commons.sign.keys.keyStore.KeyStoreCredentials;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.commons.sign.keys.keyStore.KeystoreType;
 import com.sos.commons.vfs.exception.SOSAuthenticationFailedException;
-import com.sos.jitl.jobs.common.JobLogger;
+import com.sos.jitl.jobs.common.OrderProcessStepLogger;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigFactory;
@@ -83,10 +83,10 @@ public class ApiExecutor {
     private SOSRestApiClient client;
     private URI jocUri;
     private List<String> jocUris;
-    private final JobLogger jobLogger;
+    private final OrderProcessStepLogger jobLogger;
     private Config config;
 
-    public ApiExecutor(JobLogger jobLogger) {
+    public ApiExecutor(OrderProcessStepLogger jobLogger) {
         this(null, null, jobLogger);
     }
 
@@ -94,7 +94,7 @@ public class ApiExecutor {
         this(jocUri, null, null);
     }
 
-    public ApiExecutor(URI jocUri, JobLogger logger) {
+    public ApiExecutor(URI jocUri, OrderProcessStepLogger logger) {
         this(jocUri, null, logger);
     }
 
@@ -104,7 +104,7 @@ public class ApiExecutor {
         this.jobLogger = null;
     }
 
-    public ApiExecutor(URI jocUri, String truststoreFileName, JobLogger jobLogger) {
+    public ApiExecutor(URI jocUri, String truststoreFileName, OrderProcessStepLogger jobLogger) {
         this.jocUri = jocUri;
         this.truststoreFileName = truststoreFileName == null ? DEFAULT_TRUSTSTORE_FILENAME : truststoreFileName;
         this.jobLogger = jobLogger;

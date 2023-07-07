@@ -35,6 +35,7 @@ import com.sos.commons.util.common.SOSArgumentHelper;
 import com.sos.commons.vfs.ssh.SSHProvider;
 import com.sos.jitl.jobs.common.JobArgument.ValueSource;
 import com.sos.jitl.jobs.common.JobArguments.MockLevel;
+import com.sos.jitl.jobs.common.exception.SOSJITLJobException;
 import com.sos.jitl.jobs.exception.SOSJobArgumentException;
 import com.sos.jitl.jobs.exception.SOSJobProblemException;
 import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
@@ -51,7 +52,7 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
     private static final String BASE64_VALUE_PREFIX = "base64:";
     private static final String OPERATION_CANCEL_KILL = "cancel/kill";
 
-    private final JobContext jobContext;
+    private final JobEnvironment<A> jobEnvironment;
 
     public ABlockingInternalJob() {
         this(null);
@@ -59,28 +60,24 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
 
     /** e.g. for jobContext.jobArguments() or getAgentSystemEncoding */
     public ABlockingInternalJob(JobContext jobContext) {
-        this.jobContext = jobContext;
+        jobEnvironment = new JobEnvironment<A>(jobContext);
     }
 
     /** to override */
-    public void onStart(A args) throws Exception {
-
-    }
-
-    /** to override */
-    public void onStop(A args) throws Exception {
+    public void onStart() throws Exception {
 
     }
 
     /** to override */
-    public abstract JOutcome.Completed onOrderProcess(JobStep<A> step) throws Exception;
+    public void onStop() throws Exception {
 
-    public JobContext getJobContext() {
-        return jobContext;
     }
 
-    public Charset getAgentSystemEncoding() {
-        return jobContext == null ? null : jobContext.systemEncoding();
+    /** to override */
+    public abstract void onOrderProcess(OrderProcessStep<A> step) throws Exception;
+
+    public JobEnvironment<A> getJobEnvironment() {
+        return jobEnvironment;
     }
 
     /** engine methods */
@@ -88,26 +85,26 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
     public Either<Problem, Void> start() {
         try {
             List<SOSJobArgumentException> exceptions = new ArrayList<SOSJobArgumentException>();
-            A args = createJobArguments(exceptions);
+            jobEnvironment.setDeclaredArguments(createJobArguments(exceptions));
             // TODO
             // checkExceptions(exceptions);
-
-            onStart(args);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(String.format("[start]%s", jobEnvironment.getJobKey()));
+            }
+            onStart();
             return right(null);
         } catch (Throwable e) {
-            return left(Problem.fromThrowable(e));
+            return left(Problem.fromThrowable(new SOSJITLJobException("[onStart]" + e.toString(), e)));
         }
     }
 
     @Override
     public void stop() {
         try {
-            List<SOSJobArgumentException> exceptions = new ArrayList<SOSJobArgumentException>();
-            A args = createJobArguments(exceptions);
-            // TODO
-            // checkExceptions(exceptions);
-
-            onStop(args);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(String.format("[stop]%s", jobEnvironment.getJobKey()));
+            }
+            onStop();
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         }
@@ -118,45 +115,46 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
         return new OrderProcess() {
 
             volatile boolean canceled = false;
-            AtomicReference<JobStep<A>> jobStepRef = null;
+            AtomicReference<OrderProcessStep<A>> orderProcessStepRef = null;
 
             public JOutcome.Completed run() throws Exception {
                 while (!canceled) {
                     MockLevel mockLevel = MockLevel.OFF;
-                    JobStep<A> jobStep = new JobStep<A>(getClass().getName(), jobContext, step);
-                    jobStepRef = new AtomicReference<>(jobStep);
+                    OrderProcessStep<A> orderProcessStep = new OrderProcessStep<A>(jobEnvironment, step);
+                    orderProcessStepRef = new AtomicReference<>(orderProcessStep);
                     try {
                         List<SOSJobArgumentException> exceptions = new ArrayList<SOSJobArgumentException>();
-                        A args = createJobArguments(exceptions, jobStep);
-                        jobStep.init(args);
+                        A args = createJobArguments(exceptions, orderProcessStep);
+                        orderProcessStep.init(args);
 
-                        mockLevel = jobStep.getDeclaredArguments().getMockLevel().getValue();
+                        mockLevel = orderProcessStep.getDeclaredArguments().getMockLevel().getValue();
                         switch (mockLevel) {
                         case OFF:
-                            jobStep.logParameterization(null);
-                            checkExceptions(jobStep, exceptions);
-                            return onOrderProcess(jobStep);
+                            orderProcessStep.logParameterization(null);
+                            checkExceptions(orderProcessStep, exceptions);
+                            onOrderProcess(orderProcessStep);
+                            return orderProcessStep.processed();
                         case ERROR:
-                            jobStep.logParameterization(String.format("Mock Execution: %s=%s.", jobStep.getDeclaredArguments().getMockLevel()
-                                    .getName(), mockLevel));
-                            checkExceptions(jobStep, exceptions);
-                            return jobStep.success();
+                            orderProcessStep.logParameterization(String.format("Mock Execution: %s=%s.", orderProcessStep.getDeclaredArguments()
+                                    .getMockLevel().getName(), mockLevel));
+                            checkExceptions(orderProcessStep, exceptions);
+                            return orderProcessStep.success();
                         case INFO:
                         default:
-                            jobStep.logParameterization(String.format("Mock Execution: %s=%s.", jobStep.getDeclaredArguments().getMockLevel()
-                                    .getName(), mockLevel));
-                            return jobStep.success();
+                            orderProcessStep.logParameterization(String.format("Mock Execution: %s=%s.", orderProcessStep.getDeclaredArguments()
+                                    .getMockLevel().getName(), mockLevel));
+                            return orderProcessStep.success();
                         }
                     } catch (Throwable e) {
                         switch (mockLevel) {
                         case OFF:
                         case ERROR:
-                            return jobStep.failed(e.toString(), e);
+                            return orderProcessStep.failed(e.toString(), e);
                         case INFO:
                         default:
-                            jobStep.getLogger().info(String.format("Mock Execution: %s=%s, Exception: %s", jobStep.getDeclaredArguments()
-                                    .getMockLevel().getName(), mockLevel, e.toString()));
-                            return jobStep.success();
+                            orderProcessStep.getLogger().info(String.format("Mock Execution: %s=%s, Exception: %s", orderProcessStep
+                                    .getDeclaredArguments().getMockLevel().getName(), mockLevel, e.toString()));
+                            return orderProcessStep.success();
                         }
                     }
                 }
@@ -165,22 +163,22 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
 
             @Override
             public void cancel(boolean immediately) {
-                if (jobStepRef != null && !canceled) {
-                    JobStep<A> jobStep = jobStepRef.get();
-                    if (jobStep != null) {
-                        cancelStep(jobStep);
-                        Thread thread = Thread.getAllStackTraces().keySet().stream().filter(t -> t.getName().equals(jobStep.getThreadName())).map(
-                                t -> {
+                if (orderProcessStepRef != null && !canceled) {
+                    OrderProcessStep<A> orderProcessStep = orderProcessStepRef.get();
+                    if (orderProcessStep != null) {
+                        cancelOrderProcessStep(orderProcessStep);
+                        Thread thread = Thread.getAllStackTraces().keySet().stream().filter(t -> t.getName().equals(orderProcessStep.getThreadName()))
+                                .map(t -> {
                                     return t;
                                 }).findAny().orElse(null);
                         if (thread == null) {
                             try {
-                                jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "][thread][" + jobStep.getThreadName()
+                                orderProcessStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "][thread][" + orderProcessStep.getThreadName()
                                         + "][skip interrupt]thread not found");
                             } catch (Throwable e) {
                             }
                         } else {
-                            jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "][thread][" + thread.getName() + "]interrupt ...");
+                            orderProcessStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "][thread][" + thread.getName() + "]interrupt ...");
                             thread.interrupt();
                         }
                     }
@@ -191,22 +189,24 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
     }
 
     /** can be overwritten */
-    public void cancelStep(JobStep<A> jobStep) {
+    public void cancelOrderProcessStep(OrderProcessStep<A> jobStep) {
         if (jobStep.getPayload() != null) {
             String jobName = getJobName(jobStep);
             cancelHibernateConnection(jobStep, jobName);
-            cancelSQLConnection(jobStep, jobName);
+            // cancelSQLConnection(jobStep, jobName);
             cancelVFSConnection(jobStep, jobName);
         }
     }
 
-    private void cancelHibernateConnection(JobStep<A> jobStep, String jobName) {
+    private void cancelHibernateConnection(OrderProcessStep<A> jobStep, String jobName) {
         try {
-            Object o = jobStep.getPayload().get(JobStep.PAYLOAD_NAME_HIBERNATE_SESSION);
+            Object o = jobStep.getPayload().get(OrderProcessStep.PAYLOAD_NAME_HIBERNATE_SESSION);
             if (o != null) {
                 SOSHibernateSession s = (SOSHibernateSession) o;
-                // step.getLogger().info("cancel ... close session");
+                // jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "]close session ...");
                 // s.rollback(); s.close() <- does not work because blocked
+
+                // TODO restore factory if initialized onStart ? ...
                 if (s.getFactory() != null) {
                     jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "]close factory ...");
                     s.getFactory().close();
@@ -219,9 +219,10 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
 
     // TODO currently not used(candidate PLSQLJob) because abort is asynchronous and conn.close() is synchronous (waiting for execution is completed)
     // PLSQLJob is cancelled when the Thread is interrupted.
-    private void cancelSQLConnection(JobStep<A> jobStep, String jobName) {
+    @SuppressWarnings("unused")
+    private void cancelSQLConnection(OrderProcessStep<A> jobStep, String jobName) {
         try {
-            Object o = jobStep.getPayload().get(JobStep.PAYLOAD_NAME_SQL_CONNECTION);
+            Object o = jobStep.getPayload().get(OrderProcessStep.PAYLOAD_NAME_SQL_CONNECTION);
             if (o != null) {
                 jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "]abort connection ...");
                 // ((Connection) o).close();
@@ -232,9 +233,9 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
         }
     }
 
-    private void cancelVFSConnection(JobStep<A> jobStep, String jobName) {
+    private void cancelVFSConnection(OrderProcessStep<A> jobStep, String jobName) {
         try {
-            Object o = jobStep.getPayload().get(JobStep.PAYLOAD_NAME_VFS_PROVIDER);
+            Object o = jobStep.getPayload().get(OrderProcessStep.PAYLOAD_NAME_VFS_PROVIDER);
             if (o != null) {
                 jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "]disconnect ..");
                 // ((AProvider<?>) o).disconnect();
@@ -246,7 +247,7 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
         }
     }
 
-    private String getJobName(JobStep<A> jobStep) {
+    private String getJobName(OrderProcessStep<A> jobStep) {
         try {
             return jobStep == null ? "unknown" : jobStep.getJobName();
         } catch (Throwable e) {
@@ -254,7 +255,7 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
         }
     }
 
-    private void checkExceptions(JobStep<A> jobStep, List<SOSJobArgumentException> exceptions) throws Exception {
+    private void checkExceptions(OrderProcessStep<A> jobStep, List<SOSJobArgumentException> exceptions) throws Exception {
         if (exceptions.size() > 0) {
             List<String> l = exceptions.stream().filter(e -> e instanceof ISOSRequiredArgumentMissingException).map(e -> {
                 return ((ISOSRequiredArgumentMissingException) e).getArgumentName();
@@ -268,19 +269,19 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
         }
     }
 
-    private Map<String, Object> mergeJobAndStepArguments(final JobStep<A> step) {
+    private Map<String, Object> mergeJobAndStepArguments(final OrderProcessStep<A> step) {
         Map<String, Object> map = null;
         if (step == null) {
-            map = JobHelper.asJavaValues(jobContext.jobArguments());
+            map = jobEnvironment.getAllArgumentsAsNameValueMap();
         } else {
             Set<Entry<String, Value>> stepArgs = step.getInternalStep().arguments().entrySet();
             Set<Entry<String, Value>> orderArgs = step.getInternalStep().order().arguments().entrySet();
 
             Stream<Map.Entry<String, Value>> stream = null;
-            if (jobContext == null) {
+            if (jobEnvironment.getEngineArguments() == null) {
                 stream = Stream.concat(stepArgs.stream(), orderArgs.stream());
             } else {
-                stream = Stream.concat(Stream.concat(jobContext.jobArguments().entrySet().stream(), stepArgs.stream()), orderArgs.stream());
+                stream = Stream.concat(Stream.concat(jobEnvironment.getEngineArguments().entrySet().stream(), stepArgs.stream()), orderArgs.stream());
             }
             map = JobHelper.asJavaValues(stream.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (value1, value2) -> value2)));
         }
@@ -292,14 +293,14 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
     }
 
     @SuppressWarnings({ "rawtypes" })
-    private A createJobArguments(List<SOSJobArgumentException> exceptions, final JobStep<A> step) throws Exception {
+    private A createJobArguments(List<SOSJobArgumentException> exceptions, final OrderProcessStep<A> step) throws Exception {
         A instance = getJobArgumensClass().getDeclaredConstructor().newInstance();
-        if (jobContext == null && step == null) {
+        if (jobEnvironment.getEngineArguments() == null && step == null) {
             return instance;
         }
         Map<String, Object> map = mergeJobAndStepArguments(step);
-        Map<String, JobDetailValue> lastSucceededOutcomes = step == null ? null : step.getLastSucceededOutcomes();
-        Map<String, JobDetailValue> jobResources = step == null ? null : step.getJobResourcesValues();
+        Map<String, DetailValue> lastSucceededOutcomes = step == null ? null : step.getLastSucceededOutcomes();
+        Map<String, DetailValue> jobResources = step == null ? null : step.getJobResourcesArgumentsAsNameDetailValueMap();
 
         if (instance.getIncludedArguments() != null && instance.getIncludedArguments().size() > 0) {
             for (Map.Entry<String, List<JobArgument>> e : instance.getIncludedArguments().entrySet()) {
@@ -313,8 +314,8 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
     }
 
     @SuppressWarnings({ "rawtypes" })
-    private A setJobArguments(List<SOSJobArgumentException> exceptions, final JobStep<A> step, Map<String, Object> map,
-            Map<String, JobDetailValue> lastSucceededOutcomes, Map<String, JobDetailValue> jobResources, A instance) throws Exception {
+    private A setJobArguments(List<SOSJobArgumentException> exceptions, final OrderProcessStep<A> step, Map<String, Object> map,
+            Map<String, DetailValue> lastSucceededOutcomes, Map<String, DetailValue> jobResources, A instance) throws Exception {
 
         List<Field> fields = JobHelper.getJobArgumentFields(instance);
         for (Field field : fields) {
@@ -336,8 +337,8 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private void setJobArgument(final JobStep<A> step, Map<String, Object> map, Map<String, JobDetailValue> lastSucceededOutcomes,
-            Map<String, JobDetailValue> jobResources, JobArgument arg, Field field) throws Exception {
+    private void setJobArgument(final OrderProcessStep<A> step, Map<String, Object> map, Map<String, DetailValue> lastSucceededOutcomes,
+            Map<String, DetailValue> jobResources, JobArgument arg, Field field) throws Exception {
         if (arg.getName() == null) {// internal usage
             return;
         }
@@ -347,7 +348,7 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
         }
 
         // preference 1 (HIGHEST) - Succeeded Outcomes
-        JobDetailValue jdv = fromMap(lastSucceededOutcomes, allNames);
+        DetailValue jdv = fromMap(lastSucceededOutcomes, allNames);
         if (jdv != null) {
             arg.setValue(getValue(jdv.getValue(), arg, field));
             ValueSource vs = ValueSource.LAST_SUCCEEDED_OUTCOME;
@@ -392,7 +393,7 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
         return list.stream().filter(map::containsKey).findFirst().map(map::get).orElse(null);
     }
 
-    private Object getNamedValue(final JobStep<A> step, final JobArgument<A> arg) throws SOSJobProblemException {
+    private Object getNamedValue(final OrderProcessStep<A> step, final JobArgument<A> arg) throws SOSJobProblemException {
         if (step == null) {
             return null;
         }
@@ -408,7 +409,7 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
         return val;
     }
 
-    private Object getNamedValue(final JobStep<A> step, final String name) throws SOSJobProblemException {
+    private Object getNamedValue(final OrderProcessStep<A> step, final String name) throws SOSJobProblemException {
         Optional<Either<Problem, Value>> opt = step.getInternalStep().namedValue(name);
         if (opt.isPresent()) {
             return JobHelper.asJavaValue(JobHelper.getFromEither(opt.get()));
@@ -504,14 +505,14 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
         if (arg.getName() == null) {// source Java - internal usage
             return;
         }
-        if (jobContext != null && jobContext.jobArguments().containsKey(arg.getName())) {
+        if (jobEnvironment.getAllArgumentsAsNameValueMap().containsKey(arg.getName())) {
             setValueSource(arg, JobArgument.ValueSource.JOB_ARGUMENT);
         }
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private void setValueSource(final JobStep<A> step, Field field, JobArgument arg, List<String> allNames, boolean isNamedValue,
-            Map<String, JobDetailValue> jobResources) {
+    private void setValueSource(final OrderProcessStep<A> step, Field field, JobArgument arg, List<String> allNames, boolean isNamedValue,
+            Map<String, DetailValue> jobResources) {
         if (arg.getName() == null) {// source Java - internal usage
             return;
         }
@@ -521,8 +522,8 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
             v = fromMap(step.getInternalStep().order().arguments(), allNames);
             source = v == null ? JobArgument.ValueSource.ORDER_OR_NODE : JobArgument.ValueSource.ORDER;
         } else {
-            if (jobContext != null) {
-                v = fromMap(jobContext.jobArguments(), allNames);
+            if (jobEnvironment.getEngineArguments() != null) {
+                v = fromMap(jobEnvironment.getEngineArguments(), allNames);
                 if (v != null) {
                     source = JobArgument.ValueSource.JOB_ARGUMENT;
                 }
@@ -534,7 +535,7 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
 
             // preference 4 (LOWEST) - JobResources
             if (source == null && arg.getValueSource().equals(ValueSource.JAVA)) {
-                JobDetailValue jdv = fromMap(jobResources, allNames);
+                DetailValue jdv = fromMap(jobResources, allNames);
                 if (jdv != null) {
                     try {
                         arg.setValue(getValue(jdv.getValue(), arg, field));
