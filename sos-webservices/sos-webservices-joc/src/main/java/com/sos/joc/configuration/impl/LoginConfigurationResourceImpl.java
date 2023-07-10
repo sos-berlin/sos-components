@@ -12,6 +12,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JocCockpitProperties;
+import com.sos.joc.classes.common.FilenameSanitizer;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.configuration.resource.ILoginConfigurationResource;
 import com.sos.joc.exceptions.JocException;
@@ -42,7 +43,13 @@ public class LoginConfigurationResourceImpl extends JOCResourceImpl implements I
             login.setTitle(Globals.sosCockpitProperties.getProperty("title", ""));
             login.setEnableRememberMe(ClusterSettings.getEnableRememberMe(Globals.getConfigurationGlobalsJoc()));
             String logoName = Globals.sosCockpitProperties.getProperty("custom_logo_name", "").trim();
-            if (!logoName.isEmpty()) {
+            if (logoName != null && !logoName.isEmpty()) {
+                try {
+                    FilenameSanitizer.test("custom_logo_name", logoName);
+                } catch (IllegalArgumentException e) {
+                    LOGGER.warn("joc.properties: " + e.getMessage());
+                    logoName = "";
+                }
                 java.nio.file.Path p = Paths.get(LOGO_LOCATION + logoName);
                 if (!Files.exists(p)) {
                     LOGGER.warn("logo image '" + p.toString() + "' doesn't exist but configured.");
