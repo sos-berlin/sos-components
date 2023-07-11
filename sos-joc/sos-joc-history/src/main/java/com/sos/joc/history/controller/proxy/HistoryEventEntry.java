@@ -431,7 +431,10 @@ public class HistoryEventEntry {
 
         public OutcomeInfo getOutcomeInfoFailed() throws Exception {
             if (outcomeInfo == null) {
-                outcomeInfo = getOutcomeInfo(((JOrderFailed) getJOrderEvent()).outcome());
+                JOrderEvent ev = getJOrderEvent();
+                if (ev instanceof JOrderFailed) {
+                    outcomeInfo = getOutcomeInfo(((JOrderFailed) getJOrderEvent()).outcome());
+                }
                 if (outcomeInfo != null) {
                     Instruction i = getCurrentPositionInstruction();
                     if (i != null && i instanceof Fail) {
