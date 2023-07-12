@@ -1,13 +1,14 @@
 
 package com.sos.inventory.model.instruction;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.instruction.schedule.CycleSchedule;
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
@@ -19,7 +20,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "cycleWorkflow",
-    "schedule"
+    "schedule",
+    "onlyOnePeriod"
 })
 public class Cycle
     extends Instruction
@@ -38,10 +40,13 @@ public class Cycle
      * Cycle Schedule
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("schedule")
     private CycleSchedule schedule;
+    @JsonProperty("onlyOnePeriod")
+    private Boolean onlyOnePeriod = false;
 
     /**
      * No args constructor for use in serialization
@@ -59,6 +64,20 @@ public class Cycle
         super();
         this.cycleWorkflow = cycleWorkflow;
         this.schedule = schedule;
+        this.onlyOnePeriod = false;
+    }
+    
+    /**
+     * 
+     * @param cycleWorkflow
+     * @param schedule
+     * @param onlyOnePeriod
+     */
+    public Cycle(Instructions cycleWorkflow, CycleSchedule schedule, Boolean onlyOnePeriod) {
+        super();
+        this.cycleWorkflow = cycleWorkflow;
+        this.schedule = schedule;
+        this.onlyOnePeriod = onlyOnePeriod;
     }
 
     /**
@@ -89,6 +108,7 @@ public class Cycle
      * Cycle Schedule
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("schedule")
@@ -100,6 +120,7 @@ public class Cycle
      * Cycle Schedule
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("schedule")
@@ -107,14 +128,24 @@ public class Cycle
         this.schedule = schedule;
     }
 
+    @JsonProperty("onlyOnePeriod")
+    public Boolean getOnlyOnePeriod() {
+        return onlyOnePeriod;
+    }
+
+    @JsonProperty("onlyOnePeriod")
+    public void setOnlyOnePeriod(Boolean onlyOnePeriod) {
+        this.onlyOnePeriod = onlyOnePeriod;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("cycleWorkflow", cycleWorkflow).append("schedule", schedule).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("cycleWorkflow", cycleWorkflow).append("schedule", schedule).append("onlyOnePeriod", onlyOnePeriod).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(cycleWorkflow).append(schedule).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(cycleWorkflow).append(schedule).append(onlyOnePeriod).toHashCode();
     }
 
     @Override
@@ -126,7 +157,7 @@ public class Cycle
             return false;
         }
         Cycle rhs = ((Cycle) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(cycleWorkflow, rhs.cycleWorkflow).append(schedule, rhs.schedule).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(cycleWorkflow, rhs.cycleWorkflow).append(schedule, rhs.schedule).append(onlyOnePeriod, rhs.onlyOnePeriod).isEquals();
     }
 
 }

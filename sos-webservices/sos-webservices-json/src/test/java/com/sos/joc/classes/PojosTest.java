@@ -35,6 +35,7 @@ import com.sos.inventory.model.instruction.Instructions;
 import com.sos.inventory.model.instruction.NamedJob;
 import com.sos.inventory.model.instruction.RetryCatch;
 import com.sos.inventory.model.instruction.TryCatch;
+
 import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.inventory.model.job.Job;
 import com.sos.inventory.model.workflow.Jobs;
@@ -301,12 +302,11 @@ public class PojosTest {
     @Test
     public void cycleInstruction() throws JsonParseException, JsonMappingException, IOException {
         String json = "{\"TYPE\":\"Cycle\",\"cycleWorkflow\":{\"instructions\":[]},\"schedule\":{\"schemes\":[{\"repeat\":{\"TYPE\":\"Periodic\",\"period\":3600,\"offsets\":[600,900,1200]}},{\"repeat\":{\"TYPE\":\"Ticking\",\"interval\":1200},\"admissionTimeScheme\":{\"periods\":[{\"TYPE\":\"DailyPeriod\",\"secondOfDay\":200,\"duration\":3600},{\"TYPE\":\"WeekdayPeriod\",\"secondOfWeek\":360000,\"duration\":3600}]}},{\"repeat\":{\"TYPE\":\"Continuous\",\"pause\":300},\"admissionTimeScheme\":{\"periods\":[{\"TYPE\":\"WeekdayPeriod\",\"secondOfWeek\":583200,\"duration\":1800}]}},{\"repeat\":{\"TYPE\":\"Continuous\",\"pause\":60,\"limit\":3},\"admissionTimeScheme\":{\"periods\":[{\"TYPE\":\"WeekdayPeriod\",\"secondOfWeek\":590400,\"duration\":1800}]}}]}}";
-        String json2 = "{\"TYPE\": \"Periodic\",\"offsets\": [600,900,1200],\"period\": 3600}";
+//        String json2 = "{\"TYPE\": \"Periodic\",\"offsets\": [600,900,1200],\"period\": 3600}";
         Cycle cycle = objectMapper.readValue(json, Cycle.class);
-//        Repeat periodic = objectMapper.readValue(json2, Repeat.class);
+        cycle.setOnlyOnePeriod(null);
         String result = objectMapper.writeValueAsString(cycle);
 //        System.out.println(result);
-//        System.out.println(objectMapper.writeValueAsString(periodic));
         assertEquals("cycleInstruction", result, json);
     }
 

@@ -169,7 +169,7 @@ public class WorkflowPositionsModifyImpl extends JOCResourceImpl implements IWor
 
         Workflow wV = workflow.asScala();
         requestedPositions.forEach(l -> {
-            if (wV.checkedPosition(l.asScala()).isRight()) {
+            if (wV.checkPosition(l.asScala()).isRight()) {
                 knownPositions.add(l);
             }
         });
