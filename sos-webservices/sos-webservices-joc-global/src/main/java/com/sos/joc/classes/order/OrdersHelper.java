@@ -52,6 +52,7 @@ import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
+import com.sos.joc.classes.common.StringSizeSanitizer;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.classes.proxy.ControllerApi;
@@ -583,6 +584,13 @@ public class OrdersHelper {
             }
             if (args.containsKey(param.getKey())) {
                 Object curArg = args.get(param.getKey());
+                
+                try {
+                    StringSizeSanitizer.test("variable '" + param.getKey() + "'", curArg);
+                } catch (IllegalArgumentException e1) {
+                    throw new JocConfigurationException(e1.getMessage());
+                }
+                
                 switch (param.getValue().getType()) {
                 case String:
                     if ((curArg instanceof String) == false) {
@@ -672,6 +680,13 @@ public class OrdersHelper {
                 }
 
                 Object curListArg = listVariable.get(p.getKey());
+                
+                try {
+                    StringSizeSanitizer.test("variable '" + p.getKey() + "' of list variable '" + listKey, curListArg);
+                } catch (IllegalArgumentException e1) {
+                    throw new JocConfigurationException(e1.getMessage());
+                }
+                
                 switch (p.getValue().getType()) {
                 case String:
                     if ((curListArg instanceof String) == false) {
