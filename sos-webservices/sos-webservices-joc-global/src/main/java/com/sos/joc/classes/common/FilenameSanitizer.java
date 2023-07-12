@@ -30,7 +30,7 @@ public class FilenameSanitizer {
     });
 
     /**
-     * Checks if 'value' complies all rules of a java variable name
+     * Checks if 'value' complies all rules
      * @param value
      * @return boolean
      *      true iff 'value' complies all rules 
@@ -46,10 +46,7 @@ public class FilenameSanitizer {
     /**
      * Checks if 'value' complies all rules
      * @param value
-     * @return Either&lt;String, Void&gt;
-     *      the 'either' is right iff 'value' complies all rules
-     *      otherwise the left hand side string of the 'either' contains an error message 
-     *      to use in String.format(either.getLeft(), "myString").
+     * @return String errorMessage or null 
      */
     public static String check(String value) {
         if (value == null || value.isEmpty()) {
