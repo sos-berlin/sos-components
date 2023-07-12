@@ -13,7 +13,6 @@ import com.sos.inventory.model.instruction.AddOrder;
 import com.sos.inventory.model.instruction.ConsumeNotices;
 import com.sos.inventory.model.instruction.Cycle;
 import com.sos.inventory.model.instruction.Fail;
-import com.sos.inventory.model.instruction.Finish;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.ForkList;
 import com.sos.inventory.model.instruction.IfElse;
@@ -663,6 +662,7 @@ public class JsonSerializer {
                     break;
                 case CYCLE:
                     Cycle cycle = inst.cast();
+                    cycle.setOnlyOnePeriod(defaultToNull(cycle.getOnlyOnePeriod(), Boolean.FALSE));
                     if (cycle.getCycleWorkflow() != null) {
                         cleanInventoryInstructions(cycle.getCycleWorkflow().getInstructions(), jobs, forkListAgentName, stickyAgentName);
                     }
@@ -774,6 +774,7 @@ public class JsonSerializer {
                     break;
                 case CYCLE:
                     com.sos.sign.model.instruction.Cycle cycle = inst.cast();
+                    cycle.setOnlyOnePeriod(defaultToNull(cycle.getOnlyOnePeriod(), Boolean.FALSE));
                     if (cycle.getCycleWorkflow() != null) {
                         cleanSignedInstructions(cycle.getCycleWorkflow().getInstructions());
                     }

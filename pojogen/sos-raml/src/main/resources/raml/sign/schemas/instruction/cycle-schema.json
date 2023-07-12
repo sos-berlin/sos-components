@@ -15,7 +15,8 @@
   "propertyOrder": [
   	"TYPE",
   	"cycleWorkflow",
-  	"schedule"
+  	"schedule",
+  	"onlyOnePeriod"
   ],
   "properties": {
   	"cycleWorkflow" : {
@@ -23,7 +24,11 @@
   	},
   	"schedule" : {
   		"$ref": "../../../inventory/schemas/instruction/schedule/schedule-schema.json"
-  	}
+  	},
+    "onlyOnePeriod": {
+    	"description": "default = false",
+    	"type": "boolean"	
+    }
   },
   "additionalProperties": false
 }
