@@ -14,12 +14,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.httpclient.exception.SOSBadRequestException;
-import com.sos.jitl.jobs.common.ABlockingInternalJob;
-import com.sos.jitl.jobs.common.JobArgument;
-import com.sos.jitl.jobs.common.OrderProcessStep;
-import com.sos.jitl.jobs.common.OrderProcessStepLogger;
-import com.sos.jitl.jobs.exception.SOSJobProblemException;
-import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
+import com.sos.commons.job.ABlockingInternalJob;
+import com.sos.commons.job.JobArgument;
+import com.sos.commons.job.OrderProcessStep;
+import com.sos.commons.job.OrderProcessStepLogger;
+import com.sos.commons.job.exception.JobProblemException;
+import com.sos.commons.job.exception.JobRequiredArgumentMissingException;
 import com.sos.jitl.jobs.sap.common.bean.ResponseSchedule;
 import com.sos.jitl.jobs.sap.common.bean.RunIds;
 import com.sos.jitl.jobs.sap.common.bean.ScheduleDescription;
@@ -88,15 +88,15 @@ public abstract class ASAPS4HANAJob extends ABlockingInternalJob<CommonJobArgume
         return true;
     }
 
-    public static String setScheduleDescription(OrderProcessStep<CommonJobArguments> step) throws SOSJobProblemException, JsonProcessingException {
+    public static String setScheduleDescription(OrderProcessStep<CommonJobArguments> step) throws JobProblemException, JsonProcessingException {
         return Globals.objectMapper.writeValueAsString(new ScheduleDescription(step.getWorkflowName(), step.getJobInstructionLabel(), step
                 .getOrderId(), Instant.now().toEpochMilli()));
     }
 
-    private void checkRequiredArguments(List<JobArgument<?>> args) throws SOSJobRequiredArgumentMissingException {
+    private void checkRequiredArguments(List<JobArgument<?>> args) throws JobRequiredArgumentMissingException {
         Optional<String> arg = args.stream().filter(JobArgument::isRequired).filter(JobArgument::isEmpty).findAny().map(JobArgument::getName);
         if (arg.isPresent()) {
-            throw new SOSJobRequiredArgumentMissingException(String.format("'%s' is missing but required", arg.get()));
+            throw new JobRequiredArgumentMissingException(String.format("'%s' is missing but required", arg.get()));
         }
     }
 
@@ -167,7 +167,7 @@ public abstract class ASAPS4HANAJob extends ABlockingInternalJob<CommonJobArgume
         }
     }
 
-    private String getStatusFilename(OrderProcessStep<CommonJobArguments> step) throws SOSJobProblemException {
+    private String getStatusFilename(OrderProcessStep<CommonJobArguments> step) throws JobProblemException {
         return String.format("%s#%s%s.json", step.getWorkflowName(), step.getJobInstructionLabel(), step.getOrderId().replace('|', '!'));
     }
 

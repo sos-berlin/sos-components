@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.sos.commons.exception.SOSException;
+import com.sos.commons.job.OrderProcessStepLogger;
 import com.sos.jitl.jobs.checkhistory.classes.CheckHistoryHelper;
 import com.sos.jitl.jobs.checkhistory.classes.HistoryFilter;
 import com.sos.jitl.jobs.checkhistory.classes.HistoryItem;
 import com.sos.jitl.jobs.checkhistory.classes.HistoryWebserviceExecuter;
 import com.sos.jitl.jobs.checkhistory.classes.ParameterResolver;
-import com.sos.jitl.jobs.common.OrderProcessStepLogger;
 import com.sos.jitl.jobs.jocapi.ApiExecutor;
 import com.sos.jitl.jobs.jocapi.ApiResponse;
 import com.sos.joc.model.common.HistoryStateText;

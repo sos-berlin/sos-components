@@ -308,8 +308,8 @@ public class SOSPath {
         return getFolderStream(folder, regexp, flag, withSubFolder).collect(Collectors.toList());
     }
 
-    public static byte[] readFile(final Path source) throws IOException {
-        return Files.readAllBytes(source);
+    public static String readFile(final Path source) throws IOException {
+        return readFile(source, StandardCharsets.UTF_8);
     }
 
     public static String readFile(final Path source, Charset charset) throws IOException {

@@ -13,10 +13,10 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.job.OrderProcessStepLogger;
+import com.sos.commons.job.OrderProcessStepOutcome;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.common.SOSCommandResult;
-import com.sos.jitl.jobs.common.OrderProcessStepLogger;
-import com.sos.jitl.jobs.common.OrderProcessStepOutcome;
 
 public class SQLPLUSCommandHandler {
 

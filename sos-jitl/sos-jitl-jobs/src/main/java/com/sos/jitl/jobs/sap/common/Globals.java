@@ -7,7 +7,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.sos.jitl.jobs.exception.SOSJobProblemException;
+import com.sos.commons.job.exception.JobProblemException;
 import com.sos.jitl.jobs.sap.common.bean.RunIds;
 import com.sos.jitl.jobs.sap.common.bean.ScheduleDescription;
 
@@ -26,7 +26,7 @@ public class Globals {
             .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false)
             .configure(SerializationFeature.INDENT_OUTPUT, true);
 
-    public static Path getStatusFileDirectory(CommonJobArguments args) throws SOSJobProblemException, JsonProcessingException {
+    public static Path getStatusFileDirectory(CommonJobArguments args) throws JobProblemException, JsonProcessingException {
         if (args.getMandant().isEmpty()) {
             return statusFileDirectory;
         }

@@ -1,7 +1,7 @@
 package com.sos.jitl.jobs.inventory;
 
-import com.sos.jitl.jobs.common.ABlockingInternalJob;
-import com.sos.jitl.jobs.common.OrderProcessStep;
+import com.sos.commons.job.ABlockingInternalJob;
+import com.sos.commons.job.OrderProcessStep;
 import com.sos.jitl.jobs.inventory.setjobresource.SetJobResource;
 import com.sos.jitl.jobs.inventory.setjobresource.SetJobResourceJobArguments;
 

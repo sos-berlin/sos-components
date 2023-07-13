@@ -2,11 +2,11 @@ package com.sos.jitl.jobs.examples;
 
 import java.nio.charset.Charset;
 
+import com.sos.commons.job.ABlockingInternalJob;
+import com.sos.commons.job.OrderProcessStep;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.SOSTimeout;
-import com.sos.jitl.jobs.common.ABlockingInternalJob;
-import com.sos.jitl.jobs.common.OrderProcessStep;
 
 public class SOSShellJob extends ABlockingInternalJob<SOSShellJobArguments> {
 

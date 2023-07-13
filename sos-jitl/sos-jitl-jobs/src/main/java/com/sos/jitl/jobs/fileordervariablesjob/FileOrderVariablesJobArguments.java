@@ -1,8 +1,8 @@
 package com.sos.jitl.jobs.fileordervariablesjob;
 
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
-import com.sos.jitl.jobs.common.JobArgument;
-import com.sos.jitl.jobs.common.JobArguments;
+import com.sos.commons.job.JobArgument;
+import com.sos.commons.job.JobArguments;
 
 public class FileOrderVariablesJobArguments extends JobArguments {
 

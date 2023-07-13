@@ -12,9 +12,9 @@ import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.QuoteMode;
 
 import com.sos.commons.hibernate.SOSHibernateSQLExecutor;
+import com.sos.commons.job.OrderProcessStepLogger;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSPath;
-import com.sos.jitl.jobs.common.OrderProcessStepLogger;
 
 public class Export2CSV {
 

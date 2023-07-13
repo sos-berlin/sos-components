@@ -1,8 +1,8 @@
 package com.sos.jitl.jobs.ssh.exception;
 
-import com.sos.jitl.jobs.exception.SOSJobException;
+import com.sos.commons.job.exception.JobException;
 
-public class SOSJobSSHException extends SOSJobException{
+public class SOSJobSSHException extends JobException{
 
 	private static final long serialVersionUID = -8987213800270311709L;
 

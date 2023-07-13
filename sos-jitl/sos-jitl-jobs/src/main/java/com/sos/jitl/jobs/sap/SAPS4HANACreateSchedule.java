@@ -2,11 +2,11 @@ package com.sos.jitl.jobs.sap;
 
 import java.util.Optional;
 
-import com.sos.jitl.jobs.common.JobArgument;
-import com.sos.jitl.jobs.common.OrderProcessStep;
-import com.sos.jitl.jobs.common.OrderProcessStepLogger;
-import com.sos.jitl.jobs.exception.SOSJobException;
-import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
+import com.sos.commons.job.JobArgument;
+import com.sos.commons.job.OrderProcessStep;
+import com.sos.commons.job.OrderProcessStepLogger;
+import com.sos.commons.job.exception.JobException;
+import com.sos.commons.job.exception.JobRequiredArgumentMissingException;
 import com.sos.jitl.jobs.sap.common.ASAPS4HANAJob;
 import com.sos.jitl.jobs.sap.common.CommonJobArguments;
 import com.sos.jitl.jobs.sap.common.HttpClient;
@@ -43,14 +43,14 @@ public class SAPS4HANACreateSchedule extends ASAPS4HANAJob {
             args.setIScheduleId(respSchedule.getScheduleId());
             logger.info("Schedule jobId=%d scheduleId=%s is created", args.getJobId().getValue(), respSchedule.getScheduleId());
         } else {
-            throw new SOSJobException(String.format("A Schedule '%s' doesn't exist in the Job '%d'", job.getJobId(), args.getScheduleId()
+            throw new JobException(String.format("A Schedule '%s' doesn't exist in the Job '%d'", job.getJobId(), args.getScheduleId()
                     .getValue()));
         }
     }
 
-    private void checkJobIdName(JobArgument<Long> jobId, JobArgument<String> jobName) throws SOSJobRequiredArgumentMissingException {
+    private void checkJobIdName(JobArgument<Long> jobId, JobArgument<String> jobName) throws JobRequiredArgumentMissingException {
         if (jobId.isEmpty() && jobName.isEmpty()) {
-            throw new SOSJobRequiredArgumentMissingException(String.format("Either the %s or the %s must be specified", jobId.getName(), jobName
+            throw new JobRequiredArgumentMissingException(String.format("Either the %s or the %s must be specified", jobId.getName(), jobName
                     .getName()));
         }
     }

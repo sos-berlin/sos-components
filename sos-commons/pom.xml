@@ -25,5 +25,6 @@
 		<module>sos-commons-vfs</module>
 		<module>sos-commons-cli</module>
 		<module>sos-commons-git</module>
-	</modules>
+        <module>sos-commons-job</module>
+ 	</modules>
 </project>

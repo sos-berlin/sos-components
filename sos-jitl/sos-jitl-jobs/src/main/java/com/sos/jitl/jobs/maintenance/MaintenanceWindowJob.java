@@ -1,7 +1,7 @@
 package com.sos.jitl.jobs.maintenance;
 
-import com.sos.jitl.jobs.common.ABlockingInternalJob;
-import com.sos.jitl.jobs.common.OrderProcessStep;
+import com.sos.commons.job.ABlockingInternalJob;
+import com.sos.commons.job.OrderProcessStep;
 import com.sos.jitl.jobs.maintenance.classes.MaintenanceWindowImpl;
 
 public class MaintenanceWindowJob extends ABlockingInternalJob<MaintenanceWindowJobArguments> {

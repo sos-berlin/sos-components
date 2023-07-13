@@ -8,11 +8,11 @@ import java.nio.file.Paths;
 import java.util.stream.Stream;
 
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
+import com.sos.commons.job.JobArgument;
+import com.sos.commons.job.JobArguments;
+import com.sos.commons.job.JobHelper;
+import com.sos.commons.job.exception.JobRequiredArgumentMissingException;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
-import com.sos.jitl.jobs.common.JobArgument;
-import com.sos.jitl.jobs.common.JobArguments;
-import com.sos.jitl.jobs.common.JobHelper;
-import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
 
 public class PLSQLJobArguments extends JobArguments {
 
@@ -129,27 +129,27 @@ public class PLSQLJobArguments extends JobArguments {
         resultFile.setValue(val);
     }
 
-    public void checkRequired() throws SOSJobRequiredArgumentMissingException {
+    public void checkRequired() throws JobRequiredArgumentMissingException {
         if ((command.getValue() == null || command.getValue().isEmpty()) && (commandScriptFile.getValue() == null || commandScriptFile.getValue()
                 .isEmpty())) {
-            throw new SOSJobRequiredArgumentMissingException(command.getName() + " or " + commandScriptFile.getName());
+            throw new JobRequiredArgumentMissingException(command.getName() + " or " + commandScriptFile.getName());
         }
         if (!useHibernateFile()) {
             if (dbUrl.getValue() == null || dbUrl.getValue().isEmpty()) {
-                throw new SOSJobRequiredArgumentMissingException(dbUrl.getName());
+                throw new JobRequiredArgumentMissingException(dbUrl.getName());
             }
             if ((dbUser.getValue() == null || dbUser.getValue().isEmpty()) && (dbPassword.getValue() != null)) {
-                throw new SOSJobRequiredArgumentMissingException(dbUrl.getName());
+                throw new JobRequiredArgumentMissingException(dbUrl.getName());
             }
 
         } else {
             if (hibernateFile.getValue().toString().isEmpty()) {
-                throw new SOSJobRequiredArgumentMissingException(hibernateFile.getName() + " or " + dbUrl.getName() + " + username and password");
+                throw new JobRequiredArgumentMissingException(hibernateFile.getName() + " or " + dbUrl.getName() + " + username and password");
             }
         }
 
         if (getResultSetAs() != null && getResultFile() == null) {
-            throw new SOSJobRequiredArgumentMissingException(resultFile.getName());
+            throw new JobRequiredArgumentMissingException(resultFile.getName());
         }
 
     }

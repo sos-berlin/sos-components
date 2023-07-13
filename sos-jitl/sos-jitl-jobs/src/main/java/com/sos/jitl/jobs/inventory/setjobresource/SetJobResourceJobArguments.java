@@ -1,8 +1,8 @@
 package com.sos.jitl.jobs.inventory.setjobresource;
 
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
-import com.sos.jitl.jobs.common.JobArgument;
-import com.sos.jitl.jobs.common.JobArguments;
+import com.sos.commons.job.JobArgument;
+import com.sos.commons.job.JobArguments;
 
 public class SetJobResourceJobArguments extends JobArguments {
 

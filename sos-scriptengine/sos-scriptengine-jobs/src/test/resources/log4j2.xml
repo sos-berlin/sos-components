@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+	<Appenders>
+		<!-- Appender for root logger -->
+		<Console name="stdout" target="SYSTEM_OUT">
+			<PatternLayout pattern="%d{ISO8601}{Europe/Berlin} %-5p %-16.16t %-44.70c{1.} - %m%n"/>
+		</Console>
+	</Appenders>
+
+	<Loggers>
+		<!-- General Loggers - set the following loggers to 'debug' to debug the JOC Cockpit -->
+    <Logger name="js7.base.io.https.Https" level="warn"/>
+		<Logger name="com.sos" level="debug"/>
+		<Logger name="org.hibernate.SQL" level="error"/>
+
+		<!-- Apache and Apache Shiro Logs -->
+		<Logger name="org.apache.commons" level="error"/>
+		<Logger name="org.apache.http" level="error"/>
+		<!--Logger name="org.apache.shiro" level="info"/-->
+		<Logger name="org.apache.shiro.session.mgt" level="error"/>
+
+		<!-- Logger for hibernate -->
+		<Logger name="org.hibernate.hql" level="error"/>
+		<Logger name="org.hibernate.event" level="error"/>
+		<Logger name="org.hibernate.cfg" level="error"/>
+		<Logger name="org.hibernate.type" level="error"/>
+		<Logger name="org.hibernate.id" level="error"/>
+		<Logger name="org.hibernate.orm.deprecation" level="error"/>
+		<Logger name="org.hibernate.engine.transaction.internal.TransactionImpl" level="info"/>
+
+		<!-- root logger with console appender. All other loggers inherit from this logger. -->
+		<Root level="info">
+			<AppenderRef ref="stdout"/>
+		</Root>
+	</Loggers>
+</Configuration>

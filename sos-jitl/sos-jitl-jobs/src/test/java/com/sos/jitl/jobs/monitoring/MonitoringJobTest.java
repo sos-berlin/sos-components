@@ -8,8 +8,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.jitl.jobs.common.JobHelper;
-import com.sos.jitl.jobs.common.UnitTestJobHelper;
+import com.sos.commons.job.JobHelper;
+import com.sos.commons.job.UnitTestJobHelper;
 
 import js7.data_for_java.order.JOutcome;
 

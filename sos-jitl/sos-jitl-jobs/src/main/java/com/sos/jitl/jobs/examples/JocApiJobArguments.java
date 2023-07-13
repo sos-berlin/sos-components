@@ -2,8 +2,8 @@ package com.sos.jitl.jobs.examples;
 
 import java.net.URI;
 
-import com.sos.jitl.jobs.common.JobArgument;
-import com.sos.jitl.jobs.common.JobArguments;
+import com.sos.commons.job.JobArgument;
+import com.sos.commons.job.JobArguments;
 
 public class JocApiJobArguments extends JobArguments {
 
