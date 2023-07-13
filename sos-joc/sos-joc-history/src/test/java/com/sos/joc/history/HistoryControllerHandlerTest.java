@@ -108,7 +108,7 @@ public class HistoryControllerHandlerTest {
 
     private static final String CONTROLLER_URI_PRIMARY = "http://localhost:5444";
     private static final String CONTROLLER_ID = "js7.x";
-    private static final int MAX_EXECUTION_TIME = 20; // seconds
+    private static final int MAX_EXECUTION_TIME = 30; // seconds
     private static final int SIMULATE_LONG_EXECUTION_INTERVAL = 0; // seconds
     private static final Long START_EVENT_ID = 0L;
 
@@ -151,7 +151,7 @@ public class HistoryControllerHandlerTest {
             LOGGER.info("[flux][START]");
             Flux<JEventAndControllerState<Event>> flux = api.eventFlux(eventBus, OptionalLong.of(eventId));
 
-            flux = flux.doOnNext(e -> LOGGER.info(e.stampedEvent().value().event().getClass().getSimpleName()));
+            // flux = flux.doOnNext(e -> LOGGER.info(e.stampedEvent().value().event().getClass().getSimpleName()));
             // flux = flux.doOnNext(e -> LOGGER.info(SOSString.toString(e)));
 
             flux = flux.filter(e -> HistoryEventType.fromValue(e.stampedEvent().value().event().getClass().getSimpleName()) != null);
@@ -211,9 +211,9 @@ public class HistoryControllerHandlerTest {
     private AFatEvent map2fat(JEventAndControllerState<Event> eventAndState) {
         AFatEvent event = null;
         HistoryEventEntry entry = null;
+        HistoryOrder order = null;
         try {
             entry = new HistoryEventEntry(CONTROLLER_ID, eventAndState);
-            HistoryOrder order;
             List<FatForkedChild> childs;
             List<OrderLock> ol;
             switch (entry.getEventType()) {
@@ -564,17 +564,18 @@ public class HistoryControllerHandlerTest {
                 break;
 
             default:
-                event = new FatEventWithProblem(entry, new Exception("unknown type=" + entry.getEventType()));
+                event = new FatEventWithProblem(entry, null, new Exception("unknown type=" + entry.getEventType()));
                 break;
             }
 
         } catch (Throwable e) {
             e.printStackTrace();
             // Flux.error(e);
+            String orderId = order == null ? null : order.getOrderId();
             if (entry == null) {
-                event = new FatEventWithProblem(entry, e);
+                event = new FatEventWithProblem(entry, orderId, e);
             } else {
-                event = new FatEventWithProblem(entry, e, entry.getEventId(), entry.getEventDate());
+                event = new FatEventWithProblem(entry, orderId, e, entry.getEventId(), entry.getEventDate());
             }
         }
         return event;

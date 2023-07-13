@@ -7,17 +7,19 @@ import com.sos.joc.history.controller.proxy.HistoryEventType;
 
 public final class FatEventWithProblem extends AFatEvent {
 
-    private final HistoryEventEntry entry;
     private final Throwable error;
+    private final HistoryEventType eventType;
+    private final String orderId;
 
-    public FatEventWithProblem(HistoryEventEntry entry, Throwable error) {
-        this(entry, error, -1L, new Date());
+    public FatEventWithProblem(HistoryEventEntry entry, String orderId, Throwable error) {
+        this(entry, orderId, error, -1L, new Date());
     }
 
-    public FatEventWithProblem(HistoryEventEntry entry, Throwable error, Long eventId, Date eventDatetime) {
+    public FatEventWithProblem(HistoryEventEntry entry, String orderId, Throwable error, Long eventId, Date eventDatetime) {
         super(eventId, eventDatetime);
-        this.entry = entry;
         this.error = error;
+        this.eventType = entry == null ? null : entry.getEventType();
+        this.orderId = orderId;
     }
 
     @Override
@@ -29,12 +31,15 @@ public final class FatEventWithProblem extends AFatEvent {
         return HistoryEventType.EventWithProblem;
     }
 
-    public HistoryEventEntry getEntry() {
-        return entry;
+    public HistoryEventType getEventType() {
+        return eventType;
     }
 
-    public Throwable getError() {
-        return error;
+    public String getError() {
+        return error == null ? "" : error.toString();
     }
 
+    public String getOrderId() {
+        return orderId;
+    }
 }

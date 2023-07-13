@@ -377,9 +377,9 @@ public class HistoryControllerHandler {
     private AFatEvent map2fat(JEventAndControllerState<Event> eventAndState) {
         AFatEvent event = null;
         HistoryEventEntry entry = null;
+        HistoryOrder order = null;
         try {
             entry = new HistoryEventEntry(model.getControllerConfiguration().getCurrent().getId(), eventAndState);
-            HistoryOrder order;
             List<FatForkedChild> childs;
             List<OrderLock> ol;
             switch (entry.getEventType()) {
@@ -726,16 +726,17 @@ public class HistoryControllerHandler {
                 break;
 
             default:
-                event = new FatEventWithProblem(entry, new Exception("unknown type=" + entry.getEventType()));
+                event = new FatEventWithProblem(entry, null, new Exception("unknown type=" + entry.getEventType()));
                 break;
             }
 
         } catch (Throwable e) {
             // Flux.error(e);
+            String orderId = order == null ? null : order.getOrderId();
             if (entry == null) {
-                event = new FatEventWithProblem(entry, e);
+                event = new FatEventWithProblem(entry, orderId, e);
             } else {
-                event = new FatEventWithProblem(entry, e, entry.getEventId(), entry.getEventDate());
+                event = new FatEventWithProblem(entry, orderId, e, entry.getEventId(), entry.getEventDate());
             }
         }
         return event;
