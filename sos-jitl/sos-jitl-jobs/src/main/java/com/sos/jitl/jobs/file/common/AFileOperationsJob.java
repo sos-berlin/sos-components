@@ -7,11 +7,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.sos.jitl.jobs.common.ABlockingInternalJob;
-import com.sos.jitl.jobs.common.JobHelper;
-import com.sos.jitl.jobs.common.OrderProcessStep;
-import com.sos.jitl.jobs.common.OrderProcessStepOutcome;
-import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
+import com.sos.commons.job.ABlockingInternalJob;
+import com.sos.commons.job.JobHelper;
+import com.sos.commons.job.OrderProcessStep;
+import com.sos.commons.job.OrderProcessStepOutcome;
+import com.sos.commons.job.exception.JobRequiredArgumentMissingException;
 import com.sos.jitl.jobs.file.exception.SOSFileOperationsException;
 
 public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperationsJobArguments> {
@@ -22,7 +22,7 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
 
     public static void checkArguments(FileOperationsJobArguments args) throws Exception {
         if (args.getReplacing().isEmpty() && !args.getReplacement().isEmpty()) {
-            throw new SOSJobRequiredArgumentMissingException(String.format("'%s' is missing but required for '%s'", args.getReplacing().getName(),
+            throw new JobRequiredArgumentMissingException(String.format("'%s' is missing but required for '%s'", args.getReplacing().getName(),
                     args.getReplacement().getName()));
         }
     }

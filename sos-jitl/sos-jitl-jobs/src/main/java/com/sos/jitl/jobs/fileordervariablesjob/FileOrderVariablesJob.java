@@ -2,8 +2,8 @@ package com.sos.jitl.jobs.fileordervariablesjob;
 
 import java.util.Map;
 
-import com.sos.jitl.jobs.common.ABlockingInternalJob;
-import com.sos.jitl.jobs.common.OrderProcessStep;
+import com.sos.commons.job.ABlockingInternalJob;
+import com.sos.commons.job.OrderProcessStep;
 
 public class FileOrderVariablesJob extends ABlockingInternalJob<FileOrderVariablesJobArguments> {
 

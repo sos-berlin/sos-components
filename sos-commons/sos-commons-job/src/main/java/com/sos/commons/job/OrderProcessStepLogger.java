@@ -1,0 +1,251 @@
+package com.sos.commons.job;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.sos.commons.exception.ISOSRequiredArgumentMissingException;
+import com.sos.commons.util.SOSString;
+
+import js7.launcher.forjava.internal.BlockingInternalJob;
+
+public class OrderProcessStepLogger {
+
+    public enum LogLevel {
+        INFO, DEBUG, TRACE, WARN, ERROR
+    }
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(OrderProcessStepLogger.class);
+    private static final String LOG_LEVEL_INFO = LogLevel.INFO.name();
+    private static final String LOG_LEVEL_DEBUG = LogLevel.DEBUG.name();
+    private static final String LOG_LEVEL_TRACE = LogLevel.TRACE.name();
+    private static final String LOG_LEVEL_WARN = LogLevel.WARN.name();
+    private static final String LOG_LEVEL_ERROR = LogLevel.ERROR.name();
+
+    private final BlockingInternalJob.Step step;
+
+    private boolean isDebugEnabled;
+    private boolean isTraceEnabled;
+
+    protected OrderProcessStepLogger(BlockingInternalJob.Step step) {
+        this.step = step;
+    }
+
+    protected void init(Object args) {
+        if (step == null) {
+            isTraceEnabled = LOGGER.isTraceEnabled();
+            isDebugEnabled = LOGGER.isDebugEnabled();
+        } else if (args != null && args instanceof JobArguments) {
+            JobArguments ja = (JobArguments) args;
+            isTraceEnabled = ja.getLogLevel().getValue().equals(LogLevel.TRACE);
+            isDebugEnabled = ja.getLogLevel().getValue().equals(LogLevel.DEBUG) || isTraceEnabled;
+        }
+    }
+
+    public void info(final Object msg) {
+        if (step == null) {
+            LOGGER.info(String.format("[%s]%s", LOG_LEVEL_INFO, msg));
+            return;
+        }
+        step.out().println(String.format("[%s]%s", LOG_LEVEL_INFO, msg));
+    }
+
+    public void info(final String format, final Object... args) {
+        if (args.length == 0) {
+            info(format);
+        } else {
+            info(String.format(format, args));
+        }
+    }
+
+    public void debug(final Object msg) {
+        if (!isDebugEnabled) {
+            return;
+        }
+        if (step == null) {
+            LOGGER.debug(String.format("[%s]%s", LOG_LEVEL_DEBUG, msg));
+            return;
+        }
+        step.out().println(String.format("[%s]%s", LOG_LEVEL_DEBUG, msg));
+    }
+
+    public void debug(final String format, final Object... args) {
+        if (!isDebugEnabled) {
+            return;
+        }
+        if (args.length == 0) {
+            debug(format);
+        } else {
+            debug(String.format(format, args));
+        }
+    }
+
+    public void trace(final Object msg) {
+        if (!isTraceEnabled) {
+            return;
+        }
+        if (step == null) {
+            LOGGER.trace(String.format("[%s]%s", LOG_LEVEL_TRACE, msg));
+            return;
+        }
+        step.out().println(String.format("[%s]%s", LOG_LEVEL_TRACE, msg));
+    }
+
+    public void trace(final String format, final Object... args) {
+        if (!isTraceEnabled) {
+            return;
+        }
+        if (args.length == 0) {
+            trace(format);
+        } else {
+            trace(String.format(format, args));
+        }
+    }
+
+    public void warn(final Object msg) {
+        if (step == null) {
+            LOGGER.warn(String.format("[%s]%s", LOG_LEVEL_WARN, msg));
+            return;
+        }
+        step.out().println(String.format("[%s]%s", LOG_LEVEL_WARN, msg));
+    }
+
+    public void warn(final String format, final Object... args) {
+        if (args.length == 0) {
+            warn(format);
+        } else {
+            warn(String.format(format, args));
+        }
+    }
+
+    public void warn(final String msg, Throwable e) {
+        warn(warn2String(msg, e));
+    }
+
+    protected void warn2allLogger(String stepInfo, final String msg, Throwable e) {
+        Throwable ex = handleException(e);
+        if (ex != null) {
+            warn2slf4j(stepInfo, msg, ex);
+            warn(warn2String(msg, ex));
+        }
+    }
+
+    public void error(final Object msg) {
+        if (step == null) {
+            LOGGER.error(String.format("[%s]%s", LOG_LEVEL_ERROR, msg));
+            return;
+        }
+        step.err().println(String.format("[%s]%s", LOG_LEVEL_ERROR, msg));
+    }
+
+    public void error(final String format, final Object... args) {
+        if (args.length == 0) {
+            error(format);
+        } else {
+            error(String.format(format, args));
+        }
+    }
+
+    public void error(final String msg, Throwable e) {
+        error(throwable2String(msg, e));
+    }
+
+    public void error(Throwable e) {
+        error(throwable2String(null, e));
+    }
+
+    protected void error2allLogger(final String stepInfo, final String msg, final Throwable e) {
+        Throwable ex = handleException(e);
+        if (ex != null) {
+            error2slf4j(stepInfo, msg, ex);
+            error(throwable2String(msg, ex));
+        }
+    }
+
+    protected void log(LogLevel logLevel, final Object msg) {
+        switch (logLevel) {
+        case INFO:
+            info(msg);
+            break;
+        case DEBUG:
+            debug(msg);
+            break;
+        case TRACE:
+            trace(msg);
+            break;
+        case WARN:
+            warn(msg);
+            break;
+        case ERROR:
+            error(msg);
+            break;
+        }
+    }
+
+    protected void log(LogLevel logLevel, final String format, final Object... args) {
+        switch (logLevel) {
+        case INFO:
+            info(format, args);
+            break;
+        case DEBUG:
+            debug(format, args);
+            break;
+        case TRACE:
+            trace(format, args);
+            break;
+        case WARN:
+            warn(format, args);
+            break;
+        case ERROR:
+            error(format, args);
+            break;
+        }
+    }
+
+    public boolean isDebugEnabled() {
+        return isDebugEnabled;
+    }
+
+    public boolean isTraceEnabled() {
+        return isTraceEnabled;
+    }
+
+    private String warn2String(String msg, Throwable e) {
+        return throwable2String(msg, e);
+    }
+
+    protected Throwable handleException(Throwable e) {
+        if (e == null || e instanceof ISOSRequiredArgumentMissingException) {
+            return null;
+        }
+        return e;
+    }
+
+    protected void failed2slf4j(String stepInfo, String msg) {
+        LOGGER.error(String.format("[failed]%s%s", stepInfo, SOSString.isEmpty(msg) ? "" : msg));
+    }
+
+    protected void failed2slf4j(String stepInfo, String msg, Throwable e) {
+        LOGGER.error(String.format("[failed]%s%s", stepInfo, msg), e);
+    }
+
+    private void warn2slf4j(String stepInfo, String msg, Throwable e) {
+        LOGGER.warn(String.format("%s%s", stepInfo, msg), e);
+    }
+
+    private void error2slf4j(String stepInfo, String msg, Throwable e) {
+        LOGGER.error(String.format("%s%s", stepInfo, msg), e);
+    }
+
+    protected String throwable2String(String msg, Throwable e) {
+        if (e == null) {
+            return msg;
+        }
+        StringBuilder sb = new StringBuilder();
+        if (!SOSString.isEmpty(msg)) {
+            sb.append(msg);
+            sb.append("\n");
+        }
+        sb.append(SOSString.toString(e));
+        return sb.toString();
+    }
+}

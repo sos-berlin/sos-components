@@ -3,9 +3,9 @@ package com.sos.jitl.jobs.ssh;
 import java.util.List;
 
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
+import com.sos.commons.job.JobArgument;
+import com.sos.commons.job.JobArguments;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
-import com.sos.jitl.jobs.common.JobArgument;
-import com.sos.jitl.jobs.common.JobArguments;
 
 public class SSHJobArguments extends JobArguments {
 

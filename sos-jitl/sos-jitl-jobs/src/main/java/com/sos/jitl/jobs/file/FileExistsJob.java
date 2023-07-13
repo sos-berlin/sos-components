@@ -12,10 +12,10 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import com.sos.commons.job.ABlockingInternalJob;
+import com.sos.commons.job.OrderProcessStep;
+import com.sos.commons.job.OrderProcessStepLogger;
 import com.sos.commons.util.SOSDate;
-import com.sos.jitl.jobs.common.ABlockingInternalJob;
-import com.sos.jitl.jobs.common.OrderProcessStep;
-import com.sos.jitl.jobs.common.OrderProcessStepLogger;
 import com.sos.jitl.jobs.file.common.AFileOperationsJob;
 import com.sos.jitl.jobs.file.common.FileOperationsImpl;
 import com.sos.jitl.jobs.file.common.FileOperationsJobFileExistsArguments;

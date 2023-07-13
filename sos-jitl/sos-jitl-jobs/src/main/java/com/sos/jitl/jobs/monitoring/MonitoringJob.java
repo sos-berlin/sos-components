@@ -4,8 +4,8 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
-import com.sos.jitl.jobs.common.ABlockingInternalJob;
-import com.sos.jitl.jobs.common.OrderProcessStep;
+import com.sos.commons.job.ABlockingInternalJob;
+import com.sos.commons.job.OrderProcessStep;
 import com.sos.jitl.jobs.monitoring.classes.MonitoringCheckReturn;
 import com.sos.jitl.jobs.monitoring.classes.MonitoringParameters;
 import com.sos.joc.model.jitl.monitoring.MonitoringStatus;

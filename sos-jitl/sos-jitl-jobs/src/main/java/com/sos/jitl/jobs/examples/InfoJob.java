@@ -11,14 +11,14 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments.SOSCredentialStoreResolver;
+import com.sos.commons.job.ABlockingInternalJob;
+import com.sos.commons.job.DetailValue;
+import com.sos.commons.job.JobArgument;
+import com.sos.commons.job.OrderProcessStep;
+import com.sos.commons.job.OrderProcessStepLogger;
+import com.sos.commons.job.OrderProcessStepOutcome;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
-import com.sos.jitl.jobs.common.ABlockingInternalJob;
-import com.sos.jitl.jobs.common.DetailValue;
-import com.sos.jitl.jobs.common.JobArgument;
-import com.sos.jitl.jobs.common.OrderProcessStep;
-import com.sos.jitl.jobs.common.OrderProcessStepLogger;
-import com.sos.jitl.jobs.common.OrderProcessStepOutcome;
 
 public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
 
@@ -95,7 +95,7 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
         step.getLogger().info("----------NODE/STEP-----------------");
         step.getLogger().info("[java][agentId]" + step.getAgentId());
         step.getLogger().info("[java][name]" + step.getJobName());
-      
+
         step.getLogger().info("----------ALL CURRENT declared/not declared argumens-----------------");
         Map<String, JobArgument<InfoJobArguments>> allcmap = step.getAllArguments();
         allcmap.entrySet().stream().forEach(e -> {

@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.sos.commons.exception.SOSException;
-import com.sos.jitl.jobs.common.OrderProcessStepLogger;
+import com.sos.commons.job.OrderProcessStepLogger;
 import com.sos.jitl.jobs.jocapi.ApiExecutor;
 import com.sos.jitl.jobs.jocapi.ApiResponse;
 import com.sos.jitl.jobs.monitoring.classes.MonitoringCheckReturn;

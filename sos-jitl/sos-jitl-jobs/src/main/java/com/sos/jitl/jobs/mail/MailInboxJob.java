@@ -10,11 +10,11 @@ import java.util.stream.Collectors;
 
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments.SOSCredentialStoreResolver;
+import com.sos.commons.job.ABlockingInternalJob;
+import com.sos.commons.job.JobArgument;
+import com.sos.commons.job.OrderProcessStep;
+import com.sos.commons.job.exception.JobRequiredArgumentMissingException;
 import com.sos.commons.mail.SOSMailReceiver;
-import com.sos.jitl.jobs.common.ABlockingInternalJob;
-import com.sos.jitl.jobs.common.JobArgument;
-import com.sos.jitl.jobs.common.OrderProcessStep;
-import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
 import com.sos.jitl.jobs.mail.MailInboxArguments.ActionProcess;
 
 public class MailInboxJob extends ABlockingInternalJob<MailInboxArguments> {
@@ -111,10 +111,10 @@ public class MailInboxJob extends ABlockingInternalJob<MailInboxArguments> {
         }
     }
 
-    private void checkRequiredArguments(List<JobArgument<?>> args) throws SOSJobRequiredArgumentMissingException {
+    private void checkRequiredArguments(List<JobArgument<?>> args) throws Exception {
         Optional<String> arg = args.stream().filter(JobArgument::isRequired).filter(JobArgument::isEmpty).findAny().map(JobArgument::getName);
         if (arg.isPresent()) {
-            throw new SOSJobRequiredArgumentMissingException(String.format("'%s' is missing but required", arg.get()));
+            throw new JobRequiredArgumentMissingException(String.format("'%s' is missing but required", arg.get()));
         }
     }
 

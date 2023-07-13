@@ -8,12 +8,12 @@ import java.util.Map.Entry;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.sos.commons.job.JobArgument;
+import com.sos.commons.job.OrderProcessStep;
+import com.sos.commons.job.OrderProcessStepLogger;
+import com.sos.commons.job.OrderProcessStepOutcome;
+import com.sos.commons.job.exception.JobProblemException;
 import com.sos.commons.util.SOSParameterSubstitutor;
-import com.sos.jitl.jobs.common.JobArgument;
-import com.sos.jitl.jobs.common.OrderProcessStep;
-import com.sos.jitl.jobs.common.OrderProcessStepLogger;
-import com.sos.jitl.jobs.common.OrderProcessStepOutcome;
-import com.sos.jitl.jobs.exception.SOSJobProblemException;
 import com.sos.jitl.jobs.ssh.SSHJobArguments;
 import com.sos.jitl.jobs.ssh.exception.SOSJobSSHException;
 
@@ -162,7 +162,7 @@ public class SSHJobUtil {
         }
     }
 
-    public static Map<String, String> getJobResourceEnvVars(OrderProcessStep<SSHJobArguments> step) throws SOSJobProblemException {
+    public static Map<String, String> getJobResourceEnvVars(OrderProcessStep<SSHJobArguments> step) throws JobProblemException {
         return step.getEnv().entrySet().stream().collect(Collectors.toMap(e -> JS7_WORKFLOW_VARIABLES_ENVVAR_PREFIX + e.getKey().toUpperCase(),
                 Map.Entry::getValue));
     }

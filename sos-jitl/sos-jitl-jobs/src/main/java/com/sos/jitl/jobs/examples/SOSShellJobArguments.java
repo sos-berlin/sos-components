@@ -1,7 +1,7 @@
 package com.sos.jitl.jobs.examples;
 
-import com.sos.jitl.jobs.common.JobArgument;
-import com.sos.jitl.jobs.common.JobArguments;
+import com.sos.commons.job.JobArgument;
+import com.sos.commons.job.JobArguments;
 
 public class SOSShellJobArguments extends JobArguments {
 

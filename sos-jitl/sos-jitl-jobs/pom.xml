@@ -15,10 +15,10 @@
 		<!-- SOS Dependencies -->
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
-			<artifactId>sos-commons-hibernate</artifactId>
+			<artifactId>sos-commons-job</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		<dependency>
+        <dependency>
 			<groupId>com.sos-berlin.js7.engine</groupId>
 			<artifactId>js7-launcher-for-java_2.13</artifactId>
 			<scope>provided</scope>
@@ -41,11 +41,6 @@
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
 			<artifactId>sos-commons-mail</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.sos-berlin</groupId>
-			<artifactId>sos-commons-vfs</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>

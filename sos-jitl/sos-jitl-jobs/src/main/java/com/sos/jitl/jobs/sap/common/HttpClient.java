@@ -32,8 +32,8 @@ import com.sos.commons.exception.SOSException;
 import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.commons.httpclient.exception.SOSBadRequestException;
 import com.sos.commons.httpclient.exception.SOSSSLException;
-import com.sos.jitl.jobs.common.OrderProcessStepLogger;
-import com.sos.jitl.jobs.exception.SOSJobArgumentException;
+import com.sos.commons.job.OrderProcessStepLogger;
+import com.sos.commons.job.exception.JobArgumentException;
 import com.sos.jitl.jobs.sap.common.bean.Job;
 import com.sos.jitl.jobs.sap.common.bean.ResponseJob;
 import com.sos.jitl.jobs.sap.common.bean.ResponseJobs;
@@ -55,7 +55,7 @@ public class HttpClient extends SOSRestApiClient {
     private boolean isDebugEnabled = false;
     
     
-    public HttpClient(CommonJobArguments jobArgs) throws SOSJobArgumentException, KeyStoreException, NoSuchAlgorithmException, CertificateException,
+    public HttpClient(CommonJobArguments jobArgs) throws JobArgumentException, KeyStoreException, NoSuchAlgorithmException, CertificateException,
             SOSSSLException, IOException {
         this.uri = jobArgs.getUri().getValue();
         this.sapClient = jobArgs.getMandant().getValue();
@@ -64,7 +64,7 @@ public class HttpClient extends SOSRestApiClient {
         setProperties(jobArgs);
     }
 
-    public HttpClient(CommonJobArguments jobArgs, OrderProcessStepLogger processStepLogger) throws SOSJobArgumentException, KeyStoreException, NoSuchAlgorithmException,
+    public HttpClient(CommonJobArguments jobArgs, OrderProcessStepLogger processStepLogger) throws JobArgumentException, KeyStoreException, NoSuchAlgorithmException,
             CertificateException, SOSSSLException, IOException {
         this.uri = jobArgs.getUri().getValue();
         this.sapClient = jobArgs.getMandant().getValue();
@@ -184,7 +184,7 @@ public class HttpClient extends SOSRestApiClient {
      */
     public <B> ResponseJob createJob(B body) throws JsonParseException, JsonMappingException, SocketException, IOException, SOSException {
         if (body == null) {
-            throw new SOSJobArgumentException("Request body is missing");
+            throw new JobArgumentException("Request body is missing");
         }
 //      if (csrfToken == null) {
 //          fetchCSRFToken();
@@ -221,7 +221,7 @@ public class HttpClient extends SOSRestApiClient {
             queryParameter.put("displaySchedules", true);
             url = setUriPath("scheduler/jobs", null, queryParameter);
         } else {
-            throw new SOSJobArgumentException("jobId and jobName are missing");
+            throw new JobArgumentException("jobId and jobName are missing");
         }
         logInfo("Retrieve Job: %s '%s'", HttpMethod.GET.name(), url.toString());
         return getJsonObject(HttpMethod.GET, url, null, ResponseJob.class);
@@ -237,7 +237,7 @@ public class HttpClient extends SOSRestApiClient {
      */
     public boolean deleteJob(Long jobId) throws SocketException, SOSException {
         if (jobId == null) {
-            throw new SOSJobArgumentException("jobId is missing");
+            throw new JobArgumentException("jobId is missing");
         }
 //        if (csrfToken == null) {
 //            fetchCSRFToken();
@@ -291,10 +291,10 @@ public class HttpClient extends SOSRestApiClient {
     public <B> ResponseSchedule createSchedule(Long jobId, B body) throws JsonParseException, JsonMappingException, SocketException, IOException,
             SOSException {
         if (jobId == null) {
-            throw new SOSJobArgumentException("jobId is missing");
+            throw new JobArgumentException("jobId is missing");
         }
         if (body == null) {
-            throw new SOSJobArgumentException("Request body is missing");
+            throw new JobArgumentException("Request body is missing");
         }
 //        if (csrfToken == null) {
 //            fetchCSRFToken();
@@ -321,10 +321,10 @@ public class HttpClient extends SOSRestApiClient {
     public ResponseSchedule retrieveSchedule(Long jobId, String scheduleId) throws JsonParseException, JsonMappingException, SocketException,
             IOException, SOSException {
         if (jobId == null) {
-            throw new SOSJobArgumentException("jobId is missing");
+            throw new JobArgumentException("jobId is missing");
         }
         if (scheduleId == null) {
-            throw new SOSJobArgumentException("scheduleId is missing");
+            throw new JobArgumentException("scheduleId is missing");
         }
         Map<String, Object> uriParameter = new HashMap<>(2);
         uriParameter.put("jobId", jobId);
@@ -351,10 +351,10 @@ public class HttpClient extends SOSRestApiClient {
     public ResponseSchedule activateSchedule(Long jobId, String scheduleId) throws JsonParseException, JsonMappingException, SocketException,
             IOException, SOSException {
         if (jobId == null) {
-            throw new SOSJobArgumentException("jobId is missing");
+            throw new JobArgumentException("jobId is missing");
         }
         if (scheduleId == null) {
-            throw new SOSJobArgumentException("scheduleId is missing");
+            throw new JobArgumentException("scheduleId is missing");
         }
         Map<String, Object> uriParameter = new HashMap<>(2);
         uriParameter.put("jobId", jobId);
@@ -379,13 +379,13 @@ public class HttpClient extends SOSRestApiClient {
     public ScheduleLog retrieveScheduleLog(Long jobId, String scheduleId, String runId) throws JsonParseException, JsonMappingException,
             SocketException, IOException, SOSException {
         if (jobId == null) {
-            throw new SOSJobArgumentException("jobId is missing");
+            throw new JobArgumentException("jobId is missing");
         }
         if (scheduleId == null) {
-            throw new SOSJobArgumentException("scheduleId is missing");
+            throw new JobArgumentException("scheduleId is missing");
         }
         if (runId == null) {
-            throw new SOSJobArgumentException("runId is missing");
+            throw new JobArgumentException("runId is missing");
         }
         Map<String, Object> uriParameter = new HashMap<>(3);
         uriParameter.put("jobId", jobId);
@@ -407,10 +407,10 @@ public class HttpClient extends SOSRestApiClient {
      */
     public boolean deleteSchedule(Long jobId, String scheduleId) throws SocketException, SOSException {
         if (jobId == null) {
-            throw new SOSJobArgumentException("jobId is missing");
+            throw new JobArgumentException("jobId is missing");
         }
         if (scheduleId == null) {
-            throw new SOSJobArgumentException("scheduleId is missing");
+            throw new JobArgumentException("scheduleId is missing");
         }
 //        if (csrfToken == null) {
 //            fetchCSRFToken();
@@ -433,7 +433,7 @@ public class HttpClient extends SOSRestApiClient {
         return true;
     }
     
-    private void setProperties(CommonJobArguments jobArgs) throws SOSJobArgumentException, KeyStoreException, NoSuchAlgorithmException,
+    private void setProperties(CommonJobArguments jobArgs) throws JobArgumentException, KeyStoreException, NoSuchAlgorithmException,
             CertificateException, IOException, SOSSSLException {
         setAutoCloseHttpClient(false);
         setAllowAllHostnameVerifier(jobArgs.getHostnameVerification().getValue());
@@ -444,7 +444,7 @@ public class HttpClient extends SOSRestApiClient {
     }
     
     private static KeyStore readTruststore(CommonJobArguments jobArgs) throws KeyStoreException, NoSuchAlgorithmException,
-            CertificateException, IOException, SOSJobArgumentException {
+            CertificateException, IOException, JobArgumentException {
         if (jobArgs.getTruststorePath().getValue() == null) {
             return null;
         }
@@ -458,7 +458,7 @@ public class HttpClient extends SOSRestApiClient {
                 throw e;
             }
         } else {
-            throw new SOSJobArgumentException(String.format("truststore (%1$s) not found.", truststorePath.toString()));
+            throw new JobArgumentException(String.format("truststore (%1$s) not found.", truststorePath.toString()));
         }
     }
     

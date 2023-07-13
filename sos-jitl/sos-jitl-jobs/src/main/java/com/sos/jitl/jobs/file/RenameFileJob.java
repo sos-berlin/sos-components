@@ -2,7 +2,7 @@ package com.sos.jitl.jobs.file;
 
 import java.util.regex.Pattern;
 
-import com.sos.jitl.jobs.common.OrderProcessStep;
+import com.sos.commons.job.OrderProcessStep;
 import com.sos.jitl.jobs.file.common.AFileOperationsJob;
 import com.sos.jitl.jobs.file.common.FileOperationsJobArguments;
 import com.sos.jitl.jobs.file.common.FileOperationsRenameImpl;

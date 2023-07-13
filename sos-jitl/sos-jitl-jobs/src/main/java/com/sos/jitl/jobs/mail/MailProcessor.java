@@ -23,14 +23,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.exception.SOSInvalidDataException;
+import com.sos.commons.job.JobArgument;
+import com.sos.commons.job.OrderProcessStepLogger;
+import com.sos.commons.job.exception.JobRequiredArgumentMissingException;
 import com.sos.commons.mail.SOSMailReceiver;
 import com.sos.commons.mail.SOSMimeMessage;
 import com.sos.commons.util.SOSDate;
-import com.sos.jitl.jobs.common.JobArgument;
-import com.sos.jitl.jobs.common.OrderProcessStepLogger;
-import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
 import com.sos.jitl.jobs.mail.MailInboxArguments.ActionProcess;
-
 
 public class MailProcessor {
 
@@ -40,18 +39,18 @@ public class MailProcessor {
     private Folder inFolder;
     private Folder targetFolder;
     private Date dateMinAge = null;
-    
+
     public MailProcessor(MailInboxArguments args, OrderProcessStepLogger logger) {
         this.args = args;
         this.jobLogger = logger;
         setMinAgeDate();
     }
 
-    private void setMinAgeDate() { 
+    private void setMinAgeDate() {
         if (args.getMinMailAge().isDirty()) {
             long minAge = SOSDate.getTimeAsSeconds(args.getMinMailAge().getValue());
             if (minAge > 0L) {
-                Instant now = Instant.now(); 
+                Instant now = Instant.now();
                 dateMinAge = Date.from(now.minusSeconds(minAge));
                 logDebug("Min. Age defined: %1$s", dateMinAge.toString());
             }
@@ -77,54 +76,54 @@ public class MailProcessor {
     }
 
     private void performAction(final SOSMimeMessage message) throws IOException, MessagingException, SOSInvalidDataException,
-            SOSJobRequiredArgumentMissingException {
+            JobRequiredArgumentMissingException {
         if (args.getAction().getValue().contains(ActionProcess.dump)) {
             if (args.getMailDirectoryName().isEmpty()) {
-                throw new SOSJobRequiredArgumentMissingException("No target directory [parameter " + args.getMailDirectoryName().getName()
+                throw new JobRequiredArgumentMissingException("No target directory [parameter " + args.getMailDirectoryName().getName()
                         + "] specified.");
             }
             dumpMessage(message, args.getMailDirectoryName().getValue());
         }
         if (args.getAction().getValue().contains(ActionProcess.dump_attachments)) {
             if (args.getAttachmentDirectoryName().isEmpty()) {
-                throw new SOSJobRequiredArgumentMissingException("No target directory [parameter " + args.getAttachmentDirectoryName().getName()
+                throw new JobRequiredArgumentMissingException("No target directory [parameter " + args.getAttachmentDirectoryName().getName()
                         + "] specified.");
             }
             copyAttachmentsToFile(message);
         }
-//        if (args.getCopyMailToFile().getValue()) {
-//            if (args.getMailDirectoryName().isEmpty()) {
-//                throw new SOSRequiredArgumentMissingException("No target directory [parameter " + args.getMailDirectoryName().getName()
-//                        + "] specified.");
-//            }
-//            dumpMessage(message, args.getMailDirectoryName().getValue());
-//        }
-//
-//        if (args.getCopyAttachmentsToFile().getValue()) {
-//            copyAttachmentsToFile(message);
-//        }
+        // if (args.getCopyMailToFile().getValue()) {
+        // if (args.getMailDirectoryName().isEmpty()) {
+        // throw new SOSRequiredArgumentMissingException("No target directory [parameter " + args.getMailDirectoryName().getName()
+        // + "] specified.");
+        // }
+        // dumpMessage(message, args.getMailDirectoryName().getValue());
+        // }
+        //
+        // if (args.getCopyAttachmentsToFile().getValue()) {
+        // copyAttachmentsToFile(message);
+        // }
 
-//        if (args.getDeleteMail().getValue()) {
-//            deleteMessage(message);
-//        } else {
-            handleAfterProcessEmail(message);
-//        }
+        // if (args.getDeleteMail().getValue()) {
+        // deleteMessage(message);
+        // } else {
+        handleAfterProcessEmail(message);
+        // }
     }
 
-    private void copyMailToFolder(SOSMimeMessage message) throws MessagingException, IOException, SOSJobRequiredArgumentMissingException {
+    private void copyMailToFolder(SOSMimeMessage message) throws MessagingException, IOException, JobRequiredArgumentMissingException {
         if (targetFolder != null) {
             List<Message> tempList = new ArrayList<>();
             tempList.add(message.getMessage());
             Message[] m = tempList.toArray(new Message[tempList.size()]);
             inFolder.copyMessages(m, targetFolder);
         } else {
-            throw new SOSJobRequiredArgumentMissingException("Parameter '" + args.getAfterProcessMailDirectoryName().getName()
+            throw new JobRequiredArgumentMissingException("Parameter '" + args.getAfterProcessMailDirectoryName().getName()
                     + "' is required but missing.");
         }
 
     }
 
-    private void handleAfterProcessEmail(SOSMimeMessage message) throws MessagingException, IOException, SOSJobRequiredArgumentMissingException {
+    private void handleAfterProcessEmail(SOSMimeMessage message) throws MessagingException, IOException, JobRequiredArgumentMissingException {
         switch (args.getAfterProcessMail().getValue()) {
         case none:
             break;
@@ -137,7 +136,7 @@ public class MailProcessor {
             break;
         case move:
             if (args.getAfterProcessMailDirectoryName().getValue().isEmpty()) {
-                throw new SOSJobRequiredArgumentMissingException("No target folder [parameter " + args.getAfterProcessMailDirectoryName().getName()
+                throw new JobRequiredArgumentMissingException("No target folder [parameter " + args.getAfterProcessMailDirectoryName().getName()
                         + "] specified.");
             }
             copyMailToFolder(message);
@@ -145,7 +144,7 @@ public class MailProcessor {
             break;
         case copy:
             if (args.getAfterProcessMailDirectoryName().getValue().isEmpty()) {
-                throw new SOSJobRequiredArgumentMissingException("No target folder [parameter " + args.getAfterProcessMailDirectoryName().getName()
+                throw new JobRequiredArgumentMissingException("No target folder [parameter " + args.getAfterProcessMailDirectoryName().getName()
                         + "] specified.");
             }
             copyMailToFolder(message);
@@ -153,14 +152,14 @@ public class MailProcessor {
         }
     }
 
-    private String getEmailFolderName(JobArgument<String> folder) throws SOSJobRequiredArgumentMissingException {
+    private String getEmailFolderName(JobArgument<String> folder) throws JobRequiredArgumentMissingException {
         switch (args.getAfterProcessMail().getValue()) {
         case move:
         case copy:
             if (folder.isEmpty()) {
-               throw new SOSJobRequiredArgumentMissingException("Parameter '" + folder.getName() + "' is required but missing.");
+                throw new JobRequiredArgumentMissingException("Parameter '" + folder.getName() + "' is required but missing.");
             } else {
-               return folder.getValue();
+                return folder.getValue();
             }
         default:
             break;
@@ -168,7 +167,8 @@ public class MailProcessor {
         return "";
     }
 
-    public void performMessagesInFolder(SOSMailReceiver mailReader, final String messageFolder) throws MessagingException, SOSJobRequiredArgumentMissingException {
+    public void performMessagesInFolder(SOSMailReceiver mailReader, final String messageFolder) throws MessagingException,
+            JobRequiredArgumentMissingException {
         try {
             logDebug("reading " + messageFolder);
             inFolder = mailReader.openFolder(messageFolder, mailReader.READ_WRITE);
@@ -203,8 +203,8 @@ public class MailProcessor {
                 SearchTerm searchTerm = new AndTerm(subjectTerm, fromTerm);
                 logDebug("looking for subject=%s and from=%s", args.getMailSubjectFilter().getValue(), args.getMailFromFilter().getValue());
                 msgs2 = inFolder.search(searchTerm, msgs);
-                logDebug("%d messages found with subject=%s and from=%s", msgs2.length, args.getMailSubjectFilter().getValue(), args.getMailFromFilter()
-                        .getValue());
+                logDebug("%d messages found with subject=%s and from=%s", msgs2.length, args.getMailSubjectFilter().getValue(), args
+                        .getMailFromFilter().getValue());
             } else {
 
                 if (!args.getMailSubjectFilter().isEmpty()) {
@@ -219,7 +219,7 @@ public class MailProcessor {
                     logDebug("%d messages found with from=%s", msgs2.length, args.getMailFromFilter().getValue());
                 } else {
                     msgs2 = msgs;
-                    logDebug("%d messages found, folder = %s", msgs2.length,  messageFolder);
+                    logDebug("%d messages found, folder = %s", msgs2.length, messageFolder);
                 }
             }
 
@@ -244,8 +244,8 @@ public class MailProcessor {
                         }
                         if (bodyPattern != null) {
                             if (!bodyPattern.matcher(sosMailItem.getPlainTextBody()).find()) {
-                                logTrace("message with subject %s skipped, body does not match [%s]", sosMailItem.getSubject(), args.getMailBodyPattern()
-                                        .getValue());
+                                logTrace("message with subject %s skipped, body does not match [%s]", sosMailItem.getSubject(), args
+                                        .getMailBodyPattern().getValue());
                                 continue;
                             }
                         }
@@ -284,26 +284,26 @@ public class MailProcessor {
         message.saveAttachments(message, args.getAttachmentFileNamePattern().getValue(), directory, args.getSaveBodyAsAttachment().getValue())
                 .forEach(s -> logDebug("attachment file [%s] successfully saved.", s));
     }
-    
-//    private void logError(String format, Object... msg) {
-//        if (jobLogger != null) {
-//            jobLogger.error(format, msg);
-//        } else {
-//            if (msg.length == 0) {
-//                LOGGER.error(format);
-//            } else {
-//                LOGGER.error(String.format(format, msg));
-//            }
-//        }
-//    }
-//
-//    private void logError(String msg, Throwable t) {
-//        if (jobLogger != null) {
-//            jobLogger.error(msg, t);
-//        } else {
-//            LOGGER.error(msg, t);
-//        }
-//    }
+
+    // private void logError(String format, Object... msg) {
+    // if (jobLogger != null) {
+    // jobLogger.error(format, msg);
+    // } else {
+    // if (msg.length == 0) {
+    // LOGGER.error(format);
+    // } else {
+    // LOGGER.error(String.format(format, msg));
+    // }
+    // }
+    // }
+    //
+    // private void logError(String msg, Throwable t) {
+    // if (jobLogger != null) {
+    // jobLogger.error(msg, t);
+    // } else {
+    // LOGGER.error(msg, t);
+    // }
+    // }
 
     private void logInfo(String format, Object... msg) {
         if (jobLogger != null) {
@@ -328,7 +328,7 @@ public class MailProcessor {
             }
         }
     }
-    
+
     private void logTrace(String format, Object... msg) {
         if (jobLogger != null) {
             jobLogger.trace(format, msg);
@@ -341,16 +341,16 @@ public class MailProcessor {
         }
     }
 
-//    private void logWarn(String format, Object... msg) {
-//        if (jobLogger != null) {
-//            jobLogger.warn(format, msg);
-//        } else {
-//            if (msg.length == 0) {
-//                LOGGER.warn(format);
-//            } else {
-//                LOGGER.warn(String.format(format, msg));
-//            }
-//        }
-//    }
+    // private void logWarn(String format, Object... msg) {
+    // if (jobLogger != null) {
+    // jobLogger.warn(format, msg);
+    // } else {
+    // if (msg.length == 0) {
+    // LOGGER.warn(format);
+    // } else {
+    // LOGGER.warn(String.format(format, msg));
+    // }
+    // }
+    // }
 
 }

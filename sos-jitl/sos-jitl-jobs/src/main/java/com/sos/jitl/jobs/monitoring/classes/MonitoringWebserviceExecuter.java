@@ -4,8 +4,8 @@ import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.exception.SOSException;
-import com.sos.jitl.jobs.common.JobHelper;
-import com.sos.jitl.jobs.common.OrderProcessStepLogger;
+import com.sos.commons.job.JobHelper;
+import com.sos.commons.job.OrderProcessStepLogger;
 import com.sos.jitl.jobs.jocapi.ApiExecutor;
 import com.sos.jitl.jobs.jocapi.ApiResponse;
 import com.sos.joc.model.agent.AgentV;

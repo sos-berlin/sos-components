@@ -3,7 +3,7 @@ package com.sos.jitl.jobs.monitoring.classes;
 import java.util.List;
 
 import com.sos.commons.exception.SOSException;
-import com.sos.jitl.jobs.common.OrderProcessStepLogger;
+import com.sos.commons.job.OrderProcessStepLogger;
 import com.sos.joc.model.agent.AgentV;
 import com.sos.joc.model.agent.SubagentV;
 import com.sos.joc.model.controller.Controller;

@@ -1,11 +1,11 @@
 package com.sos.jitl.jobs.db.oracle;
 
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
+import com.sos.commons.job.JobArgument;
+import com.sos.commons.job.JobArguments;
+import com.sos.commons.job.exception.JobRequiredArgumentMissingException;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
-import com.sos.jitl.jobs.common.JobArgument;
-import com.sos.jitl.jobs.common.JobArguments;
-import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
 
 public class SQLPlusJobArguments extends JobArguments {
 
@@ -176,20 +176,20 @@ public class SQLPlusJobArguments extends JobArguments {
         return commandLine;
     }
 
-    public void checkRequired() throws SOSJobRequiredArgumentMissingException {
+    public void checkRequired() throws JobRequiredArgumentMissingException {
         if ((command.getValue() == null || command.getValue().isEmpty()) && (commandScriptFile.getValue() == null || commandScriptFile.getValue()
                 .isEmpty())) {
-            throw new SOSJobRequiredArgumentMissingException(command.getName() + " or " + commandScriptFile.getName());
+            throw new JobRequiredArgumentMissingException(command.getName() + " or " + commandScriptFile.getName());
         }
 
         if ((shellCommand.getValue() == null) || (shellCommand.getValue().isEmpty())) {
-            throw new SOSJobRequiredArgumentMissingException(dbUrl.getName());
+            throw new JobRequiredArgumentMissingException(dbUrl.getName());
         }
         if ((dbUrl.getValue() == null) || dbUrl.getValue().isEmpty()) {
-            throw new SOSJobRequiredArgumentMissingException(dbUrl.getName());
+            throw new JobRequiredArgumentMissingException(dbUrl.getName());
         }
         if ((dbUser.getValue() == null || dbUser.getValue().isEmpty()) && dbPassword.getValue() != null && !dbPassword.getValue().isEmpty()) {
-            throw new SOSJobRequiredArgumentMissingException(dbUser.getName());
+            throw new JobRequiredArgumentMissingException(dbUser.getName());
         }
 
     }

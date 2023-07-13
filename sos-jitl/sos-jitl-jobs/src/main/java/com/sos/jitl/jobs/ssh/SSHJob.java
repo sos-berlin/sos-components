@@ -22,15 +22,15 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
+import com.sos.commons.job.ABlockingInternalJob;
+import com.sos.commons.job.OrderProcessStep;
+import com.sos.commons.job.OrderProcessStepLogger;
 import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.SOSEnv;
 import com.sos.commons.vfs.ssh.SSHProvider;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
-import com.sos.jitl.jobs.common.ABlockingInternalJob;
-import com.sos.jitl.jobs.common.OrderProcessStep;
-import com.sos.jitl.jobs.common.OrderProcessStepLogger;
 import com.sos.jitl.jobs.ssh.exception.SOSJobSSHException;
 import com.sos.jitl.jobs.ssh.util.SSHJobUtil;
 

@@ -2,9 +2,9 @@ package com.sos.jitl.jobs.db;
 
 import java.nio.file.Path;
 
-import com.sos.jitl.jobs.common.JobArgument;
-import com.sos.jitl.jobs.common.JobArguments;
-import com.sos.jitl.jobs.common.JobHelper;
+import com.sos.commons.job.JobArguments;
+import com.sos.commons.job.JobHelper;
+import com.sos.commons.job.JobArgument;
 
 public class SQLExecutorJobArguments extends JobArguments {
 

@@ -1,6 +1,6 @@
 package com.sos.jitl.jobs.maintenance.classes;
 
-import com.sos.jitl.jobs.common.OrderProcessStepLogger;
+import com.sos.commons.job.OrderProcessStepLogger;
 import com.sos.jitl.jobs.jocapi.ApiExecutor;
 import com.sos.jitl.jobs.jocapi.ApiResponse;
 import com.sos.jitl.jobs.maintenance.MaintenanceWindowJobArguments;
@@ -35,7 +35,7 @@ public class MaintenanceWindowImpl {
                 if (apiResponse.getStatusCode() == 200) {
                     accessToken = apiResponse.getAccessToken();
                 }
-                
+
                 MaintenanceWindowExecuter maintenanceWindowExecuter = new MaintenanceWindowExecuter(logger, apiExecutor);
                 // ManageMaintenanceWindowProfile manageMaintenanceWindowProfile =
                 // maintenanceWindowExecuter.getSettings(accessToken,args.getMaintenanceProfile());

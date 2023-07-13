@@ -3,9 +3,9 @@ package com.sos.jitl.jobs.sap;
 import java.util.Collections;
 import java.util.Map;
 
-import com.sos.jitl.jobs.common.OrderProcessStep;
-import com.sos.jitl.jobs.common.OrderProcessStepLogger;
-import com.sos.jitl.jobs.exception.SOSJobProblemException;
+import com.sos.commons.job.OrderProcessStep;
+import com.sos.commons.job.OrderProcessStepLogger;
+import com.sos.commons.job.exception.JobProblemException;
 import com.sos.jitl.jobs.sap.common.ASAPS4HANAJob;
 import com.sos.jitl.jobs.sap.common.CommonJobArguments;
 import com.sos.jitl.jobs.sap.common.HttpClient;
@@ -47,7 +47,7 @@ public class SAPS4HANACreateJob extends ASAPS4HANAJob {
         logger.info("Schedule jobId=%d scheduleId=%s is created", respJob.getJobId(), respJob.getSchedules().get(0).getScheduleId());
     }
 
-    private static String getJobName(OrderProcessStep<CommonJobArguments> step) throws SOSJobProblemException {
+    private static String getJobName(OrderProcessStep<CommonJobArguments> step) throws JobProblemException {
         return String.format("%s#%s", step.getWorkflowName(), step.getJobInstructionLabel());
     }
 

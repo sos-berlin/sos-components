@@ -10,14 +10,14 @@ import java.util.Map;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSQLExecutor;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jitl.jobs.common.ABlockingInternalJob;
-import com.sos.jitl.jobs.common.OrderProcessStep;
-import com.sos.jitl.jobs.common.OrderProcessStepOutcome;
+import com.sos.commons.job.ABlockingInternalJob;
+import com.sos.commons.job.OrderProcessStep;
+import com.sos.commons.job.OrderProcessStepOutcome;
+import com.sos.commons.job.exception.JobRequiredArgumentMissingException;
 import com.sos.jitl.jobs.db.SQLExecutorJobArguments.ResultSetAsVariables;
 import com.sos.jitl.jobs.db.common.Export2CSV;
 import com.sos.jitl.jobs.db.common.Export2JSON;
 import com.sos.jitl.jobs.db.common.Export2XML;
-import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
 
 public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments> {
 
@@ -93,19 +93,19 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
                 switch (args.getResultSetAsVariables()) {
                 case CSV:
                     if (args.getResultFile().getValue() == null) {
-                        throw new SOSJobRequiredArgumentMissingException(args.getResultFile().getName());
+                        throw new JobRequiredArgumentMissingException(args.getResultFile().getName());
                     }
                     Export2CSV.export(rs, args.getResultFile().getValue(), step.getLogger());
                     return;
                 case XML:
                     if (args.getResultFile().getValue() == null) {
-                        throw new SOSJobRequiredArgumentMissingException(args.getResultFile().getName());
+                        throw new JobRequiredArgumentMissingException(args.getResultFile().getName());
                     }
                     Export2XML.export(rs, args.getResultFile().getValue(), step.getLogger());
                     return;
                 case JSON:
                     if (args.getResultFile().getValue() == null) {
-                        throw new SOSJobRequiredArgumentMissingException(args.getResultFile().getName());
+                        throw new JobRequiredArgumentMissingException(args.getResultFile().getName());
                     }
                     Export2JSON.export(rs, args.getResultFile().getValue(), step.getLogger());
                     return;
