@@ -295,8 +295,7 @@ public class HistoryModel {
                                 storedEventId, eventId, SOSString.toString(entry)));
 
                         FatEventWithProblem ep = (FatEventWithProblem) entry;
-                        LOGGER.info(String.format("[FatEventWithProblem][entry][%s]problem=%s", SOSString.toString(ep.getEntry()), ep
-                                .getError() == null ? "" : ep.getError().toString()));
+                        LOGGER.info(String.format("[FatEventWithProblem][eventType=%s]problem=%s", ep.getEventType(), ep.getError()));
                     } else {
                         if (isDebugEnabled) {
                             LOGGER.debug(String.format("[%s][%s][%s][skip]stored eventId=%s > current eventId=%s %s", identifier, method, entry
@@ -523,9 +522,9 @@ public class HistoryModel {
                     case EventWithProblem:
                         try {
                             FatEventWithProblem ep = (FatEventWithProblem) entry;
-                            LOGGER.info(String.format("[%s][%s][%s]%s", method, entry.getType(), SOSString.toString(ep.getEntry()), ep.getError()
-                                    .toString()));
-                        } catch (Throwable ep) {
+                            LOGGER.info(String.format("[%s][%s][%s][%s][%s]%s", controllerConfiguration.getCurrent().getId(), entry.getType(), ep
+                                    .getOrderId(), ep.getEventType(), ep.getEventId(), ep.getError()));
+                        } catch (Throwable tep) {
                         }
                         break;
                     case Empty:
@@ -546,10 +545,10 @@ public class HistoryModel {
             throw new HistoryModelException(controllerConfiguration.getCurrent().getId(), String.format("[%s][%s][end]%s", identifier, method, e
                     .toString()), e);
         } finally {
-            Exception ex = null;
+            Throwable ex = null;
             try {
                 tryStoreCurrentStateAtEnd(dbLayer, lastSuccessEventId);
-            } catch (Exception e1) {
+            } catch (Throwable e1) {
                 ex = e1;
             }
             dbLayer.close();
@@ -557,7 +556,7 @@ public class HistoryModel {
             if (counter.getProcessed() == 0 && firstEventId == 0 && counter.getTotal() > 0) {
                 try {
                     firstEventId = list.get(0).getEventId();
-                } catch (Throwable e) {
+                } catch (Throwable e2) {
                 }
             }
 

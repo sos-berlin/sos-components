@@ -290,7 +290,7 @@ public class LogExtAsyncHandler {
         sb.append(".").append(l.getOrderId());
         sb.append(".");
         sb.append(LogExt.isOrderHistory(lt) ? "json" : "log");
-        return sb.toString();
+        return HistoryUtil.normalizeFileName(sb.toString());
     }
 
     private String getTaskLogName(LogExt l) {
@@ -301,7 +301,7 @@ public class LogExtAsyncHandler {
         sb.append(".").append(l.getJobLabel());
         sb.append(".").append(l.getTaskHistoryId());
         sb.append(".log");
-        return sb.toString();
+        return HistoryUtil.normalizeFileName(sb.toString());
     }
 
     private void deleteLogFile(Path file) {

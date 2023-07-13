@@ -53,6 +53,11 @@ public class HistoryUtil {
         }
     }
 
+    // @TODO
+    public static String normalizeFileName(String name) {
+        return name.replaceAll(":", "_");
+    }
+
     public static Path getOrderStepLog(Path dir, LogEntry le) {
         return dir.resolve(le.getHistoryOrderId() + "_" + le.getHistoryOrderStepId() + ".log");
     }
