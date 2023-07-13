@@ -13,7 +13,7 @@
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
 			<artifactId>sos-commons-job</artifactId>
-			<version>2.5.4-SNAPSHOT</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.sos-berlin.js7.engine</groupId>
