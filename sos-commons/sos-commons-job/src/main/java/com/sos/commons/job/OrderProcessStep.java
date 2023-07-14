@@ -508,7 +508,8 @@ public class OrderProcessStep<A extends JobArguments> {
         if (internalStep == null) {
             return null;
         }
-        return JobHelper.getFromEither(internalStep.env());
+        return JobHelper.getFromEither(internalStep.env()).entrySet().stream().filter(e -> e.getValue().isPresent()).collect(Collectors.toMap(
+                Map.Entry::getKey, e -> e.getValue().get()));
     }
 
     public String replaceVars(Path path) throws Exception {
