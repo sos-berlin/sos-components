@@ -19,7 +19,10 @@ import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.Options;
 import com.sos.inventory.model.instruction.StickySubagent;
 import com.sos.inventory.model.instruction.TryCatch;
+import com.sos.inventory.model.job.ExecutableJava;
+import com.sos.inventory.model.job.InternalExecutableType;
 import com.sos.inventory.model.workflow.Branch;
+import com.sos.inventory.model.workflow.Jobs;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 
@@ -42,6 +45,7 @@ public class WorkflowConverter {
             if (hasConvertInstruction.test(content)) {
                 convertInstructions(workflow.getInstructions());
             }
+            addJobType(workflow.getJobs());
             workflow.setVersion(Globals.getStrippedInventoryVersion());
             return workflow;
         }
@@ -131,6 +135,37 @@ public class WorkflowConverter {
                 }
             }
         }
+    }
+    
+    private static void addJobType(Jobs jobs) {
+        if (jobs != null && jobs.getAdditionalProperties() != null) {
+            jobs.getAdditionalProperties().forEach((jobName, job) -> {
+                if (job.getExecutable() != null && job.getExecutable().getTYPE() != null) {
+                    switch (job.getExecutable().getTYPE()) {
+                    case ShellScriptExecutable:
+                    case ScriptExecutable:
+                        break;
+                    case InternalExecutable:
+                        ExecutableJava ej = job.getExecutable().cast();
+                        if (ej.getInternalType() == null) {
+                            if (ej.getScript() != null) {
+                                ej.setInternalType(InternalExecutableType.JavaScript);
+                            } else if (ej.getClassName() != null) {
+                                if (ej.getClassName().startsWith("com.sos.jitl.jobs.")) {
+                                    ej.setInternalType(InternalExecutableType.JITL);
+                                } else {
+                                    ej.setInternalType(InternalExecutableType.Java);
+                                }
+                            } else {
+                                //default
+                                ej.setInternalType(InternalExecutableType.JITL);
+                            }
+                        }
+                        break;
+                    }
+                }
+            });
+        };
     }
 
 }

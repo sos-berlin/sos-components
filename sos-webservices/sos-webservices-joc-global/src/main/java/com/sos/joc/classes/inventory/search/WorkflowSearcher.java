@@ -143,14 +143,6 @@ public class WorkflowSearcher {
         return jobs.stream().filter(j -> j.getJob().getAgentName() != null).filter(j -> j.getJob().getAgentName().matches(regex)).collect(Collectors.toList());
     }
 
-    public List<WorkflowJob> getJobsByJobClass(String regex) {
-        setAllJobs();
-        if (regex == null || jobs.isEmpty()) {
-            return jobs;
-        }
-        return jobs.stream().filter(j -> j.getJob().getJobClassName() != null).filter(j -> j.getJob().getJobClassName().matches(regex)).collect(Collectors.toList());
-    }
-    
     public List<WorkflowJob> getJobsByJobTemplate(String regex) {
         setAllJobs();
         if (regex == null || jobs.isEmpty()) {

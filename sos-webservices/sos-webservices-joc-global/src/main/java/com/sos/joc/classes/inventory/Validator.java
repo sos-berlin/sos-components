@@ -50,6 +50,7 @@ import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.job.ExecutableJava;
 import com.sos.inventory.model.job.ExecutableScript;
+import com.sos.inventory.model.job.InternalExecutableType;
 import com.sos.inventory.model.job.Job;
 import com.sos.inventory.model.jobresource.JobResource;
 import com.sos.inventory.model.jobtemplate.JobTemplate;
@@ -64,6 +65,7 @@ import com.sos.inventory.model.workflow.Requirements;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.agent.AgentHelper;
+import com.sos.joc.classes.common.StringSizeSanitizer;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
@@ -585,6 +587,17 @@ public class Validator {
             switch (job.getExecutable().getTYPE()) {
             case InternalExecutable:
                 ExecutableJava ej = job.getExecutable().cast();
+                if (ej.getInternalType() != null && InternalExecutableType.JavaScript.equals(ej.getInternalType())) {
+                    // script is required
+                    if (ej.getScript() == null || ej.getScript().isEmpty()) {
+                        throw new JocConfigurationException("$.jobs['" + entry.getKey() + "'].executable.script is required but missing");
+                    }
+                } else {
+                    // classname is required
+                    if (ej.getClassName() == null || ej.getClassName().isEmpty()) {
+                        throw new JocConfigurationException("$.jobs['" + entry.getKey() + "'].executable.className is required but missing");
+                    }
+                }
                 if (ej.getArguments() != null) {
                     validateEmptyExpressions(ej.getArguments(), "$.jobs['" + entry.getKey() + "'].executable.arguments", allowEmptyArguments);
                     validateExpression("$.jobs['" + entry.getKey() + "'].executable.arguments", ej.getArguments().getAdditionalProperties());
@@ -1465,7 +1478,13 @@ public class Validator {
         if (value != null) {
             Either<Problem, JExpression> e = JExpression.parse(value);
             if (e.isLeft()) {
-                throw new JocConfigurationException(prefix + "[" + key + "]:" + e.getLeft().message());
+                throw new JocConfigurationException(prefix + "[" + key + "]: " + e.getLeft().message());
+            } else {
+                try {
+                    StringSizeSanitizer.test(null, value);
+                } catch (IllegalArgumentException e1) {
+                    throw new JocConfigurationException(prefix + "[" + key + "]: " + e1.getMessage());
+                }
             }
         }
     }
@@ -1475,6 +1494,12 @@ public class Validator {
             Either<Problem, JExpression> e = JExpression.parse(value);
             if (e.isLeft()) {
                 throw new JocConfigurationException(prefix + e.getLeft().message());
+            } else {
+                try {
+                    StringSizeSanitizer.test(null, value);
+                } catch (IllegalArgumentException e1) {
+                    throw new JocConfigurationException(prefix + e1.getMessage());
+                }
             }
         }
     }
@@ -1484,6 +1509,12 @@ public class Validator {
             Either<Problem, JExpression> e = JExpression.parse(value);
             if (e.isLeft()) {
                 throw new JocConfigurationException(e.getLeft().message());
+            } else {
+                try {
+                    StringSizeSanitizer.test(null, value);
+                } catch (IllegalArgumentException e1) {
+                    throw new JocConfigurationException(e1.getMessage());
+                }
             }
         }
     }

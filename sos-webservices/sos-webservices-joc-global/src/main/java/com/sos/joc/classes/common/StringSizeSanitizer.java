@@ -4,9 +4,10 @@ import java.nio.charset.StandardCharsets;
 
 public class StringSizeSanitizer {
 
-    private static final int oneMB = 1024 * 1024* 1024; //1MB
+    private static final int oneMB = 1024 * 1024; //1MB
     private static final int maxSize = 2 * oneMB; //2MB
     private static final String errorMessagePattern = "The value of %s has %dB more than the limit of 2MB";
+    private static final String errorMessagePattern2 = "The value has %dB more than the limit of 2MB";
     
     /**
      * Checks if 'value' complies max size
@@ -15,19 +16,11 @@ public class StringSizeSanitizer {
      *      true iff 'value' complies all rules 
      */
     public static boolean test(Object value) {
-        if(check(value) == null) {
-            return true;
-        } else {
-            return false;
-        }
+        return check(value) == null;
     }
     
     public static boolean test(String value) {
-        if(check(value) == null) {
-            return true;
-        } else {
-            return false;
-        }
+        return check(value) == null;
     }
 
     /**
@@ -51,7 +44,7 @@ public class StringSizeSanitizer {
         }
         int size = value.getBytes(StandardCharsets.UTF_8).length;
         if (size > maxSize) {
-            return size - oneMB;
+            return size - maxSize;
         }
         return null;
     }
@@ -67,14 +60,22 @@ public class StringSizeSanitizer {
     public static void test(String key, Object value) throws IllegalArgumentException {
         Integer size = check(value);
         if (size != null) {
-            throw new IllegalArgumentException(String.format(errorMessagePattern, key, size));
+            if (key != null) {
+                throw new IllegalArgumentException(String.format(errorMessagePattern, key, size));
+            } else {
+                throw new IllegalArgumentException(String.format(errorMessagePattern2, size));
+            }
         }
     }
     
     public static void test(String key, String value) throws IllegalArgumentException {
         Integer size = check(value);
         if (size != null) {
-            throw new IllegalArgumentException(String.format(errorMessagePattern, key, size));
+            if (key != null) {
+                throw new IllegalArgumentException(String.format(errorMessagePattern, key, size));
+            } else {
+                throw new IllegalArgumentException(String.format(errorMessagePattern2, size));
+            }
         }
     }
 

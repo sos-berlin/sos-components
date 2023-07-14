@@ -20,6 +20,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "className",
+    "internalType",
+    "script",
     "jobArguments",
     "returnCodeMeaning",
     "arguments"
@@ -35,6 +37,16 @@ public class ExecutableJava
      */
     @JsonProperty("className")
     private String className;
+    /**
+     * executable types
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("internalType")
+    private InternalExecutableType internalType;
+    @JsonProperty("script")
+    private String script;
     /**
      * key-value pairs
      * <p>
@@ -75,11 +87,15 @@ public class ExecutableJava
      * @param className
      * @param jobArguments
      * @param arguments
+     * @param internalType
      * @param tYPE
+     * @param script
      */
-    public ExecutableJava(String className, Variables jobArguments, JobReturnCodeWarning returnCodeMeaning, Environment arguments, ExecutableType tYPE) {
+    public ExecutableJava(String className, InternalExecutableType internalType, String script, Variables jobArguments, JobReturnCodeWarning returnCodeMeaning, Environment arguments, ExecutableType tYPE) {
         super(tYPE);
         this.className = className;
+        this.internalType = internalType;
+        this.script = script;
         this.jobArguments = jobArguments;
         this.returnCodeMeaning = returnCodeMeaning;
         this.arguments = arguments;
@@ -103,6 +119,38 @@ public class ExecutableJava
     @JsonProperty("className")
     public void setClassName(String className) {
         this.className = className;
+    }
+
+    /**
+     * executable types
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("internalType")
+    public InternalExecutableType getInternalType() {
+        return internalType;
+    }
+
+    /**
+     * executable types
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("internalType")
+    public void setInternalType(InternalExecutableType internalType) {
+        this.internalType = internalType;
+    }
+
+    @JsonProperty("script")
+    public String getScript() {
+        return script;
+    }
+
+    @JsonProperty("script")
+    public void setScript(String script) {
+        this.script = script;
     }
 
     /**
@@ -173,12 +221,12 @@ public class ExecutableJava
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("className", className).append("jobArguments", jobArguments).append("returnCodeMeaning", returnCodeMeaning).append("arguments", arguments).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("className", className).append("internalType", internalType).append("script", script).append("jobArguments", jobArguments).append("returnCodeMeaning", returnCodeMeaning).append("arguments", arguments).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(returnCodeMeaning).append(className).append(jobArguments).append(arguments).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(returnCodeMeaning).append(className).append(jobArguments).append(arguments).append(internalType).append(script).toHashCode();
     }
 
     @Override
@@ -190,7 +238,7 @@ public class ExecutableJava
             return false;
         }
         ExecutableJava rhs = ((ExecutableJava) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(returnCodeMeaning, rhs.returnCodeMeaning).append(className, rhs.className).append(jobArguments, rhs.jobArguments).append(arguments, rhs.arguments).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(returnCodeMeaning, rhs.returnCodeMeaning).append(className, rhs.className).append(jobArguments, rhs.jobArguments).append(arguments, rhs.arguments).append(internalType, rhs.internalType).append(script, rhs.script).isEquals();
     }
 
 }
