@@ -156,7 +156,7 @@ public class WorkflowConverter {
                 ExecutableJava ej = executable.cast();
                 if (ej.getInternalType() == null) {
                     if (ej.getScript() != null) {
-                        ej.setInternalType(InternalExecutableType.JavaScript);
+                        ej.setInternalType(InternalExecutableType.JavaScript_Graal);
                     } else if (ej.getClassName() != null) {
                         if (ej.getClassName().startsWith("com.sos.jitl.jobs.")) {
                             ej.setInternalType(InternalExecutableType.JITL);

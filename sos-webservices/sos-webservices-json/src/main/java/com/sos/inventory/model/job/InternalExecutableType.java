@@ -10,7 +10,8 @@ public enum InternalExecutableType {
 
     JITL("JITL"),
     Java("Java"),
-    JavaScript("JavaScript");
+    JavaScript_Graal("JavaScript_Graal"),
+    JavaScript_Node("JavaScript_Node");
     private final String value;
     private final static Map<String, InternalExecutableType> CONSTANTS = new HashMap<String, InternalExecutableType>();
 
