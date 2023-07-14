@@ -587,7 +587,8 @@ public class Validator {
             switch (job.getExecutable().getTYPE()) {
             case InternalExecutable:
                 ExecutableJava ej = job.getExecutable().cast();
-                if (ej.getInternalType() != null && InternalExecutableType.JavaScript.equals(ej.getInternalType())) {
+                if (ej.getInternalType() != null && (InternalExecutableType.JavaScript_Graal.equals(ej.getInternalType())
+                        || InternalExecutableType.JavaScript_Graal.equals(ej.getInternalType()))) {
                     // script is required
                     if (ej.getScript() == null || ej.getScript().isEmpty()) {
                         throw new JocConfigurationException("$.jobs['" + entry.getKey() + "'].executable.script is required but missing");

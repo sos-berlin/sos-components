@@ -87,7 +87,8 @@ public class JsonConverter {
         private static final long serialVersionUID = 1L;
 
         {
-            put(InternalExecutableType.JavaScript, "com.sos.scriptengine.jobs.JavaScriptJob");
+            put(InternalExecutableType.JavaScript_Graal, "com.sos.scriptengine.jobs.JavaScriptJob");
+            put(InternalExecutableType.JavaScript_Node, "com.sos.scriptengine.jobs.JavaScriptJob"); //TODO different className
         }
     });
 
@@ -148,10 +149,10 @@ public class JsonConverter {
                 switch (invJob.getExecutable().getTYPE()) {
                 case InternalExecutable:
                     com.sos.inventory.model.job.ExecutableJava invEj = invJob.getExecutable().cast();
-                    if (signJob != null && invEj.getInternalType() != null && invEj.getInternalType().equals(InternalExecutableType.JavaScript)) {
+                    if (signJob != null && invEj.getInternalType() != null && invEj.getInternalType().equals(InternalExecutableType.JavaScript_Graal)) {
                         ExecutableJava signEj = signJob.getExecutable().cast();
                         if (signEj != null) {
-                            signEj.setClassName(type2classname.get(InternalExecutableType.JavaScript));
+                            signEj.setClassName(type2classname.get(InternalExecutableType.JavaScript_Graal));
                         }
                     }
                     break;
