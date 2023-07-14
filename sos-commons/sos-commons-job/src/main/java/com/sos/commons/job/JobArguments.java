@@ -10,9 +10,12 @@ import java.util.stream.Collectors;
 
 import com.sos.commons.util.common.ASOSArguments;
 import com.sos.commons.util.common.SOSArgument;
-import com.sos.commons.job.OrderProcessStepLogger.LogLevel;
 
 public class JobArguments {
+
+    public enum LogLevel {
+        INFO, DEBUG, TRACE, WARN, ERROR
+    }
 
     public enum MockLevel {
         OFF, INFO, ERROR

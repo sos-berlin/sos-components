@@ -46,10 +46,7 @@ public class UnitTestJobHelper<A extends JobArguments> {
 
     public void onStart(Map<String, Object> args) throws Exception {
         job.getJobEnvironment().setDeclaredArguments(toArgs(args).instance);
-
-        Field f = job.getJobEnvironment().getClass().getDeclaredField("allArguments");
-        f.setAccessible(true);
-        f.set(job.getJobEnvironment(), args);
+        SOSReflection.setDeclaredFieldValue(job.getJobEnvironment(), "allArguments", args);
 
         job.onStart();
     }

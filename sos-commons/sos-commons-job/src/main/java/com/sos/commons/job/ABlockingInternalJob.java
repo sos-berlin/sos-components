@@ -27,7 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.exception.ISOSRequiredArgumentMissingException;
-import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.job.JobArgument.ValueSource;
 import com.sos.commons.job.JobArguments.MockLevel;
 import com.sos.commons.job.exception.JobArgumentException;
@@ -70,6 +70,11 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
 
     /** to override */
     public void onStop() throws Exception {
+
+    }
+
+    /** to override */
+    public void onOrderProcessCancel(OrderProcessStep<A> step) throws Exception {
 
     }
 
@@ -185,31 +190,50 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
     }
 
     /** can be overwritten */
-    public void cancelOrderProcessStep(OrderProcessStep<A> jobStep) {
-        if (jobStep.getPayload() != null) {
-            String jobName = getJobName(jobStep);
-            cancelHibernateConnection(jobStep, jobName);
+    private void cancelOrderProcessStep(OrderProcessStep<A> jobStep) {
+        String jobName = getJobName(jobStep);
+        if (jobStep.getCancelableResources() != null) {
+            cancelHibernateFactory(jobStep, jobName);
+            cancelSSHProvider(jobStep, jobName);
             // cancelSQLConnection(jobStep, jobName);
-            cancelVFSConnection(jobStep, jobName);
+        }
+        try {
+            onOrderProcessCancel(jobStep);
+        } catch (Throwable e) {
+            LOGGER.error(String.format("[%s][job name=%s][onOrderProcessCancel]%s", OPERATION_CANCEL_KILL, jobName, e.toString()), e);
         }
     }
 
-    private void cancelHibernateConnection(OrderProcessStep<A> jobStep, String jobName) {
+    private void cancelHibernateFactory(OrderProcessStep<A> jobStep, String jobName) {
         try {
-            Object o = jobStep.getPayload().get(OrderProcessStep.PAYLOAD_NAME_HIBERNATE_SESSION);
+            Object o = jobStep.getCancelableResources().get(OrderProcessStep.CANCELABLE_RESOURCE_NAME_HIBERNATE_FACTORY);
             if (o != null) {
-                SOSHibernateSession s = (SOSHibernateSession) o;
+                // SOSHibernateSession s = (SOSHibernateSession) o;
                 // jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "]close session ...");
                 // s.rollback(); s.close() <- does not work because blocked
 
                 // TODO restore factory if initialized onStart ? ...
-                if (s.getFactory() != null) {
-                    jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "]close factory ...");
-                    s.getFactory().close();
+                SOSHibernateFactory f = (SOSHibernateFactory) o;
+                if (f != null) {
+                    jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "]close hibernate factory ...");
+                    f.close();
                 }
             }
         } catch (Throwable e) {
-            LOGGER.error(String.format("[%s][job name=%s][cancelHibernateConnection]%s", OPERATION_CANCEL_KILL, jobName, e.toString()), e);
+            LOGGER.error(String.format("[%s][job name=%s][cancelHibernateFactory]%s", OPERATION_CANCEL_KILL, jobName, e.toString()), e);
+        }
+    }
+
+    private void cancelSSHProvider(OrderProcessStep<A> jobStep, String jobName) {
+        try {
+            Object o = jobStep.getCancelableResources().get(OrderProcessStep.CANCELABLE_RESOURCE_NAME_SSH_PROVIDER);
+            if (o != null) {
+                jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "]ssh cancelWithKill ...");
+                SSHProvider p = (SSHProvider) o;
+                p.cancelWithKill();
+            }
+        } catch (Throwable e) {
+            LOGGER.error(String.format("[%s][job name=%s][cancelSSHProvider]%s", OPERATION_CANCEL_KILL, jobName, e.toString()), e);
         }
     }
 
@@ -218,28 +242,14 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
     @SuppressWarnings("unused")
     private void cancelSQLConnection(OrderProcessStep<A> jobStep, String jobName) {
         try {
-            Object o = jobStep.getPayload().get(OrderProcessStep.PAYLOAD_NAME_SQL_CONNECTION);
+            Object o = jobStep.getCancelableResources().get(OrderProcessStep.CANCELABLE_RESOURCE_NAME_SQL_CONNECTION);
             if (o != null) {
-                jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "]abort connection ...");
+                jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "]abort sql connection ...");
                 // ((Connection) o).close();
                 ((Connection) o).abort(Runnable::run);
             }
         } catch (Throwable e) {
             LOGGER.error(String.format("[%s][job name=%s][cancelSQLConnection]%s", OPERATION_CANCEL_KILL, jobName, e.toString()), e);
-        }
-    }
-
-    private void cancelVFSConnection(OrderProcessStep<A> jobStep, String jobName) {
-        try {
-            Object o = jobStep.getPayload().get(OrderProcessStep.PAYLOAD_NAME_VFS_PROVIDER);
-            if (o != null) {
-                jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "]disconnect ..");
-                // ((AProvider<?>) o).disconnect();
-                SSHProvider p = (SSHProvider) o;
-                p.cancelWithKill();
-            }
-        } catch (Throwable e) {
-            LOGGER.error(String.format("[%s][job name=%s][cancelVFSConnection]%s", OPERATION_CANCEL_KILL, jobName, e.toString()), e);
         }
     }
 

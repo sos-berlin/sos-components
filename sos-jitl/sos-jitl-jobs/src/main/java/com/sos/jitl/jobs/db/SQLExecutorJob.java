@@ -33,9 +33,9 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
             factory = new SOSHibernateFactory(step.getDeclaredArguments().getHibernateFile().getValue());
             factory.setIdentifier(SQLExecutorJob.class.getSimpleName());
             factory.build();
-            session = factory.openStatelessSession();
-            step.setPayload(session);
+            step.addCancelableResource(factory);
 
+            session = factory.openStatelessSession();
             process(step, session);
             step.getLogger().info("result: " + step.getOutcome().getVariables());
         } catch (Throwable e) {

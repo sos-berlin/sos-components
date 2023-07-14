@@ -4,22 +4,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.exception.ISOSRequiredArgumentMissingException;
+import com.sos.commons.job.JobArguments.LogLevel;
 import com.sos.commons.util.SOSString;
 
 import js7.launcher.forjava.internal.BlockingInternalJob;
 
 public class OrderProcessStepLogger {
 
-    public enum LogLevel {
-        INFO, DEBUG, TRACE, WARN, ERROR
-    }
-
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderProcessStepLogger.class);
-    private static final String LOG_LEVEL_INFO = LogLevel.INFO.name();
-    private static final String LOG_LEVEL_DEBUG = LogLevel.DEBUG.name();
-    private static final String LOG_LEVEL_TRACE = LogLevel.TRACE.name();
-    private static final String LOG_LEVEL_WARN = LogLevel.WARN.name();
-    private static final String LOG_LEVEL_ERROR = LogLevel.ERROR.name();
 
     private final BlockingInternalJob.Step step;
 
@@ -42,11 +34,12 @@ public class OrderProcessStepLogger {
     }
 
     public void info(final Object msg) {
+        String m = getMessage(LogLevel.INFO, msg);
         if (step == null) {
-            LOGGER.info(String.format("[%s]%s", LOG_LEVEL_INFO, msg));
+            LOGGER.info(m);
             return;
         }
-        step.out().println(String.format("[%s]%s", LOG_LEVEL_INFO, msg));
+        step.out().println(m);
     }
 
     public void info(final String format, final Object... args) {
@@ -61,11 +54,12 @@ public class OrderProcessStepLogger {
         if (!isDebugEnabled) {
             return;
         }
+        String m = getMessage(LogLevel.DEBUG, msg);
         if (step == null) {
-            LOGGER.debug(String.format("[%s]%s", LOG_LEVEL_DEBUG, msg));
+            LOGGER.debug(m);
             return;
         }
-        step.out().println(String.format("[%s]%s", LOG_LEVEL_DEBUG, msg));
+        step.out().println(m);
     }
 
     public void debug(final String format, final Object... args) {
@@ -83,11 +77,12 @@ public class OrderProcessStepLogger {
         if (!isTraceEnabled) {
             return;
         }
+        String m = getMessage(LogLevel.TRACE, msg);
         if (step == null) {
-            LOGGER.trace(String.format("[%s]%s", LOG_LEVEL_TRACE, msg));
+            LOGGER.trace(m);
             return;
         }
-        step.out().println(String.format("[%s]%s", LOG_LEVEL_TRACE, msg));
+        step.out().println(m);
     }
 
     public void trace(final String format, final Object... args) {
@@ -102,11 +97,12 @@ public class OrderProcessStepLogger {
     }
 
     public void warn(final Object msg) {
+        String m = getMessage(LogLevel.WARN, msg);
         if (step == null) {
-            LOGGER.warn(String.format("[%s]%s", LOG_LEVEL_WARN, msg));
+            LOGGER.warn(m);
             return;
         }
-        step.out().println(String.format("[%s]%s", LOG_LEVEL_WARN, msg));
+        step.out().println(m);
     }
 
     public void warn(final String format, final Object... args) {
@@ -121,7 +117,7 @@ public class OrderProcessStepLogger {
         warn(warn2String(msg, e));
     }
 
-    protected void warn2allLogger(String stepInfo, final String msg, Throwable e) {
+    protected void warn2allLoggers(String stepInfo, final String msg, Throwable e) {
         Throwable ex = handleException(e);
         if (ex != null) {
             warn2slf4j(stepInfo, msg, ex);
@@ -130,11 +126,12 @@ public class OrderProcessStepLogger {
     }
 
     public void error(final Object msg) {
+        String m = getMessage(LogLevel.ERROR, msg);
         if (step == null) {
-            LOGGER.error(String.format("[%s]%s", LOG_LEVEL_ERROR, msg));
+            LOGGER.error(m);
             return;
         }
-        step.err().println(String.format("[%s]%s", LOG_LEVEL_ERROR, msg));
+        step.err().println(m);
     }
 
     public void error(final String format, final Object... args) {
@@ -153,7 +150,7 @@ public class OrderProcessStepLogger {
         error(throwable2String(null, e));
     }
 
-    protected void error2allLogger(final String stepInfo, final String msg, final Throwable e) {
+    protected void error2allLoggers(final String stepInfo, final String msg, final Throwable e) {
         Throwable ex = handleException(e);
         if (ex != null) {
             error2slf4j(stepInfo, msg, ex);
@@ -234,6 +231,10 @@ public class OrderProcessStepLogger {
 
     private void error2slf4j(String stepInfo, String msg, Throwable e) {
         LOGGER.error(String.format("%s%s", stepInfo, msg), e);
+    }
+
+    private String getMessage(LogLevel logLevel, Object msg) {
+        return String.format("[%s]%s", logLevel.name(), msg);
     }
 
     protected String throwable2String(String msg, Throwable e) {
