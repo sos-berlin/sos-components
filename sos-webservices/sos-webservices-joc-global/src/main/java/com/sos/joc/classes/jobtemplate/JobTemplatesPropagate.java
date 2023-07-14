@@ -354,11 +354,13 @@ public class JobTemplatesPropagate {
             }
             ExecutableJava jtE = jt.getExecutable().cast();
             
-            if (isNotEqual(e.getClassName(), jtE.getClassName()) || isNotEqual(e.getJobArguments(), jtE.getJobArguments()) || isNotEqual(e
-                    .getReturnCodeMeaning(), jtE.getReturnCodeMeaning())) {
+            if (isNotEqual(e.getClassName(), jtE.getClassName()) || isNotEqual(e.getScript(), jtE.getScript()) || isNotEqual(e.getJobArguments(), jtE
+                    .getJobArguments()) || isNotEqual(e.getReturnCodeMeaning(), jtE.getReturnCodeMeaning())) {
                 actions.getChanges().add("executable");
             }
+            e.setInternalType(jtE.getInternalType());
             e.setClassName(jtE.getClassName());
+            e.setScript(jtE.getScript());
             e.setJobArguments(jtE.getJobArguments());
             e.setReturnCodeMeaning(jtE.getReturnCodeMeaning());
             

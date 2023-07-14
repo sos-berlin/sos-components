@@ -296,19 +296,27 @@ public class JocInventory {
         if (SOSString.isEmpty(content) || ConfigurationType.FOLDER.equals(type)) {
             return null;
         }
-        if (type.equals(ConfigurationType.WORKFLOW)) {
+        switch (type) {
+        case WORKFLOW:
             return com.sos.joc.classes.inventory.WorkflowConverter.convertInventoryWorkflow(content);
-        }
-        if (type.equals(ConfigurationType.SCHEDULE)) {
+            
+        case JOBTEMPLATE:
+            JobTemplate jt = (JobTemplate) Globals.objectMapper.readValue(content, JobTemplate.class);
+            com.sos.joc.classes.inventory.WorkflowConverter.addInternalExecutableType(jt.getExecutable());
+            jt.setVersion(Globals.getStrippedInventoryVersion());
+            return jt;
+            
+        case SCHEDULE:
             // JOC-1255 workflowName -> workflowNames
             Schedule s = setWorkflowNames(Globals.objectMapper.readValue(content, Schedule.class));
             s.setWorkflowName(null);
             s.setVersion(Globals.getStrippedInventoryVersion());
             return s;
-        }
-        if (type.equals(ConfigurationType.FILEORDERSOURCE)) {
+            
+        case FILEORDERSOURCE:
             return convertFileOrderSource(content, FileOrderSource.class);
-        } else {
+            
+        default:
             IConfigurationObject obj = (IConfigurationObject) Globals.objectMapper.readValue(content, CLASS_MAPPING.get(type));
             ((IInventoryObject) obj).setVersion(Globals.getStrippedInventoryVersion());
             return obj;
