@@ -114,15 +114,6 @@ public class Job {
     @JsonProperty("failOnErrWritten")
     private Boolean failOnErrWritten = false;
     /**
-     * path
-     * <p>
-     * absolute path of an object.
-     * 
-     */
-    @JsonProperty("jobClass")
-    @JsonPropertyDescription("absolute path of an object.")
-    private String jobClass;
-    /**
      * key-value pairs particularly to assign parameters to environment
      * <p>
      * a map for arbitrary key-value pairs
@@ -158,10 +149,9 @@ public class Job {
      * @param returnCodeMeaning
      * @param defaultArguments
      * @param jobResourcePaths
-     * @param jobClass
      * @param skipIfNoAdmissionStartForOrderDay
      */
-    public Job(String agentPath, String subagentSelectionId, String subagentSelectionIdExpr, Executable executable, AdmissionTimeScheme admissionTimeScheme, Boolean skipIfNoAdmissionStartForOrderDay, JobReturnCode returnCodeMeaning, Integer parallelism, Integer timeout, Integer sigkillDelay, Boolean failOnErrWritten, String jobClass, Environment defaultArguments, List<String> jobResourcePaths) {
+    public Job(String agentPath, String subagentSelectionId, String subagentSelectionIdExpr, Executable executable, AdmissionTimeScheme admissionTimeScheme, Boolean skipIfNoAdmissionStartForOrderDay, JobReturnCode returnCodeMeaning, Integer parallelism, Integer timeout, Integer sigkillDelay, Boolean failOnErrWritten, Environment defaultArguments, List<String> jobResourcePaths) {
         super();
         this.agentPath = agentPath;
         this.subagentSelectionId = subagentSelectionId;
@@ -174,7 +164,6 @@ public class Job {
         this.timeout = timeout;
         this.sigkillDelay = sigkillDelay;
         this.failOnErrWritten = failOnErrWritten;
-        this.jobClass = jobClass;
         this.defaultArguments = defaultArguments;
         this.jobResourcePaths = jobResourcePaths;
     }
@@ -354,28 +343,6 @@ public class Job {
     }
 
     /**
-     * path
-     * <p>
-     * absolute path of an object.
-     * 
-     */
-    @JsonProperty("jobClass")
-    public String getJobClass() {
-        return jobClass;
-    }
-
-    /**
-     * path
-     * <p>
-     * absolute path of an object.
-     * 
-     */
-    @JsonProperty("jobClass")
-    public void setJobClass(String jobClass) {
-        this.jobClass = jobClass;
-    }
-
-    /**
      * key-value pairs particularly to assign parameters to environment
      * <p>
      * a map for arbitrary key-value pairs
@@ -409,12 +376,12 @@ public class Job {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentPath", agentPath).append("subagentSelectionId", subagentSelectionId).append("subagentSelectionIdExpr", subagentSelectionIdExpr).append("executable", executable).append("admissionTimeScheme", admissionTimeScheme).append("skipIfNoAdmissionStartForOrderDay", skipIfNoAdmissionStartForOrderDay).append("returnCodeMeaning", returnCodeMeaning).append("parallelism", parallelism).append("timeout", timeout).append("sigkillDelay", sigkillDelay).append("failOnErrWritten", failOnErrWritten).append("jobClass", jobClass).append("defaultArguments", defaultArguments).append("jobResourcePaths", jobResourcePaths).toString();
+        return new ToStringBuilder(this).append("agentPath", agentPath).append("subagentSelectionId", subagentSelectionId).append("subagentSelectionIdExpr", subagentSelectionIdExpr).append("executable", executable).append("admissionTimeScheme", admissionTimeScheme).append("skipIfNoAdmissionStartForOrderDay", skipIfNoAdmissionStartForOrderDay).append("returnCodeMeaning", returnCodeMeaning).append("parallelism", parallelism).append("timeout", timeout).append("sigkillDelay", sigkillDelay).append("failOnErrWritten", failOnErrWritten).append("defaultArguments", defaultArguments).append("jobResourcePaths", jobResourcePaths).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(subagentSelectionId).append(sigkillDelay).append(parallelism).append(failOnErrWritten).append(executable).append(timeout).append(admissionTimeScheme).append(agentPath).append(subagentSelectionIdExpr).append(returnCodeMeaning).append(defaultArguments).append(jobResourcePaths).append(jobClass).append(skipIfNoAdmissionStartForOrderDay).toHashCode();
+        return new HashCodeBuilder().append(subagentSelectionId).append(sigkillDelay).append(parallelism).append(failOnErrWritten).append(executable).append(timeout).append(admissionTimeScheme).append(agentPath).append(subagentSelectionIdExpr).append(returnCodeMeaning).append(defaultArguments).append(jobResourcePaths).append(skipIfNoAdmissionStartForOrderDay).toHashCode();
     }
 
     @Override
@@ -426,7 +393,7 @@ public class Job {
             return false;
         }
         Job rhs = ((Job) other);
-        return new EqualsBuilder().append(subagentSelectionId, rhs.subagentSelectionId).append(sigkillDelay, rhs.sigkillDelay).append(parallelism, rhs.parallelism).append(failOnErrWritten, rhs.failOnErrWritten).append(executable, rhs.executable).append(timeout, rhs.timeout).append(admissionTimeScheme, rhs.admissionTimeScheme).append(agentPath, rhs.agentPath).append(subagentSelectionIdExpr, rhs.subagentSelectionIdExpr).append(returnCodeMeaning, rhs.returnCodeMeaning).append(defaultArguments, rhs.defaultArguments).append(jobResourcePaths, rhs.jobResourcePaths).append(jobClass, rhs.jobClass).append(skipIfNoAdmissionStartForOrderDay, rhs.skipIfNoAdmissionStartForOrderDay).isEquals();
+        return new EqualsBuilder().append(subagentSelectionId, rhs.subagentSelectionId).append(sigkillDelay, rhs.sigkillDelay).append(parallelism, rhs.parallelism).append(failOnErrWritten, rhs.failOnErrWritten).append(executable, rhs.executable).append(timeout, rhs.timeout).append(admissionTimeScheme, rhs.admissionTimeScheme).append(agentPath, rhs.agentPath).append(subagentSelectionIdExpr, rhs.subagentSelectionIdExpr).append(returnCodeMeaning, rhs.returnCodeMeaning).append(defaultArguments, rhs.defaultArguments).append(jobResourcePaths, rhs.jobResourcePaths).append(skipIfNoAdmissionStartForOrderDay, rhs.skipIfNoAdmissionStartForOrderDay).isEquals();
     }
 
 }

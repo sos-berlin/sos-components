@@ -68,9 +68,6 @@
     	"type": "boolean",
     	"default": false
     },
-    "jobClass": {
-      "$ref": "../../../inventory/schemas/common/path-schema.json"
-    },
     "defaultArguments": {
       "$ref": "../../../inventory/schemas/job/env-schema.json"
     },

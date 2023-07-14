@@ -22,6 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "className",
+    "script",
     "jobArguments",
     "arguments"
 })
@@ -36,6 +37,8 @@ public class ExecutableJava
      */
     @JsonProperty("className")
     private String className;
+    @JsonProperty("script")
+    private String script;
     /**
      * key-value pairs
      * <p>
@@ -68,10 +71,12 @@ public class ExecutableJava
      * @param jobArguments
      * @param arguments
      * @param tYPE
+     * @param script
      */
-    public ExecutableJava(String className, Variables jobArguments, Environment arguments, ExecutableType tYPE) {
+    public ExecutableJava(String className, String script, Variables jobArguments, Environment arguments, ExecutableType tYPE) {
         super(tYPE);
         this.className = className;
+        this.script = script;
         this.jobArguments = jobArguments;
         this.arguments = arguments;
     }
@@ -94,6 +99,16 @@ public class ExecutableJava
     @JsonProperty("className")
     public void setClassName(String className) {
         this.className = className;
+    }
+
+    @JsonProperty("script")
+    public String getScript() {
+        return script;
+    }
+
+    @JsonProperty("script")
+    public void setScript(String script) {
+        this.script = script;
     }
 
     /**
@@ -142,12 +157,12 @@ public class ExecutableJava
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("className", className).append("jobArguments", jobArguments).append("arguments", arguments).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("className", className).append("script", script).append("jobArguments", jobArguments).append("arguments", arguments).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(className).append(jobArguments).append(arguments).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(className).append(jobArguments).append(arguments).append(script).toHashCode();
     }
 
     @Override
@@ -159,7 +174,7 @@ public class ExecutableJava
             return false;
         }
         ExecutableJava rhs = ((ExecutableJava) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(className, rhs.className).append(jobArguments, rhs.jobArguments).append(arguments, rhs.arguments).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(className, rhs.className).append(jobArguments, rhs.jobArguments).append(arguments, rhs.arguments).append(script, rhs.script).isEquals();
     }
 
 }

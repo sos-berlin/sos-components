@@ -35,6 +35,7 @@ import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.Options;
 import com.sos.inventory.model.instruction.StickySubagent;
 import com.sos.inventory.model.instruction.TryCatch;
+import com.sos.inventory.model.job.InternalExecutableType;
 import com.sos.inventory.model.job.Job;
 import com.sos.inventory.model.job.JobReturnCode;
 import com.sos.inventory.model.script.Script;
@@ -51,6 +52,7 @@ import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.common.IDeployObject;
+import com.sos.sign.model.job.ExecutableJava;
 import com.sos.sign.model.job.ExecutableScript;
 import com.sos.sign.model.workflow.ListParameters;
 import com.sos.sign.model.workflow.OrderPreparation;
@@ -80,6 +82,15 @@ public class JsonConverter {
             + scriptIncludeComments + scriptInclude + " scriptname [--replace=\"search literal\",\"replacement literal\" [--replace=...]]";
 
     private final static Logger LOGGER = LoggerFactory.getLogger(JsonConverter.class);
+    
+    private static final Map<InternalExecutableType, String> type2classname = Collections.unmodifiableMap(new HashMap<InternalExecutableType, String>() {
+
+        private static final long serialVersionUID = 1L;
+
+        {
+            put(InternalExecutableType.JavaScript, "com.sos.scriptengine.jobs.JavaScriptJob");
+        }
+    });
 
     @SuppressWarnings("unchecked")
     public static <T extends IDeployObject> T readAsConvertedDeployObject(String controllerId, String objectName, String json, Class<T> clazz,
@@ -137,6 +148,13 @@ public class JsonConverter {
                 
                 switch (invJob.getExecutable().getTYPE()) {
                 case InternalExecutable:
+                    com.sos.inventory.model.job.ExecutableJava invEj = invJob.getExecutable().cast();
+                    if (signJob != null && invEj.getInternalType() != null && invEj.getInternalType().equals(InternalExecutableType.JavaScript)) {
+                        ExecutableJava signEj = signJob.getExecutable().cast();
+                        if (signEj != null) {
+                            signEj.setClassName(type2classname.get(InternalExecutableType.JavaScript));
+                        }
+                    }
                     break;
                 case ShellScriptExecutable:
                 case ScriptExecutable:

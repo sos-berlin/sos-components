@@ -585,12 +585,6 @@ public class OrdersHelper {
             if (args.containsKey(param.getKey())) {
                 Object curArg = args.get(param.getKey());
                 
-                try {
-                    StringSizeSanitizer.test("variable '" + param.getKey() + "'", curArg);
-                } catch (IllegalArgumentException e1) {
-                    throw new JocConfigurationException(e1.getMessage());
-                }
-                
                 switch (param.getValue().getType()) {
                 case String:
                     if ((curArg instanceof String) == false) {
@@ -599,6 +593,12 @@ public class OrdersHelper {
                         String strArg = (String) curArg;
                         if ((strArg == null || strArg.isEmpty()) && param.getValue().getDefault() == null) {
                             throw new JocMissingRequiredParameterException("Variable '" + param.getKey() + "' is empty but required");
+                        }
+                        
+                        try {
+                            StringSizeSanitizer.test("variable '" + param.getKey() + "'", strArg);
+                        } catch (IllegalArgumentException e1) {
+                            throw new JocConfigurationException(e1.getMessage());
                         }
                     }
                     break;
@@ -681,12 +681,6 @@ public class OrdersHelper {
 
                 Object curListArg = listVariable.get(p.getKey());
                 
-                try {
-                    StringSizeSanitizer.test("variable '" + p.getKey() + "' of list variable '" + listKey, curListArg);
-                } catch (IllegalArgumentException e1) {
-                    throw new JocConfigurationException(e1.getMessage());
-                }
-                
                 switch (p.getValue().getType()) {
                 case String:
                     if ((curListArg instanceof String) == false) {
@@ -696,6 +690,12 @@ public class OrdersHelper {
                         if ((strListArg == null || strListArg.isEmpty())) {
                             throw new JocMissingRequiredParameterException("Variable '" + p.getKey() + "' of list variable '" + listKey
                                     + "' is empty but required");
+                        }
+                        
+                        try {
+                            StringSizeSanitizer.test("variable '" + p.getKey() + "' of list variable '" + listKey, strListArg);
+                        } catch (IllegalArgumentException e1) {
+                            throw new JocConfigurationException(e1.getMessage());
                         }
                     }
                     break;
