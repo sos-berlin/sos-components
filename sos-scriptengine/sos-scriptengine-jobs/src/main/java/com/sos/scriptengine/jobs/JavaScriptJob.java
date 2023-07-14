@@ -16,14 +16,16 @@ import com.sos.commons.util.SOSPath;
 public class JavaScriptJob extends ABlockingInternalJob<JobArguments> {
 
     private static final String SCRIPT_ENGINE_NAME = "Graal.js";
-    private static final String FUNCTION_NAME_GET_JOB = "getJob";
-    private static final String METHOD_NAME_ON_START = "onStart";
-    private static final String METHOD_NAME_ON_STOP = "onStop";
-    private static final String METHOD_NAME_ON_ORDER_PROCESS = "onOrderProcess";
+    private static final String FUNCTION_NAME_GET_JOB = "getJS7Job";
+    private static final String JOB_CLASS_NAME = "JS7Job";
+    private static final String JOB_METHOD_NAME_ON_START = "onStart";
+    private static final String JOB_METHOD_NAME_ON_STOP = "onStop";
+    private static final String JOB_METHOD_NAME_ON_ORDER_PROCESS = "onOrderProcess";
 
-    private static final String BASIC_SCRIPT = "function " + FUNCTION_NAME_GET_JOB + "(jobEnvironment){ return new JS7Job(jobEnvironment);}"
-            + " class ABlockingJob { #jobEnvironment; " + "constructor(jobEnvironment){this.#jobEnvironment = jobEnvironment;}" + METHOD_NAME_ON_START
-            + "(){} " + METHOD_NAME_ON_STOP + "(){} " + METHOD_NAME_ON_ORDER_PROCESS + "(_step){} getJobEnvironment(){return this.#jobEnvironment;}}";
+    private static final String BASIC_SCRIPT = "function " + FUNCTION_NAME_GET_JOB + "(jobEnvironment){ return new " + JOB_CLASS_NAME
+            + "(jobEnvironment);}" + " class ABlockingJob { #jobEnvironment; " + "constructor(jobEnvironment){this.#jobEnvironment = jobEnvironment;}"
+            + JOB_METHOD_NAME_ON_START + "(){} " + JOB_METHOD_NAME_ON_STOP + "(){} " + JOB_METHOD_NAME_ON_ORDER_PROCESS
+            + "(_step){} getJobEnvironment(){return this.#jobEnvironment;}}";
 
     private Invocable invocable = null;
     private Object job;
@@ -41,22 +43,31 @@ public class JavaScriptJob extends ABlockingInternalJob<JobArguments> {
         engine.eval(BASIC_SCRIPT + "\n" + script);
 
         invocable = (Invocable) engine;
-        // method not found - throws NoSuchMethodException : <methodName>
-        // job is a PolyglotMap and can't be cast to Invocable -
+        // job is a PolyglotMap and can't be cast to Invocable
         job = invocable.invokeFunction(FUNCTION_NAME_GET_JOB, getJobEnvironment());
-        invocable.invokeMethod(job, METHOD_NAME_ON_START);
+        invocable.invokeMethod(job, JOB_METHOD_NAME_ON_START);
     }
 
     @Override
     public void onStop() throws Exception {
         if (canInvoke()) {
-            invocable.invokeMethod(job, METHOD_NAME_ON_STOP);
+            invocable.invokeMethod(job, JOB_METHOD_NAME_ON_STOP);
         }
     }
 
+    /** com.sos.commons.job.ABlockingInternalJob - [cancel/kill][job name=javascript_job][onOrderProcessCancel]<br/>
+     * java.lang.IllegalStateException: <br/>
+     * Multi threaded access requested by thread Thread[#46,JS7 blocking job 46,5,main] but is not allowed for language(s) js.<br/>
+     * at com.oracle.truffle.polyglot.PolyglotEngineException.illegalState(PolyglotEngineException.java:135) ~[org.graalvm.truffle:?]<br>
+     * ... */
+    // @Override
+    // public void onOrderProcessCancel(OrderProcessStep<JobArguments> step) throws Exception {
+
+    // }
+
     @Override
     public void onOrderProcess(OrderProcessStep<JobArguments> step) throws Exception {
-        invocable.invokeMethod(job, METHOD_NAME_ON_ORDER_PROCESS, step);
+        invocable.invokeMethod(job, JOB_METHOD_NAME_ON_ORDER_PROCESS, step);
     }
 
     private ScriptEngine createScriptEngine() throws Exception {

@@ -14,11 +14,34 @@ class JS7Job extends ABlockingJob {
 		step.getLogger().info("[onOrderProcess][getJobEnvironment.getSystemEncoding]" + this.getJobEnvironment().getSystemEncoding());
 		step.getLogger().info("[onOrderProcess][this.myPublicProperty]" + this.myPublicProperty);
 
+		//java.lang.Thread.sleep(5*1000);
+
+		var h = new Helper();
+		h.logPublicMethods(step.getLogger(), "this.getJobEnvironment()", this.getJobEnvironment());
+		h.logPublicMethods(step.getLogger(), "step", step);
+
 		step.getOutcome().setReturnCode(100);
-		step.getOutcome().putVariable("val_1", "val_1_value");
-		step.getOutcome().setFailed();
+		step.getOutcome().putVariable("var_1", "var_1_value");
+		//step.getOutcome().setFailed();
 	}
 }
 
+function Sleep(milliseconds) {
+	return new Promise(resolve => setTimeout(resolve, milliseconds));
+}
 
+class Helper {
+	regExp = new RegExp("equals|toString|hashCode|getClass|notify|notifyAll|wait");
 
+	logPublicMethods(logger, title, o) {
+		logger.info("---------------Public Methods " + title + "--");
+		var pm = com.sos.commons.util.SOSReflection.getAllMethods(o.getClass());
+		for (var i in pm) {
+			var m = pm[i];
+			if (this.regExp.test(m.getName())) {
+				continue;
+			}
+			logger.info(" " + m);
+		}
+	}
+}

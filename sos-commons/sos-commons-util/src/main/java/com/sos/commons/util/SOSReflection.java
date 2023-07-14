@@ -36,6 +36,12 @@ public class SOSReflection {
         memberValues.put(key, newValue);
     }
 
+    public static void setDeclaredFieldValue(Object o, String fieldName, Object fieldValue) throws Exception {
+        Field f = o.getClass().getDeclaredField(fieldName);
+        f.setAccessible(true);
+        f.set(o, fieldValue);
+    }
+
     public static List<Field> getFields(Class<?> type) {
         if (type == null) {
             return null;
@@ -94,7 +100,7 @@ public class SOSReflection {
         for (Class<?> c = type; c != null; c = c.getSuperclass()) {
             result.addAll(Arrays.asList(c.getMethods()));
         }
-        //result.sort(Comparator.comparing(Method::getName));
+        // result.sort(Comparator.comparing(Method::getName));
         return result;
     }
 

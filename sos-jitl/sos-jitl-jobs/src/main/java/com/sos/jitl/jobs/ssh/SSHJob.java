@@ -43,7 +43,8 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
 
         SSHProviderArguments providerArgs = step.getIncludedArguments(SSHProviderArguments.class);
         SSHProvider provider = new SSHProvider(providerArgs, step.getIncludedArguments(SOSCredentialStoreArguments.class));
-        step.setPayload(provider);
+        step.addCancelableResource(provider);
+
         SSHJobArguments jobArgs = step.getDeclaredArguments();
 
         SOSEnv envVars = new SOSEnv();

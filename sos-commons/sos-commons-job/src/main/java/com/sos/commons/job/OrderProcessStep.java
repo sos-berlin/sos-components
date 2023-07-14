@@ -1,7 +1,6 @@
 package com.sos.commons.job;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.util.ArrayList;
@@ -12,10 +11,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.job.JobArgument.Type;
 import com.sos.commons.job.JobArgument.ValueSource;
-import com.sos.commons.job.OrderProcessStepLogger.LogLevel;
+import com.sos.commons.job.JobArguments.LogLevel;
+import com.sos.commons.job.exception.JobArgumentException;
 import com.sos.commons.job.exception.JobProblemException;
 import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.commons.util.SOSString;
@@ -23,7 +23,7 @@ import com.sos.commons.util.common.ASOSArguments;
 import com.sos.commons.util.common.SOSArgument;
 import com.sos.commons.util.common.SOSArgumentHelper;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
-import com.sos.commons.vfs.common.AProvider;
+import com.sos.commons.vfs.ssh.SSHProvider;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
@@ -39,9 +39,9 @@ import scala.collection.JavaConverters;
 
 public class OrderProcessStep<A extends JobArguments> {
 
-    protected static final String PAYLOAD_NAME_HIBERNATE_SESSION = "hibernate_session";
-    protected static final String PAYLOAD_NAME_SQL_CONNECTION = "sql_connection";
-    protected static final String PAYLOAD_NAME_VFS_PROVIDER = "vfs_provider";
+    protected static final String CANCELABLE_RESOURCE_NAME_HIBERNATE_FACTORY = "hibernate_factory";
+    protected static final String CANCELABLE_RESOURCE_NAME_SSH_PROVIDER = "ssh_provider";
+    protected static final String CANCELABLE_RESOURCE_NAME_SQL_CONNECTION = "sql_connection";
 
     private final JobEnvironment<A> jobEnvironment;
     private final BlockingInternalJob.Step internalStep;
@@ -55,7 +55,7 @@ public class OrderProcessStep<A extends JobArguments> {
     private List<JobArgument<A>> allDeclaredArguments;
     private Map<String, JobArgument<A>> allArguments;
     private Map<String, Object> unitTestNotDeclaredArguments;
-    private Map<String, Object> payload;
+    private Map<String, Object> cancelableResources;
 
     private String controllerId;
     private String orderId;
@@ -89,21 +89,28 @@ public class OrderProcessStep<A extends JobArguments> {
         return threadName;
     }
 
-    public void setPayload(SOSHibernateSession session) {
-        payload = Collections.singletonMap(PAYLOAD_NAME_HIBERNATE_SESSION, session);
+    public void addCancelableResource(SOSHibernateFactory factory) {
+        addCancelableResource(CANCELABLE_RESOURCE_NAME_HIBERNATE_FACTORY, factory);
+    }
+
+    public void addCancelableResource(SSHProvider provider) {
+        addCancelableResource(CANCELABLE_RESOURCE_NAME_SSH_PROVIDER, provider);
     }
 
     @SuppressWarnings("unused")
-    private void setPayload(Connection conn) {
-        payload = Collections.singletonMap(PAYLOAD_NAME_SQL_CONNECTION, conn);
+    private void addCancelableResource(Connection conn) {
+        addCancelableResource(CANCELABLE_RESOURCE_NAME_SQL_CONNECTION, conn);
     }
 
-    public void setPayload(AProvider<?> provider) {
-        payload = Collections.singletonMap(PAYLOAD_NAME_VFS_PROVIDER, provider);
+    private void addCancelableResource(String identifier, Object o) {
+        if (cancelableResources == null) {
+            cancelableResources = new HashMap<>();
+        }
+        cancelableResources.put(identifier, o);
     }
 
-    public Map<String, Object> getPayload() {
-        return payload;
+    protected Map<String, Object> getCancelableResources() {
+        return cancelableResources;
     }
 
     public OrderProcessStepLogger getLogger() {
@@ -318,7 +325,7 @@ public class OrderProcessStep<A extends JobArguments> {
                         l.add(arg);
                     }
                 } catch (Throwable e) {
-                    logger.warn2allLogger(getStepInfo(), String.format("[%s.%s][can't read field]%s", getClass().getName(), field.getName(), e
+                    logger.warn2allLoggers(getStepInfo(), String.format("[%s.%s][can't read field]%s", getClass().getName(), field.getName(), e
                             .toString()), e);
                 }
             }
@@ -334,20 +341,22 @@ public class OrderProcessStep<A extends JobArguments> {
     }
 
     @SuppressWarnings("rawtypes")
-    public <T extends ASOSArguments> T getIncludedArguments(Class<T> clazz) throws InstantiationException, IllegalAccessException,
-            IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
-        setAllDeclaredArguments();
-        T instance = clazz.getDeclaredConstructor().newInstance();
-        if (declaredArguments.getIncludedArguments() == null) {
+    public <T extends ASOSArguments> T getIncludedArguments(Class<T> clazz) throws JobArgumentException {
+        try {
+            setAllDeclaredArguments();
+            T instance = clazz.getDeclaredConstructor().newInstance();
+            if (declaredArguments.getIncludedArguments() == null) {
+                return instance;
+            }
+            List<SOSArgument> args = allDeclaredArguments.stream().filter(a -> a.getPayload() != null && a.getPayload().equals(clazz.getName())).map(
+                    a -> (SOSArgument) a).collect(Collectors.toList());
+            if (args != null) {
+                instance.setArguments(args);
+            }
             return instance;
+        } catch (Throwable e) {
+            throw new JobArgumentException(e.toString(), e);
         }
-        List<SOSArgument> args = allDeclaredArguments.stream().filter(a -> a.getPayload() != null && a.getPayload().equals(clazz.getName())).map(
-                a -> (SOSArgument) a).collect(Collectors.toList());
-
-        if (args != null) {
-            instance.setArguments(args);
-        }
-        return instance;
     }
 
     private String getStepInfo() {
@@ -613,7 +622,7 @@ public class OrderProcessStep<A extends JobArguments> {
             }
 
         } catch (Throwable e) {
-            logger.error2allLogger(getStepInfo(), e.toString(), e);
+            logger.error2allLoggers(getStepInfo(), e.toString(), e);
         }
     }
 
@@ -623,7 +632,7 @@ public class OrderProcessStep<A extends JobArguments> {
             logArguments(LogLevel.INFO);
             logAllResultingArguments(LogLevel.INFO);
         } catch (Exception e) {
-            logger.error2allLogger(getStepInfo(), e.toString(), e);
+            logger.error2allLoggers(getStepInfo(), e.toString(), e);
         }
     }
 

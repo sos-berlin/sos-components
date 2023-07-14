@@ -7,7 +7,7 @@ import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 
 /** SOSArgument&lt;T&gt; supported types(&lt;T&gt;):<br/>
  * - generally: all data types are supported <br/>
- * - usage in JITL: see com.sos.jitl.jobs.common.JobArgument supported types <br/>
+ * - usage in JITL: see com.sos.commons.job.JobArgument supported types <br/>
  */
 public class SOSArgument<T> {
 
