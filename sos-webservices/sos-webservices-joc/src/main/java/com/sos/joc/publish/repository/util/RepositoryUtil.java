@@ -3,6 +3,7 @@ package com.sos.joc.publish.repository.util;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -28,7 +29,6 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
-import org.apache.commons.codec.Charsets;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -207,7 +207,7 @@ public abstract class RepositoryUtil {
             File calendarFile = path.toFile();
             try {
                 FileInputStream stream = new FileInputStream(calendarFile);
-                String content = IOUtils.toString(stream, Charsets.UTF_8);
+                String content = IOUtils.toString(stream, StandardCharsets.UTF_8);
                 if (content.contains(ConfigurationType.WORKINGDAYSCALENDAR.toString())) {
                     return ConfigurationType.WORKINGDAYSCALENDAR;
                 } else {
