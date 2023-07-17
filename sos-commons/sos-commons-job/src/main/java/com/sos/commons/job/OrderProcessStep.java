@@ -129,6 +129,10 @@ public class OrderProcessStep<A extends JobArguments> {
         return declaredArguments;
     }
 
+    public List<JobArgument<A>> getAllDeclaredArguments() {
+        return allDeclaredArguments;
+    }
+
     public Map<String, Map<String, DetailValue>> getLastOutcomes() {
         if (lastOutcomes == null) {
             lastOutcomes = historicOutcomes2map();
@@ -185,6 +189,20 @@ public class OrderProcessStep<A extends JobArguments> {
 
         // DECLARED Arguments
         setAllDeclaredArguments();
+        if (allDeclaredArguments != null && allDeclaredArguments.size() > 0) {
+            allDeclaredArguments.stream().forEach(a -> {
+                if (!allArguments.containsKey(a.getName())) {
+                    allArguments.put(a.getName(), a);
+                }
+                if (a.getNameAliases() != null) {
+                    for (String n : a.getNameAliases()) {
+                        if (!allArguments.containsKey(n)) {
+                            allArguments.put(n, a);
+                        }
+                    }
+                }
+            });
+        }
 
         // for preference see ABlockingJob.createJobArguments/setJobArgument
         // Preference 1 (HIGHEST) - Succeeded Outcomes
@@ -227,21 +245,6 @@ public class OrderProcessStep<A extends JobArguments> {
                     ValueSource vs = ValueSource.JOB_RESOURCE;
                     vs.setDetails(e.getValue().getSource());
                     allArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue().getValue(), vs));
-                }
-            });
-        }
-
-        if (allDeclaredArguments != null && allDeclaredArguments.size() > 0) {
-            allDeclaredArguments.stream().forEach(a -> {
-                if (!allArguments.containsKey(a.getName())) {
-                    allArguments.put(a.getName(), a);
-                }
-                if (a.getNameAliases() != null) {
-                    for (String n : a.getNameAliases()) {
-                        if (!allArguments.containsKey(n)) {
-                            allArguments.put(n, a);
-                        }
-                    }
                 }
             });
         }

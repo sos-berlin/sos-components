@@ -24,6 +24,7 @@ class JS7Job extends ABlockingJob {
 		var h = new Helper();
 		h.logPublicMethods(step.getLogger(), "this.getJobEnvironment()", this.getJobEnvironment());
 		h.logPublicMethods(step.getLogger(), "step", step);
+		h.logArguments(step);
 
 		step.getOutcome().setReturnCode(100);
 		step.getOutcome().putVariable("var_1", "var_1_value");
@@ -49,4 +50,27 @@ class Helper {
 			logger.info(" " + m);
 		}
 	}
+	
+	logArguments(step){
+        step.getLogger().info("---------------All Arguments--");
+        var args = step.getAllArguments();
+        step.getLogger().info("getAllArguments:");
+        for (var a in args) {
+            step.getLogger().info(" " + a + "=" + args[a]);
+        }
+        
+        step.getLogger().info("---------------Declared Arguments--");
+        args = step.getDeclaredArguments();
+        step.getLogger().info("getDeclaredArguments:");
+        step.getLogger().info(" "+args);
+        for (var a in args) {
+            step.getLogger().info(" " + a + "=" + args[a]);
+        }
+        
+        args = step.getAllDeclaredArguments();
+        step.getLogger().info("getAllDeclaredArguments:");
+        for (var a in args) {
+            step.getLogger().info(" "+ args[a]);
+        }
+    }
 }
