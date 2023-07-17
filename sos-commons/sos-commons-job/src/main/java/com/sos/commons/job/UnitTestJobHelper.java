@@ -55,6 +55,10 @@ public class UnitTestJobHelper<A extends JobArguments> {
         job.onStop();
     }
 
+    public ABlockingInternalJob<A> getJobs() {
+        return job;
+    }
+
     public JOutcome.Completed onOrderProcess(Map<String, Object> args) throws Exception {
         return onOrderProcess(args, null);
     }
@@ -67,7 +71,7 @@ public class UnitTestJobHelper<A extends JobArguments> {
         final OrderProcessStep<A> step = newOrderProcessStep(args);
         return CompletableFuture.supplyAsync(() -> {
             try {
-                step.logParameterization(null);
+                step.checkAndLogParameterization(null, null);
                 this.job.onOrderProcess(step);
                 return step.processed();
             } catch (Throwable e) {
@@ -91,7 +95,7 @@ public class UnitTestJobHelper<A extends JobArguments> {
     private OrderProcessStep<A> newOrderProcessStep(Map<String, Object> args) throws Exception {
         OrderProcessStep<A> step = new OrderProcessStep<A>(job.getJobEnvironment(), null);
         ArgumentsResult r = toArgs(args);
-        step.init(r.instance, r.notDeclared);
+        step.init(r.instance, r.undeclared);
         return step;
     }
 
@@ -141,7 +145,7 @@ public class UnitTestJobHelper<A extends JobArguments> {
         Set<String> declared = setArguments(args, instance);
         ArgumentsResult r = new ArgumentsResult();
         r.instance = instance;
-        r.notDeclared = args.entrySet().stream().filter(e -> !declared.contains(e.getKey())).collect(Collectors.toMap(Map.Entry::getKey,
+        r.undeclared = args.entrySet().stream().filter(e -> !declared.contains(e.getKey())).collect(Collectors.toMap(Map.Entry::getKey,
                 Map.Entry::getValue));
 
         return r;
@@ -293,7 +297,7 @@ public class UnitTestJobHelper<A extends JobArguments> {
     private class ArgumentsResult {
 
         private A instance;
-        private Map<String, Object> notDeclared;
+        private Map<String, Object> undeclared;
     }
 
 }

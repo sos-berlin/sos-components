@@ -56,7 +56,7 @@ public class JobArgument<T> extends SOSArgument<T> {
     }
 
     public enum Type {
-        DECLARED, NOT_DECLARED;
+        DECLARED, UNDECLARED;
     }
 
     private final List<String> nameAliases;
@@ -96,11 +96,11 @@ public class JobArgument<T> extends SOSArgument<T> {
         this.nameAliases = nameAliases;
     }
 
-    /* internal usage - not declared Arguments */
+    /* internal usage - undeclared Arguments */
     protected JobArgument(String name, T value, ValueSource valueSource) {
         this(name, false, null, DisplayMode.UNKNOWN, null);
         setValue(value);
-        this.type = Type.NOT_DECLARED;
+        this.type = Type.UNDECLARED;
         this.valueSource = valueSource;
     }
 
