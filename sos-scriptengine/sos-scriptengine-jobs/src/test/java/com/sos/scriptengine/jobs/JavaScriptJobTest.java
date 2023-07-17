@@ -29,6 +29,7 @@ public class JavaScriptJobTest {
         UnitTestJobHelper<JobArguments> h = new UnitTestJobHelper<>(new JavaScriptJob(null));
         SOSReflection.setDeclaredFieldValue(h.getJobs(), "script", script);
         h.onStart(args);
+
         JOutcome.Completed result = h.onOrderProcess(args);
         LOGGER.info("###############################################");
         LOGGER.info(String.format("[RESULT]%s", result));

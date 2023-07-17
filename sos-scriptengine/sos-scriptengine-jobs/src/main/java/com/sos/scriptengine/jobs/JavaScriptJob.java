@@ -1,6 +1,8 @@
 package com.sos.scriptengine.jobs;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Paths;
 
 import javax.script.Bindings;
@@ -20,18 +22,10 @@ public class JavaScriptJob extends ABlockingInternalJob<JobArguments> {
     private static final String SCRIPT_ENGINE_NAME = "Graal.js";
 
     private static final String FUNCTION_NAME_GET_JOB = "getJS7Job";
-    private static final String JOB_CLASS_NAME = "JS7Job";
-    private static final String JOB_METHOD_NAME_ON_START = "onStart";
-    private static final String JOB_METHOD_NAME_ON_STOP = "onStop";
     private static final String JOB_METHOD_NAME_ON_ORDER_PROCESS = "onOrderProcess";
 
-    private static final String BASIC_SCRIPT = "function " + FUNCTION_NAME_GET_JOB + "(jobEnvironment){ return new " + JOB_CLASS_NAME
-            + "(jobEnvironment);}" + " class ABlockingJob { #jobEnvironment; "
-            + "constructor(jobEnvironment){ this.#jobEnvironment=jobEnvironment; } " + JOB_METHOD_NAME_ON_START + "(){} " + JOB_METHOD_NAME_ON_STOP
-            + "(){} " + JOB_METHOD_NAME_ON_ORDER_PROCESS + "(_step){} getJobEnvironment(){return this.#jobEnvironment;}}";
+    private static volatile String BASIC_SCRIPT;
 
-    private Invocable invocable = null;
-    private Object job;
     private String script;
 
     public JavaScriptJob(JobContext jobContext) {
@@ -51,25 +45,16 @@ public class JavaScriptJob extends ABlockingInternalJob<JobArguments> {
 
     @Override
     public void onStart() throws Exception {
-        ScriptEngine engine = createScriptEngine();
-        engine.eval(BASIC_SCRIPT + "\n" + script);
-        script = null;
-
-        invocable = (Invocable) engine;
-        // job is a PolyglotMap and can't be cast to Invocable
-        job = invocable.invokeFunction(FUNCTION_NAME_GET_JOB, getJobEnvironment());
-        invocable.invokeMethod(job, JOB_METHOD_NAME_ON_START);
-    }
-
-    @Override
-    public void onStop() throws Exception {
-        if (canInvoke()) {
-            invocable.invokeMethod(job, JOB_METHOD_NAME_ON_STOP);
-        }
+        setBasicScript();
     }
 
     @Override
     public void onOrderProcess(OrderProcessStep<JobArguments> step) throws Exception {
+        ScriptEngine engine = createScriptEngine();
+        engine.eval(BASIC_SCRIPT + "\n" + script);
+        Invocable invocable = (Invocable) engine;
+
+        Object job = invocable.invokeFunction(FUNCTION_NAME_GET_JOB, getJobEnvironment());
         invocable.invokeMethod(job, JOB_METHOD_NAME_ON_ORDER_PROCESS, step);
     }
 
@@ -94,8 +79,21 @@ public class JavaScriptJob extends ABlockingInternalJob<JobArguments> {
         return engine;
     }
 
-    private boolean canInvoke() {
-        return invocable != null && job != null;
+    private synchronized void setBasicScript() throws Exception {
+        if (BASIC_SCRIPT == null) {
+            BASIC_SCRIPT = inputStreamToString(this.getClass().getClassLoader().getResourceAsStream(this.getClass().getSimpleName() + ".js"));
+        }
+    }
+
+    public String inputStreamToString(InputStream inputStream) throws IOException {
+        try (ByteArrayOutputStream result = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = inputStream.read(buffer)) != -1) {
+                result.write(buffer, 0, length);
+            }
+            return result.toString("UTF-8");
+        }
     }
 
 }
