@@ -1,17 +1,4 @@
 class JS7Job extends ABlockingJob {
-	myPublicProperty = new Date();
-	LOGGER = org.slf4j.LoggerFactory.getLogger("JS7JobLogger");
-	//constructor(jobEnvironment) {
-	//	super(jobEnvironment);
-	//}
-
-	onStart() {
-		this.LOGGER.info("[onStart]" + this.getJobEnvironment().getJobKey());
-	}
-
-	onStop() {
-		this.LOGGER.info("[onStop]" + this.getJobEnvironment().getJobKey());
-	}
 
 	onOrderProcess(step) {
 		step.getLogger().info("[onOrderProcess]Hallo from My Job");
@@ -32,10 +19,6 @@ class JS7Job extends ABlockingJob {
 	}
 }
 
-function Sleep(milliseconds) {
-	return new Promise(resolve => setTimeout(resolve, milliseconds));
-}
-
 class Helper {
 	regExp = new RegExp("equals|toString|hashCode|getClass|notify|notifyAll|wait");
 
@@ -50,27 +33,27 @@ class Helper {
 			logger.info(" " + m);
 		}
 	}
-	
-	logArguments(step){
-        step.getLogger().info("---------------All Arguments--");
-        var args = step.getAllArguments();
-        step.getLogger().info("getAllArguments:");
-        for (var a in args) {
-            step.getLogger().info(" " + a + "=" + args[a]);
-        }
-        
-        step.getLogger().info("---------------Declared Arguments--");
-        args = step.getDeclaredArguments();
-        step.getLogger().info("getDeclaredArguments:");
-        step.getLogger().info(" "+args);
-        for (var a in args) {
-            step.getLogger().info(" " + a + "=" + args[a]);
-        }
-        
-        args = step.getAllDeclaredArguments();
-        step.getLogger().info("getAllDeclaredArguments:");
-        for (var a in args) {
-            step.getLogger().info(" "+ args[a]);
-        }
-    }
+
+	logArguments(step) {
+		step.getLogger().info("---------------All Arguments--");
+		var args = step.getAllArguments();
+		step.getLogger().info("getAllArguments:");
+		for (var a in args) {
+			step.getLogger().info(" " + a + "=" + args[a]);
+		}
+
+		step.getLogger().info("---------------Declared Arguments--");
+		args = step.getDeclaredArguments();
+		step.getLogger().info("getDeclaredArguments:");
+		step.getLogger().info(" " + args);
+		for (var a in args) {
+			step.getLogger().info(" " + a + "=" + args[a]);
+		}
+
+		args = step.getAllDeclaredArguments();
+		step.getLogger().info("getAllDeclaredArguments:");
+		for (var a in args) {
+			step.getLogger().info(" " + args[a]);
+		}
+	}
 }
