@@ -1,11 +1,16 @@
 class JS7Job extends ABlockingJob {
 	myPublicProperty = new Date();
+	LOGGER = org.slf4j.LoggerFactory.getLogger("JS7JobLogger");
 	//constructor(jobEnvironment) {
 	//	super(jobEnvironment);
 	//}
 
 	onStart() {
-		console.log("[onStart]" + this.getJobEnvironment());
+		this.LOGGER.info("[onStart]" + this.getJobEnvironment().getJobKey());
+	}
+
+	onStop() {
+		this.LOGGER.info("[onStop]" + this.getJobEnvironment().getJobKey());
 	}
 
 	onOrderProcess(step) {

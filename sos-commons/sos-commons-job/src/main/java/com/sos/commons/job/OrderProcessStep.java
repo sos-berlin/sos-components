@@ -6,17 +6,20 @@ import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
+import com.sos.commons.exception.ISOSRequiredArgumentMissingException;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.job.JobArgument.Type;
 import com.sos.commons.job.JobArgument.ValueSource;
 import com.sos.commons.job.JobArguments.LogLevel;
 import com.sos.commons.job.exception.JobArgumentException;
 import com.sos.commons.job.exception.JobProblemException;
+import com.sos.commons.job.exception.JobRequiredArgumentMissingException;
 import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.ASOSArguments;
@@ -49,12 +52,15 @@ public class OrderProcessStep<A extends JobArguments> {
     private final OrderProcessStepOutcome outcome;
     private final String threadName;
 
+    /* Arguments of <A extends JobArguments> */
     private A declaredArguments;
-    private Map<String, Map<String, DetailValue>> lastOutcomes;
-    private Map<String, DetailValue> jobResourcesValues;
+    /* declaredArguments + declared includedArguments */
     private List<JobArgument<A>> allDeclaredArguments;
     private Map<String, JobArgument<A>> allArguments;
-    private Map<String, Object> unitTestNotDeclaredArguments;
+
+    private Map<String, Map<String, DetailValue>> lastOutcomes;
+    private Map<String, DetailValue> jobResourcesValues;
+    private Map<String, Object> unitTestUndeclaredArguments;
     private Map<String, Object> cancelableResources;
 
     private String controllerId;
@@ -78,11 +84,13 @@ public class OrderProcessStep<A extends JobArguments> {
     protected void init(A arguments) {
         this.declaredArguments = arguments;
         this.logger.init(arguments);
+
+        setAllArguments();
     }
 
-    protected void init(A arguments, Map<String, Object> unitTestNotDeclaredArguments) {
+    protected void init(A arguments, Map<String, Object> unitTestUndeclaredArguments) {
         init(arguments);
-        this.unitTestNotDeclaredArguments = unitTestNotDeclaredArguments;
+        this.unitTestUndeclaredArguments = unitTestUndeclaredArguments;
     }
 
     protected String getThreadName() {
@@ -143,45 +151,11 @@ public class OrderProcessStep<A extends JobArguments> {
         return getLastOutcomes().get(Outcome.Failed.class.getSimpleName());
     }
 
-    private Map<JobArgument.ValueSource, List<String>> declaredArgumentsInfoBySetter() throws Exception {
-        setAllDeclaredArguments();
-        if (allDeclaredArguments == null || allDeclaredArguments.size() == 0) {
-            return null;
-        }
-        Map<JobArgument.ValueSource, List<String>> map = new HashMap<JobArgument.ValueSource, List<String>>();
-        for (JobArgument<?> arg : allDeclaredArguments) {
-            List<String> l;
-            ValueSource key = arg.getValueSource();
-            if (map.containsKey(key)) {
-                l = map.get(key);
-            } else {
-                l = new ArrayList<String>();
-            }
-            l.add(String.format("%s=%s", arg.getName(), arg.getDisplayValue()));
-            map.put(key, l);
-
-            if (arg.getNotAcceptedValue() != null) {
-                key = arg.getNotAcceptedValue().getSource();
-                if (map.containsKey(key)) {
-                    l = map.get(key);
-                } else {
-                    l = new ArrayList<String>();
-                }
-                l.add(String.format("[not accepted]%s=%s[use default]%s", arg.getName(), arg.getNotAcceptedValue().getDisplayValue(), arg
-                        .getDisplayValue()));
-                map.put(key, l);
-            }
-
-        }
-        return map;
-    }
-
     protected BlockingInternalJob.Step getInternalStep() {
         return internalStep;
     }
 
     private JobArgument<A> getDeclaredArgument(String name) {
-        setAllDeclaredArguments();
         if (allDeclaredArguments != null) {
             return allDeclaredArguments.stream().filter(a -> a.getName().equals(name) || (a.getNameAliases() != null && a.getNameAliases().contains(
                     name))).findAny().orElse(null);
@@ -206,14 +180,57 @@ public class OrderProcessStep<A extends JobArguments> {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public Map<String, JobArgument<A>> getAllArguments() {
-        if (allArguments != null) {
-            return allArguments;
+    private void setAllArguments() {
+        allArguments = new TreeMap<>();
+
+        // DECLARED Arguments
+        setAllDeclaredArguments();
+
+        // for preference see ABlockingJob.createJobArguments/setJobArgument
+        // Preference 1 (HIGHEST) - Succeeded Outcomes
+        Map<String, DetailValue> lso = getLastSucceededOutcomes();
+        if (lso != null && lso.size() > 0) {
+            lso.entrySet().stream().forEach(e -> {
+                // if (!allArguments.containsKey(e.getKey()) && !JobHelper.NAMED_NAME_RETURN_CODE.equals(e.getKey())) {
+                if (!allArguments.containsKey(e.getKey())) {
+                    ValueSource vs = ValueSource.LAST_SUCCEEDED_OUTCOME;
+                    vs.setDetails(e.getValue().getSource());
+                    allArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue().getValue(), vs));
+                }
+            });
+        }
+        if (internalStep != null) {
+            // Preference 2 - Order Variables (Node Arguments are unknown)
+            Map<String, Object> o = JobHelper.asJavaValues(internalStep.order().arguments());
+            if (o != null && o.size() > 0) {
+                o.entrySet().stream().forEach(e -> {
+                    if (!allArguments.containsKey(e.getKey())) {
+                        allArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue(), ValueSource.ORDER));
+                    }
+                });
+            }
+            // Preference 3 - JobArgument
+            Map<String, Object> j = JobHelper.asJavaValues(internalStep.arguments());
+            if (j != null && j.size() > 0) {
+                j.entrySet().stream().forEach(e -> {
+                    if (!allArguments.containsKey(e.getKey())) {
+                        allArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue(), ValueSource.JOB));
+                    }
+                });
+            }
+        }
+        // Preference 4 (LOWEST) - JobResources
+        Map<String, DetailValue> resources = getJobResourcesArgumentsAsNameDetailValueMap();
+        if (resources != null && resources.size() > 0) {
+            resources.entrySet().stream().forEach(e -> {
+                if (!allArguments.containsKey(e.getKey())) {
+                    ValueSource vs = ValueSource.JOB_RESOURCE;
+                    vs.setDetails(e.getValue().getSource());
+                    allArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue().getValue(), vs));
+                }
+            });
         }
 
-        allArguments = new HashMap<>();
-        // KNOWN Arguments
-        setAllDeclaredArguments();
         if (allDeclaredArguments != null && allDeclaredArguments.size() > 0) {
             allDeclaredArguments.stream().forEach(a -> {
                 if (!allArguments.containsKey(a.getName())) {
@@ -228,74 +245,31 @@ public class OrderProcessStep<A extends JobArguments> {
                 }
             });
         }
-        // UNKNOWN Arguments
-        // for preference see ABlockingJob.createJobArguments
-        // preference 1 (HIGHEST) - Succeeded Outcomes
-        Map<String, DetailValue> lso = getLastSucceededOutcomes();
-        if (lso != null && lso.size() > 0) {
-            lso.entrySet().stream().forEach(e -> {
-                if (!allArguments.containsKey(e.getKey()) && !JobHelper.NAMED_NAME_RETURN_CODE.equals(e.getKey())) {
-                    ValueSource vs = ValueSource.LAST_SUCCEEDED_OUTCOME;
-                    vs.setDetails(e.getValue().getSource());
-                    allArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue().getValue(), vs));
-                }
-            });
-        }
-        if (internalStep != null) {
-            // preference 2 - Order Variables (Node Arguments are unknown)
-            Map<String, Object> o = JobHelper.asJavaValues(internalStep.order().arguments());
-            if (o != null && o.size() > 0) {
-                o.entrySet().stream().forEach(e -> {
-                    if (!allArguments.containsKey(e.getKey())) {
-                        allArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue(), ValueSource.ORDER));
-                    }
-                });
-            }
-            // preference 3 - JobArgument
-            Map<String, Object> j = JobHelper.asJavaValues(internalStep.arguments());
-            if (j != null && j.size() > 0) {
-                j.entrySet().stream().forEach(e -> {
-                    if (!allArguments.containsKey(e.getKey())) {
-                        allArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue(), ValueSource.JOB));
-                    }
-                });
-            }
-        }
-        // preference 4 (LOWEST) - JobResources
-        Map<String, DetailValue> resources = getJobResourcesArgumentsAsNameDetailValueMap();
-        if (resources != null && resources.size() > 0) {
-            resources.entrySet().stream().forEach(e -> {
-                if (!allArguments.containsKey(e.getKey())) {
-                    ValueSource vs = ValueSource.JOB_RESOURCE;
-                    vs.setDetails(e.getValue().getSource());
-                    allArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue().getValue(), vs));
-                }
-            });
-        }
 
-        if (unitTestNotDeclaredArguments != null) {
-            unitTestNotDeclaredArguments.entrySet().stream().forEach(e -> {
+        if (unitTestUndeclaredArguments != null) {
+            unitTestUndeclaredArguments.entrySet().stream().forEach(e -> {
                 if (!allArguments.containsKey(e.getKey())) {
                     allArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue(), ValueSource.JOB_ARGUMENT));
                 }
             });
         }
+    }
 
+    public Map<String, JobArgument<A>> getAllArguments() {
         return allArguments;
     }
 
     public Map<String, JobArgument<A>> getAllArguments(JobArgument.Type type) {
-        getAllArguments();
         return allArguments.entrySet().stream().filter(a -> a.getValue().getType().equals(type)).collect(Collectors.toMap(Map.Entry::getKey,
                 Map.Entry::getValue));
     }
 
     public Map<String, Object> getAllArgumentsAsNameValueMap() {
-        return JobHelper.asNameValueMap(getAllArguments());
+        return JobHelper.asNameValueMap(allArguments);
     }
 
-    public Map<String, Object> getNotDeclaredArgumentsAsNameValueMap() {
-        return JobHelper.asNameValueMap(getAllArguments(Type.NOT_DECLARED));
+    public Map<String, Object> getUndeclaredArgumentsAsNameValueMap() {
+        return JobHelper.asNameValueMap(getAllArguments(Type.UNDECLARED));
     }
 
     public Map<String, Object> getOrderArgumentsAsNameValueMap() {
@@ -303,6 +277,42 @@ public class OrderProcessStep<A extends JobArguments> {
             return Collections.emptyMap();
         }
         return JobHelper.asJavaValues(internalStep.order().arguments());
+    }
+
+    @SuppressWarnings("unused")
+    private Object getArgumentValue(String name) {
+        if (allArguments.containsKey(name)) {
+            return allArguments.get(name).getValue();
+        }
+        try {
+            return getNamedValue(name);
+        } catch (JobProblemException e) {
+            return null;
+        }
+    }
+
+    protected Object getNamedValue(final JobArgument<A> arg) throws JobProblemException {
+        if (internalStep == null) {
+            return null;
+        }
+        Object val = getNamedValue(arg.getName());
+        if (val == null && arg.getNameAliases() != null) {
+            for (String name : arg.getNameAliases()) {
+                val = getNamedValue(name);
+                if (val != null) {
+                    break;
+                }
+            }
+        }
+        return val;
+    }
+
+    private Object getNamedValue(final String name) throws JobProblemException {
+        Optional<Either<Problem, Value>> opt = internalStep.namedValue(name);
+        if (opt.isPresent()) {
+            return JobHelper.asJavaValue(JobHelper.getFromEither(opt.get()));
+        }
+        return null;
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -343,7 +353,6 @@ public class OrderProcessStep<A extends JobArguments> {
     @SuppressWarnings("rawtypes")
     public <T extends ASOSArguments> T getIncludedArguments(Class<T> clazz) throws JobArgumentException {
         try {
-            setAllDeclaredArguments();
             T instance = clazz.getDeclaredConstructor().newInstance();
             if (declaredArguments.getIncludedArguments() == null) {
                 return instance;
@@ -513,7 +522,7 @@ public class OrderProcessStep<A extends JobArguments> {
     }
 
     public String replaceVars(Path path) throws Exception {
-        Map<String, Object> vars = JobHelper.asNameValueMap(getAllArguments());
+        Map<String, Object> vars = JobHelper.asNameValueMap(allArguments);
         put(vars, JobHelper.VAR_NAME_CONTROLLER_ID, getControllerId());
         put(vars, JobHelper.VAR_NAME_ORDER_ID, getOrderId());
         put(vars, JobHelper.VAR_NAME_WORKFLOW_PATH, getWorkflowName());
@@ -547,14 +556,14 @@ public class OrderProcessStep<A extends JobArguments> {
             return Collections.emptyMap();
         }
 
-        Map<String, Map<String, DetailValue>> resultMap = new HashMap<String, Map<String, DetailValue>>();
+        Map<String, Map<String, DetailValue>> resultMap = new TreeMap<>();
         for (HistoricOutcome ho : l) {
             Outcome outcome = ho.outcome();
             if (outcome instanceof Completed) {
                 Completed c = (Completed) outcome;
                 if (c.namedValues() != null) {
                     String key = outcome.getClass().getSimpleName();
-                    Map<String, DetailValue> map = new HashMap<>();
+                    Map<String, DetailValue> map = new TreeMap<>();
                     if (resultMap.containsKey(key)) {
                         map = resultMap.get(key);
                     } else {
@@ -576,7 +585,7 @@ public class OrderProcessStep<A extends JobArguments> {
     }
 
     private Map<String, DetailValue> jobResources2map() {
-        Map<String, DetailValue> resultMap = new LinkedHashMap<>();
+        Map<String, DetailValue> resultMap = new TreeMap<>();
         if (internalStep == null) {
             return resultMap;
         }
@@ -596,48 +605,47 @@ public class OrderProcessStep<A extends JobArguments> {
         return resultMap;
     }
 
-    protected void logParameterization(String mockMessage) {
+    protected void checkAndLogParameterization(List<JobArgumentException> exceptions, String mockMessage) throws Exception {
+        Exception ae = null;
         try {
+            if (exceptions != null && exceptions.size() > 0) {
+                List<String> l = exceptions.stream().filter(e -> e instanceof ISOSRequiredArgumentMissingException).map(e -> {
+                    return ((ISOSRequiredArgumentMissingException) e).getArgumentName();
+                }).collect(Collectors.toList());
+                if (l.size() > 0) {
+                    ae = new JobRequiredArgumentMissingException(String.join(", ", l));
+                } else {
+                    ae = exceptions.get(0);
+                }
+            }
             if (mockMessage == null) {
                 logger.info("Job Parameterization:");
             } else {
                 logger.info(mockMessage + " Job Parameterization:");
             }
-            setAllDeclaredArguments();
-            Map<ValueSource, List<String>> map = declaredArgumentsInfoBySetter();
-            if (map == null || map.size() == 0) {
-                infoResultingArguments();
 
-                if (logger.isDebugEnabled()) {
-                    logJobEnvironmentArguments(LogLevel.DEBUG);
-                    logOutcomes(LogLevel.DEBUG);
-                    logAllResultingArguments(LogLevel.DEBUG);
-                }
-                return;
-            }
-            infoResultingArguments();
-
-            if (logger.isDebugEnabled()) {
-                logArguments(LogLevel.DEBUG);
-                logAllResultingArguments(LogLevel.DEBUG);
+            logAllDirtyArguments();
+            LogLevel ll = LogLevel.DEBUG;
+            boolean doLog = logger.isDebugEnabled();
+            if (ae != null) {
+                ll = LogLevel.INFO;
+                doLog = true;
             }
 
+            if (doLog) {
+                logArgumentsBySource(ll);
+                logAllArguments(ll);
+            }
         } catch (Throwable e) {
             logger.error2allLoggers(getStepInfo(), e.toString(), e);
+        } finally {
+            if (ae != null) {
+                throw ae;
+            }
         }
     }
 
-    protected void logParameterizationOnRequiredArgumentMissingException() {
-        try {
-            setAllDeclaredArguments();
-            logArguments(LogLevel.INFO);
-            logAllResultingArguments(LogLevel.INFO);
-        } catch (Exception e) {
-            logger.error2allLoggers(getStepInfo(), e.toString(), e);
-        }
-    }
-
-    private void logArguments(LogLevel logLevel) throws Exception {
+    private void logArgumentsBySource(LogLevel logLevel) throws Exception {
         Map<String, Object> map = null;
         if (internalStep != null) {
             // ORDER Variables
@@ -649,9 +657,8 @@ public class OrderProcessStep<A extends JobArguments> {
                 });
             }
         }
-        // ORDER or Node arguments
-        setAllDeclaredArguments();
-        List<JobArgument<A>> orderOrNode = getOrderOrNodeArguments();
+        // Declared ORDER or Node arguments
+        List<JobArgument<A>> orderOrNode = getDeclaredOrderOrNodeArguments();
         if (orderOrNode != null && orderOrNode.size() > 0) {
             logger.log(logLevel, String.format(" %s:", ValueSource.ORDER_OR_NODE.getHeader()));
             orderOrNode.stream().forEach(a -> {
@@ -681,7 +688,7 @@ public class OrderProcessStep<A extends JobArguments> {
         logOutcomes(logLevel);
     }
 
-    private List<JobArgument<A>> getOrderOrNodeArguments() {
+    private List<JobArgument<A>> getDeclaredOrderOrNodeArguments() {
         if (allDeclaredArguments == null) {
             return null;
         }
@@ -724,17 +731,17 @@ public class OrderProcessStep<A extends JobArguments> {
         }
     }
 
-    private void infoResultingArguments() throws Exception {
-        if (allDeclaredArguments == null || allDeclaredArguments.size() == 0) {
+    private void logAllDirtyArguments() throws Exception {
+        if (allArguments == null || allArguments.size() == 0) {
             return;
         }
         logger.info(String.format("%s:", ValueSource.JAVA.getHeader()));
-        allDeclaredArguments.stream().filter(a -> {
-            if (a.isDirty()) {
+        allArguments.entrySet().stream().filter(a -> {
+            if (a.getValue().isDirty()) {
                 return true;
             } else {
-                if (a.getValueSource().equals(JobArgument.ValueSource.JAVA)) {
-                    if (a.getNotAcceptedValue() != null) {
+                if (a.getValue().getValueSource().equals(JobArgument.ValueSource.JAVA)) {
+                    if (a.getValue().getNotAcceptedValue() != null) {
                         return true;
                     }
                 } else {
@@ -743,33 +750,35 @@ public class OrderProcessStep<A extends JobArguments> {
             }
             return false;
         }).forEach(a -> {
-            String detail = a.getValueSource().getDetails() == null ? "" : " " + a.getValueSource().getDetails();
-            if (a.getPayload() != null) {
-                String pd = SOSArgumentHelper.getClassName(a.getPayload().toString());
+            String detail = a.getValue().getValueSource().getDetails() == null ? "" : " " + a.getValue().getValueSource().getDetails();
+            if (a.getValue().getPayload() != null) {
+                String pd = SOSArgumentHelper.getClassName(a.getValue().getPayload().toString());
                 if (detail.equals("")) {
                     detail = " " + pd;
                 } else {
                     detail = detail + " " + pd;
                 }
             }
-            if (a.getNotAcceptedValue() == null) {
-                logger.info("    %s=%s (source=%s%s)", a.getName(), a.getDisplayValue(), a.getValueSource().name(), detail);
+            if (a.getValue().getNotAcceptedValue() == null) {
+                logger.info("    %s=%s (source=%s%s)", a.getValue().getName(), a.getValue().getDisplayValue(), a.getValue().getValueSource().name(),
+                        detail);
             } else {
                 String exception = "";
-                if (a.getNotAcceptedValue().getException() != null) {
-                    exception = new StringBuilder("(").append(a.getNotAcceptedValue().getException().toString()).append(")").toString();
+                if (a.getValue().getNotAcceptedValue().getException() != null) {
+                    exception = new StringBuilder("(").append(a.getValue().getNotAcceptedValue().getException().toString()).append(")").toString();
                 }
-                logger.info("    %s=%s (source=%s value=%s[not accepted%s, use from source=%s]%s)", a.getName(), a.getDisplayValue(), a
-                        .getNotAcceptedValue().getSource().name(), a.getNotAcceptedValue().getDisplayValue(), exception, a.getNotAcceptedValue()
-                                .getUsedValueSource().name(), detail);
+                logger.info("    %s=%s (source=%s value=%s[not accepted%s, use from source=%s]%s)", a.getValue().getName(), a.getValue()
+                        .getDisplayValue(), a.getValue().getNotAcceptedValue().getSource().name(), a.getValue().getNotAcceptedValue()
+                                .getDisplayValue(), exception, a.getValue().getNotAcceptedValue().getUsedValueSource().name(), detail);
             }
         });
     }
 
-    private void logAllResultingArguments(LogLevel logLevel) throws Exception {
-        if (unitTestNotDeclaredArguments != null && unitTestNotDeclaredArguments.size() > 0) {
-            logger.log(logLevel, String.format(" All %s(Unit-Test NotDeclaredArguments):", ValueSource.JAVA.getHeader()));
-            unitTestNotDeclaredArguments.entrySet().stream().forEach(a -> {
+    @SuppressWarnings("unused")
+    private void logArgumentsDeprecated(LogLevel logLevel) throws Exception {
+        if (unitTestUndeclaredArguments != null && unitTestUndeclaredArguments.size() > 0) {
+            logger.log(logLevel, String.format(" All %s(Unit-Test UndeclaredArguments):", ValueSource.JAVA.getHeader()));
+            unitTestUndeclaredArguments.entrySet().stream().forEach(a -> {
                 logger.log(logLevel, "    " + a.toString());
             });
         }
@@ -780,6 +789,24 @@ public class OrderProcessStep<A extends JobArguments> {
         logger.log(logLevel, String.format(" All %s:", ValueSource.JAVA.getHeader()));
         allDeclaredArguments.stream().forEach(a -> {
             logger.log(logLevel, "    " + a.toString());
+        });
+        // logAllAllArguments(logLevel);
+    }
+
+    private void logAllArguments(LogLevel logLevel) throws Exception {
+        if (unitTestUndeclaredArguments != null && unitTestUndeclaredArguments.size() > 0) {
+            logger.log(logLevel, String.format(" All %s(Unit-Test UndeclaredArguments):", ValueSource.JAVA.getHeader()));
+            unitTestUndeclaredArguments.entrySet().stream().forEach(a -> {
+                logger.log(logLevel, "    " + a.toString());
+            });
+        }
+
+        if (allArguments == null || allArguments.size() == 0) {
+            return;
+        }
+        logger.log(logLevel, String.format(" All %s:", ValueSource.JAVA.getHeader()));
+        allArguments.entrySet().stream().forEach(a -> {
+            logger.log(logLevel, "    " + a.getValue().toString());
         });
     }
 

@@ -17,7 +17,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -26,13 +25,11 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.exception.ISOSRequiredArgumentMissingException;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.job.JobArgument.ValueSource;
 import com.sos.commons.job.JobArguments.MockLevel;
 import com.sos.commons.job.exception.JobArgumentException;
 import com.sos.commons.job.exception.JobException;
-import com.sos.commons.job.exception.JobProblemException;
 import com.sos.commons.job.exception.JobRequiredArgumentMissingException;
 import com.sos.commons.util.SOSBase64;
 import com.sos.commons.util.SOSReflection;
@@ -112,7 +109,7 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
     }
 
     @Override
-    public OrderProcess toOrderProcess(BlockingInternalJob.Step step) {
+    public OrderProcess toOrderProcess(BlockingInternalJob.Step internalStep) {
         return new OrderProcess() {
 
             volatile boolean canceled = false;
@@ -121,41 +118,38 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
             public JOutcome.Completed run() throws Exception {
                 while (!canceled) {
                     MockLevel mockLevel = MockLevel.OFF;
-                    OrderProcessStep<A> orderProcessStep = new OrderProcessStep<A>(jobEnvironment, step);
-                    orderProcessStepRef = new AtomicReference<>(orderProcessStep);
+                    OrderProcessStep<A> step = new OrderProcessStep<A>(jobEnvironment, internalStep);
+                    orderProcessStepRef = new AtomicReference<>(step);
                     try {
                         List<JobArgumentException> exceptions = new ArrayList<JobArgumentException>();
-                        A args = createJobArguments(exceptions, orderProcessStep);
-                        orderProcessStep.init(args);
+                        step.init(createJobArguments(exceptions, step));
 
-                        mockLevel = orderProcessStep.getDeclaredArguments().getMockLevel().getValue();
+                        mockLevel = step.getDeclaredArguments().getMockLevel().getValue();
                         switch (mockLevel) {
                         case OFF:
-                            orderProcessStep.logParameterization(null);
-                            checkExceptions(orderProcessStep, exceptions);
-                            onOrderProcess(orderProcessStep);
-                            return orderProcessStep.processed();
+                            step.checkAndLogParameterization(exceptions, null);
+                            onOrderProcess(step);
+                            return step.processed();
                         case ERROR:
-                            orderProcessStep.logParameterization(String.format("Mock Execution: %s=%s.", orderProcessStep.getDeclaredArguments()
+                            step.checkAndLogParameterization(exceptions, String.format("Mock Execution: %s=%s.", step.getDeclaredArguments()
                                     .getMockLevel().getName(), mockLevel));
-                            checkExceptions(orderProcessStep, exceptions);
-                            return orderProcessStep.success();
+                            return step.success();
                         case INFO:
                         default:
-                            orderProcessStep.logParameterization(String.format("Mock Execution: %s=%s.", orderProcessStep.getDeclaredArguments()
-                                    .getMockLevel().getName(), mockLevel));
-                            return orderProcessStep.success();
+                            step.checkAndLogParameterization(null, String.format("Mock Execution: %s=%s.", step.getDeclaredArguments().getMockLevel()
+                                    .getName(), mockLevel));
+                            return step.success();
                         }
                     } catch (Throwable e) {
                         switch (mockLevel) {
                         case OFF:
                         case ERROR:
-                            return orderProcessStep.failed(e.toString(), e);
+                            return step.failed(e.toString(), e);
                         case INFO:
                         default:
-                            orderProcessStep.getLogger().info(String.format("Mock Execution: %s=%s, Exception: %s", orderProcessStep
-                                    .getDeclaredArguments().getMockLevel().getName(), mockLevel, e.toString()));
-                            return orderProcessStep.success();
+                            step.getLogger().info(String.format("Mock Execution: %s=%s, Exception: %s", step.getDeclaredArguments().getMockLevel()
+                                    .getName(), mockLevel, e.toString()));
+                            return step.success();
                         }
                     }
                 }
@@ -189,18 +183,17 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
         };
     }
 
-    /** can be overwritten */
     private void cancelOrderProcessStep(OrderProcessStep<A> jobStep) {
         String jobName = getJobName(jobStep);
-        if (jobStep.getCancelableResources() != null) {
-            cancelHibernateFactory(jobStep, jobName);
-            cancelSSHProvider(jobStep, jobName);
-            // cancelSQLConnection(jobStep, jobName);
-        }
         try {
             onOrderProcessCancel(jobStep);
         } catch (Throwable e) {
             LOGGER.error(String.format("[%s][job name=%s][onOrderProcessCancel]%s", OPERATION_CANCEL_KILL, jobName, e.toString()), e);
+        }
+        if (jobStep.getCancelableResources() != null) {
+            cancelHibernateFactory(jobStep, jobName);
+            cancelSSHProvider(jobStep, jobName);
+            // cancelSQLConnection(jobStep, jobName);
         }
     }
 
@@ -258,20 +251,6 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
             return jobStep == null ? "unknown" : jobStep.getJobName();
         } catch (Throwable e) {
             return "unknown";
-        }
-    }
-
-    private void checkExceptions(OrderProcessStep<A> jobStep, List<JobArgumentException> exceptions) throws Exception {
-        if (exceptions.size() > 0) {
-            List<String> l = exceptions.stream().filter(e -> e instanceof ISOSRequiredArgumentMissingException).map(e -> {
-                return ((ISOSRequiredArgumentMissingException) e).getArgumentName();
-            }).collect(Collectors.toList());
-            if (l.size() > 0) {
-                jobStep.logParameterizationOnRequiredArgumentMissingException();
-                throw new JobRequiredArgumentMissingException(String.join(", ", l));
-            } else {
-                throw exceptions.get(0);
-            }
         }
     }
 
@@ -353,7 +332,7 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
             allNames.addAll(arg.getNameAliases());
         }
 
-        // preference 1 (HIGHEST) - Succeeded Outcomes
+        // Preference 1 (HIGHEST) - Succeeded Outcomes
         DetailValue jdv = fromMap(lastSucceededOutcomes, allNames);
         if (jdv != null) {
             arg.setValue(getValue(jdv.getValue(), arg, field));
@@ -361,8 +340,8 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
             vs.setDetails("pos=" + jdv.getSource());
             setValueSource(arg, vs);
         } else {
-            // preference 2 - Order Variable or Node Argument
-            Object val = getNamedValue(step, arg);
+            // Preference 2 - Order Variable or Node Argument
+            Object val = step == null ? null : step.getNamedValue(arg);
             boolean isNamedValue = false;
             if (val == null) {
                 val = fromMap(map, allNames);
@@ -374,7 +353,7 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
             // - solution 1 - set SOSArgument.setDefaultValue instead of SOSArgument.setValue
             // - solution 2 - handle here ...
 
-            // preference 3 - JobArgument or Argument or Java Default
+            // Preference 3 - JobArgument or Argument or Java Default
             if (val == null || SOSString.isEmpty(val.toString())) {
                 arg.setValue(arg.getDefaultValue());
             } else {
@@ -383,7 +362,7 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
             if (step == null) {
                 setValueSource(arg, allNames);
             } else {
-                // preference 4 (LOWEST) - JobResources
+                // Preference 4 (LOWEST) - JobResources
                 setValueSource(step, field, arg, allNames, isNamedValue, jobResources);
             }
             if (arg.isRequired() && arg.getValue() == null) {
@@ -397,30 +376,6 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
             return null;
         }
         return list.stream().filter(map::containsKey).findFirst().map(map::get).orElse(null);
-    }
-
-    private Object getNamedValue(final OrderProcessStep<A> step, final JobArgument<A> arg) throws JobProblemException {
-        if (step == null) {
-            return null;
-        }
-        Object val = getNamedValue(step, arg.getName());
-        if (val == null && arg.getNameAliases() != null) {
-            for (String name : arg.getNameAliases()) {
-                val = getNamedValue(step, name);
-                if (val != null) {
-                    break;
-                }
-            }
-        }
-        return val;
-    }
-
-    private Object getNamedValue(final OrderProcessStep<A> step, final String name) throws JobProblemException {
-        Optional<Either<Problem, Value>> opt = step.getInternalStep().namedValue(name);
-        if (opt.isPresent()) {
-            return JobHelper.asJavaValue(JobHelper.getFromEither(opt.get()));
-        }
-        return null;
     }
 
     private Object getValue(Object val, JobArgument<A> arg, Field field) throws ClassNotFoundException {

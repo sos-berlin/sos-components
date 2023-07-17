@@ -51,7 +51,7 @@ public class SQLPLUSJob extends ABlockingInternalJob<SQLPlusJobArguments> {
         step.getLogger().debug("dbUser: " + args.getDbUser());
         step.getLogger().debug("dbPassword: " + args.getDbPassword().getDisplayValue());
 
-        Map<String, Object> variables = step.getNotDeclaredArgumentsAsNameValueMap();
+        Map<String, Object> variables = step.getUndeclaredArgumentsAsNameValueMap();
 
         SQLPLUSCommandHandler sqlPlusCommandHandler = new SQLPLUSCommandHandler(variables, step.getLogger());
         File tempFile = File.createTempFile("sos", ".sql");
