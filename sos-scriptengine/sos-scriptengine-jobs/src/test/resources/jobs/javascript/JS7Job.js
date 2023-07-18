@@ -1,12 +1,20 @@
-class JS7Job extends ABlockingJob {
+class JS7JobArguments {
+	my_arg1 = new js7.JobArgument("my_arg1", false);
+	my_arg2 = new js7.JobArgument("my_arg2", true, "x", js7.DisplayMode.MASKED);
+}
 
-	onOrderProcess(step) {
+class JS7Job extends js7.Job {
+	declaredArguments = new JS7JobArguments();
+
+	processOrder(step) {
 		step.getLogger().info("[onOrderProcess]Hallo from My Job");
 		step.getLogger().info("[onOrderProcess][getJobEnvironment]" + this.getJobEnvironment());
 		step.getLogger().info("[onOrderProcess][getJobEnvironment.getSystemEncoding]" + this.getJobEnvironment().getSystemEncoding());
-		step.getLogger().info("[onOrderProcess][this.myPublicProperty]" + this.myPublicProperty);
 
 		//java.lang.Thread.sleep(5*1000);
+		var da = step.getDeclaredArgument(this.declaredArguments.my_arg2.name);
+		step.getLogger().info("[onOrderProcess][declaredArgument=" + da.getName() + "]" + da.getValue());
+		step.getLogger().info("[onOrderProcess][declaredArgumentValue]" + (typeof step.getDeclaredArgumentValue(this.declaredArguments.my_arg2.name)));
 
 		var h = new Helper();
 		h.logPublicMethods(step.getLogger(), "this.getJobEnvironment()", this.getJobEnvironment());

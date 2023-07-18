@@ -159,10 +159,19 @@ public class OrderProcessStep<A extends JobArguments> {
         return internalStep;
     }
 
-    private JobArgument<A> getDeclaredArgument(String name) {
+    public JobArgument<A> getDeclaredArgument(String name) {
         if (allDeclaredArguments != null) {
-            return allDeclaredArguments.stream().filter(a -> a.getName().equals(name) || (a.getNameAliases() != null && a.getNameAliases().contains(
-                    name))).findAny().orElse(null);
+            return allDeclaredArguments.stream().filter(a -> (a.getName() != null && a.getName().equals(name)) || (a.getNameAliases() != null && a
+                    .getNameAliases().contains(name))).findAny().orElse(null);
+        }
+        return null;
+    }
+
+    /** JobArgument<?> instead of JobArgument<A> because of dynamicArguments */
+    public Object getDeclaredArgumentValue(String name) {
+        JobArgument<?> a = getDeclaredArgument(name);
+        if (a != null) {
+            return a.getValue();
         }
         return null;
     }
@@ -249,6 +258,14 @@ public class OrderProcessStep<A extends JobArguments> {
             });
         }
 
+        // Preference 5 - JobContext.jobArguments()
+        jobEnvironment.getAllArgumentsAsNameValueMap().entrySet().stream().forEach(e -> {
+            if (!allArguments.containsKey(e.getKey())) {
+                ValueSource vs = ValueSource.JOB_ARGUMENT;
+                allArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue(), vs));
+            }
+        });
+
         if (unitTestUndeclaredArguments != null) {
             unitTestUndeclaredArguments.entrySet().stream().forEach(e -> {
                 if (!allArguments.containsKey(e.getKey())) {
@@ -326,7 +343,7 @@ public class OrderProcessStep<A extends JobArguments> {
         }
         if (allDeclaredArguments == null) {
             List<Field> fields = JobHelper.getJobArgumentFields(declaredArguments);
-            List<JobArgument<A>> l = new ArrayList<JobArgument<A>>();
+            List<JobArgument<A>> l = new ArrayList<>();
             for (Field field : fields) {
                 try {
                     field.setAccessible(true);
@@ -349,6 +366,12 @@ public class OrderProcessStep<A extends JobArguments> {
                     }
                 }
             }
+            if (declaredArguments.hasDynamicArgumentFields()) {
+                for (JobArgument<A> arg : declaredArguments.getDynamicArgumentFields()) {
+                    l.add(arg);
+                }
+            }
+
             allDeclaredArguments = l;
         }
     }

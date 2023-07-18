@@ -108,6 +108,10 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
         onStop();
     }
 
+    public A onCreateJobArguments(List<JobArgumentException> exceptions, final OrderProcessStep<A> step) throws Exception {
+        return null;
+    }
+
     @Override
     public OrderProcess toOrderProcess(BlockingInternalJob.Step internalStep) {
         return new OrderProcess() {
@@ -122,7 +126,11 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
                     orderProcessStepRef = new AtomicReference<>(step);
                     try {
                         List<JobArgumentException> exceptions = new ArrayList<JobArgumentException>();
-                        step.init(createJobArguments(exceptions, step));
+
+                        A args = onCreateJobArguments(exceptions, step);
+                        args = createJobArguments(exceptions, step, args);
+
+                        step.init(args);
 
                         mockLevel = step.getDeclaredArguments().getMockLevel().getValue();
                         switch (mockLevel) {
@@ -274,12 +282,12 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
     }
 
     private A createJobArguments(List<JobArgumentException> exceptions) throws Exception {
-        return createJobArguments(exceptions, null);
+        return createJobArguments(exceptions, null, null);
     }
 
-    @SuppressWarnings({ "rawtypes" })
-    private A createJobArguments(List<JobArgumentException> exceptions, final OrderProcessStep<A> step) throws Exception {
-        A instance = getJobArgumensClass().getDeclaredConstructor().newInstance();
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private A createJobArguments(List<JobArgumentException> exceptions, final OrderProcessStep<A> step, A instance) throws Exception {
+        instance = instance == null ? getJobArgumensClass().getDeclaredConstructor().newInstance() : instance;
         if (jobEnvironment.getEngineArguments() == null && step == null) {
             return instance;
         }
@@ -293,6 +301,11 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
                     arg.setPayload(e.getKey());
                     setJobArgument(step, map, lastSucceededOutcomes, jobResources, arg, null);
                 }
+            }
+        }
+        if (instance.hasDynamicArgumentFields()) {
+            for (JobArgument<String> arg : instance.getDynamicArgumentFields()) {
+                setJobArgument(step, map, lastSucceededOutcomes, jobResources, arg, null);
             }
         }
         return setJobArguments(exceptions, step, map, lastSucceededOutcomes, jobResources, instance);
@@ -318,6 +331,13 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
                         .toString()), e));
             }
         }
+
+        // if (instance.hasDynamicArgumentFields()) {
+        // for (JobArgument arg : instance.getDynamicArgumentFields()) {
+        // setJobArgument(step, map, lastSucceededOutcomes, jobResources, arg, null);
+        // }
+        // }
+
         return instance;
     }
 
@@ -455,7 +475,7 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
     private void setValueType(JobArgument<A> arg, Field field) {
         if (field == null) {
             if (arg.getClazzType() == null) {
-                arg.setClazzType(Object.class);
+                arg.setClazzType(String.class);
             }
             return;
         }
