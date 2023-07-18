@@ -206,6 +206,11 @@ public class JsonConverter {
                 if (job.getExecutable() != null) {
                     switch (job.getExecutable().getTYPE()) {
                     case InternalExecutable:
+                        ExecutableJava ej = job.getExecutable().cast();
+                        if (ej.getScript() != null && hasScriptIncludes.test(ej.getScript())) {
+                            ej.setScript(replaceIncludes(workflowName, ej.getScript(), jobName, releasedScripts));
+                            replacedJobs.put(jobName, job);
+                        }
                         break;
                     case ShellScriptExecutable:
                     case ScriptExecutable:
