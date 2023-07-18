@@ -857,18 +857,21 @@ public class SOSServicePermissionIam {
                         sosLoginParameters.setSOSOpenIdWebserviceCredentials(sosOpenIdWebserviceCredentials);
 
                     } else {
-                        sosLoginParameters.setAccount(sosLoginParameters.getClientCertCN());
+                        if (sosLoginParameters.getCredentialId() == null || sosLoginParameters.getCredentialId().isEmpty()) {
+                            sosLoginParameters.setAccount(sosLoginParameters.getClientCertCN());
+                        }
                     }
                 }
                 if (pwd == null) {
                     pwd = "";
                 }
 
-                String s = sosLoginParameters.getAccount() + ":" + pwd;
-                byte[] authEncBytes = org.apache.commons.codec.binary.Base64.encodeBase64(s.getBytes());
-                String authStringEnc = new String(authEncBytes);
-                sosLoginParameters.setBasicAuthorization("Basic " + authStringEnc);
-
+                if (sosLoginParameters.basicAuthorizationHeaderIsEmpty()) {
+                    String s = sosLoginParameters.getAccount() + ":" + pwd;
+                    byte[] authEncBytes = org.apache.commons.codec.binary.Base64.encodeBase64(s.getBytes());
+                    String authStringEnc = new String(authEncBytes);
+                    sosLoginParameters.setBasicAuthorization("Basic " + authStringEnc);
+                }
             }
 
             TimeZone.setDefault(TimeZone.getTimeZone(UTC));

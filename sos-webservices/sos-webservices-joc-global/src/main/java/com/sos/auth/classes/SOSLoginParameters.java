@@ -49,6 +49,14 @@ public class SOSLoginParameters {
         return identityService;
     }
 
+    public String getMainIdentitySercic() {
+        if (isSecondPathOfTwoFactor()) {
+            return getFirstIdentityService();
+        } else {
+            return getIdentityService();
+        }
+    }
+
     public void setIdentityService(String identityService) {
         this.identityService = identityService;
     }
@@ -109,7 +117,7 @@ public class SOSLoginParameters {
         this.authenticatorData = authenticatorData;
     }
 
-    public String getCredentialId() { 
+    public String getCredentialId() {
         return credentialId;
     }
 
@@ -133,7 +141,6 @@ public class SOSLoginParameters {
         return firstIdentityService;
     }
 
-    
     public void setFirstIdentityService(String firstIdentityService) {
         this.firstIdentityService = firstIdentityService;
     }
@@ -146,22 +153,18 @@ public class SOSLoginParameters {
         return !isSecondPathOfTwoFactor();
     }
 
-    
     public String getOpenidConfiguration() {
         return openidConfiguration;
     }
 
-    
     public void setOpenidConfiguration(String openidConfiguration) {
         this.openidConfiguration = openidConfiguration;
     }
 
-    
     public SOSOpenIdWebserviceCredentials getSosOpenIdWebserviceCredentials() {
         return sosOpenIdWebserviceCredentials;
     }
 
-    
     public void setSosOpenIdWebserviceCredentials(SOSOpenIdWebserviceCredentials sosOpenIdWebserviceCredentials) {
         this.sosOpenIdWebserviceCredentials = sosOpenIdWebserviceCredentials;
     }
