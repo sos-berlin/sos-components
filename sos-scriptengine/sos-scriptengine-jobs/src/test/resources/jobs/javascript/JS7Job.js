@@ -1,6 +1,8 @@
 class JS7JobArguments {
 	my_arg1 = new js7.JobArgument("my_arg1", false);
 	my_arg2 = new js7.JobArgument("my_arg2", true, "x", js7.DisplayMode.MASKED);
+
+	includedArguments = [js7.IncludableArgument.CREDENTIAL_STORE, js7.IncludableArgument.SSH_PROVIDER];
 }
 
 class JS7Job extends js7.Job {

@@ -7,6 +7,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.script.Bindings;
 import javax.script.Invocable;
@@ -21,6 +23,7 @@ import com.sos.commons.job.OrderProcessStep;
 import com.sos.commons.job.exception.JobArgumentException;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
+import com.sos.commons.util.common.ASOSArguments;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 
 public class JavaScriptJob extends ABlockingInternalJob<JobArguments> {
@@ -30,6 +33,10 @@ public class JavaScriptJob extends ABlockingInternalJob<JobArguments> {
     private static final String FUNCTION_NAME_GET_JOB = "getJS7Job";
     private static final String JOB_METHOD_GET_DECLARED_ARGUMENTS = "getDeclaredArguments";
     private static final String JOB_METHOD_PROCESS_ORDER = "processOrder";
+
+    private static final Map<String, String> INCLUDABLE_ARGUMENTS = Stream.of(new String[][] { { "CREDENTIAL_STORE",
+            "com.sos.commons.credentialstore.common.SOSCredentialStoreArguments" }, { "SSH_PROVIDER",
+                    "com.sos.commons.vfs.ssh.common.SSHProviderArguments" }, }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
 
     private static volatile String BASIC_SCRIPT;
 
@@ -90,28 +97,57 @@ public class JavaScriptJob extends ABlockingInternalJob<JobArguments> {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private JobArguments getDeclaredArguments(Object args) throws Exception {
-        JobArguments jas = new JobArguments();
-        if (args != null) {
-            Map<String, Object> m = (Map) args;
-            List<JobArgument> l = new ArrayList<>();
-            m.entrySet().stream().forEach(e -> {
-                Map<String, Object> v = (Map) e.getValue();
-                Object required = v.get("required");
-                Object defaultValue = v.get("defaultValue");
-                Object displayMode = v.get("displayMode");
-
-                JobArgument<String> ja = new JobArgument<>(e.getKey(), Boolean.parseBoolean(required.toString()));
-                if (defaultValue != null) {
-                    ja.setDefaultValue(defaultValue.toString());
-                }
-                if (displayMode != null) {
-                    ja.setDisplayMode(DisplayMode.valueOf(displayMode.toString()));
-                }
-                ja.setIsDirty(false);
-                l.add(ja);
-            });
-            jas.setDynamicArgumentFields(l);
+        if (args == null) {
+            return new JobArguments();
         }
+
+        Map<String, Object> m = (Map) args;
+        List<JobArgument> l = new ArrayList<>();
+        List<ASOSArguments> included = new ArrayList<>();
+        m.entrySet().stream().forEach(e -> {
+            if (e.getKey().equals("includedArguments") && e.getValue() instanceof List) {
+                List<String> vl = (List<String>) e.getValue();
+                for (String n : vl) {
+                    try {
+                        included.add((ASOSArguments) Class.forName(INCLUDABLE_ARGUMENTS.get(n)).getDeclaredConstructor().newInstance());
+                    } catch (Throwable e1) {
+                    }
+                }
+            } else if (e.getValue() instanceof Map) {
+                Map<String, Object> v = (Map) e.getValue();
+                if (v.containsKey("required") && v.containsKey("defaultValue") && v.containsKey("displayMode")) {
+                    Object required = v.get("required");
+                    Object defaultValue = v.get("defaultValue");
+                    Object displayMode = v.get("displayMode");
+
+                    JobArgument<String> ja = new JobArgument<>(e.getKey(), Boolean.parseBoolean(required.toString()));
+                    if (defaultValue != null) {
+                        ja.setDefaultValue(defaultValue.toString());
+                    }
+                    if (displayMode != null) {
+                        ja.setDisplayMode(DisplayMode.valueOf(displayMode.toString().toUpperCase()));
+                    }
+                    ja.setIsDirty(false);
+                    l.add(ja);
+                }
+            }
+        });
+
+        JobArguments jas = null;
+        // TODO to Array etc ..
+        switch (included.size()) {
+        case 1:
+            jas = new JobArguments(included.get(0));
+            break;
+        case 2:
+            jas = new JobArguments(included.get(0), included.get(1));
+            break;
+        default:
+            jas = new JobArguments();
+            break;
+        }
+
+        jas.setDynamicArgumentFields(l);
         return jas;
     }
 
