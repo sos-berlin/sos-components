@@ -19,7 +19,7 @@ public class FileOrderVariablesJob extends ABlockingInternalJob<FileOrderVariabl
             step.getDeclaredArguments().setJs7SourceFile((String) orderArgFile);
         }
         ExecuteFileOrderVariables eov = new ExecuteFileOrderVariables(step.getLogger(), allArgs, step.getDeclaredArguments());
-        step.getOutcome().getVariables().putAll(eov.getVariables());
+        step.getOutcome().putVariables(eov.getVariables());
     }
 
 }

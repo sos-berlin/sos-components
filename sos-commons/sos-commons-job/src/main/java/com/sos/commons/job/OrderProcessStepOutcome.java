@@ -36,6 +36,12 @@ public class OrderProcessStepOutcome {
         variables.put(name, val);
     }
 
+    public void putVariables(Map<String, Object> val) {
+        if (val != null) {
+            variables.putAll(val);
+        }
+    }
+
     public Map<String, Object> getVariables() {
         return variables;
     }
