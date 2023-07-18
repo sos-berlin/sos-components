@@ -11,6 +11,11 @@ var js7 = {
 
 	},
 
+	IncludableArgument: {
+		CREDENTIAL_STORE: 'CREDENTIAL_STORE',
+		SSH_PROVIDER: 'SSH_PROVIDER'
+	},
+
 	JobArgument: class {
 		name;
 		required;
