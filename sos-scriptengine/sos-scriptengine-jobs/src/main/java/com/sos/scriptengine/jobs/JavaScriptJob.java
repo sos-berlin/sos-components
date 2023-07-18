@@ -4,6 +4,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import javax.script.Bindings;
 import javax.script.Invocable;
@@ -12,21 +15,26 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 
 import com.sos.commons.job.ABlockingInternalJob;
+import com.sos.commons.job.JobArgument;
 import com.sos.commons.job.JobArguments;
 import com.sos.commons.job.OrderProcessStep;
+import com.sos.commons.job.exception.JobArgumentException;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
+import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 
 public class JavaScriptJob extends ABlockingInternalJob<JobArguments> {
 
     private static final String SCRIPT_ENGINE_NAME = "Graal.js";
 
     private static final String FUNCTION_NAME_GET_JOB = "getJS7Job";
-    private static final String JOB_METHOD_NAME_ON_ORDER_PROCESS = "onOrderProcess";
+    private static final String JOB_METHOD_GET_DECLARED_ARGUMENTS = "getDeclaredArguments";
+    private static final String JOB_METHOD_PROCESS_ORDER = "processOrder";
 
     private static volatile String BASIC_SCRIPT;
 
     private String script;
+    private JobArguments declaredArguments;
 
     public JavaScriptJob(JobContext jobContext) {
         super(jobContext);
@@ -46,6 +54,18 @@ public class JavaScriptJob extends ABlockingInternalJob<JobArguments> {
     @Override
     public void onStart() throws Exception {
         setBasicScript();
+
+        ScriptEngine engine = createScriptEngine();
+        engine.eval(BASIC_SCRIPT + "\n" + script);
+        Invocable invocable = (Invocable) engine;
+
+        Object job = invocable.invokeFunction(FUNCTION_NAME_GET_JOB, getJobEnvironment());
+        declaredArguments = getDeclaredArguments(invocable.invokeMethod(job, JOB_METHOD_GET_DECLARED_ARGUMENTS));
+    }
+
+    @Override
+    public JobArguments onCreateJobArguments(List<JobArgumentException> exceptions, final OrderProcessStep<JobArguments> step) {
+        return declaredArguments;
     }
 
     @Override
@@ -55,7 +75,7 @@ public class JavaScriptJob extends ABlockingInternalJob<JobArguments> {
         Invocable invocable = (Invocable) engine;
 
         Object job = invocable.invokeFunction(FUNCTION_NAME_GET_JOB, getJobEnvironment());
-        invocable.invokeMethod(job, JOB_METHOD_NAME_ON_ORDER_PROCESS, step);
+        invocable.invokeMethod(job, JOB_METHOD_PROCESS_ORDER, step);
     }
 
     /** com.sos.commons.job.ABlockingInternalJob - [cancel/kill][job name=javascript_job][onOrderProcessCancel]<br/>
@@ -67,6 +87,33 @@ public class JavaScriptJob extends ABlockingInternalJob<JobArguments> {
     // public void onOrderProcessCancel(OrderProcessStep<JobArguments> step) throws Exception {
 
     // }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private JobArguments getDeclaredArguments(Object args) throws Exception {
+        JobArguments jas = new JobArguments();
+        if (args != null) {
+            Map<String, Object> m = (Map) args;
+            List<JobArgument> l = new ArrayList<>();
+            m.entrySet().stream().forEach(e -> {
+                Map<String, Object> v = (Map) e.getValue();
+                Object required = v.get("required");
+                Object defaultValue = v.get("defaultValue");
+                Object displayMode = v.get("displayMode");
+
+                JobArgument<String> ja = new JobArgument<>(e.getKey(), Boolean.parseBoolean(required.toString()));
+                if (defaultValue != null) {
+                    ja.setDefaultValue(defaultValue.toString());
+                }
+                if (displayMode != null) {
+                    ja.setDisplayMode(DisplayMode.valueOf(displayMode.toString()));
+                }
+                ja.setIsDirty(false);
+                l.add(ja);
+            });
+            jas.setDynamicArgumentFields(l);
+        }
+        return jas;
+    }
 
     private ScriptEngine createScriptEngine() throws Exception {
         ScriptEngine engine = new ScriptEngineManager().getEngineByName(SCRIPT_ENGINE_NAME);

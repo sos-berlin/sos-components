@@ -45,7 +45,7 @@ public class UnitTestJobHelper<A extends JobArguments> {
     }
 
     public void onStart(Map<String, Object> args) throws Exception {
-        job.getJobEnvironment().setDeclaredArguments(toArgs(args).instance);
+        job.getJobEnvironment().setDeclaredArguments(toArgs(args, null).instance);
         SOSReflection.setDeclaredFieldValue(job.getJobEnvironment(), "allArguments", args);
 
         job.onStart();
@@ -94,7 +94,8 @@ public class UnitTestJobHelper<A extends JobArguments> {
 
     private OrderProcessStep<A> newOrderProcessStep(Map<String, Object> args) throws Exception {
         OrderProcessStep<A> step = new OrderProcessStep<A>(job.getJobEnvironment(), null);
-        ArgumentsResult r = toArgs(args);
+        ArgumentsResult r = toArgs(args, job.onCreateJobArguments(null, step));
+
         step.init(r.instance, r.undeclared);
         return step;
     }
@@ -123,8 +124,8 @@ public class UnitTestJobHelper<A extends JobArguments> {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private ArgumentsResult toArgs(Map<String, Object> args) throws Exception {
-        A instance = getJobArgumensClass().getDeclaredConstructor().newInstance();
+    private ArgumentsResult toArgs(Map<String, Object> args, A instance) throws Exception {
+        instance = instance == null ? getJobArgumensClass().getDeclaredConstructor().newInstance() : instance;
 
         if (instance.getIncludedArguments() != null && instance.getIncludedArguments().size() > 0) {
             for (Map.Entry<String, List<JobArgument>> e : instance.getIncludedArguments().entrySet()) {
@@ -141,8 +142,20 @@ public class UnitTestJobHelper<A extends JobArguments> {
                 }
             }
         }
+        if (instance.hasDynamicArgumentFields()) {
+            for (JobArgument arg : instance.getDynamicArgumentFields()) {
+                if (arg.getName() != null && args.containsKey(arg.getName())) {
+                    Object val = args.get(arg.getName());
+                    if (val == null || SOSString.isEmpty(val.toString())) {
+                        arg.setValue(arg.getDefaultValue());
+                    } else {
+                        arg.setValue(getValue(val, arg, null));
+                    }
+                }
+            }
+        }
 
-        Set<String> declared = setArguments(args, instance);
+        Set<String> declared = setJobArguments(args, instance);
         ArgumentsResult r = new ArgumentsResult();
         r.instance = instance;
         r.undeclared = args.entrySet().stream().filter(e -> !declared.contains(e.getKey())).collect(Collectors.toMap(Map.Entry::getKey,
@@ -152,9 +165,9 @@ public class UnitTestJobHelper<A extends JobArguments> {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private Set<String> setArguments(Map<String, Object> map, JobArguments o) {
+    private Set<String> setJobArguments(Map<String, Object> map, JobArguments o) {
         List<Field> fields = JobHelper.getJobArgumentFields(o);
-        Set<String> known = new HashSet<>();
+        Set<String> declared = new HashSet<>();
         for (Field field : fields) {
             try {
                 field.setAccessible(true);
@@ -168,8 +181,8 @@ public class UnitTestJobHelper<A extends JobArguments> {
                     if (val == null) {
                         arg.setValue(arg.getDefaultValue());
                     } else {
-                        if (!known.contains(arg.getName())) {
-                            known.add(arg.getName());
+                        if (!declared.contains(arg.getName())) {
+                            declared.add(arg.getName());
                         }
                         if (SOSString.isEmpty(val.toString())) {
                             arg.setValue(arg.getDefaultValue());
@@ -183,7 +196,29 @@ public class UnitTestJobHelper<A extends JobArguments> {
                 LOGGER.error(String.format("[can't get field][%s.%s]%s", o.getClass().getSimpleName(), field.getName(), e.toString()), e);
             }
         }
-        return known;
+
+        if (o.hasDynamicArgumentFields()) {
+            for (JobArgument arg : o.getDynamicArgumentFields()) {
+                Object val = map.get(arg.getName());
+                if (val == null) {
+                    arg.setValue(arg.getDefaultValue());
+                } else {
+                    if (!declared.contains(arg.getName())) {
+                        declared.add(arg.getName());
+                    }
+                    if (SOSString.isEmpty(val.toString())) {
+                        arg.setValue(arg.getDefaultValue());
+                    } else {
+                        try {
+                            arg.setValue(getValue(val, arg, null));
+                        } catch (ClassNotFoundException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+        }
+        return declared;
     }
 
     private Object getValue(Object val, JobArgument<A> arg, Field field) throws ClassNotFoundException {

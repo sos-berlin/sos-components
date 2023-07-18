@@ -27,11 +27,27 @@ public class JobArguments {
     @SuppressWarnings("rawtypes")
     private Map<String, List<JobArgument>> includedArguments;
 
+    @SuppressWarnings("rawtypes")
+    private List<JobArgument> dynamicArgumentFields;
+
     public JobArguments() {
     }
 
     public JobArguments(ASOSArguments... args) {
         setIncludedArguments(args);
+    }
+
+    public void setDynamicArgumentFields(@SuppressWarnings("rawtypes") List<JobArgument> val) {
+        dynamicArgumentFields = val;
+    }
+
+    @SuppressWarnings("rawtypes")
+    public List<JobArgument> getDynamicArgumentFields() {
+        return dynamicArgumentFields;
+    }
+
+    public boolean hasDynamicArgumentFields() {
+        return dynamicArgumentFields != null && dynamicArgumentFields.size() > 0;
     }
 
     public JobArgument<LogLevel> getLogLevel() {
