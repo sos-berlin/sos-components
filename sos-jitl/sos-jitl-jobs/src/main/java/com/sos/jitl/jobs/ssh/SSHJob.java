@@ -150,7 +150,7 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
                 }
             }
             if (resolvedReturnValuesFileName != null) {
-                step.getOutcome().getVariables().putAll(executePostCommand(jobArgs, provider, resolvedReturnValuesFileName, isWindowsShell, logger));
+                step.getOutcome().putVariables(executePostCommand(jobArgs, provider, resolvedReturnValuesFileName, isWindowsShell, logger));
             }
         } catch (Throwable e) {
             if (jobArgs.getRaiseExceptionOnError().getValue()) {
