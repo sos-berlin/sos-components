@@ -11,16 +11,16 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments.SOSCredentialStoreResolver;
-import com.sos.commons.job.ABlockingInternalJob;
-import com.sos.commons.job.DetailValue;
-import com.sos.commons.job.JobArgument;
-import com.sos.commons.job.OrderProcessStep;
-import com.sos.commons.job.OrderProcessStepLogger;
-import com.sos.commons.job.OrderProcessStepOutcome;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
+import com.sos.js7.job.DetailValue;
+import com.sos.js7.job.Job;
+import com.sos.js7.job.JobArgument;
+import com.sos.js7.job.OrderProcessStep;
+import com.sos.js7.job.OrderProcessStepLogger;
+import com.sos.js7.job.OrderProcessStepOutcome;
 
-public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
+public class InfoJob extends Job<InfoJobArguments> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InfoJob.class);
 
@@ -40,7 +40,7 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
     }
 
     @Override
-    public void onOrderProcess(OrderProcessStep<InfoJobArguments> step) throws Exception {
+    public void processOrder(OrderProcessStep<InfoJobArguments> step) throws Exception {
         InfoJobArguments args = step.getDeclaredArguments();
 
         step.getLogger().info("----------USAGE-----------------");

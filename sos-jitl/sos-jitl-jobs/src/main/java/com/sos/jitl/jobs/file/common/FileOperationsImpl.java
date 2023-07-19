@@ -2,7 +2,7 @@ package com.sos.jitl.jobs.file.common;
 
 import java.io.File;
 
-import com.sos.commons.job.OrderProcessStepLogger;
+import com.sos.js7.job.OrderProcessStepLogger;
 
 public class FileOperationsImpl extends AFileOperations {
 
@@ -11,8 +11,7 @@ public class FileOperationsImpl extends AFileOperations {
     }
 
     @Override
-    protected boolean handleOneFile(File sourceFile, File targetFile, boolean overwrite, boolean gracious)
-            throws Exception {
+    protected boolean handleOneFile(File sourceFile, File targetFile, boolean overwrite, boolean gracious) throws Exception {
         return false;
     }
 

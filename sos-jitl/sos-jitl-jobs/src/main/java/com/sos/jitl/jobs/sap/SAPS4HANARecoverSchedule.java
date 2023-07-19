@@ -13,9 +13,6 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.httpclient.exception.SOSBadRequestException;
-import com.sos.commons.job.ABlockingInternalJob;
-import com.sos.commons.job.OrderProcessStep;
-import com.sos.commons.job.OrderProcessStepLogger;
 import com.sos.jitl.jobs.sap.common.CommonJobArguments;
 import com.sos.jitl.jobs.sap.common.Globals;
 import com.sos.jitl.jobs.sap.common.HttpClient;
@@ -23,15 +20,18 @@ import com.sos.jitl.jobs.sap.common.bean.ResponseSchedule;
 import com.sos.jitl.jobs.sap.common.bean.RunIds;
 import com.sos.jitl.jobs.sap.common.bean.ScheduleDescription;
 import com.sos.jitl.jobs.sap.common.bean.ScheduleLog;
+import com.sos.js7.job.Job;
+import com.sos.js7.job.OrderProcessStep;
+import com.sos.js7.job.OrderProcessStepLogger;
 
-public class SAPS4HANARecoverSchedule extends ABlockingInternalJob<CommonJobArguments> {
+public class SAPS4HANARecoverSchedule extends Job<CommonJobArguments> {
 
     public SAPS4HANARecoverSchedule(JobContext jobContext) {
         super(jobContext);
     }
 
     @Override
-    public void onOrderProcess(OrderProcessStep<CommonJobArguments> step) throws Exception {
+    public void processOrder(OrderProcessStep<CommonJobArguments> step) throws Exception {
         OrderProcessStepLogger logger = step.getLogger();
         CommonJobArguments args = step.getDeclaredArguments();
 

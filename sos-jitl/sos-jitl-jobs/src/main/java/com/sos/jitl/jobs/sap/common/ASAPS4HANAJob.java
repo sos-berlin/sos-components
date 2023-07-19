@@ -14,18 +14,18 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.httpclient.exception.SOSBadRequestException;
-import com.sos.commons.job.ABlockingInternalJob;
-import com.sos.commons.job.JobArgument;
-import com.sos.commons.job.OrderProcessStep;
-import com.sos.commons.job.OrderProcessStepLogger;
-import com.sos.commons.job.exception.JobProblemException;
-import com.sos.commons.job.exception.JobRequiredArgumentMissingException;
 import com.sos.jitl.jobs.sap.common.bean.ResponseSchedule;
 import com.sos.jitl.jobs.sap.common.bean.RunIds;
 import com.sos.jitl.jobs.sap.common.bean.ScheduleDescription;
 import com.sos.jitl.jobs.sap.common.bean.ScheduleLog;
+import com.sos.js7.job.Job;
+import com.sos.js7.job.JobArgument;
+import com.sos.js7.job.OrderProcessStep;
+import com.sos.js7.job.OrderProcessStepLogger;
+import com.sos.js7.job.exception.JobProblemException;
+import com.sos.js7.job.exception.JobRequiredArgumentMissingException;
 
-public abstract class ASAPS4HANAJob extends ABlockingInternalJob<CommonJobArguments> {
+public abstract class ASAPS4HANAJob extends Job<CommonJobArguments> {
 
     public ASAPS4HANAJob(JobContext jobContext) {
         super(jobContext);
@@ -106,8 +106,8 @@ public abstract class ASAPS4HANAJob extends ABlockingInternalJob<CommonJobArgume
         logger.info("Schedule jobId=%d scheduleId=%s is activated", ids.getJobId(), ids.getScheduleId());
     }
 
-    private boolean pollSchedule(CommonJobArguments args, HttpClient httpClient, OrderProcessStepLogger logger) throws JsonParseException, JsonMappingException,
-            SocketException, IOException, SOSException {
+    private boolean pollSchedule(CommonJobArguments args, HttpClient httpClient, OrderProcessStepLogger logger) throws JsonParseException,
+            JsonMappingException, SocketException, IOException, SOSException {
 
         Long interval = args.getCheckInterval().getValue();
         if (interval <= 0) {
@@ -129,8 +129,8 @@ public abstract class ASAPS4HANAJob extends ABlockingInternalJob<CommonJobArgume
         return result;
     }
 
-    private boolean checkSchedule(CommonJobArguments args, HttpClient httpClient, boolean firstStep, OrderProcessStepLogger logger) throws JsonParseException,
-            JsonMappingException, SocketException, IOException, SOSException {
+    private boolean checkSchedule(CommonJobArguments args, HttpClient httpClient, boolean firstStep, OrderProcessStepLogger logger)
+            throws JsonParseException, JsonMappingException, SocketException, IOException, SOSException {
         RunIds runIds = args.getIds();
         ScheduleLog scheduleLog = new ScheduleLog().withRunStatus("UNKNOWN");
         try {

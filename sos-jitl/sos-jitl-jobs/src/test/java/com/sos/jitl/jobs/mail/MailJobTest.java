@@ -11,11 +11,11 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.job.UnitTestJobHelper;
 import com.sos.commons.mail.SOSMailReceiver.Protocol;
 import com.sos.commons.util.common.SOSTimeout;
 import com.sos.jitl.jobs.mail.MailInboxArguments.ActionAfterProcess;
 import com.sos.jitl.jobs.mail.MailInboxArguments.ActionProcess;
+import com.sos.js7.job.UnitTestJobHelper;
 
 import js7.data_for_java.order.JOutcome;
 
@@ -40,7 +40,7 @@ public class MailJobTest {
         // for unit tests only
         UnitTestJobHelper<MailJobArguments> h = new UnitTestJobHelper<>(new MailJob(null));
         // creates a new thread for each new onOrderProcess call
-        JOutcome.Completed result = h.onOrderProcess(args);
+        JOutcome.Completed result = h.processOrder(args);
         LOGGER.info("###############################################");
         LOGGER.info(String.format("[RESULT]%s", result));
     }
@@ -63,7 +63,7 @@ public class MailJobTest {
         args.put("mail_file_directory", "C:/tmp/mailTest");
 
         UnitTestJobHelper<MailInboxArguments> h = new UnitTestJobHelper<>(new MailInboxJob(null));
-        JOutcome.Completed result = h.onOrderProcess(args, new SOSTimeout(5, TimeUnit.MINUTES));
+        JOutcome.Completed result = h.processOrder(args, new SOSTimeout(5, TimeUnit.MINUTES));
         LOGGER.info("###############################################");
         LOGGER.info(String.format("[RESULT]%s", result));
     }

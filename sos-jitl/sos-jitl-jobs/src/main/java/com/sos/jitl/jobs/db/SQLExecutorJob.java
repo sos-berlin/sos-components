@@ -10,23 +10,25 @@ import java.util.Map;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSQLExecutor;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.job.ABlockingInternalJob;
-import com.sos.commons.job.OrderProcessStep;
-import com.sos.commons.job.OrderProcessStepOutcome;
-import com.sos.commons.job.exception.JobRequiredArgumentMissingException;
+import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.jitl.jobs.db.SQLExecutorJobArguments.ResultSetAsVariables;
 import com.sos.jitl.jobs.db.common.Export2CSV;
 import com.sos.jitl.jobs.db.common.Export2JSON;
 import com.sos.jitl.jobs.db.common.Export2XML;
+import com.sos.js7.job.Job;
+import com.sos.js7.job.JobHelper;
+import com.sos.js7.job.OrderProcessStep;
+import com.sos.js7.job.OrderProcessStepOutcome;
+import com.sos.js7.job.exception.JobRequiredArgumentMissingException;
 
-public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments> {
+public class SQLExecutorJob extends Job<SQLExecutorJobArguments> {
 
     public SQLExecutorJob(JobContext jobContext) {
         super(jobContext);
     }
 
     @Override
-    public void onOrderProcess(OrderProcessStep<SQLExecutorJobArguments> step) throws Exception {
+    public void processOrder(OrderProcessStep<SQLExecutorJobArguments> step) throws Exception {
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
         try {
@@ -58,7 +60,7 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
             Path path = Paths.get(args.getCommand());
             if (Files.exists(path)) {
                 step.getLogger().debug("[load from file]%s", path);
-                statements = executor.getStatements(step.replaceVars(path));
+                statements = executor.getStatements(replaceVars(step, path));
             }
         } catch (Throwable e) {
         }
@@ -76,6 +78,28 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
             }
         }
         session.commit();
+    }
+
+    public String replaceVars(OrderProcessStep<SQLExecutorJobArguments> step, Path path) throws Exception {
+        Map<String, Object> vars = step.getAllArgumentsAsNameValueMap();
+        put(vars, JobHelper.VAR_NAME_CONTROLLER_ID, step.getControllerId());
+        put(vars, JobHelper.VAR_NAME_ORDER_ID, step.getOrderId());
+        put(vars, JobHelper.VAR_NAME_WORKFLOW_PATH, step.getWorkflowName());
+        put(vars, JobHelper.VAR_NAME_WORKFLOW_POSITION, step.getWorkflowPosition());
+        put(vars, JobHelper.VAR_NAME_JOB_INSTRUCTION_LABEL, step.getJobInstructionLabel());
+        put(vars, JobHelper.VAR_NAME_JOB_NAME, step.getJobName());
+
+        SOSParameterSubstitutor ps = new SOSParameterSubstitutor(true, "${", "}");
+        vars.entrySet().forEach(e -> {
+            ps.addKey(e.getKey(), e.getValue().toString());
+        });
+        return ps.replace(path);
+    }
+
+    private void put(Map<String, Object> map, String name, Object value) {
+        if (value != null) {
+            map.put(name, value);
+        }
     }
 
     private void executeResultSet(OrderProcessStep<SQLExecutorJobArguments> step, final SOSHibernateSQLExecutor executor, final String statement,

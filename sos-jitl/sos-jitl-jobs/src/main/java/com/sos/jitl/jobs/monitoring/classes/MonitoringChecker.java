@@ -3,7 +3,6 @@ package com.sos.jitl.jobs.monitoring.classes;
 import java.util.List;
 
 import com.sos.commons.exception.SOSException;
-import com.sos.commons.job.OrderProcessStepLogger;
 import com.sos.joc.model.agent.AgentV;
 import com.sos.joc.model.agent.SubagentV;
 import com.sos.joc.model.controller.Controller;
@@ -12,6 +11,7 @@ import com.sos.joc.model.jitl.monitoring.MonitoringStatus;
 import com.sos.joc.model.joc.Cockpit;
 import com.sos.joc.model.joc.ControllerConnectionState;
 import com.sos.joc.model.order.OrdersSummary;
+import com.sos.js7.job.OrderProcessStepLogger;
 
 public class MonitoringChecker {
 

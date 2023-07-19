@@ -1,7 +1,5 @@
 package com.sos.jitl.jobs.checkhistory.classes;
 
-import com.sos.commons.job.JobHelper;
-import com.sos.commons.job.OrderProcessStepLogger;
 import com.sos.jitl.jobs.jocapi.ApiExecutor;
 import com.sos.jitl.jobs.jocapi.ApiResponse;
 import com.sos.joc.model.job.JobsFilter;
@@ -10,6 +8,8 @@ import com.sos.joc.model.job.TaskHistoryItem;
 import com.sos.joc.model.order.OrderHistory;
 import com.sos.joc.model.order.OrderHistoryItem;
 import com.sos.joc.model.order.OrdersFilter;
+import com.sos.js7.job.JobHelper;
+import com.sos.js7.job.OrderProcessStepLogger;
 
 public class HistoryWebserviceExecuter {
 

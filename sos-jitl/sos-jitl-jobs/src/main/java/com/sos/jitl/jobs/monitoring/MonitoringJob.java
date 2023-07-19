@@ -4,13 +4,13 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
-import com.sos.commons.job.ABlockingInternalJob;
-import com.sos.commons.job.OrderProcessStep;
 import com.sos.jitl.jobs.monitoring.classes.MonitoringCheckReturn;
 import com.sos.jitl.jobs.monitoring.classes.MonitoringParameters;
 import com.sos.joc.model.jitl.monitoring.MonitoringStatus;
+import com.sos.js7.job.Job;
+import com.sos.js7.job.OrderProcessStep;
 
-public class MonitoringJob extends ABlockingInternalJob<MonitoringJobArguments> {
+public class MonitoringJob extends Job<MonitoringJobArguments> {
 
     private static final String REPORTFILE_FILENAME_DATEFORMAT = "yyyy-MM-dd.HH-mm-ss.SSS'Z'";
     private static final String REPORTFILE_SUBJECT_DATEFORMAT = "yyyy-MM-dd.HH:mm:ss.SSS'Z'";
@@ -20,7 +20,7 @@ public class MonitoringJob extends ABlockingInternalJob<MonitoringJobArguments> 
     }
 
     @Override
-    public void onOrderProcess(OrderProcessStep<MonitoringJobArguments> step) throws Exception {
+    public void processOrder(OrderProcessStep<MonitoringJobArguments> step) throws Exception {
         process(step, step.getDeclaredArguments());
     }
 

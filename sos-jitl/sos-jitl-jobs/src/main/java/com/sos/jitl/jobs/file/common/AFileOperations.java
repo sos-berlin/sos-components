@@ -22,9 +22,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import com.sos.commons.job.OrderProcessStepLogger;
 import com.sos.commons.util.SOSDate;
 import com.sos.jitl.jobs.file.exception.SOSFileOperationsException;
+import com.sos.js7.job.OrderProcessStepLogger;
 
 public abstract class AFileOperations {
 

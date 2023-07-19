@@ -13,9 +13,9 @@ import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.sos.commons.hibernate.SOSHibernateSQLExecutor;
-import com.sos.commons.job.OrderProcessStepLogger;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSPath;
+import com.sos.js7.job.OrderProcessStepLogger;
 
 public class Export2JSON {
 

@@ -1,11 +1,11 @@
 package com.sos.jitl.jobs.orderstatustransition;
 
-import com.sos.commons.job.ABlockingInternalJob;
-import com.sos.commons.job.OrderProcessStep;
 import com.sos.jitl.jobs.orderstatustransition.classes.OrderStateTransition;
 import com.sos.joc.model.order.OrderStateText;
+import com.sos.js7.job.Job;
+import com.sos.js7.job.OrderProcessStep;
 
-public class OrderStateTransitionJob extends ABlockingInternalJob<OrderStateTransitionJobArguments> {
+public class OrderStateTransitionJob extends Job<OrderStateTransitionJobArguments> {
 
     private static final String RESUMED = "RESUMED";
 
@@ -14,7 +14,7 @@ public class OrderStateTransitionJob extends ABlockingInternalJob<OrderStateTran
     }
 
     @Override
-    public void onOrderProcess(OrderProcessStep<OrderStateTransitionJobArguments> step) throws Exception {
+    public void processOrder(OrderProcessStep<OrderStateTransitionJobArguments> step) throws Exception {
         OrderStateTransition orderStateTransition = new OrderStateTransition(step.getLogger(), step.getDeclaredArguments());
         if (step.getDeclaredArguments().getControllerId() == null || step.getDeclaredArguments().getControllerId().isEmpty()) {
             step.getDeclaredArguments().setControllerId(step.getControllerId());

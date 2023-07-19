@@ -12,23 +12,23 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
-import com.sos.commons.job.ABlockingInternalJob;
-import com.sos.commons.job.OrderProcessStep;
-import com.sos.commons.job.OrderProcessStepLogger;
 import com.sos.commons.util.SOSDate;
 import com.sos.jitl.jobs.file.common.AFileOperationsJob;
 import com.sos.jitl.jobs.file.common.FileOperationsImpl;
 import com.sos.jitl.jobs.file.common.FileOperationsJobFileExistsArguments;
 import com.sos.jitl.jobs.file.exception.SOSFileOperationsException;
+import com.sos.js7.job.Job;
+import com.sos.js7.job.OrderProcessStep;
+import com.sos.js7.job.OrderProcessStepLogger;
 
-public class FileExistsJob extends ABlockingInternalJob<FileOperationsJobFileExistsArguments> {
+public class FileExistsJob extends Job<FileOperationsJobFileExistsArguments> {
 
     public FileExistsJob(JobContext jobContext) {
         super(jobContext);
     }
 
     @Override
-    public void onOrderProcess(OrderProcessStep<FileOperationsJobFileExistsArguments> step) throws Exception {
+    public void processOrder(OrderProcessStep<FileOperationsJobFileExistsArguments> step) throws Exception {
         AFileOperationsJob.checkArguments(step.getDeclaredArguments());
 
         FileOperationsImpl fo = new FileOperationsImpl(step.getLogger());

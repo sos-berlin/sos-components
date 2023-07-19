@@ -32,14 +32,14 @@ import com.sos.commons.exception.SOSException;
 import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.commons.httpclient.exception.SOSBadRequestException;
 import com.sos.commons.httpclient.exception.SOSSSLException;
-import com.sos.commons.job.OrderProcessStepLogger;
-import com.sos.commons.job.exception.JobArgumentException;
 import com.sos.jitl.jobs.sap.common.bean.Job;
 import com.sos.jitl.jobs.sap.common.bean.ResponseJob;
 import com.sos.jitl.jobs.sap.common.bean.ResponseJobs;
 import com.sos.jitl.jobs.sap.common.bean.ResponseSchedule;
 import com.sos.jitl.jobs.sap.common.bean.Schedule;
 import com.sos.jitl.jobs.sap.common.bean.ScheduleLog;
+import com.sos.js7.job.OrderProcessStepLogger;
+import com.sos.js7.job.exception.JobArgumentException;
 
 import jakarta.ws.rs.core.UriBuilder;
 

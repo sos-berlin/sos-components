@@ -3,9 +3,9 @@ package com.sos.jitl.jobs.examples;
 import java.util.List;
 
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
-import com.sos.commons.job.JobArgument;
-import com.sos.commons.job.JobArguments;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
+import com.sos.js7.job.JobArgument;
+import com.sos.js7.job.JobArguments;
 
 public class InfoJobArguments extends JobArguments {
 

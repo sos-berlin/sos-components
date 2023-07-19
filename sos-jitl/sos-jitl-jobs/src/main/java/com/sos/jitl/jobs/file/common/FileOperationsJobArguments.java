@@ -2,9 +2,9 @@ package com.sos.jitl.jobs.file.common;
 
 import java.nio.file.Path;
 
-import com.sos.commons.job.JobArgument;
-import com.sos.commons.job.JobArguments;
-import com.sos.commons.job.OrderProcessStepOutcomeVariable;
+import com.sos.js7.job.JobArgument;
+import com.sos.js7.job.JobArguments;
+import com.sos.js7.job.OrderProcessStepOutcomeVariable;
 
 public class FileOperationsJobArguments extends JobArguments {
 

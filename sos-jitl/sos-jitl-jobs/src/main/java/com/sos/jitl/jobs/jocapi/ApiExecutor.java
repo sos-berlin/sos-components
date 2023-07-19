@@ -34,11 +34,11 @@ import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.commons.httpclient.exception.SOSBadRequestException;
 import com.sos.commons.httpclient.exception.SOSConnectionRefusedException;
 import com.sos.commons.httpclient.exception.SOSSSLException;
-import com.sos.commons.job.OrderProcessStepLogger;
 import com.sos.commons.sign.keys.keyStore.KeyStoreCredentials;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.commons.sign.keys.keyStore.KeystoreType;
 import com.sos.commons.vfs.exception.SOSAuthenticationFailedException;
+import com.sos.js7.job.OrderProcessStepLogger;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigFactory;
@@ -184,7 +184,7 @@ public class ApiExecutor {
         }
         logInfo("No connection attempt was successful. Check agents private.conf.");
         throw latestException;
-//        return new ApiResponse(statusCode, getReasonPhrase(), latestResponse, null, new Exception(latestError));
+        // return new ApiResponse(statusCode, getReasonPhrase(), latestResponse, null, new Exception(latestError));
     }
 
     public ApiResponse post(String token, String apiUrl, String body) throws SOSConnectionRefusedException, SOSBadRequestException {

@@ -12,16 +12,16 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments.SOSCredentialStoreResolver;
-import com.sos.commons.job.ABlockingInternalJob;
-import com.sos.commons.job.OrderProcessStep;
-import com.sos.commons.job.OrderProcessStepOutcome;
-import com.sos.commons.job.exception.JobRequiredArgumentMissingException;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.SOSTimeout;
+import com.sos.js7.job.Job;
+import com.sos.js7.job.OrderProcessStep;
+import com.sos.js7.job.OrderProcessStepOutcome;
+import com.sos.js7.job.exception.JobRequiredArgumentMissingException;
 
-public class SQLPLUSJob extends ABlockingInternalJob<SQLPlusJobArguments> {
+public class SQLPLUSJob extends Job<SQLPlusJobArguments> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SQLPLUSJob.class);
 
@@ -30,7 +30,7 @@ public class SQLPLUSJob extends ABlockingInternalJob<SQLPlusJobArguments> {
     }
 
     @Override
-    public void onOrderProcess(OrderProcessStep<SQLPlusJobArguments> step) throws Exception {
+    public void processOrder(OrderProcessStep<SQLPlusJobArguments> step) throws Exception {
         if (SOSString.isEmpty(step.getDeclaredArguments().getCommandScriptFile()) & SOSString.isEmpty(step.getDeclaredArguments().getCommand())) {
             throw new JobRequiredArgumentMissingException("command is empty. please check the   \"command_script_file\" or \"command\"parameter.");
         }

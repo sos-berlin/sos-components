@@ -15,13 +15,13 @@ import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments.SOSCredentialStoreResolver;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
-import com.sos.commons.job.ABlockingInternalJob;
-import com.sos.commons.job.OrderProcessStep;
 import com.sos.jitl.jobs.db.common.Export2CSV;
 import com.sos.jitl.jobs.db.common.Export2JSON;
 import com.sos.jitl.jobs.db.common.Export2XML;
+import com.sos.js7.job.Job;
+import com.sos.js7.job.OrderProcessStep;
 
-public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
+public class PLSQLJob extends Job<PLSQLJobArguments> {
 
     private static final String STD_OUT_OUTPUT = "std_out_output";
     private static final String DBMS_OUTPUT = "dbms_output";
@@ -31,7 +31,7 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
     }
 
     @Override
-    public void onOrderProcess(OrderProcessStep<PLSQLJobArguments> step) throws Exception {
+    public void processOrder(OrderProcessStep<PLSQLJobArguments> step) throws Exception {
         step.getDeclaredArguments().checkRequired();
 
         Connection conn = null;

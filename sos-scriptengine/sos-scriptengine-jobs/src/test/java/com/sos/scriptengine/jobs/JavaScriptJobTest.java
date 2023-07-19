@@ -9,10 +9,10 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.job.JobArguments;
-import com.sos.commons.job.UnitTestJobHelper;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSReflection;
+import com.sos.js7.job.JobArguments;
+import com.sos.js7.job.UnitTestJobHelper;
 
 import js7.data_for_java.order.JOutcome;
 
@@ -32,7 +32,7 @@ public class JavaScriptJobTest {
         SOSReflection.setDeclaredFieldValue(h.getJobs(), "script", script);
         h.onStart(args);
 
-        JOutcome.Completed result = h.onOrderProcess(args);
+        JOutcome.Completed result = h.processOrder(args);
         LOGGER.info("###############################################");
         LOGGER.info(String.format("[RESULT]%s", result));
         h.onStop();

@@ -5,8 +5,8 @@ import java.util.Map;
 import javax.mail.MessagingException;
 
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
-import com.sos.commons.job.OrderProcessStepLogger;
 import com.sos.commons.mail.SOSMailReceiver;
+import com.sos.js7.job.OrderProcessStepLogger;
 
 
 public class MailReceiver extends SOSMailReceiver {

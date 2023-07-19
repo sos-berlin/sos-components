@@ -1,6 +1,6 @@
 package com.sos.jitl.jobs.file.common;
 
-import com.sos.commons.job.JobArgument;
+import com.sos.js7.job.JobArgument;
 
 public class FileOperationsJobFileExistsArguments extends FileOperationsJobArguments {
 
