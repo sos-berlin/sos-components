@@ -371,7 +371,6 @@ public class OrderProcessStep<A extends JobArguments> {
                     l.add(arg);
                 }
             }
-
             allDeclaredArguments = l;
         }
     }

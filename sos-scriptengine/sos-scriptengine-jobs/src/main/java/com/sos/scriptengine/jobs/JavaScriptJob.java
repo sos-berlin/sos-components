@@ -32,6 +32,7 @@ public class JavaScriptJob extends ABlockingInternalJob<JobArguments> {
 
     private static final String SCRIPT_ENGINE_NAME = "Graal.js";
 
+    private static final String BASIC_SCRIPT_RESOURCE = JavaScriptJob.class.getSimpleName() + ".js";
     private static final String FUNCTION_NAME_GET_JOB = "getJS7Job";
     private static final String JOB_METHOD_GET_DECLARED_ARGUMENTS = "getDeclaredArguments";
     private static final String JOB_METHOD_PROCESS_ORDER = "processOrder";
@@ -116,14 +117,15 @@ public class JavaScriptJob extends ABlockingInternalJob<JobArguments> {
                 }
             } else if (e.getValue() instanceof Map) {
                 Map<String, Object> v = (Map) e.getValue();
-                if (v.containsKey("required") && v.containsKey("defaultValue") && v.containsKey("displayMode")) {
+                if (v.containsKey("name") && v.containsKey("required") && v.containsKey("defaultValue") && v.containsKey("displayMode")) {
+                    Object name = v.get("name");
                     Object required = v.get("required");
                     Object defaultValue = v.get("defaultValue");
                     Object displayMode = v.get("displayMode");
 
-                    JobArgument<String> ja = new JobArgument<>(e.getKey(), Boolean.parseBoolean(required.toString()));
+                    JobArgument ja = new JobArgument<>(name.toString(), Boolean.parseBoolean(required.toString()));
                     if (defaultValue != null) {
-                        ja.setDefaultValue(defaultValue.toString());
+                        ja.setDefaultValue(defaultValue);
                     }
                     if (displayMode != null) {
                         ja.setDisplayMode(DisplayMode.valueOf(displayMode.toString().toUpperCase()));
@@ -165,7 +167,7 @@ public class JavaScriptJob extends ABlockingInternalJob<JobArguments> {
 
     private synchronized void setBasicScript() throws Exception {
         if (BASIC_SCRIPT == null) {
-            BASIC_SCRIPT = inputStreamToString(this.getClass().getClassLoader().getResourceAsStream(this.getClass().getSimpleName() + ".js"));
+            BASIC_SCRIPT = inputStreamToString(this.getClass().getClassLoader().getResourceAsStream(BASIC_SCRIPT_RESOURCE));
         }
     }
 

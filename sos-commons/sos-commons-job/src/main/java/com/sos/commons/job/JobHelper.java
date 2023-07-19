@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -23,7 +24,9 @@ import com.sos.commons.util.common.SOSArgumentHelper;
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.data.value.BooleanValue;
+import js7.data.value.ListValue;
 import js7.data.value.NumberValue;
+import js7.data.value.ObjectValue;
 import js7.data.value.StringValue;
 import js7.data.value.Value;
 
@@ -86,6 +89,18 @@ public class JobHelper {
             return ((NumberValue) o).toJava();
         } else if (o instanceof BooleanValue) {
             return Boolean.parseBoolean(o.convertToString());
+        } else if (o instanceof ListValue) {
+            List<Object> l = new ArrayList<>();
+            ((ListValue) o).toJava().forEach(item -> {
+                if (item instanceof js7.data.value.ObjectValue) {
+                    Map<String, Object> m = new HashMap<>();
+                    ((ObjectValue) item).toJava().forEach((k1, v1) -> m.put(k1, v1.toJava()));
+                    l.add(m);
+                } else {
+                    l.add(item.toJava());
+                }
+            });
+            return l;
         }
         return o;
     }

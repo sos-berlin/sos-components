@@ -3,6 +3,7 @@ package com.sos.commons.job;
 import static io.vavr.control.Either.left;
 import static io.vavr.control.Either.right;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -87,7 +88,7 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
     public Either<Problem, Void> start() {
         try {
             List<JobArgumentException> exceptions = new ArrayList<JobArgumentException>();
-            jobEnvironment.setDeclaredArguments(createJobArguments(exceptions));
+            jobEnvironment.setDeclaredArguments(createDeclaredJobArguments(exceptions));
             // TODO
             // checkExceptions(exceptions);
             if (LOGGER.isDebugEnabled()) {
@@ -128,7 +129,7 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
                         List<JobArgumentException> exceptions = new ArrayList<JobArgumentException>();
 
                         A args = onCreateJobArguments(exceptions, step);
-                        args = createJobArguments(exceptions, step, args);
+                        args = createDeclaredJobArguments(exceptions, step, args);
 
                         step.init(args);
 
@@ -281,12 +282,11 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
         return map;
     }
 
-    private A createJobArguments(List<JobArgumentException> exceptions) throws Exception {
-        return createJobArguments(exceptions, null, null);
+    private A createDeclaredJobArguments(List<JobArgumentException> exceptions) throws Exception {
+        return createDeclaredJobArguments(exceptions, null, null);
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    private A createJobArguments(List<JobArgumentException> exceptions, final OrderProcessStep<A> step, A instance) throws Exception {
+    private A createDeclaredJobArguments(List<JobArgumentException> exceptions, final OrderProcessStep<A> step, A instance) throws Exception {
         instance = instance == null ? getJobArgumensClass().getDeclaredConstructor().newInstance() : instance;
         if (jobEnvironment.getEngineArguments() == null && step == null) {
             return instance;
@@ -295,25 +295,26 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
         Map<String, DetailValue> lastSucceededOutcomes = step == null ? null : step.getLastSucceededOutcomes();
         Map<String, DetailValue> jobResources = step == null ? null : step.getJobResourcesArgumentsAsNameDetailValueMap();
 
+        return setDeclaredJobArguments(exceptions, step, map, lastSucceededOutcomes, jobResources, instance);
+    }
+
+    @SuppressWarnings({ "rawtypes" })
+    private A setDeclaredJobArguments(List<JobArgumentException> exceptions, final OrderProcessStep<A> step, Map<String, Object> args,
+            Map<String, DetailValue> lastSucceededOutcomes, Map<String, DetailValue> jobResources, A instance) throws Exception {
+
         if (instance.getIncludedArguments() != null && instance.getIncludedArguments().size() > 0) {
             for (Map.Entry<String, List<JobArgument>> e : instance.getIncludedArguments().entrySet()) {
                 for (JobArgument arg : e.getValue()) {
                     arg.setPayload(e.getKey());
-                    setJobArgument(step, map, lastSucceededOutcomes, jobResources, arg, null);
+                    setDeclaredJobArgument(step, args, lastSucceededOutcomes, jobResources, arg, null);
                 }
             }
         }
         if (instance.hasDynamicArgumentFields()) {
-            for (JobArgument<String> arg : instance.getDynamicArgumentFields()) {
-                setJobArgument(step, map, lastSucceededOutcomes, jobResources, arg, null);
+            for (JobArgument arg : instance.getDynamicArgumentFields()) {
+                setDeclaredJobArgument(step, args, lastSucceededOutcomes, jobResources, arg, null);
             }
         }
-        return setJobArguments(exceptions, step, map, lastSucceededOutcomes, jobResources, instance);
-    }
-
-    @SuppressWarnings({ "rawtypes" })
-    private A setJobArguments(List<JobArgumentException> exceptions, final OrderProcessStep<A> step, Map<String, Object> map,
-            Map<String, DetailValue> lastSucceededOutcomes, Map<String, DetailValue> jobResources, A instance) throws Exception {
 
         List<Field> fields = JobHelper.getJobArgumentFields(instance);
         for (Field field : fields) {
@@ -321,7 +322,7 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
                 field.setAccessible(true);
                 JobArgument arg = (JobArgument<?>) field.get(instance);
                 if (arg != null) {
-                    setJobArgument(step, map, lastSucceededOutcomes, jobResources, arg, field);
+                    setDeclaredJobArgument(step, args, lastSucceededOutcomes, jobResources, arg, field);
                     field.set(instance, arg);
                 }
             } catch (JobRequiredArgumentMissingException e) {
@@ -331,18 +332,11 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
                         .toString()), e));
             }
         }
-
-        // if (instance.hasDynamicArgumentFields()) {
-        // for (JobArgument arg : instance.getDynamicArgumentFields()) {
-        // setJobArgument(step, map, lastSucceededOutcomes, jobResources, arg, null);
-        // }
-        // }
-
         return instance;
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private void setJobArgument(final OrderProcessStep<A> step, Map<String, Object> map, Map<String, DetailValue> lastSucceededOutcomes,
+    private void setDeclaredJobArgument(final OrderProcessStep<A> step, Map<String, Object> args, Map<String, DetailValue> lastSucceededOutcomes,
             Map<String, DetailValue> jobResources, JobArgument arg, Field field) throws Exception {
         if (arg.getName() == null) {// internal usage
             return;
@@ -364,7 +358,7 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
             Object val = step == null ? null : step.getNamedValue(arg);
             boolean isNamedValue = false;
             if (val == null) {
-                val = fromMap(map, allNames);
+                val = fromMap(args, allNames);
             } else {
                 isNamedValue = true;
             }
@@ -375,7 +369,12 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
 
             // Preference 3 - JobArgument or Argument or Java Default
             if (val == null || SOSString.isEmpty(val.toString())) {
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug(String.format("[setDeclaredJobArgument][%s]val=%s(%s),defaultVal=%s(%s)", arg.getName(), arg.getValue(),
+                            getClassName(arg.getValue()), arg.getDefaultValue(), getClassName(arg.getDefaultValue())));
+                }
                 arg.setValue(arg.getDefaultValue());
+                setValueType(arg, field);
             } else {
                 arg.setValue(getValue(val, arg, field));
             }
@@ -398,10 +397,31 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
         return list.stream().filter(map::containsKey).findFirst().map(map::get).orElse(null);
     }
 
+    private String getClassName(Object val) {
+        if (val == null) {
+            return null;
+        }
+        try {
+            return val.getClass().getName();
+        } catch (Throwable e) {
+            return e.toString();
+        }
+
+    }
+
     private Object getValue(Object val, JobArgument<A> arg, Field field) throws ClassNotFoundException {
+
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(String.format("[getValue][%s]val=%s(%s),defaultVal=%s(%s)", arg.getName(), arg.getValue(), getClassName(arg.getValue()), arg
+                    .getDefaultValue(), getClassName(arg.getDefaultValue())));
+        }
         if (val instanceof String) {
             val = val.toString().trim();
-            setValueType(arg, field);
+            setValueType(arg, field, val);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(String.format("[getValue][%s][type=%s][fromString]val=%s(%s),defaultVal=%s(%s)", arg.getName(), arg.getClazzType(), arg
+                        .getValue(), getClassName(arg.getValue()), arg.getDefaultValue(), getClassName(arg.getDefaultValue())));
+            }
             Type type = arg.getClazzType();
             if (type.equals(String.class)) {
                 if (((String) val).startsWith(BASE64_VALUE_PREFIX)) {
@@ -414,6 +434,8 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
             } else {
                 if (type.equals(Path.class)) {
                     val = Paths.get(val.toString());
+                } else if (type.equals(File.class)) {
+                    val = new File(val.toString());
                 } else if (type.equals(URI.class)) {
                     val = URI.create(val.toString());
                 } else if (SOSReflection.isList(type)) {
@@ -459,7 +481,7 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
                 }
             }
         } else if (val instanceof BigDecimal) {
-            setValueType(arg, field);
+            setValueType(arg, field, val);
             Type type = arg.getClazzType();
             if (type.equals(Integer.class)) {
                 val = Integer.valueOf(((BigDecimal) val).intValue());
@@ -468,18 +490,42 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
             } else if (type.equals(String.class)) {
                 val = val.toString();
             }
+        } else if (val instanceof Boolean) {
+            setValueType(arg, field, val);
+            val = Boolean.valueOf(val.toString());
+        } else if (val instanceof List) {
+            setValueType(arg, field, val);
+            val = (List<?>) val;
         }
         return val;
     }
 
-    private void setValueType(JobArgument<A> arg, Field field) {
+    private void setValueType(JobArgument<A> arg, Field field, Object val) {
         if (field == null) {
-            if (arg.getClazzType() == null) {
-                arg.setClazzType(String.class);
-            }
+            setValueType(arg, val);
             return;
         }
         arg.setClazzType(((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0]);
+    }
+
+    @SuppressWarnings("rawtypes")
+    private void setValueType(JobArgument arg, Object val) {
+        if (arg.getClazzType() == null) {
+            if (arg.getValue() != null) {
+                try {
+                    arg.setClazzType(arg.getValue().getClass());
+                } catch (Throwable e) {
+                }
+            } else if (val != null) {
+                try {
+                    arg.setClazzType(val.getClass());
+                } catch (Throwable e) {
+                }
+            }
+            if (arg.getClazzType() == null) {
+                arg.setClazzType(Object.class);
+            }
+        }
     }
 
     private void setValueSource(JobArgument<A> arg, List<String> allNames) {

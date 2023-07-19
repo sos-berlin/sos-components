@@ -102,6 +102,9 @@ public class JobArgument<T> extends SOSArgument<T> {
         setValue(value);
         this.type = Type.UNDECLARED;
         this.valueSource = valueSource;
+        if (value != null) {
+            this.clazzType = value.getClass();
+        }
     }
 
     /* internal usage - e.g. Provider Arguments */
