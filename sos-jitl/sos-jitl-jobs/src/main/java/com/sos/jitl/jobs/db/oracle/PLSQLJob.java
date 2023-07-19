@@ -11,8 +11,8 @@ import java.util.regex.Pattern;
 
 import org.hibernate.cfg.Configuration;
 
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments.SOSCredentialStoreResolver;
+import com.sos.commons.credentialstore.CredentialStoreArguments;
+import com.sos.commons.credentialstore.CredentialStoreArguments.CredentialStoreResolver;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.jitl.jobs.db.common.Export2CSV;
@@ -52,7 +52,7 @@ public class PLSQLJob extends Job<PLSQLJobArguments> {
 
     private Connection getConnection(OrderProcessStep<PLSQLJobArguments> step) throws Exception {
         PLSQLJobArguments args = step.getDeclaredArguments();
-        SOSCredentialStoreArguments csArgs = step.getIncludedArguments(SOSCredentialStoreArguments.class);
+        CredentialStoreArguments csArgs = step.getIncludedArguments(CredentialStoreArguments.class);
         if (args.useHibernateFile()) {
             if (!Files.exists(args.getHibernateFile())) {
                 throw new SOSHibernateConfigurationException(String.format("hibernate config file not found: %s", args.getHibernateFile()));
@@ -74,7 +74,7 @@ public class PLSQLJob extends Job<PLSQLJobArguments> {
             }
         }
         if (csArgs.getFile().getValue() != null) {
-            SOSCredentialStoreResolver r = csArgs.newResolver();
+            CredentialStoreResolver r = csArgs.newResolver();
 
             args.setDbUrl(r.resolve(args.getDbUrl().getValue()));
             args.setDbUser(r.resolve(args.getDbUser().getValue()));

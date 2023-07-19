@@ -2,7 +2,7 @@ package com.sos.jitl.jobs.maintenance;
 
 import java.util.List;
 
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
+import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.JobArguments;
 
@@ -22,7 +22,7 @@ public class MaintenanceWindowJobArguments extends JobArguments {
     private JobArgument<List<String>> agentIds = new JobArgument<List<String>>("agent_ids", false);
 
     public MaintenanceWindowJobArguments() {
-        super(new SOSCredentialStoreArguments());
+        super(new CredentialStoreArguments());
     }
 
     public String getMaintenanceProfile() {

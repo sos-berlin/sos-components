@@ -11,7 +11,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
+import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.SOSEnv;
@@ -44,7 +44,7 @@ public class SSHProviderTest {
         args.setUser(SSH_USER);
         args.setPassword(SSH_PASSWORD);
 
-        SOSCredentialStoreArguments csArgs = new SOSCredentialStoreArguments();
+        CredentialStoreArguments csArgs = new CredentialStoreArguments();
 
         SSHProvider p = new SSHProvider(args, csArgs);
         try {
@@ -74,7 +74,7 @@ public class SSHProviderTest {
         args.setUser(SSH_USER);
         args.setAuthFile(SSH_AUTH_FILE);
 
-        SOSCredentialStoreArguments csArgs = new SOSCredentialStoreArguments();
+        CredentialStoreArguments csArgs = new CredentialStoreArguments();
 
         SSHProvider p = new SSHProvider(args, csArgs);
         try {
@@ -102,7 +102,7 @@ public class SSHProviderTest {
         args.setUser("cs://@user");
         args.setAuthFile("cs://@attachment");
 
-        SOSCredentialStoreArguments csArgs = new SOSCredentialStoreArguments();
+        CredentialStoreArguments csArgs = new CredentialStoreArguments();
         csArgs.setFile("/tmp/kdbx-p.kdbx");
         csArgs.setPassword("test");
         csArgs.setEntryPath("/server/SFTP/localhost");
@@ -134,7 +134,7 @@ public class SSHProviderTest {
         args.setPassword(SSH_PASSWORD);
         args.setAuthFile(SSH_AUTH_FILE);
 
-        SOSCredentialStoreArguments csArgs = new SOSCredentialStoreArguments();
+        CredentialStoreArguments csArgs = new CredentialStoreArguments();
 
         SSHProvider p = new SSHProvider(args, csArgs);
         try {
@@ -161,7 +161,7 @@ public class SSHProviderTest {
         args.setPassword(SSH_PASSWORD);
         args.setAuthFile(SSH_AUTH_FILE);
 
-        SOSCredentialStoreArguments csArgs = new SOSCredentialStoreArguments();
+        CredentialStoreArguments csArgs = new CredentialStoreArguments();
 
         SSHProvider p = new SSHProvider(args, csArgs);
         try {
@@ -189,7 +189,7 @@ public class SSHProviderTest {
 
         args.setProxy(PROXY);
 
-        SOSCredentialStoreArguments csArgs = new SOSCredentialStoreArguments();
+        CredentialStoreArguments csArgs = new CredentialStoreArguments();
 
         SSHProvider p = new SSHProvider(args, csArgs);
         try {
@@ -217,7 +217,7 @@ public class SSHProviderTest {
         args.setUser(SSH_USER);
         args.setPassword(SSH_PASSWORD);
 
-        SOSCredentialStoreArguments csArgs = new SOSCredentialStoreArguments();
+        CredentialStoreArguments csArgs = new CredentialStoreArguments();
 
         SSHProvider p = new SSHProvider(args, csArgs);
         try {
@@ -251,7 +251,7 @@ public class SSHProviderTest {
         args.setUser(SSH_USER);
         args.setPassword(SSH_PASSWORD);
 
-        SOSCredentialStoreArguments csArgs = new SOSCredentialStoreArguments();
+        CredentialStoreArguments csArgs = new CredentialStoreArguments();
 
         SSHProvider p = new SSHProvider(args, csArgs);
         try {
@@ -298,7 +298,7 @@ public class SSHProviderTest {
         args.setUser(SSH_USER);
         args.setPassword(SSH_PASSWORD);
 
-        SOSCredentialStoreArguments csArgs = new SOSCredentialStoreArguments();
+        CredentialStoreArguments csArgs = new CredentialStoreArguments();
 
         SSHProvider p = new SSHProvider(args, csArgs);
         try {
@@ -345,7 +345,7 @@ public class SSHProviderTest {
         args.setUser(SSH_USER);
         args.setPassword(SSH_PASSWORD);
 
-        SOSCredentialStoreArguments csArgs = new SOSCredentialStoreArguments();
+        CredentialStoreArguments csArgs = new CredentialStoreArguments();
 
         SSHProvider p = new SSHProvider(args, csArgs);
         try {

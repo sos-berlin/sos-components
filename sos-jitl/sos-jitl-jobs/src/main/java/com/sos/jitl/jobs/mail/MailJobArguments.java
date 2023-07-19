@@ -2,7 +2,7 @@ package com.sos.jitl.jobs.mail;
 
 import java.util.List;
 
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
+import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.JobArguments;
@@ -35,7 +35,7 @@ public class MailJobArguments extends JobArguments {
     private JobArgument<List<String>> attachment = new JobArgument<List<String>>("attachment", false);
 
     public MailJobArguments() {
-        super(new SOSCredentialStoreArguments());
+        super(new CredentialStoreArguments());
     }
 
     public String getMailSmtpHost() {

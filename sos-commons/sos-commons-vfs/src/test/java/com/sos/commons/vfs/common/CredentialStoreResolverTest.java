@@ -5,7 +5,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
+import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
 
 public class CredentialStoreResolverTest {
@@ -17,7 +17,7 @@ public class CredentialStoreResolverTest {
     public void test() throws Exception {
         LOGGER.info(System.getProperty("user.dir"));
 
-        SOSCredentialStoreArguments csArgs = new SOSCredentialStoreArguments();
+        CredentialStoreArguments csArgs = new CredentialStoreArguments();
         csArgs.getFile().setValue("src/test/resources/test_kdbx.kdbx");
         csArgs.getPassword().setValue("test");
 

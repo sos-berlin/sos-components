@@ -38,8 +38,8 @@ import javax.mail.internet.MimeMultipart;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments.SOSCredentialStoreResolver;
+import com.sos.commons.credentialstore.CredentialStoreArguments;
+import com.sos.commons.credentialstore.CredentialStoreArguments.CredentialStoreResolver;
 import com.sos.commons.credentialstore.exceptions.SOSCredentialStoreException;
 import com.sos.commons.util.SOSString;
 
@@ -58,7 +58,7 @@ public class SOSMail {
     public static final String PROPERTY_NAME_SMTP_USER = "mail.smtp.user";
     public static final String PROPERTY_NAME_SMTP_PASSWORD = "mail.smtp.password";
 
-    private SOSCredentialStoreArguments credentialStoreArguments;
+    private CredentialStoreArguments credentialStoreArguments;
     protected String subject = "";
     protected String from;
     protected String fromName;
@@ -594,7 +594,7 @@ public class SOSMail {
 
     private void useCredentialStoreArguments() throws SOSCredentialStoreException {
         if (credentialStoreArguments != null && credentialStoreArguments.getFile().getValue() != null) {
-            SOSCredentialStoreResolver r = credentialStoreArguments.newResolver();
+            CredentialStoreResolver r = credentialStoreArguments.newResolver();
 
             addMailProperty(PROPERTY_NAME_SMTP_HOST, r.resolve(getHost()));
 
@@ -614,7 +614,6 @@ public class SOSMail {
             }
         }
     }
-
 
     private boolean haveAlternative() {
         return !SOSString.isEmpty(alternativeBody) && attachmentList.isEmpty();
@@ -734,7 +733,6 @@ public class SOSMail {
         }
     }
 
-    @SuppressWarnings("unchecked")
     public String dumpHeaders() throws IOException, MessagingException {
         StringBuilder sb = new StringBuilder();
         for (Enumeration<Header> e = message.getAllHeaders(); e.hasMoreElements();) {
@@ -1252,11 +1250,11 @@ public class SOSMail {
         this.queueMailOnError = val;
     }
 
-    public void setCredentialStoreArguments(SOSCredentialStoreArguments val) {
+    public void setCredentialStoreArguments(CredentialStoreArguments val) {
         credentialStoreArguments = val;
     }
 
-    public SOSCredentialStoreArguments getCredentialStoreArguments() {
+    public CredentialStoreArguments getCredentialStoreArguments() {
         return credentialStoreArguments;
     }
 
