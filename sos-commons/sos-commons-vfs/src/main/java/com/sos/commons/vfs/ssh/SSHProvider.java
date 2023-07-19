@@ -68,16 +68,24 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
     /** e.g. "OpenSSH_$version" -> OpenSSH_for_Windows_8.1. Can be null. */
     private String serverVersion;
 
+    public SSHProvider(SSHProviderArguments args) throws Exception {
+        this(args, null);
+    }
+
     public SSHProvider(SSHProviderArguments args, CredentialStoreArguments csArgs) throws Exception {
         super(args, csArgs);
-
-        if (CredentialStoreResolver.resolve(getArguments(), getArguments().getPassphrase())) {
-            CredentialStoreResolver.resolveAttachment(getArguments(), getArguments().getAuthFile());
+        if (csArgs != null) {
+            if (CredentialStoreResolver.resolve(getArguments(), getArguments().getPassphrase())) {
+                CredentialStoreResolver.resolveAttachment(getArguments(), getArguments().getAuthFile());
+            }
         }
     }
 
     @Override
     public void connect() throws Exception {
+        if (SOSString.isEmpty(getArguments().getHost().getValue())) {
+            throw new Exception("missing host");
+        }
         createSSHClient();
         sshClient.connect(getArguments().getHost().getValue(), getArguments().getPort().getValue());
         authenticate();
@@ -276,7 +284,7 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
         return -1;
     }
 
-    public void setProxy() {
+    private void setProxy() {
         Proxy proxy = getArguments().getProxy();
         if (proxy != null) {
             sshClient.setSocketFactory(new ProxySocketFactory(proxy));
