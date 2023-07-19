@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.sos.commons.exception.SOSException;
-import com.sos.commons.job.OrderProcessStepLogger;
 import com.sos.jitl.jobs.checkhistory.classes.CheckHistoryHelper;
 import com.sos.jitl.jobs.checkhistory.classes.HistoryFilter;
 import com.sos.jitl.jobs.checkhistory.classes.HistoryItem;
@@ -17,6 +16,7 @@ import com.sos.joc.model.job.JobsFilter;
 import com.sos.joc.model.job.TaskHistory;
 import com.sos.joc.model.order.OrderHistory;
 import com.sos.joc.model.order.OrdersFilter;
+import com.sos.js7.job.OrderProcessStepLogger;
 
 public class HistoryInfo {
 

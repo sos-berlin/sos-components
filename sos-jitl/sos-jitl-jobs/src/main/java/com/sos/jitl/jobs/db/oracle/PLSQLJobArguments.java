@@ -8,11 +8,11 @@ import java.nio.file.Paths;
 import java.util.stream.Stream;
 
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
-import com.sos.commons.job.JobArgument;
-import com.sos.commons.job.JobArguments;
-import com.sos.commons.job.JobHelper;
-import com.sos.commons.job.exception.JobRequiredArgumentMissingException;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
+import com.sos.js7.job.JobArgument;
+import com.sos.js7.job.JobArguments;
+import com.sos.js7.job.JobHelper;
+import com.sos.js7.job.exception.JobRequiredArgumentMissingException;
 
 public class PLSQLJobArguments extends JobArguments {
 

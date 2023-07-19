@@ -9,8 +9,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.job.UnitTestJobHelper;
 import com.sos.jitl.jobs.db.oracle.PLSQLJobArguments.ResultSetAs;
+import com.sos.js7.job.UnitTestJobHelper;
 
 import js7.data_for_java.order.JOutcome;
 
@@ -33,7 +33,7 @@ public class PLSQLJobTest {
         // args.put("credential_store_entry_path", "/sos/my_path");
 
         UnitTestJobHelper<PLSQLJobArguments> h = new UnitTestJobHelper<>(new PLSQLJob(null));
-        JOutcome.Completed result = h.onOrderProcess(args);
+        JOutcome.Completed result = h.processOrder(args);
         LOGGER.info("###############################################");
         LOGGER.info(String.format("[RESULT]%s", result));
     }

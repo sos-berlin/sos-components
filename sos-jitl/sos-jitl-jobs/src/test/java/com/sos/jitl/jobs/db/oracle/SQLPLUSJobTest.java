@@ -8,7 +8,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.job.UnitTestJobHelper;
+import com.sos.js7.job.UnitTestJobHelper;
 
 import js7.data_for_java.order.JOutcome;
 
@@ -33,7 +33,7 @@ public class SQLPLUSJobTest {
         // args.put("credential_store_entry_path", "/sos/my_path");
 
         UnitTestJobHelper<SQLPlusJobArguments> h = new UnitTestJobHelper<>(new SQLPLUSJob(null));
-        JOutcome.Completed result = h.onOrderProcess(args);
+        JOutcome.Completed result = h.processOrder(args);
         LOGGER.info("###############################################");
         LOGGER.info(String.format("[RESULT]%s", result));
     }

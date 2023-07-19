@@ -17,18 +17,18 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
-import com.sos.commons.job.ABlockingInternalJob;
-import com.sos.commons.job.JobArgument;
-import com.sos.commons.job.JobArguments;
-import com.sos.commons.job.OrderProcessStep;
-import com.sos.commons.job.exception.JobArgumentException;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.ASOSArguments;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
+import com.sos.js7.job.Job;
+import com.sos.js7.job.JobArgument;
+import com.sos.js7.job.JobArguments;
+import com.sos.js7.job.OrderProcessStep;
+import com.sos.js7.job.exception.JobArgumentException;
 
-public class JavaScriptJob extends ABlockingInternalJob<JobArguments> {
+public class JavaScriptJob extends Job<JobArguments> {
 
     private static final String SCRIPT_ENGINE_NAME = "Graal.js";
 
@@ -78,7 +78,7 @@ public class JavaScriptJob extends ABlockingInternalJob<JobArguments> {
     }
 
     @Override
-    public void onOrderProcess(OrderProcessStep<JobArguments> step) throws Exception {
+    public void processOrder(OrderProcessStep<JobArguments> step) throws Exception {
         ScriptEngine engine = createScriptEngine();
         engine.eval(BASIC_SCRIPT + "\n" + script);
         Invocable invocable = (Invocable) engine;

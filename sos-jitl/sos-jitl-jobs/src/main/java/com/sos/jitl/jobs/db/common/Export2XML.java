@@ -14,10 +14,10 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
 
 import com.sos.commons.hibernate.SOSHibernateSQLExecutor;
-import com.sos.commons.job.OrderProcessStepLogger;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.xml.SOSXML;
+import com.sos.js7.job.OrderProcessStepLogger;
 
 public class Export2XML {
 

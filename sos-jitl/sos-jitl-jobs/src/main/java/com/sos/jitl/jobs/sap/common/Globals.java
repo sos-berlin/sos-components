@@ -7,9 +7,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.sos.commons.job.exception.JobProblemException;
 import com.sos.jitl.jobs.sap.common.bean.RunIds;
 import com.sos.jitl.jobs.sap.common.bean.ScheduleDescription;
+import com.sos.js7.job.exception.JobProblemException;
 
 public class Globals {
 

@@ -10,8 +10,8 @@ import org.junit.Test;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSQLExecutor;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.job.UnitTestJobHelper;
 import com.sos.jitl.jobs.db.SQLExecutorJobArguments.ResultSetAsVariables;
+import com.sos.js7.job.UnitTestJobHelper;
 
 public class ExportTest {
 

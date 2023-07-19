@@ -3,10 +3,10 @@ package com.sos.jitl.jobs.file;
 import java.io.File;
 import java.util.regex.Pattern;
 
-import com.sos.commons.job.OrderProcessStep;
 import com.sos.jitl.jobs.file.common.AFileOperationsJob;
 import com.sos.jitl.jobs.file.common.FileOperationsImpl;
 import com.sos.jitl.jobs.file.common.FileOperationsJobArguments;
+import com.sos.js7.job.OrderProcessStep;
 
 public class CanWriteJob extends AFileOperationsJob {
 
@@ -15,7 +15,7 @@ public class CanWriteJob extends AFileOperationsJob {
     }
 
     @Override
-    public void onOrderProcess(OrderProcessStep<FileOperationsJobArguments> step) throws Exception {
+    public void processOrder(OrderProcessStep<FileOperationsJobArguments> step) throws Exception {
         checkArguments(step.getDeclaredArguments());
 
         FileOperationsImpl fo = new FileOperationsImpl(step.getLogger());

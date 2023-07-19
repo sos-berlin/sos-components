@@ -1,18 +1,18 @@
 package com.sos.jitl.jobs.checkhistory;
 
-import com.sos.commons.job.ABlockingInternalJob;
-import com.sos.commons.job.OrderProcessStep;
-import com.sos.commons.job.OrderProcessStepOutcome;
 import com.sos.jitl.jobs.checkhistory.classes.HistoryItem;
+import com.sos.js7.job.Job;
+import com.sos.js7.job.OrderProcessStep;
+import com.sos.js7.job.OrderProcessStepOutcome;
 
-public class CheckHistoryJob extends ABlockingInternalJob<CheckHistoryJobArguments> {
+public class CheckHistoryJob extends Job<CheckHistoryJobArguments> {
 
     public CheckHistoryJob(JobContext jobContext) {
         super(jobContext);
     }
 
     @Override
-    public void onOrderProcess(OrderProcessStep<CheckHistoryJobArguments> step) throws Exception {
+    public void processOrder(OrderProcessStep<CheckHistoryJobArguments> step) throws Exception {
         process(step, step.getDeclaredArguments());
     }
 

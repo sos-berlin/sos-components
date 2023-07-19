@@ -8,14 +8,14 @@ import java.util.Map.Entry;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.sos.commons.job.JobArgument;
-import com.sos.commons.job.OrderProcessStep;
-import com.sos.commons.job.OrderProcessStepLogger;
-import com.sos.commons.job.OrderProcessStepOutcome;
-import com.sos.commons.job.exception.JobProblemException;
 import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.jitl.jobs.ssh.SSHJobArguments;
 import com.sos.jitl.jobs.ssh.exception.SOSJobSSHException;
+import com.sos.js7.job.JobArgument;
+import com.sos.js7.job.OrderProcessStep;
+import com.sos.js7.job.OrderProcessStepLogger;
+import com.sos.js7.job.OrderProcessStepOutcome;
+import com.sos.js7.job.exception.JobProblemException;
 
 public class SSHJobUtil {
 

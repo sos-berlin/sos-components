@@ -10,14 +10,14 @@ import java.util.stream.Collectors;
 
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments.SOSCredentialStoreResolver;
-import com.sos.commons.job.ABlockingInternalJob;
-import com.sos.commons.job.JobArgument;
-import com.sos.commons.job.OrderProcessStep;
-import com.sos.commons.job.exception.JobRequiredArgumentMissingException;
 import com.sos.commons.mail.SOSMailReceiver;
 import com.sos.jitl.jobs.mail.MailInboxArguments.ActionProcess;
+import com.sos.js7.job.Job;
+import com.sos.js7.job.JobArgument;
+import com.sos.js7.job.OrderProcessStep;
+import com.sos.js7.job.exception.JobRequiredArgumentMissingException;
 
-public class MailInboxJob extends ABlockingInternalJob<MailInboxArguments> {
+public class MailInboxJob extends Job<MailInboxArguments> {
 
     private static final String MAIL_STORE_PROTOCOL_KEY = "mail.store.protocol";
 
@@ -43,7 +43,7 @@ public class MailInboxJob extends ABlockingInternalJob<MailInboxArguments> {
     }
 
     @Override
-    public void onOrderProcess(OrderProcessStep<MailInboxArguments> step) throws Exception {
+    public void processOrder(OrderProcessStep<MailInboxArguments> step) throws Exception {
         process(step, step.getDeclaredArguments());
     }
 

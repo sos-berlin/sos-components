@@ -2,13 +2,13 @@ package com.sos.jitl.jobs.examples;
 
 import java.nio.charset.Charset;
 
-import com.sos.commons.job.ABlockingInternalJob;
-import com.sos.commons.job.OrderProcessStep;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.SOSTimeout;
+import com.sos.js7.job.Job;
+import com.sos.js7.job.OrderProcessStep;
 
-public class SOSShellJob extends ABlockingInternalJob<SOSShellJobArguments> {
+public class SOSShellJob extends Job<SOSShellJobArguments> {
 
     // use this constructor because of getAgentSystemEncoding
     public SOSShellJob(JobContext context) {
@@ -16,7 +16,7 @@ public class SOSShellJob extends ABlockingInternalJob<SOSShellJobArguments> {
     }
 
     @Override
-    public void onOrderProcess(OrderProcessStep<SOSShellJobArguments> step) throws Exception {
+    public void processOrder(OrderProcessStep<SOSShellJobArguments> step) throws Exception {
         step.getLogger().info("");
         step.getLogger().info("[AGENT]systemEncoding=" + getJobEnvironment().getSystemEncoding());
         step.getLogger().info("");

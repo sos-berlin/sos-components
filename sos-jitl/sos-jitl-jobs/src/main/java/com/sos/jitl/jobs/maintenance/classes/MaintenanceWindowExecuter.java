@@ -3,8 +3,6 @@ package com.sos.jitl.jobs.maintenance.classes;
 import java.util.List;
 
 import com.sos.commons.exception.SOSException;
-import com.sos.commons.job.JobHelper;
-import com.sos.commons.job.OrderProcessStepLogger;
 import com.sos.jitl.jobs.jocapi.ApiExecutor;
 import com.sos.jitl.jobs.jocapi.ApiResponse;
 import com.sos.joc.model.agent.AgentsV;
@@ -16,6 +14,8 @@ import com.sos.joc.model.controller.Components;
 import com.sos.joc.model.controller.Controller;
 import com.sos.joc.model.controller.ControllerIdReq;
 import com.sos.joc.model.controller.Controllers;
+import com.sos.js7.job.JobHelper;
+import com.sos.js7.job.OrderProcessStepLogger;
 
 public class MaintenanceWindowExecuter {
 

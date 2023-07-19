@@ -3,12 +3,13 @@ package com.sos.jitl.jobs.orderstatustransition;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.job.JobHelper;
-import com.sos.commons.job.UnitTestJobHelper;
+import com.sos.js7.job.JobHelper;
+import com.sos.js7.job.UnitTestJobHelper;
 
 import js7.data_for_java.order.JOutcome;
 
@@ -16,6 +17,7 @@ public class OrderStatusTransitionJobTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderStatusTransitionJobTest.class);
 
+    @Ignore
     @Test
     public void test() throws Exception {
         Map<String, Object> args = new HashMap<>();
@@ -29,7 +31,7 @@ public class OrderStatusTransitionJobTest {
 
         UnitTestJobHelper<OrderStateTransitionJobArguments> h = new UnitTestJobHelper<>(new OrderStateTransitionJob(null));
         h.setEnvVar(JobHelper.ENV_NAME_AGENT_CONFIG_DIR, "C:/Program Files/sos-berlin.com/js7/agent/var_4425/config");
-        JOutcome.Completed result = h.onOrderProcess(args);
+        JOutcome.Completed result = h.processOrder(args);
         LOGGER.info("###############################################");
         LOGGER.info(String.format("[RESULT]%s", result));
     }

@@ -9,8 +9,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.job.UnitTestJobHelper;
 import com.sos.jitl.jobs.maintenance.MaintenanceWindowJobArguments.StateValues;
+import com.sos.js7.job.UnitTestJobHelper;
 
 import js7.data_for_java.order.JOutcome;
 
@@ -31,7 +31,7 @@ public class MaintenanceWindowJobTest {
 
         UnitTestJobHelper<MaintenanceWindowJobArguments> h = new UnitTestJobHelper<>(new MaintenanceWindowJob(null));
         // h.setEnvVar(JobHelper.ENV_NAME_AGENT_CONFIG_DIR, "...");
-        JOutcome.Completed result = h.onOrderProcess(args);
+        JOutcome.Completed result = h.processOrder(args);
         LOGGER.info("###############################################");
         LOGGER.info(String.format("[RESULT]%s", result));
     }

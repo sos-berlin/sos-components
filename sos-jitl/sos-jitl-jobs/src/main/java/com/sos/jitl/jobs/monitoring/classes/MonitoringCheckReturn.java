@@ -1,6 +1,6 @@
 package com.sos.jitl.jobs.monitoring.classes;
 
-import com.sos.commons.job.OrderProcessStepLogger;
+import com.sos.js7.job.OrderProcessStepLogger;
 
 public class MonitoringCheckReturn {
 

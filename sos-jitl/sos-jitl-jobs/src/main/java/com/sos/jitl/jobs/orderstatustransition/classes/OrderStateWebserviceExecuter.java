@@ -1,16 +1,12 @@
 package com.sos.jitl.jobs.orderstatustransition.classes;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.sos.commons.httpclient.exception.SOSBadRequestException;
-import com.sos.commons.httpclient.exception.SOSConnectionRefusedException;
-import com.sos.commons.job.OrderProcessStepLogger;
 import com.sos.jitl.jobs.jocapi.ApiExecutor;
 import com.sos.jitl.jobs.jocapi.ApiResponse;
 import com.sos.jitl.jobs.sap.common.Globals;
 import com.sos.joc.model.order.ModifyOrders;
-import com.sos.joc.model.order.OrderV;
 import com.sos.joc.model.order.OrdersFilterV;
 import com.sos.joc.model.order.OrdersV;
+import com.sos.js7.job.OrderProcessStepLogger;
 
 public class OrderStateWebserviceExecuter {
 

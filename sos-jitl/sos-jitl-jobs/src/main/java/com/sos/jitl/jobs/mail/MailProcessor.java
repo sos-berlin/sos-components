@@ -23,13 +23,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.exception.SOSInvalidDataException;
-import com.sos.commons.job.JobArgument;
-import com.sos.commons.job.OrderProcessStepLogger;
-import com.sos.commons.job.exception.JobRequiredArgumentMissingException;
 import com.sos.commons.mail.SOSMailReceiver;
 import com.sos.commons.mail.SOSMimeMessage;
 import com.sos.commons.util.SOSDate;
 import com.sos.jitl.jobs.mail.MailInboxArguments.ActionProcess;
+import com.sos.js7.job.JobArgument;
+import com.sos.js7.job.OrderProcessStepLogger;
+import com.sos.js7.job.exception.JobRequiredArgumentMissingException;
 
 public class MailProcessor {
 

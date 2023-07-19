@@ -15,7 +15,7 @@
 		<!-- SOS Dependencies -->
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
-			<artifactId>sos-commons-job</artifactId>
+			<artifactId>sos-js7-job</artifactId>
 			<version>${project.version}</version>
 		</dependency>
         <dependency>

@@ -7,12 +7,12 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
-import com.sos.commons.job.JobArgument;
-import com.sos.commons.job.JobArguments;
 import com.sos.commons.sign.keys.keyStore.KeystoreType;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 import com.sos.jitl.jobs.sap.common.bean.AbstractJob;
 import com.sos.jitl.jobs.sap.common.bean.RunIds;
+import com.sos.js7.job.JobArgument;
+import com.sos.js7.job.JobArguments;
 
 public class CommonJobArguments extends JobArguments {
 

@@ -1,18 +1,18 @@
 package com.sos.jitl.jobs.examples;
 
-import com.sos.commons.job.ABlockingInternalJob;
-import com.sos.commons.job.OrderProcessStep;
 import com.sos.jitl.jobs.jocapi.ApiExecutor;
 import com.sos.jitl.jobs.jocapi.ApiResponse;
+import com.sos.js7.job.Job;
+import com.sos.js7.job.OrderProcessStep;
 
-public class JocApiJob extends ABlockingInternalJob<JocApiJobArguments> {
+public class JocApiJob extends Job<JocApiJobArguments> {
 
     public JocApiJob(JobContext jobContext) {
         super(jobContext);
     }
 
     @Override
-    public void onOrderProcess(OrderProcessStep<JocApiJobArguments> step) throws Exception {
+    public void processOrder(OrderProcessStep<JocApiJobArguments> step) throws Exception {
         ApiExecutor ex = new ApiExecutor(step.getLogger());
         try {
             ApiResponse apiResponse = ex.login();

@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.sos.commons.job.OrderProcessStepLogger;
 import com.sos.jitl.jobs.jocapi.ApiExecutor;
 import com.sos.jitl.jobs.jocapi.ApiResponse;
 import com.sos.jitl.jobs.orderstatustransition.OrderStateTransitionJobArguments;
@@ -15,6 +14,7 @@ import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.OrderV;
 import com.sos.joc.model.order.OrdersFilterV;
 import com.sos.joc.model.order.OrdersV;
+import com.sos.js7.job.OrderProcessStepLogger;
 
 public class OrderStateTransition {
 

@@ -1,6 +1,6 @@
 package com.sos.jitl.jobs.ssh.exception;
 
-import com.sos.commons.job.exception.JobException;
+import com.sos.js7.job.exception.JobException;
 
 public class SOSJobSSHException extends JobException{
 

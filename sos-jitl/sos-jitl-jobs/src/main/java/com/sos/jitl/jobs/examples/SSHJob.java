@@ -1,18 +1,18 @@
 package com.sos.jitl.jobs.examples;
 
 import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
-import com.sos.commons.job.ABlockingInternalJob;
-import com.sos.commons.job.OrderProcessStep;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.vfs.ssh.SSHProvider;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
 import com.sos.jitl.jobs.ssh.SSHJobArguments;
+import com.sos.js7.job.Job;
+import com.sos.js7.job.OrderProcessStep;
 
-public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
+public class SSHJob extends Job<SSHJobArguments> {
 
     @Override
-    public void onOrderProcess(OrderProcessStep<SSHJobArguments> step) throws Exception {
+    public void processOrder(OrderProcessStep<SSHJobArguments> step) throws Exception {
         SSHProviderArguments providerArgs = step.getIncludedArguments(SSHProviderArguments.class);
         SSHProvider provider = new SSHProvider(providerArgs, step.getIncludedArguments(SOSCredentialStoreArguments.class));
         step.addCancelableResource(provider);

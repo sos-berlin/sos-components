@@ -2,11 +2,6 @@ package com.sos.jitl.jobs.sap;
 
 import java.util.Optional;
 
-import com.sos.commons.job.JobArgument;
-import com.sos.commons.job.OrderProcessStep;
-import com.sos.commons.job.OrderProcessStepLogger;
-import com.sos.commons.job.exception.JobException;
-import com.sos.commons.job.exception.JobRequiredArgumentMissingException;
 import com.sos.jitl.jobs.sap.common.ASAPS4HANAJob;
 import com.sos.jitl.jobs.sap.common.CommonJobArguments;
 import com.sos.jitl.jobs.sap.common.HttpClient;
@@ -14,6 +9,11 @@ import com.sos.jitl.jobs.sap.common.bean.ResponseJob;
 import com.sos.jitl.jobs.sap.common.bean.ResponseSchedule;
 import com.sos.jitl.jobs.sap.common.bean.RunIds;
 import com.sos.jitl.jobs.sap.common.bean.Schedule;
+import com.sos.js7.job.JobArgument;
+import com.sos.js7.job.OrderProcessStep;
+import com.sos.js7.job.OrderProcessStepLogger;
+import com.sos.js7.job.exception.JobException;
+import com.sos.js7.job.exception.JobRequiredArgumentMissingException;
 
 public class SAPS4HANACreateSchedule extends ASAPS4HANAJob {
 
@@ -22,7 +22,7 @@ public class SAPS4HANACreateSchedule extends ASAPS4HANAJob {
     }
 
     @Override
-    public void onOrderProcess(OrderProcessStep<CommonJobArguments> step) throws Exception {
+    public void processOrder(OrderProcessStep<CommonJobArguments> step) throws Exception {
         CommonJobArguments args = step.getDeclaredArguments();
         checkJobIdName(args.getJobId(), args.getJobName());
         execute(step, args, RunIds.Scope.SCHEDULE);
