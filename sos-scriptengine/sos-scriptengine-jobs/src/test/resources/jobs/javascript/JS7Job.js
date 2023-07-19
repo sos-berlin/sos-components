@@ -1,8 +1,13 @@
 class JS7JobArguments {
-	my_arg1 = new js7.JobArgument("my_arg1", false);
-	my_arg2 = new js7.JobArgument("my_arg2", true, "x", js7.DisplayMode.MASKED);
+	my_arg1 = new js7.JobArgument("my_arg1", false,new java.io.File("x.txt"));
+	my_arg2 = new js7.JobArgument("my_arg2", true, "x", js7.DisplayMode.UNMASKED);
+    my_arg3 = new js7.JobArgument("op_arg_final", false);
+    my_arg4 = new js7.JobArgument("op_arg_string", false);
+    my_arg5 = new js7.JobArgument("op_arg_numeric", false);
+    my_arg6 = new js7.JobArgument("op_arg_boolean", false);
+    my_arg7 = new js7.JobArgument("op_arg_list", false);
 
-	includedArguments = [js7.IncludableArgument.CREDENTIAL_STORE, js7.IncludableArgument.SSH_PROVIDER];
+	//includedArguments = [js7.IncludableArgument.CREDENTIAL_STORE, js7.IncludableArgument.SSH_PROVIDER];
 }
 
 class JS7Job extends js7.Job {

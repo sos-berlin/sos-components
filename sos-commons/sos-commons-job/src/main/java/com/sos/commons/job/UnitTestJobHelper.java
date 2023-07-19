@@ -1,5 +1,6 @@
 package com.sos.commons.job;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -21,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.job.exception.JobArgumentException;
+import com.sos.commons.job.exception.JobRequiredArgumentMissingException;
 import com.sos.commons.util.SOSBase64;
 import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
@@ -34,9 +36,7 @@ public class UnitTestJobHelper<A extends JobArguments> {
     private static final Logger LOGGER = LoggerFactory.getLogger(UnitTestJobHelper.class);
 
     private static final String BASE64_VALUE_PREFIX = "base64:";
-
     private final ABlockingInternalJob<A> job;
-
     private Map<String, String> environment;
 
     public UnitTestJobHelper(ABlockingInternalJob<A> job) {
@@ -123,108 +123,91 @@ public class UnitTestJobHelper<A extends JobArguments> {
         }
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     private ArgumentsResult toArgs(Map<String, Object> args, A instance) throws Exception {
         instance = instance == null ? getJobArgumensClass().getDeclaredConstructor().newInstance() : instance;
+        Set<String> declared = setDeclaredJobArguments(args, instance);
+        ArgumentsResult r = new ArgumentsResult();
+        r.instance = instance;
+        r.undeclared = args.entrySet().stream().filter(e -> !declared.contains(e.getKey())).collect(Collectors.toMap(Map.Entry::getKey,
+                Map.Entry::getValue));
+        return r;
+    }
+
+    @SuppressWarnings({ "rawtypes" })
+    private Set<String> setDeclaredJobArguments(Map<String, Object> args, JobArguments instance) throws Exception {
+        Set<String> declared = new HashSet<>();
 
         if (instance.getIncludedArguments() != null && instance.getIncludedArguments().size() > 0) {
             for (Map.Entry<String, List<JobArgument>> e : instance.getIncludedArguments().entrySet()) {
                 for (JobArgument arg : e.getValue()) {
                     arg.setPayload(e.getKey());
-                    if (arg.getName() != null && args.containsKey(arg.getName())) {
-                        Object val = args.get(arg.getName());
-                        if (val == null || SOSString.isEmpty(val.toString())) {
-                            arg.setValue(arg.getDefaultValue());
-                        } else {
-                            arg.setValue(getValue(val, arg, null));
-                        }
+                    if (arg.getName() == null) {
+                        continue;
+                    }
+                    if (!declared.contains(arg.getName())) {
+                        declared.add(arg.getName());
+                    }
+                    if (args.containsKey(arg.getName())) {
+                        setDeclaredJobArgument(args, arg, null, instance);
                     }
                 }
             }
         }
+
         if (instance.hasDynamicArgumentFields()) {
             for (JobArgument arg : instance.getDynamicArgumentFields()) {
-                if (arg.getName() != null && args.containsKey(arg.getName())) {
-                    Object val = args.get(arg.getName());
-                    if (val == null || SOSString.isEmpty(val.toString())) {
-                        arg.setValue(arg.getDefaultValue());
-                    } else {
-                        arg.setValue(getValue(val, arg, null));
-                    }
+                if (arg.getName() == null) {
+                    continue;
                 }
+                if (!declared.contains(arg.getName())) {
+                    declared.add(arg.getName());
+                }
+                setDeclaredJobArgument(args, arg, null, instance);
             }
         }
 
-        Set<String> declared = setJobArguments(args, instance);
-        ArgumentsResult r = new ArgumentsResult();
-        r.instance = instance;
-        r.undeclared = args.entrySet().stream().filter(e -> !declared.contains(e.getKey())).collect(Collectors.toMap(Map.Entry::getKey,
-                Map.Entry::getValue));
-
-        return r;
-    }
-
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    private Set<String> setJobArguments(Map<String, Object> map, JobArguments o) {
-        List<Field> fields = JobHelper.getJobArgumentFields(o);
-        Set<String> declared = new HashSet<>();
+        List<Field> fields = JobHelper.getJobArgumentFields(instance);
         for (Field field : fields) {
             try {
                 field.setAccessible(true);
                 LOGGER.trace("  [" + field.getName() + "]field type=" + field.getGenericType());
-                JobArgument arg = (JobArgument<?>) field.get(o);
+                JobArgument arg = (JobArgument<?>) field.get(instance);
                 if (arg != null) {
                     if (arg.getName() == null) {// internal usage
                         continue;
                     }
-                    Object val = map.get(arg.getName());
-                    if (val == null) {
-                        arg.setValue(arg.getDefaultValue());
-                    } else {
-                        if (!declared.contains(arg.getName())) {
-                            declared.add(arg.getName());
-                        }
-                        if (SOSString.isEmpty(val.toString())) {
-                            arg.setValue(arg.getDefaultValue());
-                        } else {
-                            arg.setValue(getValue(val, arg, field));
-                        }
-                    }
-                    field.set(o, arg);
-                }
-            } catch (Throwable e) {
-                LOGGER.error(String.format("[can't get field][%s.%s]%s", o.getClass().getSimpleName(), field.getName(), e.toString()), e);
-            }
-        }
-
-        if (o.hasDynamicArgumentFields()) {
-            for (JobArgument arg : o.getDynamicArgumentFields()) {
-                Object val = map.get(arg.getName());
-                if (val == null) {
-                    arg.setValue(arg.getDefaultValue());
-                } else {
                     if (!declared.contains(arg.getName())) {
                         declared.add(arg.getName());
                     }
-                    if (SOSString.isEmpty(val.toString())) {
-                        arg.setValue(arg.getDefaultValue());
-                    } else {
-                        try {
-                            arg.setValue(getValue(val, arg, null));
-                        } catch (ClassNotFoundException e) {
-                            e.printStackTrace();
-                        }
-                    }
+                    setDeclaredJobArgument(args, arg, field, instance);
+                    field.set(instance, arg);
                 }
+            } catch (Throwable e) {
+                LOGGER.error(String.format("[can't get field][%s.%s]%s", instance.getClass().getSimpleName(), field.getName(), e.toString()), e);
             }
         }
         return declared;
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private void setDeclaredJobArgument(Map<String, Object> args, JobArgument arg, Field field, JobArguments instance) throws Exception {
+        Object val = args.get(arg.getName());
+        if (val == null || SOSString.isEmpty(val.toString())) {
+            arg.setValue(arg.getDefaultValue());
+            setValueType(arg, field, val);
+        } else {
+            arg.setValue(getValue(val, arg, field));
+        }
+
+        if (arg.isRequired() && arg.getValue() == null) {
+            throw new JobRequiredArgumentMissingException(arg.getName(), arg.getName());
+        }
+    }
+
     private Object getValue(Object val, JobArgument<A> arg, Field field) throws ClassNotFoundException {
         if (val instanceof String) {
             val = val.toString().trim();
-            setValueType(arg, field);
+            setValueType(arg, field, val);
             Type type = arg.getClazzType();
             if (type.equals(String.class)) {
                 if (((String) val).startsWith(BASE64_VALUE_PREFIX)) {
@@ -237,6 +220,8 @@ public class UnitTestJobHelper<A extends JobArguments> {
             } else {
                 if (type.equals(Path.class)) {
                     val = Paths.get(val.toString());
+                } else if (type.equals(File.class)) {
+                    val = new File(val.toString());
                 } else if (type.equals(URI.class)) {
                     val = URI.create(val.toString());
                 } else if (SOSReflection.isList(type)) {
@@ -282,7 +267,7 @@ public class UnitTestJobHelper<A extends JobArguments> {
                 }
             }
         } else if (val instanceof BigDecimal) {
-            setValueType(arg, field);
+            setValueType(arg, field, val);
             Type type = arg.getClazzType();
             if (type.equals(Integer.class)) {
                 val = Integer.valueOf(((BigDecimal) val).intValue());
@@ -291,18 +276,42 @@ public class UnitTestJobHelper<A extends JobArguments> {
             } else if (type.equals(String.class)) {
                 val = val.toString();
             }
+        } else if (val instanceof Boolean) {
+            setValueType(arg, field, val);
+            val = Boolean.valueOf(val.toString());
+        } else if (val instanceof List) {
+            setValueType(arg, field, val);
+            val = (List<?>) val;
         }
         return val;
     }
 
-    private void setValueType(JobArgument<A> arg, Field field) {
+    private void setValueType(JobArgument<A> arg, Field field, Object val) {
         if (field == null) {
-            if (arg.getClazzType() == null) {
-                arg.setClazzType(Object.class);
-            }
+            setValueType(arg, val);
             return;
         }
         arg.setClazzType(((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0]);
+    }
+
+    @SuppressWarnings("rawtypes")
+    private void setValueType(JobArgument arg, Object val) {
+        if (arg.getClazzType() == null) {
+            if (arg.getValue() != null) {
+                try {
+                    arg.setClazzType(arg.getValue().getClass());
+                } catch (Throwable e) {
+                }
+            } else if (val != null) {
+                try {
+                    arg.setClazzType(val.getClass());
+                } catch (Throwable e) {
+                }
+            }
+            if (arg.getClazzType() == null) {
+                arg.setClazzType(Object.class);
+            }
+        }
     }
 
     @SuppressWarnings("unchecked")

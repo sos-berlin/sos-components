@@ -24,6 +24,7 @@ public class JavaScriptJobTest {
     @Test
     public void test() throws Exception {
         Map<String, Object> args = new HashMap<>();
+        args.put("my_arg1", "xyz");
         args.put("my_arg2", "xyz");
         String script = SOSPath.readFile(Paths.get("src/test/resources/jobs/javascript/JS7Job.js"));
 
@@ -35,7 +36,6 @@ public class JavaScriptJobTest {
         LOGGER.info("###############################################");
         LOGGER.info(String.format("[RESULT]%s", result));
         h.onStop();
-
     }
 
 }
