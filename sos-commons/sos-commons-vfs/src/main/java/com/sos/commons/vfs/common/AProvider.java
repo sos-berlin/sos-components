@@ -1,6 +1,6 @@
 package com.sos.commons.vfs.common;
 
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
+import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.SOSEnv;
 import com.sos.commons.util.common.SOSTimeout;
@@ -9,7 +9,7 @@ public abstract class AProvider<A extends AProviderArguments> {
 
     private final A arguments;
 
-    public AProvider(A arguments, SOSCredentialStoreArguments csArgs) {
+    public AProvider(A arguments, CredentialStoreArguments csArgs) {
         this.arguments = arguments;
         if (this.arguments != null) {
             this.arguments.setCredentialStore(csArgs);

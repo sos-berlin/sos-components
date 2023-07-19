@@ -8,8 +8,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments.SOSCredentialStoreResolver;
+import com.sos.commons.credentialstore.CredentialStoreArguments;
+import com.sos.commons.credentialstore.CredentialStoreArguments.CredentialStoreResolver;
 import com.sos.commons.mail.SOSMailReceiver;
 import com.sos.jitl.jobs.mail.MailInboxArguments.ActionProcess;
 import com.sos.js7.job.Job;
@@ -72,9 +72,9 @@ public class MailInboxJob extends Job<MailInboxArguments> {
         try {
             Map<String, JobArgument<MailInboxArguments>> allCurrent = step.getAllArguments();
             Map<String, Object> variables = step.getAllArgumentsAsNameValueMap();
-            SOSCredentialStoreArguments csArgs = step.getIncludedArguments(SOSCredentialStoreArguments.class);
+            CredentialStoreArguments csArgs = step.getIncludedArguments(CredentialStoreArguments.class);
             if (csArgs.getFile().getValue() != null) {
-                SOSCredentialStoreResolver r = csArgs.newResolver();
+                CredentialStoreResolver r = csArgs.newResolver();
 
                 args.getMailUser().setValue(r.resolve(args.getMailUser().getValue()));
                 args.getMailPassword().setValue(r.resolve(args.getMailPassword().getValue()));

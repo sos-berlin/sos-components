@@ -1,6 +1,6 @@
 package com.sos.jitl.jobs.fileordervariablesjob;
 
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
+import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.JobArguments;
 
@@ -9,7 +9,7 @@ public class FileOrderVariablesJobArguments extends JobArguments {
     private JobArgument<String> js7SourceFile = new JobArgument<String>("js7_source_file", false);
 
     public FileOrderVariablesJobArguments() {
-        super(new SOSCredentialStoreArguments());
+        super(new CredentialStoreArguments());
     }
 
     public String getJs7SourceFile() {

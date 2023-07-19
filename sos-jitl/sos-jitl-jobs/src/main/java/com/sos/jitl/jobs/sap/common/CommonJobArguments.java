@@ -6,7 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
+import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.sign.keys.keyStore.KeystoreType;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 import com.sos.jitl.jobs.sap.common.bean.AbstractJob;
@@ -55,7 +55,7 @@ public class CommonJobArguments extends JobArguments {
 
     public CommonJobArguments() {
         /* http credentialStore arguments */
-        super(new SOSCredentialStoreArguments());
+        super(new CredentialStoreArguments());
     }
 
     public JobArgument<Long> getCheckInterval() {

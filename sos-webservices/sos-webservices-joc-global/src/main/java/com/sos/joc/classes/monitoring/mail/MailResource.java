@@ -8,7 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
+import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 import com.sos.inventory.model.job.Environment;
@@ -26,7 +26,7 @@ public class MailResource {
     private static final String ARG_CC = "cc";
     private static final String ARG_BCC = "bcc";
 
-    private SOSCredentialStoreArguments credentialStoreArgs;
+    private CredentialStoreArguments credentialStoreArgs;
     private Properties mailProperties;
     private String jobResourceName;
     private String from;
@@ -110,13 +110,13 @@ public class MailResource {
     }
 
     private void setCredentialStoreArgs(String key, String value) {
-        if (SOSCredentialStoreArguments.ARG_NAME_FILE.equals(key)) {
+        if (CredentialStoreArguments.ARG_NAME_FILE.equals(key)) {
             credentialStoreArgs.setFile(value);
-        } else if (SOSCredentialStoreArguments.ARG_NAME_KEY_FILE.equals(key)) {
+        } else if (CredentialStoreArguments.ARG_NAME_KEY_FILE.equals(key)) {
             credentialStoreArgs.setKeyFile(value);
-        } else if (SOSCredentialStoreArguments.ARG_NAME_PASSWORD.equals(key)) {
+        } else if (CredentialStoreArguments.ARG_NAME_PASSWORD.equals(key)) {
             credentialStoreArgs.setPassword(value);
-        } else if (SOSCredentialStoreArguments.ARG_NAME_ENTRY_PATH.equals(key)) {
+        } else if (CredentialStoreArguments.ARG_NAME_ENTRY_PATH.equals(key)) {
             credentialStoreArgs.setEntryPath(value);
         }
     }
@@ -152,7 +152,7 @@ public class MailResource {
     }
 
     private void init() {
-        credentialStoreArgs = new SOSCredentialStoreArguments();
+        credentialStoreArgs = new CredentialStoreArguments();
         mailProperties = new Properties();
         from = null;
         fromName = null;
@@ -163,7 +163,7 @@ public class MailResource {
         available = false;
     }
 
-    public SOSCredentialStoreArguments getCredentialStoreArgs() {
+    public CredentialStoreArguments getCredentialStoreArgs() {
         return credentialStoreArgs;
     }
 

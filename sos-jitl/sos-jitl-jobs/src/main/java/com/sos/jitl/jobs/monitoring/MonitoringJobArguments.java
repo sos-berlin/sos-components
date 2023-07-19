@@ -1,6 +1,6 @@
 package com.sos.jitl.jobs.monitoring;
 
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
+import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.JobArguments;
 
@@ -13,7 +13,7 @@ public class MonitoringJobArguments extends JobArguments {
     private JobArgument<String> from = new JobArgument<String>("from", false);
 
     public MonitoringJobArguments() {
-        super(new SOSCredentialStoreArguments());
+        super(new CredentialStoreArguments());
     }
 
     public String getControllerId() {

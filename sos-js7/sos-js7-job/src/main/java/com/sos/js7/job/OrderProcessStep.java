@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
+import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.exception.ISOSRequiredArgumentMissingException;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.util.SOSString;
@@ -19,6 +20,7 @@ import com.sos.commons.util.common.SOSArgument;
 import com.sos.commons.util.common.SOSArgumentHelper;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 import com.sos.commons.vfs.ssh.SSHProvider;
+import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
 import com.sos.js7.job.JobArgument.Type;
 import com.sos.js7.job.JobArgument.ValueSource;
 import com.sos.js7.job.JobArguments.LogLevel;
@@ -389,6 +391,21 @@ public class OrderProcessStep<A extends JobArguments> {
         } catch (Throwable e) {
             throw new JobArgumentException(e.toString(), e);
         }
+    }
+
+    public ASOSArguments getIncludedArguments(String clazzKey) throws JobArgumentException {
+        if (clazzKey == null) {
+            return null;
+        }
+        switch (clazzKey.toUpperCase()) {
+        case CredentialStoreArguments.CLASS_KEY:
+            return getIncludedArguments(new CredentialStoreArguments().getClass());
+        case SSHProviderArguments.CLASS_KEY:
+            return getIncludedArguments(SSHProviderArguments.class);
+        default:
+            return null;
+        }
+
     }
 
     private String getStepInfo() {

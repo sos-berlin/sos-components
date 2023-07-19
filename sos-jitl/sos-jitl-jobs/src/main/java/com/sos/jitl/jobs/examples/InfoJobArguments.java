@@ -2,7 +2,7 @@ package com.sos.jitl.jobs.examples;
 
 import java.util.List;
 
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
+import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.JobArguments;
@@ -18,7 +18,7 @@ public class InfoJobArguments extends JobArguments {
     private JobArgument<String> shellCommand = new JobArgument<>("shell_command", false);
 
     public InfoJobArguments() {
-        super(new SOSCredentialStoreArguments());
+        super(new CredentialStoreArguments());
     }
 
     public JobArgument<Boolean> getShowEnv() {

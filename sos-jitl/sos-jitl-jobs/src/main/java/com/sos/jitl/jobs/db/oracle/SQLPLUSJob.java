@@ -10,8 +10,8 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments.SOSCredentialStoreResolver;
+import com.sos.commons.credentialstore.CredentialStoreArguments;
+import com.sos.commons.credentialstore.CredentialStoreArguments.CredentialStoreResolver;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSCommandResult;
@@ -34,14 +34,14 @@ public class SQLPLUSJob extends Job<SQLPlusJobArguments> {
         if (SOSString.isEmpty(step.getDeclaredArguments().getCommandScriptFile()) & SOSString.isEmpty(step.getDeclaredArguments().getCommand())) {
             throw new JobRequiredArgumentMissingException("command is empty. please check the   \"command_script_file\" or \"command\"parameter.");
         }
-        process(step, step.getDeclaredArguments(), step.getIncludedArguments(SOSCredentialStoreArguments.class));
+        process(step, step.getDeclaredArguments(), step.getIncludedArguments(CredentialStoreArguments.class));
     }
 
-    private void process(OrderProcessStep<SQLPlusJobArguments> step, SQLPlusJobArguments args, SOSCredentialStoreArguments csArgs) throws Exception {
+    private void process(OrderProcessStep<SQLPlusJobArguments> step, SQLPlusJobArguments args, CredentialStoreArguments csArgs) throws Exception {
         args.checkRequired();
 
         if (csArgs.getFile().getValue() != null) {
-            SOSCredentialStoreResolver r = csArgs.newResolver();
+            CredentialStoreResolver r = csArgs.newResolver();
             args.setDbUrl(r.resolve(args.getDbUrl()));
             args.setDbUser(r.resolve(args.getDbUser()));
             args.setDbPassword(r.resolve(args.getDbPassword().getValue()));

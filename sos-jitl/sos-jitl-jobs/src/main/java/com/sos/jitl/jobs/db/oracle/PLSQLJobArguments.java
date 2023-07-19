@@ -7,7 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.stream.Stream;
 
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
+import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.JobArguments;
@@ -34,7 +34,7 @@ public class PLSQLJobArguments extends JobArguments {
     private JobArgument<Path> resultFile = new JobArgument<Path>("result_file", false);
 
     public PLSQLJobArguments() {
-        super(new SOSCredentialStoreArguments());
+        super(new CredentialStoreArguments());
     }
 
     public Path getHibernateFile() {

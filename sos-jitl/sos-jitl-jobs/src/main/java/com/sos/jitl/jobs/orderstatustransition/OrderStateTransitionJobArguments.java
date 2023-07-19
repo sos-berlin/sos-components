@@ -3,7 +3,7 @@ package com.sos.jitl.jobs.orderstatustransition;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
+import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.JobArguments;
 
@@ -18,7 +18,7 @@ public class OrderStateTransitionJobArguments extends JobArguments {
     private JobArgument<String> controllerId = new JobArgument<>("controller_id", false);
 
     public OrderStateTransitionJobArguments() {
-        super(new SOSCredentialStoreArguments());
+        super(new CredentialStoreArguments());
     }
 
     public List<String> getWorkflowFolders() {

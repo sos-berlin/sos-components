@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
+import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSCommandResult;
@@ -42,7 +42,7 @@ public class SSHJob extends Job<SSHJobArguments> {
     public void processOrder(OrderProcessStep<SSHJobArguments> step) throws Exception {
 
         SSHProviderArguments providerArgs = step.getIncludedArguments(SSHProviderArguments.class);
-        SSHProvider provider = new SSHProvider(providerArgs, step.getIncludedArguments(SOSCredentialStoreArguments.class));
+        SSHProvider provider = new SSHProvider(providerArgs, step.getIncludedArguments(CredentialStoreArguments.class));
         step.addCancelableResource(provider);
 
         SSHJobArguments jobArgs = step.getDeclaredArguments();

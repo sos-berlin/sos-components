@@ -1,6 +1,6 @@
 package com.sos.commons.vfs.common;
 
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
+import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.credentialstore.keepass.SOSKeePassDatabase;
 import com.sos.commons.util.common.ASOSArguments;
 import com.sos.commons.util.common.SOSArgument;
@@ -51,7 +51,7 @@ public abstract class AProviderArguments extends ASOSArguments {
             false);
     private SOSArgument<String> keepassAttachmentPropertyName = new SOSArgument<String>(null, false);
 
-    private SOSCredentialStoreArguments credentialStore;
+    private CredentialStoreArguments credentialStore;
 
     public SOSArgument<Protocol> getProtocol() {
         return protocol;
@@ -140,7 +140,7 @@ public abstract class AProviderArguments extends ASOSArguments {
         keepassAttachmentPropertyName.setValue(val);
     }
 
-    protected void setCredentialStore(SOSCredentialStoreArguments val) {
+    protected void setCredentialStore(CredentialStoreArguments val) {
         credentialStore = val;
     }
 
@@ -148,7 +148,7 @@ public abstract class AProviderArguments extends ASOSArguments {
         return arg.getValue() == null ? 0 : arg.getValue() * 1_000;
     }
 
-    public SOSCredentialStoreArguments getCredentialStore() {
+    public CredentialStoreArguments getCredentialStore() {
         return credentialStore;
     }
 }

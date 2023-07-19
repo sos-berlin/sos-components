@@ -23,10 +23,17 @@ public class JavaScriptJobTest {
     @Ignore
     @Test
     public void test() throws Exception {
+        String file = "src/test/resources/jobs/javascript/JS7Job.js";
+        file = "src/test/resources/jobs/javascript/JS7Job-CredentialStore.js";
+
         Map<String, Object> args = new HashMap<>();
         args.put("my_arg1", "xyz");
         args.put("my_arg2", "xyz");
-        String script = SOSPath.readFile(Paths.get("src/test/resources/jobs/javascript/JS7Job.js"));
+        args.put("credential_store_file", "kdbx-p.kdbx");
+        args.put("credential_store_password", "test");
+        args.put("credential_store_entry_path", "/server/SFTP/localhost");
+
+        String script = SOSPath.readFile(Paths.get(file));
 
         UnitTestJobHelper<JobArguments> h = new UnitTestJobHelper<>(new JavaScriptJob(null));
         SOSReflection.setDeclaredFieldValue(h.getJobs(), "script", script);

@@ -1,6 +1,6 @@
 package com.sos.jitl.jobs.db.oracle;
 
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
+import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 import com.sos.js7.job.JobArgument;
@@ -25,7 +25,7 @@ public class SQLPlusJobArguments extends JobArguments {
             "^SET\\s+([^\\s]+)\\s*IS\\s+(.*)$");
 
     public SQLPlusJobArguments() {
-        super(new SOSCredentialStoreArguments());
+        super(new CredentialStoreArguments());
     }
 
     public String getVariableParserRegExpr() {

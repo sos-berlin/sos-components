@@ -10,6 +10,8 @@ import com.sos.commons.vfs.common.AProviderArguments;
 
 public class SSHProviderArguments extends AProviderArguments {
 
+    public static final String CLASS_KEY = "SSH_PROVIDER";
+
     public enum AuthMethod {
         PASSWORD, PUBLICKEY, KEYBOARD_INTERACTIVE
     }

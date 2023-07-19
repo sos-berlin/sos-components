@@ -9,8 +9,8 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments.SOSCredentialStoreResolver;
+import com.sos.commons.credentialstore.CredentialStoreArguments;
+import com.sos.commons.credentialstore.CredentialStoreArguments.CredentialStoreResolver;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
 import com.sos.js7.job.DetailValue;
@@ -121,10 +121,10 @@ public class InfoJob extends Job<InfoJobArguments> {
             step.getLogger().info("  " + SOSString.toString(SOSShell.executeCommand(args.getShellCommand().getValue())));
         }
 
-        SOSCredentialStoreArguments csArgs = step.getIncludedArguments(SOSCredentialStoreArguments.class);
+        CredentialStoreArguments csArgs = step.getIncludedArguments(CredentialStoreArguments.class);
         step.getLogger().info("----------CREDENTIAL STORE-----------------");
         step.getLogger().info("  file=" + csArgs.getFile());
-        SOSCredentialStoreResolver r = csArgs.newResolver();
+        CredentialStoreResolver r = csArgs.newResolver();
         step.getLogger().info("  resolve cs://@title=" + r.resolve("cs://@title"));
 
         step.getLogger().info("----------RETURN-----------------");

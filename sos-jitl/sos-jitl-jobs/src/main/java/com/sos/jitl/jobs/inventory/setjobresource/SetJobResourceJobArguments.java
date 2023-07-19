@@ -1,6 +1,6 @@
 package com.sos.jitl.jobs.inventory.setjobresource;
 
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
+import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.JobArguments;
 
@@ -14,7 +14,7 @@ public class SetJobResourceJobArguments extends JobArguments {
 	private JobArgument<String> environmentVariable = new JobArgument<String>("environment_variable", false);
 
 	public SetJobResourceJobArguments() {
-		super(new SOSCredentialStoreArguments());
+		super(new CredentialStoreArguments());
 	}
 
 	public String getControllerId() {

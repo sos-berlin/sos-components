@@ -3,7 +3,7 @@ package com.sos.jitl.jobs.mail;
 import java.util.Collections;
 import java.util.List;
 
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
+import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.mail.SOSMailReceiver;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 import com.sos.js7.job.JobArgument;
@@ -63,7 +63,7 @@ public class MailInboxArguments extends JobArguments {
     // private JobArgument<Boolean> copyAttachmentsToFile = new JobArgument<Boolean>("dump_attachments", false, false);
 
     public MailInboxArguments() {
-        super(new SOSCredentialStoreArguments());
+        super(new CredentialStoreArguments());
     }
 
     public List<JobArgument<?>> createRequiredMailArguments(SOSMailReceiver.Protocol protocol) {

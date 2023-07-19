@@ -9,7 +9,7 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
+import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.mail.SOSMail;
 import com.sos.commons.mail.SOSMailAttachment;
 import com.sos.js7.job.OrderProcessStepLogger;
@@ -28,7 +28,7 @@ public class MailHandler {
 
     }
 
-    public void sendMail(SOSCredentialStoreArguments csArgs) throws Exception {
+    public void sendMail(CredentialStoreArguments csArgs) throws Exception {
         SOSMail sosMail = null;
         try {
             Properties smtpProperties = new Properties();

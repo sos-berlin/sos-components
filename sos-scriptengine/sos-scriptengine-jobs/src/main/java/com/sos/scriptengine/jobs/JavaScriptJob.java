@@ -16,7 +16,7 @@ import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
+import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.ASOSArguments;
@@ -37,8 +37,9 @@ public class JavaScriptJob extends Job<JobArguments> {
     private static final String JOB_METHOD_GET_DECLARED_ARGUMENTS = "getDeclaredArguments";
     private static final String JOB_METHOD_PROCESS_ORDER = "processOrder";
 
-    private static final Map<String, String> INCLUDABLE_ARGUMENTS = Stream.of(new String[][] { { "CREDENTIAL_STORE", SOSCredentialStoreArguments.class
-            .getName() }, { "SSH_PROVIDER", SSHProviderArguments.class.getName() }, }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
+    private static final Map<String, String> INCLUDABLE_ARGUMENTS = Stream.of(new String[][] { { CredentialStoreArguments.CLASS_KEY,
+            CredentialStoreArguments.class.getName() }, { SSHProviderArguments.CLASS_KEY, SSHProviderArguments.class.getName() }, }).collect(
+                    Collectors.toMap(data -> data[0], data -> data[1]));
 
     private static volatile String BASIC_SCRIPT;
 

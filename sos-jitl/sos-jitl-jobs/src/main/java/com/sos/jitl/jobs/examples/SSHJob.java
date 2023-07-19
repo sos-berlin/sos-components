@@ -1,6 +1,6 @@
 package com.sos.jitl.jobs.examples;
 
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
+import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.vfs.ssh.SSHProvider;
@@ -14,7 +14,7 @@ public class SSHJob extends Job<SSHJobArguments> {
     @Override
     public void processOrder(OrderProcessStep<SSHJobArguments> step) throws Exception {
         SSHProviderArguments providerArgs = step.getIncludedArguments(SSHProviderArguments.class);
-        SSHProvider provider = new SSHProvider(providerArgs, step.getIncludedArguments(SOSCredentialStoreArguments.class));
+        SSHProvider provider = new SSHProvider(providerArgs, step.getIncludedArguments(CredentialStoreArguments.class));
         step.addCancelableResource(provider);
         try {
             step.getLogger().info("[connect]%s:%s ...", providerArgs.getHost().getDisplayValue(), providerArgs.getPort().getDisplayValue());

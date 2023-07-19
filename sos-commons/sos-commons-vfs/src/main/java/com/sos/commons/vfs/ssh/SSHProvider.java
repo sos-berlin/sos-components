@@ -11,7 +11,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.sos.commons.credentialstore.common.SOSCredentialStoreArguments;
+import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
@@ -68,7 +68,7 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
     /** e.g. "OpenSSH_$version" -> OpenSSH_for_Windows_8.1. Can be null. */
     private String serverVersion;
 
-    public SSHProvider(SSHProviderArguments args, SOSCredentialStoreArguments csArgs) throws Exception {
+    public SSHProvider(SSHProviderArguments args, CredentialStoreArguments csArgs) throws Exception {
         super(args, csArgs);
 
         if (CredentialStoreResolver.resolve(getArguments(), getArguments().getPassphrase())) {
