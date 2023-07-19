@@ -93,31 +93,31 @@ public class JsonConverter {
     });
 
     @SuppressWarnings("unchecked")
-    public static <T extends IDeployObject> T readAsConvertedDeployObject(String controllerId, String objectName, String json, Class<T> clazz,
+    public static <T extends IDeployObject> T readAsConvertedDeployObject(String controllerId, String objectPath, String json, Class<T> clazz,
             String commitId, Map<String, String> releasedScripts) throws JsonParseException, JsonMappingException, IOException {
         if (commitId != null && !commitId.isEmpty()) {
             json = json.replaceAll("(\"versionId\"\\s*:\\s*\")[^\"]*\"", "$1" + commitId + "\"");
         }
         if (clazz.getName().equals("com.sos.sign.model.workflow.Workflow")) {
-            return (T) readAsConvertedWorkflow(controllerId, objectName, json, releasedScripts);
+            return (T) readAsConvertedWorkflow(controllerId, objectPath, json, releasedScripts);
         } else {
             return Globals.objectMapper.readValue(json.replaceAll("(\\$)epoch(Second|Milli)", "$1js7Epoch$2"), clazz);
         }
     }
     
-    public static com.sos.sign.model.workflow.Workflow readAsConvertedWorkflow(String controllerId, String workflowName, String json,
+    public static com.sos.sign.model.workflow.Workflow readAsConvertedWorkflow(String controllerId, String workflowPath, String json,
             Map<String, String> releasedScripts) throws JsonParseException, JsonMappingException, IOException {
 
         com.sos.sign.model.workflow.Workflow signWorkflow = Globals.objectMapper.readValue(json.replaceAll("(\\$)epoch(Second|Milli)",
                 "$1js7Epoch$2"), com.sos.sign.model.workflow.Workflow.class);
         Workflow invWorkflow = Globals.objectMapper.readValue(json, Workflow.class);
 
-        signWorkflow.setOrderPreparation(invOrderPreparationToSignOrderPreparation(invWorkflow.getOrderPreparation()));
+        signWorkflow.setOrderPreparation(invOrderPreparationToSignOrderPreparation(invWorkflow.getOrderPreparation(), workflowPath));
         
         if (signWorkflow.getInstructions() != null) {
             // at the moment the converter is only necessary to modify instructions for ForkList, AddOrder instructions
             if (hasInstructionToConvert.test(json)) {
-                convertInstructions(controllerId, workflowName, invWorkflow.getInstructions(), signWorkflow.getInstructions(), new AtomicInteger(0), OrdersHelper
+                convertInstructions(controllerId, workflowPath, invWorkflow.getInstructions(), signWorkflow.getInstructions(), new AtomicInteger(0), OrdersHelper
                         .getDailyPlanTimeZone());
             }
             if (hasCycleInstruction.test(json)) {
@@ -126,7 +126,7 @@ public class JsonConverter {
         }
         if (signWorkflow.getJobs() != null) {
             if (hasScriptIncludes.test(json)) {
-                includeScripts(workflowName, signWorkflow.getJobs(), releasedScripts);
+                includeScripts(workflowPath, signWorkflow.getJobs(), releasedScripts);
             }
             considerReturnCodeWarningsAndSubagentClusterId(invWorkflow.getJobs(), signWorkflow.getJobs());
         }
@@ -587,9 +587,10 @@ public class JsonConverter {
         return str;
     }
     
-    private static OrderPreparation invOrderPreparationToSignOrderPreparation(Requirements orderPreparation) {
+    private static OrderPreparation invOrderPreparationToSignOrderPreparation(Requirements orderPreparation, String workflowPath) {
         if (orderPreparation == null) {
-            return null;
+            orderPreparation = new Requirements();
+            //return null;
         }
         Parameters params = new Parameters();
         if (orderPreparation.getParameters() != null && orderPreparation.getParameters().getAdditionalProperties() != null) {
@@ -610,6 +611,9 @@ public class JsonConverter {
                 }
                 params.setAdditionalProperty(k, p);
             });
+        }
+        if (!params.getAdditionalProperties().containsKey("js7Workflow.path")) {
+            params.setAdditionalProperty("js7Workflow.path", new Parameter(ParameterType.String.value(), null, workflowPath)); 
         }
         return new OrderPreparation(params, orderPreparation.getAllowUndeclared());
     }
