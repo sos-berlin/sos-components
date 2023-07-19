@@ -22,7 +22,7 @@
                 </note>
             </param>
             <param name="state_transition_source"
-                   required="true"
+                   required="true">
                 <note>
                     <title>The source order state</title>
                     <p>
@@ -32,7 +32,7 @@ Possible values: failed, suspended, prompting.
             </param>
 
             <param name="state_transition_target"
-                   required="true"
+                   required="true">
                 <note>
                     <title>The target order state</title>
                     <p>
