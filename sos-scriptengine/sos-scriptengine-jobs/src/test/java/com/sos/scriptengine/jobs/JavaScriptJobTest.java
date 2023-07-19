@@ -25,13 +25,13 @@ public class JavaScriptJobTest {
     public void test() throws Exception {
         String file = "src/test/resources/jobs/javascript/JS7Job.js";
         file = "src/test/resources/jobs/javascript/JS7Job-CredentialStore.js";
+        file = "src/test/resources/jobs/javascript/JS7Job-SSHProvider.js";
 
         Map<String, Object> args = new HashMap<>();
         args.put("my_arg1", "xyz");
         args.put("my_arg2", "xyz");
-        args.put("credential_store_file", "kdbx-p.kdbx");
-        args.put("credential_store_password", "test");
-        args.put("credential_store_entry_path", "/server/SFTP/localhost");
+
+        // putCredentialStoreArguments(args);
 
         String script = SOSPath.readFile(Paths.get(file));
 
@@ -43,6 +43,12 @@ public class JavaScriptJobTest {
         LOGGER.info("###############################################");
         LOGGER.info(String.format("[RESULT]%s", result));
         h.onStop();
+    }
+
+    private void putCredentialStoreArguments(Map<String, Object> args) {
+        args.put("credential_store_file", "kdbx-p.kdbx");
+        args.put("credential_store_password", "test");
+        args.put("credential_store_entry_path", "/server/SFTP/localhost");
     }
 
 }
