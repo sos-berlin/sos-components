@@ -106,12 +106,13 @@ public class OrderStateTransition {
                 mapOfOrders.put(order.getOrderId(), order);
             }
 
-            logger.debug(mapOfOrders.size() + " orders found");
+        logger.info(mapOfOrders.size() + " " + args.getStateTransitionSource().toLowerCase() + " orders found");
             ModifyOrders modifyOrders = new ModifyOrders();
             modifyOrders.setControllerId(args.getControllerId());
 
+            String action = args.getStateTransitionTarget().toLowerCase();
             for (OrderV order : mapOfOrders.values()) {
-                logger.debug(order.getOrderId());
+                logger.info(order.getOrderId() + " " + action);
                 modifyOrders.getOrderIds().add(order.getOrderId());
             }
 
