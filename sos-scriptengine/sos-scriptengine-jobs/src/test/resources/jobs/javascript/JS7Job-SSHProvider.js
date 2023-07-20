@@ -17,11 +17,17 @@ class JS7Job extends js7.Job {
 		//log sshProvider public methods
 		//var lh = new LogHelper();
 		//lh.logPublicMethods(step.getLogger(), "sshProvider", sshProvider);
+		try {
+			sshProvider.connect();
 
-
-		sshProvider.connect();
-
-		sshProvider.disconnect();
+			step.getLogger().info("[sshProvider.getServerInfo]" + sshProvider.getServerInfo());
+		}
+		catch (e) {
+			throw e;
+		}
+		finally {
+			sshProvider.disconnect();
+		}
 
 	}
 }

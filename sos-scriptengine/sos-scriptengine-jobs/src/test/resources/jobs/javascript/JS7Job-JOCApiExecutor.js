@@ -14,9 +14,7 @@ class JS7Job extends js7.Job {
 			throw e;
 		}
 		finally {
-			if (accessToken != null) {
-				apiExecutor.logout(accessToken);
-			}
+			apiExecutor.logout(accessToken);
 			apiExecutor.close();
 		}
 

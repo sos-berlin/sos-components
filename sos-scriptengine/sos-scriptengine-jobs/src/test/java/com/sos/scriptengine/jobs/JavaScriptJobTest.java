@@ -23,9 +23,9 @@ public class JavaScriptJobTest {
     @Ignore
     @Test
     public void test() throws Exception {
-        boolean useSSHProvider = false;
+        boolean useSSHProvider = true;
         boolean useCredentialStore = false;
-        boolean useApiAxecutor = true;
+        boolean useApiAxecutor = false;
 
         Map<String, Object> args = new HashMap<>();
         args.put("my_arg1", "xyz");
