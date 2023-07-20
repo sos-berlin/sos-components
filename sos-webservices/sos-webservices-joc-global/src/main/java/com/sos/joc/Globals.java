@@ -20,7 +20,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.commons.hibernate.exception.SOSHibernateFactoryBuildException;
 import com.sos.commons.hibernate.exception.SOSHibernateOpenSessionException;
 import com.sos.commons.util.SOSShell;
@@ -90,7 +89,7 @@ public class Globals {
                 sosHibernateFactory.addClassMapping(DBLayer.getJocClassMapping());
                 sosHibernateFactory.setAutoCommit(true);
                 sosHibernateFactory.build(true);
-            } catch (SOSHibernateConfigurationException | SOSHibernateFactoryBuildException e) {
+            } catch (SOSHibernateFactoryBuildException e) {
                 sosHibernateFactory = null;
                 throw new JocConfigurationException(e);
             }

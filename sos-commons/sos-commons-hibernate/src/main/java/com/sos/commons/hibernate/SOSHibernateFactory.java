@@ -72,18 +72,18 @@ public class SOSHibernateFactory implements Serializable {
     private boolean useDefaultConfigurationProperties = true;
     private boolean readDatabaseMetaData;
 
-    public SOSHibernateFactory() throws SOSHibernateConfigurationException {
+    public SOSHibernateFactory() {
         this((String) null);
     }
 
-    public SOSHibernateFactory(Path hibernateConfigFile) throws SOSHibernateConfigurationException {
+    public SOSHibernateFactory(Path hibernateConfigFile) {
         setIdentifier(null);
         setConfigFile(hibernateConfigFile);
         initClassMapping();
         initConfigurationProperties();
     }
 
-    public SOSHibernateFactory(String hibernateConfigFile) throws SOSHibernateConfigurationException {
+    public SOSHibernateFactory(String hibernateConfigFile) {
         setIdentifier(null);
         setConfigFile(hibernateConfigFile);
         initClassMapping();
@@ -145,6 +145,13 @@ public class SOSHibernateFactory implements Serializable {
     // to override
     public void adjustConfiguration(Configuration config) {
 
+    }
+
+    public void close(SOSHibernateSession session) {
+        if (session != null) {
+            session.close();
+        }
+        close();
     }
 
     public void close() {
@@ -387,16 +394,13 @@ public class SOSHibernateFactory implements Serializable {
         configurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_AUTO_COMMIT, String.valueOf(commit));
     }
 
-    public void setConfigFile(Path hibernateConfigFile) throws SOSHibernateConfigurationException {
+    public void setConfigFile(Path hibernateConfigFile) {
         if (hibernateConfigFile != null) {
-            if (!Files.exists(hibernateConfigFile)) {
-                throw new SOSHibernateConfigurationException(String.format("hibernate config file not found: %s", hibernateConfigFile.toString()));
-            }
             configFile = Optional.of(hibernateConfigFile);
         }
     }
 
-    public void setConfigFile(String hibernateConfigFile) throws SOSHibernateConfigurationException {
+    public void setConfigFile(String hibernateConfigFile) {
         setConfigFile(hibernateConfigFile == null ? null : Paths.get(hibernateConfigFile));
     }
 
@@ -432,7 +436,11 @@ public class SOSHibernateFactory implements Serializable {
             addSQLFunctions();
 
             if (configFile.isPresent()) {
-                configuration.configure(configFile.get().toUri().toURL());
+                Path cf = configFile.get();
+                if (!Files.exists(cf)) {
+                    throw new SOSHibernateConfigurationException(String.format("hibernate config file not found: %s", cf.toString()));
+                }
+                configuration.configure(cf.toUri().toURL());
             } else {
                 configuration.configure();
             }
