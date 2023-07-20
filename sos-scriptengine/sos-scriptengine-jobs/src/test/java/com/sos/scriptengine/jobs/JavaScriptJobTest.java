@@ -25,12 +25,13 @@ public class JavaScriptJobTest {
     public void test() throws Exception {
         boolean useSSHProvider = false;
         boolean useCredentialStore = false;
+        boolean useApiAxecutor = true;
 
         Map<String, Object> args = new HashMap<>();
         args.put("my_arg1", "xyz");
         args.put("my_arg2", "xyz");
 
-        String file = getTestCase(args, useSSHProvider, useCredentialStore);
+        String file = getTestCase(args, useSSHProvider, useCredentialStore, useApiAxecutor);
         String script = SOSPath.readFile(Paths.get(file));
 
         UnitTestJobHelper<JobArguments> h = new UnitTestJobHelper<>(new JavaScriptJob(null));
@@ -43,14 +44,17 @@ public class JavaScriptJobTest {
         h.onStop();
     }
 
-    private String getTestCase(Map<String, Object> args, boolean useSSHProvider, boolean useCredentialStore) {
-        LOGGER.info(String.format("[getTestCase]useSSHProvider=%s, useCredentialStore=%s", useSSHProvider, useCredentialStore));
+    private String getTestCase(Map<String, Object> args, boolean useSSHProvider, boolean useCredentialStore, boolean useApiAxecutor) {
+        LOGGER.info(String.format("[getTestCase]useSSHProvider=%s, useCredentialStore=%s, useApiAxecutor=%s", useSSHProvider, useCredentialStore,
+                useApiAxecutor));
         String file = "src/test/resources/jobs/javascript/JS7Job.js";
         if (useSSHProvider) {
             file = "src/test/resources/jobs/javascript/JS7Job-SSHProvider.js";
             putSSHProviderArguments(args);
         } else if (useCredentialStore) {
             file = "src/test/resources/jobs/javascript/JS7Job-CredentialStore.js";
+        } else if (useApiAxecutor) {
+            file = "src/test/resources/jobs/javascript/JS7Job-JOCApiExecutor.js";
         }
         if (useCredentialStore) {// extra because can be used by the SSHProvider case too
             putCredentialStoreArguments(args);
