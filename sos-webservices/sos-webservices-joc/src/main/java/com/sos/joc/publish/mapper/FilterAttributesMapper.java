@@ -94,6 +94,9 @@ public abstract class FilterAttributesMapper {
         if (filter.getLimit() != null) {
             filterAttributes.add("limit");
         }
+        if(filter.getState() != null) {
+            filterAttributes.add("state");
+        }
         return filterAttributes;
     }
 
@@ -159,6 +162,8 @@ public abstract class FilterAttributesMapper {
                 return filter.getTimeZone();
             case "limit":
                 return filter.getLimit();
+            case "state" :
+                return DeploymentState.valueOf(filter.getState()).value();
         }
         return null;
     }
