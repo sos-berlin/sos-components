@@ -7,8 +7,6 @@ import com.sos.js7.job.OrderProcessStep;
 
 public class OrderStateTransitionJob extends Job<OrderStateTransitionJobArguments> {
 
-    private static final String RESUMED = "RESUMED";
-
     public OrderStateTransitionJob(JobContext jobContext) {
         super(jobContext);
     }
@@ -30,12 +28,12 @@ public class OrderStateTransitionJob extends Job<OrderStateTransitionJobArgument
         if (!OrderStateText.fromValue(step.getDeclaredArguments().getStateTransitionSource()).equals(OrderStateText.FAILED) && !OrderStateText
                 .fromValue(step.getDeclaredArguments().getStateTransitionSource()).equals(OrderStateText.PROMPTING) && !OrderStateText.fromValue(step
                         .getDeclaredArguments().getStateTransitionSource()).equals(OrderStateText.SUSPENDED)) {
-            throw new Exception("state_transition_source: Illegal value. Not in [FAILED|PROMPTING|SUSPENDED]");
+            throw new Exception("state_transition_source: Illegal value. Not in [FAILED|PROMPTING|INPROGRESS]");
         }
 
-        if (!OrderStateText.fromValue(step.getDeclaredArguments().getStateTransitionTarget()).equals(OrderStateText.CANCELLED) && !step
-                .getDeclaredArguments().getStateTransitionTarget().equals(RESUMED)) {
-            throw new Exception("state_transition_target: Illegal value. Not in [CANCELLED|RESUMED]");
+        if (!OrderStateText.fromValue(step.getDeclaredArguments().getStateTransitionTarget()).equals(OrderStateText.CANCELLED) && !OrderStateText
+                .fromValue(step.getDeclaredArguments().getStateTransitionTarget()).equals(OrderStateText.INPROGRESS)) {
+            throw new Exception("state_transition_target: Illegal value. Not in [CANCELLED|INPROGRESS]");
         }
         orderStateTransition.execute();
     }

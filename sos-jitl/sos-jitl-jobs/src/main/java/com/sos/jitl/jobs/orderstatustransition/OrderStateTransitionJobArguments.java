@@ -9,13 +9,14 @@ import com.sos.js7.job.JobArguments;
 
 public class OrderStateTransitionJobArguments extends JobArguments {
 
-    private JobArgument<List<String>> workflowFolders = new JobArgument<>("workflow_folders", false,new ArrayList<String>());
-    private JobArgument<List<String>> workflowSearchPatterns = new JobArgument<>("workflow_search_patterns", false,new ArrayList<String>());
-    private JobArgument<List<String>> orderSearchPatterns = new JobArgument<>("order_search_patterns", false,new ArrayList<String>());
+    private JobArgument<List<String>> workflowFolders = new JobArgument<>("workflow_folders", false, new ArrayList<String>());
+    private JobArgument<List<String>> workflowSearchPatterns = new JobArgument<>("workflow_search_patterns", false, new ArrayList<String>());
+    private JobArgument<List<String>> orderSearchPatterns = new JobArgument<>("order_search_patterns", false, new ArrayList<String>());
     private JobArgument<String> persistDuration = new JobArgument<>("persist_duration", false);
     private JobArgument<String> stateTransitionSource = new JobArgument<>("state_transition_source", true);
     private JobArgument<String> stateTransitionTarget = new JobArgument<>("state_transition_target", true);
     private JobArgument<String> controllerId = new JobArgument<>("controller_id", false);
+    private JobArgument<Integer> batchSize = new JobArgument<>("batch_size", false, 10000);
 
     public OrderStateTransitionJobArguments() {
         super(new CredentialStoreArguments());
@@ -75,6 +76,14 @@ public class OrderStateTransitionJobArguments extends JobArguments {
 
     public void setControllerId(String controllerId) {
         this.controllerId.setValue(controllerId);
+    }
+
+    public int getBatchSize() {
+        return batchSize.getValue();
+    }
+
+    public void setBatchSize(int batchSize) {
+        this.batchSize.setValue(batchSize);
     }
 
 }
