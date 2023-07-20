@@ -7,7 +7,7 @@ class JS7Job extends js7.Job {
 			accessToken = apiExecutor.login().getAccessToken();
 			step.getLogger().info("[accessToken]" + accessToken);
 
-			var response = apiExecutor.post(accessToken, "/monitoring/controllers", '{"controllerId":"js7.x"}');
+			var response = apiExecutor.post(accessToken, "/monitoring/controllers", '{"controllerId":"' + step.getControllerId() + '"}');
 			step.getLogger().info("[response.getResponseBody]" + response.getResponseBody());
 		}
 		catch (e) {
