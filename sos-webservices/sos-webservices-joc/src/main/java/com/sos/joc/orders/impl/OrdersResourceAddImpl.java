@@ -46,6 +46,7 @@ import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.AddOrder;
 import com.sos.joc.model.order.AddOrders;
 import com.sos.joc.model.order.OrderIds;
+import com.sos.joc.model.order.Position;
 import com.sos.joc.orders.resource.IOrdersResourceAdd;
 import com.sos.schema.JsonValidator;
 import com.sos.sign.model.workflow.Workflow;
@@ -58,6 +59,7 @@ import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JFreshOrder;
 import js7.data_for_java.workflow.JWorkflow;
+import js7.data_for_java.workflow.position.JBranchPath;
 import js7.data_for_java.workflow.position.JPositionOrLabel;
 import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
@@ -85,30 +87,25 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             boolean hasManagePositionsPermission = getControllerPermissions(controllerId, accessToken).getOrders().getManagePositions();
             Predicate<AddOrder> requestHasStartPositionSettings = o -> o.getStartPosition() != null;
             Predicate<AddOrder> requestHasEndPositionSettings = o -> o.getEndPositions() != null && !o.getEndPositions().isEmpty();
+            Predicate<AddOrder> requestHasBlockPositionSettings = o -> o.getBlockPosition() != null;
             if (!hasManagePositionsPermission && addOrders.getOrders().parallelStream().anyMatch(requestHasStartPositionSettings.or(
-                    requestHasEndPositionSettings))) {
-                return accessDeniedResponse("Access denied for setting start-/endpositions");
+                    requestHasEndPositionSettings).or(requestHasBlockPositionSettings))) {
+                return accessDeniedResponse("Access denied for setting start-/end-/blockpositions");
             }
-            
-            // TODO JOC-1453
-//            if (addOrders.getOrders().stream().map(AddOrder::getStartPosition).filter(Objects::nonNull).anyMatch(o -> o instanceof String)) {
-//                throw new JocNotImplementedException("The use of labels as a start position is not yet implemented");
-//            }
-//            if (addOrders.getOrders().stream().map(AddOrder::getEndPositions).filter(Objects::nonNull).anyMatch(l -> l.stream().filter(
-//                    Objects::nonNull).anyMatch(o -> o instanceof String))) {
-//                throw new JocNotImplementedException("The use of labels as end positions is not yet implemented");
-//            }
-            
             
             DBItemJocAuditLog dbAuditLog = storeAuditLog(addOrders.getAuditLog(), controllerId, CategoryType.CONTROLLER);
             
             // TODO JOC-1453
-            Set<String> workflowsWithLabels = Stream.concat(addOrders.getOrders().stream().filter(requestHasStartPositionSettings).filter(ao -> ao
-                    .getStartPosition() instanceof String).map(AddOrder::getWorkflowPath).map(JocInventory::pathToName), addOrders.getOrders().stream().filter(
-                            requestHasEndPositionSettings).filter(ao -> ao.getEndPositions().stream().filter(Objects::nonNull).anyMatch(
-                                    o -> o instanceof String)).map(AddOrder::getWorkflowPath).map(JocInventory::pathToName)).collect(Collectors.toSet());
-            
+            Set<String> workflowsWithLabels = Stream.of(
+                    addOrders.getOrders().stream().filter(requestHasStartPositionSettings).filter(ao -> ao.getStartPosition() instanceof String)
+                        .map(AddOrder::getWorkflowPath).map(JocInventory::pathToName), 
+                    addOrders.getOrders().stream().filter(requestHasEndPositionSettings).filter(ao -> ao.getEndPositions().stream().filter(Objects::nonNull)
+                        .anyMatch(o -> o instanceof String)).map(AddOrder::getWorkflowPath).map(JocInventory::pathToName), 
+                    addOrders.getOrders().stream().filter(requestHasBlockPositionSettings)
+                        .map(AddOrder::getWorkflowPath).map(JocInventory::pathToName)).flatMap(s -> s).collect(Collectors.toSet());
+
             Map<String, Map<String, List<Object>>> workflowsWithLabelsMap = new HashMap<>();
+            Map<String, Set<Position>> workflowsWithBlockPositions = new HashMap<>();
             if (!workflowsWithLabels.isEmpty()) {
                 connection = Globals.createSosHibernateStatelessConnection(API_CALL);
                 DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
@@ -124,6 +121,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                         com.sos.inventory.model.workflow.Workflow w = JocInventory.workflowContent2Workflow(dbWorkflow.getContent());
                         if (w != null) {
                             workflowsWithLabelsMap.put(dbWorkflow.getName(), WorkflowsHelper.getLabelToPositionsMap(w));
+                            workflowsWithBlockPositions.put(dbWorkflow.getName(), WorkflowsHelper.getWorkflowBlockPositions(w.getInstructions()));
                         }
                     }
                 }
@@ -154,15 +152,32 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     Workflow workflow = Globals.objectMapper.readValue(e.get().toJson(), Workflow.class);
                     order.setArguments(OrdersHelper.checkArguments(order.getArguments(), JsonConverter.signOrderPreparationToInvOrderPreparation(
                             workflow.getOrderPreparation())));
-                    Set<String> reachablePositions = CheckedAddOrdersPositions.getReachablePositions(e.get());
                     
                     Map<String, List<Object>> labelMap = workflowsWithLabelsMap.getOrDefault(workflow.getPath(), Collections.emptyMap());
-                    Optional<JPositionOrLabel> startPos = OrdersHelper.getStartPosition(order.getStartPosition(), labelMap, reachablePositions);
-                    Set<JPositionOrLabel> endPoss = OrdersHelper.getEndPosition(order.getEndPositions(), labelMap, reachablePositions);
-                    // TODO check if endPos not before startPos
-                    
                     boolean forceJobAdmission = order.getForceJobAdmission() == Boolean.TRUE;
-                    JFreshOrder o = OrdersHelper.mapToFreshOrder(order, zoneId, startPos, endPoss, forceJobAdmission);
+                    Optional<JPositionOrLabel> startPos = Optional.empty();
+                    Set<JPositionOrLabel> endPoss = Collections.emptySet();
+                    JBranchPath blockPosition = null;
+                    
+                    if (requestHasBlockPositionSettings.test(order)) {
+                        
+                        Set<Position> availableBlockPositions = workflowsWithBlockPositions.getOrDefault(workflow.getPath(), Collections.emptySet());
+                        
+                        blockPosition = OrdersHelper.getBlockPosition(order.getBlockPosition(), workflow.getPath(), availableBlockPositions);
+                        
+                        //check start-/endpositions inside block
+                        startPos = OrdersHelper.getStartPositionInBlock(order.getStartPosition(), labelMap, blockPosition);
+                        endPoss = OrdersHelper.getEndPositionInBlock(order.getEndPositions(), labelMap, blockPosition);
+                        
+                    } else {
+                        Set<String> reachablePositions = CheckedAddOrdersPositions.getReachablePositions(e.get());
+
+                        startPos = OrdersHelper.getStartPosition(order.getStartPosition(), labelMap, reachablePositions);
+                        endPoss = OrdersHelper.getEndPosition(order.getEndPositions(), labelMap, reachablePositions);
+                    }
+                    
+                    // TODO check if endPos not before startPos
+                    JFreshOrder o = OrdersHelper.mapToFreshOrder(order, zoneId, startPos, endPoss, blockPosition, forceJobAdmission);
                     auditLogDetails.add(new AuditLogDetail(WorkflowPaths.getPath(order.getWorkflowPath()), o.id().string(), controllerId));
                     either = Either.right(o);
                 } catch (Exception ex) {

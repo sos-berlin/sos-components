@@ -26,7 +26,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "deliveryDate",
     "surveyDate",
     "workflowId",
-    "positions"
+    "positions",
+    "blockPositions"
 })
 public class OrdersPositions {
 
@@ -60,6 +61,9 @@ public class OrdersPositions {
     @JsonProperty("positions")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     private Set<Position> positions = new LinkedHashSet<Position>();
+    @JsonProperty("blockPositions")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<Position> blockPositions = new LinkedHashSet<Position>();
 
     /**
      * timestamp
@@ -139,14 +143,24 @@ public class OrdersPositions {
         this.positions = positions;
     }
 
+    @JsonProperty("blockPositions")
+    public Set<Position> getBlockPositions() {
+        return blockPositions;
+    }
+
+    @JsonProperty("blockPositions")
+    public void setBlockPositions(Set<Position> blockPositions) {
+        this.blockPositions = blockPositions;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("workflowId", workflowId).append("positions", positions).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("workflowId", workflowId).append("positions", positions).append("blockPositions", blockPositions).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(positions).append(deliveryDate).append(surveyDate).append(workflowId).toHashCode();
+        return new HashCodeBuilder().append(positions).append(deliveryDate).append(surveyDate).append(workflowId).append(blockPositions).toHashCode();
     }
 
     @Override
@@ -158,7 +172,7 @@ public class OrdersPositions {
             return false;
         }
         OrdersPositions rhs = ((OrdersPositions) other);
-        return new EqualsBuilder().append(positions, rhs.positions).append(deliveryDate, rhs.deliveryDate).append(surveyDate, rhs.surveyDate).append(workflowId, rhs.workflowId).isEquals();
+        return new EqualsBuilder().append(positions, rhs.positions).append(deliveryDate, rhs.deliveryDate).append(surveyDate, rhs.surveyDate).append(workflowId, rhs.workflowId).append(blockPositions, rhs.blockPositions).isEquals();
     }
 
 }

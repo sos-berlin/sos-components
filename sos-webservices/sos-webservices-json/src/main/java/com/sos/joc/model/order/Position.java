@@ -149,7 +149,7 @@ public class Position {
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(position).append(label).append(type).append(positionString).toHashCode();
+        return new HashCodeBuilder().append(position).toHashCode();
     }
 
     @Override
@@ -161,7 +161,7 @@ public class Position {
             return false;
         }
         Position rhs = ((Position) other);
-        return new EqualsBuilder().append(position, rhs.position).append(label, rhs.label).append(type, rhs.type).append(positionString, rhs.positionString).isEquals();
+        return new EqualsBuilder().append(position, rhs.position).isEquals();
     }
 
 }

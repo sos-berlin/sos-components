@@ -31,6 +31,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "dailyPlanDate",
     "startPosition",
     "endPositions",
+    "blockPosition",
     "forceJobAdmission",
     "auditLog"
 })
@@ -101,6 +102,8 @@ public class DailyPlanModifyOrder {
     private Object startPosition;
     @JsonProperty("endPositions")
     private List<Object> endPositions = null;
+    @JsonProperty("blockPosition")
+    private Object blockPosition;
     @JsonProperty("forceJobAdmission")
     private Boolean forceJobAdmission = false;
     /**
@@ -296,6 +299,16 @@ public class DailyPlanModifyOrder {
         this.endPositions = endPositions;
     }
 
+    @JsonProperty("blockPosition")
+    public Object getBlockPosition() {
+        return blockPosition;
+    }
+
+    @JsonProperty("blockPosition")
+    public void setBlockPosition(Object blockPosition) {
+        this.blockPosition = blockPosition;
+    }
+
     @JsonProperty("forceJobAdmission")
     public Boolean getForceJobAdmission() {
         return forceJobAdmission;
@@ -330,12 +343,12 @@ public class DailyPlanModifyOrder {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("scheduledFor", scheduledFor).append("cycle", cycle).append("timeZone", timeZone).append("variables", variables).append("removeVariables", removeVariables).append("orderIds", orderIds).append("dailyPlanDate", dailyPlanDate).append("startPosition", startPosition).append("endPositions", endPositions).append("forceJobAdmission", forceJobAdmission).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("scheduledFor", scheduledFor).append("cycle", cycle).append("timeZone", timeZone).append("variables", variables).append("removeVariables", removeVariables).append("orderIds", orderIds).append("dailyPlanDate", dailyPlanDate).append("startPosition", startPosition).append("endPositions", endPositions).append("blockPosition", blockPosition).append("forceJobAdmission", forceJobAdmission).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(variables).append(removeVariables).append(dailyPlanDate).append(controllerId).append(auditLog).append(timeZone).append(cycle).append(startPosition).append(endPositions).append(scheduledFor).append(forceJobAdmission).append(orderIds).toHashCode();
+        return new HashCodeBuilder().append(variables).append(removeVariables).append(dailyPlanDate).append(controllerId).append(auditLog).append(blockPosition).append(timeZone).append(cycle).append(startPosition).append(endPositions).append(scheduledFor).append(forceJobAdmission).append(orderIds).toHashCode();
     }
 
     @Override
@@ -347,7 +360,7 @@ public class DailyPlanModifyOrder {
             return false;
         }
         DailyPlanModifyOrder rhs = ((DailyPlanModifyOrder) other);
-        return new EqualsBuilder().append(variables, rhs.variables).append(removeVariables, rhs.removeVariables).append(dailyPlanDate, rhs.dailyPlanDate).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(timeZone, rhs.timeZone).append(cycle, rhs.cycle).append(startPosition, rhs.startPosition).append(endPositions, rhs.endPositions).append(scheduledFor, rhs.scheduledFor).append(forceJobAdmission, rhs.forceJobAdmission).append(orderIds, rhs.orderIds).isEquals();
+        return new EqualsBuilder().append(variables, rhs.variables).append(removeVariables, rhs.removeVariables).append(dailyPlanDate, rhs.dailyPlanDate).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(blockPosition, rhs.blockPosition).append(timeZone, rhs.timeZone).append(cycle, rhs.cycle).append(startPosition, rhs.startPosition).append(endPositions, rhs.endPositions).append(scheduledFor, rhs.scheduledFor).append(forceJobAdmission, rhs.forceJobAdmission).append(orderIds, rhs.orderIds).isEquals();
     }
 
 }
