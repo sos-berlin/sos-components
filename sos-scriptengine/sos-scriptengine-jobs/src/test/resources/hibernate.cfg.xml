@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hibernate-configuration>
+	<session-factory>
+		<property name="hibernate.dialect">org.hibernate.dialect.MySQLInnoDBDialect
+		</property>
+		<property name="hibernate.connection.driver_class">org.mariadb.jdbc.Driver</property>
+		<property name="hibernate.connection.url">jdbc:mysql://localhost:3306/js7_x?serverTimezone=UTC
+		</property>
+		<property name="hibernate.connection.username">scheduler</property>
+		<property name="hibernate.connection.password">scheduler</property>
+
+		<property name="hibernate.show_sql">false</property>
+		<property name="hibernate.connection.autocommit">false</property>
+		<property name="hibernate.format_sql">true</property>
+		<property name="hibernate.temp.use_jdbc_metadata_defaults">false</property>
+
+		<!-- Hikari Connection Pool -->
+		<property name="hibernate.connection.provider_class">org.hibernate.hikaricp.internal.HikariCPConnectionProvider
+		</property>
+		<property name="hibernate.hikari.maximumPoolSize">10</property>
+
+	</session-factory>
+</hibernate-configuration>
