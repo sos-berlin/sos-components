@@ -487,6 +487,7 @@ public class SOSServicePermissionIam {
             try {
                 secondFactorSuccess = SOSSecondFactorHandler.checkSecondFactor(currentAccount, dbItemIdentityService.getIdentityServiceName());
                 if (secondFactorSuccess != null && !secondFactorSuccess) {
+                    LOGGER.info("Login: second factor failed");
                     sosAuthSubject = null;
                 }
             } catch (JocObjectNotExistException | JocAuthenticationException e) {
