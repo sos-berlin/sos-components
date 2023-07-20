@@ -1,9 +1,9 @@
 package com.sos.jitl.jobs.examples;
 
-import com.sos.jitl.jobs.jocapi.ApiExecutor;
-import com.sos.jitl.jobs.jocapi.ApiResponse;
 import com.sos.js7.job.Job;
 import com.sos.js7.job.OrderProcessStep;
+import com.sos.js7.job.jocapi.ApiExecutor;
+import com.sos.js7.job.jocapi.ApiResponse;
 
 public class JocApiJob extends Job<JocApiJobArguments> {
 
