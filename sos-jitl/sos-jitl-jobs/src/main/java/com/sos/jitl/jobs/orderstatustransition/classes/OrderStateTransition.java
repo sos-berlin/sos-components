@@ -1,9 +1,9 @@
 package com.sos.jitl.jobs.orderstatustransition.classes;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.sos.jitl.jobs.orderstatustransition.OrderStateTransitionJobArguments;
 import com.sos.joc.model.common.Folder;
@@ -18,7 +18,7 @@ import com.sos.js7.job.jocapi.ApiResponse;
 
 public class OrderStateTransition {
 
-    private static final String RESUMED = "RESUMED";
+    private static final String INPROGRESS = "INPROGRESS";
     private static final String CANCELLED = "CANCELLED";
     private OrderProcessStepLogger logger;
     private OrderStateTransitionJobArguments args;
@@ -100,32 +100,46 @@ public class OrderStateTransition {
                 listOfOrders.addAll(list.getOrders());
             }
 
-            Map<String, OrderV> mapOfOrders = new HashMap<String, OrderV>();
+            Map<String, OrderV> mapOfOrders = new ConcurrentHashMap<String, OrderV>();
 
             for (OrderV order : listOfOrders) {
                 mapOfOrders.put(order.getOrderId(), order);
             }
 
-        logger.info(mapOfOrders.size() + " " + args.getStateTransitionSource().toLowerCase() + " orders found");
+            logger.info(mapOfOrders.size() + " " + args.getStateTransitionSource().toLowerCase() + " orders found");
             ModifyOrders modifyOrders = new ModifyOrders();
             modifyOrders.setControllerId(args.getControllerId());
 
+            int count = mapOfOrders.size();
             String action = args.getStateTransitionTarget().toLowerCase();
-            for (OrderV order : mapOfOrders.values()) {
-                logger.info(order.getOrderId() + " " + action);
-                modifyOrders.getOrderIds().add(order.getOrderId());
-            }
 
-            switch (args.getStateTransitionTarget()) {
-            case CANCELLED:
-                orderStateWebserviceExecuter.cancelOrder(modifyOrders, accessToken);
-                break;
-            case RESUMED:
-                orderStateWebserviceExecuter.resumeOrder(modifyOrders, accessToken);
-                break;
-            default:
-                break;
-            }
+            do {
+                for (OrderV order : mapOfOrders.values()) {
+                    modifyOrders.getOrderIds().add(order.getOrderId());
+                    mapOfOrders.remove(order.getOrderId());
+                    if (modifyOrders.getOrderIds().size() >= args.getBatchSize()) {
+                        break;
+                    }
+                }
+                count = count - modifyOrders.getOrderIds().size();
+
+                logger.info(" ");
+                switch (args.getStateTransitionTarget()) {
+                case CANCELLED:
+                    orderStateWebserviceExecuter.cancelOrder(modifyOrders, accessToken);
+                    break;
+                case INPROGRESS:
+                    orderStateWebserviceExecuter.resumeOrder(modifyOrders, accessToken);
+                    break;
+                default:
+                    break;
+                }
+                logger.info(modifyOrders.getOrderIds().size() + " orders " + action);
+                for (String order : modifyOrders.getOrderIds()) {
+                    logger.info(order + " " + action);
+                }
+                modifyOrders.getOrderIds().clear();
+            } while (count > 0);
 
         } catch (Exception e) {
             logger.error(e);
