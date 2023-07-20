@@ -23,16 +23,14 @@ public class JavaScriptJobTest {
     @Ignore
     @Test
     public void test() throws Exception {
-        String file = "src/test/resources/jobs/javascript/JS7Job.js";
-        file = "src/test/resources/jobs/javascript/JS7Job-CredentialStore.js";
-        file = "src/test/resources/jobs/javascript/JS7Job-SSHProvider.js";
+        boolean useSSHProvider = false;
+        boolean useCredentialStore = false;
 
         Map<String, Object> args = new HashMap<>();
         args.put("my_arg1", "xyz");
         args.put("my_arg2", "xyz");
 
-        // putCredentialStoreArguments(args);
-
+        String file = getTestCase(args, useSSHProvider, useCredentialStore);
         String script = SOSPath.readFile(Paths.get(file));
 
         UnitTestJobHelper<JobArguments> h = new UnitTestJobHelper<>(new JavaScriptJob(null));
@@ -45,10 +43,33 @@ public class JavaScriptJobTest {
         h.onStop();
     }
 
+    private String getTestCase(Map<String, Object> args, boolean useSSHProvider, boolean useCredentialStore) {
+        LOGGER.info(String.format("[getTestCase]useSSHProvider=%s, useCredentialStore=%s", useSSHProvider, useCredentialStore));
+        String file = "src/test/resources/jobs/javascript/JS7Job.js";
+        if (useSSHProvider) {
+            file = "src/test/resources/jobs/javascript/JS7Job-SSHProvider.js";
+            putSSHProviderArguments(args);
+        } else if (useCredentialStore) {
+            file = "src/test/resources/jobs/javascript/JS7Job-CredentialStore.js";
+        }
+        if (useCredentialStore) {// extra because can be used by the SSHProvider case too
+            putCredentialStoreArguments(args);
+        }
+        LOGGER.info(String.format("[getTestCase][file]%s", file));
+        return file;
+    }
+
     private void putCredentialStoreArguments(Map<String, Object> args) {
         args.put("credential_store_file", "kdbx-p.kdbx");
         args.put("credential_store_password", "test");
         args.put("credential_store_entry_path", "/server/SFTP/localhost");
     }
 
+    private void putSSHProviderArguments(Map<String, Object> args) {
+        args.put("host", "localhost");
+        args.put("port", 22);
+        args.put("auth_method", "password");
+        args.put("user", "sos");
+        args.put("password", "sos");
+    }
 }

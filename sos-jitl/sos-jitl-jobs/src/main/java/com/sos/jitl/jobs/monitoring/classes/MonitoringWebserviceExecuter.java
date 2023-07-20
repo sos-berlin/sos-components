@@ -4,8 +4,6 @@ import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.exception.SOSException;
-import com.sos.jitl.jobs.jocapi.ApiExecutor;
-import com.sos.jitl.jobs.jocapi.ApiResponse;
 import com.sos.joc.model.agent.AgentV;
 import com.sos.joc.model.agent.AgentsV;
 import com.sos.joc.model.agent.ReadAgentsV;
@@ -27,6 +25,8 @@ import com.sos.joc.model.order.OrdersSnapshot;
 import com.sos.joc.model.order.OrdersSummary;
 import com.sos.js7.job.JobHelper;
 import com.sos.js7.job.OrderProcessStepLogger;
+import com.sos.js7.job.jocapi.ApiExecutor;
+import com.sos.js7.job.jocapi.ApiResponse;
 
 public class MonitoringWebserviceExecuter {
 

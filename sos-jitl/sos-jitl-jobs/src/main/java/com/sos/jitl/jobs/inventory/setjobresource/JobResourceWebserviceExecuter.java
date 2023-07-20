@@ -10,8 +10,6 @@ import java.util.List;
 
 import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.jobresource.JobResource;
-import com.sos.jitl.jobs.jocapi.ApiExecutor;
-import com.sos.jitl.jobs.jocapi.ApiResponse;
 import com.sos.joc.model.controller.ControllerIds;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.read.RequestFilter;
@@ -21,6 +19,8 @@ import com.sos.joc.model.publish.DeployFilter;
 import com.sos.joc.model.publish.DeployablesValidFilter;
 import com.sos.js7.job.JobHelper;
 import com.sos.js7.job.OrderProcessStepLogger;
+import com.sos.js7.job.jocapi.ApiExecutor;
+import com.sos.js7.job.jocapi.ApiResponse;
 
 public class JobResourceWebserviceExecuter {
 

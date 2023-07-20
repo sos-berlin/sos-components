@@ -9,14 +9,14 @@ import com.sos.jitl.jobs.checkhistory.classes.HistoryFilter;
 import com.sos.jitl.jobs.checkhistory.classes.HistoryItem;
 import com.sos.jitl.jobs.checkhistory.classes.HistoryWebserviceExecuter;
 import com.sos.jitl.jobs.checkhistory.classes.ParameterResolver;
-import com.sos.jitl.jobs.jocapi.ApiExecutor;
-import com.sos.jitl.jobs.jocapi.ApiResponse;
 import com.sos.joc.model.common.HistoryStateText;
 import com.sos.joc.model.job.JobsFilter;
 import com.sos.joc.model.job.TaskHistory;
 import com.sos.joc.model.order.OrderHistory;
 import com.sos.joc.model.order.OrdersFilter;
 import com.sos.js7.job.OrderProcessStepLogger;
+import com.sos.js7.job.jocapi.ApiExecutor;
+import com.sos.js7.job.jocapi.ApiResponse;
 
 public class HistoryInfo {
 

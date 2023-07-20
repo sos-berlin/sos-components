@@ -1,4 +1,4 @@
-package com.sos.jitl.jobs.jocapi;
+package com.sos.js7.job.jocapi;
 
 public class ApiResponse {
 
