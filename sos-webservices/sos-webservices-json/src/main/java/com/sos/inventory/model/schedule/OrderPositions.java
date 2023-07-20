@@ -19,7 +19,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "startPosition",
-    "endPositions"
+    "endPositions",
+    "blockPosition"
 })
 public class OrderPositions {
 
@@ -27,6 +28,8 @@ public class OrderPositions {
     private Object startPosition;
     @JsonProperty("endPositions")
     private List<Object> endPositions = null;
+    @JsonProperty("blockPosition")
+    private Object blockPosition;
 
     @SuppressWarnings("unchecked")
     @JsonProperty("startPosition")
@@ -56,14 +59,32 @@ public class OrderPositions {
         this.endPositions = endPositions;
     }
 
+    @SuppressWarnings("unchecked")
+    @JsonProperty("blockPosition")
+    public Object getBlockPosition() {
+        if (blockPosition != null) {
+            if (blockPosition instanceof String && ((String) blockPosition).isEmpty()) {
+                return null;
+            } else if (blockPosition instanceof List<?> && ((List<Object>) blockPosition).isEmpty()) {
+                return null;
+            }
+        }
+        return blockPosition;
+    }
+
+    @JsonProperty("blockPosition")
+    public void setBlockPosition(Object blockPosition) {
+        this.blockPosition = blockPosition;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("startPosition", startPosition).append("endPositions", endPositions).toString();
+        return new ToStringBuilder(this).append("startPosition", startPosition).append("endPositions", endPositions).append("blockPosition", blockPosition).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(startPosition).append(endPositions).toHashCode();
+        return new HashCodeBuilder().append(endPositions).append(startPosition).append(blockPosition).toHashCode();
     }
 
     @Override
@@ -75,7 +96,7 @@ public class OrderPositions {
             return false;
         }
         OrderPositions rhs = ((OrderPositions) other);
-        return new EqualsBuilder().append(startPosition, rhs.startPosition).append(endPositions, rhs.endPositions).isEquals();
+        return new EqualsBuilder().append(endPositions, rhs.endPositions).append(startPosition, rhs.startPosition).append(blockPosition, rhs.blockPosition).isEquals();
     }
 
 }

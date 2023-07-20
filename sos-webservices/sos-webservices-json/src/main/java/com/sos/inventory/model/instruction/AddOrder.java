@@ -26,6 +26,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "remainWhenTerminated",
     "startPosition",
     "endPositions",
+    "blockPosition",
     "forceJobAdmission"
 })
 public class AddOrder
@@ -57,6 +58,8 @@ public class AddOrder
     private Object startPosition;
     @JsonProperty("endPositions")
     private List<Object> endPositions = null;
+    @JsonProperty("blockPosition")
+    private Object blockPosition;
     @JsonProperty("forceJobAdmission")
     private Boolean forceJobAdmission = false;
 
@@ -70,19 +73,21 @@ public class AddOrder
     /**
      * 
      * @param endPositions
+     * @param blockPosition
      * @param forceJobAdmission
      * @param workflowName
      * @param arguments
      * @param remainWhenTerminated
      * @param startPosition
      */
-    public AddOrder(String workflowName, Variables arguments, Boolean remainWhenTerminated, Object startPosition, List<Object> endPositions, Boolean forceJobAdmission) {
+    public AddOrder(String workflowName, Variables arguments, Boolean remainWhenTerminated, Object startPosition, List<Object> endPositions, Object blockPosition, Boolean forceJobAdmission) {
         super();
         this.workflowName = workflowName;
         this.arguments = arguments;
         this.remainWhenTerminated = remainWhenTerminated;
         this.startPosition = startPosition;
         this.endPositions = endPositions;
+        this.blockPosition = blockPosition;
         this.forceJobAdmission = forceJobAdmission;
     }
 
@@ -166,6 +171,24 @@ public class AddOrder
         this.endPositions = endPositions;
     }
 
+    @SuppressWarnings("unchecked")
+    @JsonProperty("blockPosition")
+    public Object getBlockPosition() {
+        if (blockPosition != null) {
+            if (blockPosition instanceof String && ((String) blockPosition).isEmpty()) {
+                return null;
+            } else if (blockPosition instanceof List<?> && ((List<Object>) blockPosition).isEmpty()) {
+                return null;
+            }
+        }
+        return blockPosition;
+    }
+
+    @JsonProperty("blockPosition")
+    public void setBlockPosition(Object blockPosition) {
+        this.blockPosition = blockPosition;
+    }
+
     @JsonProperty("forceJobAdmission")
     public Boolean getForceJobAdmission() {
         return forceJobAdmission;
@@ -178,12 +201,12 @@ public class AddOrder
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("workflowName", workflowName).append("arguments", arguments).append("remainWhenTerminated", remainWhenTerminated).append("startPosition", startPosition).append("endPositions", endPositions).append("forceJobAdmission", forceJobAdmission).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("workflowName", workflowName).append("arguments", arguments).append("remainWhenTerminated", remainWhenTerminated).append("startPosition", startPosition).append("endPositions", endPositions).append("blockPosition", blockPosition).append("forceJobAdmission", forceJobAdmission).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(endPositions).append(forceJobAdmission).append(workflowName).append(arguments).append(remainWhenTerminated).append(startPosition).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(endPositions).append(blockPosition).append(forceJobAdmission).append(workflowName).append(arguments).append(remainWhenTerminated).append(startPosition).toHashCode();
     }
 
     @Override
@@ -195,7 +218,7 @@ public class AddOrder
             return false;
         }
         AddOrder rhs = ((AddOrder) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(endPositions, rhs.endPositions).append(forceJobAdmission, rhs.forceJobAdmission).append(workflowName, rhs.workflowName).append(arguments, rhs.arguments).append(remainWhenTerminated, rhs.remainWhenTerminated).append(startPosition, rhs.startPosition).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(endPositions, rhs.endPositions).append(blockPosition, rhs.blockPosition).append(forceJobAdmission, rhs.forceJobAdmission).append(workflowName, rhs.workflowName).append(arguments, rhs.arguments).append(remainWhenTerminated, rhs.remainWhenTerminated).append(startPosition, rhs.startPosition).isEquals();
     }
 
 }

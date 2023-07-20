@@ -2,6 +2,7 @@ package com.sos.joc.classes.order;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -10,10 +11,20 @@ import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.workflow.WorkflowId;
+import com.sos.inventory.model.deploy.DeployType;
+import com.sos.inventory.model.instruction.Instruction;
+import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.inventory.WorkflowConverter;
 import com.sos.joc.classes.workflow.WorkflowPaths;
+import com.sos.joc.classes.workflow.WorkflowsHelper;
+import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
+import com.sos.joc.db.deploy.DeployedConfigurationFilter;
+import com.sos.joc.db.deploy.items.DeployedContent;
+import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.model.common.Folder;
@@ -39,13 +50,13 @@ public class CheckedAddOrdersPositions extends OrdersPositions {
     }
     
     @JsonIgnore
-    public CheckedAddOrdersPositions get(WorkflowId workflowId, JControllerState currentState, Set<Folder> permittedFolders)
+    public CheckedAddOrdersPositions get(WorkflowId workflowId, String controllerId, JControllerState currentState, Set<Folder> permittedFolders)
             throws JsonParseException, JsonMappingException, IOException, JocException {
-        return get(workflowId, currentState, permittedFolders, null);
+        return get(workflowId, controllerId, currentState, permittedFolders, null);
     }
     
     @JsonIgnore
-    public CheckedAddOrdersPositions get(WorkflowId workflowId, JControllerState currentState, Set<Folder> permittedFolders,
+    public CheckedAddOrdersPositions get(WorkflowId workflowId, String controllerId, JControllerState currentState, Set<Folder> permittedFolders,
             List<Object> afterPosition) throws JsonParseException, JsonMappingException, IOException, JocException {
 
         WorkflowPath wPath = WorkflowPath.of(JocInventory.pathToName(workflowId.getPath()));
@@ -67,11 +78,6 @@ public class CheckedAddOrdersPositions extends OrdersPositions {
         JWorkflow w = e.get();
 //        final JPosition afterPos = getAfterPos(afterPosition);
         
-        // JsonNode node = Globals.objectMapper.readTree(e.get().withPositions().toJson());
-        // List<Instruction> instructions = Globals.objectMapper.reader().forType(new TypeReference<List<Instruction>>() {}).readValue(node.get("instructions"));
-        // List<Instruction> instructions = Arrays.asList(Globals.objectMapper.reader().treeToValue(node.get("instructions"), Instruction[].class));
-        //Set<String> implicitEnds = WorkflowsHelper.extractImplicitEnds(instructions);
-
         final Set<Position> pos = new LinkedHashSet<>();
         JPosition pos0 = JPosition.apply(js7.data.workflow.position.Position.First());
         
@@ -95,6 +101,7 @@ public class CheckedAddOrdersPositions extends OrdersPositions {
             pos.add(p);
         }
         setPositions(pos);
+        setBlockPositions(getBlockPositions(w, controllerId));
 
         setDeliveryDate(Date.from(Instant.now()));
         setSurveyDate(Date.from(currentState.instant()));
@@ -118,6 +125,32 @@ public class CheckedAddOrdersPositions extends OrdersPositions {
         return pos;
     }
     
+    @JsonIgnore
+    public static Set<Position> getBlockPositions(JWorkflow workflow, String controllerId) throws IOException {
+        return WorkflowsHelper.getWorkflowBlockPositions(getInstructions(workflow, controllerId));
+    }
+    
+    @JsonIgnore
+    private static List<Instruction> getInstructions(JWorkflow workflow, String controllerId) throws IOException {
+        SOSHibernateSession connection = null;
+        try {
+            connection = Globals.createSosHibernateStatelessConnection("./orders/add/positions");
+            DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
+            DeployedConfigurationFilter dbFilter = new DeployedConfigurationFilter();
+            dbFilter.setControllerId(controllerId);
+            dbFilter.setNames(Collections.singleton(workflow.id().path().string()));
+            dbFilter.setObjectTypes(Collections.singleton(DeployType.WORKFLOW.intValue()));
+            List<DeployedContent> dbWorkflows = dbLayer.getDeployedInventory(dbFilter);
+            if (dbWorkflows != null && !dbWorkflows.isEmpty() && dbWorkflows.get(0).getContent() != null) {
+                return JocInventory.workflowContent2Workflow(dbWorkflows.get(0).getContent()).getInstructions();
+            } else {
+                throw new DBMissingDataException("Couldn't find workflow '" + workflow.id().path().string() + "' as deployed object in database");
+            }
+        } finally {
+            Globals.disconnect(connection);
+        }
+    }
+    
 //  @JsonIgnore
 //  private static JPosition getAfterPos(List<Object> afterPosition) {
 //      if (afterPosition != null) {
@@ -132,7 +165,7 @@ public class CheckedAddOrdersPositions extends OrdersPositions {
         // only root level position or first level inside a "(re)try" or "if" instruction
 
         List<Object> posA = jPos.toList();
-        return posA.size() == 1 || (posA.size() == 3 && (((String) posA.get(1)).contains("try") || ((String) posA.get(1)).equals("if")
+        return posA.size() == 1 || (posA.size() == 3 && (((String) posA.get(1)).contains("try") || ((String) posA.get(1)).equals("then")
                 || ((String) posA.get(1)).equals("options")));
     }
     

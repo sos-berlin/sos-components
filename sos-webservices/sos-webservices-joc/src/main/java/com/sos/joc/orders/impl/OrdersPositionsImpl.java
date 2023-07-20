@@ -66,8 +66,8 @@ public class OrdersPositionsImpl extends JOCResourceImpl implements IOrdersPosit
                 return jocDefaultResponse;
             }
 
-            CheckedAddOrdersPositions entity = new CheckedAddOrdersPositions().get(workflowFilter.getWorkflowId(), Proxy.of(controllerId)
-                    .currentState(), folderPermissions.getListOfFolders());
+            CheckedAddOrdersPositions entity = new CheckedAddOrdersPositions().get(workflowFilter.getWorkflowId(), controllerId, Proxy.of(
+                    controllerId).currentState(), folderPermissions.getListOfFolders());
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
 

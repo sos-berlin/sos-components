@@ -117,6 +117,7 @@ import js7.data_for_java.order.JOrderObstacle;
 import js7.data_for_java.order.JOrderPredicates;
 import js7.data_for_java.workflow.JWorkflow;
 import js7.data_for_java.workflow.JWorkflowId;
+import js7.data_for_java.workflow.position.JBranchPath;
 import js7.data_for_java.workflow.position.JPosition;
 import js7.data_for_java.workflow.position.JPositionOrLabel;
 import js7.proxy.javaapi.JControllerApi;
@@ -781,7 +782,7 @@ public class OrdersHelper {
         if (temporaryOrderIds.isEmpty()) {
             return result;
         }
-        String controllerId = dailyplanModifyOrder.getControllerId();
+        final String controllerId = dailyplanModifyOrder.getControllerId();
         Instant now = Instant.now();
         List<AuditLogDetail> auditLogDetails = new ArrayList<>();
         
@@ -855,13 +856,43 @@ public class OrdersHelper {
                     cancelOrders(proxy.api(), modifyOrders, freshOrders.keySet()).thenAccept(either2 -> {
                         ProblemHelper.postProblemEventIfExist(either2, accessToken, jocError, controllerId);
                         if (either2.isRight()) {
+                            // TODO check if really all orders are cancelled. Only then the same orderId can be used fro addOrders(...)
+                            
+//                            try {
+//                                for (int i = 0; i < 10; i++) {
+//                                    try {
+//                                        TimeUnit.SECONDS.sleep(1L);
+//                                        if (i < 9 && !proxy.currentState().orderIds().stream().anyMatch(o -> freshOrders.keySet().contains(o))) {
+//                                            // all orders are cancelled
+//                                            break;
+//                                        }
+//                                        if (i == 9) {
+//                                            Set<OrderId> oIds = proxy.currentState().orderIds();
+//                                            oIds.retainAll(freshOrders.keySet());
+//                                            if (oIds.isEmpty()) {
+//                                                // all orders are cancelled
+//                                                break;
+//                                            }
+//                                            // addOrders not possible for retained oIds because not cancelled
+//                                            // throw Problem
+//                                            if (!oIds.isEmpty()) {
+//                                                oIds.forEach(o -> freshOrders.remove(o));
+//                                                Either<Problem, Void> e = Either.left(Problem.pure("The Orders " + oIds.toString()
+//                                                        + " cannot be modified because they could not be deleted before within 10 seconds."));
+//                                                ProblemHelper.postProblemEventIfExist(e, accessToken, jocError, controllerId);
+//                                            }
+//                                        }
+//                                    } catch (Exception e) {
+//                                        //
+//                                    }
+//                                }
+//                            } catch (Exception e) {
+//                                //
+//                            }
+                            
                             proxy.api().addOrders(Flux.fromIterable(freshOrders.values())).thenAccept(either3 -> {
                                 ProblemHelper.postProblemEventIfExist(either3, accessToken, jocError, controllerId);
                                 if (either3.isRight()) {
-                                    // proxy.api().deleteOrdersWhenTerminated(Flux.fromStream(freshOrders.values().stream().map(JFreshOrder::id)))
-                                    // .thenAccept(either4 -> ProblemHelper.postProblemEventIfExist(either4, accessToken, jocError,
-                                    // controllerId));
-                                    // auditlog is written even deleteOrdersWhenTerminated has a problem
                                     storeAuditLogDetails(auditLogDetails, auditlogId).thenAccept(either5 -> ProblemHelper.postExceptionEventIfExist(
                                             either5, accessToken, jocError, controllerId));
                                 }
@@ -933,7 +964,7 @@ public class OrdersHelper {
     }
 
     public static JFreshOrder mapToFreshOrder(AddOrder order, ZoneId zoneId, Optional<JPositionOrLabel> startPos, Set<JPositionOrLabel> endPoss,
-            boolean forceJobAdmission) {
+            JBranchPath blockPosition, boolean forceJobAdmission) {
         if (zoneId == null) {
             zoneId = getDailyPlanTimeZone();
         }
@@ -944,12 +975,15 @@ public class OrdersHelper {
         // scheduledFor = Optional.of(Instant.now());
         // }
         return mapToFreshOrder(OrderId.of(orderId), WorkflowPath.of(JocInventory.pathToName(order.getWorkflowPath())),
-                variablesToScalaValuedArguments(order.getArguments()), scheduledFor, startPos, endPoss, forceJobAdmission);
+                variablesToScalaValuedArguments(order.getArguments()), scheduledFor, startPos, endPoss, blockPosition, forceJobAdmission);
     }
 
     private static JFreshOrder mapToFreshOrder(OrderId orderId, WorkflowPath workflowPath, Map<String, Value> args, Optional<Instant> scheduledFor,
-            Optional<JPositionOrLabel> startPos, Set<JPositionOrLabel> endPoss, boolean forceJobAdmission) {
-        return JFreshOrder.of(orderId, workflowPath, scheduledFor, args, true, forceJobAdmission, startPos, endPoss);
+            Optional<JPositionOrLabel> startPos, Set<JPositionOrLabel> endPoss, JBranchPath blockPosition, boolean forceJobAdmission) {
+        if (blockPosition == null) {
+            blockPosition = JBranchPath.empty();
+        }
+        return JFreshOrder.of(orderId, workflowPath, scheduledFor, args, true, forceJobAdmission, blockPosition, startPos, endPoss);
     }
 
     public static Map<String, Value> variablesToScalaValuedArguments(Variables vars) {
@@ -1246,7 +1280,7 @@ public class OrdersHelper {
             Either<Problem, JPosition> posE = JPosition.fromList(pos);
             ProblemHelper.throwProblemIfExist(posE);
             if (!JPosition.apply(Position.First()).equals(posE.get())) {
-                if (reachablePositions.contains(posE.get().toString())) {
+                if (reachablePositions == null || reachablePositions.contains(posE.get().toString())) {
                     return Optional.of(posE.get());
                 } else {
                     throw new JocBadRequestException("Invalid start position '" + pos.toString() + "'");
@@ -1272,11 +1306,12 @@ public class OrdersHelper {
             for (List<Object> pos : poss) {
                 Either<Problem, JPosition> posE = JPosition.fromList(pos);
                 ProblemHelper.throwProblemIfExist(posE);
-                if (reachablePositions.contains(posE.get().toString())) {
-                    posOpt.add(posE.get());
-                } else {
-                    throw new JocBadRequestException("Invalid end position '" + pos.toString() + "'");
-                }
+                // endpositions are arbitrary or not?
+//                if (reachablePositions.contains(posE.get().toString())) {
+//                    posOpt.add(posE.get());
+//                } else {
+//                    throw new JocBadRequestException("Invalid end position '" + pos.toString() + "'");
+//                }
             }
         } else {
             if (!defaultPositions.isEmpty()) {
@@ -1315,6 +1350,56 @@ public class OrdersHelper {
             LOGGER.warn("DailyPlan timezone is invalid. Etc/UTC is used as fallback.", e);
             return ZoneId.of("Etc/UTC");
         }
+    }
+
+    public static JBranchPath getBlockPosition(Object blockPosition, String workflowName, Set<com.sos.joc.model.order.Position> availableBlockPositions) {
+        Optional<List<Object>> listBlockPosOpt = Optional.empty();
+        if (blockPosition instanceof String) {
+            String strBlockPos = (String) blockPosition;
+            listBlockPosOpt = availableBlockPositions.stream().filter(p -> p.getLabel() != null).filter(p -> p.getLabel().equals(strBlockPos))
+                    .findAny().map(com.sos.joc.model.order.Position::getPosition);
+            if (!listBlockPosOpt.isPresent()) {
+                throw new JocBadRequestException("Workflow '" + workflowName + "' doesn't contain the block position '" + strBlockPos + "'");
+            }
+        } else if (blockPosition instanceof List<?>) {
+            @SuppressWarnings("unchecked")
+            List<Object> listBlockPos = (List<Object>) blockPosition;
+            listBlockPosOpt = availableBlockPositions.stream().filter(p -> p.getPosition().equals(listBlockPos)).findAny().map(
+                    com.sos.joc.model.order.Position::getPosition);
+            if (!listBlockPosOpt.isPresent()) {
+                throw new JocBadRequestException("Workflow '" + workflowName + "' doesn't contain the block position '" + listBlockPos.toString()
+                        + "'");
+            }
+        }
+        Either<Problem, JBranchPath> eBranchPath = JBranchPath.fromList(listBlockPosOpt.get());
+        if (eBranchPath.isLeft()) {
+            throw new JocBadRequestException("The block position '" + listBlockPosOpt.get().toString() + "' has wrong syntax: " + eBranchPath
+                    .getLeft().message());
+        }
+        return eBranchPath.get();
+    }
+
+    public static Optional<JPositionOrLabel> getStartPositionInBlock(Object pos, Map<String, List<Object>> labelMap, JBranchPath blockPosition) {
+        Optional<JPositionOrLabel> posOpt = getStartPosition(pos, labelMap, null);
+        if (posOpt.isPresent() && blockPosition != null && !posOpt.get().toString().startsWith(blockPosition.toString() + ":")) {
+            throw new JocBadRequestException("Invalid start position '" + pos.toString() + "': It has to be inside the block '" + blockPosition
+                    .toString() + "'.");
+        }
+        return posOpt;
+    }
+    
+    public static Set<JPositionOrLabel> getEndPositionInBlock(List<Object> poss, Map<String, List<Object>> labelMap, JBranchPath blockPosition) {
+        Set<JPositionOrLabel> endPoss = getEndPosition(poss, labelMap, null);
+        // endpositions are arbitrary or not?
+        if (endPoss != null && blockPosition != null) {
+            endPoss.forEach(pos -> {
+                if (!pos.toString().startsWith(blockPosition.toString() + ":")) {
+                    throw new JocBadRequestException("Invalid end position '" + pos.toString() + "': It has to be inside the block '" + blockPosition
+                            .toString() + "'.");
+                }
+            });
+        }
+        return endPoss;
     }
 
 }
