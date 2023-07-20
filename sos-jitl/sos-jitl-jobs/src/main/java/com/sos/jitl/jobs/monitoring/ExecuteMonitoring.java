@@ -12,8 +12,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.sos.commons.exception.SOSException;
-import com.sos.jitl.jobs.jocapi.ApiExecutor;
-import com.sos.jitl.jobs.jocapi.ApiResponse;
 import com.sos.jitl.jobs.monitoring.classes.MonitoringCheckReturn;
 import com.sos.jitl.jobs.monitoring.classes.MonitoringChecker;
 import com.sos.jitl.jobs.monitoring.classes.MonitoringParameters;
@@ -26,6 +24,8 @@ import com.sos.joc.model.jitl.monitoring.MonitoringStatus;
 import com.sos.joc.model.order.OrdersHistoricSummary;
 import com.sos.joc.model.order.OrdersSummary;
 import com.sos.js7.job.OrderProcessStepLogger;
+import com.sos.js7.job.jocapi.ApiExecutor;
+import com.sos.js7.job.jocapi.ApiResponse;
 
 public class ExecuteMonitoring {
 

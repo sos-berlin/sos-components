@@ -23,10 +23,10 @@ class JS7Job extends js7.Job {
 		step.getLogger().info("[onOrderProcess][declaredArgument=" + da.getName() + "]" + da.getValue());
 		step.getLogger().info("[onOrderProcess][declaredArgumentValue]" + (typeof step.getDeclaredArgumentValue(this.declaredArguments.my_arg2.name)));
 
-		var h = new Helper();
-		h.logPublicMethods(step.getLogger(), "this.getJobEnvironment()", this.getJobEnvironment());
-		h.logPublicMethods(step.getLogger(), "step", step);
-		h.logArguments(step);
+		var lh = new LogHelper();
+		lh.logPublicMethods(step.getLogger(), "this.getJobEnvironment()", this.getJobEnvironment());
+		lh.logPublicMethods(step.getLogger(), "step", step);
+		lh.logArguments(step);
 
 		step.getOutcome().setReturnCode(100);
 		step.getOutcome().putVariable("var_1", "var_1_value");
@@ -34,7 +34,7 @@ class JS7Job extends js7.Job {
 	}
 }
 
-class Helper {
+class LogHelper {
 	regExp = new RegExp("equals|toString|hashCode|getClass|notify|notifyAll|wait");
 
 	logPublicMethods(logger, title, o) {

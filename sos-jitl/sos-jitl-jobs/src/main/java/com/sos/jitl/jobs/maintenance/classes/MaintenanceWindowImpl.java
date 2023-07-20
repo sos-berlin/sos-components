@@ -1,13 +1,13 @@
 package com.sos.jitl.jobs.maintenance.classes;
 
-import com.sos.jitl.jobs.jocapi.ApiExecutor;
-import com.sos.jitl.jobs.jocapi.ApiResponse;
 import com.sos.jitl.jobs.maintenance.MaintenanceWindowJobArguments;
 import com.sos.jitl.jobs.maintenance.MaintenanceWindowJobArguments.StateValues;
 import com.sos.joc.model.controller.Components;
 import com.sos.joc.model.controller.Controller;
 import com.sos.joc.model.joc.Cockpit;
 import com.sos.js7.job.OrderProcessStepLogger;
+import com.sos.js7.job.jocapi.ApiExecutor;
+import com.sos.js7.job.jocapi.ApiResponse;
 
 public class MaintenanceWindowImpl {
 

@@ -1,12 +1,12 @@
 package com.sos.jitl.jobs.orderstatustransition.classes;
 
-import com.sos.jitl.jobs.jocapi.ApiExecutor;
-import com.sos.jitl.jobs.jocapi.ApiResponse;
 import com.sos.jitl.jobs.sap.common.Globals;
 import com.sos.joc.model.order.ModifyOrders;
 import com.sos.joc.model.order.OrdersFilterV;
 import com.sos.joc.model.order.OrdersV;
 import com.sos.js7.job.OrderProcessStepLogger;
+import com.sos.js7.job.jocapi.ApiExecutor;
+import com.sos.js7.job.jocapi.ApiResponse;
 
 public class OrderStateWebserviceExecuter {
 

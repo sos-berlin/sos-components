@@ -25,17 +25,7 @@
 		</dependency>
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
-			<artifactId>sos-commons-sign</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.sos-berlin</groupId>
 			<artifactId>sos-commons-credentialstore</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.sos-berlin</groupId>
-			<artifactId>sos-commons-httpclient</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
