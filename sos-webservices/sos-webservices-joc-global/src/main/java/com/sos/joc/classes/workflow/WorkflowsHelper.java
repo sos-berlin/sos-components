@@ -79,6 +79,7 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.model.audit.ObjectType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.order.BlockPosition;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.Position;
 import com.sos.joc.model.workflow.WorkflowOrderCountFilter;
@@ -263,19 +264,19 @@ public class WorkflowsHelper {
         return map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey)); 
     }
     
-    public static Set<Position> getWorkflowAddOrderPositions(com.sos.inventory.model.workflow.Workflow w) {
-        if (w == null) {
-            return null;
-        }
-        List<Instruction> instructions = w.getInstructions();
+    public static Set<Position> getWorkflowAddOrderPositions(List<Instruction> instructions) {
+        Object[] pos = {};
+        return getWorkflowAddOrderPositions(instructions, pos);
+    }
+    
+    public static Set<Position> getWorkflowAddOrderPositions(List<Instruction> instructions, Object[] pos) {
         if (instructions != null) {
             instructions.add(createImplicitEndInstruction());
         } else {
-            w.setInstructions(Collections.singletonList(createImplicitEndInstruction()));
+            instructions = Collections.singletonList(createImplicitEndInstruction());
         }
-        Object[] o = {};
         Set<Position> positions = new LinkedHashSet<Position>();
-        setWorkflowAddOrderPositions(o, w.getInstructions(), positions);
+        setWorkflowAddOrderPositions(pos, instructions, positions);
         return positions;
     }
 
@@ -773,14 +774,14 @@ public class WorkflowsHelper {
         }
     }
     
-    public static Set<Position> getWorkflowBlockPositions(List<Instruction> insts) {
+    public static Set<BlockPosition> getWorkflowBlockPositions(List<Instruction> insts) {
         Object[] parentPosition = {};
-        Set<Position> blockPoss = new HashSet<>();
+        Set<BlockPosition> blockPoss = new HashSet<>();
         setWorkflowBlockPositions(parentPosition, insts, blockPoss);
         return blockPoss;
     }
     
-    private static void setWorkflowBlockPositions(Object[] parentPosition, List<Instruction> insts, Set<Position> blockPoss) {
+    private static void setWorkflowBlockPositions(Object[] parentPosition, List<Instruction> insts, Set<BlockPosition> blockPoss) {
         if (insts != null) {
             for (int i = 0; i < insts.size(); i++) {
                 Object[] pos = extendArray(parentPosition, i);
@@ -793,7 +794,7 @@ public class WorkflowsHelper {
                         for (Branch b : f.getBranches()) {
                             if (b.getWorkflow().getInstructions() != null) {
                                 Object[] blockPos = extendArray(pos, "fork+" + b.getId());
-                                blockPoss.add(getBlockPosition(blockPos, inst, b.getId()));
+                                blockPoss.add(getBlockPosition(blockPos, inst, b.getId(), b.getWorkflow().getInstructions()));
                                 setWorkflowBlockPositions(blockPos, b.getWorkflow().getInstructions(), blockPoss);
                             }
                         }
@@ -804,7 +805,7 @@ public class WorkflowsHelper {
                     if (fl.getWorkflow() != null) {
                         if (fl.getWorkflow().getInstructions() != null) {
                             Object[] blockPos = extendArray(pos, "fork");
-                            blockPoss.add(getBlockPosition(blockPos, inst, null));
+                            blockPoss.add(getBlockPosition(blockPos, inst, null, fl.getWorkflow().getInstructions()));
                             setWorkflowBlockPositions(blockPos, fl.getWorkflow().getInstructions(), blockPoss);
                         }
                     }
@@ -813,7 +814,7 @@ public class WorkflowsHelper {
                     ConsumeNotices cn = inst.cast();
                     if (cn.getSubworkflow() != null) {
                         Object[] blockPos = extendArray(pos, "consumeNotices");
-                        blockPoss.add(getBlockPosition(blockPos, inst, null));
+                        blockPoss.add(getBlockPosition(blockPos, inst, null, cn.getSubworkflow().getInstructions()));
                         setWorkflowBlockPositions(blockPos, cn.getSubworkflow().getInstructions(), blockPoss);
                     }
                     break;
@@ -821,12 +822,12 @@ public class WorkflowsHelper {
                     IfElse ie = inst.cast();
                     if (ie.getThen() != null) {
                         Object[] blockPos = extendArray(pos, "then");
-                        blockPoss.add(getBlockPosition(blockPos, inst, "then"));
+                        blockPoss.add(getBlockPosition(blockPos, inst, "then", ie.getThen().getInstructions()));
                         setWorkflowBlockPositions(blockPos, ie.getThen().getInstructions(), blockPoss);
                     }
                     if (ie.getElse() != null) {
                         Object[] blockPos = extendArray(pos, "else");
-                        blockPoss.add(getBlockPosition(blockPos, inst, "else"));
+                        blockPoss.add(getBlockPosition(blockPos, inst, "else", ie.getElse().getInstructions()));
                         setWorkflowBlockPositions(blockPos, ie.getElse().getInstructions(), blockPoss);
                     }
                     break;
@@ -834,12 +835,12 @@ public class WorkflowsHelper {
                     TryCatch tc = inst.cast();
                     if (tc.getTry() != null) {
                         Object[] blockPos = extendArray(pos, "try");
-                        blockPoss.add(getBlockPosition(blockPos, inst, "try"));
+                        blockPoss.add(getBlockPosition(blockPos, inst, "try", tc.getTry().getInstructions()));
                         setWorkflowBlockPositions(blockPos, tc.getTry().getInstructions(), blockPoss);
                     }
                     if (tc.getCatch() != null) {
                         Object[] blockPos = extendArray(pos, "catch");
-                        blockPoss.add(getBlockPosition(blockPos, inst, "catch"));
+                        blockPoss.add(getBlockPosition(blockPos, inst, "catch", tc.getCatch().getInstructions()));
                         setWorkflowBlockPositions(blockPos, tc.getCatch().getInstructions(), blockPoss);
                     }
                     break;
@@ -847,7 +848,7 @@ public class WorkflowsHelper {
                     Lock l = inst.cast();
                     if (l.getLockedWorkflow() != null) {
                         Object[] blockPos = extendArray(pos, "lock");
-                        blockPoss.add(getBlockPosition(blockPos, inst, null));
+                        blockPoss.add(getBlockPosition(blockPos, inst, null, l.getLockedWorkflow().getInstructions()));
                         setWorkflowBlockPositions(blockPos, l.getLockedWorkflow().getInstructions(), blockPoss);
                     }
                     break;
@@ -855,7 +856,7 @@ public class WorkflowsHelper {
                     Cycle c = inst.cast();
                     if (c.getCycleWorkflow() != null) {
                         Object[] blockPos = extendArray(pos, "cycle");
-                        blockPoss.add(getBlockPosition(blockPos, inst, null));
+                        blockPoss.add(getBlockPosition(blockPos, inst, null, c.getCycleWorkflow().getInstructions()));
                         setWorkflowBlockPositions(blockPos, c.getCycleWorkflow().getInstructions(), blockPoss);
                     }
                     break;
@@ -863,7 +864,7 @@ public class WorkflowsHelper {
                     StickySubagent sticky = inst.cast();
                     if (sticky.getSubworkflow() != null) {
                         Object[] blockPos = extendArray(pos, "stickySubagent");
-                        blockPoss.add(getBlockPosition(blockPos, inst, null));
+                        blockPoss.add(getBlockPosition(blockPos, inst, null, sticky.getSubworkflow().getInstructions()));
                         setWorkflowBlockPositions(blockPos, sticky.getSubworkflow().getInstructions(), blockPoss);
                     }
                     break;
@@ -871,7 +872,7 @@ public class WorkflowsHelper {
                     Options opts = inst.cast();
                     if (opts.getBlock() != null) {
                         Object[] blockPos = extendArray(pos, "options");
-                        blockPoss.add(getBlockPosition(blockPos, inst, null));
+                        blockPoss.add(getBlockPosition(blockPos, inst, null, opts.getBlock().getInstructions()));
                         setWorkflowBlockPositions(blockPos, opts.getBlock().getInstructions(), blockPoss);
                     }
                     break;
@@ -882,13 +883,14 @@ public class WorkflowsHelper {
         }
     }
     
-    private static Position getBlockPosition(Object[] pos, Instruction inst, String blockName) {
+    private static BlockPosition getBlockPosition(Object[] pos, Instruction inst, String blockName, List<Instruction> insts) {
         blockName = blockName == null ? "" : "+" + blockName;
-        Position p = new Position();
+        BlockPosition p = new BlockPosition();
         p.setPosition(Arrays.asList(pos));
         p.setPositionString(getJBranchPathString(p.getPosition()));
         p.setLabel(inst.getLabel() == null ? null : inst.getLabel() + blockName);
         p.setType(inst.getTYPE().value());
+        p.setPositions(getWorkflowAddOrderPositions(insts, pos));
         return p;
     }
 
@@ -947,6 +949,12 @@ public class WorkflowsHelper {
                     // if (tc.getCatch() != null) {
                     // setWorkflowAddOrderPositions(extendArray(pos, "catch"), tc.getCatch().getInstructions(), positions);
                     // }
+                    break;
+                case OPTIONS:
+                    Options o = inst.cast();
+                    if (o.getBlock() != null) {
+                        setWorkflowAddOrderPositions(extendArray(pos, "options"), o.getBlock().getInstructions(), positions);
+                    }
                     break;
                 case LOCK:
                     // Lock l = inst.cast();

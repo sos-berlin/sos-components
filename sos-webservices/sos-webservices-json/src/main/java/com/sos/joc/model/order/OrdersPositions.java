@@ -63,7 +63,7 @@ public class OrdersPositions {
     private Set<Position> positions = new LinkedHashSet<Position>();
     @JsonProperty("blockPositions")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<Position> blockPositions = new LinkedHashSet<Position>();
+    private Set<BlockPosition> blockPositions = new LinkedHashSet<BlockPosition>();
 
     /**
      * timestamp
@@ -144,12 +144,12 @@ public class OrdersPositions {
     }
 
     @JsonProperty("blockPositions")
-    public Set<Position> getBlockPositions() {
+    public Set<BlockPosition> getBlockPositions() {
         return blockPositions;
     }
 
     @JsonProperty("blockPositions")
-    public void setBlockPositions(Set<Position> blockPositions) {
+    public void setBlockPositions(Set<BlockPosition> blockPositions) {
         this.blockPositions = blockPositions;
     }
 

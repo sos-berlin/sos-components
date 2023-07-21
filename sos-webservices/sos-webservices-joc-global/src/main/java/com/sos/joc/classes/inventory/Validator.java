@@ -884,7 +884,8 @@ public class Validator {
                         }
                         
                         if (ao.getStartPosition() != null || (ao.getEndPositions() != null && !ao.getEndPositions().isEmpty())) {
-                            Set<Position> availablePositions = WorkflowsHelper.getWorkflowAddOrderPositions(workflowOfAddOrder);
+                            // TODO consider BlockPos
+                            Set<Position> availablePositions = WorkflowsHelper.getWorkflowAddOrderPositions(workflowOfAddOrder.getInstructions());
                             Map<List<Object>, String> posLabelMap = availablePositions.stream().collect(Collectors.toMap(Position::getPosition,
                                     pos -> pos.getLabel() != null ? pos.getLabel() : ""));
                             
@@ -1159,7 +1160,8 @@ public class Validator {
                         }
                         
                         if (ao.getStartPosition() != null || (ao.getEndPositions() != null && !ao.getEndPositions().isEmpty())) {
-                            Set<Position> availablePositions = WorkflowsHelper.getWorkflowAddOrderPositions(workflowOfAddOrder);
+                            // TODO consider BlockPos
+                            Set<Position> availablePositions = WorkflowsHelper.getWorkflowAddOrderPositions(workflowOfAddOrder.getInstructions());
                             Map<List<Object>, String> posLabelMap = availablePositions.stream().collect(Collectors.toMap(Position::getPosition,
                                     pos -> pos.getLabel() != null ? pos.getLabel() : ""));
                             
@@ -1447,7 +1449,8 @@ public class Validator {
             });
             variableSets.stream().map(OrderParameterisation::getPositions).filter(Objects::nonNull).forEach(p -> {
                 if (p.getStartPosition() != null || (p.getEndPositions() != null && !p.getEndPositions().isEmpty())) {
-                    Set<Position> availablePositions = WorkflowsHelper.getWorkflowAddOrderPositions(workflow);
+                    // TODO consider BlockPos
+                    Set<Position> availablePositions = WorkflowsHelper.getWorkflowAddOrderPositions(workflow.getInstructions());
                     Map<List<Object>, String> posLabelMap = availablePositions.stream().collect(Collectors.toMap(Position::getPosition,
                             pos -> pos.getLabel() != null ? pos.getLabel() : ""));
 
