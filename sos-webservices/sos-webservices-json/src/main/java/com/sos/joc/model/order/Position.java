@@ -11,6 +11,13 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
+
+/**
+ * available positions for a resume/add order
+ * <p>
+ * 
+ * 
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "position",
@@ -149,7 +156,7 @@ public class Position {
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(position).toHashCode();
+        return new HashCodeBuilder().append(position).append(label).append(type).append(positionString).toHashCode();
     }
 
     @Override
@@ -161,7 +168,7 @@ public class Position {
             return false;
         }
         Position rhs = ((Position) other);
-        return new EqualsBuilder().append(position, rhs.position).isEquals();
+        return new EqualsBuilder().append(position, rhs.position).append(label, rhs.label).append(type, rhs.type).append(positionString, rhs.positionString).isEquals();
     }
 
 }

@@ -3,8 +3,6 @@ package com.sos.joc.inventory.impl;
 import java.time.Instant;
 import java.util.Date;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.workflow.Workflow;
@@ -23,6 +21,8 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.read.RequestWorkflowFilter;
 import com.sos.joc.model.order.OrdersPositions;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path(JocInventory.APPLICATION_PATH)
 public class ReadAddOrderPositionsImpl extends JOCResourceImpl implements IReadAddOrderPositions {
@@ -64,7 +64,8 @@ public class ReadAddOrderPositionsImpl extends JOCResourceImpl implements IReadA
             entry.setWorkflowId(wId);
             if (!SOSString.isEmpty(config.getContent())) {
                 Workflow w = Globals.objectMapper.readValue(config.getContent(), Workflow.class);
-                entry.setPositions(WorkflowsHelper.getWorkflowAddOrderPositions(w));
+                entry.setPositions(WorkflowsHelper.getWorkflowAddOrderPositions(w.getInstructions()));
+                entry.setBlockPositions(WorkflowsHelper.getWorkflowBlockPositions(w.getInstructions()));
             } else {
                 throw new DBMissingDataException(String.format("Couldn't find Workflow instructions: %s", in.getWorkflowPath()));
             }

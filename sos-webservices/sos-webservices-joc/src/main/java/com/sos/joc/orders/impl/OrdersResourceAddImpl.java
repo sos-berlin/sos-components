@@ -45,8 +45,8 @@ import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.AddOrder;
 import com.sos.joc.model.order.AddOrders;
+import com.sos.joc.model.order.BlockPosition;
 import com.sos.joc.model.order.OrderIds;
-import com.sos.joc.model.order.Position;
 import com.sos.joc.orders.resource.IOrdersResourceAdd;
 import com.sos.schema.JsonValidator;
 import com.sos.sign.model.workflow.Workflow;
@@ -105,7 +105,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                         .map(AddOrder::getWorkflowPath).map(JocInventory::pathToName)).flatMap(s -> s).collect(Collectors.toSet());
 
             Map<String, Map<String, List<Object>>> workflowsWithLabelsMap = new HashMap<>();
-            Map<String, Set<Position>> workflowsWithBlockPositions = new HashMap<>();
+            Map<String, Set<BlockPosition>> workflowsWithBlockPositions = new HashMap<>();
             if (!workflowsWithLabels.isEmpty()) {
                 connection = Globals.createSosHibernateStatelessConnection(API_CALL);
                 DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
@@ -161,7 +161,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     
                     if (requestHasBlockPositionSettings.test(order)) {
                         
-                        Set<Position> availableBlockPositions = workflowsWithBlockPositions.getOrDefault(workflow.getPath(), Collections.emptySet());
+                        Set<BlockPosition> availableBlockPositions = workflowsWithBlockPositions.getOrDefault(workflow.getPath(), Collections.emptySet());
                         
                         blockPosition = OrdersHelper.getBlockPosition(order.getBlockPosition(), workflow.getPath(), availableBlockPositions);
                         

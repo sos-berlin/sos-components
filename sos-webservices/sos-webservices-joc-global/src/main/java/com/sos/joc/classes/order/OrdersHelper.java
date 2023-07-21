@@ -79,6 +79,7 @@ import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.DailyPlanModifyOrder;
 import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
 import com.sos.joc.model.order.AddOrder;
+import com.sos.joc.model.order.BlockPosition;
 import com.sos.joc.model.order.ModifyOrders;
 import com.sos.joc.model.order.OrderIdMap;
 import com.sos.joc.model.order.OrderMark;
@@ -1352,12 +1353,12 @@ public class OrdersHelper {
         }
     }
 
-    public static JBranchPath getBlockPosition(Object blockPosition, String workflowName, Set<com.sos.joc.model.order.Position> availableBlockPositions) {
+    public static JBranchPath getBlockPosition(Object blockPosition, String workflowName, Set<BlockPosition> availableBlockPositions) {
         Optional<List<Object>> listBlockPosOpt = Optional.empty();
         if (blockPosition instanceof String) {
             String strBlockPos = (String) blockPosition;
             listBlockPosOpt = availableBlockPositions.stream().filter(p -> p.getLabel() != null).filter(p -> p.getLabel().equals(strBlockPos))
-                    .findAny().map(com.sos.joc.model.order.Position::getPosition);
+                    .findAny().map(BlockPosition::getPosition);
             if (!listBlockPosOpt.isPresent()) {
                 throw new JocBadRequestException("Workflow '" + workflowName + "' doesn't contain the block position '" + strBlockPos + "'");
             }
@@ -1365,7 +1366,7 @@ public class OrdersHelper {
             @SuppressWarnings("unchecked")
             List<Object> listBlockPos = (List<Object>) blockPosition;
             listBlockPosOpt = availableBlockPositions.stream().filter(p -> p.getPosition().equals(listBlockPos)).findAny().map(
-                    com.sos.joc.model.order.Position::getPosition);
+                    BlockPosition::getPosition);
             if (!listBlockPosOpt.isPresent()) {
                 throw new JocBadRequestException("Workflow '" + workflowName + "' doesn't contain the block position '" + listBlockPos.toString()
                         + "'");

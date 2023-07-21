@@ -2,11 +2,13 @@ package com.sos.joc.classes.order;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -18,7 +20,6 @@ import com.sos.inventory.model.instruction.Instruction;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.inventory.JocInventory;
-import com.sos.joc.classes.inventory.WorkflowConverter;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
@@ -28,6 +29,7 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.order.BlockPosition;
 import com.sos.joc.model.order.OrdersPositions;
 import com.sos.joc.model.order.Position;
 
@@ -38,12 +40,10 @@ import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.workflow.JWorkflow;
 import js7.data_for_java.workflow.JWorkflowId;
+import js7.data_for_java.workflow.position.JBranchPath;
 import js7.data_for_java.workflow.position.JPosition;
 
 public class CheckedAddOrdersPositions extends OrdersPositions {
-    
-//    @JsonIgnore
-//    private Set<Positions> positionsWithImplicitEnds = new LinkedHashSet<>();
     
     public CheckedAddOrdersPositions() {
         //
@@ -76,31 +76,11 @@ public class CheckedAddOrdersPositions extends OrdersPositions {
         }
         ProblemHelper.throwProblemIfExist(e);
         JWorkflow w = e.get();
-//        final JPosition afterPos = getAfterPos(afterPosition);
         
-        final Set<Position> pos = new LinkedHashSet<>();
-        JPosition pos0 = JPosition.apply(js7.data.workflow.position.Position.First());
+//        JPosition pos0 = JPosition.apply(js7.data.workflow.position.Position.First());
         
-        w.reachablePositions(pos0).stream().forEachOrdered(jPos -> {
-            if (isReachable(jPos)) {
-                Position p = createPosition(jPos, w.asScala());
-                //positionsWithImplicitEnds.add(p);
-                //if (!implicitEnds.contains(p.getPositionString())) {
-                    pos.add(p);
-                //}
-            }
-        });
-        
-//        TODO if (afterPos != null) {
-//            
-//        }
-
         setWorkflowId(workflowId);
-        if (pos.isEmpty()) {
-            Position p = createPosition(pos0, w.asScala());
-            pos.add(p);
-        }
-        setPositions(pos);
+        setPositions(getPositions(JBranchPath.empty(), w));
         setBlockPositions(getBlockPositions(w, controllerId));
 
         setDeliveryDate(Date.from(Instant.now()));
@@ -109,10 +89,40 @@ public class CheckedAddOrdersPositions extends OrdersPositions {
         return this;
     }
     
-//    @JsonIgnore
-//    public Set<Positions> getPositionsWithImplicitEnds() {
-//        return positionsWithImplicitEnds;
-//    }
+    @JsonIgnore
+    private static Set<Position> getPositions(JBranchPath parentFrom, JWorkflow w) {
+        Set<Position> pos = new LinkedHashSet<>();
+        JPosition from = getFirstPositionOfBranch(parentFrom);
+        w.reachablePositions(from).stream().forEachOrdered(jPos -> {
+            if (isReachable(jPos, parentFrom)) {
+                Position p = createPosition(jPos, w.asScala());
+                pos.add(p);
+            }
+        });
+        
+        if (pos.isEmpty()) {
+            Position p = createPosition(from, w.asScala());
+            pos.add(p);
+        }
+        return pos;
+    }
+    
+    @JsonIgnore
+    private static JPosition getFirstPositionOfBranch(JBranchPath from) {
+        return getFirstPositionOfBranch(from.toList());
+    }
+    
+    @JsonIgnore
+    private static JPosition getFirstPositionOfBranch(List<Object> fromBranch) {
+        List<Object> l = new ArrayList<>(fromBranch);
+        l.add(0);
+        return JPosition.fromList(l).get();
+    }
+    
+    @JsonIgnore
+    private static Set<Position> getPositions(List<Object> fromBranch, JWorkflow w) {
+        return getPositions(JBranchPath.fromList(fromBranch).get(), w);
+    }
     
     @JsonIgnore
     public static Set<String> getReachablePositions(JWorkflow workflow) {
@@ -126,11 +136,10 @@ public class CheckedAddOrdersPositions extends OrdersPositions {
     }
     
     @JsonIgnore
-    public static Set<Position> getBlockPositions(JWorkflow workflow, String controllerId) throws IOException {
+    public static Set<BlockPosition> getBlockPositions(JWorkflow workflow, String controllerId) throws IOException {
         return WorkflowsHelper.getWorkflowBlockPositions(getInstructions(workflow, controllerId));
     }
     
-    @JsonIgnore
     private static List<Instruction> getInstructions(JWorkflow workflow, String controllerId) throws IOException {
         SOSHibernateSession connection = null;
         try {
@@ -151,22 +160,29 @@ public class CheckedAddOrdersPositions extends OrdersPositions {
         }
     }
     
-//  @JsonIgnore
-//  private static JPosition getAfterPos(List<Object> afterPosition) {
-//      if (afterPosition != null) {
-//          Either<Problem, JPosition> afterPosE = JPosition.fromList(afterPosition);
-//          ProblemHelper.throwProblemIfExist(afterPosE);
-//          return afterPosE.get();
-//      }
-//      return null;
-//  }
-    
     private static boolean isReachable(JPosition jPos) {
         // only root level position or first level inside a "(re)try" or "if" instruction
 
         List<Object> posA = jPos.toList();
         return posA.size() == 1 || (posA.size() == 3 && (((String) posA.get(1)).contains("try") || ((String) posA.get(1)).equals("then")
                 || ((String) posA.get(1)).equals("options")));
+    }
+    
+    private static boolean isReachable(JPosition jPos, JBranchPath parentPos) {
+        // only root level position or first level inside a "(re)try" or "if" instruction
+        
+        if (parentPos.toString().isEmpty()) {
+            return isReachable(jPos);
+        }
+        
+        if (!jPos.toString().startsWith(parentPos.toString() + ":")) {
+            return false;
+        }
+        JPosition relativePosition = JPosition.fromJson(jPos.toString().substring(parentPos.toString().length() + 1)).getOrNull();
+        if (relativePosition == null) {
+            return false;
+        }
+        return isReachable(relativePosition);
     }
     
     private static Position createPosition(JPosition jPos, Workflow w) {
