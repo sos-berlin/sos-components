@@ -111,7 +111,8 @@ public class SSHJobUtil {
         }
     }
 
-    public static void checkExitCode(Integer exitCode, SSHJobArguments jobArgs, OrderProcessStepOutcome outcome, OrderProcessStepLogger logger) throws SOSJobSSHException {
+    public static void checkExitCode(Integer exitCode, SSHJobArguments jobArgs, OrderProcessStepOutcome outcome, OrderProcessStepLogger logger)
+            throws SOSJobSSHException {
         if (exitCode != null) {
             outcome.putVariable("exit_code", exitCode);
             if (!exitCode.equals(Integer.valueOf(0))) {
@@ -163,8 +164,8 @@ public class SSHJobUtil {
     }
 
     public static Map<String, String> getJobResourceEnvVars(OrderProcessStep<SSHJobArguments> step) throws JobProblemException {
-        return step.getEnv().entrySet().stream().collect(Collectors.toMap(e -> JS7_WORKFLOW_VARIABLES_ENVVAR_PREFIX + e.getKey().toUpperCase(),
-                Map.Entry::getValue));
+        return step.getJobResourcesEnv().entrySet().stream().collect(Collectors.toMap(e -> JS7_WORKFLOW_VARIABLES_ENVVAR_PREFIX + e.getKey()
+                .toUpperCase(), Map.Entry::getValue));
     }
 
     public static Map<String, String> getJS7EnvVars() {

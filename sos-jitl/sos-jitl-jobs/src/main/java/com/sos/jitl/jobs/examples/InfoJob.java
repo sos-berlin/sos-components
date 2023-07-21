@@ -107,12 +107,12 @@ public class InfoJob extends Job<InfoJobArguments> {
             printEnvs(step.getLogger());
         }
 
-        step.getLogger().info("----------step.getEnv-----------------");
+        step.getLogger().info("----------step.getJobResourcesEnv-----------------");
         try {
-            Map<String, String> m = step.getEnv();
-            step.getLogger().info("[step.getEnv]" + m);
+            Map<String, String> m = step.getJobResourcesEnv();
+            step.getLogger().info("[step.getJobResourcesEnv]" + m);
         } catch (Throwable e) {
-            step.getLogger().warn(String.format("[step.getEnv]%s", e.toString()), e);
+            step.getLogger().warn(String.format("[step.getJobResourcesEnv]%s", e.toString()), e);
         }
 
         if (!args.getShellCommand().isEmpty()) {

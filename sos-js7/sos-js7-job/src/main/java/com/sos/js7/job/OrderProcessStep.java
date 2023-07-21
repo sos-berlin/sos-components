@@ -553,7 +553,7 @@ public class OrderProcessStep<A extends JobArguments> {
         return returnCode;
     }
 
-    public Map<String, String> getEnv() throws JobProblemException {
+    public Map<String, String> getJobResourcesEnv() throws JobProblemException {
         if (internalStep == null) {
             return null;
         }
