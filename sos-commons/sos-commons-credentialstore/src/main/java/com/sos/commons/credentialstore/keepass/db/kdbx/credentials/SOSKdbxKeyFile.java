@@ -1,6 +1,7 @@
 package com.sos.commons.credentialstore.keepass.db.kdbx.credentials;
 
 import java.io.InputStream;
+import java.util.Base64;
 
 import javax.xml.bind.DatatypeConverter;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -8,7 +9,6 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 
-import org.apache.commons.codec.binary.Base64;
 import org.w3c.dom.Document;
 
 import com.sos.commons.credentialstore.keepass.exceptions.SOSKeePassKeyFileException;
@@ -36,7 +36,7 @@ public class SOSKdbxKeyFile {
         switch (version) {
         case 1:
             // android compatibility
-            return Base64.decodeBase64(keyData.getBytes());
+            return Base64.getDecoder().decode(keyData.getBytes());
         case 2:
             return DatatypeConverter.parseHexBinary(keyData.trim().replaceAll("\\s", ""));
         default:
