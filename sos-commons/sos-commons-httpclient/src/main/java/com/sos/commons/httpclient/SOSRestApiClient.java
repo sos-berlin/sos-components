@@ -18,6 +18,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -32,7 +33,6 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import jakarta.ws.rs.core.StreamingOutput;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -949,7 +949,7 @@ public class SOSRestApiClient {
     }
 
     public void addAuthorizationHeader(String account) {
-        byte[] authEncBytes = Base64.encodeBase64(account.getBytes());
+        byte[] authEncBytes = Base64.getEncoder().encode(account.getBytes());
         String authStringEnc = new String(authEncBytes);
         addHeader("Authorization", "Basic " + authStringEnc);
     }
