@@ -3,7 +3,6 @@ package com.sos.scriptengine.jobs;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -17,8 +16,6 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 
 import com.sos.commons.credentialstore.CredentialStoreArguments;
-import com.sos.commons.util.SOSPath;
-import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.ASOSArguments;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
@@ -48,16 +45,8 @@ public class JavaScriptJob extends Job<JobArguments> {
 
     public JavaScriptJob(JobContext jobContext) {
         super(jobContext);
-        if (jobContext != null) {
+        if (jobContext != null) {// TODO to remove - check because of UNIT Tests
             script = jobContext.asScala().executable().script();
-            if (SOSString.isEmpty(script)) {// TO REMOVE
-                try {
-                    String s = jobContext.jobArguments().get("script").convertToString();
-                    script = SOSPath.readFile(Paths.get(s));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
         }
     }
 
