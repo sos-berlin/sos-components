@@ -76,17 +76,17 @@ public class SOSPermissionsCreator {
 
             jocPermissions.setGetLog(haveRight("", "sos:products:joc:get_log"));
             Administration admin = jocPermissions.getAdministration();
-            admin.getAccounts().setView(haveRight("", "sos:products:joc:adminstration:accounts:view"));
-            admin.getAccounts().setManage(haveRight("", "sos:products:joc:adminstration:accounts:manage"));
-            admin.getCertificates().setView(haveRight("", "sos:products:joc:adminstration:certificates:view"));
-            admin.getCertificates().setManage(haveRight("", "sos:products:joc:adminstration:certificates:manage"));
-            admin.getControllers().setView(haveRight("", "sos:products:joc:adminstration:controllers:view"));
-            admin.getControllers().setManage(haveRight("", "sos:products:joc:adminstration:controllers:manage"));
-            admin.getSettings().setView(haveRight("", "sos:products:joc:adminstration:settings:view"));
-            admin.getSettings().setManage(haveRight("", "sos:products:joc:adminstration:settings:manage"));
-            admin.getCustomization().setView(haveRight("", "sos:products:joc:adminstration:customization:view"));
-            admin.getCustomization().setManage(haveRight("", "sos:products:joc:adminstration:customization:manage"));
-            admin.getCustomization().setShare(haveRight("", "sos:products:joc:adminstration:customization:share"));
+            admin.getAccounts().setView(haveRight("", "sos:products:joc:administration:accounts:view") || haveRight("", "sos:products:joc:adminstration:accounts:view"));
+            admin.getAccounts().setManage(haveRight("", "sos:products:joc:administration:accounts:manage") || haveRight("", "sos:products:joc:adminstration:accounts:manage"));
+            admin.getCertificates().setView(haveRight("", "sos:products:joc:administration:certificates:view") || haveRight("", "sos:products:joc:adminstration:certificates:view"));
+            admin.getCertificates().setManage(haveRight("", "sos:products:joc:administration:certificates:manage") || haveRight("", "sos:products:joc:adminstration:certificates:manage"));
+            admin.getControllers().setView(haveRight("", "sos:products:joc:administration:controllers:view") || haveRight("", "sos:products:joc:adminstration:controllers:view"));
+            admin.getControllers().setManage(haveRight("", "sos:products:joc:administration:controllers:manage"));
+            admin.getSettings().setView(haveRight("", "sos:products:joc:administration:settings:view") || haveRight("", "sos:products:joc:adminstration:settings:view"));
+            admin.getSettings().setManage(haveRight("", "sos:products:joc:administration:settings:manage") || haveRight("", "sos:products:joc:adminstration:settings:manage"));
+            admin.getCustomization().setView(haveRight("", "sos:products:joc:administration:customization:view") || haveRight("", "sos:products:joc:adminstration:customization:view"));
+            admin.getCustomization().setManage(haveRight("", "sos:products:joc:administration:customization:manage") || haveRight("", "sos:products:joc:adminstration:customization:manage"));
+            admin.getCustomization().setShare(haveRight("", "sos:products:joc:administration:customization:share") || haveRight("", "sos:products:joc:adminstration:customization:share"));
             jocPermissions.setAdministration(admin);
             jocPermissions.getAuditLog().setView(haveRight("", "sos:products:joc:auditlog:view"));
             jocPermissions.getCalendars().setView(haveRight("", "sos:products:joc:calendars:view"));

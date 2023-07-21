@@ -46,8 +46,8 @@ public class SOSPermissionMapTable {
         addMapEntry("sos:products:joc_cockpit:jobscheduler_master:execute:terminate", "sos:products:controller:terminate");
         addMapEntry("sos:products:joc_cockpit:jobscheduler_master:execute:abort", "sos:products:controller:terminate");
         addMapEntry("sos:products:joc_cockpit:jobscheduler_master:execute:stop", "sos:products:controller:terminate");
-        addMapEntry("sos:products:joc_cockpit:jobscheduler_master:administration:edit_permissions", "sos:products:joc:adminstration:accounts:manage");
-        addMapEntry("sos:products:joc_cockpit:jobscheduler_master:administration", "sos:products:joc:adminstration");
+        addMapEntry("sos:products:joc_cockpit:jobscheduler_master:administration:edit_permissions", "sos:products:joc:administration:accounts:manage");
+        addMapEntry("sos:products:joc_cockpit:jobscheduler_master:administration", "sos:products:joc:administration");
         addMapEntry("sos:products:joc_cockpit:jobscheduler_master:administration:configurations:view:others", "sos:products:joc:others:view");
         addMapEntry("sos:products:joc_cockpit:jobscheduler_master:administration:configurations:view:inventory", "sos:products:joc:inventory:view");
         addMapEntry("sos:products:joc_cockpit:jobscheduler_master:administration:configurations:view:yade", "sos:products:joc:inventory:view");
