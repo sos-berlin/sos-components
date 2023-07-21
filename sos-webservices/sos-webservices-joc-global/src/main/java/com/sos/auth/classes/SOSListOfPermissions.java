@@ -19,17 +19,17 @@ public class SOSListOfPermissions {
         // JocPermissions
         addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:get_log");
 
-        addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:adminstration:accounts:view");
-        addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:adminstration:accounts:manage");
-        addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:adminstration:certificates:view");
-        addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:adminstration:certificates:manage");
-        addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:adminstration:controllers:view");
-        addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:adminstration:controllers:manage");
-        addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:adminstration:customization:view");
-        addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:adminstration:customization:manage");
-        addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:adminstration:customization:share");
-        addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:adminstration:settings:view");
-        addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:adminstration:settings:manage");
+        addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:administration:accounts:view");
+        addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:administration:accounts:manage");
+        addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:administration:certificates:view");
+        addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:administration:certificates:manage");
+        addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:administration:controllers:view");
+        addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:administration:controllers:manage");
+        addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:administration:customization:view");
+        addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:administration:customization:manage");
+        addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:administration:customization:share");
+        addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:administration:settings:view");
+        addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:administration:settings:manage");
 
         addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:auditlog:view");
         addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:calendars:view");

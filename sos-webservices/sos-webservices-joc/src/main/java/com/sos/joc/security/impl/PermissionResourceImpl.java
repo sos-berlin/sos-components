@@ -318,7 +318,8 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
 			for (DBItemIamPermission dbItemIamPermission : listOfPermissions) {
 				Permission permission = new Permission();
 				permission.setExcluded(dbItemIamPermission.getExcluded());
-				permission.setPermissionPath(dbItemIamPermission.getAccountPermission());
+				String p = dbItemIamPermission.getAccountPermission().replaceFirst("sos:products:joc:adminstration:", "sos:products:joc:administration:");
+				permission.setPermissionPath(p);
 				permissions.getPermissions().add(permission);
 			}
 
