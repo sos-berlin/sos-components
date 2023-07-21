@@ -36,7 +36,7 @@ Possible values: failed, suspended, prompting.
                 <note>
                     <title>The target order state</title>
                     <p>
-Possible values: cancelled, resumed.
+Possible values: cancelled, inprogress.
                     </p>
                 </note>
             </param>
@@ -68,6 +68,21 @@ Example: /folder/sub1;/another_folder/sub2/*
                     <p>
  May contain a folder. Items sepearated by semicolon. Example: *myWorkflow*, /folder/sub1/my?orkflow
                      </p>
+                </note>
+            </param>
+            <param name="batch_size"
+                   required="false">
+                <note>
+                    <title>The maximum number of orders for one request.</title>
+                    <p>
+ Default: 10000
+ 
+  The number of orders that are transitioned in a single transaction. This includes that either all orders in a transaction are transitioned or none. If the number of orders  exceeds the batch size then a further transaction is executed. 
+  
+  If the value batch_size = 1 is used then each order is transitioned individually with a successful or failed result. 
+  
+  The batch size should not exceed a value of approx. 15000 in order to limit the size of requests to the Controller to approx. 4 MB which is a frequently applied limit of Proxy Servers that might be in place between the Agent running the job and JOC Cockpit.
+                       </p>
                 </note>
             </param>
             <param name="persist_duration"
