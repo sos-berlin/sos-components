@@ -43,7 +43,7 @@ public class SOSSecondFactorHandler {
                     throw new JocObjectNotExistException("2nd factor: Could not find Account for identity-service-id");
                 }
                 if (dbItemSecondFactor.getIdentityServiceType().equals(IdentityServiceTypes.CERTIFICATE.value())) {
-                    if (SOSAuthHelper.checkCertificate(currentAccount.getHttpServletRequest(), currentAccount.getSosLoginParameters().getClientCertCN())) {
+                    if (SOSAuthHelper.checkCertificate(currentAccount.getHttpServletRequest(), currentAccount.getAccountname())) {
                         secondFactorSuccess = true;
                     }else {
                         secondFactorSuccess = false;
