@@ -71,7 +71,6 @@ public class OrderStateWebserviceExecuter {
 
     public void resumeOrder(ModifyOrders modifyOrders, String accessToken) throws Exception {
         if (modifyOrders.getOrderIds().size() > 0) {
-            modifyOrders.setPosition(0);
             String body = Globals.objectMapper.writeValueAsString(modifyOrders);
             ApiResponse apiResponse = apiExecutor.post(accessToken, "/orders/resume", body);
             String answer = null;
