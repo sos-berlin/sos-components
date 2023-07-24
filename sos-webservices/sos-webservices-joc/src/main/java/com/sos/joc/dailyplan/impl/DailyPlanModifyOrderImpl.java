@@ -91,6 +91,7 @@ import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.dailyplan.DailyPlanModifyOrder;
+import com.sos.joc.model.order.BlockPosition;
 import com.sos.joc.model.order.OrderIdMap;
 import com.sos.joc.model.order.OrderIdMap200;
 import com.sos.schema.JsonValidator;
@@ -121,8 +122,8 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
             boolean hasManagePositionsPermission = getControllerPermissions(controllerId, accessToken).getOrders().getManagePositions();
             if (!hasManagePositionsPermission && (in.getStartPosition() != null || (in.getEndPositions() != null && !in.getEndPositions()
-                    .isEmpty()))) {
-                return accessDeniedResponse("Access denied for setting start-/endpositions");
+                    .isEmpty()) || in.getBlockPosition() != null)) {
+                return accessDeniedResponse("Access denied for setting start-/end-/blockpositions");
             }
             
             JControllerProxy proxy = null;
@@ -171,6 +172,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             }
 
             Map<String, List<Object>> labelMap = Collections.emptyMap();
+            Set<BlockPosition> blockPositions = Collections.emptySet();
             if (!onlyStarttimeModifications) { // check that all orders belong to one workflow
                 Set<String> wNames = workflowNames.collect(Collectors.toSet());
                 if (wNames.size() > 1) {
@@ -182,8 +184,16 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                     boolean withStartLabel = in.getStartPosition() != null && in.getStartPosition() instanceof String;
                     boolean withEndLabels = in.getEndPositions() != null && in.getEndPositions().stream().filter(Objects::nonNull).anyMatch(
                             ep -> ep instanceof String);
-                    if (withStartLabel || withEndLabels) {
-                        labelMap = getLabelMap(controllerId, wNames.iterator().next());
+                    boolean withBlockLabel = in.getBlockPosition() != null && in.getBlockPosition() instanceof String;
+                    
+                    if (withStartLabel || withEndLabels || withBlockLabel) {
+                        com.sos.inventory.model.workflow.Workflow workflow = getWorkflow(controllerId, wNames.iterator().next());
+                        if (withStartLabel || withEndLabels) {
+                            labelMap = getLabelMap(workflow);
+                        }
+                        if (withBlockLabel) {
+                            blockPositions = getBlockPositions(workflow);
+                        }
                     }
                 }
             }
@@ -199,12 +209,12 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             setSettings();
             ZoneId zoneId = getZoneId();
             Either<List<Err419>, OrderIdMap> adhocCall = OrdersHelper.cancelAndAddFreshOrder(orderIds.get(Boolean.TRUE), in, accessToken,
-                    getJocError(), auditlog.getId(), proxy, currentState, zoneId, labelMap, folderPermissions);
+                    getJocError(), auditlog.getId(), proxy, currentState, zoneId, labelMap, blockPositions, folderPermissions);
             OrderIdMap dailyPlanResult = null;
 
             if (!dailyPlanOrderItems.isEmpty()) {
                 if (!onlyStarttimeModifications) {
-                    dailyPlanResult = modifyOrderParameterisation(in, dailyPlanOrderItems, auditlog, zoneId, labelMap);
+                    dailyPlanResult = modifyOrderParameterisation(in, dailyPlanOrderItems, auditlog, zoneId, labelMap, blockPositions);
                 } else {
                     dailyPlanResult = modifyStartTime(in, dailyPlanOrderItems, auditlog, zoneId);
                 }
@@ -293,6 +303,9 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         if (in.getEndPositions() != null && !in.getEndPositions().isEmpty()) {
             return false;
         }
+        if (in.getBlockPosition() != null) {
+            return false;
+        }
         if ((in.getScheduledFor() == null || in.getScheduledFor().isEmpty()) && in.getCycle() == null) {
             throw new JocMissingRequiredParameterException(
                     "At least one of the parameters 'scheduledFor', 'cycle', 'variables', 'removeVariables', 'startPosition' or 'endPositions' should be set.");
@@ -313,9 +326,16 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         }
         return false;
     }
+    
+    private boolean withNewBlockPosition(DailyPlanModifyOrder in) {
+        if (in.getBlockPosition() != null) {
+            return true;
+        }
+        return false;
+    }
 
     private boolean withNewPositions(DailyPlanModifyOrder in) {
-        return withNewStartPosition(in) || withNewEndPositions(in);
+        return withNewStartPosition(in) || withNewEndPositions(in) || withNewBlockPosition(in);
     }
 
     private boolean withAddOrUpdateVariables(DailyPlanModifyOrder in) {
@@ -337,7 +357,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
     }
 
     private OrderIdMap modifyOrderParameterisation(DailyPlanModifyOrder in, List<DBItemDailyPlanOrder> items, DBItemJocAuditLog auditlog,
-            ZoneId zoneId, Map<String, List<Object>> labelMap) throws ControllerConnectionResetException,
+            ZoneId zoneId, Map<String, List<Object>> labelMap, Set<BlockPosition> availableBlockPositions) throws ControllerConnectionResetException,
             ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
             DBConnectionRefusedException, ExecutionException, SOSHibernateException, IOException {
 
@@ -379,6 +399,8 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 final List<Object> startPosition = OrdersHelper.getPosition(in.getStartPosition(), labelMap);
                 final List<Object> endPositions = withNewEndPositions(in) ? in.getEndPositions().stream().map(pos -> OrdersHelper.getPosition(pos,
                         labelMap)).filter(Objects::nonNull).collect(Collectors.toList()) : null;
+                final BlockPosition blockPosition = OrdersHelper.getBlockPosition(in.getBlockPosition(), workflow.getPath(),
+                        availableBlockPositions);
 
                 // modify planned and prepare submitted
                 for (DBItemDailyPlanOrder item : items) {
@@ -398,6 +420,9 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                         }
                         if (withNewEndPositions(in)) {
                             newOp.setEndPositions(endPositions);
+                        }
+                        if (withNewBlockPosition(in)) {
+                            newOp.setBlockPosition(blockPosition == null ? null : blockPosition.getPosition());
                         }
                         if (newOp.equals(origOp)) {
                             withNewPositions = false;
@@ -1019,8 +1044,8 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         return Globals.objectMapper.writeValueAsString(vars);
     }
     
-    private Map<String, List<Object>> getLabelMap(String controllerId, String workflowName) throws JsonParseException, JsonMappingException,
-            IOException {
+    private com.sos.inventory.model.workflow.Workflow getWorkflow(String controllerId, String workflowName) throws JsonParseException,
+            JsonMappingException, IOException {
         SOSHibernateSession connection = null;
         try {
             connection = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
@@ -1029,15 +1054,29 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             Globals.disconnect(connection);
             connection = null;
             if (dbWorkflow != null) {
-                com.sos.inventory.model.workflow.Workflow w = JocInventory.workflowContent2Workflow(dbWorkflow.getContent());
-                if (w != null) {
-                    return WorkflowsHelper.getLabelToPositionsMap(w);
-                }
+                return JocInventory.workflowContent2Workflow(dbWorkflow.getContent());
             }
         } finally {
             Globals.disconnect(connection);
         }
+        return null;
+    }
+
+    private Map<String, List<Object>> getLabelMap(com.sos.inventory.model.workflow.Workflow workflow) throws JsonParseException, JsonMappingException,
+            IOException {
+        if (workflow != null) {
+            return WorkflowsHelper.getLabelToPositionsMap(workflow);
+            //workflowsWithBlockPositions.put(dbWorkflow.getName(), WorkflowsHelper.getWorkflowBlockPositions(w.getInstructions()));
+        }
         return Collections.emptyMap();
+    }
+    
+    private Set<BlockPosition> getBlockPositions(com.sos.inventory.model.workflow.Workflow workflow) throws JsonParseException,
+            JsonMappingException, IOException {
+        if (workflow != null) {
+            return WorkflowsHelper.getWorkflowBlockPositions(workflow.getInstructions());
+        }
+        return Collections.emptySet();
     }
 
 }

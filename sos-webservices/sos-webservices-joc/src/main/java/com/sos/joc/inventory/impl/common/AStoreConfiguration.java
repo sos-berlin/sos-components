@@ -173,7 +173,7 @@ public abstract class AStoreConfiguration extends JOCResourceImpl {
                     Schedule schedule = (Schedule) in.getConfiguration();
                     Predicate<OrderParameterisation> requestHasPositionSettings = o -> o.getPositions() != null && (o.getPositions()
                             .getStartPosition() != null || (o.getPositions().getEndPositions() != null && !o.getPositions().getEndPositions()
-                                    .isEmpty()));
+                                    .isEmpty()) || o.getPositions().getBlockPosition() != null);
                     if (schedule.getOrderParameterisations() != null && schedule.getOrderParameterisations().parallelStream().anyMatch(
                             requestHasPositionSettings)) {
                         boolean hasManagePositionsPermission = Proxies.getControllerDbInstances().keySet().parallelStream().anyMatch(

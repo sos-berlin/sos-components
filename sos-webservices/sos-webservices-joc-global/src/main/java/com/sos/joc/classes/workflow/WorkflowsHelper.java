@@ -218,7 +218,11 @@ public class WorkflowsHelper {
             if (configs != null && !configs.isEmpty()) {
                 DBItemInventoryConfiguration config = configs.get(0);
                 try {
-                    return getLabelToPositionsMap(JocInventory.workflowContent2Workflow(config.getContent()));
+                    com.sos.inventory.model.workflow.Workflow w = JocInventory.workflowContent2Workflow(config.getContent());
+                    Map<String, List<Object>> labelMap = getLabelToPositionsMap(w);
+                    labelMap.putAll(getWorkflowBlockPositions(w.getInstructions()).stream().filter(p -> p.getLabel() != null).collect(Collectors
+                            .toMap(BlockPosition::getLabel, BlockPosition::getPosition)));
+                    return labelMap;
                 } catch (Exception e) {
                     throw new DBInvalidDataException(e);
                 }

@@ -49,6 +49,13 @@
     		]
      	}
     },
+    "innerBlock": {
+    	"alias": "blockPosition",
+     	"anyOf": [
+    		{"$ref": "../../../inventory/schemas/common/blockPosition-schema.json"},
+    		{"$ref": "../../../inventory/schemas/common/string255Required-schema.json"}
+    	]
+    },
     "forceJobAdmission": {
     	"type": "boolean"	
     }
