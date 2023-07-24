@@ -522,8 +522,9 @@ public class JsonConverter {
         
         boolean withStartLabel = (sao.getStartPosition() != null && sao.getStartPosition() instanceof String);
         boolean withEndLabels = sao.getStopPositions().stream().anyMatch(pos -> pos instanceof String);
-
-        if (withStartLabel || withEndLabels) {
+        boolean withBlockLabel = (sao.getInnerBlock() != null && sao.getInnerBlock() instanceof String);
+        
+        if (withStartLabel || withEndLabels || withBlockLabel) {
             Map<String, List<Object>> labelMap = getLabelToPositionsMap(controllerId, sao.getWorkflowPath());
             int numOfEndPositions = sao.getStopPositions().size();
             if (withStartLabel) {
@@ -533,7 +534,10 @@ public class JsonConverter {
                 sao.setStopPositions(sao.getStopPositions().stream().map(pos -> pos instanceof String ? labelMap.get((String) pos) : pos).filter(
                         Objects::nonNull).collect(Collectors.toList()));
             }
-            if (sao.getStartPosition() == null || numOfEndPositions > sao.getStopPositions().size()) {
+            if (withBlockLabel) {
+                sao.setInnerBlock(labelMap.get((String) sao.getInnerBlock()));
+            }
+            if (sao.getStartPosition() == null || numOfEndPositions > sao.getStopPositions().size() || sao.getInnerBlock() == null) {
                 throw new DBInvalidDataException("Workflow '" + sao.getWorkflowPath() + "' of AddOrder instruction in Workflow '" + workflowName
                         + "' doesn't all specified labels.");
             }

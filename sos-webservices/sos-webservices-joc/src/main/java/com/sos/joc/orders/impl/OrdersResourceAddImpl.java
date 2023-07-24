@@ -157,17 +157,21 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     boolean forceJobAdmission = order.getForceJobAdmission() == Boolean.TRUE;
                     Optional<JPositionOrLabel> startPos = Optional.empty();
                     Set<JPositionOrLabel> endPoss = Collections.emptySet();
-                    JBranchPath blockPosition = null;
+                    JBranchPath jBrachPath = null;
                     
                     if (requestHasBlockPositionSettings.test(order)) {
-                        
-                        Set<BlockPosition> availableBlockPositions = workflowsWithBlockPositions.getOrDefault(workflow.getPath(), Collections.emptySet());
-                        
-                        blockPosition = OrdersHelper.getBlockPosition(order.getBlockPosition(), workflow.getPath(), availableBlockPositions);
-                        
+
+                        Set<BlockPosition> availableBlockPositions = workflowsWithBlockPositions.getOrDefault(workflow.getPath(), Collections
+                                .emptySet());
+
+                        BlockPosition blockPosition = OrdersHelper.getBlockPosition(order.getBlockPosition(), workflow.getPath(),
+                                availableBlockPositions);
+
                         //check start-/endpositions inside block
                         startPos = OrdersHelper.getStartPositionInBlock(order.getStartPosition(), labelMap, blockPosition);
                         endPoss = OrdersHelper.getEndPositionInBlock(order.getEndPositions(), labelMap, blockPosition);
+                        
+                        jBrachPath = OrdersHelper.getJBranchPath(blockPosition);
                         
                     } else {
                         Set<String> reachablePositions = CheckedAddOrdersPositions.getReachablePositions(e.get());
@@ -177,7 +181,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     }
                     
                     // TODO check if endPos not before startPos
-                    JFreshOrder o = OrdersHelper.mapToFreshOrder(order, zoneId, startPos, endPoss, blockPosition, forceJobAdmission);
+                    JFreshOrder o = OrdersHelper.mapToFreshOrder(order, zoneId, startPos, endPoss, jBrachPath, forceJobAdmission);
                     auditLogDetails.add(new AuditLogDetail(WorkflowPaths.getPath(order.getWorkflowPath()), o.id().string(), controllerId));
                     either = Either.right(o);
                 } catch (Exception ex) {

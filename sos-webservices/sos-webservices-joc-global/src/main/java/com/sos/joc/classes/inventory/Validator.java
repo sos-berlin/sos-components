@@ -55,6 +55,7 @@ import com.sos.inventory.model.job.Job;
 import com.sos.inventory.model.jobresource.JobResource;
 import com.sos.inventory.model.jobtemplate.JobTemplate;
 import com.sos.inventory.model.schedule.OrderParameterisation;
+import com.sos.inventory.model.schedule.OrderPositions;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.workflow.Branch;
 import com.sos.inventory.model.workflow.BranchWorkflow;
@@ -76,7 +77,7 @@ import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-import com.sos.joc.model.order.Position;
+import com.sos.joc.model.order.BlockPosition;
 import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
 
@@ -205,7 +206,7 @@ public class Validator {
                                         position, schedule.getPath(), workflowName, r.getParameters().getAdditionalProperties().size()));
                             }
                         }
-                        validateOrderParameterisations(schedule.getOrderParameterisations(), r, w, "$.variableSets.orderParameterisations");
+                        validateOrderParameterisations(schedule.getOrderParameterisations(), r, workflowName, w, "$.variableSets.orderParameterisations");
                     }
                 } else if (ConfigurationType.FILEORDERSOURCE.equals(type)) {
                     FileOrderSource fileOrderSource = (FileOrderSource) config;
@@ -297,7 +298,7 @@ public class Validator {
                                     position, schedule.getPath(), workflowName, r.getParameters().getAdditionalProperties().size()));
                         }
                     }
-                    validateOrderParameterisations(schedule.getOrderParameterisations(), r, w, "$.variableSets.orderParameterisations");
+                    validateOrderParameterisations(schedule.getOrderParameterisations(), r, workflowName, w, "$.variableSets.orderParameterisations");
                 }
             } else if (ConfigurationType.FILEORDERSOURCE.equals(type)) {
                 FileOrderSource fileOrderSource = (FileOrderSource) config;
@@ -883,16 +884,16 @@ public class Validator {
                             throw new JocConfigurationException("$." + instPosition + "arguments: " + e.getMessage());
                         }
                         
-                        if (ao.getStartPosition() != null || (ao.getEndPositions() != null && !ao.getEndPositions().isEmpty())) {
-                            // TODO consider BlockPos
-                            Set<Position> availablePositions = WorkflowsHelper.getWorkflowAddOrderPositions(workflowOfAddOrder.getInstructions());
-                            Map<List<Object>, String> posLabelMap = availablePositions.stream().collect(Collectors.toMap(Position::getPosition,
-                                    pos -> pos.getLabel() != null ? pos.getLabel() : ""));
-                            
-                            checkAddOrderPositions(ao.getStartPosition(), posLabelMap, "$." + instPosition);
-                            if (ao.getEndPositions() != null) {
-                                ao.getEndPositions().forEach(endP -> checkAddOrderPositions(endP, posLabelMap, "$." + instPosition));
-                            }
+                        Predicate<OrderPositions> hasPositionSetting = p -> p.getStartPosition() != null || (p.getEndPositions() != null && !p
+                                .getEndPositions().isEmpty()) || p.getBlockPosition() != null;
+                        OrderPositions op = new OrderPositions();
+                        op.setBlockPosition(ao.getBlockPosition());
+                        op.setStartPosition(ao.getStartPosition());
+                        op.setEndPositions(ao.getEndPositions());
+                        if (hasPositionSetting.test(op)) {
+                            Set<BlockPosition> availableBlockPositions = WorkflowsHelper.getWorkflowBlockPositions(workflowOfAddOrder.getInstructions());
+                            Map<String, List<Object>> labelMap = WorkflowsHelper.getLabelToPositionsMap(workflowOfAddOrder);
+                            checkAddOrderPositions(op, availableBlockPositions, ao.getWorkflowName(), labelMap, "$." + instPosition);
                         }
                     }
                     break;
@@ -1159,16 +1160,16 @@ public class Validator {
                             throw new JocConfigurationException("$." + instPosition + "arguments: " + e.getMessage());
                         }
                         
-                        if (ao.getStartPosition() != null || (ao.getEndPositions() != null && !ao.getEndPositions().isEmpty())) {
-                            // TODO consider BlockPos
-                            Set<Position> availablePositions = WorkflowsHelper.getWorkflowAddOrderPositions(workflowOfAddOrder.getInstructions());
-                            Map<List<Object>, String> posLabelMap = availablePositions.stream().collect(Collectors.toMap(Position::getPosition,
-                                    pos -> pos.getLabel() != null ? pos.getLabel() : ""));
-                            
-                            checkAddOrderPositions(ao.getStartPosition(), posLabelMap, "$." + instPosition);
-                            if (ao.getEndPositions() != null) {
-                                ao.getEndPositions().forEach(endP -> checkAddOrderPositions(endP, posLabelMap, "$." + instPosition));
-                            }
+                        Predicate<OrderPositions> hasPositionSetting = p -> p.getStartPosition() != null || (p.getEndPositions() != null && !p
+                                .getEndPositions().isEmpty()) || p.getBlockPosition() != null;
+                        OrderPositions op = new OrderPositions();
+                        op.setBlockPosition(ao.getBlockPosition());
+                        op.setStartPosition(ao.getStartPosition());
+                        op.setEndPositions(ao.getEndPositions());
+                        if (hasPositionSetting.test(op)) {
+                            Set<BlockPosition> availableBlockPositions = WorkflowsHelper.getWorkflowBlockPositions(workflowOfAddOrder.getInstructions());
+                            Map<String, List<Object>> labelMap = WorkflowsHelper.getLabelToPositionsMap(workflowOfAddOrder);
+                            checkAddOrderPositions(op, availableBlockPositions, ao.getWorkflowName(), labelMap, "$." + instPosition);
                         }
                     }
                     break;
@@ -1267,12 +1268,30 @@ public class Validator {
     }
     
     @SuppressWarnings("unchecked")
-    private static void checkAddOrderPositions(Object pos, Map<List<Object>, String> posLabelMap, String position) {
+    private static void checkAddOrderPositions(Object pos, Map<String, List<Object>> labelPosMap, String position) {
         if (pos != null) {
-            if (pos instanceof String && !posLabelMap.containsValue((String) pos)) {
+            if (pos instanceof String && !labelPosMap.containsKey((String) pos)) {
                 throw new JocConfigurationException(position + "startPosition: invalid label '" + (String) pos + "'");
-            } else if (pos instanceof List<?> && !posLabelMap.containsKey((List<Object>) pos)) {
+            } else if (pos instanceof List<?> && !labelPosMap.containsValue((List<Object>) pos)) {
                 throw new JocConfigurationException(position + "startPosition: invalid position '" + ((List<Object>) pos).toString() + "'");
+            }
+        }
+    }
+    
+    private static void checkAddOrderPositions(OrderPositions p, Set<BlockPosition> availableBlockPositions, String workflowName, Map<String, List<Object>> labelMap, String position) {
+        if (p.getBlockPosition() != null) {
+            try {
+                BlockPosition blockPosition = OrdersHelper.getBlockPosition(p.getBlockPosition(), workflowName, availableBlockPositions);
+                //check start-/endpositions inside block
+                OrdersHelper.getStartPositionInBlock(p.getStartPosition(), labelMap, blockPosition);
+                OrdersHelper.getEndPositionInBlock(p.getEndPositions(), labelMap, blockPosition);
+            } catch (Exception e1) {
+                throw new JocConfigurationException(position + e1.getMessage());
+            }
+        } else if (p.getStartPosition() != null || (p.getEndPositions() != null && !p.getEndPositions().isEmpty())) {
+            checkAddOrderPositions(p.getStartPosition(), labelMap, position);
+            if (p.getEndPositions() != null) {
+                p.getEndPositions().forEach(endP -> checkAddOrderPositions(endP, labelMap, position));
             }
         }
     }
@@ -1434,8 +1453,8 @@ public class Validator {
         }
     }
 
-    private static void validateOrderParameterisations(List<OrderParameterisation> variableSets, Requirements orderPreparation, Workflow workflow,
-            String position) throws JocConfigurationException {
+    private static void validateOrderParameterisations(List<OrderParameterisation> variableSets, Requirements orderPreparation, String workflowName,
+            Workflow workflow, String position) throws JocConfigurationException {
         if (variableSets != null) {
             if (variableSets.size() != variableSets.stream().map(OrderParameterisation::getOrderName).distinct().mapToInt(e -> 1).sum()) {
                 throw new JocConfigurationException(position + ": Order names has to be unique");
@@ -1447,19 +1466,16 @@ public class Validator {
                     throw new JocConfigurationException(position + ": " + e1.getMessage());
                 }
             });
-            variableSets.stream().map(OrderParameterisation::getPositions).filter(Objects::nonNull).forEach(p -> {
-                if (p.getStartPosition() != null || (p.getEndPositions() != null && !p.getEndPositions().isEmpty())) {
-                    // TODO consider BlockPos
-                    Set<Position> availablePositions = WorkflowsHelper.getWorkflowAddOrderPositions(workflow.getInstructions());
-                    Map<List<Object>, String> posLabelMap = availablePositions.stream().collect(Collectors.toMap(Position::getPosition,
-                            pos -> pos.getLabel() != null ? pos.getLabel() : ""));
+            Predicate<OrderPositions> hasPositionSetting = p -> p.getStartPosition() != null || (p.getEndPositions() != null && !p.getEndPositions()
+                    .isEmpty()) || p.getBlockPosition() != null;
+            if (variableSets.stream().map(OrderParameterisation::getPositions).filter(Objects::nonNull).anyMatch(hasPositionSetting)) {
+                Set<BlockPosition> availableBlockPositions = WorkflowsHelper.getWorkflowBlockPositions(workflow.getInstructions());
+                Map<String, List<Object>> labelMap = WorkflowsHelper.getLabelToPositionsMap(workflow);
 
-                    checkAddOrderPositions(p.getStartPosition(), posLabelMap, position + ".positions.");
-                    if (p.getEndPositions() != null) {
-                        p.getEndPositions().forEach(endP -> checkAddOrderPositions(endP, posLabelMap, position + ".positions."));
-                    }
-                }
-            });
+                variableSets.stream().map(OrderParameterisation::getPositions).filter(Objects::nonNull).filter(hasPositionSetting).forEach(
+                        p -> checkAddOrderPositions(p, availableBlockPositions, workflowName, labelMap, position + ".positions."));
+            }
+
         }
     }
 

@@ -774,10 +774,10 @@ public class OrdersHelper {
 //    }
     
     public static Either<List<Err419>, OrderIdMap> cancelAndAddFreshOrder(Collection<String> temporaryOrderIds,
-            DailyPlanModifyOrder dailyplanModifyOrder, String accessToken, JocError jocError, Long auditlogId, JControllerProxy proxy,
-            JControllerState currentState, ZoneId zoneId, Map<String, List<Object>> labelMap, SOSAuthFolderPermissions folderPermissions)
-            throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
-            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
+        DailyPlanModifyOrder dailyplanModifyOrder, String accessToken, JocError jocError, Long auditlogId, JControllerProxy proxy,
+        JControllerState currentState, ZoneId zoneId, Map<String, List<Object>> labelMap, Set<BlockPosition> availableBlockPositions, 
+        SOSAuthFolderPermissions folderPermissions) throws ControllerConnectionResetException, ControllerConnectionRefusedException, 
+        DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
 
         Either<List<Err419>, OrderIdMap> result = Either.right(new OrderIdMap());
         if (temporaryOrderIds.isEmpty()) {
@@ -822,14 +822,33 @@ public class OrdersHelper {
                 if (!scheduledFor.isPresent()) {
                     scheduledFor = Optional.of(now);
                 }
-                // modify start/end positions
-                Set<String> reachablePositions = CheckedAddOrdersPositions.getReachablePositions(e.get());
                 
-                Optional<JPositionOrLabel> startPos = getStartPosition(startPosition, reachablePositions, order.workflowPosition().position());
-                Set<JPositionOrLabel> endPoss = getEndPositions(endPositions, reachablePositions, JavaConverters.asJava(order.asScala()
-                        .stopPositions()));
+                Optional<JPositionOrLabel> startPos = Optional.empty();
+                Set<JPositionOrLabel> endPoss = Collections.emptySet();
+                JBranchPath jBrachPath = null;
+                
+                if (dailyplanModifyOrder.getBlockPosition() != null) {
+                    
+                    BlockPosition blockPosition = getBlockPosition(dailyplanModifyOrder.getBlockPosition(), workflow.getPath(),
+                            availableBlockPositions);
 
-                FreshOrder o = new FreshOrder(order.id(), order.workflowId().path(), args, scheduledFor, startPos, endPoss, forceJobAdmission, zoneId);
+                    //check start-/endpositions inside block
+                    startPos = OrdersHelper.getStartPositionInBlock(startPosition, blockPosition);
+                    endPoss = OrdersHelper.getEndPositionInBlock(endPositions, blockPosition);
+                    
+                    jBrachPath = OrdersHelper.getJBranchPath(blockPosition);
+                    
+                } else {
+                    // modify start/end positions
+                    Set<String> reachablePositions = CheckedAddOrdersPositions.getReachablePositions(e.get());
+
+                    startPos = getStartPosition(startPosition, reachablePositions, order.workflowPosition().position());
+                    endPoss = getEndPositions(endPositions, reachablePositions, JavaConverters.asJava(order.asScala()
+                            .stopPositions()));
+                }
+                
+                FreshOrder o = new FreshOrder(order.id(), order.workflowId().path(), args, scheduledFor, jBrachPath, startPos, endPoss,
+                        forceJobAdmission, zoneId);
                 auditLogDetails.add(new AuditLogDetail(workflowPath, order.id().string(), controllerId));
                 either = Either.right(o);
             } catch (Exception ex) {
@@ -1353,50 +1372,87 @@ public class OrdersHelper {
         }
     }
 
-    public static JBranchPath getBlockPosition(Object blockPosition, String workflowName, Set<BlockPosition> availableBlockPositions) {
-        Optional<List<Object>> listBlockPosOpt = Optional.empty();
-        if (blockPosition instanceof String) {
-            String strBlockPos = (String) blockPosition;
-            listBlockPosOpt = availableBlockPositions.stream().filter(p -> p.getLabel() != null).filter(p -> p.getLabel().equals(strBlockPos))
-                    .findAny().map(BlockPosition::getPosition);
-            if (!listBlockPosOpt.isPresent()) {
-                throw new JocBadRequestException("Workflow '" + workflowName + "' doesn't contain the block position '" + strBlockPos + "'");
-            }
-        } else if (blockPosition instanceof List<?>) {
-            @SuppressWarnings("unchecked")
-            List<Object> listBlockPos = (List<Object>) blockPosition;
-            listBlockPosOpt = availableBlockPositions.stream().filter(p -> p.getPosition().equals(listBlockPos)).findAny().map(
-                    BlockPosition::getPosition);
-            if (!listBlockPosOpt.isPresent()) {
-                throw new JocBadRequestException("Workflow '" + workflowName + "' doesn't contain the block position '" + listBlockPos.toString()
-                        + "'");
-            }
-        }
-        Either<Problem, JBranchPath> eBranchPath = JBranchPath.fromList(listBlockPosOpt.get());
+    public static JBranchPath getJBranchPath(BlockPosition pos) {
+        Either<Problem, JBranchPath> eBranchPath = JBranchPath.fromList(pos.getPosition());
         if (eBranchPath.isLeft()) {
-            throw new JocBadRequestException("The block position '" + listBlockPosOpt.get().toString() + "' has wrong syntax: " + eBranchPath
+            throw new JocBadRequestException("The block position '" + pos.getPosition().toString() + "' has wrong syntax: " + eBranchPath
                     .getLeft().message());
         }
         return eBranchPath.get();
     }
+    
+    public static BlockPosition getBlockPosition(Object blockPosition, String workflowName, Set<BlockPosition> availableBlockPositions) {
+        if (blockPosition == null) {
+            return null;
+        }
+        Optional<BlockPosition> listBlockPosOpt = Optional.empty();
+        if (blockPosition instanceof String) {
+            String strBlockPos = (String) blockPosition;
+            if (!strBlockPos.isEmpty()) {
+                listBlockPosOpt = availableBlockPositions.stream().filter(p -> p.getLabel() != null).filter(p -> p.getLabel().equals(strBlockPos))
+                        .findAny();
+                if (!listBlockPosOpt.isPresent()) {
+                    workflowName = workflowName == null ? "" : "'" + workflowName + "' ";
+                    throw new JocBadRequestException("Workflow " + workflowName + "doesn't contain the block position '" + strBlockPos + "'");
+                }
+            } else {
+                return null;
+            }
+        } else if (blockPosition instanceof List<?>) {
+            @SuppressWarnings("unchecked")
+            List<Object> listBlockPos = (List<Object>) blockPosition;
+            listBlockPosOpt = availableBlockPositions.stream().filter(p -> p.getPosition().equals(listBlockPos)).findAny();
+            if (!listBlockPosOpt.isPresent()) {
+                workflowName = workflowName == null ? "" : "'" + workflowName + "' ";
+                throw new JocBadRequestException("Workflow " + workflowName + "doesn't contain the block position '" + listBlockPos.toString()
+                        + "'");
+            }
+        }
+        return listBlockPosOpt.get();
+    }
 
-    public static Optional<JPositionOrLabel> getStartPositionInBlock(Object pos, Map<String, List<Object>> labelMap, JBranchPath blockPosition) {
+    public static Optional<JPositionOrLabel> getStartPositionInBlock(Object pos, Map<String, List<Object>> labelMap, BlockPosition blockPosition) {
         Optional<JPositionOrLabel> posOpt = getStartPosition(pos, labelMap, null);
-        if (posOpt.isPresent() && blockPosition != null && !posOpt.get().toString().startsWith(blockPosition.toString() + ":")) {
-            throw new JocBadRequestException("Invalid start position '" + pos.toString() + "': It has to be inside the block '" + blockPosition
-                    .toString() + "'.");
+        return getStartPositionInBlock(posOpt, blockPosition);
+    }
+    
+    public static Optional<JPositionOrLabel> getStartPositionInBlock(List<Object> pos, BlockPosition blockPosition) {
+        Optional<JPositionOrLabel> posOpt = getStartPosition(pos, null);
+        return getStartPositionInBlock(posOpt, blockPosition);
+    }
+    
+    private static Optional<JPositionOrLabel> getStartPositionInBlock(Optional<JPositionOrLabel> posOpt, BlockPosition blockPosition) {
+        if (posOpt.isPresent() && blockPosition != null) {
+            if (!posOpt.get().toString().startsWith(blockPosition.getPositionString() + ":")) {
+                throw new JocBadRequestException("Invalid start position '" + posOpt.get().toString() + "': It has to be inside the block '" + blockPosition
+                        .getPosition().toString() + "'.");
+            }
+            if (blockPosition.getPositions() != null && !blockPosition.getPositions().stream().map(
+                    com.sos.joc.model.order.Position::getPositionString).anyMatch(s -> s.equals(posOpt.get().toString()))) {
+                throw new JocBadRequestException("Invalid start position '" + posOpt.get().toString() + "': allowed positions are '" + blockPosition
+                        .getPositions().stream().map(com.sos.joc.model.order.Position::getPositionString).collect(Collectors.toList()).toString()
+                        + "'.");
+            }
         }
         return posOpt;
     }
     
-    public static Set<JPositionOrLabel> getEndPositionInBlock(List<Object> poss, Map<String, List<Object>> labelMap, JBranchPath blockPosition) {
+    public static Set<JPositionOrLabel> getEndPositionInBlock(List<Object> poss, Map<String, List<Object>> labelMap, BlockPosition blockPosition) {
         Set<JPositionOrLabel> endPoss = getEndPosition(poss, labelMap, null);
-        // endpositions are arbitrary or not?
+        return getEndPositionInBlock(endPoss, blockPosition);
+    }
+    
+    public static Set<JPositionOrLabel> getEndPositionInBlock(List<List<Object>> poss, BlockPosition blockPosition) {
+        Set<JPositionOrLabel> endPoss = getEndPosition(poss, null);
+        return getEndPositionInBlock(endPoss, blockPosition);
+    }
+    
+    private static Set<JPositionOrLabel> getEndPositionInBlock(Set<JPositionOrLabel> endPoss, BlockPosition blockPosition) {
         if (endPoss != null && blockPosition != null) {
             endPoss.forEach(pos -> {
-                if (!pos.toString().startsWith(blockPosition.toString() + ":")) {
+                if (!pos.toString().startsWith(blockPosition.getPositionString() + ":")) {
                     throw new JocBadRequestException("Invalid end position '" + pos.toString() + "': It has to be inside the block '" + blockPosition
-                            .toString() + "'.");
+                            .getPosition().toString() + "'.");
                 }
             });
         }

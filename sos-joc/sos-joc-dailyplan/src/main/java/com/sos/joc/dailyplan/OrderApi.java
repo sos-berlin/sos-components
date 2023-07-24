@@ -48,6 +48,7 @@ import js7.data.order.OrderId;
 import js7.data.value.Value;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.order.JFreshOrder;
+import js7.data_for_java.workflow.position.JBranchPath;
 import js7.data_for_java.workflow.position.JPosition;
 import js7.data_for_java.workflow.position.JPositionOrLabel;
 import js7.proxy.javaapi.JControllerApi;
@@ -84,6 +85,27 @@ public class OrderApi {
         }
         return Optional.empty();
     }
+    
+    @SuppressWarnings("unchecked")
+    private static JBranchPath getBlockPosition(Object position, Map<String, List<Object>> labelToPositionMap) {
+        if (position != null) {
+            if (position instanceof List<?>) {
+                return getBlockPosition((List<Object>) position);
+            } else if (position instanceof String) {
+                return getBlockPosition(labelToPositionMap.get((String) position));
+            }
+        }
+        return JBranchPath.empty();
+    }
+    
+    private static JBranchPath getBlockPosition(List<Object> pos) {
+        if (pos != null && !pos.isEmpty()) {
+            Either<Problem, JBranchPath> posE = JBranchPath.fromList(pos);
+            ProblemHelper.throwProblemIfExist(posE);
+            return posE.get();
+        }
+        return JBranchPath.empty();
+    }
 
     private static JFreshOrder mapToFreshOrder(FreshOrder order, Map<String, List<Object>> labelToPositionMap) {
         Optional<Instant> scheduledFor = Optional.empty();
@@ -94,6 +116,7 @@ public class OrderApi {
         }
         OrderPositions positions = order.getPositions();
         Optional<JPositionOrLabel> startPosition = Optional.empty();
+        JBranchPath blockPosition = JBranchPath.empty();
         Set<JPositionOrLabel> endPositions = new HashSet<>();
         if (positions != null) {
             // TODO JOC-1453 consider labels
@@ -103,11 +126,15 @@ public class OrderApi {
                     getPositionOrLabel(endPosition, labelToPositionMap).ifPresent(p -> endPositions.add(p));
                 }
             }
+            // TODO blockPosition
+            // labelToBlockPositionMap instead labelToPositionMap
+            blockPosition = getBlockPosition(positions.getBlockPosition(), labelToPositionMap);
+            
         }
         Map<String, Value> arguments = OrdersHelper.variablesToScalaValuedArguments(order.getArguments());
         boolean forceJobAdmission = order.getForceJobAdmission() == Boolean.TRUE;
         return JFreshOrder.of(OrderId.of(order.getId()), WorkflowPath.of(order.getWorkflowPath()), scheduledFor, arguments, false, forceJobAdmission,
-                startPosition, endPositions);
+                blockPosition, startPosition, endPositions);
     }
 
     public static Set<PlannedOrder> addOrdersToController(StartupMode startupMode, String controllerId, String dailyPlanDate,

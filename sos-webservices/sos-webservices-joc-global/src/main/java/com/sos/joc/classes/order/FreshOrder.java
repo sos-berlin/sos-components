@@ -11,6 +11,7 @@ import js7.data.order.OrderId;
 import js7.data.value.Value;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.order.JFreshOrder;
+import js7.data_for_java.workflow.position.JBranchPath;
 import js7.data_for_java.workflow.position.JPositionOrLabel;
 
 public class FreshOrder {
@@ -22,6 +23,7 @@ public class FreshOrder {
     private Optional<Instant> scheduledFor = Optional.empty();
     private Optional<JPositionOrLabel> startPosition = Optional.empty();
     private Set<JPositionOrLabel> endPositions = Collections.emptySet();
+    private JBranchPath branchPath = JBranchPath.empty();
     private boolean forceJobAdmission = false;
     // private boolean isDeleteWhenTerminated = false;
 
@@ -56,7 +58,8 @@ public class FreshOrder {
 //    }
     
     public FreshOrder(OrderId oldOrderId, WorkflowPath workflowPath, Map<String, Value> args, Optional<Instant> scheduledFor,
-            Optional<JPositionOrLabel> startPosition, Set<JPositionOrLabel> endPositions, boolean forceJobAdmission, ZoneId zoneId) {
+            JBranchPath branchPath, Optional<JPositionOrLabel> startPosition, Set<JPositionOrLabel> endPositions, boolean forceJobAdmission, 
+            ZoneId zoneId) {
         this.oldOrderId = oldOrderId;
         this.newOrderId = generateNewFromOldOrderId(oldOrderId, zoneId);
         this.workflowPath = workflowPath;
@@ -64,11 +67,12 @@ public class FreshOrder {
         this.scheduledFor = scheduledFor;
         this.startPosition = startPosition;
         this.endPositions = endPositions;
+        this.branchPath = branchPath;
         this.forceJobAdmission = forceJobAdmission;
     }
     
     public FreshOrder(OrderId oldOrderId, OrderId newOrderId, WorkflowPath workflowPath, Map<String, Value> args, Optional<Instant> scheduledFor,
-            Optional<JPositionOrLabel> startPosition, Set<JPositionOrLabel> endPositions, boolean forceJobAdmission) {
+            JBranchPath branchPath, Optional<JPositionOrLabel> startPosition, Set<JPositionOrLabel> endPositions, boolean forceJobAdmission) {
         this.oldOrderId = oldOrderId;
         this.newOrderId = newOrderId;
         this.workflowPath = workflowPath;
@@ -76,6 +80,7 @@ public class FreshOrder {
         this.scheduledFor = scheduledFor;
         this.startPosition = startPosition;
         this.endPositions = endPositions;
+        this.branchPath = branchPath;
         this.forceJobAdmission = forceJobAdmission;
     }
 
@@ -84,11 +89,17 @@ public class FreshOrder {
     }
 
     public JFreshOrder getJFreshOrder() {
-        return JFreshOrder.of(newOrderId, workflowPath, scheduledFor, args, false, forceJobAdmission, startPosition, endPositions);
+        if (branchPath == null) {
+            branchPath = JBranchPath.empty();
+        }
+        return JFreshOrder.of(newOrderId, workflowPath, scheduledFor, args, false, forceJobAdmission, branchPath, startPosition, endPositions);
     }
 
     public JFreshOrder getJFreshOrderWithDeleteOrderWhenTerminated() {
-        return JFreshOrder.of(newOrderId, workflowPath, scheduledFor, args, true, forceJobAdmission, startPosition, endPositions);
+        if (branchPath == null) {
+            branchPath = JBranchPath.empty();
+        }
+        return JFreshOrder.of(newOrderId, workflowPath, scheduledFor, args, true, forceJobAdmission, branchPath, startPosition, endPositions);
     }
 
     private static OrderId generateNewFromOldOrderId(OrderId orderId, ZoneId zoneId) {
