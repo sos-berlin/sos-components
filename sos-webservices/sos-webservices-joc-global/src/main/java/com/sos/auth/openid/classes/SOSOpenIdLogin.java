@@ -54,6 +54,8 @@ public class SOSOpenIdLogin implements ISOSLogin {
                         sosOpenIdAccountAccessToken = sosOpenIdHandler.login();
                         if (sosOpenIdAccountAccessToken != null) {
                             setOfTokenRoles = sosOpenIdHandler.getTokenRoles();
+                            currentAccount.setKid(sosOpenIdHandler.getKid());
+
                         }
                     }
 
