@@ -31,6 +31,7 @@ public class SOSSecondFactorHandler {
     public static Boolean checkSecondFactor(SOSAuthCurrentAccount currentAccount, String identityServiceName) throws SOSHibernateException {
 
         SOSHibernateSession sosHibernateSession = null;
+        SOSLoginUserName sosLoginUserName = new SOSLoginUserName(currentAccount.getAccountname());
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(SOSSecondFactorHandler.class.getName());
             DBItemIamIdentityService dbItemIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, identityServiceName);
@@ -43,11 +44,11 @@ public class SOSSecondFactorHandler {
                     throw new JocObjectNotExistException("2nd factor: Could not find Account for identity-service-id");
                 }
                 if (dbItemSecondFactor.getIdentityServiceType().equals(IdentityServiceTypes.CERTIFICATE.value())) {
-                    if (SOSAuthHelper.checkCertificate(currentAccount.getHttpServletRequest(), currentAccount.getAccountname())) {
+                    if (SOSAuthHelper.checkCertificate(currentAccount.getHttpServletRequest(), sosLoginUserName.getUserName())) {
                         secondFactorSuccess = true;
-                    }else {
+                    } else {
                         secondFactorSuccess = false;
-                        LOGGER.info("Could not verify second factor certificate" );
+                        LOGGER.info("Could not verify second factor certificate");
                     }
                 } else {
                     if (dbItemSecondFactor.getIdentityServiceType().equals(IdentityServiceTypes.FIDO.value())) {
@@ -100,7 +101,7 @@ public class SOSSecondFactorHandler {
                                 + dbItemSecondFactor.getIdentityServiceType() + ">");
                     }
                 }
-            } 
+            }
             return secondFactorSuccess;
         } finally {
             Globals.disconnect(sosHibernateSession);

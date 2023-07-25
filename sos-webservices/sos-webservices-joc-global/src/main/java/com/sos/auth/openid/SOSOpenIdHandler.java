@@ -19,7 +19,6 @@ import java.util.Base64;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.json.Json;
@@ -65,6 +64,7 @@ public class SOSOpenIdHandler {
     private KeyStore truststore = null;
     private String accountIdentifier = null;
     private String openidConfiguration;
+    private String kid;
 
     public SOSOpenIdHandler(SOSOpenIdWebserviceCredentials webserviceCredentials) throws Exception {
         this.webserviceCredentials = webserviceCredentials;
@@ -205,7 +205,7 @@ public class SOSOpenIdHandler {
         Long expiresIn = 0L;
         String account = null;
         String alg = null;
-        String kid = null;
+        kid = null;
         String aud = null;
         String iss = null;
 
@@ -370,7 +370,7 @@ public class SOSOpenIdHandler {
                                 List<String> mappedRoles = groupRolesMap.get(group);
                                 if (mappedRoles != null) {
                                     for (String mappedRole : mappedRoles) {
-                                        LOGGER.info("--------- role added:" + mappedRole);
+                                        LOGGER.debug("--------- role added:" + mappedRole);
                                         roles.add(mappedRole);
                                     }
                                 } else {
@@ -395,6 +395,11 @@ public class SOSOpenIdHandler {
                 jsonReaderPayload.close();
             }
         }
+    }
+
+    
+    public String getKid() {
+        return kid;
     }
 
 }
