@@ -132,7 +132,7 @@ public class SSHJobUtil {
 
     public static Map<String, String> getWorkflowParamsAsEnvVars(OrderProcessStep<SSHJobArguments> step, SSHJobArguments jobArgs) {
         Map<String, JobArgument<SSHJobArguments>> allArguments = step.getAllArguments().entrySet().stream().filter(e -> !e.getValue().getValueSource()
-                .equals(JobArgument.ValueSource.JOB_RESOURCE)).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                .isTypeJobResource()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         if (jobArgs.getFilterRegex().getValue().isEmpty()) {
             // all variables
             return allArguments.entrySet().stream().filter(e -> !SSH_JOB_ARG_NAMES.contains(e.getKey()) && !PROVIDER_ARG_NAMES.contains(e.getKey())

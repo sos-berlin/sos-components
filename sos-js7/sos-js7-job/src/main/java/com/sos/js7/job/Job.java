@@ -32,8 +32,8 @@ import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgumentHelper;
 import com.sos.commons.vfs.ssh.SSHProvider;
-import com.sos.js7.job.JobArgument.ValueSource;
 import com.sos.js7.job.JobArguments.MockLevel;
+import com.sos.js7.job.ValueSource.ValueSourceType;
 import com.sos.js7.job.exception.JobArgumentException;
 import com.sos.js7.job.exception.JobException;
 import com.sos.js7.job.exception.JobRequiredArgumentMissingException;
@@ -312,6 +312,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         }
         if (instance.hasDynamicArgumentFields()) {
             for (JobArgument arg : instance.getDynamicArgumentFields()) {
+                arg.reset();
                 setDeclaredJobArgument(step, args, lastSucceededOutcomes, jobResources, arg, null);
             }
         }
@@ -350,7 +351,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         DetailValue jdv = fromMap(lastSucceededOutcomes, allNames);
         if (jdv != null) {
             arg.setValue(getValue(jdv.getValue(), arg, field));
-            ValueSource vs = ValueSource.LAST_SUCCEEDED_OUTCOME;
+            ValueSource vs = new ValueSource(ValueSourceType.LAST_SUCCEEDED_OUTCOME);
             vs.setDetails("pos=" + jdv.getSource());
             setValueSource(arg, vs);
         } else {
@@ -465,7 +466,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
                     Object v = SOSReflection.enumIgnoreCaseValueOf(type.getTypeName(), val.toString());
                     if (v == null) {
                         arg.setNotAcceptedValue(val, null);
-                        arg.getNotAcceptedValue().setUsedValueSource(JobArgument.ValueSource.JAVA);
+                        arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
                         val = arg.getDefaultValue();
                     } else {
                         val = v;
@@ -475,7 +476,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
                         val = Charset.forName(val.toString());
                     } catch (Throwable e) {
                         arg.setNotAcceptedValue(val, e);
-                        arg.getNotAcceptedValue().setUsedValueSource(JobArgument.ValueSource.JAVA);
+                        arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
                         val = arg.getDefaultValue();
                     }
                 }
@@ -533,7 +534,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
             return;
         }
         if (jobEnvironment.getAllArgumentsAsNameValueMap().containsKey(arg.getName())) {
-            setValueSource(arg, JobArgument.ValueSource.JOB_ARGUMENT);
+            setValueSource(arg, new ValueSource(ValueSourceType.JOB_ARGUMENT));
         }
     }
 
@@ -547,26 +548,26 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         Value v = null;
         if (isNamedValue) {// order or node
             v = fromMap(step.getInternalStep().order().arguments(), allNames);
-            source = v == null ? JobArgument.ValueSource.ORDER_OR_NODE : JobArgument.ValueSource.ORDER;
+            source = v == null ? new ValueSource(ValueSourceType.ORDER_OR_NODE) : new ValueSource(ValueSourceType.ORDER);
         } else {
             if (jobEnvironment.getEngineArguments() != null) {
                 v = fromMap(jobEnvironment.getEngineArguments(), allNames);
                 if (v != null) {
-                    source = JobArgument.ValueSource.JOB_ARGUMENT;
+                    source = new ValueSource(ValueSourceType.JOB_ARGUMENT);
                 }
             }
             v = fromMap(step.getInternalStep().arguments(), allNames);
             if (v != null) {
-                source = JobArgument.ValueSource.JOB;
+                source = new ValueSource(ValueSourceType.JOB);
             }
 
             // preference 4 (LOWEST) - JobResources
-            if (source == null && arg.getValueSource().equals(ValueSource.JAVA)) {
+            if (source == null && arg.getValueSource().isTypeJAVA()) {
                 DetailValue jdv = fromMap(jobResources, allNames);
                 if (jdv != null) {
                     try {
                         arg.setValue(getValue(jdv.getValue(), arg, field));
-                        source = ValueSource.JOB_RESOURCE;
+                        source = new ValueSource(ValueSourceType.JOB_RESOURCE);
                         source.setDetails("resource=" + jdv.getSource());
                     } catch (ClassNotFoundException e) {
                         LOGGER.error(String.format("[%s]%s", arg.getName(), e.toString()), e);

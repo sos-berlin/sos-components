@@ -5,6 +5,7 @@ import java.util.List;
 import com.sos.commons.util.common.SOSArgument;
 import com.sos.commons.util.common.SOSArgumentHelper;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
+import com.sos.js7.job.ValueSource.ValueSourceType;
 
 /** JobArgument&lt;T&gt; supported types(&lt;T&gt;):<br/>
  * - java.lang.String<br/>
@@ -17,43 +18,6 @@ import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
  * - java.util.List&lt;java.lang.String | java.lang.Enum&gt;<br/>
  */
 public class JobArgument<T> extends SOSArgument<T> {
-
-    public enum ValueSource {
-
-        JAVA("Resulting Arguments", "Resulting Argument"), ORDER("Order Variables", "Order Variable"), ORDER_OR_NODE(
-                "Default Order Variables or Node Arguments", "Default Order Variable or Node Argument"), JOB("Arguments", "Argument"), JOB_ARGUMENT(
-                        "Job Arguments", "Job Argument"), JOB_RESOURCE("Job Resources", "Job Resource"), LAST_SUCCEEDED_OUTCOME(
-                                "Last Succeeded Outcomes"), LAST_FAILED_OUTCOME("Last Failed Outcomes");
-
-        private final String header;
-        private final String title;
-        private String details;
-
-        private ValueSource(String header) {
-            this(header, header);
-        }
-
-        private ValueSource(String header, String title) {
-            this.header = header;
-            this.title = title;
-        }
-
-        public String getHeader() {
-            return header;
-        }
-
-        public String getTitle() {
-            return title;
-        }
-
-        public void setDetails(String val) {
-            details = val;
-        }
-
-        public String getDetails() {
-            return details;
-        }
-    }
 
     public enum Type {
         DECLARED, UNDECLARED;
@@ -92,7 +56,7 @@ public class JobArgument<T> extends SOSArgument<T> {
     public JobArgument(String name, boolean required, T defaultValue, DisplayMode displayMode, List<String> nameAliases) {
         super(name, required, defaultValue, displayMode);
         this.type = Type.DECLARED;
-        this.valueSource = ValueSource.JAVA;
+        this.valueSource = new ValueSource(ValueSourceType.JAVA);
         this.nameAliases = nameAliases;
     }
 
@@ -112,13 +76,19 @@ public class JobArgument<T> extends SOSArgument<T> {
         super(arg);
         setValue(arg.getValue());
         this.type = Type.DECLARED;
-        this.valueSource = ValueSource.JAVA;
+        this.valueSource = new ValueSource(ValueSourceType.JAVA);
         this.nameAliases = null;
         this.clazzType = clazzType;
     }
 
     protected void setValueSource(ValueSource val) {
         valueSource = val;
+    }
+
+    protected void reset() {
+        setValue(null);
+        this.valueSource = new ValueSource(ValueSourceType.JAVA);
+        setIsDirty(false);
     }
 
     public ValueSource getValueSource() {
@@ -138,7 +108,7 @@ public class JobArgument<T> extends SOSArgument<T> {
         StringBuilder sb = new StringBuilder(getName());
         sb.append("[");
         sb.append("value=").append(getDisplayValue());
-        sb.append(" source=").append(valueSource.name());
+        sb.append(" source=").append(valueSource.getType() == null ? "" : valueSource.getType().name());
         if (valueSource.getDetails() != null) {
             sb.append("(").append(valueSource.getDetails()).append(")");
         }
