@@ -25,7 +25,6 @@
     <module>sos-joc</module>
     <module>sos-jitl</module>
     <module>sos-js7</module>
-    <module>sos-scriptengine</module>
   </modules>
 
   <properties>
