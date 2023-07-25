@@ -26,6 +26,7 @@ import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgumentHelper;
 import com.sos.commons.util.common.SOSTimeout;
+import com.sos.js7.job.ValueSource.ValueSourceType;
 import com.sos.js7.job.exception.JobArgumentException;
 import com.sos.js7.job.exception.JobRequiredArgumentMissingException;
 
@@ -251,7 +252,7 @@ public class UnitTestJobHelper<A extends JobArguments> {
                     Object v = SOSReflection.enumIgnoreCaseValueOf(type.getTypeName(), val.toString());
                     if (v == null) {
                         arg.setNotAcceptedValue(val, null);
-                        arg.getNotAcceptedValue().setUsedValueSource(JobArgument.ValueSource.JAVA);
+                        arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
                         val = arg.getDefaultValue();
                     } else {
                         val = v;
@@ -261,7 +262,7 @@ public class UnitTestJobHelper<A extends JobArguments> {
                         val = Charset.forName(val.toString());
                     } catch (Throwable e) {
                         arg.setNotAcceptedValue(val, e);
-                        arg.getNotAcceptedValue().setUsedValueSource(JobArgument.ValueSource.JAVA);
+                        arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
                         val = arg.getDefaultValue();
                     }
                 }
