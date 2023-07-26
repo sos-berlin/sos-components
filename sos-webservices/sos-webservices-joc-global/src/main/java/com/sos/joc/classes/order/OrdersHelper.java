@@ -1328,7 +1328,7 @@ public class OrdersHelper {
                 ProblemHelper.throwProblemIfExist(posE);
                 // endpositions are arbitrary or not?
 //                if (reachablePositions.contains(posE.get().toString())) {
-//                    posOpt.add(posE.get());
+                    posOpt.add(posE.get());
 //                } else {
 //                    throw new JocBadRequestException("Invalid end position '" + pos.toString() + "'");
 //                }
