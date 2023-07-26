@@ -23,46 +23,61 @@ public class JobArgument<T> extends SOSArgument<T> {
         DECLARED, UNDECLARED;
     }
 
+    public enum Scope {
+        ALL, ORDER_PREPARATION;
+    }
+
     private final List<String> nameAliases;
     private ValueSource valueSource;
     private NotAcceptedValue notAcceptedValue;
     private Type type;
+    private Scope scope;
     private java.lang.reflect.Type clazzType;
 
     public JobArgument(String name, boolean required) {
-        this(name, required, null, DisplayMode.UNMASKED, null);
+        this(name, required, null, DisplayMode.UNMASKED, null, Scope.ALL);
     }
 
     public JobArgument(String name, boolean required, List<String> nameAliases) {
-        this(name, required, null, DisplayMode.UNMASKED, nameAliases);
+        this(name, required, null, DisplayMode.UNMASKED, nameAliases, Scope.ALL);
     }
 
     public JobArgument(String name, boolean required, T defaultValue) {
-        this(name, required, defaultValue, DisplayMode.UNMASKED, null);
+        this(name, required, defaultValue, DisplayMode.UNMASKED, null, Scope.ALL);
     }
 
     public JobArgument(String name, boolean required, T defaultValue, List<String> nameAliases) {
-        this(name, required, defaultValue, DisplayMode.UNMASKED, nameAliases);
+        this(name, required, defaultValue, DisplayMode.UNMASKED, nameAliases, Scope.ALL);
     }
 
     public JobArgument(String name, boolean required, DisplayMode displayMode) {
-        this(name, required, null, displayMode, null);
+        this(name, required, null, displayMode, null, Scope.ALL);
     }
 
     public JobArgument(String name, boolean required, DisplayMode displayMode, List<String> nameAliases) {
-        this(name, required, null, displayMode, nameAliases);
+        this(name, required, null, displayMode, nameAliases, Scope.ALL);
+    }
+
+    public JobArgument(String name, boolean required, T defaultValue, DisplayMode displayMode) {
+        this(name, required, defaultValue, displayMode, null, Scope.ALL);
     }
 
     public JobArgument(String name, boolean required, T defaultValue, DisplayMode displayMode, List<String> nameAliases) {
+        this(name, required, defaultValue, displayMode, nameAliases, Scope.ALL);
+    }
+
+    public JobArgument(String name, boolean required, T defaultValue, DisplayMode displayMode, List<String> nameAliases, Scope scope) {
         super(name, required, defaultValue, displayMode);
         this.type = Type.DECLARED;
+        this.scope = scope;
         this.valueSource = new ValueSource(ValueSourceType.JAVA);
         this.nameAliases = nameAliases;
+
     }
 
     /* internal usage - undeclared Arguments */
     protected JobArgument(String name, T value, ValueSource valueSource) {
-        this(name, false, null, DisplayMode.UNKNOWN, null);
+        this(name, false, null, DisplayMode.UNKNOWN, null, Scope.ALL);
         setValue(value);
         this.type = Type.UNDECLARED;
         this.valueSource = valueSource;
@@ -76,6 +91,7 @@ public class JobArgument<T> extends SOSArgument<T> {
         super(arg);
         setValue(arg.getValue());
         this.type = Type.DECLARED;
+        this.scope = Scope.ALL;
         this.valueSource = new ValueSource(ValueSourceType.JAVA);
         this.nameAliases = null;
         this.clazzType = clazzType;
@@ -99,6 +115,10 @@ public class JobArgument<T> extends SOSArgument<T> {
         return type;
     }
 
+    public Scope getScope() {
+        return scope;
+    }
+
     protected List<String> getNameAliases() {
         return nameAliases;
     }
@@ -108,19 +128,33 @@ public class JobArgument<T> extends SOSArgument<T> {
         StringBuilder sb = new StringBuilder(getName());
         sb.append("[");
         sb.append("value=").append(getDisplayValue());
-        sb.append(" source=").append(valueSource.getType() == null ? "" : valueSource.getType().name());
-        if (valueSource.getSource() != null) {
-            sb.append("(").append(valueSource.getSource()).append(")");
+
+        if (valueSource != null && valueSource.getType() != null) {
+            sb.append(" source=").append(valueSource.getType().name());
+            if (valueSource.getSource() != null) {
+                sb.append("(").append(valueSource.getSource()).append(")");
+            }
         }
         sb.append(" modified=").append(isDirty());
         if (clazzType != null) {
             sb.append(" type=").append(clazzType.getTypeName());
+        }
+        if (scope != null) {
+            sb.append(" scope=").append(scope.name());
         }
         if (getPayload() != null) {
             sb.append(" class=").append(SOSArgumentHelper.getClassName(getPayload().toString()));
         }
         sb.append("]");
         return sb.toString();
+    }
+
+    protected boolean isScopeAll() {
+        return scope != null && scope.equals(Scope.ALL);
+    }
+
+    protected boolean isScopeOrderPreparation() {
+        return scope != null && scope.equals(Scope.ORDER_PREPARATION);
     }
 
     protected void setNotAcceptedValue(Object value, Throwable exception) {
