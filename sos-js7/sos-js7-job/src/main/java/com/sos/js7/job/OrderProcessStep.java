@@ -48,8 +48,6 @@ public class OrderProcessStep<A extends JobArguments> {
     protected static final String CANCELABLE_RESOURCE_NAME_SSH_PROVIDER = "ssh_provider";
     protected static final String CANCELABLE_RESOURCE_NAME_SQL_CONNECTION = "sql_connection";
 
-    private static final String ORDER_PREPARATION_INTERN = "js7Workflow.path";
-
     private final JobEnvironment<A> jobEnvironment;
     private final BlockingInternalJob.Step internalStep;
     private final OrderProcessStepLogger logger;
@@ -283,7 +281,18 @@ public class OrderProcessStep<A extends JobArguments> {
         // order preparation default values
         if (orderPreparationParameterNames != null) {
             for (String name : orderPreparationParameterNames) {
-                if (!allArguments.containsKey(name)) {
+                if (allArguments.containsKey(name)) {
+                    JobArgument ar = allArguments.get(name);
+                    if (ar.isScopeOrderPreparation()) {
+                        try {
+                            ar.setValueSource(new ValueSource(ValueSourceType.ORDER_PREPARATION));
+                            ar.setValue(getNamedValue(name));
+                            ar.setIsDirty(false);
+                        } catch (JobProblemException e1) {
+                            getLogger().error("[orderPreparation][isScopeOrderPreparation][" + name + "]" + e1.toString());
+                        }
+                    }
+                } else {
                     ValueSource vs = new ValueSource(ValueSourceType.ORDER_PREPARATION);
                     try {
                         Object o = getNamedValue(name);
@@ -291,7 +300,7 @@ public class OrderProcessStep<A extends JobArguments> {
                         ar.setIsDirty(false);
                         allArguments.put(name, ar);
                     } catch (Throwable e1) {
-
+                        getLogger().error("[orderPreparation][" + name + "]" + e1.toString());
                     }
                 }
             }
@@ -543,8 +552,7 @@ public class OrderProcessStep<A extends JobArguments> {
                 return;
             }
             orderPreparationParameterNames = JavaConverters.asJava(internalStep.asScala().workflow().orderPreparation().parameterList()
-                    .nameToParameter()).entrySet().stream().filter(e -> !e.getKey().equals(ORDER_PREPARATION_INTERN)).map(e -> e.getKey()).collect(
-                            Collectors.toSet());
+                    .nameToParameter()).entrySet().stream().map(e -> e.getKey()).collect(Collectors.toSet());
         }
     }
 

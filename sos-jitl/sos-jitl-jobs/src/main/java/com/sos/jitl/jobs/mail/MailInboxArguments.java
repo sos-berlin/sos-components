@@ -23,14 +23,14 @@ public class MailInboxArguments extends JobArguments {
     private JobArgument<String> mailImapHost = new JobArgument<String>("mail.imap.host", false);
     private JobArgument<Integer> mailImapPort = new JobArgument<Integer>("mail.imap.port", false); // 143, 993 ssl
     private JobArgument<String> mailImapUser = new JobArgument<String>("mail.imap.user", false);
-    private JobArgument<String> mailImapPassword = new JobArgument<String>("mail.imap.password", false, "", DisplayMode.MASKED, null);
+    private JobArgument<String> mailImapPassword = new JobArgument<String>("mail.imap.password", false, "", DisplayMode.MASKED);
     private JobArgument<Boolean> mailImapSSL = new JobArgument<Boolean>("mail.imap.ssl.enable", false, false);
 
     /* pop3 arguments https://javaee.github.io/javamail/docs/api/com/sun/mail/pop3/package-summary.html */
     private JobArgument<String> mailPop3Host = new JobArgument<String>("mail.pop3.host", false);
     private JobArgument<Integer> mailPop3Port = new JobArgument<Integer>("mail.pop3.port", false); // 110, 995 ssl
     private JobArgument<String> mailPop3User = new JobArgument<String>("mail.pop3.user", false);
-    private JobArgument<String> mailPop3Password = new JobArgument<String>("mail.pop3.password", false, "", DisplayMode.MASKED, null);
+    private JobArgument<String> mailPop3Password = new JobArgument<String>("mail.pop3.password", false, "", DisplayMode.MASKED);
     private JobArgument<Boolean> mailPop3SSL = new JobArgument<Boolean>("mail.pop3.ssl.enable", false, false);
 
     /* mail store arguments */
@@ -39,7 +39,7 @@ public class MailInboxArguments extends JobArguments {
 
     /* mail messages arguments */
     private JobArgument<List<String>> mailMessageFolder = new JobArgument<List<String>>("mail_source_folders", false, Collections.singletonList(
-            "INBOX"), null);
+            "INBOX"), DisplayMode.UNMASKED);
 
     private JobArgument<Integer> maxMailsToProcess = new JobArgument<Integer>("max_processed_mails", false, 1000);
     private JobArgument<String> minMailAge = new JobArgument<String>("min_mail_age", false, "0");// seconds or hh:mm:ss

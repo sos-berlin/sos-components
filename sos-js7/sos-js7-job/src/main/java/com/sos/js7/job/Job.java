@@ -342,6 +342,9 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         if (arg.getName() == null) {// internal usage
             return;
         }
+        if (!arg.isScopeAll()) {
+            return;
+        }
         List<String> allNames = new ArrayList<>(Arrays.asList(arg.getName()));
         if (arg.getNameAliases() != null) {
             allNames.addAll(arg.getNameAliases());

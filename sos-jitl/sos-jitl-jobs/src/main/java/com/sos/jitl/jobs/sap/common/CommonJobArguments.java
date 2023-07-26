@@ -31,7 +31,7 @@ public class CommonJobArguments extends JobArguments {
     private JobArgument<Long> socketTimeout = new JobArgument<Long>(hanaPrefix + "_socket_timeout", false, TimeUnit.SECONDS.toSeconds(5));
     private JobArgument<Boolean> hostnameVerification = new JobArgument<Boolean>(hanaPrefix + "_hostname_verification", false, true);
     private JobArgument<Path> truststorePath = new JobArgument<Path>(hanaPrefix + "_truststore_path", false);
-    private JobArgument<String> truststorePwd = new JobArgument<String>(hanaPrefix + "_truststore_password", false, "", DisplayMode.MASKED, null);
+    private JobArgument<String> truststorePwd = new JobArgument<String>(hanaPrefix + "_truststore_password", false, "", DisplayMode.MASKED);
     private JobArgument<KeystoreType> truststoreType = new JobArgument<KeystoreType>(hanaPrefix + "_truststore_type", false, KeystoreType.PKCS12);
     private JobArgument<String> user = new JobArgument<String>(hanaPrefix + "_user", true);
     private JobArgument<String> pwd = new JobArgument<String>(hanaPrefix + "_password", true, DisplayMode.MASKED);
