@@ -109,8 +109,8 @@ public class JobArgument<T> extends SOSArgument<T> {
         sb.append("[");
         sb.append("value=").append(getDisplayValue());
         sb.append(" source=").append(valueSource.getType() == null ? "" : valueSource.getType().name());
-        if (valueSource.getDetails() != null) {
-            sb.append("(").append(valueSource.getDetails()).append(")");
+        if (valueSource.getSource() != null) {
+            sb.append("(").append(valueSource.getSource()).append(")");
         }
         sb.append(" modified=").append(isDirty());
         if (clazzType != null) {

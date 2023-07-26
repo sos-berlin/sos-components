@@ -7,7 +7,7 @@ public class ValueSource {
         JAVA("Resulting Arguments", "Resulting Argument"), ORDER("Order Variables", "Order Variable"), ORDER_OR_NODE(
                 "Default Order Variables or Node Arguments", "Default Order Variable or Node Argument"), JOB("Arguments", "Argument"), JOB_ARGUMENT(
                         "Job Arguments", "Job Argument"), JOB_RESOURCE("Job Resources", "Job Resource"), LAST_SUCCEEDED_OUTCOME(
-                                "Last Succeeded Outcomes"), LAST_FAILED_OUTCOME("Last Failed Outcomes");
+                                "Last Succeeded Outcomes"), LAST_FAILED_OUTCOME("Last Failed Outcomes"), ORDER_PREPARATION("Default Order Variables");
 
         private final String header;
         private final String title;
@@ -32,7 +32,7 @@ public class ValueSource {
     }
 
     private final ValueSourceType type;
-    private String details;
+    private String source;
 
     protected ValueSource(ValueSourceType type) {
         this.type = type;
@@ -54,6 +54,10 @@ public class ValueSource {
         return type != null && type.equals(ValueSourceType.ORDER_OR_NODE);
     }
 
+    public boolean isTypeOrderPreparation() {
+        return type != null && type.equals(ValueSourceType.ORDER_PREPARATION);
+    }
+
     public boolean isTypeJob() {
         return type != null && type.equals(ValueSourceType.JOB);
     }
@@ -66,11 +70,11 @@ public class ValueSource {
         return type != null && type.equals(ValueSourceType.JOB_RESOURCE);
     }
 
-    protected void setDetails(String val) {
-        details = val;
+    protected void setSource(String val) {
+        source = val;
     }
 
-    protected String getDetails() {
-        return details;
+    public String getSource() {
+        return source;
     }
 }

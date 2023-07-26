@@ -352,7 +352,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         if (jdv != null) {
             arg.setValue(getValue(jdv.getValue(), arg, field));
             ValueSource vs = new ValueSource(ValueSourceType.LAST_SUCCEEDED_OUTCOME);
-            vs.setDetails("pos=" + jdv.getSource());
+            vs.setSource(jdv.getSource());
             setValueSource(arg, vs);
         } else {
             // Preference 2 - Order Variable or Node Argument
@@ -563,12 +563,12 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
 
             // preference 4 (LOWEST) - JobResources
             if (source == null && arg.getValueSource().isTypeJAVA()) {
-                DetailValue jdv = fromMap(jobResources, allNames);
-                if (jdv != null) {
+                DetailValue dv = fromMap(jobResources, allNames);
+                if (dv != null) {
                     try {
-                        arg.setValue(getValue(jdv.getValue(), arg, field));
+                        arg.setValue(getValue(dv.getValue(), arg, field));
                         source = new ValueSource(ValueSourceType.JOB_RESOURCE);
-                        source.setDetails("resource=" + jdv.getSource());
+                        source.setSource(dv.getSource());
                     } catch (ClassNotFoundException e) {
                         LOGGER.error(String.format("[%s]%s", arg.getName(), e.toString()), e);
                     }
