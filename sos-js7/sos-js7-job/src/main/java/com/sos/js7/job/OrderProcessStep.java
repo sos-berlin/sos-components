@@ -5,9 +5,11 @@ import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
@@ -46,6 +48,8 @@ public class OrderProcessStep<A extends JobArguments> {
     protected static final String CANCELABLE_RESOURCE_NAME_SSH_PROVIDER = "ssh_provider";
     protected static final String CANCELABLE_RESOURCE_NAME_SQL_CONNECTION = "sql_connection";
 
+    private static final String ORDER_PREPARATION_INTERN = "js7Workflow.path";
+
     private final JobEnvironment<A> jobEnvironment;
     private final BlockingInternalJob.Step internalStep;
     private final OrderProcessStepLogger logger;
@@ -62,6 +66,7 @@ public class OrderProcessStep<A extends JobArguments> {
     private Map<String, DetailValue> jobResourcesValues;
     private Map<String, Object> unitTestUndeclaredArguments;
     private Map<String, Object> cancelableResources;
+    private Set<String> orderPreparationParameterNames;
 
     private String controllerId;
     private String orderId;
@@ -196,6 +201,8 @@ public class OrderProcessStep<A extends JobArguments> {
     private void setAllArguments() {
         allArguments = new TreeMap<>();
 
+        setOrderPreparationParameterNames();
+
         // DECLARED Arguments
         setAllDeclaredArguments();
         if (allDeclaredArguments != null && allDeclaredArguments.size() > 0) {
@@ -221,7 +228,7 @@ public class OrderProcessStep<A extends JobArguments> {
                 // if (!allArguments.containsKey(e.getKey()) && !JobHelper.NAMED_NAME_RETURN_CODE.equals(e.getKey())) {
                 if (!allArguments.containsKey(e.getKey())) {
                     ValueSource vs = new ValueSource(ValueSourceType.LAST_SUCCEEDED_OUTCOME);
-                    vs.setDetails(e.getValue().getSource());
+                    vs.setSource(e.getValue().getSource());
                     allArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue().getValue(), vs));
                 }
             });
@@ -257,7 +264,7 @@ public class OrderProcessStep<A extends JobArguments> {
                 // if (!allArguments.containsKey(e.getKey())) {
                 if (aja == null || aja.getValue() == null) {// workaround js: job resource changed and declaredArgumens defined
                     ValueSource vs = new ValueSource(ValueSourceType.JOB_RESOURCE);
-                    vs.setDetails(dv.getSource());
+                    vs.setSource(dv.getSource());
                     JobArgument ja = new JobArgument(name, dv.getValue(), vs);
                     allArguments.put(name, ja);
                     // allArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue().getValue(), vs));
@@ -273,6 +280,24 @@ public class OrderProcessStep<A extends JobArguments> {
             }
         });
 
+        // order preparation default values
+        if (orderPreparationParameterNames != null) {
+            for (String name : orderPreparationParameterNames) {
+                if (!allArguments.containsKey(name)) {
+                    ValueSource vs = new ValueSource(ValueSourceType.ORDER_PREPARATION);
+                    try {
+                        Object o = getNamedValue(name);
+                        JobArgument ar = new JobArgument(name, o, vs);
+                        ar.setIsDirty(false);
+                        allArguments.put(name, ar);
+                    } catch (Throwable e1) {
+
+                    }
+                }
+            }
+        }
+
+        // unit test - TODO remove
         if (unitTestUndeclaredArguments != null) {
             unitTestUndeclaredArguments.entrySet().stream().forEach(e -> {
                 if (!allArguments.containsKey(e.getKey())) {
@@ -511,6 +536,18 @@ public class OrderProcessStep<A extends JobArguments> {
         return workflowPosition;
     }
 
+    private void setOrderPreparationParameterNames() {
+        if (orderPreparationParameterNames == null) {
+            if (internalStep == null) {
+                orderPreparationParameterNames = new HashSet<>();
+                return;
+            }
+            orderPreparationParameterNames = JavaConverters.asJava(internalStep.asScala().workflow().orderPreparation().parameterList()
+                    .nameToParameter()).entrySet().stream().filter(e -> !e.getKey().equals(ORDER_PREPARATION_INTERN)).map(e -> e.getKey()).collect(
+                            Collectors.toSet());
+        }
+    }
+
     protected JOutcome.Completed processed() {
         return outcome.isFailed() ? failed() : success();
     }
@@ -671,6 +708,8 @@ public class OrderProcessStep<A extends JobArguments> {
     }
 
     private void logArgumentsBySource(LogLevel logLevel) throws Exception {
+        logOutcomes(logLevel);
+
         Map<String, Object> map = null;
         if (internalStep != null) {
             // ORDER Variables
@@ -682,6 +721,15 @@ public class OrderProcessStep<A extends JobArguments> {
                 });
             }
         }
+
+        List<JobArgument<A>> orderPreparation = getOrderPreparationArguments();
+        if (orderPreparation != null && orderPreparation.size() > 0) {
+            logger.log(logLevel, String.format(" %s:", ValueSourceType.ORDER_PREPARATION.getHeader()));
+            orderPreparation.stream().forEach(a -> {
+                logger.log(logLevel, "    " + a.toString());
+            });
+        }
+
         // Declared ORDER or Node arguments
         List<JobArgument<A>> orderOrNode = getDeclaredOrderOrNodeArguments();
         if (orderOrNode != null && orderOrNode.size() > 0) {
@@ -700,6 +748,9 @@ public class OrderProcessStep<A extends JobArguments> {
                 });
             }
         }
+
+        logJobEnvironmentArguments(logLevel);
+
         // JOB Resources
         Map<String, DetailValue> resources = getJobResourcesArgumentsAsNameDetailValueMap();
         if (resources != null && resources.size() > 0) {
@@ -709,8 +760,19 @@ public class OrderProcessStep<A extends JobArguments> {
                 logger.log(logLevel, "    %s=%s (resource=%s)", e.getKey(), getDisplayValue(e.getKey(), v.getValue()), v.getSource());
             });
         }
-        logJobEnvironmentArguments(logLevel);
-        logOutcomes(logLevel);
+
+    }
+
+    private List<JobArgument<A>> getOrderPreparationArguments() {
+        if (allArguments == null) {
+            return null;
+        }
+        return allArguments.entrySet().stream().filter(e -> {
+            if (e.getValue().getValueSource().isTypeOrderPreparation()) {
+                return true;
+            }
+            return false;
+        }).map(e -> e.getValue()).collect(Collectors.toList());
     }
 
     private List<JobArgument<A>> getDeclaredOrderOrNodeArguments() {
@@ -770,12 +832,12 @@ public class OrderProcessStep<A extends JobArguments> {
                         return true;
                     }
                 } else {
-                    return true;
+                    // return true;
                 }
             }
             return false;
         }).forEach(a -> {
-            String detail = a.getValue().getValueSource().getDetails() == null ? "" : " " + a.getValue().getValueSource().getDetails();
+            String detail = a.getValue().getValueSource().getSource() == null ? "" : " " + a.getValue().getValueSource().getSource();
             if (a.getValue().getPayload() != null) {
                 String pd = SOSArgumentHelper.getClassName(a.getValue().getPayload().toString());
                 if (detail.equals("")) {
@@ -801,25 +863,6 @@ public class OrderProcessStep<A extends JobArguments> {
                         .getDisplayValue(), nvsn, a.getValue().getNotAcceptedValue().getDisplayValue(), exception, nvsnu, detail);
             }
         });
-    }
-
-    @SuppressWarnings("unused")
-    private void logArgumentsDeprecated(LogLevel logLevel) throws Exception {
-        if (unitTestUndeclaredArguments != null && unitTestUndeclaredArguments.size() > 0) {
-            logger.log(logLevel, String.format(" All %s(Unit-Test UndeclaredArguments):", ValueSourceType.JAVA.getHeader()));
-            unitTestUndeclaredArguments.entrySet().stream().forEach(a -> {
-                logger.log(logLevel, "    " + a.toString());
-            });
-        }
-
-        if (allDeclaredArguments == null || allDeclaredArguments.size() == 0) {
-            return;
-        }
-        logger.log(logLevel, String.format(" All %s:", ValueSourceType.JAVA.getHeader()));
-        allDeclaredArguments.stream().forEach(a -> {
-            logger.log(logLevel, "    " + a.toString());
-        });
-        // logAllAllArguments(logLevel);
     }
 
     private void logAllArguments(LogLevel logLevel) throws Exception {
