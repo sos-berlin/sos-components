@@ -8,7 +8,6 @@ import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -178,11 +177,16 @@ public class CheckedAddOrdersPositions extends OrdersPositions {
         if (!jPos.toString().startsWith(parentPos.toString() + ":")) {
             return false;
         }
-        JPosition relativePosition = JPosition.fromJson(jPos.toString().substring(parentPos.toString().length() + 1)).getOrNull();
+        JPosition relativePosition = getRelativePosition(jPos, parentPos);
         if (relativePosition == null) {
             return false;
         }
         return isReachable(relativePosition);
+    }
+    
+    private static JPosition getRelativePosition(JPosition jPos, JBranchPath parentPos) {
+        List<Object> posAsList = jPos.toList();
+        return JPosition.fromList(posAsList.subList(parentPos.toList().size(), posAsList.size())).getOrNull();
     }
     
     private static Position createPosition(JPosition jPos, Workflow w) {
