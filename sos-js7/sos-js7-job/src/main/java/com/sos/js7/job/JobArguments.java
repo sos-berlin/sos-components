@@ -62,7 +62,7 @@ public class JobArguments {
         return mockLevel;
     }
 
-    public JobArgument<String> geJS7tWorkflowPath() {
+    public JobArgument<String> getJS7WorkflowPath() {
         return js7WorkflowPath;
     }
 
