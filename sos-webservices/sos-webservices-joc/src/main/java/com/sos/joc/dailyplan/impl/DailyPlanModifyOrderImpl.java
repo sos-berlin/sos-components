@@ -184,14 +184,14 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                     boolean withStartLabel = in.getStartPosition() != null && in.getStartPosition() instanceof String;
                     boolean withEndLabels = in.getEndPositions() != null && in.getEndPositions().stream().filter(Objects::nonNull).anyMatch(
                             ep -> ep instanceof String);
-                    boolean withBlockLabel = in.getBlockPosition() != null && in.getBlockPosition() instanceof String;
+                    boolean withBlock = in.getBlockPosition() != null;
                     
-                    if (withStartLabel || withEndLabels || withBlockLabel) {
+                    if (withStartLabel || withEndLabels || withBlock) {
                         com.sos.inventory.model.workflow.Workflow workflow = getWorkflow(controllerId, wNames.iterator().next());
                         if (withStartLabel || withEndLabels) {
                             labelMap = getLabelMap(workflow);
                         }
-                        if (withBlockLabel) {
+                        if (withBlock) {
                             blockPositions = getBlockPositions(workflow);
                         }
                     }

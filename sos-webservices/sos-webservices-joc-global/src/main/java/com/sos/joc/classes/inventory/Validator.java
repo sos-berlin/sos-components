@@ -893,7 +893,7 @@ public class Validator {
                         if (hasPositionSetting.test(op)) {
                             Set<BlockPosition> availableBlockPositions = WorkflowsHelper.getWorkflowBlockPositions(workflowOfAddOrder.getInstructions());
                             Map<String, List<Object>> labelMap = WorkflowsHelper.getLabelToPositionsMap(workflowOfAddOrder);
-                            checkAddOrderPositions(op, availableBlockPositions, ao.getWorkflowName(), labelMap, "$." + instPosition);
+                            checkAddOrderPositions(op, availableBlockPositions, ao.getWorkflowName(), labelMap, "$." + instPosition + ".blockPosition");
                         }
                     }
                     break;
@@ -1169,7 +1169,7 @@ public class Validator {
                         if (hasPositionSetting.test(op)) {
                             Set<BlockPosition> availableBlockPositions = WorkflowsHelper.getWorkflowBlockPositions(workflowOfAddOrder.getInstructions());
                             Map<String, List<Object>> labelMap = WorkflowsHelper.getLabelToPositionsMap(workflowOfAddOrder);
-                            checkAddOrderPositions(op, availableBlockPositions, ao.getWorkflowName(), labelMap, "$." + instPosition);
+                            checkAddOrderPositions(op, availableBlockPositions, ao.getWorkflowName(), labelMap, "$." + instPosition + ".blockPosition");
                         }
                     }
                     break;

@@ -1,13 +1,13 @@
-package com.sos.auth.ldap.classes;
+package com.sos.auth.classes;
 
-public class SOSLdapLoginUserName {
+public class SOSLoginUserName {
 
     private String loginAccount;
     private String alternateLoginAccount;
     private String userName;
     private String domain;
 
-    public SOSLdapLoginUserName(String loginAccount) {
+    public SOSLoginUserName(String loginAccount) {
         super();
         this.loginAccount = loginAccount;
         normalizeUser();

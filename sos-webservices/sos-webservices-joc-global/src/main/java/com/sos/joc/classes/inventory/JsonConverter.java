@@ -87,8 +87,8 @@ public class JsonConverter {
         private static final long serialVersionUID = 1L;
 
         {
-            put(InternalExecutableType.JavaScript_Graal, "com.sos.scriptengine.jobs.JavaScriptJob");
-            put(InternalExecutableType.JavaScript_Node, "com.sos.scriptengine.jobs.JavaScriptJob"); //TODO different className
+            put(InternalExecutableType.JavaScript_Graal, "com.sos.js7.scriptengine.jobs.JavaScriptJob");
+            put(InternalExecutableType.JavaScript_Node, "com.sos.js7.scriptengine.jobs.JavaScriptJob"); //TODO different className
         }
     });
 

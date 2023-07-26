@@ -695,8 +695,12 @@ public class SOSServicePermissionIam {
                                 currentAccount.setRoles(securityConfiguration);
 
                                 if (msg.isEmpty()) {
+                                    String kid="";
+                                    if (currentAccount.getKid() != null && !currentAccount.getKid().isEmpty()) {
+                                       kid = "[token verified using kid: " +  currentAccount.getKid() + "]";
+                                    }
 
-                                    LOGGER.info("Login with Identity Service " + dbItemIamIdentityService.getIdentityServiceName() + " successful.");
+                                    LOGGER.info("Login with Identity Service " + dbItemIamIdentityService.getIdentityServiceName() + " successful." + kid);
                                     addFolder(currentAccount);
                                     break;
                                 }

@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSIdentityService;
+import com.sos.auth.classes.SOSLoginUserName;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.sign.keys.keyStore.KeystoreType;
@@ -32,7 +33,7 @@ public class SOSLdapWebserviceCredentials {
     private String account;
     private String systemUser;
     private String systemPassword;
-    private SOSLdapLoginUserName sosLdapLoginUserName;
+    private SOSLoginUserName sosLdapLoginUserName;
     private SOSIdentityService identityService;
 
     private Integer readTimeout;
@@ -122,10 +123,10 @@ public class SOSLdapWebserviceCredentials {
 
     public void setAccount(String account) {
         this.account = account;
-        sosLdapLoginUserName = new SOSLdapLoginUserName(account);
+        sosLdapLoginUserName = new SOSLoginUserName(account);
     }
 
-    public SOSLdapLoginUserName getSosLdapLoginUserName() {
+    public SOSLoginUserName getSosLdapLoginUserName() {
         return sosLdapLoginUserName;
     }
 

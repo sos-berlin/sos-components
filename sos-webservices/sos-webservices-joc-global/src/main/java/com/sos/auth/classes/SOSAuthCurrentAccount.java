@@ -56,6 +56,7 @@ public class SOSAuthCurrentAccount {
     private Set<String> roles;
     private Set<ISOSAuthSubject> currentSubjects;
     private SOSLoginParameters sosLoginParameters;
+    private String kid;
 
     private Permissions sosPermissionJocCockpitControllers;
     private SOSAuthFolderPermissions sosAuthFolderPermissions;
@@ -336,6 +337,16 @@ public class SOSAuthCurrentAccount {
     
     public void setAccountName(String accountName) {
         this.accountName = accountName;
+    }
+
+    
+    public String getKid() {
+        return kid;
+    }
+
+    
+    public void setKid(String kid) {
+        this.kid = kid;
     }
 
 }
