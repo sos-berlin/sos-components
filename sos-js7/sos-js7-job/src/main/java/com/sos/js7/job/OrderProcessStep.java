@@ -44,6 +44,8 @@ import scala.collection.JavaConverters;
 
 public class OrderProcessStep<A extends JobArguments> {
 
+    public static final String PARAMETER_JS7_WORKFLOW_PATH = "js7Workflow.path";
+
     protected static final String CANCELABLE_RESOURCE_NAME_HIBERNATE_FACTORY = "hibernate_factory";
     protected static final String CANCELABLE_RESOURCE_NAME_SSH_PROVIDER = "ssh_provider";
     protected static final String CANCELABLE_RESOURCE_NAME_SQL_CONNECTION = "sql_connection";
@@ -71,6 +73,7 @@ public class OrderProcessStep<A extends JobArguments> {
     private String agentId;
     private String jobInstructionLabel;
     private String jobName;
+    private String workflowPath;
     private String workflowName;
     private String workflowVersionId;
     private String workflowPosition;
@@ -281,18 +284,7 @@ public class OrderProcessStep<A extends JobArguments> {
         // order preparation default values
         if (orderPreparationParameterNames != null) {
             for (String name : orderPreparationParameterNames) {
-                if (allArguments.containsKey(name)) {
-                    JobArgument ar = allArguments.get(name);
-                    if (ar.isScopeOrderPreparation()) {
-                        try {
-                            ar.setValueSource(new ValueSource(ValueSourceType.ORDER_PREPARATION));
-                            ar.setValue(getNamedValue(name));
-                            ar.setIsDirty(false);
-                        } catch (JobProblemException e1) {
-                            getLogger().error("[orderPreparation][isScopeOrderPreparation][" + name + "]" + e1.toString());
-                        }
-                    }
-                } else {
+                if (!allArguments.containsKey(name)) {
                     ValueSource vs = new ValueSource(ValueSourceType.ORDER_PREPARATION);
                     try {
                         Object o = getNamedValue(name);
@@ -452,10 +444,10 @@ public class OrderProcessStep<A extends JobArguments> {
     private String getStepInfo() {
         if (stepInfo == null) {
             try {
-                stepInfo = String.format("[Order %s][Workflow %s, versionId=%s, pos=%s][Job %s, agent=%s, class=%s]", getOrderId(), getWorkflowName(),
+                stepInfo = String.format("[Order %s][Workflow %s, versionId=%s, pos=%s][Job %s, agent=%s, class=%s]", getOrderId(), getWorkflowPath(),
                         getWorkflowVersionId(), getWorkflowPosition(), getJobName(), getAgentId(), getClass().getName());
             } catch (JobProblemException e) {
-                stepInfo = String.format("[Workflow %s, versionId=%s, pos=%s][Job class=%s]", getWorkflowName(), getWorkflowVersionId(),
+                stepInfo = String.format("[Workflow %s, versionId=%s, pos=%s][Job class=%s]", getWorkflowPath(), getWorkflowVersionId(),
                         getWorkflowPosition(), getClass().getName());
             }
         }
@@ -510,9 +502,24 @@ public class OrderProcessStep<A extends JobArguments> {
             try {
                 jobInstructionLabel = internalStep.instructionLabel().get().string();
             } catch (Throwable e) {
+                getLogger().error(String.format("[getJobInstructionLabel]%s", e.toString()));
             }
         }
         return jobInstructionLabel;
+    }
+
+    public String getWorkflowPath() {
+        if (workflowPath == null) {
+            if (internalStep == null) {
+                return null;
+            }
+            try {
+                workflowPath = (String) getNamedValue(PARAMETER_JS7_WORKFLOW_PATH);
+            } catch (Throwable e) {
+                getLogger().error(String.format("[getWorkflowPath][%s]%s", PARAMETER_JS7_WORKFLOW_PATH, e.toString()));
+            }
+        }
+        return workflowPath;
     }
 
     public String getWorkflowName() {
@@ -552,7 +559,8 @@ public class OrderProcessStep<A extends JobArguments> {
                 return;
             }
             orderPreparationParameterNames = JavaConverters.asJava(internalStep.asScala().workflow().orderPreparation().parameterList()
-                    .nameToParameter()).entrySet().stream().map(e -> e.getKey()).collect(Collectors.toSet());
+                    .nameToParameter()).entrySet().stream().filter(e -> !e.getKey().equals(PARAMETER_JS7_WORKFLOW_PATH)).map(e -> e.getKey()).collect(
+                            Collectors.toSet());
         }
     }
 

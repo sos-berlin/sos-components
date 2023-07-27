@@ -23,6 +23,7 @@ public class JobArgument<T> extends SOSArgument<T> {
         DECLARED, UNDECLARED;
     }
 
+    // TODO: currently only ALL in use
     public enum Scope {
         ALL, ORDER_PREPARATION;
     }
@@ -139,9 +140,9 @@ public class JobArgument<T> extends SOSArgument<T> {
         if (clazzType != null) {
             sb.append(" type=").append(clazzType.getTypeName());
         }
-        if (scope != null) {
-            sb.append(" scope=").append(scope.name());
-        }
+        // if (scope != null) {
+        // sb.append(" scope=").append(scope.name());
+        // }
         if (getPayload() != null) {
             sb.append(" class=").append(SOSArgumentHelper.getClassName(getPayload().toString()));
         }

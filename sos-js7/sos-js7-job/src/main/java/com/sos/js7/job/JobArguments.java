@@ -10,8 +10,6 @@ import java.util.stream.Collectors;
 
 import com.sos.commons.util.common.ASOSArguments;
 import com.sos.commons.util.common.SOSArgument;
-import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
-import com.sos.js7.job.JobArgument.Scope;
 
 public class JobArguments {
 
@@ -25,8 +23,6 @@ public class JobArguments {
 
     private JobArgument<LogLevel> logLevel = new JobArgument<LogLevel>("log_level", false, LogLevel.INFO);
     private JobArgument<MockLevel> mockLevel = new JobArgument<MockLevel>("mock_level", false, MockLevel.OFF);
-    private JobArgument<String> js7WorkflowPath = new JobArgument<String>("js7Workflow.path", false, null, DisplayMode.UNMASKED, null,
-            Scope.ORDER_PREPARATION);
 
     @SuppressWarnings("rawtypes")
     private Map<String, List<JobArgument>> includedArguments;
@@ -60,10 +56,6 @@ public class JobArguments {
 
     public JobArgument<MockLevel> getMockLevel() {
         return mockLevel;
-    }
-
-    public JobArgument<String> getJS7WorkflowPath() {
-        return js7WorkflowPath;
     }
 
     @SuppressWarnings("rawtypes")
