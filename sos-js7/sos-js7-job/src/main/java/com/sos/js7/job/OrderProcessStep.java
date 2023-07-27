@@ -44,11 +44,11 @@ import scala.collection.JavaConverters;
 
 public class OrderProcessStep<A extends JobArguments> {
 
-    public static final String PARAMETER_JS7_WORKFLOW_PATH = "js7Workflow.path";
-
     protected static final String CANCELABLE_RESOURCE_NAME_HIBERNATE_FACTORY = "hibernate_factory";
     protected static final String CANCELABLE_RESOURCE_NAME_SSH_PROVIDER = "ssh_provider";
     protected static final String CANCELABLE_RESOURCE_NAME_SQL_CONNECTION = "sql_connection";
+
+    private static final String INTERNAL_ORDER_PREPARATION_PARAMETER_JS7_WORKFLOW_PATH = "js7Workflow.path";
 
     private final JobEnvironment<A> jobEnvironment;
     private final BlockingInternalJob.Step internalStep;
@@ -514,9 +514,9 @@ public class OrderProcessStep<A extends JobArguments> {
                 return null;
             }
             try {
-                workflowPath = (String) getNamedValue(PARAMETER_JS7_WORKFLOW_PATH);
+                workflowPath = (String) getNamedValue(INTERNAL_ORDER_PREPARATION_PARAMETER_JS7_WORKFLOW_PATH);
             } catch (Throwable e) {
-                getLogger().error(String.format("[getWorkflowPath][%s]%s", PARAMETER_JS7_WORKFLOW_PATH, e.toString()));
+                getLogger().error(String.format("[getWorkflowPath][%s]%s", INTERNAL_ORDER_PREPARATION_PARAMETER_JS7_WORKFLOW_PATH, e.toString()));
             }
         }
         return workflowPath;
@@ -559,8 +559,8 @@ public class OrderProcessStep<A extends JobArguments> {
                 return;
             }
             orderPreparationParameterNames = JavaConverters.asJava(internalStep.asScala().workflow().orderPreparation().parameterList()
-                    .nameToParameter()).entrySet().stream().filter(e -> !e.getKey().equals(PARAMETER_JS7_WORKFLOW_PATH)).map(e -> e.getKey()).collect(
-                            Collectors.toSet());
+                    .nameToParameter()).entrySet().stream().filter(e -> !e.getKey().equals(INTERNAL_ORDER_PREPARATION_PARAMETER_JS7_WORKFLOW_PATH))
+                    .map(e -> e.getKey()).collect(Collectors.toSet());
         }
     }
 
