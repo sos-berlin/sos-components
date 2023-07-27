@@ -399,7 +399,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 final List<Object> startPosition = OrdersHelper.getPosition(in.getStartPosition(), labelMap);
                 final List<Object> endPositions = withNewEndPositions(in) ? in.getEndPositions().stream().map(pos -> OrdersHelper.getPosition(pos,
                         labelMap)).filter(Objects::nonNull).collect(Collectors.toList()) : null;
-                final BlockPosition blockPosition = OrdersHelper.getBlockPosition(in.getBlockPosition(), (workflow != null) ? workflow.getPath() : null,
+                final BlockPosition blockPosition = OrdersHelper.getBlockPosition(in.getBlockPosition(), items.get(0).getWorkflowName(),
                         availableBlockPositions);
 
                 // modify planned and prepare submitted
