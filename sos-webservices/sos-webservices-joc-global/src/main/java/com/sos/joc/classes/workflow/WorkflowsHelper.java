@@ -280,7 +280,7 @@ public class WorkflowsHelper {
             instructions = Collections.singletonList(createImplicitEndInstruction());
         }
         Set<Position> positions = new LinkedHashSet<Position>();
-        setWorkflowAddOrderPositions(pos, instructions, positions);
+        setWorkflowAddOrderPositions(pos, pos.length, instructions, positions);
         return positions;
     }
 
@@ -898,7 +898,7 @@ public class WorkflowsHelper {
         return p;
     }
 
-    private static void setWorkflowAddOrderPositions(Object[] parentPosition, List<Instruction> insts, Set<Position> positions) {
+    private static void setWorkflowAddOrderPositions(Object[] parentPosition, int depth, List<Instruction> insts, Set<Position> positions) {
         if (insts != null) {
             for (int i = 0; i < insts.size(); i++) {
                 Object[] pos = extendArray(parentPosition, i);
@@ -906,7 +906,7 @@ public class WorkflowsHelper {
                 Instruction inst = insts.get(i);
                 Position p = new Position();
                 p.setPosition(Arrays.asList(pos));
-                if (p.getPosition().size() > 3) {
+                if (p.getPosition().size() - depth > 3) {
                     continue;
                 }
                 p.setPositionString(getJPositionString(p.getPosition()));
@@ -939,7 +939,7 @@ public class WorkflowsHelper {
                 case IF:
                     IfElse ie = inst.cast();
                     if (ie.getThen() != null) {
-                        setWorkflowAddOrderPositions(extendArray(pos, "then"), ie.getThen().getInstructions(), positions);
+                        setWorkflowAddOrderPositions(extendArray(pos, "then"), depth, ie.getThen().getInstructions(), positions);
                     }
                     // if (ie.getElse() != null) {
                     // setWorkflowAddOrderPositions(extendArray(pos, "else"), ie.getElse().getInstructions(), positions);
@@ -948,7 +948,7 @@ public class WorkflowsHelper {
                 case TRY:
                     TryCatch tc = inst.cast();
                     if (tc.getTry() != null) {
-                        setWorkflowAddOrderPositions(extendArray(pos, "try"), tc.getTry().getInstructions(), positions);
+                        setWorkflowAddOrderPositions(extendArray(pos, "try"), depth, tc.getTry().getInstructions(), positions);
                     }
                     // if (tc.getCatch() != null) {
                     // setWorkflowAddOrderPositions(extendArray(pos, "catch"), tc.getCatch().getInstructions(), positions);
@@ -957,7 +957,7 @@ public class WorkflowsHelper {
                 case OPTIONS:
                     Options o = inst.cast();
                     if (o.getBlock() != null) {
-                        setWorkflowAddOrderPositions(extendArray(pos, "options"), o.getBlock().getInstructions(), positions);
+                        setWorkflowAddOrderPositions(extendArray(pos, "options"), depth, o.getBlock().getInstructions(), positions);
                     }
                     break;
                 case LOCK:
