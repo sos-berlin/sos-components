@@ -6,7 +6,7 @@
 
   <groupId>com.sos-berlin</groupId>
   <artifactId>sos-components</artifactId>
-  <version>2.6.1-SNAPSHOT</version>
+  <version>2.6.1</version>
   <packaging>pom</packaging>
   <name>${project.artifactId}</name>
   <description>Parent pom project for all sos components</description>
@@ -32,9 +32,9 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-    <sos.engine.version>2.6.1-SNAPSHOT</sos.engine.version>
+    <sos.engine.version>2.6.1</sos.engine.version>
     <api.schema.version>${project.version}</api.schema.version>
-    <inventory.schema.version>1.6.1-SNAPSHOT</inventory.schema.version>
+    <inventory.schema.version>1.6.1</inventory.schema.version>
     <sos.license.version>1.1.2</sos.license.version>
 
     <jackson.version>2.14.2</jackson.version>
