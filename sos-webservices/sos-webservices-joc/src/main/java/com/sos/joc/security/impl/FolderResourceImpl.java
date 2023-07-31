@@ -5,11 +5,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import jakarta.ws.rs.Path;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
@@ -33,10 +28,10 @@ import com.sos.joc.model.security.permissions.FoldersFilter;
 import com.sos.joc.security.resource.IFolderResource;
 import com.sos.schema.JsonValidator;
 
+import jakarta.ws.rs.Path;
+
 @Path("iam")
 public class FolderResourceImpl extends JOCResourceImpl implements IFolderResource {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(FolderResourceImpl.class);
 
     private static final String API_CALL_FOLDERS = "./iam/folders";
     private static final String API_CALL_FOLDER_READ = "./iam/folder";

@@ -4,15 +4,11 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,11 +22,9 @@ import java.util.zip.GZIPOutputStream;
 
 import javax.persistence.TemporalType;
 
-import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
-import org.apache.commons.compress.archivers.tar.TarFile;
 import org.hibernate.query.Query;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -46,20 +40,15 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.commons.util.SOSCheckJavaVariableName;
-import com.sos.inventory.model.descriptor.DeploymentDescriptor;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.exceptions.JocConfigurationException;
-import com.sos.joc.exceptions.JocImportException;
 import com.sos.joc.model.agent.transfer.AgentExportFilter;
 import com.sos.joc.model.agent.transfer.AgentImportFilter;
-import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.release.ReleasableRecallFilter;
-import com.sos.joc.model.joc.JocMetaInfo;
 import com.sos.joc.model.joc.VersionsFilter;
 import com.sos.joc.model.notification.DeleteNotificationFilter;
 import com.sos.joc.model.notification.ReadNotificationFilter;
@@ -77,9 +66,6 @@ import com.sos.schema.exception.SOSJsonSchemaException;
 import com.sos.sign.model.instruction.IfElse;
 import com.sos.sign.model.instruction.NamedJob;
 import com.sos.sign.model.workflow.Workflow;
-
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.StreamingOutput;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class MappingTest {

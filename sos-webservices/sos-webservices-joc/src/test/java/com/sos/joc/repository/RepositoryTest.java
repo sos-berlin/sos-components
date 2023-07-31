@@ -33,7 +33,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.joc.Globals;
-import com.sos.joc.exceptions.JocGitException;
 import com.sos.joc.model.publish.repository.ResponseFolder;
 import com.sos.joc.model.publish.repository.ResponseFolderItem;
 import com.sos.joc.publish.repository.util.RepositoryUtil;

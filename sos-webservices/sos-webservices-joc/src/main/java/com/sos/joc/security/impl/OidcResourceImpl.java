@@ -2,14 +2,13 @@ package com.sos.joc.security.impl;
 
 import java.io.InputStream;
 import java.time.Instant;
-import java.util.ArrayList;
+
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -48,7 +47,7 @@ import jakarta.ws.rs.Path;
 @Path("iam")
 public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(OidcResourceImpl.class);
+
 
     private static final String API_CALL_IDENTITY_PROVIDERS = "./iam/identityproviders";
     private static final String API_CALL_IDENTITY_CLIENTS = "./iam/identitycliens";
@@ -167,7 +166,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
                 }
                 if (dbItemIamIdentityService.getSecondFactor()) {
                     identityProviders.getFido2ndFactorServiceItems().add(fidoIdentityProvider);
-                }else {
+                } else {
                 identityProviders.getFidoServiceItems().add(fidoIdentityProvider);
                 }
             }

@@ -4,9 +4,6 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -28,8 +25,6 @@ import jakarta.ws.rs.Path;
 
 @Path("iam")
 public class BlocklistResourceImpl extends JOCResourceImpl implements IBlocklistResource {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(BlocklistResourceImpl.class);
 
     private static final String API_CALL_BLOCKLISTS = "./iam//blockedAccounts";
     private static final String API_CALL_BLOCKLISTS_DELETE = "./iam/blockedAccounts/delete";

@@ -513,12 +513,10 @@ public class SOSMimeMessage {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	public Enumeration<Header> getHeaders() throws MessagingException {
 		return mimeMessage.getAllHeaders();
 	}
 
-	@SuppressWarnings("unchecked")
 	public String dumpHeaders() throws IOException, MessagingException {
 		StringBuilder sb = new StringBuilder();
 		Header header = null;
@@ -649,7 +647,6 @@ public class SOSMimeMessage {
 		this.queueDir = queueDir;
 	}
 
-	@SuppressWarnings("unchecked")
 	public int incrementHeader(final String headerName) throws MessagingException {
 		Header header = null;
 		int value = -1;
@@ -675,7 +672,6 @@ public class SOSMimeMessage {
 	 * @return String represents the value of the specified header otherwise null.
 	 * @throws MessagingException
 	 */
-	@SuppressWarnings("unchecked")
 	public String getHeaderValue(final String headerName) throws MessagingException {
 		Header header = null;
 		for (Enumeration<Header> e = mimeMessage.getAllHeaders(); e.hasMoreElements();) {

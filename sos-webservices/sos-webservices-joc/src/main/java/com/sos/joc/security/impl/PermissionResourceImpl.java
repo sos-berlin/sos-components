@@ -5,11 +5,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import jakarta.ws.rs.Path;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
@@ -33,10 +28,10 @@ import com.sos.joc.model.security.permissions.PermissionsFilter;
 import com.sos.joc.security.resource.IPermissionResource;
 import com.sos.schema.JsonValidator;
 
+import jakarta.ws.rs.Path;
+
 @Path("iam")
 public class PermissionResourceImpl extends JOCResourceImpl implements IPermissionResource {
-
-	private static final Logger LOGGER = LoggerFactory.getLogger(PermissionResourceImpl.class);
 
 	private static final String API_CALL_PERMISSIONS = "./iam/permissions";
 	private static final String API_CALL_PERMISSION_READ = "./iam/permission";

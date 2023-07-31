@@ -9,7 +9,6 @@ import com.sos.joc.classes.quicksearch.QuickSearchStore;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IQuickSearchResource;
 import com.sos.joc.model.common.DeployedObjectQuickSearchFilter;
-import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.search.RequestQuickSearchFilter;
 import com.sos.joc.model.inventory.search.RequestSearchReturnType;
 import com.sos.joc.model.inventory.search.ResponseQuickSearch;
