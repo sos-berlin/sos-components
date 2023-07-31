@@ -400,11 +400,15 @@ public class MonitoringDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
-    public ScrollableResults getAgents(String controllerId, Date dateFrom, Date dateTo) throws SOSHibernateException {
+    public ScrollableResults getAgents(Collection<String> controllerIds, Date dateFrom, Date dateTo) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_AGENTS).append(" ");
         List<String> where = new ArrayList<>();
-        if (!SOSString.isEmpty(controllerId)) {
-            where.add("controllerId=:controllerId");
+        if (controllerIds != null && !controllerIds.isEmpty()) {
+            if (controllerIds.size() == 1) {
+                where.add("controllerId=:controllerId");
+            } else {
+                where.add("controllerId in (:controllerIds)");
+            }
         }
         if (dateFrom != null) {
             where.add("readyEventId >= :dateFrom");
@@ -418,8 +422,12 @@ public class MonitoringDBLayer extends DBLayer {
         hql.append("order by readyEventId asc");
 
         Query<DBItemHistoryAgent> query = getSession().createQuery(hql.toString());
-        if (!SOSString.isEmpty(controllerId)) {
-            query.setParameter("controllerId", controllerId);
+        if (controllerIds != null && !controllerIds.isEmpty()) {
+            if (controllerIds.size() == 1) {
+                query.setParameter("controllerId", controllerIds.iterator().next());
+            } else {
+                query.setParameterList("controllerIds", controllerIds);
+            }
         }
         if (dateFrom != null) {
             query.setParameter("dateFrom", getDateAsEventId(dateFrom));

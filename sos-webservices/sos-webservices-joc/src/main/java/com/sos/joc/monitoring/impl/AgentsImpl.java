@@ -43,8 +43,26 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
             initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, AgentsFilter.class);
             AgentsFilter in = Globals.objectMapper.readValue(inBytes, AgentsFilter.class);
+            
+            String controllerId = in.getControllerId();
+            Set<String> allowedControllers = Collections.emptySet();
+            boolean noControllerAvailable = Proxies.getControllerDbInstances().isEmpty();
+            boolean permitted = noControllerAvailable; //no access denied if no controllers are registered
+            if (controllerId == null || controllerId.isEmpty()) {
+                if (!noControllerAvailable) {
+                    allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
+                            availableController, accessToken).getAgents().getView()).collect(Collectors.toSet());
+                    permitted = !allowedControllers.isEmpty();
+                    if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
+                        allowedControllers = Collections.emptySet();
+                    }
+                }
+            } else {
+                allowedControllers = Collections.singleton(controllerId);
+                permitted = getControllerPermissions(controllerId, accessToken).getAgents().getView();
+            }
 
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), getPermitted(accessToken, in));
+            JOCDefaultResponse response = initPermissions(null, permitted);
             if (response != null) {
                 return response;
             }
@@ -57,13 +75,12 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
             Date dateTo = JobSchedulerDate.getDateTo(in.getDateTo(), "UTC");
             ScrollableResults sr = null;
             try {
-                sr = dbLayer.getAgents(in.getControllerId(), dateFrom, dateTo);
+                sr = dbLayer.getAgents(allowedControllers, dateFrom, dateTo);
                 while (sr.next()) {
                     DBItemHistoryAgent item = (DBItemHistoryAgent) sr.get(0);
 
-                    Map<String, List<DBItemHistoryAgent>> m = map.containsKey(item.getControllerId()) ? map.get(item.getControllerId())
-                            : new HashMap<>();
-                    List<DBItemHistoryAgent> l = m.containsKey(item.getAgentId()) ? m.get(item.getAgentId()) : new ArrayList<>();
+                    Map<String, List<DBItemHistoryAgent>> m = map.getOrDefault(item.getControllerId(), new HashMap<>());
+                    List<DBItemHistoryAgent> l = m.getOrDefault(item.getAgentId(), new ArrayList<>());
                     l.add(item);
                     m.put(item.getAgentId(), l);
 
@@ -294,24 +311,5 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
                 return item.getReadyTime();
             }
         }
-    }
-
-    private boolean getPermitted(String accessToken, AgentsFilter in) {
-        String controllerId = in.getControllerId();
-        Set<String> allowedControllers = Collections.emptySet();
-        boolean permitted = false;
-        if (controllerId == null || controllerId.isEmpty()) {
-            controllerId = "";
-            allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
-                    availableController, accessToken).getAgents().getView()).collect(Collectors.toSet());
-            permitted = !allowedControllers.isEmpty();
-            if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
-                allowedControllers = Collections.emptySet();
-            }
-        } else {
-            allowedControllers = Collections.singleton(controllerId);
-            permitted = getControllerPermissions(controllerId, accessToken).getAgents().getView();
-        }
-        return permitted;
     }
 }
