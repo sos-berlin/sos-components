@@ -1,13 +1,9 @@
 package com.sos.auth.sosintern;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.auth.classes.SOSAuthAccessToken;
 import com.sos.auth.classes.SOSAuthCurrentAccount;
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSPasswordHasher;
-import com.sos.auth.classes.SOSSecondFactorHandler;
 import com.sos.auth.sosintern.classes.SOSInternAuthLogin;
 import com.sos.auth.sosintern.classes.SOSInternAuthWebserviceCredentials;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -19,7 +15,6 @@ import com.sos.joc.db.security.IamAccountFilter;
 
 public class SOSInternAuthHandler {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SOSInternAuthHandler.class);
     private Boolean forcePasswordChange = false;
 
     public SOSInternAuthHandler() {

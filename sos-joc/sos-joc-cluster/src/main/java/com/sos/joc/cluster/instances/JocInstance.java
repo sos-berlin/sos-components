@@ -4,14 +4,13 @@ import java.util.Date;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.util.SOSShell;
-import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
-import com.sos.joc.db.joc.DBItemJocInstance;
-import com.sos.joc.event.EventBus;
-import com.sos.joc.event.bean.JOCEvent;
-import com.sos.joc.event.bean.cluster.NewJocAddedEvent;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.db.DBLayerJocCluster;
+import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
+import com.sos.joc.db.joc.DBItemJocInstance;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.cluster.NewJocAddedEvent;
 
 public class JocInstance {
 

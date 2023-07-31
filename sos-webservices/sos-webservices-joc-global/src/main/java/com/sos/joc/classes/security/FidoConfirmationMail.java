@@ -6,9 +6,6 @@ import java.util.Map;
 
 import javax.mail.MessagingException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.mail.SOSMail;
 import com.sos.commons.util.SOSParameterSubstitutor;
@@ -24,7 +21,6 @@ import com.sos.joc.model.security.properties.fido.FidoProperties;
  
 public class FidoConfirmationMail {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(FidoConfirmationMail.class);
     private static final boolean QUEUE_MAIL_ON_ERROR = false;
     private SOSMail mail = null;
     private FidoProperties fidoProperties;

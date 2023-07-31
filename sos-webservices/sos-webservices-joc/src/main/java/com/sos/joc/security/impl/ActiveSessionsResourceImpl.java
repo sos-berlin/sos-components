@@ -3,11 +3,6 @@ package com.sos.joc.security.impl;
 import java.time.Instant;
 import java.util.Date;
 
-import jakarta.ws.rs.Path;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.auth.classes.SOSAuthCurrentAccount;
 import com.sos.auth.classes.SOSSessionHandler;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -23,10 +18,10 @@ import com.sos.joc.model.security.sessions.ActiveSessionsFilter;
 import com.sos.joc.security.resource.IActiveSessionsResource;
 import com.sos.schema.JsonValidator;
 
+import jakarta.ws.rs.Path;
+
 @Path("iam")
 public class ActiveSessionsResourceImpl extends JOCResourceImpl implements IActiveSessionsResource {
-
-	private static final Logger LOGGER = LoggerFactory.getLogger(ActiveSessionsResourceImpl.class);
 
 	private static final String API_CALL_SESSIONS = "./iam/sessions";
 	private static final String API_CALL_SESSIONS_DELETE = "./iam/sessions/cancel";

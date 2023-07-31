@@ -19,9 +19,6 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class SOSSecurityUtil {
 
     private static final String UTF_8 = "UTF-8";
@@ -39,7 +36,6 @@ public class SOSSecurityUtil {
     private static final String SHA3846WITHECDSA = "SHA3846withECDSA";
     private static final String SHA512WITHECDSA = "SHA512withECDSA";
     private static final String SHA256WITHECDSA = "SHA256withECDSA";
-    private static final Logger LOGGER = LoggerFactory.getLogger(SOSSecurityUtil.class);
 
     private static PublicKey getPublicKey(String base64PublicKey, String alg) throws NoSuchAlgorithmException, InvalidKeySpecException,
             NoSuchProviderException {

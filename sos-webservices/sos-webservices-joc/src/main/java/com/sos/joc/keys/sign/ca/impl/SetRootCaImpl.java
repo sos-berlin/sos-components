@@ -4,8 +4,6 @@ import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.Date;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.key.KeyUtil;
@@ -17,11 +15,12 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocKeyNotValidException;
 import com.sos.joc.keys.ca.resource.ISetRootCa;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.publish.SetRootCaFilter;
 import com.sos.joc.model.publish.SetRootCaForSigningFilter;
 import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.model.sign.JocKeyType;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 
 @Path("profile/key/ca")

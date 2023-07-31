@@ -2,9 +2,6 @@ package com.sos.joc.security.impl;
 
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSAuthLockerHandler;
 import com.sos.auth.classes.SOSLocker;
@@ -24,8 +21,6 @@ import jakarta.ws.rs.Path;
 
 @Path("iam")
 public class LockerResourceImpl extends JOCResourceImpl implements ILockerResource {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(LockerResourceImpl.class);
 
     private static final String API_CALL_LOCKER_GET = "./iam/locker/get";
     private static final String API_CALL_LOCKER_PUT = "./iam/locker/put";

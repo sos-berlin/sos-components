@@ -6,19 +6,14 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import jakarta.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -32,7 +27,6 @@ import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
-import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.exceptions.JocAuthenticationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.auth.resource.ICreateClientServerCert;
@@ -43,6 +37,8 @@ import com.sos.joc.model.publish.RolloutResponse;
 import com.sos.joc.model.publish.rollout.items.JocConf;
 import com.sos.joc.publish.util.ClientServerCertificateUtil;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("authentication")
 public class ClientServerCertImpl extends JOCResourceImpl implements ICreateClientServerCert {

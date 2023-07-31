@@ -1,15 +1,10 @@
 package com.sos.auth.classes;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.model.security.identityservice.IdentityServiceAuthenticationScheme;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
 public class SOSIdentityService {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(SOSIdentityService.class);
 
     private Long identityServiceId;
     private String identityServiceName;

@@ -5,9 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.classes.SOSInitialPasswordSetting;
@@ -46,8 +43,6 @@ import com.sos.joc.model.security.configuration.permissions.SecurityConfiguratio
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
 public class SOSSecurityDBConfiguration {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(SOSSecurityDBConfiguration.class);
 
     private void storeInVault(SOSVaultWebserviceCredentials webserviceCredentials, SecurityConfigurationAccount securityConfigurationAccount,
             String password, IdentityServiceTypes identityServiceTypes) throws Exception {

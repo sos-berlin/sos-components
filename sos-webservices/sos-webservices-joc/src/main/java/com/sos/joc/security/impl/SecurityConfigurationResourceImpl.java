@@ -4,11 +4,6 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
 
-import jakarta.ws.rs.Path;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -30,10 +25,11 @@ import com.sos.joc.security.resource.ISecurityConfigurationResource;
 import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
 
+import jakarta.ws.rs.Path;
+
 @Path("authentication")
 public class SecurityConfigurationResourceImpl extends JOCResourceImpl implements ISecurityConfigurationResource {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SecurityConfigurationResourceImpl.class);
     private static final String API_CALL_READ = "./authentication/auth";
     private static final String API_CALL_WRITE = "./authentication/auth/store";
 

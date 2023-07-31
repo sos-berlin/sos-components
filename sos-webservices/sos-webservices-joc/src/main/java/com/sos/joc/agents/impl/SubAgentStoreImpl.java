@@ -4,11 +4,8 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import jakarta.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSCheckJavaVariableName;
@@ -30,6 +27,8 @@ import com.sos.joc.model.agent.StoreSubAgents;
 import com.sos.joc.model.agent.SubAgent;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("agents")
 public class SubAgentStoreImpl extends JOCResourceImpl implements ISubAgentStore {
