@@ -7,6 +7,8 @@ import java.util.List;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.hibernate.query.Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
@@ -18,6 +20,7 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 public class InventoryOperatingSystemsDBLayer {
 
     private SOSHibernateSession session;
+    private static final Logger LOGGER = LoggerFactory.getLogger(InventoryOperatingSystemsDBLayer.class);
 
     public InventoryOperatingSystemsDBLayer(SOSHibernateSession connection) {
         this.session = connection;
@@ -76,24 +79,31 @@ public class InventoryOperatingSystemsDBLayer {
             }
             DBItemInventoryOperatingSystem oldOsItem = getOSItem(osItem.getHostname());
             if (oldOsItem == null) {
-                osItem.setModified(Date.from(Instant.now()));
-                session.save(osItem);
-                return osItem.getId();
+                DBItemInventoryOperatingSystem newItem = new DBItemInventoryOperatingSystem();
+                newItem.setId(null);
+                newItem.setArchitecture(osItem.getArchitecture());
+                newItem.setDistribution(osItem.getDistribution());
+                newItem.setHostname(osItem.getHostname());
+                newItem.setName(osItem.getName());
+                newItem.setModified(Date.from(Instant.now()));
+                session.save(newItem);
+                return newItem.getId();
             } else {
                 EqualsBuilder eb = new EqualsBuilder();
                 eb.append(oldOsItem.getArchitecture(), osItem.getArchitecture()).append(oldOsItem.getDistribution(), osItem.getDistribution()).append(
                         oldOsItem.getName(), osItem.getName());
                 if (!eb.isEquals()) {
-                    osItem.setId(oldOsItem.getId());
-                    osItem.setModified(Date.from(Instant.now()));
-                    session.update(osItem);
+                    oldOsItem.setArchitecture(osItem.getArchitecture());
+                    oldOsItem.setDistribution(osItem.getDistribution());
+                    oldOsItem.setName(osItem.getName());
+                    oldOsItem.setModified(Date.from(Instant.now()));
+                    session.update(oldOsItem);
                 }
                 return oldOsItem.getId();
             }
-        } catch (SOSHibernateInvalidSessionException ex) {
-            throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
+            LOGGER.warn(ex.toString());
+            return 0L;
         }
     }
 
