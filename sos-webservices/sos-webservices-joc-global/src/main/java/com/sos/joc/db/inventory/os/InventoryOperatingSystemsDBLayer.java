@@ -11,7 +11,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
+import com.sos.joc.Globals;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -73,9 +75,16 @@ public class InventoryOperatingSystemsDBLayer {
     }
 
     public Long saveOrUpdateOSItem(DBItemInventoryOperatingSystem osItem) throws DBConnectionRefusedException, DBInvalidDataException {
+        boolean isAutoCommit = session.isAutoCommit();
+        // if isAutoCommit==false then the caller takes care of the transaction
+        if (osItem == null || osItem.getHostname() == null || osItem.getHostname().isEmpty()) {
+            return 0L;
+        }
         try {
-            if (osItem == null || osItem.getHostname() == null || osItem.getHostname().isEmpty()) {
-                return 0L;
+            if (isAutoCommit) {
+                session.setAutoCommit(false);
+                LOGGER.info("change autocommit to false");
+                session.beginTransaction();
             }
             DBItemInventoryOperatingSystem oldOsItem = getOSItem(osItem.getHostname());
             if (oldOsItem == null) {
@@ -87,6 +96,9 @@ public class InventoryOperatingSystemsDBLayer {
                 newItem.setName(osItem.getName());
                 newItem.setModified(Date.from(Instant.now()));
                 session.save(newItem);
+                if (isAutoCommit) {
+                    Globals.commit(session);
+                }
                 return newItem.getId();
             } else {
                 EqualsBuilder eb = new EqualsBuilder();
@@ -99,11 +111,25 @@ public class InventoryOperatingSystemsDBLayer {
                     oldOsItem.setModified(Date.from(Instant.now()));
                     session.update(oldOsItem);
                 }
+                if (isAutoCommit) {
+                    Globals.commit(session);
+                }
                 return oldOsItem.getId();
             }
         } catch (Exception ex) {
+            if (isAutoCommit) {
+                Globals.rollback(session);
+            }
             LOGGER.warn(ex.toString());
             return 0L;
+        } finally {
+            if (isAutoCommit) {
+                try {
+                    session.setAutoCommit(true);
+                } catch (SOSHibernateException e) {
+                    //
+                }
+            }
         }
     }
 
