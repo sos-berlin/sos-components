@@ -160,24 +160,24 @@ public class JsonConverter {
                 case ScriptExecutable:
                     com.sos.inventory.model.job.ExecutableScript invEs = invJob.getExecutable().cast();
                     JobReturnCode rc = invEs.getReturnCodeMeaning();
-                    if (rc != null && rc.getWarning() != null && !rc.getWarning().isEmpty()) {
-                        if (signJob != null) {
+                    if (rc != null && signJob != null) {
+                        if (rc.getFailure() != null && "none".equals(rc.getFailure())) {
+                            ExecutableScript signEs = signJob.getExecutable().cast();
+                            if (signEs != null) {
+                                signEs.getReturnCodeMeaning().setFailure("");
+                            }
+                        } else if (rc.getWarning() != null && !rc.getWarning().isEmpty()) {
                             ExecutableScript signEs = signJob.getExecutable().cast();
                             if (signEs != null) {
                                 if (rc.getSuccess() != null) {
                                     signEs.getReturnCodeMeaning().setSuccessNormalized(rc.getSuccess() + "," + rc.getWarning());
-//                                    signEs.getReturnCodeMeaning().setSuccess(Stream.of(rc.getSuccess(), rc.getWarning()).flatMap(List::stream).filter(
-//                                            Objects::nonNull).distinct().sorted().collect(Collectors.toList()));
                                 } else if (rc.getFailure() != null) {
-//                                    signEs.getReturnCodeMeaning().getFailure().removeAll(rc.getWarning());
                                     signEs.getReturnCodeMeaning().setFailureNormalized(rc.getWarning());
                                 } else {
                                     if (signEs.getReturnCodeMeaning() == null) {
                                         signEs.setReturnCodeMeaning(new com.sos.sign.model.job.JobReturnCode());
                                     }
                                     signEs.getReturnCodeMeaning().setSuccessNormalized("0," + rc.getWarning());
-//                                    signEs.getReturnCodeMeaning().setSuccess(Stream.of(Collections.singletonList(0), rc.getWarning()).flatMap(
-//                                            List::stream).filter(Objects::nonNull).distinct().sorted().collect(Collectors.toList()));
                                 }
                             }
                         }
