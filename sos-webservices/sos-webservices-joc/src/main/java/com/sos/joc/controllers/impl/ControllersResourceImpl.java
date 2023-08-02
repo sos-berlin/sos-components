@@ -13,9 +13,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -34,6 +33,8 @@ import com.sos.joc.model.controller.Controller;
 import com.sos.joc.model.controller.ControllerId;
 import com.sos.joc.model.controller.Controllers;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("controllers")
 public class ControllersResourceImpl extends JOCResourceImpl implements IControllersResource {
@@ -185,12 +186,35 @@ public class ControllersResourceImpl extends JOCResourceImpl implements IControl
             }
 
             if (!onlyDb) {
-                for (ControllerAnswer master : masters) {
-                    Long osId = osDBLayer.saveOrUpdateOSItem(master.getDbOs());
-                    master.setOsId(osId);
+                boolean isAutoCommit = connection.isAutoCommit();
+                try {
+                    if (isAutoCommit) {
+                        connection.setAutoCommit(false);
+                        Globals.beginTransaction(connection);
+                    }
+                    for (ControllerAnswer master : masters) {
+                        Long osId = osDBLayer.saveOrUpdateOSItem(master.getDbOs());
+                        master.setOsId(osId);
 
-                    if (master.dbInstanceIsChanged()) {
-                        instanceLayer.updateInstance(master.getDbInstance());
+                        if (master.dbInstanceIsChanged()) {
+                            instanceLayer.updateInstance(master.getDbInstance());
+                        }
+                    }
+                    if (isAutoCommit) {
+                        Globals.commit(connection);
+                    }
+                } catch (Exception e) {
+                    if (isAutoCommit) {
+                        Globals.rollback(connection);
+                    }
+                    throw e;
+                } finally {
+                    if (isAutoCommit) {
+                        try {
+                            connection.setAutoCommit(true);
+                        } catch (SOSHibernateException e) {
+                            //
+                        }
                     }
                 }
             }
