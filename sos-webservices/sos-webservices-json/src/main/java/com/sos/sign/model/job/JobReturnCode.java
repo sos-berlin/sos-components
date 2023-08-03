@@ -20,7 +20,7 @@ import com.sos.inventory.model.job.JobReturnCodeHelper;
  * 
  * 
  */
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "success",
     "failure"
@@ -83,6 +83,9 @@ public class JobReturnCode extends JobReturnCodeHelper {
 
     @JsonProperty("failure")
     public String getFailure() {
+        if (failure != null && "none".equals(failure)) {
+            return "";
+        }
         return failure;
     }
 

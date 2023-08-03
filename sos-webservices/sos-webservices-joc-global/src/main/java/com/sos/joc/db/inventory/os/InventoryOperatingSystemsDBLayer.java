@@ -83,7 +83,6 @@ public class InventoryOperatingSystemsDBLayer {
         try {
             if (isAutoCommit) {
                 session.setAutoCommit(false);
-                LOGGER.info("change autocommit to false");
                 session.beginTransaction();
             }
             DBItemInventoryOperatingSystem oldOsItem = getOSItem(osItem.getHostname());

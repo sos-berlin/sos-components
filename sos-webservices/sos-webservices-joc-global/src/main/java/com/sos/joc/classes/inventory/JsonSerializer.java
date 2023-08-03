@@ -392,9 +392,9 @@ public class JsonSerializer {
             if (j.getSuccess() != null && j.getSuccess().isEmpty()) {
                 j.setSuccess((String) null);
             }
-            if (j.getFailure() != null && j.getFailure().isEmpty()) {
-                j.setFailure((String) null);
-            }
+//            if (j.getFailure() != null && j.getFailure().isEmpty()) {
+//                j.setFailure((String) null);
+//            }
             if (j.getFailure() == null && (j.getSuccess() == null || j.getSuccess().equals("0"))) {
                 return null;
             }
