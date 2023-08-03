@@ -165,14 +165,17 @@ public class JsonConverter {
                             ExecutableScript signEs = signJob.getExecutable().cast();
                             if (signEs != null) {
                                 signEs.getReturnCodeMeaning().setFailure("");
+                                signEs.getReturnCodeMeaning().setSuccess((String) null);
                             }
                         } else if (rc.getWarning() != null && !rc.getWarning().isEmpty()) {
                             ExecutableScript signEs = signJob.getExecutable().cast();
                             if (signEs != null) {
                                 if (rc.getSuccess() != null) {
                                     signEs.getReturnCodeMeaning().setSuccessNormalized(rc.getSuccess() + "," + rc.getWarning());
+                                    signEs.getReturnCodeMeaning().setFailure((String) null);
                                 } else if (rc.getFailure() != null) {
                                     signEs.getReturnCodeMeaning().setFailureNormalized(rc.getWarning());
+                                    signEs.getReturnCodeMeaning().setSuccess((String) null);
                                 } else {
                                     if (signEs.getReturnCodeMeaning() == null) {
                                         signEs.setReturnCodeMeaning(new com.sos.sign.model.job.JobReturnCode());
