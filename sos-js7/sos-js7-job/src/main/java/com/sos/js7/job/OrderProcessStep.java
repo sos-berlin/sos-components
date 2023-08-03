@@ -696,21 +696,17 @@ public class OrderProcessStep<A extends JobArguments> {
                     ae = exceptions.get(0);
                 }
             }
-            if (mockMessage == null) {
-                logger.info("Job Parameterization:");
-            } else {
-                logger.info(mockMessage + " Job Parameterization:");
-            }
-
-            logAllDirtyArguments();
             LogLevel ll = LogLevel.DEBUG;
-            boolean doLog = logger.isDebugEnabled();
+            boolean logDetails = logger.isDebugEnabled();
             if (ae != null) {
                 ll = LogLevel.INFO;
-                doLog = true;
+                logDetails = true;
             }
 
-            if (doLog) {
+            String header = "Job Parameterization";
+            logAllDirtyArguments(mockMessage == null ? header : mockMessage + " " + header, logDetails);
+
+            if (logDetails) {
                 logArgumentsBySource(ll);
                 logAllArguments(ll);
             }
@@ -834,51 +830,59 @@ public class OrderProcessStep<A extends JobArguments> {
         }
     }
 
-    private void logAllDirtyArguments() throws Exception {
+    private void logAllDirtyArguments(String header, boolean logDetails) throws Exception {
         if (allArguments == null || allArguments.size() == 0) {
             return;
         }
-        logger.info(String.format("%s:", ValueSourceType.JAVA.getHeader()));
-        allArguments.entrySet().stream().filter(a -> {
-            if (a.getValue().isDirty()) {
-                return true;
-            } else {
-                if (a.getValue().getValueSource().isTypeJAVA()) {
-                    if (a.getValue().getNotAcceptedValue() != null) {
-                        return true;
-                    }
-                } else {
-                    // return true;
+
+        StringBuilder sb = new StringBuilder();
+        if (logDetails) {
+            logger.info(header + ":");
+        } else {
+            sb.append(header).append(", ");
+        }
+        sb.append(ValueSourceType.JAVA.getHeader()).append(":");
+        String prefix = "";
+        for (Map.Entry<String, JobArgument<A>> e : allArguments.entrySet()) {
+            JobArgument<A> a = e.getValue();
+            if (!a.isDirty()) {
+                if (a.getNotAcceptedValue() == null) {
+                    continue;
                 }
             }
-            return false;
-        }).forEach(a -> {
-            String detail = a.getValue().getValueSource().getSource() == null ? "" : " " + a.getValue().getValueSource().getSource();
-            if (a.getValue().getPayload() != null) {
-                String pd = SOSArgumentHelper.getClassName(a.getValue().getPayload().toString());
+
+            String detail = a.getValueSource().getSource() == null ? "" : " " + a.getValueSource().getSource();
+            if (a.getPayload() != null) {
+                String pd = SOSArgumentHelper.getClassName(a.getPayload().toString());
                 if (detail.equals("")) {
                     detail = " " + pd;
                 } else {
                     detail = detail + " " + pd;
                 }
             }
-            if (a.getValue().getNotAcceptedValue() == null) {
-                String vsn = a.getValue().getValueSource().getType() == null ? "" : a.getValue().getValueSource().getType().name();
-                logger.info("    %s=%s (source=%s%s)", a.getValue().getName(), a.getValue().getDisplayValue(), vsn, detail);
+
+            sb.append(prefix).append(" ");
+            if (a.getNotAcceptedValue() == null) {
+                String vsn = a.getValueSource().getType() == null ? "" : a.getValueSource().getType().name();
+
+                sb.append(a.getName()).append("=").append(a.getDisplayValue());
+                sb.append("(").append(vsn).append(detail).append(")");
             } else {
                 String exception = "";
-                if (a.getValue().getNotAcceptedValue().getException() != null) {
-                    exception = new StringBuilder("(").append(a.getValue().getNotAcceptedValue().getException().toString()).append(")").toString();
+                if (a.getNotAcceptedValue().getException() != null) {
+                    exception = new StringBuilder("(").append(a.getNotAcceptedValue().getException().toString()).append(")").toString();
                 }
-                String nvsn = a.getValue().getNotAcceptedValue().getSource().getType() == null ? "" : a.getValue().getNotAcceptedValue().getSource()
-                        .getType().name();
-
-                String nvsnu = a.getValue().getNotAcceptedValue().getUsedValueSource().getType() == null ? "" : a.getValue().getNotAcceptedValue()
-                        .getUsedValueSource().getType().name();
-                logger.info("    %s=%s (source=%s value=%s[not accepted%s, use from source=%s]%s)", a.getValue().getName(), a.getValue()
-                        .getDisplayValue(), nvsn, a.getValue().getNotAcceptedValue().getDisplayValue(), exception, nvsnu, detail);
+                String nvsn = a.getNotAcceptedValue().getSource().getType() == null ? "" : a.getNotAcceptedValue().getSource().getType().name() + " ";
+                sb.append(a.getName()).append("=").append(a.getDisplayValue());
+                sb.append("(");
+                sb.append(nvsn).append("value=").append(a.getNotAcceptedValue().getDisplayValue());
+                sb.append(" ignored").append(exception);
+                sb.append(detail);
+                sb.append(")");
             }
-        });
+            prefix = ",";
+        }
+        logger.info(sb);
     }
 
     private void logAllArguments(LogLevel logLevel) throws Exception {
