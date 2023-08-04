@@ -1,9 +1,12 @@
 package com.sos.yade.commons.cli;
 
+import java.io.BufferedWriter;
 import java.net.InetAddress;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -25,7 +28,9 @@ public class TransferHistory {
     private static final String OS_NAME = System.getProperty("os.name");
     private static final boolean IS_WINDOWS = OS_NAME.startsWith("Windows");
 
-    private static final String ENV_VAR_RETURN_VALUES = "JS7_RETURN_VALUES";
+    private static final String ENV_VAR_JS7_RETURN_VALUES = "JS7_RETURN_VALUES";
+    private static final String ENV_VAR_JS1_RETURN_VALUES = "SCHEDULER_RETURN_VALUES";// compatibility mode v1
+
     private static final String DEFAULT_HOSTNAME = "localhost";
     private static final int DEFAULT_PORT = 0;
 
@@ -215,18 +220,29 @@ public class TransferHistory {
             }
 
             if (!dryRun) {
-                String returnValues = System.getenv(ENV_VAR_RETURN_VALUES);
+                String returnValues = System.getenv(ENV_VAR_JS7_RETURN_VALUES);
                 if (returnValues == null) {
-                    System.err.println("Missing environment variable: " + ENV_VAR_RETURN_VALUES);
-                    return EXIT_STATUS_ERROR;
+                    returnValues = System.getenv(ENV_VAR_JS1_RETURN_VALUES);
+                    if (returnValues == null) {
+                        System.err.println("Missing environment variable: " + ENV_VAR_JS7_RETURN_VALUES + " or " + ENV_VAR_JS1_RETURN_VALUES);
+                        return EXIT_STATUS_ERROR;
+                    }
                 }
-                Files.write(Paths.get(returnValues), new StringBuilder(Yade.JOB_ARGUMENT_NAME_RETURN_VALUES).append("=").append(serialized).toString()
-                        .getBytes());
+                serialize2File(returnValues, serialized);
             }
             return EXIT_STATUS_SUCCESS;
         } catch (Throwable e) {
             e.printStackTrace();
             return EXIT_STATUS_ERROR;
+        }
+    }
+
+    private static void serialize2File(String returnValues, String serialized) throws Exception {
+        try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(returnValues), StandardCharsets.UTF_8, StandardOpenOption.CREATE,
+                StandardOpenOption.APPEND)) {
+            writer.write(new StringBuilder(Yade.JOB_ARGUMENT_NAME_RETURN_VALUES).append("=").append(serialized).append(System.lineSeparator())
+                    .toString());
+            writer.flush();
         }
     }
 
