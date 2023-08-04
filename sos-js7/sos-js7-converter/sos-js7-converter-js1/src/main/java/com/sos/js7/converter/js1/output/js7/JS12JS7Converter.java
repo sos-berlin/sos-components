@@ -2067,7 +2067,7 @@ public class JS12JS7Converter {
     private StringBuilder getYADECommand(ShellJobHelper shellJob, boolean isUnix, Environment args) {
         StringBuilder sb = new StringBuilder();
         if (shellJob.getYADE() != null) {
-            sb.append(getEnvVar(shellJob.getYADE().getBin(), isUnix)).append(" ");
+            sb.append("\"").append(getEnvVar(shellJob.getYADE().getBin(), isUnix)).append("\" ");
             if (args != null && args.getAdditionalProperties().size() > 0) {
                 boolean hasProfile = false;
                 boolean hasSettings = false;
@@ -3019,9 +3019,18 @@ public class JS12JS7Converter {
 
                 boolean add = false;
                 if (hasErrorStateJob) {
-                    tryCatch.setCatch(new Instructions(getNodesInstructions(workflowInstructions, jobChain, uniqueJobs, h.getJS1ErrorState(),
-                            allStates, usedStates, fileOrderSinkStates, fileOrderSinkJobs, boardHelper, false)));
-                    add = true;
+                    if (h.getJS1NextState() != null && h.getJS1NextState().equals(h.getJS1ErrorState())) {
+                        tryCatch.setCatch(new Instructions(new ArrayList<>()));
+                        result.add(tryCatch);
+
+                        result.addAll(getNodesInstructions(workflowInstructions, jobChain, uniqueJobs, h.getJS1ErrorState(), allStates, usedStates,
+                                fileOrderSinkStates, fileOrderSinkJobs, boardHelper, false));
+
+                    } else {
+                        tryCatch.setCatch(new Instructions(getNodesInstructions(workflowInstructions, jobChain, uniqueJobs, h.getJS1ErrorState(),
+                                allStates, usedStates, fileOrderSinkStates, fileOrderSinkJobs, boardHelper, false)));
+                        add = true;
+                    }
                 } else {
                     NamedJob nj = getFileOrderSinkNamedJob(fileOrderSinkStates.get(h.getJS1ErrorState()), h.getJS1ErrorState(), fileOrderSinkJobs);
                     if (nj != null) {
