@@ -119,8 +119,6 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
 
             DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
 
-            Map<String, List<String>> schedulePathsWithWorkflowNames = getSchedulePathsWithWorkflowNames(in, dbLayer);
-
             if (in.getDelete() != null && !in.getDelete().isEmpty()) {
                 errors.addAll(delete(in.getDelete(), dbLayer, folderPermissions, getJocError(), dbAuditLog, withDeletionOfEmptyFolders));
             }
@@ -129,11 +127,14 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 errors.addAll(update(in.getUpdate(), dbLayer, folderPermissions, getJocError(), dbAuditLog, withDeletionOfEmptyFolders));
             }
 
-            cancelAndRecreateOrders(in.getAddOrdersDateFrom(), schedulePathsWithWorkflowNames, dbLayer,  accessToken);
             if (errors != null && !errors.isEmpty()) {
                 Globals.rollback(session);
                 return errors;
             }
+            Globals.commit(session);
+            Globals.beginTransaction(session);
+            Map<String, List<String>> schedulePathsWithWorkflowNames = getSchedulePathsWithWorkflowNames(in, dbLayer);
+            cancelAndRecreateOrders(in.getAddOrdersDateFrom(), schedulePathsWithWorkflowNames, dbLayer,  accessToken);
             Globals.commit(session);
             return Collections.emptyList();
         } catch (Throwable e) {
