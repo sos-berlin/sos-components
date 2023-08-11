@@ -47,6 +47,7 @@ public class SOSLdapWebserviceCredentials {
     private String userNameAttribute;
     private String userSearchFilter;
     private Boolean useStartTls;
+    private Boolean disableNestedGroupSearch;
     private String truststorePath = "";
     private String truststorePassword = "";
     private KeystoreType truststoreType = null;
@@ -208,7 +209,7 @@ public class SOSLdapWebserviceCredentials {
                 }
                 if (readTimeout == null) {
                     if (properties.getLdap().getExpert().getIamLdapReadTimeout() != null) {
-                        readTimeout = getProperty(properties.getLdap().getExpert().getIamLdapReadTimeout()*1000,SOSAuthHelper.LDAP_READ_TIMEOUT);
+                        readTimeout = getProperty(properties.getLdap().getExpert().getIamLdapReadTimeout() * 1000, SOSAuthHelper.LDAP_READ_TIMEOUT);
                     } else {
                         readTimeout = SOSAuthHelper.LDAP_READ_TIMEOUT;
 
@@ -250,6 +251,9 @@ public class SOSLdapWebserviceCredentials {
 
                 if (useStartTls == null) {
                     useStartTls = properties.getLdap().getExpert().getIamLdapUseStartTls();
+                }
+                if (disableNestedGroupSearch == null) {
+                    disableNestedGroupSearch = properties.getLdap().getExpert().getIamLdapGroupRolesMap().getIamLdapDisableNestedGroupSearch();
                 }
                 if (hostnameVerification == null) {
                     hostnameVerification = properties.getLdap().getExpert().getIamLdapHostNameVerification();
@@ -340,14 +344,16 @@ public class SOSLdapWebserviceCredentials {
         return systemPassword;
     }
 
-    
     public SOSIdentityService getIdentityService() {
         return identityService;
     }
 
-    
     public void setIdentityService(SOSIdentityService identityService) {
         this.identityService = identityService;
+    }
+
+    public Boolean getDisableNestedGroupSearch() {
+        return disableNestedGroupSearch;
     }
 
 }
