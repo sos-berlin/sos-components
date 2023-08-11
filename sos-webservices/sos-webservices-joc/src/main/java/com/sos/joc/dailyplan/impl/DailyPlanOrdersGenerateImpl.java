@@ -122,7 +122,12 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
         if (in.getSchedulePaths() != null) {
             scheduleFolders = FolderPath.filterByUniqueFolder(in.getSchedulePaths().getFolders());
             // Plaster, um Schedulenamen statt Pfade zu akzeptieren
-            scheduleSingles = FolderPath.filterByFolders(scheduleFolders, getScheduleSinglePaths(in.getSchedulePaths().getSingles()));
+            scheduleSingles = FolderPath.filterByFolders(scheduleFolders, getScheduleSinglePaths(
+                    in.getSchedulePaths().getSingles().stream().filter(item -> !item.startsWith("/")).collect(Collectors.toList())));
+            if(scheduleSingles == null) {
+                scheduleSingles = new HashSet<String>();
+            }
+            scheduleSingles.addAll(in.getSchedulePaths().getSingles().stream().filter(item -> item.startsWith("/")).collect(Collectors.toSet()));
         }
 
         final Set<Folder> permittedFolders = addPermittedFolder(null);
@@ -182,7 +187,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
     }
     
     private List<String> getScheduleSinglePaths(List<String> scheduleSingles) throws SOSHibernateException {
-        if (scheduleSingles == null) {
+        if (scheduleSingles == null || scheduleSingles.isEmpty()) {
             return null;
         }
         SOSHibernateSession session = null;
