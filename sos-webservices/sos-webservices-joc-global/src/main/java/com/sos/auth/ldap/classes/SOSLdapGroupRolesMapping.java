@@ -204,8 +204,8 @@ public class SOSLdapGroupRolesMapping {
         if (!answer.hasMore()) {
             LOGGER.debug(String.format("Cannot find account with search filter %s and search base: %s ", searchFilter, sosLdapWebserviceCredentials
                     .getSearchBase()));
-            LOGGER.warn(String.format("Cannot find account for user: search filter %s and search base: %s ", searchFilter, sosLdapWebserviceCredentials
-                    .getSearchBase()));
+            LOGGER.warn(String.format("Cannot find account for user: search filter %s and search base: %s ", searchFilter,
+                    sosLdapWebserviceCredentials.getSearchBase()));
         } else {
             SearchResult result = answer.nextElement();
             String groupNameAttribute = sosLdapWebserviceCredentials.getGroupNameAttribute();
@@ -217,16 +217,18 @@ public class SOSLdapGroupRolesMapping {
                 for (String group : groupNames) {
                     LOGGER.debug(String.format("Account is member of group: %s", group));
                 }
-                Set<String> groupsToAdd = new HashSet<String>();
-                if (MEMBER_OF.equals(sosLdapWebserviceCredentials.getGroupNameAttribute())) {
-                    Attribute distinguishName = result.getAttributes().get(DISTINGUISHED_NAME);
-                    String userDistinguishedName = "";
-                    if (distinguishName != null) {
-                        userDistinguishedName = distinguishName.get().toString();
-                        groupsToAdd.addAll(getGroupkeysFromNestedGroup(userDistinguishedName));
+                if (!sosLdapWebserviceCredentials.getDisableNestedGroupSearch()) {
+                    Set<String> groupsToAdd = new HashSet<String>();
+                    if (MEMBER_OF.equals(sosLdapWebserviceCredentials.getGroupNameAttribute())) {
+                        Attribute distinguishName = result.getAttributes().get(DISTINGUISHED_NAME);
+                        String userDistinguishedName = "";
+                        if (distinguishName != null) {
+                            userDistinguishedName = distinguishName.get().toString();
+                            groupsToAdd.addAll(getGroupkeysFromNestedGroup(userDistinguishedName));
+                        }
                     }
+                    groupNames.addAll(groupsToAdd);
                 }
-                groupNames.addAll(groupsToAdd);
             } else {
                 LOGGER.info("User is not member of any group");
             }

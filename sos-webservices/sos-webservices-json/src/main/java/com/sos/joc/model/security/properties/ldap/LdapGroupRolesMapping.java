@@ -19,10 +19,13 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "iamLdapDisableNestedGroupSearch",
     "items"
 })
 public class LdapGroupRolesMapping {
 
+    @JsonProperty("iamLdapDisableNestedGroupSearch")
+    private Boolean iamLdapDisableNestedGroupSearch;
     @JsonProperty("items")
     private List<LdapGroupRolesMappingItem> items = new ArrayList<LdapGroupRolesMappingItem>();
 
@@ -35,11 +38,23 @@ public class LdapGroupRolesMapping {
 
     /**
      * 
+     * @param iamLdapDisableNestedGroupSearch
      * @param items
      */
-    public LdapGroupRolesMapping(List<LdapGroupRolesMappingItem> items) {
+    public LdapGroupRolesMapping(Boolean iamLdapDisableNestedGroupSearch, List<LdapGroupRolesMappingItem> items) {
         super();
+        this.iamLdapDisableNestedGroupSearch = iamLdapDisableNestedGroupSearch;
         this.items = items;
+    }
+
+    @JsonProperty("iamLdapDisableNestedGroupSearch")
+    public Boolean getIamLdapDisableNestedGroupSearch() {
+        return iamLdapDisableNestedGroupSearch;
+    }
+
+    @JsonProperty("iamLdapDisableNestedGroupSearch")
+    public void setIamLdapDisableNestedGroupSearch(Boolean iamLdapDisableNestedGroupSearch) {
+        this.iamLdapDisableNestedGroupSearch = iamLdapDisableNestedGroupSearch;
     }
 
     @JsonProperty("items")
@@ -54,12 +69,12 @@ public class LdapGroupRolesMapping {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("items", items).toString();
+        return new ToStringBuilder(this).append("iamLdapDisableNestedGroupSearch", iamLdapDisableNestedGroupSearch).append("items", items).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(items).toHashCode();
+        return new HashCodeBuilder().append(iamLdapDisableNestedGroupSearch).append(items).toHashCode();
     }
 
     @Override
@@ -71,7 +86,7 @@ public class LdapGroupRolesMapping {
             return false;
         }
         LdapGroupRolesMapping rhs = ((LdapGroupRolesMapping) other);
-        return new EqualsBuilder().append(items, rhs.items).isEquals();
+        return new EqualsBuilder().append(iamLdapDisableNestedGroupSearch, rhs.iamLdapDisableNestedGroupSearch).append(items, rhs.items).isEquals();
     }
 
 }
