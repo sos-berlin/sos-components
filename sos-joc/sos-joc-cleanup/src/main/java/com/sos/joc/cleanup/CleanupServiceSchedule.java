@@ -50,7 +50,7 @@ public class CleanupServiceSchedule {
     private ZonedDateTime firstStart = null;
     private ZonedDateTime start = null;
     private ZonedDateTime end = null;
-    private List<String> unclompleted = null;
+    private List<String> uncompleted = null;
 
     public CleanupServiceSchedule(CleanupService service) {
         this.service = service;
@@ -94,7 +94,7 @@ public class CleanupServiceSchedule {
         CleanupService.setServiceLogger();
         threadPool = Executors.newScheduledThreadPool(1, new JocClusterThreadFactory(service.getThreadGroup(), service.getIdentifier() + "-t"));
         CleanupService.setServiceLogger();
-        LOGGER.info(String.format("[planned][begin=%s][max end=%s][timeout=%s] ...", start.toString(), end.toString(), SOSDate.getDuration(Duration
+        LOGGER.info(String.format("[schedule][begin=%s][max end=%s][timeout=%s] ...", start.toString(), end.toString(), SOSDate.getDuration(Duration
                 .ofSeconds(timeout))));
         resultFuture = threadPool.schedule(task, delay, TimeUnit.NANOSECONDS);
         return resultFuture.get(timeout, TimeUnit.SECONDS);
@@ -103,13 +103,14 @@ public class CleanupServiceSchedule {
     private long computeNextDelay(StartupMode mode) throws Exception {
         CleanupService.setServiceLogger();
 
-        unclompleted = null;
+        uncompleted = null;
 
+        String method = "computeNextDelay";
         DBLayerCleanup dbLayer = new DBLayerCleanup(service.getIdentifier());
         try {
             dbLayer.setSession(Globals.createSosHibernateStatelessConnection(service.getIdentifier()));
             if (mode.equals(StartupMode.manual_restart) || mode.equals(StartupMode.settings_changed)) {
-                deleteJocVariable(dbLayer, mode);
+                deleteJocVariable(method, dbLayer, mode);
             } else {
                 item = dbLayer.getVariable(service.getIdentifier());
             }
@@ -136,7 +137,7 @@ public class CleanupServiceSchedule {
                     storedNextEnd = parseDateFromDb(dbLayer, mode, arr[2].trim());
                     storedFirstStart = parseDateFromDb(dbLayer, mode, arr[3].trim());
 
-                    LOGGER.info(String.format("[computeNextDelay][stored=%s][storedPeriod=%s]", item.getTextValue(), storedPeriod));
+                    LOGGER.info(String.format("[%s][stored=%s][storedPeriod=%s]", method, item.getTextValue(), storedPeriod));
 
                     if (storedNextBegin != null && storedNextEnd != null) {
                         storedState = JocClusterAnswerState.RESTARTED;
@@ -149,7 +150,7 @@ public class CleanupServiceSchedule {
                                     storedState = JocClusterAnswerState.UNCOMPLETED;
                                     arr = state.split("=");// UNCOMPLETED=dayliplan,history
                                     if (arr.length > 1) {
-                                        unclompleted = Stream.of(arr[1].split(",", -1)).collect(Collectors.toList());
+                                        uncompleted = Stream.of(arr[1].split(",", -1)).collect(Collectors.toList());
                                     }
                                 }
                             }
@@ -157,13 +158,13 @@ public class CleanupServiceSchedule {
                         if (now.isAfter(storedNextBegin)) {
                             if (storedState.equals(JocClusterAnswerState.COMPLETED)) {
                                 computeNewPeriod = true;
-                                LOGGER.info(String.format("[computeNextDelay][%s]compute next period...", storedState));
+                                LOGGER.info(String.format("[%s][%s]compute next period...", method, storedState));
                             } else {
                                 if (storedState.equals(JocClusterAnswerState.UNCOMPLETED)) {
-                                    LOGGER.info(String.format("[computeNextDelay][%s][stored][skip]now(%s) is after the storedNextBegin(%s)",
-                                            storedState, now, storedNextBegin));
+                                    LOGGER.info(String.format("[%s][%s][stored][skip]now(%s) is after the storedNextBegin(%s)", method, storedState,
+                                            now, storedNextBegin));
                                 } else {
-                                    LOGGER.info(String.format("[computeNextDelay][stored][skip]now(%s) is after the storedNextBegin(%s)", now,
+                                    LOGGER.info(String.format("[%s][stored][skip]now(%s) is after the storedNextBegin(%s)", method, now,
                                             storedNextBegin));
                                 }
                                 storedFirstStart = null;
@@ -181,18 +182,16 @@ public class CleanupServiceSchedule {
                                     }
                                     if (weekDay.intValue() == nowDayOfWeek) {
                                         if (!storedPeriod.getWeekDays().contains(Integer.valueOf(nowDayOfWeek))) {
-                                            LOGGER.info(String.format(
-                                                    "[computeNextDelay][stored][skip]period was changed - today added (old=%s, new=%s)", storedPeriod
-                                                            .getConfigured(), period.getConfigured()));
+                                            LOGGER.info(String.format("[%s][stored][skip]period was changed - today added (old=%s, new=%s)", method,
+                                                    storedPeriod.getConfigured(), period.getConfigured()));
                                             storedFirstStart = null;
                                             storedNextBegin = null;
                                             storedNextEnd = null;
                                             break;
                                         }
                                     } else if (weekDay.intValue() < storedNextDayOfWeek) {
-                                        LOGGER.info(String.format(
-                                                "[computeNextDelay][stored][skip]period was changed - weekday(%s) added (old=%s, new=%s)", weekDay,
-                                                storedPeriod.getConfigured(), period.getConfigured()));
+                                        LOGGER.info(String.format("[%s][stored][skip]period was changed - weekday(%s) added (old=%s, new=%s)", method,
+                                                weekDay, storedPeriod.getConfigured(), period.getConfigured()));
                                         storedFirstStart = null;
                                         storedNextBegin = null;
                                         storedNextEnd = null;
@@ -200,8 +199,8 @@ public class CleanupServiceSchedule {
                                     }
                                 }
                             } else {
-                                LOGGER.info(String.format("[computeNextDelay][stored][skip]stored dayOfWeek(%s) is no more configured",
-                                        storedNextBegin.getDayOfWeek()));
+                                LOGGER.info(String.format("[%s][stored][skip]stored dayOfWeek(%s) is no more configured", method, storedNextBegin
+                                        .getDayOfWeek()));
                                 storedFirstStart = null;
                                 storedNextBegin = null;
                                 storedNextEnd = null;
@@ -209,8 +208,8 @@ public class CleanupServiceSchedule {
                         }
                     }
                 } else {
-                    LOGGER.info(String.format("[computeNextDelay][stored]%s", item.getTextValue()));
-                    LOGGER.info(String.format("[computeNextDelay][stored][skip]old format"));
+                    LOGGER.info(String.format("[%s][stored]%s", method, item.getTextValue()));
+                    LOGGER.info(String.format("[%s][stored][skip]old format", method));
                 }
             }
 
@@ -222,7 +221,7 @@ public class CleanupServiceSchedule {
                         .getBegin().getSeconds());
                 nextEnd = storedNextEnd.withHour(period.getEnd().getHours()).withMinute(period.getEnd().getMinutes()).withSecond(period.getEnd()
                         .getSeconds());
-                LOGGER.info(String.format("[computeNextDelay][use stored][begin=%s, end=%s]", nextBegin, nextEnd));
+                LOGGER.info(String.format("[%s][use stored][begin=%s, end=%s]", method, nextBegin, nextEnd));
             }
 
             int newPeriodDaysDiff = -1;
@@ -284,7 +283,8 @@ public class CleanupServiceSchedule {
                     // nextEnd.plusDays(newPeriodDaysDiff);
                     // }
                 }
-                LOGGER.info(String.format("[weekdays][newPeriodDaysDiff=%s][nextBegin=%s][nextEnd=%s]", newPeriodDaysDiff, nextBegin, nextEnd));
+                LOGGER.info(String.format("[%s][weekdays][newPeriodDaysDiff=%s][nextBegin=%s][nextEnd=%s]", method, newPeriodDaysDiff, nextBegin,
+                        nextEnd));
             } else {
                 if (computeNewPeriod) {
                     newPeriodDaysDiff = -1;
@@ -314,7 +314,7 @@ public class CleanupServiceSchedule {
                 if (!nextEnd.isAfter(nextBegin)) {
                     nextEnd = nextEnd.plusDays(1);
                     nextEndDayDiff = 1;
-                    LOGGER.info(String.format("[computeNextDelay]set nextEnd=(in 1d)%s", nextEnd));
+                    LOGGER.info(String.format("[%s]set nextEnd=(in 1d)%s", method, nextEnd));
                 }
 
                 if (!computeNewPeriod) {
@@ -325,7 +325,7 @@ public class CleanupServiceSchedule {
                             nextBegin = null;
                         }
                     } else {
-                        LOGGER.debug(String.format("[computeNextDelay][nextBegin=%s][nextEnd=%s]", nextBegin, nextEnd));
+                        LOGGER.debug(String.format("[%s][nextBegin=%s][nextEnd=%s]", method, nextBegin, nextEnd));
                     }
                 }
 
@@ -333,14 +333,14 @@ public class CleanupServiceSchedule {
                     nextBegin = nextBegin.plusDays(newPeriodDaysDiff);
                     nextEnd = nextEnd.plusDays(newPeriodDaysDiff);
                     storedFirstStart = null;
-                    LOGGER.info(String.format("[computeNextDelay]set nextBegin=(in %sd)%s, nextEnd=(in %sd)%s", newPeriodDaysDiff, nextBegin,
+                    LOGGER.info(String.format("[%s]set nextBegin=(in %sd)%s, nextEnd=(in %sd)%s", method, newPeriodDaysDiff, nextBegin,
                             (newPeriodDaysDiff + nextEndDayDiff), nextEnd));
                 }
 
                 now = Instant.now().atZone(service.getConfig().getZoneId());
                 if (nextBegin == null) {
                     nextBegin = now.plusSeconds(30);
-                    LOGGER.info(String.format("[computeNextDelay]set nextBegin=(in 30s)%s", nextBegin));
+                    LOGGER.info(String.format("[%s]set nextBegin=(in 30s)%s", method, nextBegin));
                 }
                 firstStart = storedFirstStart == null ? nextBegin : storedFirstStart;
                 nanos = now.until(nextBegin, ChronoUnit.NANOS);
@@ -354,9 +354,9 @@ public class CleanupServiceSchedule {
                     end = nextEnd;
                 }
                 if (item == null) {
-                    insertJocVariable(dbLayer);
+                    insertJocVariable(method, dbLayer);
                 } else {
-                    updateJocVariable(dbLayer, item);
+                    updateJocVariable(method, dbLayer, item);
                 }
                 return now.until(start, ChronoUnit.NANOS);
             }
@@ -382,7 +382,7 @@ public class CleanupServiceSchedule {
             return ZonedDateTime.parse(date, DateTimeFormatter.ISO_ZONED_DATE_TIME);
         } catch (Throwable e) {
             try {
-                deleteJocVariable(dbLayer, mode);
+                deleteJocVariable("parseDateFromDb", dbLayer, mode);
             } catch (Exception e1) {
                 LOGGER.error(String.format("[%s]%s", date, e.toString()), e);
             }
@@ -429,14 +429,14 @@ public class CleanupServiceSchedule {
         closeTasks();
     }
 
-    private void deleteJocVariable(DBLayerCleanup dbLayer, StartupMode mode) throws Exception {
+    private void deleteJocVariable(String caller, DBLayerCleanup dbLayer, StartupMode mode) throws Exception {
         try {
             DBItemJocVariable jv = dbLayer.getVariable(service.getIdentifier());
             if (jv != null) {
                 dbLayer.beginTransaction();
                 dbLayer.getSession().delete(jv);
                 dbLayer.commit();
-                LOGGER.info("[deleted]because " + mode);
+                LOGGER.info(String.format("[%s][deleted]because %s", caller, mode));
             }
             item = null;
         } catch (Exception e) {
@@ -445,16 +445,16 @@ public class CleanupServiceSchedule {
         }
     }
 
-    private DBItemJocVariable insertJocVariable(DBLayerCleanup dbLayer) throws Exception {
-        return insertJocVariable(dbLayer, getInitialValue().toString());
+    private DBItemJocVariable insertJocVariable(String caller, DBLayerCleanup dbLayer) throws Exception {
+        return insertJocVariable(caller, dbLayer, getInitialValue().toString());
     }
 
-    private DBItemJocVariable insertJocVariable(DBLayerCleanup dbLayer, String value) throws Exception {
+    private DBItemJocVariable insertJocVariable(String caller, DBLayerCleanup dbLayer, String value) throws Exception {
         try {
             dbLayer.beginTransaction();
             DBItemJocVariable item = dbLayer.insertVariable(service.getIdentifier(), value);
             dbLayer.commit();
-            LOGGER.info("[inserted]" + item.getTextValue());
+            LOGGER.info(String.format("[%s][inserted]%s", caller, item.getTextValue()));
             return item;
         } catch (Exception e) {
             dbLayer.rollback();
@@ -462,13 +462,18 @@ public class CleanupServiceSchedule {
         }
     }
 
-    private DBItemJocVariable updateJocVariable(DBLayerCleanup dbLayer, DBItemJocVariable item) throws Exception {
+    private DBItemJocVariable updateJocVariable(String caller, DBLayerCleanup dbLayer, DBItemJocVariable item) throws Exception {
+        return updateJocVariable(caller, dbLayer, item, getInitialValue().toString());
+    }
+
+    private DBItemJocVariable updateJocVariable(String caller, DBLayerCleanup dbLayer, DBItemJocVariable item, String value) throws Exception {
         try {
+            item.setTextValue(value);
+
             dbLayer.beginTransaction();
-            item.setTextValue(getInitialValue().toString());
             dbLayer.getSession().update(item);
             dbLayer.commit();
-            LOGGER.info("[updated]" + item.getTextValue());
+            LOGGER.info(String.format("[%s][updated]%s", caller, item.getTextValue()));
             return item;
         } catch (Exception e) {
             dbLayer.rollback();
@@ -477,8 +482,9 @@ public class CleanupServiceSchedule {
     }
 
     private void updateJocVariableOnResult(JocClusterAnswer answer) throws Exception {
+        String method = "updateJocVariableOnResult";
         if (answer == null || answer.getState().equals(JocClusterAnswerState.STOPPED)) {
-            LOGGER.info("[skip store]STOPPED");
+            LOGGER.info(String.format("[%s][skip store]STOPPED", method));
             return;
         }
 
@@ -494,17 +500,13 @@ public class CleanupServiceSchedule {
             if (item == null) {
                 item = dbLayer.getVariable(service.getIdentifier());
                 if (item == null) {
-                    item = insertJocVariable(dbLayer, val);
+                    item = insertJocVariable(method, dbLayer, val);
                     val = null;
                 }
             }
             if (val != null) {
-                dbLayer.beginTransaction();
-                item.setTextValue(val);
-                dbLayer.getSession().update(item);
-                dbLayer.commit();
+                item = updateJocVariable(method, dbLayer, item, val);
             }
-            LOGGER.info("[updated]" + item.getTextValue());
         } catch (Exception e) {
             dbLayer.rollback();
             throw e;
@@ -522,7 +524,7 @@ public class CleanupServiceSchedule {
     }
 
     public List<String> getUncompleted() {
-        return unclompleted;
+        return uncompleted;
     }
 
     private StringBuilder getInitialValue() {

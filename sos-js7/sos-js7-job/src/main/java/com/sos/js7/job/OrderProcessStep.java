@@ -289,7 +289,7 @@ public class OrderProcessStep<A extends JobArguments> {
                     try {
                         Object o = getNamedValue(name);
                         JobArgument ar = new JobArgument(name, o, vs);
-                        ar.setIsDirty(false);
+                        // ar.setIsDirty(false);
                         allArguments.put(name, ar);
                     } catch (Throwable e1) {
                         getLogger().error("[orderPreparation][" + name + "]" + e1.toString());

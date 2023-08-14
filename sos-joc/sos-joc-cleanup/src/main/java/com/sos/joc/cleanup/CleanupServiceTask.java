@@ -264,12 +264,12 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
 
     private void executeTask(ICleanupTask task, List<TaskDateTime> datetimes, List<String> uncompleted) {
         boolean run = true;
-        if (uncompleted != null) {
-            if (!uncompleted.contains(task.getIdentifier())) {
-                run = false;
-                LOGGER.info(String.format("[%s][%s][%s][skip]is already completed", logIdentifier, task.getTypeName(), task.getIdentifier()));
-            }
-        }
+        // if (uncompleted != null) {
+        // if (!uncompleted.contains(task.getIdentifier())) {
+        // run = false;
+        // LOGGER.info(String.format("[%s][%s][%s][skip]is already completed", logIdentifier, task.getTypeName(), task.getIdentifier()));
+        // }
+        // }
         if (run) {
             LOGGER.info(String.format("[%s][%s][%s]start...", logIdentifier, task.getTypeName(), task.getIdentifier()));
             cleanupTasks.add(task);
@@ -285,12 +285,12 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
 
     private void executeTask(ICleanupTask task, int counter, List<String> uncompleted) {
         boolean run = true;
-        if (uncompleted != null) {
-            if (!uncompleted.contains(task.getIdentifier())) {
-                run = false;
-                LOGGER.info(String.format("[%s][%s][%s][skip]is already completed", logIdentifier, task.getTypeName(), task.getIdentifier()));
-            }
-        }
+        // if (uncompleted != null) {
+        // if (!uncompleted.contains(task.getIdentifier())) {
+        // run = false;
+        // LOGGER.info(String.format("[%s][%s][%s][skip]is already completed", logIdentifier, task.getTypeName(), task.getIdentifier()));
+        // }
+        // }
         if (run) {
             LOGGER.info(String.format("[%s][%s][%s][%s]start...", logIdentifier, task.getTypeName(), task.getIdentifier(), counter));
             cleanupTasks.add(task);
