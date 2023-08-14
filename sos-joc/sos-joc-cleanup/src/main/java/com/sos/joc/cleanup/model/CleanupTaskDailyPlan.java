@@ -137,9 +137,9 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
     private List<Long> getSubmissionIds(TaskDateTime datetime) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select id from ");
         hql.append(DBLayer.DBITEM_DPL_SUBMISSIONS).append(" ");
-        hql.append("where created < :created ");
+        hql.append("where submissionForDate < :submissionForDate ");
         Query<Long> query = getDbLayer().getSession().createQuery(hql.toString());
-        query.setParameter("created", datetime.getDatetime());
+        query.setParameter("submissionForDate", datetime.getDatetime());
         query.setMaxResults(getBatchSize());
         List<Long> r = getDbLayer().getSession().getResultList(query);
 
