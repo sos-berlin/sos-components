@@ -31,6 +31,8 @@ public class JS7ConverterResult {
     private JS7ExportObjects<Lock> locks = new JS7ExportObjects<>();
     private JS7ExportObjects<JobTemplate> jobTemplates = new JS7ExportObjects<>();
 
+    private Object converter;
+
     private PostNotices postNotices = this.new PostNotices();
     private Set<String> applications = new HashSet<>();
     private List<Object> nonSupported;
@@ -161,6 +163,14 @@ public class JS7ConverterResult {
 
     public List<Object> getNonSupported() {
         return nonSupported;
+    }
+
+    public void setConverter(Object val) {
+        converter = val;
+    }
+
+    public Object getConverter() {
+        return converter;
     }
 
     public class PostNotices {
