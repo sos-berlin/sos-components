@@ -461,6 +461,10 @@ public class JS7ConverterHelper {
         return workflowPath.getFileName().toString().replace(".workflow.json", "");
     }
 
+    public static String getWorkflowBasePath(Path workflowPath) {
+        return workflowPath.toString().replace(".workflow.json", "");
+    }
+
     public static Path getSchedulePathFromJS7Path(Path workflowPath, String workflowName, String additionalName) {
         Path parent = workflowPath.getParent();
         if (parent == null) {
