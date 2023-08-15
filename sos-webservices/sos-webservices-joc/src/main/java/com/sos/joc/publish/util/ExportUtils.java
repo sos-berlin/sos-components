@@ -4,6 +4,7 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -419,7 +420,7 @@ public class ExportUtils {
     }
 
     public static StreamingOutput writeZipFileShallow(Set<ConfigurationObject> deployables, DBLayerDeploy dbLayer, Version jocVersion,
-            Version apiVersion, Version inventoryVersion) {
+            Version apiVersion, Version inventoryVersion, boolean relativePath) {
         StreamingOutput streamingOutput = new StreamingOutput() {
 
             @Override
@@ -468,7 +469,15 @@ public class ExportUtils {
                             }
                             if (extension != null) {
                                 content = Globals.prettyPrintObjectMapper.writeValueAsString(deployable.getConfiguration());
-                                String zipEntryName = deployable.getPath().substring(1).concat(extension);
+                                String zipEntryName = null;
+                                if(relativePath) {
+                                    Path path = Paths.get(deployable.getPath());
+                                    String filename = path.getFileName().toString().concat(extension);
+                                    String parentFolder = path.getParent().getFileName().toString();
+                                    zipEntryName = parentFolder + "/" + filename;
+                                } else {
+                                    zipEntryName = deployable.getPath().substring(1).concat(extension);
+                                }
                                 ZipEntry entry = new ZipEntry(zipEntryName);
                                 zipOut.putNextEntry(entry);
                                 zipOut.write(content.getBytes());
@@ -611,7 +620,7 @@ public class ExportUtils {
     }
 
     public static StreamingOutput writeTarGzipFileShallow(Set<ConfigurationObject> configurations, DBLayerDeploy dbLayer, Version jocVersion,
-            Version apiVersion, Version inventoryVersion) throws Exception {
+            Version apiVersion, Version inventoryVersion, boolean relativePath) throws Exception {
         StreamingOutput streamingOutput = new StreamingOutput() {
 
             @Override
@@ -665,7 +674,16 @@ public class ExportUtils {
                             }
                             if (extension != null) {
                                 content = Globals.prettyPrintObjectMapper.writeValueAsString(deployable.getConfiguration());
-                                String zipEntryName = deployable.getPath().substring(1).concat(extension);
+                                String zipEntryName = null;
+                                if(relativePath) {
+                                    Path path = Paths.get(deployable.getPath());
+                                    String filename = path.getFileName().toString().concat(extension);
+                                    String parentFolder = path.getParent().getFileName().toString();
+                                    zipEntryName = parentFolder + "/" + filename;
+                                } else {
+                                    zipEntryName = deployable.getPath().substring(1).concat(extension);
+                                }
+                                
                                 TarArchiveEntry entry = new TarArchiveEntry(zipEntryName);
                                 byte[] contentBytes = content.getBytes();
                                 entry.setSize(contentBytes.length);
