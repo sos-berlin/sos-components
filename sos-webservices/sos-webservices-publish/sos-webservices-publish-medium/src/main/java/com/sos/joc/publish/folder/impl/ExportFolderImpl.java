@@ -144,14 +144,16 @@ public class ExportFolderImpl extends JOCResourceImpl implements IExportFolderRe
                     stream = ExportUtils.writeTarGzipFileForSigning(deployablesForSigning, updateableWorkflowJobsAgentNames, 
                     		updateableFileOrderSourceAgentNames, commitId, controllerId, dbLayer, jocVersion, apiVersion, inventoryVersion);
                 } else { // shallow copy
-                    stream = ExportUtils.writeTarGzipFileShallow(configurationsForShallowCopy, dbLayer, jocVersion, apiVersion, inventoryVersion);
+                    stream = ExportUtils.writeTarGzipFileShallow(configurationsForShallowCopy, dbLayer, jocVersion, apiVersion, inventoryVersion
+                            , filter.getUseShortPath());
                 }
             } else {
                 if (filter.getForSigning() != null) {
                     stream = ExportUtils.writeZipFileForSigning(deployablesForSigning, updateableWorkflowJobsAgentNames, 
                     		updateableFileOrderSourceAgentNames, commitId, controllerId, dbLayer, jocVersion, apiVersion, inventoryVersion);
                 } else { // shallow copy
-                    stream = ExportUtils.writeZipFileShallow(configurationsForShallowCopy, dbLayer, jocVersion, apiVersion, inventoryVersion);
+                    stream = ExportUtils.writeZipFileShallow(configurationsForShallowCopy, dbLayer, jocVersion, apiVersion, inventoryVersion,
+                            filter.getUseShortPath());
                 }
             }
             return JOCDefaultResponse.responseOctetStreamDownloadStatus200(stream, filter.getExportFile().getFilename());
