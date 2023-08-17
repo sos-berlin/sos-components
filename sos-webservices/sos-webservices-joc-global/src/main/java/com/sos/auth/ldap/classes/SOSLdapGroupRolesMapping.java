@@ -228,6 +228,8 @@ public class SOSLdapGroupRolesMapping {
                         }
                     }
                     groupNames.addAll(groupsToAdd);
+                }else {
+                    LOGGER.debug("Nested group search is disabled");
                 }
             } else {
                 LOGGER.info("User is not member of any group");
