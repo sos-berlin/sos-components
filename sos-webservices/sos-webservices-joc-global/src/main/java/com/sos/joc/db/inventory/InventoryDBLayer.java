@@ -1493,7 +1493,8 @@ public class InventoryDBLayer extends DBLayer {
         hql.append("left join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
         hql.append("on ic.id=sw.inventoryConfigurationId ");
         hql.append("where ic.type=:type ");
-        hql.append("and ic.deployed=sw.deployed ");
+        // TODO: JOC-1590: "deployed" is not in sync between tables, therefore deployed workflows are missing in response of ./job_templates/used
+//        hql.append("and ic.deployed=sw.deployed ");
         hql.append("and ");
         hql.append(SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.jobs", "$.jobTemplates.\"" + jobTemplateName + "\"")).append(
                 " is not null");
