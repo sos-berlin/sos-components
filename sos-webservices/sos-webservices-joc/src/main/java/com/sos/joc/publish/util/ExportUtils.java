@@ -420,7 +420,12 @@ public class ExportUtils {
     }
 
     public static StreamingOutput writeZipFileShallow(Set<ConfigurationObject> deployables, DBLayerDeploy dbLayer, Version jocVersion,
-            Version apiVersion, Version inventoryVersion, boolean relativePath) {
+            Version apiVersion, Version inventoryVersion) {
+        return writeZipFileShallow(deployables, dbLayer, jocVersion, apiVersion, inventoryVersion, false, null);
+    }
+
+    public static StreamingOutput writeZipFileShallow(Set<ConfigurationObject> deployables, DBLayerDeploy dbLayer, Version jocVersion,
+            Version apiVersion, Version inventoryVersion, boolean relativePath, List<String> startPaths) {
         StreamingOutput streamingOutput = new StreamingOutput() {
 
             @Override
@@ -470,11 +475,18 @@ public class ExportUtils {
                             if (extension != null) {
                                 content = Globals.prettyPrintObjectMapper.writeValueAsString(deployable.getConfiguration());
                                 String zipEntryName = null;
-                                if(relativePath) {
-                                    Path path = Paths.get(deployable.getPath());
-                                    String filename = path.getFileName().toString().concat(extension);
-                                    String parentFolder = path.getParent().getFileName().toString();
-                                    zipEntryName = parentFolder + "/" + filename;
+                                if(relativePath && startPaths != null && !startPaths.isEmpty()) {
+                                    Optional<String> startPathOptional = startPaths.stream().filter(path -> deployable.getPath().startsWith(path)).findFirst();
+                                    if(startPathOptional.isPresent()) {
+                                        String startPath = startPathOptional.get();
+                                        String startFolder = Paths.get(startPath).getFileName().toString();
+                                        Path path = Paths.get(deployable.getPath());
+                                        if(startPath != null && path.startsWith(startPath)) {
+                                            zipEntryName = startFolder.concat("/").concat(Paths.get(startPath).relativize(path).toString().replace('\\', '/').concat(extension));
+                                        }
+                                    } else {
+                                        zipEntryName = deployable.getPath().substring(1).concat(extension);
+                                    }
                                 } else {
                                     zipEntryName = deployable.getPath().substring(1).concat(extension);
                                 }
@@ -620,7 +632,12 @@ public class ExportUtils {
     }
 
     public static StreamingOutput writeTarGzipFileShallow(Set<ConfigurationObject> configurations, DBLayerDeploy dbLayer, Version jocVersion,
-            Version apiVersion, Version inventoryVersion, boolean relativePath) throws Exception {
+            Version apiVersion, Version inventoryVersion) throws Exception {
+        return writeTarGzipFileShallow(configurations, dbLayer, jocVersion, apiVersion, inventoryVersion, false, null);
+    }
+
+    public static StreamingOutput writeTarGzipFileShallow(Set<ConfigurationObject> configurations, DBLayerDeploy dbLayer, Version jocVersion,
+            Version apiVersion, Version inventoryVersion, boolean relativePath, List<String> startPaths) throws Exception {
         StreamingOutput streamingOutput = new StreamingOutput() {
 
             @Override
@@ -675,11 +692,18 @@ public class ExportUtils {
                             if (extension != null) {
                                 content = Globals.prettyPrintObjectMapper.writeValueAsString(deployable.getConfiguration());
                                 String zipEntryName = null;
-                                if(relativePath) {
-                                    Path path = Paths.get(deployable.getPath());
-                                    String filename = path.getFileName().toString().concat(extension);
-                                    String parentFolder = path.getParent().getFileName().toString();
-                                    zipEntryName = parentFolder + "/" + filename;
+                                if(relativePath && startPaths != null && !startPaths.isEmpty()) {
+                                    Optional<String> startPathOptional = startPaths.stream().filter(path -> deployable.getPath().startsWith(path)).findFirst();
+                                    if(startPathOptional.isPresent()) {
+                                        String startPath = startPathOptional.get();
+                                        String startFolder = Paths.get(startPath).getFileName().toString();
+                                        Path path = Paths.get(deployable.getPath());
+                                        if(startPath != null && path.startsWith(startPath)) {
+                                            zipEntryName = startFolder.concat("/").concat(Paths.get(startPath).relativize(path).toString().replace('\\', '/').concat(extension));
+                                        }
+                                    } else {
+                                        zipEntryName = deployable.getPath().substring(1).concat(extension);
+                                    }
                                 } else {
                                     zipEntryName = deployable.getPath().substring(1).concat(extension);
                                 }
