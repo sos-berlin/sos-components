@@ -146,7 +146,7 @@ public class ExportFolderImpl extends JOCResourceImpl implements IExportFolderRe
                     		updateableFileOrderSourceAgentNames, commitId, controllerId, dbLayer, jocVersion, apiVersion, inventoryVersion);
                 } else { // shallow copy
                     stream = ExportUtils.writeTarGzipFileShallow(configurationsForShallowCopy, dbLayer, jocVersion, apiVersion, inventoryVersion,
-                            filter.getUseShortPath());
+                            filter.getUseShortPath(), filter.getShallowCopy().getFolders());
                 }
             } else {
                 if (filter.getForSigning() != null) {
@@ -154,7 +154,7 @@ public class ExportFolderImpl extends JOCResourceImpl implements IExportFolderRe
                     		updateableFileOrderSourceAgentNames, commitId, controllerId, dbLayer, jocVersion, apiVersion, inventoryVersion);
                 } else { // shallow copy
                     stream = ExportUtils.writeZipFileShallow(configurationsForShallowCopy, dbLayer, jocVersion, apiVersion, inventoryVersion,
-                            filter.getUseShortPath());
+                            filter.getUseShortPath(), filter.getShallowCopy().getFolders());
                 }
             }
             return JOCDefaultResponse.responseOctetStreamDownloadStatus200(stream, filter.getExportFile().getFilename());
