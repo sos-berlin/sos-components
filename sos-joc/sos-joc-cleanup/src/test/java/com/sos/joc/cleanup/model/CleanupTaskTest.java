@@ -42,6 +42,31 @@ public class CleanupTaskTest {
 
     @Ignore
     @Test
+    public void testCleanupHistory() throws Exception {
+        JocClusterHibernateFactory factory = null;
+        try {
+            factory = createFactory();
+            CleanupTaskHistory t = new CleanupTaskHistory(factory, null, 1000);
+            t.tryOpenSession();
+            t.getDbLayer().beginTransaction();
+
+            t.deleteControllers(Long.valueOf(1692712200000000L), new StringBuilder());
+            t.deleteAgents(Long.valueOf(1692712200000000L), new StringBuilder());
+
+            t.getDbLayer().commit();
+            t.getDbLayer().close();
+
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            if (factory != null) {
+                factory.close();
+            }
+        }
+    }
+
+    @Ignore
+    @Test
     public void testLastModified() throws SOSInvalidDataException {
         Path p = Paths.get("src/test/resources/hibernate.cfg.xml");
         LOGGER.info(String.format("[%s][ms=%s]%s", TimeZone.getDefault().getID(), SOSPath.getLastModified(p).getTime(), SOSDate.getDateTimeAsString(
