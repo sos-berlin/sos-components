@@ -291,8 +291,11 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     }
 
     
-    public ConfigurationEntry getAllowUndeclaredVariables() {
-        return allowUndeclaredVariables;
+    public boolean getAllowUndeclaredVariables() {
+        if(allowUndeclaredVariables.getValue() == null) {
+            return allowUndeclaredVariables.getDefault().equalsIgnoreCase("true");
+        }
+        return allowUndeclaredVariables.getValue().equalsIgnoreCase("true");
     }
     
 }

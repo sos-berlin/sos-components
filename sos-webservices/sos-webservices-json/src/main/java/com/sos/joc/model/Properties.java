@@ -38,6 +38,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "welcomeDoNotRemindMe",
     "welcomeGotIt",
     "allowEmptyArguments",
+    "allowUndeclaredVariables",
     "clusterLicense",
     "licenseValidFrom",
     "licenseValidUntil",
@@ -138,6 +139,8 @@ public class Properties {
     private Boolean welcomeGotIt = false;
     @JsonProperty("allowEmptyArguments")
     private Boolean allowEmptyArguments = false;
+    @JsonProperty("allowUndeclaredVariables")
+    private Boolean allowUndeclaredVariables = false;
     @JsonProperty("clusterLicense")
     private Boolean clusterLicense = false;
     /**
@@ -441,6 +444,16 @@ public class Properties {
         this.allowEmptyArguments = allowEmptyArguments;
     }
 
+    @JsonProperty("allowUndeclaredVariables")
+    public Boolean getAllowUndeclaredVariables() {
+        return allowUndeclaredVariables;
+    }
+
+    @JsonProperty("allowUndeclaredVariables")
+    public void setAllowUndeclaredVariables(Boolean allowUndeclaredVariables) {
+        this.allowUndeclaredVariables = allowUndeclaredVariables;
+    }
+
     @JsonProperty("clusterLicense")
     public Boolean getClusterLicense() {
         return clusterLicense;
@@ -519,12 +532,12 @@ public class Properties {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("title", title).append("securityLevel", securityLevel).append("defaultProfileAccount", defaultProfileAccount).append("apiVersion", apiVersion).append("inventoryVersion", inventoryVersion).append("forceCommentsForAuditLog", forceCommentsForAuditLog).append("comments", comments).append("copy", copy).append("restore", restore).append("_import", _import).append("showViews", showViews).append("welcomeDoNotRemindMe", welcomeDoNotRemindMe).append("welcomeGotIt", welcomeGotIt).append("allowEmptyArguments", allowEmptyArguments).append("clusterLicense", clusterLicense).append("licenseValidFrom", licenseValidFrom).append("licenseValidUntil", licenseValidUntil).append("licenseType", licenseType).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("title", title).append("securityLevel", securityLevel).append("defaultProfileAccount", defaultProfileAccount).append("apiVersion", apiVersion).append("inventoryVersion", inventoryVersion).append("forceCommentsForAuditLog", forceCommentsForAuditLog).append("comments", comments).append("copy", copy).append("restore", restore).append("_import", _import).append("showViews", showViews).append("welcomeDoNotRemindMe", welcomeDoNotRemindMe).append("welcomeGotIt", welcomeGotIt).append("allowEmptyArguments", allowEmptyArguments).append("allowUndeclaredVariables", allowUndeclaredVariables).append("clusterLicense", clusterLicense).append("licenseValidFrom", licenseValidFrom).append("licenseValidUntil", licenseValidUntil).append("licenseType", licenseType).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(comments).append(restore).append(clusterLicense).append(welcomeDoNotRemindMe).append(title).append(licenseValidFrom).append(defaultProfileAccount).append(securityLevel).append(licenseType).append(forceCommentsForAuditLog).append(apiVersion).append(allowEmptyArguments).append(_import).append(welcomeGotIt).append(inventoryVersion).append(showViews).append(licenseValidUntil).append(copy).append(deliveryDate).toHashCode();
+        return new HashCodeBuilder().append(comments).append(restore).append(clusterLicense).append(welcomeDoNotRemindMe).append(title).append(licenseValidFrom).append(defaultProfileAccount).append(securityLevel).append(licenseType).append(forceCommentsForAuditLog).append(apiVersion).append(allowEmptyArguments).append(_import).append(welcomeGotIt).append(inventoryVersion).append(showViews).append(allowUndeclaredVariables).append(licenseValidUntil).append(copy).append(deliveryDate).toHashCode();
     }
 
     @Override
@@ -536,7 +549,7 @@ public class Properties {
             return false;
         }
         Properties rhs = ((Properties) other);
-        return new EqualsBuilder().append(comments, rhs.comments).append(restore, rhs.restore).append(clusterLicense, rhs.clusterLicense).append(welcomeDoNotRemindMe, rhs.welcomeDoNotRemindMe).append(title, rhs.title).append(licenseValidFrom, rhs.licenseValidFrom).append(defaultProfileAccount, rhs.defaultProfileAccount).append(securityLevel, rhs.securityLevel).append(licenseType, rhs.licenseType).append(forceCommentsForAuditLog, rhs.forceCommentsForAuditLog).append(apiVersion, rhs.apiVersion).append(allowEmptyArguments, rhs.allowEmptyArguments).append(_import, rhs._import).append(welcomeGotIt, rhs.welcomeGotIt).append(inventoryVersion, rhs.inventoryVersion).append(showViews, rhs.showViews).append(licenseValidUntil, rhs.licenseValidUntil).append(copy, rhs.copy).append(deliveryDate, rhs.deliveryDate).isEquals();
+        return new EqualsBuilder().append(comments, rhs.comments).append(restore, rhs.restore).append(clusterLicense, rhs.clusterLicense).append(welcomeDoNotRemindMe, rhs.welcomeDoNotRemindMe).append(title, rhs.title).append(licenseValidFrom, rhs.licenseValidFrom).append(defaultProfileAccount, rhs.defaultProfileAccount).append(securityLevel, rhs.securityLevel).append(licenseType, rhs.licenseType).append(forceCommentsForAuditLog, rhs.forceCommentsForAuditLog).append(apiVersion, rhs.apiVersion).append(allowEmptyArguments, rhs.allowEmptyArguments).append(_import, rhs._import).append(welcomeGotIt, rhs.welcomeGotIt).append(inventoryVersion, rhs.inventoryVersion).append(showViews, rhs.showViews).append(allowUndeclaredVariables, rhs.allowUndeclaredVariables).append(licenseValidUntil, rhs.licenseValidUntil).append(copy, rhs.copy).append(deliveryDate, rhs.deliveryDate).isEquals();
     }
 
 }
