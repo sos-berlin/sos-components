@@ -18,7 +18,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "useShortPath",
     "forSigning",
     "shallowCopy",
     "exportFile",
@@ -26,8 +25,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class ExportFilter {
 
-    @JsonProperty("useShortPath")
-    private Boolean useShortPath = false;
     /**
      * ExportForSigningFilter
      * <p>
@@ -60,16 +57,6 @@ public class ExportFilter {
      */
     @JsonProperty("auditLog")
     private AuditParams auditLog;
-
-    @JsonProperty("useShortPath")
-    public Boolean getUseShortPath() {
-        return useShortPath;
-    }
-
-    @JsonProperty("useShortPath")
-    public void setUseShortPath(Boolean useShortPath) {
-        this.useShortPath = useShortPath;
-    }
 
     /**
      * ExportForSigningFilter
@@ -161,12 +148,12 @@ public class ExportFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("useShortPath", useShortPath).append("forSigning", forSigning).append("shallowCopy", shallowCopy).append("exportFile", exportFile).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("forSigning", forSigning).append("shallowCopy", shallowCopy).append("exportFile", exportFile).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(exportFile).append(forSigning).append(auditLog).append(shallowCopy).append(useShortPath).toHashCode();
+        return new HashCodeBuilder().append(exportFile).append(forSigning).append(auditLog).append(shallowCopy).toHashCode();
     }
 
     @Override
@@ -178,7 +165,7 @@ public class ExportFilter {
             return false;
         }
         ExportFilter rhs = ((ExportFilter) other);
-        return new EqualsBuilder().append(exportFile, rhs.exportFile).append(forSigning, rhs.forSigning).append(auditLog, rhs.auditLog).append(shallowCopy, rhs.shallowCopy).append(useShortPath, rhs.useShortPath).isEquals();
+        return new EqualsBuilder().append(exportFile, rhs.exportFile).append(forSigning, rhs.forSigning).append(auditLog, rhs.auditLog).append(shallowCopy, rhs.shallowCopy).isEquals();
     }
 
 }
