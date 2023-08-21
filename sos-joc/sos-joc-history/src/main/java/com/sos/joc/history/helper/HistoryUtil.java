@@ -7,6 +7,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -21,6 +24,24 @@ import js7.data.value.Value;
 import scala.collection.JavaConverters;
 
 public class HistoryUtil {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(HistoryUtil.class);
+
+    private static final String DEFAULT_TIME_ZONE = "Etc/UTC";
+    private static final String TIME_ZONE_GMT = "Etc/GMT";
+
+    public static String getTimeZone(String caller, String timeZone) {
+        if (SOSString.isEmpty(timeZone)) {
+            LOGGER.info(String.format("[%s]TimeZone is empty. Set to default=%s", caller, DEFAULT_TIME_ZONE));
+            return DEFAULT_TIME_ZONE;
+        }
+        // java TimeZone.getTimeZone - ... the specified TimeZone, or the GMT zone if the given ID cannot be understood
+        if (timeZone.toUpperCase().equals("GMT")) {
+            LOGGER.info(String.format("[%s]TimeZone=%s. Set to %s", caller, timeZone, TIME_ZONE_GMT));
+            return TIME_ZONE_GMT;
+        }
+        return timeZone;
+    }
 
     public static String getFolderFromPath(String path) {
         if (!path.startsWith("/")) {

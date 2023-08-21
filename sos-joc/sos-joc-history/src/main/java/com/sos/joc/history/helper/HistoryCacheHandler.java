@@ -289,7 +289,7 @@ public class HistoryCacheHandler {
                     item.setControllerId(controllerId);
                     item.setAgentId(agentId);
                     item.setUri(uri);
-                    item.setTimezone(controllerTimezone);
+                    item.setTimezone(HistoryUtil.getTimeZone("getAgent " + item.getAgentId(), controllerTimezone));
                     item.setReadyTime(readyTime);
                     item.setCreated(new Date());
                 } else {
@@ -306,7 +306,7 @@ public class HistoryCacheHandler {
                     item.setControllerId(controllerId);
                     item.setAgentId(agentId);
                     item.setUri(inst.getUri());
-                    item.setTimezone(controllerTimezone);
+                    item.setTimezone(HistoryUtil.getTimeZone("getAgent " + item.getAgentId(), controllerTimezone));
                     item.setReadyTime(readyTime);
                     item.setCreated(new Date());
                 }

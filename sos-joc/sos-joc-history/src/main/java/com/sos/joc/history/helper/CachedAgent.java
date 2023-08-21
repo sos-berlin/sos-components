@@ -8,7 +8,7 @@ public class CachedAgent {
     private final String uri;
 
     public CachedAgent(final DBItemHistoryAgent item) {
-        timezone = item.getTimezone();
+        timezone = HistoryUtil.getTimeZone("CachedAgent " + item.getAgentId(), item.getTimezone());
         uri = item.getUri();
     }
 

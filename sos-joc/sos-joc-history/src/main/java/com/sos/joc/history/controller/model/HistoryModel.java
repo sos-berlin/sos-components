@@ -725,7 +725,7 @@ public class HistoryModel {
             item.setReadyEventId(event.getEventId());
             item.setControllerId(controllerConfiguration.getCurrent().getId());
             item.setUri(controllerConfiguration.getCurrent().getUri());
-            item.setTimezone(event.getTimezone());
+            item.setTimezone(HistoryUtil.getTimeZone("controllerReady " + item.getControllerId(), event.getTimezone()));
             item.setReadyTime(event.getEventDatetime());
             item.setLastKnownTime(item.getReadyTime());
             item.setTotalRunningTime(event.getTotalRunningTime());
@@ -743,7 +743,7 @@ public class HistoryModel {
             LOGGER.info(String.format("[%s][ConstraintViolation][%s][eventId=%s]%s", identifier, event.getType(), event.getEventId(), e.toString()));
         } finally {
             if (controllerTimezone == null) {
-                controllerTimezone = event.getTimezone();
+                controllerTimezone = HistoryUtil.getTimeZone("controllerReady " + controllerConfiguration.getCurrent().getId(), event.getTimezone());
             }
         }
     }
@@ -791,7 +791,7 @@ public class HistoryModel {
                                 .getShutdownTime())));
             }
             if (controllerTimezone == null) {
-                controllerTimezone = item.getTimezone();
+                controllerTimezone = HistoryUtil.getTimeZone("controllerShutDown " + item.getControllerId(), item.getTimezone());
             }
         }
         tryStoreCurrentState(dbLayer, event.getEventId());
@@ -799,14 +799,8 @@ public class HistoryModel {
 
     private void checkControllerTimezone(DBLayerHistory dbLayer) throws Exception {
         if (controllerTimezone == null) {
-            controllerTimezone = dbLayer.getLastControllerTimezone(controllerConfiguration.getCurrent().getId());
-            if (controllerTimezone == null) {
-                // TODO read from controller api, and instances
-                // throw new Exception(String.format("controller not found: %s", controllerConfiguration.getCurrent().getId()));
-                LOGGER.info(String.format("[%s][%s]controller not found in the history. set controller timezone=UTC", identifier,
-                        controllerConfiguration.getCurrent().getId()));
-                controllerTimezone = "UTC";
-            }
+            controllerTimezone = HistoryUtil.getTimeZone("checkControllerTimezone " + controllerConfiguration.getCurrent().getId(), dbLayer
+                    .getLastControllerTimezone(controllerConfiguration.getCurrent().getId()));
         }
     }
 
@@ -856,7 +850,7 @@ public class HistoryModel {
             item.setControllerId(controllerConfiguration.getCurrent().getId());
             item.setAgentId(event.getId());
             item.setUri(event.getUri());
-            item.setTimezone(event.getTimezone());
+            item.setTimezone(HistoryUtil.getTimeZone("agentReady " + item.getAgentId(), event.getTimezone()));
             item.setReadyTime(event.getEventDatetime());
             item.setCouplingFailedTime(null);
             item.setLastKnownTime(item.getReadyTime());
@@ -1678,11 +1672,12 @@ public class HistoryModel {
 
     private HistoryOrderStepBean orderStepProcessed(DBLayerHistory dbLayer, FatEventOrderStepProcessed eos,
             Map<String, CachedOrderStep> endedOrderSteps) throws Exception {
+        checkControllerTimezone(dbLayer);
+
         CachedOrder co = cacheHandler.getOrderByCurrentOrderId(dbLayer, eos.getOrderId(), eos.getEventId());
         CachedOrderStep cos = cacheHandler.getOrderStepByOrder(dbLayer, co, controllerTimezone, eos.getPosition());
         HistoryOrderStepBean hosb = null;
         if (cos.getEndTime() == null) {
-            checkControllerTimezone(dbLayer);
             cos.setEndTime(eos.getEventDatetime());
 
             LogEntry le = new LogEntry(OrderLogEntryLogLevel.MAIN, EventType.OrderProcessed, JocClusterUtil.getEventIdAsDate(eos.getEventId()), cos
@@ -2209,7 +2204,13 @@ public class HistoryModel {
     }
 
     private String getDateAsString(Date date, String timeZone) throws Exception {
-        return SOSDate.format(date, "yyyy-MM-dd HH:mm:ss.SSSZZZZ", TimeZone.getTimeZone(timeZone));
+        TimeZone tz = null;
+        try {
+            tz = TimeZone.getTimeZone(timeZone);
+        } catch (Throwable e) {
+            tz = TimeZone.getTimeZone(HistoryUtil.getTimeZone("getDateAsString", timeZone));
+        }
+        return SOSDate.format(date, "yyyy-MM-dd HH:mm:ss.SSSZZZZ", tz);
     }
 
     public static String getDateAsString(Date date) throws Exception {
