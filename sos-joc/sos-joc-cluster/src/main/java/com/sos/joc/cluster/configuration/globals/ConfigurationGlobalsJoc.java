@@ -89,6 +89,7 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     private ConfigurationEntry jocReverseProxyUrl = new ConfigurationEntry("joc_reverse_proxy_url", null, GlobalSettingsSectionValueType.STRING);
 
     private ConfigurationEntry allowEmptyArguments = new ConfigurationEntry("allow_empty_arguments", "false", GlobalSettingsSectionValueType.BOOLEAN);
+    private ConfigurationEntry allowUndeclaredVariables = new ConfigurationEntry("allow_undeclared_variables", "false", GlobalSettingsSectionValueType.BOOLEAN);
 
     private Charset encodingCharset = null;
     private boolean encodingCharsetReaded = false;
@@ -139,6 +140,7 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         jocReverseProxyUrl.setOrdering(++index);
 
         allowEmptyArguments.setOrdering(++index);
+        allowUndeclaredVariables.setOrdering(++index);
     }
 
     public static List<String> getAuditLogComments() {
@@ -287,4 +289,10 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     public ConfigurationEntry getAllowEmptyArguments() {
         return allowEmptyArguments;
     }
+
+    
+    public ConfigurationEntry getAllowUndeclaredVariables() {
+        return allowUndeclaredVariables;
+    }
+    
 }
