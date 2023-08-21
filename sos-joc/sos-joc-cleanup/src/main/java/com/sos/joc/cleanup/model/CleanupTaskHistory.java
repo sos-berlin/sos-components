@@ -12,11 +12,13 @@ import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernate;
+import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSPath;
 import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
@@ -352,26 +354,104 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         Long eventId = Long.valueOf(startTime.getTime() * 1_000 + 999);
 
         // getDbLayer().beginTransaction();
-
-        StringBuilder hql = new StringBuilder("delete from ");
-        hql.append(DBLayer.DBITEM_HISTORY_CONTROLLERS).append(" ");
-        hql.append("where readyEventId < :eventId");
-        Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
-        query.setParameter("eventId", eventId);
-        int r = getDbLayer().getSession().executeUpdate(query);
-        log.append("[").append(DBLayer.TABLE_HISTORY_CONTROLLERS).append("=").append(r).append("]");
-
-        hql = new StringBuilder("delete from ");
-        hql.append(DBLayer.DBITEM_HISTORY_AGENTS).append(" ");
-        hql.append("where readyEventId < :eventId");
-        query = getDbLayer().getSession().createQuery(hql.toString());
-        query.setParameter("eventId", eventId);
-        r = getDbLayer().getSession().executeUpdate(query);
-        log.append("[").append(DBLayer.TABLE_HISTORY_AGENTS).append("=").append(r).append("]");
-
+        log = deleteControllers(eventId, log);
+        log = deleteAgents(eventId, log);
         // getDbLayer().commit();
 
         LOGGER.info(log.toString());
+    }
+
+    protected StringBuilder deleteControllers(Long eventId, StringBuilder log) throws SOSHibernateException {
+        // 1) delete controllers that no longer exist
+        StringBuilder hql = new StringBuilder("delete from ");
+        hql.append(DBLayer.DBITEM_HISTORY_CONTROLLERS).append(" ");
+        hql.append("where readyEventId > 0 ");
+        hql.append("and controllerId not in (");
+        hql.append("select controllerId from ").append(DBLayer.DBITEM_INV_JS_INSTANCES);
+        hql.append(")");
+        Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
+        int r = getDbLayer().getSession().executeUpdate(query);
+
+        // 2) leaves 1 last row per controller
+        Dialect d = getFactory().getDialect();
+        String columnReid = SOSHibernate.quoteColumn(d, "READY_EVENT_ID");
+        String columnCid = SOSHibernate.quoteColumn(d, "CONTROLLER_ID");
+
+        hql = new StringBuilder("delete from ").append(DBLayer.TABLE_HISTORY_CONTROLLERS).append(" ");
+        hql.append("where " + columnReid + " < :eventId ");
+        if (getFactory().getDbms().equals(Dbms.MYSQL)) {
+            hql.append("and (").append(columnReid + "," + columnCid + ") not in (");
+            hql.append("  select tmp.meid,tmp.cid from(");
+            hql.append("      select max(" + columnReid + ") as meid," + columnCid + " as cid ");
+            hql.append("      from ").append(DBLayer.TABLE_HISTORY_CONTROLLERS).append(" ");
+            hql.append("      group by ").append(columnCid);
+            hql.append("   ) as tmp ");
+            hql.append(")");
+        } else {
+            hql.append("and concat(").append(columnReid + "," + columnCid + ") not in (");
+            hql.append("   select concat(max(" + columnReid + ")," + columnCid + ") ");
+            hql.append("   from ").append(DBLayer.TABLE_HISTORY_CONTROLLERS).append(" ");
+            hql.append("   group by ").append(columnCid);
+            hql.append(")");
+        }
+        query = getDbLayer().getSession().createNativeQuery(hql.toString());
+        query.setParameter("eventId", eventId);
+        r += getDbLayer().getSession().executeUpdate(query);
+
+        log.append("[").append(DBLayer.TABLE_HISTORY_CONTROLLERS).append("=").append(r).append("]");
+        return log;
+    }
+
+    protected StringBuilder deleteAgents(Long eventId, StringBuilder log) throws SOSHibernateException {
+        // 1) delete agents that no longer exist
+        StringBuilder hql = new StringBuilder("delete from ");
+        hql.append(DBLayer.DBITEM_HISTORY_AGENTS).append(" ");
+        hql.append("where concat(controllerId,agentId) not in (");
+        hql.append("select concat(controllerId,agentId) from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
+        hql.append(")");
+        Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
+        int r = getDbLayer().getSession().executeUpdate(query);
+
+        // 2) leaves 1 last row per controller/agent
+        Dialect d = getFactory().getDialect();
+        String columnReid = SOSHibernate.quoteColumn(d, "READY_EVENT_ID");
+        String columnCid = SOSHibernate.quoteColumn(d, "CONTROLLER_ID");
+        String columnAid = SOSHibernate.quoteColumn(d, "AGENT_ID");
+
+        hql = new StringBuilder("delete from ").append(DBLayer.TABLE_HISTORY_AGENTS).append(" ");
+        hql.append("where " + columnReid + "  < :eventId ");
+        switch (getFactory().getDbms()) {
+        case MYSQL:
+            hql.append("and (" + columnReid + "," + columnCid + "," + columnAid + ") not in (");
+            hql.append("  select meid,cid,aid from (");
+            hql.append("      select max(" + columnReid + ") as meid," + columnCid + " as cid," + columnAid + " as aid ");
+            hql.append("      from ").append(DBLayer.TABLE_HISTORY_AGENTS).append(" ");
+            hql.append("      group by " + columnCid + "," + columnAid);
+            hql.append("   ) as tmp ");
+            hql.append(")");
+            break;
+        case ORACLE:
+            hql.append("and (" + columnReid + "||" + columnCid + "||" + columnAid + ") not in (");
+            hql.append("  select (max(" + columnReid + ")||" + columnCid + "||" + columnAid + ") ");
+            hql.append("  from ").append(DBLayer.TABLE_HISTORY_AGENTS).append(" ");
+            hql.append("  group by " + columnCid + "," + columnAid);
+            hql.append(")");
+            break;
+        default:
+            hql.append("and concat(" + columnReid + "," + columnCid + "," + columnAid + ") not in (");
+            hql.append("  select concat(max(" + columnReid + ")," + columnCid + "," + columnAid + ") ");
+            hql.append("  from ").append(DBLayer.TABLE_HISTORY_AGENTS).append(" ");
+            hql.append("  group by " + columnCid + "," + columnAid);
+            hql.append(")");
+            break;
+        }
+
+        query = getDbLayer().getSession().createNativeQuery(hql.toString());
+        query.setParameter("eventId", eventId);
+        r += getDbLayer().getSession().executeUpdate(query);
+
+        log.append("[").append(DBLayer.TABLE_HISTORY_AGENTS).append("=").append(r).append("]");
+        return log;
     }
 
     private void deleteNotStartedOrdersLogs(TaskDateTime datetime) {
