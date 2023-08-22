@@ -641,9 +641,6 @@ public class JsonConverter {
         }
         if (!params.getAdditionalProperties().containsKey("js7Workflow.path")) {
             params.setAdditionalProperty("js7Workflow.path", new Parameter(ParameterType.String.value(), null, workflowPath));
-            if (params.getAdditionalProperties().size() == 1) {
-                return new OrderPreparation(params, true);
-            }
         }
         return new OrderPreparation(params, orderPreparation.getAllowUndeclared());
     }
