@@ -317,6 +317,10 @@ public class JsonSerializer {
             return null;
         }
         if (r != null && (r.getParameters() == null || (r.getParameters() != null && r.getParameters().getAdditionalProperties().isEmpty()))) {
+            if (r.getAllowUndeclared() == Boolean.TRUE) {
+                r.setParameters(null);
+                return r; 
+            }
             return null;
         }
         r.getParameters().getAdditionalProperties().replaceAll((k, v) -> {
@@ -335,6 +339,10 @@ public class JsonSerializer {
             return null;
         }
         if (r != null && (r.getParameters() == null || (r.getParameters() != null && r.getParameters().getAdditionalProperties().isEmpty()))) {
+            if (r.getAllowUndeclared() == Boolean.TRUE) {
+                r.setParameters(null);
+                return r; 
+            }
             return null;
         }
         r.getParameters().getAdditionalProperties().replaceAll((k, v) -> {
