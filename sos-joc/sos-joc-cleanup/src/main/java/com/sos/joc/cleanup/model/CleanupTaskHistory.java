@@ -22,6 +22,7 @@ import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSPath;
 import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
+import com.sos.joc.cleanup.helper.CleanupPartialResult;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
 import com.sos.joc.cluster.configuration.JocHistoryConfiguration;
@@ -32,11 +33,11 @@ public class CleanupTaskHistory extends CleanupTaskModel {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupTaskHistory.class);
 
-    private enum Scope {
+    protected enum Scope {
         MAIN, REMAINING
     }
 
-    private enum Range {
+    protected enum Range {
         ALL, STEPS, STATES, LOGS
     }
 
@@ -44,10 +45,14 @@ public class CleanupTaskHistory extends CleanupTaskModel {
     private String logDir = "logs/history";
     private String logDirTmpOrders = logDir + "/" + JocHistoryConfiguration.ID_NOT_STARTED_ORDER;
 
-    private int totalOrders = 0;
-    private int totalOrderStates = 0;
-    private int totalOrderSteps = 0;
-    private int totalOrderLogs = 0;
+    private long totalOrders = 0;
+    private long totalOrderStates = 0;
+    private long totalOrderSteps = 0;
+    private long totalOrderLogs = 0;
+
+    private String columnQuotedId;
+    private String columnQuotedHoMainParentId;
+    private String columnQuotedMainParentId;
 
     public CleanupTaskHistory(JocClusterHibernateFactory factory, IJocActiveMemberService service, int batchSize) {
         super(factory, service, batchSize);
@@ -121,8 +126,20 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         return state;
     }
 
-    private JocServiceTaskAnswerState cleanupOrders(Scope scope, Range range, Date startTime, String ageInfo, boolean deleteLogs)
+    private void setQuotedColumns() {
+        if (columnQuotedHoMainParentId == null) {
+            Dialect d = getFactory().getDialect();
+            columnQuotedHoMainParentId = SOSHibernate.quoteColumn(d, "HO_MAIN_PARENT_ID");
+            columnQuotedMainParentId = SOSHibernate.quoteColumn(d, "MAIN_PARENT_ID");
+            columnQuotedId = SOSHibernate.quoteColumn(d, "ID");
+        }
+    }
+
+    protected JocServiceTaskAnswerState cleanupOrders(Scope scope, Range range, Date startTime, String ageInfo, boolean deleteLogs)
             throws SOSHibernateException {
+
+        setQuotedColumns();
+
         if (scope.equals(Scope.MAIN)) {
             tryOpenSession();
 
@@ -135,17 +152,15 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         while (runm) {
             tryOpenSession();
 
-            List<Long> rm = getMainOrderIds(scope, range, startTime, ageInfo);
-            if (rm == null || rm.size() == 0) {
+            Long maxMainParentId = getOrderMaxMainParentId(scope, range, startTime, ageInfo);
+            if (maxMainParentId == null || maxMainParentId == 0) {
                 return JocServiceTaskAnswerState.COMPLETED;
             }
             if (isStopped()) {
                 return JocServiceTaskAnswerState.UNCOMPLETED;
             }
 
-            getDbLayer().beginTransaction();
-            boolean completed = deleteOrders(scope, range, startTime, ageInfo, rm, deleteLogs);
-            getDbLayer().commit();
+            boolean completed = cleanupOrders(scope, range, startTime, maxMainParentId, ageInfo, deleteLogs);
             if (!completed) {
                 return JocServiceTaskAnswerState.UNCOMPLETED;
             }
@@ -174,24 +189,24 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         return state;
     }
 
-    private List<Long> getMainOrderIds(Scope scope, Range range, Date startTime, String ageInfo) throws SOSHibernateException {
+    private Long getOrderMaxMainParentId(Scope scope, Range range, Date startTime, String ageInfo) throws SOSHibernateException {
         String table = DBLayer.TABLE_HISTORY_ORDERS;
         StringBuilder hql = null;
         switch (scope) {
         case MAIN:
-            hql = new StringBuilder("select id from ").append(DBLayer.DBITEM_HISTORY_ORDERS).append(" ");
+            hql = new StringBuilder("select max(mainParentId) from ").append(DBLayer.DBITEM_HISTORY_ORDERS).append(" ");
             hql.append("where startTime < :startTime ");
             hql.append("and parentId=0");
             break;
         case REMAINING:
             switch (range) {
             case ALL:
-                hql = new StringBuilder("select distinct mainParentId from ").append(DBLayer.DBITEM_HISTORY_ORDERS).append(" ");
+                hql = new StringBuilder("select max(distinct mainParentId) from ").append(DBLayer.DBITEM_HISTORY_ORDERS).append(" ");
                 hql.append("where startTime < :startTime");
                 break;
             case STEPS:
                 table = DBLayer.TABLE_MON_ORDER_STEPS;
-                hql = new StringBuilder("select distinct historyOrderMainParentId from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEPS).append(" ");
+                hql = new StringBuilder("select max(distinct historyOrderMainParentId) from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEPS).append(" ");
                 hql.append("where startTime < :startTime");
                 break;
             default:
@@ -201,17 +216,16 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         }
         Query<Long> query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameter("startTime", startTime);
-        query.setMaxResults(getBatchSize());
-        List<Long> r = getDbLayer().getSession().getResultList(query);
+        Long r = getDbLayer().getSession().getSingleValue(query);
 
-        int size = r.size();
-        if (size == 0) {
+        if (r == null || r == 0) {
+            r = 0L;
             LOGGER.info(String.format("[%s][%s %s][%s %s][%s]found=%s", getIdentifier(), getScope(scope), getRange(range), ageInfo, getDateTime(
-                    startTime), table, size));
+                    startTime), table, r));
         } else {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug(String.format("[%s][%s %s][%s %s][%s]found=%s", getIdentifier(), getScope(scope), getRange(range), ageInfo, getDateTime(
-                        startTime), table, size));
+                        startTime), table, r));
             }
         }
         return r;
@@ -234,55 +248,116 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         return r;
     }
 
-    private boolean deleteOrders(Scope scope, Range range, Date startTime, String ageInfo, List<Long> orderIds, boolean deleteLogs)
+    private CleanupPartialResult deleteOrderStates(Long maxMainParentId) throws SOSHibernateException {
+        CleanupPartialResult r = new CleanupPartialResult(DBLayer.TABLE_HISTORY_ORDER_STATES);
+
+        StringBuilder sql = new StringBuilder("delete ");
+        sql.append(getMSSQLLimit());
+        sql.append("from ").append(DBLayer.TABLE_HISTORY_ORDER_STATES).append(" ");
+        if (isPGSQL()) {
+            sql.append("where ").append(columnQuotedId).append(" in (");
+            sql.append("select ").append(columnQuotedId).append(" from ").append(DBLayer.TABLE_HISTORY_ORDER_STATES).append(" ");
+            sql.append("where ").append(columnQuotedHoMainParentId).append(" <= ").append(maxMainParentId).append(" ");
+            sql.append("limit ").append(getBatchSize());
+            sql.append(")");
+        } else {
+            sql.append("where ").append(columnQuotedHoMainParentId).append(" <= ").append(maxMainParentId).append(" ");
+            sql.append(getLimit());
+        }
+        r.run(this, sql, maxMainParentId);
+        return r;
+    }
+
+    private CleanupPartialResult deleteOrderSteps(Long maxMainParentId) throws SOSHibernateException {
+        CleanupPartialResult r = new CleanupPartialResult(DBLayer.TABLE_HISTORY_ORDER_STEPS);
+
+        StringBuilder sql = new StringBuilder("delete ");
+        sql.append(getMSSQLLimit());
+        sql.append("from ").append(DBLayer.TABLE_HISTORY_ORDER_STEPS).append(" ");
+        if (isPGSQL()) {
+            sql.append("where ").append(columnQuotedId).append(" in (");
+            sql.append("select ").append(columnQuotedId).append(" from ").append(DBLayer.TABLE_HISTORY_ORDER_STEPS).append(" ");
+            sql.append("where ").append(columnQuotedHoMainParentId).append(" <= ").append(maxMainParentId).append(" ");
+            sql.append("limit ").append(getBatchSize());
+            sql.append(")");
+        } else {
+            sql.append("where ").append(columnQuotedHoMainParentId).append(" <= ").append(maxMainParentId).append(" ");
+            sql.append(getLimit());
+        }
+
+        r.run(this, sql, maxMainParentId);
+        return r;
+    }
+
+    private CleanupPartialResult deleteLogs(Long maxMainParentId) throws SOSHibernateException {
+        CleanupPartialResult r = new CleanupPartialResult(DBLayer.TABLE_HISTORY_LOGS);
+
+        StringBuilder sql = new StringBuilder("delete ");
+        sql.append(getMSSQLLimit());
+        sql.append("from ").append(DBLayer.TABLE_HISTORY_LOGS).append(" ");
+        if (isPGSQL()) {
+            sql.append("where ").append(columnQuotedId).append(" in (");
+            sql.append("select ").append(columnQuotedId).append(" from ").append(DBLayer.TABLE_HISTORY_LOGS).append(" ");
+            sql.append("where ").append(columnQuotedHoMainParentId).append(" <= ").append(maxMainParentId).append(" ");
+            sql.append("limit ").append(getBatchSize());
+            sql.append(")");
+        } else {
+            sql.append("where ").append(columnQuotedHoMainParentId).append(" <= ").append(maxMainParentId).append(" ");
+            sql.append(getLimit());
+        }
+
+        r.run(this, sql, maxMainParentId);
+        return r;
+    }
+
+    private CleanupPartialResult deleteOrders(Long maxMainParentId) throws SOSHibernateException {
+        CleanupPartialResult r = new CleanupPartialResult(DBLayer.TABLE_HISTORY_ORDERS);
+
+        StringBuilder sql = new StringBuilder("delete ");
+        sql.append(getMSSQLLimit());
+        sql.append("from ").append(DBLayer.TABLE_HISTORY_ORDERS).append(" ");
+        if (isPGSQL()) {
+            sql.append("where ").append(columnQuotedId).append(" in (");
+            sql.append("select ").append(columnQuotedId).append(" from ").append(DBLayer.TABLE_HISTORY_ORDERS).append(" ");
+            sql.append("where ").append(columnQuotedMainParentId).append(" <= ").append(maxMainParentId).append(" ");
+            sql.append("limit ").append(getBatchSize());
+            sql.append(")");
+        } else {
+            sql.append("where ").append(columnQuotedMainParentId).append(" <= ").append(maxMainParentId).append(" ");
+            sql.append(getLimit());
+        }
+
+        r.run(this, sql, maxMainParentId);
+        return r;
+    }
+
+    private boolean cleanupOrders(Scope scope, Range range, Date startTime, Long maxMainParentId, String ageInfo, boolean deleteLogs)
             throws SOSHibernateException {
         StringBuilder log = new StringBuilder("[").append(getIdentifier()).append("][");
         log.append(getScope(scope)).append(" ").append(getRange(range)).append("]");
-        log.append("[").append(ageInfo).append(" ").append(getDateTime(startTime)).append("][deleted]");
+        log.append("[").append(ageInfo).append(" ").append(getDateTime(startTime)).append("][maxMainParentId=" + maxMainParentId + "][deleted]");
 
-        // getDbLayer().beginTransaction();
-        StringBuilder hql = new StringBuilder("delete from ");
-        hql.append(DBLayer.DBITEM_HISTORY_ORDER_STATES).append(" ");
-        hql.append("where historyOrderMainParentId in (:orderIds)");
-        Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
-        query.setParameterList("orderIds", orderIds);
-        int r = getDbLayer().getSession().executeUpdate(query);
-        // getDbLayer().commit();
-        totalOrderStates += r;
-        log.append(getDeleted(DBLayer.TABLE_HISTORY_ORDER_STATES, r, totalOrderStates));
+        CleanupPartialResult r = deleteOrderStates(maxMainParentId);
+        totalOrderStates += r.getDeletedTotal();
+        log.append(getDeleted(DBLayer.TABLE_HISTORY_ORDER_STATES, r.getDeletedTotal(), totalOrderStates));
 
         if (isStopped()) {
             LOGGER.info(log.toString());
             return false;
         }
 
-        // getDbLayer().beginTransaction();
-        hql = new StringBuilder("delete from ");
-        hql.append(DBLayer.DBITEM_HISTORY_ORDER_STEPS).append(" ");
-        hql.append("where historyOrderMainParentId in (:orderIds)");
-        query = getDbLayer().getSession().createQuery(hql.toString());
-        query.setParameterList("orderIds", orderIds);
-        r = getDbLayer().getSession().executeUpdate(query);
-        // getDbLayer().commit();
-        totalOrderSteps += r;
-        log.append(getDeleted(DBLayer.TABLE_HISTORY_ORDER_STEPS, r, totalOrderSteps));
+        r = deleteOrderSteps(maxMainParentId);
+        totalOrderSteps += r.getDeletedTotal();
+        log.append(getDeleted(DBLayer.TABLE_HISTORY_ORDER_STEPS, r.getDeletedTotal(), totalOrderSteps));
 
         if (isStopped()) {
             LOGGER.info(log.toString());
             return false;
         }
-
         if (deleteLogs) {
-            // getDbLayer().beginTransaction();
-            hql = new StringBuilder("delete from ");
-            hql.append(DBLayer.DBITEM_HISTORY_LOGS).append(" ");
-            hql.append("where historyOrderMainParentId in (:orderIds)");
-            query = getDbLayer().getSession().createQuery(hql.toString());
-            query.setParameterList("orderIds", orderIds);
-            r = getDbLayer().getSession().executeUpdate(query);
-            // getDbLayer().commit();
-            totalOrderLogs += r;
-            log.append(getDeleted(DBLayer.TABLE_HISTORY_LOGS, r, totalOrderLogs));
+            r = deleteLogs(maxMainParentId);
+            totalOrderLogs += r.getDeletedTotal();
+            log.append(getDeleted(DBLayer.TABLE_HISTORY_LOGS, r.getDeletedTotal(), totalOrderLogs));
 
             if (isStopped()) {
                 LOGGER.info(log.toString());
@@ -291,16 +366,9 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         }
 
         if (range.equals(Range.ALL)) {
-            // getDbLayer().beginTransaction();
-            hql = new StringBuilder("delete from ");
-            hql.append(DBLayer.DBITEM_HISTORY_ORDERS).append(" ");
-            hql.append("where mainParentId in (:orderIds)");
-            query = getDbLayer().getSession().createQuery(hql.toString());
-            query.setParameterList("orderIds", orderIds);
-            r = getDbLayer().getSession().executeUpdate(query);
-            // getDbLayer().commit();
-            totalOrders += r;
-            log.append(getDeleted(DBLayer.TABLE_HISTORY_ORDERS, r, totalOrders));
+            r = deleteOrders(maxMainParentId);
+            totalOrders += r.getDeletedTotal();
+            log.append(getDeleted(DBLayer.TABLE_HISTORY_ORDERS, r.getDeletedTotal(), totalOrders));
         }
 
         LOGGER.info(log.toString());
