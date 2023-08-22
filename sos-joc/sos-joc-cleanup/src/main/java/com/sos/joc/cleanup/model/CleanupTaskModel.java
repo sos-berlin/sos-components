@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.exception.SOSInvalidDataException;
+import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 import com.sos.commons.hibernate.exception.SOSHibernateOpenSessionException;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
@@ -188,7 +189,7 @@ public class CleanupTaskModel implements ICleanupTask {
         return service;
     }
 
-    protected void tryOpenSession() throws SOSHibernateOpenSessionException {
+    public void tryOpenSession() throws SOSHibernateOpenSessionException {
         if (dbLayer != null && dbLayer.getSession() == null) {
             dbLayer.setSession(factory.openStatelessSession(getIdentifier()));
         }
@@ -252,7 +253,7 @@ public class CleanupTaskModel implements ICleanupTask {
         }
     }
 
-    protected StringBuilder getDeleted(String table, int current, int total) {
+    public StringBuilder getDeleted(String table, long current, long total) {
         return new StringBuilder("[").append(table).append("=").append(current).append(" total=").append(total).append("]");
     }
 
@@ -265,6 +266,28 @@ public class CleanupTaskModel implements ICleanupTask {
         } catch (SOSInvalidDataException e) {
             return date.toString();
         }
+    }
+
+    protected String getLimit() {
+        switch (factory.getDbms()) {
+        case MYSQL:
+            return "limit " + batchSize;
+        case ORACLE:
+            return "and ROWNUM <= " + batchSize;
+        default:
+            return "";
+        }
+    }
+
+    protected boolean isPGSQL() {
+        return factory.getDbms().equals(Dbms.PGSQL);
+    }
+
+    protected String getMSSQLLimit() {
+        if (factory.getDbms().equals(Dbms.MSSQL)) {
+            return " top (" + batchSize + ") ";
+        }
+        return "";
     }
 
     protected boolean isCompleted(JocServiceTaskAnswerState state) {
