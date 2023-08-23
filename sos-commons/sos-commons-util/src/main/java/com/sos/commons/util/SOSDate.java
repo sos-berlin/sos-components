@@ -375,6 +375,10 @@ public class SOSDate {
         return seconds;
     }
 
+    public static long getTimeAsMillis(String val) {
+        return getTimeAsSeconds(val) * 1_000;
+    }
+
     public static void main(String[] args) {
         try {
             Date d = new Date();
