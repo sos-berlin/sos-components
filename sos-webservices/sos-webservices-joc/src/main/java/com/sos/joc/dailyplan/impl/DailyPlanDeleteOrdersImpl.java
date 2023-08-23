@@ -75,6 +75,12 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
     }
 
     public boolean deleteOrders(DailyPlanOrderFilterDef in, String accessToken, boolean withAudit, boolean withEvent) throws SOSHibernateException {
+        return deleteOrders(in, accessToken, withAudit, withEvent, true);
+    }
+
+    
+    public boolean deleteOrders(DailyPlanOrderFilterDef in, String accessToken, boolean withAudit, boolean withEvent, boolean evalPermissions)
+            throws SOSHibernateException {
 
         boolean noControllerAvailable = Proxies.getControllerDbInstances().isEmpty();
         boolean permitted = true;
@@ -105,7 +111,7 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
         setSettings();
         
         for (String controllerId : allowedControllers) {
-            FilterDailyPlannedOrders filter = getOrderFilter("deleteOrdersFromPlan", controllerId, in, true);
+            FilterDailyPlannedOrders filter = getOrderFilter("deleteOrdersFromPlan", controllerId, in, true, evalPermissions);
             if (filter == null) {
                 continue;
             }

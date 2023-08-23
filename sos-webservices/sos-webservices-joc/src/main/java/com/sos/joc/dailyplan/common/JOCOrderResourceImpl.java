@@ -1,11 +1,14 @@
 package com.sos.joc.dailyplan.common;
 
+import java.nio.file.Paths;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +18,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
@@ -22,6 +26,7 @@ import com.sos.joc.dailyplan.db.DBLayerDailyPlannedOrders;
 import com.sos.joc.dailyplan.db.FilterDailyPlannedOrders;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanWithHistory;
+import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.CyclicOrderInfos;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
 import com.sos.joc.model.dailyplan.DailyPlanOrderState;
@@ -66,18 +71,51 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
 
     protected FilterDailyPlannedOrders getOrderFilter(String caller, String controllerId, DailyPlanOrderFilterDef in, boolean selectCyclicOrders)
             throws SOSHibernateException {
+        return getOrderFilter(caller, controllerId, in, selectCyclicOrders, true);
+    }
+
+    
+    protected FilterDailyPlannedOrders getOrderFilter(String caller, String controllerId, DailyPlanOrderFilterDef in, boolean selectCyclicOrders, boolean evalPermissions)
+            throws SOSHibernateException {
         FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-
-        FolderPermissionEvaluator evaluator = new FolderPermissionEvaluator();
-
-        evaluator.setScheduleFolders(in.getScheduleFolders());
-        evaluator.setSchedulePaths(in.getSchedulePaths());
-        evaluator.setWorkflowFolders(in.getWorkflowFolders());
-        evaluator.setWorkflowPaths(in.getWorkflowPaths());
         
-        evaluator.getPermittedNames(folderPermissions, controllerId, filter);
+        boolean hasPermission = true;
 
-        if (evaluator.isHasPermission()) {
+        if(!evalPermissions) {
+            if(in.getSchedulePaths() != null && !in.getSchedulePaths().isEmpty()) {
+                filter.setScheduleNames(in.getSchedulePaths().stream().map(JocInventory::pathToName).collect(Collectors.toList()));
+            }
+            if(in.getScheduleFolders() != null && !in.getScheduleFolders().isEmpty()) {
+                Set<Folder> permitted = addPermittedFolder(in.getScheduleFolders(), folderPermissions);
+                if (permitted.isEmpty()) {
+                    // hasPermission = false; //maybe the schedules were deleted
+                } else {
+                    filter.addScheduleFolders(permitted);
+                }
+            }
+            if(in.getWorkflowFolders() != null && !in.getWorkflowFolders().isEmpty()) {
+                Set<Folder> permitted = addPermittedFolder(in.getWorkflowFolders(), folderPermissions);
+                if (permitted.isEmpty()) {
+                    // hasPermission = false;
+                } else {
+                    filter.addWorkflowFolders(permitted);
+                }
+            }
+            if(in.getWorkflowPaths() != null && !in.getWorkflowPaths().isEmpty()) {
+                filter.setWorkflowNames(in.getWorkflowPaths().stream().map(JocInventory::pathToName).collect(Collectors.toList()));
+            }
+        } else {
+            FolderPermissionEvaluator evaluator = new FolderPermissionEvaluator();
+
+            evaluator.setScheduleFolders(in.getScheduleFolders());
+            evaluator.setSchedulePaths(in.getSchedulePaths());
+            evaluator.setWorkflowFolders(in.getWorkflowFolders());
+            evaluator.setWorkflowPaths(in.getWorkflowPaths());
+            
+            evaluator.getPermittedNames(folderPermissions, controllerId, filter);
+            hasPermission = evaluator.isHasPermission();
+        }
+        if (hasPermission) {
             if (in.getOrderIds() != null && !in.getOrderIds().isEmpty()) {
                 Set<String> orderIds = new HashSet<>();
                 if (selectCyclicOrders) {
