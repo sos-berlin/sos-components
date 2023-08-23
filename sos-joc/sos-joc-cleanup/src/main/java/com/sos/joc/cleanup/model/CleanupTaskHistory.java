@@ -5,7 +5,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.function.BiPredicate;
@@ -201,12 +200,12 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         case REMAINING:
             switch (range) {
             case ALL:
-                hql = new StringBuilder("select max(distinct mainParentId) from ").append(DBLayer.DBITEM_HISTORY_ORDERS).append(" ");
+                hql = new StringBuilder("select max(mainParentId) from ").append(DBLayer.DBITEM_HISTORY_ORDERS).append(" ");
                 hql.append("where startTime < :startTime");
                 break;
             case STEPS:
                 table = DBLayer.TABLE_MON_ORDER_STEPS;
-                hql = new StringBuilder("select max(distinct historyOrderMainParentId) from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEPS).append(" ");
+                hql = new StringBuilder("select max(historyOrderMainParentId) from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEPS).append(" ");
                 hql.append("where startTime < :startTime");
                 break;
             default:
@@ -227,23 +226,6 @@ public class CleanupTaskHistory extends CleanupTaskModel {
                 LOGGER.debug(String.format("[%s][%s %s][%s %s][%s]found=%s", getIdentifier(), getScope(scope), getRange(range), ageInfo, getDateTime(
                         startTime), table, r));
             }
-        }
-        return r;
-    }
-
-    private List<Long> getLogsOrderIds(Scope scope, Range range, TaskDateTime datetime) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select id from ");
-        hql.append(DBLayer.DBITEM_HISTORY_ORDERS).append(" ");
-        hql.append("where startTime < :startTime ");
-
-        Query<Long> query = getDbLayer().getSession().createQuery(hql.toString());
-        query.setParameter("startTime", datetime.getDatetime());
-        query.setMaxResults(getBatchSize());
-        List<Long> r = getDbLayer().getSession().getResultList(query);
-
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(String.format("[%s][%s][%s]found=%s", getIdentifier(), datetime.getAge().getConfigured(), DBLayer.TABLE_HISTORY_ORDERS, r
-                    .size()));
         }
         return r;
     }
@@ -617,53 +599,26 @@ public class CleanupTaskHistory extends CleanupTaskModel {
     private JocServiceTaskAnswerState cleanupLogs(Scope scope, Range range, TaskDateTime datetime) throws Exception {
         deleteNotStartedOrdersLogs(datetime);
 
+        String ageInfo = datetime.getAge().getConfigured();
+        Date startTime = datetime.getDatetime();
+
         tryOpenSession();
 
-        List<Long> ids = getLogsOrderIds(scope, range, datetime);
-        if (ids == null || ids.size() == 0) {
+        Long maxMainParentId = getOrderMaxMainParentId(scope, range, startTime, ageInfo);
+        if (maxMainParentId == null || maxMainParentId == 0) {
             return JocServiceTaskAnswerState.COMPLETED;
         }
 
-        try {
-            int size = ids.size();
-            if (size > SOSHibernate.LIMIT_IN_CLAUSE) {
-                ArrayList<Long> copy = (ArrayList<Long>) ids.stream().collect(Collectors.toList());
+        StringBuilder log = new StringBuilder("[").append(getIdentifier()).append("][");
+        log.append(getScope(scope)).append(" ").append(getRange(range)).append("]");
+        log.append("[").append(ageInfo).append(" ").append(getDateTime(startTime)).append("][maxMainParentId=" + maxMainParentId + "][deleted]");
 
-                JocServiceTaskAnswerState state = null;
-                for (int i = 0; i < size; i += SOSHibernate.LIMIT_IN_CLAUSE) {
-                    List<Long> subList;
-                    if (size > i + SOSHibernate.LIMIT_IN_CLAUSE) {
-                        subList = copy.subList(i, (i + SOSHibernate.LIMIT_IN_CLAUSE));
-                    } else {
-                        subList = copy.subList(i, size);
-                    }
-                    state = deleteLogs(datetime, subList);
-                }
-                return state;
+        CleanupPartialResult r = deleteLogs(maxMainParentId);
+        totalOrderLogs += r.getDeletedTotal();
+        log.append(getDeleted(DBLayer.TABLE_HISTORY_LOGS, r.getDeletedTotal(), totalOrderLogs));
 
-            } else {
-                return deleteLogs(datetime, ids);
-            }
-        } catch (Throwable e) {
-            throw e;
-        }
-    }
-
-    private JocServiceTaskAnswerState deleteLogs(TaskDateTime datetime, List<Long> orderIds) throws SOSHibernateException {
-        getDbLayer().beginTransaction();
-
-        StringBuilder hql = new StringBuilder("delete from ");
-        hql.append(DBLayer.DBITEM_HISTORY_LOGS).append(" ");
-        hql.append("where historyOrderMainParentId in (:orderIds)");
-        Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
-        query.setParameterList("orderIds", orderIds);
-        int r = getDbLayer().getSession().executeUpdate(query);
-        totalOrderLogs += r;
-        LOGGER.info(String.format("[%s][%s][%s]deleted=%s, total=%s", getIdentifier(), datetime.getAge().getConfigured(), DBLayer.TABLE_HISTORY_LOGS,
-                r, totalOrderLogs));
-
-        getDbLayer().commit();
-        return JocServiceTaskAnswerState.COMPLETED;
+        LOGGER.info(log.toString());
+        return r.getState();
     }
 
     private String getScope(Scope val) {
