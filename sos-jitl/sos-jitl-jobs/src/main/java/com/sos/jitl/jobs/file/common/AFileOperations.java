@@ -13,6 +13,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -159,13 +160,8 @@ public abstract class AFileOperations {
                                 + "] was modified in the future.");
                     }
                     if (interval < minAge) {
-                        String lm = null;
-                        try {
-                            lm = SOSDate.getDateTimeAsString(lastModified);
-                        } catch (Throwable e) {
-                            lm = "" + lastModified;
-                        }
-                        logger.info("[%s][lastModified=%s]minimum age required is %s", file.getCanonicalPath(), lm, minFileAge);
+                        logger.info("[%s][lastModified=%s]minimum age required is %s", file.getCanonicalPath(), getDateTime(lastModified),
+                                minFileAge);
                         return false;
                     }
                 }
@@ -177,13 +173,8 @@ public abstract class AFileOperations {
                                 + "] was modified in the future.");
                     }
                     if (interval > maxAge) {
-                        String lm = null;
-                        try {
-                            lm = SOSDate.getDateTimeAsString(lastModified);
-                        } catch (Throwable e) {
-                            lm = "" + lastModified;
-                        }
-                        logger.info("[%s][lastModified=%s]maximum age required is %s", file.getCanonicalPath(), lm, maxFileAge);
+                        logger.info("[%s][lastModified=%s]maximum age required is %s", file.getCanonicalPath(), getDateTime(lastModified),
+                                maxFileAge);
                         return false;
                     }
                 }
@@ -691,9 +682,26 @@ public abstract class AFileOperations {
         return transferedFiles;
     }
 
+    private String getDuration(long millis) {
+        try {
+            return SOSDate.getDuration(Duration.ofMillis(millis));
+        } catch (Throwable e) {
+            return millis + "ms";
+        }
+    }
+
+    private String getDateTime(long millis) {
+        try {
+            return SOSDate.getDateTimeAsString(millis);
+        } catch (Throwable e) {
+            return millis + "ms";
+        }
+    }
+
     private List<File> filelistFilterAge(List<File> filelist, final long minAge, final long maxAge) throws Exception {
         long currentTime = System.currentTimeMillis();
         if (minAge != 0) {
+            String minAgeDef = getDuration(minAge);
             File file;
             List<File> newlist = new ArrayList<File>();
             for (int i = 0; i < filelist.size(); i++) {
@@ -708,17 +716,15 @@ public abstract class AFileOperations {
                     newlist.add(file);
                 } else {
                     if (logger.isDebugEnabled()) {
-                        try {
-                            logger.debug(String.format("[%s][lastModified=%s]skip because of minimum age restriction", file.getCanonicalPath(),
-                                    SOSDate.getDateTimeAsString(lastModified)));
-                        } catch (Throwable e) {
-                        }
+                        logger.debug(String.format("[%s][lastModified=%s]minimum age required is %s", file.getCanonicalPath(), getDateTime(
+                                lastModified), minAgeDef));
                     }
                 }
             }
             filelist = newlist;
         }
         if (maxAge != 0) {
+            String maxAgeDef = getDuration(maxAge);
             File file;
             List<File> newlist = new ArrayList<File>();
             for (int i = 0; i < filelist.size(); i++) {
@@ -733,11 +739,8 @@ public abstract class AFileOperations {
                     newlist.add(file);
                 } else {
                     if (logger.isDebugEnabled()) {
-                        try {
-                            logger.debug(String.format("[%s][lastModified=%s]skip because of maximum age restriction", file.getCanonicalPath(),
-                                    SOSDate.getDateTimeAsString(lastModified)));
-                        } catch (Throwable e) {
-                        }
+                        logger.debug(String.format("[%s][lastModified=%s]maximum age required is %s", file.getCanonicalPath(), getDateTime(
+                                lastModified), maxAgeDef));
                     }
                 }
             }
