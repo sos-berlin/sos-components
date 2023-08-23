@@ -782,7 +782,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                                     session.setAutoCommit(false);
 
                                     InventoryDBLayer dbLayerForCompleteableFuture = new InventoryDBLayer(session);
-                                    boolean successful = deleteOrdersImpl.deleteOrders(orderFilter, xAccessToken, false, false);
+                                    boolean successful = deleteOrdersImpl.deleteOrders(orderFilter, xAccessToken, false, false, false);
                                     if (!successful) {
                                         JocError je = getJocError();
                                         if (je != null && je.printMetaInfo() != null) {
