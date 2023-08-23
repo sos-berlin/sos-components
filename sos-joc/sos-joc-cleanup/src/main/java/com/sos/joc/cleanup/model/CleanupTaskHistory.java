@@ -68,31 +68,40 @@ public class CleanupTaskHistory extends CleanupTaskModel {
 
             // Cleanup Logs and Orders/Steps/States
             if (orderDatetime.getAge().getConfigured().equals(logsDatetime.getAge().getConfigured())) {
-                LOGGER.info(String.format("[%s][orders,logs][%s][%s]start cleanup", getIdentifier(), orderDatetime.getAge().getConfigured(),
-                        orderDatetime.getZonedDatetime()));
+                String logPrefix = String.format("[%s][orders,logs][%s][%s]", getIdentifier(), orderDatetime.getAge().getConfigured(), orderDatetime
+                        .getZonedDatetime());
+                LOGGER.info(logPrefix + "start cleanup");
 
                 // Cleanup DB Logs and Orders/Steps/States
                 state = cleanupOrders(orderDatetime, true);
                 deleteNotStartedOrdersLogs(orderDatetime);
                 deleteNotReferencedLogs(state);
+
+                LOGGER.info(logPrefix + "end cleanup");
+
                 return state;
             }
 
             // Cleanup Logs
             if (logsDatetime.getDatetime() != null) {
-                LOGGER.info(String.format("[%s][logs][%s][%s]start cleanup", getIdentifier(), logsDatetime.getAge().getConfigured(), logsDatetime
-                        .getZonedDatetime()));
+                String logPrefix = String.format("[%s][logs][%s][%s]", getIdentifier(), logsDatetime.getAge().getConfigured(), logsDatetime
+                        .getZonedDatetime());
+
+                LOGGER.info(logPrefix + "start cleanup");
                 state = cleanupLogs(Scope.MAIN, Range.ALL, logsDatetime);
+                LOGGER.info(logPrefix + "end cleanup");
             } else {
                 LOGGER.info(String.format("[%s][logs][%s]skip", getIdentifier(), logsDatetime.getAge().getConfigured()));
             }
 
             // Cleanup Orders/Steps/States
             if (orderDatetime.getDatetime() != null && (state == null || state.equals(JocServiceTaskAnswerState.COMPLETED))) {
-                LOGGER.info(String.format("[%s][orders][%s][%s]start cleanup", getIdentifier(), orderDatetime.getAge().getConfigured(), orderDatetime
-                        .getZonedDatetime()));
+                String logPrefix = String.format("[%s][orders][%s][%s]", getIdentifier(), orderDatetime.getAge().getConfigured(), orderDatetime
+                        .getZonedDatetime());
 
+                LOGGER.info(logPrefix + "start cleanup");
                 state = cleanupOrders(orderDatetime, false);
+                LOGGER.info(logPrefix + "end cleanup");
             } else {
                 LOGGER.info(String.format("[%s][orders][%s]skip", getIdentifier(), orderDatetime.getAge().getConfigured()));
             }
