@@ -3,12 +3,15 @@ package com.sos.joc.cleanup.model;
 import java.util.Date;
 import java.util.List;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
+import com.sos.joc.cleanup.helper.CleanupPartialResult;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
 import com.sos.joc.cluster.service.active.IJocActiveMemberService;
@@ -19,11 +22,11 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupTaskMonitoring.class);
 
-    private enum Scope {
+    protected enum MontitoringScope {
         MAIN, REMAINING
     }
 
-    private enum MontitoringRange {
+    protected enum MontitoringRange {
         ALL, STEPS
     }
 
@@ -34,6 +37,10 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
     private int totalSystemNotifications = 0;
     private int totalNotificationMonitors = 0;
     private int totalNotificationAcknowledgements = 0;
+
+    private String columnQuotedHistoryId;
+    private String columnQuotedHoMainParentId;
+    private String columnQuotedMainParentId;
 
     public CleanupTaskMonitoring(JocClusterHibernateFactory factory, IJocActiveMemberService service, int batchSize) {
         super(factory, service, batchSize);
@@ -48,7 +55,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
 
             tryOpenSession();
             if (notificationDatetime.getDatetime() != null) {
-                state = cleanupNotifications(Scope.MAIN, notificationDatetime);
+                state = cleanupNotifications(MontitoringScope.MAIN, notificationDatetime);
             } else {
                 LOGGER.info(String.format("[%s][order/system_notifications][%s]skip", getIdentifier(), notificationDatetime.getAge()
                         .getConfigured()));
@@ -58,15 +65,15 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
                 LOGGER.info(String.format("[%s][monitoring][%s][%s]start cleanup", getIdentifier(), monitoringDatetime.getAge().getConfigured(),
                         monitoringDatetime.getZonedDatetime()));
 
-                state = cleanupMonitoring(Scope.MAIN, MontitoringRange.ALL, monitoringDatetime.getDatetime(), monitoringDatetime.getAge()
+                state = cleanupOrders(MontitoringScope.MAIN, MontitoringRange.ALL, monitoringDatetime.getDatetime(), monitoringDatetime.getAge()
                         .getConfigured());
                 if (isCompleted(state)) {
                     Date remainingStartTime = getRemainingStartTime(notificationDatetime);
                     String remainingAgeInfo = getRemainingAgeInfo(notificationDatetime);
 
-                    state = cleanupMonitoring(Scope.REMAINING, MontitoringRange.ALL, remainingStartTime, remainingAgeInfo);
+                    state = cleanupOrders(MontitoringScope.REMAINING, MontitoringRange.ALL, remainingStartTime, remainingAgeInfo);
                     if (isCompleted(state)) {
-                        state = cleanupMonitoring(Scope.REMAINING, MontitoringRange.STEPS, remainingStartTime, remainingAgeInfo);
+                        state = cleanupOrders(MontitoringScope.REMAINING, MontitoringRange.STEPS, remainingStartTime, remainingAgeInfo);
                     }
                 }
             } else {
@@ -82,7 +89,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         }
     }
 
-    private JocServiceTaskAnswerState cleanupNotifications(Scope scope, TaskDateTime datetime) throws SOSHibernateException {
+    private JocServiceTaskAnswerState cleanupNotifications(MontitoringScope scope, TaskDateTime datetime) throws SOSHibernateException {
         JocServiceTaskAnswerState state = cleanupOrderNotifications(scope, datetime);
         if (state.equals(JocServiceTaskAnswerState.COMPLETED)) {
             state = cleanupSystemNotifications(scope, datetime);
@@ -90,7 +97,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         return state;
     }
 
-    private JocServiceTaskAnswerState cleanupOrderNotifications(Scope scope, TaskDateTime datetime) throws SOSHibernateException {
+    private JocServiceTaskAnswerState cleanupOrderNotifications(MontitoringScope scope, TaskDateTime datetime) throws SOSHibernateException {
         LOGGER.info(String.format("[%s][order_notifications][%s][%s]start cleanup", getIdentifier(), datetime.getAge().getConfigured(), datetime
                 .getZonedDatetime()));
 
@@ -113,7 +120,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         return JocServiceTaskAnswerState.COMPLETED;
     }
 
-    private JocServiceTaskAnswerState cleanupSystemNotifications(Scope scope, TaskDateTime datetime) throws SOSHibernateException {
+    private JocServiceTaskAnswerState cleanupSystemNotifications(MontitoringScope scope, TaskDateTime datetime) throws SOSHibernateException {
         LOGGER.info(String.format("[%s][system_notifications][%s][%s]start cleanup", getIdentifier(), datetime.getAge().getConfigured(), datetime
                 .getZonedDatetime()));
 
@@ -136,23 +143,33 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         return JocServiceTaskAnswerState.COMPLETED;
     }
 
-    private JocServiceTaskAnswerState cleanupMonitoring(Scope scope, MontitoringRange range, Date startTime, String ageInfo)
+    private void setQuotedColumns() {
+        if (columnQuotedHoMainParentId == null) {
+            Dialect d = getFactory().getDialect();
+            columnQuotedHoMainParentId = SOSHibernate.quoteColumn(d, "HO_MAIN_PARENT_ID");
+            columnQuotedMainParentId = SOSHibernate.quoteColumn(d, "MAIN_PARENT_ID");
+            columnQuotedHistoryId = SOSHibernate.quoteColumn(d, "HISTORY_ID");
+        }
+    }
+
+    protected JocServiceTaskAnswerState cleanupOrders(MontitoringScope scope, MontitoringRange range, Date startTime, String ageInfo)
             throws SOSHibernateException {
+
+        setQuotedColumns();
+
         boolean runm = true;
         while (runm) {
             tryOpenSession();
 
-            List<Long> rm = getMonitoringMainOrderIds(scope, range, startTime, ageInfo);
-            if (rm == null || rm.size() == 0) {
+            Long maxMainParentId = getOrderMaxMainParentId(scope, range, startTime, ageInfo);
+            if (maxMainParentId == null || maxMainParentId.intValue() == 0) {
                 return JocServiceTaskAnswerState.COMPLETED;
             }
             if (isStopped()) {
                 return JocServiceTaskAnswerState.UNCOMPLETED;
             }
 
-            getDbLayer().beginTransaction();
-            boolean completed = deleteMonitoring(scope, range, startTime, ageInfo, rm);
-            getDbLayer().commit();
+            boolean completed = cleanupOrders(scope, range, startTime, ageInfo, maxMainParentId);
             if (!completed) {
                 return JocServiceTaskAnswerState.UNCOMPLETED;
             }
@@ -160,24 +177,25 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         return JocServiceTaskAnswerState.COMPLETED;
     }
 
-    private List<Long> getMonitoringMainOrderIds(Scope scope, MontitoringRange range, Date startTime, String ageInfo) throws SOSHibernateException {
+    private Long getOrderMaxMainParentId(MontitoringScope scope, MontitoringRange range, Date startTime, String ageInfo)
+            throws SOSHibernateException {
         String table = DBLayer.TABLE_MON_ORDERS;
         StringBuilder hql = null;
         switch (scope) {
         case MAIN:
-            hql = new StringBuilder("select historyId from ").append(DBLayer.DBITEM_MON_ORDERS).append(" ");
+            hql = new StringBuilder("select  max(mainParentId) from ").append(DBLayer.DBITEM_MON_ORDERS).append(" ");
             hql.append("where startTime < :startTime ");
             hql.append("and parentId=0");
             break;
         case REMAINING:
             switch (range) {
             case ALL:
-                hql = new StringBuilder("select distinct mainParentId from ").append(DBLayer.DBITEM_MON_ORDERS).append(" ");
+                hql = new StringBuilder("select max(mainParentId) from ").append(DBLayer.DBITEM_MON_ORDERS).append(" ");
                 hql.append("where startTime < :startTime");
                 break;
             case STEPS:
                 table = DBLayer.TABLE_MON_ORDER_STEPS;
-                hql = new StringBuilder("select distinct historyOrderMainParentId from ").append(DBLayer.DBITEM_MON_ORDER_STEPS).append(" ");
+                hql = new StringBuilder("select max(historyOrderMainParentId) from ").append(DBLayer.DBITEM_MON_ORDER_STEPS).append(" ");
                 hql.append("where startTime < :startTime");
                 break;
             }
@@ -186,38 +204,72 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
 
         Query<Long> query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameter("startTime", startTime);
-        query.setMaxResults(getBatchSize());
-        List<Long> r = getDbLayer().getSession().getResultList(query);
+        Long r = getDbLayer().getSession().getSingleValue(query);
 
-        int size = r.size();
-        if (size == 0) {
+        if (r == null || r.intValue() == 0) {
+            r = 0L;
             LOGGER.info(String.format("[%s][monitoring][%s %s][%s %s][%s]found=%s", getIdentifier(), getScope(scope), getRange(range), ageInfo,
-                    getDateTime(startTime), table, size));
+                    getDateTime(startTime), table, r));
         } else {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug(String.format("[%s][monitoring][%s %s][%s %s][%s]found=%s", getIdentifier(), getScope(scope), getRange(range), ageInfo,
-                        getDateTime(startTime), table, size));
+                        getDateTime(startTime), table, r));
             }
         }
         return r;
     }
 
-    private boolean deleteMonitoring(Scope scope, MontitoringRange range, Date startTime, String ageInfo, List<Long> orderIds)
+    private CleanupPartialResult deleteOrderSteps(Long maxMainParentId) throws SOSHibernateException {
+        CleanupPartialResult r = new CleanupPartialResult(DBLayer.TABLE_MON_ORDER_STEPS);
+
+        StringBuilder sql = new StringBuilder("delete ");
+        sql.append(getLimitTop());
+        sql.append("from ").append(DBLayer.TABLE_MON_ORDER_STEPS).append(" ");
+        if (isPGSQL()) {
+            sql.append("where ").append(columnQuotedHistoryId).append(" in (");
+            sql.append("select ").append(columnQuotedHistoryId).append(" from ").append(DBLayer.TABLE_MON_ORDER_STEPS).append(" ");
+            sql.append("where ").append(columnQuotedHoMainParentId).append(" <= ").append(maxMainParentId).append(" ");
+            sql.append("limit ").append(getBatchSize());
+            sql.append(")");
+        } else {
+            sql.append("where ").append(columnQuotedHoMainParentId).append(" <= ").append(maxMainParentId).append(" ");
+            sql.append(getLimitWhere());
+        }
+
+        r.run(this, sql, maxMainParentId);
+        return r;
+    }
+
+    private CleanupPartialResult deleteOrders(Long maxMainParentId) throws SOSHibernateException {
+        CleanupPartialResult r = new CleanupPartialResult(DBLayer.TABLE_MON_ORDERS);
+
+        StringBuilder sql = new StringBuilder("delete ");
+        sql.append(getLimitTop());
+        sql.append("from ").append(DBLayer.TABLE_MON_ORDERS).append(" ");
+        if (isPGSQL()) {
+            sql.append("where ").append(columnQuotedHistoryId).append(" in (");
+            sql.append("select ").append(columnQuotedHistoryId).append(" from ").append(DBLayer.TABLE_MON_ORDERS).append(" ");
+            sql.append("where ").append(columnQuotedMainParentId).append(" <= ").append(maxMainParentId).append(" ");
+            sql.append("limit ").append(getBatchSize());
+            sql.append(")");
+        } else {
+            sql.append("where ").append(columnQuotedMainParentId).append(" <= ").append(maxMainParentId).append(" ");
+            sql.append(getLimitWhere());
+        }
+
+        r.run(this, sql, maxMainParentId);
+        return r;
+    }
+
+    private boolean cleanupOrders(MontitoringScope scope, MontitoringRange range, Date startTime, String ageInfo, Long maxMainParentId)
             throws SOSHibernateException {
         StringBuilder log = new StringBuilder("[").append(getIdentifier()).append("][monitoring][");
         log.append(getScope(scope)).append(" ").append(getRange(range)).append("]");
-        log.append("[").append(ageInfo).append(" ").append(getDateTime(startTime)).append("][deleted]");
+        log.append("[").append(ageInfo).append(" ").append(getDateTime(startTime)).append("][maxMainParentId=" + maxMainParentId + "][deleted]");
 
-        // getDbLayer().beginTransaction();
-        StringBuilder hql = new StringBuilder("delete from ");
-        hql.append(DBLayer.DBITEM_MON_ORDER_STEPS).append(" ");
-        hql.append("where historyOrderMainParentId in (:orderIds)");
-        Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
-        query.setParameterList("orderIds", orderIds);
-        int r = getDbLayer().getSession().executeUpdate(query);
-        // getDbLayer().commit();
-        totalOrderSteps += r;
-        log.append(getDeleted(DBLayer.TABLE_MON_ORDER_STEPS, r, totalOrderSteps));
+        CleanupPartialResult r = deleteOrderSteps(maxMainParentId);
+        totalOrderSteps += r.getDeletedTotal();
+        log.append(getDeleted(DBLayer.TABLE_MON_ORDER_STEPS, r.getDeletedTotal(), totalOrderSteps));
 
         if (range.equals(MontitoringRange.ALL)) {
             if (isStopped()) {
@@ -225,23 +277,17 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
                 return false;
             }
 
-            // getDbLayer().beginTransaction();
-            hql = new StringBuilder("delete from ");
-            hql.append(DBLayer.DBITEM_MON_ORDERS).append(" ");
-            hql.append("where mainParentId in (:orderIds)");
-            query = getDbLayer().getSession().createQuery(hql.toString());
-            query.setParameterList("orderIds", orderIds);
-            r = getDbLayer().getSession().executeUpdate(query);
-            // getDbLayer().commit();
-            totalOrders += r;
-            log.append(getDeleted(DBLayer.TABLE_MON_ORDERS, r, totalOrders));
+            r = deleteOrders(maxMainParentId);
+            totalOrders += r.getDeletedTotal();
+            log.append(getDeleted(DBLayer.TABLE_MON_ORDERS, r.getDeletedTotal(), totalOrders));
         }
 
         LOGGER.info(log.toString());
         return true;
     }
 
-    private StringBuilder deleteOrderNotifications(Scope scope, TaskDateTime datetime, List<Long> notificationIds) throws SOSHibernateException {
+    private StringBuilder deleteOrderNotifications(MontitoringScope scope, TaskDateTime datetime, List<Long> notificationIds)
+            throws SOSHibernateException {
         StringBuilder log = new StringBuilder();
         log.append("[").append(getIdentifier()).append("][order_notifications][").append(getScope(scope)).append("][").append(datetime.getAge()
                 .getConfigured()).append("][deleted]");
@@ -293,7 +339,8 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         return log;
     }
 
-    private StringBuilder deleteSystemNotifications(Scope scope, TaskDateTime datetime, List<Long> notificationIds) throws SOSHibernateException {
+    private StringBuilder deleteSystemNotifications(MontitoringScope scope, TaskDateTime datetime, List<Long> notificationIds)
+            throws SOSHibernateException {
         StringBuilder log = new StringBuilder();
         log.append("[").append(getIdentifier()).append("][system_notifications][").append(getScope(scope)).append("][").append(datetime.getAge()
                 .getConfigured()).append("][deleted]");
@@ -336,7 +383,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         return log;
     }
 
-    private List<Long> getOrderNotificationIds(Scope scope, TaskDateTime datetime) throws SOSHibernateException {
+    private List<Long> getOrderNotificationIds(MontitoringScope scope, TaskDateTime datetime) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select id from ");
         hql.append(DBLayer.DBITEM_MON_NOTIFICATIONS).append(" ");
         hql.append("where created < :startTime ");
@@ -353,7 +400,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         return r;
     }
 
-    private List<Long> getSystemNotificationIds(Scope scope, TaskDateTime datetime) throws SOSHibernateException {
+    private List<Long> getSystemNotificationIds(MontitoringScope scope, TaskDateTime datetime) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select id from ");
         hql.append(DBLayer.DBITEM_MON_SYSNOTIFICATIONS).append(" ");
         hql.append("where time < :startTime ");
@@ -370,7 +417,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         return r;
     }
 
-    private String getScope(Scope val) {
+    private String getScope(MontitoringScope val) {
         return val.name().toLowerCase();
     }
 

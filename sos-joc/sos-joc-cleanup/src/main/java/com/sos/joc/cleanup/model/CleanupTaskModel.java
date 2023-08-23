@@ -268,7 +268,11 @@ public class CleanupTaskModel implements ICleanupTask {
         }
     }
 
-    protected String getLimit() {
+    protected boolean isPGSQL() {
+        return factory.getDbms().equals(Dbms.PGSQL);
+    }
+
+    protected String getLimitWhere() {
         switch (factory.getDbms()) {
         case MYSQL:
             return "limit " + batchSize;
@@ -279,11 +283,7 @@ public class CleanupTaskModel implements ICleanupTask {
         }
     }
 
-    protected boolean isPGSQL() {
-        return factory.getDbms().equals(Dbms.PGSQL);
-    }
-
-    protected String getMSSQLLimit() {
+    protected String getLimitTop() {
         if (factory.getDbms().equals(Dbms.MSSQL)) {
             return " top (" + batchSize + ") ";
         }

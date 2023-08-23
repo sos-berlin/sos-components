@@ -152,14 +152,14 @@ public class CleanupTaskHistory extends CleanupTaskModel {
             tryOpenSession();
 
             Long maxMainParentId = getOrderMaxMainParentId(scope, range, startTime, ageInfo);
-            if (maxMainParentId == null || maxMainParentId == 0) {
+            if (maxMainParentId == null || maxMainParentId.intValue() == 0) {
                 return JocServiceTaskAnswerState.COMPLETED;
             }
             if (isStopped()) {
                 return JocServiceTaskAnswerState.UNCOMPLETED;
             }
 
-            boolean completed = cleanupOrders(scope, range, startTime, maxMainParentId, ageInfo, deleteLogs);
+            boolean completed = cleanupOrders(scope, range, startTime, ageInfo, deleteLogs, maxMainParentId);
             if (!completed) {
                 return JocServiceTaskAnswerState.UNCOMPLETED;
             }
@@ -217,7 +217,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         query.setParameter("startTime", startTime);
         Long r = getDbLayer().getSession().getSingleValue(query);
 
-        if (r == null || r == 0) {
+        if (r == null || r.intValue() == 0) {
             r = 0L;
             LOGGER.info(String.format("[%s][%s %s][%s %s][%s]found=%s", getIdentifier(), getScope(scope), getRange(range), ageInfo, getDateTime(
                     startTime), table, r));
@@ -234,7 +234,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         CleanupPartialResult r = new CleanupPartialResult(DBLayer.TABLE_HISTORY_ORDER_STATES);
 
         StringBuilder sql = new StringBuilder("delete ");
-        sql.append(getMSSQLLimit());
+        sql.append(getLimitTop());
         sql.append("from ").append(DBLayer.TABLE_HISTORY_ORDER_STATES).append(" ");
         if (isPGSQL()) {
             sql.append("where ").append(columnQuotedId).append(" in (");
@@ -244,7 +244,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
             sql.append(")");
         } else {
             sql.append("where ").append(columnQuotedHoMainParentId).append(" <= ").append(maxMainParentId).append(" ");
-            sql.append(getLimit());
+            sql.append(getLimitWhere());
         }
         r.run(this, sql, maxMainParentId);
         return r;
@@ -254,7 +254,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         CleanupPartialResult r = new CleanupPartialResult(DBLayer.TABLE_HISTORY_ORDER_STEPS);
 
         StringBuilder sql = new StringBuilder("delete ");
-        sql.append(getMSSQLLimit());
+        sql.append(getLimitTop());
         sql.append("from ").append(DBLayer.TABLE_HISTORY_ORDER_STEPS).append(" ");
         if (isPGSQL()) {
             sql.append("where ").append(columnQuotedId).append(" in (");
@@ -264,7 +264,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
             sql.append(")");
         } else {
             sql.append("where ").append(columnQuotedHoMainParentId).append(" <= ").append(maxMainParentId).append(" ");
-            sql.append(getLimit());
+            sql.append(getLimitWhere());
         }
 
         r.run(this, sql, maxMainParentId);
@@ -275,7 +275,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         CleanupPartialResult r = new CleanupPartialResult(DBLayer.TABLE_HISTORY_LOGS);
 
         StringBuilder sql = new StringBuilder("delete ");
-        sql.append(getMSSQLLimit());
+        sql.append(getLimitTop());
         sql.append("from ").append(DBLayer.TABLE_HISTORY_LOGS).append(" ");
         if (isPGSQL()) {
             sql.append("where ").append(columnQuotedId).append(" in (");
@@ -285,7 +285,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
             sql.append(")");
         } else {
             sql.append("where ").append(columnQuotedHoMainParentId).append(" <= ").append(maxMainParentId).append(" ");
-            sql.append(getLimit());
+            sql.append(getLimitWhere());
         }
 
         r.run(this, sql, maxMainParentId);
@@ -296,7 +296,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         CleanupPartialResult r = new CleanupPartialResult(DBLayer.TABLE_HISTORY_ORDERS);
 
         StringBuilder sql = new StringBuilder("delete ");
-        sql.append(getMSSQLLimit());
+        sql.append(getLimitTop());
         sql.append("from ").append(DBLayer.TABLE_HISTORY_ORDERS).append(" ");
         if (isPGSQL()) {
             sql.append("where ").append(columnQuotedId).append(" in (");
@@ -306,14 +306,14 @@ public class CleanupTaskHistory extends CleanupTaskModel {
             sql.append(")");
         } else {
             sql.append("where ").append(columnQuotedMainParentId).append(" <= ").append(maxMainParentId).append(" ");
-            sql.append(getLimit());
+            sql.append(getLimitWhere());
         }
 
         r.run(this, sql, maxMainParentId);
         return r;
     }
 
-    private boolean cleanupOrders(Scope scope, Range range, Date startTime, Long maxMainParentId, String ageInfo, boolean deleteLogs)
+    private boolean cleanupOrders(Scope scope, Range range, Date startTime, String ageInfo, boolean deleteLogs, Long maxMainParentId)
             throws SOSHibernateException {
         StringBuilder log = new StringBuilder("[").append(getIdentifier()).append("][");
         log.append(getScope(scope)).append(" ").append(getRange(range)).append("]");

@@ -5,13 +5,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.joc.cleanup.model.CleanupTaskHistory;
+import com.sos.joc.cleanup.model.CleanupTaskModel;
 import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
 
 public class CleanupPartialResult {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupPartialResult.class);
 
+    //private static final long MAX_RUNS = 10_000;//*1000 - 10.000.000
     private static final int LOG_AFTER_N_RUNS = 10;
 
     private final String table;
@@ -24,7 +25,7 @@ public class CleanupPartialResult {
         this.table = table;
     }
 
-    public void run(CleanupTaskHistory task, StringBuilder deleteSQL, Long maxMainParentId) throws SOSHibernateException {
+    public void run(CleanupTaskModel task, StringBuilder deleteSQL, Long maxMainParentId) throws SOSHibernateException {
 
         int runCounter = 0;
         long lastRunsDeleted = 0;
