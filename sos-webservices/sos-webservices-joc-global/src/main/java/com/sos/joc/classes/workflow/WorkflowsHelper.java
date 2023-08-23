@@ -1757,17 +1757,11 @@ public class WorkflowsHelper {
                 if (!ie.getThen().getInstructions().isEmpty()) {
                     return getFirstJob(extendArray(pos, "then"), ie.getThen().getInstructions().get(0), skippedLabels);
                 }
-                if (ie.getElse() != null && ie.getElse().getInstructions() != null && !ie.getElse().getInstructions().isEmpty()) {
-                    return getFirstJob(extendArray(pos, "else"), ie.getElse().getInstructions().get(0), skippedLabels);
-                }
                 break;
             case TRY:
                 TryCatch tc = firstInst.cast();
                 if (!tc.getTry().getInstructions().isEmpty()) {
                     return getFirstJob(extendArray(pos, "try"), tc.getTry().getInstructions().get(0), skippedLabels);
-                }
-                if (tc.getCatch() != null && tc.getCatch().getInstructions() != null && !tc.getCatch().getInstructions().isEmpty()) {
-                    return getFirstJob(extendArray(pos, "catch"), tc.getCatch().getInstructions().get(0), skippedLabels);
                 }
                 break;
             case LOCK:
@@ -1788,7 +1782,7 @@ public class WorkflowsHelper {
                 NamedJob nj = firstInst.cast();
                 if (skippedLabels.contains(nj.getLabel())) {
                     nj.setState(getState(InstructionStateText.SKIPPED));
-                    return Optional.of(nj);
+                    //return Optional.of(nj);
                 }
                 return Optional.of(nj);
             case STICKY_SUBAGENT:
