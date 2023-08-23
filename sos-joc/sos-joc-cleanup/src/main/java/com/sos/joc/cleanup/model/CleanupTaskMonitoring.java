@@ -62,9 +62,10 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
             }
 
             if (monitoringDatetime.getDatetime() != null && (state == null || state.equals(JocServiceTaskAnswerState.COMPLETED))) {
-                LOGGER.info(String.format("[%s][monitoring][%s][%s]start cleanup", getIdentifier(), monitoringDatetime.getAge().getConfigured(),
-                        monitoringDatetime.getZonedDatetime()));
+                String logPrefix = String.format("[%s][monitoring][%s][%s]", getIdentifier(), monitoringDatetime.getAge().getConfigured(),
+                        monitoringDatetime.getZonedDatetime());
 
+                LOGGER.info(logPrefix + "start cleanup");
                 state = cleanupOrders(MontitoringScope.MAIN, MontitoringRange.ALL, monitoringDatetime.getDatetime(), monitoringDatetime.getAge()
                         .getConfigured());
                 if (isCompleted(state)) {
@@ -76,6 +77,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
                         state = cleanupOrders(MontitoringScope.REMAINING, MontitoringRange.STEPS, remainingStartTime, remainingAgeInfo);
                     }
                 }
+                LOGGER.info(logPrefix + "end cleanup");
             } else {
                 LOGGER.info(String.format("[%s][monitoring][%s]skip", getIdentifier(), monitoringDatetime.getAge().getConfigured()));
             }
@@ -90,17 +92,23 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
     }
 
     private JocServiceTaskAnswerState cleanupNotifications(MontitoringScope scope, TaskDateTime datetime) throws SOSHibernateException {
+        String logPrefix = String.format("[%s][order_notifications][%s][%s]", getIdentifier(), datetime.getAge().getConfigured(), datetime
+                .getZonedDatetime());
+
+        LOGGER.info(logPrefix + "start cleanup");
         JocServiceTaskAnswerState state = cleanupOrderNotifications(scope, datetime);
         if (state.equals(JocServiceTaskAnswerState.COMPLETED)) {
+            String logPrefixSN = String.format("[%s][system_notifications][%s][%s]", getIdentifier(), datetime.getAge().getConfigured(), datetime
+                    .getZonedDatetime());
+            LOGGER.info(logPrefixSN + "start cleanup");
             state = cleanupSystemNotifications(scope, datetime);
+            LOGGER.info(logPrefixSN + "end cleanup");
         }
+        LOGGER.info(logPrefix + "end cleanup");
         return state;
     }
 
     private JocServiceTaskAnswerState cleanupOrderNotifications(MontitoringScope scope, TaskDateTime datetime) throws SOSHibernateException {
-        LOGGER.info(String.format("[%s][order_notifications][%s][%s]start cleanup", getIdentifier(), datetime.getAge().getConfigured(), datetime
-                .getZonedDatetime()));
-
         boolean runm = true;
         while (runm) {
             tryOpenSession();
@@ -121,9 +129,6 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
     }
 
     private JocServiceTaskAnswerState cleanupSystemNotifications(MontitoringScope scope, TaskDateTime datetime) throws SOSHibernateException {
-        LOGGER.info(String.format("[%s][system_notifications][%s][%s]start cleanup", getIdentifier(), datetime.getAge().getConfigured(), datetime
-                .getZonedDatetime()));
-
         boolean runm = true;
         while (runm) {
             tryOpenSession();
