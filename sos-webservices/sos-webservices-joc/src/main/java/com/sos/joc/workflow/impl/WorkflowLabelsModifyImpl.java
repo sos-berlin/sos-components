@@ -47,13 +47,16 @@ import com.sos.schema.exception.SOSJsonSchemaException;
 import io.vavr.control.Either;
 import jakarta.ws.rs.Path;
 import js7.base.problem.Problem;
+import js7.data.agent.AgentPath;
 import js7.data.controller.ControllerCommand.Response;
+import js7.data.delegate.DelegateCouplingState;
 import js7.data.order.Order;
 import js7.data.order.OrderId;
 import js7.data.workflow.Workflow;
 import js7.data.workflow.WorkflowPath;
 import js7.data.workflow.WorkflowPathControl;
 import js7.data.workflow.position.Label;
+import js7.data_for_java.agent.JAgentRefState;
 import js7.data_for_java.controller.JControllerCommand;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JFreshOrder;
@@ -198,68 +201,90 @@ public class WorkflowLabelsModifyImpl extends JOCResourceImpl implements IWorkfl
                                 JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), o -> !o.isSuspended()),
                                 scheduledFreshOrderFilter));
                         
-                        // map collected orders to fresh orders
-                        Function<JOrder, JFreshOrder> mapper = o -> JFreshOrder.of(o.id(), o.workflowId().path(), o.scheduledFor(), o.arguments(), o
-                                .asScala().deleteWhenTerminated(), o.asScala().forceJobAdmission(), Optional.empty(), JavaConverters.asJava(o
-                                        .asScala().stopPositions()).stream().map(JPositionOrLabel::apply).collect(Collectors.toSet()));
-                        
-                        Map<OrderId, JFreshOrder> freshOrders = newCurrentState.ordersBy(scheduledFreshOrderFilter).collect(Collectors.toMap(
-                                JOrder::id, mapper));
+                        Set<JOrder> jOrders = newCurrentState.ordersBy(scheduledFreshOrderFilter).filter(o -> !o.workflowPosition().position()
+                                .toString().equals(nj.get().getPositionString())).collect(Collectors.toSet());
 
-                        ModifyOrders modifyOrders = new ModifyOrders();
-                        modifyOrders.setControllerId(controllerId);
-                        modifyOrders.setOrderType(OrderModeType.FRESH_ONLY);
+                        Map<AgentPath, JAgentRefState> agentRefStates = newCurrentState.pathToAgentRefState();
+                        Set<String> uncoupledAgents = jOrders.stream().filter(o -> o.attached().isRight()).map(JOrder::attached).map(Either::get)
+                                .distinct().map(agentRefStates::get).filter(agentRefState -> !(agentRefState.asScala()
+                                        .couplingState() instanceof DelegateCouplingState.Coupled$)).map(JAgentRefState::agentPath).map(
+                                                AgentPath::string).collect(Collectors.toSet());
                         
-                        proxy.api().deleteOrdersWhenTerminated(freshOrders.keySet()).thenAccept(either -> {
-                            ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
-                            if (either.isRight()) {
-                                OrdersHelper.cancelOrders(proxy.api(), modifyOrders, freshOrders.keySet()).thenAccept(either2 -> {
-                                    ProblemHelper.postProblemEventIfExist(either2, getAccessToken(), getJocError(), controllerId);
-                                    if (either2.isRight()) {
-                                        // check if really all orders are cancelled. Only then the same orderId can be used for addOrders(...)
-                                        try {
-                                            for (int j = 0; j < 10; j++) {
-                                                try {
-                                                    TimeUnit.SECONDS.sleep(1L);
-                                                    if (j < 9 && !proxy.currentState().orderIds().stream().anyMatch(o -> freshOrders.keySet().contains(o))) {
-                                                        // all orders are cancelled
-                                                        break;
-                                                    }
-                                                    if (j == 9) {
-                                                        Set<OrderId> oIds = proxy.currentState().orderIds();
-                                                        oIds.retainAll(freshOrders.keySet());
-                                                        if (oIds.isEmpty()) {
+                        if (!uncoupledAgents.isEmpty()) {
+                            if (uncoupledAgents.size() == 1) {
+                                ProblemHelper.postMessageAsHintIfExist("Reassigning orders not possible because the Agent '" + uncoupledAgents
+                                        .iterator().next() + "' is not coupled", getAccessToken(), getJocError(), controllerId);
+                            } else {
+                                ProblemHelper.postMessageAsHintIfExist("Reassigning orders not possible because the Agents " + uncoupledAgents
+                                        .toString() + " are not coupled", getAccessToken(), getJocError(), controllerId);
+                            }
+                        } else {
+
+                            // map collected orders to fresh orders
+                            Function<JOrder, JFreshOrder> mapper = o -> JFreshOrder.of(o.id(), o.workflowId().path(), o.scheduledFor(), o.arguments(),
+                                    o.asScala().deleteWhenTerminated(), o.asScala().forceJobAdmission(), Optional.empty(), JavaConverters.asJava(o
+                                            .asScala().stopPositions()).stream().map(JPositionOrLabel::apply).collect(Collectors.toSet()));
+
+                            Map<OrderId, JFreshOrder> freshOrders = jOrders.stream().collect(Collectors.toMap(JOrder::id, mapper));
+
+                            ModifyOrders modifyOrders = new ModifyOrders();
+                            modifyOrders.setControllerId(controllerId);
+                            modifyOrders.setOrderType(OrderModeType.FRESH_ONLY);
+
+                            proxy.api().deleteOrdersWhenTerminated(freshOrders.keySet()).thenAccept(either -> {
+                                ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
+                                if (either.isRight()) {
+                                    OrdersHelper.cancelOrders(proxy.api(), modifyOrders, freshOrders.keySet()).thenAccept(either2 -> {
+                                        ProblemHelper.postProblemEventIfExist(either2, getAccessToken(), getJocError(), controllerId);
+                                        if (either2.isRight()) {
+                                            // check if really all orders are cancelled. Only then the same orderId can be used for addOrders(...)
+                                            try {
+                                                for (int j = 0; j < 10; j++) {
+                                                    try {
+                                                        TimeUnit.SECONDS.sleep(1L);
+                                                        if (j < 9 && !proxy.currentState().orderIds().stream().anyMatch(o -> freshOrders.keySet()
+                                                                .contains(o))) {
                                                             // all orders are cancelled
                                                             break;
                                                         }
-                                                        // addOrders not possible for retained oIds because not cancelled
-                                                        // throw Problem
-                                                        if (!oIds.isEmpty()) {
-                                                            oIds.forEach(o -> freshOrders.remove(o));
-                                                            Either<Problem, Void> e = Either.left(Problem.pure("The Orders " + oIds.toString()
-                                                                    + " cannot be reassigned because they could not be deleted before within 10 seconds."));
-                                                            ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), controllerId);
+                                                        if (j == 9) {
+                                                            Set<OrderId> oIds = proxy.currentState().orderIds();
+                                                            oIds.retainAll(freshOrders.keySet());
+                                                            if (oIds.isEmpty()) {
+                                                                // all orders are cancelled
+                                                                break;
+                                                            }
+                                                            // addOrders not possible for retained oIds because not cancelled
+                                                            // throw Problem
+                                                            if (!oIds.isEmpty()) {
+                                                                oIds.forEach(o -> freshOrders.remove(o));
+                                                                Either<Problem, Void> e = Either.left(Problem.pure("The Orders " + oIds.toString()
+                                                                        + " cannot be reassigned because they could not be deleted before within 10 seconds."));
+                                                                ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(),
+                                                                        controllerId);
+                                                            }
                                                         }
+                                                    } catch (Exception e) {
+                                                        //
                                                     }
-                                                } catch (Exception e) {
-                                                    //
                                                 }
+                                            } catch (Exception e) {
+                                                //
                                             }
-                                        } catch (Exception e) {
-                                            //
+
+                                            proxy.api().addOrders(Flux.fromIterable(freshOrders.values())).thenAccept(either3 -> {
+                                                ProblemHelper.postProblemEventIfExist(either3, getAccessToken(), getJocError(), controllerId);
+                                                // if (either3.isRight()) {
+                                                // storeAuditLogDetails(auditLogDetails, auditlogId).thenAccept(either5 ->
+                                                // ProblemHelper.postExceptionEventIfExist(
+                                                // either5, getAccessToken(), getJocError(), controllerId));
+                                                // }
+                                            });
                                         }
-                                        
-                                        proxy.api().addOrders(Flux.fromIterable(freshOrders.values())).thenAccept(either3 -> {
-                                            ProblemHelper.postProblemEventIfExist(either3, getAccessToken(), getJocError(), controllerId);
-//                                            if (either3.isRight()) {
-//                                                storeAuditLogDetails(auditLogDetails, auditlogId).thenAccept(either5 -> ProblemHelper.postExceptionEventIfExist(
-//                                                        either5, getAccessToken(), getJocError(), controllerId));
-//                                            }
-                                        });
-                                    }
-                                });
-                            }
-                        });
+                                    });
+                                }
+                            });
+                        }
                     }
                 }
             });
