@@ -142,7 +142,7 @@ public class DeleteConfigurationResourceImpl extends ADeleteConfiguration implem
             }
         }
         try {
-            boolean successful = deleteOrdersImpl.deleteOrders(orderFilter, accessToken, false, false);
+            boolean successful = deleteOrdersImpl.deleteOrders(orderFilter, accessToken, false, false, false);
             if (!successful) {
                 JocError je = getJocError();
                 if (je != null && je.printMetaInfo() != null) {
