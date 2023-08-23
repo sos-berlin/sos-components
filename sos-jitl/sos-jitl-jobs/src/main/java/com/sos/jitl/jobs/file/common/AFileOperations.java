@@ -123,8 +123,8 @@ public abstract class AFileOperations {
     public boolean existsFile(File file, final String fileSpec, final boolean recursive, final int fileSpecFlags, final String minFileAge,
             final String maxFileAge, final String minFileSize, final String maxFileSize, final int skipFirstFiles, final int skipLastFiles)
             throws Exception {
-        long minAge = SOSDate.getTimeAsSeconds(minFileAge);
-        long maxAge = SOSDate.getTimeAsSeconds(maxFileAge);
+        long minAge = SOSDate.getTimeAsMillis(minFileAge);
+        long maxAge = SOSDate.getTimeAsMillis(maxFileAge);
         long minSize = calculateFileSize(minFileSize);
         long maxSize = calculateFileSize(maxFileSize);
 
@@ -152,33 +152,47 @@ public abstract class AFileOperations {
             if (!file.isDirectory()) {
                 long currentTime = System.currentTimeMillis();
                 if (minAge > 0) {
-                    long interval = currentTime - file.lastModified();
+                    long lastModified = file.lastModified();
+                    long interval = currentTime - lastModified;
                     if (interval < 0) {
                         throw new SOSFileOperationsException("Cannot filter by file age. File [" + file.getCanonicalPath()
                                 + "] was modified in the future.");
                     }
                     if (interval < minAge) {
-                        logger.info("[%s][checking file age]%s, minimum age required is %s", file.getCanonicalPath(), file.lastModified(), minAge);
+                        String lm = null;
+                        try {
+                            lm = SOSDate.getDateTimeAsString(lastModified);
+                        } catch (Throwable e) {
+                            lm = "" + lastModified;
+                        }
+                        logger.info("[%s][lastModified=%s]minimum age required is %s", file.getCanonicalPath(), lm, minFileAge);
                         return false;
                     }
                 }
                 if (maxAge > 0) {
-                    long interval = currentTime - file.lastModified();
+                    long lastModified = file.lastModified();
+                    long interval = currentTime - lastModified;
                     if (interval < 0) {
                         throw new SOSFileOperationsException("Cannot filter by file age. File [" + file.getCanonicalPath()
                                 + "] was modified in the future.");
                     }
                     if (interval > maxAge) {
-                        logger.info("[%s][checking file age]%s, maximum age required is %s", file.getCanonicalPath(), file.lastModified(), maxAge);
+                        String lm = null;
+                        try {
+                            lm = SOSDate.getDateTimeAsString(lastModified);
+                        } catch (Throwable e) {
+                            lm = "" + lastModified;
+                        }
+                        logger.info("[%s][lastModified=%s]maximum age required is %s", file.getCanonicalPath(), lm, maxFileAge);
                         return false;
                     }
                 }
                 if (minSize > -1 && minSize > file.length()) {
-                    logger.info("[%s][checking file size]%s, minimum size required is %s", file.getCanonicalPath(), file.length(), minFileSize);
+                    logger.info("[%s][checking file size][%s]minimum size required is %s", file.getCanonicalPath(), file.length(), minFileSize);
                     return false;
                 }
                 if (maxSize > -1 && maxSize < file.length()) {
-                    logger.info("[%s][checking file size]%s, maximum size required is %s", file.getCanonicalPath(), file.length(), maxFileSize);
+                    logger.info("[%s][checking file size][%s]maximum size required is %s", file.getCanonicalPath(), file.length(), maxFileSize);
                     return false;
                 }
                 if (skipFirstFiles > 0 || skipLastFiles > 0) {
@@ -228,8 +242,8 @@ public abstract class AFileOperations {
         boolean gracious = has(flags, GRACIOUS);
         boolean wipe = has(flags, WIPE);
         boolean removeDir = has(flags, REMOVE_DIR);
-        long minAge = SOSDate.getTimeAsSeconds(minFileAge);
-        long maxAge = SOSDate.getTimeAsSeconds(maxFileAge);
+        long minAge = SOSDate.getTimeAsMillis(minFileAge);
+        long maxAge = SOSDate.getTimeAsMillis(maxFileAge);
         long minSize = calculateFileSize(minFileSize);
         long maxSize = calculateFileSize(maxFileSize);
 
@@ -531,8 +545,8 @@ public abstract class AFileOperations {
         boolean createDir = has(flags, CREATE_DIR);
         boolean gracious = has(flags, GRACIOUS);
         boolean overwrite = !has(flags, NOT_OVERWRITE);
-        long minAge = SOSDate.getTimeAsSeconds(minFileAge);
-        long maxAge = SOSDate.getTimeAsSeconds(maxFileAge);
+        long minAge = SOSDate.getTimeAsMillis(minFileAge);
+        long maxAge = SOSDate.getTimeAsMillis(maxFileAge);
         long minSize = calculateFileSize(minFileSize);
         long maxSize = calculateFileSize(maxFileSize);
 
@@ -684,13 +698,22 @@ public abstract class AFileOperations {
             List<File> newlist = new ArrayList<File>();
             for (int i = 0; i < filelist.size(); i++) {
                 file = filelist.get(i);
-                long interval = currentTime - file.lastModified();
+                long lastModified = file.lastModified();
+                long interval = currentTime - lastModified;
                 if (interval < 0) {
                     throw new SOSFileOperationsException("Cannot filter by file age. File [" + file.getCanonicalPath()
                             + "] was modified in the future.");
                 }
                 if (interval >= minAge) {
                     newlist.add(file);
+                } else {
+                    if (logger.isDebugEnabled()) {
+                        try {
+                            logger.debug(String.format("[%s][lastModified=%s]skip because of minimum age restriction", file.getCanonicalPath(),
+                                    SOSDate.getDateTimeAsString(lastModified)));
+                        } catch (Throwable e) {
+                        }
+                    }
                 }
             }
             filelist = newlist;
@@ -700,13 +723,22 @@ public abstract class AFileOperations {
             List<File> newlist = new ArrayList<File>();
             for (int i = 0; i < filelist.size(); i++) {
                 file = filelist.get(i);
-                long interval = currentTime - file.lastModified();
+                long lastModified = file.lastModified();
+                long interval = currentTime - lastModified;
                 if (interval < 0) {
                     throw new SOSFileOperationsException("Cannot filter by file age. File [" + file.getCanonicalPath()
                             + "] was modified in the future.");
                 }
                 if (interval <= maxAge) {
                     newlist.add(file);
+                } else {
+                    if (logger.isDebugEnabled()) {
+                        try {
+                            logger.debug(String.format("[%s][lastModified=%s]skip because of maximum age restriction", file.getCanonicalPath(),
+                                    SOSDate.getDateTimeAsString(lastModified)));
+                        } catch (Throwable e) {
+                        }
+                    }
                 }
             }
             filelist = newlist;
