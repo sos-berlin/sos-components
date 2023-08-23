@@ -16,6 +16,8 @@ import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSPath;
 import com.sos.joc.cleanup.model.CleanupTaskHistory.Range;
 import com.sos.joc.cleanup.model.CleanupTaskHistory.Scope;
+import com.sos.joc.cleanup.model.CleanupTaskMonitoring.MontitoringRange;
+import com.sos.joc.cleanup.model.CleanupTaskMonitoring.MontitoringScope;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
 import com.sos.joc.db.DBLayer;
@@ -57,6 +59,34 @@ public class CleanupTaskTest {
             Date d = SOSDate.add(new Date(), -9, ChronoUnit.DAYS);
 
             JocServiceTaskAnswerState state = t.cleanupOrders(Scope.MAIN, Range.ALL, d, "", true);
+            LOGGER.info("[STATE]" + state);
+        } catch (Exception e) {
+            if (t != null && t.getDbLayer() != null) {
+                t.getDbLayer().rollback();
+            }
+            throw e;
+        } finally {
+            if (t != null && t.getDbLayer() != null) {
+                t.getDbLayer().close();
+            }
+            if (factory != null) {
+                factory.close();
+            }
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testCleanupMonitoring() throws Exception {
+        JocClusterHibernateFactory factory = null;
+        CleanupTaskMonitoring t = null;
+        try {
+            factory = createFactory();
+            t = new CleanupTaskMonitoring(factory, null, 1000);
+
+            Date d = SOSDate.add(new Date(), -2, ChronoUnit.DAYS);
+
+            JocServiceTaskAnswerState state = t.cleanupOrders(MontitoringScope.MAIN, MontitoringRange.ALL, d, "");
             LOGGER.info("[STATE]" + state);
         } catch (Exception e) {
             if (t != null && t.getDbLayer() != null) {
