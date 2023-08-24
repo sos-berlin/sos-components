@@ -335,7 +335,7 @@ public class DBItemHistoryOrder extends DBItem {
     }
 
     public void setStartVariables(String val) {
-        startVariables = normalizeValue(val, HistoryConstants.MAX_LEN_START_VARIABLES);
+        startVariables = val;
     }
 
     public Long getCurrentHistoryOrderStepId() {

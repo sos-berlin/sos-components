@@ -12,5 +12,4 @@ public class HistoryConstants {
 
     public static final int MAX_LEN_WORKFLOW_POSITION = 255;
     public static final int MAX_LEN_NOTIFICATION = 1_000;
-    public static final int MAX_LEN_START_VARIABLES = 2_000;
 }
