@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -100,7 +101,7 @@ public class AssignedWorkflowsImpl extends JOCResourceImpl implements IAssignedW
                     JobTemplate jt = (JobTemplate) JocInventory.content2IJSObject(dbJobTemplate.getContent(), ConfigurationType.JOBTEMPLATE);
                     jtUsedBy.setHash(jt.getHash());
                     
-                    List<JobTemplateUsedByWorkflow> jtWorkflows = new ArrayList<>();
+                    Set<JobTemplateUsedByWorkflow> jtWorkflows = new HashSet<>();
                     List<DBItemInventoryConfiguration> workflows = dbLayer.getUsedWorkflowsByJobTemplateName(dbJobTemplate.getName());
                     for (DBItemInventoryConfiguration workflow : workflows) {
                         

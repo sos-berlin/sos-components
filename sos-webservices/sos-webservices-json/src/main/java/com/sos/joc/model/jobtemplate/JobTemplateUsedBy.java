@@ -1,12 +1,13 @@
 
 package com.sos.joc.model.jobtemplate;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -54,7 +55,8 @@ public class JobTemplateUsedBy {
     @JsonProperty("hash")
     private String hash;
     @JsonProperty("workflows")
-    private List<JobTemplateUsedByWorkflow> workflows = new ArrayList<JobTemplateUsedByWorkflow>();
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<JobTemplateUsedByWorkflow> workflows = new LinkedHashSet<JobTemplateUsedByWorkflow>();
 
     /**
      * string without < and >
@@ -125,12 +127,12 @@ public class JobTemplateUsedBy {
     }
 
     @JsonProperty("workflows")
-    public List<JobTemplateUsedByWorkflow> getWorkflows() {
+    public Set<JobTemplateUsedByWorkflow> getWorkflows() {
         return workflows;
     }
 
     @JsonProperty("workflows")
-    public void setWorkflows(List<JobTemplateUsedByWorkflow> workflows) {
+    public void setWorkflows(Set<JobTemplateUsedByWorkflow> workflows) {
         this.workflows = workflows;
     }
 
