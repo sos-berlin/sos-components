@@ -5,6 +5,7 @@ import java.util.Date;
 
 import jakarta.ws.rs.Path;
 
+import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -108,7 +109,11 @@ public class JocProfileResourceImpl extends JOCResourceImpl implements IJocProfi
             DBItemJocConfiguration dbItem = jocConfigurationDBLayer.getJocConfiguration(filter, 0);
 
             if (dbItem == null) {
-                dbItem = new DBItemJocConfiguration();
+                SOSAuthHelper.storeDefaultProfile(sosHibernateSession, profileFilter.getAccountName());
+                dbItem = jocConfigurationDBLayer.getJocConfiguration(filter, 0);
+                if (dbItem == null) {
+                    dbItem = new DBItemJocConfiguration();
+                }
             }
 
             Profile profile = new Profile();
