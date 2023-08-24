@@ -217,7 +217,7 @@ public class SOSLdapGroupRolesMapping {
                 for (String group : groupNames) {
                     LOGGER.debug(String.format("Account is member of group: %s", group));
                 }
-                if (!sosLdapWebserviceCredentials.getDisableNestedGroupSearch()) {
+                if (sosLdapWebserviceCredentials.getDisableNestedGroupSearch() == null || !sosLdapWebserviceCredentials.getDisableNestedGroupSearch()) {
                     Set<String> groupsToAdd = new HashSet<String>();
                     if (MEMBER_OF.equals(sosLdapWebserviceCredentials.getGroupNameAttribute())) {
                         Attribute distinguishName = result.getAttributes().get(DISTINGUISHED_NAME);

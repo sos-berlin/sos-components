@@ -72,6 +72,9 @@ public class SOSLdapLogin implements ISOSLogin {
         } catch (NamingException e) {
             setMsg(e.getMessage() + " ==> " + e.getCause());
             LOGGER.error("", e);
+        } catch (Exception e) {
+            setMsg(e.getMessage() + " ==> " + e.getCause());
+            LOGGER.error("", e);
         } finally {
             sosLdapHandler.close();
         }
