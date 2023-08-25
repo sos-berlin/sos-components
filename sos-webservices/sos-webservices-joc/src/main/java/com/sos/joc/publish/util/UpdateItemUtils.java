@@ -153,7 +153,7 @@ public class UpdateItemUtils {
             String controllerId) {
         Set<JUpdateItemOperation> updateItemOperations = new HashSet<JUpdateItemOperation>();
         if (toDelete != null) {
-            updateItemOperations.addAll(toDelete.stream().map(item -> {
+            updateItemOperations.addAll(toDelete.stream().filter(Objects::nonNull).map(item -> {
                 switch(item.getTypeAsEnum()) {
                 case WORKFLOW:
                     return JUpdateItemOperation.deleteVersioned(WorkflowPath.of(item.getName()));
