@@ -49,7 +49,7 @@ public class DeleteConfigurationResourceImpl extends ADeleteConfiguration implem
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
             if (response == null) {
                 response = remove(accessToken, in, IMPL_PATH_DELETE);
-                deletePlannedOrdersForRemovedSchedule(in, accessToken);
+                //deletePlannedOrdersForRemovedSchedule(in, accessToken);
             }
             return response;
         } catch (JocException e) {
@@ -71,7 +71,7 @@ public class DeleteConfigurationResourceImpl extends ADeleteConfiguration implem
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
             if (response == null) {
                 response = removeFolder(accessToken, in, IMPL_PATH_FOLDER_DELETE);
-                deletePlannedOrdersForRemovedSchedule(in, accessToken);
+                //deletePlannedOrdersForRemovedSchedule(in, accessToken);
             }
             return response;
         } catch (JocException e) {
@@ -171,7 +171,7 @@ public class DeleteConfigurationResourceImpl extends ADeleteConfiguration implem
             orderFilter.setScheduleFolders(Arrays.asList(folder));
         }
         try {
-            boolean successful = deleteOrdersImpl.deleteOrders(orderFilter, accessToken, false, false);
+            boolean successful = deleteOrdersImpl.deleteOrders(orderFilter, accessToken, false, false, false);
             if (!successful) {
                 JocError je = getJocError();
                 if (je != null && je.printMetaInfo() != null) {

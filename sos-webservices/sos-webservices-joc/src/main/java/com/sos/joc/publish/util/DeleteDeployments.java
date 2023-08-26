@@ -432,7 +432,7 @@ public class DeleteDeployments {
     public static List<DBItemInventoryConfiguration> getInvConfigurationsForTrash (DBLayerDeploy dbLayer, Set<DBItemDeploymentHistory> deletedDeployItems ) {
         List<DBItemInventoryConfiguration> invConfigurations = new ArrayList<DBItemInventoryConfiguration>();
         //TODO dbLayer.getConfigurationByName(item.getName(), item.getType())) can be null
-        // better: deletedDeployItems.stream().map(item -> invConfigurations.add(dbLayer.getConfigurationByName(item.getName(), item.getType()))).filter(Objects::nonNull).collect(Collectors.toList())
+        // better: deletedDeployItems.stream().map(item -> dbLayer.getConfigurationByName(item.getName(), item.getType())).filter(Objects::nonNull).collect(Collectors.toList())
         deletedDeployItems.stream().forEach(item -> invConfigurations.add(dbLayer.getConfigurationByName(item.getName(), item.getType())));
         return invConfigurations;
     }
