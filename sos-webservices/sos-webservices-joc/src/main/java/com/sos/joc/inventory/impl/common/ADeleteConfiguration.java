@@ -39,6 +39,7 @@ import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
+import com.sos.joc.exceptions.JocAccessDeniedException;
 import com.sos.joc.inventory.impl.ReleaseResourceImpl;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
@@ -159,11 +160,12 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                             new DBLayerDeploy(session), account, accessToken, getJocError(), dbAuditLog.getId(), true, false, in.getCancelOrdersDateFrom());
                 }
             } else {
-                List<DBItemInventoryConfiguration> folderContent = dbLayer.getFolderContent(folder.getPath(), true, Collections.singleton(ConfigurationType.DEPLOYMENTDESCRIPTOR.intValue()), forDescriptors);
+                List<DBItemInventoryConfiguration> folderContent = dbLayer.getFolderContent(folder.getPath(), true, Collections.singleton(
+                        ConfigurationType.DEPLOYMENTDESCRIPTOR.intValue()), forDescriptors);
                 for (DBItemInventoryConfiguration descriptor : folderContent) {
                     JocInventory.deleteInventoryConfigurationAndPutToTrash(descriptor, dbLayer, ConfigurationType.DESCRIPTORFOLDER);
                 }
-                
+
             }
             JocInventory.deleteEmptyFolders(dbLayer, folder.getPath(), forDescriptors);
             
@@ -251,9 +253,6 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
     private void cancelOrders(String xAccessToken, DBItemInventoryConfiguration config, String cancelOrdersDate, InventoryDBLayer dbLayer)
             throws SOSHibernateException {
         if(cancelOrdersDate != null) {
-            Set<String> allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream()
-                    .filter(availableController -> getControllerPermissions(availableController, xAccessToken).getOrders().getCancel())
-                    .collect(Collectors.toSet());
             if(ConfigurationType.FOLDER.equals(config.getTypeAsEnum())) {
                 Set<Integer> confTypes = new HashSet<Integer>();
                 confTypes.add(ConfigurationType.SCHEDULE.intValue());
@@ -263,18 +262,17 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                         dbLayer.getFolderContent(config.getPath(), true, confTypes, false);
                 if(!folderContent.isEmpty()) {
                     folderContent.stream().forEach(configuration -> 
-                        cancelOrders(xAccessToken, configuration, cancelOrdersDate, allowedControllerIds, dbLayer));
+                        cancelOrders2(xAccessToken, configuration, cancelOrdersDate, dbLayer));
                 }
             } else if (ConfigurationType.SCHEDULE.equals(config.getTypeAsEnum())
                     || ConfigurationType.WORKINGDAYSCALENDAR.equals(config.getTypeAsEnum()) 
                     || ConfigurationType.NONWORKINGDAYSCALENDAR.equals(config.getTypeAsEnum())) {
-                cancelOrders(xAccessToken, config, cancelOrdersDate, allowedControllerIds, dbLayer);
+                cancelOrders2(xAccessToken, config, cancelOrdersDate, dbLayer);
             }
         }
     }
 
-    private void cancelOrders(String xAccessToken, DBItemInventoryConfiguration config, String cancelOrdersDate, Set<String> controllerIds,
-            InventoryDBLayer dbLayer) {
+    private void cancelOrders2(String xAccessToken, DBItemInventoryConfiguration config, String cancelOrdersDate, InventoryDBLayer dbLayer) {
         Set<String> schedulePaths = new HashSet<String>();
         if(ConfigurationType.SCHEDULE.equals(config.getTypeAsEnum())) {
             schedulePaths.add(config.getPath());
@@ -319,36 +317,36 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                 orderFilter.setDailyPlanDateFrom(cancelOrdersDate);
             }
             orderFilter.setSchedulePaths(new ArrayList<String>(schedulePaths));
-            orderFilter.setControllerIds(new ArrayList<String>(controllerIds));
+            
             try {
                 Map<String, List<DBItemDailyPlanOrder>> ordersPerController = 
                         cancelOrderImpl.getSubmittedOrderIdsFromDailyplanDate(orderFilter, xAccessToken, false, false);
                 Map<String, CompletableFuture<Either<Problem, Void>>> cancelOrderResponsePerController = 
                         cancelOrderImpl.cancelOrders(ordersPerController, xAccessToken, null, false, false);
-                if(cancelOrderResponsePerController.isEmpty()) {
-                    // No orders to cancel on the controller side
-                    // Add CompletableFuture per controller to go on processing to delete planned orders
-                    controllerIds.stream().forEach(controllerId -> 
-                        cancelOrderResponsePerController.put(controllerId, CompletableFuture.supplyAsync(() -> Either.right(null))));
-                }
-                for (String controllerId : cancelOrderResponsePerController.keySet()) {
-                    cancelOrderResponsePerController.get(controllerId).thenAccept(either -> {
-                        if(either.isRight()) {
-                            try {
-                                boolean successful = deleteOrdersImpl.deleteOrders(orderFilter, xAccessToken, false, false);
-                                if (!successful) {
+
+                for (String controllerId : Proxies.getControllerDbInstances().keySet()) {
+                    cancelOrderResponsePerController.getOrDefault(controllerId, CompletableFuture.supplyAsync(() -> Either.right(null))).thenAccept(
+                            either -> {
+                                if (either.isRight()) {
+                                    DailyPlanOrderFilterDef localOrderFilter = new DailyPlanOrderFilterDef();
+                                    localOrderFilter.setControllerIds(Collections.singletonList(controllerId));
+                                    localOrderFilter.setDailyPlanDateFrom(orderFilter.getDailyPlanDateFrom());
+                                    localOrderFilter.setSchedulePaths(orderFilter.getSchedulePaths());
+                                    try {
+                                        boolean successful = deleteOrdersImpl.deleteOrders(localOrderFilter, xAccessToken, false, false, false);
+                                        if (!successful) {
+                                            getJocErrorWithPrintMetaInfoAndClear(LOGGER);
+                                            LOGGER.warn("Order delete failed due to missing permission.");
+                                        }
+                                    } catch (SOSHibernateException e) {
+                                        getJocErrorWithPrintMetaInfoAndClear(LOGGER);
+                                        LOGGER.warn("Order delete failed due to: ", e.getMessage());
+                                    }
+                                } else {
                                     getJocErrorWithPrintMetaInfoAndClear(LOGGER);
-                                    LOGGER.warn("Order delete failed due to missing permission.");
+                                    LOGGER.warn("Order cancel failed due to missing permission.");
                                 }
-                            } catch (SOSHibernateException e) {
-                                getJocErrorWithPrintMetaInfoAndClear(LOGGER);
-                                LOGGER.warn("Order delete failed due to: ", e.getMessage());
-                            }
-                        } else {
-                            getJocErrorWithPrintMetaInfoAndClear(LOGGER);
-                            LOGGER.warn("Order cancel failed due to missing permission.");
-                        }
-                    });
+                            });
                 }
             } catch (Exception e) {
                 getJocErrorWithPrintMetaInfoAndClear(LOGGER);
