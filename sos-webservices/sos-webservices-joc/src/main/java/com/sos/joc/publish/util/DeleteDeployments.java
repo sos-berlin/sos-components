@@ -359,7 +359,7 @@ public class DeleteDeployments {
                             cancelOrderResponse.thenAccept(either2 -> {
                                 if(either2.isRight()) {
                                     try {
-                                        boolean successful = deleteOrdersImpl.deleteOrders(orderFilter, accessToken, false, false);
+                                        boolean successful = deleteOrdersImpl.deleteOrders(orderFilter, accessToken, false, false, false);
                                         if (!successful) {
                                             LOGGER.warn("Order delete failed due to missing permission.");
                                         }
