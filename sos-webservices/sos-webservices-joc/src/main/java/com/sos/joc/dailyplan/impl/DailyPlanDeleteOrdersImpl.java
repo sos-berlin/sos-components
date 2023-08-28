@@ -122,14 +122,14 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
                 session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
                 DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
                 session.setAutoCommit(false);
-                Globals.beginTransaction(session);
+                //Globals.beginTransaction(session);
                 dbLayer.deleteCascading(filter);
-                Globals.commit(session);
+                //Globals.commit(session);
                 if (withEvent) {
                     EventBus.getInstance().post(new DailyPlanEvent(controllerId, in.getDailyPlanDateFrom())); //TODO consider getDailyPlanDateTo
                 }
             } catch (Exception e) {
-                Globals.rollback(session);
+                //Globals.rollback(session);
                 throw e;
             } finally {
                 Globals.disconnect(session);
