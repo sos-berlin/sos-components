@@ -76,14 +76,13 @@ public class DBLayerDailyPlannedOrders {
         return filter;
     }
 
-    public int deleteCascading(FilterDailyPlannedOrders filter) throws SOSHibernateException {
+    public void deleteCascading(FilterDailyPlannedOrders filter) throws SOSHibernateException {
         int size = filter.getOrderIds() == null ? 0 : filter.getOrderIds().size();
         if (size > SOSHibernate.LIMIT_IN_CLAUSE) {
             FilterDailyPlannedOrders filterCopy = filter.copy();
             filterCopy.setOrderPlannedStartFrom(null);
             filterCopy.setOrderPlannedStartTo(null);
 
-            int result = 0;
             List<String> copy = filterCopy.getOrderIds().stream().collect(Collectors.toList());
             for (int i = 0; i < size; i += SOSHibernate.LIMIT_IN_CLAUSE) {
                 if (size > i + SOSHibernate.LIMIT_IN_CLAUSE) {
@@ -91,16 +90,15 @@ public class DBLayerDailyPlannedOrders {
                 } else {
                     filterCopy.setOrderIds(copy.subList(i, size));
                 }
-                result += executeDeleteCascading(filterCopy);
+                executeDeleteCascading(filterCopy);
             }
-            return result;
         } else {
             FilterDailyPlannedOrders filterCopy = filter.copy();
             if (size > 0) {
                 filterCopy.setOrderPlannedStartFrom(null);
                 filterCopy.setOrderPlannedStartTo(null);
             }
-            return executeDeleteCascading(filterCopy);
+            executeDeleteCascading(filterCopy);
         }
     }
 
@@ -181,43 +179,64 @@ public class DBLayerDailyPlannedOrders {
         return session.getSingleValue(query);
     }
 
-    private int executeDeleteCascading(FilterDailyPlannedOrders filter) throws SOSHibernateException {
-        executeDeleteVariables(filter);
-        return executeDelete(filter);
+    private void executeDeleteCascading(FilterDailyPlannedOrders filter) throws SOSHibernateException {
+        // two transactions to avoid deadlock
+        Globals.beginTransaction(session);
+        try {
+            executeDeleteVariables(filter);
+            Globals.commit(session);
+            Globals.beginTransaction(session);
+            executeDelete(filter);
+            Globals.commit(session);
+        } catch (SOSHibernateException e) {
+            Globals.rollback(session);
+            throw e;
+        }
     }
 
-    private int executeDeleteVariables(FilterDailyPlannedOrders filter) throws SOSHibernateException {
+    private void executeDeleteVariables(FilterDailyPlannedOrders filter) throws SOSHibernateException {
         StringBuilder subSelect = new StringBuilder("select orderId from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" p ");
         subSelect.append(getWhere(filter, "p.schedulePath", true));
-
-        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_DPL_ORDER_VARIABLES).append(" ");
-        hql.append("where orderId in (").append(subSelect).append(") ");
-        if (!SOSString.isEmpty(filter.getControllerId())) {
-            hql.append("and controllerId=:controllerId ");
+        
+        Query<String> subQuery = session.createQuery(subSelect);
+        subQuery = bindParameters(filter, subQuery);
+        List<String> orderIds = session.getResultList(subQuery);
+        
+        int size = orderIds == null ? 0 : orderIds.size();
+        if (size > SOSHibernate.LIMIT_IN_CLAUSE) {
+            for (int i = 0; i < size; i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                executeDeleteVariables(SOSHibernate.getInClausePartition(i, orderIds), filter.getControllerId());
+            }
+        } else {
+            executeDeleteVariables(orderIds, filter.getControllerId());
         }
 
-        Query<DBItemDailyPlanVariable> query = session.createQuery(hql);
-        query = bindParameters(filter, query);
-        return executeUpdate("executeDeleteVariables", query);
+        // subselect creates deadlock
+//        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_DPL_ORDER_VARIABLES).append(" ");
+//        hql.append("where orderId in (").append(subSelect).append(") ");
+//        if (!SOSString.isEmpty(filter.getControllerId())) {
+//            hql.append("and controllerId=:controllerId ");
+//        }
+//
+//        Query<DBItemDailyPlanVariable> query = session.createQuery(hql);
+//        query = bindParameters(filter, query);
+//        return executeUpdate("executeDeleteVariables", query);
     }
-
-    public int delete(FilterDailyPlannedOrders filter) throws SOSHibernateException {
-        int size = filter.getOrderIds() == null ? 0 : filter.getOrderIds().size();
-        if (size > SOSHibernate.LIMIT_IN_CLAUSE) {
-            FilterDailyPlannedOrders filterCopy = filter.copy();
-            int result = 0;
-            List<String> copy = filterCopy.getOrderIds().stream().collect(Collectors.toList());
-            for (int i = 0; i < size; i += SOSHibernate.LIMIT_IN_CLAUSE) {
-                if (size > i + SOSHibernate.LIMIT_IN_CLAUSE) {
-                    filterCopy.setOrderIds(copy.subList(i, (i + SOSHibernate.LIMIT_IN_CLAUSE)));
-                } else {
-                    filterCopy.setOrderIds(copy.subList(i, size));
-                }
-                result += executeDelete(filterCopy);
+    
+    private void executeDeleteVariables(List<String> orderIds, String controllerId) throws SOSHibernateException {
+        if (orderIds != null && !orderIds.isEmpty()) {
+            StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_DPL_ORDER_VARIABLES).append(" ");
+            hql.append("where orderId in (:orderIds) ");
+            if (!SOSString.isEmpty(controllerId)) {
+                hql.append("and controllerId=:controllerId ");
             }
-            return result;
-        } else {
-            return executeDelete(filter);
+            
+            Query<DBItemDailyPlanVariable> query = session.createQuery(hql);
+            query.setParameterList("orderIds", orderIds);
+            if (!SOSString.isEmpty(controllerId)) {
+                query.setParameter("controllerId", controllerId);
+            }
+            executeUpdate("executeDeleteVariables", query);
         }
     }
 
