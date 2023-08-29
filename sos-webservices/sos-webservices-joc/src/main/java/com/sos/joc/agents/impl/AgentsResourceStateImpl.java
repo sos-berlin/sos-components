@@ -344,9 +344,13 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                             }
                             agent.setRunningTasks(agent.getSubagents().stream().mapToInt(SubagentV::getRunningTasks).sum());
                             agent.setOrders(null);
-
-                            agent.setClusterState(States.getClusterState(getClusterStateType(agentClusterStates.get(dbAgent.getAgentId())),
-                                    getClusterLostNodeId(agentClusterStates.get(dbAgent.getAgentId()))));
+                            
+                            // JOC-1611; clusterState only if two Directors defined in ClusterAgent
+                            if (agent.getSubagents().stream().map(SubagentV::getIsDirector).filter(t -> !SubagentDirectorType.NO_DIRECTOR.equals(t))
+                                    .mapToInt(d -> 1).sum() > 1) {
+                                agent.setClusterState(States.getClusterState(getClusterStateType(agentClusterStates.get(dbAgent.getAgentId())),
+                                        getClusterLostNodeId(agentClusterStates.get(dbAgent.getAgentId()))));
+                            }
                         }
                         return agent;
                     }).filter(Objects::nonNull).sorted(Comparator.comparingInt(AgentV::getRunningTasks).reversed()).collect(Collectors.toList()));
