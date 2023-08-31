@@ -389,6 +389,46 @@ public abstract class ACommonJob {
         return lockUses != null && lockUses.size() > 0;
     }
 
+    public boolean isShellJob() {
+        return script != null && script.isShellJob();
+    }
+
+    public static OrderJob convert(StandaloneJob job) {
+        ACommonJob o = new OrderJob();
+        o.delayAfterError = job.getDelayAfterError();
+        o.description = job.getDescription();
+        o.enabled = job.getEnabled();
+        o.environment = job.getEnvironment();
+        o.forceIdleTimeout = job.getForceIdleTimeout();
+        o.ignoreSignals = job.getIgnoreSignals();
+        o.javaOptions = job.getJavaOptions();
+        o.lockUses = job.getLockUses();
+        o.minTasks = job.getMinTasks();
+        o.monitors = job.getMonitors();
+        o.name = job.getName();
+        o.params = job.getParams();
+        o.path = job.getPath();
+        o.priority = job.getPriority();
+        o.processClass = job.getProcessClass();
+        o.replace = job.getReplace();
+        o.runTime = job.getRunTime();
+        o.script = job.getScript();
+        o.settings = job.getSettings();
+        o.spoolerId = job.getSpoolerId();
+        o.startWhenDirectoryChanged = job.getStartWhenDirectoryChanged();
+        o.stderrLogLevel = job.getStderrLogLevel();
+        o.stopOnError = job.getStopOnError();
+        o.tasks = job.getTasks();
+        o.temporary = job.getTemporary();
+        o.timeout = job.getTimeout();
+        o.title = job.getTitle();
+        o.visible = job.getVisible();
+        o.warnIfLongerThan = job.getWarnIfLongerThan();
+        o.warnIfShorterThan = job.getWarnIfShorterThan();
+
+        return (OrderJob) o;
+    }
+
     public class Settings {
 
         private static final String ELEMENT_LOG_LEVEL = "log_level";

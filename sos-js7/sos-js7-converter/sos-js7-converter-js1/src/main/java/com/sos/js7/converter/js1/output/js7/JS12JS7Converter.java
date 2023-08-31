@@ -187,6 +187,7 @@ public class JS12JS7Converter {
     private Map<String, List<RunTime>> js1Calendars = new HashMap<>();
     private Map<Path, JS7Agent> js1ProcessClass2js7Agent = new HashMap<>();
     private Map<Path, OrderJob> js1OrderJobs = new HashMap<>();
+    private Map<Path, StandaloneJob> js1StandaloneShellJobs = new HashMap<>();
     private Map<Path, AgentHelper> js1Agents = new HashMap<>();
     private Map<String, ScheduleHelper> js1Schedules = new HashMap<>();
     private List<ProcessClassFirstUsageHelper> js1ProcessClass2js7AgentResult = new ArrayList<>();
@@ -2448,7 +2449,14 @@ public class JS12JS7Converter {
                             try {
                                 OrderJob oj = js1OrderJobs.get(job);
                                 if (oj == null) {
-                                    throw new Exception("[job " + job + "]not found");
+                                    LOGGER.info("[jobChain " + jobChain.getPath() + "/node=" + SOSString.toString(n)
+                                            + "]no order job found. try to find a standalone shell job " + job);
+                                    StandaloneJob sj = js1StandaloneShellJobs.get(job);
+                                    if (sj == null) {
+                                        throw new Exception("[job " + job + "]neither order job nor standalone shell job found");
+                                    }
+                                    oj = ACommonJob.convert(sj);
+                                    js1OrderJobs.put(job, oj);
                                 }
                                 String js1JobName = oj.getName();
                                 String js7JobName = JS7ConverterHelper.getJS7ObjectName(oj.getPath(), js1JobName);
@@ -3427,6 +3435,12 @@ public class JS12JS7Converter {
 
         for (OrderJob o : f.getOrderJobs()) {
             js1OrderJobs.put(o.getPath(), o);
+        }
+
+        for (StandaloneJob sj : f.getStandaloneJobs()) {
+            if (sj.isShellJob()) {
+                js1StandaloneShellJobs.put(sj.getPath(), sj);
+            }
         }
 
         for (Folder ff : f.getFolders()) {

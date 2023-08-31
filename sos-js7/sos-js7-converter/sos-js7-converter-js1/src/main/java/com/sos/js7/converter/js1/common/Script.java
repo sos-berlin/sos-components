@@ -58,6 +58,10 @@ public class Script {
         return javaClass != null && javaClass.equals(JAVA_JITL_SYNCHRONIZER_JOB);
     }
 
+    public boolean isShellJob() {
+        return language != null && language.equalsIgnoreCase("shell");
+    }
+
     public Include getInclude() {
         return include;
     }
