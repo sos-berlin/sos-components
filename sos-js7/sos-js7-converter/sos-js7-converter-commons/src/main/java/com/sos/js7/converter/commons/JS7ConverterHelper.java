@@ -426,6 +426,13 @@ public class JS7ConverterHelper {
         return "/" + StringUtils.strip(path.trim().replace('\\', '/'), "/").concat("/");
     }
 
+    public static String normalizedPathPart(String val) {
+        if (val == null) {
+            return null;
+        }
+        return val.replaceAll(" ", "_").replaceAll(":", "_");
+    }
+
     public static String getFileName(String p) {
         if (p.endsWith("/")) {
             return "";
