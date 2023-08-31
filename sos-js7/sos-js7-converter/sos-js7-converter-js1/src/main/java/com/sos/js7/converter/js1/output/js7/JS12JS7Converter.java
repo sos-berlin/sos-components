@@ -123,6 +123,8 @@ import com.sos.js7.converter.js1.output.js7.helper.NamedJobHelper;
 import com.sos.js7.converter.js1.output.js7.helper.ProcessClassFirstUsageHelper;
 import com.sos.js7.converter.js1.output.js7.helper.RunTimeHelper;
 import com.sos.js7.converter.js1.output.js7.helper.ScheduleHelper;
+import com.sos.js7.converter.js1.output.js7.helper.TryCatchHelper;
+import com.sos.js7.converter.js1.output.js7.helper.TryCatchHelper.TryCatchPartHelper;
 import com.sos.js7.converter.js1.output.js7.helper.WorkflowHelper;
 
 /** <br/>
@@ -2524,9 +2526,10 @@ public class JS12JS7Converter {
 
         Map<String, JobChainStateHelper> usedStates = new LinkedHashMap<>();
         BoardHelper boardHelper = new BoardHelper();
+        TryCatchHelper tryCatchHelper = new TryCatchHelper(allStates);
         if (startState != null) {
-            in.addAll(getNodesInstructions(workflowInstructions, jobChain, uniqueJobs, startState, allStates, usedStates, fileOrderSinkStates,
-                    fileOrderSinkJobs, boardHelper, false));
+            in.addAll(getNodesInstructions(workflowInstructions, jobChain, uniqueJobs, startState, allStates, usedStates, tryCatchHelper,
+                    fileOrderSinkStates, fileOrderSinkJobs, boardHelper, false));
         } else {
             ConverterReport.INSTANCE.addErrorRecord(jobChain.getPath(), "[jobChain " + jobChain.getName() + "]", "startState not found");
         }
@@ -2628,6 +2631,8 @@ public class JS12JS7Converter {
             w.getJobs().getAdditionalProperties().put(e.getKey(), getFileOrderSinkJob(e.getKey(), jobChainFileWatchingAgent));
         }
 
+        in = cleanup(in);
+
         w.setInstructions(in);
 
         Path workflowPath = null;
@@ -2675,6 +2680,9 @@ public class JS12JS7Converter {
             }
             JobChainStateHelper h = notUsedStates.get(nus);
             notUsedStates.remove(nus);
+
+            LOGGER.info("----------------------------------NotUsedStates=" + nus);
+
             convertJobChainWorkflow(result, js7Name, jobChain, nus, allStates, notUsedStates, uniqueJobs, fileOrderSinkStates, fileOrderSources,
                     false, h);
 
@@ -2691,6 +2699,26 @@ public class JS12JS7Converter {
                 ConverterReport.INSTANCE.addAnalyzerRecord(jobChain.getPath(), "Splitting into several workflows", "END");
             }
         }
+    }
+
+    private List<Instruction> cleanup(List<Instruction> in) {
+        // Workaround - remove Finish from the last Try/Catch instruction
+        if (in != null) {
+            try {
+                if (in.size() > 0) {
+                    Instruction li = in.get(in.size() - 1);
+                    if (li instanceof TryCatch) {
+                        TryCatch ltc = (TryCatch) li;
+                        if (ltc.getCatch() != null && ltc.getCatch().getInstructions() != null) {
+                            ltc.getCatch().getInstructions().removeIf(lii -> lii instanceof Finish);
+                        }
+                    }
+                }
+            } catch (Throwable e) {
+                LOGGER.error(e.toString(), e);
+            }
+        }
+        return in;
     }
 
     private void handleBoardHelpers(BoardHelper workflowBoardHelper, Path workflowPath, String workflowName) {
@@ -2910,8 +2938,10 @@ public class JS12JS7Converter {
 
     private List<Instruction> getNodesInstructions(Map<String, List<Instruction>> workflowInstructions, JobChain jobChain,
             Map<String, JobChainJobHelper> uniqueJobs, String js1StartState, Map<String, JobChainStateHelper> allStates,
-            Map<String, JobChainStateHelper> usedStates, Map<String, JobChainNodeFileOrderSink> fileOrderSinkStates,
+            Map<String, JobChainStateHelper> usedStates, TryCatchHelper tryCatchHelper, Map<String, JobChainNodeFileOrderSink> fileOrderSinkStates,
             Map<String, String> fileOrderSinkJobs, BoardHelper boardHelper, boolean isFork) {
+
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
         List<Instruction> result = new ArrayList<>();
 
         JobChainStateHelper h = allStates.get(js1StartState);
@@ -2925,8 +2955,8 @@ public class JS12JS7Converter {
 
             OrderJob job = uniqueJobs.get(h.getJS1JobName()).getJob();
             // NEW 11.10.2022
-            if (usedStates.containsKey(h.getJS1State()) && !job.isJavaJITLJoinJob() && h.getJS1NextState().length() > 0 && !h.getJS1NextState()
-                    .equals(h.getJS1ErrorState())) {
+            if (usedStates.containsKey(h.getJS1State()) && !job.isJavaJITLJoinJob() && h.getJS1NextState().length() > 0 && !h
+                    .isJS1NextStateEqualsErrorState()) {
                 ConverterReport.INSTANCE.addAnalyzerRecord(jobChain.getPath(), "BREAK NEXT_STATE HANDLING", "Recursion detected. Node(state=" + h
                         .getJS1State() + ",next_state=" + h.getJS1NextState() + ") already used");
                 h = null;
@@ -2963,7 +2993,7 @@ public class JS12JS7Converter {
                                 + splitterState + " not found");
                     }
                     BranchWorkflow bw = new BranchWorkflow(getNodesInstructions(workflowInstructions, jobChain, uniqueJobs, splitterState, allStates,
-                            usedStates, fileOrderSinkStates, fileOrderSinkJobs, boardHelper, true), null);
+                            usedStates, tryCatchHelper, fileOrderSinkStates, fileOrderSinkJobs, boardHelper, true), null);
                     branches.add(new Branch("branch_" + b, bw));
                     b++;
                 }
@@ -3011,64 +3041,167 @@ public class JS12JS7Converter {
             }
 
             workflowInstructions.put(h.getJS1State(), in);
-
-            boolean hasErrorStateJob = allStates.get(h.getJS1ErrorState()) != null && allStates.get(h.getJS1ErrorState()).getJS1JobName() != null;
-            if (h.getJS1ErrorState().length() > 0 && (hasErrorStateJob || fileOrderSinkStates.containsKey(h.getJS1ErrorState()))) {
-                TryCatch tryCatch = new TryCatch();
-                tryCatch.setTry(new Instructions(workflowInstructions.get(h.getJS1State())));
-
-                boolean add = false;
-                if (hasErrorStateJob) {
-                    if (h.getJS1NextState() != null && h.getJS1NextState().equals(h.getJS1ErrorState())) {
-                        tryCatch.setCatch(new Instructions(new ArrayList<>()));
-                        result.add(tryCatch);
-
-                        result.addAll(getNodesInstructions(workflowInstructions, jobChain, uniqueJobs, h.getJS1ErrorState(), allStates, usedStates,
-                                fileOrderSinkStates, fileOrderSinkJobs, boardHelper, false));
-
-                    } else {
-                        tryCatch.setCatch(new Instructions(getNodesInstructions(workflowInstructions, jobChain, uniqueJobs, h.getJS1ErrorState(),
-                                allStates, usedStates, fileOrderSinkStates, fileOrderSinkJobs, boardHelper, false)));
-                        add = true;
-                    }
-                } else {
-                    NamedJob nj = getFileOrderSinkNamedJob(fileOrderSinkStates.get(h.getJS1ErrorState()), h.getJS1ErrorState(), fileOrderSinkJobs);
-                    if (nj != null) {
-                        List<Instruction> al = new ArrayList<>();
-                        al.add(nj);
-                        tryCatch.setCatch(new Instructions(al));
-                        add = true;
-                    }
-                }
-                if (add) {
-                    // TODO Finish ??? error ???
-                    if (tryCatch.getCatch().getInstructions() == null) {
-                        tryCatch.getCatch().setInstructions(new ArrayList<>());
-                    }
-                    tryCatch.getCatch().getInstructions().add(new Finish());
-
-                    result.add(tryCatch);
-                }
-            } else if (workflowInstructions.get(h.getJS1State()) != null) {
-                result.addAll(workflowInstructions.get(h.getJS1State()));
+            JobChainStateHelper errorStateJob = allStates.get(h.getJS1ErrorState());
+            if (errorStateJob != null && SOSString.isEmpty(errorStateJob.getJS1JobName())) {
+                errorStateJob = null;
             }
 
-            if (h.getJS1NextState().length() > 0 && !h.getJS1NextState().equals(h.getJS1ErrorState())) {
-                String nextState = h.getJS1NextState();
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[%s]errorStateJob=%s", h.getJS1State(), errorStateJob));
+            }
+
+            if (h.getJS1ErrorState().length() > 0 && (errorStateJob != null || fileOrderSinkStates.containsKey(h.getJS1ErrorState()))) {
+                if (tryCatchHelper.contains(h.getJS1ErrorState())) {
+                    TryCatchPartHelper ph = tryCatchHelper.getTryCatchPart(h.getJS1ErrorState());
+                    if (ph.getTryStates().contains(h.getJS1State())) {
+                        ph.getLastTryCatch().getTry().getInstructions().addAll(workflowInstructions.get(h.getJS1State()));
+                    } else if (ph.getCatchStates().contains(h.getJS1State())) {
+                        ph.getLastTryCatch().getCatch().getInstructions().addAll(workflowInstructions.get(h.getJS1State()));
+                    }
+
+                    if (tryCatchHelper.contains(h.getJS1State())) {
+                        result.add(tryCatchHelper.getTryCatchPart(h.getJS1State()).getTryCatch());
+
+                        tryCatchHelper.remove(h.getJS1State());
+                    }
+
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][TCH][CONTAINS errorState=%s]%s", h.getJS1State(), h.getJS1ErrorState(), ph));
+                    }
+                } else {
+                    TryCatchPartHelper ph = null;
+                    if (tryCatchHelper.contains(h.getJS1NextState())) {
+                        ph = tryCatchHelper.getTryCatchPart(h.getJS1NextState());
+                    } else if (tryCatchHelper.contains(h.getJS1State())) {
+                        result.add(tryCatchHelper.getTryCatchPart(h.getJS1State()).getTryCatch());
+                        // result.addAll(workflowInstructions.get(h.getJS1State()));
+                        tryCatchHelper.remove(h.getJS1State());
+                    }
+
+                    NamedJob nj = null;
+                    if (fileOrderSinkStates.containsKey(h.getJS1ErrorState())) {
+                        nj = getFileOrderSinkNamedJob(fileOrderSinkStates.get(h.getJS1ErrorState()), h.getJS1ErrorState(), fileOrderSinkJobs);
+                    }
+                    tryCatchHelper.add(h, workflowInstructions.get(h.getJS1State()), ph, nj);
+
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][TCH][ADD]%s", h.getJS1State(), tryCatchHelper));
+                    }
+                }
+
+            } else if (workflowInstructions.get(h.getJS1State()) != null) {
+                if (tryCatchHelper.contains(h.getJS1State())) {
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][WI][TCH]%s", h.getJS1State(), tryCatchHelper));
+                    }
+
+                    TryCatchPartHelper ph = tryCatchHelper.getTryCatchPart(h.getJS1State());
+                    if (ph.getPreviousPartHelper() == null) {
+                        if (ph.getCatchStates().contains(h.getJS1State())) {
+                            ph.getTryCatch().getCatch().getInstructions().addAll(workflowInstructions.get(h.getJS1State()));
+                            result.add(ph.getTryCatch());
+                        } else if (ph.getTryStates().contains(h.getJS1State())) {
+                            ph.getTryCatch().getTry().getInstructions().addAll(workflowInstructions.get(h.getJS1State()));
+                            result.add(ph.getTryCatch());
+                        } else {
+                            result.add(ph.getTryCatch());
+                            result.addAll(workflowInstructions.get(h.getJS1State()));
+
+                        }
+
+                        tryCatchHelper.remove(h.getJS1State());
+                    } else {
+                        if (ph.getPreviousPartHelper().isCatch()) {
+                            ph.getPreviousPartHelper().getTryCatch().getCatch().getInstructions().addAll(workflowInstructions.get(h.getJS1State()));
+                        } else {
+                            ph.getPreviousPartHelper().getTryCatch().getTry().getInstructions().addAll(workflowInstructions.get(h.getJS1State()));
+                        }
+                    }
+                } else {
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][WI]%s", h.getJS1State(), tryCatchHelper));
+                    }
+                    List<Instruction> ins = workflowInstructions.get(h.getJS1State());
+                    if (!tryCatchHelper.addByState(h.getJS1State(), ins)) {
+                        result.addAll(ins);
+                    }
+                }
+            }
+
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[%s]nextState=%s,errorState=%s", h.getJS1State(), h.getJS1NextState(), h.getJS1ErrorState()));
+                LOGGER.debug(String.format("[BeforeEnd][%s]result=%s", h.getJS1State(), result));
+            }
+
+            // if (h.getJS1NextState().length() > 0 && !h.isJS1NextStateEqualsErrorState()) {
+
+            String currentState = h.getJS1State();
+            String nextState = h.getJS1NextState();
+            String errorState = h.getJS1ErrorState();
+            if (nextState.length() > 0) {
                 h = allStates.get(nextState);
                 if (h == null) {
                     //
                 } else if (h.getJS1JobName() == null) {
                     h = null;
                 }
-                if (h == null && fileOrderSinkStates.containsKey(nextState)) {
-                    NamedJob nj = getFileOrderSinkNamedJob(fileOrderSinkStates.get(nextState), nextState, fileOrderSinkJobs);
-                    if (nj != null) {
-                        result.add(nj);
+
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("[%s][nextState=%s]h=%s", currentState, nextState, h));
+                }
+
+                if (h == null) {
+                    boolean cns = fileOrderSinkStates.containsKey(nextState);
+                    boolean ces = fileOrderSinkStates.containsKey(errorState);
+                    if (cns || ces) {
+                        if (isDebugEnabled) {
+                            LOGGER.debug("----------------[fileOrderSink]containsNextState=" + nextState + "=" + cns + ",containsErrorState="
+                                    + errorState + "=" + ces);
+                        }
+                        boolean nextStateAdded = false;
+                        if (tryCatchHelper.contains(nextState) && cns) {
+                            TryCatchPartHelper ph = tryCatchHelper.getTryCatchPart(nextState);
+                            if (ph.addFileOrderSink(null)) {
+                                result.add(ph.getTryCatch());
+                                tryCatchHelper.remove(nextState);
+                                nextStateAdded = true;
+                            }
+                        }
+                        if (tryCatchHelper.contains(errorState) && ces) {
+                            NamedJob nextFileOrderSink = null;
+                            if (!nextStateAdded && cns) {
+                                nextFileOrderSink = getFileOrderSinkNamedJob(fileOrderSinkStates.get(nextState), nextState, fileOrderSinkJobs);
+                            }
+
+                            TryCatchPartHelper ph = tryCatchHelper.getTryCatchPart(errorState);
+                            ph.addFileOrderSink(nextFileOrderSink);
+                            result.add(ph.getTryCatch());
+
+                            tryCatchHelper.remove(errorState);
+                        }
                     }
                 }
             } else {
                 h = null;
+            }
+
+            if (h == null && errorState.length() > 0) {
+                h = allStates.get(errorState);
+                if (h == null) {
+                    //
+                } else {
+                    if (h.getJS1JobName() == null) {
+                        h = null;
+                    }
+                }
+            }
+
+            if (isDebugEnabled) {
+                if (h == null) {
+                    LOGGER.debug(String.format("[atEnd][null]result=%s", result));
+                } else {
+                    LOGGER.debug(String.format("[atEnd][%s]result=%s", h.getJS1State(), result));
+                }
             }
         }
         return result;
