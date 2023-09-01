@@ -16,7 +16,7 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.model.security.identityservice.IdentityServiceAuthenticationScheme;
 
 @Entity
-@Table(name = DBLayer.TABLE_IAM_IDENTITY_SERVICES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[IDENTITY_SERVICE_NAME]"}) })
+@Table(name = DBLayer.TABLE_IAM_IDENTITY_SERVICES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[IDENTITY_SERVICE_NAME]" }) })
 @SequenceGenerator(name = DBLayer.TABLE_IAM_IDENTITY_SERVICES_SEQUENCE, sequenceName = DBLayer.TABLE_IAM_IDENTITY_SERVICES_SEQUENCE, allocationSize = 1)
 
 public class DBItemIamIdentityService {
@@ -52,6 +52,12 @@ public class DBItemIamIdentityService {
     @Column(name = "[REQUIRED]", nullable = false)
     @Type(type = "numeric_boolean")
     private Boolean required;
+
+    @Column(name = "[LOGIN_COUNT]", nullable = false)
+    private Long loginCount;
+
+    @Column(name = "[LOGIN_AVERAGE]", nullable = false)
+    private Long loginAverage;
 
     public DBItemIamIdentityService() {
 
@@ -121,7 +127,7 @@ public class DBItemIamIdentityService {
 
     public void setAuthenticationScheme(String authenticationScheme) {
         this.authenticationScheme = authenticationScheme;
-    }     
+    }
 
     public Boolean getSecondFactor() {
         return secondFactor;
@@ -134,22 +140,33 @@ public class DBItemIamIdentityService {
         this.secondFactor = val;
     }
 
-    
     public Long getSecondFactorIsId() {
         return secondFactorIsId;
     }
 
-    
     public void setSecondFactorIsId(Long secondFactorIsId) {
         this.secondFactorIsId = secondFactorIsId;
     }
 
     @Transient
-    public boolean isTwoFactor(){
+    public boolean isTwoFactor() {
         return authenticationScheme.equals(IdentityServiceAuthenticationScheme.TWO_FACTOR.value()) && secondFactorIsId != null;
     }
-    
-    
 
-  
+    public Long getLoginCount() {
+        return loginCount;
+    }
+
+    public void setLoginCount(Long loginCount) {
+        this.loginCount = loginCount;
+    }
+
+    public Long getLoginAverage() {
+        return loginAverage;
+    }
+
+    public void setLoginAverage(Long loginAverage) {
+        this.loginAverage = loginAverage;
+    }
+
 }

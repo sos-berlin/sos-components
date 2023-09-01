@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -60,6 +61,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 public class SOSAuthHelper {
 
+    private static final int PERCENT_DEVIATION = 6;
     private static final String JS7_SUBJECT_REGISTRATION_WITH_JS7_JOB_SCHEDULER_IS_APPROVED = "JS7: Registration with JS7 JobScheduler is completed";
     private static final String JS7_SUBJECT_REGISTRATION_WITH_JS7_JOB_SCHEDULER_CONFIRMATION = "JS7: Registration with JS7 JobScheduler";
     private static final String JS7_SUBJECT_REGISTRATION_WITH_JS7_JOB_SCHEDULER_CONFIRMED = "JS7: Registration with JS7 JobScheduler confirmed";
@@ -399,10 +401,10 @@ public class SOSAuthHelper {
                         com.sos.joc.model.security.properties.Properties.class);
                 properties = setDefaultFIDO2Settings(properties);
                 return properties;
-            }else {
+            } else {
                 return new com.sos.joc.model.security.properties.Properties();
-             }
-         } finally {
+            }
+        } finally {
             Globals.disconnect(sosHibernateSession);
         }
     }
@@ -498,8 +500,8 @@ public class SOSAuthHelper {
             properties.getFido().setIamFidoEmailSettings(new FidoEmailSettings());
         }
 
-        if (properties.getFido().getIamFidoEmailSettings().getBodyAccess() == null || properties.getFido().getIamFidoEmailSettings()
-                .getBodyAccess().isEmpty()) {
+        if (properties.getFido().getIamFidoEmailSettings().getBodyAccess() == null || properties.getFido().getIamFidoEmailSettings().getBodyAccess()
+                .isEmpty()) {
             properties.getFido().getIamFidoEmailSettings().setBodyAccess(getContentFromResource(SECURITY_BODY_FIDO2_APPROVED_MAIL_TEMPLATE_TXT));
         }
         if (properties.getFido().getIamFidoEmailSettings().getBodyRegistration() == null || properties.getFido().getIamFidoEmailSettings()
@@ -510,8 +512,7 @@ public class SOSAuthHelper {
 
         if (properties.getFido().getIamFidoEmailSettings().getBodyConfirmed() == null || properties.getFido().getIamFidoEmailSettings()
                 .getBodyConfirmed().isEmpty()) {
-            properties.getFido().getIamFidoEmailSettings().setBodyConfirmed(getContentFromResource(
-                    SECURITY_BODY_FIDO2_CONFIRMED_MAIL_TEMPLATE_TXT));
+            properties.getFido().getIamFidoEmailSettings().setBodyConfirmed(getContentFromResource(SECURITY_BODY_FIDO2_CONFIRMED_MAIL_TEMPLATE_TXT));
         }
 
         if (properties.getFido().getIamFidoEmailSettings().getSubjectRegistration() == null || properties.getFido().getIamFidoEmailSettings()
@@ -533,8 +534,8 @@ public class SOSAuthHelper {
                 .isEmpty()) {
             properties.getFido().getIamFidoEmailSettings().setCharset(ISO_8859_1);
         }
-        if (properties.getFido().getIamFidoEmailSettings().getContentType() == null || properties.getFido().getIamFidoEmailSettings()
-                .getContentType().isEmpty()) {
+        if (properties.getFido().getIamFidoEmailSettings().getContentType() == null || properties.getFido().getIamFidoEmailSettings().getContentType()
+                .isEmpty()) {
             properties.getFido().getIamFidoEmailSettings().setContentType(TEXT_HTML);
         }
         if (properties.getFido().getIamFidoEmailSettings().getEncoding() == null || properties.getFido().getIamFidoEmailSettings().getEncoding()
@@ -610,5 +611,54 @@ public class SOSAuthHelper {
         }
         return dbItemIamIdentityService;
 
+    }
+
+    public static long handleDelay(SOSIdentityService sosIdentityService, long loginElapsedTime, boolean loginSuccessState) throws Exception {
+        SOSHibernateSession sosHibernateSession = null;
+        long sleep = 0;
+        try {
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection("login");
+
+            IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
+            sosHibernateSession.beginTransaction();
+            IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
+            filter.setId(sosIdentityService.getIdentityServiceId());
+
+            DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(filter);
+            if (dbItemIamIdentityService != null) {
+
+                Long loginCount = 0L;
+                Long loginAverage = 0L;
+                if (dbItemIamIdentityService.getLoginCount() != null) {
+                    loginCount = dbItemIamIdentityService.getLoginCount();
+                }
+
+                if (dbItemIamIdentityService.getLoginAverage() != null) {
+                    loginAverage = dbItemIamIdentityService.getLoginAverage();
+                }
+
+                if (loginSuccessState) {
+                    if (loginCount <= 30 || loginElapsedTime < (loginAverage / 100) * (100 + PERCENT_DEVIATION)) {
+                        dbItemIamIdentityService.setLoginCount(loginCount + 1);
+                        dbItemIamIdentityService.setLoginAverage((loginAverage * loginCount + loginElapsedTime) / (loginCount + 1));
+                        sosHibernateSession.update(dbItemIamIdentityService);
+                        Globals.commit(sosHibernateSession);
+                    }
+                } else {
+                    if (loginElapsedTime < loginAverage) {
+                        sleep = (loginAverage - loginElapsedTime);
+                    }
+
+                }
+
+            }
+
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            Globals.rollback(sosHibernateSession);
+            Globals.disconnect(sosHibernateSession);
+        }
+        return sleep;
     }
 }
