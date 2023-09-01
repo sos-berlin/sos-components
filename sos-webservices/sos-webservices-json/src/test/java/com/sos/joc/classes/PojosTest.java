@@ -265,7 +265,7 @@ public class PojosTest {
                         if (plt.getElementType() != null && plt.getElementType().getAdditionalProperties() != null) {
                             com.sos.inventory.model.workflow.ListParameters lp = new com.sos.inventory.model.workflow.ListParameters();
                             plt.getElementType().getAdditionalProperties().forEach((k1, v1) -> {
-                                lp.setAdditionalProperty(k1, new com.sos.inventory.model.workflow.ListParameter(v1));
+                                lp.setAdditionalProperty(k1, new com.sos.inventory.model.workflow.ListParameter(v1,null));
                                 p.setListParameters(lp);
                             });
                         }
@@ -277,7 +277,7 @@ public class PojosTest {
                             slp.forEach((k1, v1) -> {
                                 if (!"TYPE".equals(k1)) {
                                     try {
-                                        lp.setAdditionalProperty(k1, new com.sos.inventory.model.workflow.ListParameter(ListParameterType.fromValue(v1)));
+                                        lp.setAdditionalProperty(k1, new com.sos.inventory.model.workflow.ListParameter(ListParameterType.fromValue(v1),null));
                                         p.setListParameters(lp);
                                     } catch (Exception e) {
                                     }
