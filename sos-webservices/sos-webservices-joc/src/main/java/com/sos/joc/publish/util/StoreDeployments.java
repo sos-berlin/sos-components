@@ -63,9 +63,7 @@ public class StoreDeployments {
     
     public static final Map<Integer, Class<? extends IDeployObject>> CLASS_MAPPING = Collections.unmodifiableMap(
             new HashMap<Integer, Class<? extends IDeployObject>>() {
-
                 private static final long serialVersionUID = 1L;
-
                 {
                     put(DeployType.JOBCLASS.intValue(), JobClass.class);
                     put(DeployType.JOBRESOURCE.intValue(), JobResource.class);
@@ -91,22 +89,22 @@ public class StoreDeployments {
             if (signedItemsSpec.getVerifiedDeployables() != null && !signedItemsSpec.getVerifiedDeployables().isEmpty()) {
                 Set<String> folders = signedItemsSpec.getVerifiedDeployables().keySet().stream().map(DBItemDeploymentHistory::getFolder).collect(Collectors.toSet());
                 for (Map.Entry<DBItemDeploymentHistory, DBItemDepSignatures> entry : signedItemsSpec.getVerifiedDeployables().entrySet()) {
-                	DBItemDeploymentHistory item = entry.getKey();
-            		if (item.getId() == null) {
-                    	// first id == null 
-                		item.setContent(JsonSerializer.serializeAsString(entry.getKey().readUpdateableContent()));
+                    DBItemDeploymentHistory item = entry.getKey();
+                    if (item.getId() == null) {
+                        // first id == null
+                        item.setContent(JsonSerializer.serializeAsString(entry.getKey().readUpdateableContent()));
                         DBItemDepSignatures signature = entry.getValue();
-                		if (signature != null && signature.getSignature() != null && !signature.getSignature().isEmpty()) {
-                			item.setSignedContent(signature.getSignature());
-                		} else {
-                			item.setSignedContent(".");
-                		}
-                		item.setCommitId(commitId);
-                		item.setDeploymentDate(deploymentDate);
-                		item.setOperation(OperationType.UPDATE.value());
-                		item.setState(DeploymentState.DEPLOYED.value());
-                		item.setAuditlogId(signedItemsSpec.getAuditlogId());
-                		dbLayer.getSession().save(item);
+                        if (signature != null && signature.getSignature() != null && !signature.getSignature().isEmpty()) {
+                            item.setSignedContent(signature.getSignature());
+                        } else {
+                            item.setSignedContent(".");
+                        }
+                        item.setCommitId(commitId);
+                        item.setDeploymentDate(deploymentDate);
+                        item.setOperation(OperationType.UPDATE.value());
+                        item.setState(DeploymentState.DEPLOYED.value());
+                        item.setAuditlogId(signedItemsSpec.getAuditlogId());
+                        dbLayer.getSession().save(item);
                         PublishUtils.postDeployHistoryEvent(item);
                         if (signature != null) {
                             signature.setDepHistoryId(item.getId());
@@ -117,12 +115,12 @@ public class StoreDeployments {
                         toUpdate.setDeployed(true);
                         toUpdate.setModified(Date.from(Instant.now()));
                         dbLayer.getSession().update(toUpdate);
-                	} else {
-                    	// second id != null 
-                    	DBItemDeploymentHistory cloned = PublishUtils.cloneDepHistoryItemsToNewEntry(item, entry.getValue(), account, dbLayer, commitId,
-                    			controllerId, deploymentDate, signedItemsSpec.getAuditlogId());
+                    } else {
+                        // second id != null
+                        DBItemDeploymentHistory cloned = PublishUtils.cloneDepHistoryItemsToNewEntry(item, entry.getValue(), account, dbLayer,
+                                commitId, controllerId, deploymentDate, signedItemsSpec.getAuditlogId());
                         deployedObjects.add(cloned);
-                	}
+                    }
                 }
                 folders.forEach(folder -> JocInventory.postEvent(folder));
             }

@@ -39,7 +39,6 @@ import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
-import com.sos.joc.exceptions.JocAccessDeniedException;
 import com.sos.joc.inventory.impl.ReleaseResourceImpl;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
@@ -325,7 +324,10 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                         cancelOrderImpl.cancelOrders(ordersPerController, xAccessToken, null, false, false);
 
                 for (String controllerId : Proxies.getControllerDbInstances().keySet()) {
-                    cancelOrderResponsePerController.getOrDefault(controllerId, CompletableFuture.supplyAsync(() -> Either.right(null))).thenAccept(
+                    if(!cancelOrderResponsePerController.containsKey(controllerId)) {
+                        cancelOrderResponsePerController.put(controllerId, CompletableFuture.supplyAsync(() -> Either.right(null)));
+                    }
+                    cancelOrderResponsePerController.get(controllerId).thenAccept(
                             either -> {
                                 if (either.isRight()) {
                                     DailyPlanOrderFilterDef localOrderFilter = new DailyPlanOrderFilterDef();
