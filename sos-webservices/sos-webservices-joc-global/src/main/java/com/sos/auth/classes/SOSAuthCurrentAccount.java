@@ -57,6 +57,7 @@ public class SOSAuthCurrentAccount {
     private Set<ISOSAuthSubject> currentSubjects;
     private SOSLoginParameters sosLoginParameters;
     private String kid;
+    private long sleep=0;
 
     private Permissions sosPermissionJocCockpitControllers;
     private SOSAuthFolderPermissions sosAuthFolderPermissions;
@@ -347,6 +348,15 @@ public class SOSAuthCurrentAccount {
     
     public void setKid(String kid) {
         this.kid = kid;
+    }
+    
+    public void addSleep(long sleep) {
+        this.sleep = sleep+sleep;
+    }
+
+    
+    public long getSleep() {
+        return sleep;
     }
 
 }
