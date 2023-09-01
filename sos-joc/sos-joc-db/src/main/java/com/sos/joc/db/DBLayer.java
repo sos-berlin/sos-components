@@ -358,6 +358,12 @@ public class DBLayer implements Serializable {
         }
     }
 
+    public static void close(DBLayer dbLayer) {
+        if (dbLayer != null) {
+            dbLayer.close();
+        }
+    }
+
     public void setSession(SOSHibernateSession val) {
         close();
         session = val;
