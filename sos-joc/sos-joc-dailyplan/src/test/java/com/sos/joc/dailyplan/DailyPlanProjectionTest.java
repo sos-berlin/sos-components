@@ -25,6 +25,7 @@ public class DailyPlanProjectionTest {
         try {
             DailyPlanSettings s = new DailyPlanSettings();
             s.setTimeZone("Europa/Berlin");
+            s.setProjectionsMonthsAhead("2years");
 
             DailyPlanProjection p = new DailyPlanProjection();
             p.process(s);

@@ -1,7 +1,7 @@
 
-package com.sos.joc.model.dailyplan.projection.items;
+package com.sos.joc.model.dailyplan.projections.items.meta;
 
-import java.util.TreeMap;
+import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
@@ -23,18 +23,18 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
 
 })
-public class MonthItem {
+public class MetaItem {
 
     @JsonIgnore
-    private Map<String, DateItem> additionalProperties = new TreeMap<String, DateItem>();
+    private Map<String, ScheduleInfoItem> additionalProperties = new HashMap<String, ScheduleInfoItem>();
 
     @JsonAnyGetter
-    public Map<String, DateItem> getAdditionalProperties() {
+    public Map<String, ScheduleInfoItem> getAdditionalProperties() {
         return this.additionalProperties;
     }
 
     @JsonAnySetter
-    public void setAdditionalProperty(String name, DateItem value) {
+    public void setAdditionalProperty(String name, ScheduleInfoItem value) {
         this.additionalProperties.put(name, value);
     }
 
@@ -53,10 +53,10 @@ public class MonthItem {
         if (other == this) {
             return true;
         }
-        if ((other instanceof MonthItem) == false) {
+        if ((other instanceof MetaItem) == false) {
             return false;
         }
-        MonthItem rhs = ((MonthItem) other);
+        MetaItem rhs = ((MetaItem) other);
         return new EqualsBuilder().append(additionalProperties, rhs.additionalProperties).isEquals();
     }
 

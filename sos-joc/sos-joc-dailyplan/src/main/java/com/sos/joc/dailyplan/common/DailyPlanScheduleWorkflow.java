@@ -6,6 +6,9 @@ public class DailyPlanScheduleWorkflow {
     private final String path;
     private final String content;
 
+    private String controllerId;
+    private Long avg;
+
     public DailyPlanScheduleWorkflow(String name, String path, String content) {
         this.name = name;
         this.path = path;
@@ -22,6 +25,22 @@ public class DailyPlanScheduleWorkflow {
 
     public String getContent() {
         return content;
+    }
+
+    public void setControllerId(String val) {
+        controllerId = val;
+    }
+
+    public String getControllerId() {
+        return controllerId;
+    }
+
+    public void setAvg(Long val) {
+        avg = val;
+    }
+
+    public Long getAvg() {
+        return avg;
     }
 
     @Override

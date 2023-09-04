@@ -1,5 +1,5 @@
 
-package com.sos.joc.model.dailyplan.projection.items;
+package com.sos.joc.model.dailyplan.projections.items.year;
 
 import java.util.HashMap;
 import java.util.Map;

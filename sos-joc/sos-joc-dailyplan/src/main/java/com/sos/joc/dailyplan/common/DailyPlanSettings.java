@@ -6,6 +6,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSString;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 
@@ -25,6 +26,8 @@ public class DailyPlanSettings {
     private boolean submit = true;
     private int dayAheadPlan = 0;
     private int dayAheadSubmit = 0;
+    private int projectionsMonthsAhead = 0;
+    private boolean projectionsAheadConfiguredAsYears = false;
 
     public List<ControllerConfiguration> getControllers() {
         return controllers;
@@ -140,4 +143,32 @@ public class DailyPlanSettings {
         }
     }
 
+    public void setProjectionsMonthsAhead(String val) {
+        try {
+            projectionsAheadConfiguredAsYears = false;
+
+            int months = 0;
+            if (!SOSString.isEmpty(val)) {
+                String v = val.toLowerCase().trim().replaceAll("months", "").replaceAll("month", "").replaceAll("m", "");
+                if (v.endsWith("years") || v.endsWith("year") || v.endsWith("y")) {
+                    months = 12 * Integer.parseInt(v.substring(0, v.indexOf("y")).trim());
+                    projectionsAheadConfiguredAsYears = true;
+                } else {
+                    months = Integer.parseInt(v.trim());
+                }
+            }
+            projectionsMonthsAhead = months;
+        } catch (Throwable e) {
+            projectionsMonthsAhead = 0;
+            LOGGER.warn("Could not set setting for projectionsAhead: " + val);
+        }
+    }
+
+    public int getProjectionsMonthsAhead() {
+        return projectionsMonthsAhead;
+    }
+
+    public boolean isProjectionsAheadConfiguredAsYears() {
+        return projectionsAheadConfiguredAsYears;
+    }
 }
