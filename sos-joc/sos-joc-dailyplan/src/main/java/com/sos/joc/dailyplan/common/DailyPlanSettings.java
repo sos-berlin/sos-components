@@ -143,6 +143,11 @@ public class DailyPlanSettings {
         }
     }
 
+    public void setProjectionsMonthsAhead(DailyPlanSettings settings) {
+        projectionsMonthsAhead = settings.getProjectionsMonthsAhead();
+        projectionsAheadConfiguredAsYears = settings.isProjectionsAheadConfiguredAsYears();
+    }
+
     public void setProjectionsMonthsAhead(String val) {
         try {
             projectionsAheadConfiguredAsYears = false;

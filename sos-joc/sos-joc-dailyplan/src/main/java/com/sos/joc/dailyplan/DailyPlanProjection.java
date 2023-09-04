@@ -70,22 +70,20 @@ public class DailyPlanProjection {
     private boolean onlyPlanOrderAutomatically = true;
 
     public void process(DailyPlanSettings settings) throws Exception {
+        String logPrefix = String.format("[%s][process]", settings.getStartMode());
         if (settings.getProjectionsMonthsAhead() == 0) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("[projections][skip]getProjectionsMonthsAhead=0");
-            }
+            LOGGER.info(logPrefix + "[skip]getProjectionsMonthsAhead=0");
             return;
         }
 
         DBLayerDailyPlanProjections dbLayer = null;
-
         try {
             dbLayer = new DBLayerDailyPlanProjections(Globals.createSosHibernateStatelessConnection(IDENTIFIER));
 
             boolean autoCommit = dbLayer.getSession().getFactory().getAutoCommit();
             try {
+                LOGGER.info(logPrefix + "cleanup");
                 dbLayer.getSession().setAutoCommit(false);
-
                 dbLayer.beginTransaction();
                 dbLayer.cleanup();
                 dbLayer.commit();
@@ -96,7 +94,7 @@ public class DailyPlanProjection {
                 dbLayer.getSession().setAutoCommit(autoCommit);
             }
 
-            PlannedResult pr = planned(dbLayer);
+            PlannedResult pr = planned(dbLayer, logPrefix);
 
             List<DBBeanReleasedSchedule2DeployedWorkflow> schedule2workflow = new DBLayerSchedules(dbLayer.getSession())
                     .getReleasedSchedule2DeployedWorkflows(null, null);
@@ -137,7 +135,8 @@ public class DailyPlanProjection {
                             dateTo = getLastDayOfMonthCalendar(to);
                         }
 
-                        LOGGER.info("-----------------------------------------------------------------" + dateFrom + "-" + dateTo);
+                        String logDateFrom = reallyDayFrom == null ? dateFrom : dateFormatter.format(reallyDayFrom.toInstant());
+                        LOGGER.info(String.format("%s[projection]creating from %s to %s", logPrefix, logDateFrom, dateTo));
 
                         dbLayer.insert(i, yearProjection(settings, dbLayer, dailyPlanSchedules, String.valueOf(i), dateFrom, dateTo, reallyDayFrom,
                                 plannedYearItem));
@@ -213,7 +212,9 @@ public class DailyPlanProjection {
     }
 
     // already planned
-    private PlannedResult planned(DBLayerDailyPlanProjections dbLayer) {
+    private PlannedResult planned(DBLayerDailyPlanProjections dbLayer, String logPrefix) {
+        LOGGER.info(logPrefix + "[planned]not implemented yet...");
+
         PlannedResult r = new PlannedResult();
 
         // TODO read submissions etc
