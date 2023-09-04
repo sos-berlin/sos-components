@@ -1,5 +1,5 @@
 
-package com.sos.joc.model.dailyplan.projection.items;
+package com.sos.joc.model.dailyplan.projections.items.year;
 
 import java.util.TreeMap;
 import java.util.Map;
@@ -23,7 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
 
 })
-public class YearItem {
+public class YearsItem {
 
     @JsonIgnore
     private Map<String, MonthsItem> additionalProperties = new TreeMap<String, MonthsItem>();
@@ -53,10 +53,10 @@ public class YearItem {
         if (other == this) {
             return true;
         }
-        if ((other instanceof YearItem) == false) {
+        if ((other instanceof YearsItem) == false) {
             return false;
         }
-        YearItem rhs = ((YearItem) other);
+        YearsItem rhs = ((YearsItem) other);
         return new EqualsBuilder().append(additionalProperties, rhs.additionalProperties).isEquals();
     }
 

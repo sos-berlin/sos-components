@@ -169,7 +169,7 @@ public class DailyPlanRunner extends TimerTask {
             LOGGER.error(e.toString(), e);
         } finally {
             try {
-                createProjections(settings);
+                recreateProjections(settings);
             } catch (Throwable ex) {
                 LOGGER.error(ex.toString(), ex);
             } finally {
@@ -179,7 +179,7 @@ public class DailyPlanRunner extends TimerTask {
 
     }
 
-    public static void createProjections(DailyPlanSettings settings) throws Exception {
+    public static void recreateProjections(DailyPlanSettings settings) throws Exception {
         DailyPlanProjection p = new DailyPlanProjection();
         p.process(settings);
     }

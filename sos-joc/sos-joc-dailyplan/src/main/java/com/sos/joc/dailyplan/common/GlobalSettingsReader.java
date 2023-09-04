@@ -19,11 +19,14 @@ public class GlobalSettingsReader {
         settings.setDailyPlanStartTime(conf.getStartTime().getValue());
         settings.setDayAheadPlan(conf.getDaysAheadPlan().getValue());
         settings.setDayAheadSubmit(conf.getDaysAheadSubmit().getValue());
+        settings.setProjectionsMonthsAhead(conf.getProjectionsAhead().getValue());
 
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(String.format("time_zone=%s, period_begin=%s, start_time=%s, day_ahead_plan=%s, day_ahead_submit=%s", conf.getTimeZone()
-                    .getValue(), conf.getPeriodBegin().getValue(), conf.getStartTime().getValue(), conf.getDaysAheadPlan().getValue(), conf
-                            .getDaysAheadSubmit().getValue()));
+            LOGGER.debug(String.format(
+                    "time_zone=%s, period_begin=%s, start_time=%s, days_ahead_plan=%s, days_ahead_submit=%s, projection_ahead=%smonths(configured=%s)",
+                    conf.getTimeZone().getValue(), conf.getPeriodBegin().getValue(), conf.getStartTime().getValue(), conf.getDaysAheadPlan()
+                            .getValue(), conf.getDaysAheadSubmit().getValue(), settings.getProjectionsMonthsAhead(), conf.getProjectionsAhead()
+                                    .getValue()));
         }
         return settings;
     }

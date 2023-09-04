@@ -6,6 +6,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -50,6 +51,11 @@ public class DBItemDailyPlanProjection extends DBItem {
 
     public void setCreated(Date val) {
         created = val;
+    }
+
+    @Transient
+    public boolean isMeta() {
+        return id != null && id.equals(METADATEN_ID);
     }
 
 }

@@ -29,14 +29,16 @@ public class DailyPlanSchedule {
         }).collect(Collectors.toList()));
     }
 
-    public void addWorkflow(DailyPlanScheduleWorkflow newW) {
+    public DailyPlanScheduleWorkflow addWorkflow(DailyPlanScheduleWorkflow newW) {
         if (newW == null || newW.getName() == null) {
-            return;
+            return null;
         }
         DailyPlanScheduleWorkflow oldW = getWorkflow(newW.getName());
         if (oldW == null) {
             workflows.add(newW);
+            return newW;
         }
+        return oldW;
     }
 
     public DailyPlanScheduleWorkflow getWorkflow(String name) {

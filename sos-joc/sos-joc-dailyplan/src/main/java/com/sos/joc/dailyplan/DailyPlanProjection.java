@@ -21,10 +21,12 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.hibernate.SOSHibernate;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.Period;
+import com.sos.inventory.model.schedule.OrderParameterisation;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.calendar.FrequencyResolver;
@@ -34,17 +36,21 @@ import com.sos.joc.dailyplan.common.DailyPlanScheduleWorkflow;
 import com.sos.joc.dailyplan.common.DailyPlanSettings;
 import com.sos.joc.dailyplan.common.PeriodResolver;
 import com.sos.joc.dailyplan.db.DBBeanReleasedSchedule2DeployedWorkflow;
-import com.sos.joc.dailyplan.db.DBLayerDailyPlanProjection;
+import com.sos.joc.dailyplan.db.DBLayerDailyPlanProjections;
+import com.sos.joc.dailyplan.db.DBLayerDailyPlannedOrders;
 import com.sos.joc.dailyplan.db.DBLayerSchedules;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.model.dailyplan.projection.items.DateItem;
-import com.sos.joc.model.dailyplan.projection.items.DatePeriodItem;
-import com.sos.joc.model.dailyplan.projection.items.MonthItem;
-import com.sos.joc.model.dailyplan.projection.items.MonthsItem;
-import com.sos.joc.model.dailyplan.projection.items.YearItem;
+import com.sos.joc.model.dailyplan.projections.items.meta.MetaItem;
+import com.sos.joc.model.dailyplan.projections.items.meta.ScheduleInfoItem;
+import com.sos.joc.model.dailyplan.projections.items.meta.WorkflowItem;
+import com.sos.joc.model.dailyplan.projections.items.year.DateItem;
+import com.sos.joc.model.dailyplan.projections.items.year.DatePeriodItem;
+import com.sos.joc.model.dailyplan.projections.items.year.MonthItem;
+import com.sos.joc.model.dailyplan.projections.items.year.MonthsItem;
+import com.sos.joc.model.dailyplan.projections.items.year.YearsItem;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 
 public class DailyPlanProjection {
@@ -59,14 +65,22 @@ public class DailyPlanProjection {
     private static DateTimeFormatter dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE.withZone(ZoneOffset.UTC);
     private static DateTimeFormatter isoFormatter = DateTimeFormatter.ISO_INSTANT;
 
+    private Map<String, Long> workflowsAvg = new HashMap<>();
+
     private boolean onlyPlanOrderAutomatically = true;
 
     public void process(DailyPlanSettings settings) throws Exception {
+        if (settings.getProjectionsMonthsAhead() == 0) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("[projections][skip]getProjectionsMonthsAhead=0");
+            }
+            return;
+        }
 
-        DBLayerDailyPlanProjection dbLayer = null;
+        DBLayerDailyPlanProjections dbLayer = null;
 
         try {
-            dbLayer = new DBLayerDailyPlanProjection(Globals.createSosHibernateStatelessConnection(IDENTIFIER));
+            dbLayer = new DBLayerDailyPlanProjections(Globals.createSosHibernateStatelessConnection(IDENTIFIER));
 
             boolean autoCommit = dbLayer.getSession().getFactory().getAutoCommit();
             try {
@@ -88,20 +102,22 @@ public class DailyPlanProjection {
                     .getReleasedSchedule2DeployedWorkflows(null, null);
 
             if (schedule2workflow.size() > 0) {
-                Collection<DailyPlanSchedule> dailyPlanSchedules = convert(schedule2workflow, onlyPlanOrderAutomatically, true);
+                DBLayerDailyPlannedOrders dbLayerPlannedOrders = new DBLayerDailyPlannedOrders(dbLayer.getSession());
+                Collection<DailyPlanSchedule> dailyPlanSchedules = convert(dbLayerPlannedOrders, schedule2workflow, onlyPlanOrderAutomatically, pr);
 
                 if (dailyPlanSchedules.size() > 0) {
+                    insertMeta(dbLayer, dailyPlanSchedules, pr);// TODO insertMeta after
+
                     java.util.Calendar now = DailyPlanHelper.getCalendar(null, UTC);
                     java.util.Calendar to = DailyPlanHelper.getCalendar(null, UTC);
-                    to.add(java.util.Calendar.YEAR, 2);// from settings
+                    to.add(java.util.Calendar.MONTH, settings.getProjectionsMonthsAhead());
                     int yearFrom = now.get(java.util.Calendar.YEAR);
                     int yearTo = to.get(java.util.Calendar.YEAR);
 
-                    LOGGER.info(yearFrom + "-" + yearTo);
-
-                    for (int i = yearFrom; i < yearTo; i++) {
-                        YearItem plannedYearItem = null;
+                    for (int i = yearFrom; i <= yearTo; i++) {
+                        YearsItem plannedYearItem = null;
                         String dateFrom = i + "-01-01";
+                        String dateTo = i + "-12-31";
                         java.util.Calendar reallyDayFrom = null;
                         if (i == yearFrom) {
                             if (pr.lastDate == null) {
@@ -112,7 +128,16 @@ public class DailyPlanProjection {
                             plannedYearItem = pr.year;
                             dateFrom = getFirstDayOfMonth(reallyDayFrom); // <year>-<moth>-01 for day of month etc calculation
                         }
-                        String dateTo = i + "-12-31";
+
+                        // if (!settings.isProjectionsAheadConfiguredAsYears() && i == yearTo) {
+                        // dateTo = getLastDayOfMonthCalendar(to);
+                        // }
+
+                        if (i == yearTo) {
+                            dateTo = getLastDayOfMonthCalendar(to);
+                        }
+
+                        LOGGER.info("-----------------------------------------------------------------" + dateFrom + "-" + dateTo);
 
                         dbLayer.insert(i, yearProjection(settings, dbLayer, dailyPlanSchedules, String.valueOf(i), dateFrom, dateTo, reallyDayFrom,
                                 plannedYearItem));
@@ -129,6 +154,44 @@ public class DailyPlanProjection {
         }
     }
 
+    private void insertMeta(DBLayerDailyPlanProjections dbLayer, Collection<DailyPlanSchedule> dailyPlanSchedules, PlannedResult pr)
+            throws Exception {
+        MetaItem mi = pr != null && pr.meta != null ? pr.meta : new MetaItem();
+
+        for (DailyPlanSchedule s : dailyPlanSchedules) {
+            ScheduleInfoItem sii = mi.getAdditionalProperties().get(s.getSchedule().getPath());
+            if (sii == null) {
+                sii = new ScheduleInfoItem();
+                sii.setOrders(getOrders(s));
+                mi.getAdditionalProperties().put(s.getSchedule().getPath(), sii);
+            }
+            for (DailyPlanScheduleWorkflow w : s.getWorkflows()) {
+                WorkflowItem wi = sii.getAdditionalProperties().get(w.getPath());
+                if (wi == null) {
+                    wi = new WorkflowItem();
+                    sii.getAdditionalProperties().put(w.getPath(), wi);
+                }
+                wi.setAvg(w.getAvg());
+            }
+        }
+        dbLayer.insertMeta(mi);
+    }
+
+    private Long getOrders(DailyPlanSchedule s) {
+        if (s == null || s.getSchedule() == null) {
+            return null;
+        }
+        List<OrderParameterisation> l = s.getSchedule().getOrderParameterisations();
+        int o = l == null ? 1 : l.size();
+        if (o == 0) {
+            o = 1;
+        }
+        List<DailyPlanScheduleWorkflow> lw = s.getWorkflows();
+        o = lw == null ? o : o * lw.size();
+
+        return Long.valueOf(o);
+    }
+
     private String getFirstDayOfMonth(java.util.Calendar cal) {
         java.util.Calendar copy = java.util.Calendar.getInstance(TimeZone.getTimeZone(UTC));
         copy.setTime(cal.getTime());
@@ -142,8 +205,15 @@ public class DailyPlanProjection {
         return cal;
     }
 
+    private String getLastDayOfMonthCalendar(java.util.Calendar cal) {
+        java.util.Calendar copy = (java.util.Calendar) cal.clone();
+        copy.set(java.util.Calendar.DATE, copy.getActualMaximum(java.util.Calendar.DATE));
+        // copy.set(java.util.Calendar.YEAR, year);
+        return dateFormatter.format(copy.toInstant());
+    }
+
     // already planned
-    private PlannedResult planned(DBLayerDailyPlanProjection dbLayer) {
+    private PlannedResult planned(DBLayerDailyPlanProjections dbLayer) {
         PlannedResult r = new PlannedResult();
 
         // TODO read submissions etc
@@ -151,8 +221,9 @@ public class DailyPlanProjection {
         return r;
     }
 
-    private YearItem yearProjection(DailyPlanSettings settings, DBLayerDailyPlanProjection dbLayer, Collection<DailyPlanSchedule> dailyPlanSchedules,
-            String year, String dateFrom, String dateTo, java.util.Calendar reallyDayFrom, YearItem plannedYearItem) throws Exception {
+    private YearsItem yearProjection(DailyPlanSettings settings, DBLayerDailyPlanProjections dbLayer,
+            Collection<DailyPlanSchedule> dailyPlanSchedules, String year, String dateFrom, String dateTo, java.util.Calendar reallyDayFrom,
+            YearsItem plannedYearItem) throws Exception {
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
         String caller = IDENTIFIER + "-" + dateFrom + "-" + dateTo;
 
@@ -256,7 +327,7 @@ public class DailyPlanProjection {
             }
         }
 
-        YearItem result = new YearItem();
+        YearsItem result = new YearsItem();
         result.setAdditionalProperty(year, msi);
         return result;
     }
@@ -280,8 +351,8 @@ public class DailyPlanProjection {
         return pr;
     }
 
-    private Collection<DailyPlanSchedule> convert(List<DBBeanReleasedSchedule2DeployedWorkflow> items, boolean onlyPlanOrderAutomatically,
-            boolean infoOnMissingDeployedWorkflow) {
+    private Collection<DailyPlanSchedule> convert(DBLayerDailyPlannedOrders dbLayerPlannedOrders, List<DBBeanReleasedSchedule2DeployedWorkflow> items,
+            boolean onlyPlanOrderAutomatically, PlannedResult pr) throws Exception {
 
         String method = "convert";
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
@@ -322,11 +393,38 @@ public class DailyPlanProjection {
                 }
             }
             if (dps != null) {
-                dps.addWorkflow(new DailyPlanScheduleWorkflow(item.getWorkflowName(), item.getWorkflowPath(), null));
+                DailyPlanScheduleWorkflow w = dps.addWorkflow(new DailyPlanScheduleWorkflow(item.getWorkflowName(), item.getWorkflowPath(), null));
+                w.setControllerId(item.getControllerId());
+                w.setAvg(getWorkflowAvg(dbLayerPlannedOrders, w, pr, dps.getSchedule()));
                 releasedSchedules.put(key, dps);
             }
         }
         return releasedSchedules.entrySet().stream().map(e -> e.getValue()).collect(Collectors.toList());
+    }
+
+    private Long getWorkflowAvg(DBLayerDailyPlannedOrders dbLayer, DailyPlanScheduleWorkflow w, PlannedResult pr, Schedule schedule)
+            throws SOSHibernateException {
+        String key = w.getControllerId() + "DELIMITER" + w.getPath();
+        Long result = workflowsAvg.get(key);
+        if (result == null) {
+            boolean checkDb = true;
+            if (pr != null && pr.meta != null) {
+                // TODO check controllerId ???
+                ScheduleInfoItem sii = pr.meta.getAdditionalProperties().get(schedule.getPath());
+                if (sii != null) {
+                    WorkflowItem wi = sii.getAdditionalProperties().get(w.getPath());
+                    if (wi != null) {
+                        result = wi.getAvg();// can be null
+                        checkDb = false;
+                    }
+                }
+            }
+            if (checkDb) {
+                result = dbLayer.getWorkflowAvg(w.getControllerId(), w.getPath());
+            }
+            workflowsAvg.put(key, result);
+        }
+        return result;
     }
 
     private Calendar getWorkingDaysCalendar(InventoryDBLayer dbLayer, String calendarName) throws Exception {
@@ -431,8 +529,10 @@ public class DailyPlanProjection {
 
     private class PlannedResult {
 
+        private MetaItem meta;
+        private YearsItem year;
+
         private String lastDate;
-        private YearItem year;
 
         public java.util.Calendar getNextDateAfterLastDate() throws Exception {
             if (lastDate == null) {
