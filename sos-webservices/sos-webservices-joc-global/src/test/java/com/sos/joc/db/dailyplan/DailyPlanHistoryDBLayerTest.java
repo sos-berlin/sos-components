@@ -60,7 +60,7 @@ public class DailyPlanHistoryDBLayerTest {
 
     private SOSHibernateFactory createFactory() throws Exception {
         SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/hibernate.cfg.xml"));
-        factory.addClassMapping(DBLayer.getOrderInitatorClassMapping());
+        factory.addClassMapping(DBLayer.getDailyPlanClassMapping());
         factory.build();
         return factory;
     }

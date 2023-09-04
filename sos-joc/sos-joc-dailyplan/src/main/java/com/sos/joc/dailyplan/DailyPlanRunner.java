@@ -140,28 +140,46 @@ public class DailyPlanRunner extends TimerTask {
             return;
         }
 
-        // TODO createdPlans static? because several instances ...
-        if (!createdPlans.contains(date) && (manuelStart || (now.getTimeInMillis() - startCalendar.getTimeInMillis()) > 0)) {
-            startCalendar = null;
-            createdPlans.add(date);
-            try {
-                settings.setSubmissionTime(new Date());
-                createPlan(settings.getStartMode(), settings.getControllers(), DailyPlanHelper.getNextDayCalendar());
-            } catch (ControllerConnectionResetException | ControllerConnectionRefusedException | ParseException | SOSException | URISyntaxException
-                    | InterruptedException | ExecutionException | TimeoutException e) {
-                LOGGER.error(e.getMessage(), e);
-            }
-        } else {
-            if (LOGGER.isTraceEnabled() && startCalendar != null) {
+        lastActivityStart.set(new Date().getTime());
+        try {
+            // TODO createdPlans static? because several instances ...
+            if (!createdPlans.contains(date) && (manuelStart || (now.getTimeInMillis() - startCalendar.getTimeInMillis()) > 0)) {
+                startCalendar = null;
+                createdPlans.add(date);
                 try {
-                    LOGGER.trace(String.format("wait for start at %s (%s)...", SOSDate.format(startCalendar.getTime(), settings.getTimeZone()),
-                            settings.getTimeZone()));
-                } catch (SOSInvalidDataException e) {
+                    settings.setSubmissionTime(new Date());
+                    createPlan(settings.getStartMode(), settings.getControllers(), DailyPlanHelper.getNextDayCalendar());
+                } catch (ControllerConnectionResetException | ControllerConnectionRefusedException | ParseException | SOSException
+                        | URISyntaxException | InterruptedException | ExecutionException | TimeoutException e) {
+                    LOGGER.error(e.getMessage(), e);
+                }
+            } else {
+                if (LOGGER.isTraceEnabled() && startCalendar != null) {
+                    try {
+                        LOGGER.trace(String.format("wait for start at %s (%s)...", SOSDate.format(startCalendar.getTime(), settings.getTimeZone()),
+                                settings.getTimeZone()));
+                    } catch (SOSInvalidDataException e) {
 
+                    }
                 }
             }
+        } catch (Throwable e) {
+            LOGGER.error(e.toString(), e);
+        } finally {
+            try {
+                createProjections(settings);
+            } catch (Throwable ex) {
+                LOGGER.error(ex.toString(), ex);
+            } finally {
+                lastActivityEnd.set(new Date().getTime());
+            }
         }
-        // JocClusterServiceLogger.clearAllLoggers();
+
+    }
+
+    public static void createProjections(DailyPlanSettings settings) throws Exception {
+        DailyPlanProjection p = new DailyPlanProjection();
+        p.process(settings);
     }
 
     /* service */
@@ -171,7 +189,6 @@ public class DailyPlanRunner extends TimerTask {
 
         String method = "createPlan";
         try {
-            lastActivityStart.set(new Date().getTime());
             durations = null;
 
             LOGGER.info(String.format("[%s][%s]creating from %s for %s days ahead, submitting for %s days ahead", startupMode, method, SOSDate
@@ -231,8 +248,6 @@ public class DailyPlanRunner extends TimerTask {
         } catch (SOSHibernateException | IOException | DBConnectionRefusedException | DBInvalidDataException | DBMissingDataException
                 | JocConfigurationException | DBOpenSessionException e) {
             LOGGER.error(e.getMessage(), e);
-        } finally {
-            lastActivityEnd.set(new Date().getTime());
         }
     }
 
@@ -349,7 +364,7 @@ public class DailyPlanRunner extends TimerTask {
             ControllerConnectionResetException, ControllerConnectionRefusedException, InterruptedException, ExecutionException, TimeoutException {
         submitOrders(startupMode, controllerId, items, dailyPlanDate, null, jocError, accessToken);
     }
-    
+
     public void submitOrders(StartupMode startupMode, String controllerId, List<DBItemDailyPlanOrder> items, String dailyPlanDate,
             Boolean forceJobAdmission, JocError jocError, String accessToken) throws JsonParseException, JsonMappingException,
             DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
@@ -401,7 +416,7 @@ public class DailyPlanRunner extends TimerTask {
                     orderParameterisation.setForceJobAdmission(storedOP.getForceJobAdmission());
                 }
                 if (forceJobAdmission != null) {
-                    orderParameterisation.setForceJobAdmission(forceJobAdmission); 
+                    orderParameterisation.setForceJobAdmission(forceJobAdmission);
                 }
                 orderParameterisation.setVariables(variables);
                 schedule.getOrderParameterisations().add(orderParameterisation);
