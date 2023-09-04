@@ -18,6 +18,7 @@ import com.sos.joc.db.authentication.DBItemIamPermission;
 import com.sos.joc.db.authentication.DBItemIamRole;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanHistory;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
+import com.sos.joc.db.dailyplan.DBItemDailyPlanProjection;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanVariable;
 import com.sos.joc.db.deployment.DBItemDepCommitIds;
@@ -168,6 +169,9 @@ public class DBLayer implements Serializable {
     public static final String DBITEM_DPL_ORDER_VARIABLES = DBItemDailyPlanVariable.class.getSimpleName();
     public static final String TABLE_DPL_ORDER_VARIABLES = "DPL_ORDER_VARIABLES";
     public static final String TABLE_DPL_ORDER_VARIABLES_SEQUENCE = "SEQ_DPL_ORDER_VARS";
+
+    public static final String DBITEM_DPL_PROJECTIONS = DBItemDailyPlanProjection.class.getSimpleName();
+    public static final String TABLE_DPL_PROJECTIONS = "DPL_PROJECTIONS";
 
     /** Inventory tables */
     public static final String DBITEM_INV_OPERATING_SYSTEMS = DBItemInventoryOperatingSystem.class.getSimpleName();
@@ -442,13 +446,14 @@ public class DBLayer implements Serializable {
         return cl;
     }
 
-    public static SOSClassList getOrderInitatorClassMapping() {
+    public static SOSClassList getDailyPlanClassMapping() {
         SOSClassList cl = new SOSClassList();
         cl.add(DBItemInventoryJSInstance.class);
         cl.add(DBItemDailyPlanSubmission.class);
         cl.add(DBItemDailyPlanOrder.class);
         cl.add(DBItemDailyPlanVariable.class);
         cl.add(DBItemDailyPlanHistory.class);
+        cl.add(DBItemDailyPlanProjection.class);
         return cl;
     }
 
@@ -505,7 +510,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemIamFido2Devices.class);
 
         cl.merge(getHistoryClassMapping().getClasses());
-        cl.merge(getOrderInitatorClassMapping().getClasses());
+        cl.merge(getDailyPlanClassMapping().getClasses());
         cl.merge(getMonitoringClassMapping().getClasses());
 
         cl.add(DBItemXmlEditorConfiguration.class);

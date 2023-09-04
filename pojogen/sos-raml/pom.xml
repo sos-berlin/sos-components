@@ -140,6 +140,7 @@
 								<exclude>security/*.json</exclude>
 								<exclude>agent/*.json</exclude>
 								<exclude>jobTemplate/**/*.json</exclude>
+								<exclude>dailyplan/projection/**/*.json</exclude>
 							</excludes>
 						</configuration>
 						<goals>
@@ -187,6 +188,7 @@
 								<include>agent/*.json</include>
 								<include>jobTemplate/**/*.json</include>
 								<include>inventory/configurationObject-schema.json</include>
+								<include>dailyplan/projection/**/*.json</include>
 							</includes>
 						</configuration>
 						<goals>
@@ -451,6 +453,10 @@
 	                		<replaceregexp flags="ig" byline="true" match="(HashMap)" replace="Linked\1" file="${project.build.directory}/java-gen/com/sos/inventory/model/common/Variables.java" preserveLastModified="true" />
 	                		<replaceregexp flags="ig" byline="true" match="(HashMap)" replace="Linked\1" file="${project.build.directory}/java-gen/com/sos/inventory/model/workflow/ListParameters.java" preserveLastModified="true" />
 	                		<replaceregexp flags="ig" byline="true" match="(HashMap)" replace="Linked\1" file="${project.build.directory}/java-gen/com/sos/sign/model/workflow/Jobs.java" preserveLastModified="true" />
+	                		
+	                		<replaceregexp flags="ig" byline="true" match="(HashMap)" replace="TreeMap" file="${project.build.directory}/java-gen/com/sos/joc/model/dailyplan//projection/items/YearItem.java" preserveLastModified="true" />
+	                		<replaceregexp flags="ig" byline="true" match="(HashMap)" replace="TreeMap" file="${project.build.directory}/java-gen/com/sos/joc/model/dailyplan//projection/items/MonthsItem.java" preserveLastModified="true" />
+	                		<replaceregexp flags="ig" byline="true" match="(HashMap)" replace="TreeMap" file="${project.build.directory}/java-gen/com/sos/joc/model/dailyplan//projection/items/MonthItem.java" preserveLastModified="true" />
 	                	</target>
 	                </configuration>
 	        	</execution>
