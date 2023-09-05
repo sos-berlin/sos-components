@@ -54,7 +54,6 @@ public class InfoJob extends Job<InfoJobArguments> {
         step.getLogger().info("                  means set 2 return variables: 1) myvar1=xyz 2)myvar2=123");
         step.getLogger().info("     \"%s\"='some value'", args.getStringArgument().getName());
         step.getLogger().info("     \"%s\"='some password'", args.getPassword().getName());
-        step.getLogger().info("     \"%s\"='entry1;entry2;entry3'", args.getList().getName());
         step.getLogger().info("     \"%s\"='...' any shell command, e.g. dir, ls ...", args.getShellCommand().getName());
 
         if (step.getLogger().isDebugEnabled()) {
@@ -126,6 +125,93 @@ public class InfoJob extends Job<InfoJobArguments> {
         step.getLogger().info("  file=" + csArgs.getFile());
         CredentialStoreResolver r = csArgs.newResolver();
         step.getLogger().info("  resolve cs://@title=" + r.resolve("cs://@title"));
+
+        step.getLogger().info("----------COLLECTION ARGUMENTS -----------------");
+        step.getLogger().info(args.getListBigDecimalValues().getName() + "=" + args.getListBigDecimalValues().getValue());
+        if (args.getListBigDecimalValues().getValue() != null) {
+            step.getLogger().info("  " + args.getListBigDecimalValues().getValue().getClass());
+            for (Object o : args.getListBigDecimalValues().getValue()) {
+                step.getLogger().info("    " + o + "(" + o.getClass() + ")");
+            }
+        }
+        step.getLogger().info(args.getListBooleanValues().getName() + "=" + args.getListBooleanValues().getValue());
+        if (args.getListBooleanValues().getValue() != null) {
+            step.getLogger().info("  " + args.getListBooleanValues().getValue().getClass());
+            for (Object o : args.getListBooleanValues().getValue()) {
+                step.getLogger().info("    " + o + "(" + o.getClass() + ")");
+            }
+        }
+        step.getLogger().info(args.getListCharsetValues().getName() + "=" + args.getListCharsetValues().getValue());
+        if (args.getListCharsetValues().getValue() != null) {
+            step.getLogger().info("  " + args.getListCharsetValues().getValue().getClass());
+            for (Object o : args.getListCharsetValues().getValue()) {
+                step.getLogger().info("    " + o + "(" + o.getClass() + ")");
+            }
+        }
+        step.getLogger().info(args.getListEnumValues().getName() + "=" + args.getListEnumValues().getValue());
+        if (args.getListEnumValues().getValue() != null) {
+            step.getLogger().info("  " + args.getListEnumValues().getValue().getClass());
+            for (Object o : args.getListEnumValues().getValue()) {
+                step.getLogger().info("    " + o + "(" + o.getClass() + ")");
+            }
+        }
+        step.getLogger().info(args.getListFileValues().getName() + "=" + args.getListFileValues().getValue());
+        if (args.getListFileValues().getValue() != null) {
+            step.getLogger().info("  " + args.getListFileValues().getValue().getClass());
+            for (Object o : args.getListFileValues().getValue()) {
+                step.getLogger().info("    " + o + "(" + o.getClass() + ")");
+            }
+        }
+        step.getLogger().info(args.getListIntegerValues().getName() + "=" + args.getListIntegerValues().getValue());
+        if (args.getListIntegerValues().getValue() != null) {
+            step.getLogger().info("  " + args.getListIntegerValues().getValue().getClass());
+            for (Object o : args.getListIntegerValues().getValue()) {
+                step.getLogger().info("    " + o + "(" + o.getClass() + ")");
+            }
+        }
+        step.getLogger().info(args.getListLongValues().getName() + "=" + args.getListLongValues().getValue());
+        if (args.getListLongValues().getValue() != null) {
+            step.getLogger().info("  " + args.getListLongValues().getValue().getClass());
+            for (Object o : args.getListLongValues().getValue()) {
+                step.getLogger().info("    " + o + "(" + o.getClass() + ")");
+            }
+        }
+        step.getLogger().info(args.getListPathValues().getName() + "=" + args.getListPathValues().getValue());
+        if (args.getListPathValues().getValue() != null) {
+            step.getLogger().info("  " + args.getListPathValues().getValue().getClass());
+            for (Object o : args.getListPathValues().getValue()) {
+                step.getLogger().info("    " + o + "(" + o.getClass() + ")");
+            }
+        }
+        step.getLogger().info(args.getListStringValues().getName() + "=" + args.getListStringValues().getValue());
+        if (args.getListStringValues().getValue() != null) {
+            step.getLogger().info("  " + args.getListStringValues().getValue().getClass());
+            for (Object o : args.getListStringValues().getValue()) {
+                step.getLogger().info("    " + o + "(" + o.getClass() + ")");
+            }
+        }
+        step.getLogger().info(args.getListUriValues().getName() + "=" + args.getListUriValues().getValue());
+        if (args.getListUriValues().getValue() != null) {
+            step.getLogger().info("  " + args.getListUriValues().getValue().getClass());
+            for (Object o : args.getListUriValues().getValue()) {
+                step.getLogger().info("    " + o + "(" + o.getClass() + ")");
+            }
+        }
+
+        step.getLogger().info(args.getSetIntegerValues().getName() + "=" + args.getSetIntegerValues().getValue());
+        if (args.getSetIntegerValues().getValue() != null) {
+            step.getLogger().info("  " + args.getSetIntegerValues().getValue().getClass());
+            for (Object o : args.getSetIntegerValues().getValue()) {
+                step.getLogger().info("    " + o + "(" + o.getClass() + ")");
+            }
+        }
+        step.getLogger().info(args.getSetStringValues().getName() + "=" + args.getSetStringValues().getValue());
+        if (args.getSetStringValues().getValue() != null) {
+            step.getLogger().info("  " + args.getSetStringValues().getValue().getClass());
+            for (Object o : args.getSetStringValues().getValue()) {
+                step.getLogger().info("    " + o + "(" + o.getClass() + ")");
+            }
+        }
 
         step.getLogger().info("----------RETURN-----------------");
         if (args.getRedefineShowEnv().getValue() || !args.getReturnVariables().isEmpty()) {

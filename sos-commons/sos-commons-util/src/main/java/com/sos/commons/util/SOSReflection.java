@@ -7,8 +7,10 @@ import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 
 public class SOSReflection {
@@ -127,6 +129,30 @@ public class SOSReflection {
             }
         }
         return true;
+    }
+
+    public static boolean isCollection(Type type) throws ClassNotFoundException {
+        return isCollection(Class.forName(normalizeClassForName(type.getTypeName())));
+    }
+
+    public static boolean isCollection(Class<?> cls) {
+        return Collection.class.isAssignableFrom(cls);
+    }
+
+    public static boolean isSet(Type type) throws ClassNotFoundException {
+        return isSet(Class.forName(normalizeClassForName(type.getTypeName())));
+    }
+
+    public static boolean isSet(Class<?> cls) {
+        return Set.class.isAssignableFrom(cls);
+    }
+
+    public static boolean isMap(Type type) throws ClassNotFoundException {
+        return isMap(Class.forName(normalizeClassForName(type.getTypeName())));
+    }
+
+    public static boolean isMap(Class<?> cls) {
+        return Map.class.isAssignableFrom(cls);
     }
 
     public static boolean isList(Type type) throws ClassNotFoundException {

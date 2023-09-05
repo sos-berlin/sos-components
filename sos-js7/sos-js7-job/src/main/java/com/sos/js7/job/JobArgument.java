@@ -15,7 +15,9 @@ import com.sos.js7.job.ValueSource.ValueSourceType;
  * - java.net.URI<br/>
  * - java.nio.charset.Charset<br/>
  * - java.nio.file.Path<br/>
- * - java.util.List&lt;java.lang.String | java.lang.Enum&gt;<br/>
+ * - java.io.File<br/>
+ * - java.util.List&lt;T&gt; (T - see supported types above, returns an ArrayList&lt;T&gt;)<br/>
+ * - java.util.Set&lt;T&gt; (T - see supported types above, returns a HashSet&lt;T&gt;)<br/>
  */
 public class JobArgument<T> extends SOSArgument<T> {
 
@@ -145,6 +147,13 @@ public class JobArgument<T> extends SOSArgument<T> {
         // }
         if (getPayload() != null) {
             sb.append(" class=").append(SOSArgumentHelper.getClassName(getPayload().toString()));
+        }
+        if (notAcceptedValue != null) {
+            sb.append("(value=").append(notAcceptedValue.getDisplayValue()).append(" ignored");
+            if (notAcceptedValue.exception != null) {
+                sb.append("(").append(notAcceptedValue.exception.toString()).append(")");
+            }
+            sb.append(")");
         }
         sb.append("]");
         return sb.toString();

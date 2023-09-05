@@ -12,9 +12,11 @@ import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -225,29 +227,8 @@ public class UnitTestJobHelper<A extends JobArguments> {
                     val = new File(val.toString());
                 } else if (type.equals(URI.class)) {
                     val = URI.create(val.toString());
-                } else if (SOSReflection.isList(type)) {
-                    boolean asStringList = true;
-                    String listVal = val.toString();
-                    try {
-                        Type subType = ((ParameterizedType) type).getActualTypeArguments()[0];
-                        if (subType.equals(String.class)) {
-                        } else if (SOSReflection.isEnum(subType)) {
-                            val = Stream.of(listVal.split(SOSArgumentHelper.LIST_VALUE_DELIMITER)).map(v -> {
-                                Object e = null;
-                                try {
-                                    e = SOSReflection.enumIgnoreCaseValueOf(subType.getTypeName(), v.trim());
-                                } catch (ClassNotFoundException ex) {
-                                    e = v.trim();
-                                }
-                                return e;
-                            }).collect(Collectors.toList());
-                            asStringList = false;
-                        }
-                    } catch (Throwable e) {
-                    }
-                    if (asStringList) {
-                        val = Stream.of(listVal.split(SOSArgumentHelper.LIST_VALUE_DELIMITER)).map(String::trim).collect(Collectors.toList());
-                    }
+                } else if (SOSReflection.isCollection(type)) {
+                    val = getCollectionValue(val, arg, type);
                 } else if (SOSReflection.isEnum(type)) {
                     Object v = SOSReflection.enumIgnoreCaseValueOf(type.getTypeName(), val.toString());
                     if (v == null) {
@@ -283,6 +264,147 @@ public class UnitTestJobHelper<A extends JobArguments> {
         } else if (val instanceof List) {
             setValueType(arg, field, val);
             val = (List<?>) val;
+        }
+        return val;
+    }
+
+    private Object getCollectionValue(Object val, JobArgument<A> arg, Type type) {
+        String listVal = val.toString();
+        Type subType = ((ParameterizedType) type).getActualTypeArguments()[0];
+
+        Function<? super String, ? extends Object> mapFunc = (v) -> {
+            return v.trim();
+        };
+
+        if (subType.equals(String.class)) {
+        } else if (subType.equals(Integer.class)) {
+            mapFunc = (v) -> {
+                try {
+                    return Integer.valueOf(v.trim());
+                } catch (Throwable e) {
+                    arg.setNotAcceptedValue(v + " of " + listVal, e);
+                    arg.getNotAcceptedValue().setSource(arg.getValueSource());
+                    arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
+                    return null;
+                }
+            };
+        } else if (subType.equals(Long.class)) {
+            mapFunc = (v) -> {
+                try {
+                    return Long.valueOf(v.trim());
+                } catch (Throwable e) {
+                    arg.setNotAcceptedValue(v + " of " + listVal, e);
+                    arg.getNotAcceptedValue().setSource(arg.getValueSource());
+                    arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
+                    return null;
+                }
+            };
+        } else if (subType.equals(BigDecimal.class)) {
+            mapFunc = (v) -> {
+                try {
+                    if (listVal.contains(".") || listVal.contains(",")) {
+                        return BigDecimal.valueOf(Double.valueOf(v.trim()));
+                    }
+                    return BigDecimal.valueOf(Long.valueOf(v.trim()));
+                } catch (Throwable e) {
+                    arg.setNotAcceptedValue(v + " of " + listVal, e);
+                    arg.getNotAcceptedValue().setSource(arg.getValueSource());
+                    arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
+                    return null;
+                }
+            };
+        } else if (subType.equals(Path.class)) {
+            mapFunc = (v) -> {
+                try {
+                    return Paths.get(v.trim());
+                } catch (Throwable e) {
+                    arg.setNotAcceptedValue(v + " of " + listVal, e);
+                    arg.getNotAcceptedValue().setSource(arg.getValueSource());
+                    arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
+                    return null;
+                }
+            };
+        } else if (subType.equals(File.class)) {
+            mapFunc = (v) -> {
+                try {
+                    return new File(v.trim());
+                } catch (Throwable e) {
+                    arg.setNotAcceptedValue(v + " of " + listVal, e);
+                    arg.getNotAcceptedValue().setSource(arg.getValueSource());
+                    arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
+                    return null;
+                }
+            };
+        } else if (subType.equals(URI.class)) {
+            mapFunc = (v) -> {
+                try {
+                    return URI.create(v.trim());
+                } catch (Throwable e) {
+                    arg.setNotAcceptedValue(v + " of " + listVal, e);
+                    arg.getNotAcceptedValue().setSource(arg.getValueSource());
+                    arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
+                    return null;
+                }
+            };
+        } else if (subType.equals(Charset.class)) {
+            mapFunc = (v) -> {
+                try {
+                    return Charset.forName(v.trim());
+                } catch (Throwable e) {
+                    arg.setNotAcceptedValue(v + " of " + listVal, e);
+                    arg.getNotAcceptedValue().setSource(arg.getValueSource());
+                    arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
+                    return null;
+                }
+            };
+        } else if (subType.equals(Boolean.class)) {
+            mapFunc = (v) -> {
+                try {
+                    return Boolean.valueOf(v.trim());
+                } catch (Throwable e) {
+                    arg.setNotAcceptedValue(v + " of " + listVal, e);
+                    arg.getNotAcceptedValue().setSource(arg.getValueSource());
+                    arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
+                    return null;
+                }
+            };
+        } else {
+            try {
+                if (SOSReflection.isEnum(subType)) {
+                    mapFunc = (v) -> {
+                        try {
+                            return SOSReflection.enumIgnoreCaseValueOf(subType.getTypeName(), v.trim());
+                        } catch (ClassNotFoundException e) {
+                            arg.setNotAcceptedValue(v + " of " + listVal, e);
+                            arg.getNotAcceptedValue().setSource(arg.getValueSource());
+                            arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
+                            return null;
+                        }
+                    };
+                }
+            } catch (ClassNotFoundException e) {
+                arg.setNotAcceptedValue(listVal, e);
+                arg.getNotAcceptedValue().setSource(arg.getValueSource());
+                arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
+
+                mapFunc = (v) -> {
+                    return null;
+                };
+            }
+        }
+
+        try {
+            Stream<? extends Object> stream = Stream.of(listVal.split(SOSArgumentHelper.LIST_VALUE_DELIMITER)).map(mapFunc).filter(Objects::nonNull);
+            if (SOSReflection.isSet(type)) {
+                val = stream.collect(Collectors.toSet());
+            } else {
+                val = stream.collect(Collectors.toList());
+            }
+        } catch (Throwable e) {
+            arg.setNotAcceptedValue(listVal, e);
+            arg.getNotAcceptedValue().setSource(arg.getValueSource());
+            arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
+            val = arg.getDefaultValue();
         }
         return val;
     }
