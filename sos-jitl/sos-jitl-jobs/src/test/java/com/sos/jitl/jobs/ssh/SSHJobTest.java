@@ -1,6 +1,8 @@
 package com.sos.jitl.jobs.ssh;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.Ignore;
@@ -8,6 +10,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.UnitTestJobHelper;
 
 import js7.data_for_java.order.JOutcome;
@@ -33,7 +36,25 @@ public class SSHJobTest {
         // creates a new thread for each new onOrderProcess call
         JOutcome.Completed result = h.processOrder(args);
         LOGGER.info("###############################################");
-        LOGGER.info(String.format("[RESULT]%s", result));
+        LOGGER.info(String.format("[RESULT] %s", result));
     }
 
+    @Ignore
+    @Test
+    public void testSSHJobIgnoreExitCodes() throws Exception {
+        Map<String, Object> args = new HashMap<>();
+        args.put("host", "galadriel");
+        args.put("user", "sos");
+        args.put("password", "sos");
+        args.put("auth_method", "password");
+        args.put("command", "exit 5");
+        args.put("exit_codes_to_ignore", "0;1;5");
+        // for unit tests only
+        UnitTestJobHelper<SSHJobArguments> h = new UnitTestJobHelper<>(new SSHJob());
+        // creates a new thread for each new onOrderProcess call
+        JOutcome.Completed result = h.processOrder(args);
+        LOGGER.info("###############################################");
+        LOGGER.info(String.format("[RESULT] %s", result));
+    }
+    
 }
