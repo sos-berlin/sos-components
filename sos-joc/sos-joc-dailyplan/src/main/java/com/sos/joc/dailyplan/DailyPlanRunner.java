@@ -105,6 +105,7 @@ public class DailyPlanRunner extends TimerTask {
     }
 
     // service
+    // TODO currently runs every 1? seconds -the extends TimerTask should be replaced with a schedule executer (see cleanup service)
     public void run() {
         if (createdPlans == null) {
             createdPlans = new HashSet<String>();
@@ -142,13 +143,16 @@ public class DailyPlanRunner extends TimerTask {
             return;
         }
 
-        lastActivityStart.set(new Date().getTime());
+        boolean createPlan = false;
         try {
             // TODO createdPlans static? because several instances ...
             if (!createdPlans.contains(date) && (manuelStart || (now.getTimeInMillis() - startCalendar.getTimeInMillis()) > 0)) {
                 startCalendar = null;
                 createdPlans.add(date);
                 try {
+                    createPlan = true;
+                    lastActivityStart.set(new Date().getTime());
+
                     settings.setSubmissionTime(new Date());
                     createPlan(settings.getStartMode(), settings.getControllers(), DailyPlanHelper.getNextDayCalendar());
                 } catch (ControllerConnectionResetException | ControllerConnectionRefusedException | ParseException | SOSException
@@ -168,12 +172,14 @@ public class DailyPlanRunner extends TimerTask {
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         } finally {
-            try {
-                recreateProjections(settings);
-            } catch (Throwable ex) {
-                LOGGER.error(ex.toString(), ex);
-            } finally {
-                lastActivityEnd.set(new Date().getTime());
+            if (createPlan) {
+                try {
+                    recreateProjections(settings);
+                } catch (Throwable ex) {
+                    LOGGER.error(ex.toString(), ex);
+                } finally {
+                    lastActivityEnd.set(new Date().getTime());
+                }
             }
         }
 

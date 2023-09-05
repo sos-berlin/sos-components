@@ -43,6 +43,7 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.DBMissingDataException;
+import com.sos.joc.model.dailyplan.projections.items.meta.ControllerInfoItem;
 import com.sos.joc.model.dailyplan.projections.items.meta.MetaItem;
 import com.sos.joc.model.dailyplan.projections.items.meta.ScheduleInfoItem;
 import com.sos.joc.model.dailyplan.projections.items.meta.WorkflowItem;
@@ -80,69 +81,14 @@ public class DailyPlanProjection {
         try {
             dbLayer = new DBLayerDailyPlanProjections(Globals.createSosHibernateStatelessConnection(IDENTIFIER));
 
-            boolean autoCommit = dbLayer.getSession().getFactory().getAutoCommit();
-            try {
-                LOGGER.info(logPrefix + "cleanup");
-                dbLayer.getSession().setAutoCommit(false);
-                dbLayer.beginTransaction();
-                dbLayer.cleanup();
-                dbLayer.commit();
-            } catch (Throwable e) {
-                dbLayer.rollback();
-                throw e;
-            } finally {
-                dbLayer.getSession().setAutoCommit(autoCommit);
-            }
+            // 1- delete all entries
+            cleanup(dbLayer, logPrefix);
 
+            // 2- evaluate already planned daily plan entries
             PlannedResult pr = planned(dbLayer, logPrefix);
 
-            List<DBBeanReleasedSchedule2DeployedWorkflow> schedule2workflow = new DBLayerSchedules(dbLayer.getSession())
-                    .getReleasedSchedule2DeployedWorkflows(null, null);
-
-            if (schedule2workflow.size() > 0) {
-                DBLayerDailyPlannedOrders dbLayerPlannedOrders = new DBLayerDailyPlannedOrders(dbLayer.getSession());
-                Collection<DailyPlanSchedule> dailyPlanSchedules = convert(dbLayerPlannedOrders, schedule2workflow, onlyPlanOrderAutomatically, pr);
-
-                if (dailyPlanSchedules.size() > 0) {
-                    insertMeta(dbLayer, dailyPlanSchedules, pr);// TODO insertMeta after
-
-                    java.util.Calendar now = DailyPlanHelper.getCalendar(null, UTC);
-                    java.util.Calendar to = DailyPlanHelper.getCalendar(null, UTC);
-                    to.add(java.util.Calendar.MONTH, settings.getProjectionsMonthsAhead());
-                    int yearFrom = now.get(java.util.Calendar.YEAR);
-                    int yearTo = to.get(java.util.Calendar.YEAR);
-
-                    for (int i = yearFrom; i <= yearTo; i++) {
-                        YearsItem plannedYearItem = null;
-                        String dateFrom = i + "-01-01";
-                        String dateTo = i + "-12-31";
-                        java.util.Calendar reallyDayFrom = null;
-                        if (i == yearFrom) {
-                            if (pr.lastDate == null) {
-                                reallyDayFrom = now;
-                            } else {
-                                reallyDayFrom = pr.getNextDateAfterLastDate();
-                            }
-                            plannedYearItem = pr.year;
-                            dateFrom = getFirstDayOfMonth(reallyDayFrom); // <year>-<moth>-01 for day of month etc calculation
-                        }
-
-                        // if (!settings.isProjectionsAheadConfiguredAsYears() && i == yearTo) {
-                        // dateTo = getLastDayOfMonthCalendar(to);
-                        // }
-
-                        if (i == yearTo) {
-                            dateTo = getLastDayOfMonthCalendar(to);
-                        }
-
-                        String logDateFrom = reallyDayFrom == null ? dateFrom : dateFormatter.format(reallyDayFrom.toInstant());
-                        LOGGER.info(String.format("%s[projection]creating from %s to %s", logPrefix, logDateFrom, dateTo));
-
-                        dbLayer.insert(i, yearProjection(settings, dbLayer, dailyPlanSchedules, String.valueOf(i), dateFrom, dateTo, reallyDayFrom,
-                                plannedYearItem));
-                    }
-                }
-            }
+            // 3 - evaluate projection after the last planned daily plan entry
+            projection(settings, dbLayer, pr, logPrefix);
 
             dbLayer.close();
             dbLayer = null;
@@ -153,24 +99,102 @@ public class DailyPlanProjection {
         }
     }
 
+    private void cleanup(DBLayerDailyPlanProjections dbLayer, String logPrefix) throws Exception {
+        boolean autoCommit = dbLayer.getSession().getFactory().getAutoCommit();
+        try {
+            LOGGER.info(logPrefix + "cleanup");
+            dbLayer.getSession().setAutoCommit(false);
+            dbLayer.beginTransaction();
+            dbLayer.cleanup();
+            dbLayer.commit();
+        } catch (Throwable e) {
+            dbLayer.rollback();
+            throw e;
+        } finally {
+            dbLayer.getSession().setAutoCommit(autoCommit);
+        }
+    }
+
+    private void projection(DailyPlanSettings settings, DBLayerDailyPlanProjections dbLayer, PlannedResult pr, String logPrefix) throws Exception {
+        List<DBBeanReleasedSchedule2DeployedWorkflow> schedule2workflow = new DBLayerSchedules(dbLayer.getSession())
+                .getReleasedSchedule2DeployedWorkflows(null, null);
+
+        if (schedule2workflow.size() > 0) {
+            DBLayerDailyPlannedOrders dbLayerPlannedOrders = new DBLayerDailyPlannedOrders(dbLayer.getSession());
+            Collection<DailyPlanSchedule> dailyPlanSchedules = convert(dbLayerPlannedOrders, schedule2workflow, onlyPlanOrderAutomatically, pr);
+
+            if (dailyPlanSchedules.size() > 0) {
+                insertMeta(dbLayer, dailyPlanSchedules, pr);// TODO insertMeta after
+
+                java.util.Calendar now = DailyPlanHelper.getCalendar(null, UTC);
+                java.util.Calendar to = DailyPlanHelper.getCalendar(null, UTC);
+                to.add(java.util.Calendar.MONTH, settings.getProjectionsMonthsAhead());
+                int yearFrom = now.get(java.util.Calendar.YEAR);
+                int yearTo = to.get(java.util.Calendar.YEAR);
+
+                for (int i = yearFrom; i <= yearTo; i++) {
+                    YearsItem plannedYearItem = null;
+                    String dateFrom = i + "-01-01";
+                    String dateTo = i + "-12-31";
+                    java.util.Calendar reallyDayFrom = null;
+                    if (i == yearFrom) {
+                        if (pr.lastDate == null) {
+                            reallyDayFrom = now;
+                        } else {
+                            reallyDayFrom = pr.getNextDateAfterLastDate();
+                        }
+                        plannedYearItem = pr.year;
+                        dateFrom = getFirstDayOfMonth(reallyDayFrom); // <year>-<moth>-01 for day of month etc calculation
+                    }
+
+                    // if (!settings.isProjectionsAheadConfiguredAsYears() && i == yearTo) {
+                    // dateTo = getLastDayOfMonthCalendar(to);
+                    // }
+
+                    if (i == yearTo) {
+                        dateTo = getLastDayOfMonthCalendar(to);
+                    }
+
+                    String logDateFrom = reallyDayFrom == null ? dateFrom : dateFormatter.format(reallyDayFrom.toInstant());
+                    LOGGER.info(String.format("%s[projection]creating from %s to %s", logPrefix, logDateFrom, dateTo));
+
+                    dbLayer.insert(i, yearProjection(settings, dbLayer, dailyPlanSchedules, String.valueOf(i), dateFrom, dateTo, reallyDayFrom,
+                            plannedYearItem));
+                }
+            }
+        }
+    }
+
     private void insertMeta(DBLayerDailyPlanProjections dbLayer, Collection<DailyPlanSchedule> dailyPlanSchedules, PlannedResult pr)
             throws Exception {
         MetaItem mi = pr != null && pr.meta != null ? pr.meta : new MetaItem();
 
         for (DailyPlanSchedule s : dailyPlanSchedules) {
-            ScheduleInfoItem sii = mi.getAdditionalProperties().get(s.getSchedule().getPath());
-            if (sii == null) {
-                sii = new ScheduleInfoItem();
-                sii.setOrders(getOrders(s));
-                mi.getAdditionalProperties().put(s.getSchedule().getPath(), sii);
-            }
-            for (DailyPlanScheduleWorkflow w : s.getWorkflows()) {
-                WorkflowItem wi = sii.getAdditionalProperties().get(w.getPath());
-                if (wi == null) {
-                    wi = new WorkflowItem();
-                    sii.getAdditionalProperties().put(w.getPath(), wi);
+            Map<String, List<DailyPlanScheduleWorkflow>> perController = s.getWorkflows().stream().collect(Collectors.groupingBy(w -> w
+                    .getControllerId()));
+
+            for (Map.Entry<String, List<DailyPlanScheduleWorkflow>> c : perController.entrySet()) {
+                ControllerInfoItem cii = mi.getAdditionalProperties().get(c.getKey());
+                if (cii == null) {
+                    cii = new ControllerInfoItem();
+                    mi.getAdditionalProperties().put(c.getKey(), cii);
                 }
-                wi.setAvg(w.getAvg());
+
+                ScheduleInfoItem sii = cii.getAdditionalProperties().get(s.getSchedule().getPath());
+                if (sii == null) {
+                    sii = new ScheduleInfoItem();
+                    sii.setOrders(getOrders(s));
+                    cii.getAdditionalProperties().put(s.getSchedule().getPath(), sii);
+                }
+
+                for (DailyPlanScheduleWorkflow w : s.getWorkflows()) {
+                    WorkflowItem wi = sii.getAdditionalProperties().get(w.getPath());
+                    if (wi == null) {
+                        wi = new WorkflowItem();
+                        sii.getAdditionalProperties().put(w.getPath(), wi);
+                    }
+                    wi.setAvg(w.getAvg());
+                }
             }
         }
         dbLayer.insertMeta(mi);
@@ -410,13 +434,15 @@ public class DailyPlanProjection {
         if (result == null) {
             boolean checkDb = true;
             if (pr != null && pr.meta != null) {
-                // TODO check controllerId ???
-                ScheduleInfoItem sii = pr.meta.getAdditionalProperties().get(schedule.getPath());
-                if (sii != null) {
-                    WorkflowItem wi = sii.getAdditionalProperties().get(w.getPath());
-                    if (wi != null) {
-                        result = wi.getAvg();// can be null
-                        checkDb = false;
+                ControllerInfoItem cii = pr.meta.getAdditionalProperties().get(w.getControllerId());
+                if (cii != null) {
+                    ScheduleInfoItem sii = cii.getAdditionalProperties().get(w.getControllerId());
+                    if (sii != null) {
+                        WorkflowItem wi = sii.getAdditionalProperties().get(w.getPath());
+                        if (wi != null) {
+                            result = wi.getAvg();// can be null
+                            checkDb = false;
+                        }
                     }
                 }
             }

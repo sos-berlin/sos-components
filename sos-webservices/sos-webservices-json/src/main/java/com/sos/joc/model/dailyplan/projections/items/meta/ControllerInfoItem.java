@@ -23,18 +23,18 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
 
 })
-public class MetaItem {
+public class ControllerInfoItem {
 
     @JsonIgnore
-    private Map<String, ControllerInfoItem> additionalProperties = new HashMap<String, ControllerInfoItem>();
+    private Map<String, ScheduleInfoItem> additionalProperties = new HashMap<String, ScheduleInfoItem>();
 
     @JsonAnyGetter
-    public Map<String, ControllerInfoItem> getAdditionalProperties() {
+    public Map<String, ScheduleInfoItem> getAdditionalProperties() {
         return this.additionalProperties;
     }
 
     @JsonAnySetter
-    public void setAdditionalProperty(String name, ControllerInfoItem value) {
+    public void setAdditionalProperty(String name, ScheduleInfoItem value) {
         this.additionalProperties.put(name, value);
     }
 
@@ -53,10 +53,10 @@ public class MetaItem {
         if (other == this) {
             return true;
         }
-        if ((other instanceof MetaItem) == false) {
+        if ((other instanceof ControllerInfoItem) == false) {
             return false;
         }
-        MetaItem rhs = ((MetaItem) other);
+        ControllerInfoItem rhs = ((ControllerInfoItem) other);
         return new EqualsBuilder().append(additionalProperties, rhs.additionalProperties).isEquals();
     }
 
