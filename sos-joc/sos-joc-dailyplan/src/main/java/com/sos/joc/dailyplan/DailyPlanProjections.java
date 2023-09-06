@@ -131,6 +131,8 @@ public class DailyPlanProjections {
                 mi = new MetaItem();
                 yi = new YearsItem();
 
+                Map<String, Set<String>> scheduleOrders = new HashMap<>();
+
                 for (DBItemDailyPlanSubmission s : l) {
                     // database- ordered by submissionFordate, otherwise order with java ...
                     result.lastDate = s.getSubmissionForDate();
@@ -151,7 +153,7 @@ public class DailyPlanProjections {
                                     cyclic.add(cyclicMainPart);
                                 }
 
-                                setPlannedMeta(mi, item);
+                                setPlannedMeta(mi, item, scheduleOrders);
                                 setPlannedYears(yi, item);
                             }
                         }
@@ -172,7 +174,7 @@ public class DailyPlanProjections {
         return result;
     }
 
-    private void setPlannedMeta(MetaItem mi, DBItemDailyPlanOrder item) {
+    private void setPlannedMeta(MetaItem mi, DBItemDailyPlanOrder item, Map<String, Set<String>> scheduleOrders) {
         ControllerInfoItem cii = mi.getAdditionalProperties().get(item.getControllerId());
         if (cii == null) {
             cii = new ControllerInfoItem();
@@ -182,16 +184,28 @@ public class DailyPlanProjections {
         ScheduleInfoItem sii = cii.getAdditionalProperties().get(item.getSchedulePath());
         if (sii == null) {
             sii = new ScheduleInfoItem();
-            sii.setOrders(Long.valueOf(1));
             cii.getAdditionalProperties().put(item.getSchedulePath(), sii);
-        } else {
-            sii.setOrders(sii.getOrders() + Long.valueOf(1));
         }
+
+        // orders count - is overwritten by projections, but the calculation should still be performed(if a "planned" scheduler was removed and is no longer
+        // available for projections)
+        String soKey = item.getOrderName() + "DELIMITER" + item.getWorkflowName();
+        Set<String> so = scheduleOrders.get(item.getScheduleName());
+        if (so == null) {
+            so = new HashSet<>();
+        }
+        if (!so.contains(soKey)) {
+            so.add(soKey);
+        }
+        sii.setOrders(Long.valueOf(so.size()));
+        scheduleOrders.put(item.getScheduleName(), so);
+
         WorkflowItem wi = sii.getAdditionalProperties().get(item.getWorkflowPath());
         if (wi == null) {
             wi = new WorkflowItem();
             sii.getAdditionalProperties().put(item.getWorkflowPath(), wi);
         }
+        // overwrites with the latest avg
         if (item.getExpectedEnd() != null && item.getPlannedStart() != null) {
             // in seconds
             wi.setAvg((item.getExpectedEnd().getTime() - item.getPlannedStart().getTime()) / 1_000);
@@ -256,7 +270,7 @@ public class DailyPlanProjections {
                 dbLayer.insertMeta(getMeta(dailyPlanSchedules, dpr));
 
                 // current implementation - calculates "from/to" from the current date
-                // alternative (not implemented) - calculates "from/to" from the last planned date (dpr.lastDate)
+                // alternative (not implemented) - calculates "from/to" from the last planned date (dpr.lastDate) if set
                 java.util.Calendar from = DailyPlanHelper.getUTCCalendarNow();
                 java.util.Calendar to = DailyPlanHelper.add2Clone(from, java.util.Calendar.MONTH, settings.getProjectionsMonthsAhead());
 
@@ -319,9 +333,9 @@ public class DailyPlanProjections {
                 ScheduleInfoItem sii = cii.getAdditionalProperties().get(s.getSchedule().getPath());
                 if (sii == null) {
                     sii = new ScheduleInfoItem();
-                    sii.setOrders(getOrders(s));
                     cii.getAdditionalProperties().put(s.getSchedule().getPath(), sii);
                 }
+                sii.setOrders(getOrders(s));// overwrite orders (previously set by planned)
 
                 for (DailyPlanScheduleWorkflow w : s.getWorkflows()) {
                     WorkflowItem wi = sii.getAdditionalProperties().get(w.getPath());
@@ -580,5 +594,4 @@ public class DailyPlanProjections {
         private Date lastDate;
 
     }
-
 }

@@ -13,7 +13,7 @@ public class ConfigurationGlobalsDailyPlan extends AConfigurationSection {
     private ConfigurationEntry daysAheadPlan = new ConfigurationEntry("days_ahead_plan", "7", GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
     private ConfigurationEntry daysAheadSubmit = new ConfigurationEntry("days_ahead_submit", "3", GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
 
-    // 6 months, 6 month, 6m
+    // 6 months, 6 month, 6 m
     // 2 years, 2 year, 2 y - see com.sos.joc.dailyplan.common.DailyPlanSettings.setProjectionsMonthsAhead
     private ConfigurationEntry projectionsAhead = new ConfigurationEntry("projections_ahead", "6 months", GlobalSettingsSectionValueType.STRING);
 
