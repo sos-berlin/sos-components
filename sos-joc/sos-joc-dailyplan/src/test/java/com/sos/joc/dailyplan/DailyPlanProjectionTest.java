@@ -8,13 +8,14 @@ import org.junit.Test;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
+import com.sos.joc.dailyplan.common.DailyPlanHelper;
 import com.sos.joc.dailyplan.common.DailyPlanSettings;
 
 public class DailyPlanProjectionTest {
 
     @BeforeClass
     public static void setup() {
-        TimeZone.setDefault(TimeZone.getTimeZone("Etc/UTC"));
+        TimeZone.setDefault(TimeZone.getTimeZone(DailyPlanHelper.UTC));
     }
 
     @Ignore
@@ -25,9 +26,21 @@ public class DailyPlanProjectionTest {
         try {
             DailyPlanSettings s = new DailyPlanSettings();
             s.setTimeZone("Europa/Berlin");
-            s.setProjectionsMonthsAhead("2years");
+            // currently supported:
+            // 1) in months:
+            // <n> <- months
+            // <n> month
+            // <n> month
+            // <n> m
+            // 2) in years:
+            // <n> years
+            // <n> year
+            // <n> y
 
-            DailyPlanProjection p = new DailyPlanProjection();
+            // years will be converted to months...
+            s.setProjectionsMonthsAhead("2 years");
+
+            DailyPlanProjections p = new DailyPlanProjections();
             p.process(s);
 
         } catch (Throwable e) {

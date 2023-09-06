@@ -109,6 +109,13 @@ public class SOSDate {
         return getTimeAsString(date, null);
     }
 
+    public static String getTimeAsString(Long seconds) throws SOSInvalidDataException {
+        long HH = seconds / 3600;
+        long MM = (seconds % 3600) / 60;
+        long SS = seconds % 60;
+        return String.format("%02d:%02d:%02d", HH, MM, SS);
+    }
+
     public static String getTimeAsString(Date date, TimeZone timeZone) throws SOSInvalidDataException {
         return format(date, SOSDate.TIME_FORMAT, timeZone);
     }

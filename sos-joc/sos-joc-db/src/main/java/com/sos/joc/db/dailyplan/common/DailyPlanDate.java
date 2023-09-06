@@ -10,6 +10,9 @@ import org.slf4j.LoggerFactory;
 public class DailyPlanDate {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanDate.class);
+
+    public static final String PERIOD_DEFAULT_DATE = "2000-01-01";
+
     private final String conClassName = "DailyScheduleDate";
     private String dateFormat = "yyyy-MM-dd HH:mm:ss";
     private String dateFormatOnlyDay = "yyyy-MM-dd";
@@ -68,7 +71,7 @@ public class DailyPlanDate {
     public void setPeriod(Date start, String schedule) throws ParseException {
         SimpleDateFormat formatter = new SimpleDateFormat(dateFormatOnlyDay);
         formatter = new SimpleDateFormat(dateFormat);
-        schedule = "2000-01-01" + " " + schedule;
+        schedule = PERIOD_DEFAULT_DATE + " " + schedule;
         if ("now".equals(schedule)) {
             this.schedule = new Date();
         } else {

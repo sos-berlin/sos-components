@@ -5,13 +5,16 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.hibernate.ScrollableResults;
 import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanProjection;
+import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
 import com.sos.joc.model.dailyplan.projections.items.meta.MetaItem;
 import com.sos.joc.model.dailyplan.projections.items.year.YearsItem;
 
@@ -68,8 +71,27 @@ public class DBLayerDailyPlanProjections extends DBLayer {
         if (ids != null) {
             query.setParameterList("ids", ids);
         }
+        return getSession().getResultList(query);
+    }
+
+    public List<DBItemDailyPlanSubmission> getSubmissions(Date dateFrom) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBITEM_DPL_SUBMISSIONS).append(" ");
+        hql.append("where submissionForDate >= :dateFrom ");
+        hql.append("order by submissionForDate");
+
+        Query<DBItemDailyPlanSubmission> query = getSession().createQuery(hql.toString());
+        query.setParameter("dateFrom", dateFrom);
 
         return getSession().getResultList(query);
+    }
+
+    public ScrollableResults getDailyPlanOrdersBySubmission(Long submissionHistoryId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
+        hql.append("where submissionHistoryId=:submissionHistoryId ");
+
+        Query<DBItemDailyPlanOrder> query = getSession().createQuery(hql.toString());
+        query.setParameter("submissionHistoryId", submissionHistoryId);
+        return getSession().scroll(query);
     }
 
 }

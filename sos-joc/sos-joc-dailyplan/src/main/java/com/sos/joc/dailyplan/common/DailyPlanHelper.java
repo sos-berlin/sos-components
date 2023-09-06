@@ -34,6 +34,7 @@ import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.calendar.FrequencyResolver;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
+import com.sos.joc.db.dailyplan.common.DailyPlanDate;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -41,9 +42,10 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 public class DailyPlanHelper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanHelper.class);
-    private static final String UTC = "UTC";
 
-    private static DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE.withZone(ZoneOffset.UTC);
+    public static final String UTC = "Etc/UTC";
+
+    public static DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE.withZone(ZoneOffset.UTC);
 
     public static Date getDailyPlanDateAsDate(Long startTime) {
         java.util.Calendar calendar = java.util.Calendar.getInstance(TimeZone.getTimeZone(UTC));
@@ -72,14 +74,77 @@ public class DailyPlanHelper {
         return li > -1 ? path.substring(li + 1) : path;
     }
 
-    public static java.util.Calendar getCalendar(String time, String timeZoneName) {
+    public static java.util.Calendar getUTCCalendarNow() {
+        return getCalendar(null, UTC);
+    }
 
+    public static java.util.Calendar getNextDateUTCCalendar(Date date) {
+        if (date == null) {
+            return null;
+        }
+        java.util.Calendar cal = java.util.Calendar.getInstance(TimeZone.getTimeZone(UTC));
+        cal.setTime(date);
+        cal.add(java.util.Calendar.DAY_OF_MONTH, 1);
+        return cal;
+    }
+
+    public static String getDate(java.util.Calendar cal) {
+        if (cal == null) {
+            return null;
+        }
+        return DATE_FORMATTER.format(cal.toInstant());
+    }
+
+    public static String getFirstDateOfMonth(java.util.Calendar cal) {
+        java.util.Calendar clone = clone(cal);
+        clone.set(java.util.Calendar.DAY_OF_MONTH, 1);
+        return DATE_FORMATTER.format(clone.toInstant());
+    }
+
+    public static String getLastDateOfMonth(java.util.Calendar cal) {
+        java.util.Calendar clone = clone(cal);
+        clone.set(java.util.Calendar.DATE, clone.getActualMaximum(java.util.Calendar.DATE));
+        // copy.set(java.util.Calendar.YEAR, year);
+        return DATE_FORMATTER.format(clone.toInstant());
+    }
+
+    public static java.util.Calendar clone(java.util.Calendar cal) {
+        if (cal == null) {
+            return null;
+        }
+        return (java.util.Calendar) cal.clone();
+    }
+
+    public static int getYear(java.util.Calendar cal) {
+        if (cal == null) {
+            return 0;
+        }
+        return cal.get(java.util.Calendar.YEAR);
+    }
+
+    public static java.util.Calendar getFirstDayOfYearCalendar(java.util.Calendar cal, int year) {
+        if (cal == null) {
+            return null;
+        }
+        cal.set(java.util.Calendar.YEAR, year);
+        cal.set(java.util.Calendar.MONTH, 0);
+        cal.set(java.util.Calendar.DAY_OF_MONTH, 1);
+        return cal;
+    }
+
+    public static java.util.Calendar add2Clone(java.util.Calendar cal, int field, int amount) {
+        java.util.Calendar clone = clone(cal);
+        if (clone == null) {
+            return null;
+        }
+        clone.add(field, amount);
+        return clone;
+    }
+
+    public static java.util.Calendar getCalendar(String time, String timeZoneName) {
         if (time == null) {
             time = "00:00";
         }
-
-        // SOSClassUtil.printStackTrace(true, LOGGER);
-        // LOGGER.debug("Timezone is " + timeZoneName);
         TimeZone timeZone = TimeZone.getTimeZone(timeZoneName);
         java.util.Calendar calendar = java.util.Calendar.getInstance(timeZone);
 
@@ -118,7 +183,6 @@ public class DailyPlanHelper {
         calendar.set(java.util.Calendar.SECOND, seconds);
         calendar.set(java.util.Calendar.MILLISECOND, 0);
         calendar.getTimeInMillis();
-
         return calendar;
     }
 
@@ -393,6 +457,15 @@ public class DailyPlanHelper {
             }
         }
         return result;
+    }
+
+    public static String toZonedUTCDateTime(String dateTime) {
+        return dateTime.replace(' ', 'T') + "Z";
+    }
+
+    public static String toZonedUTCDateTimeCyclicPeriod(String date, Date datePart) throws SOSInvalidDataException {
+        String d = SOSDate.getDateTimeAsString(datePart);
+        return toZonedUTCDateTime(d.replaceAll(DailyPlanDate.PERIOD_DEFAULT_DATE, date));
     }
 
     public static String toString(Period p) {
