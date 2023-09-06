@@ -257,10 +257,17 @@ public class UnitTestJobHelper<A extends JobArguments> {
                 val = Long.valueOf(((BigDecimal) val).longValue());
             } else if (type.equals(String.class)) {
                 val = val.toString();
+            } else if (SOSReflection.isCollection(type)) {
+                val = getCollectionValue(val, arg, type);
             }
         } else if (val instanceof Boolean) {
             setValueType(arg, field, val);
-            val = Boolean.valueOf(val.toString());
+            Type type = arg.getClazzType();
+            if (type.equals(Boolean.class)) {
+                val = Boolean.valueOf(val.toString());
+            } else if (SOSReflection.isCollection(type)) {
+                val = getCollectionValue(val, arg, type);
+            }
         } else if (val instanceof List) {
             setValueType(arg, field, val);
             val = (List<?>) val;
