@@ -154,12 +154,16 @@ public class DailyPlanSettings {
 
             int months = 0;
             if (!SOSString.isEmpty(val)) {
-                String v = val.toLowerCase().trim().replaceAll("months", "").replaceAll("month", "").replaceAll("m", "");
-                if (v.endsWith("years") || v.endsWith("year") || v.endsWith("y")) {
-                    months = 12 * Integer.parseInt(v.substring(0, v.indexOf("y")).trim());
-                    projectionsAheadConfiguredAsYears = true;
+                String v = val.toLowerCase().trim();
+                int indx = v.indexOf("m");
+                if (indx > 0) {
+                    months = Integer.parseInt(v.substring(0, v.indexOf("m")).trim());
                 } else {
-                    months = Integer.parseInt(v.trim());
+                    indx = v.indexOf("y");
+                    if (indx > 0) {
+                        months = 12 * Integer.parseInt(v.substring(0, v.indexOf("y")).trim());
+                        projectionsAheadConfiguredAsYears = true;
+                    }
                 }
             }
             projectionsMonthsAhead = months;

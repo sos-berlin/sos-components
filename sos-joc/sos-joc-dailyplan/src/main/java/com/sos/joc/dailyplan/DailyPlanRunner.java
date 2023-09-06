@@ -184,10 +184,10 @@ public class DailyPlanRunner extends TimerTask {
     }
 
     public static void recreateProjections(DailyPlanSettings settings) throws Exception {
-        LOGGER.info(String.format("[%s][recreateProjections]creating for %s months", settings.getStartMode(), settings.getProjectionsMonthsAhead()));
+        LOGGER.info(String.format("[%s][recreateProjections]creating for %s months ahead", settings.getStartMode(), settings
+                .getProjectionsMonthsAhead()));
 
-        DailyPlanProjection p = new DailyPlanProjection();
-        p.process(settings);
+        new DailyPlanProjections().process(settings);
     }
 
     /* service */

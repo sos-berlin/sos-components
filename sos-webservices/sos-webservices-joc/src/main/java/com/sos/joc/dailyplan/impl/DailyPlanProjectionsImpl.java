@@ -33,8 +33,8 @@ public class DailyPlanProjectionsImpl extends JOCResourceImpl implements IDailyP
         SOSHibernateSession session = null;
         try {
             initLogging(IMPL_PATH, filterBytes, accessToken);
+            // TODO use own filter instead of ScheduleDatesFilter
             JsonValidator.validate(filterBytes, ScheduleDatesFilter.class);
-            ScheduleDatesFilter in = Globals.objectMapper.readValue(filterBytes, ScheduleDatesFilter.class);
 
             JocPermissions perms = getJocPermissions(accessToken);
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, perms.getCalendars().getView() || perms.getDailyPlan().getView());
@@ -42,33 +42,39 @@ public class DailyPlanProjectionsImpl extends JOCResourceImpl implements IDailyP
                 return jocDefaultResponse;
             }
 
+            // TODO read from filter ...
+            List<Long> years = null;
+
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             DBLayerDailyPlanProjections dbLayer = new DBLayerDailyPlanProjections(session);
-            List<DBItemDailyPlanProjection> items = dbLayer.getProjections(null);
+            List<DBItemDailyPlanProjection> items = dbLayer.getProjections(years);
             dbLayer.close();
             session = null;
 
-            MetaItem meta = null;
-            YearsItem years = new YearsItem();
+            MetaItem metaItem = null;
+            YearsItem yearsItem = new YearsItem();
             for (DBItemDailyPlanProjection item : items) {
                 if (item.isMeta()) {
-                    meta = Globals.objectMapper.readValue(item.getContent(), MetaItem.class);
+                    metaItem = Globals.objectMapper.readValue(item.getContent(), MetaItem.class);
                 } else {
                     String year = String.valueOf(item.getId());
 
                     YearsItem yi = Globals.objectMapper.readValue(item.getContent(), YearsItem.class);
-                    years.setAdditionalProperty(year, yi.getAdditionalProperties().get(year));
+                    yearsItem.setAdditionalProperty(year, yi.getAdditionalProperties().get(year));
                 }
             }
 
-            // TODO filter - year, month, date
-            // TODO reduce response e.g. for - year - without meta and schedule informations - e.g. only months and dates
+            // TODO filter - year, month, date, controllerId
+            // TODO reduce response:
+            // - e.g. for an year view - without meta and schedule/workflows informations - e.g. only months and dates
+            // - e.g. for a day view - provide infos(meta + schedule/workflows) for the selected day only
+            // -..
             // TODO check folder permissions for meta and year
 
             ProjectionsResponse entity = new ProjectionsResponse();
             entity.setDeliveryDate(Date.from(Instant.now()));
-            entity.setMeta(meta);
-            entity.setYears(years);
+            entity.setMeta(metaItem);
+            entity.setYears(yearsItem);
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
