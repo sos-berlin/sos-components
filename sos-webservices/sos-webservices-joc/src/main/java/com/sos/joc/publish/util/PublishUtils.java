@@ -1766,7 +1766,7 @@ public abstract class PublishUtils {
     }
 
     private static void updatePath(DBItemDeploymentHistory deployed) {
-        try {
+//        try {
             if (deployed.getType() == DeployType.WORKFLOW.intValue()) {
                 ((Workflow) deployed.readUpdateableContent()).setPath(Paths.get(deployed.getPath()).getFileName().toString());
             } else if (deployed.getType() == DeployType.JOBRESOURCE.intValue()) {
@@ -1780,8 +1780,8 @@ public abstract class PublishUtils {
             } else if (deployed.getType() == DeployType.JOBCLASS.intValue()) {
                 ((JobClass) deployed.readUpdateableContent()).setPath(deployed.getName());
             }
-            deployed.setContent(JsonSerializer.serializeAsString(deployed.readUpdateableContent()));
-        } catch (JsonProcessingException e) {
-        }
+            //deployed.setContent(JsonSerializer.serializeAsString(deployed.readUpdateableContent()));
+//        } catch (JsonProcessingException e) {
+//        }
     }
 }

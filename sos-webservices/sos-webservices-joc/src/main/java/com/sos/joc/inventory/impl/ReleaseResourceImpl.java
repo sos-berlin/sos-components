@@ -30,7 +30,10 @@ import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.jobtemplate.JobTemplate;
+import com.sos.inventory.model.schedule.OrderParameterisation;
 import com.sos.inventory.model.schedule.Schedule;
+import com.sos.inventory.model.workflow.ListParameter;
+import com.sos.inventory.model.workflow.ParameterType;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
@@ -40,6 +43,8 @@ import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonSerializer;
+import com.sos.joc.classes.inventory.Validator;
+import com.sos.joc.classes.inventory.WorkflowConverter;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.dailyplan.impl.DailyPlanCancelOrderImpl;
 import com.sos.joc.dailyplan.impl.DailyPlanDeleteOrdersImpl;
@@ -385,14 +390,65 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                             if (wj == null) {
                                 throw new Exception(workflowMsg + " couldn't find workflow deployment");
                             }
-                            w = Globals.objectMapper.readValue(wj, Workflow.class);
+                            w = WorkflowConverter.convertInventoryWorkflow(wj);
+                            cachedWorkflows.put(name, w);
+                        }
+                        // find required param in orderPreparation
+                        if (Validator.orderPreparationHasRequiredParameters(w.getOrderPreparation())) {
+                            throw new Exception(workflowMsg + "release of multiple workflows with required order variables are not allowed");
+                        }
+                    } catch (Throwable e) {
+                        errors.add(new BulkError(LOGGER).get(new JocReleaseException(ConfigurationType.SCHEDULE, item.getPath(), e), getJocError(),
+                                item.getPath()));
+                    }
+                }
+            } else if (s.getWorkflowNames().size() == 1 && s.getOrderParameterisations() != null) {
+                // Schedule's OrderParameterisations contains Listvariable
+                if (s.getOrderParameterisations().stream().filter(op -> op.getVariables() != null).filter(op -> op.getVariables()
+                        .getAdditionalProperties() != null).anyMatch(op -> op.getVariables().getAdditionalProperties().values().stream().anyMatch(
+                                o -> (o instanceof List<?>)))) {
+                    
+                    String name = s.getWorkflowNames().get(0);
+                    String workflowMsg = "[workflow=" + name + "]";
+                    try {
+                        Workflow w = cachedWorkflows.get(name);
+                        if (w == null) {
+                            String wj = dbLayer.getDeployedJsonByConfigurationName(ConfigurationType.WORKFLOW, name);
+                            if (wj == null) {
+                                wj = dbLayer.getConfigurationProperty(name, ConfigurationType.WORKFLOW.intValue(), "content");
+                            }
+                            if (wj == null) {
+                                throw new DBMissingDataException(workflowMsg + " couldn't find workflow deployment");
+                            }
+                            w = WorkflowConverter.convertInventoryWorkflow(wj);
                             cachedWorkflows.put(name, w);
                         }
                         Requirements r = w.getOrderPreparation();
-                        if (r != null && r.getParameters() != null && r.getParameters().getAdditionalProperties() != null && r.getParameters()
-                                .getAdditionalProperties().size() > 0) {
-                            throw new Exception(workflowMsg + "[" + r.getParameters().getAdditionalProperties().size()
-                                    + " order variables]release of multiple workflows with order variables is not allowed");
+                        if (r != null && r.getParameters() != null && r.getParameters().getAdditionalProperties() != null) {
+                            for (OrderParameterisation op : s.getOrderParameterisations()) {
+                                if (op.getVariables() != null && op.getVariables().getAdditionalProperties() != null) {
+                                    // find list params in orderPreparation
+                                    r.getParameters().getAdditionalProperties().forEach((k, v) -> {
+                                        if (ParameterType.List.equals(v.getType())) {
+                                            if (v.getListParameters() != null && v.getListParameters().getAdditionalProperties() != null) {
+                                                Map<String, ListParameter> declaration = v.getListParameters().getAdditionalProperties();
+
+                                                @SuppressWarnings("unchecked")
+                                                List<Map<String, Object>> listParams = (List<Map<String, Object>>) op.getVariables()
+                                                        .getAdditionalProperties().get(k);
+                                                listParams.forEach(p -> {
+                                                    declaration.forEach((k1, v1) -> {
+                                                        if (p.get(k1) == null && v1.getDefault() != null) {
+                                                            p.put(k1, v1.getDefault());
+                                                        }
+                                                    });
+                                                });
+                                            }
+                                        }
+                                    });
+                                }
+                            }
+                            item.setContent(Globals.objectMapper.writeValueAsString(s));
                         }
                     } catch (Throwable e) {
                         errors.add(new BulkError(LOGGER).get(new JocReleaseException(ConfigurationType.SCHEDULE, item.getPath(), e), getJocError(),

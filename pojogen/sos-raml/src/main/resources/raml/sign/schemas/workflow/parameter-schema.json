@@ -3,9 +3,6 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.sign.model.workflow.Parameter",
   "type": "object",
-  "required": [
-    "type"
-  ],
   "description": "parameters only for parameter type 'List'",
   "properties": {
     "type": {

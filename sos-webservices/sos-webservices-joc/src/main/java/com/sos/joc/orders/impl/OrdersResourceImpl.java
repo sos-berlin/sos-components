@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -27,7 +26,6 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.workflow.WorkflowId;
-import com.sos.inventory.model.workflow.Requirements;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -65,8 +63,6 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrdersResourceImpl.class);
     private static final String API_CALL = "./orders";
-    private final List<OrderStateText> orderStateWithRequirements = Arrays.asList(OrderStateText.PENDING, OrderStateText.BLOCKED,
-            OrderStateText.SUSPENDED);
     private final List<OrderStateText> allowedStateDateStates = Arrays.asList(OrderStateText.INPROGRESS, OrderStateText.RUNNING,
             OrderStateText.FAILED, OrderStateText.FINISHED, OrderStateText.CANCELLED);
 
@@ -369,7 +365,6 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     .iterator().next()) : null;
 
             Set<String> childOrders = OrdersHelper.getChildOrders(currentState);
-            ConcurrentMap<JWorkflowId, Requirements> orderPreparations = new ConcurrentHashMap<>();
 
             Function<JOrder, OrderV> mapJOrderToOrderV = o -> {
                 try {
@@ -379,15 +374,6 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     order.setHasChildOrders(childOrders.stream().anyMatch(s -> s.startsWith(order.getOrderId() + "|")));
                     if (responseWithLabel) {
                         order.setLabel(positionToLabelsMap.get(order.getPosition()));
-                    }
-                    if (orderStateWithRequirements.contains(order.getState().get_text())) {
-                        if (!orderPreparations.containsKey(o.workflowId())) {
-                            Requirements orderPreparation = OrdersHelper.getRequirements(o, currentState);
-                            if (orderPreparation != null) {
-                                orderPreparations.put(o.workflowId(), orderPreparation);
-                            }
-                        }
-                        order.setRequirements(orderPreparations.get(o.workflowId()));
                     }
                     return order;
                 } catch (Exception e) {
