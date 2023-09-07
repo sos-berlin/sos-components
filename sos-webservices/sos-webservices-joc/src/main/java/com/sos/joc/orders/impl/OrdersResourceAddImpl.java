@@ -8,13 +8,11 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,16 +20,17 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.inventory.model.deploy.DeployType;
+import com.sos.inventory.model.workflow.Requirements;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.inventory.JocInventory;
-import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.classes.order.CheckedAddOrdersPositions;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
@@ -49,7 +48,6 @@ import com.sos.joc.model.order.BlockPosition;
 import com.sos.joc.model.order.OrderIds;
 import com.sos.joc.orders.resource.IOrdersResourceAdd;
 import com.sos.schema.JsonValidator;
-import com.sos.sign.model.workflow.Workflow;
 
 import io.vavr.control.Either;
 import jakarta.ws.rs.Path;
@@ -95,23 +93,26 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             
             DBItemJocAuditLog dbAuditLog = storeAuditLog(addOrders.getAuditLog(), controllerId, CategoryType.CONTROLLER);
             
+            Set<String> workflows = addOrders.getOrders().stream().map(AddOrder::getWorkflowPath).map(JocInventory::pathToName).collect(Collectors.toSet());
+            
             // TODO JOC-1453
-            Set<String> workflowsWithLabels = Stream.of(
-                    addOrders.getOrders().stream().filter(requestHasStartPositionSettings).filter(ao -> ao.getStartPosition() instanceof String)
-                        .map(AddOrder::getWorkflowPath).map(JocInventory::pathToName), 
-                    addOrders.getOrders().stream().filter(requestHasEndPositionSettings).filter(ao -> ao.getEndPositions().stream().filter(Objects::nonNull)
-                        .anyMatch(o -> o instanceof String)).map(AddOrder::getWorkflowPath).map(JocInventory::pathToName), 
-                    addOrders.getOrders().stream().filter(requestHasBlockPositionSettings)
-                        .map(AddOrder::getWorkflowPath).map(JocInventory::pathToName)).flatMap(s -> s).collect(Collectors.toSet());
+//            Set<String> workflowsWithLabels = Stream.of(
+//                    addOrders.getOrders().stream().filter(requestHasStartPositionSettings).filter(ao -> ao.getStartPosition() instanceof String)
+//                        .map(AddOrder::getWorkflowPath).map(JocInventory::pathToName), 
+//                    addOrders.getOrders().stream().filter(requestHasEndPositionSettings).filter(ao -> ao.getEndPositions().stream().filter(Objects::nonNull)
+//                        .anyMatch(o -> o instanceof String)).map(AddOrder::getWorkflowPath).map(JocInventory::pathToName), 
+//                    addOrders.getOrders().stream().filter(requestHasBlockPositionSettings)
+//                        .map(AddOrder::getWorkflowPath).map(JocInventory::pathToName)).flatMap(s -> s).collect(Collectors.toSet());
 
             Map<String, Map<String, List<Object>>> workflowsWithLabelsMap = new HashMap<>();
             Map<String, Set<BlockPosition>> workflowsWithBlockPositions = new HashMap<>();
-            if (!workflowsWithLabels.isEmpty()) {
+            Map<String, Requirements> workflowOrderPreparations = new HashMap<>();
+            if (!workflows.isEmpty()) {
                 connection = Globals.createSosHibernateStatelessConnection(API_CALL);
                 DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
                 DeployedConfigurationFilter dbFilter = new DeployedConfigurationFilter();
                 dbFilter.setControllerId(controllerId);
-                dbFilter.setNames(workflowsWithLabels);
+                dbFilter.setNames(workflows);
                 dbFilter.setObjectTypes(Collections.singleton(DeployType.WORKFLOW.intValue()));
                 List<DeployedContent> dbWorkflows = dbLayer.getDeployedInventory(dbFilter);
                 Globals.disconnect(connection);
@@ -122,6 +123,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                         if (w != null) {
                             workflowsWithLabelsMap.put(dbWorkflow.getName(), WorkflowsHelper.getLabelToPositionsMap(w));
                             workflowsWithBlockPositions.put(dbWorkflow.getName(), WorkflowsHelper.getWorkflowBlockPositions(w.getInstructions()));
+                            workflowOrderPreparations.put(dbWorkflow.getName(), w.getOrderPreparation());
                         }
                     }
                 }
@@ -136,6 +138,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             final ZoneId zoneId = OrdersHelper.getDailyPlanTimeZone();
             
             final String defaultOrderName = SOSCheckJavaVariableName.makeStringRuleConform(getAccount());
+            final boolean allowEmptyArguments = ClusterSettings.getAllowEmptyArguments(Globals.getConfigurationGlobalsJoc());
             List<AuditLogDetail> auditLogDetails = new ArrayList<>();
 
             Function<AddOrder, Either<Err419, JFreshOrder>> mapper = order -> {
@@ -146,14 +149,17 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     } else {
                         SOSCheckJavaVariableName.test("orderName", order.getOrderName());
                     }
-                    Either<Problem, JWorkflow> e = currentState.repo().pathToCheckedWorkflow(WorkflowPath.of(JocInventory.pathToName(order
-                            .getWorkflowPath())));
+                    String workflowName = JocInventory.pathToName(order.getWorkflowPath());
+                    Either<Problem, JWorkflow> e = currentState.repo().pathToCheckedWorkflow(WorkflowPath.of(workflowName));
                     ProblemHelper.throwProblemIfExist(e);
-                    Workflow workflow = Globals.objectMapper.readValue(e.get().toJson(), Workflow.class);
-                    order.setArguments(OrdersHelper.checkArguments(order.getArguments(), JsonConverter.signOrderPreparationToInvOrderPreparation(
-                            workflow.getOrderPreparation())));
+//                    Workflow workflow = Globals.objectMapper.readValue(e.get().toJson(), Workflow.class);
+//                    order.setArguments(OrdersHelper.checkArguments(order.getArguments(), JsonConverter.signOrderPreparationToInvOrderPreparation(
+//                            workflow.getOrderPreparation()), allowEmptyArguments));
                     
-                    Map<String, List<Object>> labelMap = workflowsWithLabelsMap.getOrDefault(workflow.getPath(), Collections.emptyMap());
+                    order.setArguments(OrdersHelper.checkArguments(order.getArguments(), workflowOrderPreparations.get(workflowName),
+                            allowEmptyArguments));
+
+                    Map<String, List<Object>> labelMap = workflowsWithLabelsMap.getOrDefault(workflowName, Collections.emptyMap());
                     boolean forceJobAdmission = order.getForceJobAdmission() == Boolean.TRUE;
                     Optional<JPositionOrLabel> startPos = Optional.empty();
                     Set<JPositionOrLabel> endPoss = Collections.emptySet();
@@ -161,11 +167,9 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     
                     if (requestHasBlockPositionSettings.test(order)) {
 
-                        Set<BlockPosition> availableBlockPositions = workflowsWithBlockPositions.getOrDefault(workflow.getPath(), Collections
-                                .emptySet());
+                        Set<BlockPosition> availableBlockPositions = workflowsWithBlockPositions.getOrDefault(workflowName, Collections.emptySet());
 
-                        BlockPosition blockPosition = OrdersHelper.getBlockPosition(order.getBlockPosition(), workflow.getPath(),
-                                availableBlockPositions);
+                        BlockPosition blockPosition = OrdersHelper.getBlockPosition(order.getBlockPosition(), workflowName, availableBlockPositions);
 
                         //check start-/endpositions inside block
                         startPos = OrdersHelper.getStartPositionInBlock(order.getStartPosition(), labelMap, blockPosition);

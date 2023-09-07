@@ -34,8 +34,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.auth.classes.SOSAuthFolderPermissions;
+import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.order.ExpectedNotice;
 import com.sos.controller.model.order.OrderCycleState;
 import com.sos.controller.model.order.OrderItem;
@@ -43,6 +45,7 @@ import com.sos.controller.model.order.OrderModeType;
 import com.sos.controller.model.workflow.HistoricOutcome;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.common.Variables;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.workflow.ListParameter;
 import com.sos.inventory.model.workflow.ListParameters;
 import com.sos.inventory.model.workflow.Parameter;
@@ -57,10 +60,13 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.cluster.configuration.globals.common.ConfigurationEntry;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanWithHistory;
+import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
+import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.db.history.common.HistorySeverity;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
@@ -518,6 +524,50 @@ public class OrdersHelper {
         ProblemHelper.throwProblemIfExist(eW);
         return Globals.objectMapper.readValue(eW.get().toJson(), Workflow.class).getOrderPreparation();
     }
+    
+    public static Requirements getRequirements(JWorkflowId jWorkflowId, String controllerId, DeployedConfigurationDBLayer dbLayer)
+            throws JsonMappingException, JsonProcessingException {
+        return getRequirements(jWorkflowId, controllerId, dbLayer, false);
+    }
+
+    public static Requirements getRequirements(JWorkflowId jWorkflowId, String controllerId, DeployedConfigurationDBLayer dbLayer, boolean withFinals)
+            throws JsonMappingException, JsonProcessingException {
+        return getRequirements(jWorkflowId.path().string(), jWorkflowId.versionId().string(), controllerId, dbLayer, withFinals);
+    }
+    
+    public static Requirements getRequirements(JOrder jOrder, String controllerId, DeployedConfigurationDBLayer dbLayer) throws JsonMappingException,
+            JsonProcessingException {
+        return getRequirements(jOrder.workflowId(), controllerId, dbLayer, false);
+    }
+    
+    public static Requirements getRequirements(JOrder jOrder, String controllerId, DeployedConfigurationDBLayer dbLayer, boolean withFinals)
+            throws JsonMappingException, JsonProcessingException {
+        return getRequirements(jOrder.workflowId(), controllerId, dbLayer, withFinals);
+    }
+    
+    private static Requirements getRequirements(String workflowName, String controllerId) throws JsonParseException, JsonMappingException, IOException {
+        SOSHibernateSession connection = null;
+        try {
+            connection = Globals.createSosHibernateStatelessConnection("getOrderPreparation");
+            return getRequirements(workflowName, null, controllerId, new DeployedConfigurationDBLayer(connection), true);
+        } finally {
+            Globals.disconnect(connection);
+        }
+    }
+    
+    private static Requirements getRequirements(String workflowName, String versionId, String controllerId, DeployedConfigurationDBLayer dbLayer,
+            boolean withFinals) throws JsonMappingException, JsonProcessingException {
+        DeployedContent lastContent = dbLayer.getDeployedInventory(controllerId, DeployType.WORKFLOW.intValue(), workflowName, versionId);
+        Requirements orderPreparation = Globals.objectMapper.readValue(lastContent.getContent(), com.sos.inventory.model.workflow.Workflow.class)
+                .getOrderPreparation();
+        if (!withFinals && orderPreparation != null && orderPreparation.getParameters() != null && orderPreparation.getParameters()
+                .getAdditionalProperties() != null) {
+            Set<String> finalParameters = orderPreparation.getParameters().getAdditionalProperties().entrySet().stream().filter(e -> e.getValue()
+                    .getFinal() != null).map(Map.Entry::getKey).collect(Collectors.toSet());
+            finalParameters.forEach(k -> orderPreparation.getParameters().removeAdditionalProperty(k));
+        }
+        return orderPreparation;
+    }
 
     public static Requirements getRequirements(JOrder jOrder, JControllerState currentState) throws JsonParseException, JsonMappingException,
             IOException {
@@ -550,13 +600,23 @@ public class OrdersHelper {
         }
         return variables;
     }
-
-    @SuppressWarnings("unchecked")
+    
     public static Variables checkArguments(Variables arguments, Requirements orderRequirements) throws JocMissingRequiredParameterException,
             JocConfigurationException {
+        return checkArguments(arguments, orderRequirements, ClusterSettings.getAllowEmptyArguments(Globals.getConfigurationGlobalsJoc()));
+    }
+
+    @SuppressWarnings("unchecked")
+    public static Variables checkArguments(Variables arguments, Requirements orderRequirements, boolean allowEmptyValues)
+            throws JocMissingRequiredParameterException, JocConfigurationException {
         final Map<String, Parameter> params = (orderRequirements != null && orderRequirements.getParameters() != null) ? orderRequirements
                 .getParameters().getAdditionalProperties() : Collections.emptyMap();
-        Map<String, Object> args = (arguments != null) ? arguments.getAdditionalProperties() : Collections.emptyMap();
+        // clone arguments
+        Variables vars = new Variables();
+        if (arguments != null) {
+            vars.setAdditionalProperties(arguments.getAdditionalProperties());
+        }
+        Map<String, Object> args = vars.getAdditionalProperties();
 
         boolean allowUndeclared = false;
         if (orderRequirements == null || orderRequirements.getAllowUndeclared() == Boolean.TRUE) {
@@ -577,7 +637,7 @@ public class OrdersHelper {
         for (Map.Entry<String, Parameter> param : params.entrySet()) {
             if (param.getValue().getFinal() != null) {
                 if (args.containsKey(param.getKey())) {
-                    arguments.removeAdditionalProperty(param.getKey());
+                    vars.removeAdditionalProperty(param.getKey());
                 }
                 continue;
             }
@@ -593,7 +653,7 @@ public class OrdersHelper {
                         invalid = true;
                     } else {
                         String strArg = (String) curArg;
-                        if ((strArg == null || strArg.isEmpty()) && param.getValue().getDefault() == null) {
+                        if (!allowEmptyValues && strArg.isEmpty() && param.getValue().getDefault() == null) {
                             throw new JocMissingRequiredParameterException("Variable '" + param.getKey() + "' is empty but required");
                         }
                         
@@ -609,9 +669,9 @@ public class OrdersHelper {
                         if (curArg instanceof String) {
                             String strArg = (String) curArg;
                             if ("true".equals(strArg)) {
-                                arguments.setAdditionalProperty(param.getKey(), Boolean.TRUE);
+                                vars.setAdditionalProperty(param.getKey(), Boolean.TRUE);
                             } else if ("false".equals(strArg)) {
-                                arguments.setAdditionalProperty(param.getKey(), Boolean.FALSE);
+                                vars.setAdditionalProperty(param.getKey(), Boolean.FALSE);
                             } else {
                                 invalid = true;
                             }
@@ -628,7 +688,7 @@ public class OrdersHelper {
                     } else if (curArg instanceof String) {
                         try {
                             BigDecimal number = new BigDecimal((String) curArg);
-                            arguments.setAdditionalProperty(param.getKey(), number);
+                            vars.setAdditionalProperty(param.getKey(), number);
                         } catch (NumberFormatException e) {
                             invalid = true;
                         }
@@ -639,7 +699,7 @@ public class OrdersHelper {
                         invalid = true;
                     }
                     if (!invalid) {
-                        checkListArguments((List<Map<String, Object>>) curArg, param.getValue().getListParameters(), param.getKey());
+                        checkListArguments((List<Map<String, Object>>) curArg, param.getValue().getListParameters(), param.getKey(), allowEmptyValues);
                     }
                     break;
                 }
@@ -649,11 +709,11 @@ public class OrdersHelper {
                 }
             }
         }
-        return arguments;
+        return vars;
     }
 
     private static List<Map<String, Object>> checkListArguments(List<Map<String, Object>> listVariables, ListParameters listParameters,
-            String listKey) throws JocMissingRequiredParameterException, JocConfigurationException {
+            String listKey, boolean allowEmptyValues) throws JocMissingRequiredParameterException, JocConfigurationException {
         boolean invalid = false;
         final Map<String, ListParameter> listParams = (listParameters != null) ? listParameters.getAdditionalProperties() : Collections.emptyMap();
         if (listVariables.isEmpty() && !listParams.isEmpty()) {
@@ -676,12 +736,27 @@ public class OrdersHelper {
                         + "' aren't declared in the workflow");
             }
             for (Map.Entry<String, ListParameter> p : listParams.entrySet()) {
-                if (!listVariable.containsKey(p.getKey())) { // required
-                    throw new JocMissingRequiredParameterException("Variable '" + p.getKey() + "' of list variable '" + listKey
-                            + "' is missing but required");
-                }
-
+//                if (!listVariable.containsKey(p.getKey()) && p.getValue().getDefault() == null) { // required
+//                    throw new JocMissingRequiredParameterException("Variable '" + p.getKey() + "' of list variable '" + listKey
+//                            + "' is missing but required");
+//                }
+                
                 Object curListArg = listVariable.get(p.getKey());
+                
+                if (curListArg == null) { // TODO later only if it is nullable
+                    if (p.getValue().getDefault() == null) { // required? TODO later only if it is nullable
+                        throw new JocMissingRequiredParameterException("Variable '" + p.getKey() + "' of list variable '" + listKey
+                                + "' is missing but required");
+                    } else {
+                        listVariable.put(p.getKey(), p.getValue().getDefault());
+                    }
+                    continue;
+                }
+                
+                if ((curListArg instanceof String) && ((String) curListArg).isEmpty()) { // TODO later only if it is nullable
+                    continue;
+                }
+                
                 
                 switch (p.getValue().getType()) {
                 case String:
@@ -689,7 +764,7 @@ public class OrdersHelper {
                         invalid = true;
                     } else {
                         String strListArg = (String) curListArg;
-                        if ((strListArg == null || strListArg.isEmpty())) {
+                        if (!allowEmptyValues && strListArg.isEmpty()) {
                             throw new JocMissingRequiredParameterException("Variable '" + p.getKey() + "' of list variable '" + listKey
                                     + "' is empty but required");
                         }
@@ -777,7 +852,7 @@ public class OrdersHelper {
         DailyPlanModifyOrder dailyplanModifyOrder, String accessToken, JocError jocError, Long auditlogId, JControllerProxy proxy,
         JControllerState currentState, ZoneId zoneId, Map<String, List<Object>> labelMap, Set<BlockPosition> availableBlockPositions, 
         SOSAuthFolderPermissions folderPermissions) throws ControllerConnectionResetException, ControllerConnectionRefusedException, 
-        DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
+        JocConfigurationException, ExecutionException {
 
         Either<List<Err419>, OrderIdMap> result = Either.right(new OrderIdMap());
         if (temporaryOrderIds.isEmpty()) {
@@ -791,28 +866,37 @@ public class OrdersHelper {
         final List<Object> startPosition = getPosition(dailyplanModifyOrder.getStartPosition(), labelMap);
         final List<List<Object>> endPositions = getPositions(dailyplanModifyOrder.getEndPositions(), labelMap);
         final boolean forceJobAdmission = dailyplanModifyOrder.getForceJobAdmission() == Boolean.TRUE;
-
+        final boolean allowEmptyArguments = ClusterSettings.getAllowEmptyArguments(Globals.getConfigurationGlobalsJoc());
+        final boolean variablesAreModified = dailyplanModifyOrder.getVariables() != null && !dailyplanModifyOrder.getVariables().getAdditionalProperties().isEmpty();
+        final boolean variablesAreRemoved = dailyplanModifyOrder.getRemoveVariables() != null;
+        Map<String, Requirements> cachedRequirements = new HashMap<>(1);
+        
         Function<JOrder, Either<Err419, FreshOrder>> mapper = order -> {
             Either<Err419, FreshOrder> either = null;
             try {
+                String workflowName = order.workflowId().path().string();
                 Map<String, Value> args = order.arguments();
                 Either<Problem, JWorkflow> e = currentState.repo().idToCheckedWorkflow(order.workflowId());
                 ProblemHelper.throwProblemIfExist(e);
-                String workflowPath = WorkflowPaths.getPath(e.get().id());
+                String workflowPath = WorkflowPaths.getPath(workflowName);
                 if (!folderPermissions.isPermittedForFolder(Paths.get(workflowPath).getParent().toString().replace('\\', '/'))) {
                     throw new JocFolderPermissionsException(workflowPath);
                 }
-
-                Variables vars = scalaValuedArgumentsToVariables(args);
-                Workflow workflow = Globals.objectMapper.readValue(e.get().toJson(), Workflow.class);
-                if (dailyplanModifyOrder.getVariables() != null && !dailyplanModifyOrder.getVariables().getAdditionalProperties().isEmpty()) {
-                    vars.setAdditionalProperties(dailyplanModifyOrder.getVariables().getAdditionalProperties());
+                
+                //Workflow workflow = Globals.objectMapper.readValue(e.get().toJson(), Workflow.class);
+                if (variablesAreModified || variablesAreRemoved) {
+                    if (!cachedRequirements.containsKey(workflowName)) {
+                        cachedRequirements.put(workflowName, getRequirements(workflowName, controllerId));
+                    }
+                    Variables vars = scalaValuedArgumentsToVariables(args);
+                    if (variablesAreModified) {
+                        vars.setAdditionalProperties(dailyplanModifyOrder.getVariables().getAdditionalProperties());
+                    }
+                    if (variablesAreRemoved) {
+                        dailyplanModifyOrder.getRemoveVariables().forEach(k -> vars.removeAdditionalProperty(k));
+                    }
+                    args = variablesToScalaValuedArguments(checkArguments(vars, cachedRequirements.get(workflowName), allowEmptyArguments));
                 }
-                if (dailyplanModifyOrder.getRemoveVariables() != null) {
-                    dailyplanModifyOrder.getRemoveVariables().forEach(k -> vars.removeAdditionalProperty(k));
-                }
-                args = variablesToScalaValuedArguments(checkArguments(vars, JsonConverter.signOrderPreparationToInvOrderPreparation(workflow
-                        .getOrderPreparation())));
 
                 // modify scheduledFor if necessary
                 Optional<Instant> scheduledFor = order.scheduledFor();
@@ -829,8 +913,7 @@ public class OrdersHelper {
                 
                 if (dailyplanModifyOrder.getBlockPosition() != null) {
                     
-                    BlockPosition blockPosition = getBlockPosition(dailyplanModifyOrder.getBlockPosition(), workflow.getPath(),
-                            availableBlockPositions);
+                    BlockPosition blockPosition = getBlockPosition(dailyplanModifyOrder.getBlockPosition(), workflowName, availableBlockPositions);
 
                     //check start-/endpositions inside block
                     startPos = OrdersHelper.getStartPositionInBlock(startPosition, blockPosition);
@@ -1017,6 +1100,10 @@ public class OrdersHelper {
         Map<String, Value> arguments = new HashMap<>();
         if (vars != null) {
             vars.forEach((key, val) -> {
+//                if (val == null) {
+//                    //MissingValue;
+//                    arguments.put(key, (Value) val);
+//                } else 
                 if (val instanceof String) {
                     arguments.put(key, StringValue.of((String) val));
                 } else if (val instanceof Boolean) {
@@ -1028,7 +1115,7 @@ public class OrdersHelper {
                 } else if (val instanceof Double) {
                     arguments.put(key, NumberValue.of(BigDecimal.valueOf((Double) val)));
                 } else if (val instanceof BigDecimal) {
-                    arguments.put(key, NumberValue.of(((BigDecimal) val)));
+                    arguments.put(key, NumberValue.of((BigDecimal) val));
                 } else if (val instanceof List) {
                     @SuppressWarnings("unchecked")
                     List<Value> valueList = ((List<Map<String, Object>>) val).stream().map(m -> ObjectValue.of(variablesToScalaValuedArguments(m)))

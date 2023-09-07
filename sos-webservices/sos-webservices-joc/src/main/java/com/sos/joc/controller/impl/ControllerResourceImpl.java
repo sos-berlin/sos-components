@@ -73,7 +73,7 @@ public class ControllerResourceImpl extends JOCResourceImpl implements IControll
             
             if (jobSchedulerBody.getUrl() == null) {
                 List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(jobSchedulerBody.getControllerId());
-                if (controllerInstances == null) {
+                if (controllerInstances == null || controllerInstances.isEmpty()) {
                     // read db again?
                     throw new DBMissingDataException(String.format("Couldn't find Controller with id %s for security level %s", jobSchedulerBody
                             .getControllerId(), Globals.getJocSecurityLevel()));

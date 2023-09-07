@@ -75,8 +75,8 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
     }
 
     
-    protected FilterDailyPlannedOrders getOrderFilter(String caller, String controllerId, DailyPlanOrderFilterDef in, boolean selectCyclicOrders, boolean evalPermissions)
-            throws SOSHibernateException {
+    protected FilterDailyPlannedOrders getOrderFilter(String caller, String controllerId, DailyPlanOrderFilterDef in, boolean selectCyclicOrders,
+            boolean evalPermissions) throws SOSHibernateException {
         FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
         
         boolean hasPermission = true;

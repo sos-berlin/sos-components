@@ -60,6 +60,7 @@ import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.workflow.Branch;
 import com.sos.inventory.model.workflow.BranchWorkflow;
 import com.sos.inventory.model.workflow.Jobs;
+import com.sos.inventory.model.workflow.ListParameters;
 import com.sos.inventory.model.workflow.Parameter;
 import com.sos.inventory.model.workflow.ParameterType;
 import com.sos.inventory.model.workflow.Requirements;
@@ -74,7 +75,9 @@ import com.sos.joc.db.common.HistoryConstants;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
+import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.JocConfigurationException;
+import com.sos.joc.exceptions.JocReleaseException;
 import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.order.BlockPosition;
@@ -199,11 +202,10 @@ public class Validator {
                         Workflow w = Globals.objectMapper.readValue(json, Workflow.class);
                         Requirements r = w.getOrderPreparation();
                         if (namesSize >= JocInventory.SCHEDULE_MIN_MULTIPLE_WORKFLOWS_SIZE) {// check only multiple workflows
-                            if (r != null && r.getParameters() != null && r.getParameters().getAdditionalProperties() != null && r.getParameters()
-                                    .getAdditionalProperties().size() > 0) {
+                            if (orderPreparationHasRequiredParameters(w.getOrderPreparation())) {
                                 throw new JocConfigurationException(String.format(
-                                        "%s: Multiple workflows with order variables are not permitted: schedule=%s, workflowName=%s, %s order variables",
-                                        position, schedule.getPath(), workflowName, r.getParameters().getAdditionalProperties().size()));
+                                        "%s: Multiple workflows with required order variables are not permitted: schedule=%s, workflowName=%s",
+                                        position, schedule.getPath(), workflowName));
                             }
                         }
                         validateOrderParameterisations(schedule.getOrderParameterisations(), r, workflowName, w, "$.variableSets.orderParameterisations");
@@ -1358,10 +1360,36 @@ public class Validator {
                 validateExpression("$.orderPreparation.parameters['" + key + "'].final: ", value.getFinal());
             }
             if (ParameterType.List.equals(value.getType())) {
-                if (value.getListParameters() == null || value.getListParameters().getAdditionalProperties() == null || value.getListParameters()
-                        .getAdditionalProperties().isEmpty()) {
+                validateListParameters(value.getListParameters(), key);
+            }
+        });
+    }
+    
+    private static void validateListParameters(ListParameters listParameters, String key) throws JocConfigurationException {
+        if (listParameters == null || listParameters.getAdditionalProperties() == null || listParameters.getAdditionalProperties()
+                .isEmpty()) {
+            throw new JocConfigurationException(String.format(
+                    "$.orderPreparation.parameters['%s'].listParameters: missing but required if the parameter is of type 'List'", key));
+        }
+        listParameters.getAdditionalProperties().forEach((listKey, listParam) -> {
+            if (listParam.getDefault() != null) {
+                Object _default = listParam.getDefault();
+                boolean invalid = false;
+                switch (listParam.getType()) {
+                case String:
+                    invalid = (_default instanceof String) == false;
+                    break;
+                case Boolean:
+                    invalid = (_default instanceof Boolean) == false;
+                    break;
+                case Number:
+                    invalid = (_default instanceof String) || (_default instanceof Boolean);
+                    break;
+                }
+                if (invalid) {
                     throw new JocConfigurationException(String.format(
-                            "$.orderPreparation.parameters['%s'].listParameters: missing but required if the parameter is of type 'List'", key));
+                            "$.orderPreparation.parameters['%s'].listParameters['%s'].default: Wrong data type %s (%s is expected).", key, listKey,
+                            _default.getClass().getSimpleName(), listParam.getType().value()));
                 }
             }
         });
@@ -1459,9 +1487,10 @@ public class Validator {
             if (variableSets.size() != variableSets.stream().map(OrderParameterisation::getOrderName).distinct().mapToInt(e -> 1).sum()) {
                 throw new JocConfigurationException(position + ": Order names has to be unique");
             }
+            boolean allowEmptyArguments = ClusterSettings.getAllowEmptyArguments(Globals.getConfigurationGlobalsJoc());
             variableSets.stream().map(OrderParameterisation::getVariables).filter(Objects::nonNull).forEach(v -> {
                 try {
-                    OrdersHelper.checkArguments(v, orderPreparation);
+                    OrdersHelper.checkArguments(v, orderPreparation, allowEmptyArguments);
                 } catch (Exception e1) {
                     throw new JocConfigurationException(position + ": " + e1.getMessage());
                 }
@@ -1544,5 +1573,14 @@ public class Validator {
         if (errorMessage != null) {
             throw new JocConfigurationException(prefix + key + ": " + String.format(errorMessage, key, value));
         }
+    }
+    
+    public static boolean orderPreparationHasRequiredParameters(Requirements orderPrep) {
+        if (orderPrep != null && orderPrep.getParameters() != null && orderPrep.getParameters().getAdditionalProperties() != null) {
+            // find required param in orderPreparation
+            return orderPrep.getParameters().getAdditionalProperties().values().stream().filter(i -> i.getFinal() == null)
+                    .anyMatch(i -> i.getDefault() == null);
+        }
+        return false;
     }
 }

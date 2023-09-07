@@ -11,12 +11,14 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
+import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.order.OrderFilter;
@@ -41,6 +43,7 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
 
     @Override
     public JOCDefaultResponse postOrder(String accessToken, byte[] filterBytes) {
+        SOSHibernateSession connection = null;
         try {
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrderFilter.class);
@@ -65,7 +68,9 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
                 o.setLabel(positionToLabelsMap.get(o.getPosition()));
                 o.setHasChildOrders(currentState.orderIds().stream().map(OrderId::string).anyMatch(s -> s.startsWith(o.getOrderId() + "|")));
                 if (orderStateWithRequirements.contains(o.getState().get_text())) {
-                    o.setRequirements(OrdersHelper.getRequirements(jOrder, currentState));
+                    connection = Globals.createSosHibernateStatelessConnection(API_CALL);
+                    o.setRequirements(OrdersHelper.getRequirements(jOrder, orderFilter.getControllerId(), new DeployedConfigurationDBLayer(connection)));
+                    //o.setRequirements(OrdersHelper.getRequirements(jOrder, currentState));
                 }
                 o.setSurveyDate(Date.from(surveyDateInstant));
                 o.setDeliveryDate(Date.from(Instant.now()));
@@ -79,6 +84,8 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(connection);
         }
     }
     
