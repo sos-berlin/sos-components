@@ -41,6 +41,7 @@ public class DatePeriodItem {
      * periods
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("period")
@@ -76,6 +77,7 @@ public class DatePeriodItem {
      * periods
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("period")
@@ -87,6 +89,7 @@ public class DatePeriodItem {
      * periods
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("period")

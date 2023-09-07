@@ -92,6 +92,7 @@ public class DailyPlanProjectionsImpl extends JOCResourceImpl implements IDailyP
         try {
             initLogging(IMPL_PATH_RECREATE, filterBytes, accessToken);
 
+            // TODO run async
             DailyPlanRunner.recreateProjections(JOCOrderResourceImpl.getDailyPlanSettings());
 
             return JOCDefaultResponse.responseStatus200(Date.from(Instant.now()));

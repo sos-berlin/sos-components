@@ -47,6 +47,7 @@ import com.sos.joc.model.dailyplan.projections.items.meta.ControllerInfoItem;
 import com.sos.joc.model.dailyplan.projections.items.meta.MetaItem;
 import com.sos.joc.model.dailyplan.projections.items.meta.ScheduleInfoItem;
 import com.sos.joc.model.dailyplan.projections.items.meta.WorkflowItem;
+import com.sos.joc.model.dailyplan.projections.items.meta.WorkflowsItem;
 import com.sos.joc.model.dailyplan.projections.items.year.DateItem;
 import com.sos.joc.model.dailyplan.projections.items.year.DatePeriodItem;
 import com.sos.joc.model.dailyplan.projections.items.year.MonthItem;
@@ -212,13 +213,18 @@ public class DailyPlanProjections {
         if (!so.contains(soKey)) {
             so.add(soKey);
         }
-        sii.setOrders(Long.valueOf(so.size()));
+        sii.setTotalOrders(Long.valueOf(so.size()));
         scheduleOrders.put(item.getScheduleName(), so);
 
-        WorkflowItem wi = sii.getAdditionalProperties().get(item.getWorkflowPath());
+        WorkflowsItem wsi = sii.getWorkflows();
+        if (wsi == null) {
+            wsi = new WorkflowsItem();
+            sii.setWorkflows(wsi);
+        }
+        WorkflowItem wi = wsi.getAdditionalProperties().get(item.getWorkflowPath());
         if (wi == null) {
             wi = new WorkflowItem();
-            sii.getAdditionalProperties().put(item.getWorkflowPath(), wi);
+            wsi.getAdditionalProperties().put(item.getWorkflowPath(), wi);
         }
         // overwrites with the latest avg
         if (item.getExpectedEnd() != null && item.getPlannedStart() != null) {
@@ -358,15 +364,24 @@ public class DailyPlanProjections {
                     sii = new ScheduleInfoItem();
                     cii.getAdditionalProperties().put(s.getSchedule().getPath(), sii);
                 }
-                sii.setOrders(getOrders(s));// overwrite orders (previously set by planned)
+                // overwrite orders (previously (if)set by planned)
+                // schedulerOrders * workflows
+                sii.setTotalOrders(getTotalOrders(s));
 
+                WorkflowsItem wsi = sii.getWorkflows();
+                if (wsi == null) {
+                    wsi = new WorkflowsItem();
+                    sii.setWorkflows(wsi);
+                }
                 for (DailyPlanScheduleWorkflow w : s.getWorkflows()) {
-                    WorkflowItem wi = sii.getAdditionalProperties().get(w.getPath());
+                    WorkflowItem wi = wsi.getAdditionalProperties().get(w.getPath());
                     if (wi == null) {
                         wi = new WorkflowItem();
-                        sii.getAdditionalProperties().put(w.getPath(), wi);
+                        wsi.getAdditionalProperties().put(w.getPath(), wi);
                     }
-                    wi.setAvg(w.getAvg());
+                    if (wi.getAvg() == null) {
+                        wi.setAvg(w.getAvg());
+                    }
                 }
             }
         }
@@ -546,12 +561,14 @@ public class DailyPlanProjections {
             if (dpr != null && dpr.meta != null) {
                 ControllerInfoItem cii = dpr.meta.getAdditionalProperties().get(w.getControllerId());
                 if (cii != null) {
-                    ScheduleInfoItem sii = cii.getAdditionalProperties().get(w.getControllerId());
+                    ScheduleInfoItem sii = cii.getAdditionalProperties().get(schedule.getPath());
                     if (sii != null) {
-                        WorkflowItem wi = sii.getAdditionalProperties().get(w.getPath());
-                        if (wi != null) {
-                            result = wi.getAvg();// can be null
-                            checkDb = false;
+                        if (sii.getWorkflows() != null) {
+                            WorkflowItem wi = sii.getWorkflows().getAdditionalProperties().get(w.getPath());
+                            if (wi != null) {
+                                result = wi.getAvg();// can be null
+                                checkDb = false;
+                            }
                         }
                     }
                 }
@@ -577,9 +594,9 @@ public class DailyPlanProjections {
     }
 
     // schedule orders*workflows
-    private Long getOrders(DailyPlanSchedule s) {
+    private Long getTotalOrders(DailyPlanSchedule s) {
         if (s == null || s.getSchedule() == null) {
-            return null;
+            return Long.valueOf(0);
         }
         List<OrderParameterisation> l = s.getSchedule().getOrderParameterisations();
         int c = l == null ? 1 : l.size();

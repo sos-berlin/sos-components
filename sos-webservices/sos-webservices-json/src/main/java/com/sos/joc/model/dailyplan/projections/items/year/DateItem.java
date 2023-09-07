@@ -26,6 +26,11 @@ public class DateItem {
 
     @JsonProperty("planned")
     private Boolean planned;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("periods")
     private List<DatePeriodItem> periods = new ArrayList<DatePeriodItem>();
 
@@ -39,11 +44,21 @@ public class DateItem {
         this.planned = planned;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("periods")
     public List<DatePeriodItem> getPeriods() {
         return periods;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("periods")
     public void setPeriods(List<DatePeriodItem> periods) {
         this.periods = periods;
