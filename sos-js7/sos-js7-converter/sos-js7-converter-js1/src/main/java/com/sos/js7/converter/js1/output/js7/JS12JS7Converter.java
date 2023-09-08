@@ -454,7 +454,8 @@ public class JS12JS7Converter {
 
     private void addSchedulesBasedOnJS1Schedule(JS7ConverterResult result) {
         js1Schedules.entrySet().stream().sorted(Map.Entry.<String, ScheduleHelper> comparingByKey()).forEach(e -> {
-            Path schedulePath = JS7ConverterHelper.getSchedulePathFromJS7Path(e.getValue().getWorkflows().get(0).getPath(), e.getKey(), "");
+            String js7ScheduleName = JS7ConverterHelper.getJS7ObjectName(e.getKey());
+            Path schedulePath = JS7ConverterHelper.getSchedulePathFromJS7Path(e.getValue().getWorkflows().get(0).getPath(), js7ScheduleName, "");
 
             Schedule schedule = JS7RunTimeConverter.convert(schedulePath, e.getValue().getJS1Schedule(), e.getValue().getTimeZone(), e.getValue()
                     .getWorkflows().stream().map(w -> {
