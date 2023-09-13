@@ -2,7 +2,9 @@ package com.sos.joc.dailyplan.db;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.hibernate.ScrollableResults;
@@ -58,18 +60,43 @@ public class DBLayerDailyPlanProjections extends DBLayer {
 
     public List<DBItemDailyPlanProjection> getProjections(List<Long> years) throws Exception {
         StringBuilder hql = new StringBuilder("from ").append(DBITEM_DPL_PROJECTIONS).append(" ");
-        List<Long> ids = null;
+        Set<Long> ids = null;
         if (years != null && years.size() > 0) {
-            ids = new ArrayList<>(years);
+            ids = new HashSet<>(years);
             ids.add(DBItemDailyPlanProjection.METADATEN_ID);
-            ids = ids.stream().distinct().collect(Collectors.toList());
 
-            hql.append("where id in (:ids)");
+            hql.append("where id in (:ids) ");
         }
+        hql.append("order by id");
 
         Query<DBItemDailyPlanProjection> query = getSession().createQuery(hql.toString());
         if (ids != null) {
             query.setParameterList("ids", ids);
+        }
+        return getSession().getResultList(query);
+    }
+    
+    public List<DBItemDailyPlanProjection> getProjections(Long dateFrom, Long dateTo) throws Exception {
+        StringBuilder hql = new StringBuilder("from ").append(DBITEM_DPL_PROJECTIONS).append(" ");
+        if (dateFrom != null || dateTo != null) {
+            hql.append("where id = ").append(DBItemDailyPlanProjection.METADATEN_ID).append(" or (");
+            List<String> dateFromTo = new ArrayList<>(2);
+            if (dateFrom != null) {
+                dateFromTo.add("id >= :dateFrom");
+            }
+            if (dateTo != null) {
+                dateFromTo.add("id <= :dateTo");
+            }
+            hql.append(String.join(" and ", dateFromTo)).append(")");
+        }
+        hql.append("order by id");
+
+        Query<DBItemDailyPlanProjection> query = getSession().createQuery(hql.toString());
+        if (dateFrom != null) {
+            query.setParameter("dateFrom", dateFrom);
+        }
+        if (dateTo != null) {
+            query.setParameter("dateTo", dateTo);
         }
         return getSession().getResultList(query);
     }
