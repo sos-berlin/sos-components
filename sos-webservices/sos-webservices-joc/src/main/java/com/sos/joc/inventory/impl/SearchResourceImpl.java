@@ -73,7 +73,8 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
                 items = dbLayer.getBasicSearchDeployedOrReleasedConfigurations(in.getReturnType(), in.getSearch(), in.getFolders(), in
                         .getControllerId());
             } else {
-                items = dbLayer.getBasicSearchInventoryConfigurations(in.getReturnType(), in.getSearch(), in.getFolders());
+                items = dbLayer.getBasicSearchInventoryConfigurations(in.getReturnType(), in.getSearch(), in.getFolders(), in
+                        .getUndeployedOrUnreleased(), in.getValid());
             }
 
             List<ResponseSearchItem> r = Collections.emptyList();
@@ -103,7 +104,8 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
                 items = dbLayer.getAdvancedSearchDeployedOrReleasedConfigurations(in.getReturnType(), in.getSearch(), in.getFolders(), in
                         .getAdvanced(), in.getControllerId());
             } else {
-                items = dbLayer.getAdvancedSearchInventoryConfigurations(in.getReturnType(), in.getSearch(), in.getFolders(), in.getAdvanced());
+                items = dbLayer.getAdvancedSearchInventoryConfigurations(in.getReturnType(), in.getSearch(), in.getFolders(), in
+                        .getUndeployedOrUnreleased(), in.getValid(), in.getAdvanced());
             }
 
             List<ResponseSearchItem> r = new ArrayList<>();
@@ -136,7 +138,7 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
                                     .getWorkflow(), null, workflowAdvanced, in.getControllerId());
                         } else {
                             wi = dbLayer.getAdvancedSearchInventoryConfigurations(RequestSearchReturnType.WORKFLOW, in.getAdvanced().getWorkflow(),
-                                    null, workflowAdvanced);
+                                    workflowAdvanced);
                         }
                         if (wi == null || wi.size() == 0) {
                             continue;

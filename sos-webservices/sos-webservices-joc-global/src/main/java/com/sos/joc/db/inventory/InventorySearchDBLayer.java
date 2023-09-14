@@ -151,11 +151,12 @@ public class InventorySearchDBLayer extends DBLayer {
         return result.stream().filter(hasDeployedWorkflows).map(mapper);
     }
 
-    public List<InventorySearchItem> getBasicSearchInventoryConfigurations(RequestSearchReturnType type, String search, List<String> folders)
-            throws SOSHibernateException {
+    public List<InventorySearchItem> getBasicSearchInventoryConfigurations(RequestSearchReturnType type, String search, List<String> folders,
+            Boolean unDeployedUnReleaseObjects, Boolean valid) throws SOSHibernateException {
 
         boolean isReleasable = isReleasable(type);
         boolean searchInFolders = searchInFolders(folders);
+        boolean onlyUnDeployedUnReleaseObjects = unDeployedUnReleaseObjects == Boolean.TRUE;
 
         StringBuilder hql = new StringBuilder("select mt.id as id ");
         hql.append(",mt.path as path ");
@@ -189,6 +190,12 @@ public class InventorySearchDBLayer extends DBLayer {
             search = null;
         } else {
             hql.append("and (lower(mt.name) like :search or lower(mt.title) like :search) ");
+        }
+        if (onlyUnDeployedUnReleaseObjects) {
+            hql.append("and mt.deployed = 0 ");
+            if (valid != null) {
+                hql.append("and mt.valid = ").append(valid ? 1 : 0).append(" ");
+            }
         }
         if (searchInFolders) {
             hql.append("and (").append(foldersHql(folders)).append(") ");
@@ -314,13 +321,19 @@ public class InventorySearchDBLayer extends DBLayer {
         List<String> l = getSession().getResultList(query);
         return l == null || l.size() == 0 ? null : l.get(0);
     }
+    
+    public List<InventorySearchItem> getAdvancedSearchInventoryConfigurations(RequestSearchReturnType type, String search,
+            RequestSearchAdvancedItem advanced) throws SOSHibernateException {
+        return getAdvancedSearchInventoryConfigurations(type, search, null, null, null, advanced);
+    }
 
     // TODO merge all functions ...
     public List<InventorySearchItem> getAdvancedSearchInventoryConfigurations(RequestSearchReturnType type, String search, List<String> folders,
-            RequestSearchAdvancedItem advanced) throws SOSHibernateException {
+            Boolean unDeployedUnReleaseObjects, Boolean valid, RequestSearchAdvancedItem advanced) throws SOSHibernateException {
 
         boolean isReleasable = isReleasable(type);
         boolean searchInFolders = searchInFolders(folders);
+        boolean onlyUnDeployedUnReleaseObjects = unDeployedUnReleaseObjects == Boolean.TRUE;
 
         StringBuilder hql = new StringBuilder("select mt.id as id ");
         hql.append(",mt.path as path ");
@@ -360,6 +373,12 @@ public class InventorySearchDBLayer extends DBLayer {
             search = null;
         } else {
             hql.append("and (lower(mt.name) like :search or lower(mt.title) like :search) ");
+        }
+        if (onlyUnDeployedUnReleaseObjects) {
+            hql.append("and mt.deployed = 0 ");
+            if (valid != null) {
+                hql.append("and mt.valid = ").append(valid ? 1 : 0).append(" ");
+            }
         }
         if (searchInFolders) {
             hql.append("and (").append(foldersHql(folders)).append(") ");
