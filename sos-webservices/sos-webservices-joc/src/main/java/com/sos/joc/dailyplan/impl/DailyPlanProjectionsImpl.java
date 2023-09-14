@@ -1,6 +1,7 @@
 package com.sos.joc.dailyplan.impl;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -139,12 +140,14 @@ public class DailyPlanProjectionsImpl extends JOCResourceImpl implements IDailyP
                             });
                             yi.getAdditionalProperties().values().removeIf(yearItem -> yearItem.getAdditionalProperties().isEmpty());
                             
-                        } else if (pDayFromTo.isPresent()) {
+                        } else if (pMonthFromTo.isPresent() || pDayFromTo.isPresent()) {
                             yi.getAdditionalProperties().forEach((y, yearItem) -> {
-                                yearItem.getAdditionalProperties().keySet().removeIf(pMonthFromTo.get());
-                                yearItem.getAdditionalProperties().forEach((m, monthItem) -> {
-                                    monthItem.getAdditionalProperties().keySet().removeIf(pDayFromTo.get());
-                                });
+                                pMonthFromTo.ifPresent(p -> yearItem.getAdditionalProperties().keySet().removeIf(p));
+                                if (pDayFromTo.isPresent()) {
+                                    yearItem.getAdditionalProperties().forEach((m, monthItem) -> {
+                                        monthItem.getAdditionalProperties().keySet().removeIf(pDayFromTo.get());
+                                    });
+                                }
                             });
                         }
                         
@@ -183,12 +186,12 @@ public class DailyPlanProjectionsImpl extends JOCResourceImpl implements IDailyP
         Predicate<String> pMonthTo = m -> getMonth(m) > monthTo;
         
         Predicate<String> pMonthFromTo = null;
-        if (monthFrom != null) {
+        if (monthFrom != null && !(monthFrom + "").endsWith("01")) {
             pMonthFromTo = pMonthFrom;
-            if (monthTo != null) {
+            if (monthTo != null && !(monthTo + "").endsWith("12")) {
                 pMonthFromTo = pMonthFrom.or(pMonthTo);
             }
-        } else if (monthTo != null) {
+        } else if (monthTo != null && !(monthTo + "").endsWith("12")) {
             pMonthFromTo = pMonthTo;
         }
         return pMonthFromTo == null ? Optional.empty() : Optional.of(pMonthFromTo);
@@ -197,14 +200,16 @@ public class DailyPlanProjectionsImpl extends JOCResourceImpl implements IDailyP
     private Optional<Predicate<String>> getDayFromToPredicate(Integer dayFrom, Integer dayTo) {
         Predicate<String> pDayFrom = d -> getDay(d) < dayFrom;
         Predicate<String> pDayTo = d -> getDay(d) > dayTo;
-        
+        List<String> ultimos = Arrays.asList("0131", "0228", "0229", "0331", "0430", "0531", "0630", "0731", "0831", "0930", "1031", "1130", "1231");
+        boolean dayToIsUltimo = dayTo != null ? ultimos.stream().anyMatch(u -> (dayTo + "").endsWith(u)) : false;
+
         Predicate<String> pDayFromTo = null;
-        if (dayFrom != null) {
+        if (dayFrom != null && !(dayFrom + "").endsWith("01")) {
             pDayFromTo = pDayFrom;
-            if (pDayTo != null) {
+            if (dayTo != null && !dayToIsUltimo) {
                 pDayFromTo = pDayFrom.or(pDayTo);
             }
-        } else if (dayTo != null) {
+        } else if (dayTo != null && !dayToIsUltimo) {
             pDayFromTo = pDayTo;
         }
         return pDayFromTo == null ? Optional.empty() : Optional.of(pDayFromTo);
