@@ -37,7 +37,7 @@ public class InventorySearchDBLayerTest {
             InventorySearchDBLayer dbLayer = new InventorySearchDBLayer(session);
             session.beginTransaction();
 
-            List<InventorySearchItem> items = dbLayer.getBasicSearchInventoryConfigurations(RequestSearchReturnType.WORKFLOW, search, folders);
+            List<InventorySearchItem> items = dbLayer.getBasicSearchInventoryConfigurations(RequestSearchReturnType.WORKFLOW, search, folders, null, null);
             LOGGER.info("RESULT=" + items.size());
             for (InventorySearchItem item : items) {
                 LOGGER.info(SOSString.toString(item));
