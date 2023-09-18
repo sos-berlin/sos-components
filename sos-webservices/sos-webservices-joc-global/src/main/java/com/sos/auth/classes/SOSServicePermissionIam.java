@@ -63,6 +63,7 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.UriInfo;
+import jakarta.xml.bind.annotation.XmlElementDecl.GLOBAL;
 
 @Path("authentication")
 public class SOSServicePermissionIam {
@@ -423,136 +424,125 @@ public class SOSServicePermissionIam {
 
     private String createAccount(SOSAuthCurrentAccount currentAccount, String password, DBItemIamIdentityService dbItemIdentityService)
             throws Exception {
-        long startTime = System.currentTimeMillis();
         SOSIdentityService sosIdentityService = null;
         ISOSAuthSubject sosAuthSubject = null;
 
+        if (Globals.jocWebserviceDataContainer.getCurrentAccountsList() == null) {
+            Globals.jocWebserviceDataContainer.setCurrentAccountsList(new SOSAuthCurrentAccountsList());
+        }
+        IdentityServiceTypes identityServiceType = null;
         try {
+            identityServiceType = IdentityServiceTypes.fromValue(dbItemIdentityService.getIdentityServiceType());
+        } catch (IllegalArgumentException e) {
+        }
 
-            if (Globals.jocWebserviceDataContainer.getCurrentAccountsList() == null) {
-                Globals.jocWebserviceDataContainer.setCurrentAccountsList(new SOSAuthCurrentAccountsList());
+        if (identityServiceType != null) {
+            String identityServiceName = dbItemIdentityService.getIdentityServiceName();
+
+            ISOSLogin sosLogin = null;
+
+            switch (identityServiceType) {
+
+            case LDAP:
+            case LDAP_JOC:
+                sosLogin = new SOSLdapLogin();
+                LOGGER.debug("Login with idendity service ldap");
+                break;
+            case VAULT:
+            case VAULT_JOC:
+            case VAULT_JOC_ACTIVE:
+                sosLogin = new SOSVaultLogin();
+                LOGGER.debug("Login with identity service vault");
+                break;
+            case KEYCLOAK:
+            case KEYCLOAK_JOC:
+                sosLogin = new SOSKeycloakLogin();
+                LOGGER.debug("Login with identity service keycloak");
+                break;
+            case JOC:
+                sosLogin = new SOSInternAuthLogin();
+                LOGGER.debug("Login with idendity service sosintern");
+                break;
+            case CERTIFICATE:
+                sosLogin = new SOSCertificateAuthLogin();
+                LOGGER.debug("Login with identity service certificate");
+                break;
+            case FIDO:
+                sosLogin = new SOSFidoAuthLogin();
+                LOGGER.debug("Login with identity service fido");
+                break;
+            case OIDC_JOC:
+            case OIDC:
+                sosLogin = new SOSOpenIdLogin();
+                LOGGER.debug("Login with identity service openid_connect");
+                break;
+            default:
+                sosLogin = new SOSInternAuthLogin();
+                LOGGER.debug("Login with identity service sosintern");
             }
-            IdentityServiceTypes identityServiceType = null;
+
+            sosIdentityService = new SOSIdentityService(dbItemIdentityService);
+
+            sosLogin.setIdentityService(sosIdentityService);
+
+            sosLogin.login(currentAccount, password);
+            String msg = sosLogin.getMsg();
+
+            sosAuthSubject = sosLogin.getCurrentSubject();
+            Boolean secondFactorSuccess = null;
             try {
-                identityServiceType = IdentityServiceTypes.fromValue(dbItemIdentityService.getIdentityServiceType());
-            } catch (IllegalArgumentException e) {
-            }
-
-            if (identityServiceType != null) {
-                String identityServiceName = dbItemIdentityService.getIdentityServiceName();
-
-                ISOSLogin sosLogin = null;
-
-                switch (identityServiceType) {
-
-                case LDAP:
-                case LDAP_JOC:
-                    sosLogin = new SOSLdapLogin();
-                    LOGGER.debug("Login with idendity service ldap");
-                    break;
-                case VAULT:
-                case VAULT_JOC:
-                case VAULT_JOC_ACTIVE:
-                    sosLogin = new SOSVaultLogin();
-                    LOGGER.debug("Login with identity service vault");
-                    break;
-                case KEYCLOAK:
-                case KEYCLOAK_JOC:
-                    sosLogin = new SOSKeycloakLogin();
-                    LOGGER.debug("Login with identity service keycloak");
-                    break;
-                case JOC:
-                    sosLogin = new SOSInternAuthLogin();
-                    LOGGER.debug("Login with idendity service sosintern");
-                    break;
-                case CERTIFICATE:
-                    sosLogin = new SOSCertificateAuthLogin();
-                    LOGGER.debug("Login with identity service certificate");
-                    break;
-                case FIDO:
-                    sosLogin = new SOSFidoAuthLogin();
-                    LOGGER.debug("Login with identity service fido");
-                    break;
-                case OIDC_JOC:
-                case OIDC:
-                    sosLogin = new SOSOpenIdLogin();
-                    LOGGER.debug("Login with identity service openid_connect");
-                    break;
-                default:
-                    sosLogin = new SOSInternAuthLogin();
-                    LOGGER.debug("Login with identity service sosintern");
-                }
-
-                sosIdentityService = new SOSIdentityService(dbItemIdentityService);
-
-                sosLogin.setIdentityService(sosIdentityService);
-
-                sosLogin.login(currentAccount, password);
-                String msg = sosLogin.getMsg();
-
-                sosAuthSubject = sosLogin.getCurrentSubject();
-                Boolean secondFactorSuccess = null;
-                try {
-                    secondFactorSuccess = SOSSecondFactorHandler.checkSecondFactor(currentAccount, dbItemIdentityService.getIdentityServiceName());
-                    if (secondFactorSuccess != null && !secondFactorSuccess) {
-                        LOGGER.info("Login: second factor failed");
-                        sosAuthSubject = null;
-                    }
-                } catch (JocObjectNotExistException | JocAuthenticationException e) {
+                secondFactorSuccess = SOSSecondFactorHandler.checkSecondFactor(currentAccount, dbItemIdentityService.getIdentityServiceName());
+                if (secondFactorSuccess != null && !secondFactorSuccess) {
+                    LOGGER.info("Login: second factor failed");
                     sosAuthSubject = null;
-                    msg = e.getMessage();
                 }
-
-                currentAccount.setCurrentSubject(sosAuthSubject);
-                currentAccount.setIdentityService(new SOSIdentityService(dbItemIdentityService.getId(), dbItemIdentityService
-                        .getIdentityServiceName(), identityServiceType));
-
-                if (sosAuthSubject == null || !sosAuthSubject.isAuthenticated()) {
-                    SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = new SOSAuthCurrentAccountAnswer(currentAccount.getAccountname());
-                    sosAuthCurrentAccountAnswer.setIsAuthenticated(false);
-                    sosAuthCurrentAccountAnswer.setMessage(msg);
-                    sosAuthCurrentAccountAnswer.setIdentityService(identityServiceType.name() + ":" + identityServiceName);
-                    currentAccount.setCurrentSubject(null);
-
-                    throw new JocAuthenticationException(sosAuthCurrentAccountAnswer);
-                }
-
-                if (secondFactorSuccess == null && !currentAccount.getSosLoginParameters().isSecondPathOfTwoFactor() && sosIdentityService
-                        .isTwoFactor()) {
-                    DBItemIamIdentityService dbItemSecondFactor = SOSSecondFactorHandler.getSecondFactor(dbItemIdentityService);
-                    SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = new SOSAuthCurrentAccountAnswer(currentAccount.getAccountname());
-                    sosAuthCurrentAccountAnswer.setIsAuthenticated(true);
-                    sosAuthCurrentAccountAnswer.setAccessToken("");
-                    sosAuthCurrentAccountAnswer.setMessage("Second factor needed");
-                    sosAuthCurrentAccountAnswer.setIdentityService(identityServiceType.name() + ":" + identityServiceName);
-                    sosAuthCurrentAccountAnswer.setSecondFactoridentityService(dbItemSecondFactor.getIdentityServiceName());
-
-                    throw new JocWaitForSecondFactorException(sosAuthCurrentAccountAnswer);
-
-                }
-                SOSSessionHandler sosSessionHandler = new SOSSessionHandler(currentAccount);
-
-                String accessToken = sosSessionHandler.getAccessToken().toString();
-                currentAccount.setAccessToken(identityServiceName, accessToken);
-                Globals.jocWebserviceDataContainer.getCurrentAccountsList().addAccount(currentAccount);
-
-                resetTimeOut(currentAccount);
-
-                if (Globals.sosCockpitProperties == null) {
-                    Globals.sosCockpitProperties = new JocCockpitProperties();
-                }
-
-                return sosLogin.getMsg();
-            } else {
-                return "Unknown Identity Service found: " + dbItemIdentityService.getIdentityServiceType();
+            } catch (JocObjectNotExistException | JocAuthenticationException e) {
+                sosAuthSubject = null;
+                msg = e.getMessage();
             }
-        } finally {
-            if (sosAuthSubject != null && sosIdentityService != null) {
-                boolean success = (sosAuthSubject != null && sosAuthSubject.isAuthenticated());
 
-                long timeElapsed = System.currentTimeMillis() - startTime;
-                currentAccount.addSleep(currentAccount.getSleep() + SOSAuthHelper.handleDelay(sosIdentityService, timeElapsed, success));
+            currentAccount.setCurrentSubject(sosAuthSubject);
+            currentAccount.setIdentityService(new SOSIdentityService(dbItemIdentityService.getId(), dbItemIdentityService.getIdentityServiceName(),
+                    identityServiceType));
+
+            if (sosAuthSubject == null || !sosAuthSubject.isAuthenticated()) {
+                SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = new SOSAuthCurrentAccountAnswer(currentAccount.getAccountname());
+                sosAuthCurrentAccountAnswer.setIsAuthenticated(false);
+                sosAuthCurrentAccountAnswer.setMessage(msg);
+                sosAuthCurrentAccountAnswer.setIdentityService(identityServiceType.name() + ":" + identityServiceName);
+                currentAccount.setCurrentSubject(null);
+
+                throw new JocAuthenticationException(sosAuthCurrentAccountAnswer);
             }
+
+            if (secondFactorSuccess == null && !currentAccount.getSosLoginParameters().isSecondPathOfTwoFactor() && sosIdentityService
+                    .isTwoFactor()) {
+                DBItemIamIdentityService dbItemSecondFactor = SOSSecondFactorHandler.getSecondFactor(dbItemIdentityService);
+                SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = new SOSAuthCurrentAccountAnswer(currentAccount.getAccountname());
+                sosAuthCurrentAccountAnswer.setIsAuthenticated(true);
+                sosAuthCurrentAccountAnswer.setAccessToken("");
+                sosAuthCurrentAccountAnswer.setMessage("Second factor needed");
+                sosAuthCurrentAccountAnswer.setIdentityService(identityServiceType.name() + ":" + identityServiceName);
+                sosAuthCurrentAccountAnswer.setSecondFactoridentityService(dbItemSecondFactor.getIdentityServiceName());
+
+                throw new JocWaitForSecondFactorException(sosAuthCurrentAccountAnswer);
+
+            }
+            SOSSessionHandler sosSessionHandler = new SOSSessionHandler(currentAccount);
+
+            String accessToken = sosSessionHandler.getAccessToken().toString();
+            currentAccount.setAccessToken(identityServiceName, accessToken);
+            Globals.jocWebserviceDataContainer.getCurrentAccountsList().addAccount(currentAccount);
+
+            resetTimeOut(currentAccount);
+
+            if (Globals.sosCockpitProperties == null) {
+                Globals.sosCockpitProperties = new JocCockpitProperties();
+            }
+
+            return sosLogin.getMsg();
+        } else {
+            return "Unknown Identity Service found: " + dbItemIdentityService.getIdentityServiceType();
         }
 
     }
@@ -774,11 +764,13 @@ public class SOSServicePermissionIam {
                 } else {
                     sosAuthCurrentUserAnswer.setIdentityService("");
                 }
-
+                Globals.jocWebserviceDataContainer.getSOSForceDelayHandler().addFailedLogin(currentAccount);
+                Globals.jocWebserviceDataContainer.getSOSForceDelayHandler().forceDelay(currentAccount);
+                    
                 sosAuthCurrentUserAnswer.setMessage(String.format("%s: Could not login", msg));
-                TimeUnit.MILLISECONDS.sleep(currentAccount.getSleep());
-
                 throw new JocAuthenticationException(sosAuthCurrentUserAnswer);
+            }else {
+                Globals.jocWebserviceDataContainer.getSOSForceDelayHandler().resetFailedLogin(currentAccount);
             }
 
             SOSSessionHandler sosSessionHandler = new SOSSessionHandler(currentAccount);

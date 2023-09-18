@@ -1,20 +1,20 @@
 package com.sos.joc.classes;
- 
 
 import com.sos.auth.classes.SOSAuthAccessTokenHandler;
 import com.sos.auth.classes.SOSAuthCurrentAccountsList;
 import com.sos.auth.classes.SOSAuthLockerHandler;
+import com.sos.auth.classes.SOSForceDelayHandler;
 import com.sos.auth.classes.SOSLocker;
- 
 
 public final class JocWebserviceDataContainer {
+
     private static JocWebserviceDataContainer instance;
-    
+
     private static SOSAuthLockerHandler sosAuthLockerHandler;
     private static SOSAuthAccessTokenHandler sosAuthAccessTokenHandler;
     private static SOSAuthCurrentAccountsList currentAccountsList;
     private static SOSLocker sosLocker;
-    
+    private static SOSForceDelayHandler sosForceDelayHandler;
 
     private JocWebserviceDataContainer() {
         sosAuthAccessTokenHandler = new SOSAuthAccessTokenHandler();
@@ -28,27 +28,33 @@ public final class JocWebserviceDataContainer {
         return instance;
     }
 
-    public  SOSAuthCurrentAccountsList getCurrentAccountsList() {
+    public SOSAuthCurrentAccountsList getCurrentAccountsList() {
         return currentAccountsList;
     }
 
-    public  SOSLocker getSOSLocker() {
+    public SOSLocker getSOSLocker() {
+
         if (sosLocker == null) {
             sosLocker = new SOSLocker();
         }
         return sosLocker;
     }
-    
-    public  void setCurrentAccountsList(SOSAuthCurrentAccountsList currentAccountsList) {
+
+    public SOSForceDelayHandler getSOSForceDelayHandler() {
+        if (sosForceDelayHandler == null) {
+            sosForceDelayHandler = new SOSForceDelayHandler();
+        }
+        return sosForceDelayHandler;
+    }
+
+    public void setCurrentAccountsList(SOSAuthCurrentAccountsList currentAccountsList) {
         JocWebserviceDataContainer.currentAccountsList = currentAccountsList;
     }
 
-    
     public SOSAuthAccessTokenHandler getSosAuthAccessTokenHandler() {
         return sosAuthAccessTokenHandler;
     }
 
-    
     public void setSosAuthAccessTokenHandler(SOSAuthAccessTokenHandler sosAuthAccessTokenHandler) {
         JocWebserviceDataContainer.sosAuthAccessTokenHandler = sosAuthAccessTokenHandler;
     }
@@ -57,12 +63,8 @@ public final class JocWebserviceDataContainer {
         return sosAuthLockerHandler;
     }
 
-    
     public void setSosAuthLockerHandler(SOSAuthLockerHandler sosAuthLockerHandler) {
         JocWebserviceDataContainer.sosAuthLockerHandler = sosAuthLockerHandler;
     }
 
-   
 }
-
-   
