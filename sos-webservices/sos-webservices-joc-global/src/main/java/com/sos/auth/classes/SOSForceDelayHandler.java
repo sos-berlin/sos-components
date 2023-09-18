@@ -19,7 +19,7 @@ public class SOSForceDelayHandler {
     Map<String, Integer> failedLogins = new LinkedHashMap<String, Integer>();
 
     public void addFailedLogin(SOSAuthCurrentAccount currentAccount) {
-        if (failedLogins.size() > MAX_FAILED_LOGINS - 19997) {
+        if (failedLogins.size() > MAX_FAILED_LOGINS) {
             String firstFailedLoginKey = failedLogins.keySet().stream().findFirst().get();
             failedLogins.remove(firstFailedLoginKey);
         }
