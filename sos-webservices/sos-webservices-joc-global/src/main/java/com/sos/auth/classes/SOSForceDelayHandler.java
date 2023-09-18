@@ -12,6 +12,7 @@ import com.sos.joc.classes.JocWebserviceDataContainer;
 
 public class SOSForceDelayHandler {
 
+    private static final int FIRST_DELAY_LEVEL = 3;
     private static final int FORCED_LONG_DELAY = 30;
     private static final int FORCED_FIRST_DELAY = 2;
     private static final int MAX_FAILED_LOGINS = 20000;
@@ -40,7 +41,7 @@ public class SOSForceDelayHandler {
             Integer fails = failedLogins.get(currentAccount.getAccountname());
             try {
                 if (fails != null && fails > 0) {
-                    if (fails < 3) {
+                    if (fails < FIRST_DELAY_LEVEL) {
                         TimeUnit.SECONDS.sleep(FORCED_FIRST_DELAY);
                     } else {
                         TimeUnit.SECONDS.sleep(FORCED_LONG_DELAY);
