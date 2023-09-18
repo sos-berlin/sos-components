@@ -57,7 +57,6 @@ public class SOSAuthCurrentAccount {
     private Set<ISOSAuthSubject> currentSubjects;
     private SOSLoginParameters sosLoginParameters;
     private String kid;
-    private long sleep=0;
 
     private Permissions sosPermissionJocCockpitControllers;
     private SOSAuthFolderPermissions sosAuthFolderPermissions;
@@ -89,7 +88,7 @@ public class SOSAuthCurrentAccount {
             return sosPermissionJocCockpitControllers.getControllerDefaults();
         }
     }
-    
+
     public ControllerPermissions getControllerDefaultPermissions() {
         if (sosPermissionJocCockpitControllers == null) {
             sosPermissionJocCockpitControllers = initPermissions();
@@ -335,28 +334,16 @@ public class SOSAuthCurrentAccount {
         this.sosLoginParameters = sosLoginParameters;
     }
 
-    
     public void setAccountName(String accountName) {
         this.accountName = accountName;
     }
 
-    
     public String getKid() {
         return kid;
     }
 
-    
     public void setKid(String kid) {
         this.kid = kid;
-    }
-    
-    public void addSleep(long sleep) {
-        this.sleep = sleep+sleep;
-    }
-
-    
-    public long getSleep() {
-        return sleep;
     }
 
 }

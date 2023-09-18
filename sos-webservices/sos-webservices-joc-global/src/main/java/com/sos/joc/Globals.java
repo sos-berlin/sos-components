@@ -6,7 +6,6 @@ import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
 
@@ -44,21 +43,16 @@ public class Globals {
 
     public static SOSHibernateFactory sosHibernateFactory;
     public static JocWebserviceDataContainer jocWebserviceDataContainer = JocWebserviceDataContainer.getInstance();
-    public static ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            .configure(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true)
-            .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-            .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
-    public static ObjectMapper prettyPrintObjectMapper = new ObjectMapper()
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            .configure(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true)
-            .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-            .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false)
-            .configure(SerializationFeature.INDENT_OUTPUT, true);
+    public static ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
+            DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true).configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(
+                    SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
+    public static ObjectMapper prettyPrintObjectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .configure(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true).configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+            .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false).configure(SerializationFeature.INDENT_OUTPUT, true);
     public static JocCockpitProperties sosCockpitProperties;
     public static TimeZone jocTimeZone = TimeZone.getDefault();
     public static Path servletContextRealPath = null;
     public static URI servletBaseUri = null;
-    public static Map<String, String> schedulerVariables = null;
     public static ConfigurationGlobals configurationGlobals = null;
     public static String servletContextContextPath = null; // /joc
     public static String apiVersion = "";
@@ -66,7 +60,7 @@ public class Globals {
     public static String curVersion = "";
     public static boolean isApiServer = false;
     public static Boolean prevWasApiServer = null;
-    
+
     public static long maxSizeOfLogsToDisplay = 1024 * 1024 * 10L; // 10MB
     public static long timeoutToDeleteTempFiles = 1000 * 60 * 3L;
     public static int httpConnectionTimeout = 2000;
@@ -168,16 +162,16 @@ public class Globals {
 
         confFile = sosCockpitProperties.getProperty(HIBERNATE_CONFIGURATION_FILE, "hibernate.cfg.xml");
         if (confFile.trim().isEmpty()) {
-            throw new JocConfigurationException(String.format("Couldn't find the property '%1$s' in %2$s", HIBERNATE_CONFIGURATION_FILE, sosCockpitProperties
-                    .getPropertiesFile()));
+            throw new JocConfigurationException(String.format("Couldn't find the property '%1$s' in %2$s", HIBERNATE_CONFIGURATION_FILE,
+                    sosCockpitProperties.getPropertiesFile()));
         }
 
         confFile = confFile.trim();
         Path p = sosCockpitProperties.resolvePath(confFile);
         if (p != null) {
             if (!Files.exists(p) || Files.isDirectory(p)) {
-                throw new JocConfigurationException(String.format("hibernate configuration (%1$s) is set but couldn't find the file (%2$s).", confFile, p
-                        .toString()));
+                throw new JocConfigurationException(String.format("hibernate configuration (%1$s) is set but couldn't find the file (%2$s).",
+                        confFile, p.toString()));
             } else {
                 confFile = p.toString().replace('\\', '/');
             }
@@ -186,7 +180,7 @@ public class Globals {
         }
         return p;
     }
-    
+
     public static String getStrippedInventoryVersion() {
         if (inventoryVersion == null) {
             return null;
@@ -388,35 +382,35 @@ public class Globals {
         getJocSecurityLevel();
         jocSecurityLevel = level;
     }
-    
+
     public static String getClusterId() throws JocConfigurationException {
         if (clusterId == null) {
             getJocSecurityLevel();
             clusterId = isApiServer ? "api" : "joc";
-            
-//            if (sosCockpitProperties == null) {
-//                sosCockpitProperties = new JocCockpitProperties();
-//            }
-//
-//            clusterId = sosCockpitProperties.getProperty("cluster_id");
-//
-//            if (clusterId == null || clusterId.isEmpty()) {
-//                throw new JocConfigurationException("The 'cluster_id' setting in the joc.properties file is not defined.");
-//            } else if (clusterId.length() > 10) {
-//                throw new JocConfigurationException("The 'cluster_id' setting in the joc.properties file can be only max. 10 characters long.");
-//            }
+
+            // if (sosCockpitProperties == null) {
+            // sosCockpitProperties = new JocCockpitProperties();
+            // }
+            //
+            // clusterId = sosCockpitProperties.getProperty("cluster_id");
+            //
+            // if (clusterId == null || clusterId.isEmpty()) {
+            // throw new JocConfigurationException("The 'cluster_id' setting in the joc.properties file is not defined.");
+            // } else if (clusterId.length() > 10) {
+            // throw new JocConfigurationException("The 'cluster_id' setting in the joc.properties file can be only max. 10 characters long.");
+            // }
         }
         return clusterId;
     }
-    
+
     public static void setClusterId(String val) {
         clusterId = val;
     }
-    
+
     public static String getJocId() throws JocConfigurationException {
         return getClusterId() + "#" + getOrdering();
     }
-    
+
     public static Integer getOrdering() throws JocConfigurationException {
         if (ordering == null) {
             if (sosCockpitProperties == null) {
@@ -431,19 +425,19 @@ public class Globals {
         }
         return ordering;
     }
-    
+
     public static void setOrdering(Integer val) {
         ordering = val;
     }
-    
+
     public static String getDataDirectory() {
         return Paths.get(System.getProperty("user.dir")).toString();
     }
-    
+
     public static String getMemberId() {
         return getHostname() + ":" + SOSString.hash256(getDataDirectory());
     }
-    
+
     public static String getHostname() {
         try {
             return SOSShell.getHostname();
@@ -481,8 +475,8 @@ public class Globals {
     }
 
     public static ConfigurationGlobalsJoc getConfigurationGlobalsJoc() {
-        return configurationGlobals == null ? new ConfigurationGlobalsJoc() : (ConfigurationGlobalsJoc) configurationGlobals
-                .getConfigurationSection(DefaultSections.joc);
+        return configurationGlobals == null ? new ConfigurationGlobalsJoc() : (ConfigurationGlobalsJoc) configurationGlobals.getConfigurationSection(
+                DefaultSections.joc);
     }
 
     public static ConfigurationGlobalsUser getConfigurationGlobalsUser() {
@@ -491,13 +485,13 @@ public class Globals {
     }
 
     public static ConfigurationGlobalsDailyPlan getConfigurationGlobalsDailyPlan() {
-        return configurationGlobals == null ? new ConfigurationGlobalsDailyPlan()
-                : (ConfigurationGlobalsDailyPlan) configurationGlobals.getConfigurationSection(DefaultSections.dailyplan);
+        return configurationGlobals == null ? new ConfigurationGlobalsDailyPlan() : (ConfigurationGlobalsDailyPlan) configurationGlobals
+                .getConfigurationSection(DefaultSections.dailyplan);
     }
 
     public static ConfigurationGlobalsGit getConfigurationGlobalsGit() {
-        return configurationGlobals == null ? new ConfigurationGlobalsGit() : (ConfigurationGlobalsGit) configurationGlobals
-                .getConfigurationSection(DefaultSections.git);
+        return configurationGlobals == null ? new ConfigurationGlobalsGit() : (ConfigurationGlobalsGit) configurationGlobals.getConfigurationSection(
+                DefaultSections.git);
     }
 
     // -1: current version is older, 0: current version is equal, 1: current version

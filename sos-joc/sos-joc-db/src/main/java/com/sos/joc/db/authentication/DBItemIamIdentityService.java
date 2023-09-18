@@ -53,12 +53,6 @@ public class DBItemIamIdentityService {
     @Type(type = "numeric_boolean")
     private Boolean required;
 
-    @Column(name = "[LOGIN_COUNT]", nullable = false)
-    private Long loginCount;
-
-    @Column(name = "[LOGIN_AVERAGE]", nullable = false)
-    private Long loginAverage;
-
     public DBItemIamIdentityService() {
 
     }
@@ -151,22 +145,6 @@ public class DBItemIamIdentityService {
     @Transient
     public boolean isTwoFactor() {
         return authenticationScheme.equals(IdentityServiceAuthenticationScheme.TWO_FACTOR.value()) && secondFactorIsId != null;
-    }
-
-    public Long getLoginCount() {
-        return loginCount;
-    }
-
-    public void setLoginCount(Long loginCount) {
-        this.loginCount = loginCount;
-    }
-
-    public Long getLoginAverage() {
-        return loginAverage;
-    }
-
-    public void setLoginAverage(Long loginAverage) {
-        this.loginAverage = loginAverage;
     }
 
 }
