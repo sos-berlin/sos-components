@@ -300,7 +300,7 @@ public class SOSAuthCurrentAccount {
     public String getCallerIpAddress() {
         if (sosLoginParameters.getRequest() != null) {
             String s = sosLoginParameters.getRequest().getRemoteAddr();
-            if ("0:0:0:0:0:0:0:1".equals(s)) {
+            if ("[0:0:0:0:0:0:0:1]".equals(s)) {
                 return "127.0.0.1";
             } else {
                 return s;
