@@ -1,5 +1,6 @@
 package com.sos.auth.classes;
 
+import java.security.SecureRandom;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -84,6 +85,17 @@ public class SOSForceDelayHandler {
         }
     }
 
+    private int randomizeDelayToMilliseconds(Integer delay) {
+        SecureRandom rand = new SecureRandom();
+        if (delay == FORCED_LONG_DELAY) {
+            delay = 25000 + rand.nextInt(10000);
+        }
+        if (delay == FORCED_FIRST_DELAY) {
+            delay = 1000 + rand.nextInt(2000);
+        }
+        return delay;
+    }
+
     public void forceDelay(SOSAuthCurrentAccount currentAccount) {
         int delay = 0;
         delay = forceDelayAccount(currentAccount.getAccountname());
@@ -98,7 +110,7 @@ public class SOSForceDelayHandler {
         if (delay > 0) {
             try {
                 LOGGER.debug("....force delay for " + delay + " seconds");
-                TimeUnit.SECONDS.sleep(delay);
+                TimeUnit.MILLISECONDS.sleep(randomizeDelayToMilliseconds(delay));
             } catch (InterruptedException e) {
                 LOGGER.error("", e);
             }
