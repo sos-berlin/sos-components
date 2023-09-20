@@ -249,7 +249,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                                         
                                         if (Proxies.isCoupled(controllerId)) {
                                             if (SubagentDirectorType.NO_DIRECTOR.equals(dbSubAgent.getDirectorAsEnum())) {
-                                                addSubagentState(subagent, dbSubAgent, subagentItemStates, clusterState.getLostNodeProblem(), subagentIsLost);
+                                                addSubagentState(subagent, dbSubAgent, subagentItemStates, clusterState, subagentIsLost);
 
                                             } else {
                                                 boolean isActive = isActive(clusterState, dbSubAgent);
@@ -267,7 +267,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                                                     if (optProblem.isPresent()) {
                                                         subagent.setErrorMessage(ProblemHelper.getErrorMessage(optProblem.get()));
                                                     } else if (subagentIsLost.isPresent()) {
-                                                        if (clusterState.getLostNodeProblem().isPresent()) {
+                                                        if (clusterState != null && clusterState.getLostNodeProblem().isPresent()) {
                                                             subagent.setErrorMessage(clusterState.getLostNodeProblem().get());
                                                         } else {
                                                             subagent.setErrorMessage("ClusterNodeLossNotConfirmed: This director is lost. Requires user confirmation");
@@ -277,7 +277,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                                                     AgentStateReason stateReason = getAgentReasonText(couplingState, optProblem);
                                                     subagent.setState(getState(stateText, stateReason));
                                                 } else {
-                                                    addSubagentState(subagent, dbSubAgent, subagentItemStates, clusterState.getLostNodeProblem(), subagentIsLost);
+                                                    addSubagentState(subagent, dbSubAgent, subagentItemStates, clusterState, subagentIsLost);
                                                 }
                                             }
                                         }
@@ -587,7 +587,8 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
     }
     
     private static SubagentV addSubagentState(SubagentV subagent, DBItemInventorySubAgentInstance dbSubAgent,
-            Map<SubagentId, JSubagentItemState> subagentItemStates, Optional<String> lostNodeProblem, Optional<SubagentDirectorType> subagentIsLost) {
+            Map<SubagentId, JSubagentItemState> subagentItemStates, AgentDirectorClusterState clusterState,
+            Optional<SubagentDirectorType> subagentIsLost) {
         AgentStateText stateText = AgentStateText.UNKNOWN;
         AgentStateReason stateReason = null;
         JSubagentItemState jSubagentItemState = subagentItemStates.get(SubagentId.of(dbSubAgent.getSubAgentId()));
@@ -601,8 +602,8 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
             if (optProblem.isPresent()) {
                 subagent.setErrorMessage(ProblemHelper.getErrorMessage(optProblem.get()));
             } else if (subagentIsLost.isPresent()) {
-                if (lostNodeProblem.isPresent()) {
-                    subagent.setErrorMessage(lostNodeProblem.get());
+                if (clusterState != null && clusterState.getLostNodeProblem().isPresent()) {
+                    subagent.setErrorMessage(clusterState.getLostNodeProblem().get());
                 } else {
                     subagent.setErrorMessage("ClusterNodeLossNotConfirmed: This director is lost. Requires user confirmation");
                 }
