@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 public class SOSForceDelayHandler {
 
+    private static final int RESET_WHEN_REACHED = 100;
     private static final int FIRST_DELAY_LEVEL = 2;
     private static final int FORCED_LONG_DELAY = 30;
     private static final int FORCED_FIRST_DELAY = 2;
@@ -118,18 +119,26 @@ public class SOSForceDelayHandler {
     }
 
     public void resetFailedLogin(SOSAuthCurrentAccount currentAccount) {
-        if (currentAccount.getAccountname() != null && !currentAccount.getAccountname().isEmpty()) {
-            Integer fails = failedLoginsAccounts.get(currentAccount.getAccountname());
-            if (fails != null) {
-                LOGGER.debug("....Reset force delay for " + currentAccount.getAccountname());
-                failedLoginsAccounts.remove(currentAccount.getAccountname());
+        if (failedLoginsAccounts.size() > RESET_WHEN_REACHED) {
+            failedLoginsAccounts.clear();
+        } else {
+            if (currentAccount.getAccountname() != null && !currentAccount.getAccountname().isEmpty()) {
+                Integer fails = failedLoginsAccounts.get(currentAccount.getAccountname());
+                if (fails != null) {
+                    LOGGER.debug("....Reset force delay for " + currentAccount.getAccountname());
+                    failedLoginsAccounts.remove(currentAccount.getAccountname());
+                }
             }
         }
-        if (currentAccount.getCallerIpAddress() != null && !currentAccount.getCallerIpAddress().isEmpty()) {
-            Integer fails = failedLoginsIp.get(currentAccount.getCallerIpAddress());
-            if (fails != null) {
-                LOGGER.debug("....Reset force delay for " + currentAccount.getCallerIpAddress());
-                failedLoginsIp.remove(currentAccount.getCallerIpAddress());
+        if (failedLoginsIp.size() > RESET_WHEN_REACHED) {
+            failedLoginsIp.clear();
+        } else {
+            if (currentAccount.getCallerIpAddress() != null && !currentAccount.getCallerIpAddress().isEmpty()) {
+                Integer fails = failedLoginsIp.get(currentAccount.getCallerIpAddress());
+                if (fails != null) {
+                    LOGGER.debug("....Reset force delay for " + currentAccount.getCallerIpAddress());
+                    failedLoginsIp.remove(currentAccount.getCallerIpAddress());
+                }
             }
         }
     }
