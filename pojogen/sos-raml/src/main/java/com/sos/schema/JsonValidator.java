@@ -251,6 +251,8 @@ public class JsonValidator {
             put("com.sos.joc.model.dailyplan.submissions.SubmissionsDeleteRequest", "dailyplan/submissions/submissions-delete-request-schema.json");
             put("com.sos.joc.model.dailyplan.submissions.SubmissionsRequest", "dailyplan/submissions/submissions-request-schema.json");
             put("com.sos.joc.model.dailyplan.projections.ProjectionsRequest", "dailyplan/projections/projections-request-schema.json");
+            put("com.sos.joc.model.dailyplan.projections.ProjectionsDayRequest", "dailyplan/projections/projections-day-request-schema.json");
+            put("com.sos.joc.model.dailyplan.projections.ProjectionsScheduleRequest", "dailyplan/projections/projections-schedule-request-schema.json");
 
             put("com.sos.joc.model.yade.TransferFilter", "yade/transferFilter-schema.json");
             put("com.sos.joc.model.yade.TransferId", "yade/transferId-schema.json");
