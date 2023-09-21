@@ -781,7 +781,7 @@ public class DailyPlanRunner extends TimerTask {
                                 dailyPlanDateAsString));
                     }
 
-                    String calendarsKey = assignedCalendar.getCalendarName() + "#" + schedule.getPath();
+                    String calendarsKey = assignedCalendar.getCalendarName();// + "#" + schedule.getPath();
                     Calendar calendar = calendars.get(calendarsKey);
                     if (calendar == null) {
                         try {
