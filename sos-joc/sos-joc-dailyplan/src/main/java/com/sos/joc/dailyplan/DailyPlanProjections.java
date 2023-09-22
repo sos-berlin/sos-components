@@ -424,7 +424,7 @@ public class DailyPlanProjections {
                 }
                 final ZoneId timezone = ZoneId.of(assignedCalendar.getTimeZone());
 
-                String calendarsKey = assignedCalendar.getCalendarName() + "#" + schedule.getPath();
+                String calendarsKey = assignedCalendar.getCalendarName();// + "#" + schedule.getPath();
                 Calendar calendar = workingCalendars.get(calendarsKey);
                 if (calendar == null) {
                     try {

@@ -29,8 +29,6 @@ import com.sos.joc.model.dailyplan.projections.items.meta.MetaItem;
 import com.sos.joc.model.dailyplan.projections.items.year.DateItem;
 import com.sos.joc.model.dailyplan.projections.items.year.DatePeriodItem;
 import com.sos.joc.model.dailyplan.projections.items.year.MonthItem;
-import com.sos.joc.model.dailyplan.projections.items.year.MonthsItem;
-import com.sos.joc.model.dailyplan.projections.items.year.YearsItem;
 import com.sos.joc.model.security.configuration.permissions.JocPermissions;
 import com.sos.schema.JsonValidator;
 
@@ -75,13 +73,10 @@ public class DailyPlanDayProjectionImpl extends JOCResourceImpl implements IDail
                 return jocDefaultResponse;
             }
             
-            String[] splittedDate = in.getDate().split("-");
-            String year = splittedDate[0];
-            String month = splittedDate[0] + "-" + splittedDate[1];
-            
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             DBLayerDailyPlanProjections dbLayer = new DBLayerDailyPlanProjections(session);
-            List<DBItemDailyPlanProjection> items = dbLayer.getProjections(Collections.singletonList(Long.valueOf(year)));
+            List<DBItemDailyPlanProjection> items = dbLayer.getProjections(Collections.singletonList(DailyPlanProjectionsImpl.getMonth(in
+                    .getDate())));
             dbLayer.close();
             session = null;
 
@@ -96,12 +91,9 @@ public class DailyPlanDayProjectionImpl extends JOCResourceImpl implements IDail
             if (items != null) {
                 for (DBItemDailyPlanProjection item : items) {
                     if (!item.isMeta()) {
-                        //System.out.println(Instant.now().toEpochMilli());
-
-                        YearsItem yi = Globals.objectMapper.readValue(item.getContent(), YearsItem.class);
-                        //System.out.println(Instant.now().toEpochMilli());
-                        DateItem d = yi.getAdditionalProperties().getOrDefault(year, new MonthsItem())
-                                .getAdditionalProperties().getOrDefault(month, new MonthItem()).getAdditionalProperties().get(in.getDate());
+                        
+                        MonthItem mi = Globals.objectMapper.readValue(item.getContent(), MonthItem.class);
+                        DateItem d = mi.getAdditionalProperties().get(in.getDate());
                         if (d != null) {
                             entity.setPeriods(d.getPeriods());
                             entity.setPlanned(d.getPlanned());
@@ -148,9 +140,7 @@ public class DailyPlanDayProjectionImpl extends JOCResourceImpl implements IDail
                     entity.setNumOfPeriods(entity.getPeriods().size());
                 }
                 
-                
             }
-            //System.out.println(Instant.now().toEpochMilli());
             
             entity.setSurveyDate(surveyDate);
             entity.setDeliveryDate(Date.from(Instant.now()));

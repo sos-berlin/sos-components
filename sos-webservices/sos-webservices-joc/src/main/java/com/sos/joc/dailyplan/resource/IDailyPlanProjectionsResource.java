@@ -29,15 +29,15 @@ public interface IDailyPlanProjectionsResource {
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse calendarProjections(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 
-    @POST
-    @Path(PATH_SCHEDULES)
-    @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse schedulesProjections(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+//    @POST
+//    @Path(PATH_SCHEDULES)
+//    @Produces({ MediaType.APPLICATION_JSON })
+//    public JOCDefaultResponse schedulesProjections(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 
-    @POST
-    @Path(PATH_SCHEDULE)
-    @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse scheduleProjections(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+//    @POST
+//    @Path(PATH_SCHEDULE)
+//    @Produces({ MediaType.APPLICATION_JSON })
+//    public JOCDefaultResponse scheduleProjections(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 
     @POST
     @Path(PATH_RECREATE)
