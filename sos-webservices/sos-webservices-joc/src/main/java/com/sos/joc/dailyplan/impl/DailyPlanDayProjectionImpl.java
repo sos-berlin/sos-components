@@ -114,6 +114,11 @@ public class DailyPlanDayProjectionImpl extends JOCResourceImpl implements IDail
                         scheduleNamesOpt = Optional.of(scheduleNames);
                     }
                     
+                    Optional<Set<String>> workflowNames = Optional.empty();
+                    if (in.getWorkflowPaths() != null && !in.getWorkflowPaths().isEmpty()) {
+                        workflowNames = Optional.of(in.getWorkflowPaths().stream().map(JocInventory::pathToName).collect(Collectors.toSet()));
+                    }
+                    
                     Optional<DBItemDailyPlanProjection> metaContentOpt = items.stream().filter(DBItemDailyPlanProjection::isMeta).findAny();
                     if (metaContentOpt.isPresent()) {
                         surveyDate = metaContentOpt.get().getCreated();
@@ -123,8 +128,9 @@ public class DailyPlanDayProjectionImpl extends JOCResourceImpl implements IDail
                                 unPermittedSchedulesExist = true;
                             }
                             for (String controllerId : allowedControllers) {
-                                if (DailyPlanProjectionsImpl.filterPermittedSchedules(metaItem.getAdditionalProperties().get(controllerId), folderPermissions.getListOfFolders(
-                                        controllerId), scheduleNamesOpt, permittedSchedules)) {
+                                if (DailyPlanProjectionsImpl.filterPermittedSchedules(metaItem.getAdditionalProperties().get(controllerId),
+                                        folderPermissions.getListOfFolders(controllerId), scheduleNamesOpt, in.getScheduleFolders(), workflowNames, in
+                                                .getWorkflowFolders(), permittedSchedules)) {
                                     unPermittedSchedulesExist = true;
                                 }
                             }

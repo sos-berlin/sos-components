@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.common.Folder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -23,7 +24,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "dateFrom",
     "dateTo",
     "controllerIds",
-    "schedulePaths"
+    "schedulePaths",
+    "scheduleFolders",
+    "workflowPaths",
+    "workflowFolders"
 })
 public class ProjectionsRequest {
 
@@ -49,6 +53,24 @@ public class ProjectionsRequest {
     private List<String> controllerIds = new ArrayList<String>();
     @JsonProperty("schedulePaths")
     private List<String> schedulePaths = new ArrayList<String>();
+    /**
+     * folders
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("scheduleFolders")
+    private List<Folder> scheduleFolders = new ArrayList<Folder>();
+    @JsonProperty("workflowPaths")
+    private List<String> workflowPaths = new ArrayList<String>();
+    /**
+     * folders
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflowFolders")
+    private List<Folder> workflowFolders = new ArrayList<Folder>();
 
     /**
      * date
@@ -114,14 +136,68 @@ public class ProjectionsRequest {
         this.schedulePaths = schedulePaths;
     }
 
+    /**
+     * folders
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("scheduleFolders")
+    public List<Folder> getScheduleFolders() {
+        return scheduleFolders;
+    }
+
+    /**
+     * folders
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("scheduleFolders")
+    public void setScheduleFolders(List<Folder> scheduleFolders) {
+        this.scheduleFolders = scheduleFolders;
+    }
+
+    @JsonProperty("workflowPaths")
+    public List<String> getWorkflowPaths() {
+        return workflowPaths;
+    }
+
+    @JsonProperty("workflowPaths")
+    public void setWorkflowPaths(List<String> workflowPaths) {
+        this.workflowPaths = workflowPaths;
+    }
+
+    /**
+     * folders
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflowFolders")
+    public List<Folder> getWorkflowFolders() {
+        return workflowFolders;
+    }
+
+    /**
+     * folders
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflowFolders")
+    public void setWorkflowFolders(List<Folder> workflowFolders) {
+        this.workflowFolders = workflowFolders;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("dateFrom", dateFrom).append("dateTo", dateTo).append("controllerIds", controllerIds).append("schedulePaths", schedulePaths).toString();
+        return new ToStringBuilder(this).append("dateFrom", dateFrom).append("dateTo", dateTo).append("controllerIds", controllerIds).append("schedulePaths", schedulePaths).append("scheduleFolders", scheduleFolders).append("workflowPaths", workflowPaths).append("workflowFolders", workflowFolders).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(dateTo).append(schedulePaths).append(dateFrom).append(controllerIds).toHashCode();
+        return new HashCodeBuilder().append(schedulePaths).append(workflowFolders).append(controllerIds).append(dateTo).append(workflowPaths).append(dateFrom).append(scheduleFolders).toHashCode();
     }
 
     @Override
@@ -133,7 +209,7 @@ public class ProjectionsRequest {
             return false;
         }
         ProjectionsRequest rhs = ((ProjectionsRequest) other);
-        return new EqualsBuilder().append(dateTo, rhs.dateTo).append(schedulePaths, rhs.schedulePaths).append(dateFrom, rhs.dateFrom).append(controllerIds, rhs.controllerIds).isEquals();
+        return new EqualsBuilder().append(schedulePaths, rhs.schedulePaths).append(workflowFolders, rhs.workflowFolders).append(controllerIds, rhs.controllerIds).append(dateTo, rhs.dateTo).append(workflowPaths, rhs.workflowPaths).append(dateFrom, rhs.dateFrom).append(scheduleFolders, rhs.scheduleFolders).isEquals();
     }
 
 }
