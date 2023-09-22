@@ -2,12 +2,12 @@
 package com.sos.joc.model.dailyplan.projections;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.common.Folder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -22,9 +22,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "date",
-    "surveyDate",
     "controllerIds",
-    "schedulePaths"
+    "schedulePaths",
+    "scheduleFolders",
+    "workflowPaths",
+    "workflowFolders"
 })
 public class ProjectionsDayRequest {
 
@@ -32,6 +34,7 @@ public class ProjectionsDayRequest {
      * date
      * <p>
      * ISO date YYYY-MM-DD
+     * (Required)
      * 
      */
     @JsonProperty("date")
@@ -43,18 +46,34 @@ public class ProjectionsDayRequest {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("surveyDate")
-    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    private Date surveyDate;
     @JsonProperty("controllerIds")
     private List<String> controllerIds = new ArrayList<String>();
     @JsonProperty("schedulePaths")
     private List<String> schedulePaths = new ArrayList<String>();
+    /**
+     * folders
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("scheduleFolders")
+    private List<Folder> scheduleFolders = new ArrayList<Folder>();
+    @JsonProperty("workflowPaths")
+    private List<String> workflowPaths = new ArrayList<String>();
+    /**
+     * folders
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflowFolders")
+    private List<Folder> workflowFolders = new ArrayList<Folder>();
 
     /**
      * date
      * <p>
      * ISO date YYYY-MM-DD
+     * (Required)
      * 
      */
     @JsonProperty("date")
@@ -66,33 +85,12 @@ public class ProjectionsDayRequest {
      * date
      * <p>
      * ISO date YYYY-MM-DD
+     * (Required)
      * 
      */
     @JsonProperty("date")
     public void setDate(String date) {
         this.date = date;
-    }
-
-    /**
-     * timestamp
-     * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * 
-     */
-    @JsonProperty("surveyDate")
-    public Date getSurveyDate() {
-        return surveyDate;
-    }
-
-    /**
-     * timestamp
-     * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * 
-     */
-    @JsonProperty("surveyDate")
-    public void setSurveyDate(Date surveyDate) {
-        this.surveyDate = surveyDate;
     }
 
     @JsonProperty("controllerIds")
@@ -115,14 +113,68 @@ public class ProjectionsDayRequest {
         this.schedulePaths = schedulePaths;
     }
 
+    /**
+     * folders
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("scheduleFolders")
+    public List<Folder> getScheduleFolders() {
+        return scheduleFolders;
+    }
+
+    /**
+     * folders
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("scheduleFolders")
+    public void setScheduleFolders(List<Folder> scheduleFolders) {
+        this.scheduleFolders = scheduleFolders;
+    }
+
+    @JsonProperty("workflowPaths")
+    public List<String> getWorkflowPaths() {
+        return workflowPaths;
+    }
+
+    @JsonProperty("workflowPaths")
+    public void setWorkflowPaths(List<String> workflowPaths) {
+        this.workflowPaths = workflowPaths;
+    }
+
+    /**
+     * folders
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflowFolders")
+    public List<Folder> getWorkflowFolders() {
+        return workflowFolders;
+    }
+
+    /**
+     * folders
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflowFolders")
+    public void setWorkflowFolders(List<Folder> workflowFolders) {
+        this.workflowFolders = workflowFolders;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("date", date).append("surveyDate", surveyDate).append("controllerIds", controllerIds).append("schedulePaths", schedulePaths).toString();
+        return new ToStringBuilder(this).append("date", date).append("controllerIds", controllerIds).append("schedulePaths", schedulePaths).append("scheduleFolders", scheduleFolders).append("workflowPaths", workflowPaths).append("workflowFolders", workflowFolders).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(date).append(schedulePaths).append(surveyDate).append(controllerIds).toHashCode();
+        return new HashCodeBuilder().append(date).append(schedulePaths).append(workflowFolders).append(controllerIds).append(workflowPaths).append(scheduleFolders).toHashCode();
     }
 
     @Override
@@ -134,7 +186,7 @@ public class ProjectionsDayRequest {
             return false;
         }
         ProjectionsDayRequest rhs = ((ProjectionsDayRequest) other);
-        return new EqualsBuilder().append(date, rhs.date).append(schedulePaths, rhs.schedulePaths).append(surveyDate, rhs.surveyDate).append(controllerIds, rhs.controllerIds).isEquals();
+        return new EqualsBuilder().append(date, rhs.date).append(schedulePaths, rhs.schedulePaths).append(workflowFolders, rhs.workflowFolders).append(controllerIds, rhs.controllerIds).append(workflowPaths, rhs.workflowPaths).append(scheduleFolders, rhs.scheduleFolders).isEquals();
     }
 
 }

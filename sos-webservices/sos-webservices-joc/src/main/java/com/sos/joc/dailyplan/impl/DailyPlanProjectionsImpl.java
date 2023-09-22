@@ -79,20 +79,21 @@ public class DailyPlanProjectionsImpl extends JOCResourceImpl implements IDailyP
                 return jocDefaultResponse;
             }
 
-//            Long yearFrom = in.getDateFrom() != null ? Long.valueOf(in.getDateFrom().split("-",2)[0]) : null;
-//            Long yearTo = in.getDateTo() != null ? Long.valueOf(in.getDateTo().split("-",2)[0]) : null;
             Long monthFromAsLong = in.getDateFrom() != null ? getMonth(in.getDateFrom()) : null;
             Long monthToAsLong = in.getDateTo() != null ? getMonth(in.getDateTo()) : null;
-//            Integer monthFrom = in.getDateFrom() != null ? getMonth(in.getDateFrom()) : null;
-//            Integer monthTo = in.getDateTo() != null ? getMonth(in.getDateTo()) : null;
             Integer dayFrom = in.getDateFrom() != null ? getDay(in.getDateFrom()) : null;
             Integer dayTo = in.getDateTo() != null ? getDay(in.getDateTo()) : null;
             
-//            Optional<Predicate<String>> pMonthFromTo = getMonthFromToPredicate(monthFrom, monthTo);
             Optional<Predicate<String>> pDayFromTo = getDayFromToPredicate(dayFrom, dayTo);
+            
             Optional<Set<String>> scheduleNames = Optional.empty();
             if (in.getSchedulePaths() != null && !in.getSchedulePaths().isEmpty()) {
                 scheduleNames = Optional.of(in.getSchedulePaths().stream().map(JocInventory::pathToName).collect(Collectors.toSet()));
+            }
+            
+            Optional<Set<String>> workflowNames = Optional.empty();
+            if (in.getWorkflowPaths() != null && !in.getWorkflowPaths().isEmpty()) {
+                workflowNames = Optional.of(in.getWorkflowPaths().stream().map(JocInventory::pathToName).collect(Collectors.toSet()));
             }
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_CALENDAR);
@@ -118,7 +119,7 @@ public class DailyPlanProjectionsImpl extends JOCResourceImpl implements IDailyP
                         }
                         for (String controllerId : allowedControllers) {
                             if (filterPermittedSchedules(metaItem.getAdditionalProperties().get(controllerId), folderPermissions.getListOfFolders(
-                                    controllerId), scheduleNames, permittedSchedules)) {
+                                    controllerId), scheduleNames, in.getScheduleFolders(), workflowNames, in.getWorkflowFolders(), permittedSchedules)) {
                                 unPermittedSchedulesExist = true;
                             }
                         }
@@ -128,34 +129,6 @@ public class DailyPlanProjectionsImpl extends JOCResourceImpl implements IDailyP
                             "Couldn't find projections meta data. Maybe a recalculation of the projections is in progress right now.");
                 }
                 final boolean unPermittedSchedulesExist2 = unPermittedSchedulesExist;
-//                for (DBItemDailyPlanProjection item : items) {
-//                    if (!item.isMeta()) {
-//                        String year = String.valueOf(item.getId());
-//
-//                        YearsItem yi = Globals.objectMapper.readValue(item.getContent(), YearsItem.class);
-//                        yi.getAdditionalProperties().forEach((y, yearItem) -> {
-//                            pMonthFromTo.ifPresent(p -> yearItem.getAdditionalProperties().keySet().removeIf(p));
-//                            yearItem.getAdditionalProperties().forEach((m, monthItem) -> {
-//                                pDayFromTo.ifPresent(p -> monthItem.getAdditionalProperties().keySet().removeIf(p));
-//                                monthItem.getAdditionalProperties().forEach((d, dateItem) -> {
-//                                    if (unPermittedSchedulesExist2) {
-//                                        dateItem.getPeriods().removeIf(p -> !permittedSchedules.contains(p.getSchedule()));
-//                                    }
-//                                    dateItem.setNumOfPeriods(dateItem.getPeriods().size());
-//                                    dateItem.setPeriods(null);
-//                                });
-//                                monthItem.getAdditionalProperties().values().removeIf(dateItem -> dateItem.getNumOfPeriods() == 0);
-//                            });
-//                            yearItem.getAdditionalProperties().values().removeIf(monthItem -> monthItem.getAdditionalProperties().isEmpty());
-//                        });
-//                        yi.getAdditionalProperties().values().removeIf(yearItem -> yearItem.getAdditionalProperties().isEmpty());
-//                        
-//                        MonthsItem mi = yi.getAdditionalProperties().get(year);
-//                        if (mi != null) {
-//                            yearsItem.setAdditionalProperty(year, mi);
-//                        }
-//                    }
-//                }
                 
                 for (DBItemDailyPlanProjection item : items) {
                     if (!item.isMeta()) {
@@ -547,28 +520,53 @@ public class DailyPlanProjectionsImpl extends JOCResourceImpl implements IDailyP
         return controllerRemoved;
     }
     
-    private static boolean filterPermittedWorkflows(WorkflowsItem workflowsItem, Set<Folder> permittedFolders) {
-        boolean workflowsRemoved = false;
-        if (!permittedFolders.isEmpty() && workflowsItem != null && workflowsItem.getAdditionalProperties() != null) {
-            workflowsRemoved = workflowsItem.getAdditionalProperties().keySet().removeIf(wPath -> !canAdd(wPath, permittedFolders));
+    private static void filterPermittedWorkflows(WorkflowsItem workflowsItem, Set<Folder> permittedFolders, Optional<Set<String>> workflowNames) {
+        // boolean workflowsRemoved = false;
+
+        if (workflowsItem != null && workflowsItem.getAdditionalProperties() != null) {
+            // int numOfWorkflow = workflowsItem.getAdditionalProperties().keySet().size();
+
+            workflowNames.ifPresent(wn -> workflowsItem.getAdditionalProperties().keySet().removeIf(workflow -> !wn.contains(JocInventory.pathToName(
+                    workflow))));
+
+            if (!permittedFolders.isEmpty()) {
+                workflowsItem.getAdditionalProperties().keySet().removeIf(wPath -> !canAdd(wPath, permittedFolders));
+            }
+
+            // int newNumOfWorkflow = workflowsItem.getAdditionalProperties().keySet().size();
+            // if (numOfWorkflow > newNumOfWorkflow) {
+            // workflowsRemoved = true;
+            // }
         }
-        return workflowsRemoved;
+
+        // return workflowsRemoved;
     }
     
     protected static boolean filterPermittedSchedules(ControllerInfoItem cii, Set<Folder> permittedFolders, Optional<Set<String>> scheduleNames,
-            Set<String> permittedSchedules) {
+            List<Folder> scheduleFolders, Optional<Set<String>> workflowNames, List<Folder> workflowFolders, Set<String> permittedSchedules) {
         boolean schedulesRemoved = false;
         if (cii != null && cii.getAdditionalProperties() != null) {
             int numOfSchedules = cii.getAdditionalProperties().keySet().size();
 
             scheduleNames.ifPresent(sn -> cii.getAdditionalProperties().keySet().removeIf(schedule -> !sn.contains(JocInventory.pathToName(
                     schedule))));
-
-            if (!permittedFolders.isEmpty()) {
-                cii.getAdditionalProperties().keySet().removeIf(schedule -> !canAdd(schedule, permittedFolders));
+            
+            Set<Folder> permittedFolders1 = new HashSet<>(permittedFolders);
+            if (scheduleFolders != null && !scheduleFolders.isEmpty()) {
+                permittedFolders1.addAll(scheduleFolders);
+            }
+            Set<Folder> permittedFolders2 = new HashSet<>(permittedFolders);
+            if (workflowFolders != null && !workflowFolders.isEmpty()) {
+                permittedFolders2.addAll(workflowFolders);
+            }
+            
+            if (!permittedFolders1.isEmpty()) {
+                cii.getAdditionalProperties().keySet().removeIf(schedule -> !canAdd(schedule, permittedFolders1));
+            }
+            if (!permittedFolders2.isEmpty() || workflowNames.isPresent()) {
                 cii.getAdditionalProperties().values().forEach(sii -> {
                     if (sii != null) {
-                        filterPermittedWorkflows(sii.getWorkflows(), permittedFolders);
+                        filterPermittedWorkflows(sii.getWorkflows(), permittedFolders2, workflowNames);
                     }
                 });
             }
@@ -584,10 +582,6 @@ public class DailyPlanProjectionsImpl extends JOCResourceImpl implements IDailyP
         }
         return schedulesRemoved;
     }
-    
-//    private static Integer getMonth(String month) {
-//        return Integer.valueOf(month.replaceFirst("^(\\d{4})-(\\d{2}).*", "$1$2"));
-//    }
     
     public static Long getMonth(String month) {
         return Long.valueOf(month.replaceFirst("^(\\d{4})-(\\d{2}).*", "$1$2"));
