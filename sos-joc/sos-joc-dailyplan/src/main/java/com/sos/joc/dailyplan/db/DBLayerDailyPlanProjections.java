@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.ScrollableResults;
@@ -17,6 +18,8 @@ import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanProjection;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
 import com.sos.joc.model.dailyplan.projections.items.meta.MetaItem;
+import com.sos.joc.model.dailyplan.projections.items.year.MonthItem;
+import com.sos.joc.model.dailyplan.projections.items.year.MonthsItem;
 import com.sos.joc.model.dailyplan.projections.items.year.YearsItem;
 
 public class DBLayerDailyPlanProjections extends DBLayer {
@@ -35,11 +38,31 @@ public class DBLayerDailyPlanProjections extends DBLayer {
         if (o == null) {
             return;
         }
+        //store monthly not yearly
+        Date d = new Date();
+        for (Map.Entry<String, MonthItem> monthEntry : o.getAdditionalProperties().getOrDefault(year + "", new MonthsItem()).getAdditionalProperties()
+                .entrySet()) {
+            String yearMonth = monthEntry.getKey().replace("-", "");
+            insert(Long.valueOf(yearMonth), monthEntry.getValue(), d);
+        }
+            
+//        DBItemDailyPlanProjection item = new DBItemDailyPlanProjection();
+//        item.setId(Long.valueOf(year));
+//        item.setContent(Globals.objectMapper.writeValueAsString(o));
+//        item.setCreated(new Date());
+//        
+//        getSession().save(item);
+    }
+    
+    private void insert(long yearMonth, MonthItem o, Date created) throws Exception {
+        if (o == null) {
+            return;
+        }
 
         DBItemDailyPlanProjection item = new DBItemDailyPlanProjection();
-        item.setId(Long.valueOf(year));
-        item.setContent(Globals.objectMapper.writeValueAsString(o));
-        item.setCreated(new Date());
+        item.setId(yearMonth);
+        item.setContent(Globals.objectMapper.writeValueAsBytes(o));
+        item.setCreated(created);
 
         getSession().save(item);
     }
@@ -51,17 +74,17 @@ public class DBLayerDailyPlanProjections extends DBLayer {
 
         DBItemDailyPlanProjection item = new DBItemDailyPlanProjection();
         item.setId(DBItemDailyPlanProjection.METADATEN_ID);
-        item.setContent(Globals.objectMapper.writeValueAsString(o));
+        item.setContent(Globals.objectMapper.writeValueAsBytes(o));
         item.setCreated(new Date());
 
         getSession().save(item);
     }
 
-    public List<DBItemDailyPlanProjection> getProjections(List<Long> years) throws Exception {
+    public List<DBItemDailyPlanProjection> getProjections(List<Long> yearMonths) throws Exception {
         StringBuilder hql = new StringBuilder("from ").append(DBITEM_DPL_PROJECTIONS).append(" ");
         Set<Long> ids = null;
-        if (years != null && years.size() > 0) {
-            ids = new HashSet<>(years);
+        if (yearMonths != null && yearMonths.size() > 0) {
+            ids = new HashSet<>(yearMonths);
             ids.add(DBItemDailyPlanProjection.METADATEN_ID);
 
             hql.append("where id in (:ids) ");
