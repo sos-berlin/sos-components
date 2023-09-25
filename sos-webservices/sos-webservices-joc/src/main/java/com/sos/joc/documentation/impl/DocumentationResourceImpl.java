@@ -35,20 +35,24 @@ public class DocumentationResourceImpl extends JOCResourceImpl implements IDocum
     private static final java.nio.file.Path CSS = Paths.get("/sos/css/default-markdown.css");
 
     @Override
-    public JOCDefaultResponse postDocumentation(String accessToken, String path) {
+    public JOCDefaultResponse postDocumentation(String accessToken, String referer, String path) {
         try {
             if (path == null) {
                 path = "";
             }
-            String request = String.format("%s/-accessToken-/%s", API_CALL, path);
-            initLogging(request, null, accessToken);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getDocumentations().getView());
-            if (jocDefaultResponse != null) {
-                return jocDefaultResponse;
+            String request = String.format("%s/%s", API_CALL, path);
+            if (referer != null && referer.contains("joc/api/documentation")) {
+                initLogging(request, null);
+            } else {
+                initLogging(request, null, accessToken);
+                JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getDocumentations().getView());
+                if (jocDefaultResponse != null) {
+                    return jocDefaultResponse;
+                }
             }
+            
             checkRequiredParameter("path", path);
             return postDocumentation(path);
-            
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseHTMLStatusJSError(e);
