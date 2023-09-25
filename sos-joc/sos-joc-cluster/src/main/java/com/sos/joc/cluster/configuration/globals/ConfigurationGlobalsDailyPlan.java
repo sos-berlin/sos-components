@@ -13,9 +13,8 @@ public class ConfigurationGlobalsDailyPlan extends AConfigurationSection {
     private ConfigurationEntry daysAheadPlan = new ConfigurationEntry("days_ahead_plan", "7", GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
     private ConfigurationEntry daysAheadSubmit = new ConfigurationEntry("days_ahead_submit", "3", GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
 
-    // 6 months, 6 month, 6 m
-    // 2 years, 2 year, 2 y - see com.sos.joc.dailyplan.common.DailyPlanSettings.setProjectionsMonthsAhead
-    private ConfigurationEntry projectionsAhead = new ConfigurationEntry("projections_ahead", "6 months", GlobalSettingsSectionValueType.STRING);
+    private ConfigurationEntry projectionsMonthAhead = new ConfigurationEntry("projections_month_ahead", "6",
+            GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
 
     public ConfigurationGlobalsDailyPlan() {
         int index = -1;
@@ -26,7 +25,7 @@ public class ConfigurationGlobalsDailyPlan extends AConfigurationSection {
         daysAheadPlan.setOrdering(++index);
         daysAheadSubmit.setOrdering(++index);
 
-        projectionsAhead.setOrdering(++index);
+        projectionsMonthAhead.setOrdering(++index);
     }
 
     public ConfigurationEntry getTimeZone() {
@@ -49,7 +48,7 @@ public class ConfigurationGlobalsDailyPlan extends AConfigurationSection {
         return daysAheadSubmit;
     }
 
-    public ConfigurationEntry getProjectionsAhead() {
-        return projectionsAhead;
+    public ConfigurationEntry getProjectionsMonthAhead() {
+        return projectionsMonthAhead;
     }
 }

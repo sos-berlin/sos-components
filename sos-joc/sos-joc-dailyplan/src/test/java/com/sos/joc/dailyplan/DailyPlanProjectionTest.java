@@ -25,14 +25,14 @@ public class DailyPlanProjectionTest {
         Globals.sosCockpitProperties.getProperties().put("hibernate_configuration_file", "../../../src/test/resources/hibernate.cfg.xml");
         try {
             DailyPlanSettings s = new DailyPlanSettings();
-            s.setTimeZone("Europa/Berlin");
+            s.setTimeZone("Europe/Berlin");
             // currently supported (case insensitive):
             // 1) in months: <n> <- months, <n> months, <n> month, <n> m
             // or
             // 2) in years: <n> years, <n> year, <n> y
 
             // years will be converted to months...
-            s.setProjectionsMonthsAhead("2 years");
+            s.setProjectionsMonthsAhead(6);
 
             DailyPlanProjections p = new DailyPlanProjections();
             p.process(s);

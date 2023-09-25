@@ -1,9 +1,7 @@
 package com.sos.joc.dailyplan.common;
 
-import java.nio.file.Paths;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -46,6 +44,7 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
             settings.setPeriodBegin("00:00");
             settings.setDayAheadPlan(7);
             settings.setDayAheadSubmit(3);
+            settings.setProjectionsMonthsAhead(6);
             LOGGER.warn("Could not read settings. Using defaults");
         } else {
             AConfigurationSection section = Globals.configurationGlobals.getConfigurationSection(DefaultSections.dailyplan);

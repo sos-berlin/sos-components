@@ -13,6 +13,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -26,8 +27,6 @@ import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
 import com.sos.joc.dailyplan.db.DBLayerDailyPlanProjections;
 import com.sos.joc.dailyplan.resource.IDailyPlanProjectionsResource;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanProjection;
-import com.sos.joc.event.EventBus;
-import com.sos.joc.event.bean.dailyplan.DailyPlanProjectionEvent;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
@@ -125,8 +124,13 @@ public class DailyPlanProjectionsImpl extends JOCResourceImpl implements IDailyP
                         }
                     }
                 } else {
-                    throw new DBMissingDataException(
-                            "Couldn't find projections meta data. Maybe a recalculation of the projections is in progress right now.");
+                    if (DBLayerDailyPlanProjections.projectionsStart.isPresent()) {
+                        throw new DBMissingDataException(
+                                "Couldn't find projections data. A recalculation of the projections are in progress right now.");
+                    } else {
+                        throw new DBMissingDataException(
+                                "Couldn't find projections data. Please start a calculation of the projections.");
+                    }
                 }
                 final boolean unPermittedSchedulesExist2 = unPermittedSchedulesExist;
                 
@@ -166,6 +170,10 @@ public class DailyPlanProjectionsImpl extends JOCResourceImpl implements IDailyP
             //entity.setMeta(metaItem);
             entity.setYears(yearsItem);
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
+        } catch (DBMissingDataException e) {
+            ProblemHelper.postMessageAsHintIfExist(e.getMessage(), accessToken, getJocError(), null);
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatus434JSError(e);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -496,7 +504,6 @@ public class DailyPlanProjectionsImpl extends JOCResourceImpl implements IDailyP
             CompletableFuture.runAsync(() -> {
                 try {
                     DailyPlanRunner.recreateProjections(JOCOrderResourceImpl.getDailyPlanSettings());
-                    EventBus.getInstance().post(new DailyPlanProjectionEvent());
                 } catch (Exception e) {
                     ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, getJocError(), null);
                 }
@@ -545,24 +552,36 @@ public class DailyPlanProjectionsImpl extends JOCResourceImpl implements IDailyP
     protected static boolean filterPermittedSchedules(ControllerInfoItem cii, Set<Folder> permittedFolders, Optional<Set<String>> scheduleNames,
             List<Folder> scheduleFolders, Optional<Set<String>> workflowNames, List<Folder> workflowFolders, Set<String> permittedSchedules) {
         boolean schedulesRemoved = false;
+        
         if (cii != null && cii.getAdditionalProperties() != null) {
             int numOfSchedules = cii.getAdditionalProperties().keySet().size();
 
             scheduleNames.ifPresent(sn -> cii.getAdditionalProperties().keySet().removeIf(schedule -> !sn.contains(JocInventory.pathToName(
                     schedule))));
             
-            Set<Folder> permittedFolders1 = new HashSet<>(permittedFolders);
+            Set<Folder> permittedFolders1 = new HashSet<>();
             if (scheduleFolders != null && !scheduleFolders.isEmpty()) {
-                permittedFolders1.addAll(scheduleFolders);
+                permittedFolders1.addAll(SOSAuthFolderPermissions.getPermittedFolders(scheduleFolders, permittedFolders));
+                if (permittedFolders1.isEmpty()) { // no folder permissions
+                    cii.getAdditionalProperties().clear();
+                }
+            } else {
+                permittedFolders1.addAll(permittedFolders);
             }
-            Set<Folder> permittedFolders2 = new HashSet<>(permittedFolders);
-            if (workflowFolders != null && !workflowFolders.isEmpty()) {
-                permittedFolders2.addAll(workflowFolders);
-            }
-            
             if (!permittedFolders1.isEmpty()) {
                 cii.getAdditionalProperties().keySet().removeIf(schedule -> !canAdd(schedule, permittedFolders1));
+            } 
+            
+            Set<Folder> permittedFolders2 = new HashSet<>();
+            if (workflowFolders != null && !workflowFolders.isEmpty()) {
+                permittedFolders2.addAll(SOSAuthFolderPermissions.getPermittedFolders(workflowFolders, permittedFolders));
+                if (permittedFolders2.isEmpty()) { // no folder permissions
+                    cii.getAdditionalProperties().clear();
+                }
+            } else {
+                permittedFolders2.addAll(permittedFolders);
             }
+            
             if (!permittedFolders2.isEmpty() || workflowNames.isPresent()) {
                 cii.getAdditionalProperties().values().forEach(sii -> {
                     if (sii != null) {

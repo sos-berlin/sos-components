@@ -15,6 +15,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxies;
@@ -89,6 +90,14 @@ public class DailyPlanDayProjectionImpl extends JOCResourceImpl implements IDail
             
             Set<String> scheduleNames = Collections.emptySet();
             if (items != null) {
+                if (items.isEmpty()) {
+                    if (DBLayerDailyPlanProjections.projectionsStart.isPresent()) {
+                        throw new DBMissingDataException(
+                                "Couldn't find projections data. A recalculation of the projections are in progress right now.");
+                    } else {
+                        throw new DBMissingDataException("Couldn't find projections data. Please start a calculation of the projections.");
+                    } 
+                }
                 for (DBItemDailyPlanProjection item : items) {
                     if (!item.isMeta()) {
                         
@@ -136,8 +145,12 @@ public class DailyPlanDayProjectionImpl extends JOCResourceImpl implements IDail
                             }
                         }
                     } else {
-                        throw new DBMissingDataException(
-                                "Couldn't find projections meta data. Maybe a recalculation of the projections is in progress right now.");
+                        if (DBLayerDailyPlanProjections.projectionsStart.isPresent()) {
+                            throw new DBMissingDataException(
+                                    "Couldn't find projections data. A recalculation of the projections are in progress right now.");
+                        } else {
+                            throw new DBMissingDataException("Couldn't find projections data. Please start a calculation of the projections.");
+                        }
                     }
                     
                     if (unPermittedSchedulesExist) {
@@ -152,6 +165,10 @@ public class DailyPlanDayProjectionImpl extends JOCResourceImpl implements IDail
             entity.setDeliveryDate(Date.from(Instant.now()));
             entity.setMeta(metaItem);
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
+        } catch (DBMissingDataException e) {
+            ProblemHelper.postMessageAsHintIfExist(e.getMessage(), accessToken, getJocError(), null);
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatus434JSError(e);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);

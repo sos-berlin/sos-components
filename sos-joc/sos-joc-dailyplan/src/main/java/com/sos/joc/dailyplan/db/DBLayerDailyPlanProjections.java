@@ -1,10 +1,12 @@
 package com.sos.joc.dailyplan.db;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.hibernate.ScrollableResults;
@@ -17,6 +19,8 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanProjection;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.dailyplan.DailyPlanProjectionEvent;
 import com.sos.joc.model.dailyplan.projections.items.meta.MetaItem;
 import com.sos.joc.model.dailyplan.projections.items.year.MonthItem;
 import com.sos.joc.model.dailyplan.projections.items.year.MonthsItem;
@@ -25,12 +29,14 @@ import com.sos.joc.model.dailyplan.projections.items.year.YearsItem;
 public class DBLayerDailyPlanProjections extends DBLayer {
 
     private static final long serialVersionUID = 1L;
+    public static Optional<Instant> projectionsStart = Optional.empty();
 
     public DBLayerDailyPlanProjections(SOSHibernateSession session) {
         super(session);
     }
 
     public int cleanup() throws SOSHibernateException {
+        projectionsStart = Optional.of(Instant.now());
         return getSession().executeUpdate("delete from " + DBITEM_DPL_PROJECTIONS);
     }
 
@@ -45,13 +51,6 @@ public class DBLayerDailyPlanProjections extends DBLayer {
             String yearMonth = monthEntry.getKey().replace("-", "");
             insert(Long.valueOf(yearMonth), monthEntry.getValue(), d);
         }
-            
-//        DBItemDailyPlanProjection item = new DBItemDailyPlanProjection();
-//        item.setId(Long.valueOf(year));
-//        item.setContent(Globals.objectMapper.writeValueAsString(o));
-//        item.setCreated(new Date());
-//        
-//        getSession().save(item);
     }
     
     private void insert(long yearMonth, MonthItem o, Date created) throws Exception {
@@ -78,6 +77,9 @@ public class DBLayerDailyPlanProjections extends DBLayer {
         item.setCreated(new Date());
 
         getSession().save(item);
+        
+        projectionsStart = Optional.empty();
+        EventBus.getInstance().post(new DailyPlanProjectionEvent());
     }
 
     public List<DBItemDailyPlanProjection> getProjections(List<Long> yearMonths) throws Exception {
