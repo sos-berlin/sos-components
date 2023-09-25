@@ -1,6 +1,7 @@
 package com.sos.joc.documentation.resource;
 
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 
@@ -10,6 +11,6 @@ public interface IDocumentationResource {
 
     @GET
     // @Produces({ MediaType.APPLICATION_OCTET_STREAM, MediaType.TEXT_PLAIN })
-    @Path("{accessToken}/{path : .+}")
-    public JOCDefaultResponse postDocumentation(@PathParam("accessToken") String accessToken, @PathParam("path") String path);
+    @Path("{path : .+}")
+    public JOCDefaultResponse postDocumentation(@HeaderParam("X-Access-Token") String xAccessToken, @HeaderParam("Referer") String referer, @PathParam("path") String path);
 }
