@@ -296,7 +296,7 @@ public class DailyPlanProjections {
 
             if (dailyPlanSchedules.size() > 0) {
                 // TODO insertMeta later ?? - filter unused schedules/workflows ...
-                dbLayer.insertMeta(getMeta(dailyPlanSchedules, dpr));
+                //dbLayer.insertMeta(getMeta(dailyPlanSchedules, dpr));
 
                 // current implementation - calculates "from/to" from the current date
                 // alternative (not implemented) - calculates "from/to" from the last planned date (dpr.lastDate) if set
@@ -339,6 +339,8 @@ public class DailyPlanProjections {
                     dbLayer.insert(i, getProjectionYear(settings, dbLayer, dailyPlanSchedules, String.valueOf(i), dateFrom, dateTo, reallyDateFrom,
                             plannedYearsItem));
                 }
+                
+                dbLayer.insertMeta(getMeta(dailyPlanSchedules, dpr));
             }
         }
         LOGGER.info(lp + "[end]" + SOSDate.getDuration(start, Instant.now()));

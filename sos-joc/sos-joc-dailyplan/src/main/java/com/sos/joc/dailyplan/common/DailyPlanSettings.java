@@ -6,7 +6,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.util.SOSString;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 
@@ -27,7 +26,6 @@ public class DailyPlanSettings {
     private int dayAheadPlan = 0;
     private int dayAheadSubmit = 0;
     private int projectionsMonthsAhead = 0;
-    private boolean projectionsAheadConfiguredAsYears = false;
 
     public List<ControllerConfiguration> getControllers() {
         return controllers;
@@ -142,42 +140,21 @@ public class DailyPlanSettings {
             LOGGER.warn("Could not set setting for dayAheadPlan: " + val);
         }
     }
-
-    public void setProjectionsMonthsAhead(DailyPlanSettings settings) {
-        projectionsMonthsAhead = settings.getProjectionsMonthsAhead();
-        projectionsAheadConfiguredAsYears = settings.isProjectionsAheadConfiguredAsYears();
+    
+    public void setProjectionsMonthsAhead(int val) {
+        projectionsMonthsAhead = val;
     }
-
+    
     public void setProjectionsMonthsAhead(String val) {
         try {
-            projectionsAheadConfiguredAsYears = false;
-
-            int months = 0;
-            if (!SOSString.isEmpty(val)) {
-                String v = val.toLowerCase().trim();
-                int indx = v.indexOf("m");
-                if (indx > 0) {
-                    months = Integer.parseInt(v.substring(0, v.indexOf("m")).trim());
-                } else {
-                    indx = v.indexOf("y");
-                    if (indx > 0) {
-                        months = 12 * Integer.parseInt(v.substring(0, v.indexOf("y")).trim());
-                        projectionsAheadConfiguredAsYears = true;
-                    }
-                }
-            }
-            projectionsMonthsAhead = months;
-        } catch (Throwable e) {
-            projectionsMonthsAhead = 0;
-            LOGGER.warn("Could not set setting for projectionsAhead: " + val);
+            this.projectionsMonthsAhead = Integer.parseInt(val);
+        } catch (NumberFormatException e) {
+            this.projectionsMonthsAhead = 6;
+            LOGGER.warn("Could not set setting for projectionsMonthsAhead: " + val);
         }
     }
 
     public int getProjectionsMonthsAhead() {
         return projectionsMonthsAhead;
-    }
-
-    public boolean isProjectionsAheadConfiguredAsYears() {
-        return projectionsAheadConfiguredAsYears;
     }
 }
