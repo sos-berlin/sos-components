@@ -240,6 +240,10 @@ public class SOSShell {
         return sb.toString();
     }
 
+    public static String getJavaHome() {
+        return System.getProperties().getProperty("java.home");
+    }
+
     private static String[] getCommand(String script) {
         String[] command = new String[2 + 1];
         if (IS_WINDOWS) {

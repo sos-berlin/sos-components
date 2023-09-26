@@ -84,4 +84,10 @@ public class SOSShellTest {
         LOGGER.info(String.format("[exception]%s", result.getException()));
         LOGGER.info(String.format("[timeoutExeeded]%s", result.isTimeoutExeeded()));
     }
+
+    @Ignore
+    @Test
+    public void testJava() {
+        LOGGER.info(SOSShell.getJavaHome());
+    }
 }
