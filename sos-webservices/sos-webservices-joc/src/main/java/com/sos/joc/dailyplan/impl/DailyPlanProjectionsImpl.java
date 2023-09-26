@@ -539,7 +539,7 @@ public class DailyPlanProjectionsImpl extends JOCResourceImpl implements IDailyP
             if (!permittedFolders.isEmpty()) {
                 workflowsItem.getAdditionalProperties().keySet().removeIf(wPath -> !canAdd(wPath, permittedFolders));
             }
-
+            
             // int newNumOfWorkflow = workflowsItem.getAdditionalProperties().keySet().size();
             // if (numOfWorkflow > newNumOfWorkflow) {
             // workflowsRemoved = true;
@@ -582,16 +582,17 @@ public class DailyPlanProjectionsImpl extends JOCResourceImpl implements IDailyP
                 permittedFolders2.addAll(permittedFolders);
             }
             
-            if (!permittedFolders2.isEmpty() || workflowNames.isPresent()) {
-                cii.getAdditionalProperties().values().forEach(sii -> {
-                    if (sii != null) {
+            cii.getAdditionalProperties().values().forEach(sii -> {
+                if (sii != null) {
+                    if (!permittedFolders2.isEmpty() || workflowNames.isPresent()) {
                         filterPermittedWorkflows(sii.getWorkflows(), permittedFolders2, workflowNames);
                     }
-                });
-            }
-            cii.getAdditionalProperties().values().removeIf(sii -> sii == null || sii.getWorkflows() == null || sii
-                    .getWorkflows().getAdditionalProperties() == null || sii.getWorkflows().getAdditionalProperties()
-                            .isEmpty());
+                    sii.setWorkflowPaths(sii.getWorkflows().getAdditionalProperties().keySet());
+                    sii.setWorkflows(null);
+                    sii.setTotalOrders(null);
+                }
+            });
+            cii.getAdditionalProperties().values().removeIf(sii -> sii == null || sii.getWorkflowPaths() == null || sii.getWorkflowPaths().isEmpty());
 
             int newNumOfSchedules = cii.getAdditionalProperties().keySet().size();
             if (numOfSchedules > newNumOfSchedules) {
