@@ -21,6 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "planned",
     "numOfPeriods",
+    "numOfNonPeriods",
     "periods"
 })
 public class DateItem {
@@ -35,6 +36,14 @@ public class DateItem {
      */
     @JsonProperty("numOfPeriods")
     private Integer numOfPeriods;
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfNonPeriods")
+    private Integer numOfNonPeriods;
     @JsonProperty("periods")
     private List<DatePeriodItem> periods = new ArrayList<DatePeriodItem>();
 
@@ -69,6 +78,28 @@ public class DateItem {
     public void setNumOfPeriods(Integer numOfPeriods) {
         this.numOfPeriods = numOfPeriods;
     }
+    
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfNonPeriods")
+    public Integer getNumOfNonPeriods() {
+        return numOfNonPeriods;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfNonPeriods")
+    public void setNumOfNonPeriods(Integer numOfNonPeriods) {
+        this.numOfNonPeriods = numOfNonPeriods;
+    }
 
     @JsonProperty("periods")
     public List<DatePeriodItem> getPeriods() {
@@ -82,12 +113,12 @@ public class DateItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("planned", planned).append("numOfPeriods", numOfPeriods).append("periods", periods).toString();
+        return new ToStringBuilder(this).append("planned", planned).append("numOfPeriods", numOfPeriods).append("numOfNonPeriods", numOfNonPeriods).append("periods", periods).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(periods).append(planned).append(numOfPeriods).toHashCode();
+        return new HashCodeBuilder().append(periods).append(planned).append(numOfPeriods).append(numOfNonPeriods).toHashCode();
     }
 
     @Override
@@ -99,7 +130,7 @@ public class DateItem {
             return false;
         }
         DateItem rhs = ((DateItem) other);
-        return new EqualsBuilder().append(periods, rhs.periods).append(planned, rhs.planned).append(numOfPeriods, rhs.numOfPeriods).isEquals();
+        return new EqualsBuilder().append(periods, rhs.periods).append(planned, rhs.planned).append(numOfPeriods, rhs.numOfPeriods).append(numOfNonPeriods, rhs.numOfNonPeriods).isEquals();
     }
 
 }
