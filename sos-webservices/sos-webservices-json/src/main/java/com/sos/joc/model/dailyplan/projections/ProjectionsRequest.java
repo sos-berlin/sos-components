@@ -27,7 +27,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "schedulePaths",
     "scheduleFolders",
     "workflowPaths",
-    "workflowFolders"
+    "workflowFolders",
+    "withoutStartTime"
 })
 public class ProjectionsRequest {
 
@@ -71,6 +72,8 @@ public class ProjectionsRequest {
      */
     @JsonProperty("workflowFolders")
     private List<Folder> workflowFolders = new ArrayList<Folder>();
+    @JsonProperty("withoutStartTime")
+    private Boolean withoutStartTime = false;
 
     /**
      * date
@@ -189,15 +192,25 @@ public class ProjectionsRequest {
     public void setWorkflowFolders(List<Folder> workflowFolders) {
         this.workflowFolders = workflowFolders;
     }
+    
+    @JsonProperty("withoutStartTime")
+    public Boolean getWithoutStartTime() {
+        return withoutStartTime;
+    }
+
+    @JsonProperty("withoutStartTime")
+    public void setWithoutStartTime(Boolean withoutStartTime) {
+        this.withoutStartTime = withoutStartTime;
+    }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("dateFrom", dateFrom).append("dateTo", dateTo).append("controllerIds", controllerIds).append("schedulePaths", schedulePaths).append("scheduleFolders", scheduleFolders).append("workflowPaths", workflowPaths).append("workflowFolders", workflowFolders).toString();
+        return new ToStringBuilder(this).append("dateFrom", dateFrom).append("dateTo", dateTo).append("controllerIds", controllerIds).append("schedulePaths", schedulePaths).append("scheduleFolders", scheduleFolders).append("workflowPaths", workflowPaths).append("workflowFolders", workflowFolders).append("withoutStartTime", withoutStartTime).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(schedulePaths).append(workflowFolders).append(controllerIds).append(dateTo).append(workflowPaths).append(dateFrom).append(scheduleFolders).toHashCode();
+        return new HashCodeBuilder().append(schedulePaths).append(workflowFolders).append(controllerIds).append(dateTo).append(workflowPaths).append(dateFrom).append(scheduleFolders).append(withoutStartTime).toHashCode();
     }
 
     @Override
@@ -209,7 +222,7 @@ public class ProjectionsRequest {
             return false;
         }
         ProjectionsRequest rhs = ((ProjectionsRequest) other);
-        return new EqualsBuilder().append(schedulePaths, rhs.schedulePaths).append(workflowFolders, rhs.workflowFolders).append(controllerIds, rhs.controllerIds).append(dateTo, rhs.dateTo).append(workflowPaths, rhs.workflowPaths).append(dateFrom, rhs.dateFrom).append(scheduleFolders, rhs.scheduleFolders).isEquals();
+        return new EqualsBuilder().append(schedulePaths, rhs.schedulePaths).append(workflowFolders, rhs.workflowFolders).append(controllerIds, rhs.controllerIds).append(dateTo, rhs.dateTo).append(workflowPaths, rhs.workflowPaths).append(dateFrom, rhs.dateFrom).append(scheduleFolders, rhs.scheduleFolders).append(withoutStartTime, rhs.withoutStartTime).isEquals();
     }
 
 }
