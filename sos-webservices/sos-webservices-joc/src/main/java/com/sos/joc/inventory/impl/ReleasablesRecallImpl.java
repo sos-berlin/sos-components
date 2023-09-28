@@ -30,8 +30,8 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
             ReleasableRecallFilter recallFilter = Globals.objectMapper.readValue(filter, ReleasableRecallFilter.class);
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
-            recallFilter.getReleasables().stream().map(released -> dbLayer.getReleasedConfiguration(released.getName(), released.getObjectType()))
-                    .filter(Objects::nonNull).map(dbItemReleased -> {
+            recallFilter.getReleasables().stream().map(released -> dbLayer.getReleasedConfiguration(JocInventory.pathToName(released.getPath()),
+                    released.getObjectType())).filter(Objects::nonNull).map(dbItemReleased -> {
                         dbLayer.recallReleasedConfiguration(dbItemReleased);
                         return dbItemReleased.getFolder();
                     }).distinct().forEach(folder -> JocInventory.postEvent(folder));
