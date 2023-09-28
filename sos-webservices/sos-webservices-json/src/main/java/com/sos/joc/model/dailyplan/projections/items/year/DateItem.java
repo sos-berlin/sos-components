@@ -22,7 +22,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "planned",
     "numOfPeriods",
     "numOfNonPeriods",
-    "periods"
+    "periods",
+    "nonPeriods"
 })
 public class DateItem {
 
@@ -46,6 +47,8 @@ public class DateItem {
     private Integer numOfNonPeriods;
     @JsonProperty("periods")
     private List<DatePeriodItem> periods = new ArrayList<DatePeriodItem>();
+    @JsonProperty("nonPeriods")
+    private List<DatePeriodItem> nonPeriods;
 
     @JsonProperty("planned")
     public Boolean getPlanned() {
@@ -109,6 +112,16 @@ public class DateItem {
     @JsonProperty("periods")
     public void setPeriods(List<DatePeriodItem> periods) {
         this.periods = periods;
+    }
+    
+    @JsonProperty("nonPeriods")
+    public List<DatePeriodItem> getNonPeriods() {
+        return nonPeriods;
+    }
+
+    @JsonProperty("nonPeriods")
+    public void setNonPeriods(List<DatePeriodItem> nonPeriods) {
+        this.nonPeriods = nonPeriods;
     }
 
     @Override
