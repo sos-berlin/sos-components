@@ -1196,7 +1196,7 @@ public class DeploymentTestUtils {
     public static ReleasableRecallFilter createReleasableRecallFilter() {
         ReleasableRecallFilter filter = new ReleasableRecallFilter();
         Releasable releasable = new Releasable();
-        releasable.setName("mySchedule");
+        releasable.setPath("mySchedule");
         releasable.setObjectType(ConfigurationType.SCHEDULE);
         filter.getReleasables().add(releasable);
         return filter;
