@@ -2,29 +2,29 @@
 package com.sos.joc.model.dailyplan.projections;
 
 import java.util.Date;
-
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.dailyplan.projections.items.meta.MetaItem;
 import com.sos.joc.model.dailyplan.projections.items.year.YearsItem;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
  * daily plan projections response
  * <p>
- * 
+ * meta only for ./dates API
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "deliveryDate",
     "surveyDate",
-    "years"
+    "years",
+    "meta"
 })
 public class ProjectionsCalendarResponse {
 
@@ -56,6 +56,14 @@ public class ProjectionsCalendarResponse {
      */
     @JsonProperty("years")
     private YearsItem years;
+    /**
+     * daily plan projection
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("meta")
+    private MetaItem meta;
 
     /**
      * timestamp
@@ -127,14 +135,36 @@ public class ProjectionsCalendarResponse {
         this.years = years;
     }
 
+    /**
+     * daily plan projection
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("meta")
+    public MetaItem getMeta() {
+        return meta;
+    }
+
+    /**
+     * daily plan projection
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("meta")
+    public void setMeta(MetaItem meta) {
+        this.meta = meta;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("years", years).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("years", years).append("meta", meta).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deliveryDate).append(surveyDate).append(years).toHashCode();
+        return new HashCodeBuilder().append(deliveryDate).append(surveyDate).append(years).append(meta).toHashCode();
     }
 
     @Override
@@ -146,7 +176,7 @@ public class ProjectionsCalendarResponse {
             return false;
         }
         ProjectionsCalendarResponse rhs = ((ProjectionsCalendarResponse) other);
-        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(surveyDate, rhs.surveyDate).append(years, rhs.years).isEquals();
+        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(surveyDate, rhs.surveyDate).append(years, rhs.years).append(meta, rhs.meta).isEquals();
     }
 
 }
