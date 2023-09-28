@@ -18,7 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "name",
+    "path",
     "objectType"
 })
 public class Releasable {
@@ -29,8 +29,8 @@ public class Releasable {
      * 
      * 
      */
-    @JsonProperty("name")
-    private String name;
+    @JsonProperty("path")
+    private String path;
     /**
      * configuration types
      * <p>
@@ -47,9 +47,9 @@ public class Releasable {
      * 
      * 
      */
-    @JsonProperty("name")
-    public String getName() {
-        return name;
+    @JsonProperty("path")
+    public String getPath() {
+        return path;
     }
 
     /**
@@ -58,9 +58,9 @@ public class Releasable {
      * 
      * 
      */
-    @JsonProperty("name")
-    public void setName(String name) {
-        this.name = name;
+    @JsonProperty("path")
+    public void setPath(String path) {
+        this.path = path;
     }
 
     /**
@@ -89,12 +89,12 @@ public class Releasable {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("name", name).append("objectType", objectType).toString();
+        return new ToStringBuilder(this).append("path", path).append("objectType", objectType).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(name).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(path).append(objectType).toHashCode();
     }
 
     @Override
@@ -106,7 +106,7 @@ public class Releasable {
             return false;
         }
         Releasable rhs = ((Releasable) other);
-        return new EqualsBuilder().append(name, rhs.name).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(objectType, rhs.objectType).isEquals();
     }
 
 }
