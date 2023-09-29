@@ -156,7 +156,7 @@ public class DailyPlanProjectionsImpl extends JOCResourceImpl implements IDailyP
             }
             
             
-            boolean withGzipEncoding = acceptEncoding != null && acceptEncoding.equals("gzip");
+            boolean withGzipEncoding = acceptEncoding != null && acceptEncoding.contains("gzip");
             if (withPeriods) {
                 StreamingOutput entityStream = new StreamingOutput() {
 
