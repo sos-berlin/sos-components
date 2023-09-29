@@ -42,6 +42,31 @@ public class RemoteSchedulers {
         return ignore;
     }
 
+    public boolean isEmpty() {
+        return remoteScheduler == null || remoteScheduler.size() == 0;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(this.getClass().getSimpleName()).append("[");
+
+        List<String> l = new ArrayList<>();
+        l.add("ignore=" + ignore);
+
+        if (remoteScheduler != null) {
+            List<String> lr = new ArrayList<>();
+            for (RemoteScheduler rs : remoteScheduler) {
+                l.add(rs.toString());
+            }
+            l.add("remoteScheduler=" + String.join(",", lr));
+        }
+
+        sb.append(String.join(",", l));
+        sb.append("]");
+        return sb.toString();
+    }
+
     public class RemoteScheduler {
 
         private static final String ATTR_HTTP_HEARTBEAT_PERIOD = "http_heartbeat_period";
@@ -69,6 +94,27 @@ public class RemoteSchedulers {
 
         public String getRemoteScheduler() {
             return remoteScheduler;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            sb.append(this.getClass().getSimpleName()).append("[");
+
+            List<String> l = new ArrayList<>();
+            if (httpHeartbeatPeriod != null) {
+                l.add("httpHeartbeatPeriod=" + httpHeartbeatPeriod);
+            }
+            if (httpHeartbeatTimeout != null) {
+                l.add("httpHeartbeatTimeout=" + httpHeartbeatTimeout);
+            }
+            if (remoteScheduler != null) {
+                l.add("remoteScheduler=" + remoteScheduler);
+            }
+
+            sb.append(String.join(",", l));
+            sb.append("]");
+            return sb.toString();
         }
 
     }

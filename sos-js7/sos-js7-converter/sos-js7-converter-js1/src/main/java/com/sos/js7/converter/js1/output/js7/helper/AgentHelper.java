@@ -21,9 +21,7 @@ public class AgentHelper {
     public AgentHelper(JS7Agent js7Agent, ProcessClass processClass) {
         this.js7Agent = js7Agent;
         this.processClass = processClass;
-        this.js1AgentIsStandalone = processClass == null || processClass.getRemoteSchedulers() == null || processClass.getRemoteSchedulers()
-                .getRemoteScheduler().size() == 1;
-
+        this.js1AgentIsStandalone = processClass == null || processClass.isStandaloneAgent();
     }
 
     public JS7Agent getJS7Agent() {
