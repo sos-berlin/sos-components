@@ -616,4 +616,26 @@ public class JS7ConverterHelper {
 
         return c;
     }
+
+    public static String parentheses(String input) {
+        long a = input.chars().filter(c -> c == '(').count();
+        long b = input.chars().filter(c -> c == ')').count();
+        long diff = a - b;
+
+        if (diff == 0) {
+            return input;
+        }
+
+        String s = new String(input);
+        if (diff > 0) {
+            for (int i = 0; i < diff; i++) {
+                s += ")";
+            }
+        } else {
+            for (int i = 0; i < Math.abs(diff); i++) {
+                s = "(" + s;
+            }
+        }
+        return s;
+    }
 }

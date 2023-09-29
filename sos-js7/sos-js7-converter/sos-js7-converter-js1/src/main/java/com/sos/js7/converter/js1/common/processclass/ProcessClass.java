@@ -1,6 +1,8 @@
 package com.sos.js7.converter.js1.common.processclass;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.w3c.dom.Node;
@@ -57,7 +59,11 @@ public class ProcessClass {
     }
 
     public boolean isAgent() {
-        return !SOSString.isEmpty(remoteScheduler) || remoteSchedulers != null;
+        return !SOSString.isEmpty(remoteScheduler) || (remoteSchedulers != null && !remoteSchedulers.isEmpty());
+    }
+
+    public boolean isStandaloneAgent() {
+        return remoteSchedulers == null || remoteSchedulers.isEmpty() || remoteSchedulers.getRemoteScheduler().size() == 1;
     }
 
     public RemoteSchedulers getRemoteSchedulers() {
@@ -82,6 +88,39 @@ public class ProcessClass {
 
     public String getSpoolerId() {
         return spoolerId;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(this.getClass().getSimpleName()).append("[");
+
+        List<String> l = new ArrayList<>();
+        if (path != null) {
+            l.add("path=" + path);
+        }
+        if (maxProcesses != null) {
+            l.add("maxProcesses=" + maxProcesses);
+        }
+        if (name != null) {
+            l.add("name=" + name);
+        }
+        if (remoteScheduler != null) {
+            l.add("remoteScheduler=" + remoteScheduler);
+        }
+        if (replace != null) {
+            l.add("replace=" + replace);
+        }
+        if (spoolerId != null) {
+            l.add("spoolerId=" + spoolerId);
+        }
+        if (remoteSchedulers != null) {
+            l.add("remoteSchedulers=" + remoteScheduler);
+        }
+
+        sb.append(String.join(",", l));
+        sb.append("]");
+        return sb.toString();
     }
 
 }

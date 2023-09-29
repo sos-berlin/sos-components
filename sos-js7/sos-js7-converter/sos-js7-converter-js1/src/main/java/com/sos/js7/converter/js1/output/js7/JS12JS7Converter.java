@@ -321,17 +321,22 @@ public class JS12JS7Converter {
         c.converterObjects = c.getConverterObjects(pr.getRoot());
         c.js1Agents = c.getJS1Agents();
 
-        JS7JsonFilesConverter.convert(c, result);
+        try {
+            JS7JsonFilesConverter.convert(c, result);
 
-        c.convertYade(result);
-        c.convertStandalone(result);
-        c.convertJobChains(result);
-        c.addJobResources(result);
-        c.addLocks(result);
-        c.addSchedulesBasedOnJS1Schedule(result);
-        c.convertAgents(result);
-        c.convertCalendars(result);
-        c.postProcessing(result);
+            c.convertYade(result);
+            c.convertStandalone(result);
+            c.convertJobChains(result);
+            c.addJobResources(result);
+            c.addLocks(result);
+            c.addSchedulesBasedOnJS1Schedule(result);
+            c.convertAgents(result);
+            c.convertCalendars(result);
+            c.postProcessing(result);
+        } catch (Throwable e) {
+            LOGGER.error(String.format("[convert]%s", e.toString()), e);
+            ConverterReport.INSTANCE.addErrorRecord(null, "[convert]", e);
+        }
 
         c.parserSummaryReport();
         c.analyzerReport();
@@ -434,18 +439,29 @@ public class JS12JS7Converter {
     private Map<Path, AgentHelper> getJS1Agents() {
         Map<Path, AgentHelper> result = new HashMap<>();
         converterObjects.getProcessClasses().getUnique().entrySet().stream().filter(e -> e.getValue().isAgent()).forEach(e -> {
-            result.put(e.getValue().getPath(), new AgentHelper(e.getKey(), e.getValue()));
+            try {
+                result.put(e.getValue().getPath(), new AgentHelper(e.getKey(), e.getValue()));
+            } catch (Throwable ex) {
+                LOGGER.error(String.format("[getJS1Agents][processClasses][unique][%s]%s", e.getValue(), ex.toString()), ex);
+                Path p = e.getValue() == null ? null : e.getValue().getPath();
+                ConverterReport.INSTANCE.addErrorRecord(p, "[getJS1Agents][processClasses][unique]", ex);
+            }
         });
         if (converterObjects.getProcessClasses().getDuplicates().size() > 0) {
             for (Map.Entry<String, List<ProcessClass>> entry : converterObjects.getProcessClasses().getDuplicates().entrySet()) {
-                LOGGER.info("[convertStandalone][duplicate]" + entry.getKey());
+                LOGGER.info("[getJS1Agents][processClasses][duplicate]" + entry.getKey());
                 int counter = DUPLICATE_INITIAL_COUNTER;
                 for (ProcessClass pc : entry.getValue()) {
                     if (!pc.isAgent()) {
                         continue;
                     }
-                    result.put(pc.getPath(), new AgentHelper(getDuplicateName(entry.getKey(), counter), pc));
-                    counter++;
+                    try {
+                        result.put(pc.getPath(), new AgentHelper(getDuplicateName(entry.getKey(), counter), pc));
+                        counter++;
+                    } catch (Throwable ex) {
+                        LOGGER.error(String.format("[getJS1Agents][processClasses][duplicate][%s]%s", pc, ex.toString()), ex);
+                        ConverterReport.INSTANCE.addErrorRecord(pc.getPath(), "[getJS1Agents][processClasses][duplicate]", ex);
+                    }
                 }
             }
         }
