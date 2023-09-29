@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -46,6 +47,7 @@ import com.sos.joc.model.dailyplan.projections.ProjectionsRequest;
 import com.sos.joc.model.dailyplan.projections.items.meta.ControllerInfoItem;
 import com.sos.joc.model.dailyplan.projections.items.meta.MetaItem;
 import com.sos.joc.model.dailyplan.projections.items.meta.WorkflowsItem;
+import com.sos.joc.model.dailyplan.projections.items.year.DateItem;
 import com.sos.joc.model.dailyplan.projections.items.year.DatePeriodItem;
 import com.sos.joc.model.dailyplan.projections.items.year.MonthItem;
 import com.sos.joc.model.dailyplan.projections.items.year.MonthsItem;
@@ -140,6 +142,9 @@ public class DailyPlanProjectionsImpl extends JOCResourceImpl implements IDailyP
                 for (DBItemDailyPlanProjection item : items) {
                     setYearsItem(item, in.getWithoutStartTime(), withPeriods, unPermittedSchedulesExist, permittedSchedules, pDayFromTo, yearsItem);
                 }
+
+                removeObsoleteSchedulesFromMetaData(metaContentOpt, allowedControllers, in.getWithoutStartTime(), withPeriods, permittedSchedules
+                        .size(), yearsItem);
             }
 
             ProjectionsCalendarResponse entity = new ProjectionsCalendarResponse();
@@ -229,6 +234,7 @@ public class DailyPlanProjectionsImpl extends JOCResourceImpl implements IDailyP
             Optional<Set<String>> scheduleNames, List<Folder> scheduleFolders, Optional<Set<String>> nonPeriodScheduleNames,
             Optional<Set<String>> workflowNames, List<Folder> workflowFolders, Set<String> permittedSchedules,
             SOSAuthFolderPermissions folderPermissions) throws DBMissingDataException {
+        
         boolean schedulesRemoved = false;
         MetaItem metaItem = metaContentOpt.orElseThrow(DailyPlanProjectionsImpl::getDBMissingDataException);
         if (metaItem != null && metaItem.getAdditionalProperties() != null) {
@@ -236,14 +242,41 @@ public class DailyPlanProjectionsImpl extends JOCResourceImpl implements IDailyP
                 schedulesRemoved = true;
             }
             for (String controllerId : allowedControllers) {
-                if (filterPermittedSchedules(metaItem.getAdditionalProperties().get(controllerId), folderPermissions.getListOfFolders(
-                        controllerId), scheduleNames, scheduleFolders, nonPeriodScheduleNames, workflowNames, workflowFolders, permittedSchedules)) {
+                Set<Folder> permittedFolders = folderPermissions == null ? Collections.emptySet() : folderPermissions.getListOfFolders(controllerId);
+                if (filterPermittedSchedules(metaItem.getAdditionalProperties().get(controllerId), permittedFolders, scheduleNames, scheduleFolders,
+                        nonPeriodScheduleNames, workflowNames, workflowFolders, permittedSchedules)) {
                     schedulesRemoved = true;
                 }
             }
             metaContentOpt = Optional.of(metaItem);
         }
         return schedulesRemoved;
+    }
+    
+    private static void removeObsoleteSchedulesFromMetaData(Optional<MetaItem> metaContentOpt, Set<String> allowedControllers,
+            boolean nonPeriods, boolean withPeriods, int numOfPermittedSchedules, YearsItem yearsItem) {
+        if (withPeriods) {
+            Set<String> schedules = null;
+            try {
+                Stream<DateItem> dateItemStream = yearsItem.getAdditionalProperties().values().stream().map(MonthsItem::getAdditionalProperties).map(
+                        Map::values).flatMap(Collection::stream).map(MonthItem::getAdditionalProperties).map(Map::values).flatMap(Collection::stream);
+                Stream<DatePeriodItem> datePeriodItemStream = Stream.empty();
+                if (nonPeriods) {
+                    datePeriodItemStream = dateItemStream.map(DateItem::getNonPeriods).filter(Objects::nonNull).flatMap(List::stream);
+                } else {
+                    datePeriodItemStream = dateItemStream.map(DateItem::getPeriods).filter(Objects::nonNull).flatMap(List::stream);
+                }
+                schedules = datePeriodItemStream.map(DatePeriodItem::getSchedule).filter(Objects::nonNull).map(JocInventory::pathToName).collect(
+                        Collectors.toSet());
+            } catch (Exception e) {
+                //
+            }
+
+            if (schedules != null && schedules.size() < numOfPermittedSchedules) {
+                setPermittedSchedules(metaContentOpt, allowedControllers, Optional.of(schedules), null, Optional.empty(), Optional.empty(), null,
+                        new HashSet<>(), null);
+            }
+        }
     }
     
     public static DBMissingDataException getDBMissingDataException() throws DBMissingDataException {
@@ -726,9 +759,11 @@ public class DailyPlanProjectionsImpl extends JOCResourceImpl implements IDailyP
                     if (!permittedFolders2.isEmpty() || workflowNames.isPresent()) {
                         filterPermittedWorkflows(sii.getWorkflows(), permittedFolders2, workflowNames);
                     }
-                    sii.setWorkflowPaths(sii.getWorkflows().getAdditionalProperties().keySet());
-                    sii.setWorkflows(null);
-                    sii.setTotalOrders(null);
+                    if (sii.getWorkflows() != null) {
+                        sii.setWorkflowPaths(sii.getWorkflows().getAdditionalProperties().keySet());
+                        sii.setWorkflows(null);
+                        sii.setTotalOrders(null);
+                    }
                 }
             });
             cii.getAdditionalProperties().values().removeIf(sii -> sii == null || sii.getWorkflowPaths() == null || sii.getWorkflowPaths().isEmpty());
