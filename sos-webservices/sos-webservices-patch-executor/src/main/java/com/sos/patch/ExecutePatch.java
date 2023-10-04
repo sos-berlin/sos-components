@@ -88,7 +88,7 @@ public class ExecutePatch {
         }
 
         // Target
-        FileSystem targetFileSystem = FileSystems.newFileSystem(copiedPath, null);
+        FileSystem targetFileSystem = FileSystems.newFileSystem(copiedPath, (ClassLoader) null);
         // sort the patches ascending
         File[] files = patchDir.toFile().listFiles(new FileFilter() {
             
@@ -123,7 +123,7 @@ public class ExecutePatch {
                 for (File patchFile : patchFiles) {
                     System.out.println(patchFile.getAbsolutePath());
                     FileSystem sourceFileSystem = null;
-                    sourceFileSystem = FileSystems.newFileSystem(patchFile.toPath(), null);
+                    sourceFileSystem = FileSystems.newFileSystem(patchFile.toPath(), (ClassLoader) null);
                     processPatchZipFile(sourceFileSystem, targetFileSystem);
                 }
                 // After everything from patches folder is processed, copy back from temp directory
