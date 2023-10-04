@@ -1,7 +1,9 @@
 package com.sos.joc.dailyplan;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -153,6 +155,7 @@ public class DailyPlanProjections {
 
                     ScrollableResults sr = null;
                     try {
+                        // TODO manage cyclic jobs more performantly
                         sr = dbLayer.getDailyPlanOrdersBySubmission(s.getId());
                         if (sr != null) {
                             Set<String> cyclic = new HashSet<>();
@@ -164,11 +167,12 @@ public class DailyPlanProjections {
                                     if (cyclic.contains(cyclicMainPart)) {
                                         continue;
                                     }
+
                                     cyclic.add(cyclicMainPart);
                                 }
 
                                 setPlannedMeta(mi, item, scheduleOrders);
-                                setPlannedYears(yi, item);
+                                setPlannedYears(yi, item, result.lastDate);
                             }
                         }
                     } catch (Throwable e) {
@@ -186,7 +190,7 @@ public class DailyPlanProjections {
         result.meta = mi;
         result.year = yi;
 
-        LOGGER.info(lp + "[end]" + SOSDate.getDuration(start, Instant.now()));
+        LOGGER.info(lp + "[end][" + result.lastDate + "]" + SOSDate.getDuration(start, Instant.now()));
         return result;
     }
 
@@ -233,9 +237,10 @@ public class DailyPlanProjections {
         }
     }
 
-    private void setPlannedYears(YearsItem yi, DBItemDailyPlanOrder item) throws Exception {
+    private void setPlannedYears(YearsItem yi, DBItemDailyPlanOrder item, Date submissionDate) throws Exception {
         String dateTime = SOSDate.getDateTimeAsString(item.getPlannedStart());
-        String[] arr = dateTime.split(" ")[0].split("-");
+        String submissionTime = SOSDate.getDateTimeAsString(submissionDate);
+        String[] arr = submissionTime.split(" ")[0].split("-");
         String year = arr[0];
         String month = year + "-" + arr[1];
         String date = month + "-" + arr[2];
@@ -263,7 +268,12 @@ public class DailyPlanProjections {
             p.setSingleStart(DailyPlanHelper.toZonedUTCDateTime(dateTime));
         } else {
             p.setBegin(DailyPlanHelper.toZonedUTCDateTimeCyclicPeriod(date, item.getPeriodBegin()));
-            p.setEnd(DailyPlanHelper.toZonedUTCDateTimeCyclicPeriod(date, item.getPeriodEnd()));
+            if (!item.getPeriodBegin().before(item.getPeriodEnd())) {
+                String nextDate = LocalDate.parse(date).plusDays(1).format(DateTimeFormatter.ISO_LOCAL_DATE);
+                p.setEnd(DailyPlanHelper.toZonedUTCDateTimeCyclicPeriod(nextDate, item.getPeriodEnd()));
+            } else {
+                p.setEnd(DailyPlanHelper.toZonedUTCDateTimeCyclicPeriod(date, item.getPeriodEnd()));
+            }
             p.setRepeat(SOSDate.getTimeAsString(item.getRepeatInterval()));
         }
         p.setWhenHoliday(null);// ?
@@ -296,7 +306,7 @@ public class DailyPlanProjections {
 
             if (dailyPlanSchedules.size() > 0) {
                 // TODO insertMeta later ?? - filter unused schedules/workflows ...
-                //dbLayer.insertMeta(getMeta(dailyPlanSchedules, dpr));
+                // dbLayer.insertMeta(getMeta(dailyPlanSchedules, dpr));
 
                 // current implementation - calculates "from/to" from the current date
                 // alternative (not implemented) - calculates "from/to" from the last planned date (dpr.lastDate) if set
@@ -339,7 +349,7 @@ public class DailyPlanProjections {
                     dbLayer.insert(i, getProjectionYear(settings, dbLayer, dailyPlanSchedules, String.valueOf(i), dateFrom, dateTo, reallyDateFrom,
                             plannedYearsItem));
                 }
-                
+
                 dbLayer.insertMeta(getMeta(dailyPlanSchedules, dpr));
             }
         }
