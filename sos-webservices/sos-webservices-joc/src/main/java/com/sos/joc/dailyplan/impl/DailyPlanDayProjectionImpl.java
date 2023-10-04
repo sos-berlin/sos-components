@@ -142,8 +142,17 @@ public class DailyPlanDayProjectionImpl extends JOCResourceImpl implements IDail
                             entity.getPeriods().removeIf(p -> !permittedSchedules.contains(p.getSchedule()));
                         }
                         entity.setNumOfPeriods(entity.getPeriods().size());
+                        entity.setNumOfNonPeriods(null);
+                        entity.setNonPeriods(null);
                     } else {
                         entity.setPeriods(null);
+                        entity.setNumOfPeriods(null);
+                        entity.setNonPeriods(permittedSchedules.stream().map(s -> {
+                            DatePeriodItem dpi = new DatePeriodItem();
+                            dpi.setSchedule(s);
+                            return dpi;
+                        }).collect(Collectors.toList()));
+                        entity.setNumOfNonPeriods(entity.getNonPeriods().size());
                     }
                 }
 
