@@ -75,9 +75,7 @@ import com.sos.joc.db.common.HistoryConstants;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
-import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.JocConfigurationException;
-import com.sos.joc.exceptions.JocReleaseException;
 import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.order.BlockPosition;
@@ -212,7 +210,10 @@ public class Validator {
                     }
                 } else if (ConfigurationType.FILEORDERSOURCE.equals(type)) {
                     FileOrderSource fileOrderSource = (FileOrderSource) config;
-                    validateWorkflowRef(fileOrderSource.getWorkflowName(), dbLayer, "$.workflowName");
+                    String position = "$.workflowName";
+                    String json = validateWorkflowRef(fileOrderSource.getWorkflowName(), dbLayer, position);
+                    Workflow w = Globals.objectMapper.readValue(json, Workflow.class);
+                    validateFileVariable(w.getOrderPreparation(), fileOrderSource.getWorkflowName(), position);
                     if (fileOrderSource.getDirectoryExpr() != null) {
                         validateExpression("$.directoryExpr: ", fileOrderSource.getDirectoryExpr());
                     }
@@ -303,8 +304,11 @@ public class Validator {
                     validateOrderParameterisations(schedule.getOrderParameterisations(), r, workflowName, w, "$.variableSets.orderParameterisations");
                 }
             } else if (ConfigurationType.FILEORDERSOURCE.equals(type)) {
+                String position = "$.workflowName";
                 FileOrderSource fileOrderSource = (FileOrderSource) config;
-                validateWorkflowRef(fileOrderSource.getWorkflowName(), workflowJsonsByName, "$.workflowName");
+                String json = validateWorkflowRef(fileOrderSource.getWorkflowName(), workflowJsonsByName, position);
+                Workflow w = Globals.objectMapper.readValue(json, Workflow.class);
+                validateFileVariable(w.getOrderPreparation(), fileOrderSource.getWorkflowName(), position);
                 if (fileOrderSource.getDirectoryExpr() != null) {
                     validateExpression("$.directoryExpr: ", fileOrderSource.getDirectoryExpr());
                 }
@@ -367,6 +371,14 @@ public class Validator {
             throw new JocConfigurationException(position + ": Missing assigned Workflow: " + workflowName);
         }
         return wJson;
+    }
+    
+    private static void validateFileVariable(Requirements r, String workflowName, String position) throws JocConfigurationException {
+        if (r != null && r.getParameters() != null && r.getParameters().getAdditionalProperties() != null && r.getParameters()
+                .getAdditionalProperties().size() > 0 && !r.getParameters().getAdditionalProperties().containsKey("file")) {
+            throw new JocConfigurationException(String.format("%s: Workflow '%s' has order variables but the 'file' variable is missing",
+                    position, workflowName));
+        }
     }
 
     private static void validateCalendarRefs(Schedule schedule, InventoryDBLayer dbLayer) throws SOSHibernateException, JocConfigurationException {
