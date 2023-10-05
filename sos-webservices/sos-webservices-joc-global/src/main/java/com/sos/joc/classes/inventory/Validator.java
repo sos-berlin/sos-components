@@ -172,6 +172,9 @@ public class Validator {
                     if (workflow.getJobResourceNames() != null) {
                         jobResources.addAll(workflow.getJobResourceNames());
                     }
+                    //TODO should know the workflow name to check if it is referenced in a file order source 
+                    //     with dbLayer.getNumOfAddOrderWorkflowsByWorkflowName(workflowName).intValue()
+                    
                     // JsonValidator.validateStrict(configBytes, URI.create("classpath:/raml/inventory/schemas/workflow/workflowJobs-schema.json"));
                     validateOrderPreparation(workflow.getOrderPreparation());
                     List<String> boardNames = hasNoticesInstruction.test(json) ? dbLayer.getBoardNames() : Collections.emptyList();
@@ -374,10 +377,10 @@ public class Validator {
     }
     
     private static void validateFileVariable(Requirements r, String workflowName, String position) throws JocConfigurationException {
-        if (r != null && r.getParameters() != null && r.getParameters().getAdditionalProperties() != null && r.getParameters()
-                .getAdditionalProperties().size() > 0 && !r.getParameters().getAdditionalProperties().containsKey("file")) {
-            throw new JocConfigurationException(String.format("%s: Workflow '%s' has order variables but the 'file' variable is missing",
-                    position, workflowName));
+        if (r == null || r.getParameters() == null || r.getParameters().getAdditionalProperties() == null || !r.getParameters()
+                .getAdditionalProperties().containsKey("file")) {
+            throw new JocConfigurationException(String.format("%s: Workflow '%s' has order variables but the 'file' variable is missing", position,
+                    workflowName));
         }
     }
 
@@ -394,7 +397,6 @@ public class Validator {
             calendarNames.removeAll(dbCalendars.stream().map(DBItemInventoryConfiguration::getName).collect(Collectors.toSet()));
             throw new JocConfigurationException("Missing assigned Calendars: " + calendarNames.toString());
         }
-
     }
     
     private static void validateCalendarRefs(Schedule schedule, Set<String> allWorkingDaysCalendarNames, Set<String> allNonWorkingDaysCalendarNames) throws JocConfigurationException {
