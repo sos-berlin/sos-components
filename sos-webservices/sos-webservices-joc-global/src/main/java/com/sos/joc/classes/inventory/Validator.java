@@ -173,7 +173,7 @@ public class Validator {
                         jobResources.addAll(workflow.getJobResourceNames());
                     }
                     //TODO should know the workflow name to check if it is referenced in a file order source 
-                    //     with dbLayer.getNumOfAddOrderWorkflowsByWorkflowName(workflowName).intValue()
+                    //     with dbLayer.getNumOfUsedFileOrderSourcesByWorkflowName(workflowName).intValue()
                     
                     // JsonValidator.validateStrict(configBytes, URI.create("classpath:/raml/inventory/schemas/workflow/workflowJobs-schema.json"));
                     validateOrderPreparation(workflow.getOrderPreparation());
@@ -379,7 +379,7 @@ public class Validator {
     private static void validateFileVariable(Requirements r, String workflowName, String position) throws JocConfigurationException {
         if (r == null || r.getParameters() == null || r.getParameters().getAdditionalProperties() == null || !r.getParameters()
                 .getAdditionalProperties().containsKey("file")) {
-            throw new JocConfigurationException(String.format("%s: Workflow '%s' has order variables but the 'file' variable is missing", position,
+            throw new JocConfigurationException(String.format("%s: the 'file' variable is missing in the referenced workflow '%s'", position,
                     workflowName));
         }
     }
