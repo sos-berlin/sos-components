@@ -1,5 +1,7 @@
 package com.sos.joc.db.inventory.items;
 
+import java.util.Date;
+
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.ResponseFolderItem;
 
@@ -14,6 +16,7 @@ public class InventoryTreeFolderItem {
     private boolean deleted;
     private boolean deployed;
     private boolean released;
+    private Date modified;
     private Number countDeployed;
     private Number countReleased;
 
@@ -30,6 +33,7 @@ public class InventoryTreeFolderItem {
             item.setDeleted(deleted);
             item.setDeployed(deployed);
             item.setReleased(released);
+            item.setModified(modified);
             item.setHasDeployments(countDeployed.intValue() > 0);
             item.setHasReleases(countReleased.intValue() > 0);
             return item;
