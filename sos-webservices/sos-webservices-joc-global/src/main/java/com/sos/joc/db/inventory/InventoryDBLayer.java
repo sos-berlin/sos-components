@@ -406,6 +406,7 @@ public class InventoryDBLayer extends DBLayer {
         hql.append(",ic.valid as valid");
         hql.append(",ic.type as type");
         hql.append(",ic.path as path");
+        hql.append(",ic.modified as modified");
         if (forTrash) {
             hql.append(",false as deleted ");// TODO?
             hql.append(",false as deployed ");
@@ -443,7 +444,7 @@ public class InventoryDBLayer extends DBLayer {
             hql.append("where ").append(String.join(" and ", where)).append(" ");
         }
         if (!forTrash) {
-            hql.append("group by ic.id,ic.name,ic.title,ic.valid,ic.type,ic.path,ic.deleted,ic.deployed,ic.released");
+            hql.append("group by ic.id,ic.name,ic.title,ic.valid,ic.type,ic.path,ic.modified,ic.deleted,ic.deployed,ic.released");
         }
         Query<InventoryTreeFolderItem> query = getSession().createQuery(hql.toString(), InventoryTreeFolderItem.class);
         if (recursive) {
