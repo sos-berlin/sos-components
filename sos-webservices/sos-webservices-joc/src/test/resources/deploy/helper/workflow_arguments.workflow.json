@@ -1,74 +1,54 @@
 {
+	"versionId": "to_replace",
 	"TYPE": "Workflow",
 	"path": "workflow_arguments",
-	"versionId": "1",
-	"orderRequirements": {
+	"timeZone": "Europe/Berlin",
+	"orderPreparation": {
 		"parameters": {
-			"SHOW_ENV": {
-				"type": "String",
-				"default": "mystring"
-			},
-			"show_env": {
-				"type": "Boolean",
-				"default": true
-			},
-			"log_level": {
+			"c": {
 				"type": "String"
 			},
-			"string_argument": {
-				"type": "String",
-				"default": "order_string_argument"
+			"al": {
+				"type": {
+					"TYPE": "List",
+					"elementType": {
+						"TYPE": "Object",
+						"cc": "String",
+						"bb": "String",
+						"aa": "String"
+					}
+				}
 			},
-			"redefine_show_env": {
-				"type": "Boolean",
-				"default": true
+			"b": {
+				"type": "String"
+			},
+			"a": {
+				"type": "String"
 			}
-		}
+		},
+		"allowUndeclared": false
 	},
 	"instructions": [
 		{
 			"TYPE": "Execute.Named",
-			"jobName": "job_1",
-			"label": "job_1",
-			"defaultArguments": {
-				"string_argument": "job_1_node_string_argument"
-			}
-		},
-		{
-			"TYPE": "Execute.Named",
-			"jobName": "job_2",
-			"label": "job_2"
+			"jobName": "job",
+			"label": "job"
 		}
 	],
 	"jobs": {
-		"job_1": {
-			"agentName": "agent_name",
+		"job": {
+			"agentPath": "agent",
+			"withSubagentClusterIdExpr": false,
 			"executable": {
-				"TYPE": "InternalExecutable",
-				"className": "com.sos.jitl.jobs.examples.InfoJob",
-				"jobArguments": {
-					"job_argument": "my_job_argument"
-				},
-				"arguments": {
-					"string_argument": "'job_1_string_argument'"
-				}
+				"TYPE": "ShellScriptExecutable",
+				"script": "echo 123",
+				"v1Compatible": false
 			},
-			"taskLimit": 1,
-			"logLevel": "DEBUG"
-		},
-		"job_2": {
-			"agentName": "agent_name",
-			"executable": {
-				"TYPE": "InternalExecutable",
-				"className": "com.sos.jitl.jobs.examples.InfoJob",
-				"jobArguments": {
-					
-				},
-				"arguments": {
-					
-				}
-			},
-			"taskLimit": 1
+			"skipIfNoAdmissionForOrderDay": false,
+			"parallelism": 1,
+			"graceTimeout": 1,
+			"failOnErrWritten": false,
+			"warnOnErrWritten": false
 		}
 	}
 }

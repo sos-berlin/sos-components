@@ -163,7 +163,7 @@ public class DeployTest {
 
         try {
             JControllerApi api = proxy.getControllerApi(ProxyUser.JOC, CONTROLLER_URI_PRIMARY);
-            deployWorkflow(api, WORKFLOW_WITH_ARGUMENTS, "1");
+            deployWorkflowWithoutSerialisation(api, WORKFLOW_WITH_ARGUMENTS, "ee25c611-7852-40ca-b376-a4f7f228a688");
         } catch (Throwable e) {
             throw e;
         } finally {
@@ -203,7 +203,7 @@ public class DeployTest {
 
     private void addOrder(JControllerApi api, int counter) {
         try {
-            String orderId = "test-" + SOSDate.format(new Date(),"yyyyMMddHHmmss") + "_" + counter;
+            String orderId = "test-" + SOSDate.format(new Date(), "yyyyMMddHHmmss") + "_" + counter;
             JFreshOrder order = JFreshOrder.of(OrderId.of(orderId), WorkflowPath.of("shell"), Optional.empty(), Collections.emptyMap(), true);
             api.addOrder(order).thenAccept(either -> {
                 if (either.isRight()) {
@@ -217,12 +217,24 @@ public class DeployTest {
         }
     }
 
+    private void deployWorkflowWithoutSerialisation(JControllerApi api, Path workflow, String versionId) throws Exception {
+        // 1 - redefine Version (e.g. when already deployed)
+        String workflowOriginal = new String(Files.readAllBytes(workflow));
+        workflowOriginal = workflowOriginal.replaceAll("\"versionId\": \"to_replace\",", "\"versionId\": \"" + versionId + "\",");
+
+        deployWorkflow(api, workflowOriginal, versionId);
+    }
+
     private void deployWorkflow(JControllerApi api, Path workflow, String versionId) throws Exception {
         // 1 - redefine Version (e.g. when already deployed)
         Workflow w = Globals.objectMapper.readValue(Files.readAllBytes(workflow), Workflow.class);
         w.setVersionId(versionId);
 
         String workflowOriginal = Globals.objectMapper.writeValueAsString(w);
+        deployWorkflow(api, workflowOriginal, versionId);
+    }
+
+    private void deployWorkflow(JControllerApi api, String workflowOriginal, String versionId) throws Exception {
         LOGGER.info(String.format("[before sign]%s", workflowOriginal));
 
         // 2- sign workflow
@@ -244,7 +256,7 @@ public class DeployTest {
                 subAgentId)), JUpdateItemOperation.addOrChangeSimple(JSubagentItem.of(subAgentId, agentPath, agentUri, false))))).get();
         LOGGER.info("[addOrChangeAgent][" + agentId + "]" + SOSString.toString(answer));
     }
-    
+
     private void addOrChangeSignedItem(JControllerApi api, String contentOriginal, String contentSigned, String signatureType, String versionId)
             throws InterruptedException, ExecutionException {
         Set<JUpdateItemOperation> operations = new HashSet<JUpdateItemOperation>();
