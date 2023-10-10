@@ -38,7 +38,7 @@ public class HistoryUtilTest {
 
         LOGGER.info(toString(v));
 
-    }
+    }   
 
     private String toString(Variables var) {
         StringBuilder sb = new StringBuilder();

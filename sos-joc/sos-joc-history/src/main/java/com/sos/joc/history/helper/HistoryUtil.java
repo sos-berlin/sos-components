@@ -3,7 +3,7 @@ package com.sos.joc.history.helper;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Path;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -17,11 +17,7 @@ import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.common.Variables;
 import com.sos.joc.Globals;
-
-import js7.data.value.ListValue;
-import js7.data.value.ObjectValue;
-import js7.data.value.Value;
-import scala.collection.JavaConverters;
+import com.sos.joc.classes.order.OrdersHelper;
 
 public class HistoryUtil {
 
@@ -126,23 +122,7 @@ public class HistoryUtil {
         if (map == null || map.isEmpty()) {
             return null;
         }
-        Variables v = new Variables();
-        for (Map.Entry<String, js7.data.value.Value> entry : map.entrySet()) {
-            if (entry.getValue() instanceof js7.data.value.ListValue) {
-                List<Value> lv = ((ListValue) entry.getValue()).toJava();
-                for (Value l : lv) {
-                    if (l instanceof ObjectValue) {
-                        try {
-                            v.setAdditionalProperty(entry.getKey(), toVariables(JavaConverters.asJava(((ObjectValue) l).nameToValue())));
-                        } catch (Throwable e) {
-                        }
-                    }
-                }
-            } else {
-                v.setAdditionalProperty(entry.getKey(), entry.getValue().toJava());
-            }
-        }
-        return v;
+        return OrdersHelper.scalaValuedArgumentsToVariables(map);
     }
 
     public static Variables toVariables(Map<String, js7.data.value.Value> map, List<CachedWorkflowParameter> params) throws JsonProcessingException {
@@ -154,7 +134,7 @@ public class HistoryUtil {
             return v;
         }
         if (v == null) {
-            map = new HashMap<>();
+            map = new LinkedHashMap<>();
             v = new Variables();
         }
         for (CachedWorkflowParameter param : params) {
