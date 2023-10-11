@@ -385,13 +385,13 @@ public class AgentStoreUtils {
                 curDbSubAgents.add(newDbSubAgent);
             } else {
                 if (overwrite) {
-                    // update (if subagent and dbSubangent unequal)
-                    if (dbSubAgent.getDirectorAsEnum().equals(subAgent.getIsDirector()) && dbSubAgent.getUri().equals(subAgent.getUrl())) {
-                        if (subAgent.getWithGenerateSubagentCluster() && !existingSubagentClusters.contains(subAgent.getSubagentId())) {
-                            saveNewSubAgentCluster(subAgent, agentId, dbLayer.getSession(), ++clusterPosition, now);
-                        }
-                        continue;
-                    }
+//                    // update (if subagent and dbSubangent unequal)
+//                    if (dbSubAgent.getDirectorAsEnum().equals(subAgent.getIsDirector()) && dbSubAgent.getUri().equals(subAgent.getUrl())) {
+//                        if (subAgent.getWithGenerateSubagentCluster() && !existingSubagentClusters.contains(subAgent.getSubagentId())) {
+//                            saveNewSubAgentCluster(subAgent, agentId, dbLayer.getSession(), ++clusterPosition, now);
+//                        }
+//                        continue;
+//                    }
                     if (primaryDirector != null && subAgent.getIsDirector().equals(SubagentDirectorType.PRIMARY_DIRECTOR) && !subAgent.getSubagentId()
                             .equals(primaryDirector.getSubAgentId())) {
                         if (primaryDirectorIsChanged) {
