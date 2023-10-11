@@ -227,9 +227,9 @@ public class LogEntry {
         StringBuilder sb;
         switch (eventType) {
         case OrderProcessingStarted:
-            String jobAdd = label == null ? "" : ", label=" + label;
+            String jobAdd = label == null || label.equals(jobName) ? "" : "(" + label + ")";
             String agentAdd = subagentClusterId == null ? "" : ", subagentClusterId=" + subagentClusterId;
-            info = String.format("[Start] Job(name=%s%s), Agent(url=%s, id=%s, name=%s%s)", jobName, jobAdd, agentUri, agentId, agentName, agentAdd);
+            info = String.format("[Start] Job=%s%s, Agent(url=%s, id=%s, name=%s%s)", jobName, jobAdd, agentUri, agentId, agentName, agentAdd);
             return;
         case OrderProcessed:
             returnCode = cos.getReturnCode();
