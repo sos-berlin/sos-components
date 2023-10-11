@@ -46,6 +46,7 @@ public class HistoryMapper {
         history.setEndTime(item.getEndTime());
         history.setError(setError(item));
         history.setJob(item.getJobName());
+        history.setLabel(item.getJobLabel());
         history.setOrderId(item.getOrderId());
         history.setExitCode(item.getReturnCode());
         history.setState(getState(item.getSeverity()));

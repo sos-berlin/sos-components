@@ -2248,6 +2248,7 @@ public class HistoryModel {
             ole.setAgentUrl(le.getAgentUri());
             ole.setSubagentClusterId(le.getSubagentClusterId());
             ole.setJob(le.getJobName());
+            ole.setLabel(le.getLabel());
             ole.setTaskId(le.getHistoryOrderStepId());
             orderEntryContent = new StringBuilder(HistoryUtil.toJsonString(ole));
             postEventOrderLog(le, ole);
@@ -2273,6 +2274,7 @@ public class HistoryModel {
             // orderEntry.setAgentPath(entry.getAgentPath());
             // orderEntry.setAgentUrl(entry.getAgentUri());
             ole.setJob(le.getJobName());
+            ole.setLabel(le.getLabel());
             ole.setTaskId(le.getHistoryOrderStepId());
             orderEntryContent = new StringBuilder(HistoryUtil.toJsonString(ole));
             postEventOrderLog(le, ole);
