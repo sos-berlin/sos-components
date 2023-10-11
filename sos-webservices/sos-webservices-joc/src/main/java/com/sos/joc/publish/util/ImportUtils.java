@@ -610,7 +610,7 @@ public class ImportUtils {
                     try {
                         SOSCheckJavaVariableName.test("folder", Paths.get(entry.getName()).getFileName().toString());
                     } catch (IllegalArgumentException e) {
-                        throw new JocImportException("import rejected.", e);
+                        throw new JocImportException("import rejected: " + e.getMessage());
                     }
                     continue;
                 }
@@ -620,7 +620,7 @@ public class ImportUtils {
                 try {
                     SOSCheckJavaVariableName.test("filename", filename);
                 } catch (IllegalArgumentException e) {
-                    throw new JocImportException("import rejected.", e);
+                    throw new JocImportException("import rejected: " + e.getMessage());
                 }
                 ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
                 byte[] binBuffer = new byte[8192];
