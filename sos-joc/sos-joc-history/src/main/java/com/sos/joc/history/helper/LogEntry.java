@@ -38,6 +38,7 @@ public class LogEntry {
     private Long historyOrderStepId = Long.valueOf(0);
     private String position;
     private String jobName = ".";
+    private String label;
     private String agentTimezone = null;
     private String agentId = ".";
     private String agentName = ".";
@@ -217,6 +218,7 @@ public class LogEntry {
         historyOrderStepId = cos.getId();
         position = cos.getWorkflowPosition();
         jobName = cos.getJobName();
+        label = cos.getJobLabel();
         agentTimezone = cos.getAgentTimezone();
         agentId = cos.getAgentId();
         agentName = cos.getAgentName();
@@ -225,8 +227,9 @@ public class LogEntry {
         StringBuilder sb;
         switch (eventType) {
         case OrderProcessingStarted:
-            String add = subagentClusterId == null ? "" : ", subagentClusterId=" + subagentClusterId;
-            info = String.format("[Start] Job=%s, Agent (url=%s, id=%s, name=%s%s)", jobName, agentUri, agentId, agentName, add);
+            String jobAdd = label == null ? "" : ", label=" + label;
+            String agentAdd = subagentClusterId == null ? "" : ", subagentClusterId=" + subagentClusterId;
+            info = String.format("[Start] Job(name=%s%s), Agent(url=%s, id=%s, name=%s%s)", jobName, jobAdd, agentUri, agentId, agentName, agentAdd);
             return;
         case OrderProcessed:
             returnCode = cos.getReturnCode();
@@ -304,6 +307,10 @@ public class LogEntry {
 
     public String getJobName() {
         return jobName;
+    }
+
+    public String getLabel() {
+        return label;
     }
 
     public String getAgentTimezone() {
