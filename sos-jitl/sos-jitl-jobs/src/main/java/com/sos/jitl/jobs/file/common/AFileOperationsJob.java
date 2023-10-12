@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.sos.commons.util.SOSPath;
 import com.sos.jitl.jobs.file.exception.SOSFileOperationsException;
 import com.sos.js7.job.Job;
 import com.sos.js7.job.JobHelper;
@@ -66,14 +67,9 @@ public abstract class AFileOperationsJob extends Job<FileOperationsJobArguments>
 
         if (args.getResultSetFile().getValue() != null && fileList.length() > 0) {
             if (isDebugEnabled) {
-                step.getLogger().debug("[handleResult]try to write file:" + args.getResultSetFile().getValue());
+                step.getLogger().debug("[handleResult][create/overwrite file]" + args.getResultSetFile().getValue());
             }
-            if (Files.isWritable(args.getResultSetFile().getValue())) {
-                Files.write(args.getResultSetFile().getValue(), fileList.getBytes("UTF-8"));
-            } else {
-                throw new SOSFileOperationsException(String.format("file '%s'(%s) is not writable", args.getResultSetFile().getValue(), args
-                        .getResultSetFile().getName()));
-            }
+            SOSPath.overwriteWithNewLine(args.getResultSetFile().getValue(), fileList);
         }
 
         OrderProcessStepOutcome outcome = step.getOutcome();

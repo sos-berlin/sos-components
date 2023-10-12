@@ -516,12 +516,20 @@ public class SOSPath {
         append(outputFile, content, (String) null);
     }
 
+    public static void appendLine(Path outputFile, String content) throws Exception {
+        append(outputFile, content, System.lineSeparator());
+    }
+
     public static void append(Path outputFile, String content, String newLine) throws Exception {
         append(outputFile, content, newLine, StandardCharsets.UTF_8);
     }
 
     public static void append(Path outputFile, String content, Charset cs) throws Exception {
         append(outputFile, content, null, cs);
+    }
+
+    public static void appendLine(Path outputFile, String content, Charset cs) throws Exception {
+        append(outputFile, content, System.lineSeparator(), cs);
     }
 
     public static void append(Path outputFile, String content, String newLine, Charset cs) throws Exception {
@@ -532,12 +540,20 @@ public class SOSPath {
         overwrite(outputFile, content, (String) null);
     }
 
+    public static void overwriteWithNewLine(Path outputFile, String content) throws Exception {
+        overwrite(outputFile, content, System.lineSeparator());
+    }
+
     public static void overwrite(Path outputFile, String content, String newLine) throws Exception {
         overwrite(outputFile, content, newLine, StandardCharsets.UTF_8);
     }
 
     public static void overwrite(Path outputFile, String content, Charset cs) throws Exception {
         overwrite(outputFile, content, null, cs);
+    }
+
+    public static void overwriteWithNewLine(Path outputFile, String content, Charset cs) throws Exception {
+        overwrite(outputFile, content, System.lineSeparator(), cs);
     }
 
     public static void overwrite(Path outputFile, String content, String newLine, Charset cs) throws Exception {
