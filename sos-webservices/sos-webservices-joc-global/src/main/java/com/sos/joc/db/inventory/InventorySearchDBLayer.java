@@ -192,7 +192,11 @@ public class InventorySearchDBLayer extends DBLayer {
             hql.append("and (lower(mt.name) like :search or lower(mt.title) like :search) ");
         }
         if (onlyUnDeployedUnReleaseObjects) {
-            hql.append("and mt.deployed = 0 ");
+            if (isReleasable) {
+                hql.append("and mt.released = 0 ");
+            } else {
+                hql.append("and mt.deployed = 0 ");
+            }
             if (valid != null) {
                 hql.append("and mt.valid = ").append(valid ? 1 : 0).append(" ");
             }
@@ -375,7 +379,11 @@ public class InventorySearchDBLayer extends DBLayer {
             hql.append("and (lower(mt.name) like :search or lower(mt.title) like :search) ");
         }
         if (onlyUnDeployedUnReleaseObjects) {
-            hql.append("and mt.deployed = 0 ");
+            if (isReleasable) {
+                hql.append("and mt.released = 0 ");
+            } else {
+                hql.append("and mt.deployed = 0 ");
+            }
             if (valid != null) {
                 hql.append("and mt.valid = ").append(valid ? 1 : 0).append(" ");
             }
