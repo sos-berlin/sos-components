@@ -188,7 +188,8 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
 
                 if (cockpit.getCurrent()) {
                     String uri = getJocBaseUri();
-                    if (!uri.isEmpty() && !uri.equals(instance.getUri())) {
+                    //if (!uri.isEmpty() && !uri.equals(instance.getUri())) {
+                    if (!uri.isEmpty() && (instance.getUri() == null || instance.getUri().isEmpty())) {
                         instance.setUri(uri.toString());
                         dbLayer.update(instance);
                     }
