@@ -166,18 +166,19 @@ public class ClusterWatch {
         
         boolean changed = false;
         for (DBItemInventoryJSInstance inst : controllerInstances) {
+            String clusterUri = inst.getClusterUri() == null || inst.getClusterUri().isEmpty() ? inst.getUri() : inst.getClusterUri();
             if (inst.getIsPrimary()) {
                 if (!changed) {
-                    changed = !inst.getClusterUri().equals(cState.getSetting().getIdToUri().getAdditionalProperties().get("Primary"));
+                    changed = !clusterUri.equals(cState.getSetting().getIdToUri().getAdditionalProperties().get("Primary"));
                 }
-                idToUri.put(primeId, Uri.of(inst.getClusterUri())); 
-                itu.setAdditionalProperty("Primary", inst.getClusterUri());
+                idToUri.put(primeId, Uri.of(clusterUri)); 
+                itu.setAdditionalProperty("Primary", clusterUri);
             } else {
                 if (!changed) {
-                    changed = !inst.getClusterUri().equals(cState.getSetting().getIdToUri().getAdditionalProperties().get("Backup"));
+                    changed = !clusterUri.equals(cState.getSetting().getIdToUri().getAdditionalProperties().get("Backup"));
                 }
-                idToUri.put(NodeId.of("Backup"), Uri.of(inst.getClusterUri())); 
-                itu.setAdditionalProperty("Backup", inst.getClusterUri());
+                idToUri.put(NodeId.of("Backup"), Uri.of(clusterUri)); 
+                itu.setAdditionalProperty("Backup", clusterUri);
             }
         }
         
