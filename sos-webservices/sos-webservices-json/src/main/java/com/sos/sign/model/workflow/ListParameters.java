@@ -1,7 +1,7 @@
 
 package com.sos.sign.model.workflow;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
@@ -23,7 +23,7 @@ public class ListParameters {
     @JsonProperty("TYPE")
     private String tYPE = "Object";
     @JsonIgnore
-    private Map<String, ListParameterType> additionalProperties = new HashMap<String, ListParameterType>();
+    private Map<String, ListParameterType> additionalProperties = new LinkedHashMap<String, ListParameterType>();
 
     /**
      * No args constructor for use in serialization
