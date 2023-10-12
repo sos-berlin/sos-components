@@ -1,6 +1,7 @@
 package com.sos.joc.publish.impl;
 
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
@@ -154,7 +155,8 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                     		updateableFileOrderSourceAgentNames, commitId, controllerId, dbLayer, jocVersion, apiVersion, inventoryVersion);
                 } else { // shallow copy
                     Set<ConfigurationObject> all = Stream.concat(deployablesForShallowCopy.stream(), releasables.stream()).collect(Collectors.toSet());
-                    stream = ExportUtils.writeTarGzipFileShallow(all, dbLayer, jocVersion, apiVersion, inventoryVersion);
+                    stream = ExportUtils.writeTarGzipFileShallow(all, dbLayer, jocVersion, apiVersion, inventoryVersion,
+                            filter.getUseShortPath(), Arrays.asList(filter.getStartFolder()));
                 }
             } else {
                 if (forSigning != null) {
@@ -162,7 +164,8 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                     		updateableFileOrderSourceAgentNames, commitId, controllerId, dbLayer, jocVersion, apiVersion, inventoryVersion);
                 } else { // shallow copy
                     Set<ConfigurationObject> all = Stream.concat(deployablesForShallowCopy.stream(), releasables.stream()).collect(Collectors.toSet());
-                    stream = ExportUtils.writeZipFileShallow(all, dbLayer, jocVersion, apiVersion, inventoryVersion);
+                    stream = ExportUtils.writeZipFileShallow(all, dbLayer, jocVersion, apiVersion, inventoryVersion,
+                            filter.getUseShortPath(), Arrays.asList(filter.getStartFolder()));
                 }
             }
             return JOCDefaultResponse.responseOctetStreamDownloadStatus200(stream, filter.getExportFile().getFilename());
