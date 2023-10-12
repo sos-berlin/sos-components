@@ -601,28 +601,33 @@ public class JsonConverter {
         }
         Parameters params = new Parameters();
         if (orderPreparation.getParameters() != null && orderPreparation.getParameters().getAdditionalProperties() != null) {
-            orderPreparation.getParameters().getAdditionalProperties().forEach((k, v) -> {
-                Parameter p = new Parameter();
-                p.setDefault(v.getDefault());
-                p.setFinal(v.getFinal());
-                if (ParameterType.List.equals(v.getType())) {
-                    ListParameters lps = new ListParameters();
-                    if (v.getListParameters() != null && v.getListParameters().getAdditionalProperties() != null) {
-                        v.getListParameters().getAdditionalProperties().forEach((k1, v1) -> {
-                            lps.setAdditionalProperty(k1, v1.getType());
-                        });
-                    }
-                    p.setType(new ParameterListType("List", lps));
-                } else {
-                    p.setType(v.getType()); // wrong type enum
-                }
-                params.setAdditionalProperty(k, p);
-            });
+            orderPreparation.getParameters().getAdditionalProperties().forEach((k, v) -> params.setAdditionalProperty(k,
+                    invParameterToSignParameter(v)));
         }
         if (!params.getAdditionalProperties().containsKey("js7Workflow.path")) {
             params.setAdditionalProperty("js7Workflow.path", new Parameter(ParameterType.String.value(), null, workflowPath));
         }
         return new OrderPreparation(params, orderPreparation.getAllowUndeclared());
+    }
+    
+    private static Parameter invParameterToSignParameter(com.sos.inventory.model.workflow.Parameter value) {
+        Parameter p = new Parameter();
+        p.setDefault(value.getDefault());
+        p.setFinal(value.getFinal());
+        if (ParameterType.List.equals(value.getType())) {
+            p.setType(invListParameterToSignListParameter(value.getListParameters()));
+        } else {
+            p.setType(value.getType()); // wrong type enum
+        }
+        return p;
+    }
+    
+    private static ParameterListType invListParameterToSignListParameter(com.sos.inventory.model.workflow.ListParameters ilps) {
+        ListParameters lps = new ListParameters();
+        if (ilps != null && ilps.getAdditionalProperties() != null) {
+            ilps.getAdditionalProperties().forEach((k1, v1) -> lps.setAdditionalProperty(k1, v1.getType()));
+        }
+        return new ParameterListType("List", lps);
     }
     
     public static Requirements signOrderPreparationToInvOrderPreparation(OrderPreparation orderPreparation) {
