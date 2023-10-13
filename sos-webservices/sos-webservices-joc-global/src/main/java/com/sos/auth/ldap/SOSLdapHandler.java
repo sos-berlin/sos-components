@@ -61,7 +61,7 @@ public class SOSLdapHandler {
                             .getTruststorePassword());
                 }
                 if (sosLdapWebserviceCredentials.getTruststoreType() != null) {
-                    Globals.sosCockpitProperties.getProperties().put("ldap_truststore_type", sosLdapWebserviceCredentials.getTruststoreType());
+                    Globals.sosCockpitProperties.getProperties().put("ldap_truststore_type", sosLdapWebserviceCredentials.getTruststoreType().value());
                 }
             }
 
