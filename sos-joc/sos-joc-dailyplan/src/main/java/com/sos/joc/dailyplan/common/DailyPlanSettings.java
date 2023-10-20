@@ -6,6 +6,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSDate;
+import com.sos.commons.util.SOSString;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 
@@ -20,6 +22,7 @@ public class DailyPlanSettings {
     private String userAccount = "JS7";
     private String timeZone = "UTC";
     private String periodBegin = "00:00";
+    private boolean periodBeginMidnight = true;
     private String dailyPlanStartTime;
     private boolean overwrite = false;
     private boolean submit = true;
@@ -80,7 +83,14 @@ public class DailyPlanSettings {
     }
 
     public void setPeriodBegin(String val) {
+        if (!SOSString.isEmpty(val)) {
+            periodBeginMidnight = SOSDate.getTimeAsSeconds(val) == Long.valueOf(0L).longValue();
+        }
         periodBegin = val;
+    }
+
+    public boolean isPeriodBeginMidnight() {
+        return periodBeginMidnight;
     }
 
     public String getDailyPlanStartTime() {
@@ -140,11 +150,11 @@ public class DailyPlanSettings {
             LOGGER.warn("Could not set setting for dayAheadPlan: " + val);
         }
     }
-    
+
     public void setProjectionsMonthsAhead(int val) {
         projectionsMonthsAhead = val;
     }
-    
+
     public void setProjectionsMonthsAhead(String val) {
         try {
             this.projectionsMonthsAhead = Integer.parseInt(val);
