@@ -444,16 +444,6 @@
         <artifactId>jackson-dataformat-xml</artifactId>
         <version>${jackson.version}</version>
       </dependency>
-      <!--dependency>
-        <groupId>com.fasterxml.jackson.datatype</groupId>
-        <artifactId>jackson-datatype-hibernate3</artifactId>
-        <version>${jackson.version.hibernate}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.fasterxml.jackson.datatype</groupId>
-        <artifactId>jackson-datatype-joda</artifactId>
-        <version>${jackson.version}</version>
-      </dependency-->
       <dependency>
         <groupId>org.yaml</groupId>
         <artifactId>snakeyaml</artifactId>
@@ -471,7 +461,7 @@
       </dependency>
       <dependency>
         <groupId>com.sos-berlin.js7.engine</groupId>
-        <artifactId>js7-proxy_2.13</artifactId>
+        <artifactId>js7-proxy</artifactId>
         <version>${sos.engine.version}</version>
         <exclusions>
           <exclusion>
@@ -490,7 +480,7 @@
       </dependency>
       <dependency>
         <groupId>com.sos-berlin.js7.engine</groupId>
-        <artifactId>js7-data-for-java_2.13</artifactId>
+        <artifactId>js7-data-for-java</artifactId>
         <version>${sos.engine.version}</version>
         <exclusions>
           <exclusion>
@@ -509,7 +499,7 @@
       </dependency>
       <dependency>
         <groupId>com.sos-berlin.js7.engine</groupId>
-        <artifactId>js7-launcher-for-java_2.13</artifactId>
+        <artifactId>js7-launcher-for-java</artifactId>
         <version>${sos.engine.version}</version>
         <exclusions>
           <exclusion>
@@ -528,7 +518,7 @@
       </dependency>
       <dependency>
         <groupId>com.sos-berlin.js7.engine</groupId>
-        <artifactId>js7-executor-for-java_2.13</artifactId>
+        <artifactId>js7-executor-for-java</artifactId>
         <version>${sos.engine.version}</version>
         <exclusions>
           <exclusion>
@@ -590,13 +580,6 @@
     	<artifactId>jakarta.ws.rs-api</artifactId>
         <version>${jakarta.ws.rs-api.version}</version>
       </dependency>
-<!-- replaced by com.sun.mail:javax.mail:1.6.2
-      <dependency>
-        <groupId>javax.mail</groupId>
-        <artifactId>mail</artifactId>
-        <version>${javax.mail.version}</version>
-      </dependency>
--->
       <dependency>
         <groupId>com.sun.mail</groupId>
         <artifactId>javax.mail</artifactId>
@@ -678,12 +661,6 @@
         <artifactId>javassist</artifactId>
         <version>${javassist.version}</version>
       </dependency>
-      <!--dependency>
-        <groupId>org.hibernate.javax.persistence</groupId>
-        <artifactId>hibernate-jpa-2.1-api</artifactId>
-        <version>${hibernate.jpa.version}</version>
-      </dependency-->
-
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
@@ -710,7 +687,6 @@
         <artifactId>mariadb-java-client</artifactId>
         <version>${maria.db.driver.version}</version>
       </dependency>
-
       <dependency>
         <groupId>org.glassfish.jersey.core</groupId>
         <artifactId>jersey-client</artifactId>
