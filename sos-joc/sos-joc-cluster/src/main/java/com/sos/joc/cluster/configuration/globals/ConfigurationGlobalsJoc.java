@@ -63,6 +63,8 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     private ConfigurationEntry showViewFiletransfer = new ConfigurationEntry("show_view_filetransfer", null, GlobalSettingsSectionValueType.BOOLEAN);
     private ConfigurationEntry showViewMonitor = new ConfigurationEntry("show_view_monitor", null, GlobalSettingsSectionValueType.BOOLEAN);
     // private ConfigurationEntry showViewJobstreams = new ConfigurationEntry("show_view_jobstreams", null, GlobalSettingsSectionValueType.BOOLEAN);
+    
+    private ConfigurationEntry displayFoldersInViews = new ConfigurationEntry("display_folders_in_views", "true", GlobalSettingsSectionValueType.BOOLEAN);
 
     // private Map<ShowViewName, ConfigurationEntry> showViews = EnumSet.allOf(ShowViewName.class).stream().collect(Collectors.toMap(s -> s,
     // s -> new ConfigurationEntry("show_view_" + s.name(), null, GlobalSettingsSectionValueType.BOOLEAN)));
@@ -121,6 +123,8 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         showViewFiletransfer.setOrdering(++index);
         showViewMonitor.setOrdering(++index);
         // showViewJobstreams.setOrdering(++index);
+        
+        displayFoldersInViews.setOrdering(++index);
 
         jocPwd.setOrdering(++index);
         historyPwd.setOrdering(++index);
@@ -296,6 +300,13 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
             return allowUndeclaredVariables.getDefault().equalsIgnoreCase("true");
         }
         return allowUndeclaredVariables.getValue().equalsIgnoreCase("true");
+    }
+    
+    public boolean getDisplayFoldersInViews() {
+        if(displayFoldersInViews.getValue() == null) {
+            return displayFoldersInViews.getDefault().equalsIgnoreCase("true");
+        }
+        return displayFoldersInViews.getValue().equalsIgnoreCase("true");
     }
     
 }
