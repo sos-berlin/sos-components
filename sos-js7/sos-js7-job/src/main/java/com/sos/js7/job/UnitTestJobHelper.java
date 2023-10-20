@@ -75,6 +75,10 @@ public class UnitTestJobHelper<A extends JobArguments> {
         }
     }
 
+    public Job<A> getJob() {
+        return job;
+    }
+
     private OrderProcessStep<A> newOrderProcessStep(Map<String, Object> args) throws Exception {
         OrderProcessStep<A> step = new OrderProcessStep<A>(job.getJobEnvironment(), null);
         ArgumentsResult r = toArgs(args, job.onCreateJobArguments(null, step));
