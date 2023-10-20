@@ -96,7 +96,7 @@ public class InfoJob extends Job<InfoJobArguments> {
         step.getLogger().info("[java][name]" + step.getJobName());
 
         step.getLogger().info("----------ALL CURRENT declared/not declared argumens-----------------");
-        Map<String, JobArgument<InfoJobArguments>> allcmap = step.getAllArguments();
+        Map<String, JobArgument<?>> allcmap = step.getAllArguments();
         allcmap.entrySet().stream().forEach(e -> {
             step.getLogger().info("[java][%s][%s=%s]%s", e.getValue().getType(), e.getKey(), e.getValue().getDisplayValue(), SOSString.toString(e
                     .getValue()));

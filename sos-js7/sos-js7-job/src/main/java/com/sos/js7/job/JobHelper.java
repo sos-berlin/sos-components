@@ -149,7 +149,7 @@ public class JobHelper {
         return StringValue.of(o.toString());
     }
 
-    public static <A> Map<String, Object> asNameValueMap(Map<String, JobArgument<A>> map) {
+    public static Map<String, Object> asNameValueMap(Map<String, JobArgument<?>> map) {
         if (map == null || map.size() == 0) {
             return Collections.emptyMap();
         }

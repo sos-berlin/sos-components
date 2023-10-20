@@ -22,16 +22,15 @@ public abstract class ASOSArguments {
         return this.getClass().getName();
     }
 
-    @SuppressWarnings("rawtypes")
-    public void setArguments(List<SOSArgument> args) throws IllegalArgumentException, IllegalAccessException {
+    public void setArguments(List<SOSArgument<?>> args) throws IllegalArgumentException, IllegalAccessException {
         getArgumentFields();
         for (Field f : argumentFields) {
             f.setAccessible(true);
-            SOSArgument current = (SOSArgument) f.get(this);
+            SOSArgument<?> current = (SOSArgument<?>) f.get(this);
             if (current.getName() == null) {// internal usage
                 continue;
             }
-            SOSArgument extern = find(args, current.getName());
+            SOSArgument<?> extern = find(args, current.getName());
             if (extern != null) {
                 current = extern;
             }
@@ -39,8 +38,7 @@ public abstract class ASOSArguments {
         }
     }
 
-    @SuppressWarnings("rawtypes")
-    private SOSArgument find(List<SOSArgument> args, String name) {
+    private SOSArgument<?> find(List<SOSArgument<?>> args, String name) {
         return args.stream().filter(a -> a.getName() != null && a.getName().equals(name)).findAny().orElse(null);
     }
 }
