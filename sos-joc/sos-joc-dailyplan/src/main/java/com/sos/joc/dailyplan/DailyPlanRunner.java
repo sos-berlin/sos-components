@@ -752,6 +752,11 @@ public class DailyPlanRunner extends TimerTask {
         if (submission != null) {
             synchronizer.setSubmission(submission);
         }
+
+        // tmpUseOnlyActDate=true (introduced for optimization with JOC-1647)
+        // instead of 2 days (current and next day), only the current dailyPlanDate is used for the calendar/frequency resolver calculation
+        // should be removed after the test
+        boolean tmpUseOnlyActDate = true;
         for (DailyPlanSchedule dailyPlanSchedule : dailyPlanSchedules) {
             Schedule schedule = dailyPlanSchedule.getSchedule();
             logPrefix = String.format("%s[schedule=%s]", logPrefix, schedule.getPath());
@@ -800,7 +805,11 @@ public class DailyPlanRunner extends TimerTask {
                         }
                     }
                     calendar.setFrom(actDateAsString);
-                    calendar.setTo(nextDateAsString);
+                    if (tmpUseOnlyActDate) {
+                        calendar.setTo(actDateAsString);
+                    } else {
+                        calendar.setTo(nextDateAsString);
+                    }
 
                     Calendar restrictions = new Calendar();
                     restrictions.setIncludes(assignedCalendar.getIncludes());
@@ -813,8 +822,13 @@ public class DailyPlanRunner extends TimerTask {
                     List<String> frequencyResolverDates = null;
                     try {
                         PeriodResolver periodResolver = null;
-                        frequencyResolverDates = new FrequencyResolver().resolveRestrictions(calendar, restrictions, actDateAsString,
-                                nextDateAsString).getDates();
+                        if (tmpUseOnlyActDate) {
+                            frequencyResolverDates = new FrequencyResolver().resolveRestrictions(calendar, restrictions, actDateAsString,
+                                    actDateAsString).getDates();
+                        } else {
+                            frequencyResolverDates = new FrequencyResolver().resolveRestrictions(calendar, restrictions, actDateAsString,
+                                    nextDateAsString).getDates();
+                        }
                         if (isDebugEnabled) {
                             LOGGER.debug(String.format("%s[WorkingDaysCalendar=%s][FrequencyResolver]dates=%s", logPrefix, assignedCalendar
                                     .getCalendarName(), String.join(",", frequencyResolverDates)));
@@ -947,7 +961,7 @@ public class DailyPlanRunner extends TimerTask {
 
                                 if (isDebugEnabled) {
                                     LOGGER.debug(String.format(
-                                            "%s[WorkingDaysCalendar=%s][FrequencyResolver date=%s][checkNonWorkingDaysNextPrev=%s][periodResolver]startTimes size=%s",
+                                            "%s[WorkingDaysCalendar=%s][frequencyResolverDate=%s][checkNonWorkingDaysNextPrev=%s][periodResolver]startTimes size=%s",
                                             logPrefix, assignedCalendar.getCalendarName(), frequencyResolverDate, checkNonWorkingDaysNextPrev,
                                             startTimes.size()));
 
@@ -960,7 +974,7 @@ public class DailyPlanRunner extends TimerTask {
                                         case IGNORE:
                                             // do nothing - log only
                                             if (isDebugEnabled) {
-                                                LOGGER.debug(String.format("%s[FrequencyResolver date=%s][NonWorkingDays][IGNORE][skip][%s]",
+                                                LOGGER.debug(String.format("%s[frequencyResolverDate=%s][NonWorkingDays][IGNORE][skip][%s]",
                                                         logPrefix, frequencyResolverDate, DailyPlanHelper.toString(p)));
                                             }
                                             break;

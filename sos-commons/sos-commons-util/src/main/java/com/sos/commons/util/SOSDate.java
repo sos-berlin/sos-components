@@ -45,6 +45,14 @@ public class SOSDate {
         return parse(date, DATETIME_FORMAT, timeZone);
     }
 
+    public static Date tryGetDateTime(String date, TimeZone timeZone) {
+        try {
+            return parse(date, DATETIME_FORMAT, timeZone);
+        } catch (SOSInvalidDataException e) {
+            return null;
+        }
+    }
+
     public static Date parse(String date, String format) throws SOSInvalidDataException {
         return parse(date, format, null);
     }
@@ -95,6 +103,22 @@ public class SOSDate {
 
     public static String getDateTimeAsString(Date date) throws SOSInvalidDataException {
         return getDateTimeAsString(date, null);
+    }
+
+    public static String tryGetDateTimeAsString(Date date) {
+        try {
+            return getDateTimeAsString(date, null);
+        } catch (SOSInvalidDataException e) {
+            return e.toString();
+        }
+    }
+
+    public static String tryGetDateTimeAsString(Instant date) {
+        try {
+            return getDateTimeAsString(Date.from(date), null);
+        } catch (SOSInvalidDataException e) {
+            return e.toString();
+        }
     }
 
     public static String getDateTimeAsString(Date date, TimeZone timeZone) throws SOSInvalidDataException {

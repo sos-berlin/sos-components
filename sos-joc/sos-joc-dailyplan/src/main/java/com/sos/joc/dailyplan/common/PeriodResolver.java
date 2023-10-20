@@ -3,16 +3,17 @@ package com.sos.joc.dailyplan.common;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
+import java.util.Set;
 import java.util.TimeZone;
 
 import org.slf4j.Logger;
@@ -31,23 +32,24 @@ public class PeriodResolver {
 
     private DailyPlanSettings settings;
     private Map<String, Period> periods;
+    private Set<String> frequencyResolverDates;
 
     public PeriodResolver(DailyPlanSettings settings) {
         super();
         this.settings = settings;
         this.periods = new LinkedHashMap<String, Period>();
+        this.frequencyResolverDates = new HashSet<>();
     }
 
     public void addStartTimes(Period period, String dailyPlanDate, String timeZone) throws ParseException, SOSInvalidDataException {
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("  [addStartTimes][start][dailyPlanDate=%s][timeZone=%s]%s", dailyPlanDate, timeZone, SOSString.toString(
-                    period)));
+            LOGGER.debug(String.format("  [addStartTimes][dailyPlanDate=%s][timeZone=%s]%s", dailyPlanDate, timeZone, SOSString.toString(period)));
         }
 
         period = normalizePeriod(period);
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("  [addStartTimes][normalized][dailyPlanDate=%s][timeZone=%s]%s", dailyPlanDate, timeZone, SOSString.toString(
+            LOGGER.debug(String.format("  [addStartTimes][dailyPlanDate=%s][timeZone=%s][normalized]%s", dailyPlanDate, timeZone, SOSString.toString(
                     period)));
         }
 
@@ -56,6 +58,90 @@ public class PeriodResolver {
         }
         // TODO why not else ???
         addRepeat(period, dailyPlanDate, timeZone);
+    }
+
+    public Map<Long, Period> getStartTimes(String frequencyResolverDate, String dailyPlanDate, String timeZone) throws ParseException {
+        Map<Long, Period> startTimes = new HashMap<>();
+
+        if (frequencyResolverDates.contains(frequencyResolverDate)) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(String.format(
+                        "  [getStartTimes][dailyPlanDate=%s][frequencyResolverDate=%s][skip]dailyPlanDate or the current frequencyResolverDate have already been processed",
+                        dailyPlanDate, frequencyResolverDate));
+            }
+            return startTimes;
+        }
+
+        for (Entry<String, Period> periodEntry : periods.entrySet()) {
+            DailyPlanPeriodResult result = isInDailyPlanPeriod(frequencyResolverDate + " " + periodEntry.getKey(), dailyPlanDate,
+                    frequencyResolverDate, timeZone);
+            if (result.isInDailyPlanPeriod) {
+                // Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(frequencyResolverDate + " " + periodEntry.getKey(), timeZone);
+                // startTimes.put(scheduledFor.get().getEpochSecond() * 1000, periodEntry.getValue());
+                // if (LOGGER.isDebugEnabled()) {
+                // LOGGER.debug(String.format(" [getStartTimes][dailyPlanDate=%s][frequencyResolverDate=%s]scheduledFor=%s", dailyPlanDate,
+                // frequencyResolverDate, SOSDate.tryGetDateTimeAsString(scheduledFor.get())));
+                // }
+                startTimes.put(result.startUTC.getTime(), periodEntry.getValue());
+            }
+        }
+        return startTimes;
+    }
+
+    private DailyPlanPeriodResult isInDailyPlanPeriod(String startDateTime, String dailyPlanDate, String frequencyResolverDate, String timeZone)
+            throws ParseException {
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(String.format("  [isInDailyPlanPeriod][dailyPlanDate=%s][frequencyResolverDate=%s]startDateTime=%s(%s)", dailyPlanDate,
+                    frequencyResolverDate, startDateTime, timeZone));
+        }
+
+        // DailyPlan DAY Period: START/END
+        String periodDateTime = dailyPlanDate + " " + settings.getPeriodBegin();
+        Date periodStartUTC = Date.from(JobSchedulerDate.getScheduledForInUTC(periodDateTime, timeZone).get());
+        Date periodEndUTC = SOSDate.add(periodStartUTC, 1, ChronoUnit.DAYS);
+        // Start DateTime
+        Date startUTC = SOSDate.tryGetDateTime(startDateTime, TimeZone.getTimeZone(timeZone));
+        // NOW
+        Date nowUTC = JobSchedulerDate.nowInUtc();
+
+        // Check
+        boolean isInDailyPlanPeriod = startUTC.after(nowUTC) && startUTC.getTime() >= periodStartUTC.getTime() && startUTC.before(periodEndUTC);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(String.format("    [isInDailyPlanPeriod=%s][UTC][start=%s][DailyPlanPeriod start=%s, end=%s][now=%s]", isInDailyPlanPeriod,
+                    SOSDate.tryGetDateTimeAsString(startUTC), SOSDate.tryGetDateTimeAsString(periodStartUTC), SOSDate.tryGetDateTimeAsString(
+                            periodEndUTC), SOSDate.tryGetDateTimeAsString(nowUTC)));
+        }
+
+        frequencyResolverDates.add(frequencyResolverDate);
+        if (isInDailyPlanPeriod) {
+            frequencyResolverDates.add(getNextDateAsString(frequencyResolverDate));
+        } else {
+            // only for period_begin <> 00:00:00 add 1 day to the start
+            if (!settings.isPeriodBeginMidnight() && dailyPlanDate.equals(frequencyResolverDate)) {
+                frequencyResolverDates.add(getNextDateAsString(frequencyResolverDate));
+
+                startUTC = SOSDate.add(startUTC, 1, ChronoUnit.DAYS);
+                // Check
+                isInDailyPlanPeriod = startUTC.after(nowUTC) && startUTC.getTime() >= periodStartUTC.getTime() && startUTC.before(periodEndUTC);
+
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug(String.format(
+                            "    [isInDailyPlanPeriod=%s][recheck due to period_begin=%s][UTC][start=%s][DailyPlanPeriod start=%s, end=%s][now=%s]",
+                            isInDailyPlanPeriod, settings.getPeriodBegin(), SOSDate.tryGetDateTimeAsString(startUTC), SOSDate.tryGetDateTimeAsString(
+                                    periodStartUTC), SOSDate.tryGetDateTimeAsString(periodEndUTC), SOSDate.tryGetDateTimeAsString(nowUTC)));
+                }
+            }
+        }
+        return new DailyPlanPeriodResult(startUTC, isInDailyPlanPeriod);
+    }
+
+    private String getNextDateAsString(String date) {
+        try {
+            return SOSDate.getDateAsString(SOSDate.add(SOSDate.getDate(date), 1, ChronoUnit.DAYS));
+        } catch (SOSInvalidDataException e) {
+            LOGGER.error(String.format("[getNextDateAsString][%s]%s", date, e.toString()), e);
+            return "";
+        }
     }
 
     private Date getDate(String day, String time, String format) throws ParseException {
@@ -176,90 +262,14 @@ public class PeriodResolver {
         return p;
     }
 
-    public Map<Long, Period> getStartTimes(String frequencyResolverDate, String dailyPlanDate, String timeZone) throws ParseException {
-        boolean isDebugEnabled = LOGGER.isDebugEnabled();
-        String method = "getStartTimes";
-        Map<Long, Period> startTimes = new HashMap<>();
-        for (Entry<String, Period> periodEntry : periods.entrySet()) {
-            Date start = getDate(frequencyResolverDate, periodEntry.getKey(), DATE_FORMAT_SIMPLE);
-            DayIsInPlanResult result = dayIsInPlan(start, dailyPlanDate, frequencyResolverDate, timeZone);
-            if (result.isInPlan) {
-                // if (dayIsInPlan(start, dailyPlanDate, frequencyResolverDate, timeZone)) {
-                // Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(dailyPlanDate + " " + periodEntry.getKey(), timeZone);
-                Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(frequencyResolverDate + " " + periodEntry.getKey(), timeZone);
-                startTimes.put(scheduledFor.get().getEpochSecond() * 1000, periodEntry.getValue());
-
-                if (isDebugEnabled) {
-                    try {
-                        LOGGER.debug(String.format(
-                                "      [%s][added][day is in plan][UTC start=%s][dailyPlanDate=%s][FrequencyResolver date=%s][period_begin=%s][timeZone=%s][period=%s]start=%s",
-                                method, SOSDate.getDateTimeAsString(result.startUTC), dailyPlanDate, frequencyResolverDate, settings.getPeriodBegin(),
-                                timeZone, periodEntry.getKey(), SOSDate.getDateTimeAsString(start)));
-                    } catch (SOSInvalidDataException e) {
-
-                    }
-                }
-            } else {
-                if (isDebugEnabled) {
-                    try {
-                        LOGGER.debug(String.format(
-                                "      [%s][skip][day is not in plan][UTC start=%s][dailyPlanDate=%s][FrequencyResolver date=%s][period_begin=%s][timeZone=%s][period=%s]start=%s",
-                                method, SOSDate.getDateTimeAsString(result.startUTC), dailyPlanDate, frequencyResolverDate, settings.getPeriodBegin(),
-                                timeZone, periodEntry.getKey(), SOSDate.getDateTimeAsString(start)));
-                    } catch (SOSInvalidDataException e) {
-
-                    }
-                }
-            }
-        }
-        return startTimes;
-    }
-
-    private DayIsInPlanResult dayIsInPlan(Date start, String dailyPlanDate, String frequencyResolverDate, String timeZone) throws ParseException {
-        String timeZoneDailyplan = settings.getTimeZone();
-        String periodBegin = settings.getPeriodBegin();
-        String dateInString = String.format("%s %s", dailyPlanDate, periodBegin);
-
-        Instant instant = JobSchedulerDate.getScheduledForInUTC(dateInString, timeZoneDailyplan).get();
-        Date dailyPlanStartPeriod = Date.from(instant);
-
-        java.util.Calendar calendar = java.util.Calendar.getInstance();
-        calendar.setTime(dailyPlanStartPeriod);
-        calendar.add(java.util.Calendar.HOUR, 24);
-        Date dailyPlanEndPeriod = calendar.getTime();
-
-        SimpleDateFormat sdfUtc = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        sdfUtc.setTimeZone(TimeZone.getTimeZone("UTC"));
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        sdf.setTimeZone(TimeZone.getTimeZone(timeZone));
-        start = sdf.parse(sdfUtc.format(start));
-
-        Date now = JobSchedulerDate.nowInUtc();
-        if (LOGGER.isDebugEnabled()) {
-            try {
-                LOGGER.debug(String.format(
-                        "  [dayIsInPlan][check][UTC start=%s][dailyPlanDate=%s][FrequencyResolver date=%s][period_begin=%s][UTC now=%s, dailyPlanStartPeriod=%s, dailyPlanEndPeriod=%s]",
-                        SOSDate.getDateTimeAsString(start), dailyPlanDate, frequencyResolverDate, periodBegin, SOSDate.getDateTimeAsString(now),
-                        SOSDate.getDateTimeAsString(dailyPlanStartPeriod), SOSDate.getDateTimeAsString(dailyPlanEndPeriod)));
-            } catch (SOSInvalidDataException e) {
-
-            }
-        }
-
-        // return (start.after(now) && start.after(dailyPlanStartPeriod) || start.equals(dailyPlanStartPeriod)) && (start.before(dailyPlanEndPeriod));
-        // return start.after(now) && start.before(dailyPlanEndPeriod) && start.getTime() >= dailyPlanStartPeriod.getTime();
-        boolean isInPlan = start.after(now) && start.before(dailyPlanEndPeriod) && start.getTime() >= dailyPlanStartPeriod.getTime();
-        return new DayIsInPlanResult(start, isInPlan);
-    }
-
-    private class DayIsInPlanResult {
+    private class DailyPlanPeriodResult {
 
         private final Date startUTC;
-        private final boolean isInPlan;
+        private final boolean isInDailyPlanPeriod;
 
-        private DayIsInPlanResult(Date startUTC, boolean isInPlan) {
+        private DailyPlanPeriodResult(Date startUTC, boolean isInDailyPlanPeriod) {
             this.startUTC = startUTC;
-            this.isInPlan = isInPlan;
+            this.isInDailyPlanPeriod = isInDailyPlanPeriod;
         }
     }
 }
