@@ -131,7 +131,7 @@ public class SSHJobUtil {
     }
 
     public static Map<String, String> getWorkflowParamsAsEnvVars(OrderProcessStep<SSHJobArguments> step, SSHJobArguments jobArgs) {
-        Map<String, JobArgument<SSHJobArguments>> allArguments = step.getAllArguments().entrySet().stream().filter(e -> !e.getValue().getValueSource()
+        Map<String, JobArgument<?>> allArguments = step.getAllArguments().entrySet().stream().filter(e -> !e.getValue().getValueSource()
                 .isTypeJobResource()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         if (jobArgs.getFilterRegex().getValue().isEmpty()) {
             // all variables
@@ -139,7 +139,7 @@ public class SSHJobUtil {
                     && !SSH_PROVIDER_ARG_NAMES.contains(e.getKey()) && !FTP_PROVIDER_ARG_NAMES.contains(e.getKey()) && !CREDENTIAL_STORE_ARG_NAMES
                             .contains(e.getKey()) && !OTHER_ARG_NAMES.contains(e.getKey())).collect(Collectors.toMap(
                                     e -> JS7_WORKFLOW_VARIABLES_ENVVAR_PREFIX + e.getKey().toUpperCase(), e -> {
-                                        JobArgument<SSHJobArguments> arg = e.getValue();
+                                        JobArgument<?> arg = e.getValue();
                                         if (arg.getValue() != null) {
                                             return arg.getValue() + "";
                                         } else {
@@ -153,7 +153,7 @@ public class SSHJobUtil {
                     && !SSH_PROVIDER_ARG_NAMES.contains(e.getKey()) && !FTP_PROVIDER_ARG_NAMES.contains(e.getKey()) && !CREDENTIAL_STORE_ARG_NAMES
                             .contains(e.getKey()) && !OTHER_ARG_NAMES.contains(e.getKey())).filter(e -> pattern.matcher(e.getKey()).matches())
                     .collect(Collectors.toMap(e -> JS7_WORKFLOW_VARIABLES_ENVVAR_PREFIX + e.getKey().toUpperCase(), e -> {
-                        JobArgument<SSHJobArguments> arg = e.getValue();
+                        JobArgument<?> arg = e.getValue();
                         if (arg.getValue() != null) {
                             return arg.getValue() + "";
                         } else {

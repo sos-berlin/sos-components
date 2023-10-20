@@ -300,20 +300,19 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         return setDeclaredJobArguments(exceptions, step, map, lastSucceededOutcomes, jobResources, instance);
     }
 
-    @SuppressWarnings({ "rawtypes" })
-    private A setDeclaredJobArguments(List<JobArgumentException> exceptions, final OrderProcessStep<A> step, Map<String, Object> args,
+    protected A setDeclaredJobArguments(List<JobArgumentException> exceptions, final OrderProcessStep<A> step, Map<String, Object> args,
             Map<String, DetailValue> lastSucceededOutcomes, Map<String, DetailValue> jobResources, A instance) throws Exception {
 
         if (instance.getIncludedArguments() != null && instance.getIncludedArguments().size() > 0) {
-            for (Map.Entry<String, List<JobArgument>> e : instance.getIncludedArguments().entrySet()) {
-                for (JobArgument arg : e.getValue()) {
+            for (Map.Entry<String, List<JobArgument<?>>> e : instance.getIncludedArguments().entrySet()) {
+                for (JobArgument<?> arg : e.getValue()) {
                     arg.setPayload(e.getKey());
                     setDeclaredJobArgument(step, args, lastSucceededOutcomes, jobResources, arg, null);
                 }
             }
         }
         if (instance.hasDynamicArgumentFields()) {
-            for (JobArgument arg : instance.getDynamicArgumentFields()) {
+            for (JobArgument<?> arg : instance.getDynamicArgumentFields()) {
                 arg.reset();
                 setDeclaredJobArgument(step, args, lastSucceededOutcomes, jobResources, arg, null);
             }
@@ -323,7 +322,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         for (Field field : fields) {
             try {
                 field.setAccessible(true);
-                JobArgument arg = (JobArgument<?>) field.get(instance);
+                JobArgument<?> arg = (JobArgument<?>) field.get(instance);
                 if (arg != null) {
                     setDeclaredJobArgument(step, args, lastSucceededOutcomes, jobResources, arg, field);
                     field.set(instance, arg);
@@ -338,9 +337,8 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         return instance;
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    private void setDeclaredJobArgument(final OrderProcessStep<A> step, Map<String, Object> args, Map<String, DetailValue> lastSucceededOutcomes,
-            Map<String, DetailValue> jobResources, JobArgument arg, Field field) throws Exception {
+    protected <V> void setDeclaredJobArgument(final OrderProcessStep<A> step, Map<String, Object> args,
+            Map<String, DetailValue> lastSucceededOutcomes, Map<String, DetailValue> jobResources, JobArgument<V> arg, Field field) throws Exception {
         if (arg.getName() == null) {// internal usage
             return;
         }
@@ -375,12 +373,12 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
 
             // Preference 3 - JobArgument or Argument or Java Default
             if (val == null || SOSString.isEmpty(val.toString())) {
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug(String.format("[setDeclaredJobArgument][%s]val=%s(%s),defaultVal=%s(%s)", arg.getName(), arg.getValue(),
+                if (LOGGER.isTraceEnabled()) {
+                    LOGGER.trace(String.format("[setDeclaredJobArgument][%s]val=%s(%s),defaultVal=%s(%s)", arg.getName(), arg.getValue(),
                             getClassName(arg.getValue()), arg.getDefaultValue(), getClassName(arg.getDefaultValue())));
                 }
                 arg.setValue(arg.getDefaultValue());
-                setValueType(arg, field);
+                setValueType(arg, field, arg.getValue());
             } else {
                 arg.setValue(getValue(val, arg, field));
             }
@@ -412,20 +410,20 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         } catch (Throwable e) {
             return e.toString();
         }
-
     }
 
-    private Object getValue(Object val, JobArgument<A> arg, Field field) throws ClassNotFoundException {
+    @SuppressWarnings("unchecked")
+    private <V> V getValue(Object val, JobArgument<V> arg, Field field) throws ClassNotFoundException {
 
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(String.format("[getValue][%s]val=%s(%s),defaultVal=%s(%s)", arg.getName(), arg.getValue(), getClassName(arg.getValue()), arg
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace(String.format("[getValue][%s]val=%s(%s),defaultVal=%s(%s)", arg.getName(), arg.getValue(), getClassName(arg.getValue()), arg
                     .getDefaultValue(), getClassName(arg.getDefaultValue())));
         }
         if (val instanceof String) {
             val = val.toString().trim();
             setValueType(arg, field, val);
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("[getValue][%s][type=%s][fromString]val=%s(%s),defaultVal=%s(%s)", arg.getName(), arg.getClazzType(), arg
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.trace(String.format("[getValue][%s][type=%s][fromString]val=%s(%s),defaultVal=%s(%s)", arg.getName(), arg.getClazzType(), arg
                         .getValue(), getClassName(arg.getValue()), arg.getDefaultValue(), getClassName(arg.getDefaultValue())));
             }
             Type type = arg.getClazzType();
@@ -489,10 +487,11 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
             setValueType(arg, field, val);
             val = (List<?>) val;
         }
-        return val;
+        return (V) val;
     }
 
-    private Object getCollectionValue(Object val, JobArgument<A> arg, Type type) {
+    @SuppressWarnings("unchecked")
+    private <V> V getCollectionValue(Object val, JobArgument<V> arg, Type type) {
         String listVal = val.toString();
         Type subType = ((ParameterizedType) type).getActualTypeArguments()[0];
 
@@ -630,10 +629,10 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
             arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
             val = arg.getDefaultValue();
         }
-        return val;
+        return (V) val;
     }
 
-    private void setValueType(JobArgument<A> arg, Field field, Object val) {
+    private <V> void setValueType(JobArgument<V> arg, Field field, Object val) {
         if (field == null) {
             setValueType(arg, val);
             return;
@@ -641,9 +640,10 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         arg.setClazzType(((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0]);
     }
 
-    @SuppressWarnings("rawtypes")
-    private void setValueType(JobArgument arg, Object val) {
+    private <V> void setValueType(JobArgument<V> arg, Object val) {
         if (arg.getClazzType() == null) {
+            LOGGER.info("arg=" + arg.getName());
+
             if (arg.getValue() != null) {
                 try {
                     arg.setClazzType(arg.getValue().getClass());
@@ -661,7 +661,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         }
     }
 
-    private void setValueSource(JobArgument<A> arg, List<String> allNames) {
+    private <V> void setValueSource(JobArgument<V> arg, List<String> allNames) {
         if (arg.getName() == null) {// source Java - internal usage
             return;
         }
@@ -670,8 +670,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         }
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    private void setValueSource(final OrderProcessStep<A> step, Field field, JobArgument arg, List<String> allNames, boolean isNamedValue,
+    private <V> void setValueSource(final OrderProcessStep<A> step, Field field, JobArgument<V> arg, List<String> allNames, boolean isNamedValue,
             Map<String, DetailValue> jobResources) {
         if (arg.getName() == null) {// source Java - internal usage
             return;
@@ -712,7 +711,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         }
     }
 
-    private void setValueSource(JobArgument<A> arg, ValueSource source) {
+    private <V> void setValueSource(JobArgument<V> arg, ValueSource source) {
         if (arg.getNotAcceptedValue() != null) {
             arg.getNotAcceptedValue().setSource(source);
             if (arg.getNotAcceptedValue().getUsedValueSource() == null) {
@@ -724,7 +723,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
     }
 
     @SuppressWarnings("unchecked")
-    private Class<A> getJobArgumensClass() throws JobArgumentException {
+    protected Class<A> getJobArgumensClass() throws JobArgumentException {
         try {
             Class<?> clazz = getClass();
             while (clazz.getSuperclass() != Job.class) {

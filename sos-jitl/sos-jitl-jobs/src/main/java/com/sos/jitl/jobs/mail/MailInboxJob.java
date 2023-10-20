@@ -70,7 +70,7 @@ public class MailInboxJob extends Job<MailInboxArguments> {
 
         SOSMailReceiver receiver = null;
         try {
-            Map<String, JobArgument<MailInboxArguments>> allCurrent = step.getAllArguments();
+            Map<String, JobArgument<?>> allCurrent = step.getAllArguments();
             Map<String, Object> variables = step.getAllArgumentsAsNameValueMap();
             CredentialStoreArguments csArgs = step.getIncludedArguments(CredentialStoreArguments.class);
             if (csArgs.getFile().getValue() != null) {
@@ -83,7 +83,7 @@ public class MailInboxJob extends Job<MailInboxArguments> {
             }
 
             SOSMailReceiver.Protocol protocol = args.getMailProtocol().getValue();
-            JobArgument<MailInboxArguments> port = allCurrent.getOrDefault("mail." + protocol.name() + ".port", allCurrent.get("mail.port"));
+            JobArgument<?> port = allCurrent.getOrDefault("mail." + protocol.name() + ".port", allCurrent.get("mail.port"));
             if (port == null || port.getValue() == null) {
                 args.setDefaultMailPort();
                 step.getLogger().info("Port is undefined. Default port %d is used.", args.getMailPort().getDefaultValue());
