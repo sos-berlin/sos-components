@@ -88,11 +88,11 @@
 		</dependency>
 		<dependency>
 			<groupId>com.sos-berlin.js7.engine</groupId>
-			<artifactId>js7-proxy</artifactId>
+			<artifactId>js7-proxy_3</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.sos-berlin.js7.engine</groupId>
-			<artifactId>js7-data-for-java</artifactId>
+			<artifactId>js7-data-for-java_3</artifactId>
 		</dependency>
 
 		<!-- 3RD PARTY DEPENDENCIES -->

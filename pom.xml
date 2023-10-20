@@ -197,11 +197,6 @@
         <plugin>
           <artifactId>maven-surefire-plugin</artifactId>
           <version>2.21.0</version>
-		  <!--
-		  <configuration>
-          	<classpathDependencyExcludes>org.apache.logging.log4j:log4j-slf4j-impl</classpathDependencyExcludes>
-          </configuration>
-		  -->
         </plugin>
         <plugin>
           <artifactId>maven-dependency-plugin</artifactId>
@@ -461,7 +456,7 @@
       </dependency>
       <dependency>
         <groupId>com.sos-berlin.js7.engine</groupId>
-        <artifactId>js7-proxy</artifactId>
+        <artifactId>js7-proxy_3</artifactId>
         <version>${sos.engine.version}</version>
         <exclusions>
           <exclusion>
@@ -480,7 +475,7 @@
       </dependency>
       <dependency>
         <groupId>com.sos-berlin.js7.engine</groupId>
-        <artifactId>js7-data-for-java</artifactId>
+        <artifactId>js7-data-for-java_3</artifactId>
         <version>${sos.engine.version}</version>
         <exclusions>
           <exclusion>
@@ -499,7 +494,7 @@
       </dependency>
       <dependency>
         <groupId>com.sos-berlin.js7.engine</groupId>
-        <artifactId>js7-launcher-for-java</artifactId>
+        <artifactId>js7-launcher-for-java_3</artifactId>
         <version>${sos.engine.version}</version>
         <exclusions>
           <exclusion>
@@ -518,7 +513,7 @@
       </dependency>
       <dependency>
         <groupId>com.sos-berlin.js7.engine</groupId>
-        <artifactId>js7-executor-for-java</artifactId>
+        <artifactId>js7-executor-for-java_3</artifactId>
         <version>${sos.engine.version}</version>
         <exclusions>
           <exclusion>
