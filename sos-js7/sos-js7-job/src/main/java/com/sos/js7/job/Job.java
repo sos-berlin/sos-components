@@ -687,7 +687,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
                     source = new ValueSource(ValueSourceType.JOB_ARGUMENT);
                 }
             }
-            v = fromMap(step.getInternalStep().arguments(), allNames);
+            v = fromMap((Map<String,Value>)step.getInternalStep().arguments(), allNames);
             if (v != null) {
                 source = new ValueSource(ValueSourceType.JOB);
             }
