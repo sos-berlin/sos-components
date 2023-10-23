@@ -65,7 +65,7 @@
 <!--    <sos.ojdbc8.version>21.8.0.0</sos.ojdbc8.version> -->
     <sos.ojdbc8.version>19.19.0.0</sos.ojdbc8.version>
     <com.sun.javax.mail.version>1.6.2</com.sun.javax.mail.version>
-    <jersey.glassfish.version>3.0.8</jersey.glassfish.version>
+    <jersey.glassfish.version>3.0.11</jersey.glassfish.version>
     <io.vavr.version>0.10.4</io.vavr.version>
     <txtmark.version>0.13</txtmark.version>
     <jakarta.ws.rs-api.version>3.0.0</jakarta.ws.rs-api.version>
