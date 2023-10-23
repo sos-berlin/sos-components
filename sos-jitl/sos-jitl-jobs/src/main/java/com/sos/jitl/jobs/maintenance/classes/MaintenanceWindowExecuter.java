@@ -204,15 +204,4 @@ public class MaintenanceWindowExecuter {
         return JobHelper.OBJECT_MAPPER.readValue(answer, AgentsV.class);
     }
 
-    /*
-     * public ManageMaintenanceWindowProfile getSettings(String accessToken, String profile) throws Exception { Configuration configuration = new
-     * Configuration(); configuration.setConfigurationType(ConfigurationType.SETTING); configuration.setObjectType("MAINTENANCE");
-     * configuration.setShared(null); configuration.setId(0L); String body = Globals.objectMapper.writeValueAsString(configuration); String answer =
-     * apiExecutor.post(accessToken, "/joc/api/configuration", body); Globals.debug(logger, body); Globals.debug(logger, "answer=" + answer); Configuration200
-     * configuration200 = Globals.objectMapper.readValue(answer, Configuration200.class); ManageMaintenanceWindow manageMaintenanceWindow =
-     * Globals.objectMapper.readValue(configuration200.getConfiguration().getConfigurationItem(), ManageMaintenanceWindow.class); for
-     * (ManageMaintenanceWindowProfile manageMaintenanceWindowProfile : manageMaintenanceWindow.getManageMaintenanceWindowProfiles()) { if
-     * (manageMaintenanceWindowProfile.getProfile().equals(profile)) { return manageMaintenanceWindowProfile; } } return null; }
-     */
-
 }

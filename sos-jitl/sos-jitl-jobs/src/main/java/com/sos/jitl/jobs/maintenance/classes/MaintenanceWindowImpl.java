@@ -37,9 +37,7 @@ public class MaintenanceWindowImpl {
                 }
 
                 MaintenanceWindowExecuter maintenanceWindowExecuter = new MaintenanceWindowExecuter(logger, apiExecutor);
-                // ManageMaintenanceWindowProfile manageMaintenanceWindowProfile =
-                // maintenanceWindowExecuter.getSettings(accessToken,args.getMaintenanceProfile());
-
+            
                 String controllerId = maintenanceWindowExecuter.getControllerid(accessToken, args.getControllerId());
 
                 Components components = maintenanceWindowExecuter.getControllerClusterStatus(accessToken, controllerId);
