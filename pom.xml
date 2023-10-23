@@ -86,6 +86,7 @@
     <xml.bind.version>2.3.1</xml.bind.version>
     <jwt.version>4.2.2</jwt.version>
     <json.schema.validator.version>1.0.76</json.schema.validator.version>
+    <scala.java8.compat.version>1.0.2</scala.java8.compat.version>
   </properties>
 
   <build>
@@ -512,23 +513,9 @@
         </exclusions>
       </dependency>
       <dependency>
-        <groupId>com.sos-berlin.js7.engine</groupId>
-        <artifactId>js7-executor-for-java_3</artifactId>
-        <version>${sos.engine.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>com.intellij</groupId>
-            <artifactId>annotations</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>javax.inject</groupId>
-            <artifactId>javax.inject</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-slf4j2-impl</artifactId>
-          </exclusion>
-        </exclusions>
+        <groupId>org.scala-lang.modules</groupId>
+        <artifactId>scala-java8-compat_3</artifactId>
+        <version>${scala.java8.compat.version}</version>
       </dependency>
       <dependency>
         <groupId>commons-lang</groupId>
