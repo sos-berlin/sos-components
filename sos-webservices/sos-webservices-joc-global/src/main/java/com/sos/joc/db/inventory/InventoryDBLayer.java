@@ -1524,10 +1524,10 @@ public class InventoryDBLayer extends DBLayer {
         hql.append("and ic.deployed=sw.deployed ");
         if (recursive) {
             if (!JocInventory.ROOT_FOLDER.equals(folder)) {
-                hql.append("and (folder=:folder or folder like :likeFolder) ");
+                hql.append("and (ic.folder=:folder or ic.folder like :likeFolder) ");
             }
         } else {
-            hql.append("and folder=:folder ");
+            hql.append("and ic.folder=:folder ");
         }
         if (!jobTemplateNames.isEmpty()) {
             String jtHql = jobTemplateNames.stream().map(jobTemplateName -> SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.jobs",
