@@ -29,7 +29,7 @@ public class CheckLicense {
     public void execute() throws Exception {
         ApiExecutor apiExecutor = new ApiExecutor(logger);
         String accessToken = null;
-        exit = 4;
+        exit = 0;
         body = "";
         subject = "";
         try {
@@ -42,9 +42,11 @@ public class CheckLicense {
 
             if (js7LicenseInfo.getValid() != null) {
                 log(".. license valid: " + js7LicenseInfo.getValid());
+                subject = "JS7 JobScheduler License Check";
             } else {
-                log(".. license valid not applicable");
+                log(".. License valid not applicable");
                 log("License Check failed: license check not applicable for open source license");
+                subject = "JS7 JobScheduler License Check failed";
                 exit = 2;
             }
 
@@ -54,7 +56,7 @@ public class CheckLicense {
 
             if (js7LicenseInfo.getValidUntil().before(now)) {
                 log("License Check failed: license expired on " + js7LicenseInfo.getValidUntil());
-                subject = "JS7 JobScheduler Notification: license expired\r\n";
+                subject = "JS7 JobScheduler Notification: license expired";
                 exit = 2;
             }
 
@@ -68,6 +70,7 @@ public class CheckLicense {
 
         } catch (Exception e) {
             logger.error(e);
+            exit = 4;
             throw e;
         } finally {
             if (accessToken != null) {
