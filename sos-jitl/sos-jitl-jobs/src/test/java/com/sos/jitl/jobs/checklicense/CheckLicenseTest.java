@@ -20,7 +20,7 @@ public class CheckLicenseTest {
     @Test
     public void test() throws Exception {
         Map<String, Object> args = new HashMap<>();
-        args.put("validityDays", 2);
+        args.put("validity_days", 2);
         
         UnitTestJobHelper<CheckLicenseJobArguments> h = new UnitTestJobHelper<>(new CheckLicenseJob(null));
         JOutcome.Completed result = h.processOrder(args);
