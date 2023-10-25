@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -115,6 +116,12 @@ public class SOSString {
                         val = val.substring(0, TO_STRING_TRUNCATE_VALUE_IF_LONGER_THAN) + TO_STRING_TRUNCATED_VALUE_SUFFIX;
                     }
                     sb.append(val);
+                }
+            } else if (o instanceof Date) {
+                try {
+                    sb.append(SOSDate.getDateTimeAsString((Date) o));
+                } catch (Throwable e) {
+                    sb.append(o == null ? TO_STRING_NULL_VALUE : o.toString());
                 }
             } else {
                 String clazzCanonicalName = clazz.getCanonicalName();// can be null
