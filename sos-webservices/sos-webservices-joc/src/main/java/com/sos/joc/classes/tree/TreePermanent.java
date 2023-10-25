@@ -183,13 +183,150 @@ public class TreePermanent {
         }
         return new ArrayList<TreeType>(types);
     }
+    
+//    public static Tree initFoldersByTagsForInventory(TagTreeFilter treeBody, SOSAuthFolderPermissions sosAuthFolderPermissions) throws JocException {
+//        SOSHibernateSession session = null;
+//        try {
+//            session = Globals.createSosHibernateStatelessConnection("initTreeForInventory");
+//            Globals.beginTransaction(session);
+//            InventoryTagDBLayer dbLayer = new InventoryTagDBLayer(session);
+//
+//            List<InventoryTagItem> tagItems = dbLayer.getFoldersByTagAndTypeForInventory(getInventoryTypes(treeBody.getTypes()), treeBody
+//                    .getOnlyValidObjects());
+//            // TODO consider treeBody.getTags()
+//            return dbLayer.getAllTagsTree(getNotPermittedTagIds(tagItems, sosAuthFolderPermissions));
+//        } catch (JocException e) {
+//            throw e;
+//        } finally {
+//            Globals.rollback(session);
+//            Globals.disconnect(session);
+//        }
+//    }
+    
+//    public static Tree initFoldersByTagsForDescriptors(TagTreeFilter treeBody, SOSAuthFolderPermissions sosAuthFolderPermissions)
+//            throws JocException {
+//        SOSHibernateSession session = null;
+//        try {
+//            session = Globals.createSosHibernateStatelessConnection("initTreeForDescriptors");
+//            Globals.beginTransaction(session);
+//            InventoryTagDBLayer dbLayer = new InventoryTagDBLayer(session);
+//
+//            List<InventoryTagItem> tagItems = dbLayer.getFoldersByTagAndTypeForInventory(Collections.singleton(TreeType.DEPLOYMENTDESCRIPTOR
+//                    .intValue()), treeBody.getOnlyValidObjects());
+//            // TODO consider treeBody.getTags()
+//            return dbLayer.getAllTagsTree(getNotPermittedTagIds(tagItems, sosAuthFolderPermissions));
+//        } catch (JocException e) {
+//            throw e;
+//        } finally {
+//            Globals.rollback(session);
+//            Globals.disconnect(session);
+//        }
+//    }
+    
+//    public static Tree initFoldersByTagsForInventoryTrash(TagTreeFilter treeBody, SOSAuthFolderPermissions sosAuthFolderPermissions) throws JocException {
+//        SOSHibernateSession session = null;
+//        try {
+//            session = Globals.createSosHibernateStatelessConnection("initTreeForInventoryTrash");
+//            Globals.beginTransaction(session);
+//            InventoryTagDBLayer dbLayer = new InventoryTagDBLayer(session);
+//
+//            List<InventoryTagItem> tagItems = dbLayer.getFoldersByTagAndTypeForInventoryTrash(getInventoryTypes(treeBody.getTypes()), treeBody
+//                    .getOnlyValidObjects());
+//            // TODO consider treeBody.getTags()
+//            return dbLayer.getAllTagsTree(getNotPermittedTagIds(tagItems, sosAuthFolderPermissions));
+//        } catch (JocException e) {
+//            throw e;
+//        } finally {
+//            Globals.rollback(session);
+//            Globals.disconnect(session);
+//        }
+//    }
+    
+//    public static Tree initFoldersByTagsForDescriptorTrash(TagTreeFilter treeBody, SOSAuthFolderPermissions sosAuthFolderPermissions)
+//            throws JocException {
+//        SOSHibernateSession session = null;
+//        try {
+//            session = Globals.createSosHibernateStatelessConnection("initTreeForDescriptorTrash");
+//            Globals.beginTransaction(session);
+//            InventoryTagDBLayer dbLayer = new InventoryTagDBLayer(session);
+//
+//            List<InventoryTagItem> tagItems = dbLayer.getFoldersByTagAndTypeForInventoryTrash(Collections.singleton(TreeType.DEPLOYMENTDESCRIPTOR
+//                    .intValue()), treeBody.getOnlyValidObjects());
+//            // TODO consider treeBody.getTags()
+//            return dbLayer.getAllTagsTree(getNotPermittedTagIds(tagItems, sosAuthFolderPermissions));
+//        } catch (JocException e) {
+//            throw e;
+//        } finally {
+//            Globals.rollback(session);
+//            Globals.disconnect(session);
+//        }
+//    }
+    
+//    public static Tree initFoldersByTagsForViews(TagTreeFilter treeBody, SOSAuthFolderPermissions sosAuthFolderPermissions) throws JocException {
+//        
+//        List<TreeType> possibleInventoryTypes = Arrays.asList(TreeType.JOBTEMPLATE, TreeType.SCHEDULE, TreeType.INCLUDESCRIPT,
+//                TreeType.WORKINGDAYSCALENDAR, TreeType.NONWORKINGDAYSCALENDAR, TreeType.DEPLOYMENTDESCRIPTOR);
+//        Set<Integer> possibleDeployIntTypes = Arrays.asList(DeployType.values()).stream().map(DeployType::intValue).collect(Collectors.toSet());
+//        Set<Integer> deployTypes = new HashSet<>();
+//        Set<Integer> inventoryTypes = new HashSet<>();
+//
+//        for (TreeType type : treeBody.getTypes()) {
+//            if (possibleDeployIntTypes.contains(type.intValue())) {
+//                deployTypes.add(type.intValue());
+//            } else if (TreeType.DOCUMENTATION.equals(type)) {
+//                if (treeBody.getTypes().size() == 1) { //if docu is the only choosen type
+//                    throw new JocNotImplementedException("Documentations are not tagged");
+//                }
+//            } else if (possibleInventoryTypes.contains(type)) {
+//                inventoryTypes.add(type.intValue());
+//            }
+//        }
+//        if (!deployTypes.isEmpty() && (treeBody.getControllerId() == null || treeBody.getControllerId().isEmpty())) {
+//            throw new JocMissingRequiredParameterException("undefined 'controllerId'");
+//        }
+//        
+//        SOSHibernateSession session = null;
+//        try {
+//            session = Globals.createSosHibernateStatelessConnection("initTreeForViews");
+//            Globals.beginTransaction(session);
+//            InventoryTagDBLayer dbLayer = new InventoryTagDBLayer(session);
+//            List<InventoryTagItem> tagItems = new ArrayList<>();
+//            
+//            if (!deployTypes.isEmpty()) {
+//                List<InventoryTagItem> tagItems1 = dbLayer.getFoldersByTagAndTypeForDeployedObjects(deployTypes, treeBody.getControllerId());
+//                if (tagItems1 != null && !tagItems1.isEmpty()) {
+//                    tagItems.addAll(tagItems1);
+//                }
+//            }
+//            if (!inventoryTypes.isEmpty()) {
+//                List<InventoryTagItem> tagItems2 = dbLayer.getFoldersByTagAndTypeForReleasedObjects(inventoryTypes);
+//                if (tagItems2 != null && !tagItems2.isEmpty()) {
+//                    tagItems.addAll(tagItems2);
+//                }
+//            }
+//            
+//            // TODO consider treeBody.getTags()
+//            return dbLayer.getAllTagsTree(getNotPermittedTagIds(tagItems, sosAuthFolderPermissions));
+//        } catch (JocException e) {
+//            throw e;
+//        } finally {
+//            Globals.rollback(session);
+//            Globals.disconnect(session);
+//        }
+//    }
+    
+//    private static Set<Long> getNotPermittedTagIds(Collection<InventoryTagItem> tagItems, SOSAuthFolderPermissions sosAuthFolderPermissions) {
+//        final Set<Folder> listOfFolders = sosAuthFolderPermissions.getListOfFolders();
+//        Predicate<InventoryTagItem> isPermittedForFolder = tagItem -> SOSAuthFolderPermissions.isPermittedForFolder(tagItem.getFolder(), listOfFolders);
+//        
+//        Set<Long> permittedInvTagIds = tagItems.stream().filter(isPermittedForFolder).map(InventoryTagItem::getTagId).collect(Collectors.toSet());
+//        Set<Long> notPermittedInvTagIds = tagItems.stream().map(InventoryTagItem::getTagId).collect(Collectors.toSet());
+//        notPermittedInvTagIds.removeAll(permittedInvTagIds);
+//        return notPermittedInvTagIds;
+//    }
 
     public static SortedSet<Tree> initFoldersByFoldersForInventory(TreeFilter treeBody) throws JocException {
-        Set<Integer> inventoryTypes = new HashSet<Integer>();
-        inventoryTypes = treeBody.getTypes().stream().map(TreeType::intValue).collect(Collectors.toSet());
-        // DOCUMENTATION is not part of INV_CONFIGURATIONS
-        // boolean withDocus = inventoryTypes.removeIf(i -> i == TreeType.DOCUMENTATION.intValue());
-        inventoryTypes.removeIf(i -> i == TreeType.DOCUMENTATION.intValue());
+        Set<Integer> inventoryTypes = getInventoryTypes(treeBody.getTypes());
         
         List<ConfigurationType> folderTypes = Collections.singletonList(
                 ConfigurationType.FOLDER);
@@ -263,10 +400,7 @@ public class TreePermanent {
     }
     
     public static SortedSet<Tree> initFoldersByFoldersForInventoryTrash(TreeFilter treeBody) throws JocException {
-        Set<Integer> inventoryTypes = new HashSet<Integer>();
-        inventoryTypes = treeBody.getTypes().stream().map(TreeType::intValue).collect(Collectors.toSet());
-        // DOCUMENTATION is not part of INV_CONFIGURATION_TRASH
-        inventoryTypes.removeIf(i -> i == TreeType.DOCUMENTATION.intValue());
+        Set<Integer> inventoryTypes = getInventoryTypes(treeBody.getTypes());
 
         SOSHibernateSession session = null;
         try {
@@ -305,6 +439,13 @@ public class TreePermanent {
         } finally {
             Globals.disconnect(session);
         }
+    }
+    
+    private static Set<Integer> getInventoryTypes(List<TreeType> types) {
+        Set<Integer> inventoryTypes = types.stream().map(TreeType::intValue).collect(Collectors.toSet());
+        // DOCUMENTATION is not part of INV_CONFIGURATION_TRASH
+        inventoryTypes.removeIf(i -> i == TreeType.DOCUMENTATION.intValue());
+        return inventoryTypes;
     }
 
     public static SortedSet<Tree> initFoldersByFoldersForDescriptors(TreeFilter treeBody) {

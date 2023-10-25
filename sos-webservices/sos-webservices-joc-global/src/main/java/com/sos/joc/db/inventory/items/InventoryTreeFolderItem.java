@@ -41,4 +41,8 @@ public class InventoryTreeFolderItem {
             return null;
         }
     }
+    
+    public String getName() {
+        return name;
+    }
 }
