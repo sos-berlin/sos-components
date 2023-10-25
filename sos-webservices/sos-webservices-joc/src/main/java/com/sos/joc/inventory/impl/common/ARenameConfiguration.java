@@ -20,7 +20,9 @@ import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.DBItemInventoryTagging;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
@@ -51,7 +53,6 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
             boolean newFolderIsRootFolder = JocInventory.ROOT_FOLDER.equals(p.toString().replace('\\', '/'));
             String newFolder = newFolderIsRootFolder ? JocInventory.ROOT_FOLDER : p.getParent().toString().replace('\\', '/');
             String newPath = p.toString().replace('\\', '/');
-            //boolean isRename = !oldPath.getFileName().toString().equals(p.getFileName().toString());
             
             Set<String> events = new HashSet<>();
             Set<String> folderEvents = new HashSet<>();
@@ -177,6 +178,20 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
                 JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), session, dbAuditLog);
                 setItem(config, p, dbAuditLog.getId());
                 JocInventory.updateConfiguration(dbLayer, config);
+                
+                //rename TAGGINGS
+                boolean isRename = !oldPath.getFileName().toString().equals(p.getFileName().toString());
+                if (isRename && ConfigurationType.WORKFLOW.equals(config.getTypeAsEnum())) {
+                    String newName = p.getFileName().toString();
+                    Date now = Date.from(Instant.now());
+                    InventoryTagDBLayer dbTagLayer = new InventoryTagDBLayer(session);
+                    for (DBItemInventoryTagging tagging : dbTagLayer.getTaggings(config.getId())) {
+                        tagging.setName(newName);
+                        tagging.setModified(now);
+                        dbTagLayer.getSession().update(tagging);
+                    }
+                }
+                
                 if(config.getTypeAsEnum().equals(ConfigurationType.DEPLOYMENTDESCRIPTOR) 
                         || config.getTypeAsEnum().equals(ConfigurationType.DESCRIPTORFOLDER)) {
                     JocInventory.makeParentDirs(dbLayer, p.getParent(), config.getAuditLogId(), ConfigurationType.DESCRIPTORFOLDER);

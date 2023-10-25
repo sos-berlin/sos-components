@@ -4,9 +4,11 @@ import java.time.Instant;
 import java.util.Date;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryTag;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -47,10 +49,12 @@ public class TagModifyImpl extends JOCResourceImpl implements ITagModify {
             if (tag == null) {
                throw new DBMissingDataException("Couldn't find tag with name '" + modifyTag.getName() + "'");
             }
+            SOSCheckJavaVariableName.test("tag name: ", modifyTag.getNewName());
             tag.setName(modifyTag.getNewName());
             Date now = Date.from(Instant.now());
             tag.setModified(now);
             dbLayer.getSession().update(tag);
+            JocInventory.postTagEvent(modifyTag.getNewName());
             
             Globals.commit(session);
             return JOCDefaultResponse.responseStatusJSOk(now);
