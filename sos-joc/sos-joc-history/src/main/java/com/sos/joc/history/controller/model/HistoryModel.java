@@ -59,7 +59,9 @@ import com.sos.joc.event.bean.history.HistoryOrderTaskTerminated;
 import com.sos.joc.event.bean.history.HistoryOrderTerminated;
 import com.sos.joc.event.bean.history.HistoryOrderUpdated;
 import com.sos.joc.history.controller.exception.model.HistoryModelException;
+import com.sos.joc.history.controller.exception.model.HistoryModelOrderException;
 import com.sos.joc.history.controller.exception.model.HistoryModelOrderNotFoundException;
+import com.sos.joc.history.controller.exception.model.HistoryModelOrderStepException;
 import com.sos.joc.history.controller.exception.model.HistoryModelOrderStepNotFoundException;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryOrder.OrderLock;
 import com.sos.joc.history.controller.proxy.HistoryEventType;
@@ -1087,108 +1089,118 @@ public class HistoryModel {
         }
 
         if (co.getEndTime() == null) {
-            checkControllerTimezone(dbLayer);
+            try {
+                checkControllerTimezone(dbLayer);
 
-            CachedOrderStep cos = getCurrentOrderStep(dbLayer, co, endedOrderSteps);
-            LogEntry le = createOrderLogEntry(eventType, eventId, outcome, co);
-            co.setState(le.getState());
+                CachedOrderStep cos = getCurrentOrderStep(dbLayer, co, endedOrderSteps);
+                LogEntry le = createOrderLogEntry(eventType, eventId, outcome, co);
+                co.setState(le.getState());
 
-            Date endTime = null;
-            String endWorkflowPosition = null;
-            Long endHistoryOrderStepId = null;
-            Long endEventId = null;
-            Integer endReturnCode = null;
-            String endMessage = null;
-            Long currentHistoryOrderStepId = (cos == null) ? co.getCurrentHistoryOrderStepId() : cos.getId();
-            if (terminateOrder) {
-                endTime = eventDate;
-                endWorkflowPosition = (cos == null) ? co.getWorkflowPosition() : cos.getWorkflowPosition();
-                endHistoryOrderStepId = currentHistoryOrderStepId;
-                endEventId = eventId;
-            }
-
-            String orderErrorText = le.getErrorText();
-            String stateErrorText = null;
-            switch (eventType) {
-            case OrderJoined:
-                if (le.isError()) {
-                    co.setHasStates(true);
+                Date endTime = null;
+                String endWorkflowPosition = null;
+                Long endHistoryOrderStepId = null;
+                Long endEventId = null;
+                Integer endReturnCode = null;
+                String endMessage = null;
+                Long currentHistoryOrderStepId = (cos == null) ? co.getCurrentHistoryOrderStepId() : cos.getId();
+                if (terminateOrder) {
+                    endTime = eventDate;
+                    endWorkflowPosition = (cos == null) ? co.getWorkflowPosition() : cos.getWorkflowPosition();
+                    endHistoryOrderStepId = currentHistoryOrderStepId;
+                    endEventId = eventId;
                 }
-                le.setLogLevel(OrderLogEntryLogLevel.DETAIL);
-                break;
-            case OrderSuspended:
-                le.setInstruction(instruction);
-            case OrderBroken:
-            case OrderCancelled:
-            case OrderSuspensionMarked:
-            case OrderResumed:
-            case OrderResumptionMarked:
-                co.setHasStates(true);
-                break;
-            case OrderFailed:
-            case OrderStopped:
-                co.setHasStates(true);
-                stateErrorText = orderErrorText;
-                break;
-            case OrderFinished:
-                if (outcome != null) {
-                    endReturnCode = outcome.getReturnCode();
-                    if (outcome.isSucceeded()) {
-                        if (outcome.getNamedValues() != null && outcome.getNamedValues().containsKey(RETURN_MESSAGE_KEY)) {
-                            String rm = HistoryUtil.toString(outcome.getNamedValues().get(RETURN_MESSAGE_KEY));
-                            if (!SOSString.isEmpty(rm)) {
-                                endMessage = rm;
-                                le.setReturnMessage(endMessage);
+
+                String orderErrorText = le.getErrorText();
+                String stateErrorText = null;
+                switch (eventType) {
+                case OrderJoined:
+                    if (le.isError()) {
+                        co.setHasStates(true);
+                    }
+                    le.setLogLevel(OrderLogEntryLogLevel.DETAIL);
+                    break;
+                case OrderSuspended:
+                    le.setInstruction(instruction);
+                case OrderBroken:
+                case OrderCancelled:
+                case OrderSuspensionMarked:
+                case OrderResumed:
+                case OrderResumptionMarked:
+                    co.setHasStates(true);
+                    break;
+                case OrderFailed:
+                case OrderStopped:
+                    co.setHasStates(true);
+                    stateErrorText = orderErrorText;
+                    break;
+                case OrderFinished:
+                    if (outcome != null) {
+                        endReturnCode = outcome.getReturnCode();
+                        if (outcome.isSucceeded()) {
+                            if (outcome.getNamedValues() != null && outcome.getNamedValues().containsKey(RETURN_MESSAGE_KEY)) {
+                                String rm = HistoryUtil.toString(outcome.getNamedValues().get(RETURN_MESSAGE_KEY));
+                                if (!SOSString.isEmpty(rm)) {
+                                    endMessage = rm;
+                                    le.setReturnMessage(endMessage);
+                                }
                             }
+                        } else {
+                            endMessage = orderErrorText;
                         }
-                    } else {
-                        endMessage = orderErrorText;
+                    }
+                    break;
+                default:
+                    break;
+                }
+
+                orderErrorText = HistoryUtil.tryRemoveSpecialCharacters(orderErrorText);
+                endMessage = HistoryUtil.tryRemoveSpecialCharacters(endMessage);
+
+                dbLayer.setOrderEnd(co.getId(), le.getState(), eventDate, co.getHasStates(), le.isError(), le.getErrorState(), le.getErrorReason(), le
+                        .getReturnCode(), le.getErrorCode(), orderErrorText, endTime, endWorkflowPosition, endHistoryOrderStepId, endEventId,
+                        endReturnCode, endMessage);
+
+                if (co.getHasStates()) {
+                    stateErrorText = HistoryUtil.tryRemoveSpecialCharacters(stateErrorText);
+                    saveOrderState(dbLayer, co, le.getState(), eventDate, eventId, le.getErrorCode(), stateErrorText);
+                }
+
+                hob = co.convert(eventType, eventId, controllerConfiguration.getCurrent().getId());
+                hob.setCurrentHistoryOrderStepId(currentHistoryOrderStepId);
+                hob.setEndTime(endTime);
+                hob.setEndWorkflowPosition(endWorkflowPosition);
+                hob.setEndHistoryOrderStepId(endHistoryOrderStepId);
+                hob.setEndReturnCode(endReturnCode);
+                hob.setEndMessage(endMessage);
+                hob.setState(le.getState());
+                hob.setStateTime(eventDate);
+                hob.setSeverity(HistorySeverity.map2DbSeverity(hob.getState()));
+                hob.setError(le.isError());
+                hob.setErrorState(le.getErrorState());
+                hob.setErrorReason(le.getErrorReason());
+                hob.setErrorReturnCode(le.getReturnCode());
+                hob.setErrorCode(le.getErrorCode());
+                hob.setErrorText(orderErrorText);
+
+                if (terminateOrder) {
+                    if (isStartTimeAfterEndTime(hob.getStartTime(), hob.getEndTime())) {
+                        LOGGER.warn(String.format("[%s][%s][%s][startTime=%s > endTime=%s]%s", identifier, eventType, orderId, SOSDate
+                                .getDateTimeAsString(hob.getStartTime()), SOSDate.getDateTimeAsString(hob.getEndTime()), SOSString.toString(hob)));
                     }
                 }
-                break;
-            default:
-                break;
-            }
-            dbLayer.setOrderEnd(co.getId(), le.getState(), eventDate, co.getHasStates(), le.isError(), le.getErrorState(), le.getErrorReason(), le
-                    .getReturnCode(), le.getErrorCode(), orderErrorText, endTime, endWorkflowPosition, endHistoryOrderStepId, endEventId,
-                    endReturnCode, endMessage);
 
-            if (co.getHasStates()) {
-                saveOrderState(dbLayer, co, le.getState(), eventDate, eventId, le.getErrorCode(), stateErrorText);
-            }
-
-            hob = co.convert(eventType, eventId, controllerConfiguration.getCurrent().getId());
-            hob.setCurrentHistoryOrderStepId(currentHistoryOrderStepId);
-            hob.setEndTime(endTime);
-            hob.setEndWorkflowPosition(endWorkflowPosition);
-            hob.setEndHistoryOrderStepId(endHistoryOrderStepId);
-            hob.setEndReturnCode(endReturnCode);
-            hob.setEndMessage(endMessage);
-            hob.setState(le.getState());
-            hob.setStateTime(eventDate);
-            hob.setSeverity(HistorySeverity.map2DbSeverity(hob.getState()));
-            hob.setError(le.isError());
-            hob.setErrorState(le.getErrorState());
-            hob.setErrorReason(le.getErrorReason());
-            hob.setErrorReturnCode(le.getReturnCode());
-            hob.setErrorCode(le.getErrorCode());
-            hob.setErrorText(orderErrorText);
-
-            if (terminateOrder) {
-                if (isStartTimeAfterEndTime(hob.getStartTime(), hob.getEndTime())) {
-                    LOGGER.warn(String.format("[%s][%s][%s][startTime=%s > endTime=%s]%s", identifier, eventType, orderId, SOSDate
-                            .getDateTimeAsString(hob.getStartTime()), SOSDate.getDateTimeAsString(hob.getEndTime()), SOSString.toString(hob)));
+                le.onOrder(co, position == null ? co.getWorkflowPosition() : position);
+                Path log = storeLog2File(le);
+                // if (completeOrder && co.getParentId().longValue() == 0L) {
+                if (terminateOrder) {
+                    storeLogFile2Db(dbLayer, log, hob, null);
+                    cacheHandler.clear(CacheType.order, orderId);
                 }
+                tryStoreCurrentState(dbLayer, eventId);
+            } catch (Throwable te) {
+                String msg = String.format("[%s][%s][%s]%s", identifier, eventType, SOSString.toString(co, true), te);
+                throw new HistoryModelOrderException(controllerConfiguration.getCurrent().getId(), msg, te);
             }
-
-            le.onOrder(co, position == null ? co.getWorkflowPosition() : position);
-            Path log = storeLog2File(le);
-            // if (completeOrder && co.getParentId().longValue() == 0L) {
-            if (terminateOrder) {
-                storeLogFile2Db(dbLayer, log, hob, null);
-                cacheHandler.clear(CacheType.order, orderId);
-            }
-            tryStoreCurrentState(dbLayer, eventId);
         } else {
             if (isDebugEnabled) {
                 LOGGER.debug(String.format("[%s][%s][skip][%s]order is already completed[%s]", identifier, eventType, orderId, SOSString.toString(
@@ -1678,52 +1690,60 @@ public class HistoryModel {
         CachedOrderStep cos = cacheHandler.getOrderStepByOrder(dbLayer, co, controllerTimezone, eos.getPosition());
         HistoryOrderStepBean hosb = null;
         if (cos.getEndTime() == null) {
-            cos.setEndTime(eos.getEventDatetime());
+            try {
+                cos.setEndTime(eos.getEventDatetime());
 
-            LogEntry le = new LogEntry(OrderLogEntryLogLevel.MAIN, EventType.OrderProcessed, JocClusterUtil.getEventIdAsDate(eos.getEventId()), cos
-                    .getEndTime());
-            if (eos.getOutcome() != null) {
-                cos.setReturnCode(eos.getOutcome().getReturnCode());
-                le.setReturnCode(cos.getReturnCode());
-                if (eos.getOutcome().isFailed()) {
-                    le.setError(OrderStateText.FAILED.value(), eos.getOutcome());
+                LogEntry le = new LogEntry(OrderLogEntryLogLevel.MAIN, EventType.OrderProcessed, JocClusterUtil.getEventIdAsDate(eos.getEventId()),
+                        cos.getEndTime());
+                if (eos.getOutcome() != null) {
+                    cos.setReturnCode(eos.getOutcome().getReturnCode());
+                    le.setReturnCode(cos.getReturnCode());
+                    if (eos.getOutcome().isFailed()) {
+                        le.setError(OrderStateText.FAILED.value(), eos.getOutcome());
+                    }
                 }
-            }
 
-            OrderStepProcessedResult r = new OrderStepProcessedResult(eos, controllerConfiguration.getCurrent().getId(), co, cos);
-            if (r.getYadeTransferResult() != null) {
-                if (le.isError()) {
-                    le.setErrorText(r.getYadeTransferResult().getErrorMessage());
+                OrderStepProcessedResult r = new OrderStepProcessedResult(eos, controllerConfiguration.getCurrent().getId(), co, cos);
+                if (r.getYadeTransferResult() != null) {
+                    if (le.isError()) {
+                        le.setErrorText(r.getYadeTransferResult().getErrorMessage());
+                    }
+                    yadeHandler.process(r.getYadeTransferResult(), co.getWorkflowPath(), co.getOrderId(), cos.getId(), cos.getJobName(), cos
+                            .getWorkflowPosition());
                 }
-                yadeHandler.process(r.getYadeTransferResult(), co.getWorkflowPath(), co.getOrderId(), cos.getId(), cos.getJobName(), cos
-                        .getWorkflowPosition());
+
+                if (le.isError() && SOSString.isEmpty(le.getErrorText())) {
+                    le.setErrorText(cos.getFirstChunkStdError());
+                }
+                co.setLastStepError(le, cos);
+                cos.setSeverity(HistorySeverity.map2DbSeverity(le.isError() ? OrderStateText.FAILED : OrderStateText.FINISHED));
+
+                Variables outcome = HistoryUtil.toVariables(r.getReturnValues());
+                String endVariables = HistoryUtil.toJsonString(outcome);
+                String errorText = HistoryUtil.tryRemoveSpecialCharacters(le.getErrorText());
+                dbLayer.setOrderStepEnd(cos.getId(), cos.getEndTime(), eos.getEventId(), endVariables, le.getReturnCode(), cos.getSeverity(), le
+                        .isError(), le.getErrorState(), le.getErrorReason(), le.getErrorCode(), errorText, new Date());
+                le.onOrderStep(cos);
+                le.setArguments(outcome);
+
+                hosb = onOrderStepProcessed(dbLayer, eos.getEventId(), co, cos, le, errorText, endVariables);
+
+                if (isStartTimeAfterEndTime(hosb.getStartTime(), hosb.getEndTime())) {
+                    LOGGER.warn(String.format("[%s][%s][%s][startTime=%s > endTime=%s]%s", identifier, EventType.OrderProcessed, co.getOrderId(),
+                            SOSDate.getDateTimeAsString(hosb.getStartTime()), SOSDate.getDateTimeAsString(hosb.getEndTime()), SOSString.toString(
+                                    hosb)));
+                }
+
+                Path log = storeLog2File(le);
+                storeLogFile2Db(dbLayer, log, null, hosb);
+                endedOrderSteps.put(eos.getOrderId(), cos);
+
+                tryStoreCurrentState(dbLayer, eos.getEventId());
+            } catch (Throwable te) {
+                String msg = String.format("[%s][%s][%s][%s]%s", identifier, EventType.OrderProcessed, SOSString.toString(co, true), SOSString
+                        .toString(cos, true), te);
+                throw new HistoryModelOrderStepException(controllerConfiguration.getCurrent().getId(), msg, te);
             }
-
-            if (le.isError() && SOSString.isEmpty(le.getErrorText())) {
-                le.setErrorText(cos.getFirstChunkStdError());
-            }
-            co.setLastStepError(le, cos);
-            cos.setSeverity(HistorySeverity.map2DbSeverity(le.isError() ? OrderStateText.FAILED : OrderStateText.FINISHED));
-
-            Variables outcome = HistoryUtil.toVariables(r.getReturnValues());
-            String endVariables = HistoryUtil.toJsonString(outcome);
-            dbLayer.setOrderStepEnd(cos.getId(), cos.getEndTime(), eos.getEventId(), endVariables, le.getReturnCode(), cos.getSeverity(), le
-                    .isError(), le.getErrorState(), le.getErrorReason(), le.getErrorCode(), le.getErrorText(), new Date());
-            le.onOrderStep(cos);
-            le.setArguments(outcome);
-
-            hosb = onOrderStepProcessed(dbLayer, eos.getEventId(), co, cos, le, endVariables);
-
-            if (isStartTimeAfterEndTime(hosb.getStartTime(), hosb.getEndTime())) {
-                LOGGER.warn(String.format("[%s][%s][%s][startTime=%s > endTime=%s]%s", identifier, EventType.OrderProcessed, co.getOrderId(), SOSDate
-                        .getDateTimeAsString(hosb.getStartTime()), SOSDate.getDateTimeAsString(hosb.getEndTime()), SOSString.toString(hosb)));
-            }
-
-            Path log = storeLog2File(le);
-            storeLogFile2Db(dbLayer, log, null, hosb);
-            endedOrderSteps.put(eos.getOrderId(), cos);
-
-            tryStoreCurrentState(dbLayer, eos.getEventId());
         } else {
             if (isDebugEnabled) {
                 LOGGER.debug(String.format("[%s][%s][skip][%s]order step is already ended[%s]", identifier, eos.getType(), eos.getOrderId(), SOSString
@@ -1790,7 +1810,7 @@ public class HistoryModel {
     }
 
     private HistoryOrderStepBean onOrderStepProcessed(DBLayerHistory dbLayer, Long eventId, CachedOrder co, CachedOrderStep cos, LogEntry le,
-            String endVariables) throws Exception {
+            String errorText, String endVariables) throws Exception {
         String workflowName = JocClusterUtil.getBasenameFromPath(co.getWorkflowPath());
         CachedWorkflow cw = cacheHandler.getWorkflow(dbLayer, workflowName, co.getWorkflowVersionId());
         CachedWorkflowJob job = cw.getJob(cos.getJobName());
@@ -1802,7 +1822,7 @@ public class HistoryModel {
         hosb.setErrorCode(le.getErrorCode());
         hosb.setErrorReason(le.getErrorReason());
         hosb.setErrorState(le.getErrorState());
-        hosb.setErrorText(le.getErrorText());
+        hosb.setErrorText(errorText);// errorText extra because of store to db without special(NUL etc) characters
         if (job != null) {
             hosb.setCriticality(getJobCriticality(job));
             hosb.setWarnIfLonger(job.getWarnIfLonger());

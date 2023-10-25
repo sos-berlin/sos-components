@@ -1,7 +1,6 @@
 package com.sos.joc.history.helper;
 
 import java.util.Date;
-import java.util.regex.Pattern;
 
 import com.sos.controller.model.event.EventType;
 import com.sos.joc.classes.history.HistoryMapper;
@@ -9,8 +8,6 @@ import com.sos.joc.cluster.bean.history.HistoryOrderStepBean;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
 
 public class CachedOrderStep {
-
-    private static final Pattern PATTERN_CHARACTERS_TO_REPLACE = Pattern.compile("[\\u0000-\\u0008]");
 
     private final Long id;
     private final Long historyOrderMainParentId;
@@ -186,12 +183,7 @@ public class CachedOrderStep {
     }
 
     public void setFirstChunkStdError(String val) {
-        if (val == null) {
-            firstChunkStdError = null;
-        } else {
-            firstChunkStdError = val.trim();
-            firstChunkStdError = PATTERN_CHARACTERS_TO_REPLACE.matcher(firstChunkStdError).replaceAll("");
-        }
+        firstChunkStdError = val == null ? null : HistoryUtil.tryRemoveSpecialCharacters(val.trim());
     }
 
     public String getFirstChunkStdError() {
