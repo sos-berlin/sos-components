@@ -561,4 +561,42 @@ public class InventoryTagDBLayer extends DBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
+    
+    public boolean hasTaggings(String name, Integer type) {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("select count(id) from ").append(DBLayer.DBITEM_INV_TAGGINGS);
+            sql.append(" where name=:name and type=:type");
+
+            Query<Long> query = getSession().createQuery(sql.toString());
+            query.setParameter("name", name);
+            query.setParameter("type", type);
+            
+            return getSession().getSingleResult(query) > 0L;
+            
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public int delete(String name, Integer type) {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("delete from ").append(DBLayer.DBITEM_INV_TAGGINGS);
+            sql.append(" where name=:name and type=:type");
+
+            Query<String> query = getSession().createQuery(sql.toString());
+            query.setParameter("name", name);
+            query.setParameter("type", type);
+            
+            return getSession().executeUpdate(query);
+            
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
 }
