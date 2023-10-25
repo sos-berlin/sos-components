@@ -38,6 +38,7 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.inventory.impl.ReleaseResourceImpl;
 import com.sos.joc.model.common.JocSecurityLevel;
@@ -189,6 +190,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             session = Globals.createSosHibernateStatelessConnection(request);
             session.setAutoCommit(false);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+            InventoryTagDBLayer dbTagLayer = new InventoryTagDBLayer(session);
             session.beginTransaction();
             
             Predicate<RequestFilter> isFolder = r -> 
@@ -199,6 +201,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             Set<String> foldersForEvent = new HashSet<>();
             for (RequestFilter r : in.getObjects().stream().filter(isFolder.negate()).collect(Collectors.toSet())) {
                 DBItemInventoryConfigurationTrash config = JocInventory.getTrashConfiguration(dbLayer, r, folderPermissions);
+                deleteTaggings(config.getName(), config.getTypeAsEnum(), dbLayer, dbTagLayer);
                 session.delete(config);
                 foldersForEvent.add(config.getFolder());
                 JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), session, dbAuditLog);
@@ -222,6 +225,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
     public JOCDefaultResponse deleteFolder(String accessToken, RequestFolder in, String request) throws Exception {
         return deleteFolder(accessToken, in, false, request);
     }
+    
     public JOCDefaultResponse deleteFolder(String accessToken, RequestFolder in, boolean forDescriptors, String request) throws Exception {
         SOSHibernateSession session = null;
         try {
@@ -229,6 +233,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             session = Globals.createSosHibernateStatelessConnection(request);
             session.setAutoCommit(false);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+            InventoryTagDBLayer dbTagLayer = new InventoryTagDBLayer(session);
             session.beginTransaction();
             DBItemInventoryConfigurationTrash config = null;
             if(forDescriptors) {
@@ -236,6 +241,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             } else {
                 config = JocInventory.getTrashConfiguration(dbLayer, null, in.getPath(), ConfigurationType.FOLDER, folderPermissions);
             }
+            deleteTaggingsOfFolder(config, dbLayer, dbTagLayer);
             dbLayer.deleteTrashFolder(config.getPath());
             Globals.commit(session);
             JocInventory.postTrashEvent(config.getFolder());
@@ -249,6 +255,25 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
         }
     }
 
+    private int deleteTaggings(String name, ConfigurationType type, InventoryDBLayer dbLayer, InventoryTagDBLayer dbTagLayer) {
+        if (ConfigurationType.WORKFLOW.equals(type) && dbTagLayer.hasTaggings(name, type.intValue()) && dbLayer.getConfigurationByName(name, type
+                .intValue()).isEmpty()) {
+            return dbTagLayer.delete(name, type.intValue());
+        }
+        return 0;
+    }
+    
+    private int deleteTaggingsOfFolder(DBItemInventoryConfigurationTrash config, InventoryDBLayer dbLayer, InventoryTagDBLayer dbTagLayer)
+            throws SOSHibernateException {
+        int i = 0;
+        List<DBItemInventoryConfigurationTrash> workflows = dbLayer.getTrashFolderContent(config.getPath(), true, Collections.singleton(
+                ConfigurationType.WORKFLOW.intValue()), false);
+        for (DBItemInventoryConfigurationTrash conf : workflows) {
+            i += deleteTaggings(conf.getName(), conf.getTypeAsEnum(), dbLayer, dbTagLayer);
+        }
+        return i;
+    }
+    
     private void cancelOrders(String xAccessToken, DBItemInventoryConfiguration config, String cancelOrdersDate, InventoryDBLayer dbLayer)
             throws SOSHibernateException {
         if(cancelOrdersDate != null) {

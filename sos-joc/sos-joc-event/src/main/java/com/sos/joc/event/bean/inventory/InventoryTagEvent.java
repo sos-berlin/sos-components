@@ -1,0 +1,27 @@
+package com.sos.joc.event.bean.inventory;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.sos.joc.event.bean.JOCEvent;
+
+public class InventoryTagEvent extends JOCEvent {
+    
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public InventoryTagEvent() {
+    }
+
+    /**
+     * @param folder
+     */
+    public InventoryTagEvent(String tag) {
+        super("InventoryTagUpdated", null, null);
+        putVariable("tag", tag);
+    }
+    
+    @JsonIgnore
+    public String getTag() {
+        return (String) getVariables().get("tag");
+    }
+}
