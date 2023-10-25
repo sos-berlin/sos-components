@@ -143,7 +143,7 @@ public class HttpClientTests {
         Path privateConfPath = Paths.get(System.getProperty("user.dir")).resolve("src/test/resources");
         System.setProperty("js7.config-directory", privateConfPath.toString());
         System.setProperty("JS7_AGENT_CONFIG_DIR", privateConfPath.toString());
-        ApiExecutor ex = new ApiExecutor(null, null, null);
+        ApiExecutor ex = new ApiExecutor(null);
         ex.readConfig();
         Config config = ex.getConfig();
         List<String> urls = config.getConfig("js7.api-server").getStringList("url");
@@ -165,9 +165,9 @@ public class HttpClientTests {
         Path privateConfPath = Paths.get(System.getProperty("user.dir")).resolve("src/test/resources");
         System.setProperty("js7.config-directory", privateConfPath.toString());
         System.setProperty("JS7_AGENT_CONFIG_DIR", privateConfPath.toString());
-        ApiExecutor ex = new ApiExecutor(null, null, null);
-        ex.login();
-        
+        ApiExecutor ex = new ApiExecutor(null);
+        String accessToken = ex.login().getAccessToken();
+        ex.logout(accessToken);
     }
     
     @Ignore

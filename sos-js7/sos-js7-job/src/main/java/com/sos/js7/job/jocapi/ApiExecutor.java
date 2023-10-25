@@ -1,15 +1,14 @@
 package com.sos.js7.job.jocapi;
 
-import java.io.IOException;
+import java.io.FileNotFoundException;
 import java.io.StringReader;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.KeyManagementException;
 import java.security.KeyStore;
-import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
@@ -22,7 +21,11 @@ import java.util.stream.Collectors;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.TrustManagerFactory;
 
+import org.apache.http.ssl.SSLContextBuilder;
+import org.apache.http.ssl.SSLContexts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +36,6 @@ import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.commons.httpclient.exception.SOSBadRequestException;
 import com.sos.commons.httpclient.exception.SOSConnectionRefusedException;
-import com.sos.commons.httpclient.exception.SOSSSLException;
 import com.sos.commons.sign.keys.keyStore.KeyStoreCredentials;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.commons.sign.keys.keyStore.KeystoreType;
@@ -79,34 +81,21 @@ public class ApiExecutor {
             "js7.web.https.truststores" });
     private static final String DO_NOT_LOG_VAL = "store-password";
 
-    private final String truststoreFileName;
     private SOSRestApiClient client;
     private URI jocUri;
     private List<String> jocUris;
     private final OrderProcessStepLogger jobLogger;
     private Config config;
+    private String truststorePath;
+    private String keystorePath;
+    private String truststorePasswd;
+    private String keystorePasswd;
+    private String keystoreKeyPasswd;
+    private String truststoreType;
+    private String keystoreType;
+
 
     public ApiExecutor(OrderProcessStepLogger jobLogger) {
-        this(null, null, jobLogger);
-    }
-
-    public ApiExecutor(URI jocUri) {
-        this(jocUri, null, null);
-    }
-
-    public ApiExecutor(URI jocUri, OrderProcessStepLogger logger) {
-        this(jocUri, null, logger);
-    }
-
-    public ApiExecutor(URI jocUri, String truststoreFileName) {
-        this.jocUri = jocUri;
-        this.truststoreFileName = truststoreFileName == null ? DEFAULT_TRUSTSTORE_FILENAME : truststoreFileName;
-        this.jobLogger = null;
-    }
-
-    public ApiExecutor(URI jocUri, String truststoreFileName, OrderProcessStepLogger jobLogger) {
-        this.jocUri = jocUri;
-        this.truststoreFileName = truststoreFileName == null ? DEFAULT_TRUSTSTORE_FILENAME : truststoreFileName;
         this.jobLogger = jobLogger;
     }
 
@@ -116,6 +105,19 @@ public class ApiExecutor {
             reasonPhrase = this.getClient().getHttpResponse().getStatusLine().getReasonPhrase();
         }
         return reasonPhrase;
+    }
+    
+    public void setKeystoreCredentials (String path, String type, String storePwd, String keyPwd) {
+        this.keystorePath = path;
+        this.keystoreType = type;
+        this.keystorePasswd = storePwd;
+        this.keystoreKeyPasswd = keyPwd;
+    }
+
+    public void setTruststoreCredentials (String path, String type, String storePwd) {
+        this.truststorePath = path;
+        this.truststoreType = type;
+        this.truststorePasswd = storePwd;
     }
 
     public ApiResponse login() throws Exception {
@@ -184,7 +186,6 @@ public class ApiExecutor {
         }
         logInfo("No connection attempt was successful. Check agents private.conf.");
         throw latestException;
-        // return new ApiResponse(statusCode, getReasonPhrase(), latestResponse, null, new Exception(latestError));
     }
 
     public ApiResponse post(String token, String apiUrl, String body) throws SOSConnectionRefusedException, SOSBadRequestException {
@@ -248,37 +249,87 @@ public class ApiExecutor {
     public List<String> getJocUris() {
         return jocUris;
     }
+    
+    private KeyStore readTrustStore(String path, KeystoreType type, String passwd) throws FileNotFoundException {
+        if(!Files.exists(Paths.get(path))) {
+            throw new FileNotFoundException(String.format("Cannot read from truststore %1$s. File does not exist!", path));
+        }
+        try {
+            return KeyStoreUtil.readTrustStore(path, type, passwd);
+        } catch (Exception e) {
+            return null;
+        }
+    }
 
-    private void applySSLContextCredentials(SOSRestApiClient client) throws KeyStoreException, NoSuchAlgorithmException, CertificateException,
-            IOException, SOSSSLException, SOSMissingDataException {
+    private KeyStore readKeyStore(String path, KeystoreType type, String passwd) throws FileNotFoundException {
+        if(!Files.exists(Paths.get(path))) {
+            throw new FileNotFoundException(String.format("Cannot read from keystore %1$s. File does not exist!", path));
+        }
+        try {
+            return KeyStoreUtil.readKeyStore(path, type, passwd);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private void applySSLContextCredentials(SOSRestApiClient client) 
+            throws KeyManagementException, SOSMissingDataException, NoSuchAlgorithmException, FileNotFoundException {
         if (config == null) {
             readConfig();
         }
         List<KeyStoreCredentials> truststoresCredentials = readTruststoreCredentials(config);
-        KeyStore truststore = null;
-        if (truststoresCredentials != null && !truststoresCredentials.isEmpty()) {
-            truststore = truststoresCredentials.stream().filter(item -> item.getPath().endsWith(truststoreFileName)).map(item -> {
+        SSLContextBuilder sslContextBuilder = SSLContexts.custom();
+        sslContextBuilder.setKeyManagerFactoryAlgorithm(KeyManagerFactory.getDefaultAlgorithm());
+        sslContextBuilder.setTrustManagerFactoryAlgorithm(TrustManagerFactory.getDefaultAlgorithm());
+        if(truststorePath != null && truststoreType != null && truststorePasswd != null) {
+            KeyStore truststore = readTrustStore(truststorePath, KeystoreType.fromValue(truststoreType), truststorePasswd);
+            if(truststore != null) {
                 try {
-                    return KeyStoreUtil.readTrustStore(item.getPath(), KeystoreType.PKCS12, item.getStorePwd());
-                } catch (Exception e) {
-                    return null;
+                    sslContextBuilder.loadTrustMaterial(truststore, null);
+                } catch (Exception e) {}
+            }
+        } else if (truststoresCredentials != null && !truststoresCredentials.isEmpty()) {
+            truststoresCredentials.stream().forEach(item -> {
+                KeyStore truststore;
+                try {
+                    truststore = readTrustStore(item.getPath(), KeystoreType.PKCS12, item.getStorePwd());
+                } catch (FileNotFoundException e) {
+                   throw new RuntimeException(e);
                 }
-            }).filter(Objects::nonNull).findFirst().get();
+                if(truststore != null) {
+                    try {
+                        sslContextBuilder.loadTrustMaterial(truststore, null);
+                    } catch (Exception e) {}
+                }
+            });
         }
         KeyStoreCredentials credentials = readKeystoreCredentials(config);
-        KeyStore keystore = null;
-        if (credentials != null) {
-            keystore = KeyStoreUtil.readKeyStore(credentials.getPath(), KeystoreType.PKCS12, credentials.getStorePwd());
+        if(keystorePath != null && keystoreType != null && keystorePasswd != null) {
+            KeyStore keystore = readKeyStore(keystorePath, KeystoreType.fromValue(keystoreType), keystorePasswd);
+            if(keystore != null) {
+                try {
+                    if(keystoreKeyPasswd != null) {
+                        sslContextBuilder.loadKeyMaterial(keystore, keystoreKeyPasswd.toCharArray());
+                    } else {
+                        sslContextBuilder.loadKeyMaterial(keystore, "".toCharArray());
+                    }
+                } catch (Exception e) {}
+            }
+        } else if (credentials != null) {
+            KeyStore keystore = readKeyStore(credentials.getPath(), KeystoreType.PKCS12, credentials.getStorePwd());
+            try {
+                if(keystoreKeyPasswd != null) {
+                    sslContextBuilder.loadKeyMaterial(keystore, keystoreKeyPasswd.toCharArray());
+                } else {
+                    sslContextBuilder.loadKeyMaterial(keystore, "".toCharArray());
+                }
+            } catch (Exception e) {}
         }
-        if (keystore != null && truststore != null) {
-            // TODO consider alias JOC-1379
-            client.setSSLContext(keystore, credentials.getKeyPwd() != null ? credentials.getKeyPwd().toCharArray() : "".toCharArray(), credentials
-                    .getKeyStoreAlias(), truststore);
-        }
+        client.setSSLContext(sslContextBuilder.build());
     }
 
-    private void tryCreateClient(String jocUri) throws SOSMissingDataException, KeyStoreException, NoSuchAlgorithmException, CertificateException,
-            SOSSSLException, IOException, SOSKeePassDatabaseException {
+    private void tryCreateClient(String jocUri)
+            throws SOSMissingDataException, KeyManagementException, SOSKeePassDatabaseException, NoSuchAlgorithmException, FileNotFoundException {
         if (client != null) {
             client.closeHttpClient();
         }
