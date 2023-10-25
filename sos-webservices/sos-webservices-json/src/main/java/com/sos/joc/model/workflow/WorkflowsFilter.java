@@ -2,11 +2,14 @@
 package com.sos.joc.model.workflow;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.sos.controller.model.common.SyncStateText;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.model.common.Folder;
@@ -28,6 +31,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "workflowIds",
     "compact",
     "folders",
+    "tags",
     "states",
     "instructionStates",
     "regex",
@@ -63,6 +67,15 @@ public class WorkflowsFilter {
      */
     @JsonProperty("folders")
     private List<Folder> folders = new ArrayList<Folder>();
+    /**
+     * tags
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("tags")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<String> tags = new LinkedHashSet<String>();
     @JsonProperty("states")
     private List<SyncStateText> states = new ArrayList<SyncStateText>();
     @JsonProperty("instructionStates")
@@ -157,6 +170,28 @@ public class WorkflowsFilter {
         this.folders = folders;
     }
 
+    /**
+     * tags
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("tags")
+    public Set<String> getTags() {
+        return tags;
+    }
+
+    /**
+     * tags
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("tags")
+    public void setTags(Set<String> tags) {
+        this.tags = tags;
+    }
+
     @JsonProperty("states")
     public List<SyncStateText> getStates() {
         return states;
@@ -211,12 +246,12 @@ public class WorkflowsFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("workflowIds", workflowIds).append("compact", compact).append("folders", folders).append("states", states).append("instructionStates", instructionStates).append("regex", regex).append("agentNames", agentNames).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("workflowIds", workflowIds).append("compact", compact).append("folders", folders).append("tags", tags).append("states", states).append("instructionStates", instructionStates).append("regex", regex).append("agentNames", agentNames).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowIds).append(regex).append(folders).append(controllerId).append(compact).append(agentNames).append(states).append(instructionStates).toHashCode();
+        return new HashCodeBuilder().append(workflowIds).append(regex).append(folders).append(controllerId).append(compact).append(agentNames).append(tags).append(states).append(instructionStates).toHashCode();
     }
 
     @Override
@@ -228,7 +263,7 @@ public class WorkflowsFilter {
             return false;
         }
         WorkflowsFilter rhs = ((WorkflowsFilter) other);
-        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(regex, rhs.regex).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(agentNames, rhs.agentNames).append(states, rhs.states).append(instructionStates, rhs.instructionStates).isEquals();
+        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(regex, rhs.regex).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(agentNames, rhs.agentNames).append(tags, rhs.tags).append(states, rhs.states).append(instructionStates, rhs.instructionStates).isEquals();
     }
 
 }
