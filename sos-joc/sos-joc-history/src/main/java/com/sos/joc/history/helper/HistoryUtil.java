@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,8 +24,17 @@ public class HistoryUtil {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryUtil.class);
 
+    private static final Pattern PATTERN_CHARACTERS_TO_REPLACE = Pattern.compile("[\\u0000-\\u0008]");
+
     private static final String DEFAULT_TIME_ZONE = "Etc/UTC";
     private static final String TIME_ZONE_GMT = "Etc/GMT";
+
+    public static String tryRemoveSpecialCharacters(String val) {
+        if (SOSString.isEmpty(val)) {
+            return val;
+        }
+        return PATTERN_CHARACTERS_TO_REPLACE.matcher(val).replaceAll("");
+    }
 
     public static String getTimeZone(String caller, String timeZone) {
         if (SOSString.isEmpty(timeZone)) {
