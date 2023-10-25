@@ -2,10 +2,13 @@
 package com.sos.joc.model.workflow;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.common.Folder;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -14,7 +17,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * ModifyWorkflows
+ * ModifyWorkflows (suspend, resume)
  * <p>
  * 
  * 
@@ -24,6 +27,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "controllerId",
     "workflowPaths",
     "folders",
+    "tags",
     "all",
     "auditLog"
 })
@@ -48,6 +52,15 @@ public class ModifyWorkflows {
      */
     @JsonProperty("folders")
     private List<Folder> folders = new ArrayList<Folder>();
+    /**
+     * tags
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("tags")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<String> tags = new LinkedHashSet<String>();
     @JsonProperty("all")
     private Boolean all = false;
     /**
@@ -115,6 +128,28 @@ public class ModifyWorkflows {
         this.folders = folders;
     }
 
+    /**
+     * tags
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("tags")
+    public Set<String> getTags() {
+        return tags;
+    }
+
+    /**
+     * tags
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("tags")
+    public void setTags(Set<String> tags) {
+        this.tags = tags;
+    }
+
     @JsonProperty("all")
     public Boolean getAll() {
         return all;
@@ -149,12 +184,12 @@ public class ModifyWorkflows {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("workflowPaths", workflowPaths).append("folders", folders).append("all", all).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("workflowPaths", workflowPaths).append("folders", folders).append("tags", tags).append("all", all).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(all).append(workflowPaths).append(folders).append(controllerId).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(all).append(folders).append(controllerId).append(auditLog).append(workflowPaths).append(tags).toHashCode();
     }
 
     @Override
@@ -166,7 +201,7 @@ public class ModifyWorkflows {
             return false;
         }
         ModifyWorkflows rhs = ((ModifyWorkflows) other);
-        return new EqualsBuilder().append(all, rhs.all).append(workflowPaths, rhs.workflowPaths).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).isEquals();
+        return new EqualsBuilder().append(all, rhs.all).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(workflowPaths, rhs.workflowPaths).append(tags, rhs.tags).isEquals();
     }
 
 }
