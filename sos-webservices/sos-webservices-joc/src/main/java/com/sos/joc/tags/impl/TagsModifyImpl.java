@@ -15,9 +15,11 @@ import java.util.stream.Collectors;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryTag;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.exceptions.JocException;
@@ -54,8 +56,6 @@ public class TagsModifyImpl extends JOCResourceImpl implements ITagsModify {
     }
 
     public void postTagsModify(Action action, RequestFilters modifyTags, InventoryTagDBLayer dbLayer) throws Exception {
-        storeAuditLog(modifyTags.getAuditLog(), CategoryType.INVENTORY);
-
         Set<String> tags = modifyTags.getTags() == null ? Collections.emptySet() : modifyTags.getTags();
 
         switch (action) {
@@ -104,6 +104,7 @@ public class TagsModifyImpl extends JOCResourceImpl implements ITagsModify {
         int maxOrdering = dbLayer.getMaxOrdering();
         Set<DBItemInventoryTag> result = new HashSet<>();
         for (String name : tags) {
+            SOSCheckJavaVariableName.test("tag name: ", name);
             DBItemInventoryTag item = new DBItemInventoryTag();
             item.setId(null);
             item.setModified(date);
@@ -127,8 +128,10 @@ public class TagsModifyImpl extends JOCResourceImpl implements ITagsModify {
             session.setAutoCommit(false);
             session.beginTransaction();
             InventoryTagDBLayer dbLayer = new InventoryTagDBLayer(session);
+            storeAuditLog(modifyTags.getAuditLog(), CategoryType.INVENTORY);
             postTagsModify(action, modifyTags, dbLayer);
             Globals.commit(session);
+            JocInventory.postTagsEvent();
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             Globals.rollback(session);

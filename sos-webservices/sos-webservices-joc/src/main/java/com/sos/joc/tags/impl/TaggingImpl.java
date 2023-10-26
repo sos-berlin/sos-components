@@ -2,6 +2,7 @@ package com.sos.joc.tags.impl;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -58,16 +59,19 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
             List<DBItemInventoryTag> dbTags = dbTagLayer.getTags(tags);
             Date date = Date.from(Instant.now());
             Set<DBItemInventoryTag> newDbTagItems = TagsModifyImpl.add(tags, date, dbTagLayer);
+            boolean sendTagsEvent = !newDbTagItems.isEmpty();
             newDbTagItems.addAll(dbTags);
             Set<Long> newTagIds = newDbTagItems.stream().map(DBItemInventoryTag::getId).collect(Collectors.toSet());
             
             List<DBItemInventoryTagging> dbTaggings = dbTagLayer.getTaggings(config.getId());
             Set<Long> tagIdsInTaggings = dbTaggings.stream().map(DBItemInventoryTagging::getTagId).collect(Collectors.toSet());
+            List<String> tagEvents = new ArrayList<>();
             
             //delete taggings that not inside request
             dbTaggings.stream().filter(i -> !newTagIds.contains(i.getTagId())).forEach(i -> {
                 try {
                     dbTagLayer.getSession().delete(i);
+                    tagEvents.add(i.getName());
                 } catch (SOSHibernateException e) {
                     throw new DBInvalidDataException(e);
                 }
@@ -86,12 +90,19 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
             }).forEach(i -> {
                 try {
                     dbTagLayer.getSession().save(i);
+                    tagEvents.add(i.getName());
                 } catch (SOSHibernateException e) {
                     throw new DBInvalidDataException(e);
                 }
             });
             
             Globals.commit(session);
+            
+            if (sendTagsEvent) {
+                JocInventory.postTagsEvent();
+            }
+            tagEvents.forEach(tag -> JocInventory.postTagEvent(tag));
+            
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             Globals.rollback(session);
