@@ -323,8 +323,13 @@ public class DeployedConfigurationDBLayer {
             DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("select new ").append(DeployedContent.class.getName());
-            hql.append("(path, name, title, content, commitId, created, true as isCurrentVersion) from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS)
-                    .append(getWhereForDepConfiguration(filter));
+            hql.append("(c.path, c.name, c.title, c.content, c.commitId, c.created, true as isCurrentVersion) from ").append(
+                    DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" c ");
+            if (filter.getTags() != null || !filter.getTags().isEmpty()) {
+                hql.append(" left join ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg on tg.cid=c.inventoryConfigurationId");
+                hql.append(" left join ").append(DBLayer.DBITEM_INV_TAGS).append(" t on t.id=tg.tagId ");
+            }
+            hql.append(getWhereForDepConfiguration(filter));
             Query<DeployedContent> query = createQuery(hql.toString(), filter);
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -338,8 +343,13 @@ public class DeployedConfigurationDBLayer {
             DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("select new ").append(DeployedContent.class.getName());
-            hql.append("(path, name, title, invContent, commitId, deploymentDate, false as isCurrentVersion) from ").append(
-                    DBLayer.DBITEM_DEP_HISTORY).append(getWhereForDepHistory(filter));
+            hql.append("(c.path, c.name, c.title, c.invContent, c.commitId, c.deploymentDate, false as isCurrentVersion) from ").append(
+                    DBLayer.DBITEM_DEP_HISTORY).append(" c ");
+            if (filter.getTags() != null || !filter.getTags().isEmpty()) {
+                hql.append(" left join ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg on (tg.name=c.name and tg.type=c.type)");
+                hql.append(" left join ").append(DBLayer.DBITEM_INV_TAGS).append(" t on t.id=tg.tagId ");
+            }
+            hql.append(getWhereForDepHistory(filter));
             Query<DeployedContent> query = createQuery(hql.toString(), filter);
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -353,8 +363,12 @@ public class DeployedConfigurationDBLayer {
             DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("select new ").append(Deployed.class.getName());
-            hql.append("(inventoryConfigurationId, name, type) from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(getWhereForDepConfiguration(
-                    filter));
+            hql.append("(c.inventoryConfigurationId, c.name, c.type) from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" c ");
+            if (filter.getTags() != null || !filter.getTags().isEmpty()) {
+                hql.append(" left join ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg on tg.cid=c.inventoryConfigurationId");
+                hql.append(" left join ").append(DBLayer.DBITEM_INV_TAGS).append(" t on t.id=tg.tagId ");
+            }
+            hql.append(getWhereForDepConfiguration(filter));
             Query<Deployed> query = createQuery(hql.toString(), filter);
             List<Deployed> result = session.getResultList(query);
             if (result == null || result.isEmpty()) {
@@ -662,41 +676,41 @@ public class DeployedConfigurationDBLayer {
         List<String> clauses = new ArrayList<String>();
 
         if (filter.getControllerId() != null && !filter.getControllerId().isEmpty()) {
-            clauses.add("controllerId = :controllerId");
+            clauses.add("c.controllerId = :controllerId");
         }
 
         // TODO consider max in
         if (filter.getNames() != null && !filter.getNames().isEmpty()) {
             if (filter.getNames().size() == 1) {
-                clauses.add("name = :name");
+                clauses.add("c.name = :name");
             } else {
-                clauses.add("name in (:names)");
+                clauses.add("c.name in (:names)");
             }
         }
 
         // TODO consider max in
         if (filter.getWorkflowIds() != null && !filter.getWorkflowIds().isEmpty()) {
             if (filter.getWorkflowIds().size() == 1) {
-                clauses.add("concat(name, '/', commitId) = :workflowId");
+                clauses.add("concat(c.name, '/', c.commitId) = :workflowId");
             } else {
-                clauses.add("concat(name, '/', commitId) in (:workflowIds)");
+                clauses.add("concat(c.name, '/', c.commitId) in (:workflowIds)");
             }
         }
 
         if (filter.getObjectTypes() != null && !filter.getObjectTypes().isEmpty()) {
             if (filter.getObjectTypes().size() == 1) {
-                clauses.add("type = :type");
+                clauses.add("c.type = :type");
             } else {
-                clauses.add("type in (:types)");
+                clauses.add("c.type in (:types)");
             }
         }
 
         if (filter.getFolders() != null && !filter.getFolders().isEmpty()) {
             String clause = filter.getFolders().stream().map(folder -> {
                 if (folder.getRecursive()) {
-                    return "(folder = '" + folder.getFolder() + "' or folder like '" + (folder.getFolder() + "/%").replaceAll("//+", "/") + "')";
+                    return "(c.folder = '" + folder.getFolder() + "' or c.folder like '" + (folder.getFolder() + "/%").replaceAll("//+", "/") + "')";
                 } else {
-                    return "folder = '" + folder.getFolder() + "'";
+                    return "c.folder = '" + folder.getFolder() + "'";
                 }
             }).collect(Collectors.joining(" or "));
             if (filter.getFolders().size() > 1) {
@@ -704,10 +718,18 @@ public class DeployedConfigurationDBLayer {
             }
             clauses.add(clause);
         }
+        
+        if (filter.getTags() != null || !filter.getTags().isEmpty()) {
+            if (filter.getTags().size() == 1) {
+                clauses.add("t.name = :tag");
+            } else {
+                clauses.add("t.name in (:tags)");
+            }
+        }
 
         if (withOperationAndState) {
-            clauses.add("operation = 0");
-            clauses.add("state = 0");
+            clauses.add("c.operation = 0");
+            clauses.add("c.state = 0");
         }
 
         if (!clauses.isEmpty()) {
@@ -742,6 +764,13 @@ public class DeployedConfigurationDBLayer {
                 query.setParameter("type", filter.getObjectTypes().iterator().next());
             } else {
                 query.setParameterList("types", filter.getObjectTypes());
+            }
+        }
+        if (filter.getTags() != null || !filter.getTags().isEmpty()) {
+            if (filter.getTags().size() == 1) {
+                query.setParameter("tag", filter.getTags().iterator().next());
+            } else {
+                query.setParameterList("tags", filter.getTags());
             }
         }
         return query;

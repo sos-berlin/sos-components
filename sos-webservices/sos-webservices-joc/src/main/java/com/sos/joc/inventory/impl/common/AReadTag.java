@@ -61,7 +61,8 @@ public abstract class AReadTag extends JOCResourceImpl {
                     DeployedConfigurationFilter deployedFilter = new DeployedConfigurationFilter();
                     deployedFilter.setControllerId(in.getControllerId());
                     deployedFilter.setObjectTypes(types);
-                    deployedFilter.setNames(items.stream().map(InventoryTreeFolderItem::getName).filter(Objects::nonNull).collect(Collectors.toSet()));
+                    deployedFilter.setTags(Collections.singleton(in.getTag()));
+                    //deployedFilter.setNames(items.stream().map(InventoryTreeFolderItem::getName).filter(Objects::nonNull).collect(Collectors.toSet()));
                     currentstate = Proxy.of(in.getControllerId()).currentState();
                     deloyedNames = deployedDbLayer.getDeployedNames(deployedFilter);
                 } catch (Exception e) {

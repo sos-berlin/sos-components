@@ -54,6 +54,7 @@ public class TagModifyImpl extends JOCResourceImpl implements ITagModify {
             Date now = Date.from(Instant.now());
             tag.setModified(now);
             dbLayer.getSession().update(tag);
+            JocInventory.postTagEvent(modifyTag.getName());
             JocInventory.postTagEvent(modifyTag.getNewName());
             
             Globals.commit(session);

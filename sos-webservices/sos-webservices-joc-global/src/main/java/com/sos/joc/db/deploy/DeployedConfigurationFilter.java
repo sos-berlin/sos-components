@@ -15,6 +15,7 @@ public class DeployedConfigurationFilter {
     private Set<Folder> folders;
     private Set<String> names;
     private Set<WorkflowId> workflowIds;
+    private Set<String> tags;
 
     
     public String getControllerId() {
@@ -84,6 +85,26 @@ public class DeployedConfigurationFilter {
     public void setWorkflowIds(Stream<WorkflowId> workflowIds) {
         if (workflowIds != null) {
             this.workflowIds = workflowIds.collect(Collectors.toSet());
+        }
+    }
+    
+    public void setTags(Set<String> tags) {
+        this.tags = tags;
+    }
+
+    public Set<String> getTags() {
+        return tags;
+    }
+    
+    public void setTags(Collection<String> tags) {
+        if (tags != null && !tags.isEmpty()) {
+            this.tags = tags.stream().collect(Collectors.toSet());
+        }
+    }
+    
+    public void setTags(Stream<String> tags) {
+        if (tags != null) {
+            this.tags = tags.collect(Collectors.toSet());
         }
     }
 }

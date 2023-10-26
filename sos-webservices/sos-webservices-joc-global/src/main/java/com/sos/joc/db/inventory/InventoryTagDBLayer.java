@@ -599,4 +599,25 @@ public class InventoryTagDBLayer extends DBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
+    
+    public int update(String name, Integer type, Long cid) {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("update ").append(DBLayer.DBITEM_INV_TAGGINGS);
+            sql.append(" set cid=:cid");
+            sql.append(" where name=:name and type=:type");
+
+            Query<String> query = getSession().createQuery(sql.toString());
+            query.setParameter("cid", cid);
+            query.setParameter("name", name);
+            query.setParameter("type", type);
+            
+            return getSession().executeUpdate(query);
+            
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
 }
