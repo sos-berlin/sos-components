@@ -9,7 +9,7 @@ public class JS12JS7ConverterMain extends JS7ConverterMain {
 
     @Override
     public String getProductAndVersion() {
-        return "JS1 2023-09-29 JS7 2.5.6";
+        return "JS1 2023-10-26 JS7 2.5.6";
     }
 
     @Override

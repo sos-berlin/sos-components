@@ -105,31 +105,31 @@ public abstract class JS7ConverterMain {
         if (Files.exists(archive)) {
             try {
                 Files.delete(archive);
-                LOGGER.info("[" + archive + "]old archive file deleted");
+                LOGGER.info("[archive][old][deleted]" + archive);
             } catch (IOException e) {
-                LOGGER.warn("[" + archive + "][old archive file can not be deleted]" + e.toString(), e);
+                LOGGER.warn("[archive][old][can not be deleted][" + archive + "]" + e.toString(), e);
             }
         }
         String fn = archive.getFileName().toString().toLowerCase();
         boolean isTarGZ = fn.endsWith(".tar.gz");
         boolean isZIP = fn.endsWith(".zip");
         if (!isTarGZ && !isZIP) {
-            archive = Paths.get(archive.toString() + ".tar.gz");
+            archive = Paths.get(archive.toString() + ".zip");
             LOGGER.info("[archive]" + archive);
-            isTarGZ = true;
+            isZIP = true;
         }
 
         if (isTarGZ) {
             try {
                 SOSGzipResult r = SOSGzip.compress(outputDir, false);
                 Files.write(archive, r.getCompressed(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-                LOGGER.info("[archive][" + archive + "][written]" + r.toString());
+                LOGGER.info("[archive][new][created]" + archive);
             } catch (Throwable e) {
-                LOGGER.error("[" + archive + "][tar.gz compressing]" + e.toString(), e);
+                LOGGER.error("[archive][new][" + archive + "]" + e.toString(), e);
             }
         } else {
             ZipCompress.compress(outputDir, archive);
-            LOGGER.info("[archive][" + archive + "]file written");
+            LOGGER.info("[archive][new][created]" + archive);
         }
 
     }

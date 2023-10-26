@@ -29,27 +29,27 @@ public class ConverterReportWriter {
         ConfigReport.INSTANCE.clear();
     }
 
-    public static void writeParserReport(Path summaryReport, Path errorReport, Path warningReport, Path analyzerReport) {
-        String method = "writeParserReport";
+    public static void writeParserReport(String title, Path summaryReport, Path errorReport, Path warningReport, Path analyzerReport) {
+        String method = "parserReport";
         if (ParserReport.INSTANCE.getSummary().getRecords().size() > 0) {
-            LOGGER.info(String.format("[%s][JIL][summary][start]...", method));
+            LOGGER.info(String.format("[%s][%s][summary][start]...", method, title));
             ReportWriter.write(summaryReport, ParserReport.INSTANCE.getSummary());
-            LOGGER.info(String.format("[%s][JIL][summary][end]", method));
+            LOGGER.info(String.format("[%s][%s][summary][end]", method, title));
         }
         if (ParserReport.INSTANCE.getError().getRecords().size() > 0) {
-            LOGGER.info(String.format("[%s][JIL][error][start]...", method));
+            LOGGER.info(String.format("[%s][%s][error][start]...", method), title);
             ReportWriter.write(errorReport, ParserReport.INSTANCE.getError());
-            LOGGER.info(String.format("[%s][JIL][error][end]", method));
+            LOGGER.info(String.format("[%s][%s][error][end]", method, title));
         }
         if (ParserReport.INSTANCE.getWarning().getRecords().size() > 0) {
-            LOGGER.info(String.format("[%s][JIL][warning][start]...", method));
+            LOGGER.info(String.format("[%s]%s][warning][start]...", method, title));
             ReportWriter.write(warningReport, ParserReport.INSTANCE.getWarning());
-            LOGGER.info(String.format("[%s][JIL][warning][end]", method));
+            LOGGER.info(String.format("[%s][%s][warning][end]", method, title));
         }
         if (ParserReport.INSTANCE.getAnalyzer().getRecords().size() > 0) {
-            LOGGER.info(String.format("[%s][JIL][analyzer][start]...", method));
+            LOGGER.info(String.format("[%s][%s][analyzer][start]...", method, title));
             ReportWriter.write(analyzerReport, ParserReport.INSTANCE.getAnalyzer());
-            LOGGER.info(String.format("[%s][JIL][analyzer][end]", method));
+            LOGGER.info(String.format("[%s][%s][analyzer][end]", method, title));
         }
         ParserReport.INSTANCE.clear();
     }
