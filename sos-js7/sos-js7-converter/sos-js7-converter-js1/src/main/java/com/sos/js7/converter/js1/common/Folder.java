@@ -85,8 +85,10 @@ public class Folder {
         locks.add(new Lock(file));
     }
 
-    public void addProcessClass(Path processClass) throws Exception {
-        processClasses.add(new ProcessClass(processClass));
+    public ProcessClass addProcessClass(Path processClass) throws Exception {
+        ProcessClass pc = new ProcessClass(processClass);
+        processClasses.add(pc);
+        return pc;
     }
 
     public void addSchedule(DirectoryParserResult pr, Path schedule) throws Exception {

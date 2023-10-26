@@ -79,6 +79,7 @@ import com.sos.js7.converter.commons.agent.JS7AgentConverter;
 import com.sos.js7.converter.commons.agent.JS7AgentConverter.JS7AgentConvertType;
 import com.sos.js7.converter.commons.agent.JS7AgentHelper;
 import com.sos.js7.converter.commons.config.JS7ConverterConfig.Platform;
+import com.sos.js7.converter.commons.config.items.GenerateConfig;
 import com.sos.js7.converter.commons.config.json.JS7Agent;
 import com.sos.js7.converter.commons.output.OutputWriter;
 import com.sos.js7.converter.commons.report.ConverterReport;
@@ -179,6 +180,8 @@ public class JS12JS7Converter {
     private static final String YADE_JOB_SETTINGS_ENV = "YADE_SETTINGS";
     private static final String YADE_JOB_PROFILE_ENV = "YADE_PROFILE";
 
+    private static final String LOG_DELIMITER_LINE = "--------------------------------------------------";
+
     private ConverterObjects converterObjects;
     private DirectoryParserResult pr;
     private String inputDirPath;
@@ -211,14 +214,19 @@ public class JS12JS7Converter {
 
     public static void convert(Path input, Path outputDir, Path reportDir) throws Exception {
 
-        String method = "convert";
+        GenerateConfig gc = CONFIG.getGenerateConfig();
+        if (gc.getCyclicOrders()) {
+            LOGGER.info(LOG_DELIMITER_LINE);
+            LOGGER.info(String.format("[config][%s=true]not implemented yet", gc.getFullPropertyNameCyclicOrders()));
+            LOGGER.info(LOG_DELIMITER_LINE);
+        }
 
+        String method = "convert";
         // APP start
         Instant appStart = Instant.now();
         LOGGER.info(String.format("[%s][start]...", method));
 
         try {
-
             OutputWriter.prepareDirectory(reportDir);
             OutputWriter.prepareDirectory(outputDir);
 
@@ -227,87 +235,101 @@ public class JS12JS7Converter {
                     .resolve("config_analyzer.csv"));
 
             // 2 - Parse JS1 files
-            LOGGER.info(String.format("[%s][JS1][parse][start]...", method));
+            LOGGER.info(LOG_DELIMITER_LINE);
+            LOGGER.info(String.format("[%s][JS1][parse][start]%s", method, input));
             DirectoryParserResult pr = DirectoryParser.parse(CONFIG.getParserConfig(), input, outputDir);
+
+            LOGGER.info(String.format("[%s][JS1][parse][result][total]folders=%s", method, pr.getCountFolders()));
+            LOGGER.info(String.format("[%s][JS1][parse][result][total]process_class=%s (agent standalone=%s, cluster=%s)", method, pr
+                    .getCountProcessClasses(), pr.getCountProcessClassesAgentStandalone(), pr.getCountProcessClassesAgentCluster()));
+            LOGGER.info(String.format("[%s][JS1][parse][result][total]job_chain=%s (order=%s, config=%s)", method, pr.getCountJobChains(), pr
+                    .getCountOrders(), pr.getCountJobChainConfigs()));
+            LOGGER.info(String.format("[%s][JS1][parse][result][total]job=%s (order=%s, standalone=%s), monitor=%s", method, pr.getCountJobs(), pr
+                    .getCountOrderJobs(), pr.getCountStandaloneJobs(), pr.getCountMonitors()));
+            LOGGER.info(String.format("[%s][JS1][parse][result][total]lock=%s, schedule=%s, other files=%s (json=%s)", method, pr.getCountLocks(), pr
+                    .getCountSchedules(), pr.getCountOtherFiles(), pr.getJsonFiles().size()));
+
             LOGGER.info(String.format("[%s][JS1][parse][end]%s", method, SOSDate.getDuration(appStart, Instant.now())));
 
             // 3 - Convert to JS7
+            LOGGER.info(LOG_DELIMITER_LINE);
             Instant start = Instant.now();
             LOGGER.info(String.format("[%s][JS7][convert][start]...", method));
             JS7ConverterResult result = convert(pr);
             LOGGER.info(String.format("[%s][JS7][convert][end]%s", method, SOSDate.getDuration(start, Instant.now())));
 
             // 3.1 - Parser Reports
-            ConverterReportWriter.writeParserReport(reportDir.resolve("parser_summary.csv"), reportDir.resolve("parser_errors.csv"), reportDir
+            LOGGER.info(LOG_DELIMITER_LINE);
+            ConverterReportWriter.writeParserReport("JS1", reportDir.resolve("parser_summary.csv"), reportDir.resolve("parser_errors.csv"), reportDir
                     .resolve("parser_warnings.csv"), reportDir.resolve("parser_analyzer.csv"));
             // 3.2 - Converter Reports
             ConverterReportWriter.writeConverterReport(reportDir.resolve("converter_errors.csv"), reportDir.resolve("converter_warnings.csv"),
                     reportDir.resolve("converter_analyzer.csv"));
 
             // 4 - Write JS7 files
+            LOGGER.info(LOG_DELIMITER_LINE);
             start = Instant.now();
             LOGGER.info(String.format("[%s][JS7][write][start]...", method));
-            if (CONFIG.getGenerateConfig().getWorkflows()) {
-                LOGGER.info(String.format("[%s][JS7][write][workflows]...", method));
-                OutputWriter.write(outputDir, result.getWorkflows());
-                ConverterReport.INSTANCE.addSummaryRecord("Workflows", result.getWorkflows().getItems().size());
-            }
+
             if (CONFIG.getGenerateConfig().getAgents()) {
-                LOGGER.info(String.format("[%s][JS7][write][Agents]...", method));
-                OutputWriter.write(outputDir, result.getAgents());
                 long total = result.getAgents().getItems().size();
+                if (total > 0) {
+                    LOGGER.info(String.format("[%s][JS7][write][Agents]...", method));
+                    OutputWriter.write(outputDir, result.getAgents());
+                } else {
+                    LOGGER.info(String.format("[%s][JS7][write][Agents][skip]0 items", method));
+                }
                 long standalone = result.getAgents().getItems().stream().filter(a -> a.getObject().getStandaloneAgent() != null).count();
                 ConverterReport.INSTANCE.addSummaryRecord("Agents", total + ", STANDALONE=" + standalone + ", CLUSTER=" + (total - standalone));
+            } else {
+                LOGGER.info(String.format("[%s][JS7][write][Agents][skip]%s=false", method, CONFIG.getGenerateConfig().getFullPropertyNameAgents()));
             }
-            if (CONFIG.getGenerateConfig().getCalendars()) {
-                LOGGER.info(String.format("[%s][JS7][write][calendars]...", method));
-                OutputWriter.write(outputDir, result.getCalendars());
-                ConverterReport.INSTANCE.addSummaryRecord("Calendars", result.getCalendars().getItems().size());
-            }
-            if (CONFIG.getGenerateConfig().getSchedules()) {
-                LOGGER.info(String.format("[%s][JS7][write][schedules]...", method));
-                OutputWriter.write(outputDir, result.getSchedules());
-                ConverterReport.INSTANCE.addSummaryRecord("Schedules", result.getSchedules().getItems().size());
-            }
-            if (CONFIG.getGenerateConfig().getCalendars()) {
-                LOGGER.info(String.format("[%s][JS7][write][calendars]...", method));
-                OutputWriter.write(outputDir, result.getCalendars());
-                ConverterReport.INSTANCE.addSummaryRecord("Calendars", result.getCalendars().getItems().size());
-            }
-            if (result.getJobResources().getItems().size() > 0) {
-                LOGGER.info(String.format("[%s][JS7][write][jobResources]...", method));
-                OutputWriter.write(outputDir, result.getJobResources());
-                ConverterReport.INSTANCE.addSummaryRecord("JobResources", result.getJobResources().getItems().size());
-            }
-            if (result.getFileOrderSources().getItems().size() > 0) {
-                LOGGER.info(String.format("[%s][JS7][write][fileOrderSources]...", method));
-                OutputWriter.write(outputDir, result.getFileOrderSources());
-                ConverterReport.INSTANCE.addSummaryRecord("FileOrderSources", result.getFileOrderSources().getItems().size());
-            }
-            if (result.getBoards().getItems().size() > 0) {
-                LOGGER.info(String.format("[%s][JS7][write][boards]...", method));
-                OutputWriter.write(outputDir, result.getBoards());
-                ConverterReport.INSTANCE.addSummaryRecord("Boards", result.getBoards().getItems().size());
-            }
-            if (CONFIG.getGenerateConfig().getJobTemplates()) {
-                LOGGER.info(String.format("[%s][JS7][write][jobTemplates]...", method));
-                OutputWriter.write(outputDir, result.getJobTemplates());
-                ConverterReport.INSTANCE.addSummaryRecord("JobTemplates", result.getJobTemplates().getItems().size());
-            }
-            if (result.getLocks().getItems().size() > 0) {
-                LOGGER.info(String.format("[%s][JS7][write][locks]...", method));
-                OutputWriter.write(outputDir, result.getLocks());
-                ConverterReport.INSTANCE.addSummaryRecord("Locks", result.getLocks().getItems().size());
-            }
+
+            write(outputDir, "Workflows", result.getWorkflows(), gc.getWorkflows(), gc.getFullPropertyNameWorkflows());
+            write(outputDir, "Calendars", result.getCalendars(), gc.getCalendars(), gc.getFullPropertyNameCalendars());
+            write(outputDir, "Schedules", result.getSchedules(), gc.getSchedules(), gc.getFullPropertyNameSchedules());
+            write(outputDir, "Boards", result.getBoards(), true, null);
+            write(outputDir, "FileOrderSources", result.getFileOrderSources(), true, null);
+            write(outputDir, "Locks", result.getLocks(), gc.getLocks(), gc.getFullPropertyNameLocks());
+            write(outputDir, "JobResources", result.getJobResources(), true, null);
+            write(outputDir, "JobTemplates", result.getJobTemplates(), gc.getJobTemplates(), gc.getFullPropertyNameJobTemplates());
+            LOGGER.info(String.format("[%s][JS7][write][end]%s", method, SOSDate.getDuration(start, Instant.now())));
+
             // 4.1 - Summary Report
+            LOGGER.info(LOG_DELIMITER_LINE);
+            LOGGER.info("[converterReport][JS7][summary][start]...");
             ConverterReportWriter.writeSummaryReport(reportDir.resolve("converter_summary.csv"));
-            LOGGER.info(String.format("[%s][[JS7][write][end]%s", method, SOSDate.getDuration(start, Instant.now())));
+            LOGGER.info("[converterReport][JS7][summary][end]");
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
             throw e;
         } finally {
             // APP end
-            LOGGER.info(String.format("[%s][end]%s", method, SOSDate.getDuration(appStart, Instant.now())));
+            LOGGER.info(LOG_DELIMITER_LINE);
+        }
+    }
+
+    private static <T> void write(Path outputDir, String title, JS7ExportObjects<T> exportObject, boolean doWrite, String configPropertyName) {
+        String logPrefix = String.format("[convert][JS7][write][%s]", title);
+        int size = exportObject.getItems().size();
+        try {
+            if (doWrite) {
+                if (size > 0) {
+                    LOGGER.info(logPrefix + size + " items ...");
+                    OutputWriter.write(outputDir, exportObject);
+                } else {
+                    LOGGER.info(logPrefix + "[skip]0 items");
+                }
+            } else {
+                if (configPropertyName != null) {
+                    LOGGER.info(logPrefix + "[skip]" + configPropertyName + "=false");
+                }
+            }
+        } catch (Throwable e) {
+            LOGGER.error(logPrefix + e.toString(), e);
+            ConverterReport.INSTANCE.addErrorRecord(null, logPrefix, e);
+        } finally {
+            ConverterReport.INSTANCE.addSummaryRecord(title, size);
         }
     }
 
@@ -495,19 +517,19 @@ public class JS12JS7Converter {
         long agentsStandalone = js1Agents.entrySet().stream().filter(a -> a.getValue().isJS1AgentIsStandalone()).count();
 
         ParserReport.INSTANCE.addSummaryRecord("TOTAL FOLDERS", pr.getCountFolders());
-        ParserReport.INSTANCE.addSummaryRecord("TOTAL AGENTS", js1Agents.size() + ", STANDALONE=" + agentsStandalone + ", CLUSTER=" + (js1Agents
-                .size() - agentsStandalone));
-        ParserReport.INSTANCE.addSummaryRecord("TOTAL JOB files", pr.getCountJobs() + ", STANDALONE=" + pr.getCountStandaloneJobs() + ", ORDER=" + pr
-                .getCountOrderJobs());
+        ParserReport.INSTANCE.addSummaryRecord("TOTAL PROCESS CLASS files", pr.getCountProcessClasses());
+        ParserReport.INSTANCE.addSummaryRecord("TOTAL AGENTS", js1Agents.size() + " (STANDALONE=" + agentsStandalone + ", CLUSTER=" + (js1Agents
+                .size() - agentsStandalone) + ")");
+        ParserReport.INSTANCE.addSummaryRecord("TOTAL JOB files", pr.getCountJobs() + " (STANDALONE=" + pr.getCountStandaloneJobs() + ", ORDER=" + pr
+                .getCountOrderJobs() + ")");
         ParserReport.INSTANCE.addSummaryRecord("TOTAL JOBS WITH MONITORS", js1JobsWithMonitors.size());
         ParserReport.INSTANCE.addSummaryRecord("TOTAL JOB CHAIN files", pr.getCountJobChains());
         ParserReport.INSTANCE.addSummaryRecord("TOTAL JOB CHAIN ORDER files", pr.getCountOrders());
         ParserReport.INSTANCE.addSummaryRecord("TOTAL JOB CHAIN CONFIG files", pr.getCountJobChainConfigs());
         ParserReport.INSTANCE.addSummaryRecord("TOTAL LOCK files", pr.getCountLocks());
-        ParserReport.INSTANCE.addSummaryRecord("TOTAL PROCESS CLASS files", pr.getCountProcessClasses());
         ParserReport.INSTANCE.addSummaryRecord("TOTAL SCHEDULE files", pr.getCountSchedules());
         ParserReport.INSTANCE.addSummaryRecord("TOTAL MONITOR files", pr.getCountMonitors());
-        ParserReport.INSTANCE.addSummaryRecord("TOTAL ANOTHER files", pr.getCountFiles() + ", JSON files=" + pr.getJsonFiles());
+        ParserReport.INSTANCE.addSummaryRecord("TOTAL OTHER files", pr.getCountOtherFiles() + " (JSON files=" + pr.getJsonFiles().size() + ")");
         ParserReport.INSTANCE.addSummaryRecord("YADE MAIN CONFIGURATION file", pr.getYadeConfiguration() == null ? "" : pr.getYadeConfiguration()
                 .toString());
     }
