@@ -4,6 +4,14 @@ public class GenerateConfig extends AConfigItem {
 
     private static final String CONFIG_KEY = "generateConfig";
 
+    private static final String PROPERTY_NAME_WORKFLOWS = "workflows";
+    private static final String PROPERTY_NAME_AGENTS = "agents";
+    private static final String PROPERTY_NAME_LOCKS = "locks";
+    private static final String PROPERTY_NAME_SCHEDULES = "schedules";
+    private static final String PROPERTY_NAME_CALENDARS = "calendars";
+    private static final String PROPERTY_NAME_JOB_TEMPLATES = "jobTemplates";
+    private static final String PROPERTY_NAME_CYCLIC_ORDERS = "cyclicOrders";
+
     private boolean workflows = true;
     private boolean agents = true;
     private boolean locks = true;
@@ -17,27 +25,27 @@ public class GenerateConfig extends AConfigItem {
     }
 
     @Override
-    protected void parse(String key, String val) {
-        switch (key) {
-        case "workflows":
+    protected void parse(String propertyName, String val) {
+        switch (propertyName) {
+        case PROPERTY_NAME_WORKFLOWS:
             withWorkflows(Boolean.parseBoolean(val));
             break;
-        case "agents":
+        case PROPERTY_NAME_AGENTS:
             withAgents(Boolean.parseBoolean(val));
             break;
-        case "locks":
+        case PROPERTY_NAME_LOCKS:
             withLocks(Boolean.parseBoolean(val));
             break;
-        case "schedules":
+        case PROPERTY_NAME_SCHEDULES:
             withSchedules(Boolean.parseBoolean(val));
             break;
-        case "calendars":
+        case PROPERTY_NAME_CALENDARS:
             withCalendars(Boolean.parseBoolean(val));
             break;
-        case "jobTemplates":
+        case PROPERTY_NAME_JOB_TEMPLATES:
             withJobTemplates(Boolean.parseBoolean(val));
             break;
-        case "cyclicOrders":
+        case PROPERTY_NAME_CYCLIC_ORDERS:
             withCyclicOrders(Boolean.parseBoolean(val));
             break;
         }
@@ -46,6 +54,38 @@ public class GenerateConfig extends AConfigItem {
     @Override
     public boolean isEmpty() {
         return false;
+    }
+
+    public String getFullPropertyNameWorkflows() {
+        return getFullPropertyName(PROPERTY_NAME_WORKFLOWS);
+    }
+
+    public String getFullPropertyNameAgents() {
+        return getFullPropertyName(PROPERTY_NAME_AGENTS);
+    }
+
+    public String getFullPropertyNameLocks() {
+        return getFullPropertyName(PROPERTY_NAME_LOCKS);
+    }
+
+    public String getFullPropertyNameSchedules() {
+        return getFullPropertyName(PROPERTY_NAME_SCHEDULES);
+    }
+
+    public String getFullPropertyNameCalendars() {
+        return getFullPropertyName(PROPERTY_NAME_CALENDARS);
+    }
+
+    public String getFullPropertyNameJobTemplates() {
+        return getFullPropertyName(PROPERTY_NAME_JOB_TEMPLATES);
+    }
+
+    public String getFullPropertyNameCyclicOrders() {
+        return getFullPropertyName(PROPERTY_NAME_CYCLIC_ORDERS);
+    }
+
+    private String getFullPropertyName(String name) {
+        return CONFIG_KEY + "." + name;
     }
 
     public GenerateConfig withWorkflows(boolean val) {

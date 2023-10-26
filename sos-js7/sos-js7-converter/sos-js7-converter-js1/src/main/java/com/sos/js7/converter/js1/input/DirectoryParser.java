@@ -23,6 +23,7 @@ import com.sos.js7.converter.commons.output.ZipCompress;
 import com.sos.js7.converter.commons.report.ParserReport;
 import com.sos.js7.converter.js1.common.EConfigFileExtensions;
 import com.sos.js7.converter.js1.common.Folder;
+import com.sos.js7.converter.js1.common.processclass.ProcessClass;
 
 public class DirectoryParser {
 
@@ -185,7 +186,16 @@ public class DirectoryParser {
             } else if (fileName.endsWith(EConfigFileExtensions.PROCESS_CLASS.extension())) {
                 r.addCountProcessClasses();
                 try {
-                    folder.addProcessClass(file.toPath());
+                    ProcessClass pc = folder.addProcessClass(file.toPath());
+                    if (pc != null) {
+                        if (pc.isAgent()) {
+                            if (pc.isStandaloneAgent()) {
+                                r.addCountProcessClassesAgentStandalone();
+                            } else {
+                                r.addCountProcessClassesAgentCluster();
+                            }
+                        }
+                    }
                 } catch (Exception e) {
                     LOGGER.error(String.format("[%s]%s", method, e.toString()), e);
                     ParserReport.INSTANCE.addErrorRecord(file.toPath(), "error on addProcessClass", e);
@@ -202,7 +212,7 @@ public class DirectoryParser {
                 r.addCountMonitors();
                 folder.addMonitor(null);
             } else {
-                r.addCountFiles();
+                r.addCountOtherFiles();
                 Path p = file.toPath();
                 folder.addFile(p);
 
@@ -213,8 +223,11 @@ public class DirectoryParser {
             }
         }
 
+        int jobChainSize = jobChains.size();
+        int orderJobsSize = folder.getOrderJobs().size();
+
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("[%s][%s]jobChains...", method, folder.getPath()));
+            LOGGER.debug(String.format("[%s][%s]jobChains=%s, orderJobs=%s", method, folder.getPath(), jobChainSize, orderJobsSize));
         }
         for (Map.Entry<String, List<Path>> entry : jobChains.entrySet()) {
             try {
@@ -232,8 +245,16 @@ public class DirectoryParser {
             }
         }
 
+        if (jobChainSize == 0 && orderJobsSize > 0) {
+            LOGGER.info(String.format(
+                    "[%s][%s][job chain=0, order jobs=%s]no job chains found. the order jobs will not be converted if they are not used in other folders.",
+                    method, folder.getPath(), orderJobsSize));
+            ParserReport.INSTANCE.addAnalyzerRecord(folder.getPath(), "job chain=0, order jobs=" + orderJobsSize,
+                    "no job chains found. the order jobs will not be converted if they are not used in other folders.");
+        }
+
         r.addCountStandaloneJobs(folder.getStandaloneJobs().size());
-        r.addCountOrderJobs(folder.getOrderJobs().size());
+        r.addCountOrderJobs(orderJobsSize);
 
         if (isDebugEnabled) {
             LOGGER.debug(String.format("[%s][%s]end", method, folder.getPath()));
@@ -270,9 +291,11 @@ public class DirectoryParser {
         private int countOrderJobs = 0;
         private int countLocks = 0;
         private int countProcessClasses = 0;
+        private int countProcessClassesAgentStandalone = 0;
+        private int countProcessClassesAgentCluster = 0;
         private int countSchedules = 0;
         private int countMonitors = 0;
-        private int countFiles = 0;
+        private int countOtherFiles = 0;
 
         protected void setRoot(Folder f) {
             root = f;
@@ -322,6 +345,14 @@ public class DirectoryParser {
             countProcessClasses++;
         }
 
+        protected void addCountProcessClassesAgentStandalone() {
+            countProcessClassesAgentStandalone++;
+        }
+
+        protected void addCountProcessClassesAgentCluster() {
+            countProcessClassesAgentCluster++;
+        }
+
         protected void addCountSchedules() {
             countSchedules++;
         }
@@ -330,8 +361,8 @@ public class DirectoryParser {
             countMonitors++;
         }
 
-        protected void addCountFiles() {
-            countFiles++;
+        protected void addCountOtherFiles() {
+            countOtherFiles++;
         }
 
         public Folder getRoot() {
@@ -382,6 +413,14 @@ public class DirectoryParser {
             return countProcessClasses;
         }
 
+        public int getCountProcessClassesAgentStandalone() {
+            return countProcessClassesAgentStandalone;
+        }
+
+        public int getCountProcessClassesAgentCluster() {
+            return countProcessClassesAgentCluster;
+        }
+
         public int getCountSchedules() {
             return countSchedules;
         }
@@ -390,8 +429,8 @@ public class DirectoryParser {
             return countMonitors;
         }
 
-        public int getCountFiles() {
-            return countFiles;
+        public int getCountOtherFiles() {
+            return countOtherFiles;
         }
 
         public void putOrderJobsUsage(Path jobChainPath, Path jobPath) {

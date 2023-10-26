@@ -112,8 +112,8 @@ public class Autosys2JS7Converter {
         DirectoryParserResult pr = DirectoryParser.parse(CONFIG.getParserConfig(), parser, input);
         LOGGER.info(String.format("[%s][JIL][parse][end]%s", method, SOSDate.getDuration(appStart, Instant.now())));
         // 2.1 - Parser Reports
-        ConverterReportWriter.writeParserReport(reportDir.resolve("parser_summary.csv"), reportDir.resolve("parser_errors.csv"), reportDir.resolve(
-                "parser_warnings.csv"), reportDir.resolve("parser_analyzer.csv"));
+        ConverterReportWriter.writeParserReport("JIL", reportDir.resolve("parser_summary.csv"), reportDir.resolve("parser_errors.csv"), reportDir
+                .resolve("parser_warnings.csv"), reportDir.resolve("parser_analyzer.csv"));
 
         // 3 - Convert to JS7
         Instant start = Instant.now();
