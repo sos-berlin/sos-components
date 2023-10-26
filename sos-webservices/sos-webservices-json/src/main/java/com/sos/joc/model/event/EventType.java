@@ -14,6 +14,7 @@ public enum EventType {
     AGENT("AGENT"),
     PROBLEM("PROBLEM"),
     FOLDER("FOLDER"),
+    TAG("TAG"),
     WORKFLOW("WORKFLOW"),
     ORDER("ORDER"),
     LOCK("LOCK"),

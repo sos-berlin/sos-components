@@ -342,6 +342,7 @@ public class WorkflowsHelper {
             workflowsFilter.setFolders(null);
             workflowsFilter.setRegex(null);
             workflowsFilter.setStates(null);
+            workflowsFilter.setTags(null);
         }
 
         return contents;
@@ -399,11 +400,13 @@ public class WorkflowsHelper {
         DeployedConfigurationFilter dbFilter = new DeployedConfigurationFilter();
         dbFilter.setControllerId(workflowsFilter.getControllerId());
         dbFilter.setObjectTypes(Collections.singleton(DeployType.WORKFLOW.intValue()));
+        dbFilter.setTags(workflowsFilter.getTags());
 
         List<WorkflowId> workflowIds = workflowsFilter.getWorkflowIds();
         if (workflowIds != null && !workflowIds.isEmpty()) {
             workflowsFilter.setFolders(null);
             workflowsFilter.setRegex(null);
+            workflowsFilter.setTags(null);
         }
         boolean withFolderFilter = workflowsFilter.getFolders() != null && !workflowsFilter.getFolders().isEmpty();
         List<DeployedContent> contents = null;
@@ -485,6 +488,7 @@ public class WorkflowsHelper {
             DeployedConfigurationFilter dbFilter = new DeployedConfigurationFilter();
             dbFilter.setControllerId(workflowsFilter.getControllerId());
             dbFilter.setObjectTypes(Collections.singleton(DeployType.WORKFLOW.intValue()));
+            dbFilter.setTags(workflowsFilter.getTags());
             // if (permittedFolders != null && !permittedFolders.isEmpty()) {
             // dbFilter.setFolders(permittedFolders);
             // }

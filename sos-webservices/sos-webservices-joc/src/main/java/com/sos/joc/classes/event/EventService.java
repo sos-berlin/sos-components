@@ -35,6 +35,8 @@ import com.sos.joc.event.bean.documentation.DocumentationEvent;
 import com.sos.joc.event.bean.history.HistoryOrderEvent;
 import com.sos.joc.event.bean.history.HistoryTaskEvent;
 import com.sos.joc.event.bean.inventory.InventoryEvent;
+import com.sos.joc.event.bean.inventory.InventoryTagEvent;
+import com.sos.joc.event.bean.inventory.InventoryTagsEvent;
 import com.sos.joc.event.bean.inventory.InventoryTrashEvent;
 import com.sos.joc.event.bean.monitoring.MonitoringGuiEvent;
 import com.sos.joc.event.bean.monitoring.NotificationCreated;
@@ -284,6 +286,25 @@ public class EventService {
         eventSnapshot.setEventType(evt.getKey()); // InventoryUpdated, InventoryTrashUpdated
         eventSnapshot.setObjectType(EventType.FOLDER);
         eventSnapshot.setPath(evt.getFolder());
+        addEvent(eventSnapshot);
+    }
+    
+    @Subscribe({ InventoryTagEvent.class })
+    public void createInventoryTagEvent(InventoryTagEvent evt) {
+        EventSnapshot eventSnapshot = new EventSnapshot();
+        eventSnapshot.setEventId(evt.getEventId() / 1000);
+        eventSnapshot.setEventType(evt.getKey()); // InventoryTagUpdated
+        eventSnapshot.setObjectType(EventType.TAG);
+        eventSnapshot.setPath(evt.getTag());
+        addEvent(eventSnapshot);
+    }
+    
+    @Subscribe({ InventoryTagsEvent.class })
+    public void createInventoryTagEvent(InventoryTagsEvent evt) {
+        EventSnapshot eventSnapshot = new EventSnapshot();
+        eventSnapshot.setEventId(evt.getEventId() / 1000);
+        eventSnapshot.setEventType(evt.getKey()); // InventoryTagsUpdated
+        eventSnapshot.setObjectType(EventType.TAG);
         addEvent(eventSnapshot);
     }
 
