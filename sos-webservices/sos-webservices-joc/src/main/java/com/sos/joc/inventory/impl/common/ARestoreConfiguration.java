@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -23,6 +24,7 @@ import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -37,6 +39,7 @@ public abstract class ARestoreConfiguration extends JOCResourceImpl {
             session = Globals.createSosHibernateStatelessConnection(request);
             session.setAutoCommit(false);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+            InventoryTagDBLayer tagDbLayer = new InventoryTagDBLayer(session);
             
             session.beginTransaction();
             DBItemInventoryConfigurationTrash config = JocInventory.getTrashConfiguration(dbLayer, in, folderPermissions);
@@ -59,6 +62,7 @@ public abstract class ARestoreConfiguration extends JOCResourceImpl {
                     .getRestoreSuffixPrefix(clusterSettings), clusterSettings.getRestoreSuffix().getDefault(), config.getName(), type, dbLayer));
 
             Set<String> events = Collections.emptySet();
+            boolean withTagsEvents = false;
             ResponseNewPath response = new ResponseNewPath();
             response.setObjectType(type);
             
@@ -90,29 +94,34 @@ public abstract class ARestoreConfiguration extends JOCResourceImpl {
                 for (ConfigurationType objType : restoreOrder) {
                     for (DBItemInventoryConfigurationTrash trashItem : trashMap.getOrDefault(objType, Collections.emptyList())) {
                         java.nio.file.Path oldItemPath = Paths.get(trashItem.getPath());
+                        DBItemInventoryConfiguration item = null;
                         if (ConfigurationType.FOLDER.intValue() == trashItem.getType() 
                                 || ConfigurationType.DESCRIPTORFOLDER.intValue() == trashItem.getType()) {
                             if (!folderPaths.contains(trashItem.getPath())) {
-                                DBItemInventoryConfiguration item = createItem(trashItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath)),
-                                        dbAuditLog.getId(), dbLayer);
+                                item = createItem(trashItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath)), dbAuditLog.getId(), dbLayer);
                                 JocInventory.insertConfiguration(dbLayer, item);
                             }
                         } else {
                             List<DBItemInventoryConfiguration> targetItems = dbLayer.getConfigurationByName(trashItem.getName(), trashItem.getType());
                             if (targetItems.isEmpty()) {
-                                if(in.getPrefix() != null || in.getSuffix() != null) {
-                                    JocInventory.insertConfiguration(dbLayer, createItem(trashItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath
-                                            .getParent().resolve(trashItem.getName().replaceFirst(replace.get(0), replace.get(1))))),
-                                            dbAuditLog.getId(), dbLayer));
+                                if (in.getPrefix() != null || in.getSuffix() != null) {
+                                    item = createItem(trashItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath.getParent().resolve(trashItem
+                                            .getName().replaceFirst(replace.get(0), replace.get(1))))), dbAuditLog.getId(), dbLayer);
+                                    JocInventory.insertConfiguration(dbLayer, item);
                                 } else {
-                                    JocInventory.insertConfiguration(dbLayer, createItem(trashItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath)),
-                                            dbAuditLog.getId(), dbLayer));
+                                    item = createItem(trashItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath)), dbAuditLog.getId(), dbLayer);
+                                    JocInventory.insertConfiguration(dbLayer, item);
                                 }
                             } else {
-                                JocInventory.insertConfiguration(dbLayer, createItem(trashItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath
-                                        .getParent().resolve(trashItem.getName().replaceFirst(replace.get(0), replace.get(1))))), dbAuditLog.getId(),
-                                        dbLayer));
+                                item = createItem(trashItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath.getParent().resolve(trashItem
+                                        .getName().replaceFirst(replace.get(0), replace.get(1))))), dbAuditLog.getId(), dbLayer);
+                                JocInventory.insertConfiguration(dbLayer, item);
                             }
+                        }
+                        if (item != null) {
+                           if (restoreTaggings(item, tagDbLayer)) {
+                               withTagsEvents = true;
+                           }
                         }
                     }
                 }
@@ -128,6 +137,9 @@ public abstract class ARestoreConfiguration extends JOCResourceImpl {
                     if (newItem == null) {
                         DBItemInventoryConfiguration newDbItem = createItem(config, pWithoutFix, dbAuditLog.getId(), dbLayer);
                         JocInventory.insertConfiguration(dbLayer, newDbItem);
+                        if (restoreTaggings(newDbItem, tagDbLayer)) {
+                            withTagsEvents = true;
+                        }
                         if (newDbItem.getTypeAsEnum().equals(ConfigurationType.DEPLOYMENTDESCRIPTOR) 
                                 || newDbItem.getTypeAsEnum().equals(ConfigurationType.DESCRIPTORFOLDER)) {
                             JocInventory.makeParentDirs(dbLayer, pWithoutFix.getParent(), dbAuditLog.getId(), ConfigurationType.DESCRIPTORFOLDER);
@@ -172,12 +184,18 @@ public abstract class ARestoreConfiguration extends JOCResourceImpl {
                         dbItem = createItem(config, pWithoutFix, dbAuditLog.getId(), dbLayer);
                     }
                     JocInventory.insertConfiguration(dbLayer, dbItem);
+                    if (restoreTaggings(dbItem, tagDbLayer)) {
+                        withTagsEvents = true;
+                    }
                     response.setId(dbItem.getId());
                     response.setPath(dbItem.getPath());
                 } else {
                     DBItemInventoryConfiguration dbItem = createItem(config, pWithoutFix.getParent().resolve(pWithoutFix.getFileName().toString()
                             .replaceFirst(replace.get(0), replace.get(1))), dbAuditLog.getId(), dbLayer);
                     JocInventory.insertConfiguration(dbLayer, dbItem);
+                    if (restoreTaggings(dbItem, tagDbLayer)) {
+                        withTagsEvents = true;
+                    }
                     response.setId(dbItem.getId());
                     response.setPath(dbItem.getPath());
                 }
@@ -201,6 +219,9 @@ public abstract class ARestoreConfiguration extends JOCResourceImpl {
                     JocInventory.postTrashEvent(event);
                 }
             }
+            if (withTagsEvents) {
+                JocInventory.postTagsEvent();
+            }
 
             response.setDeliveryDate(Date.from(Instant.now()));
             return JOCDefaultResponse.responseStatus200(response);
@@ -210,6 +231,15 @@ public abstract class ARestoreConfiguration extends JOCResourceImpl {
         } finally {
             Globals.disconnect(session);
         }
+    }
+    
+    private static boolean restoreTaggings(DBItemInventoryConfiguration dbItem, InventoryTagDBLayer tagDbLayer) {
+        if (ConfigurationType.WORKFLOW.equals(dbItem.getTypeAsEnum())) {
+            if (tagDbLayer.hasTaggings(dbItem.getName(), dbItem.getType())) {
+                return tagDbLayer.update(dbItem.getName(), dbItem.getType(), dbItem.getId()) > 0;
+            }
+        }
+        return false;
     }
     
     private static boolean validate(DBItemInventoryConfiguration item, InventoryDBLayer dbLayer) {
