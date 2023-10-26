@@ -77,7 +77,7 @@ public class ApiExecutor {
     private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_USERNAME = "js7.api-server.username";
     private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD = "js7.api-server.password";
     private static final List<String> DO_NOT_LOG_KEY = Arrays.asList(new String[] { "js7.api-server.password", "js7.api-server.cs-password",
-            "js7.web.https.keystore.store-password", "js7.web.https.keystore.key-password", "s7.web.https.keystore.alias",
+            "js7.web.https.keystore.store-password", "js7.web.https.keystore.key-password", "js7.web.https.keystore.alias",
             "js7.web.https.truststores" });
     private static final String DO_NOT_LOG_VAL = "store-password";
 
