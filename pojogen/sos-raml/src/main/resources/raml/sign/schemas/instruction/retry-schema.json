@@ -21,8 +21,7 @@
   "description": "instruction with fixed property 'TYPE':'Try' (with a retry object in the catch)",
   "properties": {
     "maxTries": {
-      "$ref": "../../../inventory/schemas/common/nonNegativeInteger-schema.json",
-      "default": 1
+      "$ref": "../../../inventory/schemas/common/nonNegativeInteger-schema.json"
     },
     "retryDelays": {
       "type": "array",
