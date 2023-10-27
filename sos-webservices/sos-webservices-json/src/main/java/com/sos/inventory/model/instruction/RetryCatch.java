@@ -33,9 +33,6 @@ public class RetryCatch
 
     /**
      * non negative integer
-     * <p>
-     * 
-     * (Required)
      * 
      */
     @JsonProperty("maxTries")
@@ -85,9 +82,6 @@ public class RetryCatch
 
     /**
      * non negative integer
-     * <p>
-     * 
-     * (Required)
      * 
      */
     @JsonProperty("maxTries")
@@ -97,9 +91,6 @@ public class RetryCatch
 
     /**
      * non negative integer
-     * <p>
-     * 
-     * (Required)
      * 
      */
     @JsonProperty("maxTries")
