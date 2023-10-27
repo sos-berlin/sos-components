@@ -325,7 +325,7 @@ public class DeployedConfigurationDBLayer {
             StringBuilder hql = new StringBuilder("select new ").append(DeployedContent.class.getName());
             hql.append("(c.path, c.name, c.title, c.content, c.commitId, c.created, true as isCurrentVersion) from ").append(
                     DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" c ");
-            if (filter.getTags() != null || !filter.getTags().isEmpty()) {
+            if (filter.getTags() != null && !filter.getTags().isEmpty()) {
                 hql.append(" left join ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg on tg.cid=c.inventoryConfigurationId");
                 hql.append(" left join ").append(DBLayer.DBITEM_INV_TAGS).append(" t on t.id=tg.tagId ");
             }
@@ -345,7 +345,7 @@ public class DeployedConfigurationDBLayer {
             StringBuilder hql = new StringBuilder("select new ").append(DeployedContent.class.getName());
             hql.append("(c.path, c.name, c.title, c.invContent, c.commitId, c.deploymentDate, false as isCurrentVersion) from ").append(
                     DBLayer.DBITEM_DEP_HISTORY).append(" c ");
-            if (filter.getTags() != null || !filter.getTags().isEmpty()) {
+            if (filter.getTags() != null && !filter.getTags().isEmpty()) {
                 hql.append(" left join ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg on (tg.name=c.name and tg.type=c.type)");
                 hql.append(" left join ").append(DBLayer.DBITEM_INV_TAGS).append(" t on t.id=tg.tagId ");
             }
@@ -364,7 +364,7 @@ public class DeployedConfigurationDBLayer {
         try {
             StringBuilder hql = new StringBuilder("select new ").append(Deployed.class.getName());
             hql.append("(c.inventoryConfigurationId, c.name, c.type) from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" c ");
-            if (filter.getTags() != null || !filter.getTags().isEmpty()) {
+            if (filter.getTags() != null && !filter.getTags().isEmpty()) {
                 hql.append(" left join ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg on tg.cid=c.inventoryConfigurationId");
                 hql.append(" left join ").append(DBLayer.DBITEM_INV_TAGS).append(" t on t.id=tg.tagId ");
             }
@@ -719,7 +719,7 @@ public class DeployedConfigurationDBLayer {
             clauses.add(clause);
         }
         
-        if (filter.getTags() != null || !filter.getTags().isEmpty()) {
+        if (filter.getTags() != null && !filter.getTags().isEmpty()) {
             if (filter.getTags().size() == 1) {
                 clauses.add("t.name = :tag");
             } else {
@@ -766,7 +766,7 @@ public class DeployedConfigurationDBLayer {
                 query.setParameterList("types", filter.getObjectTypes());
             }
         }
-        if (filter.getTags() != null || !filter.getTags().isEmpty()) {
+        if (filter.getTags() != null && !filter.getTags().isEmpty()) {
             if (filter.getTags().size() == 1) {
                 query.setParameter("tag", filter.getTags().iterator().next());
             } else {
