@@ -19,6 +19,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -945,15 +946,19 @@ public abstract class PublishUtils {
         return deployedObjects;
     }
 
-    public static Set<DBItemDeploymentHistory> updateDeletedDepHistory(List<DBItemDeploymentHistory> toDelete, DBLayerDeploy dbLayer, String commitId,
-            boolean withTrash) {
+    public static Set<DBItemDeploymentHistory> updateDeletedDepHistory(Collection<DBItemDeploymentHistory> toDelete, DBLayerDeploy dbLayer, String commitId,
+            String commitIdforFileOrderSource, boolean withTrash) {
         Set<DBItemDeploymentHistory> deletedObjects = new HashSet<DBItemDeploymentHistory>();
         InventoryDBLayer invDBLayer = new InventoryDBLayer(dbLayer.getSession());
         try {
             if (toDelete != null && !toDelete.isEmpty()) {
                 for (DBItemDeploymentHistory delete : toDelete) {
                     delete.setId(null);
-                    delete.setCommitId(commitId);
+                    if (DeployType.FILEORDERSOURCE.equals(delete.getTypeAsEnum()) && commitIdforFileOrderSource != null) {
+                        delete.setCommitId(commitIdforFileOrderSource);
+                    } else {
+                        delete.setCommitId(commitId);
+                    }
                     delete.setOperation(OperationType.DELETE.value());
                     delete.setState(DeploymentState.DEPLOYED.value());
                     delete.setDeleteDate(Date.from(Instant.now()));
@@ -980,7 +985,7 @@ public abstract class PublishUtils {
 
     public static Set<DBItemDeploymentHistory> updateDeletedDepHistoryAndPutToTrash(List<DBItemDeploymentHistory> toDelete, DBLayerDeploy dbLayer,
             String commitId) {
-        return updateDeletedDepHistory(toDelete, dbLayer, commitId, true);
+        return updateDeletedDepHistory(toDelete, dbLayer, commitId, null, true);
     }
 
     public static void prepareNextInvConfigGeneration(final Set<DBItemInventoryConfiguration> drafts, SOSHibernateSession hibernateSession) {

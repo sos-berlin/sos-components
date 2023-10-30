@@ -326,7 +326,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             // Delete from all known controllers
             final String commitIdForDelete = UUID.randomUUID().toString();
             final String commitIdForDeleteFromFolder = UUID.randomUUID().toString();
-            List<DBItemInventoryConfiguration> invConfigurationsToDelete = new ArrayList<DBItemInventoryConfiguration>();
+            Set<DBItemInventoryConfiguration> invConfigurationsToDelete = new HashSet<DBItemInventoryConfiguration>();
             Map<String, List<DBItemDeploymentHistory>> itemsFromFolderToDeletePerController = new HashMap<String, List<DBItemDeploymentHistory>>();
             List<DBItemDeploymentHistory> filteredDepHistoryItemsToDelete = Collections.emptyList();
             List<DBItemDeploymentHistory> filteredItemsFromFolderToDelete = Collections.emptyList();
@@ -362,7 +362,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             if (foldersToDelete != null) {
                 folders = foldersToDelete.stream().map(item -> item.getConfiguration()).collect(Collectors.toList());
             }
-            DeleteDeployments.deleteConfigurations(dbLayer, folders, invConfigurationsToDelete, commitIdForDeleteFromFolder, getAccessToken(), 
+            DeleteDeployments.deleteConfigurations(dbLayer, folders, invConfigurationsToDelete, getAccessToken(), 
                     getJocError(), dbAuditlog.getId(), withoutFolderDeletion);
             // loop 2: send commands to controllers
             for (String controllerId : allowedControllerIds) {
