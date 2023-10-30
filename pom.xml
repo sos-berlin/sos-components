@@ -45,7 +45,6 @@
     <javassist.version>3.29.2-GA</javassist.version>
     <log4j2.version>2.20.0</log4j2.version>
     <commons.io.version>2.11.0</commons.io.version>
-    <commons.lang.version>2.6</commons.lang.version>
     <apache.commons.lang.version>3.12.0</apache.commons.lang.version>
     <apache.commons.compress.version>1.24.0</apache.commons.compress.version>
     <apache.commons.csv.version>1.10.0</apache.commons.csv.version>
@@ -544,11 +543,6 @@
             <artifactId>log4j-slf4j2-impl</artifactId>
           </exclusion>
         </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>commons-lang</groupId>
-        <artifactId>commons-lang</artifactId>
-        <version>${commons.lang.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>

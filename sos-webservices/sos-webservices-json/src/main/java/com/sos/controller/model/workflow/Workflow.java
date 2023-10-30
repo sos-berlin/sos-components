@@ -14,9 +14,9 @@ import com.sos.controller.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.workflow.Jobs;
 import com.sos.inventory.model.workflow.Requirements;
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
