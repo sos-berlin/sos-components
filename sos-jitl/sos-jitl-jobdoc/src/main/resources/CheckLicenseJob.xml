@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="js7_job_documentation_v1.1.xsl"?>
+<description xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+             xmlns:xi="http://www.w3.org/2001/XInclude"
+             xmlns:xhtml="http://www.w3.org/1999/xhtml"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
+    <job name="CheckLicenseJob"
+         title="Check the actual license stare"
+         category="Orders;JITL">
+        <script language="java"
+                java_class="com.sos.jitl.jobs.checklicense.CheckLicenseJob"
+                resource="1"/>
+    </job>
+    <configuration>
+        <params id="job_parameter">
+            <param name="validity_days"
+                   required="false">
+                <note>
+                    <title>The number of days a license should be considered as expiring soon </title>
+                     Default: 60
+                </note>
+            </param>
+        </params>
+ 
+        <params id="return_parameter">
+            <param name="subject"
+                   required="false">
+                <note>
+                    <title>E-Mail subject according to the found license state </title>
+                    <p>Can be used in a following email job</p>
+                </note>
+            </param>
+            <param name="body"
+                   required="false">
+                <note>
+                    <title>E-Mail Body according to the found license state </title>
+                    <p>Can be used in a following email job</p>
+                </note>
+            </param>
+ 			
+           
+        </params>
+    </configuration>
+    <documentation>
+        <note>
+            <title>What is the purpose of this job?</title>
+            <p>
+Users of subscription licenses receive warnings and errors about expiration of licenses from the JOC Cockpit GUI.
+Users would like to receive e-mail notification about upcoming license expiration and expired licenses.            
+
+<b>Returncodes:</b>
+<ul>
+<li>2: license check not applicable for open source license</li>
+<li>2: license has expired</li>
+<li>3: license expiration warning when expiration is in less than validity_days days</li>
+</ul>
+ 
+
+</p>
+        </note>
+ 
+    </documentation>
+</description>
