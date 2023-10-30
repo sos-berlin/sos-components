@@ -4,9 +4,9 @@ package com.sos.controller.model.command;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.sos.controller.model.order.OrderMode;
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**

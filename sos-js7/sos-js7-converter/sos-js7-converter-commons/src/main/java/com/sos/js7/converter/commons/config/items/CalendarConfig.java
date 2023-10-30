@@ -3,7 +3,7 @@ package com.sos.js7.converter.commons.config.items;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.sos.commons.util.SOSString;
 
