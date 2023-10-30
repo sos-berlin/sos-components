@@ -47,6 +47,7 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFilter;
 import com.sos.joc.model.inventory.delete.RequestFilters;
 import com.sos.joc.model.inventory.delete.RequestFolder;
+import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.util.DeleteDeployments;
@@ -66,7 +67,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             session = Globals.createSosHibernateStatelessConnection(request);
             session.setAutoCommit(false);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-            session.beginTransaction();
+            Globals.beginTransaction(session);
             
             Predicate<RequestFilter> isFolder = r -> JocInventory.isFolder(r.getObjectType());
             if (in.getObjects().stream().parallel().anyMatch(isFolder)) {
@@ -90,10 +91,11 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                     List<DBItemDeploymentHistory> allDeploymentsPerObject = deployDbLayer.getDeployedConfigurations(config.getName(), config.getType());
                     Set<DBItemDeploymentHistory> deployments = null;
                     if (allDeploymentsPerObject != null) {
-                        deployments = allDeploymentsPerObject.stream().filter(d -> OperationType.UPDATE.value() == d.getOperation()).collect(
-                                Collectors.groupingBy(DBItemDeploymentHistory::getControllerId, Collectors.maxBy(Comparator.comparingLong(
-                                        DBItemDeploymentHistory::getId)))).values().stream().filter(Optional::isPresent).map(Optional::get).collect(
-                                                Collectors.toSet());
+                        deployments = allDeploymentsPerObject.stream().filter(d -> OperationType.UPDATE.value() == d.getOperation()).filter(
+                                d -> DeploymentState.DEPLOYED.value() == d.getState()).collect(Collectors.groupingBy(
+                                        DBItemDeploymentHistory::getControllerId, Collectors.maxBy(Comparator.comparingLong(
+                                                DBItemDeploymentHistory::getId)))).values().stream().filter(Optional::isPresent).map(Optional::get)
+                                .collect(Collectors.toSet());
                     }
                     if (deployments == null || deployments.isEmpty()) {
                         JocInventory.deleteInventoryConfigurationAndPutToTrash(config, dbLayer, ConfigurationType.FOLDER);
