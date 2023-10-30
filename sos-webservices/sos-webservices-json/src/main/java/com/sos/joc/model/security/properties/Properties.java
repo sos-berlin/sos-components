@@ -9,9 +9,9 @@ import com.sos.joc.model.security.properties.keycloak.KeycloakProperties;
 import com.sos.joc.model.security.properties.ldap.LdapProperties;
 import com.sos.joc.model.security.properties.oidc.OidcProperties;
 import com.sos.joc.model.security.properties.vault.VaultProperties;
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**

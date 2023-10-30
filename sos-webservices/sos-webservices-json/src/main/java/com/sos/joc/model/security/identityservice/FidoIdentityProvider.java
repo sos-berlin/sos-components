@@ -10,9 +10,9 @@ import com.sos.joc.model.security.properties.fido.FidoAttachment;
 import com.sos.joc.model.security.properties.fido.FidoResidentKey;
 import com.sos.joc.model.security.properties.fido.FidoTransports;
 import com.sos.joc.model.security.properties.fido.FidoUserverification;
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**

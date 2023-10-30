@@ -14,9 +14,9 @@ import com.sos.controller.model.common.SyncStateText;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.workflow.search.InstructionStateText;
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
