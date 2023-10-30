@@ -129,6 +129,7 @@
 							<includeAdditionalProperties>false</includeAdditionalProperties>
 							<outputDirectory>${project.build.directory}/java-gen</outputDirectory>
 							<addCompileSourceRoot>false</addCompileSourceRoot>
+							<useCommonsLang3>true</useCommonsLang3>
 							<includes>
 								<include>**/*.json</include>
 							</includes>
@@ -161,6 +162,7 @@
 							<includeAdditionalProperties>true</includeAdditionalProperties>
 							<outputDirectory>${project.build.directory}/java-gen</outputDirectory>
 							<addCompileSourceRoot>false</addCompileSourceRoot>
+							<useCommonsLang3>true</useCommonsLang3>
 							<!-- includes>
 								<include>permissions-schema.json</include>
 							</includes -->
@@ -182,6 +184,7 @@
 							<includeAdditionalProperties>true</includeAdditionalProperties>
 							<outputDirectory>${project.build.directory}/java-gen</outputDirectory>
 							<addCompileSourceRoot>false</addCompileSourceRoot>
+							<useCommonsLang3>true</useCommonsLang3>
 							<includes>
 								<include>configuration/globals/*.json</include>
 								<include>order/orderIdMap*.json</include>
@@ -210,6 +213,7 @@
 							<initializeCollections>false</initializeCollections>
 							<outputDirectory>${project.build.directory}/java-gen</outputDirectory>
 							<addCompileSourceRoot>false</addCompileSourceRoot>
+							<useCommonsLang3>true</useCommonsLang3>
 							<includes>
 								<include>calendar/*.json</include>
 								<include>inventory/*.json</include>
@@ -237,6 +241,7 @@
 							<includeConstructors>true</includeConstructors>
 							<outputDirectory>${project.build.directory}/java-gen</outputDirectory>
 							<addCompileSourceRoot>false</addCompileSourceRoot>
+							<useCommonsLang3>true</useCommonsLang3>
 							<includes>
 								<include>**/*.json</include>
 							</includes>
@@ -265,6 +270,7 @@
 							<inclusionLevel>NON_EMPTY</inclusionLevel>
 							<outputDirectory>${project.build.directory}/java-gen</outputDirectory>
 							<addCompileSourceRoot>false</addCompileSourceRoot>
+							<useCommonsLang3>true</useCommonsLang3>
 							<includes>
 								<include>**/*.json</include>
 							</includes>
@@ -296,6 +302,7 @@
 							<inclusionLevel>NON_NULL</inclusionLevel>
 							<outputDirectory>${project.build.directory}/java-gen</outputDirectory>
 							<addCompileSourceRoot>false</addCompileSourceRoot>
+							<useCommonsLang3>true</useCommonsLang3>
 							<includes>
 								<include>**/instructions-schema.json</include>
 							</includes>
@@ -321,6 +328,7 @@
 							<inclusionLevel>NON_EMPTY</inclusionLevel>
 							<outputDirectory>${project.build.directory}/java-gen</outputDirectory>
 							<addCompileSourceRoot>false</addCompileSourceRoot>
+							<useCommonsLang3>true</useCommonsLang3>
 							<includes>
 								<include>**/*.json</include>
 							</includes>
@@ -352,6 +360,7 @@
 							<inclusionLevel>NON_NULL</inclusionLevel>
 							<outputDirectory>${project.build.directory}/java-gen</outputDirectory>
 							<addCompileSourceRoot>false</addCompileSourceRoot>
+							<useCommonsLang3>true</useCommonsLang3>
 							<includes>
 								<include>**/instructions-schema.json</include>
 								<include>**/addOrder-schema.json</include>
@@ -398,6 +407,7 @@
 							<initializeCollections>false</initializeCollections>
 							<outputDirectory>${project.build.directory}/java-gen</outputDirectory>
 							<addCompileSourceRoot>false</addCompileSourceRoot>
+							<useCommonsLang3>true</useCommonsLang3>
 							<includes>
 								<include>**/*.json</include>
 							</includes>
@@ -557,8 +567,8 @@
 			<artifactId>jackson-databind</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>commons-lang</groupId>
-			<artifactId>commons-lang</artifactId>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
