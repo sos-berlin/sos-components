@@ -17,7 +17,7 @@
             <param name="controller_id"
                    required="false">
                 <note>
-                    <title>The controller the controlls the order</title>
+                    <title>The controller that controlls the order</title>
                      Default: Actual controllerId
                 </note>
             </param>
