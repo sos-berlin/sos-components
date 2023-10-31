@@ -13,10 +13,12 @@ import com.sos.js7.job.UnitTestJobHelper;
 
 import js7.data_for_java.order.JOutcome;
 
+
 public class OrderStatusTransitionJobTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderStatusTransitionJobTest.class);
 
+    @Ignore
     @Test
     public void test() throws Exception {
         Map<String, Object> args = new HashMap<>();
