@@ -14,50 +14,19 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "agentPath"
-})
 public class ClusterSwitchOver
     extends Command
 {
 
-    @JsonProperty("agentPath")
-    private String agentPath;
-
-    /**
-     * No args constructor for use in serialization
-     * 
-     */
-    public ClusterSwitchOver() {
-    }
-
-    /**
-     * 
-     * @param agentPath
-     */
-    public ClusterSwitchOver(String agentPath) {
-        super();
-        this.agentPath = agentPath;
-    }
-
-    @JsonProperty("agentPath")
-    public String getAgentPath() {
-        return agentPath;
-    }
-
-    @JsonProperty("agentPath")
-    public void setAgentPath(String agentPath) {
-        this.agentPath = agentPath;
-    }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("agentPath", agentPath).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(agentPath).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).toHashCode();
     }
 
     @Override
@@ -69,7 +38,7 @@ public class ClusterSwitchOver
             return false;
         }
         ClusterSwitchOver rhs = ((ClusterSwitchOver) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(agentPath, rhs.agentPath).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).isEquals();
     }
 
 }
