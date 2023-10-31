@@ -9,9 +9,10 @@ import com.sos.js7.job.JobArguments;
 
 public class OrderStateTransitionJobArguments extends JobArguments {
 
-    private JobArgument<List<String>> workflowFolders = new JobArgument<>("workflow_folders", false, new ArrayList<String>());
-    private JobArgument<List<String>> workflowSearchPatterns = new JobArgument<>("workflow_search_patterns", false, new ArrayList<String>());
-    private JobArgument<List<String>> orderSearchPatterns = new JobArgument<>("order_search_patterns", false, new ArrayList<String>());
+    private JobArgument<List<String>> workflowFolders = new JobArgument<>("workflow_folders", false, new ArrayList<>(), (List<String>) null);
+    private JobArgument<List<String>> workflowSearchPatterns = new JobArgument<>("workflow_search_patterns", false, new ArrayList<>(),
+            (List<String>) null);
+    private JobArgument<List<String>> orderSearchPatterns = new JobArgument<>("order_search_patterns", false, new ArrayList<>(), (List<String>) null);
     private JobArgument<String> persistDuration = new JobArgument<>("persist_duration", false);
     private JobArgument<String> stateTransitionSource = new JobArgument<>("state_transition_source", true);
     private JobArgument<String> stateTransitionTarget = new JobArgument<>("state_transition_target", true);
