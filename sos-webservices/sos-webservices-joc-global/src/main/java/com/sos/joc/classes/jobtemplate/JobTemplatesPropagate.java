@@ -64,7 +64,7 @@ public class JobTemplatesPropagate {
         private static final long serialVersionUID = 1L;
 
         {
-            put(ExecutableType.InternalExecutable, "JITL");
+            put(ExecutableType.InternalExecutable, "Java/JITL/JavaScript");
             put(ExecutableType.ScriptExecutable, "Shell");
             put(ExecutableType.ShellScriptExecutable, "Shell");
         }
@@ -91,6 +91,8 @@ public class JobTemplatesPropagate {
 
     private boolean withAdmissionTime = false;
     private boolean withNotification = false;
+    private boolean overwriteValues = false;
+    private boolean withOptionalArgs = false;
     private boolean deleteUnknownNodeProps = false;
     private Set<Folder> permittedFolders = null;
     
@@ -101,6 +103,8 @@ public class JobTemplatesPropagate {
     public JobTemplatesPropagate(JobTemplatesPropagateBaseFilter filter, Set<Folder> permittedFolders) {
         this.withAdmissionTime = filter.getOverwriteAdmissionTime() == Boolean.TRUE;
         this.withNotification = filter.getOverwriteNotification() == Boolean.TRUE;
+        this.overwriteValues = filter.getOverwriteValues() == Boolean.TRUE;
+        this.withOptionalArgs = filter.getPropagateOptionalArguments() == Boolean.TRUE;
         this.deleteUnknownNodeProps = filter.getDeleteUnknownNodeProperties() == Boolean.TRUE;
         this.permittedFolders = permittedFolders;
     }
@@ -338,7 +342,7 @@ public class JobTemplatesPropagate {
         return true;
     }
     
-    private static void setExecutable(JobReport jReport, Job j, JobTemplate jt, Environment arguments) {
+    private void setExecutable(JobReport jReport, Job j, JobTemplate jt, Environment arguments) {
         Actions actions = jReport.getActions();
         if (actions.getChanges() == null) {
             actions.setChanges(new ArrayList<String>());
@@ -425,12 +429,12 @@ public class JobTemplatesPropagate {
         return env;
     }
     
-    private static void setNodeArguments(JobReport jReport, NamedJob j, Parameters jobTemplateArguments, Environment defaultArgs,
-            boolean deleteUnknownNodeProps, boolean withAddRequiredParams) {
+    private void setNodeArguments(JobReport jReport, NamedJob j, Parameters jobTemplateArguments, Environment defaultArgs,
+            boolean deleteUnknownNodeProps, boolean withAddParams) {
         if (defaultArgs != null && defaultArgs.getAdditionalProperties() != null) {
             j.setDefaultArguments(defaultArgs);
         }
-        j.setDefaultArguments(setArguments(jReport, j.getDefaultArguments(), jobTemplateArguments, deleteUnknownNodeProps, withAddRequiredParams));
+        j.setDefaultArguments(setArguments(jReport, j.getDefaultArguments(), jobTemplateArguments, deleteUnknownNodeProps, withAddParams));
     }
     
     private static Environment readNodeArguments(NamedJob j, Environment env) {
@@ -444,12 +448,12 @@ public class JobTemplatesPropagate {
         return env;
     }
     
-    private static Environment setArguments(JobReport jReport, Environment env, Parameters jobTemplateArguments, boolean deleteUnknownNodeProps) {
+    private Environment setArguments(JobReport jReport, Environment env, Parameters jobTemplateArguments, boolean deleteUnknownNodeProps) {
         return setArguments(jReport, env, jobTemplateArguments, deleteUnknownNodeProps, true);
     }
     
-    private static Environment setArguments(JobReport jReport, Environment jobNodeproperties, Parameters jobTemplateArguments, boolean deleteUnknownNodeProps,
-            boolean withAddRequiredParams) {
+    private Environment setArguments(JobReport jReport, Environment jobNodeproperties, Parameters jobTemplateArguments, boolean deleteUnknownNodeProps,
+            boolean withAddParams) {
         Actions actions = jReport.getActions();
 
         if (jobNodeproperties == null || jobNodeproperties.getAdditionalProperties() == null) {
@@ -489,8 +493,8 @@ public class JobTemplatesPropagate {
         Environment addEnv = actions.getAddRequiredArguments();
         List<String> foundRequiredParams = new ArrayList<>();
         for (Map.Entry<String, Parameter> entry : jobTemplateArguments.getAdditionalProperties().entrySet()) {
-            if (entry.getValue().getRequired()) {
-                if (withAddRequiredParams && !envKeys.contains(entry.getKey())) {
+            if (withOptionalArgs || entry.getValue().getRequired()) {
+                if (withAddParams && (overwriteValues || !envKeys.contains(entry.getKey()))) {
 
                     // TODO conflict required without default value
                     String _default = entry.getValue().getDefault() != null ? entry.getValue().getDefault().toString() : "";
@@ -500,7 +504,7 @@ public class JobTemplatesPropagate {
                     addEnv.setAdditionalProperty(entry.getKey(), JsonConverter.quoteString(_default));
                     jobNodeproperties.setAdditionalProperty(entry.getKey(), JsonConverter.quoteString(_default));
                     
-                } else if (!withAddRequiredParams && envKeys.contains(entry.getKey())) {
+                } else if (!withAddParams && entry.getValue().getRequired() && envKeys.contains(entry.getKey())) {
                     foundRequiredParams.add(entry.getKey());
                 }
             }
@@ -523,8 +527,8 @@ public class JobTemplatesPropagate {
         return jobNodeproperties;
     }
     
-    private static void setNodeArguments(List<Instruction> insts, String jobName, JobReport jReport, Parameters jobTemplateArguments, Environment defaultArgs,
-            boolean deleteUnknownNodeProps, boolean withAddRequiredParams) {
+    private void setNodeArguments(List<Instruction> insts, String jobName, JobReport jReport, Parameters jobTemplateArguments, Environment defaultArgs,
+            boolean deleteUnknownNodeProps, boolean withAddParams) {
         if (insts != null) {
             for (Instruction inst : insts) {
                 switch (inst.getTYPE()) {
@@ -533,7 +537,7 @@ public class JobTemplatesPropagate {
                     if (f.getBranches() != null) {
                         for (Branch b : f.getBranches()) {
                             setNodeArguments(b.getWorkflow().getInstructions(), jobName, jReport, jobTemplateArguments, defaultArgs, deleteUnknownNodeProps,
-                                    withAddRequiredParams);
+                                    withAddParams);
                         }
                     }
                     break;
@@ -541,70 +545,70 @@ public class JobTemplatesPropagate {
                     ForkList fl = inst.cast();
                     if (fl.getWorkflow() != null) {
                         setNodeArguments(fl.getWorkflow().getInstructions(), jobName, jReport, jobTemplateArguments, defaultArgs, deleteUnknownNodeProps,
-                                withAddRequiredParams);
+                                withAddParams);
                     }
                     break;
                 case IF:
                     IfElse ie = inst.cast();
                     if (ie.getThen() != null) {
                         setNodeArguments(ie.getThen().getInstructions(), jobName, jReport, jobTemplateArguments, defaultArgs, deleteUnknownNodeProps,
-                                withAddRequiredParams);
+                                withAddParams);
                     }
                     if (ie.getElse() != null) {
                         setNodeArguments(ie.getElse().getInstructions(), jobName, jReport, jobTemplateArguments, defaultArgs, deleteUnknownNodeProps,
-                                withAddRequiredParams);
+                                withAddParams);
                     }
                     break;
                 case TRY:
                     TryCatch tc = inst.cast();
                     if (tc.getTry() != null) {
                         setNodeArguments(tc.getTry().getInstructions(), jobName, jReport, jobTemplateArguments, defaultArgs, deleteUnknownNodeProps,
-                                withAddRequiredParams);
+                                withAddParams);
                     }
                     if (tc.getCatch() != null) {
                         setNodeArguments(tc.getCatch().getInstructions(), jobName, jReport, jobTemplateArguments, defaultArgs, deleteUnknownNodeProps,
-                                withAddRequiredParams);
+                                withAddParams);
                     }
                     break;
                 case LOCK:
                     Lock l = inst.cast();
                     if (l.getLockedWorkflow() != null) {
                         setNodeArguments(l.getLockedWorkflow().getInstructions(), jobName, jReport, jobTemplateArguments, defaultArgs,
-                                deleteUnknownNodeProps, withAddRequiredParams);
+                                deleteUnknownNodeProps, withAddParams);
                     }
                     break;
                 case CYCLE:
                     Cycle c = inst.cast();
                     if (c.getCycleWorkflow() != null) {
                         setNodeArguments(c.getCycleWorkflow().getInstructions(), jobName, jReport, jobTemplateArguments, defaultArgs,
-                                deleteUnknownNodeProps, withAddRequiredParams);
+                                deleteUnknownNodeProps, withAddParams);
                     }
                     break;
                 case EXECUTE_NAMED:
                     NamedJob j = inst.cast();
                     if (j.getJobName().equals(jobName)) {
-                        setNodeArguments(jReport, j, jobTemplateArguments, defaultArgs, deleteUnknownNodeProps, withAddRequiredParams);
+                        setNodeArguments(jReport, j, jobTemplateArguments, defaultArgs, deleteUnknownNodeProps, withAddParams);
                     }
                     break;
                 case CONSUME_NOTICES:
                     ConsumeNotices cn = inst.cast();
                     if (cn.getSubworkflow() != null) {
                         setNodeArguments(cn.getSubworkflow().getInstructions(), jobName, jReport, jobTemplateArguments, defaultArgs,
-                                deleteUnknownNodeProps, withAddRequiredParams);
+                                deleteUnknownNodeProps, withAddParams);
                     }
                     break;
                 case STICKY_SUBAGENT:
                     StickySubagent ss = inst.cast();
                     if (ss.getSubworkflow() != null) {
                         setNodeArguments(ss.getSubworkflow().getInstructions(), jobName, jReport, jobTemplateArguments, defaultArgs,
-                                deleteUnknownNodeProps, withAddRequiredParams);
+                                deleteUnknownNodeProps, withAddParams);
                     }
                     break;
                 case OPTIONS:
                     Options opts = inst.cast();
                     if (opts.getBlock() != null) {
                         setNodeArguments(opts.getBlock().getInstructions(), jobName, jReport, jobTemplateArguments, defaultArgs,
-                                deleteUnknownNodeProps, withAddRequiredParams);
+                                deleteUnknownNodeProps, withAddParams);
                     }
                     break;
                 default:
