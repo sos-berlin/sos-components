@@ -41,13 +41,6 @@ public class OrderStateTransition {
 
     public void execute() throws Exception {
 
-        boolean executeModify = true;
-        if (OrderStateText.fromValue(args.getStateTransitionSource()).equals(OrderStateText.PROMPTING) && OrderStateText.fromValue(args
-                .getStateTransitionTarget()).equals(OrderStateText.INPROGRESS)) {
-            logger.info("illegal source/target state_transition combination:  [PROMPTING --> INPROGRESS]");
-            executeModify = false;
-        }
-
         ApiExecutor apiExecutor = new ApiExecutor(logger);
         String accessToken = null;
         List<OrderV> listOfOrders = new ArrayList<OrderV>();
@@ -121,40 +114,38 @@ public class OrderStateTransition {
             int count = mapOfOrders.size();
             String action = args.getStateTransitionTarget().toLowerCase();
 
-            if (executeModify) {
-                do {
-                    for (OrderV order : mapOfOrders.values()) {
-                        modifyOrders.getOrderIds().add(order.getOrderId());
-                        mapOfOrders.remove(order.getOrderId());
-                        if (modifyOrders.getOrderIds().size() >= args.getBatchSize()) {
-                            break;
-                        }
-                    }
-                    count = count - modifyOrders.getOrderIds().size();
-
-                    logger.info(" ");
-                    switch (args.getStateTransitionTarget()) {
-                    case CANCELLED:
-                        orderStateWebserviceExecuter.cancelOrder(modifyOrders, accessToken);
-                        break;
-                    case INPROGRESS:
-                        orderStateWebserviceExecuter.resumeOrder(modifyOrders, accessToken);
-                        break;
-                    default:
-                        break;
-                    }
-                    logger.info(modifyOrders.getOrderIds().size() + " orders " + action);
-                    for (String order : modifyOrders.getOrderIds()) {
-                        logger.info(order + " " + action);
-                    }
-                    modifyOrders.getOrderIds().clear();
-                } while (count > 0);
-            } else {
+            do {
                 for (OrderV order : mapOfOrders.values()) {
-                    logger.info("order: " + order.getOrderId() + " is prompting. Can not be resumed.");
+                    modifyOrders.getOrderIds().add(order.getOrderId());
+                    mapOfOrders.remove(order.getOrderId());
+                    if (modifyOrders.getOrderIds().size() >= args.getBatchSize()) {
+                        break;
+                    }
                 }
+                count = count - modifyOrders.getOrderIds().size();
 
-            }
+                logger.info(" ");
+                switch (args.getStateTransitionTarget()) {
+                case CANCELLED:
+                    orderStateWebserviceExecuter.cancelOrders(modifyOrders, accessToken);
+                    break;
+                case INPROGRESS:
+                    if (OrderStateText.fromValue(args.getStateTransitionSource()).equals(OrderStateText.PROMPTING)) {
+                        orderStateWebserviceExecuter.confirmOrders(modifyOrders, accessToken);
+
+                    } else {
+                        orderStateWebserviceExecuter.resumeOrders(modifyOrders, accessToken);
+                    }
+                    break;
+                default:
+                    break;
+                }
+                logger.info(modifyOrders.getOrderIds().size() + " orders " + action);
+                for (String order : modifyOrders.getOrderIds()) {
+                    logger.info(order + " " + action);
+                }
+                modifyOrders.getOrderIds().clear();
+            } while (count > 0);
 
         } catch (Exception e) {
             logger.error(e);
