@@ -77,7 +77,7 @@ import js7.data_for_java.order.JOrderPredicates;
 import js7.data_for_java.subagent.JSubagentItemState;
 import js7.proxy.javaapi.JControllerProxy;
 import scala.collection.JavaConverters;
-import scala.compat.java8.OptionConverters;
+import scala.jdk.javaapi.OptionConverters;
 
 @Path("agents")
 public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsResourceState {

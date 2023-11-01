@@ -17,7 +17,7 @@ import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.model.configuration.globals.GlobalSettings;
 
 import js7.data_for_java.auth.JCredentials;
-import scala.compat.java8.OptionConverters;
+import scala.jdk.javaapi.OptionConverters;
 
 public enum ProxyUser {
     
