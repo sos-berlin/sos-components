@@ -44,7 +44,7 @@ import js7.data_for_java.order.JOrder;
 import js7.data_for_java.workflow.JWorkflow;
 import js7.data_for_java.workflow.JWorkflowId;
 import scala.collection.JavaConverters;
-import scala.compat.java8.OptionConverters;
+import scala.jdk.javaapi.OptionConverters;
 
 public class LockEntryHelper {
 

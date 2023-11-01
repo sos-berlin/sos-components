@@ -36,7 +36,7 @@ import js7.data.subagent.SubagentId;
 import js7.data_for_java.agent.JAgentRefState;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.subagent.JSubagentItemState;
-import scala.compat.java8.OptionConverters;
+import scala.jdk.javaapi.OptionConverters;
 
 @Path("joc")
 public class GetVersionsImpl extends JOCResourceImpl implements IGetVersionsResource{
