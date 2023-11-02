@@ -26,7 +26,11 @@ public class OrderStateTransitionJob extends Job<OrderStateTransitionJobArgument
             step.getDeclaredArguments().getWorkflowFolders().add("/*");
         }
 
-        step.getDeclaredArguments().setStates(step.getDeclaredArguments().getStates().toUpperCase());
+        for (int i = 0; i < step.getDeclaredArguments().getStates().size(); i++) {
+            String state = step.getDeclaredArguments().getStates().get(i).toUpperCase();
+            step.getDeclaredArguments().getStates().set(i, state);
+        }
+
         step.getDeclaredArguments().setTransition(step.getDeclaredArguments().getTransition().toUpperCase());
         if (step.getDeclaredArguments().getTransition().equals(OrderStateText.CANCELLED.name())) {
             step.getDeclaredArguments().setTransition(CANCEL);
@@ -35,7 +39,8 @@ public class OrderStateTransitionJob extends Job<OrderStateTransitionJobArgument
             step.getDeclaredArguments().setTransition(CONTINUE);
         }
 
-        if (!step.getDeclaredArguments().getTransition().equals(CANCEL) && !step.getDeclaredArguments().getTransition().equals(SUSPEND) &&!step.getDeclaredArguments().getTransition().equals(CONTINUE)) {
+        if (!step.getDeclaredArguments().getTransition().equals(CANCEL) && !step.getDeclaredArguments().getTransition().equals(SUSPEND) && !step
+                .getDeclaredArguments().getTransition().equals(CONTINUE)) {
             throw new Exception("tranistion: Illegal value. Not in [CANCEL|SUSPEND|CONTINUE]");
         }
 
