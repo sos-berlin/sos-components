@@ -44,8 +44,6 @@ public class OrderStateTransition {
 
     public void execute() throws Exception {
 
-        String states[] = args.getStates().split(",");
-
         ApiExecutor apiExecutor = new ApiExecutor(logger);
         String accessToken = null;
         List<OrderV> listOfOrders = new ArrayList<OrderV>();
@@ -55,7 +53,7 @@ public class OrderStateTransition {
 
             OrderStateWebserviceExecuter orderStateWebserviceExecuter = new OrderStateWebserviceExecuter(logger, apiExecutor);
 
-            for (String state : states) {
+            for (String state : args.getStates()) {
                 if (args.getWorkflowSearchPattern() != null && args.getWorkflowSearchPattern().size() > 0) {
                     for (String workflowPattern : args.getWorkflowSearchPattern()) {
                         OrdersFilterV ordersFilter = newOrdersFilterV(state);
@@ -137,7 +135,8 @@ public class OrderStateTransition {
                         orderStateWebserviceExecuter.cancelOrders(modifyOrders, accessToken);
                         break;
                     case SUSPEND:
-                        if (!OrderStateText.fromValue(state).equals(OrderStateText.FAILED) && !OrderStateText.fromValue(state).equals(OrderStateText.FINISHED)) {
+                        if (!OrderStateText.fromValue(state).equals(OrderStateText.FAILED) && !OrderStateText.fromValue(state).equals(
+                                OrderStateText.FINISHED)) {
                             orderStateWebserviceExecuter.suspendOrders(modifyOrders, accessToken);
                         }
                         break;
