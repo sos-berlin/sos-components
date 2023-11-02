@@ -21,22 +21,30 @@
                      Default: Actual controllerId
                 </note>
             </param>
-            <param name="state_transition_source"
+            <param name="states"
                    required="true">
                 <note>
-                    <title>The source order state</title>
+                    <title>The source order states</title>
                     <p>
-Possible values: failed, suspended, prompting.
+						
+<p>Possible values: pending,failed, suspended,waiting,inprogress,scheduled,prompting.</p>
+<p>The values can be a comma seperated list. Each state in the list is handled seperatly as e.g. the continue action for "prompting" is not the same as for "suspended"</p>
                     </p>
                 </note>
             </param>
 
-            <param name="state_transition_target"
+            <param name="transition"
                    required="true">
                 <note>
-                    <title>The target order state</title>
+                    <title>The transition for the order state</title>
                     <p>
-Possible values: cancelled, inprogress.
+Possible values: cancel, suspend, continue.<br/>
+cancel: Execute cancel for the orders<br/>
+continue: Execute resume for failed and suspended orders. Execute confirm for prompting orders.<br/>
+suspend: Execute suspend for the orders that are not failed and not finished<br/>
+
+ 
+
                     </p>
                 </note>
             </param>
@@ -64,7 +72,7 @@ Example: /folder/sub1;/another_folder/sub2/*
             <param name="order_search_patterns"
                    required="false">
                 <note>
-                    <title>A list of search patterns for order names. May contain a folder. Items sepearated by semicolon..</title>
+                    <title>A list of search patterns for order names. May contain a folder. Items sepearated by semicolon.</title>
                     <p>
  May contain a folder. Items sepearated by semicolon. Example: *myWorkflow*, /folder/sub1/my?orkflow
                      </p>
@@ -122,7 +130,7 @@ the value 0 indicates the current time
         <note>
             <title>What is the purpose of this job?</title>
             <p>
-                The job find orders with the given state_transition_source in the specified folders and resumes them or cancel them.
+                The job find orders with the given state_transition_source in the specified folders and resumes/cancel/suspend them.
             </p>
         </note>
  

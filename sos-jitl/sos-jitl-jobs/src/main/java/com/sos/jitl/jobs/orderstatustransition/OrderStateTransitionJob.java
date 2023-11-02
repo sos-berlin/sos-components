@@ -7,6 +7,10 @@ import com.sos.js7.job.OrderProcessStep;
 
 public class OrderStateTransitionJob extends Job<OrderStateTransitionJobArguments> {
 
+    private static final String CONTINUE = "CONTINUE";
+    private static final String CANCEL = "CANCEL";
+    private static final String SUSPEND = "SUSPEND";
+
     public OrderStateTransitionJob(JobContext jobContext) {
         super(jobContext);
     }
@@ -22,19 +26,19 @@ public class OrderStateTransitionJob extends Job<OrderStateTransitionJobArgument
             step.getDeclaredArguments().getWorkflowFolders().add("/*");
         }
 
-        step.getDeclaredArguments().setStateTransitionSource(step.getDeclaredArguments().getStateTransitionSource().toUpperCase());
-        step.getDeclaredArguments().setStateTransitionTarget(step.getDeclaredArguments().getStateTransitionTarget().toUpperCase());
-
-        if (!OrderStateText.fromValue(step.getDeclaredArguments().getStateTransitionSource()).equals(OrderStateText.FAILED) && !OrderStateText
-                .fromValue(step.getDeclaredArguments().getStateTransitionSource()).equals(OrderStateText.PROMPTING) && !OrderStateText.fromValue(step
-                        .getDeclaredArguments().getStateTransitionSource()).equals(OrderStateText.SUSPENDED)) {
-            throw new Exception("state_transition_source: Illegal value. Not in [FAILED|PROMPTING|INPROGRESS]");
+        step.getDeclaredArguments().setStates(step.getDeclaredArguments().getStates().toUpperCase());
+        step.getDeclaredArguments().setTransition(step.getDeclaredArguments().getTransition().toUpperCase());
+        if (step.getDeclaredArguments().getTransition().equals(OrderStateText.CANCELLED.name())) {
+            step.getDeclaredArguments().setTransition(CANCEL);
+        }
+        if (step.getDeclaredArguments().getTransition().equals(OrderStateText.INPROGRESS.name())) {
+            step.getDeclaredArguments().setTransition(CONTINUE);
         }
 
-        if (!OrderStateText.fromValue(step.getDeclaredArguments().getStateTransitionTarget()).equals(OrderStateText.CANCELLED) && !OrderStateText
-                .fromValue(step.getDeclaredArguments().getStateTransitionTarget()).equals(OrderStateText.INPROGRESS)) {
-            throw new Exception("state_transition_target: Illegal value. Not in [CANCELLED|INPROGRESS]");
+        if (!step.getDeclaredArguments().getTransition().equals(CANCEL) && !step.getDeclaredArguments().getTransition().equals(SUSPEND) &&!step.getDeclaredArguments().getTransition().equals(CONTINUE)) {
+            throw new Exception("tranistion: Illegal value. Not in [CANCEL|SUSPEND|CONTINUE]");
         }
+
         orderStateTransition.execute();
     }
 }
