@@ -15,7 +15,7 @@ public class OrderStateTransitionJobArguments extends JobArguments {
             (List<String>) null);
     private JobArgument<List<String>> orderSearchPatterns = new JobArgument<>("order_search_patterns", false, new ArrayList<>(), (List<String>) null);
     private JobArgument<String> persistDuration = new JobArgument<>("persist_duration", false);
-    private JobArgument<String> states = new JobArgument<>("states", true,Collections.singletonList("state_transition_source"));
+    private JobArgument<List<String>> states = new JobArgument<>("states", true,new ArrayList<>(),Collections.singletonList("state_transition_source"));
     private JobArgument<String> transition = new JobArgument<>("transition", true,  Collections.singletonList("state_transition_target"));
     private JobArgument<String> controllerId = new JobArgument<>("controller_id", false);
     private JobArgument<Integer> batchSize = new JobArgument<>("batch_size", false, 10000);
@@ -56,11 +56,11 @@ public class OrderStateTransitionJobArguments extends JobArguments {
         this.persistDuration.setValue(persistDuration);
     }
 
-    public String getStates() {
+    public List<String> getStates() {
         return states.getValue();
     }
 
-    public void setStates(String states) {
+    public void setStates(List<String> states) {
         this.states.setValue(states);
     }
 
