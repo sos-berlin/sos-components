@@ -19,7 +19,10 @@ import com.sos.js7.job.jocapi.ApiResponse;
 public class OrderStateTransition {
 
     private static final String INPROGRESS = "INPROGRESS";
+    private static final String SUSPEND = "SUSPEND";
+    private static final String CONTINUE = "CONTINUE";
     private static final String CANCELLED = "CANCELLED";
+    private static final String CANCEL = "CANCEL";
     private OrderProcessStepLogger logger;
     private OrderStateTransitionJobArguments args;
 
@@ -28,18 +31,20 @@ public class OrderStateTransition {
         this.logger = logger;
     }
 
-    private OrdersFilterV newOrdersFilterV() {
+    private OrdersFilterV newOrdersFilterV(String state) {
         OrdersFilterV ordersFilter = new OrdersFilterV();
         ordersFilter.setCompact(true);
         ordersFilter.setControllerId(args.getControllerId());
-        ordersFilter.getStates().add(OrderStateText.fromValue(args.getStateTransitionSource()));
-        if (args.getPersistDuration() != null && OrderStateText.fromValue(args.getStateTransitionSource()).equals(OrderStateText.FAILED)) {
+        ordersFilter.getStates().add(OrderStateText.fromValue(state));
+        if (args.getPersistDuration() != null && OrderStateText.fromValue(state).equals(OrderStateText.FAILED)) {
             ordersFilter.setStateDateFrom(args.getPersistDuration());
         }
         return ordersFilter;
     }
 
     public void execute() throws Exception {
+
+        String states[] = args.getStates().split(",");
 
         ApiExecutor apiExecutor = new ApiExecutor(logger);
         String accessToken = null;
@@ -50,103 +55,113 @@ public class OrderStateTransition {
 
             OrderStateWebserviceExecuter orderStateWebserviceExecuter = new OrderStateWebserviceExecuter(logger, apiExecutor);
 
-            if (args.getWorkflowSearchPattern() != null && args.getWorkflowSearchPattern().size() > 0) {
-                for (String workflowPattern : args.getWorkflowSearchPattern()) {
-                    OrdersFilterV ordersFilter = newOrdersFilterV();
-                    ordersFilter.setRegex(convertGlobToRegex(workflowPattern));
-                    OrdersV list = orderStateWebserviceExecuter.getOrders(ordersFilter, accessToken);
-                    if (list != null) {
-                        listOfOrders.addAll(list.getOrders());
+            for (String state : states) {
+                if (args.getWorkflowSearchPattern() != null && args.getWorkflowSearchPattern().size() > 0) {
+                    for (String workflowPattern : args.getWorkflowSearchPattern()) {
+                        OrdersFilterV ordersFilter = newOrdersFilterV(state);
+                        ordersFilter.setRegex(convertGlobToRegex(workflowPattern));
+                        OrdersV list = orderStateWebserviceExecuter.getOrders(ordersFilter, accessToken);
+                        if (list != null) {
+                            listOfOrders.addAll(list.getOrders());
+                        }
                     }
                 }
-            }
 
-            if (args.getOrderSearchPatterns() != null && args.getOrderSearchPatterns().size() > 0) {
-                for (String orderPattern : args.getOrderSearchPatterns()) {
-                    if (!orderPattern.startsWith("/")) {
-                        orderPattern = "/" + orderPattern;
-                    }
-                    String[] p = orderPattern.split("/");
-                    String orderName = p[p.length - 1];
-                    orderName = "#*#*-" + orderName;
-                    p[p.length - 1] = orderName;
-                    orderPattern = convertStringArrayToString(p, "/");
-                    OrdersFilterV ordersFilter = newOrdersFilterV();
-                    ordersFilter.setRegex(convertGlobToRegex(orderPattern));
-                    OrdersV list = orderStateWebserviceExecuter.getOrders(ordersFilter, accessToken);
-                    if (list != null) {
-                        listOfOrders.addAll(list.getOrders());
+                if (args.getOrderSearchPatterns() != null && args.getOrderSearchPatterns().size() > 0) {
+                    for (String orderPattern : args.getOrderSearchPatterns()) {
+                        if (!orderPattern.startsWith("/")) {
+                            orderPattern = "/" + orderPattern;
+                        }
+                        String[] p = orderPattern.split("/");
+                        String orderName = p[p.length - 1];
+                        orderName = "#*#*-" + orderName;
+                        p[p.length - 1] = orderName;
+                        orderPattern = convertStringArrayToString(p, "/");
+                        OrdersFilterV ordersFilter = newOrdersFilterV(state);
+                        ordersFilter.setRegex(convertGlobToRegex(orderPattern));
+                        OrdersV list = orderStateWebserviceExecuter.getOrders(ordersFilter, accessToken);
+                        if (list != null) {
+                            listOfOrders.addAll(list.getOrders());
+                        }
                     }
                 }
-            }
 
-            OrdersFilterV ordersFilter = newOrdersFilterV();
+                OrdersFilterV ordersFilter = newOrdersFilterV(state);
 
-            for (String folderName : args.getWorkflowFolders()) {
-                Folder f = new Folder();
-                boolean recursive = false;
-                if (folderName.endsWith("/*")) {
-                    folderName = folderName.substring(0, folderName.length() - 2);
-                    if (folderName.isEmpty()) {
-                        folderName = "/";
+                for (String folderName : args.getWorkflowFolders()) {
+                    Folder f = new Folder();
+                    boolean recursive = false;
+                    if (folderName.endsWith("/*")) {
+                        folderName = folderName.substring(0, folderName.length() - 2);
+                        if (folderName.isEmpty()) {
+                            folderName = "/";
+                        }
+                        recursive = true;
                     }
-                    recursive = true;
+                    f.setFolder(folderName);
+                    f.setRecursive(recursive);
+                    ordersFilter.getFolders().add(f);
                 }
-                f.setFolder(folderName);
-                f.setRecursive(recursive);
-                ordersFilter.getFolders().add(f);
-            }
-            OrdersV list = orderStateWebserviceExecuter.getOrders(ordersFilter, accessToken);
-            if (list != null) {
-                listOfOrders.addAll(list.getOrders());
-            }
+                OrdersV list = orderStateWebserviceExecuter.getOrders(ordersFilter, accessToken);
+                if (list != null) {
+                    listOfOrders.addAll(list.getOrders());
+                }
 
-            Map<String, OrderV> mapOfOrders = new ConcurrentHashMap<String, OrderV>();
+                Map<String, OrderV> mapOfOrders = new ConcurrentHashMap<String, OrderV>();
 
-            for (OrderV order : listOfOrders) {
-                mapOfOrders.put(order.getOrderId(), order);
-            }
+                for (OrderV order : listOfOrders) {
+                    mapOfOrders.put(order.getOrderId(), order);
+                }
 
-            logger.info(mapOfOrders.size() + " " + args.getStateTransitionSource().toLowerCase() + " orders found");
-            ModifyOrders modifyOrders = new ModifyOrders();
-            modifyOrders.setControllerId(args.getControllerId());
+                logger.info(mapOfOrders.size() + " " + state.toLowerCase() + " orders found");
+                ModifyOrders modifyOrders = new ModifyOrders();
+                modifyOrders.setControllerId(args.getControllerId());
 
-            int count = mapOfOrders.size();
-            String action = args.getStateTransitionTarget().toLowerCase();
+                int count = mapOfOrders.size();
+                String action = args.getTransition().toLowerCase();
 
-            do {
-                for (OrderV order : mapOfOrders.values()) {
-                    modifyOrders.getOrderIds().add(order.getOrderId());
-                    mapOfOrders.remove(order.getOrderId());
-                    if (modifyOrders.getOrderIds().size() >= args.getBatchSize()) {
+                do {
+                    for (OrderV order : mapOfOrders.values()) {
+                        modifyOrders.getOrderIds().add(order.getOrderId());
+                        mapOfOrders.remove(order.getOrderId());
+                        if (modifyOrders.getOrderIds().size() >= args.getBatchSize()) {
+                            break;
+                        }
+                    }
+                    count = count - modifyOrders.getOrderIds().size();
+
+                    logger.info(" ");
+                    switch (args.getTransition()) {
+                    case CANCEL:
+                    case CANCELLED:
+                        orderStateWebserviceExecuter.cancelOrders(modifyOrders, accessToken);
+                        break;
+                    case SUSPEND:
+                        if (!OrderStateText.fromValue(state).equals(OrderStateText.FAILED) && !OrderStateText.fromValue(state).equals(OrderStateText.FINISHED)) {
+                            orderStateWebserviceExecuter.suspendOrders(modifyOrders, accessToken);
+                        }
+                        break;
+                    case INPROGRESS:
+                    case CONTINUE:
+                        if (OrderStateText.fromValue(state).equals(OrderStateText.PROMPTING)) {
+                            orderStateWebserviceExecuter.confirmOrders(modifyOrders, accessToken);
+                        } else {
+                            if (OrderStateText.fromValue(state).equals(OrderStateText.FAILED) || OrderStateText.fromValue(state).equals(
+                                    OrderStateText.SUSPENDED)) {
+                                orderStateWebserviceExecuter.resumeOrders(modifyOrders, accessToken);
+                            }
+                        }
+                        break;
+                    default:
                         break;
                     }
-                }
-                count = count - modifyOrders.getOrderIds().size();
-
-                logger.info(" ");
-                switch (args.getStateTransitionTarget()) {
-                case CANCELLED:
-                    orderStateWebserviceExecuter.cancelOrders(modifyOrders, accessToken);
-                    break;
-                case INPROGRESS:
-                    if (OrderStateText.fromValue(args.getStateTransitionSource()).equals(OrderStateText.PROMPTING)) {
-                        orderStateWebserviceExecuter.confirmOrders(modifyOrders, accessToken);
-
-                    } else {
-                        orderStateWebserviceExecuter.resumeOrders(modifyOrders, accessToken);
+                    logger.info(modifyOrders.getOrderIds().size() + " orders " + action);
+                    for (String order : modifyOrders.getOrderIds()) {
+                        logger.info(order + " " + action);
                     }
-                    break;
-                default:
-                    break;
-                }
-                logger.info(modifyOrders.getOrderIds().size() + " orders " + action);
-                for (String order : modifyOrders.getOrderIds()) {
-                    logger.info(order + " " + action);
-                }
-                modifyOrders.getOrderIds().clear();
-            } while (count > 0);
-
+                    modifyOrders.getOrderIds().clear();
+                } while (count > 0);
+            }
         } catch (Exception e) {
             logger.error(e);
             throw e;
