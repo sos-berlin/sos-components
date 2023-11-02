@@ -29,8 +29,10 @@ public class CheckLicense {
     public void execute() throws Exception {
         ApiExecutor apiExecutor = new ApiExecutor(logger);
         String accessToken = null;
+        
         exit = 0;
         body = "";
+
         subject = "";
         try {
             ApiResponse apiResponse = apiExecutor.login();
@@ -60,8 +62,12 @@ public class CheckLicense {
                 exit = 2;
             }
 
-            long timeUntilExpiration = js7LicenseInfo.getValidUntil().getTime() - now.getTime();
-            long daysMs = args.getValidityDays() * 1000 * 24 * 60 * 60;
+            long timeUntilExpiration = (js7LicenseInfo.getValidUntil().getTime() - now.getTime()) /(1000*24*60*60);
+            long daysMs = args.getValidityDays();
+            
+            logger.debug("now: " + now.getTime());
+            logger.debug("daysMs: " + daysMs);
+            logger.debug("timeUntilExpiration: " + timeUntilExpiration);
             if (timeUntilExpiration < daysMs) {
                 log("License Check warning: license will expire on " + js7LicenseInfo.getValidUntil());
                 subject = "JS7 JobScheduler Notification: license expiration warning";
