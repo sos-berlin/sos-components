@@ -91,6 +91,30 @@ public class OrderStateWebserviceExecuter {
         }
 
     }
+
+    public void suspendOrders(ModifyOrders modifyOrders, String accessToken) throws Exception {
+        if (modifyOrders.getOrderIds().size() > 0) {
+            String body = Globals.objectMapper.writeValueAsString(modifyOrders);
+            ApiResponse apiResponse = apiExecutor.post(accessToken, "/orders/suspend", body);
+            String answer = null;
+            if (apiResponse.getStatusCode() == 200) {
+                answer = apiResponse.getResponseBody();
+            } else {
+                if (apiResponse.getException() != null) {
+                    throw apiResponse.getException();
+                } else {
+                    throw new Exception(apiResponse.getResponseBody());
+                }
+
+            }
+            logger.debug(body);
+            logger.debug("answer=" + answer);
+        } else {
+            logger.info("Nothing to do. No orders found");
+        }
+
+    }
+
     public void confirmOrders(ModifyOrders modifyOrders, String accessToken) throws Exception {
         if (modifyOrders.getOrderIds().size() > 0) {
             String body = Globals.objectMapper.writeValueAsString(modifyOrders);
