@@ -63,7 +63,7 @@ public class CleanupService extends AJocActiveMemberService {
             LOGGER.info(String.format("[%s][%s]%s", getIdentifier(), mode, config.toString()));
             lastActivityEnd.set(new Date().getTime());
             if (config.getPeriod() == null || config.getPeriod().getWeekDays().size() == 0) {
-                LOGGER.error(String.format("[%s][%s][stop]missing \"%s\" parameter", getIdentifier(), mode,
+                LOGGER.info(String.format("[%s][%s][stop]missing \"%s\" parameter", getIdentifier(), mode,
                         CleanupServiceConfiguration.PROPERTY_NAME_PERIOD));
                 return JocCluster.getOKAnswer(JocClusterAnswerState.MISSING_CONFIGURATION);
             } else {
