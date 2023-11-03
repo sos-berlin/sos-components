@@ -152,10 +152,11 @@ public class InventorySearchDBLayer extends DBLayer {
     }
 
     public List<InventorySearchItem> getBasicSearchInventoryConfigurations(RequestSearchReturnType type, String search, List<String> folders,
-            Boolean unDeployedUnReleaseObjects, Boolean valid) throws SOSHibernateException {
+            List<String> tags, Boolean unDeployedUnReleaseObjects, Boolean valid) throws SOSHibernateException {
 
         boolean isReleasable = isReleasable(type);
         boolean searchInFolders = searchInFolders(folders);
+        boolean searchInTags = tags != null && !tags.isEmpty();
         boolean onlyUnDeployedUnReleaseObjects = unDeployedUnReleaseObjects == Boolean.TRUE;
 
         StringBuilder hql = new StringBuilder("select mt.id as id ");
@@ -181,6 +182,10 @@ public class InventorySearchDBLayer extends DBLayer {
             hql.append("left join ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh ");
             hql.append("on mt.id=dh.inventoryConfigurationId ");
         }
+        if (searchInTags) {
+            hql.append("left join ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg on tg.cid=mt.id ");
+            hql.append("left join ").append(DBLayer.DBITEM_INV_TAGS).append(" t on t.id=tg.tagId ");
+        }
         if (RequestSearchReturnType.CALENDAR.equals(type)) {
             hql.append("where mt.type in (:types) ");
         } else {
@@ -204,6 +209,13 @@ public class InventorySearchDBLayer extends DBLayer {
         if (searchInFolders) {
             hql.append("and (").append(foldersHql(folders)).append(") ");
         }
+        if (searchInTags) {
+            if (tags.size() == 1) {
+                hql.append("and t.name=:tag ");
+            } else {
+                hql.append("and t.name in (:tags) ");
+            }
+        }
         hql.append("group by mt.id,mt.path,mt.type,mt.folder,mt.name,mt.title,mt.valid,mt.deleted,mt.deployed,mt.released ");
 
         Query<InventorySearchItem> query = getSession().createQuery(hql.toString(), InventorySearchItem.class);
@@ -218,6 +230,13 @@ public class InventorySearchDBLayer extends DBLayer {
         if (searchInFolders) {
             foldersQueryParameters(query, folders);
         }
+        if (searchInTags) {
+            if (tags.size() == 1) {
+                query.setParameter("tag", tags.iterator().next());
+            } else {
+                query.setParameterList("tags", tags);
+            }
+        }
         if (tmpShowLog) {
             LOGGER.info("[getBasicSearchInventoryConfigurations]" + getSession().getSQLString(query));
         }
@@ -225,10 +244,11 @@ public class InventorySearchDBLayer extends DBLayer {
     }
 
     public List<InventorySearchItem> getBasicSearchDeployedOrReleasedConfigurations(RequestSearchReturnType type, String search, List<String> folders,
-            String controllerId) throws SOSHibernateException {
+            List<String> tags, String controllerId) throws SOSHibernateException {
 
         boolean isReleasable = isReleasable(type);
         boolean searchInFolders = searchInFolders(folders);
+        boolean searchInTags = tags != null && !tags.isEmpty();
 
         StringBuilder hql = new StringBuilder("select ");
         if (isReleasable) {
@@ -245,6 +265,10 @@ public class InventorySearchDBLayer extends DBLayer {
             hql.append(",1 as countReleased ");
             hql.append(",0 as countDeployed ");
             hql.append("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" mt ");
+            if (searchInTags) {
+                hql.append("left join ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg on tg.cid=mt.cid ");
+                hql.append("left join ").append(DBLayer.DBITEM_INV_TAGS).append(" t on t.id=tg.tagId ");
+            }
         } else {
             hql.append("mt.inventoryConfigurationId as id");
             hql.append(",mt.path as path");
@@ -260,6 +284,10 @@ public class InventorySearchDBLayer extends DBLayer {
             hql.append(",0 as countReleased ");
             hql.append(",1 as countDeployed ");
             hql.append("from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" mt ");
+            if (searchInTags) {
+                hql.append("left join ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg on tg.cid=mt.inventoryConfigurationId ");
+                hql.append("left join ").append(DBLayer.DBITEM_INV_TAGS).append(" t on t.id=tg.tagId ");
+            }
         }
         if (RequestSearchReturnType.CALENDAR.equals(type)) {
             hql.append("where mt.type in (:types) ");
@@ -279,6 +307,18 @@ public class InventorySearchDBLayer extends DBLayer {
         } else {
             controllerId = null;
         }
+        if (searchInTags) {
+            if (tags.size() == 1) {
+                hql.append("and t.name=:tag ");
+            } else {
+                hql.append("and t.name in (:tags) ");
+            }
+            if (isReleasable) {
+                hql.append("group by mt.cid,mt.path,mt.type,mt.folder,mt.name,mt.title");
+            } else {
+                hql.append("group by mt.inventoryConfigurationId,mt.path,mt.type,mt.folder,mt.name,mt.title,mt.controllerId");
+            }
+        }
 
         Query<InventorySearchItem> query = getSession().createQuery(hql.toString(), InventorySearchItem.class);
         if (RequestSearchReturnType.CALENDAR.equals(type)) {
@@ -294,6 +334,13 @@ public class InventorySearchDBLayer extends DBLayer {
         }
         if (controllerId != null) {
             query.setParameter("controllerId", controllerId);
+        }
+        if (searchInTags) {
+            if (tags.size() == 1) {
+                query.setParameter("tag", tags.iterator().next());
+            } else {
+                query.setParameterList("tags", tags);
+            }
         }
         if (tmpShowLog) {
             LOGGER.info("[getBasicSearchDeployedOrReleasedConfigurations]" + getSession().getSQLString(query));
@@ -328,16 +375,17 @@ public class InventorySearchDBLayer extends DBLayer {
     
     public List<InventorySearchItem> getAdvancedSearchInventoryConfigurations(RequestSearchReturnType type, String search,
             RequestSearchAdvancedItem advanced) throws SOSHibernateException {
-        return getAdvancedSearchInventoryConfigurations(type, search, null, null, null, advanced);
+        return getAdvancedSearchInventoryConfigurations(type, search, null, null, null, null, advanced);
     }
 
     // TODO merge all functions ...
     public List<InventorySearchItem> getAdvancedSearchInventoryConfigurations(RequestSearchReturnType type, String search, List<String> folders,
-            Boolean unDeployedUnReleaseObjects, Boolean valid, RequestSearchAdvancedItem advanced) throws SOSHibernateException {
+            List<String> tags, Boolean unDeployedUnReleaseObjects, Boolean valid, RequestSearchAdvancedItem advanced) throws SOSHibernateException {
 
         boolean isReleasable = isReleasable(type);
         boolean searchInFolders = searchInFolders(folders);
         boolean onlyUnDeployedUnReleaseObjects = unDeployedUnReleaseObjects == Boolean.TRUE;
+        boolean searchInTags = tags != null && !tags.isEmpty();
 
         StringBuilder hql = new StringBuilder("select mt.id as id ");
         hql.append(",mt.path as path ");
@@ -368,6 +416,10 @@ public class InventorySearchDBLayer extends DBLayer {
                 hql.append("on mt.id=sw.inventoryConfigurationId and mt.deployed=sw.deployed ");
             }
         }
+        if (searchInTags) {
+            hql.append("left join ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg on tg.cid=mt.cid ");
+            hql.append("left join ").append(DBLayer.DBITEM_INV_TAGS).append(" t on t.id=tg.tagId ");
+        }
         if (RequestSearchReturnType.CALENDAR.equals(type)) {
             hql.append("where mt.type in (:types) ");
         } else {
@@ -390,6 +442,13 @@ public class InventorySearchDBLayer extends DBLayer {
         }
         if (searchInFolders) {
             hql.append("and (").append(foldersHql(folders)).append(") ");
+        }
+        if (searchInTags) {
+            if (tags.size() == 1) {
+                hql.append("and t.name=:tag ");
+            } else {
+                hql.append("and t.name in (:tags) ");
+            }
         }
 
         /*------------------------*/
@@ -758,6 +817,13 @@ public class InventorySearchDBLayer extends DBLayer {
         if (searchInFolders) {
             foldersQueryParameters(query, folders);
         }
+        if (searchInTags) {
+            if (tags.size() == 1) {
+                query.setParameter("tag", tags.iterator().next());
+            } else {
+                query.setParameterList("tags", tags);
+            }
+        }
         /*------------------------*/
         if (fileOrderSource != null) {
             query.setParameter("fileOrderSource", '%' + fileOrderSource.toLowerCase() + '%');
@@ -862,10 +928,11 @@ public class InventorySearchDBLayer extends DBLayer {
     }
 
     public List<InventorySearchItem> getAdvancedSearchDeployedOrReleasedConfigurations(RequestSearchReturnType type, String search,
-            List<String> folders, RequestSearchAdvancedItem advanced, String controllerId) throws SOSHibernateException {
+            List<String> folders, List<String> tags, RequestSearchAdvancedItem advanced, String controllerId) throws SOSHibernateException {
 
         boolean isReleasable = isReleasable(type);
         boolean searchInFolders = searchInFolders(folders);
+        boolean searchInTags = tags != null && !tags.isEmpty();
 
         StringBuilder hql = new StringBuilder("select ");
         if (isReleasable) {
@@ -882,6 +949,10 @@ public class InventorySearchDBLayer extends DBLayer {
             hql.append(",1 as countReleased ");
             hql.append(",0 as countDeployed ");
             hql.append("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" mt ");
+            if (searchInTags) {
+                hql.append("left join ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg on tg.cid=mt.cid ");
+                hql.append("left join ").append(DBLayer.DBITEM_INV_TAGS).append(" t on t.id=tg.tagId ");
+            }
         } else {
             hql.append("mt.inventoryConfigurationId as id");
             hql.append(",mt.path as path");
@@ -904,6 +975,10 @@ public class InventorySearchDBLayer extends DBLayer {
                 hql.append("on mt.inventoryConfigurationId=sw.inventoryConfigurationId and sw.deployed=1 ");
                 hql.append("left join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS_DEPLOYMENT_HISTORY).append(" swdh ");
                 hql.append("on swdh.deploymentHistoryId=mt.id and swdh.searchWorkflowId=sw.id ");
+                if (searchInTags) {
+                    hql.append("left join ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg on tg.cid=mt.inventoryConfigurationId ");
+                    hql.append("left join ").append(DBLayer.DBITEM_INV_TAGS).append(" t on t.id=tg.tagId ");
+                }
             }
         }
         if (RequestSearchReturnType.CALENDAR.equals(type)) {
@@ -923,6 +998,14 @@ public class InventorySearchDBLayer extends DBLayer {
         controllerId = SOSString.isEmpty(controllerId) ? null : controllerId;
         if (!isReleasable && controllerId != null) {
             hql.append("and mt.controllerId=:controllerId ");
+        }
+
+        if (searchInTags) {
+            if (tags.size() == 1) {
+                hql.append("and t.name=:tag ");
+            } else {
+                hql.append("and t.name in (:tags) ");
+            }
         }
 
         /*------------------------*/
@@ -1310,6 +1393,14 @@ public class InventorySearchDBLayer extends DBLayer {
         default:
             break;
         }
+        
+        if (searchInTags) {
+            if (isReleasable) {
+                hql.append(" group by mt.cid,mt.path,mt.type,mt.folder,mt.name,mt.title ");
+            } else {
+                hql.append(" group by mt.inventoryConfigurationId,mt.path,mt.type,mt.folder,mt.name,mt.title,mt.controllerId ");
+            }
+        }
         Query<InventorySearchItem> query = getSession().createQuery(hql.toString(), InventorySearchItem.class);
         if (RequestSearchReturnType.CALENDAR.equals(type)) {
             query.setParameterList("types", JocInventory.getCalendarTypes());
@@ -1324,6 +1415,13 @@ public class InventorySearchDBLayer extends DBLayer {
         }
         if (controllerId != null) {
             query.setParameter("controllerId", controllerId);
+        }
+        if (searchInTags) {
+            if (tags.size() == 1) {
+                query.setParameter("tag", tags.iterator().next());
+            } else {
+                query.setParameterList("tags", tags);
+            }
         }
         /*------------------------*/
         if (fileOrderSource != null) {

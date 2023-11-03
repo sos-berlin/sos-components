@@ -22,6 +22,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "search",
     "folders",
+    "tags",
     "advanced"
 })
 public class RequestBaseSearchFilter {
@@ -37,6 +38,8 @@ public class RequestBaseSearchFilter {
     private String search;
     @JsonProperty("folders")
     private List<String> folders = new ArrayList<String>();
+    @JsonProperty("tags")
+    private List<String> tags = new ArrayList<String>();
     /**
      * Inventory advanced search
      * <p>
@@ -78,6 +81,16 @@ public class RequestBaseSearchFilter {
         this.folders = folders;
     }
 
+    @JsonProperty("tags")
+    public List<String> getTags() {
+        return tags;
+    }
+
+    @JsonProperty("tags")
+    public void setTags(List<String> tags) {
+        this.tags = tags;
+    }
+
     /**
      * Inventory advanced search
      * <p>
@@ -102,12 +115,12 @@ public class RequestBaseSearchFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("search", search).append("folders", folders).append("advanced", advanced).toString();
+        return new ToStringBuilder(this).append("search", search).append("folders", folders).append("tags", tags).append("advanced", advanced).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(search).append(folders).append(advanced).toHashCode();
+        return new HashCodeBuilder().append(search).append(folders).append(advanced).append(tags).toHashCode();
     }
 
     @Override
@@ -119,7 +132,7 @@ public class RequestBaseSearchFilter {
             return false;
         }
         RequestBaseSearchFilter rhs = ((RequestBaseSearchFilter) other);
-        return new EqualsBuilder().append(search, rhs.search).append(folders, rhs.folders).append(advanced, rhs.advanced).isEquals();
+        return new EqualsBuilder().append(search, rhs.search).append(folders, rhs.folders).append(advanced, rhs.advanced).append(tags, rhs.tags).isEquals();
     }
 
 }
