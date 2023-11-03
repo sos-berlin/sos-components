@@ -1,8 +1,10 @@
 package com.sos.jitl.jobs.orderstatustransition.classes;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.sos.jitl.jobs.orderstatustransition.OrderStateTransitionJobArguments;
@@ -44,8 +46,7 @@ public class OrderStateTransition {
 
     public void execute() throws Exception {
 
-        String states[] = args.getStates().split(",");
-
+        Map<String, OrdersV> resultsets = new HashMap<String, OrdersV>();
         ApiExecutor apiExecutor = new ApiExecutor(logger);
         String accessToken = null;
         List<OrderV> listOfOrders = new ArrayList<OrderV>();
@@ -55,7 +56,7 @@ public class OrderStateTransition {
 
             OrderStateWebserviceExecuter orderStateWebserviceExecuter = new OrderStateWebserviceExecuter(logger, apiExecutor);
 
-            for (String state : states) {
+            for (String state : args.getStates()) {
                 if (args.getWorkflowSearchPattern() != null && args.getWorkflowSearchPattern().size() > 0) {
                     for (String workflowPattern : args.getWorkflowSearchPattern()) {
                         OrdersFilterV ordersFilter = newOrdersFilterV(state);
@@ -103,13 +104,20 @@ public class OrderStateTransition {
                     ordersFilter.getFolders().add(f);
                 }
                 OrdersV list = orderStateWebserviceExecuter.getOrders(ordersFilter, accessToken);
+
                 if (list != null) {
-                    listOfOrders.addAll(list.getOrders());
+                    resultsets.put(state, list);
                 }
+            }
+
+            for (Entry<String, OrdersV> entry : resultsets.entrySet()) {
+
+                OrdersV list = entry.getValue();
+                String state = entry.getKey();
 
                 Map<String, OrderV> mapOfOrders = new ConcurrentHashMap<String, OrderV>();
 
-                for (OrderV order : listOfOrders) {
+                for (OrderV order : list.getOrders()) {
                     mapOfOrders.put(order.getOrderId(), order);
                 }
 
@@ -137,7 +145,8 @@ public class OrderStateTransition {
                         orderStateWebserviceExecuter.cancelOrders(modifyOrders, accessToken);
                         break;
                     case SUSPEND:
-                        if (!OrderStateText.fromValue(state).equals(OrderStateText.FAILED) && !OrderStateText.fromValue(state).equals(OrderStateText.FINISHED)) {
+                        if (!OrderStateText.fromValue(state).equals(OrderStateText.FAILED) && !OrderStateText.fromValue(state).equals(
+                                OrderStateText.FINISHED)) {
                             orderStateWebserviceExecuter.suspendOrders(modifyOrders, accessToken);
                         }
                         break;
@@ -162,6 +171,7 @@ public class OrderStateTransition {
                     modifyOrders.getOrderIds().clear();
                 } while (count > 0);
             }
+
         } catch (Exception e) {
             logger.error(e);
             throw e;

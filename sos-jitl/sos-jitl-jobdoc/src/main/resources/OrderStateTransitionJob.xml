@@ -17,8 +17,8 @@
             <param name="controller_id"
                    required="false">
                 <note>
-                    <title>The controller that controlls the order</title>
-                     Default: Actual controllerId
+                    <title>The identifier of a Controller can be specified to limit the resulting list of orders to the indicated Controller.</title>
+                     Default: Current Controller ID
                 </note>
             </param>
             <param name="states"
@@ -27,9 +27,15 @@
                     <title>The source order states</title>
                     <p>
 						
-<p>Possible values: pending,failed, suspended,waiting,inprogress,scheduled,prompting.</p>
-<p>The values can be a comma seperated list. Each state in the list is handled seperatly as e.g. the continue action for "prompting" is not the same as for "suspended"</p>
-                    </p>
+Possible values: pending, failed, suspended, waiting, inprogress, scheduled, prompting. Values can be specified in uppercase, lowercase or mixed letters.
+
+Values can be specified from a semicolon separated list. Each state in the list is handled separately, for example
+
+<ul>
+<li>the transition continue for prompting orders will move orders to the IN PROGRESS and possibly to the RUNNING state,</li>
+<li>the same transition for suspended orders will put orders to the state they had before being suspended.</li>
+</ul>                    
+</p>
                 </note>
             </param>
 
@@ -38,13 +44,13 @@
                 <note>
                     <title>The transition for the order state</title>
                     <p>
-Possible values: cancel, suspend, continue.<br/>
-cancel: Execute cancel for the orders<br/>
-continue: Execute resume for failed and suspended orders. Execute confirm for prompting orders.<br/>
-suspend: Execute suspend for the orders that are not failed and not finished<br/>
+Possible values:
 
- 
-
+<ul>
+<li>cancel: execute cancel operation on related orders</li>
+<li>continue: execute resume operation on failed and suspended orders. Execute confirm operation on prompting orders.</li>
+<li>suspend: execute suspend operation on orders that are not failed, not finished and not suspended.</li> 
+</ul>
                     </p>
                 </note>
             </param>
@@ -55,8 +61,9 @@ suspend: Execute suspend for the orders that are not failed and not finished<br/
                 <note>
                     <title>A list of workflow folders that contains the orders</title>
                     <p>
-                       Items sepearated by semicolon. When ending with /* the folder will be searched recursivly.
-Example: /folder/sub1;/another_folder/sub2/*
+                       A list of search patterns for names of workflow for which orders should be transitioned. The wildcard characters * (zero or more characters) and ? (a single character) can be used. If more than one search pattern is used then they are separated by semicolon.
+
+Examples: *myWorkflow*; my?orkflow
                     </p>
                 </note>
             </param>
@@ -65,8 +72,10 @@ Example: /folder/sub1;/another_folder/sub2/*
                 <note>
                     <title>A list of search patterns for workflow folders that contains the orders</title>
                     <p>
-                        Example: *myWorkflow*, my?orkflow
-                    </p>
+If more than one search pattern is used then they are separated by semicolon.
+
+Examples: *myWorkflow*; /folder/sub1/my?orkflow                    
+</p>
                 </note>
             </param>
             <param name="order_search_patterns"
@@ -74,7 +83,9 @@ Example: /folder/sub1;/another_folder/sub2/*
                 <note>
                     <title>A list of search patterns for order names. May contain a folder. Items sepearated by semicolon.</title>
                     <p>
- May contain a folder. Items sepearated by semicolon. Example: *myWorkflow*, /folder/sub1/my?orkflow
+If more than one search pattern is used then they are separated by semicolon.
+
+Examples: *myWorkflow*; /folder/sub1/my?orkflow
                      </p>
                 </note>
             </param>
@@ -83,14 +94,12 @@ Example: /folder/sub1;/another_folder/sub2/*
                 <note>
                     <title>The maximum number of orders for one request.</title>
                     <p>
- Default: 10000
- 
-  The number of orders that are transitioned in a single transaction. This includes that either all orders in a transaction are transitioned or none. If the number of orders  exceeds the batch size then a further transaction is executed. 
-  
-  If the value batch_size = 1 is used then each order is transitioned individually with a successful or failed result. 
-  
-  The batch size should not exceed a value of approx. 15000 in order to limit the size of requests to the Controller to approx. 4 MB which is a frequently applied limit of Proxy Servers that might be in place between the Agent running the job and JOC Cockpit.
-                       </p>
+Default: 10000
+						
+<p>The maximum number of orders that are processed in a single request.</p>
+<p>Orders are transitioned in a single transaction. This includes that either all orders in a transaction are transitioned or none. If the number of orders exceeds the batch size then a further transaction is executed.</p>
+<p>If the value 1 is used for the batch_size is used then each order is transitioned individually with a successful or failed result.</p>
+<p>The batch size should not exceed a value of approx. 15000 in order to limit the size of requests to the Controller to approx. 4 MB which is a frequently applied limit of Proxy Servers that might be in place between the Agent running the job and JOC Cockpit.                       </p></p>
                 </note>
             </param>
             <param name="persist_duration"
@@ -101,11 +110,6 @@ Example: /folder/sub1;/another_folder/sub2/*
 Available for FAILED orders.
 Example: 2d                     
 
-an ISO 8601 date format with the time offset and milliseconds being optional, e.g.
-YYYY-MM-DDThh:mm:ss[.s][Z (Z means +00)]
-YYYY-MM-DDThh:mm:ss[.s][+01:00]
-YYYY-MM-DDThh:mm:ss[.s][+0100]
-YYYY-MM-DDThh:mm:ss[.s][+01]
 a format for a period relative to the current time, e.g. 6h, 12h, 1d, 1w that specifies the quantity followed by a qualifier:
 s (seconds)
 m (minutes)
@@ -130,8 +134,16 @@ the value 0 indicates the current time
         <note>
             <title>What is the purpose of this job?</title>
             <p>
-                The job find orders with the given state_transition_source in the specified folders and resumes/cancel/suspend them.
-            </p>
+The JITL OrderStateTransitionJob template can be used to perform transitions on orders. Examples for state transitions include to
+
+continue orders from the FAILED state to the IN PROGRESS state and possibly to the RUNNING state in case of a JS7 - Job Instruction,
+continue orders from the SUSPENDED state to the state they had before being suspended.
+continue orders from the PROMPTING state to the IN PROGRESS state and possibly to the RUNNING state.
+
+The job template makes use of the JS7 - REST Web Service API to perform JS7 - Order State Transitions.
+
+The job template authenticates with the JS7 - REST Web Service API by use of user account/password and/or by use of a certificate, for details see JS7 - Authentication.
+For details about configuration items see JS7 - JITL Common Authentication.            </p>
         </note>
  
     </documentation>
