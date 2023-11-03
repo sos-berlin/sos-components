@@ -1,8 +1,10 @@
 package com.sos.jitl.jobs.orderstatustransition.classes;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.sos.jitl.jobs.orderstatustransition.OrderStateTransitionJobArguments;
@@ -44,6 +46,7 @@ public class OrderStateTransition {
 
     public void execute() throws Exception {
 
+        Map<String, OrdersV> resultsets = new HashMap<String, OrdersV>();
         ApiExecutor apiExecutor = new ApiExecutor(logger);
         String accessToken = null;
         List<OrderV> listOfOrders = new ArrayList<OrderV>();
@@ -101,13 +104,20 @@ public class OrderStateTransition {
                     ordersFilter.getFolders().add(f);
                 }
                 OrdersV list = orderStateWebserviceExecuter.getOrders(ordersFilter, accessToken);
+
                 if (list != null) {
-                    listOfOrders.addAll(list.getOrders());
+                    resultsets.put(state, list);
                 }
+            }
+
+            for (Entry<String, OrdersV> entry : resultsets.entrySet()) {
+
+                OrdersV list = entry.getValue();
+                String state = entry.getKey();
 
                 Map<String, OrderV> mapOfOrders = new ConcurrentHashMap<String, OrderV>();
 
-                for (OrderV order : listOfOrders) {
+                for (OrderV order : list.getOrders()) {
                     mapOfOrders.put(order.getOrderId(), order);
                 }
 
@@ -161,6 +171,7 @@ public class OrderStateTransition {
                     modifyOrders.getOrderIds().clear();
                 } while (count > 0);
             }
+
         } catch (Exception e) {
             logger.error(e);
             throw e;
