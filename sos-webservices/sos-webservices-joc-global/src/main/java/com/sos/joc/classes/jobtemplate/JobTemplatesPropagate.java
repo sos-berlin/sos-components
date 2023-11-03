@@ -322,11 +322,13 @@ public class JobTemplatesPropagate {
             return true;
         }
         if (jtRef.getHash() != null && jtRef.getHash().equals(jobTemplate.getHash())) {
-            jReport.setJobTemplatePath(jobTemplate.getPath());
-            jReport.setState(getState(JobReportStateText.UPTODATE, String.format(
-                    "Job '%s' is created from the job template '%s'. Updating the job is not necessary because version is up to date.", jobName,
-                    jobTemplate.getName())));
-            return false;
+            if (!overwriteValues && !withOptionalArgs) {
+                jReport.setJobTemplatePath(jobTemplate.getPath());
+                jReport.setState(getState(JobReportStateText.UPTODATE, String.format(
+                        "Job '%s' is created from the job template '%s'. Updating the job is not necessary because version is up to date.", jobName,
+                        jobTemplate.getName())));
+                return false;
+            }
         }
         if (!JOCResourceImpl.canAdd(jobTemplate.getPath(), permittedFolders)) {
             jReport.setState(getState(JobReportStateText.PERMISSION_DENIED, String.format("Job '%s' is created from the job template '%s'", jobName,
