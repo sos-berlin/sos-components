@@ -33,6 +33,7 @@ import com.sos.joc.event.bean.auditlog.AuditlogChangedEvent;
 import com.sos.joc.event.bean.auditlog.AuditlogWorkflowEvent;
 import com.sos.joc.event.bean.cluster.ActiveClusterChangedEvent;
 import com.sos.joc.event.bean.dailyplan.DailyPlanEvent;
+import com.sos.joc.event.bean.dailyplan.DailyPlanProjectionEvent;
 import com.sos.joc.event.bean.documentation.DocumentationEvent;
 import com.sos.joc.event.bean.history.HistoryOrderEvent;
 import com.sos.joc.event.bean.history.HistoryTaskEvent;
@@ -343,6 +344,15 @@ public class EventService {
             eventSnapshot.setMessage(evt.getDailyPlanDate());
             addEvent(eventSnapshot);
         }
+    }
+    
+    @Subscribe({ DailyPlanProjectionEvent.class })
+    public void createEvent(DailyPlanProjectionEvent evt) {
+        EventSnapshot eventSnapshot = new EventSnapshot();
+        eventSnapshot.setEventId(evt.getEventId() / 1000);
+        eventSnapshot.setEventType(evt.getKey());
+        eventSnapshot.setObjectType(EventType.DAILYPLAN);
+        addEvent(eventSnapshot);
     }
 
     @Subscribe({ NotificationCreated.class })

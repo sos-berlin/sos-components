@@ -280,11 +280,13 @@ public class DailyPlanProjectionsImpl extends JOCResourceImpl implements IDailyP
     }
     
     public static DBMissingDataException getDBMissingDataException() throws DBMissingDataException {
+        String errorMsg = "Couldn't find projections data. Please start a calculation of the projections.";
         if (DBLayerDailyPlanProjections.projectionsStart.isPresent()) {
-            return new DBMissingDataException("Couldn't find projections data. A calculation of the projections are in progress right now.");
-        } else {
-            return new DBMissingDataException("Couldn't find projections data. Please start a calculation of the projections.");
+            errorMsg = "Couldn't find projections data. A calculation of the projections are in progress right now.";
         }
+        DBMissingDataException e = new DBMissingDataException(errorMsg);
+        e.getError().setLogAsInfo(true);
+        return e;
     }
     
     private static void setYearsItem(DBItemDailyPlanProjection item, boolean nonPeriods, boolean withPeriods, boolean unPermittedSchedulesExist,
