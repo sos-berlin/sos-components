@@ -136,6 +136,10 @@ public class JobTemplatesPropagate {
         return template2Job(dbWorkflow, workflow, jobTemplates, dbLayer, now, dbAuditLog);
     }
     
+    private boolean forceUpdating() {
+        return withAdmissionTime || withNotification || overwriteValues || withOptionalArgs;
+    }
+    
     private WorkflowReport template2Job(String workflowPath, Workflow w, Map<String, JobTemplate> jobTemplates, Set<String> jobNames)
             throws JsonParseException, JsonMappingException, IOException {
         WorkflowReport wReport = new WorkflowReport();
@@ -322,7 +326,7 @@ public class JobTemplatesPropagate {
             return true;
         }
         if (jtRef.getHash() != null && jtRef.getHash().equals(jobTemplate.getHash())) {
-            if (!overwriteValues && !withOptionalArgs) {
+            if (!forceUpdating()) {
                 jReport.setJobTemplatePath(jobTemplate.getPath());
                 jReport.setState(getState(JobReportStateText.UPTODATE, String.format(
                         "Job '%s' is created from the job template '%s'. Updating the job is not necessary because version is up to date.", jobName,
