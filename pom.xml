@@ -682,6 +682,12 @@
         <groupId>org.glassfish.jersey.media</groupId>
         <artifactId>jersey-media-moxy</artifactId>
         <version>${jersey.glassfish.version}</version>
+        <exclusions>
+          <exclusion>
+            <artifactId>org.eclipse.parsson</artifactId>
+            <groupId>parsson</groupId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.glassfish.jersey.media</groupId>
@@ -805,6 +811,11 @@
         <groupId>com.networknt</groupId>
         <artifactId>json-schema-validator</artifactId>
         <version>${json.schema.validator.version}</version>
+      </dependency>
+      <dependency>
+        <artifactId>org.eclipse.parsson</artifactId>
+        <groupId>parsson</groupId>
+        <version>1.0.5</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
