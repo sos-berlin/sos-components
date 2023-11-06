@@ -468,6 +468,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
         agent.setAgentId(dbAgent.getAgentId());
         agent.setAgentName(dbAgent.getAgentName());
         agent.setControllerId(dbAgent.getControllerId());
+        agent.setProcessLimit(dbAgent.getProcessLimit());
         if (subagents == null) {
             agent.setSubagents(null);
             agent.setUrl(dbAgent.getUri());

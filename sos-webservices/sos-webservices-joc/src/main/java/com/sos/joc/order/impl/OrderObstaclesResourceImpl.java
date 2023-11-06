@@ -62,8 +62,10 @@ public class OrderObstaclesResourceImpl extends JOCResourceImpl implements IOrde
                     if (obstacle instanceof JOrderObstacle.WaitingForAdmission) {
                         ob.setType(ObstacleType.WaitingForAdmission);
                         ob.setUntil(Date.from(((JOrderObstacle.WaitingForAdmission) obstacle).until()));
-                    } else if (obstacle instanceof JOrderObstacle.JobParallelismLimitReached) {
+                    } else if (obstacle instanceof JOrderObstacle.JobProcessLimitReached) {
                         ob.setType(ObstacleType.JobParallelismLimitReached);
+                    } else if (obstacle instanceof JOrderObstacle.AgentProcessLimitReached) {
+                        ob.setType(ObstacleType.AgentProcessLimitReached);
                     } else if (obstacle instanceof JOrderObstacle.WorkflowSuspended) {
                         ob.setType(ObstacleType.WorkflowIsSuspended);
                     } else {

@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -42,7 +43,8 @@ public class AgentHelper {
         if (testMode) {
             return true;
         }
-        return JocClusterService.getInstance().getCluster() != null && JocClusterService.getInstance().getCluster().getConfig().getClusterModeResult().getUse();
+        return JocClusterService.getInstance().getCluster() != null && JocClusterService.getInstance().getCluster().getConfig().getClusterModeResult()
+                .getUse();
     }
 
     public static void throwJocMissingLicenseException() throws JocMissingLicenseException {
@@ -191,5 +193,9 @@ public class AgentHelper {
                 JocInventory.postEvent(event);
             }
         }
+    }
+    
+    public static OptionalInt getProcessLimit(Integer processLimit) {
+        return processLimit == null ? OptionalInt.empty() : OptionalInt.of(processLimit);
     }
 }

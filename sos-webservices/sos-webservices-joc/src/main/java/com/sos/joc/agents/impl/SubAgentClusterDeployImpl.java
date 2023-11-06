@@ -19,6 +19,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.agent.AgentHelper;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentCluster;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
@@ -115,6 +116,7 @@ public class SubAgentClusterDeployImpl extends JOCResourceImpl implements ISubAg
             if (updateAgentIds != null && !updateAgentIds.isEmpty()) {
                 InventoryAgentInstancesDBLayer dbLayer2 = new InventoryAgentInstancesDBLayer(connection);
                 for (String agentId : updateAgentIds) {
+                    DBItemInventoryAgentInstance dbAgent = dbLayer2.getAgentInstance(agentId);
                     List<DBItemInventorySubAgentInstance> subAgents = dbLayer2.getSubAgentInstancesByAgentId(agentId);
                     if (subAgents.isEmpty()) {
                         throw new JocBadRequestException("Agent Cluster '" + agentId + "' doesn't have Subagents");
@@ -127,7 +129,8 @@ public class SubAgentClusterDeployImpl extends JOCResourceImpl implements ISubAg
                     List<SubagentId> directors = subAgents.stream().filter(s -> directorTypes.contains(s.getDirectorAsEnum())).sorted(Comparator
                             .comparingInt(DBItemInventorySubAgentInstance::getIsDirector)).map(DBItemInventorySubAgentInstance::getSubAgentId).map(
                                     SubagentId::of).collect(Collectors.toList());
-                    updateItems.add(JUpdateItemOperation.addOrChangeSimple(JAgentRef.of(agentPath, directors)));
+                    updateItems.add(JUpdateItemOperation.addOrChangeSimple(JAgentRef.of(agentPath, directors, AgentHelper.getProcessLimit(dbAgent
+                            .getProcessLimit()))));
                     updateSubagentIds.addAll(directors.stream().map(SubagentId::string).collect(Collectors.toList()));
                 }
             }

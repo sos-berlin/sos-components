@@ -75,8 +75,11 @@ public class OrdersObstaclesResourceImpl extends JOCResourceImpl implements IOrd
                         ob.setType(ObstacleType.WaitingForAdmission);
                         ob.setUntil(Date.from(((JOrderObstacle.WaitingForAdmission) obstacle).until()));
                         obstacleSet.add(ob);
-                    } else if (obstacle instanceof JOrderObstacle.JobParallelismLimitReached) {
+                    } else if (obstacle instanceof JOrderObstacle.JobProcessLimitReached) {
                         ob.setType(ObstacleType.JobParallelismLimitReached);
+                        obstacleSet.add(ob);
+                    } else if (obstacle instanceof JOrderObstacle.AgentProcessLimitReached) {
+                        ob.setType(ObstacleType.AgentProcessLimitReached);
                         obstacleSet.add(ob);
                     } else if (obstacle instanceof JOrderObstacle.WorkflowSuspended) {
                         ob.setType(ObstacleType.WorkflowIsSuspended);
