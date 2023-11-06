@@ -48,8 +48,8 @@
     "returnCodeMeaning": {
       "$ref": "jobReturnCode-schema.json"
     },
-    "parallelism": {
-      "alias": "taskLimit",
+    "processLimit": {
+      "alias": "parallelism,taskLimit",
       "type": "integer",
       "minimum": 1,
       "default": 1

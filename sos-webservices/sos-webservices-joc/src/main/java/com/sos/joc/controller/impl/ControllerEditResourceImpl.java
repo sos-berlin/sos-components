@@ -369,6 +369,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                     dbAgent.setOsId(0L);
                     dbAgent.setStartedAt(null);
                     dbAgent.setUri(clusterWatcher.getUrl());
+                    dbAgent.setProcessLimit(null);
                     dbAgent.setVersion(null);
                     dbAgent.setTitle(null);
                     dbAgent.setOrdering(++position);
@@ -516,7 +517,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
     }
     
     private static JAgentRef createAgent(Agent a, SubagentId subagentId) {
-        return JAgentRef.of(AgentPath.of(a.getAgentId()), subagentId);
+        return JAgentRef.of(AgentPath.of(a.getAgentId()), Collections.singleton(subagentId), AgentHelper.getProcessLimit(a.getProcessLimit()));
     }
     
     private static JSubagentItem createSubagentDirector(Agent a, SubagentId subagentId) {

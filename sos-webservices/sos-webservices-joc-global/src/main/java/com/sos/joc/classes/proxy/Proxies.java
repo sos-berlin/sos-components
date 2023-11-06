@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
@@ -22,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
+import com.sos.joc.classes.agent.AgentHelper;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
@@ -492,6 +494,7 @@ public class Proxies {
                         controllerId), false, true);
                 for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
                     AgentPath agentPath = AgentPath.of(dbAgent.getAgentId());
+                    OptionalInt processLimit = AgentHelper.getProcessLimit(dbAgent.getProcessLimit());
                     JAgentRef jAgentRef = controllerKnownAgents.get(agentPath);
                     List<DBItemInventorySubAgentInstance> subs = subAgents.get(dbAgent.getAgentId());
                     if (subs == null || subs.isEmpty()) { // single agent
@@ -521,7 +524,7 @@ public class Proxies {
                             .getAgentId()), Uri.of(s.getUri()), s.getDisabled())).collect(Collectors.toList());
                     Set<SubagentId> directors = subs.stream().filter(s -> s.getIsDirector() > SubagentDirectorType.NO_DIRECTOR.intValue()).sorted()
                             .map(s -> SubagentId.of(s.getSubAgentId())).collect(Collectors.toSet());
-                    result.put(JAgentRef.of(agentPath, directors), subRefs);
+                    result.put(JAgentRef.of(agentPath, directors, processLimit), subRefs);
                 }
                 return result;
             }

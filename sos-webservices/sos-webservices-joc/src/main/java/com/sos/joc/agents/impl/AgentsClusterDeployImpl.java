@@ -81,6 +81,7 @@ public class AgentsClusterDeployImpl extends JOCResourceImpl implements IAgentsC
             Set<String> agentIds = agentParameter.getClusterAgentIds();
             if (agentIds != null) {
                 for (String agentId : agentIds) {
+                    DBItemInventoryAgentInstance dbAgent = dbLayer.getAgentInstance(agentId);
                     List<DBItemInventorySubAgentInstance> subAgents = dbLayer.getSubAgentInstancesByAgentId(agentId);
                     if (subAgents.isEmpty()) {
                         throw new JocBadRequestException("Agent Cluster '" + agentId + "' doesn't have Subagents");
@@ -93,14 +94,14 @@ public class AgentsClusterDeployImpl extends JOCResourceImpl implements IAgentsC
                     List<SubagentId> directors = subAgents.stream().filter(s -> directorTypes.contains(s.getDirectorAsEnum())).sorted(Comparator
                             .comparingInt(DBItemInventorySubAgentInstance::getIsDirector)).map(DBItemInventorySubAgentInstance::getSubAgentId).map(
                                     SubagentId::of).collect(Collectors.toList());
-                    updateItems.add(JUpdateItemOperation.addOrChangeSimple(JAgentRef.of(agentPath, directors)));
+                    updateItems.add(JUpdateItemOperation.addOrChangeSimple(JAgentRef.of(agentPath, directors, AgentHelper.getProcessLimit(dbAgent
+                            .getProcessLimit()))));
                     updateAgentIds.add(agentId);
 
                     updateItems.addAll(subAgents.stream().map(s -> JSubagentItem.of(SubagentId.of(s.getSubAgentId()), agentPath, Uri.of(s.getUri()), s
                             .getDisabled())).map(JUpdateItemOperation::addOrChangeSimple).collect(Collectors.toList()));
                     updateSubagentIds.addAll(subAgents.stream().map(DBItemInventorySubAgentInstance::getSubAgentId).collect(Collectors.toList()));
                     
-                    DBItemInventoryAgentInstance dbAgent = dbLayer.getAgentInstance(agentId);
                     if (dbAgent.getIsWatcher()) {
                         clusterWatcherUrls.add(dbAgent.getUri());
                     }

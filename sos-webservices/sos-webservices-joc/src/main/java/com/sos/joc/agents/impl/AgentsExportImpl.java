@@ -105,6 +105,7 @@ public class AgentsExportImpl extends JOCResourceImpl implements IAgentsExport {
         clAgent.setAgentName(agentInstance.getAgentName());
         clAgent.setAgentNameAliases(agentInstanceDbLayer.getAgentNamesByAgentIds(agentInstance.getAgentId()));
         clAgent.setControllerId(agentInstance.getControllerId());
+        clAgent.setProcessLimit(agentInstance.getProcessLimit());
         clAgent.setDeployed(agentInstance.getDeployed());
         clAgent.setDisabled(agentInstance.getDisabled());
         clAgent.setHidden(agentInstance.getHidden());
@@ -141,6 +142,7 @@ public class AgentsExportImpl extends JOCResourceImpl implements IAgentsExport {
         standalone.setAgentName(agentInstance.getAgentName());
         standalone.setAgentNameAliases(agentInstanceDbLayer.getAgentNamesByAgentIds(agentInstance.getAgentId()));
         standalone.setControllerId(agentInstance.getControllerId());
+        standalone.setProcessLimit(agentInstance.getProcessLimit());
         standalone.setDeployed(agentInstance.getDeployed());
         standalone.setDisabled(agentInstance.getDisabled());
         standalone.setHidden(agentInstance.getHidden());

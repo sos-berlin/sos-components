@@ -157,13 +157,13 @@ public class OrdersHelper {
                     put(Order.Forked.class, OrderStateText.WAITING);
                     put(Order.WaitingForLock$.class, OrderStateText.WAITING);
                     put(Order.BetweenCycles.class, OrderStateText.WAITING);
+                    put(Order.Ready$.class, OrderStateText.WAITING);
                     put(Order.Broken.class, OrderStateText.FAILED);
                     put(Order.Failed$.class, OrderStateText.FAILED);
                     put(Order.FailedInFork$.class, OrderStateText.FAILED);
                     put(Order.FailedWhileFresh$.class, OrderStateText.FAILED);
                     put(Order.Stopped$.class, OrderStateText.FAILED);
                     put(Order.StoppedWhileFresh$.class, OrderStateText.FAILED);
-                    put(Order.Ready$.class, OrderStateText.INPROGRESS);
                     put(Order.Processed$.class, OrderStateText.INPROGRESS);
                     put(Order.Processing.class, OrderStateText.RUNNING);
                     put(Order.Finished$.class, OrderStateText.FINISHED);
@@ -187,13 +187,13 @@ public class OrdersHelper {
             put("ExpectingNotices", OrderStateText.WAITING);
             put("WaitingForLock", OrderStateText.WAITING);
             put("BetweenCycles", OrderStateText.WAITING);
+            put("Ready", OrderStateText.WAITING);
             put("Broken", OrderStateText.FAILED);
             put("Failed", OrderStateText.FAILED);
             put("FailedInFork", OrderStateText.FAILED);
             put("FailedWhileFresh", OrderStateText.FAILED);
             put("Stopped", OrderStateText.FAILED);
             put("StoppedWhileFresh", OrderStateText.FAILED);
-            put("Ready", OrderStateText.INPROGRESS);
             put("Processed", OrderStateText.INPROGRESS);
             put("Processing", OrderStateText.RUNNING);
             put("Suspended", OrderStateText.SUSPENDED);
@@ -216,6 +216,7 @@ public class OrdersHelper {
             put("ExpectingNotices", OrderWaitingReason.EXPECTING_NOTICES); // TODO introduce plural in OrderWaitingReason??
             put("WaitingForLock", OrderWaitingReason.WAITING_FOR_LOCK);
             put("BetweenCycles", OrderWaitingReason.BETWEEN_CYCLES);
+            put("WaitingForAdmission", OrderWaitingReason.WAITING_FOR_ADMISSION);
         }
     });
 
@@ -334,7 +335,7 @@ public class OrdersHelper {
         return OrderStateText.PROMPTING.equals(getGroupedState(order.asScala().state().getClass()));
     }
 
-    public static OrderState getState(String state, Boolean isSuspended) {
+    public static OrderState getState(String state, Boolean isSuspended, boolean waitingForAdmission) {
         OrderState oState = new OrderState();
         OrderStateText groupedState = getGroupedState(state);
         if (isSuspended == Boolean.TRUE && !(OrderStateText.CANCELLED.equals(groupedState) || OrderStateText.FINISHED.equals(groupedState))) {
@@ -342,8 +343,12 @@ public class OrdersHelper {
         }
         oState.set_text(groupedState);
         oState.setSeverity(severityByGroupedStates.get(groupedState));
-        oState.set_reason(waitingReasons.get(state));
+        oState.set_reason(waitingForAdmission ? OrderWaitingReason.WAITING_FOR_ADMISSION : waitingReasons.get(state));
         return oState;
+    }
+    
+    public static OrderState getState(String state, Boolean isSuspended) {
+        return getState(state, isSuspended, false);
     }
 
     public static OrderState getHistoryState(OrderStateText st) {
@@ -462,7 +467,8 @@ public class OrdersHelper {
         Long scheduledFor = getScheduledForMillis(jOrder, zoneId);
         if (scheduledFor != null && surveyDateMillis != null && scheduledFor < surveyDateMillis && "Fresh".equals(oItem.getState().getTYPE())) {
             if (blockedButWaitingForAdmissionOrderIds != null && blockedButWaitingForAdmissionOrderIds.contains(jOrder.id())) {
-                o.setState(getState("Ready", oItem.getIsSuspended()));
+                // TODO set waiting reason
+                o.setState(getState("Ready", oItem.getIsSuspended(), true));
             } else {
                 o.setState(getState("Blocked", oItem.getIsSuspended()));
             }

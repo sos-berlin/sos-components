@@ -23,6 +23,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "agentId",
     "agentName",
     "orders",
+    "processLimit",
     "runningTasks",
     "isClusterWatcher"
 })
@@ -56,6 +57,14 @@ public class AgentTasks {
     private String agentName;
     @JsonProperty("orders")
     private List<AgentTaskOrder> orders = new ArrayList<AgentTaskOrder>();
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("processLimit")
+    private Integer processLimit;
     /**
      * non negative integer
      * <p>
@@ -152,6 +161,28 @@ public class AgentTasks {
      * non negative integer
      * <p>
      * 
+     * 
+     */
+    @JsonProperty("processLimit")
+    public Integer getProcessLimit() {
+        return processLimit;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("processLimit")
+    public void setProcessLimit(Integer processLimit) {
+        this.processLimit = processLimit;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
      * (Required)
      * 
      */
@@ -184,12 +215,12 @@ public class AgentTasks {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("agentName", agentName).append("orders", orders).append("runningTasks", runningTasks).append("isClusterWatcher", isClusterWatcher).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("agentName", agentName).append("orders", orders).append("processLimit", processLimit).append("runningTasks", runningTasks).append("isClusterWatcher", isClusterWatcher).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentId).append(controllerId).append(agentName).append(orders).append(isClusterWatcher).append(runningTasks).toHashCode();
+        return new HashCodeBuilder().append(agentId).append(processLimit).append(controllerId).append(agentName).append(orders).append(isClusterWatcher).append(runningTasks).toHashCode();
     }
 
     @Override
@@ -201,7 +232,7 @@ public class AgentTasks {
             return false;
         }
         AgentTasks rhs = ((AgentTasks) other);
-        return new EqualsBuilder().append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(agentName, rhs.agentName).append(orders, rhs.orders).append(isClusterWatcher, rhs.isClusterWatcher).append(runningTasks, rhs.runningTasks).isEquals();
+        return new EqualsBuilder().append(agentId, rhs.agentId).append(processLimit, rhs.processLimit).append(controllerId, rhs.controllerId).append(agentName, rhs.agentName).append(orders, rhs.orders).append(isClusterWatcher, rhs.isClusterWatcher).append(runningTasks, rhs.runningTasks).isEquals();
     }
 
 }

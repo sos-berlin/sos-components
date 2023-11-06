@@ -27,6 +27,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "subagentId",
     "url",
     "version",
+    "processLimit",
     "state",
     "healthState",
     "errorMessage",
@@ -80,6 +81,14 @@ public class AgentStateV {
     private String url;
     @JsonProperty("version")
     private String version;
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("processLimit")
+    private Integer processLimit;
     /**
      * component state
      * <p>
@@ -244,6 +253,28 @@ public class AgentStateV {
     }
 
     /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("processLimit")
+    public Integer getProcessLimit() {
+        return processLimit;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("processLimit")
+    public void setProcessLimit(Integer processLimit) {
+        this.processLimit = processLimit;
+    }
+
+    /**
      * component state
      * <p>
      * 
@@ -359,12 +390,12 @@ public class AgentStateV {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("agentName", agentName).append("subagentId", subagentId).append("url", url).append("version", version).append("state", state).append("healthState", healthState).append("errorMessage", errorMessage).append("orders", orders).append("runningTasks", runningTasks).append("isClusterWatcher", isClusterWatcher).append("disabled", disabled).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("agentName", agentName).append("subagentId", subagentId).append("url", url).append("version", version).append("processLimit", processLimit).append("state", state).append("healthState", healthState).append("errorMessage", errorMessage).append("orders", orders).append("runningTasks", runningTasks).append("isClusterWatcher", isClusterWatcher).append("disabled", disabled).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentId).append(controllerId).append(errorMessage).append(agentName).append(isClusterWatcher).append(version).append(url).append(healthState).append(subagentId).append(orders).append(disabled).append(state).append(runningTasks).toHashCode();
+        return new HashCodeBuilder().append(agentId).append(controllerId).append(errorMessage).append(agentName).append(isClusterWatcher).append(version).append(url).append(processLimit).append(healthState).append(subagentId).append(orders).append(disabled).append(state).append(runningTasks).toHashCode();
     }
 
     @Override
@@ -376,7 +407,7 @@ public class AgentStateV {
             return false;
         }
         AgentStateV rhs = ((AgentStateV) other);
-        return new EqualsBuilder().append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(errorMessage, rhs.errorMessage).append(agentName, rhs.agentName).append(isClusterWatcher, rhs.isClusterWatcher).append(version, rhs.version).append(url, rhs.url).append(healthState, rhs.healthState).append(subagentId, rhs.subagentId).append(orders, rhs.orders).append(disabled, rhs.disabled).append(state, rhs.state).append(runningTasks, rhs.runningTasks).isEquals();
+        return new EqualsBuilder().append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(errorMessage, rhs.errorMessage).append(agentName, rhs.agentName).append(isClusterWatcher, rhs.isClusterWatcher).append(version, rhs.version).append(url, rhs.url).append(processLimit, rhs.processLimit).append(healthState, rhs.healthState).append(subagentId, rhs.subagentId).append(orders, rhs.orders).append(disabled, rhs.disabled).append(state, rhs.state).append(runningTasks, rhs.runningTasks).isEquals();
     }
 
 }

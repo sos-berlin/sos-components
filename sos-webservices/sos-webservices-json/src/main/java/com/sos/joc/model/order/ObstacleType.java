@@ -11,6 +11,8 @@ public enum ObstacleType {
     OrderNotExisting("OrderNotExisting"),
     WaitingForAdmission("WaitingForAdmission"),
     JobParallelismLimitReached("JobParallelismLimitReached"),
+    JobProcessLimitReached("JobProcessLimitReached"),
+    AgentProcessLimitReached("AgentProcessLimitReached"),
     WorkflowIsSuspended("WorkflowIsSuspended");
     private final String value;
     private final static Map<String, ObstacleType> CONSTANTS = new HashMap<String, ObstacleType>();

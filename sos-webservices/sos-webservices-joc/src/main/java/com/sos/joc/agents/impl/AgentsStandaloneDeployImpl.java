@@ -19,6 +19,7 @@ import com.sos.joc.agents.resource.IAgentsStandaloneDeploy;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.agent.AgentHelper;
 import com.sos.joc.classes.proxy.ClusterWatch;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
@@ -158,7 +159,7 @@ public class AgentsStandaloneDeployImpl extends JOCResourceImpl implements IAgen
     }
     
     private static JAgentRef createAgent(DBItemInventoryAgentInstance a, SubagentId subagentId) {
-        return JAgentRef.of(AgentPath.of(a.getAgentId()), subagentId);
+        return JAgentRef.of(AgentPath.of(a.getAgentId()), Collections.singleton(subagentId), AgentHelper.getProcessLimit(a.getProcessLimit()));
     }
     
     private static JSubagentItem createSubagentDirector(DBItemInventoryAgentInstance a, SubagentId subagentId) {
