@@ -42,6 +42,9 @@ public class DBItemInventoryAgentInstance extends DBItem {
     @Column(name = "[CONTROLLER_ID]", nullable = false)
     private String controllerId;
     
+    @Column(name = "[PROCESS_LIMIT]", nullable = true)
+    private Integer processLimit;
+    
     @Column(name = "[ORDERING]", nullable = false)
     private Integer ordering;
     
@@ -129,6 +132,14 @@ public class DBItemInventoryAgentInstance extends DBItem {
 
     public void setControllerId(String val) {
         controllerId = val;
+    }
+    
+    public Integer getProcessLimit() {
+        return processLimit;
+    }
+
+    public void setProcessLimit(Integer val) {
+        processLimit = val;
     }
     
     public Integer getOrdering() {

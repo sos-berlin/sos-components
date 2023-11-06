@@ -116,6 +116,7 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
                     agent.setAgentId(dbAgent.getAgentId());
                     agent.setAgentName(dbAgent.getAgentName());
                     agent.setAgentNameAliases(allAliases.get(dbAgent.getAgentId()));
+                    agent.setProcessLimit(dbAgent.getProcessLimit());
                     //agent.setDisabled(dbAgent.getDisabled());
                     agent.setControllerId(dbAgent.getControllerId());
                     agent.setUrl(dbAgent.getUri());

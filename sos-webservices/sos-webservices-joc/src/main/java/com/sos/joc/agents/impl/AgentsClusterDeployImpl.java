@@ -1,15 +1,18 @@
 package com.sos.joc.agents.impl;
 
+
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
+
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+
 import com.sos.joc.Globals;
 import com.sos.joc.agents.resource.IAgentsClusterDeploy;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -17,6 +20,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.agent.AgentHelper;
 import com.sos.joc.classes.proxy.ControllerApi;
+
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.event.EventBus;
@@ -36,6 +40,7 @@ import js7.data.subagent.SubagentId;
 import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.item.JUpdateItemOperation;
 import js7.data_for_java.subagent.JSubagentItem;
+
 import reactor.core.publisher.Flux;
 
 @Path("agents")
@@ -69,10 +74,12 @@ public class AgentsClusterDeployImpl extends JOCResourceImpl implements IAgentsC
             List<JUpdateItemOperation> updateItems = new ArrayList<>();
             List<String> updateAgentIds = new ArrayList<>();
             List<String> updateSubagentIds = new ArrayList<>();
+
             
             Set<String> agentIds = agentParameter.getClusterAgentIds();
             if (agentIds != null) {
                 for (String agentId : agentIds) {
+                    DBItemInventoryAgentInstance dbAgent = dbLayer.getAgentInstance(agentId);
                     List<DBItemInventorySubAgentInstance> subAgents = dbLayer.getSubAgentInstancesByAgentId(agentId);
                     if (subAgents.isEmpty()) {
                         throw new JocBadRequestException("Agent Cluster '" + agentId + "' doesn't have Subagents");
@@ -85,13 +92,18 @@ public class AgentsClusterDeployImpl extends JOCResourceImpl implements IAgentsC
                     List<SubagentId> directors = subAgents.stream().filter(s -> directorTypes.contains(s.getDirectorAsEnum())).sorted(Comparator
                             .comparingInt(DBItemInventorySubAgentInstance::getIsDirector)).map(DBItemInventorySubAgentInstance::getSubAgentId).map(
                                     SubagentId::of).collect(Collectors.toList());
-                    updateItems.add(JUpdateItemOperation.addOrChangeSimple(JAgentRef.of(agentPath, directors)));
+                    updateItems.add(JUpdateItemOperation.addOrChangeSimple(JAgentRef.of(agentPath, directors, AgentHelper.getProcessLimit(dbAgent
+                            .getProcessLimit()))));
                     updateAgentIds.add(agentId);
 
                     updateItems.addAll(subAgents.stream().map(s -> JSubagentItem.of(SubagentId.of(s.getSubAgentId()), agentPath, Uri.of(s.getUri()), s
                             .getDisabled())).map(JUpdateItemOperation::addOrChangeSimple).collect(Collectors.toList()));
                     updateSubagentIds.addAll(subAgents.stream().map(DBItemInventorySubAgentInstance::getSubAgentId).collect(Collectors.toList()));
+
+
+
                 }
+
             }
             
             if (!updateItems.isEmpty()) {

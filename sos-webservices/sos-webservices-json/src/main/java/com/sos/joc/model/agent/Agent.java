@@ -27,6 +27,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "agentNameAliases",
     "url",
     "title",
+    "processLimit",
     "hidden",
     "disabled",
     "syncState",
@@ -82,6 +83,14 @@ public class Agent {
      */
     @JsonProperty("title")
     private String title;
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("processLimit")
+    private Integer processLimit;
     @JsonProperty("hidden")
     private Boolean hidden = false;
     @JsonProperty("disabled")
@@ -236,6 +245,28 @@ public class Agent {
         this.title = title;
     }
 
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("processLimit")
+    public Integer getProcessLimit() {
+        return processLimit;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("processLimit")
+    public void setProcessLimit(Integer processLimit) {
+        this.processLimit = processLimit;
+    }
+
     @JsonProperty("hidden")
     public Boolean getHidden() {
         return hidden;
@@ -322,12 +353,12 @@ public class Agent {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("agentName", agentName).append("agentNameAliases", agentNameAliases).append("url", url).append("title", title).append("hidden", hidden).append("disabled", disabled).append("syncState", syncState).append("deployed", deployed).append("ordering", ordering).append("version", version).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("agentName", agentName).append("agentNameAliases", agentNameAliases).append("url", url).append("title", title).append("processLimit", processLimit).append("hidden", hidden).append("disabled", disabled).append("syncState", syncState).append("deployed", deployed).append("ordering", ordering).append("version", version).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentId).append(controllerId).append(hidden).append(agentNameAliases).append(ordering).append(syncState).append(agentName).append(deployed).append(title).append(version).append(url).append(disabled).toHashCode();
+        return new HashCodeBuilder().append(agentId).append(controllerId).append(hidden).append(agentNameAliases).append(ordering).append(syncState).append(agentName).append(deployed).append(title).append(version).append(url).append(processLimit).append(disabled).toHashCode();
     }
 
     @Override
@@ -339,7 +370,7 @@ public class Agent {
             return false;
         }
         Agent rhs = ((Agent) other);
-        return new EqualsBuilder().append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(hidden, rhs.hidden).append(agentNameAliases, rhs.agentNameAliases).append(ordering, rhs.ordering).append(syncState, rhs.syncState).append(agentName, rhs.agentName).append(deployed, rhs.deployed).append(title, rhs.title).append(version, rhs.version).append(url, rhs.url).append(disabled, rhs.disabled).isEquals();
+        return new EqualsBuilder().append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(hidden, rhs.hidden).append(agentNameAliases, rhs.agentNameAliases).append(ordering, rhs.ordering).append(syncState, rhs.syncState).append(agentName, rhs.agentName).append(deployed, rhs.deployed).append(title, rhs.title).append(version, rhs.version).append(url, rhs.url).append(processLimit, rhs.processLimit).append(disabled, rhs.disabled).isEquals();
     }
 
 }

@@ -199,7 +199,7 @@ public class JsonSerializer {
             } else {
                 j.getAdditionalProperties().forEach((key, job) -> {
                     job.setFailOnErrWritten(defaultToNull(job.getFailOnErrWritten(), Boolean.FALSE));
-                    job.setParallelism(defaultToNull(job.getParallelism(), 1));
+                    //job.setProcessLimit(defaultToNull(job.getProcessLimit(), 1));
                     job.setDefaultArguments(emptyEnvToNullAndQuoteStrings(job.getDefaultArguments()));
                     emptyStringCollectionsToNull(job.getJobResourcePaths());
                     emptyExecutableToNull(job.getExecutable(), job.getReturnCodeMeaning());

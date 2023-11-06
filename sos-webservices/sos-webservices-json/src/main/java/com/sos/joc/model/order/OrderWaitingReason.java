@@ -12,6 +12,7 @@ public enum OrderWaitingReason {
     FORKED("FORKED"),
     EXPECTING_NOTICES("EXPECTING_NOTICES"),
     WAITING_FOR_LOCK("WAITING_FOR_LOCK"),
+    WAITING_FOR_ADMISSION("WAITING_FOR_ADMISSION"),
     BETWEEN_CYCLES("BETWEEN_CYCLES");
     private final String value;
     private final static Map<String, OrderWaitingReason> CONSTANTS = new HashMap<String, OrderWaitingReason>();
