@@ -29,6 +29,7 @@ public class InventorySearchDBLayerTest {
         try {
             String search = null;
             List<String> folders = new ArrayList<>();
+            List<String> tags = new ArrayList<>();
             folders.add("/x");
             folders.add("/ssh");
 
@@ -37,7 +38,8 @@ public class InventorySearchDBLayerTest {
             InventorySearchDBLayer dbLayer = new InventorySearchDBLayer(session);
             session.beginTransaction();
 
-            List<InventorySearchItem> items = dbLayer.getBasicSearchInventoryConfigurations(RequestSearchReturnType.WORKFLOW, search, folders, null, null);
+            List<InventorySearchItem> items = dbLayer.getBasicSearchInventoryConfigurations(RequestSearchReturnType.WORKFLOW, search, folders, tags,
+                    null, null);
             LOGGER.info("RESULT=" + items.size());
             for (InventorySearchItem item : items) {
                 LOGGER.info(SOSString.toString(item));
@@ -69,6 +71,7 @@ public class InventorySearchDBLayerTest {
         try {
             String search = null;
             List<String> folders = new ArrayList<>();
+            List<String> tags = new ArrayList<>();
             // folders.add("/x");
             // folders.add("/ssh");
 
@@ -96,7 +99,7 @@ public class InventorySearchDBLayerTest {
             // List<InventorySearchItem> items = dbLayer.getAdvancedSearchInventoryConfigurations(RequestSearchReturnType.FILEORDERSOURCE, search,
             // folders, advanced);
             List<InventorySearchItem> items = dbLayer.getAdvancedSearchDeployedOrReleasedConfigurations(RequestSearchReturnType.CALENDAR, search,
-                    folders, advanced, "js7.x");
+                    folders, tags, advanced, "js7.x");
             LOGGER.info("RESULT=" + items.size());
             for (InventorySearchItem item : items) {
                 LOGGER.info(SOSString.toString(item));
