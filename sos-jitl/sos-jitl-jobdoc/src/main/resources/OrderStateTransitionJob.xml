@@ -1,109 +1,106 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="js7_job_documentation_v1.1.xsl"?>
 <description xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
-             xmlns:xi="http://www.w3.org/2001/XInclude"
-             xmlns:xhtml="http://www.w3.org/1999/xhtml"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
-    <job name="OrderStateTransitionJob"
-         title="Transition order states"
-         category="Orders;JITL">
+   <job xmlns:xi="http://www.w3.org/2001/XInclude"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
+        name="OrderStateTransitionJob"
+        title="Transition order states"
+        category="Orders;JITL">
         <script language="java"
-                java_class="com.sos.jitl.jobs.orderstatustransition.OrderStateTransitionJob"
-                resource="1"/>
+              java_class="com.sos.jitl.jobs.orderstatustransition.OrderStateTransitionJob"
+              resource="1"/>
     </job>
-    <configuration>
-        <params id="job_parameter">
-            <param name="controller_id"
-                   required="false">
+   <configuration>
+      <params id="job_parameter">
+            <param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                name="controller_id"
+                required="false">
                 <note>
-                    <title>The identifier of a Controller can be specified to limit the resulting list of orders to the indicated Controller.</title>
-                     Default: Current Controller ID
+                    <title>The identifier of a Controller can be specified to limit the resulting list of orders to the indicated Controller</title>
+                    <p>Default: Current Controller ID</p>
                 </note>
             </param>
-            <param name="states"
-                   required="true">
+            <param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                name="states"
+                required="true">
                 <note>
-                    <title>The source order states</title>
-                    <p>
-						
-Possible values: pending, failed, suspended, waiting, inprogress, scheduled, prompting. Values can be specified in uppercase, lowercase or mixed letters.
-
-Values can be specified from a semicolon separated list. Each state in the list is handled separately, for example
-
-<ul>
-<li>the transition continue for prompting orders will move orders to the IN PROGRESS and possibly to the RUNNING state,</li>
-<li>the same transition for suspended orders will put orders to the state they had before being suspended.</li>
-</ul>                    
-</p>
-                </note>
-            </param>
-
-            <param name="transition"
-                   required="true">
-                <note>
-                    <title>The transition for the order state</title>
-                    <p>
-Possible values:
-
-<ul>
-<li>cancel: execute cancel operation on related orders</li>
-<li>continue: execute resume operation on failed and suspended orders. Execute confirm operation on prompting orders.</li>
-<li>suspend: execute suspend operation on orders that are not failed, not finished and not suspended.</li> 
-</ul>
+                    <title>The state of orders that should be transitioned</title>
+                    <p>Possible values: pending, failed, suspended, waiting, inprogress, scheduled, prompting. Values can be specified in uppercase, lowercase or mixed letters. 
+                       Values can be specified from a semicolon separated list. Each state in the list is handled separately, for example
+                        <ul>
+                            <li>the transition continue for prompting orders will move orders to the IN PROGRESS and possibly to the RUNNING state,</li>
+                            <li>the same transition for suspended orders will put orders to the state they had before being suspended.</li>
+                        </ul>
                     </p>
                 </note>
             </param>
-
-
-            <param name="workflow_folders"
-                   required="false">
+            <param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                name="transition"
+                required="true">
                 <note>
-                    <title>A list of workflow folders that contains the orders</title>
-                    <p>
-                       A list of search patterns for names of workflow for which orders should be transitioned. The wildcard characters * (zero or more characters) and ? (a single character) can be used. If more than one search pattern is used then they are separated by semicolon.
-
-Examples: *myWorkflow*; my?orkflow
+                    <title>The transition operation for the order</title>
+                    <p>Possible values are one of:
+                        <ul>
+                            <li>cancel: execute cancel operation on related orders</li>
+                            <li>continue: execute resume operation on failed and suspended orders. Execute confirm operation on prompting orders.</li>
+                            <li>suspend: execute suspend operation on orders that are not failed, not finished and not suspended.</li> 
+                        </ul>
                     </p>
                 </note>
             </param>
-            <param name="workflow_search_patterns"
-                   required="false">
+            <param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                name="workflow_folders"
+                required="false">
+                <note>
+                    <title>A list of folders that hold workflows for which orders should be transitioned</title>
+                    <p>If more than one folder is specified then folders are separated by semicolon. When used with the trailing characters /* then the folder will be looked up recursively. By default all folders will be looked up recursively.</p>
+                    <p>Examples: *myWorkflow*;my?orkflow</p>
+                </note>
+            </param>
+            <param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                name="workflow_search_patterns"
+                required="false">
                 <note>
                     <title>A list of search patterns for workflow folders that contains the orders</title>
-                    <p>
-If more than one search pattern is used then they are separated by semicolon.
-
-Examples: *myWorkflow*; /folder/sub1/my?orkflow                    
-</p>
+                    <p>If more than one search pattern is used then they are separated by semicolon.</p>
+                    <p>Examples: *myWorkflow*;/folder/sub1/my?orkflow</p>
                 </note>
             </param>
-            <param name="order_search_patterns"
-                   required="false">
+            <param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                name="order_search_patterns"
+                required="false">
                 <note>
-                    <title>A list of search patterns for order names. May contain a folder. Items sepearated by semicolon.</title>
-                    <p>
-If more than one search pattern is used then they are separated by semicolon.
-
-Examples: *myWorkflow*; /folder/sub1/my?orkflow
-                     </p>
+                    <title>A list of search patterns for order names</title>
+                    <p>If more than one search pattern is used then they are separated by semicolon.</p>
+                    <p>Examples: *myWorkflow*;/folder/sub1/my?orkflow</p>
                 </note>
             </param>
-            <param name="batch_size"
-                   required="false">
+            <param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                name="batch_size"
+                required="false">
                 <note>
-                    <title>The maximum number of orders for one request.</title>
-                    <p>
-Default: 10000
-						
-<p>The maximum number of orders that are processed in a single request.</p>
-<p>Orders are transitioned in a single transaction. This includes that either all orders in a transaction are transitioned or none. If the number of orders exceeds the batch size then a further transaction is executed.</p>
-<p>If the value 1 is used for the batch_size is used then each order is transitioned individually with a successful or failed result.</p>
-<p>The batch size should not exceed a value of approx. 15000 in order to limit the size of requests to the Controller to approx. 4 MB which is a frequently applied limit of Proxy Servers that might be in place between the Agent running the job and JOC Cockpit.                       </p></p>
+                    <title>The maximum number of orders for a single request.</title>
+                    <p>Default: 10000
+                        <p>The maximum number of orders that are processed in a single request.</p>
+                        <p>Orders are transitioned in a single transaction. This includes that either all orders in a transaction are transitioned or none. If the number of orders exceeds the batch size then a further transaction is executed.</p>
+                        <p>If the value 1 is used for the batch_size then each order is transitioned individually with a successful or failed result.</p>
+                        <p>The batch size should not exceed a value of approx. 15000 in order to limit the size of requests to the Controller to approx. 4 MB which is a frequently applied limit of Proxy Servers that might be in place between the Agent running the job and JOC Cockpit.                       </p>
+                    </p>
                 </note>
             </param>
-            <param name="persist_duration"
-                   required="false">
+            <param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                name="persist_duration"
+                required="false">
                 <note>
                     <title>The duration the order persists in the failed state.</title>
                     <p>
@@ -125,26 +122,23 @@ the value 0 indicates the current time
 </p>
                 </note>
             </param>
-        </params>
-        <params id="return_parameter">
-           
-        </params>
-    </configuration>
-    <documentation>
+      </params>
+   </configuration>
+   <documentation xmlns:xi="http://www.w3.org/2001/XInclude"
+                  xmlns:xhtml="http://www.w3.org/1999/xhtml">
         <note>
             <title>What is the purpose of this job?</title>
+            <p>The JITL OrderStateTransitionJob template can be used to perform state transitions on orders. Examples for state transitions include to</p>
             <p>
-The JITL OrderStateTransitionJob template can be used to perform transitions on orders. Examples for state transitions include to
-
-continue orders from the FAILED state to the IN PROGRESS state and possibly to the RUNNING state in case of a JS7 - Job Instruction,
-continue orders from the SUSPENDED state to the state they had before being suspended.
-continue orders from the PROMPTING state to the IN PROGRESS state and possibly to the RUNNING state.
-
-The job template makes use of the JS7 - REST Web Service API to perform JS7 - Order State Transitions.
-
-The job template authenticates with the JS7 - REST Web Service API by use of user account/password and/or by use of a certificate, for details see JS7 - Authentication.
-For details about configuration items see JS7 - JITL Common Authentication.            </p>
+                <ul>
+                    <li>continue orders from the FAILED state to the IN PROGRESS state and possibly to the RUNNING state in case of a JS7 - Job Instruction,</li>
+                    <li>continue orders from the SUSPENDED state to the state they had before being suspended.</li>
+                    <li>continue orders from the PROMPTING state to the IN PROGRESS state and possibly to the RUNNING state.</li>
+                </ul>
+            </p>
+            <p>The job template makes use of the JS7 REST Web Service API to perform transitions, see "JS7 - Order State Transitions" article.</p>
+            <p>The job template authenticates with the JS7 - REST Web Service API by use of user account/password and/or by use of a certificate, for details see "JS7 - Authentication" article.
+               For details about configuration items see "JS7 - JITL Common Authentication" article.</p>
         </note>
- 
     </documentation>
 </description>
