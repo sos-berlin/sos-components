@@ -516,6 +516,9 @@ public class GitCommandUtils {
                 LOGGER.debug("remote URL from git remote -v command: " + knownRemoteUri);
                 if(knownRemoteUri.startsWith("git@")) {
                     // ssh
+                    if(credList == null) {
+                        throw new JocGitException("No git credentials configured for the current user.");
+                    }
                     if(credList.getRemoteUrls().contains(knownRemoteUri)) {
                         remoteUri = knownRemoteUri;
                     }
