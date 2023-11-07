@@ -100,6 +100,9 @@ public class AgentStoreUtils {
                     if (!dbAgent.getUri().equals(agentFound.getUrl())) {
                         dbAgent.setDeployed(false);
                     }
+                    if (!Optional.ofNullable(dbAgent.getProcessLimit()).equals(Optional.ofNullable(agentFound.getProcessLimit()))) {
+                        dbAgent.setDeployed(false);
+                    }
                     dbAgent.setUri(agentFound.getUrl());
                     dbAgent.setProcessLimit(agentFound.getProcessLimit());
                     dbLayer.updateAgent(dbAgent);
@@ -182,6 +185,9 @@ public class AgentStoreUtils {
                 dbAgent.setHidden(agent.getHidden());
                 dbAgent.setAgentName(agent.getAgentName());
                 dbAgent.setTitle(agent.getTitle());
+                if (!Optional.ofNullable(dbAgent.getProcessLimit()).equals(Optional.ofNullable(agent.getProcessLimit()))) {
+                    dbAgent.setDeployed(false);
+                }
                 dbAgent.setProcessLimit(agent.getProcessLimit());
                 agentNamesAndAliases.add(dbAgent.getAgentName());
                 agentDbLayer.updateAgent(dbAgent);
