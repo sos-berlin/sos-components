@@ -149,6 +149,43 @@ public class DeployedConfigurationDBLayer {
         }
         return session.getResultList(query);
     }
+    
+    public List<String> getDeployedWorkflowPathsByTags(String controllerId, Collection<String> tags)
+            throws SOSHibernateException {
+        if (tags == null || tags.isEmpty()) {
+            return Collections.emptyList();
+        }
+        StringBuilder hql = new StringBuilder("select c.path from ");
+        hql.append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" c ");
+        hql.append("left join ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg ");
+        hql.append("on c.inventoryConfigurationId=tg.cid ");
+        hql.append("left join ").append(DBLayer.DBITEM_INV_TAGS).append(" t ");
+        hql.append("on t.id=tg.tagId ");
+        List<String> whereClause = new ArrayList<>();
+        whereClause.add("c.type=:type");
+        if (SOSString.isEmpty(controllerId)) {
+            controllerId = null;
+        } else {
+            whereClause.add("c.controllerId = :controllerId");
+        }
+        whereClause.add("t.name in (:tags)");
+        if (!whereClause.isEmpty()) {
+            hql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
+        }
+        hql.append(" group by c.path");
+
+        Query<String> query = session.createQuery(hql.toString());
+        query.setParameter("type", DeployType.WORKFLOW.intValue());
+        query.setParameterList("tags", tags);
+        if (controllerId != null) {
+            query.setParameter("controllerId", controllerId);
+        }
+        List<String> result = session.getResultList(query);
+        if (result == null) {
+            return Collections.emptyList();
+        }
+        return result;
+    }
 
     public DeployedContent getDeployedInventory(String controllerId, Integer type, String path) throws DBConnectionRefusedException,
             DBInvalidDataException {
