@@ -21,7 +21,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "path",
     "name",
-    "objectType"
+    "objectType",
+    "ordering"
 })
 public class ResponseBaseSearchItem {
 
@@ -53,6 +54,8 @@ public class ResponseBaseSearchItem {
      */
     @JsonProperty("objectType")
     private ConfigurationType objectType;
+    @JsonProperty("ordering")
+    private Integer ordering;
 
     /**
      * path
@@ -124,6 +127,16 @@ public class ResponseBaseSearchItem {
     @JsonProperty("objectType")
     public void setObjectType(ConfigurationType objectType) {
         this.objectType = objectType;
+    }
+    
+    @JsonProperty("ordering")
+    public Integer getOrdering() {
+        return ordering;
+    }
+
+    @JsonProperty("ordering")
+    public void setOrdering(Integer ordering) {
+        this.ordering = ordering;
     }
 
     @Override
