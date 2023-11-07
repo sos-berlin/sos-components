@@ -2,6 +2,7 @@ package com.sos.joc.dailyplan.common;
 
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -24,6 +25,7 @@ import com.sos.joc.dailyplan.db.DBLayerDailyPlannedOrders;
 import com.sos.joc.dailyplan.db.FilterDailyPlannedOrders;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanWithHistory;
+import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.CyclicOrderInfos;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
@@ -79,6 +81,15 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
         
         boolean hasPermission = true;
+        
+        if (in.getTags() != null && !in.getTags().isEmpty()) {
+            if (in.getWorkflowPaths() == null) {
+                in.setWorkflowPaths(getWorkflowPathsFromTags(in.getTags(), controllerId));
+            } else {
+                in.getWorkflowPaths().addAll(getWorkflowPathsFromTags(in.getTags(), controllerId));
+                in.setWorkflowPaths(in.getWorkflowPaths().stream().distinct().collect(Collectors.toList()));
+            }
+        }
 
         if(!evalPermissions) {
             if(in.getSchedulePaths() != null && !in.getSchedulePaths().isEmpty()) {
@@ -306,5 +317,19 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
             date = "0d";
         }
         return JobSchedulerDate.getDateFrom(date, "UTC");
+    }
+    
+    private static List<String> getWorkflowPathsFromTags(Set<String> tags, String controllerId) throws SOSHibernateException {
+        if (tags == null || tags.isEmpty()) {
+            return Collections.emptyList();
+        }
+        SOSHibernateSession session = null;
+        try {
+            session = Globals.createSosHibernateStatelessConnection("getWorkflowPathsFromTags");
+            DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
+            return dbLayer.getDeployedWorkflowPathsByTags(controllerId, tags);
+        } finally {
+            Globals.disconnect(session);
+        }
     }
 }
