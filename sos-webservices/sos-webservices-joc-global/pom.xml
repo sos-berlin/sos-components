@@ -157,6 +157,10 @@
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
 		</dependency>
+    <dependency>
+      <groupId>org.eclipse.parsson</groupId>
+      <artifactId>parsson</artifactId>
+    </dependency>
 	</dependencies>
 
 </project>
