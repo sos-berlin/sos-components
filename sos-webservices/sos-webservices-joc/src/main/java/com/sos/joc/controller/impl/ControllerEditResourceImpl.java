@@ -2,25 +2,20 @@ package com.sos.joc.controller.impl;
 
 import java.time.Instant;
 import java.util.ArrayList;
-
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-
 import java.util.Objects;
-
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-
 import com.sos.controller.model.command.Overview;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.classes.JOCResourceImpl;
-
 import com.sos.joc.classes.agent.AgentHelper;
 import com.sos.joc.classes.controller.ControllerAnswer;
 import com.sos.joc.classes.controller.ControllerCallable;
@@ -35,11 +30,9 @@ import com.sos.joc.db.cluster.JocInstancesDBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
-
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
-
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -50,7 +43,6 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.exceptions.JocServiceException;
 import com.sos.joc.joc.impl.StateImpl;
-
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.controller.ConnectionStateText;
@@ -63,11 +55,8 @@ import com.sos.joc.model.controller.TestConnect;
 import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
 
-
 import jakarta.ws.rs.Path;
-
 import js7.proxy.javaapi.JControllerApi;
-
 
 @Path("controller")
 public class ControllerEditResourceImpl extends JOCResourceImpl implements IControllerEditResource {
@@ -97,7 +86,6 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             }
             
             if (body.getControllers().size() == 2) {
-
                 AgentHelper.throwJocMissingLicenseException("missing license for Controller cluster");
             }
             
@@ -142,7 +130,6 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_REGISTER);
             InventoryInstancesDBLayer instanceDBLayer = new InventoryInstancesDBLayer(connection);
-
             
             if (!requestWithEmptyControllerId) { // try update controllers with given controllerId
                 Integer securityLevel = instanceDBLayer.getSecurityLevel(controllerId);
@@ -153,7 +140,6 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 }
             }
             
-
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getControllers()
                     .getManage());
             if (jocDefaultResponse != null) {
@@ -167,7 +153,6 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             DBItemInventoryOperatingSystem osSystem = null;
                         
             boolean firstController = instanceDBLayer.isEmpty();
-
             
             // sorted by isPrimary first
             List<DBItemInventoryJSInstance> dbControllers = instanceDBLayer.getInventoryInstancesByControllerId(controllerId);
@@ -215,7 +200,6 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 } else { // cluster from request
                     if (dbControllers.size() == 1) { // but standalone in DB
                         instanceDBLayer.deleteInstance(dbControllers.get(0));
-
                         for (RegisterParameter controller : body.getControllers()) {
                             instances.add(storeNewInventoryInstance(instanceDBLayer, osDBLayer, controller, controllerId));
                         }
@@ -230,7 +214,6 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                                 if (controller.getClusterUrl() == null) {
                                     controller.setClusterUrl(controller.getUrl());
                                 }
-
                                 instance = setInventoryInstance(dbControllers.get(0), controller, controllerId);
                             } else {
                                 if (!uriChanged) {
@@ -239,7 +222,6 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                                 if (controller.getClusterUrl() == null) {
                                     controller.setClusterUrl(controller.getUrl());
                                 }
-
                                 instance = setInventoryInstance(dbControllers.get(1), controller, controllerId);
                             }
                             instances.add(instance);
@@ -258,20 +240,14 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 }
             }
             
-
-                    dbAgent.setProcessLimit(null);
-
                 
             instances = instances.stream().filter(Objects::nonNull).collect(Collectors.toList());
-
             if (!instances.isEmpty()) {
                 ProxiesEdit.update(instances);
-
             }
             
             JControllerApi controllerApi = null;
             
-
             if (dbControllers.size() == 2) {
                 try {
                     controllerApi = ControllerApi.of(controllerId);
@@ -281,7 +257,6 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 }
             }
             
-
             if (firstController) { // GUI needs permissions directly for the first controller(s)
                 return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(getJobschedulerUser().getSOSAuthCurrentAccount()
                         .getSosPermissionJocCockpitControllers()));
@@ -297,9 +272,6 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             Globals.disconnect(connection);
         }
     }
-
-
-
     
     @Override
     public JOCDefaultResponse deleteController(String accessToken, byte[] filterBytes) {

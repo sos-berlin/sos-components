@@ -5,21 +5,17 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
-
 import java.util.List;
 import java.util.Map;
-
 import java.util.stream.Collectors;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-
 import com.sos.joc.Globals;
 import com.sos.joc.agents.resource.IAgentsStandaloneDeploy;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.agent.AgentHelper;
-
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
@@ -91,17 +87,14 @@ public class AgentsStandaloneDeployImpl extends JOCResourceImpl implements IAgen
                 Map<AgentPath, JAgentRef> knownAgents = currentState.pathToAgentRef();
                 for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
                     JAgentRef agentRef = knownAgents.get(AgentPath.of(dbAgent.getAgentId()));
-
                     SubagentId subagentId = agentRef != null && !agentRef.directors().isEmpty() ? agentRef.directors().get(0) : SubagentId.of(dbAgent
                             .getAgentId());
                     agentRefs.add(JUpdateItemOperation.addOrChangeSimple(createAgent(dbAgent, subagentId)));
                     agentRefs.add(JUpdateItemOperation.addOrChangeSimple(createSubagentDirector(dbAgent, subagentId)));
                     updateAgentIds.add(dbAgent.getAgentId());
-
                 }
             }
 
-            
             if (!agentRefs.isEmpty()) {
                 proxy.api().updateItems(Flux.fromIterable(agentRefs)).thenAccept(e -> {
                     ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), null);

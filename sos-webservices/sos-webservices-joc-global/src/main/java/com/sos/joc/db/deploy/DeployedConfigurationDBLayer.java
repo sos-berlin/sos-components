@@ -35,6 +35,7 @@ import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.db.deploy.items.NumOfDeployment;
 import com.sos.joc.db.inventory.items.InventoryNamePath;
 import com.sos.joc.db.inventory.items.InventoryQuickSearchItem;
+import com.sos.joc.db.inventory.items.InventoryTagItem;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.common.Folder;
@@ -82,6 +83,56 @@ public class DeployedConfigurationDBLayer {
         }
 
         Query<InventoryQuickSearchItem> query = session.createQuery(hql.toString(), InventoryQuickSearchItem.class);
+        if (types != null && !types.isEmpty()) {
+            if (types.size() > 1) {
+                query.setParameterList("types", types);
+            } else {
+                query.setParameter("type", types.iterator().next());
+            }
+        }
+        if (search != null) {
+            // (only) on the right hand side always %
+            query.setParameter("search", SearchStringHelper.globToSqlPattern(search.toLowerCase() + '%').replaceAll("%%+", "%"));
+        }
+        if (controllerId != null) {
+            query.setParameter("controllerId", controllerId);
+        }
+        return session.getResultList(query);
+    }
+    
+    public List<InventoryTagItem> getTagSearch(String controllerId, Collection<Integer> types, String search)
+            throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select c.folder as folder, t.name as name, t.ordering as ordering from ");
+        hql.append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" c ");
+        hql.append("left join ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg ");
+        hql.append("on c.inventoryConfigurationId=tg.cid ");
+        hql.append("left join ").append(DBLayer.DBITEM_INV_TAGS).append(" t ");
+        hql.append("on t.id=tg.tagId ");
+        List<String> whereClause = new ArrayList<>();
+        if (types != null && !types.isEmpty()) {
+            if (types.size() > 1) {
+                whereClause.add("c.type in (:types)");
+            } else {
+                whereClause.add("c.type=:type");
+            }
+        }
+        if (SOSString.isEmpty(search) || search.equals("*")) {
+            search = null;
+            whereClause.add("t.name is not null");
+        } else {
+            whereClause.add("lower(t.name) like :search");
+        }
+        if (SOSString.isEmpty(controllerId)) {
+            controllerId = null;
+        } else {
+            whereClause.add("c.controllerId = :controllerId");
+        }
+        if (!whereClause.isEmpty()) {
+            hql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
+        }
+        hql.append(" group by c.folder,t.name,t.ordering");
+
+        Query<InventoryTagItem> query = session.createQuery(hql.toString(), InventoryTagItem.class);
         if (types != null && !types.isEmpty()) {
             if (types.size() > 1) {
                 query.setParameterList("types", types);
