@@ -43,7 +43,7 @@
     <junit.version>4.13.1</junit.version>
     <slf4j.version>1.7.36</slf4j.version>
     <javassist.version>3.29.2-GA</javassist.version>
-    <log4j2.version>2.20.0</log4j2.version>
+    <log4j2.version>2.21.1</log4j2.version>
     <commons.io.version>2.11.0</commons.io.version>
     <apache.commons.lang.version>3.12.0</apache.commons.lang.version>
     <apache.commons.compress.version>1.24.0</apache.commons.compress.version>
@@ -726,8 +726,8 @@
         <version>${jersey.glassfish.version}</version>
         <exclusions>
           <exclusion>
-            <artifactId>org.eclipse.parsson</artifactId>
-            <groupId>parsson</groupId>
+            <groupId>org.eclipse.parsson</groupId>
+            <artifactId>parsson</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -855,8 +855,8 @@
         <version>${json.schema.validator.version}</version>
       </dependency>
       <dependency>
-        <artifactId>org.eclipse.parsson</artifactId>
-        <groupId>parsson</groupId>
+        <groupId>org.eclipse.parsson</groupId>
+        <artifactId>parsson</artifactId>
         <version>1.0.5</version>
       </dependency>
     </dependencies>
