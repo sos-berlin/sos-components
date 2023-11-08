@@ -1482,7 +1482,8 @@ public class InventoryDBLayer extends DBLayer {
         hql.append("where ic.type=:type ");
         hql.append("and ic.deployed=sw.deployed ");
         hql.append("and ");
-        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "sw.instructions", "$.locks.\"" + lockName + "\"")).append(" is not null");
+        String jsonPath = needQuotes() ? "$.locks.\"" + lockName + "\"" : "$.locks." + lockName;
+        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "sw.instructions", jsonPath)).append(" is not null");
 
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("type", ConfigurationType.WORKFLOW.intValue());
@@ -1497,8 +1498,8 @@ public class InventoryDBLayer extends DBLayer {
         // TODO: JOC-1590: "deployed" is not in sync between tables, therefore deployed workflows are missing in response of ./job_templates/used
 //        hql.append("and ic.deployed=sw.deployed ");
         hql.append("and ");
-        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.jobs", "$.jobTemplates.\"" + jobTemplateName + "\"")).append(
-                " is not null");
+        String jsonPath = needQuotes() ? "$.jobTemplates.\"" + jobTemplateName + "\"" : "$.jobTemplates." + jobTemplateName;
+        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.jobs", jsonPath)).append(" is not null");
 
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("type", ConfigurationType.WORKFLOW.intValue());
@@ -1530,8 +1531,11 @@ public class InventoryDBLayer extends DBLayer {
             hql.append("and ic.folder=:folder ");
         }
         if (!jobTemplateNames.isEmpty()) {
-            String jtHql = jobTemplateNames.stream().map(jobTemplateName -> SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.jobs",
-                    "$.jobTemplates.\"" + jobTemplateName + "\"") + " is not null").collect(Collectors.joining(" or ")).trim();
+            
+            String jtHql = jobTemplateNames.stream().map(jobTemplateName -> {
+                String jsonPath = needQuotes() ? "$.jobTemplates.\"" + jobTemplateName + "\"" : "$.jobTemplates." + jobTemplateName;
+                return SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.jobs", jsonPath) + " is not null";
+            }).collect(Collectors.joining(" or ")).trim();
             if (!jtHql.isEmpty()) {
                 hql.append("and (").append(jtHql).append(")");
             }
@@ -1633,7 +1637,7 @@ public class InventoryDBLayer extends DBLayer {
             hql.append("and ic.valid=0 ");
         }
         hql.append("and ");
-
+        
         hql.append(agentNames.stream().map(agentName -> SOSHibernateRegexp.getFunction(SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.jobs",
                 "$.agentIds"), getRegexpParameter(agentName, "\""))).collect(Collectors.joining(" or ", "(", ")")));
 
@@ -2001,5 +2005,16 @@ public class InventoryDBLayer extends DBLayer {
             return Collections.emptyList();
         }
         return result;
+    }
+    
+    private boolean needQuotes() {
+        Dbms dbms = getSession().getFactory().getDbms();
+        switch (dbms) {
+        case H2:
+        case PGSQL:
+            return false;
+        default:
+            return true;
+        }
     }
 }
