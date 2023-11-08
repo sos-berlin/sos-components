@@ -31,14 +31,14 @@ public class JocCertificate {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JocCertificate.class);
     private static JocCertificate jocCert;
-    
-    private JocCertificate () {
+
+    private JocCertificate() {
         EventBus.getInstance().register(this);
     }
-    
+
     public static synchronized JocCertificate getInstance() {
         if (jocCert == null) {
-            jocCert = new JocCertificate(); 
+            jocCert = new JocCertificate();
         }
         return jocCert;
     }
@@ -52,19 +52,18 @@ public class JocCertificate {
         }
     }
 
-    
     @Subscribe({ NewJocAddedEvent.class })
-    public synchronized void updateCertificate (NewJocAddedEvent event) {
+    public synchronized void updateCertificate(NewJocAddedEvent event) {
         updateCertificate(event.getJocId(), event.getClusterId(), event.getMemberId(), event.getOrdering());
     }
-    
+
     private synchronized void updateCertificate(Long jocId, String clusterId, String memberId, Integer ordering) {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(JocCertificate.class.getSimpleName());
             JocInstancesDBLayer dbLayer = new JocInstancesDBLayer(session);
             DBItemJocInstance dbItem = null;
-            if(jocId != null) {
+            if (jocId != null) {
                 dbItem = session.get(DBItemJocInstance.class, jocId);
             } else {
                 dbItem = dbLayer.getInstance(clusterId, ordering);
@@ -76,7 +75,7 @@ public class JocCertificate {
             Globals.disconnect(session);
         }
     }
-    
+
     private synchronized void update(DBItemJocInstance jocInstance, SOSHibernateSession session) {
         Path keyStorePath = Globals.sosCockpitProperties.resolvePath(Globals.sosCockpitProperties.getProperty("keystore_path"));
         LOGGER.debug("KeyStore path: " + keyStorePath);
@@ -85,33 +84,35 @@ public class JocCertificate {
         LOGGER.debug("KeyStore type: " + keyStoreType);
         String keyStoreAlias = Globals.sosCockpitProperties.getProperty("keystore_alias", "");
         LOGGER.debug("KeyStore alias: " + keyStoreAlias);
-        if(keyStorePath != null &&  Files.exists(keyStorePath)) {
+        if (keyStorePath != null && Files.exists(keyStorePath)) {
             LOGGER.debug("reading KeyStore from " + keyStorePath);
             try {
                 KeyStore keystore = KeyStoreUtil.readKeyStore(keyStorePath, KeystoreType.fromValue(keyStoreType), keyStorePw);
-                X509Certificate certificate =  KeyStoreUtil.getX509CertificateFromKeyStore(keystore, keyStoreAlias);
-                if(certificate != null) {
-                    String dn = CertificateUtils.getDistinguishedName(certificate);
-                    LOGGER.debug(String.format("Certificate: %1$s read from Keystore", dn));
-                    if(jocInstance != null) {
-                        if(certificate != null) {
-                            X509Certificate dbCert = null;
-                            if(jocInstance.getCertificate() != null) {
-                                dbCert = KeyUtil.getX509Certificate(jocInstance.getCertificate());
-                            }
-                            if((dbCert != null && !dbCert.equals(certificate)) || dbCert == null) {
-                                jocInstance.setCertificate(CertificateUtils.asPEMString(certificate));
-                                session.update(jocInstance);
-                                LOGGER.debug("new certificate stored in DB.");
+                if (keystore != null) {
+                    X509Certificate certificate = KeyStoreUtil.getX509CertificateFromKeyStore(keystore, keyStoreAlias);
+                    if (certificate != null) {
+                        String dn = CertificateUtils.getDistinguishedName(certificate);
+                        LOGGER.debug(String.format("Certificate: %1$s read from Keystore", dn));
+                        if (jocInstance != null) {
+                            if (certificate != null) {
+                                X509Certificate dbCert = null;
+                                if (jocInstance.getCertificate() != null) {
+                                    dbCert = KeyUtil.getX509Certificate(jocInstance.getCertificate());
+                                }
+                                if ((dbCert != null && !dbCert.equals(certificate)) || dbCert == null) {
+                                    jocInstance.setCertificate(CertificateUtils.asPEMString(certificate));
+                                    session.update(jocInstance);
+                                    LOGGER.debug("new certificate stored in DB.");
+                                }
                             }
                         }
                     }
-                    
+
                 }
             } catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException | SOSHibernateException e) {
                 LOGGER.warn("Couldn´t read KeyStore from " + keyStorePath.toString());
             }
         }
     }
-    
+
 }
