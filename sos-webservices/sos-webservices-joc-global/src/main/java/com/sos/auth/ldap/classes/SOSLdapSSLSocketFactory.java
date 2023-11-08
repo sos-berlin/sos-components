@@ -5,7 +5,6 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.nio.file.Path;
 import java.security.KeyStore;
-import java.util.concurrent.atomic.AtomicReference;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.HostnameVerifier;
@@ -24,75 +23,74 @@ import com.sos.joc.classes.JocCockpitProperties;
 
 public class SOSLdapSSLSocketFactory extends SocketFactory {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(SOSLdapSSLSocketFactory.class);
-	private static final AtomicReference<SOSLdapSSLSocketFactory> defaultFactory = new AtomicReference<>();
-	private String truststorePath;
-	private KeystoreType truststoreType;
-	private String truststorePass;
+    private static final Logger LOGGER = LoggerFactory.getLogger(SOSLdapSSLSocketFactory.class);
+    private String truststorePath;
+    private KeystoreType truststoreType;
+    private String truststorePass;
 
-	private SSLSocketFactory sf;
+    private SSLSocketFactory sf;
 
-	public SOSLdapSSLSocketFactory() {
-		KeyStore trustStore = null;
-		try {
-			setSSLContext();
-			trustStore = KeyStoreUtil.readKeyStore(truststorePath, truststoreType, truststorePass);
+    public SOSLdapSSLSocketFactory() {
+        KeyStore trustStore = null;
+        try {
+            setSSLContext();
+            trustStore = KeyStoreUtil.readKeyStore(truststorePath, truststoreType, truststorePass);
+            if (trustStore != null) {
 
-			TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-			tmf.init(trustStore);
-			SSLContext ctx = SSLContext.getInstance("TLS"); 
+                TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+                tmf.init(trustStore);
+                SSLContext ctx = SSLContext.getInstance("TLS");
 
-			ctx.init(null, tmf.getTrustManagers(), null);
-			sf = ctx.getSocketFactory(); 
+                ctx.init(null, tmf.getTrustManagers(), null);
+                sf = ctx.getSocketFactory();
+            }
 
-		} catch (Exception e) {
-			LOGGER.error("", e);
-		}
-	}
+        } catch (Exception e) {
+            LOGGER.error("", e);
+        }
+    }
 
-	public static SocketFactory getDefault() {
-		return new SOSLdapSSLSocketFactory();
-	}
+    public static SocketFactory getDefault() {
+        return new SOSLdapSSLSocketFactory();
+    }
 
-	@Override
-	public Socket createSocket(final String s, final int i) throws IOException {
-		return sf.createSocket(s, i);
-	}
+    @Override
+    public Socket createSocket(final String s, final int i) throws IOException {
+        return sf.createSocket(s, i);
+    }
 
-	@Override
-	public Socket createSocket(final String s, final int i, final InetAddress inetAddress, final int i1)
-			throws IOException {
-		return sf.createSocket(s, i, inetAddress, i1);
-	}
+    @Override
+    public Socket createSocket(final String s, final int i, final InetAddress inetAddress, final int i1) throws IOException {
+        return sf.createSocket(s, i, inetAddress, i1);
+    }
 
-	@Override
-	public Socket createSocket(final InetAddress inetAddress, final int i) throws IOException {
-		return sf.createSocket(inetAddress, i);
-	}
+    @Override
+    public Socket createSocket(final InetAddress inetAddress, final int i) throws IOException {
+        return sf.createSocket(inetAddress, i);
+    }
 
-	@Override
-	public Socket createSocket(final InetAddress inetAddress, final int i, final InetAddress inetAddress1, final int i1)
-			throws IOException {
-		return sf.createSocket(inetAddress, i, inetAddress1, i1);
-	}
+    @Override
+    public Socket createSocket(final InetAddress inetAddress, final int i, final InetAddress inetAddress1, final int i1) throws IOException {
+        return sf.createSocket(inetAddress, i, inetAddress1, i1);
+    }
 
-	private String getValue(JocCockpitProperties jocCockpitProperties, String property, String defaultValue) {
-		String s = jocCockpitProperties.getProperty(property, defaultValue);
-		if (s == null || s.isEmpty()) {
-			s = defaultValue;
-		}
-		return s;
-	}
+    private String getValue(JocCockpitProperties jocCockpitProperties, String property, String defaultValue) {
+        String s = jocCockpitProperties.getProperty(property, defaultValue);
+        if (s == null || s.isEmpty()) {
+            s = defaultValue;
+        }
+        return s;
+    }
 
-	private String getValueOrEmpty(String value, String defaultValue) {
-		if (value == null || value.isEmpty()) {
-			value = defaultValue;
-		}
-		return value;
-	}
+    private String getValueOrEmpty(String value, String defaultValue) {
+        if (value == null || value.isEmpty()) {
+            value = defaultValue;
+        }
+        return value;
+    }
 
     private void setSSLContext() {
-        
+
         if (Globals.sosCockpitProperties == null) {
             Globals.sosCockpitProperties = new JocCockpitProperties();
         }
@@ -104,12 +102,9 @@ public class SOSLdapSSLSocketFactory extends SocketFactory {
         String truststorePassDefault = "";
 
         if ((truststorePathJocProperties).isEmpty()) {
-            truststorePathDefault = jocCockpitProperties.getProperty("truststore_path",
-                    System.getProperty("javax.net.ssl.trustStore"));
-            truststoreTypeDefault = jocCockpitProperties.getProperty("truststore_type",
-                    System.getProperty("javax.net.ssl.trustStoreType"));
-            truststorePassDefault = jocCockpitProperties.getProperty("truststore_password",
-                    System.getProperty("javax.net.ssl.trustStorePassword"));
+            truststorePathDefault = jocCockpitProperties.getProperty("truststore_path", System.getProperty("javax.net.ssl.trustStore"));
+            truststoreTypeDefault = jocCockpitProperties.getProperty("truststore_type", System.getProperty("javax.net.ssl.trustStoreType"));
+            truststorePassDefault = jocCockpitProperties.getProperty("truststore_password", System.getProperty("javax.net.ssl.trustStorePassword"));
 
             truststorePath = getValue(jocCockpitProperties, "ldap_truststore_path", truststorePathDefault);
             truststorePass = getValue(jocCockpitProperties, "ldap_truststore_password", truststorePassDefault);
@@ -138,11 +133,11 @@ public class SOSLdapSSLSocketFactory extends SocketFactory {
         }
     }
 
-	/** The hostname verifier always return true */
-	final static class DummyVerifier implements HostnameVerifier {
+    /** The hostname verifier always return true */
+    final static class DummyVerifier implements HostnameVerifier {
 
-		public boolean verify(String hostname, SSLSession session) {
-			return true;
-		}
-	}
+        public boolean verify(String hostname, SSLSession session) {
+            return true;
+        }
+    }
 }
