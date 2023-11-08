@@ -12,6 +12,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -87,6 +88,8 @@ import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
 import com.sos.joc.model.order.AddOrder;
 import com.sos.joc.model.order.BlockPosition;
 import com.sos.joc.model.order.ModifyOrders;
+import com.sos.joc.model.order.Obstacle;
+import com.sos.joc.model.order.ObstacleType;
 import com.sos.joc.model.order.OrderIdMap;
 import com.sos.joc.model.order.OrderMark;
 import com.sos.joc.model.order.OrderMarkText;
@@ -217,6 +220,10 @@ public class OrdersHelper {
             put("WaitingForLock", OrderWaitingReason.WAITING_FOR_LOCK);
             put("BetweenCycles", OrderWaitingReason.BETWEEN_CYCLES);
             put("WaitingForAdmission", OrderWaitingReason.WAITING_FOR_ADMISSION);
+            put("JobParallelismLimitReached", OrderWaitingReason.JOB_PROCESS_LIMIT_REACHED);
+            put("JobProcessLimitReached", OrderWaitingReason.JOB_PROCESS_LIMIT_REACHED);
+            put("AgentProcessLimitReached", OrderWaitingReason.AGENT_PROCESS_LIMIT_REACHED);
+            put("WorkflowIsSuspended", OrderWaitingReason.WORKFLOW_IS_SUSPENDED);
         }
     });
 
@@ -335,7 +342,7 @@ public class OrdersHelper {
         return OrderStateText.PROMPTING.equals(getGroupedState(order.asScala().state().getClass()));
     }
 
-    public static OrderState getState(String state, Boolean isSuspended, boolean waitingForAdmission) {
+    public static OrderState getState(String state, Boolean isSuspended, ObstacleType obstacle) {
         OrderState oState = new OrderState();
         OrderStateText groupedState = getGroupedState(state);
         if (isSuspended == Boolean.TRUE && !(OrderStateText.CANCELLED.equals(groupedState) || OrderStateText.FINISHED.equals(groupedState))) {
@@ -343,12 +350,12 @@ public class OrdersHelper {
         }
         oState.set_text(groupedState);
         oState.setSeverity(severityByGroupedStates.get(groupedState));
-        oState.set_reason(waitingForAdmission ? OrderWaitingReason.WAITING_FOR_ADMISSION : waitingReasons.get(state));
+        oState.set_reason(obstacle != null ? waitingReasons.get(obstacle.value()) : waitingReasons.get(state));
         return oState;
     }
     
     public static OrderState getState(String state, Boolean isSuspended) {
-        return getState(state, isSuspended, false);
+        return getState(state, isSuspended, null);
     }
 
     public static OrderState getHistoryState(OrderStateText st) {
@@ -465,15 +472,33 @@ public class OrdersHelper {
             orderIsInImplicitEnd(jOrder, controllerState).ifPresent(b -> o.setPositionIsImplicitEnd(b ? true : null));
         }
         Long scheduledFor = getScheduledForMillis(jOrder, zoneId);
+//        if ("Fresh".equals(oItem.getState().getTYPE()) || "Ready".equals(oItem.getState().getTYPE())) {
+//            Optional<Obstacle> obstacleOpt = getObstacle(OrderId.of(oItem.getId()), controllerState);
+//            if (obstacleOpt.isPresent()) {
+//                o.setState(getState("Ready", oItem.getIsSuspended(), obstacleOpt.get().getType()));
+//            }
+//        } else 
         if (scheduledFor != null && surveyDateMillis != null && scheduledFor < surveyDateMillis && "Fresh".equals(oItem.getState().getTYPE())) {
             if (blockedButWaitingForAdmissionOrderIds != null && blockedButWaitingForAdmissionOrderIds.contains(jOrder.id())) {
-                // TODO set waiting reason
-                o.setState(getState("Ready", oItem.getIsSuspended(), true));
+                //o.setState(getState("Ready", oItem.getIsSuspended(), ObstacleType.WaitingForAdmission));
+                o.setState(getState("Processed", oItem.getIsSuspended(), ObstacleType.WaitingForAdmission));
             } else {
-                o.setState(getState("Blocked", oItem.getIsSuspended()));
+                Optional<Obstacle> obstacleOpt = getObstacle(OrderId.of(oItem.getId()), controllerState);
+                if (obstacleOpt.isPresent()) {
+                    o.setState(getState("Blocked", oItem.getIsSuspended(), obstacleOpt.get().getType()));
+                } else {
+                    o.setState(getState("Blocked", oItem.getIsSuspended()));
+                }
             }
         } else if (scheduledFor != null && JobSchedulerDate.NEVER_MILLIS.equals(scheduledFor) && "Fresh".equals(oItem.getState().getTYPE())) {
             o.setState(getState("Pending", oItem.getIsSuspended()));
+        } else if ("Ready".equals(oItem.getState().getTYPE())) {
+            Optional<Obstacle> obstacleOpt = getObstacle(OrderId.of(oItem.getId()), controllerState);
+            if (obstacleOpt.isPresent()) {
+                o.setState(getState("Ready", oItem.getIsSuspended(), obstacleOpt.get().getType()));
+            } else {
+                o.setState(getState("Ready", oItem.getIsSuspended()));
+            }
         } else {
             o.setState(getState(oItem.getState().getTYPE(), oItem.getIsSuspended()));
         }
@@ -1248,6 +1273,51 @@ public class OrdersHelper {
     public static ConcurrentMap<OrderId, JOrder> getWaitingForAdmissionOrders(Collection<JOrder> blockedOrders, JControllerState controllerState) {
         Set<OrderId> ids = getWaitingForAdmissionOrderIds(blockedOrders.stream().map(JOrder::id).collect(Collectors.toSet()), controllerState);
         return blockedOrders.parallelStream().filter(o -> ids.contains(o.id())).collect(Collectors.toConcurrentMap(JOrder::id, Function.identity()));
+    }
+    
+    public static Map<OrderId, Obstacle> getWaitingOrderIds(Collection<OrderId> orderIds, JControllerState controllerState) {
+        if (!orderIds.isEmpty()) {
+            Either<Problem, Map<OrderId, Set<JOrderObstacle>>> obstaclesE = controllerState.ordersToObstacles(orderIds, controllerState
+                    .instant());
+            if (obstaclesE.isRight()) {
+                Function<Map.Entry<OrderId, Set<JOrderObstacle>>, Obstacle> obstacleMapper = e -> mapObstacle(e.getValue().iterator().next());
+                Map<OrderId, Set<JOrderObstacle>> obstacles = obstaclesE.get();
+                return obstacles.entrySet().stream().peek(e -> e.getValue().removeIf(obstacle -> (obstacle instanceof JOrderObstacle.WaitingForOtherTime)
+                        || (obstacle instanceof JOrderObstacle.WaitingForTime))).filter(e -> !e.getValue().isEmpty()).collect(Collectors.toMap(
+                                Map.Entry::getKey, obstacleMapper));
+            }
+        }
+        return Collections.emptyMap();
+    }
+    
+    public static Optional<Obstacle> getObstacle(OrderId orderId, JControllerState controllerState) {
+        Either<Problem, Set<JOrderObstacle>> obstaclesE = controllerState.orderToObstacles(orderId, controllerState.instant());
+        if (obstaclesE.isRight()) {
+            Set<JOrderObstacle> obstacles = obstaclesE.get();
+            obstacles.removeIf(obstacle -> (obstacle instanceof JOrderObstacle.WaitingForOtherTime)
+                    || (obstacle instanceof JOrderObstacle.WaitingForTime));
+            if (!obstacles.isEmpty()) {
+                return Optional.ofNullable(mapObstacle(obstacles.iterator().next()));
+            }
+        }
+        return Optional.empty();
+    }
+    
+    public static Obstacle mapObstacle(JOrderObstacle obstacle) {
+        Obstacle ob = new Obstacle();
+        if (obstacle instanceof JOrderObstacle.WaitingForAdmission) {
+            ob.setType(ObstacleType.WaitingForAdmission);
+            ob.setUntil(Date.from(((JOrderObstacle.WaitingForAdmission) obstacle).until()));
+        } else if (obstacle instanceof JOrderObstacle.JobProcessLimitReached) {
+            ob.setType(ObstacleType.JobParallelismLimitReached);
+        } else if (obstacle instanceof JOrderObstacle.AgentProcessLimitReached) {
+            ob.setType(ObstacleType.AgentProcessLimitReached);
+        } else if (obstacle instanceof JOrderObstacle.WorkflowSuspended) {
+            ob.setType(ObstacleType.WorkflowIsSuspended);
+        } else {
+            return null;
+        }
+        return ob;
     }
     
     public static Set<String> getChildOrders(JControllerState currentState) {
