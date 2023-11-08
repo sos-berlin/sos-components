@@ -37,10 +37,12 @@ public abstract class KeyStoreUtil {
             NoSuchAlgorithmException, CertificateException {
         InputStream keyStoreStream = null;
         try {
-            boolean fileAlreadyExist = Files.exists(keyStorePath);
+            boolean fileAlreadyExist = Files.exists(keyStorePath) && Files.isRegularFile(keyStorePath);
             if (!fileAlreadyExist) {
                 LOGGER.warn(String.format("KeyStore with path: %1$s does not exist!", keyStorePath.toAbsolutePath()));
+                return null;
             }
+
             keyStoreStream = Files.newInputStream(keyStorePath);
             // for testing with keystore in classpath
             // keyStoreStream = KeyStoreUtil.class.getResourceAsStream(keyStorePath);
@@ -82,6 +84,7 @@ public abstract class KeyStoreUtil {
             boolean fileAlreadyExist = Files.exists(trustStorePath);
             if (!fileAlreadyExist) {
                 LOGGER.warn(String.format("TrustStore with path: %1$s does not exist!", trustStorePath.toAbsolutePath()));
+                return null;
             }
             trustStoreStream = Files.newInputStream(trustStorePath);
             KeyStore trustStore = KeyStore.getInstance(trustStoreType.value()); // "PKCS12" or "JKS"
