@@ -1,10 +1,15 @@
 package com.sos.joc.joc.versions.util;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.sos.joc.model.joc.CompatibilityLevel;
 
@@ -45,6 +50,15 @@ public class CheckVersion {
         }
     });
     
+    private static final Set<String> versionBackwardIncompatibilties = Collections.unmodifiableSet(new HashSet<String>() {
+
+        private static final long serialVersionUID = 1L;
+        {
+            add("2.5.6");
+            add("2.6.3");
+        }
+    });
+    
     public static CompatibilityLevel checkControllerVersionMatches2Joc (String controllerVersion, String jocVersion) {
         String coreControllerVersion = extractCoreVersion(controllerVersion);
         String coreJocVersion = extractCoreVersion(jocVersion);
@@ -59,7 +73,7 @@ public class CheckVersion {
             return CompatibilityLevel.NOT_COMPATIBLE;
         } else if(controllerVersionSplitted.get(1) != jocVersionSplitted.get(1)) {
             return CompatibilityLevel.NOT_COMPATIBLE;
-        } else if (controllerVersionSplitted.get(2) <= jocVersionSplitted.get(2)) {
+        } else if (controllerVersionSplitted.get(2) <= jocVersionSplitted.get(2) && !isIncompatible(controllerVersion, null, jocVersion)) {
             return CompatibilityLevel.COMPATIBLE;
         } else {
             return CompatibilityLevel.NOT_COMPATIBLE;
@@ -80,7 +94,7 @@ public class CheckVersion {
             return CompatibilityLevel.NOT_COMPATIBLE;
         } else if (agentVersionSplitted.get(1) != controllerVersionSplitted.get(1)) {
             return CompatibilityLevel.NOT_COMPATIBLE;
-        } else if (agentVersionSplitted.get(2) <= controllerVersionSplitted.get(2)) {
+        } else if (agentVersionSplitted.get(2) <= controllerVersionSplitted.get(2) && !isIncompatible(controllerVersion, agentVersion, null)) {
             return CompatibilityLevel.COMPATIBLE;
         } else {
             return CompatibilityLevel.NOT_COMPATIBLE;
@@ -98,4 +112,120 @@ public class CheckVersion {
     private static String extractCoreVersion (String version) {
         return version.contains("-") ? version.split("-")[0] : version;
     }
+    
+    private static boolean isIncompatible(String controllerVersion, String agentVersion, String jocVersion) {
+        String coreControllerVersion = extractCoreVersion(controllerVersion);
+        if(jocVersion != null) {
+            String coreJocVersion = extractCoreVersion(jocVersion);
+            String lowestIncompatibleVersion = getLowestIncompatibilityVersionMatch(coreControllerVersion);
+            if(!lowestIncompatibleVersion.isEmpty() 
+                    && !isLower(coreJocVersion, lowestIncompatibleVersion)
+                    && isLower(coreControllerVersion, coreJocVersion) 
+                    && ( isEqual(coreJocVersion, lowestIncompatibleVersion) || isHigher(coreJocVersion, lowestIncompatibleVersion)) 
+                    && isLower(controllerVersion, lowestIncompatibleVersion)) {
+                return true;
+            }
+        } else if (agentVersion != null) {
+            String coreAgentVersion = extractCoreVersion(agentVersion);
+            String lowestIncompatibleVersion = getLowestIncompatibilityVersionMatch(coreAgentVersion);
+            if(!lowestIncompatibleVersion.isEmpty() 
+                    && ! isLower(coreAgentVersion, lowestIncompatibleVersion)
+                    && isLower(coreAgentVersion, coreControllerVersion)
+                    && (isEqual(controllerVersion, lowestIncompatibleVersion) || isHigher(controllerVersion, lowestIncompatibleVersion))
+                    && isLower(agentVersion, lowestIncompatibleVersion)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    private static String getLowestIncompatibilityVersionMatch(String currentVersion) {
+        Comparator<String> comp = new Comparator<String>() {
+            @Override
+            public int compare(String arg0, String arg1) {
+                if(isLower(arg0, arg1)) {
+                    return +1;
+                } else if (isHigher(arg0, arg1)) {
+                    return -1;
+                } else {
+                    return 0;
+                }
+            }
+        };
+        String lowestIncompatibilty = "";
+        for (String incomp : versionBackwardIncompatibilties) {
+            if (isLower(currentVersion, incomp) && (lowestIncompatibilty.isEmpty() || !isLower(lowestIncompatibilty, incomp))) {
+                lowestIncompatibilty = incomp;
+            }
+        }
+        return lowestIncompatibilty;
+    }
+    
+    /**
+     * @param version1
+     * @param version2
+     * 
+     * @return boolean; if version1 is considered lower as version2
+     */
+    private static boolean isLower(String version1, String version2) {
+        List<Integer> version1Splitted = splitVersion(version1);
+        List<Integer> version2Splitted = splitVersion(version2);
+        if(version1Splitted.get(0) < version2Splitted.get(0)) {
+            return true;
+        } else if (version1Splitted.get(0) > version2Splitted.get(0)) {
+            return false;
+        } else if (version1Splitted.get(1) < version2Splitted.get(1)) {
+            return true;
+        } else if (version1Splitted.get(1) > version2Splitted.get(1)) {
+            return false;
+        } else if (version1Splitted.get(2) < version2Splitted.get(2)) {
+            return true;
+        } else if (version1Splitted.get(2) > version2Splitted.get(2)) {
+            return false;
+        }
+        return false;
+    }
+    /**
+     * @param version1
+     * @param version2
+     * 
+     * @return boolean; if version1 is considered higher as version2
+     */
+    private static boolean isHigher(String version1, String version2) {
+        List<Integer> version1Splitted = splitVersion(version1);
+        List<Integer> version2Splitted = splitVersion(version2);
+        if(version1Splitted.get(0) > version2Splitted.get(0)) {
+            return true;
+        } else if (version1Splitted.get(0) < version2Splitted.get(0)) {
+            return false;
+        } else if (version1Splitted.get(1) > version2Splitted.get(1)) {
+            return true;
+        } else if (version1Splitted.get(1) < version2Splitted.get(1)) {
+            return false;
+        } else if (version1Splitted.get(2) > version2Splitted.get(2)) {
+            return true;
+        } else if (version1Splitted.get(2) < version2Splitted.get(2)) {
+            return false;
+        }
+        return false;
+    }
+    
+    /**
+     * @param version1
+     * @param version2
+     * 
+     * @return boolean; if version1 is considered equal as version2
+     */
+    private static boolean isEqual(String version1, String version2) {
+        List<Integer> version1Splitted = splitVersion(version1);
+        List<Integer> version2Splitted = splitVersion(version2);
+        if(version1Splitted.get(0) == version2Splitted.get(0) 
+                && version1Splitted.get(1) == version2Splitted.get(1)
+                && version1Splitted.get(2) == version2Splitted.get(2)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
 }
