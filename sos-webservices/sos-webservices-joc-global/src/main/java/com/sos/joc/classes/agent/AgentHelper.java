@@ -196,7 +196,6 @@ public class AgentHelper {
     }
     
     public static OptionalInt getProcessLimit(Integer processLimit) {
-        //return processLimit == null ? OptionalInt.empty() : OptionalInt.of(processLimit);
-        return processLimit == null ? OptionalInt.of(100000) : OptionalInt.of(processLimit);
+        return processLimit == null ? OptionalInt.empty() : OptionalInt.of(processLimit);
     }
 }
