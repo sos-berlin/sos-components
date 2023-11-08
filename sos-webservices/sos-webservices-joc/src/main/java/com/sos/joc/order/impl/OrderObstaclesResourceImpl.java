@@ -13,6 +13,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.JocException;
@@ -56,24 +57,8 @@ public class OrderObstaclesResourceImpl extends JOCResourceImpl implements IOrde
             entry.setOrderId(orderFilter.getOrderId());
             try {
                 ProblemHelper.throwProblemIfExist(obstaclesE);
-
-                entry.setObstacles(obstaclesE.get().stream().map(obstacle -> {
-                    Obstacle ob = new Obstacle();
-                    if (obstacle instanceof JOrderObstacle.WaitingForAdmission) {
-                        ob.setType(ObstacleType.WaitingForAdmission);
-                        ob.setUntil(Date.from(((JOrderObstacle.WaitingForAdmission) obstacle).until()));
-                    } else if (obstacle instanceof JOrderObstacle.JobProcessLimitReached) {
-                        ob.setType(ObstacleType.JobParallelismLimitReached);
-                    } else if (obstacle instanceof JOrderObstacle.AgentProcessLimitReached) {
-                        ob.setType(ObstacleType.AgentProcessLimitReached);
-                    } else if (obstacle instanceof JOrderObstacle.WorkflowSuspended) {
-                        ob.setType(ObstacleType.WorkflowIsSuspended);
-                    } else {
-                        return null;
-                    }
-                    return ob;
-                }).filter(Objects::nonNull).collect(Collectors.toSet()));
-                
+                entry.setObstacles(obstaclesE.get().stream().map(obstacle -> OrdersHelper.mapObstacle(obstacle)).filter(Objects::nonNull).collect(
+                        Collectors.toSet()));
             } catch (ControllerObjectNotExistException e) {
                 Obstacle ob = new Obstacle();
                 ob.setType(ObstacleType.OrderNotExisting);
