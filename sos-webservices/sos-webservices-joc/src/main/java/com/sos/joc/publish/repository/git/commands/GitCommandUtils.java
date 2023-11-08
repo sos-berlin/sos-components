@@ -123,7 +123,11 @@ public class GitCommandUtils {
                 credList =  Globals.objectMapper.readValue(dbItem.getConfigurationItem(), GitCredentialsList.class);
             }
             if(credList == null) {
-                throw new JocGitException("No Git Credentials found for Joc account:  " + dbItem.getAccount());
+                if(dbItem != null) {
+                    throw new JocGitException("No Git Credentials found for Joc account:  " + dbItem.getAccount());
+                } else {
+                    throw new JocGitException("No Git Credentials found for current account.");
+                }
             }
             if(!credList.getRemoteUrls().contains(filter.getRemoteUrl())) {
                 credList.getRemoteUrls().add(filter.getRemoteUrl());
