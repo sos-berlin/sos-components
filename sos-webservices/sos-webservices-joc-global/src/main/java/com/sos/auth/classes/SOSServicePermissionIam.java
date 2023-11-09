@@ -714,8 +714,8 @@ public class SOSServicePermissionIam {
                                 }
 
                             } catch (JocAuthenticationException e) {
-                                LOGGER.info("Login with Identity Service " + dbItemIamIdentityService.getIdentityServiceName() + " failed.");
                                 msg = e.getMessage();
+                                LOGGER.info("Login with Identity Service " + dbItemIamIdentityService.getIdentityServiceName() + " failed:" + msg);
                                 authenticationResult.put(dbItemIamIdentityService.getIdentityServiceName(), msg);
                                 continue;
                             } catch (JocWaitForSecondFactorException e) {
