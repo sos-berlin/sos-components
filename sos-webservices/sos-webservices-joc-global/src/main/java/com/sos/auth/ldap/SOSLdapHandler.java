@@ -1,6 +1,8 @@
 package com.sos.auth.ldap;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.UUID;
@@ -133,6 +135,15 @@ public class SOSLdapHandler {
             if (password == null || password.isEmpty()) {
                 msg = "Password is empty";
             }
+            
+
+            if (sosLdapWebserviceCredentials.isSSL() && sosLdapWebserviceCredentials.getTruststorePath() != null && !sosLdapWebserviceCredentials.getTruststorePath().isEmpty()) {
+                if (!(Files.exists(Paths.get(sosLdapWebserviceCredentials.getTruststorePath())) && Files.isRegularFile(Paths.get(sosLdapWebserviceCredentials.getTruststorePath())))){
+                    msg = "Truststore file not exists: " + sosLdapWebserviceCredentials.getTruststorePath();
+                }
+            }
+           
+            
             if (msg.isEmpty()) {
                 createDirContext(sosLdapWebserviceCredentials, password);
                 sosAuthAccessToken = new SOSAuthAccessToken();
