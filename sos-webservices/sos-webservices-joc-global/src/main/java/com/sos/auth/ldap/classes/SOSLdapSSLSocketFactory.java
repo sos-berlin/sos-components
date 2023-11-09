@@ -34,7 +34,7 @@ public class SOSLdapSSLSocketFactory extends SocketFactory {
         KeyStore trustStore = null;
         try {
             setSSLContext();
-            trustStore = KeyStoreUtil.readKeyStore(truststorePath, truststoreType, truststorePass);
+            trustStore = KeyStoreUtil.readTrustStore(truststorePath, truststoreType, truststorePass);
             if (trustStore != null) {
 
                 TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
