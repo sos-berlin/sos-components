@@ -24,6 +24,20 @@ public class JobTest {
 
     @Ignore
     @Test
+    public void testArguments() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("x", "y");
+
+        for (Map.Entry<String, Object> e : map.entrySet()) {
+            LOGGER.info("1=" + e.getKey() + "=" + e.getValue());
+            JobArgument<?> arg = JobArgument.toExecuteJobArgument(e.getKey(), e.getValue());
+            LOGGER.info("2=" + e.getKey() + "=" + SOSString.toString(arg));
+        }
+
+    }
+
+    @Ignore
+    @Test
     public void testABlockingJobWithoutArgumentClazzConstructor() throws Exception {
         TestJobSuperClass job = new TestJobSuperClass();
 
