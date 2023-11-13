@@ -78,6 +78,18 @@ public class JobArgument<T> extends SOSArgument<T> {
 
     }
 
+    private JobArgument(SOSArgument<T> arg) {
+        super(arg.getName(), arg.isRequired(), arg.getDefaultValue(), arg.getDisplayMode());
+        this.setValue(arg.getValue());
+        this.nameAliases = null;
+    }
+
+    private JobArgument(String name, T value) {
+        this(name, false, null, DisplayMode.UNKNOWN, null, Scope.ALL);
+        setValue(value);
+        this.type = Type.UNDECLARED;
+    }
+
     /* internal usage - undeclared Arguments */
     protected JobArgument(String name, T value, ValueSource valueSource) {
         this(name, false, null, DisplayMode.UNKNOWN, null, Scope.ALL);
@@ -87,6 +99,31 @@ public class JobArgument<T> extends SOSArgument<T> {
         if (value != null) {
             this.clazzType = value.getClass();
         }
+    }
+
+    protected static JobArgument<?> toExecuteJobArgument(String name, Object value) {
+        return new JobArgument<>(name, value).toExecuteJobArgument();
+    }
+
+    protected JobArgument<T> toExecuteJobArgument() {
+        return toExecuteJobArgument(this);
+    }
+
+    private JobArgument<T> toExecuteJobArgument(JobArgument<T> arg) {
+        arg.type = Type.UNDECLARED;
+        arg.valueSource = new ValueSource(ValueSourceType.EXECUTE_JOB);
+        arg.scope = Scope.ALL;
+        return arg;
+    }
+
+    /* internal usage - execute another job arguments */
+    protected JobArgument(SOSArgument<T> arg, T value, Type type) {
+        super(arg);
+        setValue(value);
+        this.type = type;
+        this.scope = Scope.ALL;
+        this.valueSource = new ValueSource(ValueSourceType.EXECUTE_JOB);
+        this.nameAliases = null;
     }
 
     /* internal usage - e.g. Provider Arguments */
@@ -131,12 +168,14 @@ public class JobArgument<T> extends SOSArgument<T> {
         StringBuilder sb = new StringBuilder(getName());
         sb.append("[");
         sb.append("value=").append(getDisplayValue());
-
         if (valueSource != null && valueSource.getType() != null) {
             sb.append(" source=").append(valueSource.getType().name());
             if (valueSource.getSource() != null) {
                 sb.append("(").append(valueSource.getSource()).append(")");
             }
+        }
+        if (isRequired()) {
+            sb.append(" required=true");
         }
         sb.append(" modified=").append(isDirty());
         if (clazzType != null) {

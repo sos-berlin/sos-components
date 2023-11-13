@@ -52,15 +52,19 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
     private static final String BASE64_VALUE_PREFIX = "base64:";
     private static final String OPERATION_CANCEL_KILL = "cancel/kill";
 
-    private final JobEnvironment<A> jobEnvironment;
+    private JobEnvironment<A> jobEnvironment;
 
     public Job() {
-        this(null);
+        this((JobContext) null);
     }
 
     /** e.g. for jobContext.jobArguments() or getAgentSystemEncoding */
     public Job(JobContext jobContext) {
         jobEnvironment = new JobEnvironment<A>(jobContext);
+    }
+
+    protected void setJobEnvironment(JobEnvironment<A> je) {
+        jobEnvironment = je;
     }
 
     /** to override */
@@ -194,13 +198,16 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         };
     }
 
-    private void cancelOrderProcessStep(OrderProcessStep<A> jobStep) {
+    protected void cancelOrderProcessStep(OrderProcessStep<A> jobStep) {
         String jobName = getJobName(jobStep);
         try {
             onOrderProcessCancel(jobStep);
         } catch (Throwable e) {
             LOGGER.error(String.format("[%s][job name=%s][onOrderProcessCancel]%s", OPERATION_CANCEL_KILL, jobName, e.toString()), e);
         }
+
+        jobStep.cancelExecuteJobs();
+
         if (jobStep.getCancelableResources() != null) {
             cancelHibernateFactory(jobStep, jobName);
             cancelSSHProvider(jobStep, jobName);
@@ -288,7 +295,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         return createDeclaredJobArguments(exceptions, null, null);
     }
 
-    private A createDeclaredJobArguments(List<JobArgumentException> exceptions, final OrderProcessStep<A> step, A instance) throws Exception {
+    protected A createDeclaredJobArguments(List<JobArgumentException> exceptions, final OrderProcessStep<A> step, A instance) throws Exception {
         instance = instance == null ? getJobArgumensClass().getDeclaredConstructor().newInstance() : instance;
         if (jobEnvironment.getEngineArguments() == null && step == null) {
             return instance;
@@ -337,6 +344,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         return instance;
     }
 
+    @SuppressWarnings("unchecked")
     protected <V> void setDeclaredJobArgument(final OrderProcessStep<A> step, Map<String, Object> args,
             Map<String, DetailValue> lastSucceededOutcomes, Map<String, DetailValue> jobResources, JobArgument<V> arg, Field field) throws Exception {
         if (arg.getName() == null) {// internal usage
@@ -345,6 +353,28 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         if (!arg.isScopeAll()) {
             return;
         }
+
+        // step calls another java job
+        if (step != null && step.hasExecuteJobArguments() && step.getExecuteJobBean().getArguments().containsKey(arg.getName())) {
+            JobArgument<?> a = step.getExecuteJobBean().getArguments().get(arg.getName());
+            try {
+                arg.setValue(getValue(a.getValue(), arg, field));
+
+                if (step.getExecuteJobBean().updateDeclaredArgumentsDefinition()) {
+                    arg.setRequired(a.isRequired());
+                    arg.setDefaultValue((V) a.getDefaultValue());
+                    arg.setDisplayMode(a.getDisplayMode());
+                    arg.setValueSource(a.getValueSource());
+                }
+                if (arg.isRequired() && arg.getValue() == null) {
+                    throw new JobRequiredArgumentMissingException(arg.getName(), arg.getName());
+                }
+            } catch (Throwable e) {
+                arg.setNotAcceptedValue(a.getValue(), e);
+            }
+            return;
+        }
+
         List<String> allNames = new ArrayList<>(Arrays.asList(arg.getName()));
         if (arg.getNameAliases() != null) {
             allNames.addAll(arg.getNameAliases());
