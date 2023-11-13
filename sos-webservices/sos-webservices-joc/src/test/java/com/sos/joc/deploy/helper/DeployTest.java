@@ -3,10 +3,15 @@ package com.sos.joc.deploy.helper;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -35,6 +40,10 @@ import js7.data.item.VersionId;
 import js7.data.lock.LockPath;
 import js7.data.order.OrderId;
 import js7.data.subagent.SubagentId;
+import js7.data.value.ListValue;
+import js7.data.value.ObjectValue;
+import js7.data.value.StringValue;
+import js7.data.value.Value;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.item.JUnsignedSimpleItem;
@@ -182,7 +191,7 @@ public class DeployTest {
                 if (i % 10 == 0) {
                     TimeUnit.SECONDS.sleep(1);
                 }
-                addOrder(api, i);
+                addOrder(api, "shell", Collections.emptyMap(), i);
             }
             long sleep = 5;
             if (i > 100) {
@@ -201,12 +210,91 @@ public class DeployTest {
         }
     }
 
-    private void addOrder(JControllerApi api, int counter) {
+    @Ignore
+    @Test
+    public void testAddOrderWithScalarArguments() throws Exception {
+
+        // 1
+        String workflowName = "JOC-1639-only-scalar2";
+        Map<String, Value> args = new LinkedHashMap<>();
+        args.put("xx", StringValue.of("b_unittest"));
+        args.put("bb", StringValue.of("c_unittest"));
+        args.put("aa", StringValue.of("a_unittest"));
+
+        boolean useMultiValues = false;
+        // 2 with list value
+        if (useMultiValues) {
+            workflowName = "JOC-1639";
+            args = new LinkedHashMap<>();
+            args.put("c", StringValue.of("c_unittest"));
+            args.put("l", getListValue());
+            args.put("b", StringValue.of("b_unittest"));
+            args.put("a", StringValue.of("a_unittest"));
+        }
+        JProxyTestClass proxy = new JProxyTestClass();
         try {
-            String orderId = "test-" + SOSDate.format(new Date(), "yyyyMMddHHmmss") + "_" + counter;
-            JFreshOrder order = JFreshOrder.of(OrderId.of(orderId), WorkflowPath.of("shell"), Optional.empty(), Collections.emptyMap(), true);
+            JControllerApi api = proxy.getControllerApi(ProxyUser.JOC, CONTROLLER_URI_PRIMARY);
+            addOrder(api, workflowName, args, 1);
+
+            TimeUnit.SECONDS.sleep(5);
+            LOGGER.info("stop");
+        } catch (Throwable e) {
+            throw e;
+        } finally {
+            proxy.close();
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testAddOrderWithScalarAndListArguments() throws Exception {
+
+        // 1
+        String workflowName = "JOC-1639-scalar-and-list";
+        Map<String, Value> args = new LinkedHashMap<>();
+
+        args = new LinkedHashMap<>();
+        args.put("c", StringValue.of("c_unittest"));
+        args.put("l", getListValue());
+        args.put("b", StringValue.of("b_unittest"));
+        args.put("a", StringValue.of("a_unittest"));
+
+        JProxyTestClass proxy = new JProxyTestClass();
+        try {
+            JControllerApi api = proxy.getControllerApi(ProxyUser.JOC, CONTROLLER_URI_PRIMARY);
+            addOrder(api, workflowName, args, 1);
+
+            TimeUnit.SECONDS.sleep(5);
+            LOGGER.info("stop");
+        } catch (Throwable e) {
+            throw e;
+        } finally {
+            proxy.close();
+        }
+    }
+
+    private ListValue getListValue() {
+        List<Value> l = new ArrayList<>();
+
+        Map<String, Value> m = new HashMap<>();
+        m.put("z", StringValue.of("z_unittest"));
+        m.put("y", StringValue.of("y_unittest"));
+        m.put("x", StringValue.of("x_unittest"));
+        l.add(ObjectValue.of(m));
+
+        return ListValue.of(l);
+    }
+
+    private void addOrder(JControllerApi api, String workflowName, Map<String, Value> arguments, int counter) {
+        try {
+            String orderId = "#" + SOSDate.format(new Date(), "yyyy-MM-dd") + "#T0" + SOSDate.format(new Date(), "MMddHHmmss") + "-UNITTEST-"
+                    + counter;
+            JFreshOrder order = JFreshOrder.of(OrderId.of(orderId), WorkflowPath.of(workflowName), Optional.empty(), arguments, true);
             api.addOrder(order).thenAccept(either -> {
                 if (either.isRight()) {
+                    LOGGER.info(String.format("[arguments][put]%s", arguments));
+                    LOGGER.info(String.format("[arguments][JFreshOrder]%s", order.asScala().arguments()));
+
                     LOGGER.info(String.format("[created]%s", orderId));
                 } else {
                     LOGGER.error(String.format("[failed][%s]%s", orderId, SOSString.toString(either.getLeft())));
