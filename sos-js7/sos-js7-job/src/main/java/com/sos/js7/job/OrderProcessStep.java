@@ -3,6 +3,8 @@ package com.sos.js7.job;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -11,6 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import com.sos.commons.credentialstore.CredentialStoreArguments;
@@ -40,6 +43,7 @@ import js7.data.value.NumberValue;
 import js7.data.value.Value;
 import js7.data_for_java.order.JOutcome;
 import js7.launcher.forjava.internal.BlockingInternalJob;
+import js7.launcher.forjava.internal.BlockingInternalJob.JobContext;
 import scala.collection.JavaConverters;
 
 public class OrderProcessStep<A extends JobArguments> {
@@ -61,6 +65,10 @@ public class OrderProcessStep<A extends JobArguments> {
     /* declaredArguments + declared includedArguments */
     private List<JobArgument<?>> allDeclaredArguments;
     private Map<String, JobArgument<?>> allArguments;
+    /* execute another job */
+    private ExecuteJobBean executeJobBean;
+    @SuppressWarnings("rawtypes")
+    private Map<String, OrderProcessStep> cancelableExecuteJobs;
 
     private Map<String, Map<String, DetailValue>> lastOutcomes;
     private Map<String, DetailValue> jobResourcesValues;
@@ -85,6 +93,120 @@ public class OrderProcessStep<A extends JobArguments> {
         this.logger = new OrderProcessStepLogger(internalStep);
         this.threadName = Thread.currentThread().getName();
         this.outcome = new OrderProcessStepOutcome();
+    }
+
+    private OrderProcessStep(JobEnvironment<A> jobEnvironment, OrderProcessStep<?> step) {
+        this.jobEnvironment = jobEnvironment;
+        this.internalStep = step.getInternalStep();
+        this.logger = step.logger;
+        this.threadName = step.threadName;
+        this.outcome = step.outcome;
+    }
+
+    /** Execute another job<br />
+     * 
+     * @param clazz Job class
+     * @throws Exception */
+    public <AJ extends JobArguments> void executeJob(Class<? extends Job<AJ>> clazz) throws Exception {
+        executeJob(clazz, (Map<String, JobArgument<?>>) null, false);
+    }
+
+    /** Execute another job<br />
+     * 
+     * @param clazz Job class
+     * @param executeJobArguments Map (key=argument name,value=argument value)
+     * @throws Exception */
+    public <AJ extends JobArguments> void executeJob(Class<? extends Job<AJ>> clazz, Map<String, Object> executeJobArguments) throws Exception {
+        Map<String, JobArgument<?>> map = null;
+        if (executeJobArguments != null && executeJobArguments.size() > 0) {
+            map = new HashMap<>();
+            for (Map.Entry<String, Object> e : executeJobArguments.entrySet()) {
+                map.put(e.getKey(), JobArgument.toExecuteJobArgument(e.getKey(), e.getValue()));
+            }
+        }
+        executeJob(clazz, map, false);
+    }
+
+    public <AJ extends JobArguments> void executeJob(Class<? extends Job<AJ>> clazz, JobArgument<?>... executeJobArguments) throws Exception {
+        executeJob(clazz, executeJobArguments == null || executeJobArguments.length == 0 ? null : Arrays.asList(executeJobArguments));
+    }
+
+    public <AJ extends JobArguments> void executeJob(Class<? extends Job<AJ>> clazz, Collection<JobArgument<?>> executeJobArguments)
+            throws Exception {
+        Map<String, JobArgument<?>> map = null;
+        if (executeJobArguments != null && executeJobArguments.size() > 0) {
+            map = new HashMap<>();
+            for (JobArgument<?> arg : executeJobArguments) {
+                map.put(arg.getName(), arg.toExecuteJobArgument());
+            }
+        }
+        executeJob(clazz, map, true);
+    }
+
+    // to overwrite by UnitTestJobHelper
+    protected <AJ extends JobArguments> AJ onExecuteJobCreateArguments(Job<AJ> job, OrderProcessStep<AJ> step, List<JobArgumentException> exceptions)
+            throws Exception {
+        AJ args = job.onCreateJobArguments(exceptions, step);
+        return job.createDeclaredJobArguments(exceptions, step, args);
+    }
+
+    private <AJ extends JobArguments> void executeJob(Class<? extends Job<AJ>> clazz, Map<String, JobArgument<?>> executeJobArguments,
+            boolean updateDeclaredArgumentsDefinition) throws Exception {
+        Job<AJ> job = null;
+        try {
+            job = clazz.getDeclaredConstructor(JobContext.class).newInstance((JobContext) null);
+        } catch (Throwable e) {
+            job = clazz.getDeclaredConstructor().newInstance();
+        }
+
+        JobEnvironment<AJ> je = new JobEnvironment<AJ>(clazz.getSimpleName(), jobEnvironment);
+        job.setJobEnvironment(je);
+
+        if (cancelableExecuteJobs == null) {
+            cancelableExecuteJobs = new ConcurrentHashMap<>();
+        }
+        try {
+            job.onStart();
+
+            OrderProcessStep<AJ> step = new OrderProcessStep<>(je, this);
+            step.executeJobBean = step.new ExecuteJobBean(job, executeJobArguments, updateDeclaredArgumentsDefinition);
+
+            List<JobArgumentException> exceptions = new ArrayList<JobArgumentException>();
+            // AJ args = job.onCreateJobArguments(exceptions, step);
+            // args = job.createDeclaredJobArguments(exceptions, step, args);
+            AJ args = onExecuteJobCreateArguments(job, step, exceptions);
+            step.init(args);
+
+            if (step.getLogger().isDebugEnabled()) {
+                step.logJobKey();
+                // step.getLogger().debug(job.getClass().getSimpleName() + " Arguments:");
+                // logArgumentsBySource(LogLevel.DEBUG);
+                step.logAllArguments(LogLevel.DEBUG);
+            }
+
+            cancelableExecuteJobs.put(je.getJobKey(), step);
+            job.processOrder(step);
+        } catch (Throwable e) {
+            throw e;
+        } finally {
+            job.onStop();
+            cancelableExecuteJobs.remove(je.getJobKey());
+        }
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    protected void cancelExecuteJobs() {
+        if (cancelableExecuteJobs != null && cancelableExecuteJobs.size() > 0) {
+            for (Map.Entry<String, OrderProcessStep> e : cancelableExecuteJobs.entrySet()) {
+                try {
+                    e.getValue().getExecuteJobBean().getJob().cancelOrderProcessStep(e.getValue());
+                } catch (Throwable t) {
+                    logger.warn("[cancelExecuteJobs][" + e.getKey() + "]" + e.toString(), e);
+                }
+            }
+            cancelableExecuteJobs.clear();
+        }
+        cancelableExecuteJobs = null;
     }
 
     protected void init(A arguments) {
@@ -216,6 +338,14 @@ public class OrderProcessStep<A extends JobArguments> {
                             allArguments.put(n, a);
                         }
                     }
+                }
+            });
+        }
+
+        if (hasExecuteJobArguments()) {
+            executeJobBean.arguments.entrySet().stream().forEach(e -> {
+                if (!allArguments.containsKey(e.getKey())) {
+                    allArguments.put(e.getKey(), e.getValue());
                 }
             });
         }
@@ -703,6 +833,7 @@ public class OrderProcessStep<A extends JobArguments> {
             logAllDirtyArguments(mockMessage == null ? header : mockMessage + " " + header, logDetails);
 
             if (logDetails) {
+                logJobKey();
                 logArgumentsBySource(ll);
                 logAllArguments(ll);
             }
@@ -712,6 +843,12 @@ public class OrderProcessStep<A extends JobArguments> {
             if (ae != null) {
                 throw ae;
             }
+        }
+    }
+
+    private void logJobKey() {
+        if (logger.isDebugEnabled()) {
+            logger.debug("JobKEY=" + jobEnvironment.getJobKey());
         }
     }
 
@@ -891,8 +1028,42 @@ public class OrderProcessStep<A extends JobArguments> {
         });
     }
 
+    protected ExecuteJobBean getExecuteJobBean() {
+        return executeJobBean;
+    }
+
+    protected boolean hasExecuteJobArguments() {
+        return executeJobBean != null && executeJobBean.arguments != null && executeJobBean.arguments.size() > 0;
+    }
+
     public OrderProcessStepOutcome getOutcome() {
         return outcome;
+    }
+
+    protected class ExecuteJobBean {
+
+        private final Job<?> job;
+        /* execute another job arguments */
+        private final Map<String, JobArgument<?>> arguments;
+        private final boolean updateDeclaredArgumentsDefinition;
+
+        private ExecuteJobBean(Job<?> job, Map<String, JobArgument<?>> arguments, boolean updateDeclaredArgumentsDefinition) {
+            this.job = job;
+            this.arguments = arguments;
+            this.updateDeclaredArgumentsDefinition = updateDeclaredArgumentsDefinition;
+        }
+
+        protected Job<?> getJob() {
+            return job;
+        }
+
+        protected Map<String, JobArgument<?>> getArguments() {
+            return arguments;
+        }
+
+        protected boolean updateDeclaredArgumentsDefinition() {
+            return updateDeclaredArgumentsDefinition;
+        }
     }
 
 }

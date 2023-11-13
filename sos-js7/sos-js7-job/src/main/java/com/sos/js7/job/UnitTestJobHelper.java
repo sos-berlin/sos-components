@@ -80,10 +80,23 @@ public class UnitTestJobHelper<A extends JobArguments> {
     }
 
     private OrderProcessStep<A> newOrderProcessStep(Map<String, Object> args) throws Exception {
-        OrderProcessStep<A> step = new OrderProcessStep<A>(job.getJobEnvironment(), null);
-        ArgumentsResult r = toArgs(args, job.onCreateJobArguments(null, step));
+        // OrderProcessStep<A> step = new OrderProcessStep<A>(job.getJobEnvironment(), null);
+        OrderProcessStep<A> step = new OrderProcessStep<A>(job.getJobEnvironment(), null) {
 
+            @Override
+            protected <AJ extends JobArguments> AJ onExecuteJobCreateArguments(Job<AJ> job, OrderProcessStep<AJ> step,
+                    List<JobArgumentException> exceptions) throws Exception {
+
+                AJ aj = job.onCreateJobArguments(exceptions, step);
+                aj = job.getJobArgumensClass().getDeclaredConstructor().newInstance();
+                aj = job.setDeclaredJobArguments(exceptions, null, args, null, null, aj);
+                return aj;
+            }
+        };
+
+        ArgumentsResult r = toArgs(args, job.onCreateJobArguments(null, step));
         step.init(r.instance, r.undeclared);
+
         return step;
     }
 
