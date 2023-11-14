@@ -4,6 +4,8 @@ import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.UUID;
 
+import com.sos.commons.util.SOSShell;
+
 import js7.data.value.Value;
 import js7.launcher.forjava.internal.BlockingInternalJob.JobContext;
 
@@ -19,13 +21,23 @@ public class JobEnvironment<A extends JobArguments> {
     protected JobEnvironment(JobContext jc) {
         if (jc == null) {
             engineArguments = null;
-            systemEncoding = null;
+            systemEncoding = SOSShell.getSystemEncoding();
             jobKey = UUID.randomUUID().toString();
         } else {
             engineArguments = jc.jobArguments();
             systemEncoding = jc.systemEncoding();
             jobKey = jc.jobKey().toString();
         }
+    }
+
+    // execute another job
+    protected <AJ extends JobArguments> JobEnvironment(String clazzName, JobEnvironment<AJ> je) {
+        engineArguments = je.getEngineArguments();
+        systemEncoding = je.getSystemEncoding();
+        jobKey = "execute-job-" + clazzName + "-" + UUID.randomUUID().toString();
+
+        // TODO set declaredArguments
+        allArguments = je.allArguments;
     }
 
     public A getDeclaredArguments() {
