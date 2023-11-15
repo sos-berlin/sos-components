@@ -7,5 +7,5 @@
 /sos-webservices/sos-webservices-server/src/main/resources/joc/repositories
 /sos-webservices/sos-webservices-joc/src/test/resources/joc/repositories/*
 /pojogen/sos-raml/src/main/resources/com/sos/monitoring/*
-
 /sos-webservices/sos-webservices-server/src/main/resources/joc/joc.properties
+/sos-webservices/sos-webservices-server/src/main/resources/joc/joc.*.properties
