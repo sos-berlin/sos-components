@@ -1,5 +1,8 @@
 package com.sos.joc2;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -94,5 +97,15 @@ public class MapUrls {
     
     public static JocSecurityLevel getSecurityLevelByUser() {
         return securityLevelByUser.get(System.getProperty("user.name").toLowerCase());
+    }
+    
+    public static String getJocProperties() {
+        Path resources = Paths.get("src/main/resources/joc");
+        String userJocProperties = "joc." + System.getProperty("user.name").toLowerCase() + ".properties";
+        if (Files.exists(resources.resolve(userJocProperties))) {
+            return "/joc/" + userJocProperties;
+        } else {
+            return "/joc/joc.properties";
+        }
     }
 }
