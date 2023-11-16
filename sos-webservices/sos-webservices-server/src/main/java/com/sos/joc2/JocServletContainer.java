@@ -37,7 +37,7 @@ public class JocServletContainer extends ServletContainer {
         LOGGER.debug("----> init on starting JOC");
         super.init();
 
-        Globals.sosCockpitProperties = new JocCockpitProperties();
+        Globals.sosCockpitProperties = new JocCockpitProperties(MapUrls.getJocProperties());
         Globals.setJocSecurityLevel(MapUrls.getSecurityLevelByUser());
         Proxies.startAll(Globals.sosCockpitProperties, 0, ProxyUser.JOC, MapUrls.getUrlMapperByUser());
         WorkflowPaths.init();
