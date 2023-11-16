@@ -95,7 +95,7 @@ public class SOSKdbxCreds implements Credentials {
             if (isTraceEnabled) {
                 LOGGER.trace("[handleXmlKey]keyFile");
             }
-            MessageDigest md = Encryption.getMessageDigestInstance();
+            MessageDigest md = Encryption.getSha256MessageDigestInstance();
             byte[] keyFileData = SOSKdbxKeyFile.load(keyFile);
             if (keyFileData == null) {
                 throw new IllegalStateException("Could not read key file");
@@ -105,7 +105,7 @@ public class SOSKdbxCreds implements Credentials {
             if (isTraceEnabled) {
                 LOGGER.trace("[handleXmlKey]pass,keyFile");
             }
-            MessageDigest md = Encryption.getMessageDigestInstance();
+            MessageDigest md = Encryption.getSha256MessageDigestInstance();
             byte[] pwKey = md.digest(password.getBytes());
             md.update(pwKey);
 
@@ -118,7 +118,7 @@ public class SOSKdbxCreds implements Credentials {
     }
 
     private void handleBinaryKey(@NotNull InputStream keyFile, String password) {
-        MessageDigest md = Encryption.getMessageDigestInstance();
+        MessageDigest md = Encryption.getSha256MessageDigestInstance();
         if (SOSString.isEmpty(password)) {
             if (isTraceEnabled) {
                 LOGGER.trace("[handleBinaryKey]keyFile");
