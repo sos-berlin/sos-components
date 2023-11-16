@@ -819,6 +819,31 @@
         <version>${keepass.java2.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.linguafranca.pwdb</groupId>
+        <artifactId>KeePassJava2-kdbx</artifactId>
+        <version>${keepass.java2.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.linguafranca.pwdb</groupId>
+        <artifactId>database</artifactId>
+        <version>${keepass.java2.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk18on</artifactId> 
+          </exclusion>
+          <exclusion>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcutil-jdk18on</artifactId> 
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.linguafranca.pwdb</groupId>
+        <artifactId>KeePassJava2-simple</artifactId>
+        <version>${keepass.java2.version}</version>
+      </dependency>
+      <dependency>
         <groupId>javax.jms</groupId>
         <artifactId>javax.jms-api</artifactId>
         <version>${javax.jms-api.version}</version>
