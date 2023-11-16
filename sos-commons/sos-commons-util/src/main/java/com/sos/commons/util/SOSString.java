@@ -53,16 +53,22 @@ public class SOSString {
     }
 
     private static String toString(Object o, Collection<String> excludeFieldNames, boolean excludeNullValues) {
-        return toString(o, excludeFieldNames, excludeNullValues, 0);
+        return toString(o, excludeFieldNames, excludeNullValues, 0, 0);
     }
 
-    private static String toString(Object o, Collection<String> excludeFieldNames, boolean excludeNullValues, int error) {
+    private static String toString(Object o, Collection<String> excludeFieldNames, boolean excludeNullValues, int error, int recursion) {
         if (o == null) {
             return TO_STRING_NULL_VALUE;
         }
         if (error > 100) {
             return TO_STRING_UNKNOWN_VALUE;
         }
+
+        recursion += 1;
+        if (recursion > 5) {
+            return TO_STRING_UNKNOWN_VALUE;
+        }
+
         try {
             Class<?> clazz = o.getClass();
             String clazzSimpleName = clazz.getSimpleName();
@@ -75,7 +81,7 @@ public class SOSString {
                     List<String> r = new ArrayList<>();
                     int len = Array.getLength(o);
                     for (int i = 0; i < len; i++) {
-                        r.add(toString(Array.get(o, i), excludeFieldNames, excludeNullValues, error));
+                        r.add(toString(Array.get(o, i), excludeFieldNames, excludeNullValues, error, recursion));
                     }
                     sb.append(String.join(",", r));
                     sb.append(']');
@@ -92,7 +98,7 @@ public class SOSString {
                 Collection<?> coll = (Collection<?>) o;
                 Iterator<?> it = coll.iterator();
                 while ((it.hasNext())) {
-                    r.add(toString(it.next(), excludeFieldNames, excludeNullValues, error));
+                    r.add(toString(it.next(), excludeFieldNames, excludeNullValues, error, recursion));
                 }
                 sb.append(String.join(",", r));
                 sb.append(']');
@@ -103,7 +109,7 @@ public class SOSString {
                 Iterator<?> it = map.keySet().iterator();
                 while ((it.hasNext())) {
                     Object key = it.next();
-                    r.add(key + "=" + toString(map.get(key), excludeFieldNames, excludeNullValues, error));
+                    r.add(key + "=" + toString(map.get(key), excludeFieldNames, excludeNullValues, error, recursion));
                 }
                 sb.append(String.join(",", r));
                 sb.append('}');
@@ -149,7 +155,8 @@ public class SOSString {
                             if (excludeNullValues && val == null) {
                                 continue;
                             }
-                            r.add(fn + "=" + toString(val, excludeFieldNames, excludeNullValues, error));
+                            r.add(fn + "=" + toString(val, excludeFieldNames, excludeNullValues, error, recursion));
+                            // r.add(fn + "=" + val);
                         } catch (Throwable e) {
                             error++;
                             if (!r.contains(TO_STRING_UNKNOWN_VALUE)) {
