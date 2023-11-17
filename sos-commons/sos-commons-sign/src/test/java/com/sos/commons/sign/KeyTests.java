@@ -895,7 +895,7 @@ public class KeyTests {
             assertNotEquals(signature, "");
             LOGGER.trace("Signing was successful!");
             LOGGER.trace(String.format("Signature:\n%1$s%2$s", signature.substring(0, 120), "..."));
-            X509Certificate cert = KeyUtil.generateCertificateFromKeyPair(keyPair);
+            X509Certificate cert = KeyUtil.generateCertificateFromKeyPair(keyPair, "testaccount");
             Boolean verified = VerifySignature.verifyX509(cert, ORIGINAL_STRING, signature);
             if (verified) {
                 LOGGER.trace("Created signature verification was successful!");
@@ -924,7 +924,7 @@ public class KeyTests {
             assertNotEquals(signature, "");
             LOGGER.trace("Signing was successful!");
             LOGGER.trace(String.format("Signature:\n%1$s%2$s", signature.substring(0, 120), "..."));
-            X509Certificate cert = KeyUtil.generateCertificateFromKeyPair(keyPair);
+            X509Certificate cert = KeyUtil.generateCertificateFromKeyPair(keyPair, "testaccount");
             Boolean verified = VerifySignature.verifyX509(cert.getPublicKey(), ORIGINAL_STRING, signature);
             if (verified) {
                 LOGGER.trace("Created signature verification was successful!");
@@ -1101,7 +1101,7 @@ public class KeyTests {
         try {
             String privateKeyString = new String(Files.readAllBytes(Paths.get(X509_PRIVATEKEY_PATH)), StandardCharsets.UTF_8);
             KeyPair keyPair = KeyUtil.getKeyPairFromRSAPrivatKeyString(privateKeyString);
-            X509Certificate cert = KeyUtil.generateCertificateFromKeyPair(keyPair);
+            X509Certificate cert = KeyUtil.generateCertificateFromKeyPair(keyPair, "testaccount");
             boolean keysAndGeneratedX509Match = KeyUtil.pubKeyFromCertMatchPrivKey(keyPair.getPrivate(), cert);
             LOGGER.trace("matches: " + keysAndGeneratedX509Match);
             assertTrue(keysAndGeneratedX509Match);
@@ -1114,7 +1114,7 @@ public class KeyTests {
     public void test25CheckKeys() {
         LOGGER.trace("*********  Test 25: Check generated KeyPair format  ********************************************");
         try {
-            JocKeyPair jocKeyPair = KeyUtil.createRSAJocKeyPair();
+            JocKeyPair jocKeyPair = KeyUtil.createRSAJocKeyPair("testaccount");
             LOGGER.trace("KeyPair generation was successful");
             LOGGER.trace(String.format("privateKey:\n%1$s%2$s", jocKeyPair.getPrivateKey().substring(0, 120), "..."));
             LOGGER.trace(String.format("publicKey:\n%1$s%2$s", jocKeyPair.getPublicKey().substring(0, 120), "..."));

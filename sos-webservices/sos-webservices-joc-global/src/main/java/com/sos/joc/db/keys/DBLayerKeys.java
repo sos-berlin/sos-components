@@ -67,9 +67,13 @@ public class DBLayerKeys {
                 existingKey.setCertificate(keyPair.getCertificate());
             } else {
                 try {
-                    String certificate = CertificateUtils.asPEMString(KeyUtil.generateCertificateFromKeyPair(KeyUtil
-                            .getKeyPairFromECDSAPrivatKeyString(keyPair.getPrivateKey())));
-                    existingKey.setCertificate(certificate);
+                    if(keyPair.getKeyAlgorithm().equals(JocKeyAlgorithm.ECDSA.name())) {
+                        existingKey.setCertificate(CertificateUtils.asPEMString(KeyUtil.generateCertificateFromKeyPair(KeyUtil
+                                .getKeyPairFromECDSAPrivatKeyString(keyPair.getPrivateKey()), account, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM)));
+                    } else {
+                        existingKey.setCertificate(CertificateUtils.asPEMString(KeyUtil.generateCertificateFromKeyPair(KeyUtil
+                                .getKeyPairFromRSAPrivatKeyString(keyPair.getPrivateKey()), account)));
+                    }
                 } catch (CertificateEncodingException | NoSuchAlgorithmException | InvalidKeySpecException | IOException e) {
                     LOGGER.warn("could not extract certificate from key pair. cause: ", e);
                     existingKey.setCertificate(null);
@@ -87,7 +91,22 @@ public class DBLayerKeys {
             DBItemDepKeys newKey = new DBItemDepKeys();
             newKey.setKeyType(JocKeyType.PRIVATE.value());
             newKey.setKey(keyPair.getPrivateKey());
-            newKey.setCertificate(null);
+            if(keyPair.getCertificate() != null) {
+                newKey.setCertificate(keyPair.getCertificate());
+            } else {
+                try {
+                    if(keyPair.getKeyAlgorithm().equals(JocKeyAlgorithm.ECDSA.name())) {
+                        newKey.setCertificate(CertificateUtils.asPEMString(KeyUtil.generateCertificateFromKeyPair(KeyUtil
+                                .getKeyPairFromECDSAPrivatKeyString(keyPair.getPrivateKey()), account, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM)));
+                    } else {
+                        newKey.setCertificate(CertificateUtils.asPEMString(KeyUtil.generateCertificateFromKeyPair(KeyUtil
+                                .getKeyPairFromRSAPrivatKeyString(keyPair.getPrivateKey()), account)));
+                    }
+                } catch (CertificateEncodingException | NoSuchAlgorithmException | InvalidKeySpecException | IOException e) {
+                    LOGGER.warn("could not extract certificate from key pair. cause: ", e);
+                    newKey.setCertificate(null);
+                }
+            }
             if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
                 newKey.setKeyAlgorithm(JocKeyAlgorithm.PGP.value());
             } else if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
@@ -244,8 +263,8 @@ public class DBLayerKeys {
             JocKeyPair keyPair = new JocKeyPair();
             keyPair.setPrivateKey(key.getKey());
             keyPair.setCertificate(key.getCertificate());
-            keyPair.setKeyAlgorithm(SOSKeyConstants.ECDSA_ALGORITHM_NAME);
-            keyPair.setKeyType(SOSKeyConstants.ECDSA_ALGORITHM_NAME);
+            keyPair.setKeyAlgorithm(JocKeyAlgorithm.fromValue(key.getKeyAlgorithm()).name());
+            keyPair.setKeyType(JocKeyType.fromValue(key.getKeyType()).name());
             return keyPair;
         }
         return null;
@@ -286,7 +305,7 @@ public class DBLayerKeys {
             DBItemInventoryCertificate newCertificate = new DBItemInventoryCertificate();
             newCertificate.setCa(true);
             newCertificate.setKeyAlgorithm(JocKeyAlgorithm.valueOf(keyPair.getKeyAlgorithm()).value());
-            newCertificate.setKeyType(JocKeyType.valueOf(keyPair.getKeyType()).value());
+            newCertificate.setKeyType(JocKeyType.CA.value());
             newCertificate.setPem(keyPair.getCertificate());
             newCertificate.setAccount(account);
             newCertificate.setSecLvl(secLvl);
