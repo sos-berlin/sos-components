@@ -78,13 +78,12 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
                 } else {
                     if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())) {
                         // default
-                        keyPair = KeyUtil.createRSAJocKeyPair();
+                        keyPair = KeyUtil.createRSAJocKeyPair(accountName);
                     } else {
-                        keyPair = KeyUtil.createECDSAJOCKeyPair();
+                        keyPair = KeyUtil.createECDSAJOCKeyPair(accountName);
                     }
                 }
             }
-            keyPair.setKeyAlgorithm(filter.getKeyAlgorithm());
             // store private key to the db
             dbLayer.saveOrUpdateGeneratedKey(keyPair, accountName, JocSecurityLevel.MEDIUM);
             // update CA info for signing key
