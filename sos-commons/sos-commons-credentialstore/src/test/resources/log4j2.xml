@@ -3,7 +3,7 @@
 	<Appenders>
 		<Console name="console" target="SYSTEM_OUT">
 			<PatternLayout
-				pattern="%d{HH:mm:ss.SSS}[%5p][%t](%F:%L) - %m%n" />
+				pattern="%d{HH:mm:ss.SSS}[%5p][%t] (%F:%L) - %m%n" />
 		</Console>
 
 	</Appenders>
@@ -11,6 +11,6 @@
 		<Root level="info">
 			<AppenderRef ref="console" />
 		</Root>
-		<Logger name="com.sos" level="trace" />
+		<Logger name="com.sos" level="debug" />
 	</Loggers>
 </Configuration>
