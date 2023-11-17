@@ -17,7 +17,7 @@ import com.sos.commons.credentialstore.keepass.exceptions.SOSKeePassAttachmentEx
 import com.sos.commons.credentialstore.keepass.exceptions.SOSKeePassDatabaseException;
 
 public abstract class ASOSKeePassHandler {
-  
+
     public static final int ICON_INDEX_NEW_GROUP = 48; // folder icon
     public static final int ICON_INDEX_NEW_ENTRY = 0; // key icon
 
@@ -49,11 +49,11 @@ public abstract class ASOSKeePassHandler {
         if (SOSKeePassDatabase.isKdbx(keePassFile)) {
             Module m = module == null ? SOSKeePassDatabase.DEFAULT_MODULE : module;
             switch (m) {
-            case DOM:
-                h = new SOSKdbxDOMHandler();
-                break;
             case JAXB:
                 h = new SOSKdbxJAXBHandler();
+                break;
+            case DOM:
+                h = new SOSKdbxDOMHandler();
                 break;
             }
         } else {
