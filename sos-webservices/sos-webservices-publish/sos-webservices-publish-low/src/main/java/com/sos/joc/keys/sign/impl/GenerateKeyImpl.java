@@ -81,17 +81,14 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
                 } else {
                     if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())) {
                         // default
-                        keyPair = KeyUtil.createRSAJocKeyPair();
+                        keyPair = KeyUtil.createRSAJocKeyPair(accountName);
                     } else {
-                        keyPair = KeyUtil.createECDSAJOCKeyPair();
+                        keyPair = KeyUtil.createECDSAJOCKeyPair(accountName);
                     }
                 }
             }
-            keyPair.setKeyAlgorithm(filter.getKeyAlgorithm());
-            hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
             // store private key to the db
-            dbLayerKeys.saveOrUpdateGeneratedKey(keyPair, accountName, JocSecurityLevel.LOW);
+            dbLayer.saveOrUpdateGeneratedKey(keyPair, accountName, JocSecurityLevel.LOW);
             // update CA info for signing key
             if(rootCaAvailable) {
                 dbLayer.saveOrUpdateSigningRootCaCertificate(rootKeyPair, accountName, Globals.getJocSecurityLevel().intValue());
