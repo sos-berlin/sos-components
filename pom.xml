@@ -83,6 +83,8 @@
 <!--    <yaml.version>1.33</yaml.version> -->
     <yaml.version>2.0</yaml.version>
     <xml.bind.version>2.3.1</xml.bind.version>
+    <jaxb.version>2.4.0-b180830.0438</jaxb.version>
+    <jaxb.api.version>2.4.0-b180830.0359</jaxb.api.version>
     <jwt.version>4.2.2</jwt.version>
     <json.schema.validator.version>1.0.76</json.schema.validator.version>
   </properties>
@@ -461,7 +463,23 @@
       <dependency>
         <groupId>javax.xml.bind</groupId>
         <artifactId>jaxb-api</artifactId>
-        <version>${xml.bind.version}</version>
+<!--        <version>${xml.bind.version}</version> -->
+        <version>${jaxb.api.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.sun.xml.bind</groupId>
+        <artifactId>jaxb-impl</artifactId>
+        <version>${jaxb.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.glassfish.jaxb</groupId>
+        <artifactId>jaxb-bom</artifactId>
+        <version>${jaxb.version}</version>
+      </dependency>
+            <dependency>
+        <groupId>org.glassfish.jaxb</groupId>
+        <artifactId>jaxb-runtime</artifactId>
+        <version>${jaxb.version}</version>
       </dependency>
       <dependency>
         <groupId>org.slf4j</groupId>
