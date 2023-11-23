@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -19,9 +20,13 @@ import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryTag;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.JOCEvent;
+import com.sos.joc.event.bean.inventory.InventoryTagAddEvent;
+import com.sos.joc.event.bean.inventory.InventoryTagDeleteEvent;
+import com.sos.joc.event.bean.inventory.InventoryTagsEvent;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.tag.common.RequestFilters;
@@ -55,23 +60,30 @@ public class TagsModifyImpl extends JOCResourceImpl implements ITagsModify {
         return postTagsModify(Action.ORDERING, accessToken, filterBytes);
     }
 
-    public void postTagsModify(Action action, RequestFilters modifyTags, InventoryTagDBLayer dbLayer) throws Exception {
+    public Stream<JOCEvent> postTagsModify(Action action, RequestFilters modifyTags, InventoryTagDBLayer dbLayer) throws Exception {
         Set<String> tags = modifyTags.getTags() == null ? Collections.emptySet() : modifyTags.getTags();
+        Stream<JOCEvent> events = Stream.empty();
 
         switch (action) {
         case ADD:
-            add(tags, Date.from(Instant.now()), dbLayer);
+            Set<DBItemInventoryTag> result = add(tags, Date.from(Instant.now()), dbLayer);
+            events = result.stream().map(dbItem -> new InventoryTagAddEvent(dbItem.getName()));
             break;
             
         case DELETE:
+            List<DBItemInventoryTag> dbTags = dbLayer.getTags(tags);
+            Set<String> alreadyExistingTags = dbTags.stream().map(DBItemInventoryTag::getName).collect(Collectors.toSet());
+            tags.retainAll(alreadyExistingTags);
             // IMPORTANT! first taggings, then tags
-            dbLayer.deleteTaggings(tags);
+            dbLayer.deleteTaggings(tags); // TODO events for Workflows
             dbLayer.deleteTags(tags);
+            
+            events = tags.stream().map(name -> new InventoryTagDeleteEvent(name));
             break;
             
         case ORDERING:
-            List<DBItemInventoryTag> dbTags = dbLayer.getAllTags();
-            Map<String, DBItemInventoryTag> mappedByName = dbTags.stream().collect(Collectors.toMap(DBItemInventoryTag::getName, Function
+            List<DBItemInventoryTag> dbAllTags = dbLayer.getAllTags();
+            Map<String, DBItemInventoryTag> mappedByName = dbAllTags.stream().collect(Collectors.toMap(DBItemInventoryTag::getName, Function
                     .identity()));
             int ordering = 1;
             for (String name : tags) {
@@ -93,8 +105,10 @@ public class TagsModifyImpl extends JOCResourceImpl implements ITagsModify {
                 }
                 ordering++;
             }
+            events = Stream.of(new InventoryTagsEvent());
             break;
         }
+        return events;
     }
     
     public static Set<DBItemInventoryTag> add(Set<String> tags, Date date, InventoryTagDBLayer dbLayer) throws SOSHibernateException {
@@ -129,9 +143,9 @@ public class TagsModifyImpl extends JOCResourceImpl implements ITagsModify {
             session.beginTransaction();
             InventoryTagDBLayer dbLayer = new InventoryTagDBLayer(session);
             storeAuditLog(modifyTags.getAuditLog(), CategoryType.INVENTORY);
-            postTagsModify(action, modifyTags, dbLayer);
+            Stream<JOCEvent> events = postTagsModify(action, modifyTags, dbLayer);
             Globals.commit(session);
-            JocInventory.postTagsEvent();
+            events.forEach(evt -> EventBus.getInstance().post(evt));
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             Globals.rollback(session);

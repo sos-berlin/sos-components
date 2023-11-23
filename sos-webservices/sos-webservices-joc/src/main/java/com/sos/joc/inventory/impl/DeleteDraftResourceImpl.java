@@ -26,6 +26,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -98,6 +99,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
                 // throw new
             }
             Set<String> foldersForEvent = new HashSet<>();
+            List<Long> workflowInvIds = new ArrayList<>();
             ResponseItem entity = new ResponseItem();
             Set<RequestFilter> requests = in.getObjects().stream().filter(isFolder.negate()).collect(Collectors.toSet());
             DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
@@ -112,6 +114,9 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
                 }
                 deleteUpdateDraft(config.getTypeAsEnum(), dbLayer, config, dbAuditLog.getId());
                 foldersForEvent.add(config.getFolder());
+                if (JocInventory.isWorkflow(config.getType())) {
+                    workflowInvIds.add(config.getId());
+                }
                 JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), session, dbAuditLog);
             }
             Globals.commit(session);
@@ -123,6 +128,11 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             if (deleted.size() + updated.size() > 0) {
                 for (String folder : foldersForEvent) {
                     JocInventory.postEvent(folder);
+                }
+                // post event: InventoryTaggingUpdated
+                if (workflowInvIds != null && !workflowInvIds.isEmpty()) {
+                    InventoryTagDBLayer dbTagLayer = new InventoryTagDBLayer(session);
+                    dbTagLayer.getTags(workflowInvIds).stream().distinct().forEach(JocInventory::postTaggingEvent);
                 }
             }
 
@@ -150,10 +160,15 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
 
             List<DBItemInventoryConfiguration> dbFolderContent = dbLayer.getFolderContent(config.getPath(), true, null, false);
             DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
+            List<Long> workflowInvIds = new ArrayList<>();
+            
             for (DBItemInventoryConfiguration item : dbFolderContent) {
                 if (!item.getDeployed() && !item.getReleased() && !ConfigurationType.FOLDER.intValue().equals(item.getType())) {
                     deleteUpdateDraft(item.getTypeAsEnum(), dbLayer, item, dbAuditLog.getId());
                     JocAuditLog.storeAuditLogDetail(new AuditLogDetail(item.getPath(), item.getType()), session, dbAuditLog);
+                    if (JocInventory.isWorkflow(item.getType())) {
+                        workflowInvIds.add(item.getId());
+                    }
                 }
             }
             if (withDeletionOfEmptyFolders) {
@@ -174,6 +189,11 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             if (deleted.size() + updated.size() > 0) {
                 JocInventory.postEvent(config.getPath());
                 JocInventory.postFolderEvent(config.getFolder());
+                // post event: InventoryTaggingUpdated
+                if (workflowInvIds != null && !workflowInvIds.isEmpty()) {
+                    InventoryTagDBLayer dbTagLayer = new InventoryTagDBLayer(session);
+                    dbTagLayer.getTags(workflowInvIds).stream().distinct().forEach(JocInventory::postTaggingEvent);
+                }
             }
 
             return JOCDefaultResponse.responseStatus200(entity);

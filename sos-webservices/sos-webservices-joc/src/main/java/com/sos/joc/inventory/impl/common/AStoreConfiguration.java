@@ -26,6 +26,7 @@ import com.sos.joc.classes.inventory.ReferenceValidator;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocError;
@@ -55,6 +56,15 @@ public abstract class AStoreConfiguration extends JOCResourceImpl {
                 JocInventory.updateConfiguration(dbLayer, item, in.getConfiguration());
                 if (JocInventory.isFolder(item.getType())) {
                     JocInventory.postFolderEvent(item.getFolder());
+                } else if (JocInventory.isWorkflow(item.getType())) {
+                    InventoryTagDBLayer tagDbLayer = new InventoryTagDBLayer(session);
+                    try {
+                        tagDbLayer.getTags(item.getId()).stream().distinct().forEach(JocInventory::postTaggingEvent);
+                    } catch (Exception e) {
+                        //
+                    }
+                    JocInventory.postEvent(item.getFolder());
+                    JocInventory.postObjectEvent(item.getPath(), item.getTypeAsEnum()); //is used for Tags layout
                 } else {
                     JocInventory.postEvent(item.getFolder());
                 }

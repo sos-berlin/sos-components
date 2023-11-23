@@ -1,6 +1,7 @@
 package com.sos.joc.classes.agent;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -25,6 +26,7 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentCluster;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.exceptions.JocMissingLicenseException;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -170,6 +172,7 @@ public class AgentHelper {
             InventoryDBLayer invDbLayer = new InventoryDBLayer(agentDbLayer.getSession());
             List<DBItemInventoryConfiguration> invalidWorkflowsByAgentNames = invDbLayer.getUsedWorkflowsByAgentNames(agentNamesAndAliases, true);
             Set<String> events = new HashSet<>();
+            List<Long> workflowInvIds = new ArrayList<>();
             if (!invalidWorkflowsByAgentNames.isEmpty()) {
                 Set<String> visibleAgentNames = agentDbLayer.getVisibleAgentNames();
                 invalidWorkflowsByAgentNames.stream().filter(w -> {
@@ -182,6 +185,9 @@ public class AgentHelper {
                 }).peek(w -> w.setValid(true)).forEach(w -> {
                     try {
                         events.add(w.getFolder());
+                        if (JocInventory.isWorkflow(w.getType())) {
+                            workflowInvIds.add(w.getId());
+                        }
                         //JocInventory.updateConfiguration(invDbLayer, w);
                         invDbLayer.getSession().update(w);
                     } catch (Exception e) {
@@ -189,8 +195,11 @@ public class AgentHelper {
                     }
                 });
             }
-            for (String event : events) {
-                JocInventory.postEvent(event);
+            events.forEach(JocInventory::postEvent);
+            // post event: InventoryTaggingUpdated
+            if (workflowInvIds != null && !workflowInvIds.isEmpty()) {
+                InventoryTagDBLayer dbTagLayer = new InventoryTagDBLayer(agentDbLayer.getSession());
+                dbTagLayer.getTags(workflowInvIds).stream().distinct().forEach(JocInventory::postTaggingEvent);
             }
         }
     }

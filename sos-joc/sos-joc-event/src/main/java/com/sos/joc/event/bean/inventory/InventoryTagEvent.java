@@ -16,7 +16,12 @@ public class InventoryTagEvent extends JOCEvent {
      * @param folder
      */
     public InventoryTagEvent(String tag) {
-        super("InventoryTagUpdated", null, null);
+        super("InventoryTaggingUpdated", null, null);
+        putVariable("tag", tag);
+    }
+    
+    public InventoryTagEvent(String key, String tag) {
+        super(key, null, null);
         putVariable("tag", tag);
     }
     

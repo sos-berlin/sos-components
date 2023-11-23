@@ -216,6 +216,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 JocInventory.postEvent(conf.getFolder());
             }
         }
+        // TODO post event: InventoryTaggingUpdated ??
     }
 
     private List<Err419> update(List<RequestFilter> toUpdate, InventoryDBLayer dbLayer, SOSAuthFolderPermissions folderPermissions, JocError jocError,

@@ -131,8 +131,11 @@ public class JobTemplatesPropagateImpl extends JOCResourceImpl implements IJobTe
             if (!jobTemplateNamesPerWorkflowName.isEmpty()) {
                 // post events
                 if (!report.getWorkflows().isEmpty()) {
-                    report.getWorkflows().stream().filter(JobTemplatesPropagate.workflowIsChanged).map(WorkflowReport::getPath).map(path -> getParent(
-                            path)).distinct().forEach(folder -> JocInventory.postEvent(folder));
+                    report.getWorkflows().stream().filter(JobTemplatesPropagate.workflowIsChanged).map(WorkflowReport::getPath).distinct().forEach(
+                            path -> {
+                                JocInventory.postEvent(getParent(path));
+                                JocInventory.postObjectEvent(path, ConfigurationType.WORKFLOW);
+                            });
                 }
             }
 
