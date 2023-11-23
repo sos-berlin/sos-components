@@ -34,7 +34,7 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
                     released.getObjectType())).filter(Objects::nonNull).map(dbItemReleased -> {
                         dbLayer.recallReleasedConfiguration(dbItemReleased);
                         return dbItemReleased.getFolder();
-                    }).distinct().forEach(folder -> JocInventory.postEvent(folder));
+                    }).distinct().forEach(JocInventory::postEvent);
             return JOCDefaultResponse.responseStatusJSOk(new Date());
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

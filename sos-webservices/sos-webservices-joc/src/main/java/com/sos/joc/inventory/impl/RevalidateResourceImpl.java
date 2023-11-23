@@ -100,7 +100,7 @@ public class RevalidateResourceImpl extends JOCResourceImpl implements IRevalida
         Report report = revalidate(folderFilter, getJocError(), dbAuditLog);
         Stream.concat(report.getInvalidObjs().stream(), report.getValidObjs().stream()).map(ReportItem::getPath).map(JOCResourceImpl::getParent)
                 .distinct().forEach(JocInventory::postEvent);
-
+        // TODO post event: InventoryTaggingUpdated ?? I don't know the Ids :(
         report.setDeliveryDate(Date.from(Instant.now()));
 
         return report;

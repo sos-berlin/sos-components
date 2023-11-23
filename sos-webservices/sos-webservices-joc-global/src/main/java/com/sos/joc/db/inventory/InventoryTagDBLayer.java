@@ -562,6 +562,42 @@ public class InventoryTagDBLayer extends DBLayer {
         }
     }
     
+    public List<String> getTags(List<Long> cids) {
+        if (cids == null || cids.isEmpty()) {
+            return Collections.emptyList();
+        }
+        if (cids.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            List<String> result = new ArrayList<>();
+            for (int i = 0; i < cids.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                result.addAll(getTags(SOSHibernate.getInClausePartition(i, cids)));
+            }
+            return result;
+        } else {
+            try {
+                StringBuilder sql = new StringBuilder();
+                sql.append("select t.name from ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg join ").append(DBLayer.DBITEM_INV_TAGS).append(
+                        " t on t.id = tg.tagId");
+
+                sql.append(" where tg.cid in (:cids)");
+                sql.append(" order by t.ordering");
+
+                Query<String> query = getSession().createQuery(sql.toString());
+                query.setParameterList("cids", cids);
+
+                List<String> result = getSession().getResultList(query);
+                if (result == null) {
+                    return Collections.emptyList();
+                }
+
+                return result;
+
+            } catch (Exception ex) {
+                // this method is exclusively used for tagging events. That should not throw exception. It affects only missing events.
+                return Collections.emptyList();
+            }
+        }
+    }
+    
     public boolean hasTaggings(String name, Integer type) {
         try {
             StringBuilder sql = new StringBuilder();
@@ -610,6 +646,29 @@ public class InventoryTagDBLayer extends DBLayer {
             Query<String> query = getSession().createQuery(sql.toString());
             query.setParameter("cid", cid);
             query.setParameter("name", name);
+            query.setParameter("type", type);
+            
+            return getSession().executeUpdate(query);
+            
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public int update(String trashName, String name, Integer type, Long cid) {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("update ").append(DBLayer.DBITEM_INV_TAGGINGS);
+            sql.append(" set cid=:cid");
+            sql.append(" set name=:name");
+            sql.append(" where name=:trashName and type=:type");
+
+            Query<String> query = getSession().createQuery(sql.toString());
+            query.setParameter("cid", cid);
+            query.setParameter("name", name);
+            query.setParameter("trashName", trashName);
             query.setParameter("type", type);
             
             return getSession().executeUpdate(query);

@@ -3,6 +3,7 @@ package com.sos.joc.inventory.impl.common;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -12,7 +13,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -62,7 +62,7 @@ public abstract class ARestoreConfiguration extends JOCResourceImpl {
                     .getRestoreSuffixPrefix(clusterSettings), clusterSettings.getRestoreSuffix().getDefault(), config.getName(), type, dbLayer));
 
             Set<String> events = Collections.emptySet();
-            boolean withTagsEvents = false;
+            List<Long> workflowInvIds = new ArrayList<>();
             ResponseNewPath response = new ResponseNewPath();
             response.setObjectType(type);
             
@@ -112,16 +112,13 @@ public abstract class ARestoreConfiguration extends JOCResourceImpl {
                                     item = createItem(trashItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath)), dbAuditLog.getId(), dbLayer);
                                     JocInventory.insertConfiguration(dbLayer, item);
                                 }
+                                restoreTaggings(item, pWithoutFix.getFileName().toString(), tagDbLayer, workflowInvIds);
                             } else {
                                 item = createItem(trashItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath.getParent().resolve(trashItem
                                         .getName().replaceFirst(replace.get(0), replace.get(1))))), dbAuditLog.getId(), dbLayer);
                                 JocInventory.insertConfiguration(dbLayer, item);
+                                restoreTaggings(item, tagDbLayer, workflowInvIds);
                             }
-                        }
-                        if (item != null) {
-                           if (restoreTaggings(item, tagDbLayer)) {
-                               withTagsEvents = true;
-                           }
                         }
                     }
                 }
@@ -137,9 +134,7 @@ public abstract class ARestoreConfiguration extends JOCResourceImpl {
                     if (newItem == null) {
                         DBItemInventoryConfiguration newDbItem = createItem(config, pWithoutFix, dbAuditLog.getId(), dbLayer);
                         JocInventory.insertConfiguration(dbLayer, newDbItem);
-                        if (restoreTaggings(newDbItem, tagDbLayer)) {
-                            withTagsEvents = true;
-                        }
+                        restoreTaggings(newDbItem, tagDbLayer, workflowInvIds);
                         if (newDbItem.getTypeAsEnum().equals(ConfigurationType.DEPLOYMENTDESCRIPTOR) 
                                 || newDbItem.getTypeAsEnum().equals(ConfigurationType.DESCRIPTORFOLDER)) {
                             JocInventory.makeParentDirs(dbLayer, pWithoutFix.getParent(), dbAuditLog.getId(), ConfigurationType.DESCRIPTORFOLDER);
@@ -184,18 +179,14 @@ public abstract class ARestoreConfiguration extends JOCResourceImpl {
                         dbItem = createItem(config, pWithoutFix, dbAuditLog.getId(), dbLayer);
                     }
                     JocInventory.insertConfiguration(dbLayer, dbItem);
-                    if (restoreTaggings(dbItem, tagDbLayer)) {
-                        withTagsEvents = true;
-                    }
+                    restoreTaggings(dbItem, pWithoutFix.getFileName().toString(), tagDbLayer, workflowInvIds);
                     response.setId(dbItem.getId());
                     response.setPath(dbItem.getPath());
                 } else {
                     DBItemInventoryConfiguration dbItem = createItem(config, pWithoutFix.getParent().resolve(pWithoutFix.getFileName().toString()
                             .replaceFirst(replace.get(0), replace.get(1))), dbAuditLog.getId(), dbLayer);
                     JocInventory.insertConfiguration(dbLayer, dbItem);
-                    if (restoreTaggings(dbItem, tagDbLayer)) {
-                        withTagsEvents = true;
-                    }
+                    restoreTaggings(dbItem, tagDbLayer, workflowInvIds);
                     response.setId(dbItem.getId());
                     response.setPath(dbItem.getPath());
                 }
@@ -219,8 +210,8 @@ public abstract class ARestoreConfiguration extends JOCResourceImpl {
                     JocInventory.postTrashEvent(event);
                 }
             }
-            if (withTagsEvents) {
-                JocInventory.postTagsEvent();
+            if (workflowInvIds != null && !workflowInvIds.isEmpty()) {
+                tagDbLayer.getTags(workflowInvIds).stream().distinct().forEach(JocInventory::postTaggingEvent);
             }
 
             response.setDeliveryDate(Date.from(Instant.now()));
@@ -233,13 +224,25 @@ public abstract class ARestoreConfiguration extends JOCResourceImpl {
         }
     }
     
-    private static boolean restoreTaggings(DBItemInventoryConfiguration dbItem, InventoryTagDBLayer tagDbLayer) {
-        if (ConfigurationType.WORKFLOW.equals(dbItem.getTypeAsEnum())) {
+    private static void restoreTaggings(DBItemInventoryConfiguration dbItem, InventoryTagDBLayer tagDbLayer, List<Long> workflowInvIds) {
+        if (JocInventory.isWorkflow(dbItem.getType())) {
             if (tagDbLayer.hasTaggings(dbItem.getName(), dbItem.getType())) {
-                return tagDbLayer.update(dbItem.getName(), dbItem.getType(), dbItem.getId()) > 0;
+                if (tagDbLayer.update(dbItem.getName(), dbItem.getType(), dbItem.getId()) > 0) {
+                    workflowInvIds.add(dbItem.getId());
+                }
             }
         }
-        return false;
+    }
+    
+    private static void restoreTaggings(DBItemInventoryConfiguration dbItem, String trashName, InventoryTagDBLayer tagDbLayer,
+            List<Long> workflowInvIds) {
+        if (JocInventory.isWorkflow(dbItem.getType())) {
+            if (tagDbLayer.hasTaggings(trashName, dbItem.getType())) {
+                if (tagDbLayer.update(trashName, dbItem.getName(), dbItem.getType(), dbItem.getId()) > 0) {
+                    workflowInvIds.add(dbItem.getId());
+                }
+            }
+        }
     }
     
     private static boolean validate(DBItemInventoryConfiguration item, InventoryDBLayer dbLayer) {
