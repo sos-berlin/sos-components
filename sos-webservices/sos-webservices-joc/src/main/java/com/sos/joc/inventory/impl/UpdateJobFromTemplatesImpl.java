@@ -109,6 +109,7 @@ public class UpdateJobFromTemplatesImpl extends JOCResourceImpl implements IUpda
             // post events
             if (JobTemplatesPropagate.workflowIsChanged.test(report)) {
                 JocInventory.postEvent(getParent(report.getPath()));
+                JocInventory.postObjectEvent(report.getPath(), ConfigurationType.WORKFLOW);
             }
 
             return report.getJobs().getAdditionalProperties().get(in.getJobName());

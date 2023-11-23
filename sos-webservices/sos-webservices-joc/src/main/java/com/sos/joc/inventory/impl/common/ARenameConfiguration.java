@@ -56,8 +56,12 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
             
             Set<String> events = new HashSet<>();
             Set<String> folderEvents = new HashSet<>();
+            List<Long> workflowInvIds = new ArrayList<>();
             events.add(config.getPath());
             folderEvents.add(oldFolder);
+            if (JocInventory.isWorkflow(config.getType())) {
+                workflowInvIds.add(config.getId());
+            }
             
             ResponseNewPath response = new ResponseNewPath();
             response.setObjectType(type);
@@ -92,16 +96,21 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
 
             if (JocInventory.isFolder(type)) {
                 List<AuditLogDetail> auditLogDetails = new ArrayList<>();
-                List<DBItemInventoryConfiguration> oldDBFolderContent = dbLayer.getFolderContent(config.getPath(), true, null, JocInventory.isDescriptor(config.getTypeAsEnum()));
+                List<DBItemInventoryConfiguration> oldDBFolderContent = dbLayer.getFolderContent(config.getPath(), true, null, JocInventory
+                        .isDescriptor(config.getTypeAsEnum()));
                 oldDBFolderContent = oldDBFolderContent.stream().map(oldItem -> {
                     auditLogDetails.add(new AuditLogDetail(oldItem.getPath(), oldItem.getType()));
+                    if (JocInventory.isWorkflow(oldItem.getType())) {
+                        workflowInvIds.add(oldItem.getId());
+                    }
                     setItem(oldItem, p.resolve(oldPath.relativize(Paths.get(oldItem.getPath()))), dbAuditLog.getId());
                     return oldItem;
                 }).collect(Collectors.toList());
                 
                 JocAuditLog.storeAuditLogDetails(auditLogDetails, session, dbAuditLog);
                 DBItemInventoryConfiguration newItem = dbLayer.getConfiguration(newPath, ConfigurationType.FOLDER.intValue());
-                List<DBItemInventoryConfiguration> newDBFolderContent = dbLayer.getFolderContent(newPath, true, null, JocInventory.isDescriptor(config.getTypeAsEnum()));
+                List<DBItemInventoryConfiguration> newDBFolderContent = dbLayer.getFolderContent(newPath, true, null, JocInventory.isDescriptor(config
+                        .getTypeAsEnum()));
                 Set<Long> deletedIds = new HashSet<>();
 
                 if (newDBFolderContent != null && !newDBFolderContent.isEmpty()) {
@@ -205,11 +214,12 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
             }
             
             Globals.commit(session);
-            for (String event : events) {
-                JocInventory.postEvent(event);
-            }
-            for (String event : folderEvents) {
-                JocInventory.postFolderEvent(event);
+            events.forEach(JocInventory::postEvent);
+            folderEvents.forEach(JocInventory::postFolderEvent);
+            // post event: InventoryTaggingUpdated
+            if (workflowInvIds != null && !workflowInvIds.isEmpty()) {
+                InventoryTagDBLayer dbTagLayer = new InventoryTagDBLayer(session);
+                dbTagLayer.getTags(workflowInvIds).stream().distinct().forEach(JocInventory::postTaggingEvent);
             }
 
             response.setDeliveryDate(Date.from(Instant.now()));

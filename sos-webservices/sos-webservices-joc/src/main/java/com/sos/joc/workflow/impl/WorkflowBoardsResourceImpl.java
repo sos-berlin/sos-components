@@ -1,18 +1,22 @@
 package com.sos.joc.workflow.impl;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import jakarta.ws.rs.Path;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -23,17 +27,16 @@ import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.items.DeployedContent;
+import com.sos.joc.db.deploy.items.WorkflowBoards;
 import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.workflow.Workflow;
 import com.sos.joc.model.workflow.WorkflowFilter;
 import com.sos.joc.model.workflow.WorkflowsFilter;
 import com.sos.joc.workflow.resource.IWorkflowBoardsResource;
-import com.sos.joc.workflows.impl.WorkflowsResourceImpl;
 import com.sos.schema.JsonValidator;
 
+import jakarta.ws.rs.Path;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.workflow.position.JPosition;
 
@@ -110,11 +113,11 @@ public class WorkflowBoardsResourceImpl extends JOCResourceImpl implements IWork
                     workflow.setOrderPreparation(WorkflowsHelper.removeFinals(workflow));
                 }
                 
-                JocError jocError = getJocError();
+//                JocError jocError = getJocError();
                 WorkflowsFilter f = new WorkflowsFilter();
                 f.setControllerId(controllerId);
                 f.setCompact(true);
-                final Set<Folder> folders = folderPermissions.getListOfFolders();
+//                final Set<Folder> folders = folderPermissions.getListOfFolders();
                 Set<String> expectedAndConsumeNoticeBoards = Stream.concat(workflow.getExpectedNoticeBoards().getAdditionalProperties().keySet().stream(),
                         workflow.getConsumeNoticeBoards().getAdditionalProperties().keySet().stream()).collect(Collectors.toSet());
                 Set<String> postNoticeBoards = workflow.getPostNoticeBoards().getAdditionalProperties().keySet().stream().collect(Collectors.toSet());
@@ -122,36 +125,122 @@ public class WorkflowBoardsResourceImpl extends JOCResourceImpl implements IWork
                 workflow.getExpectedNoticeBoards().getAdditionalProperties().clear();
                 workflow.getConsumeNoticeBoards().getAdditionalProperties().clear();
                 
+                List<WorkflowBoards> allWorkflowIdsWithBoards = dbLayer.getUsedWorkflowsByNoticeBoards(controllerId);
+//                Set<WorkflowId> workflowsWithNotices = new HashSet<>();
+                Map<String, Set<WorkflowId>> workflowsWithPostNotices = new HashMap<>();
+                Map<String, Set<WorkflowId>> workflowsWithExpectedNotices = new HashMap<>();
+                Map<String, Set<WorkflowId>> workflowsWithConsumeNotices = new HashMap<>();
+                
+                
+                for (WorkflowBoards wb : allWorkflowIdsWithBoards) {
+                    List<String> pNotices = wb.getPostNotices();
+                    List<String> eNotices = wb.getExpectNotices();
+                    List<String> cNotices = wb.getConsumeNotices();
+                    WorkflowId wId = new WorkflowId(wb.getPath(), wb.getVersionId());
+                    if (pNotices != null && !pNotices.isEmpty()) {
+                        pNotices.retainAll(expectedAndConsumeNoticeBoards);
+//                        if (!pNotices.isEmpty()) {
+                            for (String pNotice : pNotices) {
+                                workflowsWithPostNotices.putIfAbsent(pNotice, new HashSet<>());
+                                workflowsWithPostNotices.get(pNotice).add(wId);
+                            }
+//                            workflowsWithNotices.add(wId);
+//                        }
+                    }
+                    if (eNotices != null && !eNotices.isEmpty()) {
+                        eNotices.retainAll(postNoticeBoards);
+//                        if (!eNotices.isEmpty()) {
+                            for (String eNotice : eNotices) {
+                                workflowsWithExpectedNotices.putIfAbsent(eNotice, new HashSet<>());
+                                workflowsWithExpectedNotices.get(eNotice).add(wId);
+                            }
+//                            workflowsWithNotices.add(wId);
+//                        }
+                    }
+                    if (cNotices != null && !cNotices.isEmpty()) {
+                        cNotices.retainAll(postNoticeBoards);
+//                        if (!cNotices.isEmpty()) {
+                            for (String cNotice : cNotices) {
+                                workflowsWithConsumeNotices.putIfAbsent(cNotice, new HashSet<>());
+                                workflowsWithConsumeNotices.get(cNotice).add(wId);
+                            }
+//                            workflowsWithNotices.add(wId);
+//                        }
+                    }
+                }
+                
+//                f.setWorkflowIds(new ArrayList<>(workflowsWithNotices));
+//                workflowsWithNotices.clear();
+                
+//                if (f.getWorkflowIds() != null && !f.getWorkflowIds().isEmpty()) {
+//                    List<com.sos.controller.model.workflow.Workflow> workflows = WorkflowsResourceImpl.getWorkflows(f, dbLayer, currentstate, folders,
+//                            jocError);
+//                }
+                
                 for (String boardName : postNoticeBoards) {
-                    f.setWorkflowIds(dbLayer.getUsedWorkflowsByExpectedNoticeBoard(JocInventory.pathToName(boardName), controllerId));
-                    if (f.getWorkflowIds() != null && !f.getWorkflowIds().isEmpty()) {
-                        workflow.getExpectedNoticeBoards().setAdditionalProperty(boardName, WorkflowsResourceImpl.getWorkflows(f, dbLayer,
-                                currentstate, folders, jocError));
+                    
+                    Set<WorkflowId> wIds = null;
+                    
+//                    f.setWorkflowIds(new ArrayList<>(workflowsWithExpectedNotices.getOrDefault(boardName, Collections.emptySet())));
+                    wIds = workflowsWithExpectedNotices.get(boardName);
+                    if (wIds != null && !wIds.isEmpty()) {
+                        //workflow.getExpectedNoticeBoards().setAdditionalProperty(boardName, getWorkflowFromWorkflowId(wIds));
+                        workflow.getExpectedNoticeBoards().setAdditionalProperty(boardName, new ArrayList<>(wIds));
                     }
-                    f.setWorkflowIds(dbLayer.getUsedWorkflowsByConsumeNoticeBoard(JocInventory.pathToName(boardName), controllerId));
-                    if (f.getWorkflowIds() != null && !f.getWorkflowIds().isEmpty()) {
-                        workflow.getConsumeNoticeBoards().setAdditionalProperty(boardName, WorkflowsResourceImpl.getWorkflows(f, dbLayer,
-                                currentstate, folders, jocError));
+//                    f.setWorkflowIds(dbLayer.getUsedWorkflowsByExpectedNoticeBoard(JocInventory.pathToName(boardName), controllerId));
+//                    if (f.getWorkflowIds() != null && !f.getWorkflowIds().isEmpty()) {
+//                        workflow.getExpectedNoticeBoards().setAdditionalProperty(boardName, WorkflowsResourceImpl.getWorkflows(f, dbLayer,
+//                                currentstate, folders, jocError));
+//                    }
+//                    f.setWorkflowIds(new ArrayList<>(workflowsWithConsumeNotices.getOrDefault(boardName, Collections.emptySet())));
+                    wIds = workflowsWithConsumeNotices.get(boardName);
+                    if (wIds != null && !wIds.isEmpty()) {
+                        //workflow.getConsumeNoticeBoards().setAdditionalProperty(boardName, getWorkflowFromWorkflowId(wIds));
+                        workflow.getConsumeNoticeBoards().setAdditionalProperty(boardName, new ArrayList<>(wIds));
                     }
+//                    f.setWorkflowIds(dbLayer.getUsedWorkflowsByConsumeNoticeBoard(JocInventory.pathToName(boardName), controllerId));
+//                    if (f.getWorkflowIds() != null && !f.getWorkflowIds().isEmpty()) {
+//                        workflow.getConsumeNoticeBoards().setAdditionalProperty(boardName, WorkflowsResourceImpl.getWorkflows(f, dbLayer,
+//                                currentstate, folders, jocError));
+//                    }
                 }
                 for (String boardName : expectedAndConsumeNoticeBoards) {
-                    f.setWorkflowIds(dbLayer.getUsedWorkflowsByPostNoticeBoard(JocInventory.pathToName(boardName), controllerId));
-                    if (f.getWorkflowIds() != null && !f.getWorkflowIds().isEmpty()) {
-                        workflow.getPostNoticeBoards().setAdditionalProperty(boardName, WorkflowsResourceImpl.getWorkflows(f, dbLayer, currentstate,
-                                folders, jocError));
+//                    f.setWorkflowIds(new ArrayList<>(workflowsWithPostNotices.getOrDefault(boardName, Collections.emptySet())));
+                    Set<WorkflowId> wIds = workflowsWithPostNotices.get(boardName);
+                    if (wIds != null && !wIds.isEmpty()) {
+                        //workflow.getPostNoticeBoards().setAdditionalProperty(boardName, getWorkflowFromWorkflowId(wIds));
+                        workflow.getPostNoticeBoards().setAdditionalProperty(boardName, new ArrayList<>(wIds));
                     }
+//                    f.setWorkflowIds(dbLayer.getUsedWorkflowsByPostNoticeBoard(JocInventory.pathToName(boardName), controllerId));
+//                    if (f.getWorkflowIds() != null && !f.getWorkflowIds().isEmpty()) {
+//                        workflow.getPostNoticeBoards().setAdditionalProperty(boardName, WorkflowsResourceImpl.getWorkflows(f, dbLayer, currentstate,
+//                                folders, jocError));
+//                    }
                 }
-                f.setWorkflowIds(dbLayer.getAddOrderWorkflowsByWorkflow(JocInventory.pathToName(workflow.getPath()), controllerId));
-                if (f.getWorkflowIds() != null && !f.getWorkflowIds().isEmpty()) {
-                    workflow.setAddOrderFromWorkflows(WorkflowsResourceImpl.getWorkflows(f, dbLayer, currentstate, folders, jocError));
+//                f.setWorkflowIds(dbLayer.getAddOrderWorkflowsByWorkflow(JocInventory.pathToName(workflow.getPath()), controllerId));
+                List<WorkflowId> wIds2 = dbLayer.getAddOrderWorkflowsByWorkflow(JocInventory.pathToName(workflow.getPath()), controllerId);
+                if (wIds2 != null && !wIds2.isEmpty()) {
+//                    if (compact) {
+                        //workflow.setAddOrderFromWorkflows(getWorkflowFromWorkflowId(wIds2));
+                        workflow.setAddOrderFromWorkflows(wIds2);
+//                    } else {
+//                        workflow.setAddOrderFromWorkflows(WorkflowsResourceImpl.getWorkflows(f, dbLayer, currentstate, folders, jocError));
+//                    }
                 } else {
                     workflow.setAddOrderFromWorkflows(Collections.emptyList());
                 }
                 if (workflow.getAddOrderToWorkflows() != null && !workflow.getAddOrderToWorkflows().isEmpty()) {
-                    f.setWorkflowIds(dbLayer.getWorkflowsIds(workflow.getAddOrderToWorkflows().stream().map(w -> w.getPath()).distinct().collect(Collectors
-                            .toList()), controllerId));
-                    if (f.getWorkflowIds() != null && !f.getWorkflowIds().isEmpty()) {
-                        workflow.setAddOrderToWorkflows(WorkflowsResourceImpl.getWorkflows(f, dbLayer, currentstate, folders, jocError));
+//                    f.setWorkflowIds(dbLayer.getWorkflowsIds(workflow.getAddOrderToWorkflows().stream().map(w -> w.getPath()).distinct().collect(Collectors
+//                            .toList()), controllerId));
+                    wIds2 = dbLayer.getWorkflowsIds(workflow.getAddOrderToWorkflows().stream().map(w -> w.getPath()).distinct().collect(Collectors
+                          .toList()), controllerId);
+                    if (wIds2 != null && !wIds2.isEmpty()) {
+//                        if (compact) {
+                            //workflow.setAddOrderToWorkflows(getWorkflowFromWorkflowId(wIds2));
+                            workflow.setAddOrderToWorkflows(wIds2);
+//                        } else {
+//                            workflow.setAddOrderToWorkflows(WorkflowsResourceImpl.getWorkflows(f, dbLayer, currentstate, folders, jocError));
+//                        }
                     }
                 }
                 
@@ -183,5 +272,18 @@ public class WorkflowBoardsResourceImpl extends JOCResourceImpl implements IWork
         }
         return currentstate;
     }
+    
+//    private static List<com.sos.controller.model.workflow.Workflow> getWorkflowFromWorkflowId(Collection<WorkflowId> workflowIds) {
+//        return workflowIds.stream().map(wId -> {
+//            com.sos.controller.model.workflow.Workflow w = new com.sos.controller.model.workflow.Workflow();
+//            w.setVersionId(wId.getVersionId());
+//            w.setPath(wId.getPath());
+//            w.setIsCurrentVersion(null);
+//            w.setTimeZone(null);
+//            w.setVersion(null);
+//            w.setSuspended(null);
+//            return w;
+//        }).distinct().collect(Collectors.toList());
+//    }
 
 }

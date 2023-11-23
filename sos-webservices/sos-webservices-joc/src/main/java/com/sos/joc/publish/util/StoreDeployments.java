@@ -38,6 +38,7 @@ import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.exceptions.JocDeployException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.common.IDeployObject;
@@ -88,6 +89,7 @@ public class StoreDeployments {
 
             if (signedItemsSpec.getVerifiedDeployables() != null && !signedItemsSpec.getVerifiedDeployables().isEmpty()) {
                 Set<String> folders = signedItemsSpec.getVerifiedDeployables().keySet().stream().map(DBItemDeploymentHistory::getFolder).collect(Collectors.toSet());
+                List<Long> workflowInvIds = new ArrayList<>();
                 for (Map.Entry<DBItemDeploymentHistory, DBItemDepSignatures> entry : signedItemsSpec.getVerifiedDeployables().entrySet()) {
                     DBItemDeploymentHistory item = entry.getKey();
                     if (item.getId() == null) {
@@ -111,7 +113,11 @@ public class StoreDeployments {
                             dbLayer.getSession().save(signature);
                         }
                         deployedObjects.add(item);
-                        DBItemInventoryConfiguration toUpdate = dbLayer.getSession().get(DBItemInventoryConfiguration.class, item.getInventoryConfigurationId());
+                        DBItemInventoryConfiguration toUpdate = dbLayer.getSession().get(DBItemInventoryConfiguration.class, item
+                                .getInventoryConfigurationId());
+                        if (JocInventory.isWorkflow(toUpdate.getType())) {
+                            workflowInvIds.add(toUpdate.getId());
+                        }
                         toUpdate.setDeployed(true);
                         toUpdate.setModified(Date.from(Instant.now()));
                         dbLayer.getSession().update(toUpdate);
@@ -123,6 +129,11 @@ public class StoreDeployments {
                     }
                 }
                 folders.forEach(folder -> JocInventory.postEvent(folder));
+                // post event: InventoryTaggingUpdated
+                if (workflowInvIds != null && !workflowInvIds.isEmpty()) {
+                    InventoryTagDBLayer dbTagLayer = new InventoryTagDBLayer(dbLayer.getSession());
+                    dbTagLayer.getTags(workflowInvIds).stream().distinct().forEach(JocInventory::postTaggingEvent);
+                }
             }
             if (!deployedObjects.isEmpty()) {
                 long countWorkflows = deployedObjects.stream().filter(item -> ConfigurationType.WORKFLOW.intValue() == item.getType()).count();

@@ -20,6 +20,9 @@ import com.sos.joc.db.inventory.DBItemInventoryTag;
 import com.sos.joc.db.inventory.DBItemInventoryTagging;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.inventory.InventoryTagAddEvent;
+import com.sos.joc.event.bean.inventory.InventoryTagEvent;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
@@ -54,24 +57,25 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
             InventoryTagDBLayer dbTagLayer = new InventoryTagDBLayer(session);
             
             DBItemInventoryConfiguration config = getConfiguration(in.getPath(), new InventoryDBLayer(session));
+            List<InventoryTagEvent> tagEvents = new ArrayList<>();
             
             Set<String> tags = in.getTags() == null ? Collections.emptySet() : in.getTags();
             List<DBItemInventoryTag> dbTags = dbTagLayer.getTags(tags);
             Date date = Date.from(Instant.now());
             Set<DBItemInventoryTag> newDbTagItems = TagsModifyImpl.add(tags, date, dbTagLayer);
-            boolean sendTagsEvent = !newDbTagItems.isEmpty();
+            tagEvents.addAll(newDbTagItems.stream().map(name -> new InventoryTagAddEvent(name.getName())).collect(Collectors.toList()));
+            
             newDbTagItems.addAll(dbTags);
             Set<Long> newTagIds = newDbTagItems.stream().map(DBItemInventoryTag::getId).collect(Collectors.toSet());
             
             List<DBItemInventoryTagging> dbTaggings = dbTagLayer.getTaggings(config.getId());
             Set<Long> tagIdsInTaggings = dbTaggings.stream().map(DBItemInventoryTagging::getTagId).collect(Collectors.toSet());
-            List<String> tagEvents = new ArrayList<>();
             
             //delete taggings that not inside request
             dbTaggings.stream().filter(i -> !newTagIds.contains(i.getTagId())).forEach(i -> {
                 try {
                     dbTagLayer.getSession().delete(i);
-                    tagEvents.add(i.getName());
+                    tagEvents.add(new InventoryTagEvent(i.getName()));
                 } catch (SOSHibernateException e) {
                     throw new DBInvalidDataException(e);
                 }
@@ -90,7 +94,7 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
             }).forEach(i -> {
                 try {
                     dbTagLayer.getSession().save(i);
-                    tagEvents.add(i.getName());
+                    tagEvents.add(new InventoryTagEvent(i.getName()));
                 } catch (SOSHibernateException e) {
                     throw new DBInvalidDataException(e);
                 }
@@ -98,10 +102,7 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
             
             Globals.commit(session);
             
-            if (sendTagsEvent) {
-                JocInventory.postTagsEvent();
-            }
-            tagEvents.forEach(tag -> JocInventory.postTagEvent(tag));
+            tagEvents.forEach(evt -> EventBus.getInstance().post(evt));
             
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {

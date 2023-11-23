@@ -2,6 +2,7 @@ package com.sos.joc.inventory.impl;
 
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -22,6 +23,7 @@ import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
@@ -144,6 +146,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
             }
             DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
             Set<String> events = new HashSet<>();
+            List<Long> workflowInvIds = new ArrayList<>();
             String search = in.getSearch().replaceAll("%", ".*");
             String replace = in.getReplace() == null ? "" : in.getReplace();
             Set<RequestFilter> requests = in.getObjects().stream().filter(isFolder.negate()).collect(Collectors.toSet());
@@ -184,11 +187,17 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
                 setItem(config, p, dbAuditLog.getId());
                 JocInventory.updateConfiguration(dbLayer, config);
                 events.add(config.getFolder());
+                if (JocInventory.isWorkflow(config.getType())) {
+                    workflowInvIds.add(config.getId());
+                }
             }
 
             Globals.commit(session);
-            for (String event : events) {
-                JocInventory.postEvent(event);
+            events.forEach(JocInventory::postEvent);
+            // post event: InventoryTaggingUpdated
+            if (workflowInvIds != null && !workflowInvIds.isEmpty()) {
+                InventoryTagDBLayer dbTagLayer = new InventoryTagDBLayer(dbLayer.getSession());
+                dbTagLayer.getTags(workflowInvIds).stream().distinct().forEach(JocInventory::postTaggingEvent);
             }
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
