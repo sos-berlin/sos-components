@@ -1,9 +1,15 @@
 package com.sos.joc.db.deploy.items;
 
 import java.util.Date;
+import java.util.List;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.sos.joc.Globals;
 
 public class DeployedContent {
 
@@ -57,6 +63,17 @@ public class DeployedContent {
 
     public String getContent() {
         return json;
+    }
+    
+    public WorkflowBoards mapToWorkflowBoards() {
+        try {
+            WorkflowBoards wb = Globals.objectMapper.readValue(json, WorkflowBoards.class);
+            wb.setPath(path);
+            wb.setVersionId(commitId);
+            return wb;
+        } catch (Exception e) {
+            return null;
+        }
     }
     
     public String getPath() {
