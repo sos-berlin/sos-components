@@ -36,6 +36,7 @@ import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
@@ -71,18 +72,19 @@ public class DeleteDeployments {
             ConfigurationType.SCHEDULE);
 
 
-    public static boolean delete(Collection<DBItemDeploymentHistory> dbItems, DBLayerDeploy dbLayer, String account, String accessToken,
-            JocError jocError, Long auditlogId, boolean withoutFolderDeletion, String cancelOrderDate) throws SOSHibernateException {
+    public static Set<DBItemInventoryConfiguration> delete(Collection<DBItemDeploymentHistory> dbItems, DBLayerDeploy dbLayer, String account, String accessToken,
+            JocError jocError, Long auditlogId, boolean withoutFolderDeletion, boolean withEvents, String cancelOrderDate) throws SOSHibernateException {
         if (dbItems == null || dbItems.isEmpty()) {
-            return true;
+            return Collections.emptySet();
         }
         final String commitId = UUID.randomUUID().toString();
         final String commitIdforFileOrderSource = UUID.randomUUID().toString();
         
         
         // delete configurations optimistically
-        deleteConfigurations(dbLayer, null, getInvConfigurationsForTrash(dbLayer, storeNewDepHistoryEntries(dbLayer, dbItems, commitId, commitIdforFileOrderSource)), accessToken, jocError, auditlogId, withoutFolderDeletion);
-        
+        Set<DBItemInventoryConfiguration> invConfsToTrash = getInvConfigurationsForTrash(dbLayer, storeNewDepHistoryEntries(dbLayer, dbItems, commitId,
+                commitIdforFileOrderSource));
+        deleteConfigurations(dbLayer, null, invConfsToTrash, accessToken, jocError, auditlogId, withoutFolderDeletion, withEvents);
         
 //        List<DBItemInventoryConfiguration> invConfigurationsToDelete = new ArrayList<>();
 //        List<DBItemInventoryConfiguration> fileOrderSourcesToDelete = new ArrayList<>();
@@ -148,10 +150,10 @@ public class DeleteDeployments {
         }
         
 
-        return true;
+        return invConfsToTrash;
     }
     
-    public static boolean deleteFolder(String apiCall, String folder, boolean recursive, Collection<String> controllerIds, DBLayerDeploy dbLayer,
+    public static Set<DBItemInventoryConfiguration> deleteFolder(String apiCall, String folder, boolean recursive, Collection<String> controllerIds, DBLayerDeploy dbLayer,
             String account, String accessToken, JocError jocError, Long auditlogId, boolean withoutFolderDeletion, boolean withEvents, String cancelOrderDate)
             throws SOSHibernateException {
         Configuration conf = new Configuration();
@@ -162,11 +164,11 @@ public class DeleteDeployments {
                 withEvents, cancelOrderDate);
     }
     
-    public static boolean deleteFolder(String apiCall, Configuration conf, Collection<String> controllerIds, DBLayerDeploy dbLayer, String account,
+    public static Set<DBItemInventoryConfiguration> deleteFolder(String apiCall, Configuration conf, Collection<String> controllerIds, DBLayerDeploy dbLayer, String account,
             String accessToken, JocError jocError, Long auditlogId, boolean withoutFolderDeletion,
             boolean withEvents, String cancelOrderDate) throws SOSHibernateException {
         if (conf == null || conf.getPath() == null || conf.getPath().isEmpty()) {
-            return true;
+            return Collections.emptySet();
         }
    
         final String commitIdForDeleteFromFolder = UUID.randomUUID().toString();
@@ -177,8 +179,9 @@ public class DeleteDeployments {
                         Collectors.toList());
 
         // delete configurations optimistically
-        deleteConfigurations(dbLayer, null, getInvConfigurationsForTrash(dbLayer, storeNewDepHistoryEntries(dbLayer, dbItems,
-                commitIdForDeleteFromFolder, commitIdForDeleteFileOrderSource)), accessToken, jocError, auditlogId, withoutFolderDeletion);
+        Set<DBItemInventoryConfiguration> invItemsforTrash = getInvConfigurationsForTrash(dbLayer, storeNewDepHistoryEntries(dbLayer, dbItems,
+                commitIdForDeleteFromFolder, commitIdForDeleteFileOrderSource));
+        deleteConfigurations(dbLayer, null, invItemsforTrash, accessToken, jocError, auditlogId, withoutFolderDeletion, withEvents);
         
 //        List<DBItemInventoryConfiguration> invConfigurationsToDelete = new ArrayList<>();
 //        List<DBItemInventoryConfiguration> fileOrderSourceToDelete = new ArrayList<>();
@@ -244,7 +247,7 @@ public class DeleteDeployments {
 //                accessToken, jocError, auditlogId, withoutFolderDeletion, withEvents);
 //        deleteConfigurations(dbLayer, Collections.singletonList(conf), invConfigurationsToDelete, commitIdForDeleteFromFolder,
 //                accessToken, jocError, auditlogId, withoutFolderDeletion, withEvents);
-        return true;
+        return invItemsforTrash;
     }
     
     public static boolean delete(String apiCall, Collection<Configuration> confs, Collection<String> controllerIds, DBLayerDeploy dbLayer, String account,
@@ -420,12 +423,16 @@ public class DeleteDeployments {
     public static Set<DBItemDeploymentHistory> storeNewDepHistoryEntriesForRevoke(DBLayerDeploy dbLayer, List<DBItemDeploymentHistory> deletedItems,
             String commitId, Long auditLogId) {
         Set<DBItemDeploymentHistory> deletedObjects = Collections.emptySet();
-        Set<String> folders = Collections.emptySet();
+        Set<String> folders = new HashSet<>();
+        List<Long> workflowInvIds = new ArrayList<>();
         try {
             if (deletedItems != null && !deletedItems.isEmpty()) {
-                folders = deletedItems.stream().map(item -> item.getFolder()).collect(Collectors.toSet());
                 deletedObjects = new HashSet<DBItemDeploymentHistory>();
                 for (DBItemDeploymentHistory item : deletedItems) {
+                    folders.add(item.getFolder());
+                    if (JocInventory.isWorkflow(item.getType())) {
+                        workflowInvIds.add(item.getInventoryConfigurationId()); 
+                    }
                     item.setId(null);
                     item.setCommitId(commitId);
                     item.setOperation(OperationType.DELETE.value());
@@ -444,7 +451,12 @@ public class DeleteDeployments {
                         dbLayer.getSession().update(orig);
                     }
                 }
-                folders.stream().forEach(folder -> JocInventory.postEvent(folder));
+                folders.forEach(JocInventory::postEvent);
+                // InventoryTaggingUpdated
+                if (workflowInvIds != null && !workflowInvIds.isEmpty()) {
+                    InventoryTagDBLayer dbTagLayer = new InventoryTagDBLayer(dbLayer.getSession());
+                    dbTagLayer.getTags(workflowInvIds).stream().distinct().forEach(JocInventory::postTaggingEvent);
+                }
             }
 
         } catch (SOSHibernateException e) {
@@ -476,6 +488,7 @@ public class DeleteDeployments {
             boolean withoutFolderDeletion, boolean withEvents) {
         // add all elements from the folder(s)
         Set<String> foldersForEvent = new HashSet<>();
+        List<Long> workflowInvIds = new ArrayList<>();
         if (folders != null) {
             for (Configuration folder : folders) {
                 itemsToDelete.addAll(dbLayer.getInventoryConfigurationsByFolder(folder.getPath(), folder.getRecursive()));
@@ -496,6 +509,9 @@ public class DeleteDeployments {
                 JocInventory.deleteInventoryConfigurationAndPutToTrash(invConfiguration, invDbLayer, ConfigurationType.FOLDER);
                 if (withEvents) {
                     foldersForEvent.add(invConfiguration.getFolder());
+                    if (JocInventory.isWorkflow(invConfiguration.getType())) {
+                        workflowInvIds.add(invConfiguration.getId());
+                    }
                 }
             }
         }
@@ -515,6 +531,11 @@ public class DeleteDeployments {
         for (String folder: foldersForEvent) {
             JocInventory.postEvent(folder);
             JocInventory.postTrashEvent(folder);
+        }
+        // post event: InventoryTaggingUpdated
+        if (workflowInvIds != null && !workflowInvIds.isEmpty()) {
+            InventoryTagDBLayer dbTagLayer = new InventoryTagDBLayer(dbLayer.getSession());
+            dbTagLayer.getTags(workflowInvIds).stream().distinct().forEach(JocInventory::postTaggingEvent);
         }
     }
     

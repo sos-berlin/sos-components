@@ -70,12 +70,14 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             Globals.beginTransaction(session);
             
             Predicate<RequestFilter> isFolder = r -> JocInventory.isFolder(r.getObjectType());
-            if (in.getObjects().stream().parallel().anyMatch(isFolder)) {
-                //throw new 
-            }
+//            if (in.getObjects().stream().parallel().anyMatch(isFolder)) {
+//                //throw new 
+//            }
             Set<DBItemDeploymentHistory> allDeployments = new HashSet<>();
             DBLayerDeploy deployDbLayer = new DBLayerDeploy(session);
             Set<String> foldersForEvent = new HashSet<>();
+            List<Long> workflowInvIds = new ArrayList<>();
+            
             for (RequestFilter r : in.getObjects().stream().filter(isFolder.negate()).collect(Collectors.toSet())) {
                 DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, r, folderPermissions);
                 final ConfigurationType type = config.getTypeAsEnum();
@@ -101,6 +103,9 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                         JocInventory.deleteInventoryConfigurationAndPutToTrash(config, dbLayer, ConfigurationType.FOLDER);
                         JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), dbLayer.getSession(), dbAuditLog);
                         foldersForEvent.add(config.getFolder());
+                        if (JocInventory.isWorkflow(config.getType())) {
+                            workflowInvIds.add(config.getId());
+                        }
                     } else {
                         allDeployments.addAll(deployments);
                     }
@@ -112,13 +117,21 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             if (allDeployments != null && !allDeployments.isEmpty()) {
                 String account = JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel()) ? ClusterSettings.getDefaultProfileAccount(Globals
                         .getConfigurationGlobalsJoc()) : getAccount();
-                DeleteDeployments.delete(allDeployments, deployDbLayer, account, accessToken, getJocError(), dbAuditLog.getId(), true, in.getCancelOrdersDateFrom());
+                Set<DBItemInventoryConfiguration> deployedDeployables = DeleteDeployments.delete(allDeployments, deployDbLayer, account, accessToken,
+                        getJocError(), dbAuditLog.getId(), true, false, in.getCancelOrdersDateFrom());
+                workflowInvIds.addAll(deployedDeployables.stream().filter(i -> JocInventory.isWorkflow(i.getType())).map(
+                        DBItemInventoryConfiguration::getId).collect(Collectors.toList()));
             }
             Globals.commit(session);
             // post events
             for (String folder: foldersForEvent) {
                 JocInventory.postEvent(folder);
                 JocInventory.postTrashEvent(folder);
+            }
+            // post event: InventoryTaggingUpdated
+            if (workflowInvIds != null && !workflowInvIds.isEmpty()) {
+                InventoryTagDBLayer dbTagLayer = new InventoryTagDBLayer(session);
+                dbTagLayer.getTags(workflowInvIds).stream().distinct().forEach(JocInventory::postTaggingEvent);
             }
             
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -143,7 +156,8 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             session.setAutoCommit(false);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             session.beginTransaction();
-
+            
+            List<Long> workflowInvIds = null;
             DBItemInventoryConfiguration folder = null;
             if(forDescriptors) {
                 folder = JocInventory.getConfiguration(dbLayer, null, in.getPath(), ConfigurationType.DESCRIPTORFOLDER, folderPermissions);
@@ -154,12 +168,21 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                 cancelOrders(accessToken, folder, in.getCancelOrdersDateFrom(),dbLayer);
                 ReleaseResourceImpl.delete(folder, dbLayer, dbAuditLog, false, false);
                 // TODO restrict to allowed Controllers
-                List<DBItemInventoryConfiguration> deployables = dbLayer.getFolderContent(folder.getPath(), true, JocInventory.getDeployableTypes(), forDescriptors);
+                List<DBItemInventoryConfiguration> deployables = dbLayer.getFolderContent(folder.getPath(), true, JocInventory.getDeployableTypes(),
+                        forDescriptors);
                 if (deployables != null && !deployables.isEmpty()) {
                     String account = JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel()) ? ClusterSettings.getDefaultProfileAccount(Globals
                             .getConfigurationGlobalsJoc()) : getAccount();
-                    DeleteDeployments.deleteFolder(request, folder.getPath(), true, Proxies.getControllerDbInstances().keySet(),
-                            new DBLayerDeploy(session), account, accessToken, getJocError(), dbAuditLog.getId(), true, false, in.getCancelOrdersDateFrom());
+                    Set<DBItemInventoryConfiguration> deployedDeployables = DeleteDeployments.deleteFolder(request, folder.getPath(), true, Proxies
+                            .getControllerDbInstances().keySet(), new DBLayerDeploy(session), account, accessToken, getJocError(), dbAuditLog.getId(),
+                            true, false, in.getCancelOrdersDateFrom());
+                    
+                    workflowInvIds = deployables.stream().filter(i -> JocInventory.isWorkflow(i.getType())).map(
+                            DBItemInventoryConfiguration::getId).collect(Collectors.toList());
+                    deployables.removeAll(deployedDeployables); // deployables that never were deployed
+                    for (DBItemInventoryConfiguration deployable : deployables) {
+                        JocInventory.deleteInventoryConfigurationAndPutToTrash(deployable, dbLayer, ConfigurationType.DESCRIPTORFOLDER);
+                    }
                 }
             } else {
                 List<DBItemInventoryConfiguration> folderContent = dbLayer.getFolderContent(folder.getPath(), true, Collections.singleton(
@@ -175,6 +198,11 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             JocInventory.postFolderEvent(folder.getFolder());
             JocInventory.postTrashFolderEvent(folder.getFolder());
             JocInventory.postTrashEvent(folder.getPath());
+            // Tagging events
+            if (workflowInvIds != null && !workflowInvIds.isEmpty()) {
+                InventoryTagDBLayer dbTagLayer = new InventoryTagDBLayer(session);
+                dbTagLayer.getTags(workflowInvIds).stream().distinct().forEach(JocInventory::postTaggingEvent);
+            }
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (Throwable e) {
             Globals.rollback(session);

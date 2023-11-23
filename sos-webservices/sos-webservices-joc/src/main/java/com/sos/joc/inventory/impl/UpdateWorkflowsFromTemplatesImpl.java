@@ -10,8 +10,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.jobtemplate.JobTemplate;
 import com.sos.inventory.model.job.Job;
@@ -38,6 +36,8 @@ import com.sos.joc.model.jobtemplate.propagate.Report;
 import com.sos.joc.model.jobtemplate.propagate.WorkflowPropagateFilter;
 import com.sos.joc.model.jobtemplate.propagate.WorkflowReport;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path(JocInventory.APPLICATION_PATH)
 public class UpdateWorkflowsFromTemplatesImpl extends JOCResourceImpl implements IUpdateWorkflowsFromTemplates {
@@ -126,8 +126,11 @@ public class UpdateWorkflowsFromTemplatesImpl extends JOCResourceImpl implements
             if (dbWorkflows != null && !dbWorkflows.isEmpty()) {
                 // post events
                 if (!report.getWorkflows().isEmpty()) {
-                    report.getWorkflows().stream().filter(JobTemplatesPropagate.workflowIsChanged).map(WorkflowReport::getPath).map(path -> getParent(
-                            path)).distinct().forEach(folder -> JocInventory.postEvent(folder));
+                    report.getWorkflows().stream().filter(JobTemplatesPropagate.workflowIsChanged).map(WorkflowReport::getPath).distinct().forEach(
+                            path -> {
+                                JocInventory.postEvent(getParent(path));
+                                JocInventory.postObjectEvent(path, ConfigurationType.WORKFLOW);
+                            });
                 }
             }
             

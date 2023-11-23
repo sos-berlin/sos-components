@@ -66,6 +66,7 @@ import com.sos.joc.db.search.DBItemSearchWorkflow;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.inventory.InventoryEvent;
 import com.sos.joc.event.bean.inventory.InventoryFolderEvent;
+import com.sos.joc.event.bean.inventory.InventoryObjectEvent;
 import com.sos.joc.event.bean.inventory.InventoryTagEvent;
 import com.sos.joc.event.bean.inventory.InventoryTagsEvent;
 import com.sos.joc.event.bean.inventory.InventoryTrashEvent;
@@ -212,6 +213,10 @@ public class JocInventory {
 
     public static boolean isFolder(Integer type) {
         return (ConfigurationType.FOLDER.intValue() == type) || (ConfigurationType.DESCRIPTORFOLDER.intValue() == type);
+    }
+
+    public static boolean isWorkflow(Integer type) {
+        return ConfigurationType.WORKFLOW.intValue() == type;
     }
 
     public static boolean isCalendar(ConfigurationType type) {
@@ -515,7 +520,7 @@ public class JocInventory {
     public static void postEvent(String folder) {
         EventBus.getInstance().post(new InventoryEvent(folder));
     }
-
+    
     public static void postFolderEvent(String folder) {
         EventBus.getInstance().post(new InventoryFolderEvent(folder));
     }
@@ -528,12 +533,12 @@ public class JocInventory {
         EventBus.getInstance().post(new InventoryTrashFolderEvent(folder));
     }
     
-    public static void postTagEvent(String tag) {
-        EventBus.getInstance().post(new InventoryTagEvent(tag));
+    public static void postObjectEvent(String path, ConfigurationType objectType) {
+        EventBus.getInstance().post(new InventoryObjectEvent(path, objectType.value()));
     }
-
-    public static void postTagsEvent() {
-        EventBus.getInstance().post(new InventoryTagsEvent());
+    
+    public static void postTaggingEvent(String tag) {
+        EventBus.getInstance().post(new InventoryTagEvent(tag));
     }
 
     public static class InventoryPath {

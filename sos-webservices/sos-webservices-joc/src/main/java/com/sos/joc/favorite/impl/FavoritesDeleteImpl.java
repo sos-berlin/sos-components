@@ -39,7 +39,7 @@ public class FavoritesDeleteImpl extends JOCResourceImpl implements IFavoritesDe
             connection.beginTransaction();
             FavoriteDBLayer dbLayer = new FavoriteDBLayer(connection, account);
             
-            favorites.getFavoriteIds().stream().forEach(f -> dbLayer.deleteFavorite(f));
+            favorites.getFavoriteIds().stream().forEach(dbLayer::deleteFavorite);
             Globals.commit(connection);
             
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

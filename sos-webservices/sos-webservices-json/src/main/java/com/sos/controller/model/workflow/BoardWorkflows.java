@@ -27,15 +27,15 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 public class BoardWorkflows {
 
     @JsonIgnore
-    private Map<String, List<Workflow>> additionalProperties = new HashMap<String, List<Workflow>>();
+    private Map<String, List<WorkflowId>> additionalProperties = new HashMap<String, List<WorkflowId>>();
 
     @JsonAnyGetter
-    public Map<String, List<Workflow>> getAdditionalProperties() {
+    public Map<String, List<WorkflowId>> getAdditionalProperties() {
         return this.additionalProperties;
     }
 
     @JsonAnySetter
-    public void setAdditionalProperty(String name, List<Workflow> value) {
+    public void setAdditionalProperty(String name, List<WorkflowId> value) {
         this.additionalProperties.put(name, value);
     }
 
