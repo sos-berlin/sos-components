@@ -8,9 +8,11 @@ import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryTag;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.inventory.InventoryTagAddEvent;
+import com.sos.joc.event.bean.inventory.InventoryTagDeleteEvent;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
@@ -54,10 +56,13 @@ public class TagModifyImpl extends JOCResourceImpl implements ITagModify {
             Date now = Date.from(Instant.now());
             tag.setModified(now);
             dbLayer.getSession().update(tag);
-            JocInventory.postTagEvent(modifyTag.getName());
-            JocInventory.postTagEvent(modifyTag.getNewName());
-            
             Globals.commit(session);
+            
+            EventBus.getInstance().post(new InventoryTagAddEvent(modifyTag.getNewName()));
+            EventBus.getInstance().post(new InventoryTagDeleteEvent(modifyTag.getName()));
+//            JocInventory.postTagEvent(modifyTag.getName());
+//            JocInventory.postTagEvent(modifyTag.getNewName());
+            
             return JOCDefaultResponse.responseStatusJSOk(now);
         } catch (JocException e) {
             Globals.rollback(session);

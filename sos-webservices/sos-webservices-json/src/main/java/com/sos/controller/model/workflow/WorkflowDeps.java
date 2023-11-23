@@ -60,9 +60,9 @@ public class WorkflowDeps
     @JsonProperty("postNoticeBoards")
     private BoardWorkflows postNoticeBoards;
     @JsonProperty("addOrderToWorkflows")
-    private List<Workflow> addOrderToWorkflows = null;
+    private List<WorkflowId> addOrderToWorkflows = null;
     @JsonProperty("addOrderFromWorkflows")
-    private List<Workflow> addOrderFromWorkflows = null;
+    private List<WorkflowId> addOrderFromWorkflows = null;
 
     /**
      * No args constructor for use in serialization
@@ -101,7 +101,7 @@ public class WorkflowDeps
      * @param addOrderFromWorkflows
      * @param numOfSkippedInstructions
      */
-    public WorkflowDeps(BoardWorkflows consumeNoticeBoards, BoardWorkflows expectedNoticeBoards, BoardWorkflows postNoticeBoards, List<Workflow> addOrderToWorkflows, List<Workflow> addOrderFromWorkflows, String path, Boolean isCurrentVersion, Date versionDate, SyncState state, Boolean suspended, List<FileOrderSource> fileOrderSources, Set<String> forkListVariables, Boolean hasExpectedNoticeBoards, Boolean hasPostNoticeBoards, Boolean hasConsumeNoticeBoards, Boolean hasAddOrderDependencies, Integer numOfStoppedInstructions, Integer numOfSkippedInstructions, String version, String versionId, String timeZone, String title, String documentationName, Requirements orderPreparation, List<String> jobResourceNames, List<Instruction> instructions, Jobs jobs) {
+    public WorkflowDeps(BoardWorkflows consumeNoticeBoards, BoardWorkflows expectedNoticeBoards, BoardWorkflows postNoticeBoards, List<WorkflowId> addOrderToWorkflows, List<WorkflowId> addOrderFromWorkflows, String path, Boolean isCurrentVersion, Date versionDate, SyncState state, Boolean suspended, List<FileOrderSource> fileOrderSources, Set<String> forkListVariables, Boolean hasExpectedNoticeBoards, Boolean hasPostNoticeBoards, Boolean hasConsumeNoticeBoards, Boolean hasAddOrderDependencies, Integer numOfStoppedInstructions, Integer numOfSkippedInstructions, String version, String versionId, String timeZone, String title, String documentationName, Requirements orderPreparation, List<String> jobResourceNames, List<Instruction> instructions, Jobs jobs) {
         super(path, isCurrentVersion, versionDate, state, suspended, fileOrderSources, forkListVariables, hasExpectedNoticeBoards, hasPostNoticeBoards, hasConsumeNoticeBoards, hasAddOrderDependencies, numOfStoppedInstructions, numOfSkippedInstructions, version, versionId, timeZone, title, documentationName, orderPreparation, jobResourceNames, instructions, jobs);
         this.consumeNoticeBoards = consumeNoticeBoards;
         this.expectedNoticeBoards = expectedNoticeBoards;
@@ -177,22 +177,22 @@ public class WorkflowDeps
     }
 
     @JsonProperty("addOrderToWorkflows")
-    public List<Workflow> getAddOrderToWorkflows() {
+    public List<WorkflowId> getAddOrderToWorkflows() {
         return addOrderToWorkflows;
     }
 
     @JsonProperty("addOrderToWorkflows")
-    public void setAddOrderToWorkflows(List<Workflow> addOrderToWorkflows) {
+    public void setAddOrderToWorkflows(List<WorkflowId> addOrderToWorkflows) {
         this.addOrderToWorkflows = addOrderToWorkflows;
     }
 
     @JsonProperty("addOrderFromWorkflows")
-    public List<Workflow> getAddOrderFromWorkflows() {
+    public List<WorkflowId> getAddOrderFromWorkflows() {
         return addOrderFromWorkflows;
     }
 
     @JsonProperty("addOrderFromWorkflows")
-    public void setAddOrderFromWorkflows(List<Workflow> addOrderFromWorkflows) {
+    public void setAddOrderFromWorkflows(List<WorkflowId> addOrderFromWorkflows) {
         this.addOrderFromWorkflows = addOrderFromWorkflows;
     }
 

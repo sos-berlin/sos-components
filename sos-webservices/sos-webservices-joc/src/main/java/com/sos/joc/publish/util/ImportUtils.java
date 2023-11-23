@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -54,7 +55,10 @@ import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.inventory.InventoryTagEvent;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
@@ -1403,7 +1407,8 @@ public class ImportUtils {
         SOSHibernateSession session = Globals.createSosHibernateStatelessConnection("./inventory/import");
         InventoryDBLayer dbLayer = new InventoryDBLayer(session);
         InventoryAgentInstancesDBLayer agentDbLayer = new InventoryAgentInstancesDBLayer(session);
-        Set<Path> folders = new HashSet<Path>();
+        Set<Path> folders = new HashSet<>();
+        List<Long> workflowInvIds = new ArrayList<>();
         try {
             List<DBItemInventoryConfiguration> invalidDBItems = dbLayer.getAllInvalidConfigurations();
             if (storedConfigurations != null) {
@@ -1414,12 +1419,20 @@ public class ImportUtils {
             ).peek(cfg -> cfg.setValid(true)).forEach(cfg -> {
                 try {
                     folders.add(Paths.get(cfg.getPath()).getParent());
+                    if (JocInventory.isWorkflow(cfg.getType())) {
+                        workflowInvIds.add(cfg.getId());
+                    }
                     dbLayer.getSession().update(cfg);
                 } catch (Exception e) {
                     //
                 }
             });
-            folders.stream().forEach(folder -> JocInventory.postEvent(folder.toString().replace('\\', '/')));
+            folders.stream().map(folder -> folder.toString().replace('\\', '/')).forEach(JocInventory::postEvent);
+            // Tagging events
+            if (workflowInvIds != null && !workflowInvIds.isEmpty()) {
+                InventoryTagDBLayer dbTagLayer = new InventoryTagDBLayer(session);
+                dbTagLayer.getTags(workflowInvIds).stream().distinct().forEach(JocInventory::postTaggingEvent);
+            }
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
         } finally {

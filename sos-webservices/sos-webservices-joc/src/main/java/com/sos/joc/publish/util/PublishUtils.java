@@ -997,6 +997,7 @@ public abstract class PublishUtils {
                 toUpdate.setModified(Date.from(Instant.now()));
                 hibernateSession.update(toUpdate);
                 JocInventory.postEvent(draft.getFolder());
+                // TODO post event: InventoryTaggingUpdated ??
             }
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
@@ -1005,14 +1006,17 @@ public abstract class PublishUtils {
 
     public static void prepareNextInvConfigGeneration(Set<ControllerObject> drafts, String controllerId, DBLayerDeploy dbLayer) {
         try {
+            Set<String> foldersForEvent = new HashSet<>();
             for (ControllerObject draft : drafts) {
                 DBItemInventoryConfiguration configuration = dbLayer.getConfigurationByPath(draft.getPath(), ConfigurationType.fromValue(draft
                         .getObjectType().intValue()));
                 configuration.setDeployed(true);
                 configuration.setModified(Date.from(Instant.now()));
                 dbLayer.getSession().update(configuration);
-                JocInventory.postEvent(configuration.getFolder());
+                foldersForEvent.add(configuration.getFolder());
             }
+            foldersForEvent.forEach(JocInventory::postEvent);
+            // TODO post event: InventoryTaggingUpdated ??
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
         }
