@@ -64,9 +64,10 @@ public abstract class AStoreConfiguration extends JOCResourceImpl {
                         //
                     }
                     JocInventory.postEvent(item.getFolder());
-                    JocInventory.postObjectEvent(item.getPath(), item.getTypeAsEnum()); //is used for Tags layout
+                    JocInventory.postObjectEvent(item.getPath(), item.getTypeAsEnum());
                 } else {
                     JocInventory.postEvent(item.getFolder());
+                    JocInventory.postObjectEvent(item.getPath(), item.getTypeAsEnum());
                 }
                 
             } catch (DBMissingDataException e) {
