@@ -1282,6 +1282,7 @@ public class OrdersHelper {
             if (obstaclesE.isRight()) {
                 Function<Map.Entry<OrderId, Set<JOrderObstacle>>, Obstacle> obstacleMapper = e -> mapObstacle(e.getValue().iterator().next());
                 Map<OrderId, Set<JOrderObstacle>> obstacles = obstaclesE.get();
+                // Attention: It could be that removeIf -> java.lang.UnsupportedOperationException
                 return obstacles.entrySet().stream().peek(e -> e.getValue().removeIf(obstacle -> (obstacle instanceof JOrderObstacle.WaitingForOtherTime)
                         || (obstacle instanceof JOrderObstacle.WaitingForTime))).filter(e -> !e.getValue().isEmpty()).collect(Collectors.toMap(
                                 Map.Entry::getKey, obstacleMapper));
@@ -1294,10 +1295,12 @@ public class OrdersHelper {
         Either<Problem, Set<JOrderObstacle>> obstaclesE = controllerState.orderToObstacles(orderId, controllerState.instant());
         if (obstaclesE.isRight()) {
             Set<JOrderObstacle> obstacles = obstaclesE.get();
-            obstacles.removeIf(obstacle -> (obstacle instanceof JOrderObstacle.WaitingForOtherTime)
-                    || (obstacle instanceof JOrderObstacle.WaitingForTime));
-            if (!obstacles.isEmpty()) {
-                return Optional.ofNullable(mapObstacle(obstacles.iterator().next()));
+            for (JOrderObstacle obstacle : obstacles) {
+                if (obstacle instanceof JOrderObstacle.WaitingForOtherTime || obstacle instanceof JOrderObstacle.WaitingForTime
+                        || obstacle instanceof JOrderObstacle.WaitingForCommand$) {
+                    continue;
+                }
+                return Optional.ofNullable(mapObstacle(obstacle));
             }
         }
         return Optional.empty();
