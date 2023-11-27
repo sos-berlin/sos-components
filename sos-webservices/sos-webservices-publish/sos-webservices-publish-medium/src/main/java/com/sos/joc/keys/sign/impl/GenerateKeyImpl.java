@@ -13,6 +13,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.keys.DBLayerKeys;
+import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.sign.resource.IGenerateKey;
 import com.sos.joc.model.audit.CategoryType;
@@ -51,45 +52,50 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
                 filter.setKeyAlgorithm(SOSKeyConstants.RSA_ALGORITHM_NAME);
             }
             JocKeyPair keyPair = null;
-            boolean rootCaAvailable = false;
-            JocKeyPair rootKeyPair = dbLayer.getAuthRootCaKeyPair();
-            X509Certificate rootCert = null;
-            if (rootKeyPair != null) {
-                rootCaAvailable = true;
-                rootCert = KeyUtil.getX509Certificate(rootKeyPair.getCertificate());
-            }
             String accountName = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
             if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())) {
                 if (validUntil != null) {
                     Long secondsToExpire = validUntil.getTime() / 1000;
-                    keyPair = KeyUtil.createKeyPair(jobschedulerUser.getSOSAuthCurrentAccount().getAccountname(), null, secondsToExpire);
+                    keyPair = KeyUtil.createKeyPair(accountName, null, secondsToExpire);
                 } else {
-                    keyPair = KeyUtil.createKeyPair(jobschedulerUser.getSOSAuthCurrentAccount().getAccountname(), null, null);
+                    keyPair = KeyUtil.createKeyPair(accountName, null, null);
                 }
             } else {
-                if (rootCaAvailable && rootCert != null) {
-                    // first: get new PK and X509 certificate from stored CA
-                    String newDN = CAUtils.createUserSubjectDN("CN=" + accountName, rootCert);
-                    String san = accountName;
-                    CreateCSRFilter csrFilter = new CreateCSRFilter();
-                    csrFilter.setDn(newDN);
-                    csrFilter.setSan(san);
-                    keyPair = SigningCertificateUtil.createSigningKeyPair(hibernateSession, csrFilter, filter.getKeyAlgorithm(), validUntil);
+                boolean rootCaAvailable = false;
+                JocKeyPair rootKeyPair = null;
+                X509Certificate rootCert = null;
+                if(filter.getUseSslCa()) {
+                    rootKeyPair = dbLayer.getAuthRootCaKeyPair();
+                    if (rootKeyPair != null) {
+                        rootCaAvailable = true;
+                        rootCert = KeyUtil.getX509Certificate(rootKeyPair.getCertificate());
+                        if(rootCert != null) {
+                            // first: get new PK and X509 certificate from stored CA
+                            String newDN = CAUtils.createUserSubjectDN(filter.getDn(), rootCert, accountName);
+                            String san = accountName;
+                            CreateCSRFilter csrFilter = new CreateCSRFilter();
+                            csrFilter.setDn(newDN);
+                            csrFilter.setSan(san);
+                            keyPair = SigningCertificateUtil.createSigningKeyPair(hibernateSession, csrFilter, filter.getKeyAlgorithm(), validUntil);
+                        }
+                    } else {
+                        throw new JocConfigurationException("No CA configured in SSL Key Management. Please configure the CA for SSL Key Management first.");
+                    }
+                    // update CA info for signing key
+                    if(rootCaAvailable) {
+                        dbLayer.saveOrUpdateSigningRootCaCertificate(rootKeyPair, accountName, Globals.getJocSecurityLevel().intValue());
+                    }
                 } else {
                     if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())) {
                         // default
-                        keyPair = KeyUtil.createRSAJocKeyPair(accountName);
+                        keyPair = KeyUtil.createRSAJocKeyPair(accountName, filter.getDn());
                     } else {
-                        keyPair = KeyUtil.createECDSAJOCKeyPair(accountName);
+                        keyPair = KeyUtil.createECDSAJOCKeyPair(accountName, filter.getDn());
                     }
                 }
             }
             // store private key to the db
-            dbLayer.saveOrUpdateGeneratedKey(keyPair, accountName, JocSecurityLevel.MEDIUM);
-            // update CA info for signing key
-            if(rootCaAvailable) {
-                dbLayer.saveOrUpdateSigningRootCaCertificate(rootKeyPair, accountName, Globals.getJocSecurityLevel().intValue());
-            }
+            dbLayer.saveOrUpdateGeneratedKey(keyPair, accountName, JocSecurityLevel.MEDIUM, filter.getDn());
             return JOCDefaultResponse.responseStatus200(keyPair);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

@@ -332,7 +332,7 @@ public class CATests {
     
     @Test
     public void testExtractFromDistinguishedName () throws InvalidNameException {
-        String dn = "CN=HOSTNAME , OU=devel, OU= Büro hinten, O=SOS, L=Area 51, C=DE";
+        String dn = "CN=HOSTNAME , OU=devel, OU= Büro hinten, O=SOS, L=Berlin, C=DE";
         LdapName ldapNameDN = new LdapName(dn);
         for (Rdn rdn : ldapNameDN.getRdns()) {
             LOGGER.trace(rdn.getType() + " : " + rdn.getValue());
@@ -341,28 +341,42 @@ public class CATests {
 
     @Test
     public void testCreateUserSubjectDN () throws InvalidNameException, IOException, CertificateException {
-        String dn = "CN=HOSTNAME , OU=devel, OU= Büro hinten, O=SOS, L=Area 51, C=DE";
+        String dn = "DNQ=SP SOS CA, CN=HOSTNAME, OU=devel, OU= Büro hinten, O=SOS, L=Berlin, C=DE";
         String certificateString = new String(Files.readAllBytes(Paths.get("src/test/resources/sp_root_ca.cer")), StandardCharsets.UTF_8);
         X509Certificate certificate =  KeyUtil.getX509Certificate(certificateString);
         LOGGER.trace("************************************  full DN");
         LOGGER.trace(CAUtils.createUserSubjectDN(dn, certificate, "MyAgent"));
-        dn = "OU=Büro hinten, L=Area 51";
+        dn = "OU=Büro hinten, L=Berlin";
         LOGGER.trace("************************************  partial DN");
         LOGGER.trace(CAUtils.createUserSubjectDN(dn, certificate, "MyAgent"));
         LOGGER.trace("************************************  empty DN");
         LOGGER.trace(CAUtils.createUserSubjectDN("", certificate, "MyAgent"));
         LOGGER.trace("************************************  null DN");
         LOGGER.trace(CAUtils.createUserSubjectDN(null, certificate, "MyAgent"));
-        dn = "CN=HOSTNAME , OU=devel, OU= Büro hinten, O=SOS, L=Area 51, C=DE";
+        dn = "DNQ=SP SOS CA, CN=HOSTNAME, OU=devel, OU= Büro hinten, O=SOS, L=Berlin, C=DE";
         LOGGER.trace("************************************  full DN alt cert null");
         LOGGER.trace(CAUtils.createUserSubjectDN(dn, null, "MyAgent"));
-        dn = "OU=Büro hinten, L=Area 51";
+        dn = "DN=SP SOS CA, OU=devel, OU= Büro hinten, O=SOS, L=Berlin, C=DE";
+        LOGGER.trace("************************************  partial DN(missing CN) alt cert null");
+        LOGGER.trace(CAUtils.createUserSubjectDN(dn, null, "MyAgent"));
+        dn = "OU=Büro hinten, L=Berlin";
         LOGGER.trace("************************************  partial DN alt cert null");
         LOGGER.trace(CAUtils.createUserSubjectDN(dn, null, "MyAgent"));
         LOGGER.trace("************************************  empty DN alt cert null");
         LOGGER.trace(CAUtils.createUserSubjectDN("", null, "MyAgent"));
         LOGGER.trace("************************************  null DN alt cert null");
         LOGGER.trace(CAUtils.createUserSubjectDN(null, null, "MyAgent"));
+        LOGGER.trace("CAUtils.createUserSubjectDN(\"CN=\" + \"myTestAccount\", certificate)");
+        LOGGER.trace(CAUtils.createUserSubjectDN("CN=" + "myTestAccount", certificate));
+        LOGGER.trace("CAUtils.createUserSubjectDN(null, certificate, \"myTestAccount\")");
+        LOGGER.trace(CAUtils.createUserSubjectDN(null, certificate, "myTestAccount"));
+        LOGGER.trace(CAUtils.createUserSubjectDN("", certificate, "myTestAccount"));
+        LOGGER.trace("CAUtils.createUserSubjectDN(\"DN=SP SOS CA, OU=devel, OU= Büro hinten, O=SOS, L=Berlin, ST=Berlin, C=DE\", certificate, \"myTestAccount\")");
+        LOGGER.trace(CAUtils.createUserSubjectDN("DN=SP SOS CA, OU=devel, OU= Büro hinten, O=SOS, L=Berlin, ST=Berlin, C=DE", certificate, "myTestAccount"));
+        LOGGER.trace("CAUtils.createUserSubjectDN(\"DN=SP SOS CA, CN=AnotherAccount, OU=devel, OU=Büro hinten, O=SOS, L=Berlin, ST=Berlin, C=DE\", certificate, \"myTestAccount\")");
+        LOGGER.trace(CAUtils.createUserSubjectDN("DN=SP SOS CA, CN=AnotherAccount, OU=devel, OU=Büro hinten, O=SOS, L=Berlin, ST=Berlin, C=DE", certificate, "myTestAccount"));
+        LOGGER.trace("CAUtils.createUserSubjectDN(\"DN=SP SOS CA, CN=AnotherAccount, OU=devel, OU=Büro hinten, O=SOS, L=Berlin, ST=Berlin, C=DE\", null, \"myTestAccount\")");
+        LOGGER.trace(CAUtils.createUserSubjectDN("DN=SP SOS CA, CN=AnotherAccount, OU=devel, OU=Büro hinten, O=SOS, L=Berlin, ST=Berlin, C=DE", null, "myTestAccount"));
     }
 
     private void exportCertificateBundle(String rootKey, String rootCert, String userCertificateRequest, String userKey, String userCert, String filename)

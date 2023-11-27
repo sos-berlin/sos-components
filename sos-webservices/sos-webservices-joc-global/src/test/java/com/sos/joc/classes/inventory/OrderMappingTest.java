@@ -9,6 +9,8 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -21,6 +23,8 @@ import com.sos.joc.model.order.OrderV;
 
 
 public class OrderMappingTest {
+    
+    private static final Logger LOGGER = LoggerFactory.getLogger(OrderMappingTest.class);
 
     @Test
     public void test() throws JsonParseException, JsonMappingException, IOException {
@@ -40,7 +44,7 @@ public class OrderMappingTest {
         o.setState(OrdersHelper.getState(oItem.getState().getTYPE(), oItem.getIsSuspended()));
         o.setScheduledFor(scheduledFor);
         o.setWorkflowId(oItem.getWorkflowPosition().getWorkflowId());
-        System.out.println(Globals.prettyPrintObjectMapper.writeValueAsString(o));
+        LOGGER.trace(Globals.prettyPrintObjectMapper.writeValueAsString(o));
     }
     
     @Test
@@ -48,9 +52,9 @@ public class OrderMappingTest {
         String json = "{\"TYPE\": \"Workflow\", \"title\":\"\", \"jobResourceNames\": [\"\"], \"jobs\": {\"job1\": {\"agentName\": \"secondaryAgent\", \"parallelism\": 100, \"executable\": {\"TYPE\": \"ShellScriptExecutable\", \"script\": \"echo hallo\", \"v1Compatible\": false}, \"failOnErrWritten\": false}, \"transferFile\": {\"agentName\": \"primaryAgent\", \"parallelism\": 100, \"executable\": {\"env\": {}, \"TYPE\": \"ShellScriptExecutable\", \"ReturnCodeMeaning\": {}, \"script\": \"echo hello\", \"v1Compatible\": false}, \"failOnErrWritten\": false}}, \"versionId\": \"38752807-de25-4eb6-b132-1189a9da8cd0\", \"instructions\": [{\"TYPE\": \"Execute.Named\", \"label\": \"job1\", \"jobName\": \"job1\"}, {\"TYPE\": \"Execute.Named\", \"label\": \"transferFile\", \"jobName\": \"transferFile\"}], \"orderRequirements\": {\"parameters\": {\"yade_bin\": {\"type\": \"String\", \"default\": \"/var/sos-berlin.com/yade/bin/jade.sh\"}, \"yade_profile\": {\"type\": \"String\", \"default\": \"product_demo_from_galadriel_sftp\"}, \"yade_settings\": {\"type\": \"String\", \"default\": \"./config/yade.xml\"}, \"yade_java_options\": {\"type\": \"String\", \"default\": \"-Xmx32m\"}}}}";
         Workflow w = Globals.objectMapper.readValue(json, Workflow.class);
         String result = JsonSerializer.serializeAsString(w);
-        System.out.println(result);
+        LOGGER.trace(result);
         String expected = "{\"TYPE\":\"Workflow\",\"version\":\"1.1.0\",\"versionId\":\"38752807-de25-4eb6-b132-1189a9da8cd0\",\"timeZone\":\"Etc/UTC\",\"orderPreparation\":{\"parameters\":{\"yade_bin\":{\"type\":\"String\",\"default\":\"\\\"/var/sos-berlin.com/yade/bin/jade.sh\\\"\"},\"yade_profile\":{\"type\":\"String\",\"default\":\"\\\"product_demo_from_galadriel_sftp\\\"\"},\"yade_settings\":{\"type\":\"String\",\"default\":\"\\\"./config/yade.xml\\\"\"},\"yade_java_options\":{\"type\":\"String\",\"default\":\"\\\"-Xmx32m\\\"\"}}},\"instructions\":[{\"TYPE\":\"Execute.Named\",\"jobName\":\"job1\",\"label\":\"job1\"},{\"TYPE\":\"Execute.Named\",\"jobName\":\"transferFile\",\"label\":\"transferFile\"}],\"jobs\":{\"job1\":{\"agentName\":\"secondaryAgent\",\"executable\":{\"TYPE\":\"ShellScriptExecutable\",\"script\":\"echo hallo\"},\"parallelism\":100,\"graceTimeout\":1},\"transferFile\":{\"agentName\":\"primaryAgent\",\"executable\":{\"TYPE\":\"ShellScriptExecutable\",\"script\":\"echo hello\"},\"parallelism\":100,\"graceTimeout\":1}}}";
-        System.out.println(expected);
+        LOGGER.trace(expected);
         assertEquals("SerializerTest", expected, result);
     }
     
@@ -59,7 +63,7 @@ public class OrderMappingTest {
 //        String json = "{\"myString\": \"stringValue\",\"myNumber\": 3.14,\"myBoolean\": true,\"myList\": [{\"a\":\"var1\"},{\"a\":\"var2\"}]}\"";
 //        Variables vars = Globals.objectMapper.readValue(json, Variables.class);
 //        Map<String, Value> controllerVars = variablesToScalaValuedArguments(vars);
-//        System.out.println(controllerVars.toString());
+//        LOGGER.trace(controllerVars.toString());
 //    }
 //    
 //    

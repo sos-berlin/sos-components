@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -661,12 +662,12 @@ public class MappingTest {
             tarIn = Files.newInputStream(Paths.get(targetFilePath));
             gzipInputStream = new GZIPInputStream(tarIn);
             tarArchiveIn = new TarArchiveInputStream(gzipInputStream);
-            LOGGER.debug("In File Path: " + sourceFilePath);
-            LOGGER.debug("archive path: " + targetFilePath);
-            LOGGER.debug("path inside archive: " + pathInArchive);
+            LOGGER.trace("In File Path: " + sourceFilePath);
+            LOGGER.trace("archive path: " + targetFilePath);
+            LOGGER.trace("path inside archive: " + pathInArchive);
             TarArchiveEntry entry = tarArchiveIn.getNextTarEntry();
             pathInArchiveAfter = entry.getName();
-            LOGGER.debug("path inside archive after store: " + pathInArchiveAfter);
+            LOGGER.trace("path inside archive after store: " + pathInArchiveAfter);
         } finally {
             if (tarIn != null) {
                 try {
@@ -686,4 +687,23 @@ public class MappingTest {
         }
     }
     
+    @Test
+    public void testShortenedPath () throws IOException {
+        String startPath = "/a/b/c";
+        List<String> childPaths = Arrays.asList(
+                "/a/b/c/d/myWorkflow1", 
+                "/a/b/c/d/e/myWorkflow2",
+                "/a/b/c/d/e/myWorkflow3",
+                "/a/b/c/d/e/f/myWorkflow4",
+                "/a/b/c/d/myWorkflow5",
+                "/a/b/c/d/e/f/myWorkflow6");
+        childPaths.stream().map(path -> {
+            if(path.startsWith(startPath)) {
+                String startFolder = Paths.get(startPath).getFileName().toString();
+                String shortenedPath = Paths.get(startPath).relativize(Paths.get(path)).toString().replace('\\', '/');
+                return startFolder.concat("/").concat(shortenedPath);
+            }
+            return path;
+        }).forEach(item -> LOGGER.trace(item));
+    }
 }
