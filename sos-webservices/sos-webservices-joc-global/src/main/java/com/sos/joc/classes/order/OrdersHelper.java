@@ -505,6 +505,10 @@ public class OrdersHelper {
         if ("Prompting".equals(oItem.getState().getTYPE())) {
             o.setQuestion(((Order.Prompting) jOrder.asScala().state()).question().convertToString());
         }
+        // completed order
+        if (OrderStateText.FINISHED.equals(o.getState().get_text()) || OrderStateText.CANCELLED.equals(o.getState().get_text())) {
+            o.setCanLeave(!o.getOrderId().matches(".*#F[0-9]+-.*")); // true if not file order
+        }
         o.setMarked(getMark(jOrder.asScala().mark()));
         // o.setIsCancelable(jOrder.asScala().isCancelable() ? null : false);
         // o.setIsSuspendible(jOrder.asScala().isSuspendible() ? null : false);
