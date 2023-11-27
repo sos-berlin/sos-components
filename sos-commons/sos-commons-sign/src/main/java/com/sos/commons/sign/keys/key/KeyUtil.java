@@ -142,7 +142,7 @@ public abstract class KeyUtil {
         return keyPair;
     }
     
-    public static JocKeyPair createRSAJocKeyPair(String account) throws NoSuchAlgorithmException, NoSuchProviderException {
+    public static JocKeyPair createRSAJocKeyPair(String account, String dn) throws NoSuchAlgorithmException, NoSuchProviderException {
         KeyPairGenerator kpg = KeyPairGenerator.getInstance(SOSKeyConstants.RSA_ALGORITHM_NAME);
         kpg.initialize(SOSKeyConstants.DEFAULT_RSA_ALGORITHM_BIT_LENGTH);
         KeyPair kp = kpg.generateKeyPair();
@@ -157,7 +157,7 @@ public abstract class KeyUtil {
         keyPair.setKeyAlgorithm(JocKeyAlgorithm.RSA.name());
         keyPair.setKeyType(JocKeyType.PRIVATE.name());
         try {
-            keyPair.setCertificate(CertificateUtils.asPEMString(generateCertificateFromKeyPair(kp, account, SOSKeyConstants.RSA_SIGNER_ALGORITHM)));
+            keyPair.setCertificate(CertificateUtils.asPEMString(generateCertificateFromKeyPair(kp, account, SOSKeyConstants.RSA_SIGNER_ALGORITHM, dn)));
         } catch (CertificateEncodingException | IOException e) {
             LOGGER.warn("certificate could not be extracted from key pair. cause:", e);
         }
@@ -165,10 +165,14 @@ public abstract class KeyUtil {
     }
     
     public static JocKeyPair createECDSAJOCKeyPair(String account) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
-        return createECDSAJOCKeyPair("prime256v1", account);
+        return createECDSAJOCKeyPair("prime256v1", account, null);
     }
 
-    public static JocKeyPair createECDSAJOCKeyPair(String curveName, String account) throws NoSuchAlgorithmException, NoSuchProviderException,
+    public static JocKeyPair createECDSAJOCKeyPair(String account, String dn) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
+        return createECDSAJOCKeyPair("prime256v1", account, dn);
+    }
+
+    public static JocKeyPair createECDSAJOCKeyPair(String curveName, String account, String dn) throws NoSuchAlgorithmException, NoSuchProviderException,
             InvalidAlgorithmParameterException {
         KeyPair kp = createECDSAKeyPair(curveName);
         JocKeyPair keyPair = new JocKeyPair();
@@ -181,7 +185,7 @@ public abstract class KeyUtil {
         keyPair.setKeyAlgorithm(JocKeyAlgorithm.ECDSA.name());
         keyPair.setKeyType(JocKeyType.PRIVATE.name());
         try {
-            keyPair.setCertificate(CertificateUtils.asPEMString(generateCertificateFromKeyPair(kp, account, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM)));
+            keyPair.setCertificate(CertificateUtils.asPEMString(generateCertificateFromKeyPair(kp, account, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, dn)));
         } catch (CertificateEncodingException | IOException e) {
             LOGGER.warn("certificate could not be extracted from key pair. cause:", e);
         }
@@ -1069,19 +1073,19 @@ public abstract class KeyUtil {
         return cf.generateCertificate(certificate);
     }
 
-    public static X509Certificate generateCertificateFromKeyPair(KeyPair keyPair, String account) {
-        return generateCertificateFromKeyPair(keyPair, account, "SHA256withRSA");
-    }
-    
-    public static X509Certificate generateCertificateFromKeyPair(KeyPair keyPair, String account, String signatureAlgorithm) {
-
+    public static X509Certificate generateCertificateFromKeyPair(KeyPair keyPair, String account, String signatureAlgorithm, String dn) {
         try {
             BigInteger serialNumber = BigInteger.valueOf(System.currentTimeMillis());
             Date startDate = Date.from(Instant.now());
             Date expiryDate = Date.from(Instant.now().plusSeconds(365 * 24 * 60 * 60));
-            X500Name issuer = new X500Name("O=SOS self signed,OU=JOC");
-            X500Name subject = new X500Name("CN=" + account + ",O=SOS self signed,OU=JOC");
-
+            X500Name issuer = new X500Name("O=JOC,OU=Self Signed");
+            X500Name subject = null;
+            if(dn != null && !dn.isEmpty()) {
+                subject = new X500Name(dn);
+            } else {
+                // default
+                subject = new X500Name("CN=" + account + ",O=SOS self signed,OU=JOC");
+            }
             X509v3CertificateBuilder certBuilder = new X509v3CertificateBuilder(
                     issuer, serialNumber, startDate, expiryDate, subject,
                     SubjectPublicKeyInfo.getInstance(keyPair.getPublic().getEncoded()));
@@ -1094,7 +1098,6 @@ public abstract class KeyUtil {
             return (X509Certificate) certificateFactory.generateCertificate(new ByteArrayInputStream(certBytes));
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
-//            throw new DeltaClientException("Error generating certificate", e);
             return null;
         }
     }

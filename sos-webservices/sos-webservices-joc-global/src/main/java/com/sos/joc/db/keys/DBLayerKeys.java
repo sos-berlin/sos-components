@@ -51,7 +51,7 @@ public class DBLayerKeys {
         }
     }
 
-    public void saveOrUpdateGeneratedKey(JocKeyPair keyPair, String account, JocSecurityLevel secLvl) throws SOSHibernateException {
+    public void saveOrUpdateGeneratedKey(JocKeyPair keyPair, String account, JocSecurityLevel secLvl, String dn) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ");
         hql.append(DBLayer.DBITEM_DEP_KEYS);
         hql.append(" where account = :account");
@@ -60,25 +60,27 @@ public class DBLayerKeys {
         query.setParameter("account", account);
         query.setParameter("secLvl", secLvl.intValue());
         DBItemDepKeys existingKey = session.getSingleResult(query);
+        String certificate = null;
+        if (keyPair.getCertificate() != null) {
+            certificate = keyPair.getCertificate();
+        } else {
+            try {
+                if(keyPair.getKeyAlgorithm().equals(JocKeyAlgorithm.ECDSA.name())) {
+                    certificate = CertificateUtils.asPEMString(KeyUtil.generateCertificateFromKeyPair(KeyUtil.getKeyPairFromECDSAPrivatKeyString(
+                            keyPair.getPrivateKey()), account, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, dn));
+                } else {
+                    certificate = CertificateUtils.asPEMString(KeyUtil.generateCertificateFromKeyPair(KeyUtil.getKeyPairFromRSAPrivatKeyString(
+                            keyPair.getPrivateKey()), account, SOSKeyConstants.RSA_SIGNER_ALGORITHM, dn));
+                }
+            } catch (CertificateEncodingException | NoSuchAlgorithmException | InvalidKeySpecException | IOException e) {
+                LOGGER.warn("could not extract certificate from key pair. cause: ", e);
+            }
+        }
+        
         if (existingKey != null) {
             existingKey.setKeyType(JocKeyType.PRIVATE.value());
             existingKey.setKey(keyPair.getPrivateKey());
-            if (keyPair.getCertificate() != null) {
-                existingKey.setCertificate(keyPair.getCertificate());
-            } else {
-                try {
-                    if(keyPair.getKeyAlgorithm().equals(JocKeyAlgorithm.ECDSA.name())) {
-                        existingKey.setCertificate(CertificateUtils.asPEMString(KeyUtil.generateCertificateFromKeyPair(KeyUtil
-                                .getKeyPairFromECDSAPrivatKeyString(keyPair.getPrivateKey()), account, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM)));
-                    } else {
-                        existingKey.setCertificate(CertificateUtils.asPEMString(KeyUtil.generateCertificateFromKeyPair(KeyUtil
-                                .getKeyPairFromRSAPrivatKeyString(keyPair.getPrivateKey()), account)));
-                    }
-                } catch (CertificateEncodingException | NoSuchAlgorithmException | InvalidKeySpecException | IOException e) {
-                    LOGGER.warn("could not extract certificate from key pair. cause: ", e);
-                    existingKey.setCertificate(null);
-                }
-            }
+            existingKey.setCertificate(certificate);
             if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
                 existingKey.setKeyAlgorithm(JocKeyAlgorithm.PGP.value());
             } else if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
@@ -91,22 +93,7 @@ public class DBLayerKeys {
             DBItemDepKeys newKey = new DBItemDepKeys();
             newKey.setKeyType(JocKeyType.PRIVATE.value());
             newKey.setKey(keyPair.getPrivateKey());
-            if(keyPair.getCertificate() != null) {
-                newKey.setCertificate(keyPair.getCertificate());
-            } else {
-                try {
-                    if(keyPair.getKeyAlgorithm().equals(JocKeyAlgorithm.ECDSA.name())) {
-                        newKey.setCertificate(CertificateUtils.asPEMString(KeyUtil.generateCertificateFromKeyPair(KeyUtil
-                                .getKeyPairFromECDSAPrivatKeyString(keyPair.getPrivateKey()), account, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM)));
-                    } else {
-                        newKey.setCertificate(CertificateUtils.asPEMString(KeyUtil.generateCertificateFromKeyPair(KeyUtil
-                                .getKeyPairFromRSAPrivatKeyString(keyPair.getPrivateKey()), account)));
-                    }
-                } catch (CertificateEncodingException | NoSuchAlgorithmException | InvalidKeySpecException | IOException e) {
-                    LOGGER.warn("could not extract certificate from key pair. cause: ", e);
-                    newKey.setCertificate(null);
-                }
-            }
+            newKey.setCertificate(certificate);
             if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
                 newKey.setKeyAlgorithm(JocKeyAlgorithm.PGP.value());
             } else if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
@@ -293,7 +280,7 @@ public class DBLayerKeys {
 
     public void saveOrUpdateSigningRootCaCertificate(JocKeyPair keyPair, String account, Integer secLvl) throws SOSHibernateException {
         DBItemInventoryCertificate certificate = getSigningRootCaCertificate(account);
-        if (certificate != null) {
+        if (certificate != null && !certificate.getPem().equals(keyPair.getCertificate())) {
             certificate.setCa(true);
             certificate.setKeyAlgorithm(JocKeyAlgorithm.valueOf(keyPair.getKeyAlgorithm()).value());
             certificate.setKeyType(JocKeyType.CA.value());

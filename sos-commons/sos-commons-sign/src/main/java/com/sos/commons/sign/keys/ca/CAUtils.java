@@ -230,14 +230,13 @@ public abstract class CAUtils {
         }
         if (commonName != null) {
             if (dnQualifier == null) {
-                userSubjectDN.append("DN=").append(commonName).append(separator).append("CN=").append(commonName);
-            } else {
-                userSubjectDN.append("CN=").append(commonName);
+                userSubjectDN.append("DN=").append(commonName);
             }
+            userSubjectDN.append(separator).append("CN=").append(commonName);
         }
         if (organizationUnits != null && organizationUnits.length > 0) {
-            for (int i = organizationUnits.length - 1; i == 0; i--) {
-                userSubjectDN.append(separator).append("OU=").append(organizationUnits[i]);
+            for (int i = organizationUnits.length; i > 0; i--) {
+                userSubjectDN.append(separator).append("OU=").append(organizationUnits[i-1]);
             }
         }
         if (organization != null) {
@@ -259,7 +258,7 @@ public abstract class CAUtils {
         return createUserSubjectDN(dn, alternativeSource, null);
     }
 
-    public static String createUserSubjectDN(String dn, X509Certificate alternativeSource, String targetHostname) throws InvalidNameException {
+    public static String createUserSubjectDN(String dn, X509Certificate alternativeSource, String defaultTargetHostname) throws InvalidNameException {
         LdapName dnName = null;
         if (dn != null) {
             dnName = new LdapName(dn);
@@ -278,11 +277,11 @@ public abstract class CAUtils {
         String locality = null;
         String state = null;
         if (dn != null && (dn.contains("DN=") || dn.contains("DNQ="))) {
-            try {
-                commonName = dnName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("DNQ")).map(rdn -> rdn.getValue().toString())
+            if(dn.contains("DNQ=")) {
+                dnQualifier = dnName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("DNQ")).map(rdn -> rdn.getValue().toString())
                         .collect(Collectors.toList()).get(0);
-            } catch (Exception e) {
-                commonName = dnName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("DN")).map(rdn -> rdn.getValue().toString())
+            } else if (dn.contains("DN=")) {
+                dnQualifier = dnName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("DN")).map(rdn -> rdn.getValue().toString())
                         .collect(Collectors.toList()).get(0);
             }
         }
@@ -293,8 +292,8 @@ public abstract class CAUtils {
         if (dn != null && dn.contains("CN=")) {
             commonName = dnName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("CN")).map(rdn -> rdn.getValue().toString()).collect(
                     Collectors.toList()).get(0);
-        } else if (targetHostname != null) {
-            commonName = targetHostname;
+        } else if (defaultTargetHostname != null) {
+            commonName = defaultTargetHostname;
         }
         if (dn != null && dn.contains("OU=")) {
             organizationUnits = dnName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("OU")).map(rdn -> rdn.getValue().toString())
