@@ -546,6 +546,7 @@ public class Validator {
             if (ej.getArguments() != null) {
                 validateExpression("$.executable.arguments", ej.getArguments().getAdditionalProperties());
             }
+            checkScriptIncludes(ej.getScript(), "$.executable.script", releasedScripts);
             break;
         case ScriptExecutable:
         case ShellScriptExecutable:
@@ -555,25 +556,7 @@ public class Validator {
             }
             validateEnvironmentKeys(es.getEnv(), "$.executable.env");
             checkReturnCodeMeaning(es, "$.");
-            if (es.getScript() != null) {
-                Matcher m = scriptIncludePattern.matcher(es.getScript());
-                while (m.find()) {
-                    String scriptName = m.group(2);
-                    if (!releasedScripts.contains(scriptName)) {
-                        throw new JocConfigurationException("$.executable.script referenced an unknown script '" + scriptName + "'");
-                    }
-                    try {
-                        JsonConverter.parseReplaceInclude(m.group(3)); // m.group(3) = "--replace="","" ...
-                    } catch (Exception e) {
-                        throw new JocConfigurationException("$.executable.script: Invalid script include '" + m.group(0)
-                                + "'. Replace arguments must have the form: --replace=\"...\",\"...\"");
-                    }
-                }
-                m = scriptIncludeWithoutScriptPattern.matcher(es.getScript());
-                while (m.find()) {
-                    throw new JocConfigurationException("$.executable.script contains script include without script name");
-                }
-            }
+            checkScriptIncludes(es.getScript(), "$.executable.script", releasedScripts);
             break;
         }
         validateJobNotification(jobTemplate);
@@ -605,11 +588,12 @@ public class Validator {
             case InternalExecutable:
                 ExecutableJava ej = job.getExecutable().cast();
                 if (ej.getInternalType() != null && (InternalExecutableType.JavaScript_Graal.equals(ej.getInternalType())
-                        || InternalExecutableType.JavaScript_Graal.equals(ej.getInternalType()))) {
+                        || InternalExecutableType.JavaScript_Node.equals(ej.getInternalType()))) {
                     // script is required
                     if (ej.getScript() == null || ej.getScript().isEmpty()) {
                         throw new JocConfigurationException("$.jobs['" + entry.getKey() + "'].executable.script is required but missing");
                     }
+                    checkScriptIncludes(ej.getScript(), "$.jobs['" + entry.getKey() + "'].executable.script", releasedScripts);
                 } else {
                     // classname is required
                     if (ej.getClassName() == null || ej.getClassName().isEmpty()) {
@@ -630,33 +614,35 @@ public class Validator {
                 }
                 validateEnvironmentKeys(es.getEnv(), "$.jobs['" + entry.getKey() + "'].executable.env");
                 checkReturnCodeMeaning(es, "$.jobs['" + entry.getKey() + "']");
-                if (es.getScript() != null) {
-                    Matcher m = scriptIncludePattern.matcher(es.getScript());
-                    while (m.find()) {
-                        String scriptName = m.group(2);
-                        if (!releasedScripts.contains(scriptName)) {
-                            throw new JocConfigurationException("$.jobs['" + entry.getKey() + "'].executable.script referenced an unknown script '"
-                                    + scriptName + "'");
-                        }
-                        try {
-                            JsonConverter.parseReplaceInclude(m.group(3)); // m.group(3) = "--replace="","" ...
-                        } catch (Exception e) {
-                            throw new JocConfigurationException("$.jobs['" + entry.getKey() + "'].executable.script: Invalid script include '" + m
-                                    .group(0) + "'. Replace arguments must have the form: --replace=\"...\",\"...\"");
-                        }
-                    }
-                    m = scriptIncludeWithoutScriptPattern.matcher(es.getScript());
-                    while (m.find()) {
-                        throw new JocConfigurationException("$.jobs['" + entry.getKey()
-                                + "'].executable.script contains script include without script name");
-                    }
-                }
+                checkScriptIncludes(es.getScript(), "$.jobs['" + entry.getKey() + "'].executable.script", releasedScripts);
                 break;
             }
             validateJobNotification(entry.getKey(), job);
             validateOnErrWritten(job.getFailOnErrWritten(), job.getWarnOnErrWritten());
         }
         return jobResources;
+    }
+    
+    private static void checkScriptIncludes(String script, String position, Set<String> releasedScripts) {
+        if (script != null) {
+            Matcher m = scriptIncludePattern.matcher(script);
+            while (m.find()) {
+                String scriptName = m.group(2);
+                if (!releasedScripts.contains(scriptName)) {
+                    throw new JocConfigurationException(position + " referenced an unknown script '" + scriptName + "'");
+                }
+                try {
+                    JsonConverter.parseReplaceInclude(m.group(3)); // m.group(3) = "--replace="","" ...
+                } catch (Exception e) {
+                    throw new JocConfigurationException(position + ": Invalid script include '" + m.group(0)
+                            + "'. Replace arguments must have the form: --replace=\"...\",\"...\"");
+                }
+            }
+            m = scriptIncludeWithoutScriptPattern.matcher(script);
+            while (m.find()) {
+                throw new JocConfigurationException(position + " contains script include without script name");
+            }
+        }
     }
     
     private static void checkReturnCodeMeaning(ExecutableScript es, String position) throws JsonProcessingException, IOException, SOSJsonSchemaException {
