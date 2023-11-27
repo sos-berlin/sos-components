@@ -10,6 +10,8 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.joc.exceptions.JocConfigurationException;
 
@@ -19,6 +21,8 @@ import js7.data_for_java.value.JExpression;
 
 
 public class PredicateValidatorTest {
+    
+    private static final Logger LOGGER = LoggerFactory.getLogger(PredicateValidatorTest.class);
 
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
@@ -58,7 +62,7 @@ public class PredicateValidatorTest {
             PredicateParser.parseDollarVariable(str, 0);
             assertTrue(expect);
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            LOGGER.trace(e.getMessage());
             assertFalse(expect);
         }
     }
@@ -82,7 +86,7 @@ public class PredicateValidatorTest {
             PredicateParser.parseVariable(str, 0);
             assertTrue(expect);
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            LOGGER.trace(e.getMessage());
             assertFalse(expect);
         }
     }
@@ -127,7 +131,7 @@ public class PredicateValidatorTest {
             //PredicateParser.parse(str);
             assertTrue(expect);
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            LOGGER.trace(e.getMessage());
             assertFalse(expect);
         }
     }
@@ -138,7 +142,7 @@ public class PredicateValidatorTest {
         if (e.isLeft()) {
             s = JExpression.quoteString(s);
         }
-        System.out.println("str: " + str + " -> " + s);
+        LOGGER.trace("str: " + str + " -> " + s);
         return s;
     }
 }

@@ -6,6 +6,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.sign.model.job.JobReturnCode;
 import com.sos.inventory.model.workflow.Workflow;
@@ -15,6 +17,7 @@ import com.sos.sign.model.job.ExecutableScript;
 
 public class ConverterTest {
     
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConverterTest.class);
     private static final String jsonTemplate =
             "{\"TYPE\": \"Workflow\",\"jobs\":{\"job1\":{\"executable\":{\"TYPE\": \"ShellScriptExecutable\", \"returnCodeMeaning\": %s}}}}";
 
@@ -45,7 +48,7 @@ public class ConverterTest {
             JsonConverter.considerReturnCodeWarningsAndSubagentClusterId(invWorkflow.getJobs(), signWorkflow.getJobs());
             // System.out.println(Globals.prettyPrintObjectMapper.writeValueAsString(signWorkflow));
             ExecutableScript es = signWorkflow.getJobs().getAdditionalProperties().get("job1").getExecutable().cast();
-            System.out.println(es.getReturnCodeMeaning() + "==" + expectations.get(i) + "?");
+            LOGGER.trace(es.getReturnCodeMeaning() + "==" + expectations.get(i) + "?");
             assertTrue(es.getReturnCodeMeaning().equals(expectations.get(i)));
         } catch (Exception e) {
             e.printStackTrace();
