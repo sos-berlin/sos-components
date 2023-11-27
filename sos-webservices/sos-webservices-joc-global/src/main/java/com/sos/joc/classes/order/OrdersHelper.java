@@ -507,9 +507,7 @@ public class OrdersHelper {
         }
         // completed order
         if (OrderStateText.FINISHED.equals(o.getState().get_text()) || OrderStateText.CANCELLED.equals(o.getState().get_text())) {
-            if (!o.getOrderId().matches(".*#F[0-9]+-.*")) { // not file order
-                o.setCanLeave(true);
-            }
+            o.setCanLeave(!o.getOrderId().matches(".*#F[0-9]+-.*")); // true if not file order
         }
         o.setMarked(getMark(jOrder.asScala().mark()));
         // o.setIsCancelable(jOrder.asScala().isCancelable() ? null : false);
