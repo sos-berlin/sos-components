@@ -293,7 +293,7 @@ public class DeploymentTest {
         LOGGER.trace("*************************  verify signatures with generated Certificate  ************");
         countVerified = 0;
         countNotVerified = 0;
-        Certificate cert = KeyUtil.generateCertificateFromKeyPair(kp, "testaccount");
+        Certificate cert = KeyUtil.generateCertificateFromKeyPair(kp, "testaccount", "SHA256withRSA", null);
         for (ControllerObject jsObject : jsObjects) {
             if (verifySignatureWithX509Certificate(cert, (Workflow) jsObject.getContent(), jsObject.getSignedContent())) {
                 countVerified++;
@@ -380,7 +380,7 @@ public class DeploymentTest {
         LOGGER.trace("*************************  verify signatures with generated Certificate  ************");
         countVerified = 0;
         countNotVerified = 0;
-        Certificate cert = KeyUtil.generateCertificateFromKeyPair(kp, "testaccount");
+        Certificate cert = KeyUtil.generateCertificateFromKeyPair(kp, "testaccount", "SHA256withRSA", null);
         for (ControllerObject jsObject : jsObjects) {
             if (verifySignatureWithX509Certificate(cert, (Workflow) jsObject.getContent(), jsObject.getSignedContent())) {
                 countVerified++;

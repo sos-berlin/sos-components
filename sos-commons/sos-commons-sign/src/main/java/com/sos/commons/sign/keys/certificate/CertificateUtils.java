@@ -15,6 +15,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.naming.InvalidNameException;
+import javax.naming.ldap.LdapName;
+
 import org.bouncycastle.asn1.x500.AttributeTypeAndValue;
 import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -30,10 +33,9 @@ public abstract class CertificateUtils {
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(CertificateUtils.class);
 	
-	// Access restriction: The type 'X500Name' is not API (restriction on required library 'rt.jar')
-	@SuppressWarnings("restriction")
-	public static String getCommonName(X509Certificate cert) throws IOException {
-		return ((sun.security.x509.X500Name)cert.getSubjectDN()).getCommonName();
+	public static String getCommonName(X509Certificate cert) throws InvalidNameException {
+	    LdapName ldapName = new LdapName(cert.getSubjectDN().toString());
+		return ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("CN")).findFirst().get().getValue().toString();
 	}
 
 	public static void logCertificateInfo(X509Certificate certificate) {
@@ -54,7 +56,7 @@ public abstract class CertificateUtils {
 			LOGGER.info("Subject DN: " + certificate.getSubjectDN().getName());
             try {
 				LOGGER.info("CN: " + CertificateUtils.getCommonName(certificate));
-			} catch (IOException e) {
+			} catch (InvalidNameException e) {
 				LOGGER.error(e.getMessage(), e);
 			}
 //			String subjectPrincipalName = certificate.getSubjectX500Principal().getName();
