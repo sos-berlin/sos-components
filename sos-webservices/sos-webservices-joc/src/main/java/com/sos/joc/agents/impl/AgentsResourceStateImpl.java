@@ -575,11 +575,15 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                 isActive = true;
                 break;
             default:
-                String activeClusterUri = clusterState.getSetting().getIdToUri().getAdditionalProperties().get(clusterState.getSetting()
-                        .getActiveId());
-                isActive = activeClusterUri.equalsIgnoreCase(subagent.getUri());
-                if (!isActive && subagent.getDirectorAsEnum().equals(subagentDirectors.get(clusterState.getSetting().getActiveId().toLowerCase()))) {
-                    isActive = true;
+                try {
+                    String activeClusterUri = clusterState.getSetting().getIdToUri().getAdditionalProperties().get(clusterState.getSetting()
+                            .getActiveId());
+                    isActive = activeClusterUri.equalsIgnoreCase(subagent.getUri());
+                    if (!isActive && subagent.getDirectorAsEnum().equals(subagentDirectors.get(clusterState.getSetting().getActiveId().toLowerCase()))) {
+                        isActive = true;
+                    }
+                } catch (Exception e) {
+                    LOGGER.warn("Couldn't determine if subagent '" + subagent.getSubAgentId() + "' is active or not: " + clusterState.toString());
                 }
                 break;
             }

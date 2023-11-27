@@ -80,6 +80,7 @@ public class JsonConverter {
     public final static Predicate<String> hasScriptIncludes = Pattern.compile(scriptIncludeComments + scriptInclude + "[ \t]+").asPredicate();
     private final static String includeScriptErrorMsg = "Script include '%s' of job '%s[%s]' has wrong format, expected format: "
             + scriptIncludeComments + scriptInclude + " scriptname [--replace=\"search literal\",\"replacement literal\" [--replace=...]]";
+    private final static String includeScriptErrorMsg2 = "Script include of job '%s[%s]': value replacement failed: %s";
 
     private final static Logger LOGGER = LoggerFactory.getLogger(JsonConverter.class);
     
@@ -253,10 +254,10 @@ public class JsonConverter {
                     try {
                         Map<String, String> replacements = parseReplaceInclude(m.group(3));
                         for (Map.Entry<String, String> entry : replacements.entrySet()) {
-                            line = line.replaceAll(Pattern.quote(entry.getKey()), entry.getValue());
+                            line = line.replaceAll(Pattern.quote(entry.getKey()), Matcher.quoteReplacement(entry.getValue()));
                         }
                     } catch (Exception e) {
-                        throw new IllegalArgumentException(String.format(includeScriptErrorMsg, line, workflowName, jobName));
+                        throw new IllegalArgumentException(String.format(includeScriptErrorMsg2, workflowName, jobName, e.getMessage()));
                     }
                     scriptLines[i] = line;
                 } else {
