@@ -210,6 +210,7 @@ public class JsonValidator {
             put("com.sos.joc.model.descriptor.rename.RequestFilter", "descriptor/rename/request-filter-schema.json");
             put("com.sos.joc.model.descriptor.restore.RequestFilter", "descriptor/restore/request-filter-schema.json");
 
+            put("com.sos.joc.model.publish.DeleteKeyFilter", "publish/deleteKey-schema.json");
             put("com.sos.joc.model.publish.SetKeyFilter", "publish/setKey-schema.json");
             put("com.sos.joc.model.publish.GenerateKeyFilter", "publish/generateKey-schema.json");
             put("com.sos.joc.model.publish.ExportFilter", "publish/exportFilter-schema.json");
@@ -222,6 +223,7 @@ public class JsonValidator {
             put("com.sos.joc.model.publish.ShowDepHistoryFilter", "publish/showDepHistoryFilter-schema.json");
             put("com.sos.joc.model.publish.ShowDepHistoryFilter", "publish/showDepHistoryFilter-schema.json");
             put("com.sos.joc.model.publish.RedeployFilter", "publish/redeployFilter-schema.json");
+            put("com.sos.joc.model.publish.DeleteCaFilter", "publish/deleteCaFilter-schema.json");
             put("com.sos.joc.model.publish.GenerateCaFilter", "publish/generateCaFilter-schema.json");
             put("com.sos.joc.model.publish.ImportRootCaFilter", "publish/importRootCaFilter-schema.json");
             put("com.sos.joc.model.publish.SetRootCaFilter", "publish/setRootCa-schema.json");

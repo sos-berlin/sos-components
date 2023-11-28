@@ -18,6 +18,7 @@ import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.keys.DBLayerKeys;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
@@ -29,6 +30,7 @@ import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.keys.ca.resource.IImportRootCa;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.audit.CategoryType;
+import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.model.sign.JocKeyType;
 import com.sos.joc.publish.util.PublishUtils;
@@ -68,7 +70,12 @@ public class ImportRootCaImpl extends JOCResourceImpl implements IImportRootCa {
             String certificateFromFile = readFileContent(stream);
             keyPair.setKeyAlgorithm(SOSKeyConstants.ECDSA_ALGORITHM_NAME);
             keyPair.setKeyType(JocKeyType.CA.name());
-            String account = "";
+            String accountName = "";
+            if (JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel())) {
+                accountName = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
+            } else {
+                accountName =  jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
+            }
             String publicKey = null;
             if (certificateFromFile != null) {
                 try {
@@ -82,8 +89,7 @@ public class ImportRootCaImpl extends JOCResourceImpl implements IImportRootCa {
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerKeys dbLayer = new DBLayerKeys(hibernateSession);
-            dbLayer.saveOrUpdateSigningRootCaCertificate(keyPair, jobschedulerUser.getSOSAuthCurrentAccount().getAccountname(), 
-                    Globals.getJocSecurityLevel().intValue());
+            dbLayer.saveOrUpdateSigningRootCaCertificate(keyPair, accountName, Globals.getJocSecurityLevel().intValue());
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
