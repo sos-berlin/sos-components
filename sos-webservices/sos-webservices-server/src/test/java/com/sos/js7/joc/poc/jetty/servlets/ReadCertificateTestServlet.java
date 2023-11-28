@@ -77,7 +77,6 @@ public class ReadCertificateTestServlet extends HttpServlet {
             clientCertificate = clientCertificateChain[0];
             if (clientCertificate != null) {
                 subjectDN = clientCertificate.getSubjectDN().getName();
-//                clientCN = ((sun.security.x509.X500Name)clientCertificate.getSubjectDN()).getCommonName();
                 try {
                     LdapName ldapName = new LdapName(clientCertificate.getSubjectDN().getName().toString());
                     clientCN = ldapName.getRdns().stream().filter(item -> item.getType().equalsIgnoreCase("CN")).findFirst().get().getValue().toString();
