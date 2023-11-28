@@ -10,11 +10,13 @@ import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.keys.DBLayerKeys;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocKeyNotValidException;
 import com.sos.joc.keys.ca.resource.ISetRootCa;
 import com.sos.joc.model.audit.CategoryType;
+import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.publish.SetRootCaForSigningFilter;
 import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.model.sign.JocKeyType;
@@ -41,6 +43,12 @@ public class SetRootCaImpl extends JOCResourceImpl implements ISetRootCa {
             }
             
             storeAuditLog(setRootCaFilter.getAuditLog(), CategoryType.CERTIFICATES);
+            String accountName = "";
+            if (JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel())) {
+                accountName = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
+            } else {
+                accountName =  jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
+            }
             X509Certificate cert;
             try {
                 cert = KeyUtil.getX509Certificate(setRootCaFilter.getCertificate());
@@ -56,7 +64,7 @@ public class SetRootCaImpl extends JOCResourceImpl implements ISetRootCa {
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             if (keyPair.getCertificate() != null && !keyPair.getCertificate().isEmpty()) {
                 DBLayerKeys dbLayer = new DBLayerKeys(hibernateSession);
-                dbLayer.saveOrUpdateSigningRootCaCertificate(keyPair, jobschedulerUser.getSOSAuthCurrentAccount().getAccountname(), Globals.getJocSecurityLevel().intValue());
+                dbLayer.saveOrUpdateSigningRootCaCertificate(keyPair, accountName, Globals.getJocSecurityLevel().intValue());
             } 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
