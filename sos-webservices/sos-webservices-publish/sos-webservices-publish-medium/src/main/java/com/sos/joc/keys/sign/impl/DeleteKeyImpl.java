@@ -7,6 +7,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.db.deployment.DBItemDepKeys;
 import com.sos.joc.db.keys.DBLayerKeys;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.sign.resource.IDeleteKey;
@@ -39,9 +40,9 @@ public class DeleteKeyImpl extends JOCResourceImpl implements IDeleteKey {
             String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
-            JocKeyPair jocKeyPair = dbLayerKeys.getKeyPair(account, JocSecurityLevel.MEDIUM);
-            if (jocKeyPair != null) {
-                hibernateSession.delete(jocKeyPair);
+            DBItemDepKeys signatureKeyPair = dbLayerKeys.getDbItemDepKeys(account, JocSecurityLevel.MEDIUM);
+            if (signatureKeyPair != null) {
+                hibernateSession.delete(signatureKeyPair);
             }
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {

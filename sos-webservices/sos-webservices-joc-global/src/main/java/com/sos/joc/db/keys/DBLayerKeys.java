@@ -205,7 +205,7 @@ public class DBLayerKeys {
         }
     }
 
-    public JocKeyPair getKeyPair(String account, JocSecurityLevel secLvl) throws SOSHibernateException {
+    public DBItemDepKeys getDbItemDepKeys(String account, JocSecurityLevel secLvl) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ");
         hql.append(DBLayer.DBITEM_DEP_KEYS);
         hql.append(" where account = :account");
@@ -213,7 +213,11 @@ public class DBLayerKeys {
         Query<DBItemDepKeys> query = session.createQuery(hql.toString());
         query.setParameter("account", account);
         query.setParameter("secLvl", secLvl.intValue());
-        DBItemDepKeys key = session.getSingleResult(query);
+        return session.getSingleResult(query);
+    }
+
+    public JocKeyPair getKeyPair(String account, JocSecurityLevel secLvl) throws SOSHibernateException {
+        DBItemDepKeys key = getDbItemDepKeys(account, secLvl);
         if (key != null) {
             JocKeyPair keyPair = new JocKeyPair();
             if (key.getKeyType() == JocKeyType.PRIVATE.value()) {
