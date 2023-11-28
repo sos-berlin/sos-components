@@ -230,9 +230,9 @@ public abstract class CAUtils {
         }
         if (commonName != null) {
             if (dnQualifier == null) {
-                userSubjectDN.append("DN=").append(commonName);
+                userSubjectDN.append("DN=").append(commonName).append(separator);
             }
-            userSubjectDN.append(separator).append("CN=").append(commonName);
+            userSubjectDN.append("CN=").append(commonName);
         }
         if (organizationUnits != null && organizationUnits.length > 0) {
             for (int i = organizationUnits.length; i > 0; i--) {
