@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -56,6 +57,8 @@ public class JS7ConverterHelper {
     public final static String JS7_NEW_LINE = "\n";
 
     private final static Set<Character> QUOTED_CHARS = new HashSet<>(Arrays.asList('\"', '$', '\n'));
+
+    private final static Pattern NUMERIC_PATTERN = Pattern.compile("-?\\d+(\\.\\d+)?");
 
     private static int converterNameCounter = 0;
 
@@ -362,13 +365,14 @@ public class JS7ConverterHelper {
      * --- js7.data.value.ValuePrinter.quoteString<br />
      */
 
-    public static String quoteValue4JS7(String val) {
-        boolean preferSingleOverDoubleQuotes = true;
+    @SuppressWarnings("unused")
+    private static String quoteValue4JS7TODO(String val) {
+        // engine use preferSingleOverDoubleQuotes = false
+        // joc preferSingleOverDoubleQuotes = false?
+        boolean preferSingleOverDoubleQuotes = false;
         if (SOSString.isEmpty(val)) {
             return "\"\"";
-        } else if (val.startsWith("$")) {
-            return val;
-        } else if (val.equalsIgnoreCase("true") || val.equalsIgnoreCase("false")) {
+        } else if (val.startsWith("$") || isBoolean(val) || isNumeric(val)) {
             return val;
         } else if (!val.contains("'") && (preferSingleOverDoubleQuotes || hasQuotedChars(val)) && !val.contains(
                 "\r")) {/* because '-parsing removes \r */
@@ -378,7 +382,56 @@ public class JS7ConverterHelper {
         }
     }
 
-    public static String doubleQuoteStringValue4JS7(String val) {
+    public static String quoteValue4JS7(String val) {
+        // joc salways seems to use the double quote ...
+        if (SOSString.isEmpty(val)) {
+            return "\"\"";
+        } else if (val.startsWith("$")) {
+            if (val.indexOf(" ") < 0) {
+                return val;
+            }
+            return doubleQuoteStringValue4JS7(val);
+        } else if (isBoolean(val) || isNumeric(val)) {
+            return val;
+        } else {
+            return doubleQuoteStringValue4JS7(val);
+        }
+    }
+
+    // without $ ...
+    private static String doubleQuoteStringValue4JS7(String val) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("\"");
+        char[] arr = val.toCharArray();
+        for (int i = 0; i < arr.length; i++) {
+            char c = arr[i];
+            switch (c) {
+            case '\\':
+                sb.append("\\\\");
+                break;
+            case '"':
+                sb.append("\\\"");
+                break;
+            case '\r':
+                sb.append("\\r");
+                break;
+            case '\n':
+                sb.append("\\n");
+                break;
+            case '\t':
+                sb.append("\\t");
+                break;
+            default:
+                sb.append(c);
+                break;
+            }
+        }
+        sb.append("\"");
+        return sb.toString();
+    }
+
+    @SuppressWarnings("unused")
+    private static String doubleQuoteStringValue4JS7Engine(String val) {
         StringBuilder sb = new StringBuilder();
         sb.append("\"");
         char[] arr = val.toCharArray();
@@ -637,5 +690,19 @@ public class JS7ConverterHelper {
             }
         }
         return s;
+    }
+
+    private static boolean isNumeric(String val) {
+        if (val == null) {
+            return false;
+        }
+        return NUMERIC_PATTERN.matcher(val).matches();
+    }
+
+    private static boolean isBoolean(String val) {
+        if (val == null) {
+            return false;
+        }
+        return val.equalsIgnoreCase("true") || val.equalsIgnoreCase("false");
     }
 }

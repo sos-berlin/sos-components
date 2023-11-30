@@ -6,9 +6,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.job.Job;
+import com.sos.js7.converter.commons.JS7ConverterHelper;
 import com.sos.js7.converter.commons.config.json.JS7Agent;
 import com.sos.js7.converter.commons.report.ConverterReport;
 import com.sos.js7.converter.js1.common.Script;
@@ -59,6 +61,7 @@ public class JobHelper {
         this.js1Job = js1Job;
         this.standalone = js1Job != null && (js1Job instanceof StandaloneJob);
         this.language = js1Job.getScript().getLanguage() == null ? "shell" : js1Job.getScript().getLanguage().toLowerCase();
+
         switch (language) {
         case "java":
             String jc = js1Job.getScript().getJavaClass();
@@ -73,14 +76,15 @@ public class JobHelper {
                 javaJITLJob = new JavaJITLJobHelper(JS1_JAVA_JITL_DB_MANAGED_DATABASE_JOB, "com.sos.jitl.jobs.db.SQLExecutorJob");
                 break;
             case JS1_JAVA_JITL_DB_ORACLE_PLSQL_JOB:
-                // parameters 1:1
+                // parameters 1:1 (but + command from script)
                 javaJITLJob = new JavaJITLJobHelper(JS1_JAVA_JITL_DB_ORACLE_PLSQL_JOB, "com.sos.jitl.jobs.db.oracle.PLSQLJob");
+                setFromScript(js1Job, "command");
                 break;
             case JS1_JAVA_JITL_DB_ORACLE_SQLPLUS_JOB:
-                // parameters 1:1
+                // parameters 1:1 (but + command from script)
                 javaJITLJob = new JavaJITLJobHelper(JS1_JAVA_JITL_DB_ORACLE_SQLPLUS_JOB, "com.sos.jitl.jobs.db.oracle.SQLPLUSJob");
+                setFromScript(js1Job, "command");
                 break;
-
             // FILE Operations
             case JS1_JAVA_JITL_FO_EXISTS:
                 // parameters adjusted
@@ -120,6 +124,7 @@ public class JobHelper {
             // SSH
             case JS1_JAVA_JITL_SSH_JOB:
                 javaJITLJob = new JavaJITLJobHelper(JS1_JAVA_JITL_SSH_JOB, "com.sos.jitl.jobs.ssh.SSHJob");
+                setFromScript(js1Job, "command");
                 break;
             // YADE
             case JS1_JAVA_JITL_YADE_JOB:
@@ -144,6 +149,13 @@ public class JobHelper {
         default:
             shellJob = new ShellJobHelper(language, js1Job.getScript() == null ? null : js1Job.getScript().getComClass());
             break;
+        }
+    }
+
+    private void setFromScript(ACommonJob js1Job, String paramName) {
+        String v = js1Job.getScript().getScript();
+        if (!SOSString.isEmpty(v) && v.trim().length() > 0) {
+            javaJITLJob.getParams().getFromScript().put(paramName, js1Job.getScript().getScript().trim() + JS7ConverterHelper.JS7_NEW_LINE);
         }
     }
 
@@ -239,6 +251,7 @@ public class JobHelper {
     public class JavaJITLJobParams {
 
         private Set<String> toRemove = new HashSet<>();
+        private Map<String, String> fromScript = new HashMap<>();
         private Map<String, String> toAdd = new HashMap<>();
         private Map<String, String> mapping = new HashMap<>();
         private Map<String, String> mappingWhenTrue = new HashMap<>();
@@ -392,6 +405,10 @@ public class JobHelper {
 
         public Set<String> getToRemove() {
             return toRemove;
+        }
+
+        public Map<String, String> getFromScript() {
+            return fromScript;
         }
 
         public Map<String, String> getToAdd() {

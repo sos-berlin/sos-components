@@ -1798,7 +1798,8 @@ public class JS12JS7Converter {
         p.setType(ParameterType.String);
         if (defaultValue != null) {
             // p.setDefault("\"" + getReplacedParamValue(defaultValue) + "\"");
-            p.setDefault(JS7ConverterHelper.doubleQuoteStringValue4JS7(getReplacedParamValue(defaultValue)));
+            // p.setDefault(JS7ConverterHelper.doubleQuoteStringValue4JS7(getReplacedParamValue(defaultValue)));
+            p.setDefault(JS7ConverterHelper.quoteValue4JS7(getReplacedParamValue(defaultValue)));
         }
         return p;
     }
@@ -1819,9 +1820,10 @@ public class JS12JS7Converter {
             });
         }
 
+        JavaJITLJobHelper jitlJob = null;
         if (params.size() > 0) {
             // ARGUMENTS
-            JavaJITLJobHelper jitlJob = jh.getJavaJITLJob();
+            jitlJob = jh.getJavaJITLJob();
             ShellJobHelper shellJob = jh.getShellJob();
             Map<String, String> dynamic = null;
             if (jitlJob != null) {
@@ -1910,6 +1912,14 @@ public class JS12JS7Converter {
                 } catch (Throwable ee) {
                     setJobHelperParam(jh, e.getKey(), e.getValue());
                     ConverterReport.INSTANCE.addErrorRecord(job.getPath(), "getJobArguments: could not convert value=" + e.getValue(), ee);
+                }
+            }
+        }
+
+        if (jitlJob != null && jitlJob.getParams().getFromScript().size() > 0) {
+            for (Map.Entry<String, String> e : jitlJob.getParams().getFromScript().entrySet()) {
+                if (!params.containsKey(e.getKey())) {
+                    setJobHelperParam(jh, e.getKey(), e.getValue());
                 }
             }
         }
