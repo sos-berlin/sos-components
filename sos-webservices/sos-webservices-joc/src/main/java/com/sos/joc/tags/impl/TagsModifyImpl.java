@@ -112,6 +112,9 @@ public class TagsModifyImpl extends JOCResourceImpl implements ITagsModify {
     }
     
     public static Set<DBItemInventoryTag> add(Set<String> tags, Date date, InventoryTagDBLayer dbLayer) throws SOSHibernateException {
+        if (tags == null || tags.isEmpty()) {
+           return new HashSet<>();
+        }
         List<DBItemInventoryTag> dbTags = dbLayer.getTags(tags);
         Set<String> alreadyExistingTags = dbTags.stream().map(DBItemInventoryTag::getName).collect(Collectors.toSet());
         tags.removeAll(alreadyExistingTags);

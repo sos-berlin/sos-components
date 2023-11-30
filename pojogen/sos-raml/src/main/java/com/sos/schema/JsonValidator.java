@@ -194,8 +194,10 @@ public class JsonValidator {
             put("JobWizardFilter", "wizard/wizard-job-filter-schema.json");
             
             put("com.sos.joc.model.tag.common.RequestFilters", "tag/common/request-filters-schema.json");
+            put("com.sos.joc.model.tag.common.RequestFolder", "tag/common/request-folder-schema.json");
             put("com.sos.joc.model.tag.tagging.RequestFilter", "tag/tagging/request-filter-schema.json");
             put("com.sos.joc.model.tag.rename.RequestFilter", "tag/rename/request-filter-schema.json");
+            put("com.sos.joc.model.tag.tagging.RequestModifyFilter", "tag/tagging/request-modify-filter-schema.json");
             put("com.sos.joc.model.inventory.common.RequestTag", "inventory/common/request-tag-schema.json");
             
             put("com.sos.joc.model.descriptor.common.RequestFilter", "descriptor/common/request-filter-schema.json");
