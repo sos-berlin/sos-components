@@ -1,7 +1,9 @@
 
 package com.sos.joc.model.tag.tagging;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -15,21 +17,29 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
- * filter for tagging
+ * filter for bulk tagging
  * <p>
- * A tag that is item of 'addTags' and 'deleteTags' won't be processed
+ * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "folders",
     "addTags",
     "deleteTags",
     "auditLog"
 })
-public class RequestModifyFilter
-    extends Folder
-{
+public class RequestModifyFilter {
 
+    /**
+     * folders
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("folders")
+    private List<Folder> folders = new ArrayList<Folder>();
     /**
      * tags
      * <p>
@@ -56,6 +66,30 @@ public class RequestModifyFilter
      */
     @JsonProperty("auditLog")
     private AuditParams auditLog;
+
+    /**
+     * folders
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("folders")
+    public List<Folder> getFolders() {
+        return folders;
+    }
+
+    /**
+     * folders
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("folders")
+    public void setFolders(List<Folder> folders) {
+        this.folders = folders;
+    }
 
     /**
      * tags
@@ -125,12 +159,12 @@ public class RequestModifyFilter
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("addTags", addTags).append("deleteTags", deleteTags).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("folders", folders).append("addTags", addTags).append("deleteTags", deleteTags).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(deleteTags).append(addTags).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(deleteTags).append(folders).append(addTags).append(auditLog).toHashCode();
     }
 
     @Override
@@ -142,7 +176,7 @@ public class RequestModifyFilter
             return false;
         }
         RequestModifyFilter rhs = ((RequestModifyFilter) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(deleteTags, rhs.deleteTags).append(addTags, rhs.addTags).append(auditLog, rhs.auditLog).isEquals();
+        return new EqualsBuilder().append(deleteTags, rhs.deleteTags).append(folders, rhs.folders).append(addTags, rhs.addTags).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }

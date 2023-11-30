@@ -18,6 +18,8 @@ import com.sos.joc.db.inventory.items.InventoryTagItem;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 
 public class InventoryTagDBLayer extends DBLayer {
 
@@ -148,17 +150,17 @@ public class InventoryTagDBLayer extends DBLayer {
         if (tagNames == null || tagNames.isEmpty()) {
             return 0;
         }
-        return deleteTaggingsByIds(getTags(tagNames).stream().map(DBItemInventoryTag::getId).collect(Collectors.toList()));
+        return deleteTaggingsByTagIds(getTags(tagNames).stream().map(DBItemInventoryTag::getId).collect(Collectors.toList()));
     }
     
-    private Integer deleteTaggingsByIds(List<Long> tagIds) throws SOSHibernateException {
+    private Integer deleteTaggingsByTagIds(List<Long> tagIds) throws SOSHibernateException {
         if (tagIds == null || tagIds.isEmpty()) {
             return 0;
         }
         if (tagIds.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
             int result = 0;
             for (int i = 0; i < tagIds.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
-                result += deleteTaggingsByIds(SOSHibernate.getInClausePartition(i, tagIds));
+                result += deleteTaggingsByTagIds(SOSHibernate.getInClausePartition(i, tagIds));
             }
             return result;
         } else {
@@ -174,6 +176,34 @@ public class InventoryTagDBLayer extends DBLayer {
                 query.setParameter("tagId", tagIds.iterator().next());
             } else {
                 query.setParameterList("tagIds", tagIds);
+            }
+            return getSession().executeUpdate(query);
+        }
+    }
+    
+    public Integer deleteTaggingsByIds(List<Long> taggingIds) throws SOSHibernateException {
+        if (taggingIds == null || taggingIds.isEmpty()) {
+            return 0;
+        }
+        if (taggingIds.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            int result = 0;
+            for (int i = 0; i < taggingIds.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                result += deleteTaggingsByIds(SOSHibernate.getInClausePartition(i, taggingIds));
+            }
+            return result;
+        } else {
+            StringBuilder sql = new StringBuilder();
+            sql.append("delete from ").append(DBLayer.DBITEM_INV_TAGGINGS);
+            if (taggingIds.size() == 1) {
+                sql.append(" where id = :taggingId");
+            } else {
+                sql.append(" where id in (:taggingIds)");
+            }
+            Query<Integer> query = getSession().createQuery(sql.toString());
+            if (taggingIds.size() == 1) {
+                query.setParameter("taggingId", taggingIds.iterator().next());
+            } else {
+                query.setParameterList("taggingIds", taggingIds);
             }
             return getSession().executeUpdate(query);
         }
@@ -280,6 +310,51 @@ public class InventoryTagDBLayer extends DBLayer {
             query.setParameterList("configTypes", configTypes);
         }
         return getSession().getResultList(query);
+    }
+    
+    public List<InventoryTagItem> getTagsByFolders(Collection<Folder> folders, boolean onlyObjectsThatHaveTags) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select ");
+        hql.append("ic.id as cId");
+        hql.append(",ic.path as path");
+        hql.append(",ic.folder as folder");
+        hql.append(",ic.type as type");
+        hql.append(",t.name as name");
+        hql.append(",t.id as tagId");
+        hql.append(",tg.id as taggingId");
+        hql.append(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
+        hql.append("left join ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg ");
+        hql.append("on ic.id=tg.cid ");
+        hql.append("left join ").append(DBLayer.DBITEM_INV_TAGS).append(" t ");
+        hql.append("on t.id=tg.tagId ");
+        
+        List<String> where = new ArrayList<>();
+        if (onlyObjectsThatHaveTags) {
+            where.add("t.id is not null");
+        }
+        where.add("ic.type = :configType");
+        
+        if (folders != null && !folders.isEmpty()) {
+            String clause = folders.stream().distinct().map(folder -> {
+                if (folder.getRecursive()) {
+                    return "(folder = '" + folder.getFolder() + "' or folder like '" + (folder.getFolder() + "/%").replaceAll("//+", "/") + "')";
+                } else {
+                    return "folder = '" + folder.getFolder() + "'";
+                }
+            }).collect(Collectors.joining(" or "));
+            if (folders.size() > 1) {
+                clause = "(" + clause + ")";
+            }
+            where.add(clause);
+        }
+        
+        hql.append("where ").append(String.join(" and ", where)).append(" ");
+        Query<InventoryTagItem> query = getSession().createQuery(hql.toString(), InventoryTagItem.class);
+        query.setParameter("configType", ConfigurationType.WORKFLOW.intValue());
+        List<InventoryTagItem> result = getSession().getResultList(query);
+        if (result == null) {
+           return Collections.emptyList();
+        }
+        return result;
     }
     
     public List<InventoryTagItem> getFoldersByTagAndTypeForInventory(Set<Integer> inventoryTypes, Boolean onlyValidObjects)
