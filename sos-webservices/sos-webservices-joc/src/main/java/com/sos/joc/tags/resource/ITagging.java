@@ -13,13 +13,20 @@ public interface ITagging {
     
     public static final String PATH_TAGS = "workflow/tags";
     public static final String PATH_TAGGING = PATH_TAGS + "/store";
+    public static final String FOLDER_TAGGING = PATH_TAGGING + "/folder";
     public static final String IMPL_PATH_TAGS = JocInventory.getResourceImplPath(PATH_TAGS);
     public static final String IMPL_PATH_TAGGING = JocInventory.getResourceImplPath(PATH_TAGGING);
+    public static final String IMPL_FOLDER_TAGGING = JocInventory.getResourceImplPath(FOLDER_TAGGING);
     
     @POST
     @Path(PATH_TAGGING)
     @Produces({ "application/json" })
     public JOCDefaultResponse postTagging(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    
+    @POST
+    @Path(FOLDER_TAGGING)
+    @Produces({ "application/json" })
+    public JOCDefaultResponse postFolderTagging(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
     
     @POST
     @Path(PATH_TAGS)

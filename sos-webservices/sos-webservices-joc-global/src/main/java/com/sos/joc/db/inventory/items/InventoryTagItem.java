@@ -9,7 +9,10 @@ import com.sos.joc.model.inventory.search.ResponseBaseSearchItem;
 public class InventoryTagItem extends ResponseBaseSearchItem {
     
     private Long tagId;
+    private Long taggingId;
+    private Long cId;
     private String folder;
+    private Integer type;
     
     public Long getTagId() {
         return tagId;
@@ -19,12 +22,44 @@ public class InventoryTagItem extends ResponseBaseSearchItem {
         this.tagId = val;
     }
     
+    public Long getTaggingId() {
+        return taggingId;
+    }
+    
+    public void setTaggingId(Long val) {
+        this.taggingId = val;
+    }
+    
+    public Long getCId() {
+        return cId;
+    }
+    
+    public void setCId(Long val) {
+        this.cId = val;
+    }
+    
+    public void setType(Integer val) {
+        this.type = val;
+    }
+    
+    public Integer getType() {
+        return type;
+    }
+    
     public String getFolder() {
         return folder;
     }
     
     public void setFolder(String val) {
         this.folder = val;
+    }
+    
+    public String getNullableName() {
+        String nullableName = getName();
+        if (nullableName == null) {
+            return "";
+        }
+        return nullableName;
     }
     
     @Override
@@ -45,7 +80,6 @@ public class InventoryTagItem extends ResponseBaseSearchItem {
         if ((other instanceof InventoryTagItem) == false) {
             return false;
         }
-        InventoryTagItem rhs = ((InventoryTagItem) other);
         return new EqualsBuilder().appendSuper(super.equals(other)).isEquals();
     }
     
