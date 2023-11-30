@@ -142,6 +142,7 @@
 								<exclude>agent/*.json</exclude>
 								<exclude>jobTemplate/**/*.json</exclude>
 								<exclude>dailyplan/projections/**/*.json</exclude>
+								<exclude>tag/**/*.json</exclude>
 							</excludes>
 						</configuration>
 						<goals>
@@ -192,6 +193,7 @@
 								<include>jobTemplate/**/*.json</include>
 								<include>inventory/configurationObject-schema.json</include>
 								<include>dailyplan/projections/**/*.json</include>
+								<include>tag/**/*.json</include>
 							</includes>
 						</configuration>
 						<goals>
