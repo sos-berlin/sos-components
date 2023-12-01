@@ -158,13 +158,13 @@ public class FidoConfirmationMail {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("FidoConfirmationMail");
 
             InventoryDBLayer inventoryDBLayer = new InventoryDBLayer(sosHibernateSession);
-            List<DBItemInventoryConfiguration> listOfJobRessourcen = inventoryDBLayer.getConfigurationByName(jobResourceName, 10);
-            if (listOfJobRessourcen.size() == 0) {
-                throw new JocObjectNotExistException("Couldn't find the Job Ressource <" + jobResourceName + ">");
+            List<DBItemInventoryConfiguration> listOfJobResourcen = inventoryDBLayer.getConfigurationByName(jobResourceName, 10);
+            if (listOfJobResourcen.size() == 0) {
+                throw new JocObjectNotExistException("Couldn't find the Job Resource <" + jobResourceName + ">");
             }
 
             MailResource mr = new MailResource();
-            mr.parse(jobResourceName, listOfJobRessourcen.get(0).getJsonContent());
+            mr.parse(jobResourceName, listOfJobResourcen.get(0).getJsonContent());
 
             return mr;
         } finally {
