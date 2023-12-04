@@ -2,6 +2,7 @@ package com.sos.joc.classes.event;
 
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
@@ -377,12 +378,16 @@ public class EventService {
         NotificationType type = getNotificationType(evt.getLevel());
         if (notificationFailureTypes.contains(type)) {
             EventOrderMonitoring eventO = new EventOrderMonitoring();
-            eventO.setEventId(evt.getEventId() / 1000);
+            Long evtId = evt.getEventId() / 1000;
+            eventO.setEventId(evtId);
             eventO.setLevel(type);
             eventO.setWorkflowName(evt.getWorkflowName());
             eventO.setOrderId(evt.getOrderId());
             eventO.setJobName(evt.getJobName());
             eventO.setTimestamp(evt.getDate());
+            if (evt.getDate() == null) {
+                eventO.setTimestamp(Date.from(Instant.ofEpochSecond(evtId)));
+            }
             eventO.setMessage(evt.getMessage());
             addEventO(eventO);
         }
@@ -425,12 +430,16 @@ public class EventService {
     public void createEvent(MonitoringGuiEvent evt) {
         try {
             EventMonitoring eventM = new EventMonitoring();
-            eventM.setEventId(evt.getEventId() / 1000);
+            Long evtId = evt.getEventId() / 1000;
+            eventM.setEventId(evtId);
             eventM.setLevel(getNotificationType(evt.getLevel()));
             eventM.setSource(evt.getSource());
             eventM.setCategory(evt.getCategory());
             eventM.setRequest(evt.getRequest());
             eventM.setTimestamp(evt.getDate());
+            if (evt.getDate() == null) {
+                eventM.setTimestamp(Date.from(Instant.ofEpochSecond(evtId)));
+            }
             eventM.setMessage(evt.getMessage());
             addEventM(eventM);
         } catch (Exception e) {
