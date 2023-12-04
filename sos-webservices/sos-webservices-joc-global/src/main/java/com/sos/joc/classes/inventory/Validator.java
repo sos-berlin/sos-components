@@ -28,6 +28,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.board.Board;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.AssignedNonWorkingDayCalendars;
+import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.AddOrder;
 import com.sos.inventory.model.instruction.ConsumeNotices;
@@ -1485,12 +1486,15 @@ public class Validator {
 
     private static void validateOrderParameterisations(List<OrderParameterisation> variableSets, Requirements orderPreparation, String workflowName,
             Workflow workflow, String position) throws JocConfigurationException {
+        boolean allowEmptyArguments = ClusterSettings.getAllowEmptyArguments(Globals.getConfigurationGlobalsJoc());
         if (variableSets != null) {
             if (variableSets.size() != variableSets.stream().map(OrderParameterisation::getOrderName).distinct().mapToInt(e -> 1).sum()) {
                 throw new JocConfigurationException(position + ": Order names has to be unique");
             }
-            boolean allowEmptyArguments = ClusterSettings.getAllowEmptyArguments(Globals.getConfigurationGlobalsJoc());
-            variableSets.stream().map(OrderParameterisation::getVariables).filter(Objects::nonNull).forEach(v -> {
+            variableSets.stream().map(OrderParameterisation::getVariables).forEach(v -> {
+                if (v == null) {
+                    v = new Variables();
+                }
                 try {
                     OrdersHelper.checkArguments(v, orderPreparation, allowEmptyArguments);
                 } catch (Exception e1) {
@@ -1506,7 +1510,12 @@ public class Validator {
                 variableSets.stream().map(OrderParameterisation::getPositions).filter(Objects::nonNull).filter(hasPositionSetting).forEach(
                         p -> checkAddOrderPositions(p, availableBlockPositions, workflowName, labelMap, position + ".positions."));
             }
-
+        } else {
+            try {
+                OrdersHelper.checkArguments(new Variables(), orderPreparation, allowEmptyArguments);
+            } catch (Exception e1) {
+                throw new JocConfigurationException(position + ": " + e1.getMessage());
+            }
         }
     }
 
