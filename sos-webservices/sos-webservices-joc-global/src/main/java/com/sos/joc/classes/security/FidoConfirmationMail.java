@@ -18,7 +18,7 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.security.properties.fido.FidoProperties;
- 
+
 public class FidoConfirmationMail {
 
     private static final boolean QUEUE_MAIL_ON_ERROR = false;
@@ -63,8 +63,8 @@ public class FidoConfirmationMail {
             String to = fidoProperties.getIamFidoEmailSettings().getReceiptConfirmed();
             String cc = fidoProperties.getIamFidoEmailSettings().getCcConfirmed();
             String bcc = fidoProperties.getIamFidoEmailSettings().getBccConfirmed();
-            sendMail(dbItemIamFido2Registration, fidoProperties.getIamFidoEmailSettings().getBodyConfirmed(), fidoProperties
-                    .getIamFidoEmailSettings().getSubjectConfirmed(), to, cc, bcc, identityServiceName);
+            sendMail(dbItemIamFido2Registration, fidoProperties.getIamFidoEmailSettings().getBodyConfirmed(), fidoProperties.getIamFidoEmailSettings()
+                    .getSubjectConfirmed(), to, cc, bcc, identityServiceName);
         }
     }
 
@@ -73,8 +73,8 @@ public class FidoConfirmationMail {
         if (fidoProperties.getIamFidoEmailSettings().getSendMailToNotifySuccessfulRegistration()) {
             String cc = fidoProperties.getIamFidoEmailSettings().getCcAccess();
             String bcc = fidoProperties.getIamFidoEmailSettings().getBccAccess();
-            sendMail(dbItemIamFido2Registration, fidoProperties.getIamFidoEmailSettings().getBodyAccess(), fidoProperties
-                    .getIamFidoEmailSettings().getSubjectAccess(), to, cc, bcc, identityServiceName);
+            sendMail(dbItemIamFido2Registration, fidoProperties.getIamFidoEmailSettings().getBodyAccess(), fidoProperties.getIamFidoEmailSettings()
+                    .getSubjectAccess(), to, cc, bcc, identityServiceName);
         }
 
     }
@@ -182,9 +182,27 @@ public class FidoConfirmationMail {
 
     private void setMailHeaders(MailResource res) throws Exception {
 
-        mail.setCharset(fidoProperties.getIamFidoEmailSettings().getCharset());
-        mail.setEncoding(fidoProperties.getIamFidoEmailSettings().getEncoding());
-        mail.setContentType(fidoProperties.getIamFidoEmailSettings().getContentType());
+        //Values from mail --> JobResource --> FidoSettings
+        if (res.getCharset() != null && !res.getCharset().isEmpty()) {
+            mail.setCharset(res.getCharset());
+        }
+        if (res.getEncoding() != null && !res.getEncoding().isEmpty()) {
+            mail.setEncoding(res.getEncoding());
+        }
+        if (res.getContentType() != null && !res.getContentType().isEmpty()) {
+            mail.setContentType(res.getContentType());
+        }
+
+        if (fidoProperties.getIamFidoEmailSettings().getCharset() != null && !fidoProperties.getIamFidoEmailSettings().getCharset().isEmpty()) {
+            mail.setCharset(fidoProperties.getIamFidoEmailSettings().getCharset());
+        }
+        if (fidoProperties.getIamFidoEmailSettings().getEncoding() != null && !fidoProperties.getIamFidoEmailSettings().getEncoding().isEmpty()) {
+            mail.setEncoding(fidoProperties.getIamFidoEmailSettings().getEncoding());
+        }
+        if (fidoProperties.getIamFidoEmailSettings().getContentType() != null && !fidoProperties.getIamFidoEmailSettings().getContentType()
+                .isEmpty()) {
+            mail.setContentType(fidoProperties.getIamFidoEmailSettings().getContentType());
+        }
 
         addFrom(res);
         setMailPriority(fidoProperties.getIamFidoEmailSettings().getPriority());
