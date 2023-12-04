@@ -19,9 +19,6 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "jobResourceName",
     "subject",
-    "charset",
-    "encoding",
-    "contentType",
     "recipient"
 })
 public class SendMail {
@@ -42,30 +39,6 @@ public class SendMail {
      */
     @JsonProperty("subject")
     private String subject;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("charset")
-    private String charset;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("encoding")
-    private String encoding;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("contentType")
-    private String contentType;
     /**
      * string without < and >
      * <p>
@@ -125,72 +98,6 @@ public class SendMail {
      * 
      * 
      */
-    @JsonProperty("charset")
-    public String getCharset() {
-        return charset;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("charset")
-    public void setCharset(String charset) {
-        this.charset = charset;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("encoding")
-    public String getEncoding() {
-        return encoding;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("encoding")
-    public void setEncoding(String encoding) {
-        this.encoding = encoding;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("contentType")
-    public String getContentType() {
-        return contentType;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("contentType")
-    public void setContentType(String contentType) {
-        this.contentType = contentType;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("recipient")
     public String getRecipient() {
         return recipient;
@@ -209,12 +116,12 @@ public class SendMail {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobResourceName", jobResourceName).append("subject", subject).append("charset", charset).append("encoding", encoding).append("contentType", contentType).append("recipient", recipient).toString();
+        return new ToStringBuilder(this).append("jobResourceName", jobResourceName).append("subject", subject).append("recipient", recipient).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(charset).append(subject).append(recipient).append(jobResourceName).append(encoding).append(contentType).toHashCode();
+        return new HashCodeBuilder().append(recipient).append(jobResourceName).append(subject).toHashCode();
     }
 
     @Override
@@ -226,7 +133,7 @@ public class SendMail {
             return false;
         }
         SendMail rhs = ((SendMail) other);
-        return new EqualsBuilder().append(charset, rhs.charset).append(subject, rhs.subject).append(recipient, rhs.recipient).append(jobResourceName, rhs.jobResourceName).append(encoding, rhs.encoding).append(contentType, rhs.contentType).isEquals();
+        return new EqualsBuilder().append(recipient, rhs.recipient).append(jobResourceName, rhs.jobResourceName).append(subject, rhs.subject).isEquals();
     }
 
 }

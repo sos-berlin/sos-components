@@ -25,6 +25,9 @@ public class MailResource {
     private static final String ARG_TO = "to";
     private static final String ARG_CC = "cc";
     private static final String ARG_BCC = "bcc";
+    private static final String ARG_CONTENT_TYPE = "content_type";
+    private static final String ARG_CHARSET = "charset";
+    private static final String ARG_ENCODING = "encoding";
 
     private CredentialStoreArguments credentialStoreArgs;
     private Properties mailProperties;
@@ -35,6 +38,9 @@ public class MailResource {
     private String to;
     private String cc;
     private String bcc;
+    private String contentType;
+    private String encoding;
+    private String charset;
 
     private boolean available;
 
@@ -59,6 +65,9 @@ public class MailResource {
                 to = strip(arguments.get(ARG_TO));
                 cc = strip(arguments.get(ARG_CC));
                 bcc = strip(arguments.get(ARG_BCC));
+                charset = strip(arguments.get(ARG_CHARSET));
+                encoding = strip(arguments.get(ARG_ENCODING));
+                contentType = strip(arguments.get(ARG_CONTENT_TYPE));
             }
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug(String.format("[parse][%s][mail properties]%s", jobResourceName, getMaskedMailProperties()));
@@ -102,6 +111,9 @@ public class MailResource {
             to = getCurrentValue("mail", "to", to, mr.getTo(), isDebugEnabled, mr.jobResourceName);
             cc = getCurrentValue("mail", "cc", cc, mr.getCC(), isDebugEnabled, mr.jobResourceName);
             bcc = getCurrentValue("mail", "bcc", bcc, mr.getBCC(), isDebugEnabled, mr.jobResourceName);
+            contentType = getCurrentValue("mail", "contentType", contentType, mr.getContentType(), isDebugEnabled, mr.jobResourceName);
+            encoding = getCurrentValue("mail", "encoding", encoding, mr.getEncoding(), isDebugEnabled, mr.jobResourceName);
+            charset = getCurrentValue("mail", "charset", charset, mr.getCharset(), isDebugEnabled, mr.jobResourceName);
             available = true;
         }
         if (LOGGER.isDebugEnabled()) {
@@ -160,6 +172,9 @@ public class MailResource {
         to = null;
         cc = null;
         bcc = null;
+        charset = null;
+        encoding = null;
+        contentType = null;
         available = false;
     }
 
@@ -238,6 +253,21 @@ public class MailResource {
             sb.append(",credentialStoreArgs");
         }
         return sb.toString();
+    }
+
+    
+    public String getContentType() {
+        return contentType;
+    }
+
+    
+    public String getEncoding() {
+        return encoding;
+    }
+
+    
+    public String getCharset() {
+        return charset;
     }
 
 }
