@@ -894,8 +894,8 @@ public class Validator {
                         op.setEndPositions(ao.getEndPositions());
                         if (hasPositionSetting.test(op)) {
                             Set<BlockPosition> availableBlockPositions = WorkflowsHelper.getWorkflowBlockPositions(workflowOfAddOrder.getInstructions());
-                            Map<String, List<Object>> labelMap = WorkflowsHelper.getLabelToPositionsMap(workflowOfAddOrder);
-                            checkAddOrderPositions(op, availableBlockPositions, ao.getWorkflowName(), labelMap, "$." + instPosition + ".blockPosition");
+                            Map<String, List<Object>> labelMap = WorkflowsHelper.getLabelToPositionsMap(workflowOfAddOrder, true);
+                            checkAddOrderPositions(op, availableBlockPositions, ao.getWorkflowName(), labelMap, "$." + instPosition);
                         }
                     }
                     break;
@@ -1170,8 +1170,8 @@ public class Validator {
                         op.setEndPositions(ao.getEndPositions());
                         if (hasPositionSetting.test(op)) {
                             Set<BlockPosition> availableBlockPositions = WorkflowsHelper.getWorkflowBlockPositions(workflowOfAddOrder.getInstructions());
-                            Map<String, List<Object>> labelMap = WorkflowsHelper.getLabelToPositionsMap(workflowOfAddOrder);
-                            checkAddOrderPositions(op, availableBlockPositions, ao.getWorkflowName(), labelMap, "$." + instPosition + ".blockPosition");
+                            Map<String, List<Object>> labelMap = WorkflowsHelper.getLabelToPositionsMap(workflowOfAddOrder, true);
+                            checkAddOrderPositions(op, availableBlockPositions, ao.getWorkflowName(), labelMap, "$." + instPosition);
                         }
                     }
                     break;
@@ -1273,27 +1273,28 @@ public class Validator {
     private static void checkAddOrderPositions(Object pos, Map<String, List<Object>> labelPosMap, String position) {
         if (pos != null) {
             if (pos instanceof String && !labelPosMap.containsKey((String) pos)) {
-                throw new JocConfigurationException(position + "startPosition: invalid label '" + (String) pos + "'");
-            } else if (pos instanceof List<?> && !labelPosMap.containsValue((List<Object>) pos)) {
-                throw new JocConfigurationException(position + "startPosition: invalid position '" + ((List<Object>) pos).toString() + "'");
+                throw new JocConfigurationException(position + ": invalid label '" + (String) pos + "'");
+            } else if (pos instanceof List<?> && !labelPosMap.containsKey(WorkflowsHelper.getJPositionString((List<Object>) pos))) {
+                throw new JocConfigurationException(position + ": invalid position '" + ((List<Object>) pos).toString() + "'");
             }
         }
     }
     
-    private static void checkAddOrderPositions(OrderPositions p, Set<BlockPosition> availableBlockPositions, String workflowName, Map<String, List<Object>> labelMap, String position) {
+    private static void checkAddOrderPositions(OrderPositions p, Set<BlockPosition> availableBlockPositions, String workflowName,
+            Map<String, List<Object>> labelMap, String position) {
         if (p.getBlockPosition() != null) {
             try {
                 BlockPosition blockPosition = OrdersHelper.getBlockPosition(p.getBlockPosition(), workflowName, availableBlockPositions);
-                //check start-/endpositions inside block
+                // check start-/endpositions inside block
                 OrdersHelper.getStartPositionInBlock(p.getStartPosition(), labelMap, blockPosition);
                 OrdersHelper.getEndPositionInBlock(p.getEndPositions(), labelMap, blockPosition);
             } catch (Exception e1) {
-                throw new JocConfigurationException(position + e1.getMessage());
+                throw new JocConfigurationException(position + "blockPosition:" + e1.getMessage());
             }
         } else if (p.getStartPosition() != null || (p.getEndPositions() != null && !p.getEndPositions().isEmpty())) {
-            checkAddOrderPositions(p.getStartPosition(), labelMap, position);
+            checkAddOrderPositions(p.getStartPosition(), labelMap, position + "startPosition");
             if (p.getEndPositions() != null) {
-                p.getEndPositions().forEach(endP -> checkAddOrderPositions(endP, labelMap, position));
+                p.getEndPositions().forEach(endP -> checkAddOrderPositions(endP, labelMap, position + "endPosition"));
             }
         }
     }
@@ -1302,7 +1303,8 @@ public class Validator {
     private static void firstChildIsForkInstruction(List<Instruction> insts, String pos, String parent) {
         if (insts != null && !insts.isEmpty()) {
             if (InstructionType.FORK.equals(insts.get(0).getTYPE())) {
-                throw new JocConfigurationException(pos + ".[0]: A Fork instruction must not be the first instruction within a " + parent + " instruction.");
+                throw new JocConfigurationException(pos + ".[0]: A Fork instruction must not be the first instruction within a " + parent
+                        + " instruction.");
             }
         }
     }
@@ -1499,7 +1501,7 @@ public class Validator {
                     .isEmpty()) || p.getBlockPosition() != null;
             if (variableSets.stream().map(OrderParameterisation::getPositions).filter(Objects::nonNull).anyMatch(hasPositionSetting)) {
                 Set<BlockPosition> availableBlockPositions = WorkflowsHelper.getWorkflowBlockPositions(workflow.getInstructions());
-                Map<String, List<Object>> labelMap = WorkflowsHelper.getLabelToPositionsMap(workflow);
+                Map<String, List<Object>> labelMap = WorkflowsHelper.getLabelToPositionsMap(workflow, true);
 
                 variableSets.stream().map(OrderParameterisation::getPositions).filter(Objects::nonNull).filter(hasPositionSetting).forEach(
                         p -> checkAddOrderPositions(p, availableBlockPositions, workflowName, labelMap, position + ".positions."));
