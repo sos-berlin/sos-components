@@ -196,16 +196,22 @@ public class WorkflowsHelper {
     }
     
     public static Map<String, List<Object>> getLabelToPositionsMap(com.sos.inventory.model.workflow.Workflow w) {
+        return getLabelToPositionsMap(w, false);
+    }
+    
+    public static Map<String, List<Object>> getLabelToPositionsMap(com.sos.inventory.model.workflow.Workflow w, boolean withAllPositions) {
         if (w == null) {
             return Collections.emptyMap();
         }
         List<Instruction> instructions = w.getInstructions();
-        if (instructions == null) {
-            return Collections.emptyMap();
+        if (instructions != null) {
+            instructions.add(createImplicitEndInstruction());
+        } else {
+            w.setInstructions(Collections.singletonList(createImplicitEndInstruction()));
         }
         Object[] o = {};
         Map<String, List<Object>> labelToPositionsMap = new HashMap<>();
-        setWorkflowPositions(o, w.getInstructions(), labelToPositionsMap);
+        setWorkflowPositions(o, w.getInstructions(), labelToPositionsMap, withAllPositions);
         return labelToPositionsMap;
     }
     
@@ -678,10 +684,11 @@ public class WorkflowsHelper {
     }
     
     private static void setWorkflowPositions(Object[] parentPosition, List<Instruction> insts) {
-        setWorkflowPositions(parentPosition, insts, null);
+        setWorkflowPositions(parentPosition, insts, null, false);
     }
 
-    private static void setWorkflowPositions(Object[] parentPosition, List<Instruction> insts, Map<String, List<Object>> mapLabelToPos) {
+    private static void setWorkflowPositions(Object[] parentPosition, List<Instruction> insts, Map<String, List<Object>> mapLabelToPos,
+            boolean withAllPositions) {
         if (insts != null) {
             for (int i = 0; i < insts.size(); i++) {
                 Object[] pos = extendArray(parentPosition, i);
@@ -689,8 +696,13 @@ public class WorkflowsHelper {
                 Instruction inst = insts.get(i);
                 inst.setPosition(Arrays.asList(pos));
                 inst.setPositionString(getJPositionString(inst.getPosition()));
-                if (mapLabelToPos != null && inst.getLabel() != null && !inst.getLabel().isEmpty()) {
-                    mapLabelToPos.putIfAbsent(inst.getLabel(), inst.getPosition());
+                if (mapLabelToPos != null) {
+                    if (inst.getLabel() != null && !inst.getLabel().isEmpty()) {
+                        mapLabelToPos.putIfAbsent(inst.getLabel(), inst.getPosition());
+                    }
+                    if (withAllPositions) {
+                        mapLabelToPos.putIfAbsent(inst.getPositionString(), inst.getPosition());
+                    }
                 }
                 switch (inst.getTYPE()) {
                 case FORK:
@@ -702,7 +714,7 @@ public class WorkflowsHelper {
                             } else {
                                 b.getWorkflow().setInstructions(Collections.singletonList(createImplicitEndInstruction()));
                             }
-                            setWorkflowPositions(extendArray(pos, "fork+" + b.getId()), b.getWorkflow().getInstructions(), mapLabelToPos);
+                            setWorkflowPositions(extendArray(pos, "fork+" + b.getId()), b.getWorkflow().getInstructions(), mapLabelToPos, withAllPositions);
                         }
                     }
                     break;
@@ -714,7 +726,7 @@ public class WorkflowsHelper {
                         } else {
                             fl.getWorkflow().setInstructions(Collections.singletonList(createImplicitEndInstruction()));
                         }
-                        setWorkflowPositions(extendArray(pos, "fork"), fl.getWorkflow().getInstructions(), mapLabelToPos);
+                        setWorkflowPositions(extendArray(pos, "fork"), fl.getWorkflow().getInstructions(), mapLabelToPos, withAllPositions);
                     }
                     break;
                 case EXPECT_NOTICE:
@@ -728,48 +740,48 @@ public class WorkflowsHelper {
                     if (cn.getSubworkflow() == null || cn.getSubworkflow().getInstructions() == null) {
                         cn.setSubworkflow(new Instructions(Collections.emptyList())); 
                     }
-                    setWorkflowPositions(extendArray(pos, "consumeNotices"), cn.getSubworkflow().getInstructions(), mapLabelToPos);
+                    setWorkflowPositions(extendArray(pos, "consumeNotices"), cn.getSubworkflow().getInstructions(), mapLabelToPos, withAllPositions);
                     break;
                 case IF:
                     IfElse ie = inst.cast();
                     if (ie.getThen() != null) {
-                        setWorkflowPositions(extendArray(pos, "then"), ie.getThen().getInstructions(), mapLabelToPos);
+                        setWorkflowPositions(extendArray(pos, "then"), ie.getThen().getInstructions(), mapLabelToPos, withAllPositions);
                     }
                     if (ie.getElse() != null) {
-                        setWorkflowPositions(extendArray(pos, "else"), ie.getElse().getInstructions(), mapLabelToPos);
+                        setWorkflowPositions(extendArray(pos, "else"), ie.getElse().getInstructions(), mapLabelToPos, withAllPositions);
                     }
                     break;
                 case TRY:
                     TryCatch tc = inst.cast();
                     if (tc.getTry() != null) {
-                        setWorkflowPositions(extendArray(pos, "try"), tc.getTry().getInstructions(), mapLabelToPos);
+                        setWorkflowPositions(extendArray(pos, "try"), tc.getTry().getInstructions(), mapLabelToPos, withAllPositions);
                     }
                     if (tc.getCatch() != null) {
-                        setWorkflowPositions(extendArray(pos, "catch"), tc.getCatch().getInstructions(), mapLabelToPos);
+                        setWorkflowPositions(extendArray(pos, "catch"), tc.getCatch().getInstructions(), mapLabelToPos, withAllPositions);
                     }
                     break;
                 case LOCK:
                     Lock l = inst.cast();
                     if (l.getLockedWorkflow() != null) {
-                        setWorkflowPositions(extendArray(pos, "lock"), l.getLockedWorkflow().getInstructions(), mapLabelToPos);
+                        setWorkflowPositions(extendArray(pos, "lock"), l.getLockedWorkflow().getInstructions(), mapLabelToPos, withAllPositions);
                     }
                     break;
                 case CYCLE:
                     Cycle c = inst.cast();
                     if (c.getCycleWorkflow() != null) {
-                        setWorkflowPositions(extendArray(pos, "cycle"), c.getCycleWorkflow().getInstructions(), mapLabelToPos);
+                        setWorkflowPositions(extendArray(pos, "cycle"), c.getCycleWorkflow().getInstructions(), mapLabelToPos, withAllPositions);
                     }
                     break;
                 case STICKY_SUBAGENT:
                     StickySubagent sticky = inst.cast();
                     if (sticky.getSubworkflow() != null) {
-                        setWorkflowPositions(extendArray(pos, "stickySubagent"), sticky.getSubworkflow().getInstructions(), mapLabelToPos);
+                        setWorkflowPositions(extendArray(pos, "stickySubagent"), sticky.getSubworkflow().getInstructions(), mapLabelToPos, withAllPositions);
                     }
                     break;
                 case OPTIONS:
                     Options opts = inst.cast();
                     if (opts.getBlock() != null) {
-                        setWorkflowPositions(extendArray(pos, "options"), opts.getBlock().getInstructions(), mapLabelToPos);
+                        setWorkflowPositions(extendArray(pos, "options"), opts.getBlock().getInstructions(), mapLabelToPos, withAllPositions);
                     }
                     break;
                 default:
@@ -1257,7 +1269,7 @@ public class WorkflowsHelper {
     // }
     // }
 
-    private static String getJPositionString(List<Object> positionList) {
+    public static String getJPositionString(List<Object> positionList) {
         Either<Problem, JPosition> jPosEither = JPosition.fromList(positionList);
         if (jPosEither.isRight()) {
             return jPosEither.get().toString();
