@@ -14,15 +14,20 @@ import com.sos.inventory.model.jobtemplate.JobTemplate;
 import com.sos.inventory.model.lock.Lock;
 import com.sos.inventory.model.schedule.OrderParameterisation;
 import com.sos.inventory.model.schedule.Schedule;
+import com.sos.inventory.model.workflow.Parameter;
+import com.sos.inventory.model.workflow.ParameterType;
+import com.sos.inventory.model.workflow.Parameters;
+import com.sos.inventory.model.workflow.Requirements;
+import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.inventory.JocInventory;
-import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.classes.inventory.JocInventory.InventoryPath;
 import com.sos.joc.classes.inventory.ReferenceValidator;
+import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
@@ -33,6 +38,7 @@ import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.model.common.ICalendarObject;
+import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.ItemStateEnum;
@@ -195,6 +201,9 @@ public abstract class AStoreConfiguration extends JOCResourceImpl {
                         }
                     }
                     break;
+                case WORKFLOW: 
+                    addFileVariableIfAssignedInFileOrderSource(in.getConfiguration(), item.getName(), dbLayer);
+                    break;
                 default:
                     break;
                 }
@@ -207,6 +216,26 @@ public abstract class AStoreConfiguration extends JOCResourceImpl {
         item.setReleased(false);
         item.setModified(Date.from(Instant.now()));
         return item;
+    }
+
+    private void addFileVariableIfAssignedInFileOrderSource(IConfigurationObject config, String name, InventoryDBLayer dbLayer) {
+        try {
+            if (dbLayer.getNumOfUsedFileOrderSourcesByWorkflowName(name) > 0) {
+                Workflow workflow = (Workflow) config;
+                Requirements r = workflow.getOrderPreparation();
+                if (r == null) {
+                    r = new Requirements();
+                }
+                if (r.getParameters() == null) {
+                    r.setParameters(new Parameters());
+                }
+                if (r.getParameters().getAdditionalProperties().get("file") == null) {
+                    r.getParameters().setAdditionalProperty("file", new Parameter(ParameterType.String, null, null, null, null, null, null));
+                }
+            }
+        } catch (Exception e) {
+            //
+        }
     }
 
     private void validate(DBItemInventoryConfiguration item, ConfigurationObject in, InventoryDBLayer dbLayer) {
