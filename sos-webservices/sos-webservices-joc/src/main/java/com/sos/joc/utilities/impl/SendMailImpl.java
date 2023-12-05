@@ -49,15 +49,15 @@ public class SendMailImpl extends JOCOrderResourceImpl implements ISendMailResou
                 return jocDefaultResponse;
             }
             
-            if (sendMail.getCharset() == null || sendMail.getCharset().isEmpty()) {
-                sendMail.setCharset("ISO-8859-1");
-            }
-            if (sendMail.getContentType() == null || sendMail.getContentType().isEmpty()) {
-                sendMail.setContentType("text/html");
-            }
-            if (sendMail.getEncoding() == null || sendMail.getEncoding().isEmpty()) {
-                sendMail.setEncoding("7-bit");
-            }
+//            if (sendMail.getCharset() == null || sendMail.getCharset().isEmpty()) {
+//                sendMail.setCharset("ISO-8859-1");
+//            }
+//            if (sendMail.getContentType() == null || sendMail.getContentType().isEmpty()) {
+//                sendMail.setContentType("text/html");
+//            }
+//            if (sendMail.getEncoding() == null || sendMail.getEncoding().isEmpty()) {
+//                sendMail.setEncoding("7-bit");
+//            }
 
             sendMail(sendMail);
 
@@ -159,9 +159,9 @@ public class SendMailImpl extends JOCOrderResourceImpl implements ISendMailResou
 
     private void setMailHeaders(MailResource mailResource, SendMail sendMail) throws Exception {
 
-        mail.setCharset(sendMail.getCharset());
-        mail.setEncoding(sendMail.getEncoding());
-        mail.setContentType(sendMail.getContentType());
+//        mail.setCharset(sendMail.getCharset());
+//        mail.setEncoding(sendMail.getEncoding());
+//        mail.setContentType(sendMail.getContentType());
 
         addFrom(mailResource);
 
