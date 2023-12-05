@@ -20,7 +20,6 @@ import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-import com.sos.joc.model.order.OrdersFilterV;
 import com.sos.joc.model.utilities.SendMail;
 import com.sos.joc.utilities.resource.ISendMailResource;
 import com.sos.schema.JsonValidator;

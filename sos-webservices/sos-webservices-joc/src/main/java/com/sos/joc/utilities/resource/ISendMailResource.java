@@ -12,7 +12,7 @@ import com.sos.joc.classes.WebservicePaths;
 
 public interface ISendMailResource {
 
-    public static final String PATH = "send_mail";
+    public static final String PATH = "send_email";
     public static final String IMPL_PATH = WebservicePaths.getResourceImplPath(WebservicePaths.UTILITIES, PATH);
 
     @POST
