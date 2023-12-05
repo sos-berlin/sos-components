@@ -284,14 +284,16 @@ public class DBLayerKeys {
 
     public void saveOrUpdateSigningRootCaCertificate(JocKeyPair keyPair, String account, Integer secLvl) throws SOSHibernateException {
         DBItemInventoryCertificate certificate = getSigningRootCaCertificate(account);
-        if (certificate != null && !certificate.getPem().equals(keyPair.getCertificate())) {
-            certificate.setCa(true);
-            certificate.setKeyAlgorithm(JocKeyAlgorithm.valueOf(keyPair.getKeyAlgorithm()).value());
-            certificate.setKeyType(JocKeyType.CA.value());
-            certificate.setPem(keyPair.getCertificate());
-            certificate.setAccount(account);
-            certificate.setSecLvl(secLvl);
-            session.update(certificate);
+        if (certificate != null) {
+            if(!certificate.getPem().equals(keyPair.getCertificate())) {
+                certificate.setCa(true);
+                certificate.setKeyAlgorithm(JocKeyAlgorithm.valueOf(keyPair.getKeyAlgorithm()).value());
+                certificate.setKeyType(JocKeyType.CA.value());
+                certificate.setPem(keyPair.getCertificate());
+                certificate.setAccount(account);
+                certificate.setSecLvl(secLvl);
+                session.update(certificate);
+            }
         } else {
             DBItemInventoryCertificate newCertificate = new DBItemInventoryCertificate();
             newCertificate.setCa(true);
