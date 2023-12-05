@@ -37,7 +37,7 @@ public class ConverterReportWriter {
             LOGGER.info(String.format("[%s][%s][summary][end]", method, title));
         }
         if (ParserReport.INSTANCE.getError().getRecords().size() > 0) {
-            LOGGER.info(String.format("[%s][%s][error][start]...", method), title);
+            LOGGER.info(String.format("[%s][%s][error][start]...", method, title));
             ReportWriter.write(errorReport, ParserReport.INSTANCE.getError());
             LOGGER.info(String.format("[%s][%s][error][end]", method, title));
         }
