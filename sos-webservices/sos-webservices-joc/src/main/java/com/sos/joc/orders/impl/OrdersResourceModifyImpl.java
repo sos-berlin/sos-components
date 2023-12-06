@@ -315,7 +315,6 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         }
 
         Optional<JPosition> positionOpt = Optional.empty();
-        Optional<JPosition> orderPositionOpt = Optional.empty();
         Optional<String> workflowPositionStringOpt = Optional.empty();
 
         // JOC-1453 consider labels
@@ -494,17 +493,31 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 }
             }
             
-            orderPositionOpt = cop.workflowPositionToOrderPosition(positionOpt, modifyOrders.getCycleEndTime());
-            ControllerApi.of(controllerId).resumeOrder(jOrders.iterator().next().id(), orderPositionOpt, historyOperations, true).thenAccept(either -> {
-                ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
-                if (either.isRight()) {
-                    OrdersHelper.storeAuditLogDetailsFromJOrders(jOrders, dbAuditLog.getId(), controllerId).thenAccept(either2 -> ProblemHelper
-                            .postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
-                }
-            });
+            Optional<JPosition> orderPositionOpt = cop.workflowPositionToOrderPosition(positionOpt, modifyOrders.getCycleEndTime());
+
+            OrderId oId = jOrders.iterator().next().id();
+            // TODO handle grouped fresh cyclicOrders
+            Set<OrderId> orderIds = Collections.emptySet();
+            if (OrdersHelper.isCyclicOrderId(oId.string())) {
+                orderIds = cyclicFreshOrderIds(Collections.singleton(oId.string()), currentState).filter(co -> co.asScala().isResumable()).map(
+                        JOrder::id).collect(Collectors.toSet());
+            }
+            if (orderIds.isEmpty()) {
+                orderIds = Collections.singleton(oId);
+            }
+
+            for (OrderId orderId : orderIds) {
+                ControllerApi.of(controllerId).resumeOrder(orderId, orderPositionOpt, historyOperations, true).thenAccept(either -> {
+                    ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
+                    if (either.isRight()) {
+                        OrdersHelper.storeAuditLogDetailsFromJOrders(jOrders, dbAuditLog.getId(), controllerId).thenAccept(either2 -> ProblemHelper
+                                .postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
+                    }
+                });
+            }
         } else {
             for (JOrder jOrder : jOrders) {
-                orderPositionOpt = cop.workflowPositionToOrderPosition(positionOpt, jOrder, modifyOrders.getCycleEndTime());
+                Optional<JPosition> orderPositionOpt = cop.workflowPositionToOrderPosition(positionOpt, jOrder, modifyOrders.getCycleEndTime());
                 ControllerApi.of(controllerId).resumeOrder(jOrder.id(), orderPositionOpt, historyOperations, true).thenAccept(either -> {
                     ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
                     if (either.isRight()) {
@@ -648,7 +661,9 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             });
 
         case RESUME:
-            return ControllerApi.of(controllerId).resumeOrders(oIdsStream.collect(Collectors.toSet()), true);
+            Stream<OrderId> cyclicOrders = cyclicFreshOrderIds(jOrders.stream().map(JOrder::id).map(OrderId::string).collect(Collectors.toSet()),
+                    currentState).filter(co -> co.asScala().isResumable()).map(JOrder::id);
+            return ControllerApi.of(controllerId).resumeOrders(Stream.concat(oIdsStream, cyclicOrders).collect(Collectors.toSet()), true);
 
         case SUSPEND:
             if (modifyOrders.getDeep() == Boolean.TRUE) {
