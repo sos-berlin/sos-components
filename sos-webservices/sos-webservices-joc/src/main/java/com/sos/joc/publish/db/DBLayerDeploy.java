@@ -1116,7 +1116,7 @@ public class DBLayerDeploy {
                 return newConfiguration;
             }
         } catch (SOSHibernateException e) {
-            throw new JocSosHibernateException(String.format("%1$s: %2$s - ", configType.value().toLowerCase(), configPath), e);
+            throw new JocSosHibernateException(String.format("%1$s: %2$s - %3$s", configType.value().toLowerCase(), configPath, e.getMessage()), e);
         } catch (IOException e) {
             throw new JocException(e);
         }
@@ -2171,7 +2171,7 @@ public class DBLayerDeploy {
                 try {
                     session.delete(sig);
                 } catch (SOSHibernateException e) {
-                    throw new JocSosHibernateException(e.getCause());
+                    throw new JocSosHibernateException(e);
                 }
             }
         }
@@ -2191,7 +2191,7 @@ public class DBLayerDeploy {
                 }
             }
         } catch (SOSHibernateException e) {
-            throw new JocSosHibernateException(e.getCause());
+            throw new JocSosHibernateException(e);
         }
     }
 
@@ -2346,7 +2346,7 @@ public class DBLayerDeploy {
             Query<DBItemInventoryAgentInstance> query = getSession().createQuery(hql.toString());
             return query.getResultList();
         }catch (SOSHibernateException e) {
-            throw new JocSosHibernateException(e.getMessage(), e);
+            throw new JocSosHibernateException(e);
         }
     }
     
@@ -2377,7 +2377,7 @@ public class DBLayerDeploy {
                 }
 
             } catch (SOSHibernateException e) {
-                throw new JocSosHibernateException(e.getMessage(), e);
+                throw new JocSosHibernateException(e);
             }
         } else {
             return null;
@@ -2699,6 +2699,8 @@ public class DBLayerDeploy {
                 unreleased.setReleased(false);
                 getSession().update(unreleased);
             }
+        } catch (JocSosHibernateException e) {
+            throw e;
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
         }
