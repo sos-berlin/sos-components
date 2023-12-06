@@ -347,10 +347,11 @@ public class OrdersHelper {
         OrderStateText groupedState = getGroupedState(state);
         if (isSuspended == Boolean.TRUE && !(OrderStateText.CANCELLED.equals(groupedState) || OrderStateText.FINISHED.equals(groupedState))) {
             groupedState = OrderStateText.SUSPENDED;
+        } else {
+            oState.set_reason(obstacle != null ? waitingReasons.get(obstacle.value()) : waitingReasons.get(state));
         }
         oState.set_text(groupedState);
         oState.setSeverity(severityByGroupedStates.get(groupedState));
-        oState.set_reason(obstacle != null ? waitingReasons.get(obstacle.value()) : waitingReasons.get(state));
         return oState;
     }
     
