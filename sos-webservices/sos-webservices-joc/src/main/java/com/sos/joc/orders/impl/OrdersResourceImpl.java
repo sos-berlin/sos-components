@@ -119,9 +119,11 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             Function1<Order<Order.State>, Object> finishedFilter = JOrderPredicates.or(JOrderPredicates.or(JOrderPredicates.byOrderState(
                     Order.Finished$.class), JOrderPredicates.byOrderState(Order.Cancelled$.class)), JOrderPredicates.byOrderState(
                             Order.ProcessingKilled$.class));
+            Function1<Order<Order.State>, Object> freshFilter = JOrderPredicates.byOrderState(Order.Fresh$.class);
             Function1<Order<Order.State>, Object> suspendFilter = JOrderPredicates.and(o -> o.isSuspended(), JOrderPredicates.not(finishedFilter));
             Function1<Order<Order.State>, Object> notSuspendFilter = JOrderPredicates.not(suspendFilter);
             Function1<Order<Order.State>, Object> cyclicFilter = o -> OrdersHelper.isCyclicOrderId(o.id().string());
+            Function1<Order<Order.State>, Object> freshCyclicFilter = JOrderPredicates.and(freshFilter, cyclicFilter);
             Function1<Order<Order.State>, Object> notCyclicFilter = JOrderPredicates.not(cyclicFilter);
             Function1<Order<Order.State>, Object> blockedFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), o -> !o
                     .isSuspended() && OrdersHelper.getScheduledForMillis(o, zoneId, surveyDateMillis) < surveyDateMillis);
@@ -175,19 +177,18 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     }
 
                     if (freshOrderFilter != null) {
-                        freshOrderFilter = JOrderPredicates.and(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), o -> !o
-                                .isSuspended()), freshOrderFilter);
+                        freshOrderFilter = JOrderPredicates.and(freshFilter, freshOrderFilter);
                     } else if (lookingForScheduled && lookingForBlocked && lookingForPending) {
-                        freshOrderFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), o -> !o.isSuspended());
+                        freshOrderFilter = freshFilter;
                     }
 
+                    //consider that fresh orders can be suspended and SUSPENDED beats PENDING, BLOCKED, SCHEDULED
                     if (freshOrderFilter != null) {
-                        cycledOrderFilter = JOrderPredicates.and(freshOrderFilter, JOrderPredicates.and(cyclicFilter, notSuspendFilter));
-                        if (states.contains(OrderStateText.SUSPENDED)) {
-                            freshOrderFilter = JOrderPredicates.and(freshOrderFilter, JOrderPredicates.or(suspendFilter, notCyclicFilter));
-                        } else {
-                            freshOrderFilter = JOrderPredicates.and(freshOrderFilter, JOrderPredicates.and(notCyclicFilter, notSuspendFilter));
+                        if (!states.contains(OrderStateText.SUSPENDED)) {
+                            freshOrderFilter = JOrderPredicates.and(freshOrderFilter, o -> !o.isSuspended()); 
                         }
+                        cycledOrderFilter = JOrderPredicates.and(freshOrderFilter, cyclicFilter);
+                        freshOrderFilter = JOrderPredicates.and(freshOrderFilter, notCyclicFilter);
                     }
 
                     if (stateFilter == null) {
@@ -198,14 +199,19 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                         if (freshOrderFilter != null) {
                             notCycledOrderFilter = JOrderPredicates.or(stateFilter, freshOrderFilter);
                         } else {
-                            notCycledOrderFilter = stateFilter;
+                            //consider that suspended orders can be fresh -> maybe cyclic orders exist that needs one reference
+                            if (states.contains(OrderStateText.SUSPENDED)) {
+                                cycledOrderFilter = JOrderPredicates.and(stateFilter, freshCyclicFilter);
+                                notCycledOrderFilter = JOrderPredicates.and(stateFilter, JOrderPredicates.not(freshCyclicFilter));
+                            } else {
+                                notCycledOrderFilter = stateFilter;
+                            }
                         }
                     }
 
                 } else {
-                    cycledOrderFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), JOrderPredicates.and(cyclicFilter,
-                            notSuspendFilter));
-                    notCycledOrderFilter = JOrderPredicates.not(cycledOrderFilter);
+                    cycledOrderFilter = freshCyclicFilter;
+                    notCycledOrderFilter = JOrderPredicates.not(freshCyclicFilter);
                 }
             }
             
