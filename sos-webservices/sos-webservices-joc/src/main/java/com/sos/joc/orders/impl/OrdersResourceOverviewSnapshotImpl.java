@@ -8,6 +8,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -121,6 +122,8 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
                             Order.ProcessingKilled$.class));
             Function1<Order<Order.State>, Object> suspendFilter = JOrderPredicates.and(o -> o.isSuspended(), JOrderPredicates.not(finishedFilter));
             Function1<Order<Order.State>, Object> notSuspendFilter = JOrderPredicates.not(suspendFilter);
+            Function<JOrder, String> collapseCyclicOrders = o -> OrdersHelper.isFresh(o) ? OrdersHelper.getCyclicOrderIdMainPart(o.id().string()) : o
+                    .id().string();
 
             if (withWorkFlowFilter) {
                 if (!workflowIds.isEmpty()) {
@@ -130,8 +133,8 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
                         freshOrders = controllerState.ordersBy(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class),
                                 JOrderPredicates.and(notSuspendFilter, o -> workflowIds.contains(o.workflowId()))));
                     }
-                    suspendedOrders = controllerState.ordersBy(JOrderPredicates.and(suspendFilter, o -> workflowIds.contains(o.workflowId())))
-                            .mapToInt(e -> 1).sum();
+                    suspendedOrders = controllerState.ordersBy(JOrderPredicates.and(suspendFilter, o -> workflowIds.contains(o.workflowId()))).map(
+                            collapseCyclicOrders).distinct().mapToInt(e -> 1).sum();
                 } else {
                     // no folder permissions
                     orderStates = Collections.emptyMap();
@@ -148,8 +151,8 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
                         freshOrders = controllerState.ordersBy(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class),
                                 JOrderPredicates.and(notSuspendFilter, o -> workflowIds2.contains(o.workflowId()))));
                     }
-                    suspendedOrders = controllerState.ordersBy(JOrderPredicates.and(suspendFilter, o -> workflowIds2.contains(o.workflowId())))
-                            .mapToInt(e -> 1).sum();
+                    suspendedOrders = controllerState.ordersBy(JOrderPredicates.and(suspendFilter, o -> workflowIds2.contains(o.workflowId()))).map(
+                            collapseCyclicOrders).distinct().mapToInt(e -> 1).sum();
                 } else {
                     // no folder permissions
                     orderStates = Collections.emptyMap();
@@ -159,7 +162,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
                 if (orderStates.getOrDefault(Order.Fresh$.class, 0) > 0) {
                     freshOrders = controllerState.ordersBy(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), notSuspendFilter));
                 }
-                suspendedOrders = controllerState.ordersBy(suspendFilter).mapToInt(e -> 1).sum();
+                suspendedOrders = controllerState.ordersBy(suspendFilter).map(collapseCyclicOrders).distinct().mapToInt(e -> 1).sum();
             }
 
             int numOfBlockedOrders = 0;
