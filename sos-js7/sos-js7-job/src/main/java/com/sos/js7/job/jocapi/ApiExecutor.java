@@ -48,6 +48,10 @@ import com.typesafe.config.ConfigValue;
 
 public class ApiExecutor {
 
+    private static final String X_IDENTITY_SERVICE = "X-IDENTITY-SERVICE";
+
+    private static final String X_ID_TOKEN = "X-ID-TOKEN";
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ApiExecutor.class);
 
     private static final String DEFAULT_TRUSTSTORE_FILENAME = "https-truststore.p12";
@@ -75,6 +79,8 @@ public class ApiExecutor {
     private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_CS_KEYFILE = "js7.api-server.cs-key";
     private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_CS_PWD = "js7.api-server.cs-password";
     private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_USERNAME = "js7.api-server.username";
+    private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_TOKEN = "js7.api-server.token ";
+    private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_IDENTITY_SERVICE = "js7.api-server.identity-service ";
     private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD = "js7.api-server.password";
     private static final List<String> DO_NOT_LOG_KEY = Arrays.asList(new String[] { "js7.api-server.password", "js7.api-server.cs-password",
             "js7.web.https.keystore.store-password", "js7.web.https.keystore.key-password", "js7.web.https.keystore.alias",
@@ -94,7 +100,6 @@ public class ApiExecutor {
     private String truststoreType;
     private String keystoreType;
 
-
     public ApiExecutor(OrderProcessStepLogger jobLogger) {
         this.jobLogger = jobLogger;
     }
@@ -106,15 +111,15 @@ public class ApiExecutor {
         }
         return reasonPhrase;
     }
-    
-    public void setKeystoreCredentials (String path, String type, String storePwd, String keyPwd) {
+
+    public void setKeystoreCredentials(String path, String type, String storePwd, String keyPwd) {
         this.keystorePath = path;
         this.keystoreType = type;
         this.keystorePasswd = storePwd;
         this.keystoreKeyPasswd = keyPwd;
     }
 
-    public void setTruststoreCredentials (String path, String type, String storePwd) {
+    public void setTruststoreCredentials(String path, String type, String storePwd) {
         this.truststorePath = path;
         this.truststoreType = type;
         this.truststorePasswd = storePwd;
@@ -249,9 +254,9 @@ public class ApiExecutor {
     public List<String> getJocUris() {
         return jocUris;
     }
-    
+
     private KeyStore readTrustStore(String path, KeystoreType type, String passwd) throws FileNotFoundException {
-        if(!Files.exists(Paths.get(path))) {
+        if (!Files.exists(Paths.get(path))) {
             throw new FileNotFoundException(String.format("Cannot read from truststore %1$s. File does not exist!", path));
         }
         try {
@@ -262,7 +267,7 @@ public class ApiExecutor {
     }
 
     private KeyStore readKeyStore(String path, KeystoreType type, String passwd) throws FileNotFoundException {
-        if(!Files.exists(Paths.get(path))) {
+        if (!Files.exists(Paths.get(path))) {
             throw new FileNotFoundException(String.format("Cannot read from keystore %1$s. File does not exist!", path));
         }
         try {
@@ -272,8 +277,8 @@ public class ApiExecutor {
         }
     }
 
-    private void applySSLContextCredentials(SOSRestApiClient client) 
-            throws KeyManagementException, SOSMissingDataException, NoSuchAlgorithmException, FileNotFoundException {
+    private void applySSLContextCredentials(SOSRestApiClient client) throws KeyManagementException, SOSMissingDataException, NoSuchAlgorithmException,
+            FileNotFoundException {
         if (config == null) {
             readConfig();
         }
@@ -281,12 +286,13 @@ public class ApiExecutor {
         SSLContextBuilder sslContextBuilder = SSLContexts.custom();
         sslContextBuilder.setKeyManagerFactoryAlgorithm(KeyManagerFactory.getDefaultAlgorithm());
         sslContextBuilder.setTrustManagerFactoryAlgorithm(TrustManagerFactory.getDefaultAlgorithm());
-        if(truststorePath != null && truststoreType != null && truststorePasswd != null) {
+        if (truststorePath != null && truststoreType != null && truststorePasswd != null) {
             KeyStore truststore = readTrustStore(truststorePath, KeystoreType.fromValue(truststoreType), truststorePasswd);
-            if(truststore != null) {
+            if (truststore != null) {
                 try {
                     sslContextBuilder.loadTrustMaterial(truststore, null);
-                } catch (Exception e) {}
+                } catch (Exception e) {
+                }
             }
         } else if (truststoresCredentials != null && !truststoresCredentials.isEmpty()) {
             truststoresCredentials.stream().forEach(item -> {
@@ -294,42 +300,45 @@ public class ApiExecutor {
                 try {
                     truststore = readTrustStore(item.getPath(), KeystoreType.PKCS12, item.getStorePwd());
                 } catch (FileNotFoundException e) {
-                   throw new RuntimeException(e);
+                    throw new RuntimeException(e);
                 }
-                if(truststore != null) {
+                if (truststore != null) {
                     try {
                         sslContextBuilder.loadTrustMaterial(truststore, null);
-                    } catch (Exception e) {}
+                    } catch (Exception e) {
+                    }
                 }
             });
         }
         KeyStoreCredentials credentials = readKeystoreCredentials(config);
-        if(keystorePath != null && keystoreType != null && keystorePasswd != null) {
+        if (keystorePath != null && keystoreType != null && keystorePasswd != null) {
             KeyStore keystore = readKeyStore(keystorePath, KeystoreType.fromValue(keystoreType), keystorePasswd);
-            if(keystore != null) {
+            if (keystore != null) {
                 try {
-                    if(keystoreKeyPasswd != null) {
+                    if (keystoreKeyPasswd != null) {
                         sslContextBuilder.loadKeyMaterial(keystore, keystoreKeyPasswd.toCharArray());
                     } else {
                         sslContextBuilder.loadKeyMaterial(keystore, "".toCharArray());
                     }
-                } catch (Exception e) {}
+                } catch (Exception e) {
+                }
             }
         } else if (credentials != null) {
             KeyStore keystore = readKeyStore(credentials.getPath(), KeystoreType.PKCS12, credentials.getStorePwd());
             try {
-                if(keystoreKeyPasswd != null) {
+                if (keystoreKeyPasswd != null) {
                     sslContextBuilder.loadKeyMaterial(keystore, keystoreKeyPasswd.toCharArray());
                 } else {
                     sslContextBuilder.loadKeyMaterial(keystore, "".toCharArray());
                 }
-            } catch (Exception e) {}
+            } catch (Exception e) {
+            }
         }
         client.setSSLContext(sslContextBuilder.build());
     }
 
-    private void tryCreateClient(String jocUri)
-            throws SOSMissingDataException, KeyManagementException, SOSKeePassDatabaseException, NoSuchAlgorithmException, FileNotFoundException {
+    private void tryCreateClient(String jocUri) throws SOSMissingDataException, KeyManagementException, SOSKeePassDatabaseException,
+            NoSuchAlgorithmException, FileNotFoundException {
         if (client != null) {
             client.closeHttpClient();
         }
@@ -365,23 +374,43 @@ public class ApiExecutor {
         }
         String username = "";
         String pwd = "";
+        String token = "";
+        String identityService = "";
         if (csFile != null && !csFile.isEmpty()) {
             SOSKeePassResolver resolver = new SOSKeePassResolver(csFile, csKeyFile, csPwd);
             username = resolver.resolve(config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_USERNAME));
             pwd = resolver.resolve(config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD));
+            token = resolver.resolve(config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_TOKEN));
+            identityService = resolver.resolve(config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_IDENTITY_SERVICE));
         } else {
             try {
-                username = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_USERNAME);
+                token = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_TOKEN);
             } catch (ConfigException e) {
-                logDebug("no username found in private.conf.");
-
+                logDebug("no token found in private.conf.");
             }
             try {
-                pwd = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD);
+                identityService = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_IDENTITY_SERVICE);
             } catch (ConfigException e) {
-                logDebug("no (user-)password found in private.conf.");
-
+                logDebug("no identity-service found in private.conf.");
             }
+            if (token.isEmpty() || identityService.isEmpty()) {
+                try {
+                    username = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_USERNAME);
+                } catch (ConfigException e) {
+                    logDebug("no username found in private.conf.");
+
+                }
+                try {
+                    pwd = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD);
+                } catch (ConfigException e) {
+                    logDebug("no (user-)password found in private.conf.");
+                }
+            }
+
+        }
+        if (!token.isEmpty() && !identityService.isEmpty()) {
+            client.addHeader(X_ID_TOKEN, token);
+            client.addHeader(X_IDENTITY_SERVICE, identityService);
         }
         if (!username.isEmpty() && !pwd.isEmpty()) {
             String basicAuth = Base64.getMimeEncoder().encodeToString((username + ":" + pwd).getBytes());

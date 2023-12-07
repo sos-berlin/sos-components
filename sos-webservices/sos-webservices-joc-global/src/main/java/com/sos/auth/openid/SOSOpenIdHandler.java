@@ -41,12 +41,15 @@ import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.security.properties.oidc.OidcFlowTypes;
 
 public class SOSOpenIdHandler {
 
     private static final String PREFERRED_USERNAME = "preferred_username";
+    private static final String CLIENT_CREDENTIAL_APP_ID = "appid";
     private static final String EMAIL = "email";
     private static final String CLAIMS_SUPPORTED = "claims_supported";
+    private static final String WELL_KNOWN_OPENID_CONFIGURATION = "/.well-known/openid-configuration";
     private static final String JWKS_URI_ENDPOINT = "jwks_uri";
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSOpenIdHandler.class);
     private static final String EXPIRATION_FIELD = "exp";
@@ -63,8 +66,8 @@ public class SOSOpenIdHandler {
     private JsonObject jsonPayload;
     private KeyStore truststore = null;
     private String accountIdentifier = null;
-    private String openidConfiguration;
     private String kid;
+    String openidConfiguration;
 
     public SOSOpenIdHandler(SOSOpenIdWebserviceCredentials webserviceCredentials) throws Exception {
         this.webserviceCredentials = webserviceCredentials;
@@ -83,35 +86,21 @@ public class SOSOpenIdHandler {
         }
     }
 
-    private String getFormResponse(Boolean post, URI requestUri, Map<String, String> body, String xAccessToken) throws SOSException, SocketException {
+    private String getFormResponse(URI requestUri) throws SOSException, SocketException {
         SOSRestApiClient restApiClient = new SOSRestApiClient();
         restApiClient.setConnectionTimeout(SOSAuthHelper.RESTAPI_CONNECTION_TIMEOUT);
         restApiClient.addHeader(CONTENT_TYPE, APPLICATION_X_WWW_FORM_URLENCODED);
-        if (!(xAccessToken == null || xAccessToken.isEmpty())) {
-            restApiClient.addHeader(AUTHORIZATION, BEARER + " " + xAccessToken);
-        }
 
         if (truststore != null) {
             restApiClient.setSSLContext(null, null, truststore);
         }
 
-        if (post && body != null) {
-            for (java.util.Map.Entry<String, String> e : body.entrySet()) {
-                if (e.getKey().contains("password") || e.getKey().contains("client_secret")) {
-                    LOGGER.debug(e.getKey() + "= ********");
-                } else {
-                    LOGGER.debug(e.getKey() + "=" + e.getValue());
-                }
-            }
-        }
         LOGGER.debug(requestUri.toString());
 
         String response;
-        if (post) {
-            response = restApiClient.postRestService(requestUri, body);
-        } else {
-            response = restApiClient.getRestService(requestUri);
-        }
+
+        response = restApiClient.getRestService(requestUri);
+
         if (response == null) {
             response = "";
         }
@@ -165,8 +154,19 @@ public class SOSOpenIdHandler {
             return webserviceCredentials.getUserAttribute();
         }
 
-        Base64.Decoder decoder = Base64.getUrlDecoder();
-        openidConfiguration = new String(decoder.decode(webserviceCredentials.getOpenidConfiguration()));
+        if (webserviceCredentials.getFlowType().equals(OidcFlowTypes.CLIENT_CREDENTIAL)) {
+            return CLIENT_CREDENTIAL_APP_ID;
+        }
+
+        if (openidConfiguration == null) {
+            if (webserviceCredentials.getOpenidConfiguration() == null) {
+                URI requestUri = URI.create(webserviceCredentials.getAuthenticationUrl() + WELL_KNOWN_OPENID_CONFIGURATION);
+                openidConfiguration = getFormResponse(requestUri);
+            } else {
+                Base64.Decoder decoder = Base64.getUrlDecoder();
+                openidConfiguration = new String(decoder.decode(webserviceCredentials.getOpenidConfiguration()));
+            }
+        }
 
         JsonReader jsonReaderConfigurationResponse = Json.createReader(new StringReader(openidConfiguration));
         JsonObject jsonConfigurationResponse = jsonReaderConfigurationResponse.readObject();
@@ -209,9 +209,13 @@ public class SOSOpenIdHandler {
         String aud = null;
         String iss = null;
 
-        Base64.Decoder decoder = Base64.getUrlDecoder();
-
-        openidConfiguration = new String(decoder.decode(webserviceCredentials.getOpenidConfiguration()));
+        if (webserviceCredentials.getOpenidConfiguration() == null) {
+            URI requestUri = URI.create(webserviceCredentials.getAuthenticationUrl() + WELL_KNOWN_OPENID_CONFIGURATION);
+            openidConfiguration = getFormResponse(requestUri);
+        } else {
+            Base64.Decoder decoder = Base64.getUrlDecoder();
+            openidConfiguration = new String(decoder.decode(webserviceCredentials.getOpenidConfiguration()));
+        }
 
         JsonReader jsonReaderConfigurationResponse = Json.createReader(new StringReader(openidConfiguration));
         JsonObject jsonConfigurationResponse = jsonReaderConfigurationResponse.readObject();
@@ -239,17 +243,23 @@ public class SOSOpenIdHandler {
         }
 
         boolean valid = true;
-        valid = valid && webserviceCredentials.getClientId().equals(aud);
+        if (webserviceCredentials.getFlowType().equals(OidcFlowTypes.CLIENT_CREDENTIAL)) {
+            valid = valid && webserviceCredentials.getClientId().equals(account);
+        } else {
+            valid = valid && webserviceCredentials.getClientId().equals(aud);
+        }
         valid = valid && webserviceCredentials.getAuthenticationUrl().equals(iss);
         valid = valid && webserviceCredentials.getAccount().equals(account);
 
         valid = valid && expiresIn > 0;
-        try {
-            RSAPublicKey publicKey = this.getPublicKey(webserviceCredentials, certEndpoit, kid);
-            valid = valid && (SOSJWTVerifier.verify(webserviceCredentials, alg, publicKey).getHeader() != null);
-        } catch (CertificateException | NoSuchAlgorithmException | InvalidKeySpecException e) {
-            LOGGER.error("", e);
-            valid = false;
+        if (valid) {
+            try {
+                RSAPublicKey publicKey = this.getPublicKey(webserviceCredentials, certEndpoit, kid);
+                valid = valid && (SOSJWTVerifier.verify(webserviceCredentials, alg, publicKey).getHeader() != null);
+            } catch (CertificateException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+                LOGGER.error("", e);
+                valid = false;
+            }
         }
 
         if (valid) {
@@ -271,7 +281,7 @@ public class SOSOpenIdHandler {
         URI certEndpointUri = URI.create(certEndpoit);
 
         String response;
-        response = getFormResponse(false, certEndpointUri, null, null);
+        response = getFormResponse(certEndpointUri);
 
         JsonReader jsonReaderCertResponse = Json.createReader(new StringReader(response));
         JsonObject jsonKeys = jsonReaderCertResponse.readObject();
@@ -397,7 +407,6 @@ public class SOSOpenIdHandler {
         }
     }
 
-    
     public String getKid() {
         return kid;
     }

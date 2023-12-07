@@ -9,7 +9,6 @@ import java.util.Optional;
 
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 
-
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
@@ -39,6 +38,7 @@ import com.sos.joc.model.security.identityservice.IdentityProviders;
 import com.sos.joc.model.security.identityservice.IdentityServiceFilter;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 import com.sos.joc.model.security.identityservice.OidcIdentityProvider;
+import com.sos.joc.model.security.properties.oidc.OidcFlowTypes;
 import com.sos.joc.security.resource.IOidcResource;
 import com.sos.schema.JsonValidator;
 
@@ -46,8 +46,6 @@ import jakarta.ws.rs.Path;
 
 @Path("iam")
 public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
-
-
 
     private static final String API_CALL_IDENTITY_PROVIDERS = "./iam/identityproviders";
     private static final String API_CALL_IDENTITY_CLIENTS = "./iam/identitycliens";
@@ -98,19 +96,22 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
 
                     if (properties.getOidc() != null) {
 
-                        DocumentationDBLayer dbLayer = new DocumentationDBLayer(sosHibernateSession);
-                        String iconPath = DocumentationDBLayer.SOS_IMAGES_FOLDER + "/" + dbItemIamIdentityService.getIdentityServiceName();
-                        DBItemDocumentation dbItemDocumentation = dbLayer.getDocumentation(iconPath);
-                        if (dbItemDocumentation != null) {
-                            oidcIdentityProvider.setIamIconUrl("/iam/icon/" + JOCJsonCommand.urlEncodedPath(oidcIdentityProvider
-                                    .getIdentityServiceName()));
-                        }
+                        if (!properties.getOidc().getIamOidcFlowType().equals(OidcFlowTypes.CLIENT_CREDENTIAL)) {
 
-                        oidcIdentityProvider.setIamOidcAuthenticationUrl(getProperty(properties.getOidc().getIamOidcAuthenticationUrl(), ""));
-                        oidcIdentityProvider.setIamOidcName(getProperty(properties.getOidc().getIamOidcName(), ""));
+                            DocumentationDBLayer dbLayer = new DocumentationDBLayer(sosHibernateSession);
+                            String iconPath = DocumentationDBLayer.SOS_IMAGES_FOLDER + "/" + dbItemIamIdentityService.getIdentityServiceName();
+                            DBItemDocumentation dbItemDocumentation = dbLayer.getDocumentation(iconPath);
+                            if (dbItemDocumentation != null) {
+                                oidcIdentityProvider.setIamIconUrl("/iam/icon/" + JOCJsonCommand.urlEncodedPath(oidcIdentityProvider
+                                        .getIdentityServiceName()));
+                            }
+
+                            oidcIdentityProvider.setIamOidcAuthenticationUrl(getProperty(properties.getOidc().getIamOidcAuthenticationUrl(), ""));
+                            oidcIdentityProvider.setIamOidcName(getProperty(properties.getOidc().getIamOidcName(), ""));
+                            identityProviders.getOidcServiceItems().add(oidcIdentityProvider);
+                        }
                     }
                 }
-                identityProviders.getOidcServiceItems().add(oidcIdentityProvider);
             }
 
             for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServicesOIdcJoc) {
@@ -167,7 +168,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
                 if (dbItemIamIdentityService.getSecondFactor()) {
                     identityProviders.getFido2ndFactorServiceItems().add(fidoIdentityProvider);
                 } else {
-                identityProviders.getFidoServiceItems().add(fidoIdentityProvider);
+                    identityProviders.getFidoServiceItems().add(fidoIdentityProvider);
                 }
             }
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityProviders));
@@ -198,7 +199,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
             filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC);
             filter.setIdentityServiceName(identityServiceFilter.getIdentityServiceName());
             List<DBItemIamIdentityService> listOfIdentityServicesOidc = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
-            
+
             filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC_JOC);
             List<DBItemIamIdentityService> listOfIdentityServicesOidcJoc = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
 

@@ -20,6 +20,7 @@ import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
+import com.sos.joc.model.security.properties.oidc.OidcFlowTypes;
 import com.sos.joc.model.security.properties.oidc.OidcGroupRolesMappingItem;
 
 public class SOSOpenIdWebserviceCredentials {
@@ -35,6 +36,7 @@ public class SOSOpenIdWebserviceCredentials {
     private String providerName;
     private String userAttribute;
     private String openidConfiguration;
+    private OidcFlowTypes flowType;
 
     private String truststorePath = "";
     private String truststorePassword = "";
@@ -128,6 +130,9 @@ public class SOSOpenIdWebserviceCredentials {
                     authenticationUrl = getProperty(properties.getOidc().getIamOidcAuthenticationUrl(), "");
                 }
 
+                if (flowType == null) {
+                    flowType = properties.getOidc().getIamOidcFlowType();
+                }
                 if (clientSecret == null) {
                     clientSecret = getProperty(properties.getOidc().getIamOidcClientSecret(), "");
                 }
@@ -187,6 +192,11 @@ public class SOSOpenIdWebserviceCredentials {
             Globals.disconnect(sosHibernateSession);
         }
 
+    }
+
+    
+    public OidcFlowTypes getFlowType() {
+        return flowType;
     }
 
     @Override
