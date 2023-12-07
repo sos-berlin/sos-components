@@ -31,6 +31,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.pekko.util.OptionConverters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -117,6 +118,7 @@ import js7.data.value.StringValue;
 import js7.data.value.Value;
 import js7.data.workflow.WorkflowPath;
 import js7.data.workflow.instructions.ImplicitEnd;
+import js7.data.workflow.position.Label;
 import js7.data.workflow.position.Position;
 import js7.data.workflow.position.PositionOrLabel;
 import js7.data_for_java.command.JCancellationMode;
@@ -523,7 +525,14 @@ public class OrdersHelper {
             throw new JocFolderPermissionsException("Access denied for folder: " + getParent(wId.getPath()));
         }
         o.setWorkflowId(wId);
+        // only label of a job instruction is available
+        orderPositionToLabel(jOrder, controllerState).ifPresent(l -> o.setLabel(l));
         return o;
+    }
+    
+    private static Optional<String> orderPositionToLabel(JOrder order, JControllerState controllerState) {
+        return OptionConverters.toJava(controllerState.asScala().workflowPositionToLabel(order.asScala().workflowPosition()).map(
+                OptionConverters::toJava).toOption()).orElse(Optional.empty()).map(Label::string);
     }
     
     private static List<ExpectedNotice> getStillExpectedNotices(OrderId orderId, OrderItem oItem, JControllerState controllerState) {
