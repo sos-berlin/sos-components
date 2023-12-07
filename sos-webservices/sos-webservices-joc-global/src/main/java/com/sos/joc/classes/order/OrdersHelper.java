@@ -531,6 +531,9 @@ public class OrdersHelper {
     }
     
     private static Optional<String> orderPositionToLabel(JOrder order, JControllerState controllerState) {
+        if (controllerState == null || order == null) {
+            return Optional.empty();
+        }
         return OptionConverters.toJava(controllerState.asScala().workflowPositionToLabel(order.asScala().workflowPosition()).map(
                 OptionConverters::toJava).toOption()).orElse(Optional.empty()).map(Label::string);
     }
