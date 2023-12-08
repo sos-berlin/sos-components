@@ -236,6 +236,8 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 } else if (!JocInventory.isReleasable(conf.getTypeAsEnum())) {
                     throw new ControllerInvalidResponseDataException(String.format("%s is not a 'Scheduling Object': %s", conf.getPath(), conf
                             .getTypeAsEnum()));
+                } else if (!conf.getValid()) {
+                    throw new ControllerInvalidResponseDataException(String.format("%s is not valid", conf.getPath()));
                 } else {
                     bulkErrors.addAll(updateReleasedObject(conf, dbLayer, cachedWorkflows, dbAuditLog));
                     JocInventory.postEvent(conf.getFolder());

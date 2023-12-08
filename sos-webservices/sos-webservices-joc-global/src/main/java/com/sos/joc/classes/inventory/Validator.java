@@ -210,7 +210,7 @@ public class Validator {
                                         position, schedule.getPath(), workflowName));
                             }
                         }
-                        validateOrderParameterisations(schedule.getOrderParameterisations(), r, workflowName, w, "$.variableSets.orderParameterisations");
+                        validateOrderParameterisations(schedule.getOrderParameterisations(), r, workflowName, w, "$.orderParameterisations");
                     }
                 } else if (ConfigurationType.FILEORDERSOURCE.equals(type)) {
                     FileOrderSource fileOrderSource = (FileOrderSource) config;
@@ -305,7 +305,7 @@ public class Validator {
                                     position, schedule.getPath(), workflowName, r.getParameters().getAdditionalProperties().size()));
                         }
                     }
-                    validateOrderParameterisations(schedule.getOrderParameterisations(), r, workflowName, w, "$.variableSets.orderParameterisations");
+                    validateOrderParameterisations(schedule.getOrderParameterisations(), r, workflowName, w, "$.orderParameterisations");
                 }
             } else if (ConfigurationType.FILEORDERSOURCE.equals(type)) {
                 String position = "$.workflowName";
