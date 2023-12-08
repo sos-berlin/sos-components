@@ -48,6 +48,7 @@ import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.workflow.ListParameter;
+import com.sos.inventory.model.workflow.ListParameterType;
 import com.sos.inventory.model.workflow.ListParameters;
 import com.sos.inventory.model.workflow.Parameter;
 import com.sos.inventory.model.workflow.Requirements;
@@ -677,11 +678,15 @@ public class OrdersHelper {
                 }
                 continue;
             }
-            if (param.getValue().getDefault() == null && !args.containsKey(param.getKey())) { // required
+            if (param.getValue().getDefault() == null && args.get(param.getKey()) ==  null) { // required
                 throw new JocMissingRequiredParameterException("Variable '" + param.getKey() + "' is missing but required");
             }
             if (args.containsKey(param.getKey())) {
                 Object curArg = args.get(param.getKey());
+                if (curArg == null) {
+                    vars.removeAdditionalProperty(param.getKey());
+                    continue;
+                }
                 
                 switch (param.getValue().getType()) {
                 case String:
@@ -789,9 +794,21 @@ public class OrdersHelper {
                     continue;
                 }
                 
-                if ((curListArg instanceof String) && ((String) curListArg).isEmpty()) { // TODO later only if it is nullable
-                    continue;
+                if (p.getValue().getType().equals(ListParameterType.String) && !allowEmptyValues) {
+                    if ((curListArg instanceof String) && ((String) curListArg).isEmpty()) {
+                        if (p.getValue().getDefault() == null) { // required? TODO later only if it is nullable
+                            throw new JocMissingRequiredParameterException("Variable '" + p.getKey() + "' of list variable '" + listKey
+                                    + "' is missing but required");
+                        } else {
+                            listVariable.put(p.getKey(), p.getValue().getDefault());
+                        }
+                        continue;
+                    }
                 }
+                
+//                if ((curListArg instanceof String) && ((String) curListArg).isEmpty()) { // TODO later only if it is nullable
+//                    continue;
+//                }
                 
                 
                 switch (p.getValue().getType()) {
