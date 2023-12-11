@@ -118,83 +118,89 @@ public class SOSOpenIdWebserviceCredentials {
             }
 
             if (dbItem != null) {
-
                 if (Globals.sosCockpitProperties == null) {
                     Globals.sosCockpitProperties = new JocCockpitProperties();
                 }
 
                 com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(dbItem.getConfigurationItem(),
                         com.sos.joc.model.security.properties.Properties.class);
-
-                if (authenticationUrl == null || authenticationUrl.isEmpty()) {
-                    authenticationUrl = getProperty(properties.getOidc().getIamOidcAuthenticationUrl(), "");
-                }
-
-                if (flowType == null) {
-                    flowType = properties.getOidc().getIamOidcFlowType();
-                }
-                if (clientSecret == null) {
-                    clientSecret = getProperty(properties.getOidc().getIamOidcClientSecret(), "");
-                }
-
-                if (clientId == null) {
-                    clientId = getProperty(properties.getOidc().getIamOidcClientId(), "");
-                }
-
-                if (providerName == null) {
-                    providerName = getProperty(properties.getOidc().getIamOidcName(), "");
-                }
-
-                if (userAttribute == null || userAttribute.isEmpty()) {
-                    userAttribute = getProperty(properties.getOidc().getIamOidcUserAttribute(), "");
-                }
-
-                if (groupRolesMap == null) {
-                    if (properties.getOidc().getIamOidcGroupRolesMap() != null && properties.getOidc().getIamOidcGroupRolesMap().getItems() != null) {
-                        groupRolesMap = new HashMap<String, List<String>>();
-                        for (OidcGroupRolesMappingItem entry : properties.getOidc().getIamOidcGroupRolesMap().getItems()) {
-                            groupRolesMap.put(entry.getOidcGroup(), entry.getRoles());
-                        }
-                    }
-                }
-                if (claims == null) {
-                    if (properties.getOidc().getIamOidcGroupClaims() != null) {
-                        claims = new ArrayList<String>();
-                        for (String claim : properties.getOidc().getIamOidcGroupClaims()) {
-                            claims.add(claim);
-                        }
-                    }
-                }
-
-                String truststorePathGui = getProperty(properties.getOidc().getIamOidcTruststorePath(), "");
-                String truststorePassGui = getProperty(properties.getOidc().getIamOidcTruststorePassword(), "");
-                String tTypeGui = getProperty(properties.getOidc().getIamOidcTruststoreType(), "");
-
-                String truststorePathDefault = getProperty(System.getProperty("javax.net.ssl.trustStore"), Globals.sosCockpitProperties.getProperty(
-                        "truststore_path", ""));
-                String truststoreTypeDefault = getProperty(System.getProperty("javax.net.ssl.trustStoreType"), Globals.sosCockpitProperties
-                        .getProperty("truststore_type", "PKCS12"));
-                String truststorePassDefault = getProperty(System.getProperty("javax.net.ssl.trustStorePassword"), Globals.sosCockpitProperties
-                        .getProperty("truststore_password", ""));
-
-                truststorePath = getProperty(truststorePathGui, truststorePathDefault);
-                truststorePassword = getProperty(truststorePassGui, truststorePassDefault);
-                truststoreType = KeystoreType.valueOf(getProperty(tTypeGui, truststoreTypeDefault));
-
-                if (truststorePath != null && !truststorePath.trim().isEmpty()) {
-                    Path p = Globals.sosCockpitProperties.resolvePath(truststorePath.trim());
-                    truststorePath = p.toString();
-                }
+                setValuesFromProperties(properties);
             }
         } catch (SOSHibernateException | IOException e) {
             LOGGER.error("", e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
+    }
+
+    public void setValuesFromProperties(com.sos.joc.model.security.properties.Properties properties) {
+
+        if (Globals.sosCockpitProperties == null) {
+            Globals.sosCockpitProperties = new JocCockpitProperties();
+        }
+
+        if (authenticationUrl == null || authenticationUrl.isEmpty()) {
+            authenticationUrl = getProperty(properties.getOidc().getIamOidcAuthenticationUrl(), "");
+        }
+
+        if (flowType == null) {
+            flowType = properties.getOidc().getIamOidcFlowType();
+        }
+        if (clientSecret == null) {
+            clientSecret = getProperty(properties.getOidc().getIamOidcClientSecret(), "");
+        }
+
+        if (clientId == null) {
+            clientId = getProperty(properties.getOidc().getIamOidcClientId(), "");
+        }
+
+        if (providerName == null) {
+            providerName = getProperty(properties.getOidc().getIamOidcName(), "");
+        }
+
+        if (userAttribute == null || userAttribute.isEmpty()) {
+            userAttribute = getProperty(properties.getOidc().getIamOidcUserAttribute(), "");
+        }
+
+        if (groupRolesMap == null) {
+            if (properties.getOidc().getIamOidcGroupRolesMap() != null && properties.getOidc().getIamOidcGroupRolesMap().getItems() != null) {
+                groupRolesMap = new HashMap<String, List<String>>();
+                for (OidcGroupRolesMappingItem entry : properties.getOidc().getIamOidcGroupRolesMap().getItems()) {
+                    groupRolesMap.put(entry.getOidcGroup(), entry.getRoles());
+                }
+            }
+        }
+        if (claims == null) {
+            if (properties.getOidc().getIamOidcGroupClaims() != null) {
+                claims = new ArrayList<String>();
+                for (String claim : properties.getOidc().getIamOidcGroupClaims()) {
+                    claims.add(claim);
+                }
+            }
+        }
+
+        String truststorePathGui = getProperty(properties.getOidc().getIamOidcTruststorePath(), "");
+        String truststorePassGui = getProperty(properties.getOidc().getIamOidcTruststorePassword(), "");
+        String tTypeGui = getProperty(properties.getOidc().getIamOidcTruststoreType(), "");
+
+        String truststorePathDefault = getProperty(System.getProperty("javax.net.ssl.trustStore"), Globals.sosCockpitProperties.getProperty(
+                "truststore_path", ""));
+        String truststoreTypeDefault = getProperty(System.getProperty("javax.net.ssl.trustStoreType"), Globals.sosCockpitProperties.getProperty(
+                "truststore_type", "PKCS12"));
+        String truststorePassDefault = getProperty(System.getProperty("javax.net.ssl.trustStorePassword"), Globals.sosCockpitProperties.getProperty(
+                "truststore_password", ""));
+
+        truststorePath = getProperty(truststorePathGui, truststorePathDefault);
+        truststorePassword = getProperty(truststorePassGui, truststorePassDefault);
+        truststoreType = KeystoreType.valueOf(getProperty(tTypeGui, truststoreTypeDefault));
+
+        if (truststorePath != null && !truststorePath.trim().isEmpty()) {
+            Path p = Globals.sosCockpitProperties.resolvePath(truststorePath.trim());
+            truststorePath = p.toString();
+        }
 
     }
 
-    
     public OidcFlowTypes getFlowType() {
         return flowType;
     }

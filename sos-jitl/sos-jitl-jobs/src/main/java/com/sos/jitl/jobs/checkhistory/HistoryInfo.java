@@ -2,6 +2,7 @@ package com.sos.jitl.jobs.checkhistory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import com.sos.commons.exception.SOSException;
 import com.sos.jitl.jobs.checkhistory.classes.CheckHistoryHelper;
@@ -14,6 +15,8 @@ import com.sos.joc.model.job.JobsFilter;
 import com.sos.joc.model.job.TaskHistory;
 import com.sos.joc.model.order.OrderHistory;
 import com.sos.joc.model.order.OrdersFilter;
+import com.sos.js7.job.DetailValue;
+import com.sos.js7.job.OrderProcessStep;
 import com.sos.js7.job.OrderProcessStepLogger;
 import com.sos.js7.job.jocapi.ApiExecutor;
 import com.sos.js7.job.jocapi.ApiResponse;
@@ -21,16 +24,20 @@ import com.sos.js7.job.jocapi.ApiResponse;
 public class HistoryInfo {
 
     private CheckHistoryJobArguments args;
+    private Map<String, DetailValue> jobResources;
     private OrderProcessStepLogger logger;
 
-    public HistoryInfo(OrderProcessStepLogger logger, CheckHistoryJobArguments args) {
-        this.args = args;
-        this.logger = logger;
+    public HistoryInfo(OrderProcessStep<CheckHistoryJobArguments> step) {
+        this.args = step.getDeclaredArguments();
+        this.jobResources = step.getJobResourcesArgumentsAsNameDetailValueMap();
+        this.logger = step.getLogger();
     }
 
     private HistoryItem executeApiCall(String query) throws Exception {
 
         ApiExecutor apiExecutor = new ApiExecutor(logger);
+        apiExecutor.setJobResources(jobResources);
+
         String accessToken = null;
         try {
             ApiResponse apiResponse = apiExecutor.login();

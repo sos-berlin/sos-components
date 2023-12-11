@@ -33,7 +33,7 @@ public class CheckHistoryJob extends Job<CheckHistoryJobArguments> {
         outcome.putVariable("js7CheckHistoryQueryJob", args.getJob());
         step.getLogger().debug(String.format("check history: %s will be executed.", query));
 
-        HistoryInfo historyInfo = new HistoryInfo(step.getLogger(), args);
+        HistoryInfo historyInfo = new HistoryInfo(step);
         HistoryItem historyItem = historyInfo.queryHistory();
 
         String name = args.getWorkflow();

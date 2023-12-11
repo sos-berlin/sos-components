@@ -43,7 +43,7 @@ public class MonitoringJob extends Job<MonitoringJobArguments> {
 
         step.getLogger().debug("Setting controller_id=" + step.getControllerId());
 
-        ExecuteMonitoring executeMonitoring = new ExecuteMonitoring(step.getLogger(), args);
+        ExecuteMonitoring executeMonitoring = new ExecuteMonitoring(step);
         MonitoringStatus monitoringStatus = executeMonitoring.getStatusInformations();
 
         MonitoringCheckReturn monitoringCheckReturn = executeMonitoring.checkStatusInformation(monitoringStatus, monitoringParameters);

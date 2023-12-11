@@ -151,7 +151,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
                 fidoIdentityProvider.setIdentityServiceName(dbItemIamIdentityService.getIdentityServiceName());
 
                 com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getIamProperties(dbItemIamIdentityService
-                        .getIdentityServiceName());
+                        .getIdentityServiceName(),IdentityServiceTypes.FIDO);
 
                 if (properties != null) {
                     if (properties.getFido() != null) {

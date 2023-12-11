@@ -2,8 +2,6 @@ package com.sos.jitl.jobs.checklicense.classes;
 
 import com.sos.jitl.jobs.sap.common.Globals;
 import com.sos.joc.model.joc.Js7LicenseInfo;
-import com.sos.joc.model.order.OrdersFilterV;
-import com.sos.joc.model.order.OrdersV;
 import com.sos.js7.job.OrderProcessStepLogger;
 import com.sos.js7.job.jocapi.ApiExecutor;
 import com.sos.js7.job.jocapi.ApiResponse;

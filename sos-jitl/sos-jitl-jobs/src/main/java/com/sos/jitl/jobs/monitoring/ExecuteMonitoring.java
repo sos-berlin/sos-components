@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -23,6 +24,8 @@ import com.sos.joc.model.jitl.monitoring.MonitoringJocStatus;
 import com.sos.joc.model.jitl.monitoring.MonitoringStatus;
 import com.sos.joc.model.order.OrdersHistoricSummary;
 import com.sos.joc.model.order.OrdersSummary;
+import com.sos.js7.job.DetailValue;
+import com.sos.js7.job.OrderProcessStep;
 import com.sos.js7.job.OrderProcessStepLogger;
 import com.sos.js7.job.jocapi.ApiExecutor;
 import com.sos.js7.job.jocapi.ApiResponse;
@@ -30,16 +33,20 @@ import com.sos.js7.job.jocapi.ApiResponse;
 public class ExecuteMonitoring {
 
     private MonitoringJobArguments args;
+    private Map<String, DetailValue> jobResources;
     private OrderProcessStepLogger logger;
 
-    public ExecuteMonitoring(OrderProcessStepLogger logger, MonitoringJobArguments args) {
-        this.args = args;
-        this.logger = logger;
+    public ExecuteMonitoring(OrderProcessStep<MonitoringJobArguments> step) {
+        this.args = step.getDeclaredArguments();
+        this.jobResources = step.getJobResourcesArgumentsAsNameDetailValueMap();
+        this.logger = step.getLogger();
     }
 
     public MonitoringStatus getStatusInformations() throws Exception {
 
         ApiExecutor apiExecutor = new ApiExecutor(logger);
+        apiExecutor.setJobResources(jobResources);
+
         String accessToken = null;
         try {
             ApiResponse apiResponse = apiExecutor.login();

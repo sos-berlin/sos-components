@@ -383,7 +383,7 @@ public class SOSAuthHelper {
         return 0L;
     }
 
-    public static com.sos.joc.model.security.properties.Properties getIamProperties(String identityServiceName) throws SOSException, IOException {
+    public static com.sos.joc.model.security.properties.Properties getIamProperties(String identityServiceName,IdentityServiceTypes objectType) throws SOSException, IOException {
         SOSHibernateSession sosHibernateSession = null;
 
         try {
@@ -393,13 +393,12 @@ public class SOSAuthHelper {
             JocConfigurationFilter jocConfigurationFilter = new JocConfigurationFilter();
             jocConfigurationFilter.setConfigurationType(SOSAuthHelper.CONFIGURATION_TYPE_IAM);
             jocConfigurationFilter.setName(identityServiceName);
-            jocConfigurationFilter.setObjectType(IdentityServiceTypes.FIDO.value());
+            jocConfigurationFilter.setObjectType(objectType.value());
             List<DBItemJocConfiguration> listOfJocConfigurations = jocConfigurationDBLayer.getJocConfigurationList(jocConfigurationFilter, 0);
             if (listOfJocConfigurations.size() == 1) {
                 DBItemJocConfiguration dbItem = listOfJocConfigurations.get(0);
                 com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(dbItem.getConfigurationItem(),
                         com.sos.joc.model.security.properties.Properties.class);
-                properties = setDefaultFIDO2Settings(properties);
                 return properties;
             } else {
                 return new com.sos.joc.model.security.properties.Properties();
@@ -492,73 +491,76 @@ public class SOSAuthHelper {
     public static com.sos.joc.model.security.properties.Properties setDefaultFIDO2Settings(
             com.sos.joc.model.security.properties.Properties properties) throws SOSException, IOException {
 
-        if (properties.getFido() == null) {
-            properties.setFido(new FidoProperties());
-        }
+        if (properties != null) {
+            if (properties.getFido() == null) {
+                properties.setFido(new FidoProperties());
+            }
 
-        if (properties.getFido().getIamFidoEmailSettings() == null) {
-            properties.getFido().setIamFidoEmailSettings(new FidoEmailSettings());
-        }
+            if (properties.getFido().getIamFidoEmailSettings() == null) {
+                properties.getFido().setIamFidoEmailSettings(new FidoEmailSettings());
+            }
 
-        if (properties.getFido().getIamFidoEmailSettings().getBodyAccess() == null || properties.getFido().getIamFidoEmailSettings().getBodyAccess()
-                .isEmpty()) {
-            properties.getFido().getIamFidoEmailSettings().setBodyAccess(getContentFromResource(SECURITY_BODY_FIDO2_APPROVED_MAIL_TEMPLATE_TXT));
-        }
-        if (properties.getFido().getIamFidoEmailSettings().getBodyRegistration() == null || properties.getFido().getIamFidoEmailSettings()
-                .getBodyRegistration().isEmpty()) {
-            properties.getFido().getIamFidoEmailSettings().setBodyRegistration(getContentFromResource(
-                    SECURITY_BODY_FIDO2_CONFIRMATION_MAIL_TEMPLATE_TXT));
-        }
+            if (properties.getFido().getIamFidoEmailSettings().getBodyAccess() == null || properties.getFido().getIamFidoEmailSettings()
+                    .getBodyAccess().isEmpty()) {
+                properties.getFido().getIamFidoEmailSettings().setBodyAccess(getContentFromResource(SECURITY_BODY_FIDO2_APPROVED_MAIL_TEMPLATE_TXT));
+            }
+            if (properties.getFido().getIamFidoEmailSettings().getBodyRegistration() == null || properties.getFido().getIamFidoEmailSettings()
+                    .getBodyRegistration().isEmpty()) {
+                properties.getFido().getIamFidoEmailSettings().setBodyRegistration(getContentFromResource(
+                        SECURITY_BODY_FIDO2_CONFIRMATION_MAIL_TEMPLATE_TXT));
+            }
 
-        if (properties.getFido().getIamFidoEmailSettings().getBodyConfirmed() == null || properties.getFido().getIamFidoEmailSettings()
-                .getBodyConfirmed().isEmpty()) {
-            properties.getFido().getIamFidoEmailSettings().setBodyConfirmed(getContentFromResource(SECURITY_BODY_FIDO2_CONFIRMED_MAIL_TEMPLATE_TXT));
-        }
+            if (properties.getFido().getIamFidoEmailSettings().getBodyConfirmed() == null || properties.getFido().getIamFidoEmailSettings()
+                    .getBodyConfirmed().isEmpty()) {
+                properties.getFido().getIamFidoEmailSettings().setBodyConfirmed(getContentFromResource(
+                        SECURITY_BODY_FIDO2_CONFIRMED_MAIL_TEMPLATE_TXT));
+            }
 
-        if (properties.getFido().getIamFidoEmailSettings().getSubjectRegistration() == null || properties.getFido().getIamFidoEmailSettings()
-                .getSubjectRegistration().isEmpty()) {
-            properties.getFido().getIamFidoEmailSettings().setSubjectRegistration(JS7_SUBJECT_REGISTRATION_WITH_JS7_JOB_SCHEDULER_CONFIRMATION);
-        }
+            if (properties.getFido().getIamFidoEmailSettings().getSubjectRegistration() == null || properties.getFido().getIamFidoEmailSettings()
+                    .getSubjectRegistration().isEmpty()) {
+                properties.getFido().getIamFidoEmailSettings().setSubjectRegistration(JS7_SUBJECT_REGISTRATION_WITH_JS7_JOB_SCHEDULER_CONFIRMATION);
+            }
 
-        if (properties.getFido().getIamFidoEmailSettings().getSubjectAccess() == null || properties.getFido().getIamFidoEmailSettings()
-                .getSubjectAccess().isEmpty()) {
-            properties.getFido().getIamFidoEmailSettings().setSubjectAccess(JS7_SUBJECT_REGISTRATION_WITH_JS7_JOB_SCHEDULER_IS_APPROVED);
-        }
+            if (properties.getFido().getIamFidoEmailSettings().getSubjectAccess() == null || properties.getFido().getIamFidoEmailSettings()
+                    .getSubjectAccess().isEmpty()) {
+                properties.getFido().getIamFidoEmailSettings().setSubjectAccess(JS7_SUBJECT_REGISTRATION_WITH_JS7_JOB_SCHEDULER_IS_APPROVED);
+            }
 
-        if (properties.getFido().getIamFidoEmailSettings().getSubjectConfirmed() == null || properties.getFido().getIamFidoEmailSettings()
-                .getSubjectConfirmed().isEmpty()) {
-            properties.getFido().getIamFidoEmailSettings().setSubjectConfirmed(JS7_SUBJECT_REGISTRATION_WITH_JS7_JOB_SCHEDULER_CONFIRMED);
-        }
+            if (properties.getFido().getIamFidoEmailSettings().getSubjectConfirmed() == null || properties.getFido().getIamFidoEmailSettings()
+                    .getSubjectConfirmed().isEmpty()) {
+                properties.getFido().getIamFidoEmailSettings().setSubjectConfirmed(JS7_SUBJECT_REGISTRATION_WITH_JS7_JOB_SCHEDULER_CONFIRMED);
+            }
 
-        if (properties.getFido().getIamFidoEmailSettings().getCharset() == null || properties.getFido().getIamFidoEmailSettings().getCharset()
-                .isEmpty()) {
-            properties.getFido().getIamFidoEmailSettings().setCharset(ISO_8859_1);
-        }
-        if (properties.getFido().getIamFidoEmailSettings().getContentType() == null || properties.getFido().getIamFidoEmailSettings().getContentType()
-                .isEmpty()) {
-            properties.getFido().getIamFidoEmailSettings().setContentType(TEXT_HTML);
-        }
-        if (properties.getFido().getIamFidoEmailSettings().getEncoding() == null || properties.getFido().getIamFidoEmailSettings().getEncoding()
-                .isEmpty()) {
-            properties.getFido().getIamFidoEmailSettings().setEncoding(_7_BIT);
-        }
-        if (properties.getFido().getIamFidoEmailSettings().getSendMailToConfirm() == null) {
-            properties.getFido().getIamFidoEmailSettings().setSendMailToConfirm(true);
-        }
-        if (properties.getFido().getIamFidoEmailSettings().getSendMailToNotifySuccessfulRegistration() == null) {
-            properties.getFido().getIamFidoEmailSettings().setSendMailToNotifySuccessfulRegistration(true);
-        }
-        if (properties.getFido().getIamFidoEmailSettings().getSendMailToNotifyConfirmationReceived() == null) {
-            properties.getFido().getIamFidoEmailSettings().setSendMailToNotifyConfirmationReceived(false);
-        }
-        if (properties.getFido().getIamFidoResidentKey() == null) {
-            properties.getFido().setIamFidoResidentKey(FidoResidentKey.REQUIRED);
-        }
-        if (properties.getFido().getIamFidoUserVerification() == null) {
-            properties.getFido().setIamFidoUserVerification(FidoUserverification.REQUIRED);
-        }
-        if (properties.getFido().getIamFidoTimeout() == null) {
-            properties.getFido().setIamFidoTimeout(60);
+            if (properties.getFido().getIamFidoEmailSettings().getCharset() == null || properties.getFido().getIamFidoEmailSettings().getCharset()
+                    .isEmpty()) {
+                properties.getFido().getIamFidoEmailSettings().setCharset(ISO_8859_1);
+            }
+            if (properties.getFido().getIamFidoEmailSettings().getContentType() == null || properties.getFido().getIamFidoEmailSettings()
+                    .getContentType().isEmpty()) {
+                properties.getFido().getIamFidoEmailSettings().setContentType(TEXT_HTML);
+            }
+            if (properties.getFido().getIamFidoEmailSettings().getEncoding() == null || properties.getFido().getIamFidoEmailSettings().getEncoding()
+                    .isEmpty()) {
+                properties.getFido().getIamFidoEmailSettings().setEncoding(_7_BIT);
+            }
+            if (properties.getFido().getIamFidoEmailSettings().getSendMailToConfirm() == null) {
+                properties.getFido().getIamFidoEmailSettings().setSendMailToConfirm(true);
+            }
+            if (properties.getFido().getIamFidoEmailSettings().getSendMailToNotifySuccessfulRegistration() == null) {
+                properties.getFido().getIamFidoEmailSettings().setSendMailToNotifySuccessfulRegistration(true);
+            }
+            if (properties.getFido().getIamFidoEmailSettings().getSendMailToNotifyConfirmationReceived() == null) {
+                properties.getFido().getIamFidoEmailSettings().setSendMailToNotifyConfirmationReceived(false);
+            }
+            if (properties.getFido().getIamFidoResidentKey() == null) {
+                properties.getFido().setIamFidoResidentKey(FidoResidentKey.REQUIRED);
+            }
+            if (properties.getFido().getIamFidoUserVerification() == null) {
+                properties.getFido().setIamFidoUserVerification(FidoUserverification.REQUIRED);
+            }
+            if (properties.getFido().getIamFidoTimeout() == null) {
+                properties.getFido().setIamFidoTimeout(60);
+            }
         }
         return properties;
     }

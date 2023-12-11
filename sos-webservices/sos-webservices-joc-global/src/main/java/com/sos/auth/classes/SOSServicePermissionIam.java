@@ -50,6 +50,7 @@ import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.security.configuration.SecurityConfiguration;
 import com.sos.joc.model.security.configuration.permissions.Permissions;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
+import com.sos.joc.model.security.properties.oidc.OidcFlowTypes;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.Consumes;
@@ -62,7 +63,6 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.UriInfo;
-import jakarta.xml.bind.annotation.XmlElementDecl.GLOBAL;
 
 @Path("authentication")
 public class SOSServicePermissionIam {
@@ -209,6 +209,9 @@ public class SOSServicePermissionIam {
                 }
             }
             SOSLoginParameters sosLoginParameters = new SOSLoginParameters();
+            if (((identityService == null) || (identityService.isEmpty())) && (idToken != null && !idToken.isEmpty())) {
+                identityService = getOIDCClientCredentialIdentityService(idToken);
+            }
             sosLoginParameters.setIdToken(idToken);
             sosLoginParameters.setBasicAuthorization(basicAuthorization);
             sosLoginParameters.setClientCertCN(clientCertCN);
@@ -613,6 +616,60 @@ public class SOSServicePermissionIam {
         }
     }
 
+    private String getClientId(String idToken, com.sos.joc.model.security.properties.Properties properties) throws Exception {
+        SOSOpenIdWebserviceCredentials sosOpenIdWebserviceCredentials = new SOSOpenIdWebserviceCredentials();
+        sosOpenIdWebserviceCredentials.setValuesFromProperties(properties);
+        sosOpenIdWebserviceCredentials.setIdToken(idToken);
+        SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(sosOpenIdWebserviceCredentials);
+        String clientId = sosOpenIdHandler.decodeIdToken(idToken);
+        return clientId;
+    }
+
+    private String getOIDCClientCredentialIdentityService(String idToken) throws Exception {
+        SOSHibernateSession sosHibernateSession = null;
+        String clientId = "";
+
+        try {
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection("Login Identity Services");
+            IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
+            IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
+            filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC);
+            filter.setDisabled(false);
+            List<DBItemIamIdentityService> listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
+            for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
+                com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getIamProperties(dbItemIamIdentityService
+                        .getIdentityServiceName(), IdentityServiceTypes.OIDC);
+                if (properties != null && properties.getOidc() != null) {
+                    try {
+                        clientId = getClientId(idToken, properties);
+
+                        if (properties != null && properties.getOidc() != null && properties.getOidc().getIamOidcFlowType().equals(
+                                OidcFlowTypes.CLIENT_CREDENTIAL) && properties.getOidc().getIamOidcClientId().equals(clientId)) {
+                            return dbItemIamIdentityService.getIdentityServiceName();
+                        }
+                    } finally {
+
+                    }
+                }
+            }
+            filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC_JOC);
+            listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
+            for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
+                com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getIamProperties(dbItemIamIdentityService
+                        .getIdentityServiceName(), IdentityServiceTypes.OIDC_JOC);
+                if (properties != null && properties.getOidc() != null && properties.getOidc().getIamOidcFlowType().equals(
+                        OidcFlowTypes.CLIENT_CREDENTIAL) && properties.getOidc().getIamOidcClientId().equals(clientId)) {
+                    return dbItemIamIdentityService.getIdentityServiceName();
+                }
+            }
+
+        } finally {
+            Globals.disconnect(sosHibernateSession);
+        }
+        return "";
+
+    }
+
     private SOSAuthCurrentAccountAnswer authenticate(SOSAuthCurrentAccount currentAccount, String password) throws Exception {
 
         try {
@@ -765,10 +822,10 @@ public class SOSServicePermissionIam {
                 }
                 Globals.jocWebserviceDataContainer.getSOSForceDelayHandler().addFailedLogin(currentAccount);
                 Globals.jocWebserviceDataContainer.getSOSForceDelayHandler().forceDelay(currentAccount);
-                    
+
                 sosAuthCurrentUserAnswer.setMessage(String.format("%s: Could not login", msg));
                 throw new JocAuthenticationException(sosAuthCurrentUserAnswer);
-            }else {
+            } else {
                 Globals.jocWebserviceDataContainer.getSOSForceDelayHandler().resetFailedLogin(currentAccount);
             }
 

@@ -13,7 +13,7 @@ public class SetJobResourceJob extends Job<SetJobResourceJobArguments> {
 
     @Override
     public void processOrder(OrderProcessStep<SetJobResourceJobArguments> step) throws Exception {
-        SetJobResource jr = new SetJobResource(step.getLogger(), step.getDeclaredArguments());
+        SetJobResource jr = new SetJobResource(step);
         jr.execute();
     }
 

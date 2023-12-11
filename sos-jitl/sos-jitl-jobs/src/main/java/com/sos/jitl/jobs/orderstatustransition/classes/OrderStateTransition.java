@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.sos.jitl.jobs.checklicense.CheckLicenseJobArguments;
 import com.sos.jitl.jobs.orderstatustransition.OrderStateTransitionJobArguments;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.ModifyOrders;
@@ -14,6 +15,8 @@ import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.OrderV;
 import com.sos.joc.model.order.OrdersFilterV;
 import com.sos.joc.model.order.OrdersV;
+import com.sos.js7.job.DetailValue;
+import com.sos.js7.job.OrderProcessStep;
 import com.sos.js7.job.OrderProcessStepLogger;
 import com.sos.js7.job.jocapi.ApiExecutor;
 import com.sos.js7.job.jocapi.ApiResponse;
@@ -27,10 +30,13 @@ public class OrderStateTransition {
     private static final String CANCEL = "CANCEL";
     private OrderProcessStepLogger logger;
     private OrderStateTransitionJobArguments args;
+    private Map<String, DetailValue> jobResources;
 
-    public OrderStateTransition(OrderProcessStepLogger logger, OrderStateTransitionJobArguments args) {
-        this.args = args;
-        this.logger = logger;
+
+    public OrderStateTransition(OrderProcessStep<OrderStateTransitionJobArguments> step) {
+        this.args = step.getDeclaredArguments();
+        this.jobResources = step.getJobResourcesArgumentsAsNameDetailValueMap();
+        this.logger = step.getLogger();
     }
 
     private OrdersFilterV newOrdersFilterV(String state) {
@@ -48,6 +54,8 @@ public class OrderStateTransition {
 
         Map<String, OrdersV> resultsets = new HashMap<String, OrdersV>();
         ApiExecutor apiExecutor = new ApiExecutor(logger);
+        apiExecutor.setJobResources(jobResources);
+
         String accessToken = null;
         List<OrderV> listOfOrders = new ArrayList<OrderV>();
         try {

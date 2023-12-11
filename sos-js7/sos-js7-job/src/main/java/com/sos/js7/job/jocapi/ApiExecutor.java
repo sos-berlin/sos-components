@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Properties;
@@ -40,6 +41,7 @@ import com.sos.commons.sign.keys.keyStore.KeyStoreCredentials;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.commons.sign.keys.keyStore.KeystoreType;
 import com.sos.commons.vfs.exception.SOSAuthenticationFailedException;
+import com.sos.js7.job.DetailValue;
 import com.sos.js7.job.OrderProcessStepLogger;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
@@ -47,8 +49,6 @@ import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValue;
 
 public class ApiExecutor {
-
-    private static final String X_IDENTITY_SERVICE = "X-IDENTITY-SERVICE";
 
     private static final String X_ID_TOKEN = "X-ID-TOKEN";
 
@@ -80,7 +80,6 @@ public class ApiExecutor {
     private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_CS_PWD = "js7.api-server.cs-password";
     private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_USERNAME = "js7.api-server.username";
     private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_TOKEN = "js7.api-server.token ";
-    private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_IDENTITY_SERVICE = "js7.api-server.identity-service ";
     private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD = "js7.api-server.password";
     private static final List<String> DO_NOT_LOG_KEY = Arrays.asList(new String[] { "js7.api-server.password", "js7.api-server.cs-password",
             "js7.web.https.keystore.store-password", "js7.web.https.keystore.key-password", "js7.web.https.keystore.alias",
@@ -99,6 +98,11 @@ public class ApiExecutor {
     private String keystoreKeyPasswd;
     private String truststoreType;
     private String keystoreType;
+    private Map<String, DetailValue> jobResources;
+
+    public void setJobResources(Map<String, DetailValue> jobResources) {
+        this.jobResources = jobResources;
+    }
 
     public ApiExecutor(OrderProcessStepLogger jobLogger) {
         this.jobLogger = jobLogger;
@@ -375,25 +379,19 @@ public class ApiExecutor {
         String username = "";
         String pwd = "";
         String token = "";
-        String identityService = "";
         if (csFile != null && !csFile.isEmpty()) {
             SOSKeePassResolver resolver = new SOSKeePassResolver(csFile, csKeyFile, csPwd);
             username = resolver.resolve(config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_USERNAME));
             pwd = resolver.resolve(config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD));
             token = resolver.resolve(config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_TOKEN));
-            identityService = resolver.resolve(config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_IDENTITY_SERVICE));
         } else {
             try {
                 token = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_TOKEN);
             } catch (ConfigException e) {
                 logDebug("no token found in private.conf.");
             }
-            try {
-                identityService = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_IDENTITY_SERVICE);
-            } catch (ConfigException e) {
-                logDebug("no identity-service found in private.conf.");
-            }
-            if (token.isEmpty() || identityService.isEmpty()) {
+ 
+            if (token.isEmpty()) {
                 try {
                     username = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_USERNAME);
                 } catch (ConfigException e) {
@@ -408,9 +406,22 @@ public class ApiExecutor {
             }
 
         }
-        if (!token.isEmpty() && !identityService.isEmpty()) {
+        if (!token.isEmpty() && jobResources != null) {
+ 
+            String[] tokenJobResource = token.split(":");
+            if (tokenJobResource.length == 2) {
+                String variableName = tokenJobResource[1];
+                String jobResourceName = tokenJobResource[0];
+                DetailValue detailValue = jobResources.get(variableName);
+                if (detailValue != null) {
+                    if (detailValue.getSource().equals(jobResourceName)) {
+                        token = (String) detailValue.getValue();
+                    } else {
+                        LOGGER.info("Name of JobResource: " + detailValue.getSource() + " does not match the " + tokenJobResource[0]);
+                    }
+                }
+            }
             client.addHeader(X_ID_TOKEN, token);
-            client.addHeader(X_IDENTITY_SERVICE, identityService);
         }
         if (!username.isEmpty() && !pwd.isEmpty()) {
             String basicAuth = Base64.getMimeEncoder().encodeToString((username + ":" + pwd).getBytes());

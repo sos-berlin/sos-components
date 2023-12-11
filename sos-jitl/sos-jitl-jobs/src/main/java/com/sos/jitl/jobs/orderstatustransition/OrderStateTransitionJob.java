@@ -17,7 +17,7 @@ public class OrderStateTransitionJob extends Job<OrderStateTransitionJobArgument
 
     @Override
     public void processOrder(OrderProcessStep<OrderStateTransitionJobArguments> step) throws Exception {
-        OrderStateTransition orderStateTransition = new OrderStateTransition(step.getLogger(), step.getDeclaredArguments());
+        OrderStateTransition orderStateTransition = new OrderStateTransition(step);
         if (step.getDeclaredArguments().getControllerId() == null || step.getDeclaredArguments().getControllerId().isEmpty()) {
             step.getDeclaredArguments().setControllerId(step.getControllerId());
         }

@@ -1,10 +1,14 @@
 package com.sos.jitl.jobs.maintenance.classes;
 
+import java.util.Map;
+
 import com.sos.jitl.jobs.maintenance.MaintenanceWindowJobArguments;
 import com.sos.jitl.jobs.maintenance.MaintenanceWindowJobArguments.StateValues;
 import com.sos.joc.model.controller.Components;
 import com.sos.joc.model.controller.Controller;
 import com.sos.joc.model.joc.Cockpit;
+import com.sos.js7.job.DetailValue;
+import com.sos.js7.job.OrderProcessStep;
 import com.sos.js7.job.OrderProcessStepLogger;
 import com.sos.js7.job.jocapi.ApiExecutor;
 import com.sos.js7.job.jocapi.ApiResponse;
@@ -12,16 +16,20 @@ import com.sos.js7.job.jocapi.ApiResponse;
 public class MaintenanceWindowImpl {
 
     private MaintenanceWindowJobArguments args;
+    private Map<String, DetailValue> jobResources;
     private OrderProcessStepLogger logger;
 
-    public MaintenanceWindowImpl(OrderProcessStepLogger logger, MaintenanceWindowJobArguments args) {
-        this.args = args;
-        this.logger = logger;
+    public MaintenanceWindowImpl(OrderProcessStep<MaintenanceWindowJobArguments> step) {
+        this.args = step.getDeclaredArguments();
+        this.jobResources = step.getJobResourcesArgumentsAsNameDetailValueMap();
+        this.logger = step.getLogger();
     }
 
     public void executeApiCall() throws Exception {
 
         ApiExecutor apiExecutor = new ApiExecutor(logger);
+        apiExecutor.setJobResources(jobResources);
+
         String accessToken = null;
         ApiResponse apiResponse = null;
         try {

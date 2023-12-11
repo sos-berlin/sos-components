@@ -14,9 +14,10 @@ public class CheckLicenseJob extends Job<CheckLicenseJobArguments> {
     @Override
     public void processOrder(OrderProcessStep<CheckLicenseJobArguments> step) throws Exception {
         OrderProcessStepOutcome outcome = step.getOutcome();
-        CheckLicense checklicense = new CheckLicense(step.getLogger(), step.getDeclaredArguments());
+        CheckLicense checklicense = new CheckLicense(step);
         try {
             checklicense.execute();
+            
         } finally {
             outcome.putVariable("subject", checklicense.getSubject());
             outcome.putVariable("body", checklicense.getBody());

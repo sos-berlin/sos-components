@@ -1,9 +1,12 @@
 package com.sos.jitl.jobs.checklicense.classes;
 
 import java.util.Date;
+import java.util.Map;
 
 import com.sos.jitl.jobs.checklicense.CheckLicenseJobArguments;
 import com.sos.joc.model.joc.Js7LicenseInfo;
+import com.sos.js7.job.DetailValue;
+import com.sos.js7.job.OrderProcessStep;
 import com.sos.js7.job.OrderProcessStepLogger;
 import com.sos.js7.job.jocapi.ApiExecutor;
 import com.sos.js7.job.jocapi.ApiResponse;
@@ -15,10 +18,13 @@ public class CheckLicense {
     private int exit;
     private String body;
     private String subject;
+    private Map<String, DetailValue> jobResources;
 
-    public CheckLicense(OrderProcessStepLogger logger, CheckLicenseJobArguments args) {
-        this.args = args;
-        this.logger = logger;
+
+    public CheckLicense(OrderProcessStep<CheckLicenseJobArguments> step) {
+        this.args = step.getDeclaredArguments();
+        this.jobResources = step.getJobResourcesArgumentsAsNameDetailValueMap();
+        this.logger = step.getLogger();
     }
 
     private void log(String s) {
@@ -28,6 +34,7 @@ public class CheckLicense {
 
     public void execute() throws Exception {
         ApiExecutor apiExecutor = new ApiExecutor(logger);
+        apiExecutor.setJobResources(jobResources);
         String accessToken = null;
 
         exit = 0;
