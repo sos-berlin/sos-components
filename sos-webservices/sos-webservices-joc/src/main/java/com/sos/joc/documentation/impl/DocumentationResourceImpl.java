@@ -41,7 +41,7 @@ public class DocumentationResourceImpl extends JOCResourceImpl implements IDocum
                 path = "";
             }
             String request = String.format("%s/%s", API_CALL, path);
-            if (referer != null && referer.contains("/joc")) {
+            if (referer != null && referer.contains("/joc/api/documentation/")) {
                 initLogging(request, null);
             } else {
                 initLogging(request, null, accessToken);

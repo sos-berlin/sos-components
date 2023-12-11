@@ -41,8 +41,14 @@ public class DocumentationShowResourceImpl extends JOCResourceImpl implements ID
                 path = getPathFromRef(path);
             }
             checkFolderPermissions(path);
+//            String entity = String.format(
+//                    "<!DOCTYPE html>%n<html>%n<head>%n  <meta http-equiv=\"refresh\" content=\"0;URL='%s'\" />%n</head>%n<body>%n</body>%n</html>",
+//                    JOCJsonCommand.urlEncodedPath(path.replaceFirst("^/", "")));
+            
             String entity = String.format(
-                    "<!DOCTYPE html>%n<html>%n<head>%n  <meta http-equiv=\"refresh\" content=\"0;URL='%s'\" />%n</head>%n<body>%n</body>%n</html>",
+                    "<!DOCTYPE html>%n<html>%n<head>%n  <title>preview</title>%n</head>%n<body>%n  <script>%n"
+                    + "      window.location.replace(\"%s\");%n"
+                    + "   </script>%n</body>%n</html>",
                     JOCJsonCommand.urlEncodedPath(path.replaceFirst("^/", "")));
 
             return JOCDefaultResponse.responseHtmlStatus200(entity);
