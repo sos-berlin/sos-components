@@ -161,11 +161,15 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
 
                 runner.submitOrders(StartupMode.manual, controllerId, items, null, getJocError(), accessToken);
 
-                if (withEvent) {
-                    EventBus.getInstance().post(new DailyPlanEvent(controllerId, in.getDailyPlanDateFrom())); //TODO consider getDailyPlanDateTo
-                }
-
+                Set<String> days = new HashSet<String>();
                 for (DBItemDailyPlanOrder item : items) {
+                    if (withEvent) {
+                        String date = item.getDailyPlanDate(settings.getTimeZone());
+                        if (!days.contains(date)) {
+                            days.add(date);
+                            EventBus.getInstance().post(new DailyPlanEvent(item.getControllerId(), date));
+                        }
+                    }
                     auditLogDetails.add(new AuditLogDetail(item.getWorkflowPath(), item.getOrderId(), controllerId));
                 }
 
