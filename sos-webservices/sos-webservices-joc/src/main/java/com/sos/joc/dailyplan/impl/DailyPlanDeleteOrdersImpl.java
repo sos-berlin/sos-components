@@ -1,5 +1,8 @@
 package com.sos.joc.dailyplan.impl;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -16,6 +19,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
+import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.dailyplan.common.DailyPlanUtils;
@@ -126,7 +130,26 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
                 dbLayer.deleteCascading(filter);
                 //Globals.commit(session);
                 if (withEvent) {
-                    EventBus.getInstance().post(new DailyPlanEvent(controllerId, in.getDailyPlanDateFrom())); //TODO consider getDailyPlanDateTo
+                    EventBus.getInstance().post(new DailyPlanEvent(controllerId, in.getDailyPlanDateFrom()));
+                    if (in.getDailyPlanDateTo() != null) {
+                        Instant from = JobSchedulerDate.getInstantFromISO8601String(in.getDailyPlanDateFrom() + "T00:00:00Z");
+                        Instant to = JobSchedulerDate.getInstantFromISO8601String(in.getDailyPlanDateTo() + "T00:00:00Z");
+                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault());
+                        if (from != null && to != null) {
+                            from = from.plusSeconds(86400); // plus one day
+                            int i = 0; 
+                            while (from.isBefore(to) && i < 31) { // one month is max in GUI
+                                i++;
+                                try {
+                                    EventBus.getInstance().post(new DailyPlanEvent(controllerId, formatter.format(from)));
+                                } catch (Exception e) {
+                                    //
+                                }
+                                from = from.plusSeconds(86400); // plus one day
+                            }
+                        }
+                        EventBus.getInstance().post(new DailyPlanEvent(controllerId, in.getDailyPlanDateTo()));
+                    }
                 }
             } catch (Exception e) {
                 //Globals.rollback(session);
