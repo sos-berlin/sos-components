@@ -12,8 +12,6 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSIdentityService;
-import com.sos.auth.vault.SOSVaultHandler;
-import com.sos.auth.vault.classes.SOSVaultWebserviceCredentials;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
@@ -182,25 +180,6 @@ public class IamIdentityServiceDBLayer {
         sosHibernateSession.executeUpdate(query);
     }
     
-    private void deleteInVault(Set<String> setOfAccounts, Long identityServiceId, String identityServiceName,
-            IdentityServiceTypes identityServiceType) throws Exception {
-
-        SOSVaultWebserviceCredentials webserviceCredentials = new SOSVaultWebserviceCredentials();
-        SOSIdentityService sosIdentityService = new SOSIdentityService(identityServiceId, identityServiceName, identityServiceType);
-        webserviceCredentials.setValuesFromProfile(sosIdentityService);
-
-        KeyStore trustStore = null;
-        trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
-                webserviceCredentials.getTruststorePassword());
-
-        SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, trustStore);
-
-        for (String account : setOfAccounts) {
-            sosVaultHandler.deleteAccount(account);
-        }
-
-    }
-
     public int deleteCascading(IamIdentityServiceFilter filter) throws Exception {
 
         List<DBItemIamIdentityService> identityServices2BeDeleted = this.getIdentityServiceList(filter, 0);
@@ -215,21 +194,6 @@ public class IamIdentityServiceDBLayer {
                 deleteRolesByServiceId(identityServiceId);
                 deletePermissionsByServiceId(identityServiceId);
                 deleteSecondFactorByServiceId(identityServiceId);
-
-                try {
-                    if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
-                        deleteInVault(accounts, dbItemIamIdentityService.getId(), dbItemIamIdentityService.getIdentityServiceName(),
-                                IdentityServiceTypes.fromValue(dbItemIamIdentityService.getIdentityServiceType()));
-                    }
-                } catch (IllegalArgumentException e) {
-                    LOGGER.warn("Unknown Identity Service found:" + dbItemIamIdentityService.getIdentityServiceType());
-
-                } catch (AccessDeniedException e) {
-                    LOGGER.warn(e.getCause() + " -> file:" + e.getFile());
-
-                } catch (Exception e) {
-                    LOGGER.warn(e.getMessage());
-                }
 
                 JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
 

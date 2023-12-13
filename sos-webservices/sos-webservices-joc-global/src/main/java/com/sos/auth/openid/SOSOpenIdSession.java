@@ -14,7 +14,6 @@ import com.sos.auth.interfaces.ISOSSession;
 import com.sos.auth.keycloak.classes.SOSKeycloakAccountAccessToken;
 import com.sos.auth.openid.classes.SOSOpenIdAccountAccessToken;
 import com.sos.auth.openid.classes.SOSOpenIdWebserviceCredentials;
-import com.sos.auth.vault.classes.SOSVaultAccountAccessToken;
 import com.sos.joc.Globals;
 
 public class SOSOpenIdSession implements ISOSSession {
@@ -131,10 +130,6 @@ public class SOSOpenIdSession implements ISOSSession {
         return startSession;
     }
 
-    @Override
-    public SOSVaultAccountAccessToken getSOSVaultAccountAccessToken() {
-        return null;
-    }
 
     @Override
     public SOSKeycloakAccountAccessToken getSOSKeycloakAccountAccessToken() {

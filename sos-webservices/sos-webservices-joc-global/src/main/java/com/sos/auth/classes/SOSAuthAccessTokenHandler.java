@@ -95,22 +95,6 @@ public class SOSAuthAccessTokenHandler extends Thread {
                             }
                         }
                         break;
-                    case VAULT:
-                    case VAULT_JOC:
-                    case VAULT_JOC_ACTIVE:
-                        if (currentAccount.getCurrentSubject().getSession().getSOSVaultAccountAccessToken() != null) {
-                            long leaseDuration = currentAccount.getCurrentSubject().getSession().getSOSVaultAccountAccessToken().getAuth()
-                                    .getLease_duration() * 1000;
-
-                            long n = currentAccount.getCurrentSubject().getSession().getStartSession() + leaseDuration - TIME_GAP_SECONDS * 1000;
-
-                            if (next == null || nextTime > n) {
-                                nextTime = n;
-                                next = leaseDuration - TIME_GAP_SECONDS * 1000;
-                                nextAccount = currentAccount;
-                            }
-                        }
-                        break;
                     default:
                         break;
 

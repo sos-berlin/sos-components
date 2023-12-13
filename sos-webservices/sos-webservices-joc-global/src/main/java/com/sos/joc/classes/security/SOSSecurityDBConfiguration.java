@@ -9,9 +9,6 @@ import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.classes.SOSInitialPasswordSetting;
 import com.sos.auth.classes.SOSPasswordHasher;
-import com.sos.auth.vault.SOSVaultHandler;
-import com.sos.auth.vault.classes.SOSVaultAccountCredentials;
-import com.sos.auth.vault.classes.SOSVaultWebserviceCredentials;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
@@ -44,48 +41,11 @@ import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
 public class SOSSecurityDBConfiguration {
 
-    private void storeInVault(SOSVaultWebserviceCredentials webserviceCredentials, SecurityConfigurationAccount securityConfigurationAccount,
-            String password, IdentityServiceTypes identityServiceTypes) throws Exception {
-        KeyStore trustStore = null;
-
-        if ((webserviceCredentials.getTruststorePath() != null) && (webserviceCredentials.getTrustStoreType() != null)) {
-            trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
-                    webserviceCredentials.getTruststorePassword());
-
-            SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, trustStore);
-            SOSVaultAccountCredentials sosVaultAccountCredentials = new SOSVaultAccountCredentials();
-            sosVaultAccountCredentials.setUsername(securityConfigurationAccount.getAccountName());
-
-            List<String> tokenPolicies = new ArrayList<String>();
-            for (String role : securityConfigurationAccount.getRoles()) {
-                tokenPolicies.add(role);
-            }
-
-            sosVaultAccountCredentials.setTokenPolicies(tokenPolicies);
-
-            if (!"********".equals(password) && IdentityServiceTypes.VAULT_JOC_ACTIVE.equals(identityServiceTypes)) {
-                sosVaultHandler.storeAccountPassword(sosVaultAccountCredentials, password);
-            }
-
-            sosVaultHandler.updateTokenPolicies(sosVaultAccountCredentials);
-        } else {
-            JocError error = new JocError();
-            error.setMessage("Configuration for VAULT missing");
-            throw new JocException(error);
-        }
-
-    }
-
     private void storeAccounts(SOSHibernateSession sosHibernateSession, SecurityConfiguration securityConfiguration,
             DBItemIamIdentityService dbItemIamIdentityService, boolean updateAccounts) throws Exception {
 
         SOSIdentityService sosIdentityService = new SOSIdentityService(dbItemIamIdentityService);
         IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
-
-        SOSVaultWebserviceCredentials webserviceCredentials = new SOSVaultWebserviceCredentials();
-        if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
-            webserviceCredentials.setValuesFromProfile(sosIdentityService);
-        }
 
         SOSInitialPasswordSetting sosInitialPasswordSetting = SOSAuthHelper.getInitialPasswordSettings(sosHibernateSession);
         String initialPassword = sosInitialPasswordSetting.getInitialPassword();
@@ -168,10 +128,6 @@ public class SOSSecurityDBConfiguration {
                         }
                     }
                 }
-            }
-
-            if (IdentityServiceTypes.VAULT_JOC_ACTIVE.toString().equals(dbItemIamIdentityService.getIdentityServiceType())) {
-                storeInVault(webserviceCredentials, securityConfigurationAccount, password, IdentityServiceTypes.VAULT_JOC_ACTIVE);
             }
         }
     }

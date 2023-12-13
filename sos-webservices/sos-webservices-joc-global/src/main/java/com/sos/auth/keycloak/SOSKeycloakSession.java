@@ -15,7 +15,6 @@ import com.sos.auth.interfaces.ISOSSession;
 import com.sos.auth.keycloak.classes.SOSKeycloakAccountAccessToken;
 import com.sos.auth.keycloak.classes.SOSKeycloakWebserviceCredentials;
 import com.sos.auth.openid.classes.SOSOpenIdAccountAccessToken;
-import com.sos.auth.vault.classes.SOSVaultAccountAccessToken;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.joc.Globals;
@@ -51,8 +50,8 @@ public class SOSKeycloakSession implements ISOSSession {
             try {
                 webserviceCredentials.setValuesFromProfile(identityService);
 
-                KeyStore truststore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
-                        webserviceCredentials.getTruststorePassword());
+                KeyStore truststore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials
+                        .getTrustStoreType(), webserviceCredentials.getTruststorePassword());
 
                 webserviceCredentials.setAccount("");
                 sosKeycloakHandler = new SOSKeycloakHandler(webserviceCredentials, truststore);
@@ -147,11 +146,6 @@ public class SOSKeycloakSession implements ISOSSession {
     @Override
     public Long getStartSession() {
         return startSession;
-    }
-
-    @Override
-    public SOSVaultAccountAccessToken getSOSVaultAccountAccessToken() {
-        return null;
     }
 
     @Override

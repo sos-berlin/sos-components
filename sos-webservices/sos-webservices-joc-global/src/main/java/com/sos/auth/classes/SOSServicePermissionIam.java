@@ -25,7 +25,6 @@ import com.sos.auth.openid.SOSOpenIdHandler;
 import com.sos.auth.openid.classes.SOSOpenIdLogin;
 import com.sos.auth.openid.classes.SOSOpenIdWebserviceCredentials;
 import com.sos.auth.sosintern.classes.SOSInternAuthLogin;
-import com.sos.auth.vault.classes.SOSVaultLogin;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -449,12 +448,6 @@ public class SOSServicePermissionIam {
             case LDAP_JOC:
                 sosLogin = new SOSLdapLogin();
                 LOGGER.debug("Login with idendity service ldap");
-                break;
-            case VAULT:
-            case VAULT_JOC:
-            case VAULT_JOC_ACTIVE:
-                sosLogin = new SOSVaultLogin();
-                LOGGER.debug("Login with identity service vault");
                 break;
             case KEYCLOAK:
             case KEYCLOAK_JOC:

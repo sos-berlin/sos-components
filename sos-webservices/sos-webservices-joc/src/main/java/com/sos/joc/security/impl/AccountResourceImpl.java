@@ -24,10 +24,6 @@ import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSLogin;
 import com.sos.auth.ldap.classes.SOSLdapLogin;
 import com.sos.auth.sosintern.classes.SOSInternAuthLogin;
-import com.sos.auth.vault.SOSVaultHandler;
-import com.sos.auth.vault.classes.SOSVaultAccountCredentials;
-import com.sos.auth.vault.classes.SOSVaultLogin;
-import com.sos.auth.vault.classes.SOSVaultWebserviceCredentials;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.joc.Globals;
@@ -204,8 +200,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             }
 
             dbItemIamAccount.setAccountName(account.getAccountName());
-            if (dbItemIamIdentityService.getIdentityServiceType().equals(IdentityServiceTypes.JOC.value()) || dbItemIamIdentityService
-                    .getIdentityServiceType().equals(IdentityServiceTypes.VAULT_JOC_ACTIVE.value())) {
+            if (dbItemIamIdentityService.getIdentityServiceType().equals(IdentityServiceTypes.JOC.value())) {
 
                 if (account.getPassword() != null && !password.isEmpty()) {
                     if (!sosInitialPasswordSetting.isMininumPasswordLength(password)) {
@@ -264,12 +259,6 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                 }
             }
 
-            if (IdentityServiceTypes.VAULT_JOC_ACTIVE.value().equals(dbItemIamIdentityService.getIdentityServiceType())) {
-                SOSVaultWebserviceCredentials webserviceCredentials = new SOSVaultWebserviceCredentials();
-                SOSIdentityService sosIdentityService = new SOSIdentityService(dbItemIamIdentityService);
-                webserviceCredentials.setValuesFromProfile(sosIdentityService);
-                storeInVault(webserviceCredentials, account.getRoles(), account.getAccountName(), password);
-            }
 
             storeAuditLog(account.getAuditLog(), CategoryType.IDENTITY);
             Globals.commit(sosHibernateSession);
@@ -518,12 +507,6 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                     sosLogin = new SOSLdapLogin();
                     LOGGER.debug("Login with idendity service ldap");
                     break;
-                case VAULT:
-                case VAULT_JOC:
-                case VAULT_JOC_ACTIVE:
-                    sosLogin = new SOSVaultLogin();
-                    LOGGER.debug("Login with idendity service vault");
-                    break;
                 case JOC:
                     sosLogin = new SOSInternAuthLogin();
                     LOGGER.debug("Login with idendity service sosintern");
@@ -563,39 +546,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
         }
     }
 
-    private void storeInVault(SOSVaultWebserviceCredentials webserviceCredentials, List<String> roles, String account, String password)
-            throws Exception {
-        KeyStore trustStore = null;
-
-        if ((webserviceCredentials.getTruststorePath() != null) && (webserviceCredentials.getTrustStoreType() != null)) {
-            trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
-                    webserviceCredentials.getTruststorePassword());
-
-            SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, trustStore);
-            SOSVaultAccountCredentials sosVaultAccountCredentials = new SOSVaultAccountCredentials();
-            sosVaultAccountCredentials.setUsername(account);
-
-            if (roles != null) {
-                List<String> tokenPolicies = new ArrayList<String>();
-                for (String role : roles) {
-                    tokenPolicies.add(role);
-                }
-
-                sosVaultAccountCredentials.setTokenPolicies(tokenPolicies);
-            }
-
-            if (!"********".equals(password)) {
-                sosVaultHandler.storeAccountPassword(sosVaultAccountCredentials, password);
-            }
-
-            sosVaultHandler.updateTokenPolicies(sosVaultAccountCredentials);
-        } else {
-            JocError error = new JocError();
-            error.setMessage("Configuration for VAULT missing");
-            throw new JocException(error);
-        }
-
-    }
+  
 
     private void changePassword(SOSHibernateSession sosHibernateSession, boolean withPasswordCheck, AccountChangePassword account,
             DBItemIamIdentityService dbItemIamIdentityService) throws Exception {
@@ -603,15 +554,10 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
         IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
         IamAccountFilter iamAccountFilter = new IamAccountFilter();
 
-        if (IdentityServiceTypes.VAULT_JOC_ACTIVE.value().equals(dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.JOC
+        if (IdentityServiceTypes.JOC
                 .value().equals(dbItemIamIdentityService.getIdentityServiceType())) {
-            SOSVaultWebserviceCredentials webserviceCredentials = new SOSVaultWebserviceCredentials();
-            if (IdentityServiceTypes.VAULT_JOC_ACTIVE.value().equals(dbItemIamIdentityService.getIdentityServiceType())) {
-                SOSIdentityService sosIdentityService = new SOSIdentityService(dbItemIamIdentityService);
-                webserviceCredentials.setValuesFromProfile(sosIdentityService);
-            }
-
-            SOSInitialPasswordSetting sosInitialPasswordSetting = SOSAuthHelper.getInitialPasswordSettings(sosHibernateSession);
+           
+           SOSInitialPasswordSetting sosInitialPasswordSetting = SOSAuthHelper.getInitialPasswordSettings(sosHibernateSession);
 
             if (account.getPassword() != null && !account.getPassword().equals(account.getRepeatedPassword())) {
                 JocError error = new JocError();
@@ -654,9 +600,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                 dbItemIamAccount.setAccountPassword(SOSPasswordHasher.hash(password));
                 sosHibernateSession.update(dbItemIamAccount);
 
-                if (IdentityServiceTypes.VAULT_JOC_ACTIVE.value().equals(dbItemIamIdentityService.getIdentityServiceType())) {
-                    storeInVault(webserviceCredentials, null, account.getAccountName(), password);
-                }
+                
             } else {
                 JocError error = new JocError();
                 error.setMessage("Unknown account or password is wrong");
@@ -736,14 +680,12 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
             IamAccountFilter iamAccountFilter = new IamAccountFilter();
 
-            if (IdentityServiceTypes.VAULT_JOC_ACTIVE.value().equals(dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.JOC
+            if (IdentityServiceTypes.JOC
                     .value().equals(dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.KEYCLOAK_JOC.value().equals(
                             dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.OIDC_JOC.value().equals(
                                     dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.OIDC.value().equals(
                                             dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.LDAP_JOC.value().equals(
-                                                    dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.VAULT_JOC.value()
-                                                            .equals(dbItemIamIdentityService.getIdentityServiceType()) || IdentityServiceTypes.FIDO
-                                                                    .value().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+                                                    dbItemIamIdentityService.getIdentityServiceType()) ) {
 
                 iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
                 for (String accountName : accountsFilter.getAccountNames()) {
@@ -754,8 +696,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                             dbItemIamAccount.setDisabled(disable);
                         }
                         if (forcePasswordChange != null) {
-                            if (IdentityServiceTypes.VAULT_JOC_ACTIVE.value().equals(dbItemIamIdentityService.getIdentityServiceType())
-                                    || IdentityServiceTypes.JOC.value().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+                            if (IdentityServiceTypes.JOC.value().equals(dbItemIamIdentityService.getIdentityServiceType())) {
                                 dbItemIamAccount.setForcePasswordChange(forcePasswordChange);
                             }
                         }
