@@ -21,6 +21,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.settings.ClusterSettings;
+import com.sos.joc.db.keys.DBLayerKeys;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
@@ -74,10 +75,16 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             storeAuditLog(filter.getAuditLog(), CategoryType.CERTIFICATES);
             
             stream = body.getEntityAs(InputStream.class);
-            JocKeyPair keyPair = new JocKeyPair();
+            String account = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
+            JocKeyPair keyPair = null;
+            hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
+            keyPair = dbLayerKeys.getKeyPair(account, JocSecurityLevel.LOW);
+            if(keyPair == null) {
+                keyPair = new JocKeyPair();
+            }
             String keyFromFile = readFileContent(stream, filter);
             keyPair.setKeyAlgorithm(filter.getKeyAlgorithm());
-            String account = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
             String publicKey = null;
             String reason = null;
             if (keyFromFile != null) {
@@ -142,7 +149,6 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
                             "The provided file does not contain a valid PGP, RSA or ECDSA Private Key nor a X.509 certificate!");
                 }
             }
-            hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             PublishUtils.storeKey(keyPair, hibernateSession, account, JocSecurityLevel.LOW);
 //            DeployAudit importAudit = new DeployAudit(filter.getAuditLog(), reason);
 //            logAuditMessage(importAudit);
