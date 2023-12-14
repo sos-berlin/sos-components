@@ -1,8 +1,10 @@
 package com.sos.js7.converter.js1.output.js7.helper;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -56,6 +58,7 @@ public class JobHelper {
     private Environment js7JobArgumentsNotQuotedValues = new Environment();
 
     private String language;
+    private List<Variables> copyParams;
 
     public JobHelper(ACommonJob js1Job, JobChain jobChain) {
         this.js1Job = js1Job;
@@ -221,6 +224,17 @@ public class JobHelper {
 
     public boolean isStandalone() {
         return standalone;
+    }
+
+    public List<Variables> getCopyParams() {
+        return copyParams;
+    }
+
+    public void addCopyParams(Variables val) {
+        if (copyParams == null) {
+            copyParams = new ArrayList<>();
+        }
+        copyParams.add(val);
     }
 
     public class JavaJITLJobHelper {
