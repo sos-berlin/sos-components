@@ -22,6 +22,7 @@ import com.sos.js7.converter.js1.common.Include;
 import com.sos.js7.converter.js1.common.Monitor;
 import com.sos.js7.converter.js1.common.Params;
 import com.sos.js7.converter.js1.common.Script;
+import com.sos.js7.converter.js1.common.commands.Commands;
 import com.sos.js7.converter.js1.common.lock.LockUse;
 import com.sos.js7.converter.js1.common.processclass.ProcessClass;
 import com.sos.js7.converter.js1.common.runtime.RunTime;
@@ -65,6 +66,7 @@ public abstract class ACommonJob {
     private static final String ELEMENT_START_WHEN_DIRECTORY_CHANGED = "start_when_directory_changed";
     private static final String ELEMENT_DELAY_AFTER_ERROR = "delay_after_error";
     private static final String ELEMENT_RUN_TIME = "run_time";
+    private static final String ELEMENT_COMMANDS = "commands";
 
     private final Type type;
     private Path path;
@@ -81,6 +83,7 @@ public abstract class ACommonJob {
     private Script script;
     private RunTime runTime;
     private ProcessClass processClass;
+    private List<Commands> commands;
 
     // ATTRIBUTE
     private String name;
@@ -196,6 +199,15 @@ public abstract class ACommonJob {
             OrderJob j = (OrderJob) this;
             j.parse(pr, xpath, node, attributes, currentPath);
         }
+
+        l = xpath.selectNodes(node, "./" + ELEMENT_COMMANDS);
+        if (l != null && l.getLength() > 0) {
+            commands = new ArrayList<>();
+            for (int i = 0; i < l.getLength(); i++) {
+                commands.add(new Commands(l.item(i)));
+            }
+        }
+
         return xpath;
     }
 
@@ -307,6 +319,10 @@ public abstract class ACommonJob {
 
     public RunTime getRunTime() {
         return runTime;
+    }
+
+    public List<Commands> getCommands() {
+        return commands;
     }
 
     public String getName() {

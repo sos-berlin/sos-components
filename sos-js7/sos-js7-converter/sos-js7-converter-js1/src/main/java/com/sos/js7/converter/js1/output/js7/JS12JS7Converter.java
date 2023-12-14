@@ -100,7 +100,6 @@ import com.sos.js7.converter.js1.common.jobchain.node.AJobChainNode;
 import com.sos.js7.converter.js1.common.jobchain.node.JobChainNode;
 import com.sos.js7.converter.js1.common.jobchain.node.JobChainNodeFileOrderSink;
 import com.sos.js7.converter.js1.common.jobchain.node.JobChainNodeFileOrderSource;
-import com.sos.js7.converter.js1.common.jobchain.node.JobChainNodeOnReturnCode;
 import com.sos.js7.converter.js1.common.json.calendars.JS1Calendar;
 import com.sos.js7.converter.js1.common.json.calendars.JS1Calendars;
 import com.sos.js7.converter.js1.common.lock.LockUse;
@@ -122,6 +121,7 @@ import com.sos.js7.converter.js1.output.js7.helper.JobTemplateHelper;
 import com.sos.js7.converter.js1.output.js7.helper.LockHelper;
 import com.sos.js7.converter.js1.output.js7.helper.NamedJobHelper;
 import com.sos.js7.converter.js1.output.js7.helper.ProcessClassFirstUsageHelper;
+import com.sos.js7.converter.js1.output.js7.helper.ReturnCodeHelper;
 import com.sos.js7.converter.js1.output.js7.helper.RunTimeHelper;
 import com.sos.js7.converter.js1.output.js7.helper.ScheduleHelper;
 import com.sos.js7.converter.js1.output.js7.helper.TryCatchHelper;
@@ -803,6 +803,12 @@ public class JS12JS7Converter {
 
         List<Instruction> in = new ArrayList<>();
         in.add(getNamedJobInstruction(js1Job, js7Name, js7Name, null, null, null).getInstruction());
+
+        List<Instruction> ifs = ReturnCodeHelper.JS17OnReturnCodes2JS7(js7Name, jh);
+        if (ifs != null && ifs.size() > 0) {
+            in.addAll(ifs);
+        }
+
         if (h == null) {
             in = getRetryInstructions(js1Job, in);
         } else {
@@ -854,6 +860,23 @@ public class JS12JS7Converter {
                 }
                 w.setOrderPreparation(new Requirements(parameters, false));
             }
+        }
+
+        // See ReturnCodeHelper - getArguments. addCopyParams - will be set here because can only be evaluated after order preparation was created
+        try {
+            if (w.getOrderPreparation() != null && w.getOrderPreparation().getParameters() != null && w.getOrderPreparation().getParameters()
+                    .getAdditionalProperties().size() > 0) {
+                if (jh.getCopyParams() != null && jh.getCopyParams().size() > 0) {
+                    for (Variables v : jh.getCopyParams()) {
+                        for (Map.Entry<String, Parameter> p : w.getOrderPreparation().getParameters().getAdditionalProperties().entrySet()) {
+                            v.getAdditionalProperties().put(p.getKey(), "$" + p.getKey());
+                        }
+                    }
+                }
+            }
+        } catch (Throwable e) {
+            LOGGER.error(String.format(String.format("[%s]%s", js7Name, e.toString()), e), e);
+            ConverterReport.INSTANCE.addErrorRecord(js1Job.getPath(), js7Name, e);
         }
 
         result.add(workflowPath, w);
@@ -1777,11 +1800,23 @@ public class JS12JS7Converter {
         return JS7ConverterHelper.quoteValue4JS7(getReplacedParamValue(val));
     }
 
-    public String getQuotedParamValue(String val) {
+    public static String getQuotedParamValue(String val) {
         return JS7ConverterHelper.quoteValue4JS7(val);
     }
 
-    public String getReplacedParamValue(String val) {
+    public static Variables JS12JS7(Params p) {
+        if (p == null || !p.hasParams()) {
+            return null;
+        }
+        Variables args = new Variables();
+        for (Map.Entry<String, String> e : p.getParams().entrySet()) {
+            String v = getReplacedParamValue(e.getValue());
+            args.getAdditionalProperties().put(e.getKey(), getQuotedParamValue(v));
+        }
+        return args;
+    }
+
+    public static String getReplacedParamValue(String val) {
         if (SOSString.isEmpty(val)) {
             return val;
         }
@@ -2476,15 +2511,9 @@ public class JS12JS7Converter {
             switch (n.getType()) {
             case NODE:
                 JobChainNode jcn = (JobChainNode) n;
-                if (jcn.getOnReturnCodes() != null && jcn.getOnReturnCodes().size() > 0) {
-                    for (JobChainNodeOnReturnCode rc : jcn.getOnReturnCodes()) {
-                        ConverterReport.INSTANCE.addWarningRecord(jobChain.getPath(), "ON_RETURN_CODE not implemented yet", String.format(
-                                "[state=%s][ON_RETURN_CODE]returnCode=%s,toState=%s", jcn.getState(), rc.getReturnCode(), rc.getToState()));
-                    }
-                }
                 if (jcn.getJob() == null) {
                     if (jcn.getState() != null) {
-                        allStates.put(jcn.getState(), new JobChainStateHelper(jcn, null, null));
+                        allStates.put(jcn.getState(), new JobChainStateHelper(js7Name, jcn, null, null));
                     }
                 } else {
                     Path job = null;
@@ -2522,7 +2551,7 @@ public class JS12JS7Converter {
                                     uniqueJobs.put(js1JobName, new JobChainJobHelper(oj, js7JobName));
                                 }
 
-                                allStates.put(jcn.getState(), new JobChainStateHelper(jcn, js1JobName, js7JobName));
+                                allStates.put(jcn.getState(), new JobChainStateHelper(js7Name, jcn, js1JobName, js7JobName));
                             } catch (Throwable e) {
                                 LOGGER.warn("[jobChain " + jobChain.getPath() + "/node=" + SOSString.toString(n) + "]" + e.getMessage());
                                 ConverterReport.INSTANCE.addWarningRecord(job, "[jobChain " + jobChain.getName() + "/node=" + SOSString.toString(n)
@@ -2619,6 +2648,26 @@ public class JS12JS7Converter {
         w.setTitle(jobChain.getTitle());
         w.setTimeZone(CONFIG.getWorkflowConfig().getDefaultTimeZone());
         w = setWorkflowOrderPreparationOrResources(w, jobChain, usedStates, fileOrderSources);
+
+        // See ReturnCodeHelper - getArguments. addCopyParams - will be set here because can only be evaluated after order preparation was created
+        try {
+            if (w.getOrderPreparation() != null && w.getOrderPreparation().getParameters() != null && w.getOrderPreparation().getParameters()
+                    .getAdditionalProperties().size() > 0) {
+                for (Map.Entry<String, JobChainStateHelper> e : usedStates.entrySet()) {
+                    JobChainStateHelper h = e.getValue();
+                    if (h.getCopyParams() != null && h.getCopyParams().size() > 0) {
+                        for (Variables v : h.getCopyParams()) {
+                            for (Map.Entry<String, Parameter> p : w.getOrderPreparation().getParameters().getAdditionalProperties().entrySet()) {
+                                v.getAdditionalProperties().put(p.getKey(), "$" + p.getKey());
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Throwable e) {
+            LOGGER.error(String.format(String.format("[%s]%s", js7Name, e.toString()), e));
+            ConverterReport.INSTANCE.addErrorRecord(jobChain.getPath(), js7Name, e);
+        }
 
         JS7Agent jobChainAgent = getJobChainAgent(jobChain, false);
         Jobs js = new Jobs();
@@ -3182,6 +3231,17 @@ public class JS12JS7Converter {
                     if (!tryCatchHelper.addByState(h.getJS1State(), ins)) {
                         result.addAll(ins);
                     }
+                }
+            }
+
+            List<Instruction> ifs = ReturnCodeHelper.JS17OnReturnCodes2JS7(h);
+            if (ifs != null && ifs.size() > 0) {
+                result.addAll(ifs);
+            }
+            if (job.getCommands() != null && job.getCommands().size() > 0) {
+                ifs = ReturnCodeHelper.JS17OnReturnCodes2JS7(h, new JobHelper(job, null));
+                if (ifs != null && ifs.size() > 0) {
+                    result.addAll(ifs);
                 }
             }
 
