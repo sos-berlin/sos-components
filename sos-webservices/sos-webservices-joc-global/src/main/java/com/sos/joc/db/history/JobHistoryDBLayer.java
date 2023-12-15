@@ -8,9 +8,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.function.Predicate;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.persistence.TemporalType;
 
@@ -24,6 +25,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.history.common.HistorySeverity;
+import com.sos.joc.db.history.items.CSVItem;
 import com.sos.joc.db.history.items.HistoryGroupedSummary;
 import com.sos.joc.db.history.items.JobsPerAgent;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -88,6 +90,23 @@ public class JobHistoryDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
+    
+    public ScrollableResults getCSVJobs(Stream<String> columns) throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            Query<CSVItem> query = createQuery(new StringBuilder().append("select workflowFolder as folder, concat(coalesce(").append(columns.collect(
+                    Collectors.joining(",''),';',coalesce("))).append(",'')) as csv from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEPS).append(
+                            getOrderStepsWhere()).append(" order by startTime desc").toString(), CSVItem.class);
+            if (filter.getLimit() > 0) {
+                query.setMaxResults(filter.getLimit());
+            }
+
+            return executeScroll(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
 
     public ScrollableResults getJobsFromHistoryIdAndPosition(Map<Long, Set<String>> mapOfHistoryIdAndPosition) throws DBConnectionRefusedException,
             DBInvalidDataException {
@@ -116,6 +135,42 @@ public class JobHistoryDBLayer {
             StringBuilder hql = new StringBuilder().append("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEPS).append(where).append(
                     " order by startTime desc");
             Query<DBItemHistoryOrderStep> query = session.createQuery(hql.toString());
+            return executeScroll(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public ScrollableResults getCSVJobsFromHistoryIdAndPosition(Stream<String> columns, Map<Long, Set<String>> mapOfHistoryIdAndPosition)
+            throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            List<String> l = new ArrayList<String>();
+            String where = "";
+            for (Entry<Long, Set<String>> entry : mapOfHistoryIdAndPosition.entrySet()) {
+                String s = "historyOrderMainParentId = " + entry.getKey();
+                Set<String> workflowPositions = entry.getValue();
+                if (!workflowPositions.isEmpty() && !workflowPositions.contains(null)) {
+                    if (workflowPositions.size() == 1) {
+                        s += " and workflowPosition = '" + workflowPositions.iterator().next() + "'";
+                    } else {
+                        s += " and workflowPosition in (" + workflowPositions.stream().map(val -> "'" + val + "'").collect(Collectors.joining(","))
+                                + ")";
+                    }
+                }
+                l.add("(" + s + ")");
+            }
+            if (!l.isEmpty()) {
+                where = String.join(" or ", l);
+            }
+            if (!where.trim().isEmpty()) {
+                where = " where " + where;
+            }
+            StringBuilder hql = new StringBuilder().append("select workflowFolder as folder, concat(coalesce(").append(columns.collect(Collectors
+                    .joining(",''),';',coalesce("))).append(",'')) as csv from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEPS).append(where).append(
+                            " order by startTime desc");
+            Query<CSVItem> query = session.createQuery(hql.toString(), CSVItem.class);
             return executeScroll(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -529,9 +584,18 @@ public class JobHistoryDBLayer {
         }
         return where.toString();
     }
-
+    
     private <T> Query<T> createQuery(String hql) throws SOSHibernateException {
-        Query<T> query = session.createQuery(hql);
+        return createQuery(hql, null);
+    }
+    
+    private <T> Query<T> createQuery(String hql, Class<T> clazz) throws SOSHibernateException {
+        Query<T> query = null;
+        if (clazz == null) {
+            query = session.createQuery(hql);
+        } else {
+            query = session.createQuery(hql, clazz);
+        }
         if (filter.getControllerIds() != null && !filter.getControllerIds().isEmpty()) {
             if (filter.getControllerIds().size() == 1) {
                 query.setParameter("controllerIds", filter.getControllerIds());

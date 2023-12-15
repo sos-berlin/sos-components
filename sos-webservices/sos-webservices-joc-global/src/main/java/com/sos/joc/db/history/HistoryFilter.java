@@ -58,6 +58,10 @@ public class HistoryFilter {
     private String orderId;
     private String workflowPath;
     private String workflowName;
+    
+    private boolean hasPermission = true;
+    private boolean taskFromHistoryIdAndNode = false;
+    private boolean folderPermissionsAreChecked = false;
 
     public void setLimit(Integer limit) {
         this.limit = limit;
@@ -317,6 +321,30 @@ public class HistoryFilter {
 
     public void setWorkflowName(String workflowName) {
         this.workflowName = workflowName == null ? null : workflowName.trim();
+    }
+
+    public boolean hasPermission() {
+        return hasPermission;
+    }
+
+    public void setHasPermission(boolean hasPermission) {
+        this.hasPermission = hasPermission;
+    }
+
+    public boolean getTaskFromHistoryIdAndNode() {
+        return taskFromHistoryIdAndNode;
+    }
+
+    public void setTaskFromHistoryIdAndNode(boolean taskFromHistoryIdAndNode) {
+        this.taskFromHistoryIdAndNode = taskFromHistoryIdAndNode;
+    }
+
+    public boolean isFolderPermissionsAreChecked() {
+        return folderPermissionsAreChecked;
+    }
+
+    public void setFolderPermissionsAreChecked(boolean folderPermissionsAreChecked) {
+        this.folderPermissionsAreChecked = folderPermissionsAreChecked;
     }
 
 }

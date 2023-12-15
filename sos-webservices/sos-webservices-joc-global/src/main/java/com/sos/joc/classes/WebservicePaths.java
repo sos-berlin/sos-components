@@ -11,6 +11,7 @@ public class WebservicePaths {
     public static final String UTILITIES = "utilities";
     public static final String MONITORING = "monitoring";
     public static final String DAILYPLAN = "daily_plan";
+    public static final String REPORTING = "reporting";
 
     public static String getResourceImplPath(String mainPath) {
         return getResourceImplPath(mainPath, null);

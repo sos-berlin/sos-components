@@ -97,72 +97,10 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                 return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
             }
             
-            boolean withFolderFilter = in.getFolders() != null && !in.getFolders().isEmpty();
-            boolean hasPermission = true;
-            boolean getTaskFromHistoryIdAndNode = false;
             Set<Folder> permittedFolders = addPermittedFolder(in.getFolders());
-            boolean folderPermissionsAreChecked = false;
+            HistoryFilter dbFilter = getFilter(in, allowedControllers, permittedFolders);
 
-            HistoryFilter dbFilter = new HistoryFilter();
-            dbFilter.setControllerIds(allowedControllers);
-
-            if (in.getTaskIds() != null && !in.getTaskIds().isEmpty()) {
-                dbFilter.setHistoryIds(in.getTaskIds());
-            } else {
-                if (in.getHistoryIds() != null && !in.getHistoryIds().isEmpty()) {
-                    getTaskFromHistoryIdAndNode = true;
-                } else {
-
-                    if (in.getDateFrom() != null) {
-                        dbFilter.setExecutedFrom(JobSchedulerDate.getDateFrom(in.getDateFrom(), in.getTimeZone()));
-                    }
-                    if (in.getDateTo() != null) {
-                        dbFilter.setExecutedTo(JobSchedulerDate.getDateTo(in.getDateTo(), in.getTimeZone()));
-                    }
-                    if (in.getCompletedDateFrom() != null) {
-                        dbFilter.setEndFrom(JobSchedulerDate.getDateFrom(in.getCompletedDateFrom(), in.getTimeZone()));
-                    }
-                    if (in.getCompletedDateTo() != null) {
-                        dbFilter.setEndTo(JobSchedulerDate.getDateTo(in.getCompletedDateTo(), in.getTimeZone()));
-                    }
-                    if (in.getHistoryStates() != null && !in.getHistoryStates().isEmpty()) {
-                        dbFilter.setState(in.getHistoryStates());
-                    }
-
-                    if (in.getCriticalities() != null && !in.getCriticalities().isEmpty()) {
-                        dbFilter.setCriticalities(in.getCriticalities());
-                    }
-
-                    if (in.getJobs() != null && !in.getJobs().isEmpty()) {
-                        dbFilter.setJobs(in.getJobs().stream().filter(Objects::nonNull).filter(job -> canAdd(WorkflowPaths.getPath(job
-                                .getWorkflowPath()), permittedFolders)).peek(job -> job.setWorkflowPath(JocInventory.pathToName(job
-                                        .getWorkflowPath()))).collect(Collectors.groupingBy(JobPath::getWorkflowPath, Collectors.mapping(
-                                                JobPath::getJob, Collectors.toSet()))));
-                        folderPermissionsAreChecked = true;
-                    } else {
-
-                        if (!in.getExcludeJobs().isEmpty()) {
-                            dbFilter.setExcludedJobs(in.getExcludeJobs().stream().filter(Objects::nonNull).peek(job -> job.setWorkflowPath(
-                                    JocInventory.pathToName(job.getWorkflowPath()))).collect(Collectors.groupingBy(JobPath::getWorkflowPath, Collectors
-                                            .mapping(JobPath::getJob, Collectors.toSet()))));
-                        }
-
-                        if (withFolderFilter && (permittedFolders == null || permittedFolders.isEmpty())) {
-                            hasPermission = false;
-                        } else if (withFolderFilter && permittedFolders != null && !permittedFolders.isEmpty()) {
-                            dbFilter.setFolders(in.getFolders().stream().filter(folder -> folderIsPermitted(folder.getFolder(), permittedFolders))
-                                    .collect(Collectors.toSet()));
-                            folderPermissionsAreChecked = true;
-                        }
-
-                        dbFilter.setJobName(in.getJobName());
-                        dbFilter.setWorkflowPath(in.getWorkflowPath());
-                        dbFilter.setWorkflowName(in.getWorkflowName());
-                    }
-                }
-            }
-
-            if (hasPermission) {
+            if (dbFilter.hasPermission()) {
 
                 if (in.getLimit() == null) {
                     in.setLimit(WebserviceConstants.HISTORY_RESULTSET_LIMIT);
@@ -176,7 +114,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                 try {
                     boolean profiler = false;
                     Instant profilerStart = Instant.now();
-                    if (getTaskFromHistoryIdAndNode) {
+                    if (dbFilter.getTaskFromHistoryIdAndNode()) {
                         sr = dbLayer.getJobsFromHistoryIdAndPosition(in.getHistoryIds().stream().filter(Objects::nonNull).filter(t -> t
                                 .getHistoryId() != null).collect(Collectors.groupingBy(TaskIdOfOrder::getHistoryId, Collectors.mapping(
                                         TaskIdOfOrder::getPosition, Collectors.toSet()))));
@@ -201,7 +139,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                             if (isControllerIdEmpty && !getControllerPermissions(item, accessToken, checkedControllers)) {
                                 continue;
                             }
-                            if (!folderPermissionsAreChecked && !canAdd(item, permittedFolders, checkedFolders)) {
+                            if (!dbFilter.isFolderPermissionsAreChecked() && !canAdd(item, permittedFolders, checkedFolders)) {
                                 continue;
                             }
                             history.add(HistoryMapper.map2TaskHistoryItem(item));
@@ -260,6 +198,70 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
         }
         LOGGER.info(String.format("[task][history][%s][total=%s][select=%s, first entry=%s]", i, SOSDate.getDuration(start, end), SOSDate.getDuration(
                 start, afterSelect), firstEntryDuration));
+    }
+    
+    public static HistoryFilter getFilter(JobsFilter in, Set<String> allowedControllers, Set<Folder> permittedFolders) {
+        boolean withFolderFilter = in.getFolders() != null && !in.getFolders().isEmpty();
+
+        HistoryFilter dbFilter = new HistoryFilter();
+        dbFilter.setControllerIds(allowedControllers);
+
+        if (in.getTaskIds() != null && !in.getTaskIds().isEmpty()) {
+            dbFilter.setHistoryIds(in.getTaskIds());
+        } else {
+            if (in.getHistoryIds() != null && !in.getHistoryIds().isEmpty()) {
+                dbFilter.setTaskFromHistoryIdAndNode(true);
+            } else {
+
+                if (in.getDateFrom() != null) {
+                    dbFilter.setExecutedFrom(JobSchedulerDate.getDateFrom(in.getDateFrom(), in.getTimeZone()));
+                }
+                if (in.getDateTo() != null) {
+                    dbFilter.setExecutedTo(JobSchedulerDate.getDateTo(in.getDateTo(), in.getTimeZone()));
+                }
+                if (in.getCompletedDateFrom() != null) {
+                    dbFilter.setEndFrom(JobSchedulerDate.getDateFrom(in.getCompletedDateFrom(), in.getTimeZone()));
+                }
+                if (in.getCompletedDateTo() != null) {
+                    dbFilter.setEndTo(JobSchedulerDate.getDateTo(in.getCompletedDateTo(), in.getTimeZone()));
+                }
+                if (in.getHistoryStates() != null && !in.getHistoryStates().isEmpty()) {
+                    dbFilter.setState(in.getHistoryStates());
+                }
+
+                if (in.getCriticalities() != null && !in.getCriticalities().isEmpty()) {
+                    dbFilter.setCriticalities(in.getCriticalities());
+                }
+
+                if (in.getJobs() != null && !in.getJobs().isEmpty()) {
+                    dbFilter.setJobs(in.getJobs().stream().filter(Objects::nonNull).filter(job -> canAdd(WorkflowPaths.getPath(job
+                            .getWorkflowPath()), permittedFolders)).peek(job -> job.setWorkflowPath(JocInventory.pathToName(job
+                                    .getWorkflowPath()))).collect(Collectors.groupingBy(JobPath::getWorkflowPath, Collectors.mapping(
+                                            JobPath::getJob, Collectors.toSet()))));
+                    dbFilter.setFolderPermissionsAreChecked(true);
+                } else {
+
+                    if (!in.getExcludeJobs().isEmpty()) {
+                        dbFilter.setExcludedJobs(in.getExcludeJobs().stream().filter(Objects::nonNull).peek(job -> job.setWorkflowPath(
+                                JocInventory.pathToName(job.getWorkflowPath()))).collect(Collectors.groupingBy(JobPath::getWorkflowPath, Collectors
+                                        .mapping(JobPath::getJob, Collectors.toSet()))));
+                    }
+
+                    if (withFolderFilter && (permittedFolders == null || permittedFolders.isEmpty())) {
+                        dbFilter.setHasPermission(false);
+                    } else if (withFolderFilter && permittedFolders != null && !permittedFolders.isEmpty()) {
+                        dbFilter.setFolders(in.getFolders().stream().filter(folder -> folderIsPermitted(folder.getFolder(), permittedFolders))
+                                .collect(Collectors.toSet()));
+                        dbFilter.setFolderPermissionsAreChecked(true);
+                    }
+
+                    dbFilter.setJobName(in.getJobName());
+                    dbFilter.setWorkflowPath(in.getWorkflowPath());
+                    dbFilter.setWorkflowName(in.getWorkflowName());
+                }
+            }
+        }
+        return dbFilter;
     }
 
 }

@@ -140,7 +140,7 @@ public class JsonValidator {
             put("JobsFilter", "job/jobsFilter-schema.json");
             put("TaskFilter", "job/taskFilter-schema.json");
             put("RunningTaskLogFilter", "job/runningTaskLogFilter-schema.json");
-
+            
             put("ApplyConfiguration", "xmleditor/apply/apply-configuration-schema.json");
             put("SchemaAssignConfiguration", "xmleditor/schema/assign/schema-assign-configuration-schema.json");
             put("DeleteAll", "xmleditor/delete/all/delete-all-schema.json");
@@ -362,6 +362,10 @@ public class JsonValidator {
             
             // utilities
             put("com.sos.joc.model.utilities.SendMail", "utilities/sendMail-schema.json");
+            
+            // reporting
+            put("com.sos.joc.model.reporting.OrderSteps", "reporting/orderSteps-schema.json");
+
 
             // TODO complete the map
         }
