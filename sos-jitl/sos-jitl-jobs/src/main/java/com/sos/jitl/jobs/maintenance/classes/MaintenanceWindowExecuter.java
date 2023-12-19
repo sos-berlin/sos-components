@@ -138,7 +138,7 @@ public class MaintenanceWindowExecuter {
         if (enable) {
             apiResponse = apiExecutor.post(accessToken, "/joc/api/agents/inventory/cluster/subagents/enable", body);
         } else {
-            apiResponse = apiExecutor.post(accessToken, "/joc/api/agents/inventory/cluster/subagents/enable", body);
+            apiResponse = apiExecutor.post(accessToken, "/joc/api/agents/inventory/cluster/subagents/disable", body);
         }
 
         if (apiResponse.getStatusCode() == 200) {
