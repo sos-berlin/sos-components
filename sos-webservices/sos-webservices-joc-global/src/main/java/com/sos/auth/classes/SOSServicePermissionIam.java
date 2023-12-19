@@ -766,10 +766,10 @@ public class SOSServicePermissionIam {
                 }
                 Globals.jocWebserviceDataContainer.getSOSForceDelayHandler().addFailedLogin(currentAccount);
                 Globals.jocWebserviceDataContainer.getSOSForceDelayHandler().forceDelay(currentAccount);
-                    
+
                 sosAuthCurrentUserAnswer.setMessage(String.format("%s: Could not login", msg));
                 throw new JocAuthenticationException(sosAuthCurrentUserAnswer);
-            }else {
+            } else {
                 Globals.jocWebserviceDataContainer.getSOSForceDelayHandler().resetFailedLogin(currentAccount);
             }
 
@@ -919,14 +919,24 @@ public class SOSServicePermissionIam {
             if (Globals.jocWebserviceDataContainer.getCurrentAccountsList() != null) {
                 Globals.jocWebserviceDataContainer.getCurrentAccountsList().removeTimedOutAccount(currentAccount.getAccountname());
 
-                if (Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler() != null) {
-                    Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler().endExecution();
-                    do {
-                    } while (Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler().isAlive());
+                if (currentAccount.getIdentityService().getIdentyServiceType().equals(IdentityServiceTypes.KEYCLOAK) || currentAccount
+                        .getIdentityService().getIdentyServiceType().equals(IdentityServiceTypes.KEYCLOAK_JOC) || currentAccount.getIdentityService()
+                                .getIdentyServiceType().equals(IdentityServiceTypes.VAULT) || currentAccount.getIdentityService()
+                                        .getIdentyServiceType().equals(IdentityServiceTypes.VAULT_JOC) || currentAccount.getIdentityService()
+                                                .getIdentyServiceType().equals(IdentityServiceTypes.VAULT_JOC_ACTIVE)) {
+                    if (Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler() != null) {
+                        Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler().endExecution();
+                        do {
+                        } while (Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler().isAlive());
+                    }
+                    Globals.jocWebserviceDataContainer.setSosAuthAccessTokenHandler(new SOSAuthAccessTokenHandler());
+                    try {
+                        LOGGER.debug("Starting thread to renew external access-token");
+                        Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler().start();
+                    } catch (IllegalStateException e) {
+                        LOGGER.debug(e.getMessage());
+                    }
                 }
-                Globals.jocWebserviceDataContainer.setSosAuthAccessTokenHandler(new SOSAuthAccessTokenHandler());
-                Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler().start();
-
                 audit.setComment(currentAccount.getRolesAsString());
             }
             if (!sosAuthCurrentUserAnswer.isAuthenticated()) {
