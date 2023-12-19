@@ -968,14 +968,21 @@ public class SOSServicePermissionIam {
             if (Globals.jocWebserviceDataContainer.getCurrentAccountsList() != null) {
                 Globals.jocWebserviceDataContainer.getCurrentAccountsList().removeTimedOutAccount(currentAccount.getAccountname());
 
-                if (Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler() != null) {
-                    Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler().endExecution();
-                    do {
-                    } while (Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler().isAlive());
+                if (currentAccount.getIdentityService().getIdentyServiceType().equals(IdentityServiceTypes.KEYCLOAK) || currentAccount
+                        .getIdentityService().getIdentyServiceType().equals(IdentityServiceTypes.KEYCLOAK_JOC)) {
+                    if (Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler() != null) {
+                        Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler().endExecution();
+                        do {
+                        } while (Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler().isAlive());
+                    }
+                    Globals.jocWebserviceDataContainer.setSosAuthAccessTokenHandler(new SOSAuthAccessTokenHandler());
+                    try {
+                        LOGGER.debug("Starting thread to renew external access-token");
+                        Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler().start();
+                    } catch (IllegalStateException e) {
+                        LOGGER.debug(e.getMessage());
+                    }
                 }
-                Globals.jocWebserviceDataContainer.setSosAuthAccessTokenHandler(new SOSAuthAccessTokenHandler());
-                Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler().start();
-
                 audit.setComment(currentAccount.getRolesAsString());
             }
             if (!sosAuthCurrentUserAnswer.isAuthenticated()) {
