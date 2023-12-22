@@ -441,10 +441,13 @@ public class DailyPlanHelper {
                         c.setName(dbItem.getName());
                         c.setPath(dbItem.getPath());
 
+                        if (LOGGER.isDebugEnabled()) {
+                            LOGGER.debug(String.format("[NonWorkingDaysCalendar=%s]%s", c.getName(), SOSString.toString(c, true)));
+                        }
+
                         all.put(c.getName(), c);
                     }
                 }
-
             }
 
             FrequencyResolver fr = new FrequencyResolver();

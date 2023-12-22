@@ -737,12 +737,11 @@ public class DailyPlanRunner extends TimerTask {
         Date date = SOSDate.getDate(dailyPlanDate);
         Date actDate = date;
         Date nextDate = DailyPlanHelper.getNextDay(date, settings);
-        String logPrefix = String.format("[%s][%s][%s][%s]", startupMode, method, controllerId, dailyPlanDate);
+        String lp = String.format("[%s][%s][%s][%s]", startupMode, method, controllerId, dailyPlanDate);
         boolean fromService = isFromService(startupMode);
 
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("[%s][%s][%s][dailyPlanDate=%s]actDate=%s,nextDate=%s", startupMode, method, controllerId, dailyPlanDate,
-                    SOSDate.getDateAsString(actDate), SOSDate.getDateAsString(nextDate)));
+            LOGGER.debug(String.format("%sactDate=%s,nextDate=%s", lp, SOSDate.getDateAsString(actDate), SOSDate.getDateAsString(nextDate)));
         }
 
         Map<String, Calendar> calendars = new HashMap<String, Calendar>();
@@ -759,7 +758,8 @@ public class DailyPlanRunner extends TimerTask {
         boolean tmpUseOnlyActDate = true;
         for (DailyPlanSchedule dailyPlanSchedule : dailyPlanSchedules) {
             Schedule schedule = dailyPlanSchedule.getSchedule();
-            logPrefix = String.format("%s[schedule=%s]", logPrefix, schedule.getPath());
+            String logPrefix = String.format("%s[schedule=%s]", lp, schedule.getPath());
+            String logNonWorkingDayCalendars = nonWorkingDayCalendarsLog(schedule);
             if (fromService && !schedule.getPlanOrderAutomatically()) {
                 if (isDebugEnabled) {
                     LOGGER.debug(String.format("%s[skip]fromService=true, plan order automatically=false", logPrefix, schedule.getPath()));
@@ -791,7 +791,7 @@ public class DailyPlanRunner extends TimerTask {
                             calendar = getWorkingDaysCalendar(controllerId, assignedCalendar.getCalendarName());
                             if (isDebugEnabled) {
                                 LOGGER.debug(String.format("%s[WorkingDaysCalendar=%s][db]%s", logPrefix, assignedCalendar.getCalendarName(),
-                                        SOSString.toString(calendar)));
+                                        SOSString.toString(calendar, true)));
                             }
                         } catch (DBMissingDataException e) {
                             LOGGER.warn(String.format("%s[WorkingDaysCalendar=%s][skip]not found", logPrefix, assignedCalendar.getCalendarName()));
@@ -1047,20 +1047,32 @@ public class DailyPlanRunner extends TimerTask {
                         LOGGER.error(String.format("%s[WorkingDaysCalendar=%s,timeZone=%s][FrequencyResolver dates=%s]%s", logPrefix, assignedCalendar
                                 .getCalendarName(), assignedCalendar.getTimeZone(), String.join(",", frequencyResolverDates), e.toString()), e);
                     }
-
                     if (plannedOrdersCount == 0) {
-                        LOGGER.info(String.format("%s[WorkingDaysCalendar=%s,timeZone=%s]0 planned orders", logPrefix, assignedCalendar
-                                .getCalendarName(), assignedCalendar.getTimeZone()));
+                        LOGGER.info(String.format("%s[WorkingDaysCalendar=%s,timeZone=%s]%s0 planned orders", logPrefix, assignedCalendar
+                                .getCalendarName(), assignedCalendar.getTimeZone(), logNonWorkingDayCalendars));
                     } else {
                         if (isDebugEnabled) {
-                            LOGGER.debug(String.format("%s[WorkingDaysCalendar=%s,timeZone=%s]%s planned orders", logPrefix, assignedCalendar
-                                    .getCalendarName(), assignedCalendar.getTimeZone(), plannedOrdersCount));
+                            LOGGER.debug(String.format("%s[WorkingDaysCalendar=%s,timeZone=%s]%s%s planned orders", logPrefix, assignedCalendar
+                                    .getCalendarName(), assignedCalendar.getTimeZone(), logNonWorkingDayCalendars, plannedOrdersCount));
                         }
                     }
                 }
             }
         }
         return synchronizer;
+    }
+
+    private String nonWorkingDayCalendarsLog(Schedule schedule) {
+        if (schedule.getNonWorkingDayCalendars() == null || schedule.getNonWorkingDayCalendars().size() == 0) {
+            return "";
+        }
+        return "[NonWorkingDayCalendars=" + schedule.getNonWorkingDayCalendars().stream().map(e -> {
+            if (e.getCalendarName() == null) {
+                return "unknown";
+            }
+            return e.getCalendarName();
+        }).collect(Collectors.joining(",")) + "]";
+
     }
 
     private boolean isDayAfterNonWorkingDays(boolean isDebugEnabled, String logPrefix, InventoryDBLayer dbLayer, Schedule schedule,
