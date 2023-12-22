@@ -18,6 +18,7 @@ public class MaintenanceWindowImpl {
     private MaintenanceWindowJobArguments args;
     private Map<String, DetailValue> jobResources;
     private OrderProcessStepLogger logger;
+    private String controllerId;
 
     public MaintenanceWindowImpl(OrderProcessStep<MaintenanceWindowJobArguments> step) {
         this.args = step.getDeclaredArguments();
@@ -47,6 +48,9 @@ public class MaintenanceWindowImpl {
                 MaintenanceWindowExecuter maintenanceWindowExecuter = new MaintenanceWindowExecuter(logger, apiExecutor);
             
                 String controllerId = maintenanceWindowExecuter.getControllerid(accessToken, args.getControllerId());
+                if (controllerId == null || controllerId.isEmpty()) {
+                    controllerId = this.controllerId;
+                }
 
                 Components components = maintenanceWindowExecuter.getControllerClusterStatus(accessToken, controllerId);
                 if (args.getControllerHost() != null) {

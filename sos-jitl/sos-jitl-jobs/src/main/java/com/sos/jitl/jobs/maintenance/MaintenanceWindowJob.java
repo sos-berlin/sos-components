@@ -13,6 +13,8 @@ public class MaintenanceWindowJob extends Job<MaintenanceWindowJobArguments> {
     @Override
     public void processOrder(OrderProcessStep<MaintenanceWindowJobArguments> step) throws Exception {
         step.getLogger().debug("maintenance window: will be executed");
+      
+        MaintenanceWindowImpl impl = new MaintenanceWindowImpl(step);
 
         MaintenanceWindowImpl impl = new MaintenanceWindowImpl(step);
         impl.executeApiCall();
