@@ -5,6 +5,8 @@ import com.sos.jitl.jobs.maintenance.MaintenanceWindowJobArguments.StateValues;
 import com.sos.joc.model.controller.Components;
 import com.sos.joc.model.controller.Controller;
 import com.sos.joc.model.joc.Cockpit;
+import com.sos.js7.job.JobArguments;
+import com.sos.js7.job.OrderProcessStep;
 import com.sos.js7.job.OrderProcessStepLogger;
 import com.sos.js7.job.jocapi.ApiExecutor;
 import com.sos.js7.job.jocapi.ApiResponse;
@@ -13,10 +15,12 @@ public class MaintenanceWindowImpl {
 
     private MaintenanceWindowJobArguments args;
     private OrderProcessStepLogger logger;
+    private String controllerId;
 
-    public MaintenanceWindowImpl(OrderProcessStepLogger logger, MaintenanceWindowJobArguments args) {
-        this.args = args;
-        this.logger = logger;
+    public MaintenanceWindowImpl(OrderProcessStep<MaintenanceWindowJobArguments> step) {
+        this.args = step.getDeclaredArguments();
+        this.logger = step.getLogger();
+        this.controllerId = step.getControllerId();
     }
 
     public void executeApiCall() throws Exception {
@@ -39,6 +43,9 @@ public class MaintenanceWindowImpl {
                 MaintenanceWindowExecuter maintenanceWindowExecuter = new MaintenanceWindowExecuter(logger, apiExecutor);
             
                 String controllerId = maintenanceWindowExecuter.getControllerid(accessToken, args.getControllerId());
+                if (controllerId == null || controllerId.isEmpty()) {
+                    controllerId = this.controllerId;
+                }
 
                 Components components = maintenanceWindowExecuter.getControllerClusterStatus(accessToken, controllerId);
                 if (args.getControllerHost() != null) {

@@ -45,7 +45,7 @@ public class MaintenanceWindowExecuter {
         logger.debug("answer=" + answer);
         Controllers controllers = JobHelper.OBJECT_MAPPER.readValue(answer, Controllers.class);
         for (Controller controller : controllers.getControllers()) {
-            if (!defControllerId.isEmpty() & !defControllerId.equals(controller.getControllerId())) {
+            if (!defControllerId.isEmpty() && !defControllerId.equals(controller.getControllerId())) {
                 defControllerId = "";
                 break;
             }
