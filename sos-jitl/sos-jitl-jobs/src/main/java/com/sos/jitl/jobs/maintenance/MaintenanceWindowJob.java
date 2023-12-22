@@ -15,8 +15,6 @@ public class MaintenanceWindowJob extends Job<MaintenanceWindowJobArguments> {
         step.getLogger().debug("maintenance window: will be executed");
       
         MaintenanceWindowImpl impl = new MaintenanceWindowImpl(step);
-
-        MaintenanceWindowImpl impl = new MaintenanceWindowImpl(step);
         impl.executeApiCall();
     }
 }
