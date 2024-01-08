@@ -34,7 +34,7 @@
 
     <sos.engine.version>2.5.7</sos.engine.version>
     <api.schema.version>${project.version}</api.schema.version>
-    <inventory.schema.version>1.5.7</inventory.schema.version>
+    <inventory.schema.version>1.5.7.1</inventory.schema.version>
     <sos.license.version>1.1.2</sos.license.version>
 
     <jackson.version>2.14.2</jackson.version>
