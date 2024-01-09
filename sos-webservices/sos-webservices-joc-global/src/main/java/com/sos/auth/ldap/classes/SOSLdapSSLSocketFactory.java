@@ -3,6 +3,7 @@ package com.sos.auth.ldap.classes;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyStore;
 
@@ -33,17 +34,27 @@ public class SOSLdapSSLSocketFactory extends SocketFactory {
     public SOSLdapSSLSocketFactory() {
         KeyStore trustStore = null;
         try {
-            setSSLContext();
-            trustStore = KeyStoreUtil.readTrustStore(truststorePath, truststoreType, truststorePass);
-            if (trustStore != null) {
+            getTruststoreSettings();
+            TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            if (truststorePath != null && !truststorePath.isEmpty()) {
+                Path p = Globals.sosCockpitProperties.resolvePath(truststorePath);
 
-                TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-                tmf.init(trustStore);
-                SSLContext ctx = SSLContext.getInstance("TLS");
-
-                ctx.init(null, tmf.getTrustManagers(), null);
-                sf = ctx.getSocketFactory();
+                if (Files.exists(p) && Files.isRegularFile(p)) {
+                    trustStore = KeyStoreUtil.readTrustStore(truststorePath, truststoreType, truststorePass);
+                }else {
+                    LOGGER.debug("trustorePath: " + truststorePass  + " not found");
+                }
+            }else {
+                LOGGER.debug("trustorePath is empty");
             }
+            if (trustStore == null) {
+                LOGGER.debug("Using default TrustManager");
+            }
+            tmf.init(trustStore);
+            SSLContext ctx = SSLContext.getInstance("TLS");
+
+            ctx.init(null, tmf.getTrustManagers(), null);
+            sf = ctx.getSocketFactory();
 
         } catch (Exception e) {
             LOGGER.error("", e);
@@ -89,7 +100,7 @@ public class SOSLdapSSLSocketFactory extends SocketFactory {
         return value;
     }
 
-    private void setSSLContext() {
+    private void getTruststoreSettings() {
 
         if (Globals.sosCockpitProperties == null) {
             Globals.sosCockpitProperties = new JocCockpitProperties();
