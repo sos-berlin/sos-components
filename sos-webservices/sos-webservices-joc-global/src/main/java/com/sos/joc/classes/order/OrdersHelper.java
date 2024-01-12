@@ -966,7 +966,18 @@ public class OrdersHelper {
                 // modify scheduledFor if necessary
                 Optional<Instant> scheduledFor = order.scheduledFor();
                 if (dailyplanModifyOrder.getScheduledFor() != null) {
-                    scheduledFor = JobSchedulerDate.getScheduledForInUTC(dailyplanModifyOrder.getScheduledFor(), dailyplanModifyOrder.getTimeZone());
+                    if (isDateWithoutTime(dailyplanModifyOrder.getScheduledFor())) {
+                        if (scheduledFor.isPresent()) {
+                            scheduledFor = Optional.of(JobSchedulerDate.convertUTCDate(dailyplanModifyOrder.getScheduledFor(), scheduledFor.get(),
+                                    dailyplanModifyOrder.getTimeZone()));
+                        } else {
+                            scheduledFor = Optional.of(JobSchedulerDate.convertUTCDate(dailyplanModifyOrder.getScheduledFor(), now,
+                                    dailyplanModifyOrder.getTimeZone()));
+                        }
+                    } else {
+                        scheduledFor = JobSchedulerDate.getScheduledForInUTC(dailyplanModifyOrder.getScheduledFor(), dailyplanModifyOrder
+                                .getTimeZone());
+                    }
                 }
                 if (!scheduledFor.isPresent()) {
                     scheduledFor = Optional.of(now);
@@ -1078,6 +1089,10 @@ public class OrdersHelper {
             result = Either.left(addOrders.get(false).stream().parallel().map(Either::getLeft).collect(Collectors.toList()));
         }
         return result;
+    }
+    
+    private static boolean isDateWithoutTime(String datetime) {
+        return datetime == null ? false : datetime.matches("\\d{4}-\\d{2}-\\d{2}");
     }
 
     public static CompletableFuture<Either<Problem, Void>> cancelOrders(JControllerApi controllerApi, ModifyOrders modifyOrders,
