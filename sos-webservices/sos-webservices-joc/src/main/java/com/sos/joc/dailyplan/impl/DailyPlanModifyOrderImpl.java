@@ -4,7 +4,12 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -18,7 +23,6 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TimeZone;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -662,22 +666,35 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
             Date now = JobSchedulerDate.nowInUtc();
             Date scheduledFor = now; // TODO set default ???
-            Optional<Instant> scheduledForUtc = JobSchedulerDate.getScheduledForInUTC(in.getScheduledFor(), in.getTimeZone());
+            Optional<Instant> scheduledForUtc = getScheduledForInUTC(in.getScheduledFor(), in.getTimeZone());
             if (scheduledForUtc.isPresent()) { // TODO error if not present ???
                 scheduledFor = Date.from(scheduledForUtc.get());
             }
             if (now.getTime() > scheduledFor.getTime()) {
-                TimeZone timeZone = in.getTimeZone() == null ? null : TimeZone.getTimeZone(in.getTimeZone());
-                String current = SOSDate.format(now, SOSDate.DATETIME_FORMAT, timeZone);
-                String planned = SOSDate.format(scheduledFor, SOSDate.DATETIME_FORMAT, timeZone);
-                String add = timeZone == null ? "" : "(" + in.getTimeZone() + ")";
-                throw new Exception(String.format("Current date time %s greater than Planned Start %s %s", current, planned, add));
+//                TimeZone timeZone = in.getTimeZone() == null ? null : TimeZone.getTimeZone(in.getTimeZone());
+//                String current = SOSDate.format(now, SOSDate.DATETIME_FORMAT, timeZone);
+//                String planned = SOSDate.format(scheduledFor, SOSDate.DATETIME_FORMAT, timeZone);
+//                String add = timeZone == null ? "" : "(" + in.getTimeZone() + ")";
+//                throw new Exception(String.format("Current date time %s is younger than planned start %s %s", current, planned, add));
+                throw new JocBadRequestException("The new planned start must be in the future.");
             }
 
             // can have multiple items - of the same schedule or workflow
             result = modifyStartTimeSingle(in, mainItems, scheduledFor, auditlog, zoneId);
         }
         return result;
+    }
+    
+    private boolean isDateWithoutTime(String datetime) {
+        return datetime == null ? false : datetime.matches("\\d{4}-\\d{2}-\\d{2}");
+    }
+    
+    private Optional<Instant> getScheduledForInUTC(String datetime, String timeZone) {
+        if (isDateWithoutTime(datetime)) {
+            return Optional.of(Instant.parse(datetime + "T00:00:00Z"));
+        } else {
+            return JobSchedulerDate.getScheduledForInUTC(datetime, timeZone);
+        }
     }
 
     private OrderIdMap modifyStartTimeSingle(DailyPlanModifyOrder in, List<DBItemDailyPlanOrder> items, Date scheduledFor, DBItemJocAuditLog auditlog,
@@ -687,13 +704,31 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         List<Long> submissionIds = items.stream().filter(SOSCollection.distinctByKey(DBItemDailyPlanOrder::getSubmissionHistoryId)).map(e -> {
             return e.getSubmissionHistoryId();
         }).collect(Collectors.toList());
+        
+        boolean isDateWithoutTime = isDateWithoutTime(in.getScheduledFor());
+        final String settingTimeZone = getSettings().getTimeZone();
 
         // calculate new orders id
-        String dailyPlanDate = SOSDate.getDateAsString(scheduledFor);
+        //String dailyPlanDate = isDateWithoutTime ? in.getScheduledFor() : SOSDate.getDateAsString(scheduledFor);
+        Set<String> dailyPlanDates = new HashSet<>();
         OrderIdMap result = new OrderIdMap();
         for (DBItemDailyPlanOrder item : items) {
             // not check if now > plannedStart of already submitted orders because of cyclic workflows
             // generate for not submitted too because maybe the daily plan day was changed - use new for all - same behaviour as for cyclic orders
+            
+            Date scheduledFor2 = scheduledFor;
+            if (isDateWithoutTime) {
+                // use time from old planned start
+                scheduledFor2 = Date.from(JobSchedulerDate.convertUTCDate(in.getScheduledFor(), item.getPlannedStart().toInstant(), in.getTimeZone()));
+            }
+            
+            Long expectedDuration = item.getExpectedEnd().getTime() - item.getPlannedStart().getTime();
+            item.setExpectedEnd(new Date(expectedDuration + scheduledFor2.getTime()));
+            item.setPlannedStart(scheduledFor2);
+            
+            String dailyPlanDate = item.getDailyPlanDate(settingTimeZone);
+            dailyPlanDates.add(dailyPlanDate);
+            
             result.getAdditionalProperties().put(item.getOrderId(), OrdersHelper.generateNewFromOldOrderId(item.getOrderId(), dailyPlanDate, zoneId));
         }
 
@@ -701,26 +736,36 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         c.thenAccept(either -> {
             SOSHibernateSession sessionNew = null;
             try {
+                
+                Map<String, Long> submissionHistoryIds = new HashMap<>();
                 sessionNew = Globals.createSosHibernateStatelessConnection(IMPL_PATH + "[modifyStartTimeSingle]");
                 sessionNew.setAutoCommit(false);
-
-                DBItemDailyPlanSubmission submission = newSubmission(in.getControllerId(), scheduledFor);
                 sessionNew.beginTransaction();
-                sessionNew.save(submission);
+                
+                for (String dailyPlanDate: dailyPlanDates) {
+                    DBItemDailyPlanSubmission submission = newSubmission(in.getControllerId(), dailyPlanDate);
+                    sessionNew.save(submission);
+                    submissionHistoryIds.put(dailyPlanDate, submission.getId());
+                }
 
                 DBLayerOrderVariables ovDbLayer = new DBLayerOrderVariables(sessionNew);
                 List<DBItemDailyPlanOrder> toSubmit = new ArrayList<>();
                 for (DBItemDailyPlanOrder item : items) {
+                    
                     String oldOrderId = item.getOrderId();
                     String newOrderId = result.getAdditionalProperties().get(oldOrderId);
 
                     // update variables
                     ovDbLayer.update(item.getControllerId(), oldOrderId, newOrderId);
-
-                    Long expectedDuration = item.getExpectedEnd().getTime() - item.getPlannedStart().getTime();
-                    item.setExpectedEnd(new Date(expectedDuration + scheduledFor.getTime()));
-                    item.setPlannedStart(scheduledFor);
-                    item.setSubmissionHistoryId(submission.getId());
+                    
+                    if (submissionHistoryIds.size() == 1) {
+                        item.setSubmissionHistoryId(submissionHistoryIds.values().iterator().next());
+                    } else if (submissionHistoryIds.size() > 1) {
+                        Long submissionHistoryId = submissionHistoryIds.get(item.getDailyPlanDate(settingTimeZone));
+                        if (submissionHistoryId != null) {
+                            item.setSubmissionHistoryId(submissionHistoryId);
+                        }
+                    }
                     item.setModified(new Date());
                     item.setOrderId(newOrderId);
 
@@ -1006,10 +1051,6 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             Globals.disconnect(session);
         }
         return item;
-    }
-
-    private DBItemDailyPlanSubmission newSubmission(String controllerId, Date scheduleFor) throws SOSInvalidDataException {
-        return newSubmission(controllerId, SOSDate.format(scheduleFor, SOSDate.DATE_FORMAT));
     }
 
     private DBItemDailyPlanSubmission newSubmission(String controllerId, String dailyPlanDate) throws SOSInvalidDataException {

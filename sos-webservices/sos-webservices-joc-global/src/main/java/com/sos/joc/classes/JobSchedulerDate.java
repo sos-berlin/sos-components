@@ -3,7 +3,9 @@ package com.sos.joc.classes;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -321,5 +323,14 @@ public class JobSchedulerDate {
             }
         }
         return dateToFrom;
+    }
+    
+    
+    public static Instant convertUTCDate(String dateWithoutTime, Instant utcDateTime, String timezone) {
+        ZoneId utcZoneId = ZoneId.of("Etc/UTC");
+        ZoneId zoneId = timezone == null ? utcZoneId : ZoneId.of(timezone);
+        LocalDate localDate = LocalDateTime.ofInstant(Instant.parse(dateWithoutTime + "T00:00:00Z"), utcZoneId).toLocalDate();
+        LocalTime localTime = LocalDateTime.ofInstant(utcDateTime, utcZoneId).atOffset(ZoneOffset.UTC).atZoneSameInstant(zoneId).toLocalTime();
+        return ZonedDateTime.of(LocalDateTime.of(localDate, localTime), zoneId).withZoneSameInstant(utcZoneId).toInstant();
     }
 }
