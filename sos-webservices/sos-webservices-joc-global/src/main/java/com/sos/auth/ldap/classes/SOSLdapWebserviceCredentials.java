@@ -47,7 +47,7 @@ public class SOSLdapWebserviceCredentials {
     private String userNameAttribute;
     private String userSearchFilter;
     private Boolean useStartTls;
-    private Boolean disableNestedGroupSearch=false;
+    private Boolean disableNestedGroupSearch;
     private String truststorePath = "";
     private String truststorePassword = "";
     private KeystoreType truststoreType = null;
