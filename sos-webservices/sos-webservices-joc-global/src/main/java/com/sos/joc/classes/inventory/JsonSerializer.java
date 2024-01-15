@@ -434,11 +434,7 @@ public class JsonSerializer {
                     es.setV1Compatible(null);
                 }
                 if (es.getLogin() != null) {
-                    if (es.getLogin().getWithUserProfile() == Boolean.FALSE) {
-                        es.getLogin().setWithUserProfile(null);
-                    }
-                    if (es.getLogin().getWithUserProfile() == null && (es.getLogin().getCredentialKey() == null || es.getLogin().getCredentialKey()
-                            .isEmpty())) {
+                    if (es.getLogin().getCredentialKey() == null || es.getLogin().getCredentialKey().isEmpty()) {
                         es.setLogin(null);
                     }
                 }
