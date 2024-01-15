@@ -23,6 +23,7 @@ import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerConnectionResetException;
@@ -142,21 +143,33 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
             } else if (withFolderFilter && (permittedFolders == null || permittedFolders.isEmpty())) {
                 // no permission
             } else if (permittedFolders != null && !permittedFolders.isEmpty()) {
-                Set<VersionedItemId<WorkflowPath>> workflowIds2 = WorkflowsHelper.getWorkflowIdsFromFolders(body.getControllerId(), permittedFolders
-                        .stream().collect(Collectors.toList()), controllerState, permittedFolders);
-                if (!workflowIds2.isEmpty()) {
-                    orderStates = controllerState.orderStateToCount(JOrderPredicates.and(notSuspendFilter, o -> workflowIds2.contains(o
-                            .workflowId())));
+//                Set<VersionedItemId<WorkflowPath>> workflowIds2 = WorkflowsHelper.getWorkflowIdsFromFolders(body.getControllerId(), permittedFolders
+//                        .stream().collect(Collectors.toList()), controllerState, permittedFolders);
+//                if (!workflowIds2.isEmpty()) {
+//                    orderStates = controllerState.orderStateToCount(JOrderPredicates.and(notSuspendFilter, o -> workflowIds2.contains(o
+//                            .workflowId())));
+                    
+                    orderStates = controllerState.orderStateToCount(JOrderPredicates.and(notSuspendFilter, o -> canAdd(WorkflowPaths.getPath(o
+                            .workflowId().path().string()), permittedFolders)));
+                    
                     if (orderStates.getOrDefault(Order.Fresh$.class, 0) > 0) {
+//                        freshOrders = controllerState.ordersBy(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class),
+//                                JOrderPredicates.and(notSuspendFilter, o -> workflowIds2.contains(o.workflowId()))));
+                        
                         freshOrders = controllerState.ordersBy(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class),
-                                JOrderPredicates.and(notSuspendFilter, o -> workflowIds2.contains(o.workflowId()))));
+                                JOrderPredicates.and(notSuspendFilter, o -> canAdd(WorkflowPaths.getPath(o
+                                        .workflowId().path().string()), permittedFolders))));
                     }
-                    suspendedOrders = controllerState.ordersBy(JOrderPredicates.and(suspendFilter, o -> workflowIds2.contains(o.workflowId()))).map(
+//                    suspendedOrders = controllerState.ordersBy(JOrderPredicates.and(suspendFilter, o -> workflowIds2.contains(o.workflowId()))).map(
+//                            collapseCyclicOrders).distinct().mapToInt(e -> 1).sum();
+                    
+                    suspendedOrders = controllerState.ordersBy(JOrderPredicates.and(suspendFilter, o -> canAdd(WorkflowPaths.getPath(o
+                            .workflowId().path().string()), permittedFolders))).map(
                             collapseCyclicOrders).distinct().mapToInt(e -> 1).sum();
-                } else {
-                    // no folder permissions
-                    orderStates = Collections.emptyMap();
-                }
+//                } else {
+//                    // no folder permissions
+//                    orderStates = Collections.emptyMap();
+//                }
             } else {
                 orderStates = controllerState.orderStateToCount(notSuspendFilter);
                 if (orderStates.getOrDefault(Order.Fresh$.class, 0) > 0) {
