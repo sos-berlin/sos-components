@@ -40,7 +40,7 @@ public class SOSLdapSSLSocketFactory extends SocketFactory {
                 Path p = Globals.sosCockpitProperties.resolvePath(truststorePath);
 
                 if (Files.exists(p) && Files.isRegularFile(p)) {
-                    trustStore = KeyStoreUtil.readTrustStore(truststorePath, truststoreType, truststorePass);
+                    trustStore = KeyStoreUtil.readTrustStore(p, truststoreType, truststorePass);
                 }else {
                     LOGGER.debug("trustorePath: " + truststorePass  + " not found");
                 }
