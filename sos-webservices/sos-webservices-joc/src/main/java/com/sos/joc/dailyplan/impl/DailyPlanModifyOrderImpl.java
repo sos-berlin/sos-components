@@ -4,12 +4,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -663,26 +658,29 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             if (in.getScheduledFor() == null) {
                 throw new JocMissingRequiredParameterException("Modify Start Time: missing start time.");
             }
-
+            
             Date now = JobSchedulerDate.nowInUtc();
             Date scheduledFor = now; // TODO set default ???
-            Optional<Instant> scheduledForUtc = getScheduledForInUTC(in.getScheduledFor(), in.getTimeZone());
-            if (scheduledForUtc.isPresent()) { // TODO error if not present ???
-                scheduledFor = Date.from(scheduledForUtc.get());
-            }
-            if (now.getTime() > scheduledFor.getTime()) {
-//                TimeZone timeZone = in.getTimeZone() == null ? null : TimeZone.getTimeZone(in.getTimeZone());
-//                String current = SOSDate.format(now, SOSDate.DATETIME_FORMAT, timeZone);
-//                String planned = SOSDate.format(scheduledFor, SOSDate.DATETIME_FORMAT, timeZone);
-//                String add = timeZone == null ? "" : "(" + in.getTimeZone() + ")";
-//                throw new Exception(String.format("Current date time %s is younger than planned start %s %s", current, planned, add));
-                throw new JocBadRequestException("The new planned start must be in the future.");
+            
+            if (!isCurDate(in.getScheduledFor())) { // a "cur" date cannot be checked if future or not
+
+                Optional<Instant> scheduledForUtc = getScheduledForInUTC(in.getScheduledFor(), in.getTimeZone());
+                if (scheduledForUtc.isPresent()) { // TODO error if not present ???
+                    scheduledFor = Date.from(scheduledForUtc.get());
+                }
+                if (now.getTime() > scheduledFor.getTime()) {
+                    throw new JocBadRequestException("The new planned start must be in the future.");
+                }
             }
 
             // can have multiple items - of the same schedule or workflow
             result = modifyStartTimeSingle(in, mainItems, scheduledFor, auditlog, zoneId);
         }
         return result;
+    }
+    
+    private boolean isCurDate(String datetime) {
+        return datetime == null ? false : datetime.matches("cur\\s*[-+]\\s*(\\d{1,2}:\\d{1,2}(:\\d{1,2})?|\\d+)");
     }
     
     private boolean isDateWithoutTime(String datetime) {
@@ -706,7 +704,9 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         }).collect(Collectors.toList());
         
         boolean isDateWithoutTime = isDateWithoutTime(in.getScheduledFor());
+        Optional<Long> secondsFromCurDate = JobSchedulerDate.getSecondsOfRelativeCurDate(in.getScheduledFor());
         final String settingTimeZone = getSettings().getTimeZone();
+        Instant now = Instant.now();
 
         // calculate new orders id
         //String dailyPlanDate = isDateWithoutTime ? in.getScheduledFor() : SOSDate.getDateAsString(scheduledFor);
@@ -720,6 +720,12 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             if (isDateWithoutTime) {
                 // use time from old planned start
                 scheduledFor2 = Date.from(JobSchedulerDate.convertUTCDate(in.getScheduledFor(), item.getPlannedStart().toInstant(), in.getTimeZone()));
+            } else if (secondsFromCurDate.isPresent()) {
+                Instant newPlannedStart = item.getPlannedStart().toInstant().plusSeconds(secondsFromCurDate.get());
+                if (newPlannedStart.isBefore(now)) {
+                    throw new JocBadRequestException("Order (" + item.getOrderId() + "): the new planned start must be in the future.");
+                }
+                scheduledFor2 = Date.from(newPlannedStart);
             }
             
             Long expectedDuration = item.getExpectedEnd().getTime() - item.getPlannedStart().getTime();

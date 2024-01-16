@@ -333,4 +333,24 @@ public class JobSchedulerDate {
         LocalTime localTime = LocalDateTime.ofInstant(utcDateTime, utcZoneId).atOffset(ZoneOffset.UTC).atZoneSameInstant(zoneId).toLocalTime();
         return ZonedDateTime.of(LocalDateTime.of(localDate, localTime), zoneId).withZoneSameInstant(utcZoneId).toInstant();
     }
+    
+    public static Optional<Long> getSecondsOfRelativeCurDate(final String scheduledFor) {
+        Long result = null;
+        if (scheduledFor != null) {
+            String sf = scheduledFor.trim();
+            if (scheduledFor.matches("cur\\s*[-+]\\s*\\d{2}:\\d{2}(:\\d{2})?")) {
+                Matcher m = Pattern.compile("^cur\\s*([-+])\\s*(\\d{2}):(\\d{2}):(\\d{2})").matcher(sf + ":00");
+                if (m.find()) {
+                    result = Long.parseLong(m.group(1) + "1") * ((Long.parseLong(m.group(2)) * 60 * 60) + (Long.parseLong(m.group(3)) * 60) + Long
+                            .parseLong(m.group(4)));
+                }
+            } else if (sf.matches("cur\\s*[-+]\\s*\\d+")) {
+                Matcher m = Pattern.compile("^cur\\s*([-+])\\s*(\\d+)").matcher(sf);
+                if (m.find()) {
+                    result = Long.parseLong(m.group(1) + m.group(2));
+                }
+            }
+        }
+        return Optional.ofNullable(result);
+    }
 }

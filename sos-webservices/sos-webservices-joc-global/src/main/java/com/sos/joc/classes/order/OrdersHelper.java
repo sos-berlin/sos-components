@@ -934,6 +934,7 @@ public class OrdersHelper {
         final boolean allowEmptyArguments = ClusterSettings.getAllowEmptyArguments(Globals.getConfigurationGlobalsJoc());
         final boolean variablesAreModified = dailyplanModifyOrder.getVariables() != null && !dailyplanModifyOrder.getVariables().getAdditionalProperties().isEmpty();
         final boolean variablesAreRemoved = dailyplanModifyOrder.getRemoveVariables() != null;
+        final Optional<Long> secondsFromCurDate = JobSchedulerDate.getSecondsOfRelativeCurDate(dailyplanModifyOrder.getScheduledFor());
         Map<String, Requirements> cachedRequirements = new HashMap<>(1);
         
         Function<JOrder, Either<Err419, FreshOrder>> mapper = order -> {
@@ -973,6 +974,12 @@ public class OrdersHelper {
                         } else {
                             scheduledFor = Optional.of(JobSchedulerDate.convertUTCDate(dailyplanModifyOrder.getScheduledFor(), now,
                                     dailyplanModifyOrder.getTimeZone()));
+                        }
+                    } else if (secondsFromCurDate.isPresent()) {
+                        if (scheduledFor.isPresent()) {
+                            scheduledFor = Optional.of(scheduledFor.get().plusSeconds(secondsFromCurDate.get()));
+                        } else {
+                            scheduledFor = Optional.of(now.plusSeconds(secondsFromCurDate.get()));
                         }
                     } else {
                         scheduledFor = JobSchedulerDate.getScheduledForInUTC(dailyplanModifyOrder.getScheduledFor(), dailyplanModifyOrder
