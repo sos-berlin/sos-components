@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.dailyplan.db.DBLayerDailyPlannedOrders;
 import com.sos.joc.dailyplan.db.FilterDailyPlannedOrders;
@@ -33,8 +34,12 @@ public class DailyPlanUtils {
             filter.setScheduleFolders(in.getScheduleFolders());
             filter.setWorkflowFolders(in.getWorkflowFolders());
             filter.setSubmitted(submitted);
-
-            filter.setDailyPlanInterval(in.getDailyPlanDateFrom(), in.getDailyPlanDateTo(), settings.getTimeZone(), settings.getPeriodBegin());
+            
+            // TODO not planned start time is relevant
+            //filter.setDailyPlanInterval(in.getDailyPlanDateFrom(), in.getDailyPlanDateTo(), settings.getTimeZone(), settings.getPeriodBegin());
+            // instead join to submissions
+            filter.setSubmissionForDateFrom(JobSchedulerDate.getDateFrom(in.getDailyPlanDateFrom() + "T00:00:00Z", "UTC"));
+            filter.setSubmissionForDateTo(JobSchedulerDate.getDateFrom(in.getDailyPlanDateTo() + "T00:00:00Z", "UTC"));
 
             session = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
