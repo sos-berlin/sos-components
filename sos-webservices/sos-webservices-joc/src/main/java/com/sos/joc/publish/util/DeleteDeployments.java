@@ -180,7 +180,7 @@ public class DeleteDeployments {
 
         // delete configurations optimistically
         Set<DBItemInventoryConfiguration> invItemsforTrash = getInvConfigurationsForTrash(dbLayer, storeNewDepHistoryEntries(dbLayer, dbItems,
-                commitIdForDeleteFromFolder, commitIdForDeleteFileOrderSource));
+                commitIdForDeleteFromFolder, commitIdForDeleteFileOrderSource, account, auditlogId));
         deleteConfigurations(dbLayer, null, invItemsforTrash, accessToken, jocError, auditlogId, withoutFolderDeletion, withEvents);
         
 //        List<DBItemInventoryConfiguration> invConfigurationsToDelete = new ArrayList<>();
@@ -286,13 +286,13 @@ public class DeleteDeployments {
                                     List::stream).collect(Collectors.toList()));
                 // store history entries optimistically
                 invConfigurationsToDelete.addAll(getInvConfigurationsForTrash(dbLayer, storeNewDepHistoryEntries(dbLayer, 
-                        itemsFromFolderToDeletePerController.get(controllerId), commitIdForDeleteFromFolder, null)));
+                        itemsFromFolderToDeletePerController.get(controllerId), commitIdForDeleteFromFolder, null, account, auditlogId)));
             }
             if (depHistoryDBItemsToDeployDelete != null && !depHistoryDBItemsToDeployDelete.isEmpty()) {
                 itemsToDeletePerController.put(controllerId, depHistoryDBItemsToDeployDelete);
                 // store history entries optimistically
                 invConfigurationsToDelete.addAll(getInvConfigurationsForTrash(dbLayer, storeNewDepHistoryEntries(dbLayer, 
-                        itemsToDeletePerController.get(controllerId), commitIdForDeleteFromFolder, null)));
+                        itemsToDeletePerController.get(controllerId), commitIdForDeleteFromFolder, null, account, auditlogId)));
             }
         }
         // delete configurations optimistically
@@ -411,17 +411,17 @@ public class DeleteDeployments {
     }
 
     public static Set<DBItemDeploymentHistory> storeNewDepHistoryEntries(DBLayerDeploy dbLayer, Collection<DBItemDeploymentHistory> itemsToDelete,
-            String commitId) {
-        return PublishUtils.updateDeletedDepHistory(itemsToDelete, dbLayer, commitId, null, false);
+            String commitId, String account, Long auditLogId) {
+        return PublishUtils.updateDeletedDepHistory(itemsToDelete, dbLayer, commitId, null, false, account, auditLogId);
     }
 
     public static Set<DBItemDeploymentHistory> storeNewDepHistoryEntries(DBLayerDeploy dbLayer, Collection<DBItemDeploymentHistory> itemsToDelete,
-            String commitId, String commitIdforFileOrderSource) {
-        return PublishUtils.updateDeletedDepHistory(itemsToDelete, dbLayer, commitId, commitIdforFileOrderSource, false);
+            String commitId, String commitIdforFileOrderSource, String account, Long auditLogId) {
+        return PublishUtils.updateDeletedDepHistory(itemsToDelete, dbLayer, commitId, commitIdforFileOrderSource, false, account, auditLogId);
     }
 
     public static Set<DBItemDeploymentHistory> storeNewDepHistoryEntriesForRevoke(DBLayerDeploy dbLayer, List<DBItemDeploymentHistory> deletedItems,
-            String commitId, Long auditLogId) {
+            String commitId, Long auditLogId, String account) {
         Set<DBItemDeploymentHistory> deletedObjects = Collections.emptySet();
         Set<String> folders = new HashSet<>();
         List<Long> workflowInvIds = new ArrayList<>();
@@ -433,18 +433,32 @@ public class DeleteDeployments {
                     if (JocInventory.isWorkflow(item.getType())) {
                         workflowInvIds.add(item.getInventoryConfigurationId()); 
                     }
-                    item.setId(null);
-                    item.setCommitId(commitId);
-                    item.setOperation(OperationType.DELETE.value());
-                    item.setState(DeploymentState.DEPLOYED.value());
-                    item.setDeleteDate(Date.from(Instant.now()));
-                    item.setDeploymentDate(Date.from(Instant.now()));
-                    item.setAuditlogId(auditLogId);
+                    DBItemDeploymentHistory newEntry = new DBItemDeploymentHistory();
+                    newEntry.setOperation(OperationType.DELETE.value());
+                    newEntry.setState(DeploymentState.DEPLOYED.value());
+                    newEntry.setDeleteDate(Date.from(Instant.now()));
+                    newEntry.setDeploymentDate(Date.from(Instant.now()));
+                    
+                    newEntry.setAccount(account);
+                    newEntry.setAuditlogId(auditLogId);
+                    newEntry.setContent(item.getContent());
+                    newEntry.setControllerId(item.getControllerId());
+                    newEntry.setControllerInstanceId(item.getControllerInstanceId());
+                    newEntry.setFolder(item.getFolder());
+                    newEntry.setInvContent(item.getInvContent());
+                    newEntry.setInventoryConfigurationId(item.getInventoryConfigurationId());
+                    newEntry.setName(item.getName());
+                    newEntry.setPath(item.getPath());
+                    newEntry.setSignedContent(item.getSignedContent());
+                    newEntry.setTitle(item.getTitle());
+                    newEntry.setType(item.getType());
+                    newEntry.setVersion(item.getVersion());
+                    newEntry.setCommitId(commitId);
                     if (item.getSignedContent() == null || item.getSignedContent().isEmpty()) {
-                        item.setSignedContent(".");
+                        newEntry.setSignedContent(".");
                     }
-                    dbLayer.getSession().save(item);
-                    deletedObjects.add(item);
+                    dbLayer.getSession().save(newEntry);
+                    deletedObjects.add(newEntry);
                     DBItemInventoryConfiguration orig = dbLayer.getInventoryConfigurationByNameAndType(item.getName(), item.getType());
                     if (orig != null) {
                         orig.setDeployed(false);

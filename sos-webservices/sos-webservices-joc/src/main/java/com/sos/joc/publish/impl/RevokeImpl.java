@@ -112,7 +112,7 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
                 if (depHistoryDBItemsToRevoke != null && !depHistoryDBItemsToRevoke.isEmpty()) {
                 	filteredDepHistoryItemsToRevoke = depHistoryDBItemsToRevoke.stream()
                 			.filter(history -> canAdd(history.getPath(), permittedFolders)).collect(Collectors.toList());
-                	DeleteDeployments.storeNewDepHistoryEntriesForRevoke(dbLayer, filteredDepHistoryItemsToRevoke, commitIdForRevoke, dbAuditlog.getId());
+                	DeleteDeployments.storeNewDepHistoryEntriesForRevoke(dbLayer, filteredDepHistoryItemsToRevoke, commitIdForRevoke, dbAuditlog.getId(), account);
                 }
                 if (itemsPerControllerToRevokeFromFolder != null && !itemsPerControllerToRevokeFromFolder.isEmpty()) {
                     if(itemsPerControllerToRevokeFromFolder.containsKey(controllerId)) {
@@ -126,7 +126,7 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
                                 .collect(Collectors.toList());
                         itemsPerControllerToRevokeFromFolder.put(controllerId, itemsToDelete);
                         // store history entries for delete operation optimistically
-                        DeleteDeployments.storeNewDepHistoryEntriesForRevoke(dbLayer, itemsToDelete, commitIdForRevokeFromFolder, dbAuditlog.getId());
+                        DeleteDeployments.storeNewDepHistoryEntriesForRevoke(dbLayer, itemsToDelete, commitIdForRevokeFromFolder, dbAuditlog.getId(), account);
                     }
                 }
             }
