@@ -2,6 +2,7 @@ package com.sos.joc.db.dailyplan;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
@@ -339,6 +340,21 @@ public class DBItemDailyPlanOrder extends DBItem {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
         format.setTimeZone(TimeZone.getTimeZone(timeZone));
         return format.format(plannedStart);
+    }
+    
+    @Transient
+    public String getDailyPlanDate(String timeZone, String periodBegin) {
+        return getDailyPlanDate(timeZone, Instant.parse("1970-01-01T" + periodBegin + "Z").getEpochSecond());
+    }
+    
+    @Transient
+    public String getDailyPlanDate(String timeZone, long periodBeginSeconds) {
+        if (periodBeginSeconds <= 0) {
+            return getDailyPlanDate(timeZone);
+        }
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        format.setTimeZone(TimeZone.getTimeZone(timeZone));
+        return format.format(Date.from(plannedStart.toInstant().minusSeconds(periodBeginSeconds)));
     }
 
 }
