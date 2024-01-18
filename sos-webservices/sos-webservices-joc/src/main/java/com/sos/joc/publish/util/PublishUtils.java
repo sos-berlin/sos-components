@@ -947,27 +947,43 @@ public abstract class PublishUtils {
     }
 
     public static Set<DBItemDeploymentHistory> updateDeletedDepHistory(Collection<DBItemDeploymentHistory> toDelete, DBLayerDeploy dbLayer, String commitId,
-            String commitIdforFileOrderSource, boolean withTrash) {
+            String commitIdforFileOrderSource, boolean withTrash, String account, Long auditLogId) {
         Set<DBItemDeploymentHistory> deletedObjects = new HashSet<DBItemDeploymentHistory>();
         InventoryDBLayer invDBLayer = new InventoryDBLayer(dbLayer.getSession());
         try {
             if (toDelete != null && !toDelete.isEmpty()) {
                 for (DBItemDeploymentHistory delete : toDelete) {
-                    delete.setId(null);
+                    DBItemDeploymentHistory newEntry = new DBItemDeploymentHistory();
+//                    delete.setId(null);
                     if (DeployType.FILEORDERSOURCE.equals(delete.getTypeAsEnum()) && commitIdforFileOrderSource != null) {
-                        delete.setCommitId(commitIdforFileOrderSource);
+                        newEntry.setCommitId(commitIdforFileOrderSource);
                     } else {
-                        delete.setCommitId(commitId);
+                        newEntry.setCommitId(commitId);
                     }
-                    delete.setOperation(OperationType.DELETE.value());
-                    delete.setState(DeploymentState.DEPLOYED.value());
-                    delete.setDeleteDate(Date.from(Instant.now()));
-                    delete.setDeploymentDate(Date.from(Instant.now()));
+                    newEntry.setOperation(OperationType.DELETE.value());
+                    newEntry.setState(DeploymentState.DEPLOYED.value());
+                    newEntry.setDeleteDate(Date.from(Instant.now()));
+                    newEntry.setDeploymentDate(Date.from(Instant.now()));
+                    
+                    newEntry.setAccount(account);
+                    newEntry.setAuditlogId(auditLogId);
+                    newEntry.setContent(delete.getContent());
+                    newEntry.setControllerId(delete.getControllerId());
+                    newEntry.setControllerInstanceId(delete.getControllerInstanceId());
+                    newEntry.setFolder(delete.getFolder());
+                    newEntry.setInvContent(delete.getInvContent());
+                    newEntry.setInventoryConfigurationId(delete.getInventoryConfigurationId());
+                    newEntry.setName(delete.getName());
+                    newEntry.setPath(delete.getPath());
+                    newEntry.setSignedContent(delete.getSignedContent());
+                    newEntry.setTitle(delete.getTitle());
+                    newEntry.setType(delete.getType());
+                    newEntry.setVersion(delete.getVersion());
                     if (delete.getSignedContent() == null || delete.getSignedContent().isEmpty()) {
-                        delete.setSignedContent(".");
+                        newEntry.setSignedContent(".");
                     }
-                    dbLayer.getSession().save(delete);
-                    deletedObjects.add(delete);
+                    dbLayer.getSession().save(newEntry);
+                    deletedObjects.add(newEntry);
                     if (withTrash) {
                         DBItemInventoryConfiguration orig = dbLayer.getInventoryConfigurationByNameAndType(delete.getName(), delete.getType());
                         if (orig != null) {
