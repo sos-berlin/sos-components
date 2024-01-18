@@ -707,6 +707,8 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         Optional<Long> secondsFromCurDate = JobSchedulerDate.getSecondsOfRelativeCurDate(in.getScheduledFor());
         final String settingTimeZone = getSettings().getTimeZone();
         Instant now = Instant.now();
+        Optional<Long> settingPeriodBeginSecondsOpt = JobSchedulerDate.getSecondsOfRelativeCurDate("cur + " + getSettings().getPeriodBegin());
+        final long settingPeriodBeginSeconds = settingPeriodBeginSecondsOpt.isPresent() ? settingPeriodBeginSecondsOpt.get().longValue() : 0;
 
         // calculate new orders id
         //String dailyPlanDate = isDateWithoutTime ? in.getScheduledFor() : SOSDate.getDateAsString(scheduledFor);
@@ -732,7 +734,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             item.setExpectedEnd(new Date(expectedDuration + scheduledFor2.getTime()));
             item.setPlannedStart(scheduledFor2);
             
-            String dailyPlanDate = item.getDailyPlanDate(settingTimeZone);
+            String dailyPlanDate = item.getDailyPlanDate(settingTimeZone, settingPeriodBeginSeconds);
             dailyPlanDates.add(dailyPlanDate);
             
             result.getAdditionalProperties().put(item.getOrderId(), OrdersHelper.generateNewFromOldOrderId(item.getOrderId(), dailyPlanDate, zoneId));
@@ -767,9 +769,9 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                     if (submissionHistoryIds.size() == 1) {
                         item.setSubmissionHistoryId(submissionHistoryIds.values().iterator().next());
                     } else if (submissionHistoryIds.size() > 1) {
-                        Long submissionHistoryId = submissionHistoryIds.get(item.getDailyPlanDate(settingTimeZone));
+                        Long submissionHistoryId = submissionHistoryIds.get(item.getDailyPlanDate(settingTimeZone, settingPeriodBeginSeconds));
                         if (submissionHistoryId != null) {
-                            item.setSubmissionHistoryId(submissionHistoryId);
+                            item.setSubmissionHistoryId(submissionHistoryIds.values().iterator().next());
                         }
                     }
                     item.setModified(new Date());
@@ -795,7 +797,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                     submitOrdersToController(toSubmit, in.getForceJobAdmission());
                 }
 
-                EventBus.getInstance().post(new DailyPlanEvent(in.getControllerId(), in.getDailyPlanDate()));
+                dailyPlanDates.forEach(dailyPlanDate -> EventBus.getInstance().post(new DailyPlanEvent(in.getControllerId(), dailyPlanDate)));
 
                 OrdersHelper.storeAuditLogDetails(items.stream().map(item -> new AuditLogDetail(item.getWorkflowPath(), item.getOrderId(), in
                         .getControllerId())).collect(Collectors.toSet()), auditlog.getId()).thenAccept(either2 -> ProblemHelper
