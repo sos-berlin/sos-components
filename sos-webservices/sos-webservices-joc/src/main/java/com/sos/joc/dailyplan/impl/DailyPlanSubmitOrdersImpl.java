@@ -141,8 +141,12 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
                 filter.setSubmitted(false);
                 filter.setSortMode(null);
                 filter.setOrderCriteria(null);
-                filter.setDailyPlanInterval(in.getDailyPlanDateFrom(), in.getDailyPlanDateTo(), settings.getTimeZone(),
-                        settings.getPeriodBegin());
+                // TODO not planned start time is relevant
+//                filter.setDailyPlanInterval(in.getDailyPlanDateFrom(), in.getDailyPlanDateTo(), settings.getTimeZone(),
+//                        settings.getPeriodBegin());
+                // instead join to submissions
+                filter.setSubmissionForDateFrom(toUTCDate(in.getDailyPlanDateFrom()));
+                filter.setSubmissionForDateTo(toUTCDate(in.getDailyPlanDateTo()));
                 filter.setSubmissionIds(in.getSubmissionHistoryIds());
 
                 filter.setWorkflowNames(evaluator.getPermittedWorkflowNames());

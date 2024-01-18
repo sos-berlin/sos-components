@@ -119,6 +119,11 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
             if (filter == null) {
                 continue;
             }
+            
+            filter.setOrderPlannedStartFrom(null);
+            filter.setOrderPlannedStartTo(null);
+            filter.setSubmissionForDateFrom(toUTCDate(in.getDailyPlanDateFrom()));
+            filter.setSubmissionForDateTo(toUTCDate(in.getDailyPlanDateTo()));
             filter.addState(DailyPlanOrderStateText.PLANNED);
 
             SOSHibernateSession session = null;
