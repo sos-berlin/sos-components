@@ -662,7 +662,8 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             Date now = JobSchedulerDate.nowInUtc();
             Date scheduledFor = now; // TODO set default ???
             
-            if (!isCurDate(in.getScheduledFor())) { // a "cur" date cannot be checked if future or not
+            // a "cur" date cannot be checked if future or not and a date without time only roughly
+            if (!isCurDate(in.getScheduledFor())) {
 
                 Optional<Instant> scheduledForUtc = getScheduledForInUTC(in.getScheduledFor(), in.getTimeZone());
                 if (scheduledForUtc.isPresent()) { // TODO error if not present ???
@@ -672,6 +673,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                     throw new JocBadRequestException("The new planned start must be in the future.");
                 }
             }
+            
 
             // can have multiple items - of the same schedule or workflow
             result = modifyStartTimeSingle(in, mainItems, scheduledFor, auditlog, zoneId);
@@ -689,7 +691,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
     
     private Optional<Instant> getScheduledForInUTC(String datetime, String timeZone) {
         if (isDateWithoutTime(datetime)) {
-            return Optional.of(Instant.parse(datetime + "T00:00:00Z"));
+            return Optional.of(Instant.parse(datetime + "T00:00:00Z").plusSeconds(86400));
         } else {
             return JobSchedulerDate.getScheduledForInUTC(datetime, timeZone);
         }
@@ -721,7 +723,11 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             Date scheduledFor2 = scheduledFor;
             if (isDateWithoutTime) {
                 // use time from old planned start
-                scheduledFor2 = Date.from(JobSchedulerDate.convertUTCDate(in.getScheduledFor(), item.getPlannedStart().toInstant(), in.getTimeZone()));
+                Instant newPlannedStart = JobSchedulerDate.convertUTCDate(in.getScheduledFor(), item.getPlannedStart().toInstant(), in.getTimeZone());
+                if (newPlannedStart.isBefore(now)) {
+                    throw new JocBadRequestException("Order (" + item.getOrderId() + "): the new planned start must be in the future.");
+                }
+                scheduledFor2 = Date.from(newPlannedStart);
             } else if (secondsFromCurDate.isPresent()) {
                 Instant newPlannedStart = item.getPlannedStart().toInstant().plusSeconds(secondsFromCurDate.get());
                 if (newPlannedStart.isBefore(now)) {
