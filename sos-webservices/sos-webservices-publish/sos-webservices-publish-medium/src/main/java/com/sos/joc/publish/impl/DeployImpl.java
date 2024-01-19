@@ -338,7 +338,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     filteredDepHistoryItemsToDelete = depHistoryDBItemsToDeployDelete.stream()
                             .filter(history -> canAdd(history.getPath(), permittedFolders)).collect(Collectors.toList());
                     invConfigurationsToDelete.addAll(DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
-                                    DeleteDeployments.storeNewDepHistoryEntries(dbLayer, filteredDepHistoryItemsToDelete, commitIdForDelete)));
+                                    DeleteDeployments.storeNewDepHistoryEntries(dbLayer, filteredDepHistoryItemsToDelete, commitIdForDelete, account ,dbAuditlog.getId())));
                 }
                 if (itemsFromFolderToDelete != null && !itemsFromFolderToDelete.isEmpty()) {
                     // first filter for folder permissions
@@ -352,7 +352,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     itemsFromFolderToDeletePerController.put(controllerId, itemsToDelete);
                     // store history entries for delete operation optimistically
                     invConfigurationsToDelete.addAll(DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
-                                    DeleteDeployments.storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitIdForDeleteFromFolder)));
+                                    DeleteDeployments.storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitIdForDeleteFromFolder, account ,dbAuditlog.getId())));
                     //audit = new DeployAudit(deployFilter.getAuditLog(), null, commitId, "delete", account);
                 }
             }

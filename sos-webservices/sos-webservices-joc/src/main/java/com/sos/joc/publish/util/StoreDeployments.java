@@ -255,7 +255,7 @@ public class StoreDeployments {
 
             // store new history entries and update inventory for update operation optimistically
             storeNewDepHistoryEntries(signedItemsSpec, account, commitId, controllerId, accessToken, jocError, dbLayer);
-            DeleteDeployments.storeNewDepHistoryEntries(dbLayer, renamedToDelete, commitId, null);
+            DeleteDeployments.storeNewDepHistoryEntries(dbLayer, renamedToDelete, commitId, null, account, signedItemsSpec.getAuditlogId());
             
             List<DBItemInventoryCertificate> caCertificates = dbLayer.getCaCertificates();
             boolean verified = false;
