@@ -1000,8 +1000,8 @@ public abstract class PublishUtils {
     }
 
     public static Set<DBItemDeploymentHistory> updateDeletedDepHistoryAndPutToTrash(List<DBItemDeploymentHistory> toDelete, DBLayerDeploy dbLayer,
-            String commitId) {
-        return updateDeletedDepHistory(toDelete, dbLayer, commitId, null, true);
+            String commitId, String account, Long auditLogId) {
+        return updateDeletedDepHistory(toDelete, dbLayer, commitId, null, true, account, auditLogId);
     }
 
     public static void prepareNextInvConfigGeneration(final Set<DBItemInventoryConfiguration> drafts, SOSHibernateSession hibernateSession) {
