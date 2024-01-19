@@ -55,7 +55,8 @@ public class HistoryMapper {
         history.setTaskId(item.getId());
         history.setWorkflow(item.getWorkflowPath());
         history.setPosition(item.getWorkflowPosition());
-        history.setSequence(item.getPosition());
+        // TODO temporary solution implemented (use Id), TODO use Position ???
+        history.setSequence(item.getId() == null ? 0 : item.getId().intValue());
         history.setRetryCounter(item.getRetryCounter());
         history.setArguments(getVariables(item.getStartVariables()));
         return history;
