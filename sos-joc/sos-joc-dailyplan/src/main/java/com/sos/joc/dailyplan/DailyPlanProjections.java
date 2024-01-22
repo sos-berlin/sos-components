@@ -29,6 +29,7 @@ import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.calendar.FrequencyResolver;
 import com.sos.joc.classes.order.OrdersHelper;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.dailyplan.common.DailyPlanHelper;
 import com.sos.joc.dailyplan.common.DailyPlanSchedule;
 import com.sos.joc.dailyplan.common.DailyPlanScheduleWorkflow;
@@ -72,7 +73,7 @@ public class DailyPlanProjections {
     private String logPrefix;
 
     public void process(DailyPlanSettings settings) throws Exception {
-        logPrefix = String.format("[%s][projections]", settings.getStartMode());
+        logPrefix = String.format("[%s][projections]", settings.getStartMode() == null ? StartupMode.manual : settings.getStartMode());
         if (settings.getProjectionsMonthsAhead() == 0) {
             LOGGER.info(logPrefix + "[skip]getProjectionsMonthsAhead=0");
             return;
@@ -409,7 +410,7 @@ public class DailyPlanProjections {
         String caller = IDENTIFIER + "-" + dateFrom + "-" + dateTo;
 
         if (isDebugEnabled) {
-            LOGGER.debug(caller);
+            LOGGER.debug(String.format("%s%s", lp, caller));
         }
 
         Map<String, Calendar> workingCalendars = new HashMap<String, Calendar>();
@@ -442,18 +443,18 @@ public class DailyPlanProjections {
                     try {
                         calendar = getWorkingDaysCalendar(dbLayerInventory, assignedCalendar.getCalendarName());
                         if (isDebugEnabled) {
-                            LOGGER.debug(String.format("[%s][WorkingDaysCalendar=%s][db]%s", lp, assignedCalendar.getCalendarName(), SOSString
-                                    .toString(calendar)));
+                            LOGGER.debug(String.format("%s[WorkingDaysCalendar=%s][db]%s", lp, assignedCalendar.getCalendarName(), SOSString.toString(
+                                    calendar)));
                         }
                     } catch (DBMissingDataException e) {
-                        LOGGER.warn(String.format("[%s][WorkingDaysCalendar=%s][skip]not found", lp, assignedCalendar.getCalendarName()));
+                        LOGGER.warn(String.format("%s[WorkingDaysCalendar=%s][skip]not found", lp, assignedCalendar.getCalendarName()));
                         continue;
                     }
                     workingCalendars.put(calendarsKey, calendar);
                 } else {
                     if (isDebugEnabled) {
-                        LOGGER.debug(String.format("[%s][WorkingDaysCalendar=%s][cache]%s", lp, assignedCalendar.getCalendarName(), SOSString
-                                .toString(calendar)));
+                        LOGGER.debug(String.format("%s[WorkingDaysCalendar=%s][cache]%s", lp, assignedCalendar.getCalendarName(), SOSString.toString(
+                                calendar)));
                     }
                 }
 
@@ -493,15 +494,22 @@ public class DailyPlanProjections {
 
                     List<Period> pl = PeriodHelper.getPeriods(assignedCalendar.getPeriods(), nonWorkingDays.stream().collect(Collectors.toList()),
                             date, timezone);
-                    for (Period p : pl) {
-                        DatePeriodItem dp = new DatePeriodItem();
-                        dp.setSchedule(schedule.getPath());
-                        dp.setPeriod(p);
 
-                        di.getPeriods().add(dp);
+                    int orders = schedule.getOrderParameterisations() != null && schedule.getOrderParameterisations().size() > 1 ? schedule
+                            .getOrderParameterisations().size() : 1;
+                    int workflows = schedule.getWorkflowNames() != null && schedule.getWorkflowNames().size() > 1 ? schedule.getWorkflowNames().size()
+                            : 1;
+                    int total = orders * workflows;
+                    for (Period p : pl) {
+                        for (int t = 0; t < total; t++) {
+                            DatePeriodItem dp = new DatePeriodItem();
+                            dp.setSchedule(schedule.getPath());
+                            dp.setPeriod(p);
+
+                            di.getPeriods().add(dp);
+                        }
                     }
                     // PeriodResolver pr = createPeriodResolver(settings, assignedCalendar.getPeriods(), date, assignedCalendar.getTimeZone());
-
                     // pr.getStartTimes(date, dateTo, caller)
                 }
             }
@@ -526,30 +534,34 @@ public class DailyPlanProjections {
                 dps = releasedSchedules.get(key);
             } else {
                 if (SOSString.isEmpty(item.getScheduleContent())) {
-                    LOGGER.warn(String.format("[%s][skip][content is empty]%s", lp, SOSHibernate.toString(item)));
+                    LOGGER.warn(String.format("%s[skip][content is empty]%s", lp, SOSHibernate.toString(item)));
                     continue;
                 }
                 Schedule schedule = null;
                 try {
                     schedule = Globals.objectMapper.readValue(item.getScheduleContent(), Schedule.class);
                     if (schedule == null) {
-                        LOGGER.warn(String.format("[%s][skip][schedule is null]%s", lp, SOSHibernate.toString(item)));
+                        LOGGER.warn(String.format("%s[skip][schedule is null]%s", lp, SOSHibernate.toString(item)));
                         continue;
                     }
                     schedule.setPath(item.getSchedulePath());
                     if (onlyPlanOrderAutomatically && !schedule.getPlanOrderAutomatically()) {
                         if (isDebugEnabled) {
                             LOGGER.debug(String.format(
-                                    "[%s][skip][schedule=%s][onlyPlanOrderAutomatically=true]schedule.getPlanOrderAutomatically=false", lp, schedule
+                                    "%s[skip][schedule=%s][onlyPlanOrderAutomatically=true]schedule.getPlanOrderAutomatically=false", lp, schedule
                                             .getPath()));
                         }
                         continue;
                     }
 
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("%s[schedule]%s", lp, schedule.getPath()));
+                    }
+
                     schedule.setPath(item.getSchedulePath());
                     dps = new DailyPlanSchedule(schedule);
                 } catch (Throwable e) {
-                    LOGGER.error(String.format("[%s][%s][exception]%s", lp, SOSHibernate.toString(item), e.toString()), e);
+                    LOGGER.error(String.format("%s[%s][exception]%s", lp, SOSHibernate.toString(item), e.toString()), e);
                     continue;
                 }
             }
@@ -608,16 +620,24 @@ public class DailyPlanProjections {
     // schedule orders*workflows
     private Long getTotalOrders(DailyPlanSchedule s) {
         if (s == null || s.getSchedule() == null) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(String.format("[getTotalOrders][orders]total=0"));
+            }
             return Long.valueOf(0);
         }
         List<OrderParameterisation> l = s.getSchedule().getOrderParameterisations();
-        int c = l == null ? 1 : l.size();
-        if (c == 0) {
-            c = 1;
+        int o = l == null ? 1 : l.size();
+        if (o == 0) {
+            o = 1;
         }
         List<DailyPlanScheduleWorkflow> lw = s.getWorkflows();
-        c = lw == null ? c : c * lw.size();
-        return Long.valueOf(c);
+        int w = lw == null ? 0 : lw.size();
+        int t = o * w;
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(String.format("%s[getTotalOrders][schedule=%s][orders=%s,workflows=%s]total=%s", logPrefix, s.getSchedule().getPath(), o, w,
+                    t));
+        }
+        return Long.valueOf(t);
     }
 
     @SuppressWarnings("unused")
