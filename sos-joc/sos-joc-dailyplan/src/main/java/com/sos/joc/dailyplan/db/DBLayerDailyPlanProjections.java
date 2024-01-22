@@ -11,6 +11,8 @@ import java.util.Set;
 
 import org.hibernate.ScrollableResults;
 import org.hibernate.query.Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -28,6 +30,8 @@ import com.sos.joc.model.dailyplan.projections.items.year.YearsItem;
 
 public class DBLayerDailyPlanProjections extends DBLayer {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerDailyPlanProjections.class);
+
     private static final long serialVersionUID = 1L;
     public static Optional<Instant> projectionsStart = Optional.empty();
 
@@ -44,7 +48,7 @@ public class DBLayerDailyPlanProjections extends DBLayer {
         if (o == null) {
             return;
         }
-        //store monthly not yearly
+        // store monthly not yearly
         Date d = new Date();
         for (Map.Entry<String, MonthItem> monthEntry : o.getAdditionalProperties().getOrDefault(year + "", new MonthsItem()).getAdditionalProperties()
                 .entrySet()) {
@@ -52,10 +56,17 @@ public class DBLayerDailyPlanProjections extends DBLayer {
             insert(Long.valueOf(yearMonth), monthEntry.getValue(), d);
         }
     }
-    
+
     private void insert(long yearMonth, MonthItem o, Date created) throws Exception {
         if (o == null) {
             return;
+        }
+
+        if (LOGGER.isDebugEnabled()) {
+            try {
+                LOGGER.debug(String.format("[insert][%s]%s", yearMonth, Globals.objectMapper.writeValueAsString(o)));
+            } catch (Throwable e) {
+            }
         }
 
         DBItemDailyPlanProjection item = new DBItemDailyPlanProjection();
@@ -71,13 +82,20 @@ public class DBLayerDailyPlanProjections extends DBLayer {
             return;
         }
 
+        if (LOGGER.isDebugEnabled()) {
+            try {
+                LOGGER.debug(String.format("[insertMeta]%s", Globals.objectMapper.writeValueAsString(o)));
+            } catch (Throwable e) {
+            }
+        }
+
         DBItemDailyPlanProjection item = new DBItemDailyPlanProjection();
         item.setId(DBItemDailyPlanProjection.METADATEN_ID);
         item.setContent(Globals.objectMapper.writeValueAsBytes(o));
         item.setCreated(new Date());
 
         getSession().save(item);
-        
+
         projectionsStart = Optional.empty();
         EventBus.getInstance().post(new DailyPlanProjectionEvent());
     }
@@ -99,7 +117,7 @@ public class DBLayerDailyPlanProjections extends DBLayer {
         }
         return getSession().getResultList(query);
     }
-    
+
     public List<DBItemDailyPlanProjection> getProjections(Long dateFrom, Long dateTo) throws Exception {
         StringBuilder hql = new StringBuilder("from ").append(DBITEM_DPL_PROJECTIONS).append(" ");
         if (dateFrom != null || dateTo != null) {
