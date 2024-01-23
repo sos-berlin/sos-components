@@ -24,7 +24,6 @@ import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.Period;
-import com.sos.inventory.model.schedule.OrderParameterisation;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.calendar.FrequencyResolver;
@@ -379,7 +378,7 @@ public class DailyPlanProjections {
                 }
                 // overwrite orders (previously (if)set by planned)
                 // schedulerOrders * workflows
-                sii.setTotalOrders(getTotalOrders(s));
+                sii.setTotalOrders(Long.valueOf(getTotalOrders(s)));
 
                 WorkflowsItem wsi = sii.getWorkflows();
                 if (wsi == null) {
@@ -495,11 +494,7 @@ public class DailyPlanProjections {
                     List<Period> pl = PeriodHelper.getPeriods(assignedCalendar.getPeriods(), nonWorkingDays.stream().collect(Collectors.toList()),
                             date, timezone);
 
-                    int orders = schedule.getOrderParameterisations() != null && schedule.getOrderParameterisations().size() > 1 ? schedule
-                            .getOrderParameterisations().size() : 1;
-                    int workflows = schedule.getWorkflowNames() != null && schedule.getWorkflowNames().size() > 1 ? schedule.getWorkflowNames().size()
-                            : 1;
-                    int total = orders * workflows;
+                    int total = getTotalOrders(schedule);
                     for (Period p : pl) {
                         for (int t = 0; t < total; t++) {
                             DatePeriodItem dp = new DatePeriodItem();
@@ -618,26 +613,24 @@ public class DailyPlanProjections {
     }
 
     // schedule orders*workflows
-    private Long getTotalOrders(DailyPlanSchedule s) {
+    private int getTotalOrders(DailyPlanSchedule s) {
         if (s == null || s.getSchedule() == null) {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug(String.format("[getTotalOrders][orders]total=0"));
             }
-            return Long.valueOf(0);
+            return 0;
         }
-        List<OrderParameterisation> l = s.getSchedule().getOrderParameterisations();
-        int o = l == null ? 1 : l.size();
-        if (o == 0) {
-            o = 1;
-        }
-        List<DailyPlanScheduleWorkflow> lw = s.getWorkflows();
-        int w = lw == null ? 0 : lw.size();
+        return getTotalOrders(s.getSchedule());
+    }
+
+    private int getTotalOrders(Schedule s) {
+        int o = s.getOrderParameterisations() != null && s.getOrderParameterisations().size() > 1 ? s.getOrderParameterisations().size() : 1;
+        int w = s.getWorkflowNames() != null && s.getWorkflowNames().size() > 1 ? s.getWorkflowNames().size() : 1;
         int t = o * w;
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(String.format("%s[getTotalOrders][schedule=%s][orders=%s,workflows=%s]total=%s", logPrefix, s.getSchedule().getPath(), o, w,
-                    t));
+            LOGGER.debug(String.format("%s[getTotalOrders][schedule=%s][orders=%s,workflows=%s]total=%s", logPrefix, s.getPath(), o, w, t));
         }
-        return Long.valueOf(t);
+        return t;
     }
 
     @SuppressWarnings("unused")
