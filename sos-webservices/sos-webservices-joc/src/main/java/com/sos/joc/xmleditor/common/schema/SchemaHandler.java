@@ -15,7 +15,6 @@ import com.sos.joc.model.xmleditor.common.ObjectType;
 public class SchemaHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SchemaHandler.class);
-    private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
     private static final String TEMP_EXTENSION = ".sostmp";
     private String source;
     private Path target;
@@ -31,7 +30,7 @@ public class SchemaHandler {
                 throw new Exception("missing schema file name");
             }
             source = fileName.trim();
-            if (isDebugEnabled) {
+            if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug(String.format("[%s]create from local file", source));
             }
             target = JocXmlEditor.getSchema(type, source);
@@ -39,7 +38,7 @@ public class SchemaHandler {
         } else {
             source = fileUri.trim();
             if (JocXmlEditor.isHttp(source)) {// http(s)://
-                if (isDebugEnabled) {
+                if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug(String.format("[%s]copy from http(s)", source));
                 }
 
@@ -50,7 +49,7 @@ public class SchemaHandler {
                 targetTemp = JocXmlEditor.downloadSchema(type, JocXmlEditor.toURI(source), tempName);
             } else {
                 Path sourcePath = Paths.get(source);
-                if (isDebugEnabled) {
+                if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug(String.format("[%s]copy from local file", sourcePath));
                 }
                 if (sourcePath.isAbsolute()) {// C://Temp/xyz.xsd

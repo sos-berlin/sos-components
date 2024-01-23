@@ -2,11 +2,6 @@ package com.sos.joc.xmleditor.impl;
 
 import java.util.Date;
 
-import jakarta.ws.rs.Path;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.xml.SOSXMLXSDValidator;
 import com.sos.commons.xml.exception.SOSXMLXSDValidatorException;
@@ -27,11 +22,11 @@ import com.sos.joc.xmleditor.common.standard.ReadConfigurationHandler;
 import com.sos.joc.xmleditor.resource.IReleaseResource;
 import com.sos.schema.JsonValidator;
 
+import jakarta.ws.rs.Path;
+
 @Path(JocXmlEditor.APPLICATION_PATH)
 public class ReleaseResourceImpl extends ACommonResourceImpl implements IReleaseResource {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(ReleaseResourceImpl.class);
-
+  
     @Override
     public JOCDefaultResponse process(final String accessToken, final byte[] filterBytes) {
         SOSHibernateSession session = null;
@@ -51,7 +46,6 @@ public class ReleaseResourceImpl extends ACommonResourceImpl implements IRelease
             try {
                 SOSXMLXSDValidator.validate(schema, in.getConfiguration());
             } catch (SOSXMLXSDValidatorException e) {
-                LOGGER.error(String.format("[%s]%s", schema, e.toString()), e);
                 return JOCDefaultResponse.responseStatus200(ValidateResourceImpl.getError(e));
             }
 

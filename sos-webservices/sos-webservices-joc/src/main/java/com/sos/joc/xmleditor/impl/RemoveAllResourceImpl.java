@@ -26,8 +26,7 @@ import jakarta.ws.rs.Path;
 @Path(JocXmlEditor.APPLICATION_PATH)
 public class RemoveAllResourceImpl extends ACommonResourceImpl implements IRemoveAllResource {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DeleteAllResourceImpl.class);
-    private static final boolean isTraceEnabled = LOGGER.isTraceEnabled();
+    private static final Logger LOGGER = LoggerFactory.getLogger(RemoveAllResourceImpl.class);
 
     @Override
     public JOCDefaultResponse process(final String accessToken, final byte[] filterBytes) {
@@ -36,8 +35,8 @@ public class RemoveAllResourceImpl extends ACommonResourceImpl implements IRemov
             JsonValidator.validateFailFast(filterBytes, DeleteAll.class);
             RemoveAll in = Globals.objectMapper.readValue(filterBytes, RemoveAll.class);
 
-//            checkRequiredParameters(in);
-            
+            // checkRequiredParameters(in);
+
             List<ObjectType> permittedObjectTypes = in.getObjectTypes().stream().filter(o -> getPermission(accessToken, o, Role.MANAGE)).distinct()
                     .collect(Collectors.toList());
             JOCDefaultResponse response = initPermissions(null, permittedObjectTypes.size() > 0);
@@ -52,8 +51,8 @@ public class RemoveAllResourceImpl extends ACommonResourceImpl implements IRemov
                     break;
                 default:
                     throw new JocException(new JocError(JocXmlEditor.ERROR_CODE_UNSUPPORTED_OBJECT_TYPE, String.format(
-                            "[%s]unsupported object type(s) for remove all", in.getObjectTypes().stream().map(
-                                    ObjectType::value).collect(Collectors.joining(",")))));
+                            "[%s]unsupported object type(s) for remove all", in.getObjectTypes().stream().map(ObjectType::value).collect(Collectors
+                                    .joining(",")))));
                 }
             }
             return response;
@@ -65,9 +64,9 @@ public class RemoveAllResourceImpl extends ACommonResourceImpl implements IRemov
         }
     }
 
-//    private void checkRequiredParameters(final RemoveAll in) throws Exception {
-//        JocXmlEditor.checkRequiredParameter("objectTypes", in.getObjectTypes());
-//    }
+    // private void checkRequiredParameters(final RemoveAll in) throws Exception {
+    // JocXmlEditor.checkRequiredParameter("objectTypes", in.getObjectTypes());
+    // }
 
     private DeleteAllAnswer getSuccess() throws Exception {
         DeleteAllAnswer answer = new DeleteAllAnswer();
@@ -84,7 +83,7 @@ public class RemoveAllResourceImpl extends ACommonResourceImpl implements IRemov
             session.beginTransaction();
             int deleted = dbLayer.deleteAllMultiple(type);
             session.commit();
-            if (isTraceEnabled) {
+            if (LOGGER.isTraceEnabled()) {
                 LOGGER.trace(String.format("removed=%s", deleted));
             }
             return Math.abs(deleted) > 0;

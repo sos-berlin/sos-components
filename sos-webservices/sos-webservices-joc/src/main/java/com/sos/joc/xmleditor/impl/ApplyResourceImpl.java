@@ -2,11 +2,6 @@ package com.sos.joc.xmleditor.impl;
 
 import java.util.Date;
 
-import jakarta.ws.rs.Path;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXMLXSDValidator;
@@ -25,10 +20,10 @@ import com.sos.joc.xmleditor.common.Xml2JsonConverter;
 import com.sos.joc.xmleditor.resource.IApplyResource;
 import com.sos.schema.JsonValidator;
 
+import jakarta.ws.rs.Path;
+
 @Path(JocXmlEditor.APPLICATION_PATH)
 public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyResource {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(ApplyResourceImpl.class);
 
     @Override
     public JOCDefaultResponse process(final String accessToken, final byte[] filterBytes) {
@@ -107,7 +102,6 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
             try {
                 SOSXMLXSDValidator.validate(schema, in.getConfiguration());
             } catch (SOSXMLXSDValidatorException e) {
-                LOGGER.error(String.format("[%s]%s", schema, e.toString()), e);
                 return JOCDefaultResponse.responseStatus200(getError(e));
             }
         } else {
@@ -169,7 +163,7 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
     }
 
     private void checkRequiredParameters(final ApplyConfiguration in) throws Exception {
-        //made by schema JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
+        // made by schema JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
         switch (in.getObjectType()) {
         case YADE:
         case OTHER:

@@ -4,9 +4,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -25,9 +22,6 @@ import jakarta.ws.rs.Path;
 @Path(JocXmlEditor.APPLICATION_PATH)
 public class DeleteAllResourceImpl extends ACommonResourceImpl implements IDeleteAllResource {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DeleteAllResourceImpl.class);
-    private static final boolean isTraceEnabled = LOGGER.isTraceEnabled();
-
     @Override
     public JOCDefaultResponse process(final String accessToken, final byte[] filterBytes) {
         try {
@@ -35,8 +29,8 @@ public class DeleteAllResourceImpl extends ACommonResourceImpl implements IDelet
             JsonValidator.validateFailFast(filterBytes, DeleteAll.class);
             DeleteAll in = Globals.objectMapper.readValue(filterBytes, DeleteAll.class);
 
-            //checkRequiredParameters(in);
-            
+            // checkRequiredParameters(in);
+
             List<ObjectType> permittedObjectTypes = in.getObjectTypes().stream().filter(o -> getPermission(accessToken, o, Role.MANAGE)).distinct()
                     .collect(Collectors.toList());
             JOCDefaultResponse response = initPermissions(null, permittedObjectTypes.size() > 0);
@@ -51,8 +45,8 @@ public class DeleteAllResourceImpl extends ACommonResourceImpl implements IDelet
                     break;
                 default:
                     throw new JocException(new JocError(JocXmlEditor.ERROR_CODE_UNSUPPORTED_OBJECT_TYPE, String.format(
-                            "[%s]unsupported object type(s) for delete all", in.getObjectTypes().stream().map(
-                                    ObjectType::value).collect(Collectors.joining(",")))));
+                            "[%s]unsupported object type(s) for delete all", in.getObjectTypes().stream().map(ObjectType::value).collect(Collectors
+                                    .joining(",")))));
                 }
             }
             return response;
@@ -64,9 +58,9 @@ public class DeleteAllResourceImpl extends ACommonResourceImpl implements IDelet
         }
     }
 
-//    private void checkRequiredParameters(final DeleteAll in) throws JocException {
-//        made by schema: JocXmlEditor.checkRequiredParameter("objectTypes", in.getObjectTypes());
-//    }
+    // private void checkRequiredParameters(final DeleteAll in) throws JocException {
+    // made by schema: JocXmlEditor.checkRequiredParameter("objectTypes", in.getObjectTypes());
+    // }
 
     private DeleteAllAnswer getSuccess() throws Exception {
         DeleteAllAnswer answer = new DeleteAllAnswer();
@@ -83,9 +77,7 @@ public class DeleteAllResourceImpl extends ACommonResourceImpl implements IDelet
             session.beginTransaction();
             int deleted = dbLayer.deleteAllMultiple(type);
             session.commit();
-            if (isTraceEnabled) {
-                LOGGER.trace(String.format("deleted=%s", deleted));
-            }
+
             return Math.abs(deleted) > 0;
         } catch (Throwable e) {
             Globals.rollback(session);

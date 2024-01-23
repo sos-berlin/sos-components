@@ -2,11 +2,6 @@ package com.sos.joc.xmleditor.impl;
 
 import java.util.Date;
 
-import jakarta.ws.rs.Path;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.xml.SOSXMLXSDValidator;
 import com.sos.commons.xml.exception.SOSXMLXSDValidatorException;
 import com.sos.joc.Globals;
@@ -20,11 +15,10 @@ import com.sos.joc.model.xmleditor.validate.ValidateConfigurationAnswer;
 import com.sos.joc.xmleditor.resource.IValidateResource;
 import com.sos.schema.JsonValidator;
 
+import jakarta.ws.rs.Path;
+
 @Path(JocXmlEditor.APPLICATION_PATH)
 public class ValidateResourceImpl extends ACommonResourceImpl implements IValidateResource {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(ValidateResourceImpl.class);
-    private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
     @Override
     public JOCDefaultResponse process(final String accessToken, final byte[] filterBytes) {
@@ -51,12 +45,7 @@ public class ValidateResourceImpl extends ACommonResourceImpl implements IValida
                 try {
                     SOSXMLXSDValidator.validate(schema, in.getConfiguration());
                 } catch (SOSXMLXSDValidatorException e) {
-                    LOGGER.error(String.format("[%s]%s", schema, e.toString()), e);
                     return JOCDefaultResponse.responseStatus200(getError(e));
-                }
-
-                if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[%s][%s]validated", in.getObjectType().name(), schema));
                 }
                 response = JOCDefaultResponse.responseStatus200(getSuccess());
             }
@@ -70,11 +59,11 @@ public class ValidateResourceImpl extends ACommonResourceImpl implements IValida
     }
 
     private void checkRequiredParameters(final ValidateConfiguration in) throws Exception {
-        //JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
+        // JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
         if (!in.getObjectType().equals(ObjectType.NOTIFICATION)) {
             checkRequiredParameter("schemaIdentifier", in.getSchemaIdentifier());
-//        } else {
-//            checkRequiredParameter("configuration", in.getConfiguration());
+            // } else {
+            // checkRequiredParameter("configuration", in.getConfiguration());
         }
     }
 
