@@ -31,7 +31,6 @@ import com.sos.schema.JsonValidator;
 public class RemoveResourceImpl extends ACommonResourceImpl implements IRemoveResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DeleteResourceImpl.class);
-    private static final boolean isTraceEnabled = LOGGER.isTraceEnabled();
 
     @Override
     public JOCDefaultResponse process(final String accessToken, final byte[] filterBytes) {
@@ -40,7 +39,7 @@ public class RemoveResourceImpl extends ACommonResourceImpl implements IRemoveRe
             JsonValidator.validateFailFast(filterBytes, DeleteConfiguration.class);
             RemoveConfiguration in = Globals.objectMapper.readValue(filterBytes, RemoveConfiguration.class);
 
-//            checkRequiredParameters(in);
+            // checkRequiredParameters(in);
 
             JOCDefaultResponse response = initPermissions(accessToken, in.getObjectType(), Role.MANAGE);
             if (response == null) {
@@ -65,9 +64,9 @@ public class RemoveResourceImpl extends ACommonResourceImpl implements IRemoveRe
         }
     }
 
-//    private void checkRequiredParameters(final RemoveConfiguration in) throws Exception {
-//        JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
-//    }
+    // private void checkRequiredParameters(final RemoveConfiguration in) throws Exception {
+    // JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
+    // }
 
     private ReadStandardConfigurationAnswer handleStandardConfiguration(RemoveConfiguration in) throws Exception {
         DBItemXmlEditorConfiguration item = updateStandardItem(in.getObjectType().name(), JocXmlEditor.getConfigurationName(in.getObjectType()), in
@@ -103,7 +102,7 @@ public class RemoveResourceImpl extends ACommonResourceImpl implements IRemoveRe
             session.beginTransaction();
             int deleted = dbLayer.deleteMultiple(type, id);
             session.commit();
-            if (isTraceEnabled) {
+            if (LOGGER.isTraceEnabled()) {
                 LOGGER.trace(String.format("[id=%s]deleted=%s", id, deleted));
             }
             return Math.abs(deleted) > 0;
@@ -124,7 +123,7 @@ public class RemoveResourceImpl extends ACommonResourceImpl implements IRemoveRe
             session.beginTransaction();
             DBItemXmlEditorConfiguration item = dbLayer.getObject(objectType, name);
             if (item == null) {
-                if (isTraceEnabled) {
+                if (LOGGER.isTraceEnabled()) {
                     LOGGER.trace(String.format("[%s][%s]not found", objectType, name));
                 }
             } else {
@@ -140,7 +139,7 @@ public class RemoveResourceImpl extends ACommonResourceImpl implements IRemoveRe
                 item.setModified(new Date());
                 session.update(item);
 
-                if (isTraceEnabled) {
+                if (LOGGER.isTraceEnabled()) {
                     LOGGER.trace(String.format("[%s][%s]%s", objectType, name, SOSString.toString(item, Arrays.asList("configuration"))));
                 }
             }

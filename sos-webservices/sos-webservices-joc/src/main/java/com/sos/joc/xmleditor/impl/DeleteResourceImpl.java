@@ -28,7 +28,6 @@ import com.sos.schema.JsonValidator;
 public class DeleteResourceImpl extends ACommonResourceImpl implements IDeleteResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DeleteResourceImpl.class);
-    private static final boolean isTraceEnabled = LOGGER.isTraceEnabled();
 
     @Override
     public JOCDefaultResponse process(final String accessToken, final byte[] filterBytes) {
@@ -37,7 +36,7 @@ public class DeleteResourceImpl extends ACommonResourceImpl implements IDeleteRe
             JsonValidator.validateFailFast(filterBytes, DeleteConfiguration.class);
             DeleteConfiguration in = Globals.objectMapper.readValue(filterBytes, DeleteConfiguration.class);
 
-//            checkRequiredParameters(in);
+            // checkRequiredParameters(in);
 
             JOCDefaultResponse response = initPermissions(accessToken, in.getObjectType(), Role.MANAGE);
             if (response == null) {
@@ -49,7 +48,8 @@ public class DeleteResourceImpl extends ACommonResourceImpl implements IDeleteRe
                     response = JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(handleMultipleConfigurations(in)));
                     break;
                 default:
-                    response = JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(handleStandardConfiguration(in, getAccount(), 0L)));
+                    response = JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(handleStandardConfiguration(in,
+                            getAccount(), 0L)));
                     break;
                 }
             }
@@ -62,13 +62,14 @@ public class DeleteResourceImpl extends ACommonResourceImpl implements IDeleteRe
         }
     }
 
-//    private static void checkRequiredParameters(final DeleteConfiguration in) throws Exception {
-//        made by schema JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
-//    }
+    // private static void checkRequiredParameters(final DeleteConfiguration in) throws Exception {
+    // made by schema JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
+    // }
 
-    public static ReadStandardConfigurationAnswer handleStandardConfiguration(DeleteConfiguration in, String account, Long auditLogId) throws Exception {
-        DBItemXmlEditorConfiguration item = updateStandardItem(in.getObjectType().name(), JocXmlEditor.getConfigurationName(in
-                .getObjectType()), in.getRelease() == null ? false : in.getRelease().booleanValue(), account, auditLogId);
+    public static ReadStandardConfigurationAnswer handleStandardConfiguration(DeleteConfiguration in, String account, Long auditLogId)
+            throws Exception {
+        DBItemXmlEditorConfiguration item = updateStandardItem(in.getObjectType().name(), JocXmlEditor.getConfigurationName(in.getObjectType()), in
+                .getRelease() == null ? false : in.getRelease().booleanValue(), account, auditLogId);
 
         ReadConfigurationHandler handler = new ReadConfigurationHandler(in.getObjectType());
         handler.readCurrent(item, true);
@@ -95,7 +96,7 @@ public class DeleteResourceImpl extends ACommonResourceImpl implements IDeleteRe
             session.beginTransaction();
             int deleted = dbLayer.deleteMultiple(type, id);
             session.commit();
-            if (isTraceEnabled) {
+            if (LOGGER.isTraceEnabled()) {
                 LOGGER.trace(String.format("[id=%s]deleted=%s", id, deleted));
             }
             return Math.abs(deleted) > 0;
@@ -117,7 +118,7 @@ public class DeleteResourceImpl extends ACommonResourceImpl implements IDeleteRe
             session.beginTransaction();
             DBItemXmlEditorConfiguration item = dbLayer.getObject(objectType, name);
             if (item == null) {
-                if (isTraceEnabled) {
+                if (LOGGER.isTraceEnabled()) {
                     LOGGER.trace(String.format("[%s][%s]not found", objectType, name));
                 }
             } else {
@@ -134,9 +135,8 @@ public class DeleteResourceImpl extends ACommonResourceImpl implements IDeleteRe
                 item.setModified(new Date());
                 session.update(item);
 
-                if (isTraceEnabled) {
-                    LOGGER.trace(String.format("[%s][%s]%s", objectType, name, SOSString.toString(item, Arrays.asList(
-                            "configuration"))));
+                if (LOGGER.isTraceEnabled()) {
+                    LOGGER.trace(String.format("[%s][%s]%s", objectType, name, SOSString.toString(item, Arrays.asList("configuration"))));
                 }
             }
             session.commit();

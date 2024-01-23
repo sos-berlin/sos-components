@@ -1,18 +1,11 @@
 package com.sos.joc.xmleditor.impl;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.ws.rs.Path;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXMLXSDValidator;
 import com.sos.commons.xml.exception.SOSXMLXSDValidatorException;
 import com.sos.joc.Globals;
@@ -33,11 +26,10 @@ import com.sos.joc.xmleditor.common.standard.ReadConfigurationHandler;
 import com.sos.joc.xmleditor.resource.IReadResource;
 import com.sos.schema.JsonValidator;
 
+import jakarta.ws.rs.Path;
+
 @Path(JocXmlEditor.APPLICATION_PATH)
 public class ReadResourceImpl extends ACommonResourceImpl implements IReadResource {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(ReadResourceImpl.class);
-    private static final boolean isTraceEnabled = LOGGER.isTraceEnabled();
 
     @Override
     public JOCDefaultResponse process(final String accessToken, final byte[] filterBytes) {
@@ -46,7 +38,7 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
             JsonValidator.validateFailFast(filterBytes, ReadConfiguration.class);
             ReadConfiguration in = Globals.objectMapper.readValue(filterBytes, ReadConfiguration.class);
 
-//            checkRequiredParameters(in);
+            // checkRequiredParameters(in);
 
             JOCDefaultResponse response = initPermissions(accessToken, in.getObjectType(), Role.VIEW);
             if (response == null) {
@@ -70,9 +62,9 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
         }
     }
 
-//    private void checkRequiredParameters(final ReadConfiguration in) throws Exception {
-//        made by schema JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
-//    }
+    // private void checkRequiredParameters(final ReadConfiguration in) throws Exception {
+    // made by schema JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
+    // }
 
     public static ReadStandardConfigurationAnswer handleStandardConfiguration(ReadConfiguration in) throws Exception {
         DBItemXmlEditorConfiguration item = getItem(in.getObjectType().name(), JocXmlEditor.getConfigurationName(in.getObjectType()));
@@ -181,10 +173,6 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
             DBItemXmlEditorConfiguration item = dbLayer.getObject(id);
             session.commit();
 
-            if (isTraceEnabled) {
-                LOGGER.trace(String.format("[%s]%s", id, SOSString.toString(item, Arrays.asList("configurationDraft", "configurationDraftJson",
-                        "configurationDeployed", "configurationDeployedJson"))));
-            }
             return item;
         } catch (Throwable e) {
             Globals.rollback(session);
@@ -203,9 +191,7 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
             session.beginTransaction();
             DBItemXmlEditorConfiguration item = dbLayer.getObject(objectType, name);
             session.commit();
-            if (isTraceEnabled) {
-                LOGGER.trace(String.format("[%s][%s]%s", objectType, name, SOSString.toString(item, Collections.singletonList("configuration"))));
-            }
+
             return item;
         } catch (Throwable e) {
             Globals.rollback(session);
