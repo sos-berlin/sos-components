@@ -659,6 +659,17 @@ public class GitCommandUtils {
         }
     }
     
+    private static final String getOldSaveDirectory (Charset charset) {
+        try {
+            GitConfigCommandResult configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSaveDirectoryGet(
+                    GitConfigType.GLOBAL, charset);
+            return configResult.getCurrentValue();
+        } catch (SOSException e) {
+            LOGGER.warn("error occured reading old save.directory from git config:", e);
+            return "";
+        }
+    }
+    
     private static final void prepareConfigUnsetSshCommand(Charset charset) {
         try {
             GitCommand.executeGitConfigSshUnset(GitConfigType.GLOBAL, charset);
@@ -683,10 +694,49 @@ public class GitCommandUtils {
         }
     }
     
-    private static final GitConfigCommandResult prepareConfigSetSshCommand(Charset charset, Path gitKeyfilePath) {
+    private static final void prepareConfigUnsetSaveDirectory(Charset charset) {
+        try {
+            GitCommand.executeGitConfigSaveDirectoryUnset(GitConfigType.GLOBAL, charset);
+        } catch (SOSException e) {
+            LOGGER.warn("could not unset old save.directory from global git config.");
+        }
+    }
+    
+    private static final GitConfigCommandResult prepareConfigFile (Charset charset, Path gitKeyFilePath, Path localRepoPath, String username,
+            String userEmail) {
         GitConfigCommandResult configResult;
         try {
-            configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSshAdd(GitConfigType.GLOBAL, gitKeyfilePath, charset);
+            configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSshAdd(GitConfigType.FILE, gitKeyFilePath, charset);
+            if(configResult.getExitCode() != 0) {
+                throw new JocGitException(String.format("update config command exit code <%1$d> with message: %2$s", 
+                        configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
+            }
+            configResult = (GitConfigCommandResult)GitCommand.executeGitConfigUsernameAdd(GitConfigType.FILE, username, charset);
+            if(configResult.getExitCode() != 0) {
+                throw new JocGitException(String.format("update config command exit code <%1$d> with message: %2$s", 
+                        configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
+            }
+            configResult = (GitConfigCommandResult)GitCommand.executeGitConfigUserEmailAdd(GitConfigType.FILE, userEmail, charset);
+            if(configResult.getExitCode() != 0) {
+                throw new JocGitException(String.format("update config command exit code <%1$d> with message: %2$s", 
+                        configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
+            }
+            configResult = (GitConfigCommandResult)GitCommand.executeGitConfigUserEmailAdd(GitConfigType.FILE, userEmail, charset);
+            if(configResult.getExitCode() != 0) {
+                throw new JocGitException(String.format("update config command exit code <%1$d> with message: %2$s", 
+                        configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
+            }
+            return configResult;
+        } catch (SOSException e) {
+            LOGGER.warn("could not write git config file: ", e);
+            return null;
+        }
+    }
+    
+    private static final GitConfigCommandResult prepareConfigSetSshCommand(Charset charset, Path gitKeyFilePath) {
+        GitConfigCommandResult configResult;
+        try {
+            configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSshAdd(GitConfigType.GLOBAL, gitKeyFilePath, charset);
             if(configResult.getExitCode() != 0) {
                 throw new JocGitException(String.format("update config command exit code <%1$d> with message: %2$s", 
                         configResult.getExitCode(), configResult.getStdErr()), configResult.getException());

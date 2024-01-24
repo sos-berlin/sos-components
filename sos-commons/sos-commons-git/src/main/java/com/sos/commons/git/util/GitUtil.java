@@ -27,11 +27,13 @@ import com.sos.commons.util.common.SOSCommandResult;
 
 public class GitUtil {
     
-    private static final String ERR_MSG_UNSUPPORTED_OPTION_FORMAT = "Unsupported option %1$s. Options --local and --global supported only.";
+    private static final String ERR_MSG_UNSUPPORTED_OPTION_FORMAT = "Unsupported option %1$s. Options --local, --global and --file supported only.";
     private static final String ERR_MSG_VALUE_MISSING = "New value for setting core.sshCommand missing.";
     private static final String ERR_MSG_KF_PATH_MISSING = "Path of the keyfile is missing.";
     private static final String ERR_MSG_USERNAME_MISSING = "Username is missing.";
     private static final String ERR_MSG_EMAIL_MISSING = "Email is missing.";
+    private static final String ERR_MSG_CONFIG_PATH_MISSING = "Path to config file is missing.";
+    private static final String ERR_MSG_REPOSITORY_PATH_MISSING = "Path to local repostory is missing.";
 
     
     public static final GitCommandResult createGitStatusShortCommandResult(SOSCommandResult commandResult) {
@@ -339,18 +341,25 @@ public class GitUtil {
     }
 
     public static final String getConfigSshCommand(GitConfigType configType, GitConfigAction action) throws SOSException {
-        return getConfigSshCommand(configType, action, false, null, null);
+        return getConfigSshCommand(configType, action, false, null, null, null);
     }
     
     public static final String getConfigSshCommand(GitConfigType configType, GitConfigAction action, String newValue) throws SOSException {
-        return getConfigSshCommand(configType, action, true, null, newValue);
+        return getConfigSshCommand(configType, action, true, null, null, newValue);
     }
     
     public static final String getConfigSshCommand(GitConfigType configType, GitConfigAction action, Path keyFilePath) throws SOSException {
-        return getConfigSshCommand(configType, action, false, keyFilePath, null);
+        return getConfigSshCommand(configType, action, false, keyFilePath, null, null);
     }
     
-    public static final String getConfigSshCommand(GitConfigType configType, GitConfigAction action, boolean custom, Path keyFilePath, String newValue) throws SOSException {
+    public static final String getConfigSshCommand(GitConfigType configType, GitConfigAction action, boolean custom, Path keyFilePath,
+            String newValue) throws SOSException {
+        return getConfigSshCommand(configType, action, false, keyFilePath, null, null);
+        
+    }
+
+    public static final String getConfigSshCommand(GitConfigType configType, GitConfigAction action, boolean custom, Path keyFilePath,
+            Path configFilePath, String newValue) throws SOSException {
         if (custom && (newValue == null || newValue.isEmpty())) {
             throw new SOSMissingDataException(ERR_MSG_VALUE_MISSING);
         }
@@ -412,9 +421,48 @@ public class GitUtil {
                 break;
             }
             break;
+        case FILE:
+            if(configFilePath == null) {
+                throw new SOSMissingDataException(ERR_MSG_CONFIG_PATH_MISSING);
+            }
+            switch(action) {
+                case GET:
+                    if (SOSShell.IS_WINDOWS) {
+                        command = String.format(GitCommandConstants.CMD_GIT_CONFIG_GET_FILE_SSH_COMMAND_WIN, configFilePath);
+                    } else {
+                        command = String.format(GitCommandConstants.CMD_GIT_CONFIG_GET_FILE_SSH_COMMAND_LINUX, configFilePath);
+                    }
+                    break;
+                case ADD:
+                    if (SOSShell.IS_WINDOWS) {
+                        if(custom) {
+                            command = String.format(GitCommandConstants.CMD_GIT_CONFIG_ADD_FILE_SSH_COMMAND_FORMAT_WIN, configFilePath,
+                                    newValue);
+                        } else {
+                            command = String.format(GitCommandConstants.CMD_GIT_CONFIG_ADD_FILE_SSH_COMMAND_PREFORMAT_WIN, configFilePath,
+                                    keyFilePath.toString().replace('\\', '/'));
+                        }
+                    } else {
+                        if(custom) {
+                            command = String.format(GitCommandConstants.CMD_GIT_CONFIG_ADD_FILE_SSH_COMMAND_FORMAT_LINUX, configFilePath,
+                                    newValue);
+                        } else {
+                            command = String.format(GitCommandConstants.CMD_GIT_CONFIG_ADD_FILE_SSH_COMMAND_PREFORMAT_LINUX, configFilePath,
+                                    keyFilePath.toString().replace('\\', '/'));
+                        }
+                    }
+                    break;
+                case UNSET:
+                    if (SOSShell.IS_WINDOWS) {
+                        command = String.format(GitCommandConstants.CMD_GIT_CONFIG_UNSET_FILE_SSH_COMMAND_WIN, configFilePath);
+                    } else {
+                        command = String.format(GitCommandConstants.CMD_GIT_CONFIG_UNSET_GLOBAL_SSH_COMMAND, configFilePath);
+                    }
+                    break;
+            }
+            break;
         case SYSTEM:
         case WORKTREE:
-        case FILE:
         case BLOB:
             throw new SOSException(String.format(ERR_MSG_UNSUPPORTED_OPTION_FORMAT, configType.value()));
         }
@@ -422,10 +470,18 @@ public class GitUtil {
     }
 
     public static final String getConfigUsername(GitConfigType configType, GitConfigAction action) throws SOSException {
-        return getConfigUsername(configType, action, null);
+        return getConfigUsername(configType, action, null, null);
+    }
+
+    public static final String getConfigUsername(GitConfigType configType, GitConfigAction action, String username) throws SOSException {
+        return getConfigUsername(configType, action, username, null);
+    }
+
+    public static final String getConfigUsername(GitConfigType configType, GitConfigAction action, Path configFilePath) throws SOSException {
+        return getConfigUsername(configType, action, null, configFilePath);
     }
     
-    public static final String getConfigUsername(GitConfigType configType, GitConfigAction action, String username) throws SOSException {
+    public static final String getConfigUsername(GitConfigType configType, GitConfigAction action, String username, Path configFilePath) throws SOSException {
         String command = null;
         switch(configType) {
         case LOCAL:
@@ -468,9 +524,39 @@ public class GitUtil {
                 break;
             }
             break;
+        case FILE:
+            if(configFilePath == null) {
+                throw new SOSMissingDataException(ERR_MSG_CONFIG_PATH_MISSING);
+            }
+            switch(action) {
+            case GET:
+                if (SOSShell.IS_WINDOWS) {
+                    command = String.format(GitCommandConstants.CMD_GIT_CONFIG_GET_FILE_USER_NAME_WIN, configFilePath);
+                } else {
+                    command = String.format(GitCommandConstants.CMD_GIT_CONFIG_GET_FILE_USER_NAME_LINUX, configFilePath);
+                }
+                break;
+            case ADD:
+                if(username == null) {
+                    throw new SOSMissingDataException(ERR_MSG_USERNAME_MISSING);
+                }
+                if (SOSShell.IS_WINDOWS) {
+                    command = String.format(GitCommandConstants.CMD_GIT_CONFIG_ADD_FILE_USER_NAME_FORMAT_WIN, configFilePath, username);
+                } else {
+                    command = String.format(GitCommandConstants.CMD_GIT_CONFIG_ADD_FILE_USER_NAME_FORMAT_LINUX, configFilePath, username);
+                }
+                break;
+            case UNSET:
+                if (SOSShell.IS_WINDOWS) {
+                    command = String.format(GitCommandConstants.CMD_GIT_CONFIG_UNSET_GLOBAL_USER_NAME, configFilePath);
+                } else {
+                    command = String.format(GitCommandConstants.CMD_GIT_CONFIG_UNSET_GLOBAL_USER_NAME, configFilePath);
+                }
+                break;
+            }
+            break;
         case SYSTEM:
         case WORKTREE:
-        case FILE:
         case BLOB:
             throw new SOSException(String.format(ERR_MSG_UNSUPPORTED_OPTION_FORMAT, configType.value()));
         }
@@ -478,10 +564,20 @@ public class GitUtil {
     }
 
     public static final String getConfigUserEmail(GitConfigType configType, GitConfigAction action) throws SOSException {
-        return getConfigUserEmail(configType, action, null);
+        return getConfigUserEmail(configType, action, null, null);
     }
 
     public static final String getConfigUserEmail(GitConfigType configType, GitConfigAction action, String email) throws SOSException {
+        return getConfigUserEmail(configType, action, email, null);
+    }
+
+    public static final String getConfigUserEmail(GitConfigType configType, GitConfigAction action, Path configFilePath)
+            throws SOSException {
+        return getConfigUserEmail(configType, action, null, configFilePath);
+    }
+
+    public static final String getConfigUserEmail(GitConfigType configType, GitConfigAction action, String email, Path configFilePath)
+            throws SOSException {
         String command = null;
         switch(configType) {
         case LOCAL:
@@ -524,9 +620,130 @@ public class GitUtil {
                 break;
             }
             break;
+        case FILE:
+            if(configFilePath == null) {
+                throw new SOSMissingDataException(ERR_MSG_CONFIG_PATH_MISSING);
+            }
+            switch(action) {
+            case GET:
+                if (SOSShell.IS_WINDOWS) {
+                    command = String.format(GitCommandConstants.CMD_GIT_CONFIG_GET_FILE_USER_EMAIL_WIN, configFilePath);
+                } else {
+                    command = String.format(GitCommandConstants.CMD_GIT_CONFIG_GET_FILE_USER_EMAIL_LINUX, configFilePath);
+                }
+                break;
+            case ADD:
+                if(email == null) {
+                    throw new SOSMissingDataException(ERR_MSG_EMAIL_MISSING);
+                }
+                if (SOSShell.IS_WINDOWS) {
+                    command = String.format(GitCommandConstants.CMD_GIT_CONFIG_ADD_FILE_USER_EMAIL_FORMAT_WIN, configFilePath, email);
+                } else {
+                    command = String.format(GitCommandConstants.CMD_GIT_CONFIG_ADD_FILE_USER_EMAIL_FORMAT_LINUX, configFilePath, email);
+                }
+                break;
+            case UNSET:
+                if (SOSShell.IS_WINDOWS) {
+                    command = String.format(GitCommandConstants.CMD_GIT_CONFIG_UNSET_GLOBAL_USER_EMAIL, configFilePath);
+                } else {
+                    command = String.format(GitCommandConstants.CMD_GIT_CONFIG_UNSET_GLOBAL_USER_EMAIL, configFilePath);
+                }
+                break;
+            }
+            break;
         case SYSTEM:
         case WORKTREE:
+        case BLOB:
+            throw new SOSException(String.format(ERR_MSG_UNSUPPORTED_OPTION_FORMAT, configType.value()));
+        }
+        return command;
+    }
+    
+    public static final String getConfigSaveDirectory(GitConfigType configType, GitConfigAction action) throws SOSException {
+        return getConfigSaveDirectory(configType, action, null, null);
+    }
+
+    public static final String getConfigSaveDirectory(GitConfigType configType, GitConfigAction action, Path localRepository) throws SOSException {
+        return getConfigSaveDirectory(configType, action, localRepository, null);
+    }
+
+    public static final String getConfigSaveDirectory(GitConfigType configType, GitConfigAction action, Path localRepository, Path configFilePath)
+            throws SOSException {
+        String command = null;
+        switch(configType) {
+        case LOCAL:
+            switch(action) {
+            case GET:
+                command = GitCommandConstants.CMD_GIT_CONFIG_GET_LOCAL_SAVE_DIRECTORY;
+                break;
+            case ADD:
+                if(localRepository == null) {
+                    throw new SOSMissingDataException(ERR_MSG_REPOSITORY_PATH_MISSING);
+                }
+                if (SOSShell.IS_WINDOWS) {
+                    command = String.format(GitCommandConstants.CMD_GIT_CONFIG_ADD_LOCAL_SAVE_DIRECTORY_WIN, localRepository);
+                } else {
+                    command = String.format(GitCommandConstants.CMD_GIT_CONFIG_ADD_LOCAL_SAVE_DIRECTORY_LINUX, localRepository);
+                }
+                break;
+            case UNSET:
+                command = GitCommandConstants.CMD_GIT_CONFIG_UNSET_LOCAL_SAVE_DIRECTORY;
+                break;
+            }
+            break;
+        case GLOBAL:
+            switch(action) {
+            case GET:
+                command = GitCommandConstants.CMD_GIT_CONFIG_GET_GLOBAL_SAVE_DIRECTORY;
+                break;
+            case ADD:
+                if(localRepository == null) {
+                    throw new SOSMissingDataException(ERR_MSG_REPOSITORY_PATH_MISSING);
+                }
+                if (SOSShell.IS_WINDOWS) {
+                    command = String.format(GitCommandConstants.CMD_GIT_CONFIG_ADD_GLOBAL_SAVE_DIRECTORY_WIN, localRepository);
+                } else {
+                    command = String.format(GitCommandConstants.CMD_GIT_CONFIG_ADD_GLOBAL_SAVE_DIRECTORY_LINUX, localRepository);
+                }
+                break;
+            case UNSET:
+                command = GitCommandConstants.CMD_GIT_CONFIG_UNSET_GLOBAL_SAVE_DIRECTORY;
+                break;
+            }
+            break;
         case FILE:
+            if(configFilePath == null) {
+                throw new SOSMissingDataException(ERR_MSG_CONFIG_PATH_MISSING);
+            }
+            switch(action) {
+            case GET:
+                if (SOSShell.IS_WINDOWS) {
+                    command = String.format(GitCommandConstants.CMD_GIT_CONFIG_GET_FILE_SAVE_DIRECTORY_WIN, configFilePath);
+                } else {
+                    command = String.format(GitCommandConstants.CMD_GIT_CONFIG_GET_FILE_SAVE_DIRECTORY_WIN, configFilePath);
+                }
+                break;
+            case ADD:
+                if(localRepository == null) {
+                    throw new SOSMissingDataException(ERR_MSG_REPOSITORY_PATH_MISSING);
+                }
+                if (SOSShell.IS_WINDOWS) {
+                    command = String.format(GitCommandConstants.CMD_GIT_CONFIG_ADD_FILE_SAVE_DIRECTORY_WIN, configFilePath, localRepository);
+                } else {
+                    command = String.format(GitCommandConstants.CMD_GIT_CONFIG_ADD_FILE_USER_EMAIL_FORMAT_LINUX, configFilePath, localRepository);
+                }
+                break;
+            case UNSET:
+                if (SOSShell.IS_WINDOWS) {
+                    command = String.format(GitCommandConstants.CMD_GIT_CONFIG_UNSET_FILE_SAVE_DIRECTORY_WIN, configFilePath);
+                } else {
+                    command = String.format(GitCommandConstants.CMD_GIT_CONFIG_UNSET_FILE_SAVE_DIRECTORY_LINUX, configFilePath);
+                }
+                break;
+            }
+            break;
+        case SYSTEM:
+        case WORKTREE:
         case BLOB:
             throw new SOSException(String.format(ERR_MSG_UNSUPPORTED_OPTION_FORMAT, configType.value()));
         }
