@@ -525,7 +525,7 @@ public class GitCommand {
     
     public static GitCommandResult executeGitConfigUsernameGet(GitConfigType configType, Path repository, Path workingDir, Charset charset)
             throws SOSException {
-        String command = GitUtil.getConfigUsername(configType, GitConfigAction.GET, null);
+        String command = GitUtil.getConfigUsername(configType, GitConfigAction.GET);
         if (repository == null) {
             return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command, charset, TIMEMOUT_SHORT));
         } else {
@@ -547,7 +547,29 @@ public class GitCommand {
     
     public static GitCommandResult executeGitConfigUserEmailGet(GitConfigType configType, Path repository, Path workingDir, Charset charset)
             throws SOSException {
-        String command = GitUtil.getConfigUserEmail(configType, GitConfigAction.GET, null);
+        String command = GitUtil.getConfigUserEmail(configType, GitConfigAction.GET);
+        if (repository == null) {
+            return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command, charset, TIMEMOUT_SHORT));
+        } else {
+            GitCommandResult result = GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(getPathifiedCommand(
+                    repository, workingDir, command), charset, TIMEMOUT_SHORT), command);
+            switchBackToWorkingDir(workingDir, charset);
+            return result;
+        }
+    }
+    
+    public static GitCommandResult executeGitConfigSaveDirectoryGet(GitConfigType configType, Charset charset) throws SOSException {
+        return executeGitConfigSaveDirectoryGet(configType, null, null, charset);
+    }
+    
+    public static GitCommandResult executeGitConfigSaveDirectoryGet(GitConfigType configType, Path repository, Charset charset)
+            throws SOSException {
+        return executeGitConfigSaveDirectoryGet(configType, repository, null, charset);
+    }
+    
+    public static GitCommandResult executeGitConfigSaveDirectoryGet(GitConfigType configType, Path repository, Path workingDir,
+            Charset charset) throws SOSException {
+        String command = GitUtil.getConfigSaveDirectory(configType, GitConfigAction.GET);
         if (repository == null) {
             return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command, charset, TIMEMOUT_SHORT));
         } else {
@@ -589,7 +611,7 @@ public class GitCommand {
     
     public static GitCommandResult executeGitConfigUsernameUnset(GitConfigType configType, Path repository, Path workingDir, Charset charset)
             throws SOSException {
-        String command = GitUtil.getConfigUsername(configType, GitConfigAction.UNSET, null);
+        String command = GitUtil.getConfigUsername(configType, GitConfigAction.UNSET);
         if (repository == null) {
             return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command, charset, TIMEMOUT_SHORT));
         } else {
@@ -610,7 +632,28 @@ public class GitCommand {
     
     public static GitCommandResult executeGitConfigUserEmailUnset(GitConfigType configType, Path repository, Path workingDir, Charset charset)
             throws SOSException {
-        String command = GitUtil.getConfigUserEmail(configType, GitConfigAction.UNSET, null);
+        String command = GitUtil.getConfigUserEmail(configType, GitConfigAction.UNSET);
+        if (repository == null) {
+            return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command, charset, TIMEMOUT_SHORT));
+        } else {
+            GitCommandResult result = GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(getPathifiedCommand(
+                    repository, workingDir, command), charset, TIMEMOUT_SHORT), command);
+            switchBackToWorkingDir(workingDir, charset);
+            return result;
+        }
+    }
+    
+    public static GitCommandResult executeGitConfigSaveDirectoryUnset(GitConfigType configType, Charset charset) throws SOSException {
+        return executeGitConfigSaveDirectoryUnset(configType, null, null, charset);
+    }
+    
+    public static GitCommandResult executeGitConfigSaveDirectoryUnset(GitConfigType configType, Path repository, Charset charset) throws SOSException {
+        return executeGitConfigSaveDirectoryUnset(configType, repository, null, charset);
+    }
+    
+    public static GitCommandResult executeGitConfigSaveDirectoryUnset(GitConfigType configType, Path repository, Path workingDir, Charset charset)
+            throws SOSException {
+        String command = GitUtil.getConfigSaveDirectory(configType, GitConfigAction.UNSET);
         if (repository == null) {
             return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command, charset, TIMEMOUT_SHORT));
         } else {
@@ -677,6 +720,24 @@ public class GitCommand {
     public static GitCommandResult executeGitConfigUserEmailAdd(GitConfigType configType, String email, Path repository, Path workingDir,
             Charset charset) throws SOSException {
         String command = GitUtil.getConfigUserEmail(configType, GitConfigAction.ADD, email);
+        if (repository == null) {
+            return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command, charset, TIMEMOUT_SHORT));
+        } else {
+            GitCommandResult result = GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(getPathifiedCommand(
+                    repository, workingDir, command), charset, TIMEMOUT_SHORT), command);
+            switchBackToWorkingDir(workingDir, charset);
+            return result;
+        }
+    }
+    
+    public static GitCommandResult executeGitConfigSaveRepositoryAdd(GitConfigType configType, Path repository, Charset charset)
+            throws SOSException {
+        return executeGitConfigSaveRepositoryAdd(configType, repository, null, charset);
+    }
+    
+    public static GitCommandResult executeGitConfigSaveRepositoryAdd(GitConfigType configType, Path repository, Path workingDir,
+            Charset charset) throws SOSException {
+        String command = GitUtil.getConfigUserEmail(configType, GitConfigAction.ADD, repository);
         if (repository == null) {
             return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command, charset, TIMEMOUT_SHORT));
         } else {
