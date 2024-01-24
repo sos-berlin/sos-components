@@ -361,7 +361,10 @@ public class DailyPlanRunner extends TimerTask {
             JocConfigurationException, DBOpenSessionException, SOSHibernateException, ParseException, IOException, ControllerConnectionResetException,
             ControllerConnectionRefusedException, ExecutionException {
 
-        addPlannedOrderToControllerAndDB(StartupMode.manual, controllerId, dailyPlanDate, withSubmit, synchronizer);
+        //addPlannedOrderToControllerAndDB(StartupMode.manual, controllerId, dailyPlanDate, withSubmit, synchronizer);
+        
+        String operation = withSubmit ? "creating/submitting" : "creating";
+        synchronizer.storeAndSubmitPlannedOrder(StartupMode.manual, operation, controllerId, dailyPlanDate, withSubmit, durations);
     }
     
     public void addPlannedOrderToControllerAndDB(StartupMode startupMode, String controllerId, String dailyPlanDate, Boolean withSubmit,

@@ -992,6 +992,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             
             DailyPlanRunner runner = getDailyPlanRunner(mainItem.getSubmitted(), newSubmission.getSubmissionForDate());
             OrderListSynchronizer synchronizer = calculateStartTimes(in, cycle, runner, newSubmission, mainItem, variable);
+            synchronizer.substituteOrderIds();
             generatedOrders = synchronizer.getPlannedOrders();
             
             // get submitted
@@ -1102,7 +1103,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
     private DailyPlanRunner getDailyPlanRunner(boolean withSubmit, Date dailyPlanDate) {
         DailyPlanSettings settings = new DailyPlanSettings();
         settings.setUserAccount(this.getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname());
-        settings.setOverwrite(false);
+        settings.setOverwrite(true);
         settings.setSubmit(withSubmit);
         settings.setTimeZone(getSettings().getTimeZone());
         settings.setPeriodBegin(getSettings().getPeriodBegin());
