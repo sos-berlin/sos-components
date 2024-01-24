@@ -8,10 +8,6 @@ import com.sos.js7.job.OrderProcessStepOutcomeVariable;
 
 public class FileOperationsJobArguments extends JobArguments {
 
-    /* JOB Outcome - return values */
-    private OrderProcessStepOutcomeVariable<String> returnResultSet = new OrderProcessStepOutcomeVariable<String>("file_operations_result_set");
-    private OrderProcessStepOutcomeVariable<Integer> returnResultSetSize = new OrderProcessStepOutcomeVariable<Integer>("file_operations_result_set_size");
-
     /* JOB internal arguments */
     private JobArgument<Integer> flags = new JobArgument<Integer>(null, false, 0); // internal usage
 
@@ -41,13 +37,18 @@ public class FileOperationsJobArguments extends JobArguments {
     private JobArgument<Boolean> gracious = new JobArgument<Boolean>("gracious", false, false);
     private JobArgument<Boolean> overwrite = new JobArgument<Boolean>("overwrite", false, true);
     private JobArgument<Boolean> recursive = new JobArgument<Boolean>("recursive", false, false);
-    private JobArgument<Boolean> createFile = new JobArgument<Boolean>("create_file", false, false);// create_dir, create_files
+    private JobArgument<Boolean> createDir = new JobArgument<Boolean>("create_dir", false, false);
     private JobArgument<Boolean> removeDir = new JobArgument<Boolean>("remove_dir", false, false);
 
     // result set
     private JobArgument<Integer> expectedSizeOfResultSet = new JobArgument<Integer>("expected_size_of_result_set", false, 0);
     private JobArgument<String> raiseErrorIfResultSetIs = new JobArgument<String>("raise_error_if_result_set_is", false);
     private JobArgument<Path> resultSetFile = new JobArgument<Path>("result_set_file", false);
+
+    /* JOB Outcome - return values */
+    private OrderProcessStepOutcomeVariable<String> returnResultSet = new OrderProcessStepOutcomeVariable<String>("file_operations_result_set");
+    private OrderProcessStepOutcomeVariable<Integer> returnResultSetSize = new OrderProcessStepOutcomeVariable<Integer>(
+            "file_operations_result_set_size");
 
     public OrderProcessStepOutcomeVariable<String> getReturnResultSet() {
         return returnResultSet;
@@ -145,8 +146,8 @@ public class FileOperationsJobArguments extends JobArguments {
         return recursive;
     }
 
-    public JobArgument<Boolean> getCreateFile() {
-        return createFile;
+    public JobArgument<Boolean> getCreateDir() {
+        return createDir;
     }
 
     public JobArgument<Boolean> getRemoveDir() {

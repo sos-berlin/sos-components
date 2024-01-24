@@ -29,7 +29,7 @@ public abstract class AFileOperationsJob extends Job<FileOperationsJobArguments>
 
     public void setFlags(FileOperationsJobArguments args) {
         int flags = 0;
-        if (args.getCreateFile().getValue()) {
+        if (args.getCreateDir().getValue()) {
             flags |= AFileOperations.CREATE_DIR;
         }
         if (args.getGracious().getValue()) {
