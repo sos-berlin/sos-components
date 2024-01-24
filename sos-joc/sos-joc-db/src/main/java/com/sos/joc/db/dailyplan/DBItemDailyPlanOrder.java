@@ -111,6 +111,9 @@ public class DBItemDailyPlanOrder extends DBItem {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[MODIFIED]", nullable = true)
     private Date modified;
+    
+    @Transient
+    private String  dailyPlanDate;
 
     public DBItemDailyPlanOrder() {
 
@@ -309,30 +312,28 @@ public class DBItemDailyPlanOrder extends DBItem {
     }
 
     @Transient
-    public void setPeriodBegin(Date start, String periodBegin) throws ParseException {
-        DailyPlanDate date = new DailyPlanDate();
-        date.setPeriod(start, periodBegin);
-        this.setPeriodBegin(date.getSchedule());
+    public void setPeriodBegin(Date dailyPlanDate, String periodBegin) throws ParseException {
+        this.periodBegin = DailyPlanDate.getPeriodAsDate(dailyPlanDate, periodBegin);
     }
 
     @Transient
-    public void setPeriodEnd(Date start, String periodEnd) throws ParseException {
-        DailyPlanDate date = new DailyPlanDate();
-        date.setPeriod(start, periodEnd);
-        this.setPeriodEnd(date.getSchedule());
+    public void setPeriodEnd(Date dailyPlanDate, String periodEnd) throws ParseException {
+        this.periodEnd = DailyPlanDate.getPeriodAsDate(dailyPlanDate, periodEnd);
     }
 
     @Transient
     public void setRepeatInterval(String repeat) throws ParseException {
-        DailyPlanDate date = new DailyPlanDate();
-        date.setSchedule("HH:mm:ss", repeat);
-        Calendar c = Calendar.getInstance();
-        c.setTime(date.getSchedule());
-
-        if (repeat != null) {
-            Integer i = c.get(Calendar.HOUR) * 60 * 60 + c.get(Calendar.MINUTE) * 60 + c.get(Calendar.SECOND);
-            repeatInterval = Long.valueOf(i);
-        }
+        setRepeatInterval(DailyPlanDate.getRepeatInterval(repeat));
+    }
+    
+    @Transient
+    public void setDailyPlanDate(String yyyyMMdd) {
+        dailyPlanDate = yyyyMMdd;
+    }
+    
+    @Transient
+    public String getDailyPlanDate() {
+        return dailyPlanDate;
     }
 
     @Transient
@@ -344,17 +345,24 @@ public class DBItemDailyPlanOrder extends DBItem {
     
     @Transient
     public String getDailyPlanDate(String timeZone, String periodBegin) {
+        if (dailyPlanDate != null) {
+            return dailyPlanDate;
+        }
         return getDailyPlanDate(timeZone, Instant.parse("1970-01-01T" + periodBegin + "Z").getEpochSecond());
     }
     
     @Transient
     public String getDailyPlanDate(String timeZone, long periodBeginSeconds) {
+        if (dailyPlanDate != null) {
+            return dailyPlanDate;
+        }
         if (periodBeginSeconds <= 0) {
             return getDailyPlanDate(timeZone);
         }
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
         format.setTimeZone(TimeZone.getTimeZone(timeZone));
-        return format.format(Date.from(plannedStart.toInstant().minusSeconds(periodBeginSeconds)));
+        dailyPlanDate = format.format(Date.from(plannedStart.toInstant().minusSeconds(periodBeginSeconds)));
+        return dailyPlanDate;
     }
 
 }

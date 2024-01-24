@@ -1281,22 +1281,35 @@ public class OrdersHelper {
     }
 
     public static CompletableFuture<Either<Problem, Void>> removeFromJobSchedulerController(String controllerId,
-            List<DBItemDailyPlanOrder> listOfDailyPlanOrders) throws ControllerConnectionResetException, ControllerConnectionRefusedException,
+            Collection<DBItemDailyPlanOrder> listOfDailyPlanOrders) throws ControllerConnectionResetException, ControllerConnectionRefusedException,
             DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
             ExecutionException {
 
-        Set<OrderId> setOfOrderIds = listOfDailyPlanOrders.stream().parallel().filter(dbItem -> dbItem.getSubmitted()).map(dbItem -> OrderId.of(dbItem
-                .getOrderId())).collect(Collectors.toSet());
+        Set<OrderId> setOfSubmittedOrderIds = listOfDailyPlanOrders.stream().parallel().filter(DBItemDailyPlanOrder::getSubmitted).map(
+                DBItemDailyPlanOrder::getOrderId).map(OrderId::of).collect(Collectors.toSet());
 
+        if (setOfSubmittedOrderIds.isEmpty()) { // if order isn't submitted then it should work without proxy
+            return CompletableFuture.supplyAsync(() -> Either.right(null));
+        }
         JControllerProxy proxy = Proxy.of(controllerId);
-        return proxy.api().cancelOrders(proxy.currentState().ordersBy(o -> setOfOrderIds.contains(o.id())).parallel().map(JOrder::id).collect(
-                (Collectors.toSet())), JCancellationMode.freshOnly());
+        Set<OrderId> orderIds = proxy.currentState().ordersBy(o -> setOfSubmittedOrderIds.contains(o.id())).parallel().map(JOrder::id).collect(
+                (Collectors.toSet()));
+        if (orderIds.isEmpty()) {
+            return CompletableFuture.supplyAsync(() -> Either.right(null));
+        } else {
+            return proxy.api().cancelOrders(orderIds, JCancellationMode.freshOnly());
+        }
     }
 
     public static CompletableFuture<Either<Problem, Void>> removeFromJobSchedulerControllerWithHistory(String controllerId,
             List<DBItemDailyPlanWithHistory> listOfPlannedOrders) {
-        return ControllerApi.of(controllerId).cancelOrders(listOfPlannedOrders.stream().parallel().map(dbItem -> OrderId.of(dbItem.getOrderId()))
-                .collect(Collectors.toSet()), JCancellationMode.freshOnly());
+        Set<OrderId> orderIds = listOfPlannedOrders.stream().parallel().map(DBItemDailyPlanWithHistory::getOrderId).map(OrderId::of).collect(
+                Collectors.toSet());
+        if (orderIds.isEmpty()) {
+            return CompletableFuture.supplyAsync(() -> Either.right(null));
+        } else {
+            return ControllerApi.of(controllerId).cancelOrders(orderIds, JCancellationMode.freshOnly());
+        }
     }
 
     // #2021-10-12#C40382260571-00012-12-dailyplan_shedule_cyclic

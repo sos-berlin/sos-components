@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -297,6 +298,8 @@ public class DailyPlanHelper {
     }
 
     public static Date getDay(Date date, DailyPlanSettings settings, int amount) throws ParseException {
+        // TODO why settings. Maybe ....
+        // return Date.from(date.toInstant().plusSeconds(amount * TimeUnit.DAYS.toSeconds(1)));
         java.util.Calendar calendar = java.util.Calendar.getInstance(TimeZone.getTimeZone(settings.getTimeZone()));
         calendar.setTime(date);
         calendar.add(java.util.Calendar.DATE, amount);
@@ -468,7 +471,7 @@ public class DailyPlanHelper {
 
     public static String toZonedUTCDateTimeCyclicPeriod(String date, Date datePart) throws SOSInvalidDataException {
         String d = SOSDate.getDateTimeAsString(datePart);
-        return toZonedUTCDateTime(d.replaceAll(DailyPlanDate.PERIOD_DEFAULT_DATE, date));
+        return toZonedUTCDateTime(d.replace(DailyPlanDate.PERIOD_DEFAULT_DATE, date));
     }
 
     public static String toString(Period p) {

@@ -9,7 +9,6 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanVariable;
 
 public class DBLayerOrderVariables extends DBLayer {
@@ -70,7 +69,7 @@ public class DBLayerOrderVariables extends DBLayer {
         hql.append("where orderId=:oldOrderId ");
         hql.append("and controllerId=:controllerId");
 
-        Query<DBItemDailyPlanSubmission> query = getSession().createQuery(hql);
+        Query<DBItemDailyPlanVariable> query = getSession().createQuery(hql);
         query.setParameter("newOrderId", newOrderId);
         query.setParameter("oldOrderId", oldOrderId);
         query.setParameter("controllerId", controllerId);
