@@ -353,4 +353,17 @@ public class JobSchedulerDate {
         }
         return Optional.ofNullable(result);
     }
+    
+    public static Long getSecondsOfHHmmss(final String timeStr) {
+        if (timeStr != null) {
+            String sf = timeStr.trim();
+            if (timeStr.matches("\\d{1,2}:\\d{1,2}(:\\d{1,2})?")) {
+                Matcher m = Pattern.compile("^(\\d{1,2}):(\\d{1,2}):(\\d{1,2})").matcher(sf + ":00");
+                if (m.find()) {
+                    return ((Long.parseLong(m.group(1)) * 60 * 60) + (Long.parseLong(m.group(2)) * 60) + Long.parseLong(m.group(3)));
+                }
+            }
+        }
+        return null;
+    }
 }
