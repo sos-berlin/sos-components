@@ -194,6 +194,44 @@ public class OrderListSynchronizer {
         }
 
     }
+    
+    public void substituteOrderIds() {
+
+        ZoneId zoneId = ZoneId.of(settings.getTimeZone());
+
+        Map<MainCyclicOrderKey, List<PlannedOrder>> cyclics = new TreeMap<MainCyclicOrderKey, List<PlannedOrder>>();
+        for (PlannedOrder plannedOrder : plannedOrders.values()) {
+            if (plannedOrder.getPeriod().getSingleStart() != null) {
+                substituteOrderId(plannedOrder, OrdersHelper.getUniqueOrderId(zoneId), 0, 0);
+            } else {
+                MainCyclicOrderKey key = new MainCyclicOrderKey(plannedOrder);
+                cyclics.putIfAbsent(key, new ArrayList<PlannedOrder>());
+                cyclics.get(key).add(plannedOrder);
+            }
+        }
+
+        for (Entry<MainCyclicOrderKey, List<PlannedOrder>> entry : cyclics.entrySet()) {
+            int size = entry.getValue().size();
+            int nr = 1;
+            String id = OrdersHelper.getUniqueOrderId(zoneId);
+            for (PlannedOrder plannedOrder : entry.getValue()) {
+                substituteOrderId(plannedOrder, id, nr, size);
+                nr = nr + 1;
+            }
+        }
+    }
+
+    private void substituteOrderId(PlannedOrder plannedOrder, String id, Integer nr, Integer size) {
+        String orderId = plannedOrder.getFreshOrder().getId();
+        if (nr != 0) { // cyclic
+            String nrAsString = "00000" + String.valueOf(nr);
+            nrAsString = nrAsString.substring(nrAsString.length() - 5);
+
+            String sizeAsString = String.valueOf(size);
+            orderId = orderId.replaceFirst("<nr.....>", nrAsString).replaceFirst("<size>", sizeAsString);
+        }
+        plannedOrder.getFreshOrder().setId(orderId.replaceFirst("<id.*>", id));
+    }
 
     private OrderCounter executeStore(StartupMode startupMode, String operation, String controllerId, String date, Map<String, Long> durations)
             throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException, ParseException, JsonProcessingException {
@@ -386,6 +424,16 @@ public class OrderListSynchronizer {
                     LOGGER.debug(String.format("[%s][%s][%s][%s][skip]withSubmit=%s", startupMode, method, controllerId, date, withSubmit));
                 }
             }
+        }
+    }
+    
+    public void storeAndSubmitPlannedOrder(StartupMode startupMode, String operation, String controllerId, String date, Boolean withSubmit,
+            Map<String, Long> durations) throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException,
+            DBMissingDataException, DBOpenSessionException, DBInvalidDataException, ExecutionException, JsonProcessingException, ParseException {
+        
+        executeStore(startupMode, operation, controllerId, date, durations);
+        if (withSubmit == null || withSubmit) {
+            submitOrdersToController(startupMode, controllerId, date);
         }
     }
 
