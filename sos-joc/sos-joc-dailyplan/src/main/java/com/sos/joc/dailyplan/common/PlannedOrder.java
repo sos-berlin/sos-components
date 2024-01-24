@@ -2,6 +2,7 @@ package com.sos.joc.dailyplan.common;
 
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -22,6 +23,7 @@ public class PlannedOrder {
     private final boolean submitOrderToControllerWhenPlanned;
 
     private Long submissionHistoryId;
+    private Date submissionForDate;
     private Period period;
     private Long averageDuration = 0L;
     private boolean storedInDb = false;
@@ -94,7 +96,14 @@ public class PlannedOrder {
 
     public Long getSubmissionHistoryId() {
         return submissionHistoryId;
+    }
+    
+    public void setSubmissionForDate(Date val) {
+        submissionForDate = val;
+    }
 
+    public Date getSubmissionForDate() {
+        return submissionForDate;
     }
 
     public String getControllerId() {

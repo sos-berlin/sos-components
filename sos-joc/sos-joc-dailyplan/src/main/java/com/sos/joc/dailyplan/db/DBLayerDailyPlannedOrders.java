@@ -433,38 +433,39 @@ public class DBLayerDailyPlannedOrders {
                 where.append("p.submissionHistoryId in (:submissionHistoryIds) ");
             }
             and = " and ";
-        }
+        } else {
 
-        if (filter.getSubmissionForDate() != null) {
-            where.append(and);
-            where.append("p.submissionHistoryId in (");
-            where.append("select id from ").append(DBLayer.DBITEM_DPL_SUBMISSIONS);
-            where.append(" where submissionForDate=:submissionForDate");
-            where.append(")");
-            and = " and ";
-        } else if (filter.getSubmissionForDateFrom() != null) {
-            if (filter.getSubmissionForDateTo() == null) {
+            if (filter.getSubmissionForDate() != null) {
                 where.append(and);
                 where.append("p.submissionHistoryId in (");
                 where.append("select id from ").append(DBLayer.DBITEM_DPL_SUBMISSIONS);
-                where.append(" where submissionForDate >= :submissionForDateFrom");
+                where.append(" where submissionForDate=:submissionForDate");
                 where.append(")");
                 and = " and ";
-            } else if (filter.getSubmissionForDateFrom().equals(filter.getSubmissionForDateTo())) {
-                where.append(and);
-                where.append("p.submissionHistoryId in (");
-                where.append("select id from ").append(DBLayer.DBITEM_DPL_SUBMISSIONS);
-                where.append(" where submissionForDate=:submissionForDateFrom");
-                where.append(")");
-                and = " and ";
-            } else {
-                where.append(and);
-                where.append("p.submissionHistoryId in (");
-                where.append("select id from ").append(DBLayer.DBITEM_DPL_SUBMISSIONS);
-                where.append(" where submissionForDate >= :submissionForDateFrom");
-                where.append(" and submissionForDate <= :submissionForDateTo");
-                where.append(")");
-                and = " and ";
+            } else if (filter.getSubmissionForDateFrom() != null) {
+                if (filter.getSubmissionForDateTo() == null) {
+                    where.append(and);
+                    where.append("p.submissionHistoryId in (");
+                    where.append("select id from ").append(DBLayer.DBITEM_DPL_SUBMISSIONS);
+                    where.append(" where submissionForDate >= :submissionForDateFrom");
+                    where.append(")");
+                    and = " and ";
+                } else if (filter.getSubmissionForDateFrom().equals(filter.getSubmissionForDateTo())) {
+                    where.append(and);
+                    where.append("p.submissionHistoryId in (");
+                    where.append("select id from ").append(DBLayer.DBITEM_DPL_SUBMISSIONS);
+                    where.append(" where submissionForDate=:submissionForDateFrom");
+                    where.append(")");
+                    and = " and ";
+                } else {
+                    where.append(and);
+                    where.append("p.submissionHistoryId in (");
+                    where.append("select id from ").append(DBLayer.DBITEM_DPL_SUBMISSIONS);
+                    where.append(" where submissionForDate >= :submissionForDateFrom");
+                    where.append(" and submissionForDate <= :submissionForDateTo");
+                    where.append(")");
+                    and = " and ";
+                }
             }
         }
 
@@ -975,8 +976,8 @@ public class DBLayerDailyPlannedOrders {
         item.setPlannedStart(start);
         if (plannedOrder.getPeriod().getSingleStart() == null) {
             item.setStartMode(START_MODE_CYCLIC);
-            item.setPeriodBegin(start, plannedOrder.getPeriod().getBegin());
-            item.setPeriodEnd(start, plannedOrder.getPeriod().getEnd());
+            item.setPeriodBegin(plannedOrder.getSubmissionForDate(), plannedOrder.getPeriod().getBegin());
+            item.setPeriodEnd(plannedOrder.getSubmissionForDate(), plannedOrder.getPeriod().getEnd());
             item.setRepeatInterval(plannedOrder.getPeriod().getRepeat());
         } else {
             item.setStartMode(START_MODE_SINGLE);
