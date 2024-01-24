@@ -580,22 +580,6 @@
          </param>
          <param xmlns:xi="http://www.w3.org/2001/XInclude"
                 xmlns:xhtml="http://www.w3.org/1999/xhtml"
-                name="count_files"
-                DataType="java.lang.Boolean"
-                default_value="false"
-                required="false"
-                xml:base="file:/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/com.sos.jitl.jobs.file/param_count_files.xml">
-	
-	           <note>
-		             <title>Return the size of resultset</title>
-		             <p>
-			If this parameter is set true "<code>true</code>" the number of matches
-			is returned in the order parameter "<paramref>fileoperations_result_set_size</paramref>".
-		</p>
-	           </note>
-         </param>
-         <param xmlns:xi="http://www.w3.org/2001/XInclude"
-                xmlns:xhtml="http://www.w3.org/1999/xhtml"
                 xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd"
                 name="create_dir"
                 DataType="java.lang.Boolean"

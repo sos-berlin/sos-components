@@ -23,8 +23,7 @@
             <xi:include href="./includes/com.sos.jitl.jobs.file/param_min_file_size.xml" parse="xml" />
             <xi:include href="./includes/com.sos.jitl.jobs.file/param_skip_first_files.xml" parse="xml" />
             <xi:include href="./includes/com.sos.jitl.jobs.file/param_skip_last_files.xml" parse="xml" />
-            <xi:include href="./includes/com.sos.jitl.jobs.file/param_count_files.xml" parse="xml" />
-			<xi:include href="./includes/com.sos.jitl.jobs.file/steady_state/main.xml" parse="xml" />
+            <xi:include href="./includes/com.sos.jitl.jobs.file/steady_state/main.xml" parse="xml" />
             <xi:include href="./includes/com.sos.jitl.jobs.file/result_set/main.xml" parse="xml" />
         </params>
         <params id="return_parameter">
