@@ -174,4 +174,8 @@ public class GitCommandConstants {
     public static final String CMD_SHELL_REMOVE_LINUX = "rm '%1$s'";
     public static final String REGEX_CHANGES_COUNT = "\\s(\\d)\\s[a-z]{4}\\s[a-z]{1,},\\s(\\d)\\s[a-z]{1,}\\(\\+\\),\\s(\\d).*";
 
+    // default config file name
+    public static final String GIT_CONFIG_DEFAULT_FILENAME = ".gitconfig";
+    // default config backup file name
+    public static final String GIT_CONFIG_BACKUP_FILENAME = ".gitconfig.sos_backup";
 }
