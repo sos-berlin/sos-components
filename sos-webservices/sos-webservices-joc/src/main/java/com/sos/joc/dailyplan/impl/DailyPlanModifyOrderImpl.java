@@ -784,7 +784,25 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 DBItemDailyPlanOrder lastOrderOfCycle = cyclicOrdersOfItem.last();
                 Instant newPlannedStartOfLast = in.getNewPlannedStart(lastOrderOfCycle.getPlannedStart());
                 
-                if (newPlannedStartOfLast.isBefore(now)) {
+                DBItemDailyPlanOrder firstOrderOfCycle = cyclicOrdersOfItem.first();
+                Instant newPlannedStartOfFirst = in.getNewPlannedStart(firstOrderOfCycle.getPlannedStart());
+                
+                if ("never".equals(in.getScheduledFor())) {
+                    
+                    firstOrderOfCycle.setPlannedStart(Date.from(newPlannedStartOfFirst));
+                    firstOrderOfCycle.setExpectedEnd(null);
+                    firstOrderOfCycle.setIsLastOfCyclic(true);
+                    
+                    String dailyPlanDateOfFirst = firstOrderOfCycle.getDailyPlanDate(settingTimeZone, settingPeriodBeginSeconds);
+                    dailyPlanDates.add(dailyPlanDateOfFirst);
+                    
+                    String newOrderId = OrdersHelper.generateNewFromOldOrderId(firstOrderOfCycle.getOrderId(), dailyPlanDateOfFirst, zoneId);
+                    result.getAdditionalProperties().put(item.getOrderId(), newOrderId);
+                    cycleOrderIdMap.put(firstOrderOfCycle.getOrderId(), newOrderId);
+                    
+                    allItems.addAll(cyclicOrdersOfItem);
+                    
+                } else if (newPlannedStartOfLast.isBefore(now)) {
                     
                     newPlannedStartOfLast = now;
 
@@ -811,17 +829,14 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                     
                 } else {
 
-                    DBItemDailyPlanOrder firstOrderOfCycle = cyclicOrdersOfItem.first();
-                    Instant newPlannedStart = in.getNewPlannedStart(firstOrderOfCycle.getPlannedStart());
-                    
-                    String dailyPanDate = getDailyPlanDate(newPlannedStart, settingTimeZone, settingPeriodBeginSeconds);
+                    String dailyPanDateOfFirst = getDailyPlanDate(newPlannedStartOfFirst, settingTimeZone, settingPeriodBeginSeconds);
                     
                     Cycle cycle = new Cycle();
                     cycle.setRepeat(getPeriodRepeat(item.getRepeatInterval()));
                     cycle.setBegin(getPeriodBeginEnd(Date.from(in.getNewPlannedStart(item.getPeriodBegin())), in.getTimeZone()));
                     cycle.setEnd(getPeriodBeginEnd(Date.from(in.getNewPlannedStart(item.getPeriodEnd())), in.getTimeZone()));
                     
-                    modifyStartTimeCycle(in, dailyPanDate, cycle, item, cyclicOrdersOfItem, auditlog).ifPresent(newOrderId -> {
+                    modifyStartTimeCycle(in, dailyPanDateOfFirst, cycle, item, cyclicOrdersOfItem, auditlog).ifPresent(newOrderId -> {
                         result.getAdditionalProperties().put(item.getOrderId(), newOrderId);
                     });
                 }
@@ -838,8 +853,12 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 }
 
                 if (item.getExpectedEnd() != null) {
-                    long expectedDuration = item.getExpectedEnd().getTime() - item.getPlannedStart().getTime();
-                    item.setExpectedEnd(Date.from(newPlannedStart.plusMillis(expectedDuration)));
+                    if ("never".equals(in.getScheduledFor())) {
+                        item.setExpectedEnd(null);
+                    } else {
+                        long expectedDuration = item.getExpectedEnd().getTime() - item.getPlannedStart().getTime();
+                        item.setExpectedEnd(Date.from(newPlannedStart.plusMillis(expectedDuration)));
+                    }
                 }
                 item.setPlannedStart(Date.from(newPlannedStart));
 
@@ -877,7 +896,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 for (DBItemDailyPlanOrder item : allItems) {
                     
                     if (item.isCyclic()) {
-                        if (!item.isLastOfCyclic()) { // only last item of cycle will be update. All other will be deleted
+                        if (!item.isLastOfCyclic()) { // only one item of cycle will be update. All other will be deleted
                             sessionNew.delete(item);
                             continue;
                         }
