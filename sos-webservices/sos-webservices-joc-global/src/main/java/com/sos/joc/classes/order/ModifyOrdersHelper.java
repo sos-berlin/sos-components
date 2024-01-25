@@ -18,14 +18,14 @@ public class ModifyOrdersHelper extends DailyPlanModifyOrder {
     @JsonIgnore
     private Instant utcScheduledFor = null;
     @JsonIgnore
-    private boolean initialized = false;
+    private boolean isBulkOperation = false;
     
     
-    public void initScheduledFor() {
+    public void initScheduledFor(boolean isBulkOperation) {
+        this.isBulkOperation = isBulkOperation;
         isDateWithoutTime = getScheduledFor() == null ? false : getScheduledFor().matches("\\d{4}-\\d{2}-\\d{2}");
         secondsFromCurDate = JobSchedulerDate.getSecondsOfRelativeCurDate(getScheduledFor());
         setUtcScheduledFor();
-        initialized = true;
     }
     
     public Instant getNewPlannedStart(final Date oldPlannedStart) {
@@ -57,7 +57,7 @@ public class ModifyOrdersHelper extends DailyPlanModifyOrder {
 
             Optional<Instant> scheduledForUtc = getScheduledForInUTC(getScheduledFor(), getTimeZone());
             if (scheduledForUtc.isPresent()) { // not present for now
-                if (scheduledForUtc.get().isBefore(utcScheduledFor)) {
+                if (!isBulkOperation && scheduledForUtc.get().isBefore(utcScheduledFor)) {
                     throw new JocBadRequestException("The new planned start must be in the future.");
                 }
                 utcScheduledFor = scheduledForUtc.get();

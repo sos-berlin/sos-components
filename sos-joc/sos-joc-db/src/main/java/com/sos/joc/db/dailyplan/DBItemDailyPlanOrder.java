@@ -3,7 +3,6 @@ package com.sos.joc.db.dailyplan;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
@@ -114,6 +113,9 @@ public class DBItemDailyPlanOrder extends DBItem {
     
     @Transient
     private String  dailyPlanDate;
+    
+    @Transient
+    private boolean isLastOfCycle = false;
 
     public DBItemDailyPlanOrder() {
 
@@ -310,6 +312,16 @@ public class DBItemDailyPlanOrder extends DBItem {
     public boolean isCyclic() {
         return startMode != null && startMode.equals(Integer.valueOf(1));
     }
+    
+    @Transient
+    public boolean isLastOfCyclic() {
+        return isLastOfCycle;
+    }
+    
+    @Transient
+    public void setIsLastOfCyclic(boolean val) {
+        isLastOfCycle = val;;
+    }
 
     @Transient
     public void setPeriodBegin(Date dailyPlanDate, String periodBegin) throws ParseException {
@@ -337,13 +349,6 @@ public class DBItemDailyPlanOrder extends DBItem {
     }
 
     @Transient
-    public String getDailyPlanDate(String timeZone) {
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-        format.setTimeZone(TimeZone.getTimeZone(timeZone));
-        return format.format(plannedStart);
-    }
-    
-    @Transient
     public String getDailyPlanDate(String timeZone, String periodBegin) {
         if (dailyPlanDate != null) {
             return dailyPlanDate;
@@ -356,11 +361,11 @@ public class DBItemDailyPlanOrder extends DBItem {
         if (dailyPlanDate != null) {
             return dailyPlanDate;
         }
-        if (periodBeginSeconds <= 0) {
-            return getDailyPlanDate(timeZone);
-        }
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
         format.setTimeZone(TimeZone.getTimeZone(timeZone));
+        if (periodBeginSeconds <= 0) {
+            return format.format(plannedStart);
+        }
         dailyPlanDate = format.format(Date.from(plannedStart.toInstant().minusSeconds(periodBeginSeconds)));
         return dailyPlanDate;
     }
