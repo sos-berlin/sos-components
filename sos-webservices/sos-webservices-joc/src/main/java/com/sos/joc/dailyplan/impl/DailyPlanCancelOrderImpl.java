@@ -263,7 +263,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
 
                 Set<String> days = new HashSet<String>();
                 for (DBItemDailyPlanOrder item : items) {
-                    String date = item.getDailyPlanDate(settings.getTimeZone());
+                    String date = item.getDailyPlanDate(settings.getTimeZone(), settings.getPeriodBegin());
                     if (!days.contains(date)) {
                         days.add(date);
                         if (withEvent) {

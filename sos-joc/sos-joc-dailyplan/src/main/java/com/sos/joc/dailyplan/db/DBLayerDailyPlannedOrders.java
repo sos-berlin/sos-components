@@ -1163,7 +1163,7 @@ public class DBLayerDailyPlannedOrders {
                         filterCyclic.setCyclicOrdersMainParts(Collections.singletonList(cyclicMainPart));
                         filterCyclic.setStartMode(START_MODE_CYCLIC);
                     } catch (Throwable e) {
-                        filterCyclic.setDailyPlanDate(item.getDailyPlanDate(timeZone), timeZone, periodBegin);
+                        filterCyclic.setDailyPlanDate(item.getDailyPlanDate(timeZone, periodBegin), timeZone, periodBegin);
                         filterCyclic.setRepeatInterval(item.getRepeatInterval());
                         filterCyclic.setPeriodBegin(item.getPeriodBegin());
                         filterCyclic.setPeriodEnd(item.getPeriodEnd());

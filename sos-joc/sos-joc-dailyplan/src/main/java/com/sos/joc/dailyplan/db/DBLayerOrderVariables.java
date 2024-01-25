@@ -46,7 +46,7 @@ public class DBLayerOrderVariables extends DBLayer {
         if (isCyclic) {
             hql.append("like :mainPart ");
         } else {
-            hql.append("=:orderId");
+            hql.append("=:orderId ");
         }
 
         Query<DBItemDailyPlanVariable> query = getSession().createQuery(hql);
@@ -62,17 +62,30 @@ public class DBLayerOrderVariables extends DBLayer {
         }
         return null;
     }
-
-    public int update(String controllerId, String oldOrderId, String newOrderId) throws SOSHibernateException {
+    
+    public int update(String controllerId, String oldOrderId, String newOrderId, boolean isCyclic) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update  ").append(DBLayer.DBITEM_DPL_ORDER_VARIABLES).append(" ");
         hql.append("set orderId=:newOrderId ");
-        hql.append("where orderId=:oldOrderId ");
-        hql.append("and controllerId=:controllerId");
+        hql.append("where controllerId=:controllerId ");
+        hql.append("and orderId ");
+        if (isCyclic) {
+            hql.append("like :mainPart ");
+        } else {
+            hql.append("=:orderId ");
+        }
 
-        Query<DBItemDailyPlanVariable> query = getSession().createQuery(hql);
+        Query<Integer> query = getSession().createQuery(hql);
         query.setParameter("newOrderId", newOrderId);
-        query.setParameter("oldOrderId", oldOrderId);
+        if (isCyclic) {
+            query.setParameter("mainPart", OrdersHelper.getCyclicOrderIdMainPart(oldOrderId) + "%");
+        } else {
+            query.setParameter("orderId", oldOrderId);
+        }
         query.setParameter("controllerId", controllerId);
         return getSession().executeUpdate(query);
+    }
+
+    public int update(String controllerId, String oldOrderId, String newOrderId) throws SOSHibernateException {
+        return update(controllerId, oldOrderId, newOrderId, false);
     }
 }

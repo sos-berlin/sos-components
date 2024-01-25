@@ -168,7 +168,7 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
                 Set<String> days = new HashSet<String>();
                 for (DBItemDailyPlanOrder item : items) {
                     if (withEvent) {
-                        String date = item.getDailyPlanDate(settings.getTimeZone());
+                        String date = item.getDailyPlanDate(settings.getTimeZone(), settings.getPeriodBegin());
                         if (!days.contains(date)) {
                             days.add(date);
                             EventBus.getInstance().post(new DailyPlanEvent(item.getControllerId(), date));
