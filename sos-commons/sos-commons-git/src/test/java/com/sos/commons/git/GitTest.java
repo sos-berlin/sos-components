@@ -559,6 +559,16 @@ public class GitTest {
         }
     }
     
+    @Test
+    public void testSystemGetSpecificProperties() {
+        // user home directory
+        LOGGER.trace(System.getProperty("user.home"));
+        // user work dir
+        LOGGER.trace(System.getProperty("user.dir"));
+        // java tmp dir
+        LOGGER.trace(System.getProperty("java.io.tmpdir"));
+    }
+    
     private static void deleteFolderRecursively(Path path) throws IOException {
         Files.walk(path).sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
     }

@@ -352,6 +352,11 @@ public class GitUtil {
         return getConfigSshCommand(configType, action, false, keyFilePath, null, null);
     }
     
+    public static final String getConfigSshCommand(GitConfigType configType, GitConfigAction action, Path keyFilePath, Path configFilePath)
+            throws SOSException {
+        return getConfigSshCommand(configType, action, false, keyFilePath, configFilePath, null);
+    }
+    
     public static final String getConfigSshCommand(GitConfigType configType, GitConfigAction action, boolean custom, Path keyFilePath,
             String newValue) throws SOSException {
         return getConfigSshCommand(configType, action, false, keyFilePath, null, null);
@@ -481,7 +486,8 @@ public class GitUtil {
         return getConfigUsername(configType, action, null, configFilePath);
     }
     
-    public static final String getConfigUsername(GitConfigType configType, GitConfigAction action, String username, Path configFilePath) throws SOSException {
+    public static final String getConfigUsername(GitConfigType configType, GitConfigAction action, String username, Path configFilePath)
+            throws SOSException {
         String command = null;
         switch(configType) {
         case LOCAL:
@@ -663,12 +669,13 @@ public class GitUtil {
         return getConfigSaveDirectory(configType, action, null, null);
     }
 
-    public static final String getConfigSaveDirectory(GitConfigType configType, GitConfigAction action, Path localRepository) throws SOSException {
+    public static final String getConfigSaveDirectory(GitConfigType configType, GitConfigAction action, Path localRepository)
+            throws SOSException {
         return getConfigSaveDirectory(configType, action, localRepository, null);
     }
 
-    public static final String getConfigSaveDirectory(GitConfigType configType, GitConfigAction action, Path localRepository, Path configFilePath)
-            throws SOSException {
+    public static final String getConfigSaveDirectory(GitConfigType configType, GitConfigAction action, Path localRepository,
+            Path configFilePath) throws SOSException {
         String command = null;
         switch(configType) {
         case LOCAL:
@@ -681,9 +688,9 @@ public class GitUtil {
                     throw new SOSMissingDataException(ERR_MSG_REPOSITORY_PATH_MISSING);
                 }
                 if (SOSShell.IS_WINDOWS) {
-                    command = String.format(GitCommandConstants.CMD_GIT_CONFIG_ADD_LOCAL_SAVE_DIRECTORY_WIN, localRepository);
+                    command = String.format(GitCommandConstants.CMD_GIT_CONFIG_ADD_LOCAL_SAVE_DIRECTORY_WIN, localRepository.toString().replace('\\', '/'));
                 } else {
-                    command = String.format(GitCommandConstants.CMD_GIT_CONFIG_ADD_LOCAL_SAVE_DIRECTORY_LINUX, localRepository);
+                    command = String.format(GitCommandConstants.CMD_GIT_CONFIG_ADD_LOCAL_SAVE_DIRECTORY_LINUX, localRepository.toString().replace('\\', '/'));
                 }
                 break;
             case UNSET:
@@ -728,9 +735,9 @@ public class GitUtil {
                     throw new SOSMissingDataException(ERR_MSG_REPOSITORY_PATH_MISSING);
                 }
                 if (SOSShell.IS_WINDOWS) {
-                    command = String.format(GitCommandConstants.CMD_GIT_CONFIG_ADD_FILE_SAVE_DIRECTORY_WIN, configFilePath, localRepository);
+                    command = String.format(GitCommandConstants.CMD_GIT_CONFIG_ADD_FILE_SAVE_DIRECTORY_WIN, configFilePath, localRepository.toString().replace('\\', '/'));
                 } else {
-                    command = String.format(GitCommandConstants.CMD_GIT_CONFIG_ADD_FILE_USER_EMAIL_FORMAT_LINUX, configFilePath, localRepository);
+                    command = String.format(GitCommandConstants.CMD_GIT_CONFIG_ADD_FILE_USER_EMAIL_FORMAT_LINUX, configFilePath, localRepository.toString().replace('\\', '/'));
                 }
                 break;
             case UNSET:

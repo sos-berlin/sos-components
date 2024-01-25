@@ -665,17 +665,31 @@ public class GitCommand {
     }
     
     public static GitCommandResult executeGitConfigSshAdd(GitConfigType configType, Path keyFilePath, Charset charset) throws SOSException {
-        return executeGitConfigSshAdd(configType, keyFilePath, null, null, charset);
+        return executeGitConfigSshAdd(configType, keyFilePath, null, null, null, charset);
+    }
+    
+    public static GitCommandResult executeGitConfigSshAdd(GitConfigType configType, Charset charset, Path repository) throws SOSException {
+        return executeGitConfigSshAdd(configType, null, repository, null, null, charset);
     }
     
     public static GitCommandResult executeGitConfigSshAdd(GitConfigType configType, Path keyFilePath, Path repository, Charset charset)
             throws SOSException {
-        return executeGitConfigSshAdd(configType, keyFilePath, repository, null, charset);
+        return executeGitConfigSshAdd(configType, keyFilePath, repository, null, null, charset);
+    }
+    
+    public static GitCommandResult executeGitConfigSshAdd(GitConfigType configType, Path keyFilePath, Charset charset, Path configFilePath)
+            throws SOSException {
+        return executeGitConfigSshAdd(configType, keyFilePath, null, null, configFilePath, charset);
+    }
+    
+    public static GitCommandResult executeGitConfigSshAdd(GitConfigType configType, Path keyFilePath, Path repository, Path configFilePath,
+            Charset charset) throws SOSException {
+        return executeGitConfigSshAdd(configType, keyFilePath, repository, null, configFilePath, charset);
     }
     
     public static GitCommandResult executeGitConfigSshAdd(GitConfigType configType, Path keyFilePath, Path repository, Path workingDir,
-            Charset charset) throws SOSException {
-        String command = GitUtil.getConfigSshCommand(configType, GitConfigAction.ADD, keyFilePath);
+            Path configFilePath, Charset charset) throws SOSException {
+        String command = GitUtil.getConfigSshCommand(configType, GitConfigAction.ADD, keyFilePath, configFilePath);
         if (repository == null) {
             return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command, charset, TIMEMOUT_SHORT));
         } else {
@@ -687,17 +701,27 @@ public class GitCommand {
     }
     
     public static GitCommandResult executeGitConfigUsernameAdd(GitConfigType configType, String username, Charset charset) throws SOSException {
-        return executeGitConfigUsernameAdd(configType, username, null, null, charset);
+        return executeGitConfigUsernameAdd(configType, username, null, null, null, charset);
     }
     
     public static GitCommandResult executeGitConfigUsernameAdd(GitConfigType configType, String username, Path repository, Charset charset)
             throws SOSException {
-        return executeGitConfigUsernameAdd(configType, username, repository, null, charset);
+        return executeGitConfigUsernameAdd(configType, username, repository, null, null, charset);
+    }
+    
+    public static GitCommandResult executeGitConfigUsernameAdd(GitConfigType configType, String username, Charset charset, Path gitConfigPath)
+            throws SOSException {
+        return executeGitConfigUsernameAdd(configType, username, null, null, gitConfigPath, charset);
+    }
+    
+    public static GitCommandResult executeGitConfigUsernameAdd(GitConfigType configType, String username, Path repository, Path gitConfigPath,
+            Charset charset) throws SOSException {
+        return executeGitConfigUsernameAdd(configType, username, repository, null, gitConfigPath, charset);
     }
     
     public static GitCommandResult executeGitConfigUsernameAdd(GitConfigType configType, String username, Path repository, Path workingDir,
-            Charset charset) throws SOSException {
-        String command = GitUtil.getConfigUsername(configType, GitConfigAction.ADD, username);
+            Path gitConfigPath, Charset charset) throws SOSException {
+        String command = GitUtil.getConfigUsername(configType, GitConfigAction.ADD, username, gitConfigPath);
         if (repository == null) {
             return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command, charset, TIMEMOUT_SHORT));
         } else {
@@ -709,17 +733,22 @@ public class GitCommand {
     }
     
     public static GitCommandResult executeGitConfigUserEmailAdd(GitConfigType configType, String email, Charset charset) throws SOSException {
-        return executeGitConfigUserEmailAdd(configType, email, null, null, charset);
+        return executeGitConfigUserEmailAdd(configType, email, null, null, null, charset);
+    }
+    
+    public static GitCommandResult executeGitConfigUserEmailAdd(GitConfigType configType, String email, Charset charset, Path gitConfigPath)
+            throws SOSException {
+        return executeGitConfigUserEmailAdd(configType, email, null, null, gitConfigPath, charset);
     }
     
     public static GitCommandResult executeGitConfigUserEmailAdd(GitConfigType configType, String email, Path repository, Charset charset)
             throws SOSException {
-        return executeGitConfigUserEmailAdd(configType, email, repository, null, charset);
+        return executeGitConfigUserEmailAdd(configType, email, repository, null, null, charset);
     }
     
     public static GitCommandResult executeGitConfigUserEmailAdd(GitConfigType configType, String email, Path repository, Path workingDir,
-            Charset charset) throws SOSException {
-        String command = GitUtil.getConfigUserEmail(configType, GitConfigAction.ADD, email);
+            Path gitConfigPath, Charset charset) throws SOSException {
+        String command = GitUtil.getConfigUserEmail(configType, GitConfigAction.ADD, email, gitConfigPath);
         if (repository == null) {
             return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command, charset, TIMEMOUT_SHORT));
         } else {
@@ -730,15 +759,25 @@ public class GitCommand {
         }
     }
     
-    public static GitCommandResult executeGitConfigSaveRepositoryAdd(GitConfigType configType, Path repository, Charset charset)
+    public static GitCommandResult executeGitConfigSaveDirectoryAdd(GitConfigType configType, Path repository, Charset charset)
             throws SOSException {
-        return executeGitConfigSaveRepositoryAdd(configType, repository, null, charset);
+        return executeGitConfigSaveDirectoryAdd(configType, repository, null, null, charset);
     }
     
-    public static GitCommandResult executeGitConfigSaveRepositoryAdd(GitConfigType configType, Path repository, Path workingDir,
+    public static GitCommandResult executeGitConfigSaveDirectoryAdd(GitConfigType configType, Path repository, Path workingDir,
             Charset charset) throws SOSException {
-        String command = GitUtil.getConfigUserEmail(configType, GitConfigAction.ADD, repository);
-        if (repository == null) {
+        return executeGitConfigSaveDirectoryAdd(configType, repository, workingDir, null, charset);
+    }
+    
+    public static GitCommandResult executeGitConfigSaveDirectoryAdd(GitConfigType configType, Path repository, Charset charset,
+            Path gitConfigPath) throws SOSException {
+        return executeGitConfigSaveDirectoryAdd(configType, repository, null, gitConfigPath, charset);
+    }
+    
+    public static GitCommandResult executeGitConfigSaveDirectoryAdd(GitConfigType configType, Path repository, Path workingDir,
+            Path gitConfigPath, Charset charset) throws SOSException {
+        String command = GitUtil.getConfigSaveDirectory(configType, GitConfigAction.ADD, repository, gitConfigPath);
+        if (workingDir == null) {
             return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command, charset, TIMEMOUT_SHORT));
         } else {
             GitCommandResult result = GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(getPathifiedCommand(

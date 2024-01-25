@@ -1,10 +1,14 @@
 package com.sos.joc.publish.repository.git.commands;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
@@ -29,6 +33,7 @@ import com.sos.commons.git.results.GitLsRemoteCommandResult;
 import com.sos.commons.git.results.GitPullCommandResult;
 import com.sos.commons.git.results.GitPushCommandResult;
 import com.sos.commons.git.results.GitRemoteCommandResult;
+import com.sos.commons.git.util.GitCommandConstants;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
@@ -245,11 +250,180 @@ public class GitCommandUtils {
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
         }
-        
     }
     
-    public static final GitAddCommandResult addAllChanges (CommonFilter filter, String account, JocConfigurationDbLayer dbLayer, Charset charset)
+    public static final GitCloneCommandResult cloneGitRepositoryWithConfigFile (CloneFilter filter, String account, SOSHibernateSession session,
+            Charset charset) throws JsonMappingException, JsonProcessingException, SOSException {
+        JocConfigurationDbLayer dbLayer = new JocConfigurationDbLayer(session);
+        String hostPort = "";
+        String path = "";
+        String protocol = "";
+        if (isSshUri(filter.getRemoteUrl())) {
+            Pattern sshGitUriPattern = Pattern.compile(REGEX_GIT_URI_SSH);
+            Matcher sshGitUriMatcher = sshGitUriPattern.matcher(filter.getRemoteUrl());
+            if(sshGitUriMatcher.matches()) {
+                protocol = DEFAULT_PROTOCOL;
+                hostPort = sshGitUriMatcher.group(1);
+                path = sshGitUriMatcher.group(2);
+            }
+        } else {
+            URI remoteUri = null;
+            try {
+                remoteUri = new URI(filter.getRemoteUrl());
+                hostPort = remoteUri.getHost();
+            } catch (URISyntaxException e) {
+                throw new JocBadRequestException(String.format("%1$s is not a Git URL.", filter.getRemoteUrl()), e);
+            }
+            
+            Pattern protocolUriPattern = Pattern.compile(REGEX_GIT_URI_PROTOCOL);
+            Matcher protocolUriMatcher = protocolUriPattern.matcher(filter.getRemoteUrl());
+            if(protocolUriMatcher.matches()) {
+                protocol = protocolUriMatcher.group(1);
+                if (!HTTP_PROTOCOL.equals(protocol) && !HTTPS_PROTOCOL.equals(protocol)) {
+                    throw new JocBadRequestException(String.format("%1$s is not a Git URL.", filter.getRemoteUrl()));
+                }
+                String hostPortWithCreds = "";
+                if(hostPort == null || hostPort.isEmpty()) {
+                    Pattern hostUriPattern = Pattern.compile(REGEX_GIT_URI_HOST);
+                    Matcher hostUriMatcher = hostUriPattern.matcher(filter.getRemoteUrl());
+                    if(hostUriMatcher.matches()) {
+                        hostPortWithCreds = hostUriMatcher.group(1);
+                        if (hostPortWithCreds.contains("@")) {
+                            hostPort = hostPortWithCreds.split("@")[1];
+                        } else {
+                            hostPort = hostPortWithCreds;
+                        }
+                    }
+                }
+                if(!hostPort.contains(":") && remoteUri.getPort() != -1) {
+                    hostPort += ":" + remoteUri.getPort();
+                }
+                if(remoteUri.getPath() != null && !remoteUri.getPath().isEmpty()) {
+                    path = remoteUri.getPath();
+                } else if (!hostPortWithCreds.isEmpty()) {
+                    path = filter.getRemoteUrl().replace(protocol + "://" + hostPortWithCreds, "");
+                }
+            }
+        }
+        if (hostPort.isEmpty() || path.isEmpty() || protocol.isEmpty()) {
+            throw new JocBadRequestException(String.format("%1$s is not a Git URL.", filter.getRemoteUrl()));
+        }
+
+        try {
+            GitCredentialsList credList = null;
+            DBItemJocConfiguration dbItem = getJocConfigurationDbItem(account, dbLayer);
+            if(dbItem != null) {
+                credList =  Globals.objectMapper.readValue(dbItem.getConfigurationItem(), GitCredentialsList.class);
+            }
+            if(credList == null) {
+                if(dbItem != null) {
+                    throw new JocGitException("No Git Credentials found for Joc account:  " + dbItem.getAccount());
+                } else {
+                    throw new JocGitException("No Git Credentials found for current account.");
+                }
+            }
+            if(!credList.getRemoteUrls().contains(filter.getRemoteUrl())) {
+                credList.getRemoteUrls().add(filter.getRemoteUrl());
+                dbItem.setConfigurationItem(Globals.objectMapper.writeValueAsString(credList));
+                dbLayer.saveOrUpdateConfiguration(dbItem);
+            }
+            Path workingDir = Paths.get(System.getProperty("user.dir"));
+            if (workingDir != null) {
+                LOGGER.info("working dir: " + workingDir.toString());
+            }
+            Path repositoryBase = Globals.sosCockpitProperties.resolvePath("repositories").resolve(getSubrepositoryFromFilter(filter));
+            if(repositoryBase != null) {
+                LOGGER.debug("repositoryBase: " + repositoryBase.toString());
+            }
+            if(protocol.equals(DEFAULT_PROTOCOL)) {
+                Path gitKeyfilePath = null;
+                String username = null;
+                String email = null;
+                for(GitCredentials credentials : credList.getCredentials()) {
+                    if(credentials.getGitServer().equals(hostPort)) {
+                        username = credentials.getUsername();
+                        email = credentials.getEmail();
+                        if (credentials.getKeyfilePath() == null) {
+                            throw new JocGitException(String.format(
+                                    "remote URL '%1$s' needs ssh authentication. Missing keyfilePath in credentials for server '%2$s' and account '%3$s'.",
+                                    filter.getRemoteUrl(), hostPort, credentials.getGitAccount()));
+                        } else if(credentials.getKeyfilePath().isEmpty()) {
+                            // use ~/.ssh/id_rsa from home directory
+                            // use Path homeDir = Paths.get(System.getProperty("user.home")); for windows and linux
+                            gitKeyfilePath = Paths.get(System.getProperty("user.home")).resolve(".ssh/id_rsa");
+                        } else if(!credentials.getKeyfilePath().contains("/") && !credentials.getKeyfilePath().contains("\\")) {
+                            // filename only, use key from JETTY_BASE/resources/joc/repositories/private
+                            gitKeyfilePath = Globals.sosCockpitProperties.resolvePath("repositories").resolve("private")
+                                    .resolve(credentials.getKeyfilePath());
+                        } else  {
+                            gitKeyfilePath = Paths.get(credentials.getKeyfilePath());
+                        }
+                        break;
+                    }
+                }
+                // check remote connectivity
+                GitLsRemoteCommandResult lsRemoteResult = (GitLsRemoteCommandResult)GitCommand.executeGitCheckRemoteConnection(
+                        filter.getRemoteUrl(), charset);
+                // TODO: rest of check when timeout available from SOSShell
+                
+                // clone
+                String folder = filter.getFolder().startsWith("/") ? filter.getFolder().substring(1) : filter.getFolder();
+                GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(
+                        filter.getRemoteUrl(), folder, repositoryBase, charset);
+                if(result.getExitCode() != 0) {
+                    throw new JocGitException(String.format("clone command exit code <%1$d> with message: %2$s", 
+                            result.getExitCode(), result.getStdErr()), result.getException());
+                }
+                createOrUpdateFolder(filter.getFolder(), session);
+                return result;
+            } else {
+                String username = null;
+                String pwopat = null;
+                String gitAccount = null;
+                for(GitCredentials credentials : credList.getCredentials()) {
+                    if(credentials.getGitServer().equals(hostPort)) {
+                        gitAccount = credentials.getGitAccount();
+                        username = credentials.getUsername();
+                        if(credentials.getPersonalAccessToken() != null && !credentials.getPersonalAccessToken().isEmpty()) {
+                            pwopat = credentials.getPersonalAccessToken();
+                        } else if (credentials.getPassword() != null && !credentials.getPassword().isEmpty()) {
+                            pwopat = credentials.getPassword();
+                        }
+                        break;
+                    }
+                }
+                if(gitAccount == null || pwopat == null) {
+                    throw new JocGitException(String.format("No credentials found for Git Server '%1$s'.", hostPort));
+                }
+                // prepare Uri
+                String updatedUri = String.format("%1$s://%2$s:%3$s@%4$s%5$s", protocol, gitAccount, pwopat, hostPort, path);
+                // clone
+                String folder = filter.getFolder().startsWith("/") ? filter.getFolder().substring(1) : filter.getFolder();
+                GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(updatedUri, folder, repositoryBase, charset);
+                if(result.getExitCode() != 0) {
+                    throw new JocGitException(String.format("clone command exit code <%1$d> with message: %2$s", 
+                            result.getExitCode(), result.getStdErr()), result.getException());
+                }
+                createOrUpdateFolder(filter.getFolder(), session);
+                return result;
+            }
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        }
+    }
+    
+    public static final GitAddCommandResult addAllChanges (String account, Path localRepo, Path workingDir, Charset charset)
             throws JsonMappingException, JsonProcessingException {
+        GitAddCommandResult result = (GitAddCommandResult)GitCommand.executeGitAddAll(localRepo, workingDir, charset);
+        if(result.getExitCode() != 0) {
+            throw new JocGitException(String.format("add all command exit code <%1$d> with message: %2$s", 
+                    result.getExitCode(), result.getStdErr()), result.getException());
+        }
+        return result;
+    }
+    
+    public static final GitAddCommandResult addAllChanges (CommonFilter filter, String account, JocConfigurationDbLayer dbLayer,
+            Charset charset) throws JsonMappingException, JsonProcessingException {
         try {
             GitCredentialsList credList = getCredentialsList(account, dbLayer);
             Path workingDir = Paths.get(System.getProperty("user.dir"));
@@ -300,6 +474,16 @@ public class GitCommandUtils {
         }
     }
     
+    public static final GitCommitCommandResult commitAllStagedChanges(CommitFilter filter, String account, Path localRepo, Path workingDir,
+            Charset charset) throws JsonMappingException, JsonProcessingException {
+        GitCommitCommandResult result = (GitCommitCommandResult)GitCommand.executeGitCommitFormatted(filter.getMessage() , localRepo,
+                workingDir, charset);
+        if(result.getExitCode() != 0 && result.getExitCode() != 1) {
+            throw new JocGitException(String.format("commit command exit code <%1$d> with message: %2$s", 
+                    result.getExitCode(), result.getStdErr()), result.getException());
+        }
+        return result;
+    }
     public static final GitCommitCommandResult commitAllStagedChanges(CommitFilter filter, String account, JocConfigurationDbLayer dbLayer,
             Charset charset) throws JsonMappingException, JsonProcessingException {
         try {
@@ -352,6 +536,16 @@ public class GitCommandUtils {
         }
     }
     
+    public static final GitPushCommandResult pushCommitedChanges (CommonFilter filter, String account, Path localRepo, Path workingDir,
+            Charset charset) throws JsonMappingException, JsonProcessingException {
+        GitPushCommandResult result = (GitPushCommandResult)GitCommand.executeGitPush(localRepo, workingDir, charset);
+        if(result.getExitCode() != 0) {
+            throw new JocGitException(String.format("commit command exit code <%1$d> with message: %2$s", 
+                    result.getExitCode(), result.getStdErr()), result.getException());
+        }
+        return result;
+    }
+
     public static final GitPushCommandResult pushCommitedChanges (CommonFilter filter, String account, JocConfigurationDbLayer dbLayer,
             Charset charset) throws JsonMappingException, JsonProcessingException {
         try {
@@ -411,6 +605,16 @@ public class GitCommandUtils {
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
         }
+    }
+    
+    public static final GitPullCommandResult pullChanges (CommonFilter filter, String account, Path localRepo, Path workingDir, 
+            Charset charset) throws JsonMappingException, JsonProcessingException {
+        GitPullCommandResult result = (GitPullCommandResult)GitCommand.executeGitPull(localRepo, workingDir, charset);
+        if(result.getExitCode() != 0) {
+            throw new JocGitException(String.format("commit command exit code <%1$d> with message: %2$s", 
+                    result.getExitCode(), result.getStdErr()), result.getException());
+        }
+        return result;
     }
     
     public static final GitPullCommandResult pullChanges (CommonFilter filter, String account, JocConfigurationDbLayer dbLayer, 
@@ -476,6 +680,22 @@ public class GitCommandUtils {
         }
     }
     
+    public static final GitCheckoutCommandResult checkout (CheckoutFilter filter, String account, Path localRepo, Path workingDir, 
+            Charset charset) throws JsonMappingException, JsonProcessingException {
+        GitCheckoutCommandResult result = null;
+        if (filter.getBranch() != null) {
+            result = (GitCheckoutCommandResult)GitCommand.executeGitCheckout(filter.getBranch(), null, localRepo, workingDir, charset);
+        } else { // filter.getTag() != null
+            result = (GitCheckoutCommandResult)GitCommand.executeGitCheckout(null, filter.getTag(), localRepo, workingDir, charset);
+        }
+        
+        if(result.getExitCode() != 0) {
+            throw new JocGitException(String.format("commit command exit code <%1$d> with message: %2$s", 
+                    result.getExitCode(), result.getStdErr()), result.getException());
+        }
+        return result;
+    }
+
     // TODO: GitCheckoutCommandResult in sos-commons-git
     public static final GitCheckoutCommandResult checkout (CheckoutFilter filter, String account, JocConfigurationDbLayer dbLayer, 
             Charset charset) throws JsonMappingException, JsonProcessingException {
@@ -505,7 +725,7 @@ public class GitCommandUtils {
         }
     }
     
-    private static final String getActiveRemoteUri (Path localRepo, Path workingDir, GitCredentialsList credList, Charset charset) {
+    public static final String getActiveRemoteUri (Path localRepo, Path workingDir, GitCredentialsList credList, Charset charset) {
         GitRemoteCommandResult remoteVResult = (GitRemoteCommandResult)GitCommand.executeGitRemoteRead(localRepo, workingDir, charset);
         if(remoteVResult.getExitCode() != 0) {
             throw new JocGitException(String.format("remote -v command exit code <%1$d> with message: %2$s", 
@@ -569,7 +789,7 @@ public class GitCommandUtils {
         return dbItem;
     }
     
-    private static final GitCredentialsList getCredentialsList(String account, JocConfigurationDbLayer dbLayer)
+    public static final GitCredentialsList getCredentialsList(String account, JocConfigurationDbLayer dbLayer)
             throws SOSHibernateException, JsonMappingException, JsonProcessingException {
         GitCredentialsList credList = null;
         DBItemJocConfiguration dbItem = getJocConfigurationDbItem(account, dbLayer);
@@ -587,7 +807,7 @@ public class GitCommandUtils {
         return false;
     }
     
-    private static final String getSubrepositoryFromFilter (CloneFilter filter) {
+    public static final String getSubrepositoryFromFilter (CloneFilter filter) {
         switch(filter.getCategory()) {
         case LOCAL:
             return "local";
@@ -597,7 +817,7 @@ public class GitCommandUtils {
         return null;
     }
 
-    private static final String getSubrepositoryFromFilter (CommitFilter filter) {
+    public static final String getSubrepositoryFromFilter (CommitFilter filter) {
         switch(filter.getCategory()) {
         case LOCAL:
             return "local";
@@ -607,7 +827,7 @@ public class GitCommandUtils {
         return null;
     }
 
-    private static final String getSubrepositoryFromFilter (CheckoutFilter filter) {
+    public static final String getSubrepositoryFromFilter (CheckoutFilter filter) {
         switch(filter.getCategory()) {
         case LOCAL:
             return "local";
@@ -617,7 +837,7 @@ public class GitCommandUtils {
         return null;
     }
 
-    private static final String getSubrepositoryFromFilter (CommonFilter filter) {
+    public static final String getSubrepositoryFromFilter (CommonFilter filter) {
         switch(filter.getCategory()) {
         case LOCAL:
             return "local";
@@ -702,33 +922,88 @@ public class GitCommandUtils {
         }
     }
     
-    private static final GitConfigCommandResult prepareConfigFile (Charset charset, Path gitKeyFilePath, Path localRepoPath, String username,
+    public static final Path backupGitGlobalConfigFile () throws IOException {
+        Path gitConfigPath = Paths.get(System.getProperty("user.home")).resolve(GitCommandConstants.GIT_CONFIG_DEFAULT_FILENAME);
+        Path gitConfigBackupPath = Paths.get(System.getProperty("user.home")).resolve(GitCommandConstants.GIT_CONFIG_BACKUP_FILENAME);
+        if(Files.exists(gitConfigPath)) {
+            Files.copy(gitConfigPath, gitConfigBackupPath, StandardCopyOption.REPLACE_EXISTING);
+        }
+        return gitConfigBackupPath;
+    }
+    
+    public static final void restoreOriginalGitGlobalConfigFile () throws IOException {
+        Path gitConfigPath = Paths.get(System.getProperty("user.home")).resolve(GitCommandConstants.GIT_CONFIG_DEFAULT_FILENAME);
+        Path gitConfigBackupPath = Paths.get(System.getProperty("user.home")).resolve(GitCommandConstants.GIT_CONFIG_BACKUP_FILENAME);
+        if(Files.exists(gitConfigBackupPath)) {
+            Files.copy(gitConfigBackupPath, gitConfigPath, StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
+    
+    public static final void restoreOriginalGitGlobalConfigFile (Path backupPath) throws IOException {
+        Path gitConfigPath = Paths.get(System.getProperty("user.home")).resolve(GitCommandConstants.GIT_CONFIG_DEFAULT_FILENAME);
+        if(Files.exists(backupPath)) {
+            Files.copy(backupPath, gitConfigPath, StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
+    
+    public static final GitConfigCommandResult prepareConfigFileForCloning (Charset charset, GitCredentials credentials) {
+        return prepareConfigFile(charset, Paths.get(credentials.getKeyfilePath()), null, credentials.getUsername(),
+                credentials.getEmail());
+    }
+    
+    public static final GitConfigCommandResult prepareConfigFile (Charset charset, GitCredentials credentials, Path localRepoPath) {
+        return prepareConfigFile(charset, Paths.get(credentials.getKeyfilePath()), localRepoPath, credentials.getUsername(),
+                credentials.getEmail());
+    }
+    
+    public static final GitConfigCommandResult prepareConfigFile (Charset charset, Path gitKeyFilePath, Path localRepoPath, String username,
             String userEmail) {
-        GitConfigCommandResult configResult;
+        GitConfigCommandResult configResult = null;
+        Path gitConfigPath = Paths.get(System.getProperty("user.home")).resolve(GitCommandConstants.GIT_CONFIG_DEFAULT_FILENAME);
+        Path gitConfigTmpPath = Paths.get(System.getProperty("java.io.tmpdir"))
+                .resolve(GitCommandConstants.GIT_CONFIG_DEFAULT_FILENAME + "_"+ username);
         try {
-            configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSshAdd(GitConfigType.FILE, gitKeyFilePath, charset);
-            if(configResult.getExitCode() != 0) {
-                throw new JocGitException(String.format("update config command exit code <%1$d> with message: %2$s", 
-                        configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
+            if(gitKeyFilePath != null) {
+                configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSshAdd(GitConfigType.FILE, gitKeyFilePath, charset,
+                        gitConfigTmpPath);
+                if(configResult.getExitCode() != 0) {
+                    throw new JocGitException(String.format("update config command exit code <%1$d> with message: %2$s", 
+                            configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
+                }
             }
-            configResult = (GitConfigCommandResult)GitCommand.executeGitConfigUsernameAdd(GitConfigType.FILE, username, charset);
-            if(configResult.getExitCode() != 0) {
-                throw new JocGitException(String.format("update config command exit code <%1$d> with message: %2$s", 
-                        configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
+            if(username != null) {
+                configResult = (GitConfigCommandResult)GitCommand.executeGitConfigUsernameAdd(GitConfigType.FILE, username, charset,
+                        gitConfigTmpPath);
+                if(configResult.getExitCode() != 0) {
+                    throw new JocGitException(String.format("update config command exit code <%1$d> with message: %2$s", 
+                            configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
+                }
             }
-            configResult = (GitConfigCommandResult)GitCommand.executeGitConfigUserEmailAdd(GitConfigType.FILE, userEmail, charset);
-            if(configResult.getExitCode() != 0) {
-                throw new JocGitException(String.format("update config command exit code <%1$d> with message: %2$s", 
-                        configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
+            if (userEmail != null) {
+                configResult = (GitConfigCommandResult)GitCommand.executeGitConfigUserEmailAdd(GitConfigType.FILE, userEmail, charset,
+                        gitConfigTmpPath);
+                if(configResult.getExitCode() != 0) {
+                    throw new JocGitException(String.format("update config command exit code <%1$d> with message: %2$s", 
+                            configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
+                }
             }
-            configResult = (GitConfigCommandResult)GitCommand.executeGitConfigUserEmailAdd(GitConfigType.FILE, userEmail, charset);
-            if(configResult.getExitCode() != 0) {
-                throw new JocGitException(String.format("update config command exit code <%1$d> with message: %2$s", 
-                        configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
+            if (localRepoPath != null) {
+                configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSaveDirectoryAdd(GitConfigType.FILE, localRepoPath, charset,
+                        gitConfigTmpPath);
+                if(configResult.getExitCode() != 0) {
+                    throw new JocGitException(String.format("update config command exit code <%1$d> with message: %2$s", 
+                            configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
+                }
+            }
+            if(Files.exists(gitConfigTmpPath)) {
+                Files.copy(gitConfigTmpPath, gitConfigPath, StandardCopyOption.REPLACE_EXISTING);
             }
             return configResult;
         } catch (SOSException e) {
             LOGGER.warn("could not write git config file: ", e);
+            return null;
+        } catch (IOException e) {
+            LOGGER.warn("could not copy temporary .gitconfig file to home directory: ", e);
             return null;
         }
     }
@@ -778,6 +1053,22 @@ public class GitCommandUtils {
         }
     }
     
+    private static final GitConfigCommandResult prepareConfigSetSaveDirectoryCommand(Charset charset, Path localRrepository) {
+        GitConfigCommandResult configResult;
+        try {
+            configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSaveDirectoryAdd(GitConfigType.GLOBAL, localRrepository,
+                    charset);
+            if(configResult.getExitCode() != 0) {
+                throw new JocGitException(String.format("update config command exit code <%1$d> with message: %2$s", 
+                        configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
+            }
+            return configResult;
+        } catch (SOSException e) {
+            LOGGER.warn("could not set new save.directory to global git config.", e);
+            return null;
+        }
+    }
+    
     private static void prepareConfigRestoreSshCommand(Charset charset, String oldSshCommandValue) {
         try {
             GitConfigCommandResult configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSshAddCustom(
@@ -821,6 +1112,19 @@ public class GitCommandUtils {
         }
     }
     
+    private static void prepareConfigRestoreSaveDirectoryCommand(Charset charset, Path oldLocalRepository) {
+        try {
+            GitConfigCommandResult configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSshAdd(
+                    GitConfigType.GLOBAL, charset, oldLocalRepository);
+            if(configResult.getExitCode() != 0) {
+                LOGGER.warn(String.format("update config command exit code <%1$d> with message: %2$s", 
+                        configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
+            }
+        } catch (SOSException e) {
+            LOGGER.warn("could not restore old save.directory to global git config.", e);
+        }
+    }
+    
     private static void createOrUpdateFolder(String foldername, SOSHibernateSession session) throws SOSHibernateException {
         InventoryDBLayer dbLayer = new InventoryDBLayer(session);
         DBItemInventoryConfiguration dbFolder = dbLayer.getConfiguration(foldername, 
@@ -849,8 +1153,30 @@ public class GitCommandUtils {
             dbFolder.setModified(Date.from(Instant.now()));
             dbLayer.getSession().update(dbFolder);
         }
-
     }
 
+    public static final GitCredentials getCredentials(String account, Path workingDir, Path localRepo, JocConfigurationDbLayer dbLayer)
+            throws JsonMappingException, JsonProcessingException, SOSHibernateException {
+        GitCredentialsList credList = GitCommandUtils.getCredentialsList(account, dbLayer);
+        String remoteUri = GitCommandUtils.getActiveRemoteUri(localRepo, workingDir, credList, StandardCharsets.UTF_8);
+        for (GitCredentials creds : credList.getCredentials()) {
+            if(remoteUri.contains(creds.getGitServer())) {
+                return creds;
+            }
+        }
+        return null;
+    }
+
+    public static final GitCredentials getCredentialsForCloning(String account, String newRepoRemoteUrl, JocConfigurationDbLayer dbLayer)
+            throws JsonMappingException, JsonProcessingException, SOSHibernateException {
+        GitCredentialsList credList = GitCommandUtils.getCredentialsList(account, dbLayer);
+//        String remoteUri = GitCommandUtils.getActiveRemoteUri(localRepo, workingDir, credList, StandardCharsets.UTF_8);
+        for (GitCredentials creds : credList.getCredentials()) {
+            if(newRepoRemoteUrl.contains(creds.getGitServer())) {
+                return creds;
+            }
+        }
+        return null;
+    }
 }
 
