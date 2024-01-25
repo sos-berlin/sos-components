@@ -1,5 +1,8 @@
 package com.sos.joc.publish.repository.git.commands.impl;
 
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Date;
 
@@ -17,6 +20,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
+import com.sos.joc.model.publish.git.GitCredentials;
 import com.sos.joc.model.publish.git.commands.CommitFilter;
 import com.sos.joc.model.publish.git.commands.GitCommandResponse;
 import com.sos.joc.publish.repository.git.commands.GitCommandUtils;
@@ -48,18 +52,28 @@ public class GitCommandCommitImpl extends JOCResourceImpl implements IGitCommand
             
             if(JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel())) {
                 account = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
-            } else if (JocSecurityLevel.MEDIUM.equals(Globals.getJocSecurityLevel())) {
-                account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
             } else {
-                throw new JocNotImplementedException("The web service is not available for Security Level HIGH.");
+                account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
             }
             
             JocConfigurationDbLayer dbLayer = new JocConfigurationDbLayer(hibernateSession);
             if (filter.getMessage() == null || filter.getMessage().isEmpty()) {
                 filter.setMessage("[gen msg] automated commit with JOC api");
             }
+            
+            Path backupPath = GitCommandUtils.backupGitGlobalConfigFile();
+
+            Path workingDir = Paths.get(System.getProperty("user.dir"));
+            Path repositoryBase = Globals.sosCockpitProperties.resolvePath("repositories").resolve(
+                    GitCommandUtils.getSubrepositoryFromFilter(filter));
+            Path localRepo = repositoryBase.resolve(filter.getFolder().startsWith("/") ? 
+                    filter.getFolder().substring(1) : filter.getFolder());
+            
+            GitCredentials credentials = GitCommandUtils.getCredentials(account, workingDir, localRepo, dbLayer);
+            GitCommandUtils.prepareConfigFile(StandardCharsets.UTF_8, credentials, localRepo);
+
             GitCommitCommandResult result = GitCommandUtils.commitAllStagedChanges(
-                    filter, account, dbLayer, Globals.getConfigurationGlobalsJoc().getEncodingCharset());
+                    filter, account, localRepo, workingDir, Globals.getConfigurationGlobalsJoc().getEncodingCharset());
 
             GitCommandResponse response = new GitCommandResponse();
             response.setCommand(result.getOriginalCommand());
@@ -67,6 +81,9 @@ public class GitCommandCommitImpl extends JOCResourceImpl implements IGitCommand
             response.setStdOut(result.getStdOut());
             response.setStdErr(result.getStdErr());
             
+            //cleanup
+            GitCommandUtils.restoreOriginalGitGlobalConfigFile(backupPath);
+
             Date finished = Date.from(Instant.now());
             LOGGER.trace("*** commit finished ***" + finished);
             LOGGER.trace(String.format("ws took %1$d ms.", finished.getTime() - started.getTime()));
