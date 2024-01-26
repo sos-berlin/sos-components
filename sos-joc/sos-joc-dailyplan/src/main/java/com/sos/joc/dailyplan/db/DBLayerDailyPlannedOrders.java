@@ -601,14 +601,14 @@ public class DBLayerDailyPlannedOrders {
             } else {
                 query.setParameterList("submissionHistoryIds", filter.getSubmissionIds());
             }
-        }
-        if (filter.getSubmissionForDate() != null) {
-            query.setParameter("submissionForDate", filter.getSubmissionForDate());
-        }
-        if (filter.getSubmissionForDateFrom() != null) {
-            query.setParameter("submissionForDateFrom", filter.getSubmissionForDateFrom());
-            if (filter.getSubmissionForDateTo() != null && !filter.getSubmissionForDateFrom().equals(filter.getSubmissionForDateTo())) {
-                query.setParameter("submissionForDateTo", filter.getSubmissionForDateTo());
+        } else {
+            if (filter.getSubmissionForDate() != null) {
+                query.setParameter("submissionForDate", filter.getSubmissionForDate());
+            } else if (filter.getSubmissionForDateFrom() != null) {
+                query.setParameter("submissionForDateFrom", filter.getSubmissionForDateFrom());
+                if (filter.getSubmissionForDateTo() != null && !filter.getSubmissionForDateFrom().equals(filter.getSubmissionForDateTo())) {
+                    query.setParameter("submissionForDateTo", filter.getSubmissionForDateTo());
+                }
             }
         }
 
