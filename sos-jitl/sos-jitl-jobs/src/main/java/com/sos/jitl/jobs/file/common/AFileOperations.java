@@ -589,7 +589,7 @@ public abstract class AFileOperations {
         }
         if (createDir && target != null && !target.exists()) {
             if (target.mkdirs()) {
-                logger.info("[%s]create target directory", target.getCanonicalPath());
+                logger.info("[%s]target directory created", target.getCanonicalPath());
             } else {
                 throw new SOSFileOperationsException("cannot create directory " + target.getCanonicalPath());
             }
