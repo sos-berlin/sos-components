@@ -144,12 +144,17 @@ public class DBLayerDailyPlanProjections extends DBLayer {
     }
 
     public List<DBItemDailyPlanSubmission> getSubmissions(Date dateFrom) throws SOSHibernateException {
+        // Pending orders have the virtual submission date 9999-12-31 00:00:00 that won't be part of this result
+        final long millisOf99991231000000 = 253402214400000L;
+        final Date dateOf99991231000000 =  Date.from(Instant.ofEpochMilli(millisOf99991231000000));
         StringBuilder hql = new StringBuilder("from ").append(DBITEM_DPL_SUBMISSIONS).append(" ");
         hql.append("where submissionForDate >= :dateFrom ");
+        hql.append("and submissionForDate < :date99991231 ");
         hql.append("order by submissionForDate");
 
         Query<DBItemDailyPlanSubmission> query = getSession().createQuery(hql.toString());
         query.setParameter("dateFrom", dateFrom);
+        query.setParameter("date99991231", dateOf99991231000000);
 
         return getSession().getResultList(query);
     }
