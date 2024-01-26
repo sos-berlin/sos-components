@@ -604,8 +604,7 @@ public class DBLayerDailyPlannedOrders {
         } else {
             if (filter.getSubmissionForDate() != null) {
                 query.setParameter("submissionForDate", filter.getSubmissionForDate());
-            }
-            if (filter.getSubmissionForDateFrom() != null) {
+            } else if (filter.getSubmissionForDateFrom() != null) {
                 query.setParameter("submissionForDateFrom", filter.getSubmissionForDateFrom());
                 if (filter.getSubmissionForDateTo() != null && !filter.getSubmissionForDateFrom().equals(filter.getSubmissionForDateTo())) {
                     query.setParameter("submissionForDateTo", filter.getSubmissionForDateTo());
