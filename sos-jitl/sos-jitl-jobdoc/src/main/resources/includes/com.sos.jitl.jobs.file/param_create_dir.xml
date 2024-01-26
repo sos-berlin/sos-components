@@ -33,8 +33,8 @@
                     e.g.: /tmp/target
                     </td>
                     <td>
-                    	<code>create_dir=false</code> : the file operations fail because the <code>target_file</code> directory does not exist.<br/>
-                    	<code>create_dir=true</code> : <code>target_file</code>(<code>/tmp/target</code>) directory is created.
+                    	<code>create_dir=false</code>: the file operations fail because the <code>target_file</code> directory does not exist.<br/>
+                    	<code>create_dir=true</code>: <code>target_file</code>(<code>/tmp/target</code>) directory is created.
                     </td>
                 </tr>
                	<tr>
@@ -45,8 +45,8 @@
                     e.g.: /tmp/target
                     </td>
                     <td>
-                    	<code>create_dir=false</code> : <code>/tmp/source/test.txt</code> is copied/moved to the <code>/tmp/target</code> <b>file</b>.<br/>
-                    	<code>create_dir=true</code> : <code>target_file</code>(<code>/tmp/target</code>) directory is created and <code>test.txt</code> is copied/moved there.
+                    	<code>create_dir=false</code>: <code>/tmp/source/test.txt</code> is copied/moved to the <code>/tmp/target</code> <b>file</b>.<br/>
+                    	<code>create_dir=true</code>: <code>target_file</code>(<code>/tmp/target</code>) directory is created and <code>test.txt</code> is copied/moved there.
                     </td>
                 </tr>
                 <tr>
@@ -57,8 +57,9 @@
                     e.g.: /tmp/target/test_copied.txt
                     </td>
                     <td>
-                    	<code>create_dir=false</code> : <code>/tmp/source/test.txt</code> is copied/moved to <code>/tmp/target/test_copied.txt</code>.<br/>
-                    	<code>create_dir=true</code> : <code>target_file</code>(<code>/tmp/target/test_copied.txt</code>) directory is created and <code>test.txt</code> is copied/moved there.
+                    	<code>create_dir=false</code>: <code>/tmp/source/test.txt</code> is copied/moved to <code>/tmp/target/test_copied.txt</code>.<br/>
+                    	<code>    Note</code>: if the <code>/tmp/target</code> directory does not exist, it will be created.<br/>
+                    	<code>create_dir=true</code>: <code>target_file</code>(<code>/tmp/target/test_copied.txt</code>) directory is created and <code>test.txt</code> is copied/moved there.
                     </td>
                 </tr>                    
              </table>        
