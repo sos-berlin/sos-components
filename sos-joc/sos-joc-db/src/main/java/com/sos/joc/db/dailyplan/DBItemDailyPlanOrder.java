@@ -5,6 +5,8 @@ import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.Date;
 import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -353,7 +355,7 @@ public class DBItemDailyPlanOrder extends DBItem {
         if (dailyPlanDate != null) {
             return dailyPlanDate;
         }
-        return getDailyPlanDate(timeZone, Instant.parse("1970-01-01T" + periodBegin + "Z").getEpochSecond());
+        return getDailyPlanDate(timeZone, getSecondsFromPeriodBegin(periodBegin));
     }
     
     @Transient
@@ -368,6 +370,15 @@ public class DBItemDailyPlanOrder extends DBItem {
         }
         dailyPlanDate = format.format(Date.from(plannedStart.toInstant().minusSeconds(periodBeginSeconds)));
         return dailyPlanDate;
+    }
+    
+    @Transient
+    private long getSecondsFromPeriodBegin(String periodBegin) {
+        Matcher m = Pattern.compile("^(\\d{1,2}):(\\d{1,2}):(\\d{1,2})").matcher(periodBegin + ":00");
+        if (m.find()) {
+            return ((Long.parseLong(m.group(1)) * 60 * 60) + (Long.parseLong(m.group(2)) * 60) + Long.parseLong(m.group(3)));
+        }
+        return 0;
     }
 
 }
