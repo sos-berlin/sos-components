@@ -67,7 +67,11 @@ public class GitCommandPullImpl extends JOCResourceImpl implements IGitCommandPu
                     filter.getFolder().substring(1) : filter.getFolder());
             
             GitCredentials credentials = GitCommandUtils.getCredentials(account, workingDir, localRepo, dbLayer);
-            GitCommandUtils.prepareConfigFile(StandardCharsets.UTF_8, credentials, localRepo);
+            if (credentials != null) {
+                GitCommandUtils.prepareConfigFile(StandardCharsets.UTF_8, credentials, localRepo);
+            } else {
+                LOGGER.warn(String.format("Could not read git credentials for account %1$s", account));
+            }
 
             GitPullCommandResult result = GitCommandUtils.pullChanges(
                     filter, account, localRepo, workingDir, Globals.getConfigurationGlobalsJoc().getEncodingCharset());

@@ -66,7 +66,11 @@ public class GitCommandCloneImpl extends JOCResourceImpl implements IGitCommandC
             
             JocConfigurationDbLayer dbLayer = new JocConfigurationDbLayer(hibernateSession);
             GitCredentials credentials = GitCommandUtils.getCredentialsForCloning(account, filter.getRemoteUrl(), dbLayer);
-            GitCommandUtils.prepareConfigFileForCloning(StandardCharsets.UTF_8, credentials);
+            if (credentials != null) {
+                GitCommandUtils.prepareConfigFile(StandardCharsets.UTF_8, credentials, localRepo);
+            } else {
+                LOGGER.warn(String.format("Could not read git credentials for account %1$s", account));
+            }
 
             GitCloneCommandResult result = GitCommandUtils.cloneGitRepositoryWithConfigFile(
                     filter, account, hibernateSession, Globals.getConfigurationGlobalsJoc().getEncodingCharset());
