@@ -1077,13 +1077,15 @@ public class DBLayerDailyPlannedOrders {
 
     public int setSubmitted(String controllerId, String orderId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
-        hql.append("set submitted=true ");
+        hql.append("set submitted=true");
+        hql.append(",modified=:modified ");
         hql.append("where controllerId=:controllerId ");
         hql.append("and orderId=:orderId");
 
         Query<DBItemDailyPlanOrder> query = session.createQuery(hql);
         query.setParameter("controllerId", controllerId);
         query.setParameter("orderId", orderId);
+        query.setParameter("modified", new Date());
 
         return executeUpdate("setSubmitted", query);
     }

@@ -28,13 +28,13 @@ import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.dailyplan.DailyPlanRunner;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
+import com.sos.joc.dailyplan.common.ProjectionsImpl;
 import com.sos.joc.dailyplan.db.DBLayerDailyPlanProjections;
 import com.sos.joc.dailyplan.resource.IDailyPlanProjectionsResource;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanProjection;
@@ -44,9 +44,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.projections.ProjectionsCalendarResponse;
 import com.sos.joc.model.dailyplan.projections.ProjectionsRequest;
-import com.sos.joc.model.dailyplan.projections.items.meta.ControllerInfoItem;
 import com.sos.joc.model.dailyplan.projections.items.meta.MetaItem;
-import com.sos.joc.model.dailyplan.projections.items.meta.WorkflowsItem;
 import com.sos.joc.model.dailyplan.projections.items.year.DateItem;
 import com.sos.joc.model.dailyplan.projections.items.year.DatePeriodItem;
 import com.sos.joc.model.dailyplan.projections.items.year.MonthItem;
@@ -61,13 +59,15 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.StreamingOutput;
 
 @Path(WebservicePaths.DAILYPLAN)
-public class DailyPlanProjectionsImpl extends JOCResourceImpl implements IDailyPlanProjectionsResource {
-    
+public class DailyPlanProjectionsImpl extends ProjectionsImpl implements IDailyPlanProjectionsResource {
+
+    // Export
     @Override
     public JOCDefaultResponse datesProjections(String accessToken, String acceptEncoding, byte[] filterBytes) {
         return projections(accessToken, acceptEncoding, filterBytes, IMPL_PATH_DATES);
     }
-    
+
+    // Month/Year
     @Override
     public JOCDefaultResponse calendarProjections(String accessToken, byte[] filterBytes) {
         return projections(accessToken, null, filterBytes, IMPL_PATH_CALENDAR);
@@ -80,7 +80,7 @@ public class DailyPlanProjectionsImpl extends JOCResourceImpl implements IDailyP
             initLogging(action, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ProjectionsRequest.class);
             ProjectionsRequest in = Globals.objectMapper.readValue(filterBytes, ProjectionsRequest.class);
-            
+
             boolean noControllerAvailable = Proxies.getControllerDbInstances().isEmpty();
             boolean permitted = true;
             Set<String> allowedControllers = Collections.emptySet();
@@ -89,8 +89,8 @@ public class DailyPlanProjectionsImpl extends JOCResourceImpl implements IDailyP
                 if (in.getControllerIds() != null && !in.getControllerIds().isEmpty()) {
                     controllerIds = controllerIds.filter(availableController -> in.getControllerIds().contains(availableController));
                 }
-                allowedControllers = controllerIds.filter(availableController -> getControllerPermissions(availableController,
-                        accessToken).getOrders().getView()).collect(Collectors.toSet());
+                allowedControllers = controllerIds.filter(availableController -> getControllerPermissions(availableController, accessToken)
+                        .getOrders().getView()).collect(Collectors.toSet());
                 permitted = !allowedControllers.isEmpty();
             }
             if (permitted) {
@@ -102,14 +102,14 @@ public class DailyPlanProjectionsImpl extends JOCResourceImpl implements IDailyP
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            
+
             Long monthFromAsLong = in.getDateFrom() != null ? getMonth(in.getDateFrom()) : null;
             Long monthToAsLong = in.getDateTo() != null ? getMonth(in.getDateTo()) : null;
             Integer dayFrom = in.getDateFrom() != null ? getDay(in.getDateFrom()) : null;
             Integer dayTo = in.getDateTo() != null ? getDay(in.getDateTo()) : null;
-            
+
             Optional<Predicate<String>> pDayFromTo = getDayFromToPredicate(dayFrom, dayTo);
-            
+
             Optional<Set<String>> scheduleNames = getNamesOptional(in.getSchedulePaths());
             Optional<Set<String>> workflowNames = getNamesOptional(in.getWorkflowPaths());
 
@@ -122,11 +122,11 @@ public class DailyPlanProjectionsImpl extends JOCResourceImpl implements IDailyP
             YearsItem yearsItem = new YearsItem();
             Optional<DBItemDailyPlanProjection> metaOpt = Optional.empty();
             Optional<MetaItem> metaContentOpt = Optional.empty();
-            
-            boolean withPeriods = action == IMPL_PATH_DATES;
-            
+
+            boolean invertedProjection = in.getWithoutStartTime() != null && in.getWithoutStartTime();
+            boolean export = action == IMPL_PATH_DATES;
+
             if (items != null) {
-                Set<String> permittedSchedules = new HashSet<>();
                 metaOpt = items.stream().filter(DBItemDailyPlanProjection::isMeta).findAny();
                 metaContentOpt = metaOpt.map(m -> {
                     try {
@@ -135,60 +135,29 @@ public class DailyPlanProjectionsImpl extends JOCResourceImpl implements IDailyP
                         throw new DBInvalidDataException(e);
                     }
                 });
-                
+
+                Set<String> permittedSchedules = new HashSet<>();
                 final boolean unPermittedSchedulesExist = setPermittedSchedules(metaContentOpt, allowedControllers, scheduleNames, in
                         .getScheduleFolders(), workflowNames, in.getWorkflowFolders(), permittedSchedules, folderPermissions);
-                
+
+                Set<String> schedulesExcludedFromProjection = getSchedulesExcludedFromProjection(metaContentOpt, false);
                 for (DBItemDailyPlanProjection item : items) {
-                    setYearsItem(item, in.getWithoutStartTime(), withPeriods, unPermittedSchedulesExist, permittedSchedules, pDayFromTo, yearsItem);
+                    setYearsItem(item, invertedProjection, export, schedulesExcludedFromProjection, unPermittedSchedulesExist, permittedSchedules,
+                            pDayFromTo, yearsItem);
                 }
 
-                removeObsoleteSchedulesFromMetaData(metaContentOpt, allowedControllers, in.getWithoutStartTime(), withPeriods, permittedSchedules
-                        .size(), yearsItem);
+                if (export) {
+                    removeObsoleteSchedulesFromMetaData(metaContentOpt, allowedControllers, invertedProjection, permittedSchedules.size(), yearsItem);
+                }
             }
 
             ProjectionsCalendarResponse entity = new ProjectionsCalendarResponse();
             entity.setDeliveryDate(Date.from(Instant.now()));
             metaOpt.ifPresent(meta -> entity.setSurveyDate(meta.getCreated()));
             entity.setYears(yearsItem);
-            if (withPeriods) {
-                metaContentOpt.ifPresent(meta -> entity.setMeta(meta));
-            }
-            
-            
-            boolean withGzipEncoding = acceptEncoding != null && acceptEncoding.contains("gzip");
-            if (withPeriods) {
-                StreamingOutput entityStream = new StreamingOutput() {
 
-                    @Override
-                    public void write(OutputStream output) throws IOException {
-                        if (withGzipEncoding) {
-                            output = new GZIPOutputStream(output);
-                        }
-                        InputStream in = null;
-                        try {
-                            in = new ByteArrayInputStream(Globals.objectMapper.writeValueAsBytes(entity));
-                            byte[] buffer = new byte[4096];
-                            int length;
-                            while ((length = in.read(buffer)) > 0) {
-                                output.write(buffer, 0, length);
-                            }
-                            output.flush();
-                        } finally {
-                            try {
-                                output.close();
-                            } catch (Exception e) {
-                            }
-                            if (in != null) {
-                                try {
-                                    in.close();
-                                } catch (Exception e) {
-                                }
-                            }
-                        }
-                    }
-                };
-                return JOCDefaultResponse.responseStatus200(entityStream, MediaType.APPLICATION_JSON, getGzipHeaders(withGzipEncoding));
+            if (export) {
+                return export(acceptEncoding, entity, metaContentOpt);
             } else {
                 return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
             }
@@ -205,7 +174,44 @@ public class DailyPlanProjectionsImpl extends JOCResourceImpl implements IDailyP
             Globals.disconnect(session);
         }
     }
-    
+
+    private JOCDefaultResponse export(String acceptEncoding, ProjectionsCalendarResponse entity, Optional<MetaItem> metaContentOpt) {
+        metaContentOpt.ifPresent(meta -> entity.setMeta(meta));
+
+        boolean withGzipEncoding = acceptEncoding != null && acceptEncoding.contains("gzip");
+        StreamingOutput entityStream = new StreamingOutput() {
+
+            @Override
+            public void write(OutputStream output) throws IOException {
+                if (withGzipEncoding) {
+                    output = new GZIPOutputStream(output);
+                }
+                InputStream in = null;
+                try {
+                    in = new ByteArrayInputStream(Globals.objectMapper.writeValueAsBytes(entity));
+                    byte[] buffer = new byte[4096];
+                    int length;
+                    while ((length = in.read(buffer)) > 0) {
+                        output.write(buffer, 0, length);
+                    }
+                    output.flush();
+                } finally {
+                    try {
+                        output.close();
+                    } catch (Exception e) {
+                    }
+                    if (in != null) {
+                        try {
+                            in.close();
+                        } catch (Exception e) {
+                        }
+                    }
+                }
+            }
+        };
+        return JOCDefaultResponse.responseStatus200(entityStream, MediaType.APPLICATION_JSON, getGzipHeaders(withGzipEncoding));
+    }
+
     private Map<String, Object> getGzipHeaders(boolean withGzipEncoding) {
         Map<String, Object> headers = new HashMap<String, Object>();
         if (withGzipEncoding) {
@@ -214,86 +220,51 @@ public class DailyPlanProjectionsImpl extends JOCResourceImpl implements IDailyP
         headers.put("Transfer-Encoding", "chunked");
         return headers;
     }
-    
-    public static Optional<Set<String>> getNamesOptional(List<String> paths) {
-        Optional<Set<String>> names = Optional.empty();
-        if (paths != null && !paths.isEmpty()) {
-            names = Optional.of(paths.stream().map(JocInventory::pathToName).collect(Collectors.toSet()));
-        }
-        return names;
-    }
-    
-    private static boolean setPermittedSchedules(Optional<MetaItem> metaContentOpt, Set<String> allowedControllers,
-            Optional<Set<String>> scheduleNames, List<Folder> scheduleFolders, Optional<Set<String>> workflowNames, List<Folder> workflowFolders,
-            Set<String> permittedSchedules, SOSAuthFolderPermissions folderPermissions) throws DBMissingDataException {
+
+    private boolean setPermittedSchedules(Optional<MetaItem> metaContentOpt, Set<String> allowedControllers, Optional<Set<String>> scheduleNames,
+            List<Folder> scheduleFolders, Optional<Set<String>> workflowNames, List<Folder> workflowFolders, Set<String> permittedSchedules,
+            SOSAuthFolderPermissions folderPermissions) throws DBMissingDataException {
         return setPermittedSchedules(metaContentOpt, allowedControllers, scheduleNames, scheduleFolders, Optional.empty(), workflowNames,
                 workflowFolders, permittedSchedules, folderPermissions);
     }
 
-    public static boolean setPermittedSchedules(Optional<MetaItem> metaContentOpt, Set<String> allowedControllers,
-            Optional<Set<String>> scheduleNames, List<Folder> scheduleFolders, Optional<Set<String>> nonPeriodScheduleNames,
-            Optional<Set<String>> workflowNames, List<Folder> workflowFolders, Set<String> permittedSchedules,
-            SOSAuthFolderPermissions folderPermissions) throws DBMissingDataException {
-        
-        boolean schedulesRemoved = false;
-        MetaItem metaItem = metaContentOpt.orElseThrow(DailyPlanProjectionsImpl::getDBMissingDataException);
-        if (metaItem != null && metaItem.getAdditionalProperties() != null) {
-            if (filterControllerIds(metaItem, allowedControllers)) {
-                schedulesRemoved = true;
+    private void removeObsoleteSchedulesFromMetaData(Optional<MetaItem> metaContentOpt, Set<String> allowedControllers, boolean invertedProjection,
+            int numOfPermittedSchedules, YearsItem yearsItem) {
+        Set<String> schedules = null;
+        try {
+            Stream<DateItem> dateItemStream = yearsItem.getAdditionalProperties().values().stream().map(MonthsItem::getAdditionalProperties).map(
+                    Map::values).flatMap(Collection::stream).map(MonthItem::getAdditionalProperties).map(Map::values).flatMap(Collection::stream);
+            Stream<DatePeriodItem> datePeriodItemStream = Stream.empty();
+            if (invertedProjection) {
+                datePeriodItemStream = dateItemStream.map(DateItem::getNonPeriods).filter(Objects::nonNull).flatMap(List::stream);
+            } else {
+                datePeriodItemStream = dateItemStream.map(DateItem::getPeriods).filter(Objects::nonNull).flatMap(List::stream);
             }
-            for (String controllerId : allowedControllers) {
-                Set<Folder> permittedFolders = folderPermissions == null ? Collections.emptySet() : folderPermissions.getListOfFolders(controllerId);
-                if (filterPermittedSchedules(metaItem.getAdditionalProperties().get(controllerId), permittedFolders, scheduleNames, scheduleFolders,
-                        nonPeriodScheduleNames, workflowNames, workflowFolders, permittedSchedules)) {
-                    schedulesRemoved = true;
-                }
-            }
-            metaContentOpt = Optional.of(metaItem);
+            schedules = datePeriodItemStream.map(DatePeriodItem::getSchedule).filter(Objects::nonNull).map(JocInventory::pathToName).collect(
+                    Collectors.toSet());
+        } catch (Exception e) {
+            //
         }
-        return schedulesRemoved;
-    }
-    
-    private static void removeObsoleteSchedulesFromMetaData(Optional<MetaItem> metaContentOpt, Set<String> allowedControllers,
-            boolean nonPeriods, boolean withPeriods, int numOfPermittedSchedules, YearsItem yearsItem) {
-        if (withPeriods) {
-            Set<String> schedules = null;
-            try {
-                Stream<DateItem> dateItemStream = yearsItem.getAdditionalProperties().values().stream().map(MonthsItem::getAdditionalProperties).map(
-                        Map::values).flatMap(Collection::stream).map(MonthItem::getAdditionalProperties).map(Map::values).flatMap(Collection::stream);
-                Stream<DatePeriodItem> datePeriodItemStream = Stream.empty();
-                if (nonPeriods) {
-                    datePeriodItemStream = dateItemStream.map(DateItem::getNonPeriods).filter(Objects::nonNull).flatMap(List::stream);
-                } else {
-                    datePeriodItemStream = dateItemStream.map(DateItem::getPeriods).filter(Objects::nonNull).flatMap(List::stream);
-                }
-                schedules = datePeriodItemStream.map(DatePeriodItem::getSchedule).filter(Objects::nonNull).map(JocInventory::pathToName).collect(
-                        Collectors.toSet());
-            } catch (Exception e) {
-                //
-            }
 
-            if (schedules != null && schedules.size() < numOfPermittedSchedules) {
-                setPermittedSchedules(metaContentOpt, allowedControllers, Optional.of(schedules), null, Optional.empty(), Optional.empty(), null,
-                        new HashSet<>(), null);
-            }
+        if (schedules != null && schedules.size() < numOfPermittedSchedules) {
+            setPermittedSchedules(metaContentOpt, allowedControllers, Optional.of(schedules), null, Optional.empty(), Optional.empty(), null,
+                    new HashSet<>(), null);
         }
     }
-    
-    public static DBMissingDataException getDBMissingDataException() throws DBMissingDataException {
-        String errorMsg = "Couldn't find projections data. Please start a calculation of the projections.";
-        if (DBLayerDailyPlanProjections.projectionsStart.isPresent()) {
-            errorMsg = "Couldn't find projections data. A calculation of the projections are in progress right now.";
-        }
-        DBMissingDataException e = new DBMissingDataException(errorMsg);
-        e.getError().setLogAsInfo(true);
-        return e;
-    }
-    
-    private static void setYearsItem(DBItemDailyPlanProjection item, boolean nonPeriods, boolean withPeriods, boolean unPermittedSchedulesExist,
-            Set<String> permittedSchedules, Optional<Predicate<String>> pDayFromTo, YearsItem yearsItem) throws StreamReadException,
-            DatabindException, IOException {
+
+    private void setYearsItem(DBItemDailyPlanProjection item, boolean invertedProjection, boolean export, Set<String> schedulesExcludedFromProjection,
+            boolean unPermittedSchedulesExist, Set<String> permittedSchedules, Optional<Predicate<String>> pDayFromTo, YearsItem yearsItem)
+            throws StreamReadException, DatabindException, IOException {
         if (!item.isMeta()) {
             final int numOfPermittedSchedules = permittedSchedules.size();
+            final Integer numOfPermittedSchedulesForProjectionDays;
+            if (schedulesExcludedFromProjection.size() > 0) {// removed or "Plan Order automatically" deactivated
+                numOfPermittedSchedulesForProjectionDays = Long.valueOf(permittedSchedules.stream().filter(s -> !schedulesExcludedFromProjection
+                        .contains(s)).count()).intValue();
+            } else {
+                numOfPermittedSchedulesForProjectionDays = numOfPermittedSchedules;
+            }
+
             String month = String.valueOf(item.getId());
             String year = month.substring(0, 4);
             month = year + "-" + month.substring(4);
@@ -306,43 +277,51 @@ public class DailyPlanProjectionsImpl extends JOCResourceImpl implements IDailyP
                 if (unPermittedSchedulesExist) {
                     dateItem.getPeriods().removeIf(p -> !permittedSchedules.contains(p.getSchedule()));
                 }
-                if (withPeriods) {
-                    if (nonPeriods) {
+                boolean isPlanned = isPlanned(dateItem);
+                if (invertedProjection) {
+                    if (export) {
                         Set<String> schedulesOfTheDay = dateItem.getPeriods().stream().map(DatePeriodItem::getSchedule).filter(Objects::nonNull)
                                 .collect(Collectors.toSet());
-                        
-                        dateItem.setNonPeriods(permittedSchedules.stream().filter(s -> !schedulesOfTheDay.contains(s)).map(s -> {
-                            DatePeriodItem dpi = new DatePeriodItem();
-                            dpi.setSchedule(s);
-                            return dpi;
-                        }).collect(Collectors.toList()));
-                        dateItem.setPeriods(null); //if setNonPeriods is introduced
-                    }
-                    
-                } else {
-                    if (!nonPeriods) {
-                        dateItem.setNumOfPeriods(dateItem.getPeriods().size());
+
+                        dateItem.setNonPeriods(permittedSchedules.stream().filter(s -> isPlanned ? true : !schedulesExcludedFromProjection.contains(
+                                s)).filter(s -> !schedulesOfTheDay.contains(s)).map(s -> {
+                                    DatePeriodItem dpi = new DatePeriodItem();
+                                    dpi.setSchedule(s);
+                                    return dpi;
+                                }).collect(Collectors.toList()));
                     } else {
                         int numOfschedulesOfTheDay = dateItem.getPeriods().stream().map(DatePeriodItem::getSchedule).filter(Objects::nonNull)
                                 .distinct().mapToInt(i -> 1).sum();
-                        dateItem.setNumOfNonPeriods(numOfPermittedSchedules - numOfschedulesOfTheDay);
+
+                        int total = numOfPermittedSchedules;
+                        if (!isPlanned) {
+                            total = numOfPermittedSchedulesForProjectionDays;
+                        }
+                        dateItem.setNumOfNonPeriods(total - numOfschedulesOfTheDay);
                     }
                     dateItem.setPeriods(null);
+                } else {
+                    if (!export) {
+                        dateItem.setNumOfPeriods(dateItem.getPeriods().size());
+                        dateItem.setPeriods(null);
+                    }
                 }
             });
-            if (withPeriods) {
-                if (!nonPeriods) {
-                    monthItem.getAdditionalProperties().values().removeIf(dateItem -> dateItem.getPeriods().isEmpty());
-                } else {
+
+            if (invertedProjection) {
+                if (export) {
                     monthItem.getAdditionalProperties().values().removeIf(dateItem -> dateItem.getNonPeriods().isEmpty());
-                }
-            } else {
-                if (!nonPeriods) {
-                    monthItem.getAdditionalProperties().values().removeIf(dateItem -> dateItem.getNumOfPeriods() == 0);
                 } else {
                     monthItem.getAdditionalProperties().values().removeIf(dateItem -> dateItem.getNumOfNonPeriods() == 0);
                 }
+            } else {
+                if (export) {
+                    monthItem.getAdditionalProperties().values().removeIf(dateItem -> dateItem.getPeriods().isEmpty());
+                } else {
+                    monthItem.getAdditionalProperties().values().removeIf(dateItem -> dateItem.getNumOfPeriods() == 0);
+                }
             }
+
             if (!monthItem.getAdditionalProperties().isEmpty()) {
                 mi.setAdditionalProperty(month, monthItem);
             }
@@ -353,300 +332,7 @@ public class DailyPlanProjectionsImpl extends JOCResourceImpl implements IDailyP
             }
         }
     }
-    
-//    @Override
-//    public JOCDefaultResponse schedulesProjections(String accessToken, byte[] filterBytes) {
-//
-//        SOSHibernateSession session = null;
-//        try {
-//            initLogging(IMPL_PATH_SCHEDULES, filterBytes, accessToken);
-//            JsonValidator.validateFailFast(filterBytes, ProjectionsRequest.class);
-//            ProjectionsRequest in = Globals.objectMapper.readValue(filterBytes, ProjectionsRequest.class);
-//            
-//            boolean noControllerAvailable = Proxies.getControllerDbInstances().isEmpty();
-//            boolean permitted = true;
-//            Set<String> allowedControllers = Collections.emptySet();
-//            if (!noControllerAvailable) {
-//                Stream<String> controllerIds = Proxies.getControllerDbInstances().keySet().stream();
-//                if (in.getControllerIds() != null && !in.getControllerIds().isEmpty()) {
-//                    controllerIds = controllerIds.filter(availableController -> in.getControllerIds().contains(availableController));
-//                }
-//                allowedControllers = controllerIds.filter(availableController -> getControllerPermissions(availableController,
-//                        accessToken).getOrders().getView()).collect(Collectors.toSet());
-//                permitted = !allowedControllers.isEmpty();
-//            }
-//            if (permitted) {
-//                JocPermissions perms = getJocPermissions(accessToken);
-//                permitted = perms.getCalendars().getView() || perms.getDailyPlan().getView();
-//            }
-//
-//            JOCDefaultResponse jocDefaultResponse = initPermissions(null, permitted);
-//            if (jocDefaultResponse != null) {
-//                return jocDefaultResponse;
-//            }
-//
-//            Long yearFrom = in.getDateFrom() != null ? Long.valueOf(in.getDateFrom().split("-",2)[0]) : null;
-//            Long yearTo = in.getDateTo() != null ? Long.valueOf(in.getDateTo().split("-",2)[0]) : null;
-//            Integer monthFrom = in.getDateFrom() != null ? getMonth(in.getDateFrom()) : null;
-//            Integer monthTo = in.getDateTo() != null ? getMonth(in.getDateTo()) : null;
-//            Integer dayFrom = in.getDateFrom() != null ? getDay(in.getDateFrom()) : null;
-//            Integer dayTo = in.getDateTo() != null ? getDay(in.getDateTo()) : null;
-//            
-//            Optional<Predicate<String>> pMonthFromTo = getMonthFromToPredicate(monthFrom, monthTo);
-//            Optional<Predicate<String>> pDayFromTo = getDayFromToPredicate(dayFrom, dayTo);
-//            Optional<Set<String>> scheduleNames = Optional.empty();
-//            if (in.getSchedulePaths() != null && !in.getSchedulePaths().isEmpty()) {
-//                scheduleNames = Optional.of(in.getSchedulePaths().stream().map(JocInventory::pathToName).collect(Collectors.toSet()));
-//            }
-//
-//            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_SCHEDULES);
-//            DBLayerDailyPlanProjections dbLayer = new DBLayerDailyPlanProjections(session);
-//            List<DBItemDailyPlanProjection> items = dbLayer.getProjections(yearFrom, yearTo);
-//            dbLayer.close();
-//            session = null;
-//
-//            MetaItem metaItem = null;
-//            Set<String> permittedSchedules = new HashSet<>();
-//            boolean unPermittedSchedulesExist = false;
-////            SchedulesItem si = new SchedulesItem();
-//            SortedSet<String> schedules = new TreeSet<>();
-//            Date surveyDate = null;
-//            
-//            if (items != null) {
-//                Optional<DBItemDailyPlanProjection> metaContentOpt = items.stream().filter(DBItemDailyPlanProjection::isMeta).findAny();
-//                if (metaContentOpt.isPresent()) {
-//                    surveyDate = metaContentOpt.get().getCreated();
-//                    metaItem = Globals.objectMapper.readValue(metaContentOpt.get().getContent(), MetaItem.class);
-//                    if (metaItem != null && metaItem.getAdditionalProperties() != null) {
-//                        if (filterControllerIds(metaItem, allowedControllers)) {
-//                            unPermittedSchedulesExist = true;
-//                        }
-//                        for (String controllerId : allowedControllers) {
-//                            if (filterPermittedSchedules(metaItem.getAdditionalProperties().get(controllerId), folderPermissions.getListOfFolders(
-//                                    controllerId), scheduleNames, permittedSchedules)) {
-//                                unPermittedSchedulesExist = true;
-//                            }
-//                        }
-//                    }
-//                } else {
-//                    throw new DBMissingDataException(
-//                            "Couldn't find projections meta data. Maybe a recalculation of the projections is in progress right now.");
-//                }
-//                
-////                List<DatePeriodItem> datePeriodItemItems = new ArrayList<>();
-//                
-//                final boolean unPermittedSchedulesExist2 = unPermittedSchedulesExist;
-//                for (DBItemDailyPlanProjection item : items) {
-//                    if (!item.isMeta()) {
-//
-//                        YearsItem yi = Globals.objectMapper.readValue(item.getContent(), YearsItem.class);
-//                        yi.getAdditionalProperties().forEach((y, yearItem) -> {
-//                            pMonthFromTo.ifPresent(p -> yearItem.getAdditionalProperties().keySet().removeIf(p));
-//                            yearItem.getAdditionalProperties().forEach((m, monthItem) -> {
-//                                pDayFromTo.ifPresent(p -> monthItem.getAdditionalProperties().keySet().removeIf(p));
-//                                monthItem.getAdditionalProperties().forEach((d, dateItem) -> {
-//                                    if (unPermittedSchedulesExist2) {
-//                                        dateItem.getPeriods().removeIf(p -> !permittedSchedules.contains(p.getSchedule()));
-//                                    }
-//                                    dateItem.setNumOfPeriods(dateItem.getPeriods().size());
-//                                    //dateItem.setPeriods(null);
-//                                    if (dateItem.getNumOfPeriods() != 0) {
-//                                        dateItem.getPeriods().forEach(dpi -> {
-////                                            dpi.setAdditionalProperty("planned", dateItem.getPlanned());
-////                                            dpi.setAdditionalProperty("day", d);
-////                                            datePeriodItemItems.add(dpi);
-//                                            schedules.add(dpi.getSchedule());
-//                                        });
-//                                    }
-//                                });
-//                            });
-//                        });
-//                    }
-//                }
-//                
-////                datePeriodItemItems.stream().collect(Collectors.groupingBy(DatePeriodItem::getSchedule, Collectors.groupingBy(dpi -> (String) dpi
-////                        .getAdditionalProperties().get("day")))).forEach((schedule, dpiMap) -> {
-////                            MonthItem mi = new MonthItem();
-////
-////                            dpiMap.forEach((day, dpiList) -> {
-////                                if (!dpiList.isEmpty()) {
-////                                    DateItem di = new DateItem();
-////                                    di.setPlanned((Boolean) dpiList.get(0).getAdditionalProperties().get("planned"));
-////                                    di.setNumOfPeriods(dpiList.size());
-////                                    di.setPeriods(null);
-////                                    mi.setAdditionalProperty(day, di);
-////                                }
-////                            });
-////                            
-////                            si.setAdditionalProperty(schedule, mi);
-////                        });
-//                
-//                
-//                
-//            }
-//
-//            ProjectionsSchedulesResponse entity = new ProjectionsSchedulesResponse();
-//            entity.setDeliveryDate(Date.from(Instant.now()));
-//            entity.setSurveyDate(surveyDate);
-//            entity.setSchedules(schedules);
-//            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
-//        } catch (JocException e) {
-//            e.addErrorMetaInfo(getJocError());
-//            return JOCDefaultResponse.responseStatusJSError(e);
-//        } catch (Exception e) {
-//            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-//        } finally {
-//            Globals.disconnect(session);
-//        }
-//    }
-    
-//    @Override
-//    public JOCDefaultResponse scheduleProjections(String accessToken, byte[] filterBytes) {
-//
-//        SOSHibernateSession session = null;
-//        try {
-//            initLogging(IMPL_PATH_SCHEDULES, filterBytes, accessToken);
-//            JsonValidator.validateFailFast(filterBytes, ProjectionsScheduleRequest.class);
-//            ProjectionsScheduleRequest in = Globals.objectMapper.readValue(filterBytes, ProjectionsScheduleRequest.class);
-//            
-//            boolean noControllerAvailable = Proxies.getControllerDbInstances().isEmpty();
-//            boolean permitted = true;
-//            Set<String> allowedControllers = Collections.emptySet();
-//            if (!noControllerAvailable) {
-//                Stream<String> controllerIds = Proxies.getControllerDbInstances().keySet().stream();
-//                if (in.getControllerIds() != null && !in.getControllerIds().isEmpty()) {
-//                    controllerIds = controllerIds.filter(availableController -> in.getControllerIds().contains(availableController));
-//                }
-//                allowedControllers = controllerIds.filter(availableController -> getControllerPermissions(availableController,
-//                        accessToken).getOrders().getView()).collect(Collectors.toSet());
-//                permitted = !allowedControllers.isEmpty();
-//            }
-//            if (permitted) {
-//                JocPermissions perms = getJocPermissions(accessToken);
-//                permitted = perms.getCalendars().getView() || perms.getDailyPlan().getView();
-//            }
-//
-//            JOCDefaultResponse jocDefaultResponse = initPermissions(null, permitted);
-//            if (jocDefaultResponse != null) {
-//                return jocDefaultResponse;
-//            }
-//
-//            Long yearFrom = in.getDateFrom() != null ? Long.valueOf(in.getDateFrom().split("-",2)[0]) : null;
-//            Long yearTo = in.getDateTo() != null ? Long.valueOf(in.getDateTo().split("-",2)[0]) : null;
-//            Integer monthFrom = in.getDateFrom() != null ? getMonth(in.getDateFrom()) : null;
-//            Integer monthTo = in.getDateTo() != null ? getMonth(in.getDateTo()) : null;
-//            Integer dayFrom = in.getDateFrom() != null ? getDay(in.getDateFrom()) : null;
-//            Integer dayTo = in.getDateTo() != null ? getDay(in.getDateTo()) : null;
-//            
-//            Optional<Predicate<String>> pMonthFromTo = getMonthFromToPredicate(monthFrom, monthTo);
-//            Optional<Predicate<String>> pDayFromTo = getDayFromToPredicate(dayFrom, dayTo);
-//            Optional<Set<String>> scheduleNames = Optional.of(Collections.singleton(JocInventory.pathToName(in.getSchedulePath())));
-//
-//            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_SCHEDULES);
-//            DBLayerDailyPlanProjections dbLayer = new DBLayerDailyPlanProjections(session);
-//            List<DBItemDailyPlanProjection> items = dbLayer.getProjections(yearFrom, yearTo);
-//            dbLayer.close();
-//            session = null;
-//
-//            MetaItem metaItem = null;
-//            Set<String> permittedSchedules = new HashSet<>();
-//            boolean unPermittedSchedulesExist = false;
-//            ProjectionsScheduleResponse entity = new ProjectionsScheduleResponse();
-//            Date surveyDate = null;
-//            
-//            if (items != null) {
-//                Optional<DBItemDailyPlanProjection> metaContentOpt = items.stream().filter(DBItemDailyPlanProjection::isMeta).findAny();
-//                if (metaContentOpt.isPresent()) {
-//                    surveyDate = metaContentOpt.get().getCreated();
-//                    metaItem = Globals.objectMapper.readValue(metaContentOpt.get().getContent(), MetaItem.class);
-//                    if (metaItem != null && metaItem.getAdditionalProperties() != null) {
-//                        if (filterControllerIds(metaItem, allowedControllers)) {
-//                            unPermittedSchedulesExist = true;
-//                        }
-//                        for (String controllerId : allowedControllers) {
-//                            if (filterPermittedSchedules(metaItem.getAdditionalProperties().get(controllerId), folderPermissions.getListOfFolders(
-//                                    controllerId), scheduleNames, permittedSchedules)) {
-//                                unPermittedSchedulesExist = true;
-//                            }
-//                        }
-//                    }
-//                } else {
-//                    throw new DBMissingDataException(
-//                            "Couldn't find projections meta data. Maybe a recalculation of the projections is in progress right now.");
-//                }
-//                
-//                List<DatePeriodItem> datePeriodItemItems = new ArrayList<>();
-//                
-//                final boolean unPermittedSchedulesExist2 = unPermittedSchedulesExist;
-//                for (DBItemDailyPlanProjection item : items) {
-//                    if (!item.isMeta()) {
-//
-//                        YearsItem yi = Globals.objectMapper.readValue(item.getContent(), YearsItem.class);
-//                        yi.getAdditionalProperties().forEach((y, yearItem) -> {
-//                            pMonthFromTo.ifPresent(p -> yearItem.getAdditionalProperties().keySet().removeIf(p));
-//                            yearItem.getAdditionalProperties().forEach((m, monthItem) -> {
-//                                pDayFromTo.ifPresent(p -> monthItem.getAdditionalProperties().keySet().removeIf(p));
-//                                monthItem.getAdditionalProperties().forEach((d, dateItem) -> {
-//                                    if (unPermittedSchedulesExist2) {
-//                                        dateItem.getPeriods().removeIf(p -> !permittedSchedules.contains(p.getSchedule()));
-//                                    }
-//                                    dateItem.setNumOfPeriods(dateItem.getPeriods().size());
-//                                    if (dateItem.getNumOfPeriods() != 0) {
-//                                        dateItem.getPeriods().forEach(dpi -> {
-//                                            dpi.setAdditionalProperty("planned", dateItem.getPlanned());
-//                                            dpi.setAdditionalProperty("day", d);
-//                                            datePeriodItemItems.add(dpi);
-//                                        });
-//                                    }
-//                                });
-//                            });
-//                        });
-//                    }
-//                }
-//                
-//                datePeriodItemItems.stream().collect(Collectors.groupingBy(dpi -> (String) dpi.getAdditionalProperties().get("day"))).forEach((day,
-//                        dpiList) -> {
-//                    if (!dpiList.isEmpty()) {
-//                        DateItem di = new DateItem();
-//                        di.setPlanned((Boolean) dpiList.get(0).getAdditionalProperties().get("planned"));
-//                        di.setNumOfPeriods(dpiList.size());
-//                        di.setPeriods(null);
-//                        entity.setAdditionalProperty(day, di);
-//                    }
-//                });
-//                
-//            }
-//
-//            entity.setDeliveryDate(Date.from(Instant.now()));
-//            entity.setSurveyDate(surveyDate);
-//            
-//            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
-//        } catch (JocException e) {
-//            e.addErrorMetaInfo(getJocError());
-//            return JOCDefaultResponse.responseStatusJSError(e);
-//        } catch (Exception e) {
-//            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-//        } finally {
-//            Globals.disconnect(session);
-//        }
-//    }
 
-//    private Optional<Predicate<String>> getMonthFromToPredicate(Integer monthFrom, Integer monthTo) {
-//        Predicate<String> pMonthFrom = m -> getMonth(m) < monthFrom;
-//        Predicate<String> pMonthTo = m -> getMonth(m) > monthTo;
-//        
-//        Predicate<String> pMonthFromTo = null;
-//        if (monthFrom != null && !(monthFrom + "").endsWith("01")) {
-//            pMonthFromTo = pMonthFrom;
-//            if (monthTo != null && !(monthTo + "").endsWith("12")) {
-//                pMonthFromTo = pMonthFrom.or(pMonthTo);
-//            }
-//        } else if (monthTo != null && !(monthTo + "").endsWith("12")) {
-//            pMonthFromTo = pMonthTo;
-//        }
-//        return pMonthFromTo == null ? Optional.empty() : Optional.of(pMonthFromTo);
-//    }
-    
     private Optional<Predicate<String>> getDayFromToPredicate(Integer dayFrom, Integer dayTo) {
         Predicate<String> pDayFrom = d -> getDay(d) < dayFrom;
         Predicate<String> pDayTo = d -> getDay(d) > dayTo;
@@ -687,103 +373,8 @@ public class DailyPlanProjectionsImpl extends JOCResourceImpl implements IDailyP
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
     }
-    
-    protected static boolean filterControllerIds(MetaItem metaItem, Set<String> allowedControllers) {
-        boolean controllerRemoved = false;
-        if (metaItem != null && metaItem.getAdditionalProperties() != null) {
-            //metaItem.getAdditionalProperties().keySet().removeIf(controllerId -> !allowedControllers.contains(controllerId));
-            controllerRemoved = metaItem.getAdditionalProperties().keySet().retainAll(allowedControllers);
-        }
-        return controllerRemoved;
-    }
-    
-    private static void filterPermittedWorkflows(WorkflowsItem workflowsItem, Set<Folder> permittedFolders, Optional<Set<String>> workflowNames) {
-        // boolean workflowsRemoved = false;
 
-        if (workflowsItem != null && workflowsItem.getAdditionalProperties() != null) {
-            // int numOfWorkflow = workflowsItem.getAdditionalProperties().keySet().size();
-
-            workflowNames.ifPresent(wn -> workflowsItem.getAdditionalProperties().keySet().removeIf(workflow -> !wn.contains(JocInventory.pathToName(
-                    workflow))));
-
-            if (!permittedFolders.isEmpty()) {
-                workflowsItem.getAdditionalProperties().keySet().removeIf(wPath -> !canAdd(wPath, permittedFolders));
-            }
-            
-            // int newNumOfWorkflow = workflowsItem.getAdditionalProperties().keySet().size();
-            // if (numOfWorkflow > newNumOfWorkflow) {
-            // workflowsRemoved = true;
-            // }
-        }
-
-        // return workflowsRemoved;
-    }
-    
-    protected static boolean filterPermittedSchedules(ControllerInfoItem cii, Set<Folder> permittedFolders, Optional<Set<String>> scheduleNames,
-            List<Folder> scheduleFolders, Optional<Set<String>> nonPeriodScheduleNames, Optional<Set<String>> workflowNames,
-            List<Folder> workflowFolders, Set<String> permittedSchedules) {
-        boolean schedulesRemoved = false;
-    
-        if (cii != null && cii.getAdditionalProperties() != null) {
-            int numOfSchedules = cii.getAdditionalProperties().keySet().size();
-
-            scheduleNames.ifPresent(sn -> cii.getAdditionalProperties().keySet().removeIf(schedule -> !sn.contains(JocInventory.pathToName(
-                    schedule))));
-            
-            nonPeriodScheduleNames.ifPresent(sn -> cii.getAdditionalProperties().keySet().removeIf(schedule -> sn.contains(JocInventory.pathToName(
-                    schedule))));
-            
-            Set<Folder> permittedFolders1 = new HashSet<>();
-            if (scheduleFolders != null && !scheduleFolders.isEmpty()) {
-                permittedFolders1.addAll(SOSAuthFolderPermissions.getPermittedFolders(scheduleFolders, permittedFolders));
-                if (permittedFolders1.isEmpty()) { // no folder permissions
-                    cii.getAdditionalProperties().clear();
-                }
-            } else {
-                permittedFolders1.addAll(permittedFolders);
-            }
-            if (!permittedFolders1.isEmpty()) {
-                cii.getAdditionalProperties().keySet().removeIf(schedule -> !canAdd(schedule, permittedFolders1));
-            } 
-            
-            Set<Folder> permittedFolders2 = new HashSet<>();
-            if (workflowFolders != null && !workflowFolders.isEmpty()) {
-                permittedFolders2.addAll(SOSAuthFolderPermissions.getPermittedFolders(workflowFolders, permittedFolders));
-                if (permittedFolders2.isEmpty()) { // no folder permissions
-                    cii.getAdditionalProperties().clear();
-                }
-            } else {
-                permittedFolders2.addAll(permittedFolders);
-            }
-            
-            cii.getAdditionalProperties().values().forEach(sii -> {
-                if (sii != null) {
-                    if (!permittedFolders2.isEmpty() || workflowNames.isPresent()) {
-                        filterPermittedWorkflows(sii.getWorkflows(), permittedFolders2, workflowNames);
-                    }
-                    if (sii.getWorkflows() != null) {
-                        sii.setWorkflowPaths(sii.getWorkflows().getAdditionalProperties().keySet());
-                        sii.setWorkflows(null);
-                        sii.setTotalOrders(null);
-                    }
-                }
-            });
-            cii.getAdditionalProperties().values().removeIf(sii -> sii == null || sii.getWorkflowPaths() == null || sii.getWorkflowPaths().isEmpty());
-
-            int newNumOfSchedules = cii.getAdditionalProperties().keySet().size();
-            if (numOfSchedules > newNumOfSchedules) {
-                schedulesRemoved = true;
-            }
-            permittedSchedules.addAll(cii.getAdditionalProperties().keySet());
-        }
-        return schedulesRemoved;
-    }
-    
-    public static Long getMonth(String month) {
-        return Long.valueOf(month.replaceFirst("^(\\d{4})-(\\d{2}).*", "$1$2"));
-    }
-    
-    private static Integer getDay(String day) {
+    private Integer getDay(String day) {
         return Integer.valueOf(day.replace("-", ""));
     }
 

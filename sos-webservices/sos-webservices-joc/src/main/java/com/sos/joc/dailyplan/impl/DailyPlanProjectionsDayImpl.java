@@ -14,13 +14,13 @@ import java.util.stream.Stream;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxies;
+import com.sos.joc.dailyplan.common.ProjectionsImpl;
 import com.sos.joc.dailyplan.db.DBLayerDailyPlanProjections;
-import com.sos.joc.dailyplan.resource.IDailyPlanDayProjectionResource;
+import com.sos.joc.dailyplan.resource.IDailyPlanProjectionsDayResource;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanProjection;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -37,7 +37,7 @@ import com.sos.schema.JsonValidator;
 import jakarta.ws.rs.Path;
 
 @Path(WebservicePaths.DAILYPLAN)
-public class DailyPlanDayProjectionImpl extends JOCResourceImpl implements IDailyPlanDayProjectionResource {
+public class DailyPlanProjectionsDayImpl extends ProjectionsImpl implements IDailyPlanProjectionsDayResource {
 
     @Override
     public JOCDefaultResponse dateProjection(String accessToken, byte[] filterBytes) {
@@ -77,32 +77,41 @@ public class DailyPlanDayProjectionImpl extends JOCResourceImpl implements IDail
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             DBLayerDailyPlanProjections dbLayer = new DBLayerDailyPlanProjections(session);
-            List<DBItemDailyPlanProjection> items = dbLayer.getProjections(Collections.singletonList(DailyPlanProjectionsImpl.getMonth(in
-                    .getDate())));
+            List<DBItemDailyPlanProjection> items = dbLayer.getProjections(Collections.singletonList(getMonth(in.getDate())));
             dbLayer.close();
             session = null;
+
+            boolean invertedProjection = in.getWithoutStartTime() != null && in.getWithoutStartTime();
 
             Set<String> permittedSchedules = new HashSet<>();
             ProjectionsDayResponse entity = new ProjectionsDayResponse();
             entity.setNumOfPeriods(0);
-            Boolean nonPeriods = in.getWithoutStartTime();
             Optional<DBItemDailyPlanProjection> metaOpt = Optional.empty();
             Optional<MetaItem> metaContentOpt = Optional.empty();
-            
-            if (items != null) {
-                Set<String> scheduleNames = Collections.emptySet();
 
+            if (items != null) {
                 if (items.isEmpty()) {
-                    throw DailyPlanProjectionsImpl.getDBMissingDataException();
+                    throw getDBMissingDataException();
                 }
+
+                metaOpt = items.stream().filter(DBItemDailyPlanProjection::isMeta).findAny();
+                metaContentOpt = metaOpt.map(m -> {
+                    try {
+                        return Globals.objectMapper.readValue(m.getContent(), MetaItem.class);
+                    } catch (Exception e) {
+                        throw new DBInvalidDataException(e);
+                    }
+                });
+
+                Set<String> scheduleNames = Collections.emptySet();
                 for (DBItemDailyPlanProjection item : items) {
                     if (!item.isMeta()) {
-
                         MonthItem mi = Globals.objectMapper.readValue(item.getContent(), MonthItem.class);
                         DateItem d = mi.getAdditionalProperties().get(in.getDate());
                         if (d != null) {
                             entity.setPeriods(d.getPeriods());
                             entity.setPlanned(d.getPlanned());
+
                             scheduleNames = d.getPeriods().stream().map(DatePeriodItem::getSchedule).filter(Objects::nonNull).map(
                                     JocInventory::pathToName).collect(Collectors.toSet());
                         }
@@ -110,11 +119,17 @@ public class DailyPlanDayProjectionImpl extends JOCResourceImpl implements IDail
                 }
 
                 if (!scheduleNames.isEmpty()) {
-                    Optional<Set<String>> scheduleNamesOpt = DailyPlanProjectionsImpl.getNamesOptional(in.getSchedulePaths());
-                    Optional<Set<String>> workflowNamesOpt = DailyPlanProjectionsImpl.getNamesOptional(in.getWorkflowPaths());
+                    Optional<Set<String>> scheduleNamesOpt = getNamesOptional(in.getSchedulePaths());
+                    Optional<Set<String>> workflowNamesOpt = getNamesOptional(in.getWorkflowPaths());
                     Optional<Set<String>> nonPeriodScheduleNamesOpt = Optional.empty();
-                    
-                    if (!nonPeriods) {
+                    boolean isPlanned = isPlanned(entity);
+
+                    if (invertedProjection) {
+                        nonPeriodScheduleNamesOpt = Optional.of(scheduleNames);
+
+                        // remove from Meta "ExcludedFromProjection" entries if a day is not a "planned" day
+                        getSchedulesExcludedFromProjection(metaContentOpt, !isPlanned);
+                    } else {
                         if (scheduleNamesOpt.isPresent()) {
                             Set<String> scheduleNames1 = scheduleNamesOpt.get();
                             scheduleNames1.retainAll(scheduleNames);
@@ -122,37 +137,32 @@ public class DailyPlanDayProjectionImpl extends JOCResourceImpl implements IDail
                         } else {
                             scheduleNamesOpt = Optional.of(scheduleNames);
                         }
-                    } else {
-                        nonPeriodScheduleNamesOpt = Optional.of(scheduleNames);
                     }
+                    final boolean unPermittedSchedulesExist = setPermittedSchedules(metaContentOpt, allowedControllers, scheduleNamesOpt, in
+                            .getScheduleFolders(), nonPeriodScheduleNamesOpt, workflowNamesOpt, in.getWorkflowFolders(), permittedSchedules,
+                            folderPermissions);
 
-                    metaOpt = items.stream().filter(DBItemDailyPlanProjection::isMeta).findAny();
-                    metaContentOpt = metaOpt.map(m -> {
-                        try {
-                            return Globals.objectMapper.readValue(m.getContent(), MetaItem.class);
-                        } catch (Exception e) {
-                            throw new DBInvalidDataException(e);
-                        }
-                    });
-                    final boolean unPermittedSchedulesExist = DailyPlanProjectionsImpl.setPermittedSchedules(metaContentOpt, allowedControllers,
-                            scheduleNamesOpt, in.getScheduleFolders(), nonPeriodScheduleNamesOpt, workflowNamesOpt, in.getWorkflowFolders(),
-                            permittedSchedules, folderPermissions);
-                    if (!nonPeriods) {
-                        if (unPermittedSchedulesExist) {
-                            entity.getPeriods().removeIf(p -> !permittedSchedules.contains(p.getSchedule()));
-                        }
-                        entity.setNumOfPeriods(entity.getPeriods().size());
-                        entity.setNumOfNonPeriods(null);
-                        entity.setNonPeriods(null);
-                    } else {
-                        entity.setPeriods(null);
-                        entity.setNumOfPeriods(null);
+                    if (invertedProjection) {
                         entity.setNonPeriods(permittedSchedules.stream().map(s -> {
                             DatePeriodItem dpi = new DatePeriodItem();
                             dpi.setSchedule(s);
                             return dpi;
-                        }).collect(Collectors.toList()));
+                        }).filter(Objects::nonNull).collect(Collectors.toList()));
                         entity.setNumOfNonPeriods(entity.getNonPeriods().size());
+
+                        // remove Periods
+                        entity.setPeriods(null);
+                        entity.setNumOfPeriods(null);
+
+                    } else {
+                        if (unPermittedSchedulesExist) {
+                            entity.getPeriods().removeIf(p -> !permittedSchedules.contains(p.getSchedule()));
+                        }
+                        entity.setNumOfPeriods(entity.getPeriods().size());
+
+                        // remove NonPeriods
+                        entity.setNonPeriods(null);
+                        entity.setNumOfNonPeriods(null);
                     }
                 }
 
