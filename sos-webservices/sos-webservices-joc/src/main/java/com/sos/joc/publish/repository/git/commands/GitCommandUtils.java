@@ -963,6 +963,9 @@ public class GitCommandUtils {
         Path gitConfigTmpPath = Paths.get(System.getProperty("java.io.tmpdir"))
                 .resolve(GitCommandConstants.GIT_CONFIG_DEFAULT_FILENAME + "_"+ username);
         try {
+            if(!Files.exists(gitConfigTmpPath)) {
+                Files.createFile(gitConfigTmpPath);
+            }
             if(gitKeyFilePath != null) {
                 configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSshAdd(GitConfigType.FILE, gitKeyFilePath, charset,
                         gitConfigTmpPath);
@@ -997,6 +1000,8 @@ public class GitCommandUtils {
             }
             if(Files.exists(gitConfigTmpPath)) {
                 Files.copy(gitConfigTmpPath, gitConfigPath, StandardCopyOption.REPLACE_EXISTING);
+            } else {
+                LOGGER.info("No temporary git config file found!");
             }
             return configResult;
         } catch (SOSException e) {
