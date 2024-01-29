@@ -780,13 +780,15 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 
                 TreeSet<DBItemDailyPlanOrder> cyclicOrdersOfItem = dbLayer.getDailyPlanOrdersByCyclicMainPart(in.getControllerId(), OrdersHelper
                         .getCyclicOrderIdMainPart(item.getOrderId())).stream().collect(Collectors.toCollection(() -> new TreeSet<>(comp)));
-
-                DBItemDailyPlanOrder lastOrderOfCycle = cyclicOrdersOfItem.last();
-                Instant newPlannedStartOfLast = in.getNewPlannedStart(lastOrderOfCycle.getPlannedStart());
                 
                 DBItemDailyPlanOrder firstOrderOfCycle = cyclicOrdersOfItem.first();
                 Instant newPlannedStartOfFirst = in.getNewPlannedStart(firstOrderOfCycle.getPlannedStart());
                 
+                DBItemDailyPlanOrder lastOrderOfCycle = cyclicOrdersOfItem.last();
+                // Instant newPlannedStartOfLast = in.getNewPlannedStart(lastOrderOfCycle.getPlannedStart());
+                Instant newPlannedStartOfLast = lastOrderOfCycle.getPlannedStart().toInstant().plusMillis(newPlannedStartOfFirst.toEpochMilli()
+                        - firstOrderOfCycle.getPlannedStart().getTime());
+
                 if ("never".equals(in.getScheduledFor())) {
                     
                     firstOrderOfCycle.setPlannedStart(Date.from(newPlannedStartOfFirst));
@@ -833,9 +835,11 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                     
                     Cycle cycle = new Cycle();
                     cycle.setRepeat(getPeriodRepeat(item.getRepeatInterval()));
-                    cycle.setBegin(getPeriodBeginEnd(Date.from(in.getNewPlannedStart(item.getPeriodBegin())), in.getTimeZone()));
-                    cycle.setEnd(getPeriodBeginEnd(Date.from(in.getNewPlannedStart(item.getPeriodEnd())), in.getTimeZone()));
-                    
+                    Instant newPeriodbegin = in.getNewPlannedStart(item.getPeriodBegin());
+                    long periodIntervalLength = item.getPeriodEnd().getTime() - item.getPeriodBegin().getTime();
+                    cycle.setBegin(getPeriodBeginEnd(Date.from(newPeriodbegin), in.getTimeZone()));
+                    cycle.setEnd(getPeriodBeginEnd(Date.from(newPeriodbegin.plusMillis(periodIntervalLength)), in.getTimeZone()));
+
                     modifyStartTimeCycle(in, dailyPanDateOfFirst, cycle, item, cyclicOrdersOfItem, auditlog).ifPresent(newOrderId -> {
                         result.getAdditionalProperties().put(item.getOrderId(), newOrderId);
                     });
