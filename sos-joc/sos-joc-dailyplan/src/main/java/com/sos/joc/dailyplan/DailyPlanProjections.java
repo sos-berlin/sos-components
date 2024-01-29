@@ -67,6 +67,7 @@ public class DailyPlanProjections {
     private static final int PLANNED_ENTRIES_AGE = 2;
 
     private Map<String, Long> workflowsAvg = new HashMap<>();
+    private Map<String, Integer> totalOrders = new HashMap<>();
     private boolean onlyPlanOrderAutomatically = true;
 
     private String logPrefix;
@@ -297,7 +298,7 @@ public class DailyPlanProjections {
                 .getReleasedSchedule2DeployedWorkflows(null, null);
 
         // tmp log
-        LOGGER.info(lp + "[schedules2workflows]" + SOSDate.getDuration(start, Instant.now()));
+        // LOGGER.info(lp + "[schedules2workflows]" + SOSDate.getDuration(start, Instant.now()));
 
         if (schedules2workflows.size() > 0) {
             DBLayerDailyPlannedOrders dbLayerPlannedOrders = new DBLayerDailyPlannedOrders(dbLayer.getSession());
@@ -356,9 +357,24 @@ public class DailyPlanProjections {
         LOGGER.info(lp + "[end]" + SOSDate.getDuration(start, Instant.now()));
     }
 
+    /** set planned meta schedules as "excludedFromProjection" if a schedule has been removed (or "Plan Order automatically" is deactivated) */
+    private MetaItem checkIfPlannedSchedulesExcludedFromProjection(MetaItem mi, Collection<DailyPlanSchedule> dailyPlanSchedules) {
+        for (Map.Entry<String, ControllerInfoItem> cii : mi.getAdditionalProperties().entrySet()) {
+            for (Map.Entry<String, ScheduleInfoItem> sii : cii.getValue().getAdditionalProperties().entrySet()) {
+                DailyPlanSchedule found = dailyPlanSchedules.stream().filter(s -> s.getSchedule().getPath().equals(sii.getKey())).findAny().orElse(
+                        null);
+                if (found == null) {
+                    sii.getValue().setExcludedFromProjection(Boolean.valueOf(true));
+                }
+            }
+        }
+        return mi;
+    }
+
     // merge planned and projections
     private MetaItem getMeta(Collection<DailyPlanSchedule> dailyPlanSchedules, DailyPlanResult dpr) {
         MetaItem mi = dpr != null && dpr.meta != null ? dpr.meta : new MetaItem();
+        mi = checkIfPlannedSchedulesExcludedFromProjection(mi, dailyPlanSchedules);
 
         for (DailyPlanSchedule s : dailyPlanSchedules) {
             Map<String, List<DailyPlanScheduleWorkflow>> perController = s.getWorkflows().stream().collect(Collectors.groupingBy(w -> w
@@ -612,7 +628,7 @@ public class DailyPlanProjections {
         return calendar;
     }
 
-    // schedule orders*workflows
+    // Meta
     private int getTotalOrders(DailyPlanSchedule s) {
         if (s == null || s.getSchedule() == null) {
             if (LOGGER.isDebugEnabled()) {
@@ -623,13 +639,19 @@ public class DailyPlanProjections {
         return getTotalOrders(s.getSchedule());
     }
 
+    // Projections
     private int getTotalOrders(Schedule s) {
+        if (totalOrders.containsKey(s.getPath())) {
+            return totalOrders.get(s.getPath());
+        }
+
         int o = s.getOrderParameterisations() != null && s.getOrderParameterisations().size() > 1 ? s.getOrderParameterisations().size() : 1;
         int w = s.getWorkflowNames() != null && s.getWorkflowNames().size() > 1 ? s.getWorkflowNames().size() : 1;
         int t = o * w;
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format("%s[getTotalOrders][schedule=%s][orders=%s,workflows=%s]total=%s", logPrefix, s.getPath(), o, w, t));
         }
+        totalOrders.put(s.getPath(), t);
         return t;
     }
 
