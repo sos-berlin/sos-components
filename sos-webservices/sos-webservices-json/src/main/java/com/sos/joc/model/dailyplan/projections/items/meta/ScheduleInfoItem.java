@@ -23,7 +23,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "totalOrders",
     "workflows",
-    "workflowPaths"
+    "workflowPaths",
+    "excludedFromProjection"
 })
 public class ScheduleInfoItem {
 
@@ -50,8 +51,11 @@ public class ScheduleInfoItem {
      * 
      */
     @JsonProperty("workflowPaths")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
     @JsonPropertyDescription("this property is only used for a shorter response of ./projections/day API")
-    private Set<String> workflowPaths;
+    private Set<String> workflowPaths = new LinkedHashSet<String>();
+    @JsonProperty("excludedFromProjection")
+    private Boolean excludedFromProjection;
 
     /**
      * non negative long
@@ -119,14 +123,24 @@ public class ScheduleInfoItem {
         this.workflowPaths = workflowPaths;
     }
 
+    @JsonProperty("excludedFromProjection")
+    public Boolean getExcludedFromProjection() {
+        return excludedFromProjection;
+    }
+
+    @JsonProperty("excludedFromProjection")
+    public void setExcludedFromProjection(Boolean excludedFromProjection) {
+        this.excludedFromProjection = excludedFromProjection;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("totalOrders", totalOrders).append("workflows", workflows).append("workflowPaths", workflowPaths).toString();
+        return new ToStringBuilder(this).append("totalOrders", totalOrders).append("workflows", workflows).append("workflowPaths", workflowPaths).append("excludedFromProjection", excludedFromProjection).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowPaths).append(totalOrders).append(workflows).toHashCode();
+        return new HashCodeBuilder().append(workflowPaths).append(excludedFromProjection).append(totalOrders).append(workflows).toHashCode();
     }
 
     @Override
@@ -138,7 +152,7 @@ public class ScheduleInfoItem {
             return false;
         }
         ScheduleInfoItem rhs = ((ScheduleInfoItem) other);
-        return new EqualsBuilder().append(workflowPaths, rhs.workflowPaths).append(totalOrders, rhs.totalOrders).append(workflows, rhs.workflows).isEquals();
+        return new EqualsBuilder().append(workflowPaths, rhs.workflowPaths).append(excludedFromProjection, rhs.excludedFromProjection).append(totalOrders, rhs.totalOrders).append(workflows, rhs.workflows).isEquals();
     }
 
 }

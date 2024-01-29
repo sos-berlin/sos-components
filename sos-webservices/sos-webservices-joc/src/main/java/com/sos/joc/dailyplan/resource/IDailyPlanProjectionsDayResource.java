@@ -10,7 +10,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
-public interface IDailyPlanDayProjectionResource {
+public interface IDailyPlanProjectionsDayResource {
 
     public static final String PATH = "projections/day";
     public static final String IMPL_PATH = WebservicePaths.getResourceImplPath(WebservicePaths.DAILYPLAN, PATH);
