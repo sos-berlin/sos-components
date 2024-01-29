@@ -784,18 +784,13 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 DBItemDailyPlanOrder firstOrderOfCycle = cyclicOrdersOfItem.first();
                 Instant newPlannedStartOfFirst = in.getNewPlannedStart(firstOrderOfCycle.getPlannedStart());
                 
-                DBItemDailyPlanOrder lastOrderOfCycle = cyclicOrdersOfItem.last();
-                // Instant newPlannedStartOfLast = in.getNewPlannedStart(lastOrderOfCycle.getPlannedStart());
-                Instant newPlannedStartOfLast = lastOrderOfCycle.getPlannedStart().toInstant().plusMillis(newPlannedStartOfFirst.toEpochMilli()
-                        - firstOrderOfCycle.getPlannedStart().getTime());
-
                 if ("never".equals(in.getScheduledFor())) {
                     
                     firstOrderOfCycle.setPlannedStart(Date.from(newPlannedStartOfFirst));
                     firstOrderOfCycle.setExpectedEnd(null);
                     firstOrderOfCycle.setIsLastOfCyclic(true);
                     
-                    String dailyPlanDateOfFirst = firstOrderOfCycle.getDailyPlanDate(settingTimeZone, settingPeriodBeginSeconds);
+                    String dailyPlanDateOfFirst = firstOrderOfCycle.getDailyPlanDate("Etc/UTC", 0);
                     dailyPlanDates.add(dailyPlanDateOfFirst);
                     
                     String newOrderId = OrdersHelper.generateNewFromOldOrderId(firstOrderOfCycle.getOrderId(), dailyPlanDateOfFirst, zoneId);
@@ -804,45 +799,53 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                     
                     allItems.addAll(cyclicOrdersOfItem);
                     
-                } else if (newPlannedStartOfLast.isBefore(now)) {
-                    
-                    newPlannedStartOfLast = now;
-
-                    if (lastOrderOfCycle.getExpectedEnd() != null) {
-                        long expectedDuration = lastOrderOfCycle.getExpectedEnd().getTime() - lastOrderOfCycle.getPlannedStart().getTime();
-                        lastOrderOfCycle.setExpectedEnd(Date.from(newPlannedStartOfLast.plusMillis(expectedDuration)));
-                    }
-                    lastOrderOfCycle.setPlannedStart(Date.from(newPlannedStartOfLast));
-                    lastOrderOfCycle.setIsLastOfCyclic(true);
-
-                    String dailyPlanDateOfLast = lastOrderOfCycle.getDailyPlanDate(settingTimeZone, settingPeriodBeginSeconds);
-                    dailyPlanDates.add(dailyPlanDateOfLast);
-
-                    String newOrderId = OrdersHelper.generateNewFromOldOrderId(lastOrderOfCycle.getOrderId(), dailyPlanDateOfLast, zoneId);
-                    result.getAdditionalProperties().put(item.getOrderId(), newOrderId);
-                    cycleOrderIdMap.put(lastOrderOfCycle.getOrderId(), newOrderId);
-                    
-                    // TODO ? dailyplandate from first cycle item?
-//                    DBItemDailyPlanOrder firstOrderOfCycle = cyclicOrdersOfItem.first();
-//                    Instant dailyPlanDateOfFirst = in.getNewPlannedStart(firstOrderOfCycle.getPlannedStart());
-                    // TODO setPeriodBegin and  ..End with new dailyplandate?
-
-                    allItems.addAll(cyclicOrdersOfItem);
-                    
                 } else {
-
-                    String dailyPanDateOfFirst = getDailyPlanDate(newPlannedStartOfFirst, settingTimeZone, settingPeriodBeginSeconds);
                     
-                    Cycle cycle = new Cycle();
-                    cycle.setRepeat(getPeriodRepeat(item.getRepeatInterval()));
-                    Instant newPeriodbegin = in.getNewPlannedStart(item.getPeriodBegin());
-                    long periodIntervalLength = item.getPeriodEnd().getTime() - item.getPeriodBegin().getTime();
-                    cycle.setBegin(getPeriodBeginEnd(Date.from(newPeriodbegin), in.getTimeZone()));
-                    cycle.setEnd(getPeriodBeginEnd(Date.from(newPeriodbegin.plusMillis(periodIntervalLength)), in.getTimeZone()));
+                    DBItemDailyPlanOrder lastOrderOfCycle = cyclicOrdersOfItem.last();
+                    // Instant newPlannedStartOfLast = in.getNewPlannedStart(lastOrderOfCycle.getPlannedStart());
+                    Instant newPlannedStartOfLast = lastOrderOfCycle.getPlannedStart().toInstant().plusMillis(newPlannedStartOfFirst.toEpochMilli()
+                            - firstOrderOfCycle.getPlannedStart().getTime());
+                    
+                    if (newPlannedStartOfLast.isBefore(now)) {
 
-                    modifyStartTimeCycle(in, dailyPanDateOfFirst, cycle, item, cyclicOrdersOfItem, auditlog).ifPresent(newOrderId -> {
+                        newPlannedStartOfLast = now;
+
+                        if (lastOrderOfCycle.getExpectedEnd() != null) {
+                            long expectedDuration = lastOrderOfCycle.getExpectedEnd().getTime() - lastOrderOfCycle.getPlannedStart().getTime();
+                            lastOrderOfCycle.setExpectedEnd(Date.from(newPlannedStartOfLast.plusMillis(expectedDuration)));
+                        }
+                        lastOrderOfCycle.setPlannedStart(Date.from(newPlannedStartOfLast));
+                        lastOrderOfCycle.setIsLastOfCyclic(true);
+
+                        String dailyPlanDateOfLast = lastOrderOfCycle.getDailyPlanDate(settingTimeZone, settingPeriodBeginSeconds);
+                        dailyPlanDates.add(dailyPlanDateOfLast);
+
+                        String newOrderId = OrdersHelper.generateNewFromOldOrderId(lastOrderOfCycle.getOrderId(), dailyPlanDateOfLast, zoneId);
                         result.getAdditionalProperties().put(item.getOrderId(), newOrderId);
-                    });
+                        cycleOrderIdMap.put(lastOrderOfCycle.getOrderId(), newOrderId);
+
+                        // TODO ? dailyplandate from first cycle item?
+                        // DBItemDailyPlanOrder firstOrderOfCycle = cyclicOrdersOfItem.first();
+                        // Instant dailyPlanDateOfFirst = in.getNewPlannedStart(firstOrderOfCycle.getPlannedStart());
+                        // TODO setPeriodBegin and ..End with new dailyplandate?
+
+                        allItems.addAll(cyclicOrdersOfItem);
+
+                    } else {
+
+                        String dailyPanDateOfFirst = getDailyPlanDate(newPlannedStartOfFirst, settingTimeZone, settingPeriodBeginSeconds);
+
+                        Cycle cycle = new Cycle();
+                        cycle.setRepeat(getPeriodRepeat(item.getRepeatInterval()));
+                        Instant newPeriodbegin = in.getNewPlannedStart(item.getPeriodBegin());
+                        long periodIntervalLength = item.getPeriodEnd().getTime() - item.getPeriodBegin().getTime();
+                        cycle.setBegin(getPeriodBeginEnd(Date.from(newPeriodbegin), in.getTimeZone()));
+                        cycle.setEnd(getPeriodBeginEnd(Date.from(newPeriodbegin.plusMillis(periodIntervalLength)), in.getTimeZone()));
+
+                        modifyStartTimeCycle(in, dailyPanDateOfFirst, cycle, item, cyclicOrdersOfItem, auditlog).ifPresent(newOrderId -> {
+                            result.getAdditionalProperties().put(item.getOrderId(), newOrderId);
+                        });
+                    }
                 }
             }
             for (DBItemDailyPlanOrder item : itemsMap.get(Boolean.FALSE)) { // single start orders
