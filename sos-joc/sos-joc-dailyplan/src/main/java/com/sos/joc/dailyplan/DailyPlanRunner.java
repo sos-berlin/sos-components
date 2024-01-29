@@ -581,6 +581,7 @@ public class DailyPlanRunner extends TimerTask {
                     LOGGER.warn(String.format("[%s][skip][schedule is null]%s", method, SOSHibernate.toString(item)));
                     continue;
                 }
+                // TODO: maybe duplicate with line 590 below
                 dps.getWorkflows().add(new DailyPlanScheduleWorkflow(item.getWorkflowName(), item.getWorkflowPath(), item.getWorkflowContent()));
             }
             if (dps.getSchedule() == null) {
