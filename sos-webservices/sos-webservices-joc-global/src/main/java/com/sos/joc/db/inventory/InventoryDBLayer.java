@@ -1874,9 +1874,11 @@ public class InventoryDBLayer extends DBLayer {
     public List<DBItemInventoryConfiguration> getUsedSchedulesByCalendarName(String calendarName) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
         hql.append("where type=:type ");
-        hql.append("and ");
+        hql.append("and (");
         String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "jsonContent", "$.calendars");
+        String jsonFuncNonWorkingDays = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "jsonContent", "$.nonWorkingDayCalendars");
         hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":calendarName"));
+        hql.append(" or ").append(SOSHibernateRegexp.getFunction(jsonFuncNonWorkingDays, ":calendarName")).append(" )");
 
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
@@ -1889,7 +1891,9 @@ public class InventoryDBLayer extends DBLayer {
         hql.append("where type=:type ");
         hql.append("and ");
         String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "jsonContent", "$.calendars");
+        String jsonFuncNonWorkingDays = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "jsonContent", "$.nonWorkingDayCalendars");
         hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":calendarName"));
+        hql.append(" or ").append(SOSHibernateRegexp.getFunction(jsonFuncNonWorkingDays, ":calendarName")).append(" )");
 
         Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
