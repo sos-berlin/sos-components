@@ -1164,8 +1164,13 @@ public class GitCommandUtils {
             throws JsonMappingException, JsonProcessingException, SOSHibernateException {
         GitCredentialsList credList = GitCommandUtils.getCredentialsList(account, dbLayer);
         String remoteUri = GitCommandUtils.getActiveRemoteUri(localRepo, workingDir, credList, StandardCharsets.UTF_8);
+        LOGGER.debug(" localRepo="+ localRepo.toString());
+        LOGGER.debug(" workingDir="+ workingDir.toString());
+        LOGGER.debug(" credentialsList="+ credList);
+        LOGGER.debug(" remoteUri="+ remoteUri);
         for (GitCredentials creds : credList.getCredentials()) {
             if(remoteUri.contains(creds.getGitServer())) {
+                LOGGER.debug("remoteUri.contains(creds.getGitServer()) == true");
                 return creds;
             }
         }
