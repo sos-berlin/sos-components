@@ -63,6 +63,7 @@ public class GitCommandUtils {
     private static final String DEFAULT_PROTOCOL = "ssh";
     private static final String HTTP_PROTOCOL = "http";
     private static final String HTTPS_PROTOCOL = "https";
+    public static final String CONCURRENT_ACCESS_MESSAGE = "The Git API is currently used by another user. Please try later.";
     
     public static final GitCloneCommandResult cloneGitRepository (CloneFilter filter, String account, SOSHibernateSession session,
             Charset charset) throws JsonMappingException, JsonProcessingException, SOSException {

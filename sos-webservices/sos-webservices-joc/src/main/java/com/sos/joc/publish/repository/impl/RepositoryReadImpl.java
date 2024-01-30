@@ -20,12 +20,16 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.publish.GitSemaphore;
+import com.sos.joc.exceptions.JocConcurrentAccessException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.publish.repository.ReadFromFilter;
 import com.sos.joc.model.publish.repository.ResponseFolder;
 import com.sos.joc.model.publish.repository.ResponseFolderItem;
+import com.sos.joc.publish.repository.git.commands.GitCommandUtils;
 import com.sos.joc.publish.repository.resource.IRepositoryRead;
 import com.sos.joc.publish.repository.util.RepositoryUtil;
 import com.sos.schema.JsonValidator;
@@ -39,6 +43,7 @@ public class RepositoryReadImpl extends JOCResourceImpl implements IRepositoryRe
     @Override
     public JOCDefaultResponse postRead(String xAccessToken, byte[] readFromFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
+        boolean permitted= false;
         try {
             Date started = Date.from(Instant.now());
             LOGGER.trace("*** read from repository started ***" + started);
@@ -49,6 +54,12 @@ public class RepositoryReadImpl extends JOCResourceImpl implements IRepositoryRe
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            
+            permitted = GitSemaphore.tryAcquire();
+            if (!permitted) {
+                throw new JocConcurrentAccessException(GitCommandUtils.CONCURRENT_ACCESS_MESSAGE);
+            }
+            
             Path repositoriesBase = Globals.sosCockpitProperties.resolvePath("repositories").resolve(getSubrepositoryFromFilter(filter));
             Path repo = null;
             if(filter.getFolder().startsWith("/")) {
@@ -67,6 +78,10 @@ public class RepositoryReadImpl extends JOCResourceImpl implements IRepositoryRe
             LOGGER.trace("*** read from repository finished ***" + apiCallFinished);
             LOGGER.trace("complete WS time : " + (apiCallFinished.getTime() - started.getTime()) + " ms");
             return JOCDefaultResponse.responseStatus200(result);
+        } catch (JocConcurrentAccessException e) {
+            ProblemHelper.postMessageAsHintIfExist(e.getMessage(), xAccessToken, getJocError(), null);
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatus434JSError(e);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -74,6 +89,9 @@ public class RepositoryReadImpl extends JOCResourceImpl implements IRepositoryRe
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
             Globals.disconnect(hibernateSession);
+            if (permitted) {
+                GitSemaphore.release(); 
+            }
         }
     }
 

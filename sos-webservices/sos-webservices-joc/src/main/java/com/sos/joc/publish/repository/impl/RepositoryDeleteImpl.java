@@ -19,14 +19,18 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.publish.GitSemaphore;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.exceptions.JocConcurrentAccessException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.repository.DeleteFromFilter;
+import com.sos.joc.publish.repository.git.commands.GitCommandUtils;
 import com.sos.joc.publish.repository.resource.IRepositoryDelete;
 import com.sos.joc.publish.repository.util.RepositoryUtil;
 import com.sos.schema.JsonValidator;
@@ -40,6 +44,7 @@ public class RepositoryDeleteImpl extends JOCResourceImpl implements IRepository
     @Override
     public JOCDefaultResponse postDelete(String xAccessToken, byte[] deleteFromFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
+        boolean permitted = false;
         try {
             Date started = Date.from(Instant.now());
             LOGGER.trace("*** delete from repository started ***" + started);
@@ -50,6 +55,12 @@ public class RepositoryDeleteImpl extends JOCResourceImpl implements IRepository
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            
+            permitted = GitSemaphore.tryAcquire();
+            if (!permitted) {
+                throw new JocConcurrentAccessException(GitCommandUtils.CONCURRENT_ACCESS_MESSAGE);
+            }
+            
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryDBLayer dbLayer = new InventoryDBLayer(hibernateSession);
 
@@ -86,6 +97,10 @@ public class RepositoryDeleteImpl extends JOCResourceImpl implements IRepository
             LOGGER.trace("*** delete from repository finished ***" + apiCallFinished);
             LOGGER.trace("complete WS time : " + (apiCallFinished.getTime() - started.getTime()) + " ms");
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+        } catch (JocConcurrentAccessException e) {
+            ProblemHelper.postMessageAsHintIfExist(e.getMessage(), xAccessToken, getJocError(), null);
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatus434JSError(e);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -93,6 +108,9 @@ public class RepositoryDeleteImpl extends JOCResourceImpl implements IRepository
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
             Globals.disconnect(hibernateSession);
+            if (permitted) {
+                GitSemaphore.release(); 
+            }
         }
     }
 
