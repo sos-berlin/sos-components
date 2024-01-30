@@ -500,6 +500,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             conf.setContent(Globals.objectMapper.writeValueAsString(jt));
         }
     }
+    
     private Map<String, List<String>> getReleasedSchedulePathsWithWorkflowNames (ReleaseFilter in, InventoryDBLayer dbLayer) {
         // in case a schedule has been renamed, this collects the schedules with their old names to be able to delete orders referencing this
         Map<String, List<String>> schedulePathsWithWorkflowNames = new HashMap<String, List<String>>();
@@ -576,8 +577,8 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                                 }
                             }
                         }
-                    } else if (ConfigurationType.WORKINGDAYSCALENDAR.equals(conf.getTypeAsEnum()) || ConfigurationType.NONWORKINGDAYSCALENDAR.equals(
-                            conf.getTypeAsEnum())) {
+                    } else if (ConfigurationType.WORKINGDAYSCALENDAR.equals(conf.getTypeAsEnum()) 
+                            || ConfigurationType.NONWORKINGDAYSCALENDAR.equals(conf.getTypeAsEnum())) {
                         // only add if planOrderAutomatically = true
                         List<DBItemInventoryConfiguration> schedules = dbLayer.getUsedSchedulesByCalendarName(conf.getName());
                         if (schedules != null) {
