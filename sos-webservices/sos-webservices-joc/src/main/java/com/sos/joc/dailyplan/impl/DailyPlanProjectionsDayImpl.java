@@ -114,6 +114,9 @@ public class DailyPlanProjectionsDayImpl extends ProjectionsImpl implements IDai
 
                             scheduleNames = d.getPeriods().stream().map(DatePeriodItem::getSchedule).filter(Objects::nonNull).map(
                                     JocInventory::pathToName).collect(Collectors.toSet());
+
+                            // remove from Meta "ExcludedFromProjection" entries if a day is not a "planned" day
+                            getSchedulesExcludedFromProjection(metaContentOpt, !isPlanned(entity));
                         }
                     }
                 }
@@ -122,13 +125,9 @@ public class DailyPlanProjectionsDayImpl extends ProjectionsImpl implements IDai
                     Optional<Set<String>> scheduleNamesOpt = getNamesOptional(in.getSchedulePaths());
                     Optional<Set<String>> workflowNamesOpt = getNamesOptional(in.getWorkflowPaths());
                     Optional<Set<String>> nonPeriodScheduleNamesOpt = Optional.empty();
-                    boolean isPlanned = isPlanned(entity);
 
                     if (invertedProjection) {
                         nonPeriodScheduleNamesOpt = Optional.of(scheduleNames);
-
-                        // remove from Meta "ExcludedFromProjection" entries if a day is not a "planned" day
-                        getSchedulesExcludedFromProjection(metaContentOpt, !isPlanned);
                     } else {
                         if (scheduleNamesOpt.isPresent()) {
                             Set<String> scheduleNames1 = scheduleNamesOpt.get();
@@ -138,6 +137,7 @@ public class DailyPlanProjectionsDayImpl extends ProjectionsImpl implements IDai
                             scheduleNamesOpt = Optional.of(scheduleNames);
                         }
                     }
+
                     final boolean unPermittedSchedulesExist = setPermittedSchedules(metaContentOpt, allowedControllers, scheduleNamesOpt, in
                             .getScheduleFolders(), nonPeriodScheduleNamesOpt, workflowNamesOpt, in.getWorkflowFolders(), permittedSchedules,
                             folderPermissions);
