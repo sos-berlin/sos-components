@@ -293,10 +293,7 @@ public class DailyPlanProjectionsImpl extends ProjectionsImpl implements IDailyP
                         int numOfschedulesOfTheDay = dateItem.getPeriods().stream().map(DatePeriodItem::getSchedule).filter(Objects::nonNull)
                                 .distinct().mapToInt(i -> 1).sum();
 
-                        int total = numOfPermittedSchedules;
-                        if (!isPlanned) {
-                            total = numOfPermittedSchedulesForProjectionDays;
-                        }
+                        int total = isPlanned ? numOfPermittedSchedules : numOfPermittedSchedulesForProjectionDays;
                         dateItem.setNumOfNonPeriods(total - numOfschedulesOfTheDay);
                     }
                     dateItem.setPeriods(null);
