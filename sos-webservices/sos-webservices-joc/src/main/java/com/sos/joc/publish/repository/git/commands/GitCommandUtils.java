@@ -734,43 +734,45 @@ public class GitCommandUtils {
         String remoteUri = "";
         Map<String, String> remoteRepos = remoteVResult.getRemotePushRepositories();
         if(!remoteRepos.isEmpty()) {
-            // check if account has remoteUri configured
+            // check if remoteRepos from the local repository matches with the git servers from the credentials of the used account
             for (String shortName : remoteRepos.keySet()) {
                 String knownRemoteUri = remoteRepos.get(shortName);
                 LOGGER.debug("remote URL from git remote -v command: " + knownRemoteUri);
-                if(knownRemoteUri.startsWith("git@")) {
+//                if(knownRemoteUri.startsWith("git@")) {
                     // ssh
                     if(credList == null) {
                         throw new JocGitException("No git credentials configured for the current user.");
                     }
-                    if(credList.getRemoteUrls().contains(knownRemoteUri)) {
+                    if (credList.getCredentials().stream().anyMatch(cred -> knownRemoteUri.contains(cred.getGitServer()))) {
                         remoteUri = knownRemoteUri;
-                    }
-                } else {
-                    URI uri = null;
-                    String hostPort = "";
-                    String protocol = "";
-                    String path = "";
-                    Pattern p = Pattern.compile(REGEX_HTTP_URI);
-                    Matcher m = p.matcher(knownRemoteUri);
-                    if(m.matches()) {
-                        protocol = m.group(1);
-                        hostPort = m.group(2);
-                        path = m.group(3);
-                    }
-                    if(hostPort.contains("@")) {
-                        String hp = hostPort.substring(hostPort.lastIndexOf("@") + 1);
-                        String adjustedRemoteUri = String.format(
-                                "%1$s://%2$s%3$s", protocol, hp, (path.startsWith("/") ? path : "/" + path));
-                        if(credList != null && credList.getRemoteUrls().contains(adjustedRemoteUri)) {
-                            remoteUri = adjustedRemoteUri;
-                        }
                     } else {
-                        if(credList != null && credList.getRemoteUrls().contains(knownRemoteUri)) {
-                            remoteUri = knownRemoteUri;
-                        }
+                        throw new JocGitException("No git server from credentials matches with the git server of the remote repository.");
                     }
-                }
+//                } else {
+//                    URI uri = null;
+//                    String hostPort = "";
+//                    String protocol = "";
+//                    String path = "";
+//                    Pattern p = Pattern.compile(REGEX_HTTP_URI);
+//                    Matcher m = p.matcher(knownRemoteUri);
+//                    if(m.matches()) {
+//                        protocol = m.group(1);
+//                        hostPort = m.group(2);
+//                        path = m.group(3);
+//                    }
+//                    if(hostPort.contains("@")) {
+//                        String hp = hostPort.substring(hostPort.lastIndexOf("@") + 1);
+//                        String adjustedRemoteUri = String.format(
+//                                "%1$s://%2$s%3$s", protocol, hp, (path.startsWith("/") ? path : "/" + path));
+//                        if(credList != null && credList.getRemoteUrls().contains(adjustedRemoteUri)) {
+//                            remoteUri = adjustedRemoteUri;
+//                        }
+//                    } else {
+//                        if(credList != null && credList.getRemoteUrls().contains(knownRemoteUri)) {
+//                            remoteUri = knownRemoteUri;
+//                        }
+//                    }
+//                }
             }
         }
         return remoteUri;
@@ -1164,13 +1166,8 @@ public class GitCommandUtils {
             throws JsonMappingException, JsonProcessingException, SOSHibernateException {
         GitCredentialsList credList = GitCommandUtils.getCredentialsList(account, dbLayer);
         String remoteUri = GitCommandUtils.getActiveRemoteUri(localRepo, workingDir, credList, StandardCharsets.UTF_8);
-        LOGGER.debug(" localRepo="+ localRepo.toString());
-        LOGGER.debug(" workingDir="+ workingDir.toString());
-        LOGGER.debug(" credentialsList="+ credList);
-        LOGGER.debug(" remoteUri="+ remoteUri);
         for (GitCredentials creds : credList.getCredentials()) {
             if(remoteUri.contains(creds.getGitServer())) {
-                LOGGER.debug("remoteUri.contains(creds.getGitServer()) == true");
                 return creds;
             }
         }
