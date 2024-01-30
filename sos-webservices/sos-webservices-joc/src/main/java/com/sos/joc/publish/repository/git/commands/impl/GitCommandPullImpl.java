@@ -14,11 +14,13 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.publish.GitSemaphore;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
+import com.sos.joc.exceptions.JocConcurrentAccessException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocGitException;
-import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.publish.git.GitCredentials;
@@ -37,6 +39,7 @@ public class GitCommandPullImpl extends JOCResourceImpl implements IGitCommandPu
     @Override
     public JOCDefaultResponse postCommandPull(String xAccessToken, byte[] commonFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
+        boolean permitted = false;
         try {
             Date started = Date.from(Instant.now());
             LOGGER.trace("*** pull started ***" + started);
@@ -47,6 +50,12 @@ public class GitCommandPullImpl extends JOCResourceImpl implements IGitCommandPu
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            
+            permitted = GitSemaphore.tryAcquire();
+            if (!permitted) {
+                throw new JocConcurrentAccessException(GitCommandUtils.CONCURRENT_ACCESS_MESSAGE);
+            }
+            
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
             String account = null;
@@ -90,6 +99,10 @@ public class GitCommandPullImpl extends JOCResourceImpl implements IGitCommandPu
             LOGGER.trace("*** pull finished ***" + finished);
             LOGGER.trace(String.format("ws took %1$d ms.", finished.getTime() - started.getTime()));
             return JOCDefaultResponse.responseStatus200(response);
+        } catch (JocConcurrentAccessException e) {
+            ProblemHelper.postMessageAsHintIfExist(e.getMessage(), xAccessToken, getJocError(), null);
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatus434JSError(e);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -97,6 +110,9 @@ public class GitCommandPullImpl extends JOCResourceImpl implements IGitCommandPu
             return JOCDefaultResponse.responseStatusJSError(t, getJocError());
         } finally {
             Globals.disconnect(hibernateSession);
+            if (permitted) {
+                GitSemaphore.release(); 
+            }
         }
     }
 
