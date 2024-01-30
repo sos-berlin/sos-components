@@ -78,10 +78,8 @@ public class GitCredentialsAddImpl extends JOCResourceImpl implements IGitCreden
             
             if(JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel())) {
                 account = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
-            } else if (JocSecurityLevel.MEDIUM.equals(Globals.getJocSecurityLevel())) {
-                account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
             } else {
-                throw new JocNotImplementedException("The web service is not available for Security Level HIGH.");
+                account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
             }
             JocConfigurationDbLayer dbLayer = new JocConfigurationDbLayer(hibernateSession);
             JocConfigurationFilter dbFilter = new JocConfigurationFilter();
