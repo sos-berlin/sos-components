@@ -744,9 +744,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException,
             SOSInvalidDataException, SOSHibernateException {
         
-        List<Long> submissionIds = items.stream().filter(SOSCollection.distinctByKey(DBItemDailyPlanOrder::getSubmissionHistoryId)).map(e -> {
-            return e.getSubmissionHistoryId();
-        }).collect(Collectors.toList());
+        Set<Long> submissionIds = items.stream().map(DBItemDailyPlanOrder::getSubmissionHistoryId).collect(Collectors.toSet());
         
         SOSHibernateSession session = null;
         boolean isBulkOperation = items.size() > 1;
@@ -950,12 +948,23 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                     }
                     sessionNew.update(item);
                 }
-
+                sessionNew.commit();
                 DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(sessionNew);
                 for (Long submissionId : submissionIds) {
-                    deleteNotUsedSubmission(dbLayer, in.getControllerId(), submissionId);
+//                    deleteNotUsedSubmission(dbLayer, in.getControllerId(), submissionId);
+                    if (submissionId != null) {
+                        try {
+                            Long count = dbLayer.getCountOrdersBySubmissionId(in.getControllerId(), submissionId);
+                            if (count.equals(0L)) {
+                                sessionNew.beginTransaction();
+                                dbLayer.deleteSubmission(submissionId);
+                                sessionNew.commit();
+                            }
+                        } catch (Exception e1) {
+                            //
+                        }
+                    }
                 }
-                sessionNew.commit();
                 sessionNew.close();
                 sessionNew = null;
 
@@ -965,7 +974,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
                 dailyPlanDates.forEach(dailyPlanDate -> EventBus.getInstance().post(new DailyPlanEvent(in.getControllerId(), dailyPlanDate)));
 
-                OrdersHelper.storeAuditLogDetails(items.stream().map(item -> new AuditLogDetail(item.getWorkflowPath(), item.getOrderId(), in
+                OrdersHelper.storeAuditLogDetails(allItems.stream().map(item -> new AuditLogDetail(item.getWorkflowPath(), item.getOrderId(), in
                         .getControllerId())).collect(Collectors.toSet()), auditlog.getId()).thenAccept(either2 -> ProblemHelper
                                 .postExceptionEventIfExist(either2, getAccessToken(), getJocError(), in.getControllerId()));
 
@@ -1000,22 +1009,28 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH + "[modifyStartTimeCycle][" + mainItem.getOrderId() + "]");
             session.setAutoCommit(false);
 
-            // get variables
-            DBItemDailyPlanVariable variable = new DBLayerOrderVariables(session).getOrderVariable(mainItem.getControllerId(), mainItem.getOrderId(),
-                    true);
-
             DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
             if (cyclicOrdersOfItem == null) {
                 String mainPart = OrdersHelper.getCyclicOrderIdMainPart(mainItem.getOrderId());
                 cyclicOrdersOfItem = dbLayer.getDailyPlanOrdersByCyclicMainPart(in.getControllerId(), mainPart).stream().collect(Collectors
                         .toCollection(() -> new TreeSet<>(comp)));
                 
-                Instant newPlannedStart = in.getNewPlannedStart(cyclicOrdersOfItem.last().getPlannedStart());
+                DBItemDailyPlanOrder firstOrderOfCycle = cyclicOrdersOfItem.first();
+                Instant newPlannedStartOfFirst = in.getNewPlannedStart(firstOrderOfCycle.getPlannedStart());
+                
+                DBItemDailyPlanOrder lastOrderOfCycle = cyclicOrdersOfItem.last();
+                Instant newPlannedStartOfLast = lastOrderOfCycle.getPlannedStart().toInstant().plusMillis(newPlannedStartOfFirst.toEpochMilli()
+                        - firstOrderOfCycle.getPlannedStart().getTime());
+                
                 Instant now = Instant.now();
-                if (newPlannedStart.isBefore(now)) {
+                if (newPlannedStartOfLast.isBefore(now)) {
                     throw new JocBadRequestException("The new planned start must be in the future.");
                 }
             }
+            
+            // get variables
+            DBItemDailyPlanVariable variable = new DBLayerOrderVariables(session).getOrderVariable(mainItem.getControllerId(), mainItem.getOrderId(),
+                    true);
             
             // remove not submitted
             session.beginTransaction();
@@ -1036,9 +1051,9 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 session.close();
                 session = null;
 
-                CompletableFuture<Either<Problem, Void>> c = OrdersHelper.removeFromJobSchedulerController(mainItem.getControllerId(), submitted);
+                CompletableFuture<Either<Problem, Void>> c = OrdersHelper.removeFromJobSchedulerController(in.getControllerId(), submitted);
                 c.thenAccept(either -> {
-                    ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), mainItem.getControllerId());
+                    ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), in.getControllerId());
                     if (either.isRight()) {
                         // remove submitted & old submission
                         SOSHibernateSession sessionNew = null;
@@ -1048,11 +1063,25 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                             sessionNew.beginTransaction();
                             DBLayerDailyPlannedOrders dbLayerNew = new DBLayerDailyPlannedOrders(sessionNew);
                             dbLayerNew.deleteCascading(mainItem, true);
-                            deleteNotUsedSubmission(dbLayerNew, mainItem.getControllerId(), oldSubmissionId);
                             sessionNew.commit();
+                            if (oldSubmissionId != null) {
+                                try {
+                                    Long count = dbLayer.getCountOrdersBySubmissionId(in.getControllerId(), oldSubmissionId);
+                                    if (count.equals(0L)) {
+                                        sessionNew.beginTransaction();
+                                        dbLayer.deleteSubmission(oldSubmissionId);
+                                        sessionNew.commit();
+                                    }
+                                } catch (Exception e) {
+                                    //
+                                }
+                            }
+//                            sessionNew.beginTransaction();
+//                            deleteNotUsedSubmission(dbLayerNew, in.getControllerId(), oldSubmissionId);
+//                            sessionNew.commit();
                         } catch (Exception e) {
                             Globals.rollback(sessionNew);
-                            ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), mainItem.getControllerId());
+                            ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), in.getControllerId());
                         } finally {
                             Globals.disconnect(sessionNew);
                         }
@@ -1068,15 +1097,27 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 });
             } else {
                 // remove old submission
-                session.beginTransaction();
-                deleteNotUsedSubmission(dbLayer, mainItem.getControllerId(), oldSubmissionId);
-                session.commit();
+                if (oldSubmissionId != null) {
+                    try {
+                        Long count = dbLayer.getCountOrdersBySubmissionId(in.getControllerId(), oldSubmissionId);
+                        if (count.equals(0L)) {
+                            session.beginTransaction();
+                            dbLayer.deleteSubmission(oldSubmissionId);
+                            session.commit();
+                        }
+                    } catch (Exception e) {
+                        //
+                    }
+                }
+//                session.beginTransaction();
+//                deleteNotUsedSubmission(dbLayer, in.getControllerId(), oldSubmissionId);
+//                session.commit();
                 session.close();
                 session = null;
 
                 // generate orders
                 //generatedOrders = recreateCyclicOrder(in, newSubmission, mainItem, variable, auditlog);
-                runner.addPlannedOrderToControllerAndDB(mainItem.getControllerId(), SOSDate.getDateAsString(newSubmission
+                runner.addPlannedOrderToControllerAndDB(in.getControllerId(), SOSDate.getDateAsString(newSubmission
                         .getSubmissionForDate()), mainItem.getSubmitted(), synchronizer);
                 
             }
@@ -1106,14 +1147,14 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         return newOrderId;
     }
 
-    private void deleteNotUsedSubmission(DBLayerDailyPlannedOrders dbLayer, String controllerId, Long submissionId) throws SOSHibernateException {
-        if (submissionId != null) {
-            Long count = dbLayer.getCountOrdersBySubmissionId(controllerId, submissionId);
-            if (count.equals(0L)) {
-                dbLayer.deleteSubmission(submissionId);
-            }
-        }
-    }
+//    private void deleteNotUsedSubmission(DBLayerDailyPlannedOrders dbLayer, String controllerId, Long submissionId) throws SOSHibernateException {
+//        if (submissionId != null) { //deadlock candidate
+//            Long count = dbLayer.getCountOrdersBySubmissionId(controllerId, submissionId);
+//            if (count.equals(0L)) {
+//                dbLayer.deleteSubmission(submissionId);
+//            }
+//        }
+//    }
 
 //    private boolean isCyclicOrders(List<DBItemDailyPlanOrder> items) throws Exception {
 //        boolean hasSingle = false;

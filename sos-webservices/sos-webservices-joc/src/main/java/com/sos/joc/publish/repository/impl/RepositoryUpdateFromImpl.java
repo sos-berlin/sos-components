@@ -16,18 +16,22 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.publish.GitSemaphore;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
+import com.sos.joc.exceptions.JocConcurrentAccessException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.repository.UpdateFromFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
+import com.sos.joc.publish.repository.git.commands.GitCommandUtils;
 import com.sos.joc.publish.repository.resource.IRepositoryUpdateFrom;
 import com.sos.joc.publish.repository.util.RepositoryUtil;
 import com.sos.joc.publish.util.ImportUtils;
@@ -42,6 +46,7 @@ public class RepositoryUpdateFromImpl extends JOCResourceImpl implements IReposi
     @Override
     public JOCDefaultResponse postUpdate(String xAccessToken, byte[] updateFromFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
+        boolean permitted = false;
         try {
             Date started = Date.from(Instant.now());
             LOGGER.trace("*** update from repository started ***" + started);
@@ -52,6 +57,12 @@ public class RepositoryUpdateFromImpl extends JOCResourceImpl implements IReposi
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            
+            permitted = GitSemaphore.tryAcquire();
+            if (!permitted) {
+                throw new JocConcurrentAccessException(GitCommandUtils.CONCURRENT_ACCESS_MESSAGE);
+            }
+            
             DBItemJocAuditLog dbAuditlog = storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
 
             Path repositoriesBase = Globals.sosCockpitProperties.resolvePath("repositories");
@@ -100,6 +111,10 @@ public class RepositoryUpdateFromImpl extends JOCResourceImpl implements IReposi
             LOGGER.trace("*** read from repository finished ***" + apiCallFinished);
             LOGGER.trace("complete WS time : " + (apiCallFinished.getTime() - started.getTime()) + " ms");
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+        } catch (JocConcurrentAccessException e) {
+            ProblemHelper.postMessageAsHintIfExist(e.getMessage(), xAccessToken, getJocError(), null);
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatus434JSError(e);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -107,6 +122,9 @@ public class RepositoryUpdateFromImpl extends JOCResourceImpl implements IReposi
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
             Globals.disconnect(hibernateSession);
+            if (permitted) {
+                GitSemaphore.release(); 
+            }
         }
     }
 

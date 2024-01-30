@@ -14,13 +14,17 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.publish.GitSemaphore;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
+import com.sos.joc.exceptions.JocConcurrentAccessException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.publish.repository.CopyToFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
+import com.sos.joc.publish.repository.git.commands.GitCommandUtils;
 import com.sos.joc.publish.repository.resource.IRepositoryStore;
 import com.sos.joc.publish.repository.util.RepositoryUtil;
 import com.sos.joc.publish.repository.util.StoreItemsCategory;
@@ -35,6 +39,7 @@ public class RepositoryStoreImpl extends JOCResourceImpl implements IRepositoryS
     @Override
     public JOCDefaultResponse postStore(String xAccessToken, byte[] copyToFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
+        boolean permitted = false;
         try {
             Date started = Date.from(Instant.now());
             LOGGER.trace("*** store to repository started ***" + started);
@@ -45,6 +50,12 @@ public class RepositoryStoreImpl extends JOCResourceImpl implements IRepositoryS
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            
+            permitted = GitSemaphore.tryAcquire();
+            if (!permitted) {
+                throw new JocConcurrentAccessException(GitCommandUtils.CONCURRENT_ACCESS_MESSAGE);
+            }
+            
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBItemJocAuditLog dbAudit = storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
             String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
@@ -71,6 +82,10 @@ public class RepositoryStoreImpl extends JOCResourceImpl implements IRepositoryS
             LOGGER.trace("*** store to repository finished ***" + apiCallFinished);
             LOGGER.trace("complete WS time : " + (apiCallFinished.getTime() - started.getTime()) + " ms");
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+        } catch (JocConcurrentAccessException e) {
+            ProblemHelper.postMessageAsHintIfExist(e.getMessage(), xAccessToken, getJocError(), null);
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatus434JSError(e);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -78,6 +93,9 @@ public class RepositoryStoreImpl extends JOCResourceImpl implements IRepositoryS
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
             Globals.disconnect(hibernateSession);
+            if (permitted) {
+                GitSemaphore.release(); 
+            }
         }
     }
 
