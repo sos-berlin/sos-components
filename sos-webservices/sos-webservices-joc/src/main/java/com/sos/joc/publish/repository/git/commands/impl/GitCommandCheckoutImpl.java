@@ -18,6 +18,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocGitException;
 import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
@@ -71,7 +72,7 @@ public class GitCommandCheckoutImpl extends JOCResourceImpl implements IGitComma
             if (credentials != null) {
                 GitCommandUtils.prepareConfigFile(StandardCharsets.UTF_8, credentials, localRepo);
             } else {
-                LOGGER.warn(String.format("Could not read git credentials for account %1$s", account));
+                throw new JocGitException(String.format("Could not read git credentials for account %1$s. Add Git credentials to your profile.", account));
             }
 
             GitCheckoutCommandResult result = GitCommandUtils.checkout(
