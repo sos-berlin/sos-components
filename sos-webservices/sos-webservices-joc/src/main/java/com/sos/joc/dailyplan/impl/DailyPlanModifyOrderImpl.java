@@ -888,14 +888,16 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 Map<String, Long> submissionHistoryIds = new HashMap<>();
                 sessionNew = Globals.createSosHibernateStatelessConnection(IMPL_PATH + "[modifyStartTimeSingle]");
                 sessionNew.setAutoCommit(false);
-                sessionNew.beginTransaction();
                 
                 for (String dailyPlanDate: dailyPlanDates) {
                     DBItemDailyPlanSubmission submission = newSubmission(in.getControllerId(), dailyPlanDate);
+                    sessionNew.beginTransaction();
                     sessionNew.save(submission);
+                    sessionNew.commit();
                     submissionHistoryIds.put(dailyPlanDate, submission.getId());
                 }
-
+                
+                sessionNew.beginTransaction();
                 DBLayerOrderVariables ovDbLayer = new DBLayerOrderVariables(sessionNew);
                 List<DBItemDailyPlanOrder> toSubmit = new ArrayList<>();
                 for (DBItemDailyPlanOrder item : allItems) {
@@ -934,6 +936,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                             item.setSubmissionHistoryId(submissionHistoryIds.values().iterator().next());
                         }
                     }
+                    
                     item.setModified(new Date());
                     item.setOrderId(newOrderId);
                     
