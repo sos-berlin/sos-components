@@ -37,7 +37,6 @@ import com.sos.commons.exception.SOSException;
 import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.order.FreshOrder;
@@ -745,6 +744,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             SOSInvalidDataException, SOSHibernateException {
         
         Set<Long> submissionIds = items.stream().map(DBItemDailyPlanOrder::getSubmissionHistoryId).collect(Collectors.toSet());
+        Set<String> oldDailyPlanDates = items.stream().map(DBItemDailyPlanOrder::getOrderId).map(s -> s.substring(1, 11)).collect(Collectors.toSet());
         
         SOSHibernateSession session = null;
         boolean isBulkOperation = items.size() > 1;
@@ -830,19 +830,51 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                         allItems.addAll(cyclicOrdersOfItem);
 
                     } else {
-
+                        
                         String dailyPanDateOfFirst = getDailyPlanDate(newPlannedStartOfFirst, settingTimeZone, settingPeriodBeginSeconds);
-
+                        
                         Cycle cycle = new Cycle();
                         cycle.setRepeat(getPeriodRepeat(item.getRepeatInterval()));
                         Instant newPeriodbegin = in.getNewPlannedStart(item.getPeriodBegin());
                         long periodIntervalLength = item.getPeriodEnd().getTime() - item.getPeriodBegin().getTime();
                         cycle.setBegin(getPeriodBeginEnd(Date.from(newPeriodbegin), in.getTimeZone()));
                         cycle.setEnd(getPeriodBeginEnd(Date.from(newPeriodbegin.plusMillis(periodIntervalLength)), in.getTimeZone()));
+                        if ("00:00:00".equals(cycle.getEnd())) {
+                            cycle.setEnd("24:00:00"); 
+                        }
+                        
+                        // TODO check if end before begin
+                        if (Integer.valueOf(cycle.getBegin().replace(":", "")).intValue() >= Integer.valueOf(cycle.getEnd().replace(":", ""))
+                                .intValue()) {
+                            cycle.setEnd("24:00:00");
+                        }
 
                         modifyStartTimeCycle(in, dailyPanDateOfFirst, cycle, item, cyclicOrdersOfItem, auditlog).ifPresent(newOrderId -> {
                             result.getAdditionalProperties().put(item.getOrderId(), newOrderId);
                         });
+                        
+//                        dailyPlanDates.add(dailyPanDateOfFirst);
+//                        
+//                        for (DBItemDailyPlanOrder cItem : cyclicOrdersOfItem.descendingSet()) {
+//                            Instant newPlannedStart = in.getNewPlannedStart(cItem.getPlannedStart());
+//                            // TODO if (newPlannedStart.isBefore(now)) { some first of the cycle can be in the past, the rest should planned
+//                            if (newPlannedStart.isBefore(now)) {
+//                                //
+//                            } else {
+//                                if (item.getExpectedEnd() != null) {
+//                                    long expectedDuration = cItem.getExpectedEnd().getTime() - cItem.getPlannedStart().getTime();
+//                                    cItem.setExpectedEnd(Date.from(newPlannedStart.plusMillis(expectedDuration)));
+//                                }
+//                                cItem.setPlannedStart(Date.from(newPlannedStart));
+//                                cItem.setIsLastOfCyclic(true);
+//
+//                                String newOrderId = OrdersHelper.generateNewFromOldOrderId(cItem.getOrderId(), dailyPanDateOfFirst, zoneId);
+//                                result.getAdditionalProperties().put(item.getOrderId(), newOrderId);
+//                                cycleOrderIdMap.put(cItem.getOrderId(), newOrderId);
+//                            }
+//                        }
+//                        
+//                        allItems.addAll(cyclicOrdersOfItem);
                     }
                 }
             }
@@ -974,7 +1006,8 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 if (toSubmit.size() > 0) {
                     submitOrdersToController(toSubmit, in.getForceJobAdmission());
                 }
-
+                
+                dailyPlanDates.addAll(oldDailyPlanDates);
                 dailyPlanDates.forEach(dailyPlanDate -> EventBus.getInstance().post(new DailyPlanEvent(in.getControllerId(), dailyPlanDate)));
 
                 OrdersHelper.storeAuditLogDetails(allItems.stream().map(item -> new AuditLogDetail(item.getWorkflowPath(), item.getOrderId(), in
@@ -1005,6 +1038,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
         Long oldSubmissionId = mainItem.getSubmissionHistoryId();
+        String oldDailyPlanDate = mainItem.getOrderId().substring(1, 11);
 
         SOSHibernateSession session = null;
         Map<PlannedOrderKey, PlannedOrder> generatedOrders = Collections.emptyMap();
@@ -1131,6 +1165,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                         .getControllerId()));
             }
             
+            EventBus.getInstance().post(new DailyPlanEvent(in.getControllerId(), oldDailyPlanDate));
             EventBus.getInstance().post(new DailyPlanEvent(in.getControllerId(), SOSDate.getDateAsString(newSubmission.getSubmissionForDate())));
 
             OrdersHelper.storeAuditLogDetails(auditLogDetails, auditlog.getId()).thenAccept(either2 -> ProblemHelper.postExceptionEventIfExist(
