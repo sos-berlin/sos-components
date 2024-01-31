@@ -699,6 +699,12 @@ public abstract class RepositoryUtil {
             DBItemInventoryConfiguration dbItem = dbLayer.getInventoryConfigurationByNameAndType(
                     Paths.get(stripFileExtension(Paths.get(item.getConfiguration().getPath()))).getFileName().toString(),
                     item.getConfiguration().getObjectType().intValue());
+            if(!dbItem.getFolder().startsWith("/")) {
+                dbItem.setFolder("/" + dbItem.getFolder());
+            }
+            if(!dbItem.getPath().startsWith("/")) {
+                dbItem.setPath("/" + dbItem.getPath());
+            }
             if (dbItem != null) {
                 dbItemsToUpdate.add(dbItem);   
             }
@@ -1377,7 +1383,13 @@ public abstract class RepositoryUtil {
         DBItemInventoryConfiguration item = new DBItemInventoryConfiguration();
         item.setId(null);
         item.setPath(newItem.getConfiguration().getPath());
+        if(!item.getPath().startsWith("/")) {
+            item.setPath("/" + item.getPath());
+        }
         item.setFolder(newItemPath.getParent().toString().replace('\\', '/'));
+        if(!item.getFolder().startsWith("/")) {
+            item.setFolder("/" + item.getFolder());
+        }
         item.setName(newItemPath.getFileName().toString());
         item.setDeployed(false);
         item.setReleased(false);
