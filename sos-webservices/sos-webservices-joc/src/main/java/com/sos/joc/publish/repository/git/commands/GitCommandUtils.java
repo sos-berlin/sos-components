@@ -965,6 +965,8 @@ public class GitCommandUtils {
         Path gitConfigPath = Paths.get(System.getProperty("user.home")).resolve(GitCommandConstants.GIT_CONFIG_DEFAULT_FILENAME);
         Path gitConfigTmpPath = Paths.get(System.getProperty("java.io.tmpdir"))
                 .resolve(GitCommandConstants.GIT_CONFIG_DEFAULT_FILENAME + "_"+ username);
+        // this file will be created additionally for support purposes
+        Path gitConfigLastUsedPath = Paths.get(System.getProperty("user.home")).resolve(GitCommandConstants.GIT_CONFIG_DEFAULT_FILENAME + "_lastUsed");
         try {
             if(!Files.exists(gitConfigTmpPath)) {
                 Files.createFile(gitConfigTmpPath);
@@ -1003,6 +1005,7 @@ public class GitCommandUtils {
             }
             if(Files.exists(gitConfigTmpPath)) {
                 Files.copy(gitConfigTmpPath, gitConfigPath, StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(gitConfigTmpPath, gitConfigLastUsedPath, StandardCopyOption.REPLACE_EXISTING);
             } else {
                 LOGGER.info("No temporary git config file found!");
             }
