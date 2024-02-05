@@ -252,7 +252,7 @@ public class SOSLdapWebserviceCredentials {
                 if (useStartTls == null) {
                     useStartTls = properties.getLdap().getExpert().getIamLdapUseStartTls();
                 }
-                if (disableNestedGroupSearch == null) {
+                if (disableNestedGroupSearch == null && properties.getLdap().getExpert().getIamLdapGroupRolesMap() != null) {
                     disableNestedGroupSearch = properties.getLdap().getExpert().getIamLdapGroupRolesMap().getIamLdapDisableNestedGroupSearch();
                 }
                 if (hostnameVerification == null) {
