@@ -61,6 +61,7 @@ import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.common.StringSizeSanitizer;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonConverter;
+import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.settings.ClusterSettings;
@@ -650,13 +651,23 @@ public class OrdersHelper {
         return variables;
     }
     
+    public static Variables checkArgumentsWithAllowedDollarInValues(Variables arguments, Requirements orderRequirements)
+            throws JocMissingRequiredParameterException, JocConfigurationException {
+        return checkArguments(arguments, orderRequirements, ClusterSettings.getAllowEmptyArguments(Globals.getConfigurationGlobalsJoc()), true);
+    }
+
     public static Variables checkArguments(Variables arguments, Requirements orderRequirements) throws JocMissingRequiredParameterException,
             JocConfigurationException {
-        return checkArguments(arguments, orderRequirements, ClusterSettings.getAllowEmptyArguments(Globals.getConfigurationGlobalsJoc()));
+        return checkArguments(arguments, orderRequirements, ClusterSettings.getAllowEmptyArguments(Globals.getConfigurationGlobalsJoc()), false);
+    }
+
+    public static Variables checkArguments(Variables arguments, Requirements orderRequirements, boolean allowEmptyValues)
+            throws JocMissingRequiredParameterException, JocConfigurationException {
+        return checkArguments(arguments, orderRequirements, allowEmptyValues, false);
     }
 
     @SuppressWarnings("unchecked")
-    public static Variables checkArguments(Variables arguments, Requirements orderRequirements, boolean allowEmptyValues)
+    public static Variables checkArguments(Variables arguments, Requirements orderRequirements, boolean allowEmptyValues, boolean allowDollarInValue)
             throws JocMissingRequiredParameterException, JocConfigurationException {
         final Map<String, Parameter> params = (orderRequirements != null && orderRequirements.getParameters() != null) ? orderRequirements
                 .getParameters().getAdditionalProperties() : Collections.emptyMap();
@@ -725,6 +736,9 @@ public class OrdersHelper {
                                 vars.setAdditionalProperty(param.getKey(), Boolean.TRUE);
                             } else if ("false".equals(strArg)) {
                                 vars.setAdditionalProperty(param.getKey(), Boolean.FALSE);
+                            } else if (allowDollarInValue && strArg.contains("$")) { 
+                                // only relevant for addOrder instruction
+                                Validator.validateExpression("Variable '" + param.getKey() + "': ", strArg);
                             } else {
                                 invalid = true;
                             }
@@ -739,11 +753,17 @@ public class OrdersHelper {
                     } else if (curArg instanceof List) {
                         invalid = true;
                     } else if (curArg instanceof String) {
-                        try {
-                            BigDecimal number = new BigDecimal((String) curArg);
-                            vars.setAdditionalProperty(param.getKey(), number);
-                        } catch (NumberFormatException e) {
-                            invalid = true;
+                        String strArg = (String) curArg;
+                        if (allowDollarInValue && strArg.contains("$")) {
+                            // only relevant for addOrder instruction
+                            Validator.validateExpression("Variable '" + param.getKey() + "': ", strArg);
+                        } else {
+                            try {
+                                BigDecimal number = new BigDecimal(strArg);
+                                vars.setAdditionalProperty(param.getKey(), number);
+                            } catch (NumberFormatException e) {
+                                invalid = true;
+                            }
                         }
                     }
                     break;

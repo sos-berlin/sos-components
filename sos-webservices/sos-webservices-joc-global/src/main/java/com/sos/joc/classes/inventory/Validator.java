@@ -882,7 +882,7 @@ public class Validator {
                     if (json != null) {
                         Workflow workflowOfAddOrder = Globals.objectMapper.readValue(json, Workflow.class);
                         try {
-                            OrdersHelper.checkArguments(ao.getArguments(), workflowOfAddOrder.getOrderPreparation());
+                            OrdersHelper.checkArgumentsWithAllowedDollarInValues(ao.getArguments(), workflowOfAddOrder.getOrderPreparation());
                         } catch (Exception e) {
                             throw new JocConfigurationException("$." + instPosition + "arguments: " + e.getMessage());
                         }
@@ -1158,7 +1158,7 @@ public class Validator {
                     if (json != null) {
                         Workflow workflowOfAddOrder = Globals.objectMapper.readValue(json, Workflow.class);
                         try {
-                            OrdersHelper.checkArguments(ao.getArguments(), workflowOfAddOrder.getOrderPreparation());
+                            OrdersHelper.checkArgumentsWithAllowedDollarInValues(ao.getArguments(), workflowOfAddOrder.getOrderPreparation());
                         } catch (Exception e) {
                             throw new JocConfigurationException("$." + instPosition + "arguments: " + e.getMessage());
                         }
@@ -1549,7 +1549,7 @@ public class Validator {
         }
     }
 
-    private static void validateExpression(String prefix, String value) throws JocConfigurationException {
+    public static void validateExpression(String prefix, String value) throws JocConfigurationException {
         if (value != null) {
             Either<Problem, JExpression> e = JExpression.parse(value);
             if (e.isLeft()) {
