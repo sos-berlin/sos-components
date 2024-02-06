@@ -984,6 +984,7 @@ public abstract class PublishUtils {
                     }
                     dbLayer.getSession().save(newEntry);
                     deletedObjects.add(newEntry);
+                    postDeployHistoryEventWhenDeleted(newEntry);
                     if (withTrash) {
                         DBItemInventoryConfiguration orig = dbLayer.getInventoryConfigurationByNameAndType(delete.getName(), delete.getType());
                         if (orig != null) {
