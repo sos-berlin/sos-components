@@ -1768,6 +1768,7 @@ public class DBLayerDeploy {
                     throw new JocSosHibernateException(e);
                 }
                 depHistoryFailed.add(newDepHistoryItem);
+                PublishUtils.postDeployHistoryEventWhenDeleted(newDepHistoryItem);
             }
         }
         if (verifiedReDeployables != null) {
@@ -1871,6 +1872,7 @@ public class DBLayerDeploy {
                     throw new JocSosHibernateException(e);
                 }
                 depHistoryFailed.add(newDepHistoryItem);
+                PublishUtils.postDeployHistoryEventWhenDeleted(newDepHistoryItem);
             }
         }
         if (verifiedReDeployables != null) {
@@ -1984,6 +1986,7 @@ public class DBLayerDeploy {
                 newDepHistoryItem.setVersion(null);
                 session.save(newDepHistoryItem);
                 depHistoryFailed.add(newDepHistoryItem);
+                PublishUtils.postDeployHistoryEventWhenDeleted(newDepHistoryItem);
             }
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
@@ -2017,6 +2020,7 @@ public class DBLayerDeploy {
                 }
                 // TODO: get Version to set here
                 session.save(deploy);
+                PublishUtils.postDeployHistoryEventWhenDeleted(deploy);
                 // postDeployHistoryWorkflowEvent(deploy);
                 depHistoryFailed.add(deploy);
             }

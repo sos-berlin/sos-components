@@ -145,7 +145,7 @@ public class ReferenceValidator {
                     break;
                 case ADD_ORDER:
                     AddOrder ao = inst.cast();
-                    OrdersHelper.checkArguments(ao.getArguments(), orderPreparation);
+                    OrdersHelper.checkArgumentsWithAllowedDollarInValues(ao.getArguments(), orderPreparation);
                     // TODO check also Start-/Endpositions
                     break;
                 case CONSUME_NOTICES:
