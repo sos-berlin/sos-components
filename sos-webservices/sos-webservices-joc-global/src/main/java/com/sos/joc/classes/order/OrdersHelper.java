@@ -772,7 +772,7 @@ public class OrdersHelper {
                         invalid = true;
                     }
                     if (!invalid) {
-                        checkListArguments((List<Map<String, Object>>) curArg, param.getValue().getListParameters(), param.getKey(), allowEmptyValues);
+                        checkListArguments((List<Map<String, Object>>) curArg, param.getValue().getListParameters(), param.getKey(), allowEmptyValues, allowDollarInValue);
                     }
                     break;
                 }
@@ -786,7 +786,7 @@ public class OrdersHelper {
     }
 
     private static List<Map<String, Object>> checkListArguments(List<Map<String, Object>> listVariables, ListParameters listParameters,
-            String listKey, boolean allowEmptyValues) throws JocMissingRequiredParameterException, JocConfigurationException {
+            String listKey, boolean allowEmptyValues, boolean allowDollarInValue) throws JocMissingRequiredParameterException, JocConfigurationException {
         boolean invalid = false;
         final Map<String, ListParameter> listParams = (listParameters != null) ? listParameters.getAdditionalProperties() : Collections.emptyMap();
         if (listVariables.isEmpty() && !listParams.isEmpty()) {
@@ -869,6 +869,9 @@ public class OrdersHelper {
                                 listVariable.put(p.getKey(), Boolean.TRUE);
                             } else if ("false".equals(strArg)) {
                                 listVariable.put(p.getKey(), Boolean.FALSE);
+                            } else if (allowDollarInValue && strArg.contains("$")) { 
+                                // only relevant for addOrder instruction
+                                Validator.validateExpression("Variable '" + p.getKey() + "' of list variable '" + listKey + "': ", strArg);
                             } else {
                                 invalid = true;
                             }
@@ -881,11 +884,17 @@ public class OrdersHelper {
                     if (curListArg instanceof Boolean) {
                         invalid = true;
                     } else if (curListArg instanceof String) {
-                        try {
-                            BigDecimal number = new BigDecimal((String) curListArg);
-                            listVariable.put(p.getKey(), number);
-                        } catch (NumberFormatException e) {
-                            invalid = true;
+                        String strArg = (String) curListArg;
+                        if (allowDollarInValue && strArg.contains("$")) {
+                            // only relevant for addOrder instruction
+                            Validator.validateExpression("Variable '" + p.getKey() + "' of list variable '" + listKey + "': ", strArg);
+                        } else {
+                            try {
+                                BigDecimal number = new BigDecimal(strArg);
+                                listVariable.put(p.getKey(), number);
+                            } catch (NumberFormatException e) {
+                                invalid = true;
+                            }
                         }
                     }
                     break;
