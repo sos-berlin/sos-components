@@ -25,17 +25,17 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.proxy.Proxies;
+import com.sos.joc.classes.reporting.CSVColumns;
 import com.sos.joc.db.history.HistoryFilter;
 import com.sos.joc.db.history.JobHistoryDBLayer;
 import com.sos.joc.db.history.items.CSVItem;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.exceptions.UnknownJobSchedulerControllerException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.job.TaskIdOfOrder;
-import com.sos.joc.model.reporting.OrderSteps;
-import com.sos.joc.model.reporting.OrderStepsColumns;
 import com.sos.joc.reporting.resource.IOrderStepsResource;
 import com.sos.joc.tasks.impl.TasksResourceHistoryImpl;
 import com.sos.schema.JsonValidator;
@@ -57,15 +57,15 @@ public class OrderStepsImpl extends JOCResourceImpl implements IOrderStepsResour
         private final String headline;
 
 
-        public MyStreamingOutput(boolean withGzipEncoding, HistoryFilter filter, Collection<OrderStepsColumns> osColumns,
+        public MyStreamingOutput(boolean withGzipEncoding, HistoryFilter filter, Collection<CSVColumns> osColumns,
                 List<TaskIdOfOrder> historyIds, Set<Folder> permittedFolders, String action) throws JocException, IOException {
             this.withGzipEncoding = withGzipEncoding;
             this.session = Globals.createSosHibernateStatelessConnection(action);
             this.isFolderPermissionsAreChecked= filter.isFolderPermissionsAreChecked();
             this.permittedFolders = permittedFolders;
-            this.headline = osColumns.stream().map(OrderStepsColumns::value).collect(Collectors.joining(";")) + "\n";
+            this.headline = "";//osColumns.stream().map(CSVColumns::value).collect(Collectors.joining(";")) + "\n";
             try {
-                result = getResult(filter, osColumns.stream().map(OrderStepsColumns::strValue), historyIds);
+                result = null; //getResult(filter, osColumns.stream().map(CSVColumns::strValue), historyIds);
             } catch (JocException e) {
                 Globals.disconnect(session);
                 throw e;
@@ -139,54 +139,55 @@ public class OrderStepsImpl extends JOCResourceImpl implements IOrderStepsResour
 
         try {
             initLogging(action, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, OrderSteps.class);
-            OrderSteps in = Globals.objectMapper.readValue(filterBytes, OrderSteps.class);
-
-            String controllerId = in.getControllerId();
-            Set<String> allowedControllers = Collections.emptySet();
-            boolean permitted = false;
-            if (controllerId == null || controllerId.isEmpty()) {
-                controllerId = "";
-                if (Proxies.getControllerDbInstances().isEmpty()) {
-                    permitted = getControllerDefaultPermissions(accessToken).getOrders().getView();
-                } else {
-                    allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
-                            availableController, accessToken).getOrders().getView()).collect(Collectors.toSet());
-                    permitted = !allowedControllers.isEmpty();
-                    if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
-                        allowedControllers = Collections.emptySet();
-                    }
-                }
-            } else {
-                allowedControllers = Collections.singleton(controllerId);
-                permitted = getControllerPermissions(controllerId, accessToken).getOrders().getView();
-            }
-
-            JOCDefaultResponse response = initPermissions(controllerId, permitted);
-            if (response != null) {
-                return response;
-            }
-            
-            if (Proxies.getControllerDbInstances().isEmpty()) {
-                throw new UnknownJobSchedulerControllerException(InventoryInstancesDBLayer.noRegisteredControllers());
-            }
-            
-            Collection<OrderStepsColumns> columns = in.getColumns();
-            if (in.getColumns() == null || in.getColumns().isEmpty()) {
-                columns = EnumSet.allOf(OrderStepsColumns.class);
-            }
-            
-            Set<Folder> permittedFolders = addPermittedFolder(in.getFolders());
-            HistoryFilter filter = TasksResourceHistoryImpl.getFilter(in, allowedControllers, permittedFolders);
-            filter.setLimit(in.getLimit() == null ? -1 : in.getLimit());
-            
-            boolean withGzipEncoding = acceptEncoding != null && acceptEncoding.contains("gzip");
-            StreamingOutput entityStream = new MyStreamingOutput(withGzipEncoding, filter, columns, in.getHistoryIds(), permittedFolders, action);
-            return JOCDefaultResponse.responseStatus200(entityStream, MediaType.TEXT_PLAIN, getGzipHeaders(withGzipEncoding));
-        } catch (DBMissingDataException e) {
-            ProblemHelper.postMessageAsHintIfExist(e.getMessage(), accessToken, getJocError(), null);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatus434JSError(e);
+//            JsonValidator.validateFailFast(filterBytes, OrderSteps.class);
+//            OrderSteps in = Globals.objectMapper.readValue(filterBytes, OrderSteps.class);
+//
+//            String controllerId = in.getControllerId();
+//            Set<String> allowedControllers = Collections.emptySet();
+//            boolean permitted = false;
+//            if (controllerId == null || controllerId.isEmpty()) {
+//                controllerId = "";
+//                if (Proxies.getControllerDbInstances().isEmpty()) {
+//                    permitted = getControllerDefaultPermissions(accessToken).getOrders().getView();
+//                } else {
+//                    allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
+//                            availableController, accessToken).getOrders().getView()).collect(Collectors.toSet());
+//                    permitted = !allowedControllers.isEmpty();
+//                    if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
+//                        allowedControllers = Collections.emptySet();
+//                    }
+//                }
+//            } else {
+//                allowedControllers = Collections.singleton(controllerId);
+//                permitted = getControllerPermissions(controllerId, accessToken).getOrders().getView();
+//            }
+//
+//            JOCDefaultResponse response = initPermissions(controllerId, permitted);
+//            if (response != null) {
+//                return response;
+//            }
+//            
+//            if (Proxies.getControllerDbInstances().isEmpty()) {
+//                throw new UnknownJobSchedulerControllerException(InventoryInstancesDBLayer.noRegisteredControllers());
+//            }
+//            
+//            Collection<OrderStepsColumns> columns = in.getColumns();
+//            if (in.getColumns() == null || in.getColumns().isEmpty()) {
+//                columns = EnumSet.allOf(OrderStepsColumns.class);
+//            }
+//            
+//            Set<Folder> permittedFolders = addPermittedFolder(in.getFolders());
+//            HistoryFilter filter = TasksResourceHistoryImpl.getFilter(in, allowedControllers, permittedFolders);
+//            filter.setLimit(in.getLimit() == null ? -1 : in.getLimit());
+//            
+//            boolean withGzipEncoding = acceptEncoding != null && acceptEncoding.contains("gzip");
+//            StreamingOutput entityStream = new MyStreamingOutput(withGzipEncoding, filter, columns, in.getHistoryIds(), permittedFolders, action);
+//            return JOCDefaultResponse.responseStatus200(entityStream, MediaType.TEXT_PLAIN, getGzipHeaders(withGzipEncoding));
+//        } catch (DBMissingDataException e) {
+//            ProblemHelper.postMessageAsHintIfExist(e.getMessage(), accessToken, getJocError(), null);
+//            e.addErrorMetaInfo(getJocError());
+//            return JOCDefaultResponse.responseStatus434JSError(e);
+            throw new JocNotImplementedException("deprecated");
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -195,13 +196,13 @@ public class OrderStepsImpl extends JOCResourceImpl implements IOrderStepsResour
         }
     }
     
-    private Map<String, Object> getGzipHeaders(boolean withGzipEncoding) {
-        Map<String, Object> headers = new HashMap<String, Object>();
-        if (withGzipEncoding) {
-            headers.put("Content-Encoding", "gzip");
-        }
-        headers.put("Transfer-Encoding", "chunked");
-        return headers;
-    }
+//    private Map<String, Object> getGzipHeaders(boolean withGzipEncoding) {
+//        Map<String, Object> headers = new HashMap<String, Object>();
+//        if (withGzipEncoding) {
+//            headers.put("Content-Encoding", "gzip");
+//        }
+//        headers.put("Transfer-Encoding", "chunked");
+//        return headers;
+//    }
 
 }

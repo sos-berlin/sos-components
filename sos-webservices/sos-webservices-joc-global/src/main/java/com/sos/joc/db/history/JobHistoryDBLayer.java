@@ -1,5 +1,7 @@
 package com.sos.joc.db.history;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -23,6 +25,7 @@ import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
+import com.sos.joc.classes.reporting.ReportingLoader;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.history.common.HistorySeverity;
 import com.sos.joc.db.history.items.CSVItem;
@@ -91,11 +94,30 @@ public class JobHistoryDBLayer {
         }
     }
     
+    public ScrollableResults getCSV(ReportingLoader loader, LocalDateTime month) throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            filter.setExecutedFrom(Date.from(month.atZone(ZoneId.systemDefault()).toInstant()));
+            filter.setExecutedTo(Date.from(month.plusMonths(1).atZone(ZoneId.systemDefault()).toInstant()));
+
+            Query<String> query = createQuery(new StringBuilder().append("select ").append(loader.getColumnHql()).append(" as csv from ").append(
+                    loader.getDbTable()).append(getOrderStepsWhere()).toString());
+            if (filter.getLimit() > 0) {
+                query.setMaxResults(filter.getLimit());
+            }
+
+            return executeScroll(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
     public ScrollableResults getCSVJobs(Stream<String> columns) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
-            Query<CSVItem> query = createQuery(new StringBuilder().append("select workflowFolder as folder, concat(coalesce(").append(columns.collect(
-                    Collectors.joining(",''),';',coalesce("))).append(",'')) as csv from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEPS).append(
-                            getOrderStepsWhere()).append(" order by startTime desc").toString(), CSVItem.class);
+            Query<CSVItem> query = createQuery(new StringBuilder().append("select workflowFolder as folder").append(columns.collect(Collectors
+                    .joining(",''),';',coalesce(", ", concat(coalesce(", ",'')) as csv"))).append(" from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEPS)
+                    .append(getOrderStepsWhere()).append(" order by startTime desc").toString(), CSVItem.class);
             if (filter.getLimit() > 0) {
                 query.setMaxResults(filter.getLimit());
             }
