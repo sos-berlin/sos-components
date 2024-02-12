@@ -110,6 +110,19 @@ public class Conditions {
                             }
                         }
 
+                        // e(OnHold) = 0 <- so without "<value>"
+                        if (valueBegin && !valueEnd && valueCounter == 0) {
+                            String csb = sb.toString();
+                            int eq = csb.indexOf('=');
+                            int diff = csb.length() - eq;
+                            if (diff == 2) { // second to last character is =
+                                isOperator = true;
+                            }
+                        }
+                        if (isTraceEnabled) {
+                            LOGGER.info(String.format("[%s][condition][default][value begin=%s,end=%s,counter=%s][isOperator=%s]%s", method,
+                                    valueBegin, valueEnd, valueCounter, isOperator, sb));
+                        }
                         if (isOperator) {
                             if (sb.length() > 0) {
                                 Condition cp = new Condition(sb.toString().trim());
@@ -189,7 +202,7 @@ public class Conditions {
             }
 
             if (isTraceEnabled) {
-                LOGGER.debug(String.format("[%s][group begin=%s,end=%s][part begin=%s,end=%s][value begin=%s,end=%s][%s]%s", method, groupBegin,
+                LOGGER.trace(String.format("[%s][group begin=%s,end=%s][part begin=%s,end=%s][value begin=%s,end=%s][%s]%s", method, groupBegin,
                         groupEnd, partBegin, partEnd, valueBegin, valueEnd, s, sb));
             }
 
@@ -200,6 +213,8 @@ public class Conditions {
             if (isTraceEnabled) {
                 LOGGER.trace(String.format("[%s][condition][addOnEnd][result]%s", method, sb));
             }
+
+            // LOGGER.info(String.format("[%s][condition][addOnEnd][result]%s", method, sb));
             result.add(new Condition(sb.toString().trim()));
         }
 

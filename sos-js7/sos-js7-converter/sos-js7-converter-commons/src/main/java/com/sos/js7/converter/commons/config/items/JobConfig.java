@@ -8,6 +8,7 @@ public class JobConfig extends AConfigItem {
     private Integer forcedGraceTimeout;
     private Integer forcedParallelism;
     private Boolean forcedFailOnErrWritten;
+    private Boolean forcedWarnOnErrWritten;
     private Boolean forcedV1Compatible;
 
     private String unixDefaultShebang = "#!/bin/bash";
@@ -36,6 +37,9 @@ public class JobConfig extends AConfigItem {
             break;
         case "forcedFailOnErrWritten":
             withForcedFailOnErrWritten(Boolean.parseBoolean(val));
+            break;
+        case "forcedWarnOnErrWritten":
+            withForcedWarnOnErrWritten(Boolean.parseBoolean(val));
             break;
         case "forcedV1Compatible":
             withForcedV1Compatible(Boolean.parseBoolean(val));
@@ -100,6 +104,11 @@ public class JobConfig extends AConfigItem {
         return this;
     }
 
+    public JobConfig withForcedWarnOnErrWritten(Boolean val) {
+        this.forcedWarnOnErrWritten = val;
+        return this;
+    }
+
     public JobConfig withForcedV1Compatible(Boolean val) {
         this.forcedV1Compatible = val;
         return this;
@@ -159,6 +168,10 @@ public class JobConfig extends AConfigItem {
 
     public Boolean getForcedFailOnErrWritten() {
         return forcedFailOnErrWritten;
+    }
+
+    public Boolean getForcedWarnOnErrWritten() {
+        return forcedWarnOnErrWritten;
     }
 
     public Boolean getForcedV1Compatible() {
