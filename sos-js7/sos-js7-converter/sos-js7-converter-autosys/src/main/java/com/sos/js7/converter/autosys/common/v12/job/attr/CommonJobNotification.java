@@ -109,4 +109,14 @@ public class CommonJobNotification extends AJobAttributes {
     public void setNotificationEmailaddress(String val) {
         notificationEmailaddress.setValue(JS7ConverterHelper.stringValue(val));
     }
+    
+    public boolean exists() {
+        return alarmIfFail.getValue() != null || alarmIfTerminated.getValue() != null || notificationMsg.getValue() != null || sendNotification.getValue() != null
+                || notificationEmailaddress.getValue() != null;
+    }
+
+    @Override
+    public String toString() {
+        return toString(alarmIfFail,alarmIfTerminated,sendNotification,notificationMsg,notificationEmailaddress);
+    }
 }

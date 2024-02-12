@@ -169,4 +169,5 @@ public class JobCMD extends ACommonMachineJob {
     public void setHeartbeatInterval(String val) {
         heartbeatInterval.setValue(JS7ConverterHelper.longValue(val));
     }
+
 }

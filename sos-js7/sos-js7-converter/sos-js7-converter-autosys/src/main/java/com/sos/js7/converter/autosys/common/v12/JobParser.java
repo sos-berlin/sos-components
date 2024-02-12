@@ -156,6 +156,9 @@ public class JobParser {
                         m.invoke(job, value);
                     } else {
                         // e.g. job.getFolder().setApplication(...)
+                        
+                        //LOGGER.info("includeGetMethod="+includeGetMethod+", value="+value);
+                        
                         Method im = job.getClass().getMethod(includeGetMethod);
                         m.invoke(im.invoke(job), value);
                     }

@@ -121,4 +121,16 @@ public class CommonJobMonitoring extends AJobAttributes {
         serviceDesk.setValue(JS7ConverterHelper.booleanValue(val, false));
     }
 
+    public boolean exists() {
+        return svcdeskDesc.getValue() != null || svcdeskImp.getValue() != null || svcdeskPri.getValue() != null || svcdeskSev.getValue() != null
+                || serviceDesk.getValue() != null;
+    }
+
+    @Override
+    public String toString() {
+        return toString(svcdeskDesc,svcdeskImp,svcdeskPri,svcdeskSev,serviceDesk);
+    }
+    
+    
+
 }
