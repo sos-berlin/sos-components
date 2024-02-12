@@ -21,6 +21,11 @@ import jakarta.ws.rs.Path;
 public class LoadDataImpl extends JOCResourceImpl implements ILoadDataResource {
     
     @Override
+    public JOCDefaultResponse create2(String accessToken, byte[] filterBytes) {
+        return create(accessToken, filterBytes);
+    }
+    
+    @Override
     public JOCDefaultResponse create(String accessToken, byte[] filterBytes) {
         try {
             initLogging(IMPL_PATH, filterBytes, accessToken);

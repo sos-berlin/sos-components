@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -29,47 +30,50 @@ public class LoadData extends AReporting {
     /**
      * 
      * @param monthFrom in the form yyyy-MM
-     * @param accessToken
-     * @param jocError
      * @return
      */
-    public static CompletableFuture<Either<Exception, Void>> writeCSVFiles(String monthFrom) {
+    public static CompletableFuture<Either<Exception, Void>> writeCSVFiles(final String monthFrom) {
+        String[] yearMonth = monthFrom.split("-");
+        return writeCSVFiles(LocalDate.of(Integer.valueOf(yearMonth[0]).intValue(), Integer.valueOf(yearMonth[1]).intValue(), 1).atStartOfDay());
+    }
+    
+    /**
+     * 
+     * @param monthFrom - LocalDateTime of the first day of a month at 00:00:00
+     * @return
+     */
+    public static CompletableFuture<Either<Exception, Void>> writeCSVFiles(final LocalDateTime monthFrom) {
         return CompletableFuture.supplyAsync(() -> {
             SOSHibernateSession session = null;
             ScrollableResults jobResult = null;
             ScrollableResults orderResult = null;
+            List<String> emptyMonths = new ArrayList<>();
+            List<String> existingMonths = new ArrayList<>();
+
             try {
                 session = Globals.createSosHibernateStatelessConnection("ReportingLoadData");
                 JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(session, new HistoryFilter());
                 
-                List<String> emptyMonths = new ArrayList<>();
-                List<String> existingMonths = new ArrayList<>();
-
                 LocalDateTime firstDayOfCurrentMonth = LocalDate.now(ZoneId.systemDefault()).withDayOfMonth(1).atStartOfDay();
-                String[] yearMonth = monthFrom.split("-");
-                LocalDateTime dateFrom = LocalDate.of(Integer.valueOf(yearMonth[0]).intValue(), Integer.valueOf(yearMonth[1]).intValue(), 1)
-                        .atStartOfDay();
+                LocalDateTime _monthFrom = monthFrom;
                 
                 ReportingLoader jobsReporting = new ReportingLoader(ReportingType.JOBS);
                 ReportingLoader ordersReporting = new ReportingLoader(ReportingType.ORDERS);
                 
-                while (dateFrom.isBefore(firstDayOfCurrentMonth)) {
-                    jobResult = dbLayer.getCSV(jobsReporting, dateFrom);
-                    boolean skipped = writeCSVFile(jobsReporting, dateFrom, jobResult, emptyMonths, existingMonths);
+                while (_monthFrom.isBefore(firstDayOfCurrentMonth)) {
+                    jobResult = dbLayer.getCSV(jobsReporting, _monthFrom);
+                    String month = _monthFrom.format(yearMonthFormatter);
+                    boolean skipped = writeCSVFile(jobsReporting, month, jobResult, emptyMonths, existingMonths);
                     if (!skipped) {
-                        orderResult = dbLayer.getCSV(ordersReporting, dateFrom);
-                        writeCSVFile(ordersReporting, dateFrom, orderResult, emptyMonths, existingMonths);
+                        orderResult = dbLayer.getCSV(ordersReporting, _monthFrom);
+                        writeCSVFile(ordersReporting, month, orderResult, emptyMonths, existingMonths);
+                        
+                        atomicRename(ordersReporting, month);
+                        atomicRename(jobsReporting, month);
                     }
-                    dateFrom = dateFrom.plusMonths(1);
+                    _monthFrom = _monthFrom.plusMonths(1);
                 }
 
-                if (!emptyMonths.isEmpty()) {
-                    LOGGER.info("[Reporting][loading] Skipped: No data for " + String.join(", ", emptyMonths));
-                }
-                if (!existingMonths.isEmpty()) {
-                    LOGGER.info("[Reporting][loading] Skipped: Data already exists for " + String.join(", ", existingMonths));
-                }
-                
                 return Either.right(null);
             } catch (Exception e) {
                 return Either.left(e);
@@ -81,26 +85,35 @@ public class LoadData extends AReporting {
                     orderResult.close();
                 }
                 Globals.disconnect(session);
+                
+                if (!emptyMonths.isEmpty()) {
+                    LOGGER.info("[Reporting][loading] Skipped: No data for " + String.join(", ", emptyMonths));
+                }
+                if (!existingMonths.isEmpty()) {
+                    LOGGER.info("[Reporting][loading] Skipped: Data already exists for " + String.join(", ", existingMonths));
+                }
             }
         });
     }
     
-    private static boolean writeCSVFile(ReportingLoader loader, LocalDateTime dateFrom, ScrollableResults result, List<String> emptyMonths,
+    private static boolean writeCSVFile(ReportingLoader loader, String month, ScrollableResults result, List<String> emptyMonths,
             List<String> existingMonths) throws IOException {
         boolean skipped = true;
-        String month = dateFrom.format(yearMonthFormatter);
         if (result != null) {
-            Path monthFile = loader.getOutDir().resolve(month + ".csv");
+            Path monthFile = getMonthFile(loader, month);
+            Path tmpMonthFile = getTmpMonthFile(loader, month);
+            Files.deleteIfExists(tmpMonthFile);
             if (Files.notExists(monthFile)) {
                 if (result.next()) {
-                    try (OutputStream output = Files.newOutputStream(monthFile)) {
+                    try (OutputStream output = Files.newOutputStream(tmpMonthFile)) {
                         output.write(loader.getHeadline());
                         output.write(getCsvBytes(result.get(0)));
                         while (result.next()) {
                             output.write(getCsvBytes(result.get(0)));
                         }
                         output.flush();
-                        LOGGER.info("[Reporting][loading] Write data for " + month + " (" + monthFile.toString() + ")");
+                        LOGGER.info("[Reporting][loading] Write " + loader.getType().name().toLowerCase() + " data for " + month + " (" + monthFile
+                                .toString() + ")");
                         skipped = false;
                     }
                 } else {
@@ -115,5 +128,30 @@ public class LoadData extends AReporting {
             emptyMonths.add(month);
         }
         return skipped;
+    }
+    
+    private static void atomicRename(ReportingLoader loader, String month) throws IOException {
+        Path monthFile = getMonthFile(loader, month);
+        Path tmpMonthFile = getTmpMonthFile(loader, month);
+        Files.move(tmpMonthFile, monthFile, StandardCopyOption.ATOMIC_MOVE);
+    }
+    
+    private static Path getMonthFile(ReportingLoader loader, String month) {
+        return loader.getOutDir().resolve(month + ".csv");
+    }
+    
+    private static Path getTmpMonthFile(ReportingLoader loader, String month) {
+        return loader.getOutDir().resolve(month + ".csv~");
+    }
+    
+    private static boolean checkCSVFileExists(Path outdir, LocalDateTime monthFrom) throws IOException {
+        String month = monthFrom.format(yearMonthFormatter);
+        Path monthFile = outdir.resolve(month + ".csv");
+        return Files.notExists(monthFile);
+    }
+    
+    private static boolean checkLastMonthCSVFileExists() throws IOException {
+        return checkCSVFileExists(getDataDirectory(ReportingType.JOBS), LocalDate.now(ZoneId.systemDefault()).withDayOfMonth(1).atStartOfDay()
+                .minusMonths(1));
     }
 }

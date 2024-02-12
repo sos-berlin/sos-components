@@ -12,12 +12,17 @@ import jakarta.ws.rs.core.MediaType;
 
 public interface ILoadDataResource {
 
-    public static final String PATH = "load";
+    public static final String PATH = "data/load";
     public static final String IMPL_PATH = WebservicePaths.getResourceImplPath(WebservicePaths.REPORTING, PATH);
 
     @POST
     @Path(PATH)
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse create(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    
+    @POST
+    @Path("load") //wrong url: will be deleted when GUI use the right one above
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse create2(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 
 }
