@@ -195,28 +195,14 @@ public class CommonJobRunTime extends AJobAttributes {
         dateConditions.setValue(JS7ConverterHelper.booleanValue(val, false));
     }
 
+    public boolean exists() {
+        return timezone.getValue() != null || runWindow.getValue() != null || runCalendar.getValue() != null || daysOfWeek.getValue() != null
+                || startTimes.getValue() != null || startMins.getValue() != null;
+    }
+
     @Override
     public String toString() {
-        List<String> l = new ArrayList<>();
-        if (timezone.getValue() != null) {
-            l.add("timezone=" + timezone.getValue().toString());
-        }
-        if (runWindow.getValue() != null) {
-            l.add("runWindow=" + runWindow.getValue().toString());
-        }
-        if (runCalendar.getValue() != null) {
-            l.add("runCalendar=" + runCalendar.getValue());
-        }
-        if (daysOfWeek.getValue() != null) {
-            l.add("daysOfWeek=" + daysOfWeek.getValue().toString());
-        }
-        if (startTimes.getValue() != null) {
-            l.add("startTimes=" + startTimes.getValue().toString());
-        }
-        if (startMins.getValue() != null) {
-            l.add("startMins=" + startMins.getValue().toString());
-        }
-        return String.join(",", l);
+        return toString(timezone, runWindow, runCalendar, daysOfWeek, startTimes, startMins);
     }
 
     public class RunWindow {
@@ -261,8 +247,8 @@ public class CommonJobRunTime extends AJobAttributes {
                 this.type = DaysOfWeekType.ALL;
                 this.days = stringListValue("mo,tu,we,th,fr,sa,su");
             } else {
-                this.type = DaysOfWeekType.SPECIFIC;
                 this.days = stringListValue(val);
+                this.type = days.size() == 7 ? DaysOfWeekType.ALL : DaysOfWeekType.SPECIFIC;
             }
         }
 

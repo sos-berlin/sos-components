@@ -2351,6 +2351,10 @@ public class JS12JS7Converter {
                 j.setFailOnErrWritten(true);
             }
         }
+
+        if (CONFIG.getJobConfig().getForcedWarnOnErrWritten() != null) {
+            j.setWarnOnErrWritten(CONFIG.getJobConfig().getForcedWarnOnErrWritten());
+        }
     }
 
     private void setJobNotification(Job j, ACommonJob job) {

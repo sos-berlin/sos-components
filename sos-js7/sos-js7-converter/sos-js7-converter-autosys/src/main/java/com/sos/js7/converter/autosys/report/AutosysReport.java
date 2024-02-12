@@ -35,10 +35,10 @@ public class AutosysReport {
             }
         }
         String c = analyzerResult.hasValues() ? ", condition " + analyzerResult.toString() : "";
-        ConverterReport.INSTANCE.addAnalyzerRecord("TOTAL STANDALONE", jobs.size() + ", With condition=" + jobsWithConditions.size() + c);
+        ConverterReport.INSTANCE.addAnalyzerRecord("Standalone Workflows", jobs.size() + ", With condition=" + jobsWithConditions.size() + c);
 
         // JOBS SUMMARY
-        ConverterReport.INSTANCE.addSummaryRecord("TOTAL STANDALONE", jobs.size());
+        ConverterReport.INSTANCE.addSummaryRecord("    Standalone Workflows", jobs.size());
         if (jobs.size() > 0) {
             Map<ConverterJobType, List<ACommonJob>> jobsPerType = jobs.stream().collect(Collectors.groupingBy(ACommonJob::getConverterJobType,
                     Collectors.toList()));
@@ -156,19 +156,19 @@ public class AutosysReport {
 
         }
         // JOBS SUMMARY
-        ConverterReport.INSTANCE.addSummaryRecord("TOTAL BOX", boxJobs.size());
+        ConverterReport.INSTANCE.addSummaryRecord("    BOX Workflows", boxJobs.size());
         if (mapByChildAgents.size() > 0) {
-            ConverterReport.INSTANCE.addSummaryRecord("Box/Agents", mapByChildAgents(mapByChildAgents));
+            ConverterReport.INSTANCE.addSummaryRecord("        Box/Agents", mapByChildAgents(mapByChildAgents));
         }
         if (mapByChildType.size() > 0) {
-            ConverterReport.INSTANCE.addSummaryRecord("Job type/Box", mapByChildType(mapByChildType));
+            //ConverterReport.INSTANCE.addSummaryRecord("Job type/Box", mapByChildType(mapByChildType));
         }
         if (mapByChildSize.size() > 0) {
-            ConverterReport.INSTANCE.addSummaryRecord("Box/Jobs", "TOTAL Jobs=" + counterChildren + "(" + intIntmap2String(mapByChildSize) + ")");
+            ConverterReport.INSTANCE.addSummaryRecord("        Box/Number of Jobs", "TOTAL Jobs=" + counterChildren + "(" + intIntmap2String(mapByChildSize) + ")");
         }
         mapByBoxName.entrySet().forEach(e -> {
             if (e.getValue() > 1) {
-                ConverterReport.INSTANCE.addSummaryRecord("BOX=" + e.getKey(), e.getValue() + " times");
+                ConverterReport.INSTANCE.addSummaryRecord("        BOX=" + e.getKey(), e.getValue() + " times");
             }
         });
 
@@ -202,6 +202,7 @@ public class AutosysReport {
                 .getKey()).collect(Collectors.toList()));
     }
 
+    @SuppressWarnings("unused")
     private static String mapByChildType(Map<String, List<String>> mapByChildType) {
         Map<String, Integer> map = new HashMap<>();
 

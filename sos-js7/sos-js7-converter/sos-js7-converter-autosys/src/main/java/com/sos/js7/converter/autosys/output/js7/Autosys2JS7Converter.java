@@ -25,6 +25,7 @@ import com.sos.inventory.model.calendar.Frequencies;
 import com.sos.inventory.model.calendar.Period;
 import com.sos.inventory.model.calendar.WeekDays;
 import com.sos.inventory.model.calendar.WhenHolidayType;
+import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.Cycle;
 import com.sos.inventory.model.instruction.ExpectNotices;
 import com.sos.inventory.model.instruction.Fail;
@@ -45,6 +46,10 @@ import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.workflow.Branch;
 import com.sos.inventory.model.workflow.BranchWorkflow;
 import com.sos.inventory.model.workflow.Jobs;
+import com.sos.inventory.model.workflow.Parameter;
+import com.sos.inventory.model.workflow.ParameterType;
+import com.sos.inventory.model.workflow.Parameters;
+import com.sos.inventory.model.workflow.Requirements;
 import com.sos.joc.model.agent.ClusterAgent;
 import com.sos.joc.model.agent.SubAgent;
 import com.sos.joc.model.agent.SubAgentId;
@@ -53,21 +58,26 @@ import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob.ConverterJobType;
 import com.sos.js7.converter.autosys.common.v12.job.JobBOX;
 import com.sos.js7.converter.autosys.common.v12.job.JobCMD;
+import com.sos.js7.converter.autosys.common.v12.job.JobFW;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Condition;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Condition.ConditionType;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Conditions;
+import com.sos.js7.converter.autosys.config.AutosysConverterConfig;
 import com.sos.js7.converter.autosys.input.AFileParser;
 import com.sos.js7.converter.autosys.input.DirectoryParser;
 import com.sos.js7.converter.autosys.input.DirectoryParser.DirectoryParserResult;
+import com.sos.js7.converter.autosys.input.analyzer.AutosysAnalyzer;
 import com.sos.js7.converter.autosys.report.AutosysReport;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 import com.sos.js7.converter.commons.JS7ConverterResult;
+import com.sos.js7.converter.commons.JS7ExportObjects;
 import com.sos.js7.converter.commons.JS7ExportObjects.JS7ExportObject;
 import com.sos.js7.converter.commons.agent.JS7AgentConverter;
 import com.sos.js7.converter.commons.agent.JS7AgentConverter.JS7AgentConvertType;
 import com.sos.js7.converter.commons.agent.JS7AgentHelper;
 import com.sos.js7.converter.commons.config.JS7ConverterConfig;
 import com.sos.js7.converter.commons.config.JS7ConverterConfig.Platform;
+import com.sos.js7.converter.commons.config.items.DiagramConfig;
 import com.sos.js7.converter.commons.config.items.SubFolderConfig;
 import com.sos.js7.converter.commons.config.json.JS7Agent;
 import com.sos.js7.converter.commons.output.OutputWriter;
@@ -88,9 +98,10 @@ public class Autosys2JS7Converter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Autosys2JS7Converter.class);
 
-    public static JS7ConverterConfig CONFIG = new JS7ConverterConfig();
+    public static AutosysConverterConfig CONFIG = new AutosysConverterConfig();
 
     private Map<String, JS7Agent> machine2js7Agent = new HashMap<>();
+    private Map<String, String> defaultAutosysJS7Calendars = new HashMap<>();
 
     public static void convert(AFileParser parser, Path input, Path outputDir, Path reportDir) throws IOException {
 
@@ -118,7 +129,9 @@ public class Autosys2JS7Converter {
         // 3 - Convert to JS7
         Instant start = Instant.now();
         LOGGER.info(String.format("[%s][JS7][convert][start]...", method));
-        JS7ConverterResult result = convert(pr);
+
+        ConverterResult cr = convert(reportDir, pr);
+        JS7ConverterResult result = cr.getResult();
         LOGGER.info(String.format("[%s][JS7][convert][end]%s", method, SOSDate.getDuration(start, Instant.now())));
         // 3.1 - Converter Reports
         ConverterReportWriter.writeConverterReport(reportDir.resolve("converter_errors.csv"), reportDir.resolve("converter_warnings.csv"), reportDir
@@ -131,7 +144,15 @@ public class Autosys2JS7Converter {
             LOGGER.info(String.format("[%s][JS7][write][workflows]...", method));
             OutputWriter.write(outputDir, result.getWorkflows());
             ConverterReport.INSTANCE.addSummaryRecord("Workflows", result.getWorkflows().getItems().size());
+        }
+        AutosysReport.analyze(cr.getStandaloneJobs(), cr.getBoxJobs());
 
+        if (CONFIG.getGenerateConfig().getAgents()) {
+            LOGGER.info(String.format("[%s][JS7][write][Agents]...", method));
+            OutputWriter.write(outputDir, result.getAgents());
+            long total = result.getAgents().getItems().size();
+            long standalone = result.getAgents().getItems().stream().filter(a -> a.getObject().getStandaloneAgent() != null).count();
+            ConverterReport.INSTANCE.addSummaryRecord("Agents", total + ", STANDALONE=" + standalone + ", CLUSTER=" + (total - standalone));
         }
         if (CONFIG.getGenerateConfig().getCalendars()) {
             LOGGER.info(String.format("[%s][JS7][write][calendars]...", method));
@@ -148,6 +169,9 @@ public class Autosys2JS7Converter {
         OutputWriter.write(outputDir, result.getBoards());
         ConverterReport.INSTANCE.addSummaryRecord("Boards", result.getBoards().getItems().size());
 
+        // TODO all with write(...
+        write(outputDir, "FileOrderSources", result.getFileOrderSources(), true, null);
+
         // 4.1 - Summary Report
         ConverterReportWriter.writeSummaryReport(reportDir.resolve("converter_summary.csv"));
 
@@ -157,8 +181,37 @@ public class Autosys2JS7Converter {
         LOGGER.info(String.format("[%s][end]%s", method, SOSDate.getDuration(appStart, Instant.now())));
     }
 
-    private static JS7ConverterResult convert(DirectoryParserResult pr) {
+    private static <T> void write(Path outputDir, String title, JS7ExportObjects<T> exportObject, boolean doWrite, String configPropertyName) {
+        String logPrefix = String.format("[convert][JS7][write][%s]", title);
+        int size = exportObject.getItems().size();
+        try {
+            if (doWrite) {
+                if (size > 0) {
+                    LOGGER.info(logPrefix + size + " items ...");
+                    OutputWriter.write(outputDir, exportObject);
+                } else {
+                    LOGGER.info(logPrefix + "[skip]0 items");
+                }
+            } else {
+                if (configPropertyName != null) {
+                    LOGGER.info(logPrefix + "[skip]" + configPropertyName + "=false");
+                }
+            }
+        } catch (Throwable e) {
+            LOGGER.error(logPrefix + e.toString(), e);
+            ConverterReport.INSTANCE.addErrorRecord(null, logPrefix, e);
+        } finally {
+            ConverterReport.INSTANCE.addSummaryRecord(title, size);
+        }
+    }
+
+    private static ConverterResult convert(Path reportDir, DirectoryParserResult pr) {
         String method = "convert";
+
+        DiagramConfig diagramConfig = CONFIG.getAutosys().getInputConfig().getDiagramConfig();
+
+        AutosysAnalyzer a = new AutosysAnalyzer();
+        a.analyze(pr, diagramConfig, reportDir, false);
 
         Autosys2JS7Converter c = new Autosys2JS7Converter();
         JS7ConverterResult result = new JS7ConverterResult();
@@ -209,9 +262,30 @@ public class Autosys2JS7Converter {
         }
 
         postProcessing(result);
-        AutosysReport.analyze(standaloneJobs, boxJobs);
 
-        return result;
+        c.convertAgents(result);
+        c.convertCalendars(result);
+
+        // AutosysReport.analyze(standaloneJobs, boxJobs);
+        // return result;
+        return new ConverterResult(result, standaloneJobs, boxJobs);
+    }
+
+    private void convertAgents(JS7ConverterResult result) {
+        if (CONFIG.getGenerateConfig().getAgents()) {
+            result = JS7ConverterHelper.convertAgents(result, machine2js7Agent.entrySet().stream().map(e -> e.getValue()).collect(Collectors
+                    .toList()));
+        }
+    }
+
+    private void convertCalendars(JS7ConverterResult result) {
+        if (CONFIG.getGenerateConfig().getCalendars()) {
+            Path rootPath = CONFIG.getCalendarConfig().getForcedFolder() == null ? Paths.get("") : CONFIG.getCalendarConfig().getForcedFolder();
+
+            for (Map.Entry<String, String> e : defaultAutosysJS7Calendars.entrySet()) {
+                result.add(JS7ConverterHelper.getCalendarPath(rootPath, e.getValue()), JS7ConverterHelper.createDefaultWorkingDaysCalendar());
+            }
+        }
     }
 
     private static void postProcessing(JS7ConverterResult result) {
@@ -227,7 +301,7 @@ public class Autosys2JS7Converter {
             JS7ExportObject eo = result.getExportObjectWorkflowByPath(jobName);
 
             result.getWorkflows().getItems().forEach(i -> {
-                LOGGER.debug("[postProcessing][postNotice][success]workflow=" + i.getOriginalPath().getPath());
+                LOGGER.trace("[postProcessing][postNotice][success]workflow=" + i.getOriginalPath().getPath());
             });
             // TODO for all types - failed, done etc. check create instructions ...
             if (eo == null) {
@@ -332,8 +406,16 @@ public class Autosys2JS7Converter {
         if (size == 0) {
             return;
         }
+        List<ACommonJob> fileWatchers = jilJob.getJobs().stream().filter(j -> j instanceof JobFW).collect(Collectors.toList());
+
+        if (fileWatchers.size() > 0) {
+            jilJob.getJobs().removeAll(fileWatchers);
+        }
+
         // WORKFLOW
-        String jobName = normalizeName(result, jilJob, jilJob.getInsertJob().getValue());
+        WorkflowResult wr = new WorkflowResult();
+        wr.setName(normalizeName(result, jilJob, jilJob.getInsertJob().getValue()));
+
         Workflow w = new Workflow();
         w.setTitle(jilJob.getDescription().getValue());
         w.setTimeZone(jilJob.getRunTime().getTimezone().getValue() == null ? CONFIG.getWorkflowConfig().getDefaultTimeZone() : jilJob.getRunTime()
@@ -345,14 +427,14 @@ public class Autosys2JS7Converter {
             if (j instanceof JobCMD) {
                 jobs.setAdditionalProperty(jn, getJob(result, (JobCMD) j));
             } else {
-                ConverterReport.INSTANCE.addErrorRecord("[convertBoxWorkflow][box=" + jobName + "][job=" + jn + "][not impemented yet]type=" + j
+                ConverterReport.INSTANCE.addErrorRecord("[convertBoxWorkflow][box=" + wr.getName() + "][job=" + jn + "][not impemented yet]type=" + j
                         .getConverterJobType());
             }
             // TODO FW etc jobs
         }
         w.setJobs(jobs);
 
-        List<Instruction> in = getExpectNoticeInstructions(result, jobName, jilJob);
+        List<Instruction> in = getExpectNoticeInstructions(result, wr.getName(), jilJob);
         // in.add(getNamedJobInstruction(jobName));
         // in = getCyclicWorkflowInstructions(jilJob, in);
 
@@ -418,13 +500,66 @@ public class Autosys2JS7Converter {
             }
             LOGGER.debug("[convertBoxWorkflow]childrenCopy=" + childrenCopy);
             if (childrenCopy.size() > 0) {
-                ConverterReport.INSTANCE.addErrorRecord("[convertBoxWorkflow][box=" + jobName + "][not converted jobs]" + childrenCopy);
+                ConverterReport.INSTANCE.addErrorRecord("[convertBoxWorkflow][box=" + wr.getName() + "][not converted jobs]" + childrenCopy);
             }
 
         }
         in = getCyclicWorkflowInstructions(jilJob, in);
         w.setInstructions(in);
-        result.add(getWorkflowPath(jilJob, jobName), w);
+
+        if (fileWatchers.size() > 0) {
+            Parameter p = new Parameter();
+            p.setType(ParameterType.String);
+            p.setDefault("${file}");
+
+            Parameters ps = new Parameters();
+            ps.getAdditionalProperties().put("file", p);
+
+            w.setOrderPreparation(new Requirements(ps, false));
+        }
+        wr.setPath(getWorkflowPath(jilJob, wr.getName()));
+
+        result.add(wr.getPath(), w);
+
+        if (fileWatchers.size() > 0) {
+            try {
+                String agentName = w.getJobs().getAdditionalProperties().entrySet().iterator().next().getValue().getAgentName();
+                JS7Agent a = new JS7Agent();
+                a.setJS7AgentName(agentName);
+                convertFileOrderSources(result, fileWatchers, wr, a);
+            } catch (Throwable e) {
+                LOGGER.error("[convertBoxWorkflow][box=" + wr.getName() + "][convertFileOrderSources]" + e.toString(), e);
+                ConverterReport.INSTANCE.addErrorRecord(wr.getPath(), "[convertBoxWorkflow][box=" + wr.getName() + "]convertFileOrderSources", e);
+            }
+        }
+        convertSchedule(result, jilJob, wr);
+    }
+
+    private void convertFileOrderSources(JS7ConverterResult result, List<ACommonJob> fileOrderSources, WorkflowResult wr, JS7Agent js7Agent) {
+        if (fileOrderSources.size() > 0) {
+            for (ACommonJob n : fileOrderSources) {
+                JobFW j = (JobFW) n;
+                if (SOSString.isEmpty(j.getWatchFile().getValue())) {
+                    continue;
+                }
+
+                Path p = Paths.get(j.getWatchFile().getValue());
+
+                String name = JS7ConverterHelper.getJS7ObjectName(j.getInsertJob().getValue());
+                FileOrderSource fos = new FileOrderSource();
+                fos.setWorkflowName(wr.getName());
+                fos.setAgentName(js7Agent.getJS7AgentName());
+                fos.setTimeZone(CONFIG.getWorkflowConfig().getDefaultTimeZone());
+                fos.setDirectoryExpr(JS7ConverterHelper.quoteValue4JS7(p.getParent().toString().replaceAll("\\\\", "/")));
+                fos.setPattern(p.getFileName().toString());
+                Long delay = null;
+                if (j.getWatchInterval().getValue() != null) {
+                    delay = j.getWatchInterval().getValue();
+                }
+                fos.setDelay(delay);
+                result.add(JS7ConverterHelper.getFileOrderSourcePathFromJS7Path(wr.getPath(), name), fos);
+            }
+        }
     }
 
     private static ForkJoin createForkJoin(JS7ConverterResult result, JobBOX jilJob, List<ACommonJob> children, List<ACommonJob> childrenCopy,
@@ -542,6 +677,7 @@ public class Autosys2JS7Converter {
         return jilJob.getJobs();
     }
 
+    @SuppressWarnings("unused")
     private static Map<String, Map<ConditionType, List<ACommonJob>>> getBoxJobChildrenConditions(JobBOX boxJob, List<ACommonJob> children) {
         Map<String, Map<ConditionType, List<ACommonJob>>> result = new HashMap<>();
 
@@ -610,27 +746,31 @@ public class Autosys2JS7Converter {
     }
 
     private void convertStandalone(JS7ConverterResult result, JobCMD jilJob) {
-        convertStandaloneWorkflow(result, jilJob);
-        convertSchedule(result, jilJob);
+        WorkflowResult wr = convertStandaloneWorkflow(result, jilJob);
+        convertSchedule(result, jilJob, wr);
     }
 
-    private void convertStandaloneWorkflow(JS7ConverterResult result, JobCMD jilJob) {
+    private WorkflowResult convertStandaloneWorkflow(JS7ConverterResult result, JobCMD jilJob) {
         // WORKFLOW
         Workflow w = new Workflow();
         w.setTitle(jilJob.getDescription().getValue());
         w.setTimeZone(jilJob.getRunTime().getTimezone().getValue() == null ? CONFIG.getWorkflowConfig().getDefaultTimeZone() : jilJob.getRunTime()
                 .getTimezone().getValue());
 
-        String jobName = normalizeName(result, jilJob, jilJob.getInsertJob().getValue());
+        WorkflowResult wr = new WorkflowResult();
+        wr.setName(normalizeName(result, jilJob, jilJob.getInsertJob().getValue()));
+        wr.setPath(getWorkflowPath(jilJob, wr.getName()));
+
         Jobs js = new Jobs();
-        js.setAdditionalProperty(jobName, getJob(result, jilJob));
+        js.setAdditionalProperty(wr.getName(), getJob(result, jilJob));
         w.setJobs(js);
 
-        List<Instruction> in = getExpectNoticeInstructions(result, jobName, jilJob);
-        in.add(getNamedJobInstruction(jobName));
+        List<Instruction> in = getExpectNoticeInstructions(result, wr.getName(), jilJob);
+        in.add(getNamedJobInstruction(wr.getName()));
         in = getCyclicWorkflowInstructions(jilJob, in);
         w.setInstructions(in);
-        result.add(getWorkflowPath(jilJob, jobName), w);
+        result.add(wr.getPath(), w);
+        return wr;
     }
 
     private Job getJob(JS7ConverterResult result, JobCMD jilJob) {
@@ -640,12 +780,12 @@ public class Autosys2JS7Converter {
 
         JS7Agent js7Agent = getAgent(result, j, jilJob);
         j = JS7AgentHelper.setAgent(j, js7Agent);
-        j = setExecutable(j, jilJob);
+        j = setExecutable(j, jilJob, js7Agent.getPlatform());
         j = setJobOptions(j, jilJob);
         return j;
     }
 
-    private void convertSchedule(JS7ConverterResult result, ACommonJob jilJob) {
+    private void convertSchedule(JS7ConverterResult result, ACommonJob jilJob, WorkflowResult wr) {
         String calendarName = getCalendarName(result, CONFIG, jilJob);
         if (calendarName == null) {
             ConverterReport.INSTANCE.addWarningRecord(null, jilJob.getInsertJob().getValue(), "[convertSchedule][job without " + jilJob.getRunTime()
@@ -686,18 +826,22 @@ public class Autosys2JS7Converter {
             p.setWhenHoliday(WhenHolidayType.SUPPRESS);
             periods.add(p);
         }
+        // re 2024-02-05
+        if (periods.size() == 0) {
+            return;
+        }
+
         calendar.setPeriods(periods);
 
-        String jobName = normalizeName(result, jilJob, jilJob.getInsertJob().getValue());
         Schedule s = new Schedule();
-        s.setWorkflowNames(Collections.singletonList(jobName));
+        s.setWorkflowNames(Collections.singletonList(wr.getName()));
         s.setPlanOrderAutomatically(CONFIG.getScheduleConfig().planOrders());
         s.setSubmitOrderToControllerWhenPlanned(CONFIG.getScheduleConfig().submitOrders());
         s.setCalendars(Collections.singletonList(calendar));
-        result.add(getSchedulePath(jilJob, jobName), s);
+        result.add(JS7ConverterHelper.getSchedulePathFromJS7Path(wr.getPath(), wr.getName(), ""), s);
     }
 
-    private static String getCalendarName(JS7ConverterResult result, JS7ConverterConfig config, ACommonJob jilJob) {
+    private String getCalendarName(JS7ConverterResult result, JS7ConverterConfig config, ACommonJob jilJob) {
         String name = null;
         if (config.getScheduleConfig().getForcedWorkingDayCalendarName() != null) {
             name = config.getScheduleConfig().getForcedWorkingDayCalendarName();
@@ -705,6 +849,9 @@ public class Autosys2JS7Converter {
             name = normalizeName(result, jilJob, jilJob.getRunTime().getRunCalendar().getValue());
         } else if (config.getScheduleConfig().getDefaultWorkingDayCalendarName() != null) {
             name = config.getScheduleConfig().getDefaultWorkingDayCalendarName();
+        }
+        if (!defaultAutosysJS7Calendars.containsKey(name)) {
+            defaultAutosysJS7Calendars.put(name, name);
         }
         return name;
     }
@@ -719,6 +866,9 @@ public class Autosys2JS7Converter {
         if (CONFIG.getJobConfig().getForcedFailOnErrWritten() != null) {
             j.setFailOnErrWritten(CONFIG.getJobConfig().getForcedFailOnErrWritten());
         }
+        if (CONFIG.getJobConfig().getForcedWarnOnErrWritten() != null) {
+            j.setWarnOnErrWritten(CONFIG.getJobConfig().getForcedWarnOnErrWritten());
+        }
         return j;
     }
 
@@ -731,8 +881,8 @@ public class Autosys2JS7Converter {
         JS7Agent agent = null;
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
         if (CONFIG.getAgentConfig().getForcedAgent() != null) {
-            if (isDebugEnabled) {
-                LOGGER.debug(String.format("[getAgent][%s]autosys.machine=%s", JS7AgentConvertType.CONFIG_FORCED.name(), machine));
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.trace(String.format("[getAgent][%s]autosys.machine=%s", JS7AgentConvertType.CONFIG_FORCED.name(), machine));
             }
             agent = convertAgentFrom(JS7AgentConvertType.CONFIG_FORCED, CONFIG.getAgentConfig().getForcedAgent(), CONFIG.getAgentConfig()
                     .getDefaultAgent(), machine);
@@ -744,9 +894,12 @@ public class Autosys2JS7Converter {
                     .getDefaultAgent(), machine);
         } else {
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("[getAgent][%s][autosys.machine==%s]", JS7AgentConvertType.CONFIG_DEFAULT.name(), machine));
+                LOGGER.debug(String.format("[getAgent][%s][autosys.machine=%s]", JS7AgentConvertType.CONFIG_DEFAULT.name(), machine));
             }
             agent = convertAgentFrom(JS7AgentConvertType.CONFIG_DEFAULT, CONFIG.getAgentConfig().getDefaultAgent(), null, machine);
+        }
+        if (agent != null) {
+            machine2js7Agent.put(machine == null ? agent.getJS7AgentName() : machine, agent);
         }
         return agent;
     }
@@ -929,26 +1082,62 @@ public class Autosys2JS7Converter {
             }
             source.setSubagentClusters(Collections.singletonList(subagentCluster));
         }
+
+        // source.setJS7AgentName("agent_name");
         return source;
     }
 
-    private Job setExecutable(Job j, JobCMD jilJob) {
-        ExecutableScript e = new ExecutableScript();
-        // TODO unix/windows
-        StringBuilder script = new StringBuilder("#!/bin/sh");
-        script.append(CONFIG.getJobConfig().getUnixNewLine());
-        if (jilJob.getProfile().getValue() != null) {
-            script.append(jilJob.getProfile().getValue()).append(CONFIG.getJobConfig().getUnixNewLine());
-        }
-        if (CONFIG.getMockConfig().hasScript()) {
-            // TODO unix/windows
-            script.append(CONFIG.getMockConfig().getUnixScript()).append(" ");
-        }
-        script.append(jilJob.getCommand().getValue());
-        e.setScript(script.toString());
+    private Job setExecutable(Job j, JobCMD jilJob, String platform) {
+        boolean isMock = CONFIG.getMockConfig().hasScript();
+        boolean isUnix = platform.equals(Platform.UNIX.name());
+        String commentBegin = isUnix ? "# " : "REM ";
 
-        j.setExecutable(e);
+        StringBuilder header = new StringBuilder();
+        if (isMock) {
+            header.append(getScriptBegin("", isUnix)).append(commentBegin).append("Mock mode").append(JS7ConverterHelper.JS7_NEW_LINE);
+        }
+        String command = jilJob.getCommand().getValue();
+
+        if (header.length() == 0) {
+            header.append(getScriptBegin(command, isUnix));
+        }
+        StringBuilder script = new StringBuilder(header);
+        if (!SOSString.isEmpty(jilJob.getProfile().getValue())) {
+            if (isMock) {
+                script.append(commentBegin);
+            }
+            script.append(jilJob.getProfile().getValue()).append(JS7ConverterHelper.JS7_NEW_LINE);
+        }
+        if (isMock) {
+            script.append(commentBegin);
+        }
+        script.append(command);
+
+        if (isMock) {
+            script.append(JS7ConverterHelper.JS7_NEW_LINE);
+            script.append(isUnix ? CONFIG.getMockConfig().getUnixScript() : CONFIG.getMockConfig().getWindowsScript());
+            script.append(JS7ConverterHelper.JS7_NEW_LINE);
+        }
+
+        ExecutableScript es = new ExecutableScript();
+        es.setScript(script.toString());
+        es.setV1Compatible(CONFIG.getJobConfig().getForcedV1Compatible());
+        j.setExecutable(es);
         return j;
+    }
+
+    private String getScriptBegin(String command, boolean isUnix) {
+        if (isUnix) {
+            if (!command.toString().startsWith("#!/")) {
+                StringBuilder sb = new StringBuilder();
+                if (!SOSString.isEmpty(CONFIG.getJobConfig().getUnixDefaultShebang())) {
+                    sb.append(CONFIG.getJobConfig().getUnixDefaultShebang());
+                    sb.append(JS7ConverterHelper.JS7_NEW_LINE);
+                    return sb.toString();
+                }
+            }
+        }
+        return "";
     }
 
     private static Job setJobOptions(Job j, JobCMD jilJob) {
@@ -1043,7 +1232,12 @@ public class Autosys2JS7Converter {
         if (!CONFIG.getGenerateConfig().getCyclicOrders() && jilJob.getRunTime().getStartMins().getValue() != null) {
             Periodic p = new Periodic();
             p.setPeriod(3_600L);
-            p.setOffsets(jilJob.getRunTime().getStartMins().getValue().stream().map(e -> new Long(e * 60)).collect(Collectors.toList()));
+            // TODO
+            if (jilJob.getRunTime().getStartMins().getValue().size() == 60) {
+                p.setOffsets(Collections.singletonList(60L));
+            } else {
+                p.setOffsets(jilJob.getRunTime().getStartMins().getValue().stream().map(e -> new Long(e * 60)).collect(Collectors.toList()));
+            }
 
             DailyPeriod dp = new DailyPeriod();
             dp.setSecondOfDay(0L);
@@ -1103,30 +1297,31 @@ public class Autosys2JS7Converter {
                 result.getApplications().add(jilJob.getFolder().getApplication().getValue());
             }
         }
+        if (name != null) {
+            name = JS7ConverterHelper.getJS7ObjectName(name);
+        }
         return name;
     }
 
     // TODO sub folder
     private static Path getWorkflowPath(ACommonJob job, String normalizedJobName) {
-        Path p = Paths.get(job.getFolder().getApplication().getValue());
-        Path subFolders = getSubFolders(job.getFolder().getApplication().getValue(), normalizedJobName);
+        Path p = Paths.get(getApplication(job));
+        Path subFolders = getSubFolders(getApplication(job), normalizedJobName);
         if (subFolders != null) {
             p = p.resolve(subFolders);
         }
         return p.resolve(normalizedJobName + ".workflow.json");
     }
 
-    private static Path getSchedulePath(ACommonJob job, String normalizedName) {
-        Path p = Paths.get(job.getFolder().getApplication().getValue());
-        Path subFolders = getSubFolders(job.getFolder().getApplication().getValue(), normalizedName);
-        if (subFolders != null) {
-            p = p.resolve(subFolders);
+    private static String getApplication(ACommonJob job) {
+        if (job.getFolder() == null || job.getFolder().getApplication() == null || job.getFolder().getApplication().getValue() == null) {
+            return "";
         }
-        return p.resolve(normalizedName + ".schedule.json");
+        return job.getFolder().getApplication().getValue();
     }
 
     private static Path getNoticeBoardPath(ACommonJob job, String normalizedName) {
-        Path p = Paths.get(job.getFolder().getApplication().getValue());
+        Path p = Paths.get(getApplication(job));
         return p.resolve(normalizedName + ".noticeboard.json");
     }
 

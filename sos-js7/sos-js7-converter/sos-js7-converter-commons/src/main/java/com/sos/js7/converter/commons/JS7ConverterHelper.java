@@ -30,6 +30,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.util.SOSCheckJavaVariableName;
+import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
 import com.sos.inventory.model.board.Board;
@@ -502,6 +503,25 @@ public class JS7ConverterHelper {
             ConverterReport.INSTANCE.addErrorRecord(parent, name, e.toString());
             return null;
         }
+    }
+
+    public static String getRelativePath(Path dir, Path dirFile) {
+        return dirFile.toString().substring(dir.toString().length() + 1);
+    }
+
+    public static StringBuilder getJS7ConverterComment(Path inputFile, boolean afterCleanup) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("\nExported by JS7Converter ");
+        if (afterCleanup) {
+            sb.append("after cleanup ");
+        }
+        try {
+            sb.append("at ").append(SOSDate.getCurrentDateTimeAsString()).append(" ");
+        } catch (Throwable e) {
+        }
+        sb.append("from file ").append(inputFile.getFileName());
+        sb.append("\n");
+        return sb;
     }
 
     public static Job setFromConfig(JS7ConverterConfig config, Job j) {

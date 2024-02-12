@@ -313,6 +313,15 @@ public abstract class ACommonJob {
         return insertJob;
     }
 
+    public String getFullName() {
+        StringBuilder sb = new StringBuilder();
+        // if (folder != null && !SOSString.isEmpty(folder.getApplication().getValue())) {
+        // sb.append(folder.getApplication().getValue()).append("/");
+        // }
+        sb.append(insertJob.getValue());
+        return sb.toString();
+    }
+
     @ArgumentSetter(name = ATTR_INSERT_JOB)
     public void setInsertJob(String val) {
         String s = JS7ConverterHelper.stringValue(val);
@@ -432,4 +441,19 @@ public abstract class ACommonJob {
         return sb.toString();
     }
 
+    public boolean hasMonitoring() {
+        return monitoring != null && monitoring.exists();
+    }
+
+    public boolean hasNotification() {
+        return notification != null && notification.exists();
+    }
+
+    public boolean hasRunTime() {
+        return runTime != null && runTime.exists();
+    }
+
+    public boolean hasCondition() {
+        return condition != null && !SOSString.isEmpty(condition.getOriginalCondition());
+    }
 }
