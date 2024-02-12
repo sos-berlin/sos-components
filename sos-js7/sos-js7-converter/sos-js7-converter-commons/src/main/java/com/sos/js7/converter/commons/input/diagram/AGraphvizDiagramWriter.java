@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
 
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -104,15 +105,17 @@ public abstract class AGraphvizDiagramWriter {
             sb.append(header).append(" -");
         }
         sb.append(" Created by JS7Converter (www.sos-berlin.com) at ").append(getCurrentDateTime());
-        sb.append(" (").append(range).append(",").append(toString(config)).append(")");
+        sb.append(" (").append(range).append(toString(config)).append(")");
         return sb.toString();
     }
 
     private String toString(DiagramConfig config) {
         StringBuilder sb = new StringBuilder();
-        sb.append("excludeStandalone=").append(config.getExcludeStandalone());
+        if (config.getExcludeStandalone() != null) {
+            sb.append(", excludeStandalone=").append(config.getExcludeStandalone());
+        }
         if (config.getSize() > 0) {
-            sb.append("size=").append(config.getSize());
+            sb.append(", size=").append(config.getSize());
         }
         return sb.toString();
     }
@@ -148,6 +151,22 @@ public abstract class AGraphvizDiagramWriter {
         }
         return val.replaceAll("á", "&#225;").replaceAll("ñ", "&#241;").replaceAll("ó", "&#243;").replaceAll("ì", "&#161;").replaceAll("í", "&#237;")
                 .replaceAll("ú", "&#250;").replaceAll("Ó", "&#211;");
+    }
+
+    public static String escapeHtml(final String val) {
+        return StringEscapeUtils.escapeHtml4(val);
+    }
+
+    public static String getWithFont(String val) {
+        return getWithFont(val, FONT_SIZE_GRAPH);
+    }
+
+    public static String getWithFont(String val, int fontSize) {
+        if (fontSize == 0) {
+            return val;
+        }
+        String v = SOSString.isEmpty(val) ? "&nbsp;" : val;
+        return "<font point-size=\"" + fontSize + "\">" + v + "</font>";
     }
 
     public static String quote(final String val) {

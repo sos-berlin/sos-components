@@ -8,7 +8,7 @@ public class DiagramConfig extends AConfigItem {
     private static final String CONFIG_KEY = "diagramConfig";
 
     private boolean generate = false;
-    private boolean excludeStandalone = false;
+    private Boolean excludeStandalone;
     private int size = 0;
     private String outputFormat = "svg";
 
@@ -86,8 +86,12 @@ public class DiagramConfig extends AConfigItem {
         return generate;
     }
 
-    public boolean getExcludeStandalone() {
+    public Boolean getExcludeStandalone() {
         return excludeStandalone;
+    }
+
+    public boolean excludeStandalone() {
+        return excludeStandalone != null && excludeStandalone;
     }
 
     public boolean getGraphvizCleanupDotFiles() {
