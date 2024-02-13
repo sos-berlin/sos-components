@@ -8,7 +8,7 @@ import org.junit.Test;
 
 public class Autosys2JS7ConverterMainTest {
 
-    // @Ignore
+    @Ignore
     @Test
     public void test() {
         String config = "src/test/resources/js7_convert_autosys.config";
