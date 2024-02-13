@@ -3,6 +3,7 @@ package com.sos.joc.classes;
 import java.io.File;
 import java.io.IOException;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.fasterxml.jackson.core.JsonFactory;
@@ -12,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class JsonDepthTest {
 
+    @Ignore
     @Test
     public void test() {
         String fPath = "C:\\tmp\\BillingSOUploadFile.workflow.json";
