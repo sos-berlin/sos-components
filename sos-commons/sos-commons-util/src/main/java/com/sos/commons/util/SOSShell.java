@@ -9,6 +9,7 @@ import java.lang.management.RuntimeMXBean;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
+import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -41,37 +42,40 @@ public class SOSShell {
     private static String HOSTNAME;
 
     public static SOSCommandResult executeCommand(String script) {
-        return executeCommand(script, null, null, null);
+        return executeCommand(script, null, null, null, null);
     }
 
     public static SOSCommandResult executeCommand(String script, Charset encoding) {
-        return executeCommand(script, encoding, null, null);
+        return executeCommand(script, encoding, null, null, null);
     }
 
     public static SOSCommandResult executeCommand(String script, SOSTimeout timeout) {
-        return executeCommand(script, null, timeout, null);
+        return executeCommand(script, null, timeout, null, null);
     }
 
     public static SOSCommandResult executeCommand(String script, Charset encoding, SOSTimeout timeout) {
-        return executeCommand(script, encoding, timeout, null);
+        return executeCommand(script, encoding, timeout, null, null);
     }
 
     public static SOSCommandResult executeCommand(String script, SOSEnv env) {
-        return executeCommand(script, null, null, env);
+        return executeCommand(script, null, null, env, null);
     }
 
     public static SOSCommandResult executeCommand(String script, Charset encoding, SOSEnv env) {
-        return executeCommand(script, encoding, null, env);
+        return executeCommand(script, encoding, null, env, null);
     }
 
     public static SOSCommandResult executeCommand(String script, SOSTimeout timeout, SOSEnv env) {
-        return executeCommand(script, null, timeout, env);
+        return executeCommand(script, null, timeout, env, null);
     }
 
-    public static SOSCommandResult executeCommand(String script, Charset encoding, SOSTimeout timeout, SOSEnv env) {
+    public static SOSCommandResult executeCommand(String script, Charset encoding, SOSTimeout timeout, SOSEnv env, Path workingDirectory) {
         SOSCommandResult result = new SOSCommandResult(script, getEncoding(encoding), timeout);
         try {
             ProcessBuilder pb = new ProcessBuilder(getCommand(script));
+            if (workingDirectory != null) {
+                pb.directory(workingDirectory.toFile());
+            }
             if (env != null && env.getLocalEnvs().size() > 0) {
                 pb.environment().putAll(env.getLocalEnvs());
             }

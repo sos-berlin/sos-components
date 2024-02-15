@@ -69,6 +69,7 @@ import com.sos.joc.db.monitoring.DBItemNotificationAcknowledgement;
 import com.sos.joc.db.monitoring.DBItemNotificationMonitor;
 import com.sos.joc.db.monitoring.DBItemNotificationWorkflow;
 import com.sos.joc.db.monitoring.DBItemSystemNotification;
+import com.sos.joc.db.reporting.DBItemReportHistory;
 import com.sos.joc.db.search.DBItemSearchWorkflow;
 import com.sos.joc.db.search.DBItemSearchWorkflow2DeploymentHistory;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
@@ -346,6 +347,11 @@ public class DBLayer implements Serializable {
 
     public static final String TABLE_IAM_ROLES = "IAM_ROLES";
     public static final String TABLE_IAM_ROLES_SEQUENCE = "SEQ_IAM_ROLES";
+    
+    /** Reporting tables */
+    public static final String DBITEM_REPORT_HISTORY = DBItemReportHistory.class.getSimpleName();
+    public static final String TABLE_REPORT_HISTORY = "REPORT_HISTORY";
+    public static final String TABLE_REPORT_HISTORY_SEQUENCE = "SEQ_REP_HIS";
 
     // public static final String DEFAULT_FOLDER = "/";
     // public static final Long DEFAULT_ID = 0L;
@@ -520,6 +526,8 @@ public class DBLayer implements Serializable {
         cl.add(DBItemIamFido2Registration.class);
         cl.add(DBItemIamFido2Requests.class);
         cl.add(DBItemIamFido2Devices.class);
+        
+        cl.add(DBItemReportHistory.class);
 
         cl.merge(getHistoryClassMapping().getClasses());
         cl.merge(getDailyPlanClassMapping().getClasses());

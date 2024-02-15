@@ -23,7 +23,9 @@ public abstract class AReporting {
     }
     
     protected static final DateTimeFormatter yearMonthFormatter = DateTimeFormatter.ofPattern("yyyy-MM");
-    protected static final Path dataDir = Globals.sosCockpitProperties.resolvePath("reporting/data");
+    protected static final Path reportingDir = Globals.sosCockpitProperties.resolvePath("reporting");
+    protected static final Path dataDir = reportingDir.resolve("data");
+    protected static final Path tmpDir = reportingDir.resolve("tmp");
     
     protected static final Map<ReportingType, Collection<CSVColumns>> CSV_COLUMNS = Collections.unmodifiableMap(
             new HashMap<ReportingType, Collection<CSVColumns>>() {
@@ -50,6 +52,15 @@ public abstract class AReporting {
         Path subD = dataDir.resolve(type.name().toLowerCase());
         Files.createDirectories(subD);
         return subD;
+    }
+    
+    protected static Path createTempDirectory() throws IOException {
+        Files.createDirectories(tmpDir);
+        return Files.createTempDirectory(tmpDir, "report");
+    }
+    
+    protected static Path createTempDirectoryRelativize() throws IOException {
+        return reportingDir.relativize(createTempDirectory());
     }
     
     private static Collection<CSVColumns> getOrdersColumns() {

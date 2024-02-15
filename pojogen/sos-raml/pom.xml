@@ -143,6 +143,7 @@
 								<exclude>jobTemplate/**/*.json</exclude>
 								<exclude>dailyplan/projections/**/*.json</exclude>
 								<exclude>tag/**/*.json</exclude>
+								<exclude>reporting/*.json</exclude>
 							</excludes>
 						</configuration>
 						<goals>
@@ -173,7 +174,7 @@
 						</goals>
 					</execution>
 					<execution>
-						<id>generate-joc-model-cluster-settings</id>
+						<id>generate-joc-model-with-additional-properties</id>
 						<phase>generate-sources</phase>
 						<configuration>
 							<sourceDirectory>${basedir}/src/main/resources/raml/api/schemas</sourceDirectory>
@@ -194,6 +195,7 @@
 								<include>inventory/configurationObject-schema.json</include>
 								<include>dailyplan/projections/**/*.json</include>
 								<include>tag/**/*.json</include>
+								<include>reporting/*.json</include>
 							</includes>
 						</configuration>
 						<goals>

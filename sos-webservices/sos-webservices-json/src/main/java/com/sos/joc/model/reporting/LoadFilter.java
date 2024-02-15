@@ -11,7 +11,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
- * dateFrom filter for generation of reporting data
+ * dateFrom filter for loading of reporting data
  * <p>
  * 
  * 
@@ -23,15 +23,17 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 public class LoadFilter {
 
     /**
-     * format YYYY-MM
+     * A month in the format YYYY-MM
+     * (Required)
      * 
      */
     @JsonProperty("dateFrom")
-    @JsonPropertyDescription("format YYYY-MM")
+    @JsonPropertyDescription("A month in the format YYYY-MM")
     private String dateFrom;
 
     /**
-     * format YYYY-MM
+     * A month in the format YYYY-MM
+     * (Required)
      * 
      */
     @JsonProperty("dateFrom")
@@ -40,7 +42,8 @@ public class LoadFilter {
     }
 
     /**
-     * format YYYY-MM
+     * A month in the format YYYY-MM
+     * (Required)
      * 
      */
     @JsonProperty("dateFrom")

@@ -55,23 +55,21 @@ public class LoadData extends AReporting {
                 JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(session, new HistoryFilter());
                 
                 LocalDateTime firstDayOfCurrentMonth = LocalDate.now(ZoneId.systemDefault()).withDayOfMonth(1).atStartOfDay();
-                LocalDateTime _monthFrom = monthFrom;
+                LocalDateTime month = monthFrom;
                 
                 ReportingLoader jobsReporting = new ReportingLoader(ReportingType.JOBS);
                 ReportingLoader ordersReporting = new ReportingLoader(ReportingType.ORDERS);
                 
-                while (_monthFrom.isBefore(firstDayOfCurrentMonth)) {
-                    jobResult = dbLayer.getCSV(jobsReporting, _monthFrom);
-                    String month = _monthFrom.format(yearMonthFormatter);
-                    boolean skipped = writeCSVFile(jobsReporting, month, jobResult, emptyMonths, existingMonths);
+                while (month.isBefore(firstDayOfCurrentMonth)) {
+                    jobResult = dbLayer.getCSV(jobsReporting, month);
+                    boolean skipped = writeCSVFile(jobsReporting, month, dbLayer, emptyMonths, existingMonths);
                     if (!skipped) {
-                        orderResult = dbLayer.getCSV(ordersReporting, _monthFrom);
-                        writeCSVFile(ordersReporting, month, orderResult, emptyMonths, existingMonths);
+                        writeCSVFile(ordersReporting, month, dbLayer, emptyMonths, existingMonths);
                         
                         atomicRename(ordersReporting, month);
                         atomicRename(jobsReporting, month);
                     }
-                    _monthFrom = _monthFrom.plusMonths(1);
+                    month = month.plusMonths(1);
                 }
 
                 return Either.right(null);
@@ -96,38 +94,51 @@ public class LoadData extends AReporting {
         });
     }
     
-    private static boolean writeCSVFile(ReportingLoader loader, String month, ScrollableResults result, List<String> emptyMonths,
+    private static boolean writeCSVFile(ReportingLoader loader, LocalDateTime month, JobHistoryDBLayer dbLayer, List<String> emptyMonths,
             List<String> existingMonths) throws IOException {
         boolean skipped = true;
-        if (result != null) {
-            Path monthFile = getMonthFile(loader, month);
-            Path tmpMonthFile = getTmpMonthFile(loader, month);
+        ScrollableResults result = null;
+        try {
+            String _month = month.format(yearMonthFormatter);
+            Path monthFile = getMonthFile(loader, _month);
+            Path tmpMonthFile = getTmpMonthFile(loader, _month);
             Files.deleteIfExists(tmpMonthFile);
             if (Files.notExists(monthFile)) {
-                if (result.next()) {
-                    try (OutputStream output = Files.newOutputStream(tmpMonthFile)) {
-                        output.write(loader.getHeadline());
-                        output.write(getCsvBytes(result.get(0)));
-                        while (result.next()) {
+                result = dbLayer.getCSV(loader, month);
+                if (result != null) {
+                    if (result.next()) {
+                        try (OutputStream output = Files.newOutputStream(tmpMonthFile)) {
+                            output.write(loader.getHeadline());
                             output.write(getCsvBytes(result.get(0)));
+                            while (result.next()) {
+                                output.write(getCsvBytes(result.get(0)));
+                            }
+                            output.flush();
+                            LOGGER.info("[Reporting][loading] Write " + loader.getType().name().toLowerCase() + " data for " + month + " ("
+                                    + monthFile.toString() + ")");
+                            skipped = false;
                         }
-                        output.flush();
-                        LOGGER.info("[Reporting][loading] Write " + loader.getType().name().toLowerCase() + " data for " + month + " (" + monthFile
-                                .toString() + ")");
-                        skipped = false;
+                    } else {
+                        emptyMonths.add(_month);
                     }
                 } else {
-                    emptyMonths.add(month);
+                    emptyMonths.add(_month);
                 }
             } else {
-                existingMonths.add(month);
+                existingMonths.add(_month);
             }
-            result.close();
-            result = null;
-        } else {
-            emptyMonths.add(month);
+        } finally {
+            if (result != null) {
+                result.close();
+                result = null;
+            }
         }
         return skipped;
+    }
+    
+    private static void atomicRename(ReportingLoader loader, LocalDateTime month) throws IOException {
+        String _month = month.format(yearMonthFormatter);
+        atomicRename(loader, _month);
     }
     
     private static void atomicRename(ReportingLoader loader, String month) throws IOException {
@@ -144,9 +155,9 @@ public class LoadData extends AReporting {
         return loader.getOutDir().resolve(month + ".csv~");
     }
     
-    private static boolean checkCSVFileExists(Path outdir, LocalDateTime monthFrom) throws IOException {
-        String month = monthFrom.format(yearMonthFormatter);
-        Path monthFile = outdir.resolve(month + ".csv");
+    private static boolean checkCSVFileExists(Path outdir, LocalDateTime month) throws IOException {
+        String _month = month.format(yearMonthFormatter);
+        Path monthFile = outdir.resolve(_month + ".csv");
         return Files.notExists(monthFile);
     }
     
