@@ -157,6 +157,9 @@ public class RunReport extends AReporting {
     }
     
     private static Date getDate(final LocalDateTime localDate) {
+        if (localDate == null) {
+            return null;
+        }
         return Date.from(localDate.atZone(ZoneId.systemDefault()).toInstant());
     }
     
@@ -176,6 +179,9 @@ public class RunReport extends AReporting {
     }
     
     private static LocalDateTime getLocalDateFrom(final String yyyymmdd) {
+        if (yyyymmdd == null) {
+            return null;
+        }
         String[] dateParts = yyyymmdd.split("-");
         int year = Integer.valueOf(dateParts[0]).intValue();
         int month = Integer.valueOf(dateParts[1]).intValue();

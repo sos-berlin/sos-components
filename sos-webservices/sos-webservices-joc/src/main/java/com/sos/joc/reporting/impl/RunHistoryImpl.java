@@ -1,6 +1,7 @@
 package com.sos.joc.reporting.impl;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Objects;
 import java.util.function.Function;
@@ -12,18 +13,19 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.WebservicePaths;
-import com.sos.joc.db.reporting.DBItemReportHistory;
+import com.sos.joc.db.reporting.DBItemReportRun;
 import com.sos.joc.db.reporting.ReportingDBLayer;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.reporting.ReportItem;
-import com.sos.joc.model.reporting.ReportItems;
-import com.sos.joc.reporting.resource.IReportHistoryResource;
+import com.sos.joc.model.reporting.Frequency;
+import com.sos.joc.model.reporting.RunItem;
+import com.sos.joc.model.reporting.RunItems;
+import com.sos.joc.reporting.resource.IRunHistoryResource;
 
 import jakarta.ws.rs.Path;
 
 
 @Path(WebservicePaths.REPORTING)
-public class ReportHistoryImpl extends JOCResourceImpl implements IReportHistoryResource {
+public class RunHistoryImpl extends JOCResourceImpl implements IRunHistoryResource {
     
     @Override
     public JOCDefaultResponse show(String accessToken, byte[] filterBytes) {
@@ -42,13 +44,15 @@ public class ReportHistoryImpl extends JOCResourceImpl implements IReportHistory
                 return response;
             }
             
-            Function<DBItemReportHistory, ReportItem> mapToReportItem = dbItem -> {
+            Function<DBItemReportRun, RunItem> mapToRunItem = dbItem -> {
                 try {
-                    ReportItem item = Globals.objectMapper.readValue(dbItem.getContent(), ReportItem.class);
+                    RunItem item = new RunItem();
                     item.setId(dbItem.getId());
+                    item.setName(dbItem.getName());
+                    item.setTitle(dbItem.getTitle());
                     item.setDateFrom(SOSDate.getDateAsString(dbItem.getDateFrom()));
-                    item.setDateTo(SOSDate.getDateAsString(dbItem.getDateTo()));
-                    item.setFrequency(dbItem.getFrequencyAsEnum());
+                    item.setFrequencies(Arrays.asList(dbItem.getFrequencies().split(",")).stream().map(Integer::valueOf).map(Frequency::fromValue)
+                            .filter(Objects::nonNull).collect(Collectors.toSet()));
                     item.setSize(dbItem.getSize());
                     item.setTemplateId(dbItem.getTemplateId());
                     item.setCreated(dbItem.getCreated());
@@ -61,8 +65,8 @@ public class ReportHistoryImpl extends JOCResourceImpl implements IReportHistory
             
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             ReportingDBLayer dbLayer = new ReportingDBLayer(session);
-            ReportItems entity = new ReportItems();
-            entity.setReports(dbLayer.getAllReports().stream().map(mapToReportItem).filter(Objects::nonNull).collect(Collectors.toList()));
+            RunItems entity = new RunItems();
+            entity.setRuns(dbLayer.getAllRuns().stream().map(mapToRunItem).filter(Objects::nonNull).collect(Collectors.toList()));
             entity.setDeliveryDate(Date.from(Instant.now()));
             
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));

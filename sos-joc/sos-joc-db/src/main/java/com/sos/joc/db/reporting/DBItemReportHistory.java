@@ -94,11 +94,7 @@ public class DBItemReportHistory extends DBItem {
     
     @Transient
     public Frequency getFrequencyAsEnum() {
-        try {
-            return Frequency.fromValue(frequency);
-        } catch (Exception e) {
-            return null;
-        }
+        return Frequency.fromValue(frequency);
     }
 
     public Integer getSize() {

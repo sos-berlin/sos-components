@@ -73,12 +73,7 @@ public enum Frequency {
     }
     
     public static Frequency fromValue(Integer value) {
-        Frequency constant = INTCONSTANTS.get(value);
-        if (constant == null) {
-            throw new IllegalArgumentException(value + "");
-        } else {
-            return constant;
-        }
+        return INTCONSTANTS.get(value);
     }
     
     private static Frequency fromStrValue(String value) {

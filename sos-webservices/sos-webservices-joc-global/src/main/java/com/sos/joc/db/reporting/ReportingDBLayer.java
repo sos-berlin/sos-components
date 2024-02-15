@@ -21,12 +21,30 @@ public class ReportingDBLayer extends DBLayer {
         super(session);
     }
     
-    public List<DBItemReportHistory> getAll() throws DBConnectionRefusedException, DBInvalidDataException {
+    public List<DBItemReportHistory> getAllReports() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_REPORT_HISTORY);
             Query<DBItemReportHistory> query = getSession().createQuery(sql.toString());
             List<DBItemReportHistory> result = getSession().getResultList(query);
+            if (result == null) {
+                return Collections.emptyList();
+            }
+            return result;
+            
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public List<DBItemReportRun> getAllRuns() throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("from ").append(DBLayer.DBITEM_REPORT_RUN);
+            Query<DBItemReportRun> query = getSession().createQuery(sql.toString());
+            List<DBItemReportRun> result = getSession().getResultList(query);
             if (result == null) {
                 return Collections.emptyList();
             }

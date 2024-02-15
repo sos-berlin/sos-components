@@ -42,7 +42,7 @@ public class DBItemReportRun extends DBItem {
     @Column(name = "[SIZE]", nullable = false)
     private Integer size;
 
-    @Column(name = "[DATE_FROM]", nullable = false)
+    @Column(name = "[DATE_FROM]", nullable = true)
     @Temporal(TemporalType.TIMESTAMP)
     private Date dateFrom;
 

@@ -2,6 +2,7 @@
 package com.sos.joc.model.reporting;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -28,6 +29,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "size",
     "dateFrom",
     "dateTo",
+    "created",
     "data"
 })
 public class ReportItem {
@@ -104,6 +106,15 @@ public class ReportItem {
     @JsonProperty("dateTo")
     @JsonPropertyDescription("ISO date YYYY-MM-DD")
     private String dateTo;
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("created")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
+    private Date created;
     /**
      * 
      * (Required)
@@ -301,6 +312,28 @@ public class ReportItem {
     }
 
     /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("created")
+    public Date getCreated() {
+        return created;
+    }
+
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("created")
+    public void setCreated(Date created) {
+        this.created = created;
+    }
+
+    /**
      * 
      * (Required)
      * 
@@ -322,12 +355,12 @@ public class ReportItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("runId", runId).append("title", title).append("templateId", templateId).append("frequency", frequency).append("size", size).append("dateFrom", dateFrom).append("dateTo", dateTo).append("data", data).toString();
+        return new ToStringBuilder(this).append("id", id).append("runId", runId).append("title", title).append("templateId", templateId).append("frequency", frequency).append("size", size).append("dateFrom", dateFrom).append("dateTo", dateTo).append("created", created).append("data", data).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(size).append(data).append(dateTo).append(id).append(runId).append(title).append(templateId).append(dateFrom).append(frequency).toHashCode();
+        return new HashCodeBuilder().append(size).append(data).append(created).append(dateTo).append(id).append(runId).append(title).append(templateId).append(dateFrom).append(frequency).toHashCode();
     }
 
     @Override
@@ -339,7 +372,7 @@ public class ReportItem {
             return false;
         }
         ReportItem rhs = ((ReportItem) other);
-        return new EqualsBuilder().append(size, rhs.size).append(data, rhs.data).append(dateTo, rhs.dateTo).append(id, rhs.id).append(runId, rhs.runId).append(title, rhs.title).append(templateId, rhs.templateId).append(dateFrom, rhs.dateFrom).append(frequency, rhs.frequency).isEquals();
+        return new EqualsBuilder().append(size, rhs.size).append(data, rhs.data).append(created, rhs.created).append(dateTo, rhs.dateTo).append(id, rhs.id).append(runId, rhs.runId).append(title, rhs.title).append(templateId, rhs.templateId).append(dateFrom, rhs.dateFrom).append(frequency, rhs.frequency).isEquals();
     }
 
 }
