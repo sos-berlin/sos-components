@@ -367,6 +367,7 @@ public class JsonValidator {
             // reporting
             // obsolete put("com.sos.joc.model.reporting.OrderSteps", "reporting/orderSteps-schema.json");
             put("com.sos.joc.model.reporting.LoadFilter", "reporting/load-schema.json");
+            put("com.sos.joc.model.reporting.RunFilter", "reporting/run-report-schema.json");
 
 
             // TODO complete the map

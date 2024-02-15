@@ -21,6 +21,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "name",
+    "title",
     "templateId",
     "frequencies",
     "size",
@@ -28,6 +30,23 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 })
 public class RunFilter {
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("name")
+    private String name;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("title")
+    private String title;
     /**
      * non negative integer
      * <p>
@@ -49,6 +68,7 @@ public class RunFilter {
      * non negative integer
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("size")
@@ -62,6 +82,52 @@ public class RunFilter {
     @JsonProperty("dateFrom")
     @JsonPropertyDescription("ISO date YYYY-MM-DD")
     private String dateFrom;
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("name")
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("name")
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("title")
+    public String getTitle() {
+        return title;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("title")
+    public void setTitle(String title) {
+        this.title = title;
+    }
 
     /**
      * non negative integer
@@ -111,6 +177,7 @@ public class RunFilter {
      * non negative integer
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("size")
@@ -122,6 +189,7 @@ public class RunFilter {
      * non negative integer
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("size")
@@ -153,12 +221,12 @@ public class RunFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("templateId", templateId).append("frequencies", frequencies).append("size", size).append("dateFrom", dateFrom).toString();
+        return new ToStringBuilder(this).append("name", name).append("title", title).append("templateId", templateId).append("frequencies", frequencies).append("size", size).append("dateFrom", dateFrom).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(templateId).append(size).append(dateFrom).append(frequencies).toHashCode();
+        return new HashCodeBuilder().append(size).append(name).append(title).append(templateId).append(dateFrom).append(frequencies).toHashCode();
     }
 
     @Override
@@ -170,7 +238,7 @@ public class RunFilter {
             return false;
         }
         RunFilter rhs = ((RunFilter) other);
-        return new EqualsBuilder().append(templateId, rhs.templateId).append(size, rhs.size).append(dateFrom, rhs.dateFrom).append(frequencies, rhs.frequencies).isEquals();
+        return new EqualsBuilder().append(size, rhs.size).append(name, rhs.name).append(title, rhs.title).append(templateId, rhs.templateId).append(dateFrom, rhs.dateFrom).append(frequencies, rhs.frequencies).isEquals();
     }
 
 }

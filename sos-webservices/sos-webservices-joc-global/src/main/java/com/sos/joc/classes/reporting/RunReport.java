@@ -8,8 +8,11 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -22,6 +25,7 @@ import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCSOSShell;
 import com.sos.joc.db.reporting.DBItemReportHistory;
+import com.sos.joc.db.reporting.DBItemReportRun;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.model.reporting.Frequency;
 import com.sos.joc.model.reporting.RunFilter;
@@ -47,17 +51,17 @@ public class RunReport extends AReporting {
     
     private static Either<Exception, Void> _run(final RunFilter in) {
         Set<Path> tempDirs = new HashSet<>();
-        Set<DBItemReportHistory> dbItems = new HashSet<>();
+        List<DBItemReportHistory> dbItems = new ArrayList<>();
         try {
             String commonScript = getCommonScript(in);
             //TODO SOSTimeout timeout = new SOSTimeout(10, TimeUnit.Hours);
             for (Frequency f : in.getFrequencies()) {
                 Path tempDir = runPerFrequency(f, commonScript);
                 tempDirs.add(tempDir);
-                dbItems.addAll(Files.list(tempDir).map(file -> getDBItem(file, f, in)).collect(Collectors.toSet()));
+                dbItems.addAll(Files.list(tempDir).map(file -> getHistoryDBItem(file, f, in)).collect(Collectors.toList()));
             }
             
-            insert(dbItems);
+            insert(in, dbItems);
             return Either.right(null);
         } catch (Exception e) {
             return Either.left(e);
@@ -93,8 +97,10 @@ public class RunReport extends AReporting {
             if (cResult.getExitCode() != 0) {
                 if (cResult.getException() != null) {
                     throw new JocBadRequestException(cResult.getException());
-                } else if (cResult.getStdErr() != null) {
-                    throw new JocBadRequestException(cResult.getStdErr());
+                } else if (cResult.getStdErr() != null && !cResult.getStdErr().trim().isEmpty()) {
+                    throw new JocBadRequestException(cResult.getStdErr().trim());
+                } else {
+                    throw new JocBadRequestException("Unknown error when calling: " + cResult.getCommand());
                 }
             }
             return tempDir;
@@ -121,7 +127,7 @@ public class RunReport extends AReporting {
         }
     }
     
-    private static DBItemReportHistory getDBItem(final Path report, final Frequency frequency, final RunFilter in) throws UncheckedIOException {
+    private static DBItemReportHistory getHistoryDBItem(final Path report, final Frequency frequency, final RunFilter in) throws UncheckedIOException {
         LocalDateTime localDateFrom = getLocalDateFrom(report);
         DBItemReportHistory dbItem = new DBItemReportHistory();
         dbItem.setId(null);
@@ -135,6 +141,18 @@ public class RunReport extends AReporting {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+        return dbItem;
+    }
+    
+    private static DBItemReportRun getRunDBItem(final RunFilter in) {
+        DBItemReportRun dbItem = new DBItemReportRun();
+        dbItem.setId(null);
+        dbItem.setName(in.getName());
+        dbItem.setTitle(in.getTitle());
+        dbItem.setTemplateId(in.getTemplateId());
+        dbItem.setSize(in.getSize());
+        dbItem.setFrequencies(in.getFrequencies().stream().map(Frequency::intValue).sorted().map(i -> i.toString()).collect(Collectors.joining(",")));
+        dbItem.setDateFrom(getDate(getLocalDateFrom(in.getDateFrom())));
         return dbItem;
     }
     
@@ -154,6 +172,14 @@ public class RunReport extends AReporting {
             month = Integer.valueOf(fileNameParts[1]).intValue();
         }
         int dayOfMonth = fileNameParts.length > 2 ? Integer.valueOf(fileNameParts[2]).intValue() : 1;
+        return LocalDate.of(year, month, dayOfMonth).atStartOfDay();
+    }
+    
+    private static LocalDateTime getLocalDateFrom(final String yyyymmdd) {
+        String[] dateParts = yyyymmdd.split("-");
+        int year = Integer.valueOf(dateParts[0]).intValue();
+        int month = Integer.valueOf(dateParts[1]).intValue();
+        int dayOfMonth = Integer.valueOf(dateParts[2]).intValue();
         return LocalDate.of(year, month, dayOfMonth).atStartOfDay();
     }
     
@@ -178,15 +204,23 @@ public class RunReport extends AReporting {
         return null;
     }
     
-    private static void insert(Set<DBItemReportHistory> dbItems) throws Exception {
+    private static void insert(final RunFilter in, Collection<DBItemReportHistory> dbItems) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection("ReportingStoreData");
             session.setAutoCommit(false);
             Globals.beginTransaction(session);
+            
             Date now = Date.from(Instant.now());
+            
+            DBItemReportRun runDbItem = getRunDBItem(in);
+            runDbItem.setCreated(now);
+            
+            session.save(runDbItem);
+
             for (DBItemReportHistory dbItem : dbItems) {
                 dbItem.setCreated(now);
+                dbItem.setRunId(runDbItem.getId());
                 session.save(dbItem); 
             }
             Globals.commit(session);
