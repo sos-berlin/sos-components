@@ -34,7 +34,7 @@ public class ReportDbItem extends ReportItem {
     
     public void setDateTo(Date dateTo) {
         try {
-            super.setDateFrom(SOSDate.getDateAsString(dateTo));
+            super.setDateTo(SOSDate.getDateAsString(dateTo));
         } catch (SOSInvalidDataException e) {
             //
         }
