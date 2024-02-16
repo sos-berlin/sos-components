@@ -51,8 +51,8 @@ public class RunHistoryImpl extends JOCResourceImpl implements IRunHistoryResour
                     item.setName(dbItem.getName());
                     item.setTitle(dbItem.getTitle());
                     item.setDateFrom(SOSDate.getDateAsString(dbItem.getDateFrom()));
-                    item.setFrequencies(Arrays.asList(dbItem.getFrequencies().split(",")).stream().map(Integer::valueOf).map(Frequency::fromValue)
-                            .filter(Objects::nonNull).collect(Collectors.toSet()));
+                    item.setFrequencies(Arrays.asList(dbItem.getFrequencies().split(",")).stream().map(Integer::valueOf).sorted().map(
+                            Frequency::fromValue).filter(Objects::nonNull).collect(Collectors.toSet()));
                     item.setSize(dbItem.getSize());
                     item.setTemplateId(dbItem.getTemplateId());
                     item.setCreated(dbItem.getCreated());
