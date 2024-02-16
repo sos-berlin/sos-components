@@ -23,6 +23,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "id",
     "runId",
+    "name",
     "title",
     "templateId",
     "frequency",
@@ -51,6 +52,14 @@ public class ReportItem {
      */
     @JsonProperty("runId")
     private Long runId;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("name")
+    private String name;
     /**
      * string without < and >
      * <p>
@@ -167,6 +176,28 @@ public class ReportItem {
     @JsonProperty("runId")
     public void setRunId(Long runId) {
         this.runId = runId;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("name")
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("name")
+    public void setName(String name) {
+        this.name = name;
     }
 
     /**
@@ -355,12 +386,12 @@ public class ReportItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("runId", runId).append("title", title).append("templateId", templateId).append("frequency", frequency).append("size", size).append("dateFrom", dateFrom).append("dateTo", dateTo).append("created", created).append("data", data).toString();
+        return new ToStringBuilder(this).append("id", id).append("runId", runId).append("name", name).append("title", title).append("templateId", templateId).append("frequency", frequency).append("size", size).append("dateFrom", dateFrom).append("dateTo", dateTo).append("created", created).append("data", data).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(size).append(data).append(created).append(dateTo).append(id).append(runId).append(title).append(templateId).append(dateFrom).append(frequency).toHashCode();
+        return new HashCodeBuilder().append(size).append(data).append(created).append(name).append(dateTo).append(id).append(runId).append(title).append(templateId).append(dateFrom).append(frequency).toHashCode();
     }
 
     @Override
@@ -372,7 +403,7 @@ public class ReportItem {
             return false;
         }
         ReportItem rhs = ((ReportItem) other);
-        return new EqualsBuilder().append(size, rhs.size).append(data, rhs.data).append(created, rhs.created).append(dateTo, rhs.dateTo).append(id, rhs.id).append(runId, rhs.runId).append(title, rhs.title).append(templateId, rhs.templateId).append(dateFrom, rhs.dateFrom).append(frequency, rhs.frequency).isEquals();
+        return new EqualsBuilder().append(size, rhs.size).append(data, rhs.data).append(created, rhs.created).append(name, rhs.name).append(dateTo, rhs.dateTo).append(id, rhs.id).append(runId, rhs.runId).append(title, rhs.title).append(templateId, rhs.templateId).append(dateFrom, rhs.dateFrom).append(frequency, rhs.frequency).isEquals();
     }
 
 }

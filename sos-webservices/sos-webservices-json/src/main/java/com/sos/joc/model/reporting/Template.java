@@ -1,12 +1,13 @@
 
 package com.sos.joc.model.reporting;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
@@ -17,7 +18,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "id",
+    "templateId",
     "title",
     "data"
 })
@@ -28,8 +29,8 @@ public class Template {
      * (Required)
      * 
      */
-    @JsonProperty("id")
-    private String id;
+    @JsonProperty("templateId")
+    private Integer templateId;
     @JsonProperty("title")
     private String title;
     @JsonProperty("data")
@@ -40,9 +41,9 @@ public class Template {
      * (Required)
      * 
      */
-    @JsonProperty("id")
-    public String getId() {
-        return id;
+    @JsonProperty("templateId")
+    public Integer getTemplateId() {
+        return templateId;
     }
 
     /**
@@ -50,9 +51,14 @@ public class Template {
      * (Required)
      * 
      */
+    @JsonProperty("templateId")
+    public void setTemplateId(Integer templateId) {
+        this.templateId = templateId;
+    }
+    
     @JsonProperty("id")
     public void setId(String id) {
-        this.id = id;
+        this.templateId = Integer.valueOf(id.replaceAll("\\D", ""));
     }
 
     @JsonProperty("title")
@@ -77,12 +83,12 @@ public class Template {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("title", title).append("data", data).toString();
+        return new ToStringBuilder(this).append("templateId", templateId).append("title", title).append("data", data).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(id).append(title).append(data).toHashCode();
+        return new HashCodeBuilder().append(templateId).append(title).append(data).toHashCode();
     }
 
     @Override
@@ -94,7 +100,7 @@ public class Template {
             return false;
         }
         Template rhs = ((Template) other);
-        return new EqualsBuilder().append(id, rhs.id).append(title, rhs.title).append(data, rhs.data).isEquals();
+        return new EqualsBuilder().append(templateId, rhs.templateId).append(title, rhs.title).append(data, rhs.data).isEquals();
     }
 
 }
