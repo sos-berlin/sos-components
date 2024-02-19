@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.Collections;
@@ -12,7 +13,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.sos.joc.Globals;
 import com.sos.joc.db.DBLayer;
 
 public abstract class AReporting {
@@ -23,7 +23,7 @@ public abstract class AReporting {
     }
     
     protected static final DateTimeFormatter yearMonthFormatter = DateTimeFormatter.ofPattern("yyyy-MM");
-    protected static final Path reportingDir = Globals.sosCockpitProperties.resolvePath("reporting");
+    protected static final Path reportingDir = Paths.get("reporting").toAbsolutePath();
     protected static final Path dataDir = reportingDir.resolve("data");
     protected static final Path tmpDir = reportingDir.resolve("tmp");
     
