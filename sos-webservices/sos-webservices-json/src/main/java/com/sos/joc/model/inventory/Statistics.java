@@ -30,7 +30,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "numOfSchedules",
     "numOfCalendars",
     "numOfIncludeScripts",
-    "numOfJobTemplates"
+    "numOfJobTemplates",
+    "numOfReports"
 })
 public class Statistics {
 
@@ -134,6 +135,14 @@ public class Statistics {
      */
     @JsonProperty("numOfJobTemplates")
     private Long numOfJobTemplates;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfReports")
+    private Long numOfReports;
 
     /**
      * timestamp
@@ -403,14 +412,36 @@ public class Statistics {
         this.numOfJobTemplates = numOfJobTemplates;
     }
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfReports")
+    public Long getNumOfReports() {
+        return numOfReports;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfReports")
+    public void setNumOfReports(Long numOfReports) {
+        this.numOfReports = numOfReports;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("numOfJobs", numOfJobs).append("numOfWorkflows", numOfWorkflows).append("numOfLocks", numOfLocks).append("numOfNoticeBoards", numOfNoticeBoards).append("numOfJobResources", numOfJobResources).append("numOfFileOrderSources", numOfFileOrderSources).append("numOfSchedules", numOfSchedules).append("numOfCalendars", numOfCalendars).append("numOfIncludeScripts", numOfIncludeScripts).append("numOfJobTemplates", numOfJobTemplates).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("numOfJobs", numOfJobs).append("numOfWorkflows", numOfWorkflows).append("numOfLocks", numOfLocks).append("numOfNoticeBoards", numOfNoticeBoards).append("numOfJobResources", numOfJobResources).append("numOfFileOrderSources", numOfFileOrderSources).append("numOfSchedules", numOfSchedules).append("numOfCalendars", numOfCalendars).append("numOfIncludeScripts", numOfIncludeScripts).append("numOfJobTemplates", numOfJobTemplates).append("numOfReports", numOfReports).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(numOfCalendars).append(surveyDate).append(numOfFileOrderSources).append(numOfWorkflows).append(numOfNoticeBoards).append(numOfJobTemplates).append(numOfIncludeScripts).append(numOfJobs).append(numOfLocks).append(numOfSchedules).append(deliveryDate).append(numOfJobResources).toHashCode();
+        return new HashCodeBuilder().append(numOfCalendars).append(surveyDate).append(numOfFileOrderSources).append(numOfWorkflows).append(numOfReports).append(numOfNoticeBoards).append(numOfJobTemplates).append(numOfIncludeScripts).append(numOfJobs).append(numOfLocks).append(numOfSchedules).append(deliveryDate).append(numOfJobResources).toHashCode();
     }
 
     @Override
@@ -422,7 +453,7 @@ public class Statistics {
             return false;
         }
         Statistics rhs = ((Statistics) other);
-        return new EqualsBuilder().append(numOfCalendars, rhs.numOfCalendars).append(surveyDate, rhs.surveyDate).append(numOfFileOrderSources, rhs.numOfFileOrderSources).append(numOfWorkflows, rhs.numOfWorkflows).append(numOfNoticeBoards, rhs.numOfNoticeBoards).append(numOfJobTemplates, rhs.numOfJobTemplates).append(numOfIncludeScripts, rhs.numOfIncludeScripts).append(numOfJobs, rhs.numOfJobs).append(numOfLocks, rhs.numOfLocks).append(numOfSchedules, rhs.numOfSchedules).append(deliveryDate, rhs.deliveryDate).append(numOfJobResources, rhs.numOfJobResources).isEquals();
+        return new EqualsBuilder().append(numOfCalendars, rhs.numOfCalendars).append(surveyDate, rhs.surveyDate).append(numOfFileOrderSources, rhs.numOfFileOrderSources).append(numOfWorkflows, rhs.numOfWorkflows).append(numOfReports, rhs.numOfReports).append(numOfNoticeBoards, rhs.numOfNoticeBoards).append(numOfJobTemplates, rhs.numOfJobTemplates).append(numOfIncludeScripts, rhs.numOfIncludeScripts).append(numOfJobs, rhs.numOfJobs).append(numOfLocks, rhs.numOfLocks).append(numOfSchedules, rhs.numOfSchedules).append(deliveryDate, rhs.deliveryDate).append(numOfJobResources, rhs.numOfJobResources).isEquals();
     }
 
 }

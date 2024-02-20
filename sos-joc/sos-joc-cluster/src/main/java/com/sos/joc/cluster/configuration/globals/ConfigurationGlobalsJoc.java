@@ -16,7 +16,7 @@ import com.sos.joc.model.configuration.globals.GlobalSettingsSectionValueType;
 public class ConfigurationGlobalsJoc extends AConfigurationSection {
 
     public static enum ShowViewName {
-        dashboard, dailyplan, workflows, resources, history, auditlog, configuration, filetransfer, jobstreams, monitor;
+        dashboard, dailyplan, workflows, resources, history, auditlog, configuration, filetransfer, jobstreams, monitor, report;
     }
 
     public static enum LogExtType {
@@ -62,6 +62,7 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
             GlobalSettingsSectionValueType.BOOLEAN);
     private ConfigurationEntry showViewFiletransfer = new ConfigurationEntry("show_view_filetransfer", null, GlobalSettingsSectionValueType.BOOLEAN);
     private ConfigurationEntry showViewMonitor = new ConfigurationEntry("show_view_monitor", null, GlobalSettingsSectionValueType.BOOLEAN);
+    private ConfigurationEntry showViewReport = new ConfigurationEntry("show_view_report", null, GlobalSettingsSectionValueType.BOOLEAN);
     // private ConfigurationEntry showViewJobstreams = new ConfigurationEntry("show_view_jobstreams", null, GlobalSettingsSectionValueType.BOOLEAN);
     
     private ConfigurationEntry displayFoldersInViews = new ConfigurationEntry("display_folders_in_views", "true", GlobalSettingsSectionValueType.BOOLEAN);
@@ -122,6 +123,7 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         showViewConfiguration.setOrdering(++index);
         showViewFiletransfer.setOrdering(++index);
         showViewMonitor.setOrdering(++index);
+        showViewReport.setOrdering(++index);
         // showViewJobstreams.setOrdering(++index);
         
         displayFoldersInViews.setOrdering(++index);
@@ -243,6 +245,7 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         showViews.put(ShowViewName.monitor, getBoolean(showViewMonitor));
         showViews.put(ShowViewName.resources, getBoolean(showViewResources));
         showViews.put(ShowViewName.workflows, getBoolean(showViewWorkflows));
+        showViews.put(ShowViewName.report, getBoolean(showViewReport));
         return showViews;
     }
 

@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSDate;
+import com.sos.inventory.model.report.Frequency;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -16,7 +17,6 @@ import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.db.reporting.DBItemReportRun;
 import com.sos.joc.db.reporting.ReportingDBLayer;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.reporting.Frequency;
 import com.sos.joc.model.reporting.RunItem;
 import com.sos.joc.model.reporting.RunItems;
 import com.sos.joc.reporting.resource.IRunHistoryResource;

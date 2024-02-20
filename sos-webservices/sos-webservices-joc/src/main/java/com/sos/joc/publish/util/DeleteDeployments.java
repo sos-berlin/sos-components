@@ -60,6 +60,7 @@ public class DeleteDeployments {
             DeployType.LOCK);
     private static final List<ConfigurationType> RESTORE_ORDER = Arrays.asList(
             ConfigurationType.FOLDER, 
+            ConfigurationType.REPORT,
             ConfigurationType.LOCK,
             ConfigurationType.INCLUDESCRIPT, 
             ConfigurationType.NOTICEBOARD, 

@@ -22,12 +22,12 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.common.SOSCommandResult;
+import com.sos.inventory.model.report.Frequency;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCSOSShell;
 import com.sos.joc.db.reporting.DBItemReportHistory;
 import com.sos.joc.db.reporting.DBItemReportRun;
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.model.reporting.Frequency;
 import com.sos.joc.model.reporting.RunFilter;
 
 import io.vavr.control.Either;
@@ -72,7 +72,7 @@ public class RunReport extends AReporting {
     
     private static String getCommonScript(final RunFilter in) {
         StringBuilder s = new StringBuilder()
-                .append("node bin/src/index.js -i data -t bin/templates/template_")
+                .append("node app/src/run-report.js -i data -t app/templates/template_")
                 .append(in.getTemplateId())
                 .append(".json");
         if (in.getDateFrom() != null) {
@@ -90,7 +90,7 @@ public class RunReport extends AReporting {
         try {
             tempDir = createTempDirectory();
             // reportingDir is working directory
-            String script = commonScript + f.strValue() + " -o " + reportingDir.relativize(tempDir).toString();
+            String script = commonScript + f.strValue() + " -o " + reportingDir.relativize(tempDir).toString().replace('\\', '/');
             LOGGER.info("[Reporting][run] " + script);
             SOSCommandResult cResult = JOCSOSShell.executeCommand(script, reportingDir);
 

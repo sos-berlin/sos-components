@@ -800,6 +800,7 @@ public class InventorySearchDBLayer extends DBLayer {
         case JOBRESOURCE:
         case NOTICEBOARD:
         case LOCK:
+        case REPORT:
         default:
             break;
         }
@@ -1390,6 +1391,7 @@ public class InventorySearchDBLayer extends DBLayer {
         case JOBRESOURCE:
         case NOTICEBOARD:
         case LOCK:
+        case REPORT:
         default:
             break;
         }
@@ -1584,6 +1586,7 @@ public class InventorySearchDBLayer extends DBLayer {
         case SCHEDULE:
         case INCLUDESCRIPT:
         case CALENDAR:
+        case REPORT:
         case JOBTEMPLATE:
             return true;
         default:

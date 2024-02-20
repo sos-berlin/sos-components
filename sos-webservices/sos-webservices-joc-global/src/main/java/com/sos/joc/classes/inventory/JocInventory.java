@@ -47,6 +47,7 @@ import com.sos.inventory.model.jobclass.JobClass;
 import com.sos.inventory.model.jobresource.JobResource;
 import com.sos.inventory.model.jobtemplate.JobTemplate;
 import com.sos.inventory.model.lock.Lock;
+import com.sos.inventory.model.report.Report;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.script.Script;
 import com.sos.inventory.model.workflow.Workflow;
@@ -68,7 +69,6 @@ import com.sos.joc.event.bean.inventory.InventoryEvent;
 import com.sos.joc.event.bean.inventory.InventoryFolderEvent;
 import com.sos.joc.event.bean.inventory.InventoryObjectEvent;
 import com.sos.joc.event.bean.inventory.InventoryTagEvent;
-import com.sos.joc.event.bean.inventory.InventoryTagsEvent;
 import com.sos.joc.event.bean.inventory.InventoryTrashEvent;
 import com.sos.joc.event.bean.inventory.InventoryTrashFolderEvent;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -114,6 +114,7 @@ public class JocInventory {
             put(ConfigurationType.INCLUDESCRIPT, "classpath:/raml/inventory/schemas/script/script-schema.json");
             put(ConfigurationType.WORKFLOW, "classpath:/raml/inventory/schemas/workflow/workflow-schema.json");
             put(ConfigurationType.NOTICEBOARD, "classpath:/raml/inventory/schemas/board/board-schema.json");
+            put(ConfigurationType.REPORT, "classpath:/raml/inventory/schemas/report/report-schema.json");
             put(ConfigurationType.FOLDER, "classpath:/raml/api/schemas/inventory/folder-schema.json");
             put(ConfigurationType.DEPLOYMENTDESCRIPTOR, "classpath:/raml/inventory/schemas/deploymentDescriptor/deploymentDescriptor-schema.json");
             put(ConfigurationType.DESCRIPTORFOLDER, "classpath:/raml/api/schemas/inventory/folder-schema.json");
@@ -167,6 +168,7 @@ public class JocInventory {
             put(ConfigurationType.INCLUDESCRIPT, Script.class);
             put(ConfigurationType.WORKFLOW, Workflow.class);
             put(ConfigurationType.NOTICEBOARD, Board.class);
+            put(ConfigurationType.REPORT, Report.class);
             put(ConfigurationType.FOLDER, Folder.class);
             put(ConfigurationType.DEPLOYMENTDESCRIPTOR, DeploymentDescriptor.class);
             put(ConfigurationType.DESCRIPTORFOLDER, Folder.class);
@@ -179,7 +181,7 @@ public class JocInventory {
 
     public static final Set<ConfigurationType> RELEASABLE_OBJECTS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
             ConfigurationType.SCHEDULE, ConfigurationType.INCLUDESCRIPT, ConfigurationType.NONWORKINGDAYSCALENDAR,
-            ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.JOBTEMPLATE)));
+            ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.JOBTEMPLATE, ConfigurationType.REPORT)));
 
     public static String getResourceImplPath(final String path) {
         return String.format("./%s/%s", APPLICATION_PATH, path);

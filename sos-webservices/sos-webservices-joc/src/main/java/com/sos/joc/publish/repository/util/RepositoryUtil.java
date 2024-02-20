@@ -95,6 +95,8 @@ public abstract class RepositoryUtil {
         case NONWORKINGDAYSCALENDAR:
         case WORKINGDAYSCALENDAR:
             return ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.toString();
+        case REPORT:
+            return ConfigurationObjectFileExtension.REPORT_FILE_EXTENSION.toString();
         default:
             return "";
         }
@@ -222,6 +224,8 @@ public abstract class RepositoryUtil {
             return ConfigurationType.INCLUDESCRIPT;
         } else if (path.toString().endsWith(ConfigurationObjectFileExtension.JOBTEMPLATE_FILE_EXTENSION.toString())) {
             return ConfigurationType.JOBTEMPLATE;
+        } else if (path.toString().endsWith(ConfigurationObjectFileExtension.REPORT_FILE_EXTENSION.toString())) {
+            return ConfigurationType.REPORT;
         } else {
             return ConfigurationType.FOLDER;
         }
@@ -514,6 +518,9 @@ public abstract class RepositoryUtil {
                 case NONWORKINGDAYSCALENDAR:
                     extension = ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.toString();
                     break;
+                case REPORT:
+                    extension = ConfigurationObjectFileExtension.REPORT_FILE_EXTENSION.toString();
+                    break;
                 default:
                     break;
                 }
@@ -583,6 +590,9 @@ public abstract class RepositoryUtil {
                 case WORKINGDAYSCALENDAR:
                 case NONWORKINGDAYSCALENDAR:
                     extension = ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.toString();
+                    break;
+                case REPORT:
+                    extension = ConfigurationObjectFileExtension.REPORT_FILE_EXTENSION.toString();
                     break;
                 default:
                     break;
@@ -659,6 +669,9 @@ public abstract class RepositoryUtil {
                     extension = ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.toString();
                     break;
                 case FOLDER:
+                    break;
+                case REPORT:
+                    extension = ConfigurationObjectFileExtension.REPORT_FILE_EXTENSION.toString();
                     break;
                 default:
                     break;
@@ -891,6 +904,8 @@ public abstract class RepositoryUtil {
             return Paths.get(cfg.getPath() + getExtension(ConfigurationType.NONWORKINGDAYSCALENDAR));
         case WORKINGDAYSCALENDAR:
             return Paths.get(cfg.getPath() + getExtension(ConfigurationType.WORKINGDAYSCALENDAR));
+        case REPORT:
+            return Paths.get(cfg.getPath() + getExtension(ConfigurationType.REPORT));
         default:
             return Paths.get(cfg.getPath());
         }
@@ -1277,6 +1292,7 @@ public abstract class RepositoryUtil {
                 types.add(ConfigurationType.NONWORKINGDAYSCALENDAR);
             }
         }
+        // TODO REPORT
         return types;
     }
 

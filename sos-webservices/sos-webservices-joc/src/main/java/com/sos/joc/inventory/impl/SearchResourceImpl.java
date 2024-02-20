@@ -193,6 +193,9 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
         case JOBTEMPLATE:
             in.getAdvanced().setJobTemplate(null);
             break;
+        case REPORT:
+            // TODO advanced?
+            break;
         }
     }
 

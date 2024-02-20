@@ -53,8 +53,8 @@ import jakarta.ws.rs.Path;
 public class RevalidateResourceImpl extends JOCResourceImpl implements IRevalidateResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RevalidateResourceImpl.class);
-    private static final List<ConfigurationType> types = Arrays.asList(ConfigurationType.LOCK, ConfigurationType.INCLUDESCRIPT,
-            ConfigurationType.NOTICEBOARD, ConfigurationType.JOBRESOURCE, ConfigurationType.NONWORKINGDAYSCALENDAR,
+    private static final List<ConfigurationType> types = Arrays.asList(ConfigurationType.REPORT, ConfigurationType.LOCK,
+            ConfigurationType.INCLUDESCRIPT, ConfigurationType.NOTICEBOARD, ConfigurationType.JOBRESOURCE, ConfigurationType.NONWORKINGDAYSCALENDAR,
             ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.JOBTEMPLATE, ConfigurationType.WORKFLOW, ConfigurationType.FILEORDERSOURCE,
             ConfigurationType.SCHEDULE);
     // exclusive WORKFLOW, gets an extra handling

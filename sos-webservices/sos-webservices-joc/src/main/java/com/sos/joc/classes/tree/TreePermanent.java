@@ -66,6 +66,7 @@ public class TreePermanent {
                     types.add(TreeType.NOTICEBOARD);
                     types.add(TreeType.SCHEDULE);
                     types.add(TreeType.INCLUDESCRIPT);
+                    types.add(TreeType.REPORT);
                     types.add(TreeType.WORKINGDAYSCALENDAR);
                     types.add(TreeType.NONWORKINGDAYSCALENDAR);
                 }
@@ -155,6 +156,17 @@ public class TreePermanent {
                     }
                 } else {
                     if (jocPermissions.getCalendars().getView()) {
+                        types.add(type);
+                    }
+                }
+                break;
+            case REPORT:
+                if (treeForInventory || treeForInventoryTrash) {
+                    if (inventoryPermission) {
+                        types.add(type);
+                    }
+                } else {
+                    if (jocPermissions.getReports().getView()) {
                         types.add(type);
                     }
                 }
@@ -550,7 +562,7 @@ public class TreePermanent {
 
         boolean withDocus = false;
         boolean onlyWithAssignReference = treeBody.getOnlyWithAssignReference() == Boolean.TRUE;
-        List<TreeType> possibleInventoryTypes = Arrays.asList(TreeType.JOBTEMPLATE, TreeType.SCHEDULE, TreeType.INCLUDESCRIPT,
+        List<TreeType> possibleInventoryTypes = Arrays.asList(TreeType.JOBTEMPLATE, TreeType.SCHEDULE, TreeType.INCLUDESCRIPT, TreeType.REPORT,
                 TreeType.WORKINGDAYSCALENDAR, TreeType.NONWORKINGDAYSCALENDAR, TreeType.DEPLOYMENTDESCRIPTOR);
         Set<Integer> possibleDeployIntTypes = Arrays.asList(DeployType.values()).stream().map(DeployType::intValue).collect(Collectors.toSet());
         Set<Integer> deployTypes = new HashSet<>();

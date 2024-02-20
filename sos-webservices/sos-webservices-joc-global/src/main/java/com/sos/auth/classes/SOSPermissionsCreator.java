@@ -26,6 +26,7 @@ import com.sos.joc.model.security.configuration.permissions.joc.FileTransfer;
 import com.sos.joc.model.security.configuration.permissions.joc.Inventory;
 import com.sos.joc.model.security.configuration.permissions.joc.Notification;
 import com.sos.joc.model.security.configuration.permissions.joc.Others;
+import com.sos.joc.model.security.configuration.permissions.joc.Reports;
 import com.sos.joc.model.security.configuration.permissions.joc.admin.Accounts;
 import com.sos.joc.model.security.configuration.permissions.joc.admin.Certificates;
 import com.sos.joc.model.security.configuration.permissions.joc.admin.Controllers;
@@ -70,7 +71,7 @@ public class SOSPermissionsCreator {
 
         JocPermissions jocPermissions = new JocPermissions(false, new Administration(new Accounts(), new Settings(), new Controllers(),
                 new Certificates(), new Customization()), new Cluster(), new Inventory(), new Calendars(), new Documentations(), new AuditLog(),
-                new DailyPlan(), new FileTransfer(), new Notification(), new Others());
+                new DailyPlan(), new FileTransfer(), new Notification(), new Reports(), new Others());
 
         if (currentAccount != null && currentAccount.getCurrentSubject() != null) {
 

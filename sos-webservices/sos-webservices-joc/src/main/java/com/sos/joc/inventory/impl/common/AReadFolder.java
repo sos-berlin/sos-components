@@ -128,6 +128,9 @@ public abstract class AReadFolder extends JOCResourceImpl {
                         case NONWORKINGDAYSCALENDAR:
                             folder.getCalendars().add(config);
                             break;
+                        case REPORT:
+                            folder.getReports().add(config);
+                            break;
                         case DEPLOYMENTDESCRIPTOR:
                              folder.getDeploymentDescriptors().add(config);
                             break;
@@ -150,6 +153,7 @@ public abstract class AReadFolder extends JOCResourceImpl {
                 folder.setSchedules(sort(folder.getSchedules()));
                 folder.setIncludeScripts(sort(folder.getIncludeScripts()));
                 folder.setCalendars(sort(folder.getCalendars()));
+                folder.setReports(sort(folder.getReports()));
                 folder.setDeploymentDescriptors(sort(folder.getDeploymentDescriptors()));
                 // folder.setFolders(sort(folder.getFolders()));
             }

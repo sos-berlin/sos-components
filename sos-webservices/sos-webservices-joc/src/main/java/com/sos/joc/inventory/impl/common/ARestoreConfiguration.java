@@ -73,9 +73,9 @@ public abstract class ARestoreConfiguration extends JOCResourceImpl {
                 }
                 
                 List<ConfigurationType> restoreOrder = Arrays.asList(ConfigurationType.FOLDER, ConfigurationType.DESCRIPTORFOLDER,
-                        ConfigurationType.DEPLOYMENTDESCRIPTOR,ConfigurationType.LOCK, ConfigurationType.INCLUDESCRIPT, 
-                        ConfigurationType.NOTICEBOARD, ConfigurationType.JOBRESOURCE, ConfigurationType.NONWORKINGDAYSCALENDAR, 
-                        ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.JOBTEMPLATE, ConfigurationType.WORKFLOW, 
+                        ConfigurationType.DEPLOYMENTDESCRIPTOR, ConfigurationType.REPORT, ConfigurationType.LOCK, ConfigurationType.INCLUDESCRIPT,
+                        ConfigurationType.NOTICEBOARD, ConfigurationType.JOBRESOURCE, ConfigurationType.NONWORKINGDAYSCALENDAR,
+                        ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.JOBTEMPLATE, ConfigurationType.WORKFLOW,
                         ConfigurationType.FILEORDERSOURCE, ConfigurationType.SCHEDULE);
 
                 List<DBItemInventoryConfigurationTrash> trashDBFolderContent = 

@@ -469,6 +469,9 @@ public class ExportUtils {
                             case NONWORKINGDAYSCALENDAR:
                                 extension = ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.toString();
                                 break;
+                            case REPORT:
+                                extension = ConfigurationObjectFileExtension.REPORT_FILE_EXTENSION.toString();
+                                break;
                             default:
                                 break;
                             }
@@ -685,6 +688,9 @@ public class ExportUtils {
                             case WORKINGDAYSCALENDAR:
                             case NONWORKINGDAYSCALENDAR:
                                 extension = ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.toString();
+                                break;
+                            case REPORT:
+                                extension = ConfigurationObjectFileExtension.REPORT_FILE_EXTENSION.toString();
                                 break;
                             default:
                                 break;

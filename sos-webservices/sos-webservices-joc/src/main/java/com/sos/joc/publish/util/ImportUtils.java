@@ -42,6 +42,7 @@ import com.sos.inventory.model.calendar.CalendarType;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.job.Job;
 import com.sos.inventory.model.jobtemplate.JobTemplate;
+import com.sos.inventory.model.report.Report;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.script.Script;
 import com.sos.inventory.model.workflow.Workflow;
@@ -83,6 +84,7 @@ import com.sos.joc.model.inventory.jobresource.JobResourceEdit;
 import com.sos.joc.model.inventory.jobresource.JobResourcePublish;
 import com.sos.joc.model.inventory.lock.LockEdit;
 import com.sos.joc.model.inventory.lock.LockPublish;
+import com.sos.joc.model.inventory.report.ReportEdit;
 import com.sos.joc.model.inventory.script.ScriptEdit;
 import com.sos.joc.model.inventory.workflow.WorkflowEdit;
 import com.sos.joc.model.inventory.workflow.WorkflowPublish;
@@ -522,9 +524,9 @@ public class ImportUtils {
     }
     
     public static List<ConfigurationType> getImportOrder() {
-        return Arrays.asList(ConfigurationType.LOCK, ConfigurationType.NOTICEBOARD, ConfigurationType.JOBRESOURCE, ConfigurationType.INCLUDESCRIPT,
-                ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.JOBTEMPLATE, ConfigurationType.WORKFLOW,
-                ConfigurationType.FILEORDERSOURCE, ConfigurationType.SCHEDULE);
+        return Arrays.asList(ConfigurationType.REPORT, ConfigurationType.LOCK, ConfigurationType.NOTICEBOARD, ConfigurationType.JOBRESOURCE,
+                ConfigurationType.INCLUDESCRIPT, ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR,
+                ConfigurationType.JOBTEMPLATE, ConfigurationType.WORKFLOW, ConfigurationType.FILEORDERSOURCE, ConfigurationType.SCHEDULE);
     }
 
     public static Map<ControllerObject, SignaturePath> readZipFileContentWithSignatures(InputStream inputStream, JocMetaInfo jocMetaInfo)
@@ -990,6 +992,24 @@ public class ImportUtils {
                 throw new JocImportException(String.format("Calendar with path %1$s not imported. Object values could not be mapped.", ("/"
                         + entryName).replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), "")));
             }
+        } else if (entryName.endsWith(ConfigurationObjectFileExtension.REPORT_FILE_EXTENSION.value())) {
+            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.REPORT_FILE_EXTENSION.value(),
+                    ""));
+            if (normalizedPath.startsWith("//")) {
+                normalizedPath = normalizedPath.substring(1);
+            }
+            ReportEdit reportEdit = new ReportEdit();
+            Report report = Globals.objectMapper.readValue(outBuffer.toByteArray(), Report.class);
+            if (checkObjectNotEmpty(report)) {
+                reportEdit.setConfiguration(report);
+            } else {
+                throw new JocImportException(String.format("Report with path %1$s not imported. Object values could not be mapped.",
+                        normalizedPath));
+            }
+            reportEdit.setName(Paths.get(normalizedPath).getFileName().toString());
+            reportEdit.setPath(normalizedPath);
+            reportEdit.setObjectType(ConfigurationType.REPORT);
+            return reportEdit;
         }
         return null;
     }
@@ -1012,6 +1032,14 @@ public class ImportUtils {
     
     private static boolean checkObjectNotEmpty(JobTemplate job) {
         if (job != null && job.getExecutable() == null) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+    
+    private static boolean checkObjectNotEmpty(Report report) {
+        if (report != null && report.getFrequencies() == null && report.getTemplateId() == null) {
             return false;
         } else {
             return true;

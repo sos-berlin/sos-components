@@ -1,6 +1,5 @@
 package com.sos.joc.db.reporting;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -14,9 +13,9 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
+import com.sos.inventory.model.report.Frequency;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.model.reporting.Frequency;
 
 @Entity
 @Table(name = DBLayer.TABLE_REPORT_HISTORY)
