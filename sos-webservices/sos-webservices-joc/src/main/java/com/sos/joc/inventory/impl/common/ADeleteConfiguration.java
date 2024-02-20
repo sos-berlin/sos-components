@@ -181,7 +181,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                             DBItemInventoryConfiguration::getId).collect(Collectors.toList());
                     deployables.removeAll(deployedDeployables); // deployables that never were deployed
                     for (DBItemInventoryConfiguration deployable : deployables) {
-                        JocInventory.deleteInventoryConfigurationAndPutToTrash(deployable, dbLayer, ConfigurationType.DESCRIPTORFOLDER);
+                        JocInventory.deleteInventoryConfigurationAndPutToTrash(deployable, dbLayer, ConfigurationType.FOLDER);
                     }
                 }
             } else {
