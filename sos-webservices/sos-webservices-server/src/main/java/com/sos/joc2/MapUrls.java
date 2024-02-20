@@ -63,9 +63,10 @@ public class MapUrls {
         private static final long serialVersionUID = 1L;
 
         {
-            put("http://sp:11111", "http://sp:11111");
-            put("http://sp:11112", "http://sp:11112");
-            put("http://sp:1113", "http://sp:1113");
+//            put("http://sp:11111", "http://sp:11111");
+//            put("http://sp:11112", "http://sp:11112");
+//            put("http://sp:1113", "http://sp:1113");
+            put("http://sp.sos:1113", "http://sp.sos:1113");
         }
     });
 
@@ -87,7 +88,8 @@ public class MapUrls {
         {
             put("oh", JocSecurityLevel.LOW);
             //put("oh", JocSecurityLevel.MEDIUM);
-            put("sp", JocSecurityLevel.MEDIUM);
+//            put("sp", JocSecurityLevel.MEDIUM);
+            put("santiago", JocSecurityLevel.MEDIUM);
         }
     });
     
