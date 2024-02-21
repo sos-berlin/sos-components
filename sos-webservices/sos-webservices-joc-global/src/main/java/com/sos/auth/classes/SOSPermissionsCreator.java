@@ -103,6 +103,8 @@ public class SOSPermissionsCreator {
             jocPermissions.getInventory().setDeploy(haveRight("", "sos:products:joc:inventory:deploy"));
             jocPermissions.getNotification().setView(haveRight("", "sos:products:joc:notification:view"));
             jocPermissions.getNotification().setManage(haveRight("", "sos:products:joc:notification:manage"));
+            jocPermissions.getReports().setView(haveRight("", "sos:products:joc:reports:view"));
+            jocPermissions.getReports().setManage(haveRight("", "sos:products:joc:reports:manage"));
             jocPermissions.getOthers().setView(haveRight("", "sos:products:joc:others:view"));
             jocPermissions.getOthers().setManage(haveRight("", "sos:products:joc:others:manage"));
         }

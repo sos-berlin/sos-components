@@ -45,6 +45,8 @@ public class SOSListOfPermissions {
         addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:inventory:deploy");
         addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:notification:view");
         addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:notification:manage");
+        addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:reports:view");
+        addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:reports:manage");
         addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:others:view");
         addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:others:manage");
 

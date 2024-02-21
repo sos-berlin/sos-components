@@ -28,7 +28,7 @@ import com.sos.joc.classes.JOCSOSShell;
 import com.sos.joc.db.reporting.DBItemReportHistory;
 import com.sos.joc.db.reporting.DBItemReportRun;
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.model.reporting.RunFilter;
+import com.sos.joc.model.reporting.Report;
 
 import io.vavr.control.Either;
 
@@ -36,9 +36,9 @@ public class RunReport extends AReporting {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(RunReport.class);
     
-    public static CompletableFuture<Either<Exception, Void>> run(final RunFilter in) {
-        if (in.getDateFrom() != null) { //automatically load reort data before run report
-            return LoadData.writeCSVFiles(in.getDateFrom()).thenApply(e -> {
+    public static CompletableFuture<Either<Exception, Void>> run(final Report in) {
+        if (in.getMonthFrom() != null) { //automatically load report data before run report
+            return LoadData.writeCSVFiles(in.getMonthFrom()).thenApply(e -> {
                 if (e.isLeft()) {
                     return e;
                 }
@@ -49,7 +49,7 @@ public class RunReport extends AReporting {
         }
     }
     
-    private static Either<Exception, Void> _run(final RunFilter in) {
+    private static Either<Exception, Void> _run(final Report in) {
         Set<Path> tempDirs = new HashSet<>();
         List<DBItemReportHistory> dbItems = new ArrayList<>();
         try {
@@ -70,16 +70,19 @@ public class RunReport extends AReporting {
         }
     }
     
-    private static String getCommonScript(final RunFilter in) {
+    private static String getCommonScript(final Report in) {
         StringBuilder s = new StringBuilder()
-                .append("node app/src/run-report.js -i data -t app/templates/template_")
+                .append("node app/run-report.js -i data -t app/templates/template_")
                 .append(in.getTemplateId())
                 .append(".json");
-        if (in.getDateFrom() != null) {
-            s.append(" -s ").append(in.getDateFrom());
+        if (in.getMonthFrom() != null) {
+            s.append(" -s ").append(in.getMonthFrom());
         }
-        if (in.getSize() != null) {
-            s.append(" -n ").append(in.getSize());
+        if (in.getMonthTo() != null) {
+            s.append(" -e ").append(in.getMonthTo());
+        }
+        if (in.getHits() != null) {
+            s.append(" -n ").append(in.getHits());
         }
         s.append(" -p ");
         return s.toString();
@@ -127,14 +130,14 @@ public class RunReport extends AReporting {
         }
     }
     
-    private static DBItemReportHistory getHistoryDBItem(final Path report, final Frequency frequency, final RunFilter in) throws UncheckedIOException {
+    private static DBItemReportHistory getHistoryDBItem(final Path report, final Frequency frequency, final Report in) throws UncheckedIOException {
         LocalDateTime localDateFrom = getLocalDateFrom(report);
         DBItemReportHistory dbItem = new DBItemReportHistory();
         dbItem.setId(null);
         dbItem.setDateFrom(getDate(localDateFrom));
         dbItem.setDateTo(getDate(getLocalDateTo(localDateFrom, frequency)));
         dbItem.setFrequency(frequency.intValue());
-        dbItem.setSize(in.getSize());
+        dbItem.setSize(in.getHits());
         dbItem.setTemplateId(in.getTemplateId());
         try {
             dbItem.setContent(Files.readAllBytes(report));
@@ -144,15 +147,15 @@ public class RunReport extends AReporting {
         return dbItem;
     }
     
-    private static DBItemReportRun getRunDBItem(final RunFilter in) {
+    private static DBItemReportRun getRunDBItem(final Report in) {
         DBItemReportRun dbItem = new DBItemReportRun();
         dbItem.setId(null);
-        dbItem.setName(in.getName());
+        dbItem.setName(in.getPath());
         dbItem.setTitle(in.getTitle());
         dbItem.setTemplateId(in.getTemplateId());
-        dbItem.setSize(in.getSize());
+        dbItem.setSize(in.getHits());
         dbItem.setFrequencies(in.getFrequencies().stream().map(Frequency::intValue).sorted().map(i -> i.toString()).collect(Collectors.joining(",")));
-        dbItem.setDateFrom(getDate(getLocalDateFrom(in.getDateFrom())));
+        dbItem.setDateFrom(getDate(getLocalDateFrom(in.getMonthFrom())));
         return dbItem;
     }
     
@@ -210,7 +213,7 @@ public class RunReport extends AReporting {
         return null;
     }
     
-    private static void insert(final RunFilter in, Collection<DBItemReportHistory> dbItems) throws Exception {
+    private static void insert(final Report in, Collection<DBItemReportHistory> dbItems) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection("ReportingStoreData");

@@ -1,7 +1,9 @@
 
 package com.sos.joc.model.reporting;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -19,51 +21,32 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "id",
-    "created"
+    "deliveryDate",
+    "reports"
 })
-public class RunItem
-    extends Report
-{
+public class Reports {
 
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("id")
-    private Long id;
     /**
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("created")
+    @JsonProperty("deliveryDate")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    private Date created;
+    private Date deliveryDate;
+    @JsonProperty("reports")
+    private List<Report> reports = new ArrayList<Report>();
 
     /**
-     * non negative long
+     * timestamp
      * <p>
-     * 
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("id")
-    public Long getId() {
-        return id;
-    }
-
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("id")
-    public void setId(Long id) {
-        this.id = id;
+    @JsonProperty("deliveryDate")
+    public Date getDeliveryDate() {
+        return deliveryDate;
     }
 
     /**
@@ -72,30 +55,29 @@ public class RunItem
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("created")
-    public Date getCreated() {
-        return created;
+    @JsonProperty("deliveryDate")
+    public void setDeliveryDate(Date deliveryDate) {
+        this.deliveryDate = deliveryDate;
     }
 
-    /**
-     * timestamp
-     * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * 
-     */
-    @JsonProperty("created")
-    public void setCreated(Date created) {
-        this.created = created;
+    @JsonProperty("reports")
+    public List<Report> getReports() {
+        return reports;
+    }
+
+    @JsonProperty("reports")
+    public void setReports(List<Report> reports) {
+        this.reports = reports;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("id", id).append("created", created).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("reports", reports).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(created).append(id).toHashCode();
+        return new HashCodeBuilder().append(deliveryDate).append(reports).toHashCode();
     }
 
     @Override
@@ -103,11 +85,11 @@ public class RunItem
         if (other == this) {
             return true;
         }
-        if ((other instanceof RunItem) == false) {
+        if ((other instanceof Reports) == false) {
             return false;
         }
-        RunItem rhs = ((RunItem) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(created, rhs.created).append(id, rhs.id).isEquals();
+        Reports rhs = ((Reports) other);
+        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(reports, rhs.reports).isEquals();
     }
 
 }

@@ -9,7 +9,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.report.Frequency;
-
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -29,7 +28,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "title",
     "templateId",
     "frequency",
-    "size",
+    "hits",
     "dateFrom",
     "dateTo",
     "created",
@@ -89,14 +88,12 @@ public class ReportItem {
     @JsonProperty("frequency")
     private Frequency frequency;
     /**
-     * non negative integer
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("size")
-    private Integer size;
+    @JsonProperty("hits")
+    private Integer hits;
     /**
      * date
      * <p>
@@ -273,27 +270,23 @@ public class ReportItem {
     }
 
     /**
-     * non negative integer
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("size")
-    public Integer getSize() {
-        return size;
+    @JsonProperty("hits")
+    public Integer getHits() {
+        return hits;
     }
 
     /**
-     * non negative integer
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("size")
-    public void setSize(Integer size) {
-        this.size = size;
+    @JsonProperty("hits")
+    public void setHits(Integer hits) {
+        this.hits = hits;
     }
 
     /**
@@ -388,12 +381,12 @@ public class ReportItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("runId", runId).append("name", name).append("title", title).append("templateId", templateId).append("frequency", frequency).append("size", size).append("dateFrom", dateFrom).append("dateTo", dateTo).append("created", created).append("data", data).toString();
+        return new ToStringBuilder(this).append("id", id).append("runId", runId).append("name", name).append("title", title).append("templateId", templateId).append("frequency", frequency).append("hits", hits).append("dateFrom", dateFrom).append("dateTo", dateTo).append("created", created).append("data", data).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(size).append(data).append(created).append(name).append(dateTo).append(id).append(runId).append(title).append(templateId).append(dateFrom).append(frequency).toHashCode();
+        return new HashCodeBuilder().append(hits).append(data).append(created).append(name).append(dateTo).append(id).append(runId).append(title).append(templateId).append(dateFrom).append(frequency).toHashCode();
     }
 
     @Override
@@ -405,7 +398,7 @@ public class ReportItem {
             return false;
         }
         ReportItem rhs = ((ReportItem) other);
-        return new EqualsBuilder().append(size, rhs.size).append(data, rhs.data).append(created, rhs.created).append(name, rhs.name).append(dateTo, rhs.dateTo).append(id, rhs.id).append(runId, rhs.runId).append(title, rhs.title).append(templateId, rhs.templateId).append(dateFrom, rhs.dateFrom).append(frequency, rhs.frequency).isEquals();
+        return new EqualsBuilder().append(hits, rhs.hits).append(data, rhs.data).append(created, rhs.created).append(name, rhs.name).append(dateTo, rhs.dateTo).append(id, rhs.id).append(runId, rhs.runId).append(title, rhs.title).append(templateId, rhs.templateId).append(dateFrom, rhs.dateFrom).append(frequency, rhs.frequency).isEquals();
     }
 
 }

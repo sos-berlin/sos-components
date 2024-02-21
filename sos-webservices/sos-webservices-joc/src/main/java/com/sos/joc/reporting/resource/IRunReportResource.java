@@ -12,12 +12,20 @@ import jakarta.ws.rs.core.MediaType;
 
 public interface IRunReportResource {
 
-    public static final String PATH = "report/run";
+    public static final String PATH_SINGLE_RUN = "report/run";
+    public static final String IMPL_SINGLE_RUN_PATH = WebservicePaths.getResourceImplPath(WebservicePaths.REPORTING, PATH_SINGLE_RUN);
+    
+    public static final String PATH = "reports/run";
     public static final String IMPL_PATH = WebservicePaths.getResourceImplPath(WebservicePaths.REPORTING, PATH);
 
     @POST
+    @Path(PATH_SINGLE_RUN)
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse runReport(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    
+    @POST
     @Path(PATH)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse run(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    public JOCDefaultResponse runReports(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 
 }

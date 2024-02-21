@@ -48,12 +48,12 @@ public class RunHistoryImpl extends JOCResourceImpl implements IRunHistoryResour
                 try {
                     RunItem item = new RunItem();
                     item.setId(dbItem.getId());
-                    item.setName(dbItem.getName());
+                    item.setPath(dbItem.getName());
                     item.setTitle(dbItem.getTitle());
-                    item.setDateFrom(SOSDate.getDateAsString(dbItem.getDateFrom()));
+                    item.setMonthFrom(SOSDate.format(dbItem.getDateFrom(), "yyyy-MM"));
                     item.setFrequencies(Arrays.asList(dbItem.getFrequencies().split(",")).stream().map(Integer::valueOf).sorted().map(
                             Frequency::fromValue).filter(Objects::nonNull).collect(Collectors.toSet()));
-                    item.setSize(dbItem.getSize());
+                    item.setHits(dbItem.getSize());
                     item.setTemplateId(dbItem.getTemplateId());
                     item.setCreated(dbItem.getCreated());
                     return item;

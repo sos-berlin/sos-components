@@ -78,6 +78,11 @@ public class Report implements IInventoryObject, IConfigurationObject, IReleaseO
     private Integer hits;
     @JsonProperty("controllerId")
     private Object controllerId;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("monthFrom")
     private String monthFrom;
     @JsonProperty("monthTo")
@@ -231,11 +236,21 @@ public class Report implements IInventoryObject, IConfigurationObject, IReleaseO
         this.controllerId = controllerId;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("monthFrom")
     public String getMonthFrom() {
         return monthFrom;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("monthFrom")
     public void setMonthFrom(String monthFrom) {
         this.monthFrom = monthFrom;

@@ -1,13 +1,12 @@
 
 package com.sos.joc.model.reporting;
 
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.commons.lang3.builder.ToStringBuilder;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
@@ -25,20 +24,28 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class Template {
 
     /**
+     * non negative integer
+     * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("templateId")
     private Integer templateId;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("title")
     private String title;
     @JsonProperty("data")
     private TemplateData data;
 
     /**
+     * non negative integer
+     * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("templateId")
@@ -47,8 +54,9 @@ public class Template {
     }
 
     /**
+     * non negative integer
+     * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("templateId")
@@ -56,16 +64,30 @@ public class Template {
         this.templateId = templateId;
     }
     
+    // the templates from joc-cockpit repo have an "id": "template_nr"
+    // this will be mapped during the deserialisation to "templateId": nr
     @JsonProperty("id")
     public void setId(String id) {
         this.templateId = Integer.valueOf(id.replaceAll("\\D", ""));
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("title")
     public String getTitle() {
         return title;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("title")
     public void setTitle(String title) {
         this.title = title;

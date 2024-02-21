@@ -30,7 +30,7 @@ public class ReportingDBLayer extends DBLayer {
             hql.append(",rr.title as title");
             hql.append(",rh.templateId as templateId");
             hql.append(",rh.frequency as frequency");
-            hql.append(",rh.size as size");
+            hql.append(",rh.size as hits");
             hql.append(",rh.dateFrom as dateFrom");
             hql.append(",rh.dateTo as dateTo");
             hql.append(",rh.created as created");
@@ -39,7 +39,7 @@ public class ReportingDBLayer extends DBLayer {
             }
             hql.append(" from ").append(DBLayer.DBITEM_REPORT_HISTORY).append(" rh ");
             hql.append("left join ").append(DBLayer.DBITEM_REPORT_RUN).append(" rr ");
-            hql.append("on rh.runId=rr.id ");
+            hql.append("on rh.runId=rr.id");
             
             if (ids != null && !ids.isEmpty()) {
                 hql.append(" where rh.id in (:ids)");
