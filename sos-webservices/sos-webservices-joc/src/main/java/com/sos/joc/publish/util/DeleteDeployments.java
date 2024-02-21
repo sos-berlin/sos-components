@@ -1,6 +1,7 @@
 package com.sos.joc.publish.util;
 
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -187,75 +188,10 @@ public class DeleteDeployments {
         return invItemsforTrash;
     }
     
-//    public static boolean delete(String apiCall, Collection<Configuration> confs, Collection<String> controllerIds, DBLayerDeploy dbLayer, String account,
-//            String accessToken, JocError jocError, Long auditlogId, boolean withoutFolderDeletion, String cancelOrderDate)
-//            throws SOSHibernateException {
-//        if (confs == null || confs.isEmpty()) {
-//            return true;
-//        }
-//        List<Configuration> deployConfigsToDelete = confs.stream().filter(Objects::nonNull).filter(item -> !ConfigurationType.FOLDER.equals(item
-//                .getObjectType())).collect(Collectors.toList());
-//        List<Configuration> foldersToDelete = confs.stream().filter(Objects::nonNull).filter(item -> ConfigurationType.FOLDER.equals(item
-//                .getObjectType())).collect(Collectors.toList());
-//        foldersToDelete = PublishUtils.handleFolders1(foldersToDelete, dbLayer);
-//
-//        List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete = null;
-//        if (deployConfigsToDelete != null && !deployConfigsToDelete.isEmpty()) {
-//            depHistoryDBItemsToDeployDelete = dbLayer.getFilteredDeploymentHistoryToDelete(deployConfigsToDelete);
-//            if (depHistoryDBItemsToDeployDelete != null && !depHistoryDBItemsToDeployDelete.isEmpty()) {
-//                Map<String, List<DBItemDeploymentHistory>> grouped = depHistoryDBItemsToDeployDelete.stream().collect(Collectors.groupingBy(
-//                        DBItemDeploymentHistory::getPath));
-//                depHistoryDBItemsToDeployDelete = grouped.values().stream().map(item -> item.get(0)).collect(Collectors.toList());
-//            }
-//        }
-//        
-//        final String commitId = UUID.randomUUID().toString();
-//        final String commitIdForDeleteFromFolder = UUID.randomUUID().toString();
-//        Set<DBItemInventoryConfiguration> invConfigurationsToDelete = new HashSet<>();
-//        Map<String, List<DBItemDeploymentHistory>> itemsToDeletePerController = new HashMap<String, List<DBItemDeploymentHistory>>();
-//        Map<String, List<DBItemDeploymentHistory>> itemsFromFolderToDeletePerController = new HashMap<String, List<DBItemDeploymentHistory>>();
-//
-//        // optimistic DB operations
-//        for (String controllerId : controllerIds) {
-//            if (foldersToDelete != null && !foldersToDelete.isEmpty()) {
-//                itemsFromFolderToDeletePerController.put(controllerId, foldersToDelete.stream().map(item -> dbLayer
-//                            .getLatestDepHistoryItemsFromFolder(item.getPath(), controllerId, item.getRecursive())).filter(Objects::nonNull).flatMap(
-//                                    List::stream).collect(Collectors.toList()));
-//                // store history entries optimistically
-//                invConfigurationsToDelete.addAll(getInvConfigurationsForTrash(dbLayer, storeNewDepHistoryEntries(dbLayer, 
-//                        itemsFromFolderToDeletePerController.get(controllerId), commitIdForDeleteFromFolder, null, account, auditlogId)));
-//            }
-//            if (depHistoryDBItemsToDeployDelete != null && !depHistoryDBItemsToDeployDelete.isEmpty()) {
-//                itemsToDeletePerController.put(controllerId, depHistoryDBItemsToDeployDelete);
-//                // store history entries optimistically
-//                invConfigurationsToDelete.addAll(getInvConfigurationsForTrash(dbLayer, storeNewDepHistoryEntries(dbLayer, 
-//                        itemsToDeletePerController.get(controllerId), commitIdForDeleteFromFolder, null, account, auditlogId)));
-//            }
-//        }
-//        // delete configurations optimistically
-//        deleteConfigurations(dbLayer, foldersToDelete, invConfigurationsToDelete, accessToken, jocError, auditlogId, withoutFolderDeletion);
-//
-//        // send commands to controllers
-//        for (String controllerId : controllerIds) {
-//            if (itemsToDeletePerController.get(controllerId) != null && !itemsToDeletePerController.get(controllerId).isEmpty()) {
-//                // send command to controller
-//                UpdateItemUtils.updateItemsDelete(commitId, itemsToDeletePerController.get(controllerId), controllerId).thenAccept(
-//                        either -> processAfterDelete(either, controllerId, account, commitId, accessToken, jocError, cancelOrderDate));
-//            }
-//            // process folder to Delete
-//            if (itemsFromFolderToDeletePerController.get(controllerId) != null && !itemsFromFolderToDeletePerController.get(controllerId).isEmpty()) {
-//                UpdateItemUtils.updateItemsDelete(commitIdForDeleteFromFolder, itemsFromFolderToDeletePerController.get(controllerId), controllerId).thenAccept(
-//                        either -> processAfterDelete(either, controllerId, account, commitIdForDeleteFromFolder, accessToken, jocError, cancelOrderDate));
-//            }
-//        }
-//        return true;
-//    }
-//    
     public static void processAfterDelete(Either<Problem, Void> either, String controllerId, String account, String commitId, 
             String accessToken, JocError jocError, String cancelOrderDate) {
         processAfterDelete(either, controllerId, account, commitId, accessToken, jocError, cancelOrderDate, null, null);
     }
-
     
     public static void processAfterDelete(Either<Problem, Void> either, String controllerId, String account, String commitId, 
             String accessToken, JocError jocError, String cancelOrderDate, List<DBItemDeploymentHistory> toDelete, String commitId2) {
@@ -271,6 +207,7 @@ public class DeleteDeployments {
 
                 // get all already optimistically stored entries for the commit
                 List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(commitId);
+               
                 // update all previously optimistically stored entries with the error message and change the state
                 Map<Integer, Set<DBItemInventoryConfigurationTrash>> itemsFromTrashByType = 
                         new HashMap<Integer, Set<DBItemInventoryConfigurationTrash>>();
@@ -291,15 +228,20 @@ public class DeleteDeployments {
                     }
                 }
                 if(!itemsFromTrashByType.isEmpty()) {
+                    Set<Path> parentFolders = new HashSet<Path>();
                     for (ConfigurationType objType : RESTORE_ORDER) {
                         Set<DBItemInventoryConfigurationTrash> itemsFromTrash = itemsFromTrashByType.get(objType.intValue());
                         if(itemsFromTrash != null) {
                             for (DBItemInventoryConfigurationTrash trashItem : itemsFromTrash) {
                                 if (trashItem != null) {
+                                    parentFolders.add(Paths.get(trashItem.getFolder()));
                                     JocInventory.insertConfiguration(invDbLayer, recreateItem(trashItem, null, invDbLayer));
                                 }
                             }
                         }
+                    }
+                    for(Path parentFolder : parentFolders) {
+                        JocInventory.makeParentDirs(invDbLayer, parentFolder, ConfigurationType.FOLDER);
                     }
                 }
                 // if not successful the objects and the related controllerId have to be stored 
@@ -307,6 +249,9 @@ public class DeleteDeployments {
                 dbLayer.createSubmissionForFailedDeployments(optimisticEntries);
             } else {
                 if(toDelete != null && commitId2 != null && !toDelete.isEmpty() ) {
+                    try {
+                        TimeUnit.SECONDS.sleep(4);
+                    } catch (InterruptedException e) {}
                     UpdateItemUtils.updateItemsDelete(commitId2, toDelete, controllerId)
                     .thenAccept(either2 -> {
                         processAfterDelete(either2, controllerId, account, commitId2, accessToken, jocError, cancelOrderDate);
