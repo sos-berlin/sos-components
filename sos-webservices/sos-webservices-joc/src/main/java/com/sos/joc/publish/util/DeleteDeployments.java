@@ -31,6 +31,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.Validator;
+import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.dailyplan.impl.DailyPlanCancelOrderImpl;
 import com.sos.joc.dailyplan.impl.DailyPlanDeleteOrdersImpl;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
@@ -49,6 +50,8 @@ import com.sos.joc.publish.db.DBLayerDeploy;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
+import js7.data.orderwatch.OrderWatchPath;
+import js7.proxy.javaapi.JControllerProxy;
 
 public class DeleteDeployments {
 
@@ -73,8 +76,7 @@ public class DeleteDeployments {
             ConfigurationType.FILEORDERSOURCE, 
             ConfigurationType.SCHEDULE);
 
-
-    public static Set<DBItemInventoryConfiguration> delete(Collection<DBItemDeploymentHistory> dbItems, DBLayerDeploy dbLayer, String account, String accessToken,
+     public static Set<DBItemInventoryConfiguration> delete(Collection<DBItemDeploymentHistory> dbItems, DBLayerDeploy dbLayer, String account, String accessToken,
             JocError jocError, Long auditlogId, boolean withoutFolderDeletion, boolean withEvents, String cancelOrderDate) throws SOSHibernateException {
         if (dbItems == null || dbItems.isEmpty()) {
             return Collections.emptySet();
@@ -113,10 +115,11 @@ public class DeleteDeployments {
                 }
                 
                 // send commands to controllers
+                Set<String> fileOrderSourceNames = fileOrderSourceItems.stream().map(item -> item.getName()).collect(Collectors.toSet());
                 UpdateItemUtils.updateItemsDelete(commitIdforFileOrderSource, fileOrderSourceItems, entry.getKey())
                     .thenAccept(either -> {
                         processAfterDelete(either, entry.getKey(), account, commitIdforFileOrderSource, accessToken, jocError, cancelOrderDate,
-                                sortedItems, commitId);
+                                sortedItems, commitId, fileOrderSourceNames);
                     });
             }
         }
@@ -178,10 +181,11 @@ public class DeleteDeployments {
                         }
                     }
                     // send commands to controllers
+                    Set<String> fileOrderSourceNames = fileOrderSourceItems.stream().map(item -> item.getName()).collect(Collectors.toSet());
                     UpdateItemUtils.updateItemsDelete(commitIdForDeleteFileOrderSource, fileOrderSourceItems, controllerId).thenAccept(
                             either -> {
                                 processAfterDelete(either, controllerId, account, commitIdForDeleteFileOrderSource, accessToken, jocError, cancelOrderDate,
-                                        sortedItems, commitIdForDeleteFromFolder);
+                                        sortedItems, commitIdForDeleteFromFolder, fileOrderSourceNames);
                             });
                 }
             }
@@ -191,11 +195,11 @@ public class DeleteDeployments {
     
     public static void processAfterDelete(Either<Problem, Void> either, String controllerId, String account, String commitId, 
             String accessToken, JocError jocError, String cancelOrderDate) {
-        processAfterDelete(either, controllerId, account, commitId, accessToken, jocError, cancelOrderDate, null, null);
+        processAfterDelete(either, controllerId, account, commitId, accessToken, jocError, cancelOrderDate, null, null, null);
     }
     
     public static void processAfterDelete(Either<Problem, Void> either, String controllerId, String account, String commitId, 
-            String accessToken, JocError jocError, String cancelOrderDate, List<DBItemDeploymentHistory> toDelete, String commitId2) {
+            String accessToken, JocError jocError, String cancelOrderDate, List<DBItemDeploymentHistory> toDelete, String commitId2, Set<String> fileOrderSourceNames) {
         SOSHibernateSession newHibernateSession = null;
         try {
             if (either.isLeft()) {
@@ -237,6 +241,7 @@ public class DeleteDeployments {
                                 if (trashItem != null) {
                                     parentFolders.add(Paths.get(trashItem.getFolder()));
                                     JocInventory.insertConfiguration(invDbLayer, recreateItem(trashItem, null, invDbLayer));
+                                    invDbLayer.getSession().delete(trashItem);
                                 }
                             }
                         }
@@ -249,10 +254,21 @@ public class DeleteDeployments {
                 // in a submissions table for reprocessing
                 dbLayer.createSubmissionForFailedDeployments(optimisticEntries);
             } else {
-                if(toDelete != null && commitId2 != null && !toDelete.isEmpty() ) {
-                    try {
-                        TimeUnit.SECONDS.sleep(4);
-                    } catch (InterruptedException e) {}
+                if(toDelete != null && commitId2 != null && !toDelete.isEmpty() && fileOrderSourceNames != null && !fileOrderSourceNames.isEmpty() ) {
+                    JControllerProxy proxy = Proxy.of(controllerId);
+                    Set<OrderWatchPath> fosPaths = fileOrderSourceNames.stream().map(fos -> OrderWatchPath.of(fos)).collect(Collectors.toSet());
+                    Instant start = Instant.now();
+                    for (int second = 0; second < 10; second++) {
+                        try {
+                            if (second < 9 && !proxy.currentState().pathToFileWatch().keySet().stream().anyMatch(fos -> fosPaths.contains(fos))) {
+                                // file order source is deleted
+                                break;
+                            }
+                            TimeUnit.SECONDS.sleep(1L);
+                        } catch (Exception e) {}
+                        Instant waiting = Instant.now();
+                    }
+                    
                     UpdateItemUtils.updateItemsDelete(commitId2, toDelete, controllerId)
                     .thenAccept(either2 -> {
                         processAfterDelete(either2, controllerId, account, commitId2, accessToken, jocError, cancelOrderDate);
