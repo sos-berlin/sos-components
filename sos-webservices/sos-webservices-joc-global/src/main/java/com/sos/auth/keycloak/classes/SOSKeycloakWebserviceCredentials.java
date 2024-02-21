@@ -26,6 +26,7 @@ public class SOSKeycloakWebserviceCredentials {
     private String accessToken = "";
     private String serviceUrl;
     private Long identityServiceId;
+    private String compatibility;
 
     
     public Long getIdentityServiceId() {
@@ -159,6 +160,10 @@ public class SOSKeycloakWebserviceCredentials {
                     adminPassword = getProperty(properties.getKeycloak().getIamKeycloakAdminPassword(), "");
                 }
 
+                if (compatibility == null) {
+                    compatibility = getProperty(properties.getKeycloak().getIamKeycloakCompatibility(), "/auth");
+                }
+
                 String truststorePathGui = getProperty(properties.getKeycloak().getIamKeycloakTruststorePath(), "");
                 String truststorePassGui = getProperty(properties.getKeycloak().getIamKeycloakTruststorePassword(), "");
                 String tTypeGui = getProperty(properties.getKeycloak().getIamKeycloakTruststoreType(), "");
@@ -214,6 +219,12 @@ public class SOSKeycloakWebserviceCredentials {
                 + ", truststorePath=" + truststorePath + ", truststorePassword=" + truststorePassword + ", truststoreType=" + truststoreType
                 + ", adminAccount=" + adminAccount + ", adminPassword=" + adminPassword + ", clientSecret=" + clientSecret + ", clientId="
                 + clientId + ", realm=" + realm + "]";
+    }
+
+
+    
+    public String getCompatibility() {
+        return compatibility;
     }
 
 }
