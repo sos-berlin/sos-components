@@ -34,6 +34,7 @@ import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
 public class SOSKeycloakHandler {
 
+    private static final String KEYCLOAK_COMPATIBILITY = "16";
     private static final String APPLICATION_X_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded";
     private static final boolean POST = true;
     private static final boolean GET = false;
@@ -52,7 +53,7 @@ public class SOSKeycloakHandler {
 
     private String getRelativePath() {
         if (this.webserviceCredentials.getCompatibility() == null || this.webserviceCredentials.getCompatibility().isEmpty()
-                || this.webserviceCredentials.getCompatibility().equalsIgnoreCase("16")) {
+                || this.webserviceCredentials.getCompatibility().equalsIgnoreCase(KEYCLOAK_COMPATIBILITY)) {
             return "/auth";
         } else {
             return "";
