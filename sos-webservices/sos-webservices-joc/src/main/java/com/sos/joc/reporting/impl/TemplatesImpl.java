@@ -22,11 +22,7 @@ public class TemplatesImpl extends JOCResourceImpl implements ITemplatesResource
         try {
             initLogging(IMPL_PATH, filterBytes, accessToken);
             
-            boolean permitted = true;
-
-            // TODO: PERMISSIONS, maybe a new permission
-
-            JOCDefaultResponse response = initPermissions(null, permitted);
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getReports().getView());
             if (response != null) {
                 return response;
             }

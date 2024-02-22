@@ -26,18 +26,19 @@ public class ReportingDBLayer extends DBLayer {
             StringBuilder hql = new StringBuilder();
             hql.append("select rh.id as id");
             hql.append(",rh.runId as runId");
-            hql.append(",rr.name as name");
+            hql.append(",rr.path as path");
             hql.append(",rr.title as title");
             hql.append(",rh.templateId as templateId");
             hql.append(",rh.frequency as frequency");
-            hql.append(",rh.size as hits");
+            hql.append(",rh.hits as hits");
             hql.append(",rh.dateFrom as dateFrom");
             hql.append(",rh.dateTo as dateTo");
             hql.append(",rh.created as created");
+            hql.append(",rh.modified as modified");
             if (!compact) {
                 hql.append(",rh.content as content"); 
             }
-            hql.append(" from ").append(DBLayer.DBITEM_REPORT_HISTORY).append(" rh ");
+            hql.append(" from ").append(DBLayer.DBITEM_REPORTS).append(" rh ");
             hql.append("left join ").append(DBLayer.DBITEM_REPORT_RUN).append(" rr ");
             hql.append("on rh.runId=rr.id");
             
@@ -92,6 +93,21 @@ public class ReportingDBLayer extends DBLayer {
                 return Collections.emptyList();
             }
             return result;
+            
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public DBItemReport getReport(String constraint) {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("from ").append(DBLayer.DBITEM_REPORTS).append(" where constraintHash = :constraintHash");
+            Query<DBItemReport> query = getSession().createQuery(sql.toString());
+            query.setParameter("constraintHash", constraint);
+            return getSession().getSingleResult(query);
             
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);

@@ -69,7 +69,7 @@ import com.sos.joc.db.monitoring.DBItemNotificationAcknowledgement;
 import com.sos.joc.db.monitoring.DBItemNotificationMonitor;
 import com.sos.joc.db.monitoring.DBItemNotificationWorkflow;
 import com.sos.joc.db.monitoring.DBItemSystemNotification;
-import com.sos.joc.db.reporting.DBItemReportHistory;
+import com.sos.joc.db.reporting.DBItemReport;
 import com.sos.joc.db.reporting.DBItemReportRun;
 import com.sos.joc.db.reporting.DBItemReportTemplate;
 import com.sos.joc.db.search.DBItemSearchWorkflow;
@@ -351,9 +351,9 @@ public class DBLayer implements Serializable {
     public static final String TABLE_IAM_ROLES_SEQUENCE = "SEQ_IAM_ROLES";
     
     /** Reporting tables */
-    public static final String DBITEM_REPORT_HISTORY = DBItemReportHistory.class.getSimpleName();
-    public static final String TABLE_REPORT_HISTORY = "REPORT_HISTORY";
-    public static final String TABLE_REPORT_HISTORY_SEQUENCE = "SEQ_REP_HIS";
+    public static final String DBITEM_REPORTS = DBItemReport.class.getSimpleName();
+    public static final String TABLE_REPORTS = "REPORTS";
+    public static final String TABLE_REPORTS_SEQUENCE = "SEQ_REP_REP";
     
     public static final String DBITEM_REPORT_RUN = DBItemReportRun.class.getSimpleName();
     public static final String TABLE_REPORT_RUNS = "REPORT_RUNS";
@@ -536,7 +536,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemIamFido2Requests.class);
         cl.add(DBItemIamFido2Devices.class);
         
-        cl.add(DBItemReportHistory.class);
+        cl.add(DBItemReport.class);
         cl.add(DBItemReportRun.class);
 
         cl.merge(getHistoryClassMapping().getClasses());

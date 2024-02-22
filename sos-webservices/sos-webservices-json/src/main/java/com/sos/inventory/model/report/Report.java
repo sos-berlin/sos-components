@@ -77,7 +77,7 @@ public class Report implements IInventoryObject, IConfigurationObject, IReleaseO
     @JsonProperty("hits")
     private Integer hits;
     @JsonProperty("controllerId")
-    private Object controllerId;
+    private String controllerId;
     /**
      * 
      * (Required)
@@ -106,7 +106,7 @@ public class Report implements IInventoryObject, IConfigurationObject, IReleaseO
      * @param frequencies
      * @param monthTo
      */
-    public Report(String version, String title, Integer templateId, Set<Frequency> frequencies, Integer hits, Object controllerId, String monthFrom, String monthTo) {
+    public Report(String version, String title, Integer templateId, Set<Frequency> frequencies, Integer hits, String controllerId, String monthFrom, String monthTo) {
         super();
         this.version = version;
         this.title = title;
@@ -227,12 +227,12 @@ public class Report implements IInventoryObject, IConfigurationObject, IReleaseO
     }
 
     @JsonProperty("controllerId")
-    public Object getControllerId() {
+    public String getControllerId() {
         return controllerId;
     }
 
     @JsonProperty("controllerId")
-    public void setControllerId(Object controllerId) {
+    public void setControllerId(String controllerId) {
         this.controllerId = controllerId;
     }
 

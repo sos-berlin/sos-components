@@ -1,6 +1,7 @@
 package com.sos.joc.classes.reporting;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -8,10 +9,14 @@ import java.nio.file.Paths;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.joc.db.DBLayer;
 
@@ -26,6 +31,7 @@ public abstract class AReporting {
     protected static final Path reportingDir = Paths.get("reporting").toAbsolutePath();
     protected static final Path dataDir = reportingDir.resolve("data");
     protected static final Path tmpDir = reportingDir.resolve("tmp");
+    private static final Logger LOGGER = LoggerFactory.getLogger(AReporting.class);
     
     protected static final Map<ReportingType, Collection<CSVColumns>> CSV_COLUMNS = Collections.unmodifiableMap(
             new HashMap<ReportingType, Collection<CSVColumns>>() {
@@ -90,6 +96,24 @@ public abstract class AReporting {
     
     protected static String getCsvHQL(ReportingType type) {
         return CSV_COLUMNS.get(type).stream().map(CSVColumns::hqlValue).collect(Collectors.joining(",';',", "concat(", ")"));
+    }
+    
+    public static void deleteTmpFolder() {
+        try {
+            if (Files.exists(tmpDir)) {
+                Files.walk(tmpDir).sorted(Comparator.reverseOrder()).forEach(entry -> {
+                    try {
+                        if (!tmpDir.equals(entry)) {
+                            Files.delete(entry);
+                        }
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(String.format("%1$s couldn't be deleted: %2$s", entry.toString(), e.toString()), e);
+                    }
+                });
+            }
+        } catch (Exception e) {
+            LOGGER.warn("", e);
+        }
     }
     
 }

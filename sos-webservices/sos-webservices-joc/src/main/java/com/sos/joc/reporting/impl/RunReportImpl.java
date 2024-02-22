@@ -56,7 +56,7 @@ public class RunReportImpl extends JOCResourceImpl implements IRunReportResource
                 }
                 
                 Report reportRun = Globals.objectMapper.readValue(dbItem.getContent(), Report.class);
-                reportRun.setPath(dbItem.getName()); // TODO use Path after DB table change
+                reportRun.setPath(dbItem.getPath());
                 // TODO: map relative monthFrom/To to specific Month from now
                 if (reportRun.getMonthFrom() != null && !reportRun.getMonthFrom().matches("\\d{4}-\\d{2}")) {
                     throw new JocNotImplementedException("unsupported relative monthFrom");

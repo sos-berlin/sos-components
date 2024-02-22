@@ -14,7 +14,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
- * reports
+ * report runs
  * <p>
  * 
  * 

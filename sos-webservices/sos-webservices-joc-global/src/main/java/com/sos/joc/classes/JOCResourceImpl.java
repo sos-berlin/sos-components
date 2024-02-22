@@ -190,7 +190,7 @@ public class JOCResourceImpl {
         return checkRequiredParameter(paramKey, String.valueOf(paramVal));
     }
 
-    protected static String getParent(String path) {
+    public static String getParent(String path) {
         Path p = Paths.get(path).getParent();
         if (p == null) {
             return "/";

@@ -14,7 +14,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
- * reports
+ * reports from REPORT_HISTORY
  * <p>
  * 
  * 

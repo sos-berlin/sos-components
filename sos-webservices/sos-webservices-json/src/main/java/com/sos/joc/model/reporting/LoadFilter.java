@@ -18,7 +18,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "dateFrom"
+    "monthFrom",
+    "monthTo"
 })
 public class LoadFilter {
 
@@ -27,18 +28,25 @@ public class LoadFilter {
      * (Required)
      * 
      */
-    @JsonProperty("dateFrom")
+    @JsonProperty("monthFrom")
     @JsonPropertyDescription("A month in the format YYYY-MM")
-    private String dateFrom;
+    private String monthFrom;
+    /**
+     * A month in the format YYYY-MM
+     * 
+     */
+    @JsonProperty("monthTo")
+    @JsonPropertyDescription("A month in the format YYYY-MM")
+    private String monthTo;
 
     /**
      * A month in the format YYYY-MM
      * (Required)
      * 
      */
-    @JsonProperty("dateFrom")
-    public String getDateFrom() {
-        return dateFrom;
+    @JsonProperty("monthFrom")
+    public String getMonthFrom() {
+        return monthFrom;
     }
 
     /**
@@ -46,19 +54,37 @@ public class LoadFilter {
      * (Required)
      * 
      */
-    @JsonProperty("dateFrom")
-    public void setDateFrom(String dateFrom) {
-        this.dateFrom = dateFrom;
+    @JsonProperty("monthFrom")
+    public void setMonthFrom(String monthFrom) {
+        this.monthFrom = monthFrom;
+    }
+
+    /**
+     * A month in the format YYYY-MM
+     * 
+     */
+    @JsonProperty("monthTo")
+    public String getMonthTo() {
+        return monthTo;
+    }
+
+    /**
+     * A month in the format YYYY-MM
+     * 
+     */
+    @JsonProperty("monthTo")
+    public void setMonthTo(String monthTo) {
+        this.monthTo = monthTo;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("dateFrom", dateFrom).toString();
+        return new ToStringBuilder(this).append("monthFrom", monthFrom).append("monthTo", monthTo).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(dateFrom).toHashCode();
+        return new HashCodeBuilder().append(monthFrom).append(monthTo).toHashCode();
     }
 
     @Override
@@ -70,7 +96,7 @@ public class LoadFilter {
             return false;
         }
         LoadFilter rhs = ((LoadFilter) other);
-        return new EqualsBuilder().append(dateFrom, rhs.dateFrom).isEquals();
+        return new EqualsBuilder().append(monthFrom, rhs.monthFrom).append(monthTo, rhs.monthTo).isEquals();
     }
 
 }

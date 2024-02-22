@@ -32,17 +32,14 @@ public class LoadDataImpl extends JOCResourceImpl implements ILoadDataResource {
             JsonValidator.validateFailFast(filterBytes, LoadFilter.class);
             LoadFilter in = Globals.objectMapper.readValue(filterBytes, LoadFilter.class);
             
-            boolean permitted = true;
-
-            // TODO: PERMISSIONS, maybe a new permission
-
-            JOCDefaultResponse response = initPermissions(null, permitted);
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getReports().getManage());
             if (response != null) {
                 return response;
             }
             
             // TODO: event when ready without exception
-            LoadData.writeCSVFiles(in.getDateFrom()).thenAccept(e -> ProblemHelper.postExceptionEventIfExist(e, accessToken, getJocError(), null));
+            // TODO: consider in.getMonthTo()
+            LoadData.writeCSVFiles(in.getMonthFrom(), null).thenAccept(e -> ProblemHelper.postExceptionEventIfExist(e, accessToken, getJocError(), null));
             
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {

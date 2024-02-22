@@ -15,7 +15,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
- * template
+ * report item from REPORT_HISTORY
  * <p>
  * 
  * 
@@ -31,6 +31,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "hits",
     "dateFrom",
     "dateTo",
+    "modified",
     "created",
     "data"
 })
@@ -40,6 +41,7 @@ public class ReportItem {
      * non negative long
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("id")
@@ -59,8 +61,8 @@ public class ReportItem {
      * 
      * 
      */
-    @JsonProperty("name")
-    private String name;
+    @JsonProperty("path")
+    private String path;
     /**
      * string without < and >
      * <p>
@@ -124,6 +126,15 @@ public class ReportItem {
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date created;
     /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("modified")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
+    private Date modified;
+    /**
      * 
      * (Required)
      * 
@@ -135,6 +146,7 @@ public class ReportItem {
      * non negative long
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("id")
@@ -146,6 +158,7 @@ public class ReportItem {
      * non negative long
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("id")
@@ -183,9 +196,9 @@ public class ReportItem {
      * 
      * 
      */
-    @JsonProperty("name")
-    public String getName() {
-        return name;
+    @JsonProperty("path")
+    public String getPath() {
+        return path;
     }
 
     /**
@@ -194,9 +207,9 @@ public class ReportItem {
      * 
      * 
      */
-    @JsonProperty("name")
-    public void setName(String name) {
-        this.name = name;
+    @JsonProperty("path")
+    public void setPath(String path) {
+        this.path = path;
     }
 
     /**
@@ -358,6 +371,28 @@ public class ReportItem {
     public void setCreated(Date created) {
         this.created = created;
     }
+    
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("modified")
+    public Date getModified() {
+        return modified;
+    }
+
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("modified")
+    public void setModified(Date modified) {
+        this.modified = modified;
+    }
 
     /**
      * 
@@ -381,12 +416,12 @@ public class ReportItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("runId", runId).append("name", name).append("title", title).append("templateId", templateId).append("frequency", frequency).append("hits", hits).append("dateFrom", dateFrom).append("dateTo", dateTo).append("created", created).append("data", data).toString();
+        return new ToStringBuilder(this).append("id", id).append("runId", runId).append("path", path).append("title", title).append("templateId", templateId).append("frequency", frequency).append("hits", hits).append("dateFrom", dateFrom).append("dateTo", dateTo).append("created", created).append("modified", modified).append("data", data).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(hits).append(data).append(created).append(name).append(dateTo).append(id).append(runId).append(title).append(templateId).append(dateFrom).append(frequency).toHashCode();
+        return new HashCodeBuilder().append(hits).append(data).append(created).append(modified).append(path).append(dateTo).append(id).append(runId).append(title).append(templateId).append(dateFrom).append(frequency).toHashCode();
     }
 
     @Override
@@ -398,7 +433,7 @@ public class ReportItem {
             return false;
         }
         ReportItem rhs = ((ReportItem) other);
-        return new EqualsBuilder().append(hits, rhs.hits).append(data, rhs.data).append(created, rhs.created).append(name, rhs.name).append(dateTo, rhs.dateTo).append(id, rhs.id).append(runId, rhs.runId).append(title, rhs.title).append(templateId, rhs.templateId).append(dateFrom, rhs.dateFrom).append(frequency, rhs.frequency).isEquals();
+        return new EqualsBuilder().append(hits, rhs.hits).append(data, rhs.data).append(created, rhs.created).append(modified, rhs.modified).append(path, rhs.path).append(dateTo, rhs.dateTo).append(id, rhs.id).append(runId, rhs.runId).append(title, rhs.title).append(templateId, rhs.templateId).append(dateFrom, rhs.dateFrom).append(frequency, rhs.frequency).isEquals();
     }
 
 }

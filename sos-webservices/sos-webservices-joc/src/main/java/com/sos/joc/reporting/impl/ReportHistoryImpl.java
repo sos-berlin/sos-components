@@ -34,11 +34,7 @@ public class ReportHistoryImpl extends JOCResourceImpl implements IReportHistory
             JsonValidator.validateFailFast(filterBytes, ReportHistoryFilter.class);
             ReportHistoryFilter in = Globals.objectMapper.readValue(filterBytes, ReportHistoryFilter.class);
             
-            boolean permitted = true;
-
-            // TODO: PERMISSIONS, maybe a new permission
-
-            JOCDefaultResponse response = initPermissions(null, permitted);
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getReports().getView());
             if (response != null) {
                 return response;
             }
@@ -78,6 +74,7 @@ public class ReportHistoryImpl extends JOCResourceImpl implements IReportHistory
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             ReportingDBLayer dbLayer = new ReportingDBLayer(session);
             ReportItems entity = new ReportItems();
+            // TODO more request filter
             entity.setReports(dbLayer.getAllReports(in.getIds(), in.getCompact() == Boolean.TRUE).stream().map(mapToReportItem).filter(
                     Objects::nonNull).collect(Collectors.toList()));
             entity.setDeliveryDate(Date.from(Instant.now()));

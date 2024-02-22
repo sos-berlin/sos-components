@@ -14,7 +14,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
- * dateFrom filter for loading of reporting data
+ * report history
  * <p>
  * 
  * 
@@ -22,7 +22,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "ids",
-    "compact"
+    "compact",
+    "dateFrom",
+    "dateTo"
 })
 public class ReportHistoryFilter {
 
@@ -38,6 +40,24 @@ public class ReportHistoryFilter {
     @JsonProperty("compact")
     @JsonPropertyDescription("controls if the object's data is compact or detailed")
     private Boolean compact = false;
+    /**
+     * date
+     * <p>
+     * ISO date YYYY-MM-DD
+     * 
+     */
+    @JsonProperty("dateFrom")
+    @JsonPropertyDescription("ISO date YYYY-MM-DD")
+    private String dateFrom;
+    /**
+     * date
+     * <p>
+     * ISO date YYYY-MM-DD
+     * 
+     */
+    @JsonProperty("dateTo")
+    @JsonPropertyDescription("ISO date YYYY-MM-DD")
+    private String dateTo;
 
     @JsonProperty("ids")
     public Set<Long> getIds() {
@@ -71,14 +91,58 @@ public class ReportHistoryFilter {
         this.compact = compact;
     }
 
+    /**
+     * date
+     * <p>
+     * ISO date YYYY-MM-DD
+     * 
+     */
+    @JsonProperty("dateFrom")
+    public String getDateFrom() {
+        return dateFrom;
+    }
+
+    /**
+     * date
+     * <p>
+     * ISO date YYYY-MM-DD
+     * 
+     */
+    @JsonProperty("dateFrom")
+    public void setDateFrom(String dateFrom) {
+        this.dateFrom = dateFrom;
+    }
+
+    /**
+     * date
+     * <p>
+     * ISO date YYYY-MM-DD
+     * 
+     */
+    @JsonProperty("dateTo")
+    public String getDateTo() {
+        return dateTo;
+    }
+
+    /**
+     * date
+     * <p>
+     * ISO date YYYY-MM-DD
+     * 
+     */
+    @JsonProperty("dateTo")
+    public void setDateTo(String dateTo) {
+        this.dateTo = dateTo;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("ids", ids).append("compact", compact).toString();
+        return new ToStringBuilder(this).append("ids", ids).append("compact", compact).append("dateFrom", dateFrom).append("dateTo", dateTo).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(compact).append(ids).toHashCode();
+        return new HashCodeBuilder().append(dateTo).append(ids).append(compact).append(dateFrom).toHashCode();
     }
 
     @Override
@@ -90,7 +154,7 @@ public class ReportHistoryFilter {
             return false;
         }
         ReportHistoryFilter rhs = ((ReportHistoryFilter) other);
-        return new EqualsBuilder().append(compact, rhs.compact).append(ids, rhs.ids).isEquals();
+        return new EqualsBuilder().append(dateTo, rhs.dateTo).append(ids, rhs.ids).append(compact, rhs.compact).append(dateFrom, rhs.dateFrom).isEquals();
     }
 
 }

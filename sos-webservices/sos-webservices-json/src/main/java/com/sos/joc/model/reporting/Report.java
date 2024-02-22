@@ -11,7 +11,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
- * report conficuration
+ * report configuration with path
  * <p>
  * 
  * 

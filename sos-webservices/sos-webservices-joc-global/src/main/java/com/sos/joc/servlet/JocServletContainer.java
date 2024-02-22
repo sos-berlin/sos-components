@@ -31,6 +31,7 @@ import com.sos.joc.classes.proxy.ClusterWatch;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.classes.quicksearch.QuickSearchStore;
+import com.sos.joc.classes.reporting.AReporting;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.classes.workflow.WorkflowRefs;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
@@ -91,6 +92,7 @@ public class JocServletContainer extends ServletContainer {
         CompletableFuture.runAsync(() -> {
             SOSShell.printSystemInfos();
             SOSShell.printJVMInfos();
+            AReporting.deleteTmpFolder();
         });
         ClusterWatch.getInstance();
         JocClusterService.getInstance().start(StartupMode.automatic, true);

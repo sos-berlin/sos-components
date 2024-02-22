@@ -12,7 +12,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
- * parameter for a report run
+ * report run
  * <p>
  * 
  * 
@@ -20,7 +20,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "id",
-    "created"
+    "state",
+    "errorText",
+    "modified"
 })
 public class RunItem
     extends Report
@@ -35,14 +37,24 @@ public class RunItem
     @JsonProperty("id")
     private Long id;
     /**
+     * report run state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("state")
+    private ReportRunState state;
+    @JsonProperty("errorText")
+    private String errorText;
+    /**
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("created")
+    @JsonProperty("modified")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    private Date created;
+    private Date modified;
 
     /**
      * non negative long
@@ -67,14 +79,35 @@ public class RunItem
     }
 
     /**
-     * timestamp
+     * report run state
      * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
      * 
      */
-    @JsonProperty("created")
-    public Date getCreated() {
-        return created;
+    @JsonProperty("state")
+    public ReportRunState getState() {
+        return state;
+    }
+
+    /**
+     * report run state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("state")
+    public void setState(ReportRunState state) {
+        this.state = state;
+    }
+
+    @JsonProperty("errorText")
+    public String getErrorText() {
+        return errorText;
+    }
+
+    @JsonProperty("errorText")
+    public void setErrorText(String errorText) {
+        this.errorText = errorText;
     }
 
     /**
@@ -83,19 +116,30 @@ public class RunItem
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("created")
-    public void setCreated(Date created) {
-        this.created = created;
+    @JsonProperty("modified")
+    public Date getModified() {
+        return modified;
+    }
+
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("modified")
+    public void setModified(Date modified) {
+        this.modified = modified;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("id", id).append("created", created).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("id", id).append("state", state).append("errorText", errorText).append("modified", modified).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(created).append(id).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(errorText).append(modified).append(id).append(state).toHashCode();
     }
 
     @Override
@@ -107,7 +151,7 @@ public class RunItem
             return false;
         }
         RunItem rhs = ((RunItem) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(created, rhs.created).append(id, rhs.id).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(errorText, rhs.errorText).append(modified, rhs.modified).append(id, rhs.id).append(state, rhs.state).isEquals();
     }
 
 }

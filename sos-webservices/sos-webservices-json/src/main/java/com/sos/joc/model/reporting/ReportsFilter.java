@@ -13,7 +13,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
- * parameter for a report run
+ * reports request
  * <p>
  * 
  * 

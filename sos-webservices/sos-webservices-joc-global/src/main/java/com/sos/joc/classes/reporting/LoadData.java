@@ -30,19 +30,29 @@ public class LoadData extends AReporting {
     /**
      * 
      * @param monthFrom in the form yyyy-MM
+     * @param monthTo in the form yyyy-MM
      * @return
      */
-    public static CompletableFuture<Either<Exception, Void>> writeCSVFiles(final String monthFrom) {
-        String[] yearMonth = monthFrom.split("-");
-        return writeCSVFiles(LocalDate.of(Integer.valueOf(yearMonth[0]).intValue(), Integer.valueOf(yearMonth[1]).intValue(), 1).atStartOfDay());
+    public static CompletableFuture<Either<Exception, Void>> writeCSVFiles(final String monthFrom, final String monthTo) {
+        String[] yearMonthFrom = monthFrom.split("-");
+        LocalDateTime from = LocalDate.of(Integer.valueOf(yearMonthFrom[0]).intValue(), Integer.valueOf(yearMonthFrom[1]).intValue(), 1)
+                .atStartOfDay();
+        LocalDateTime to = null;
+        if (monthTo != null) {
+            String[] yearMonthTo = monthTo.split("-");
+            to = LocalDate.of(Integer.valueOf(yearMonthTo[0]).intValue(), Integer.valueOf(yearMonthTo[1]).intValue(), 1).atStartOfDay().plusMonths(1)
+                    .minusSeconds(1);
+        }
+        return writeCSVFiles(from, to);
     }
     
     /**
      * 
      * @param monthFrom - LocalDateTime of the first day of a month at 00:00:00
+     * @param monthTo - LocalDateTime of the last day of a month at 23:59:59
      * @return
      */
-    public static CompletableFuture<Either<Exception, Void>> writeCSVFiles(final LocalDateTime monthFrom) {
+    public static CompletableFuture<Either<Exception, Void>> writeCSVFiles(final LocalDateTime monthFrom, final LocalDateTime monthTo) {
         return CompletableFuture.supplyAsync(() -> {
             SOSHibernateSession session = null;
             ScrollableResults jobResult = null;
@@ -56,11 +66,12 @@ public class LoadData extends AReporting {
                 
                 LocalDateTime firstDayOfCurrentMonth = LocalDate.now(ZoneId.systemDefault()).withDayOfMonth(1).atStartOfDay();
                 LocalDateTime month = monthFrom;
+                LocalDateTime toMonth = (monthTo == null) ? firstDayOfCurrentMonth : monthTo;
                 
                 ReportingLoader jobsReporting = new ReportingLoader(ReportingType.JOBS);
                 ReportingLoader ordersReporting = new ReportingLoader(ReportingType.ORDERS);
                 
-                while (month.isBefore(firstDayOfCurrentMonth)) {
+                while (month.isBefore(toMonth)) {
                     jobResult = dbLayer.getCSV(jobsReporting, month);
                     boolean skipped = writeCSVFile(jobsReporting, month, dbLayer, emptyMonths, existingMonths);
                     if (!skipped) {
@@ -153,16 +164,5 @@ public class LoadData extends AReporting {
     
     private static Path getTmpMonthFile(ReportingLoader loader, String month) {
         return loader.getOutDir().resolve(month + ".csv~");
-    }
-    
-    private static boolean checkCSVFileExists(Path outdir, LocalDateTime month) throws IOException {
-        String _month = month.format(yearMonthFormatter);
-        Path monthFile = outdir.resolve(_month + ".csv");
-        return Files.notExists(monthFile);
-    }
-    
-    private static boolean checkLastMonthCSVFileExists() throws IOException {
-        return checkCSVFileExists(getDataDirectory(ReportingType.JOBS), LocalDate.now(ZoneId.systemDefault()).withDayOfMonth(1).atStartOfDay()
-                .minusMonths(1));
     }
 }
