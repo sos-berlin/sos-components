@@ -233,21 +233,22 @@ public class DeleteDeployments {
                     }
                 }
                 if(!itemsFromTrashByType.isEmpty()) {
-                    Set<Path> parentFolders = new HashSet<Path>();
+                    Set<String> parentFolders = new HashSet<String>();
                     for (ConfigurationType objType : RESTORE_ORDER) {
                         Set<DBItemInventoryConfigurationTrash> itemsFromTrash = itemsFromTrashByType.get(objType.intValue());
                         if(itemsFromTrash != null) {
                             for (DBItemInventoryConfigurationTrash trashItem : itemsFromTrash) {
                                 if (trashItem != null) {
-                                    parentFolders.add(Paths.get(trashItem.getFolder()));
+                                    parentFolders.add(trashItem.getFolder());
                                     JocInventory.insertConfiguration(invDbLayer, recreateItem(trashItem, null, invDbLayer));
                                     invDbLayer.getSession().delete(trashItem);
                                 }
                             }
                         }
                     }
-                    for(Path parentFolder : parentFolders) {
-                        JocInventory.makeParentDirs(invDbLayer, parentFolder, ConfigurationType.FOLDER);
+                    for(String parentFolder : parentFolders) {
+                        JocInventory.makeParentDirs(invDbLayer, Paths.get(parentFolder), ConfigurationType.FOLDER);
+                        JocInventory.postFolderEvent(parentFolder);
                     }
                 }
                 // if not successful the objects and the related controllerId have to be stored 
@@ -257,7 +258,6 @@ public class DeleteDeployments {
                 if(toDelete != null && commitId2 != null && !toDelete.isEmpty() && fileOrderSourceNames != null && !fileOrderSourceNames.isEmpty() ) {
                     JControllerProxy proxy = Proxy.of(controllerId);
                     Set<OrderWatchPath> fosPaths = fileOrderSourceNames.stream().map(fos -> OrderWatchPath.of(fos)).collect(Collectors.toSet());
-                    Instant start = Instant.now();
                     for (int second = 0; second < 10; second++) {
                         try {
                             if (second < 9 && !proxy.currentState().pathToFileWatch().keySet().stream().anyMatch(fos -> fosPaths.contains(fos))) {
@@ -266,7 +266,6 @@ public class DeleteDeployments {
                             }
                             TimeUnit.SECONDS.sleep(1L);
                         } catch (Exception e) {}
-                        Instant waiting = Instant.now();
                     }
                     
                     UpdateItemUtils.updateItemsDelete(commitId2, toDelete, controllerId)
