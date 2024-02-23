@@ -83,9 +83,15 @@ public class RunReportImpl extends JOCResourceImpl implements IRunReportResource
     @Override
     public JOCDefaultResponse runReport(String accessToken, byte[] filterBytes) {
         try {
+            Report in = Globals.objectMapper.readValue(filterBytes, Report.class);
+            
+            if (in.getPath() == null) {
+                return runReports(accessToken, filterBytes);
+            }
+            
             initLogging(IMPL_SINGLE_RUN_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, Report.class);
-            Report in = Globals.objectMapper.readValue(filterBytes, Report.class);
+            
             
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getReports().getManage());
             if (response != null) {

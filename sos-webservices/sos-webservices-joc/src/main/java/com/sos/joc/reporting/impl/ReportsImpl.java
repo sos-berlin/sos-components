@@ -55,6 +55,7 @@ public class ReportsImpl extends JOCResourceImpl implements IReportsResource {
                 try {
                     Report report = Globals.objectMapper.readValue(dbItem.getContent(), Report.class);
                     report.setPath(dbItem.getPath());
+                    report.setVersion(null);
                     return report;
                 } catch (Exception e) {
                     // TODO error handling

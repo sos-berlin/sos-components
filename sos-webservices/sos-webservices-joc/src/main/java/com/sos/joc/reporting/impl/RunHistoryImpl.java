@@ -61,7 +61,7 @@ public class RunHistoryImpl extends JOCResourceImpl implements IRunHistoryResour
             Function<DBItemReportRun, RunItem> mapToRunItem = dbItem -> {
                 try {
                     RunItem item = new RunItem();
-                    item.setId(dbItem.getId());
+                    item.setRunId(dbItem.getId());
                     item.setPath(dbItem.getPath());
                     item.setTitle(dbItem.getTitle());
                     item.setMonthFrom(SOSDate.format(dbItem.getDateFrom(), "yyyy-MM"));
@@ -73,6 +73,7 @@ public class RunHistoryImpl extends JOCResourceImpl implements IRunHistoryResour
                     item.setModified(dbItem.getModified());
                     item.setErrorText(dbItem.getErrorText());
                     item.setState(getState(dbItem.getStateAsEnum()));
+                    item.setVersion(null);
                     return item;
                 } catch (Exception e) {
                     // TODO: error handling

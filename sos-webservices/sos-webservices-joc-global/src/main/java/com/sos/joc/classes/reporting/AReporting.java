@@ -99,6 +99,7 @@ public abstract class AReporting {
     }
     
     public static void deleteTmpFolder() {
+        LOGGER.info("cleanup temporary report directory: " + tmpDir.toString());
         try {
             if (Files.exists(tmpDir)) {
                 Files.walk(tmpDir).sorted(Comparator.reverseOrder()).forEach(entry -> {

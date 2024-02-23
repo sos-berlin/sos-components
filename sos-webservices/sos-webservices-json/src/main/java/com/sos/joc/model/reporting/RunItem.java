@@ -19,7 +19,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "id",
+    "runId",
     "state",
     "errorText",
     "modified"
@@ -34,8 +34,8 @@ public class RunItem
      * 
      * 
      */
-    @JsonProperty("id")
-    private Long id;
+    @JsonProperty("runId")
+    private Long runId;
     /**
      * report run state
      * <p>
@@ -62,9 +62,9 @@ public class RunItem
      * 
      * 
      */
-    @JsonProperty("id")
-    public Long getId() {
-        return id;
+    @JsonProperty("runId")
+    public Long getRunId() {
+        return runId;
     }
 
     /**
@@ -73,9 +73,9 @@ public class RunItem
      * 
      * 
      */
-    @JsonProperty("id")
-    public void setId(Long id) {
-        this.id = id;
+    @JsonProperty("runId")
+    public void setRunId(Long runId) {
+        this.runId = runId;
     }
 
     /**
@@ -134,12 +134,12 @@ public class RunItem
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("id", id).append("state", state).append("errorText", errorText).append("modified", modified).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("runId", runId).append("state", state).append("errorText", errorText).append("modified", modified).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(errorText).append(modified).append(id).append(state).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(errorText).append(modified).append(runId).append(state).toHashCode();
     }
 
     @Override
@@ -151,7 +151,7 @@ public class RunItem
             return false;
         }
         RunItem rhs = ((RunItem) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(errorText, rhs.errorText).append(modified, rhs.modified).append(id, rhs.id).append(state, rhs.state).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(errorText, rhs.errorText).append(modified, rhs.modified).append(runId, rhs.runId).append(state, rhs.state).isEquals();
     }
 
 }
