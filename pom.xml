@@ -46,7 +46,7 @@
     <log4j2.version>2.21.1</log4j2.version>
     <commons.io.version>2.11.0</commons.io.version>
     <apache.commons.lang.version>3.12.0</apache.commons.lang.version>
-    <apache.commons.compress.version>1.24.0</apache.commons.compress.version>
+    <apache.commons.compress.version>1.26.0</apache.commons.compress.version>
     <apache.commons.csv.version>1.10.0</apache.commons.csv.version>
     <apache.commons.net.version>3.10.0</apache.commons.net.version>
     <apache.httpcomponents.httpclient.version>4.5.14</apache.httpcomponents.httpclient.version>
@@ -905,15 +905,4 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
-  <repositories>
-    <repository>
-      <id>central</id>
-      <name>Central Repository</name>
-      <url>https://repo1.maven.org/maven2</url>
-      <snapshots>
-        <enabled>false</enabled>
-        <updatePolicy>never</updatePolicy>
-      </snapshots>
-    </repository>
-  </repositories>
 </project>
