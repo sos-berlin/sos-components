@@ -18,6 +18,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import org.hibernate.query.Query;
 
@@ -44,6 +46,7 @@ import com.sos.joc.db.search.DBItemSearchWorkflow;
 import com.sos.joc.db.search.DBItemSearchWorkflow2DeploymentHistory;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.OperationType;
@@ -1010,6 +1013,78 @@ public class InventoryDBLayer extends DBLayer {
             }
             return result;
         }
+    }
+    
+    public List<DBItemInventoryReleasedConfiguration> getReleasedConfigurationsByFolder(Collection<Folder> folders, ConfigurationType type)
+            throws SOSHibernateException {
+        return getReleasedConfigurationsByFolder(folders, type == null ? Collections.emptyList() : Collections.singleton(type));
+    }
+    
+    public List<DBItemInventoryReleasedConfiguration> getReleasedConfigurationsByFolder(Collection<Folder> folders, Collection<ConfigurationType> types)
+            throws SOSHibernateException {
+        
+        if (folders == null) {
+            folders = Collections.emptySet();
+        }
+        
+        List<Folder> recursiveFolders = folders.stream().filter(Folder::getRecursive).collect(Collectors.toList());
+        List<String> clause = new ArrayList<>();
+        
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
+        
+        int typesSize = types == null ? 0 : types.size();
+        switch (typesSize) {
+        case 0:
+            break;
+        case 1:
+            clause.add("type=:type");
+            break;
+        default:
+            clause.add("types in (:types)");
+            break;
+        }
+        
+        String foldersClause = Stream.concat(IntStream.range(0, folders.size()).mapToObj(i -> "folder=:folder" + i), IntStream.range(0,
+                recursiveFolders.size()).mapToObj(i -> "folder like :folderlike" + i)).collect(Collectors.joining(" or "));
+
+        if (!foldersClause.isEmpty()) {
+            clause.add("(" + foldersClause + ")");
+        }
+        
+        if (!clause.isEmpty()) {
+            hql.append(clause.stream().collect(Collectors.joining(" and ", " where ", "")));
+        }
+
+        Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
+        
+
+        switch (typesSize) {
+        case 0:
+            break;
+        case 1:
+            query.setParameter("type", types.iterator().next().intValue());
+            break;
+        default:
+            query.setParameterList("types", types.stream().map(ConfigurationType::intValue).collect(Collectors.toSet()));
+            break;
+        }
+        
+        int i = 0;
+        for (Folder f : folders) {
+            query.setParameter("folder" + i, f.getFolder());
+            i++;
+        }
+        i = 0;
+        for (Folder f : recursiveFolders) {
+            query.setParameter("folderlike" + i, (f.getFolder() + "/%").replaceAll("//+", "/"));
+            i++;
+        }
+
+        List<DBItemInventoryReleasedConfiguration> result = getSession().getResultList(query);
+        if (result == null) {
+            return Collections.emptyList();
+        }
+        return result;
     }
     
     public List<String> getReleasedConfigurationPaths(List<String> names, ConfigurationType type)

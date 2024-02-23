@@ -7,7 +7,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
@@ -49,7 +51,7 @@ public class ReportsImpl extends JOCResourceImpl implements IReportsResource {
             
             boolean withFolderFilter = in.getFolders() != null && !in.getFolders().isEmpty();
             
-            List<DBItemInventoryReleasedConfiguration> dbItems = Collections.emptyList();
+            Stream<DBItemInventoryReleasedConfiguration> dbItems = Stream.empty();
             
             Function<DBItemInventoryReleasedConfiguration, Report> mapDbItemToReport = dbItem -> {
                 try {
@@ -63,25 +65,25 @@ public class ReportsImpl extends JOCResourceImpl implements IReportsResource {
                 }
             };
             
+            Predicate<DBItemInventoryReleasedConfiguration> isPermitted = item -> canAdd(item.getFolder(), permittedFolders);
+            
             connection = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventoryDBLayer dbLayer = new InventoryDBLayer(connection);
             
             if (in.getReportPaths() != null && !in.getReportPaths().isEmpty()) {
                 List<String> reportNames = in.getReportPaths().stream().map(JocInventory::pathToName).collect(Collectors.toList());
-                dbItems = dbLayer.getReleasedConfigurations(reportNames, ConfigurationType.REPORT);
+                dbItems = dbLayer.getReleasedConfigurations(reportNames, ConfigurationType.REPORT).stream().filter(isPermitted);
             } else if (withFolderFilter && (permittedFolders == null || permittedFolders.isEmpty())) {
-                // no folder permisions
+                // no folder permissions
             } else if (permittedFolders != null && !permittedFolders.isEmpty()) {
-                // TODO dbLayer.getReleasedConfigurations(reportNames, ConfigurationType.REPORT); needs folder filter
-//                dbFilter.setFolders(permittedFolders);
-                dbItems = dbLayer.getReleasedConfigurations(Collections.emptyList(), ConfigurationType.REPORT);
+                // isPermitted is already made with above folderPermissions.getPermittedFolders(in.getFolders());
+                dbItems = dbLayer.getReleasedConfigurationsByFolder(permittedFolders, ConfigurationType.REPORT).stream();
             } else {
-                dbItems = dbLayer.getReleasedConfigurations(Collections.emptyList(), ConfigurationType.REPORT);
+                dbItems = dbLayer.getReleasedConfigurations(Collections.emptyList(), ConfigurationType.REPORT).stream().filter(isPermitted);
             }
             
             Reports reports = new Reports();
-            reports.setReports(dbItems.stream().filter(item -> canAdd(item.getFolder(), permittedFolders)).map(mapDbItemToReport).filter(
-                    Objects::nonNull).collect(Collectors.toList()));
+            reports.setReports(dbItems.map(mapDbItemToReport).filter(Objects::nonNull).collect(Collectors.toList()));
             reports.setDeliveryDate(Date.from(Instant.now()));
             
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(reports));
