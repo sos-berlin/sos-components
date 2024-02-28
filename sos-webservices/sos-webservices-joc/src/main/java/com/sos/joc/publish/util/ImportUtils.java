@@ -1039,7 +1039,7 @@ public class ImportUtils {
     }
     
     private static boolean checkObjectNotEmpty(Report report) {
-        if (report != null && report.getFrequencies() == null && report.getTemplateId() == null) {
+        if (report != null && report.getFrequencies() == null && report.getTemplateName() == null) {
             return false;
         } else {
             return true;

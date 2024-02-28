@@ -2,6 +2,8 @@
 package com.sos.inventory.model.report;
 
 import java.util.Set;
+
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -25,7 +27,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "version",
     "title",
-    "templateId",
+    "templateName",
     "frequencies",
     "hits",
     "controllerId",
@@ -53,14 +55,14 @@ public class Report implements IInventoryObject, IConfigurationObject, IReleaseO
     @JsonProperty("title")
     private String title;
     /**
-     * non negative integer
+     * Template identifier for report
      * <p>
      * 
-     * (Required)
      * 
      */
-    @JsonProperty("templateId")
-    private Integer templateId;
+    @JsonProperty("templateName")
+    @JsonAlias({ "templateId" })
+    private TemplateId templateName;
     /**
      * 
      * (Required)
@@ -99,18 +101,18 @@ public class Report implements IInventoryObject, IConfigurationObject, IReleaseO
      * 
      * @param hits
      * @param controllerId
+     * @param templateName
      * @param monthFrom
      * @param title
-     * @param templateId
      * @param version
      * @param frequencies
      * @param monthTo
      */
-    public Report(String version, String title, Integer templateId, Set<Frequency> frequencies, Integer hits, String controllerId, String monthFrom, String monthTo) {
+    public Report(String version, String title, TemplateId templateName, Set<Frequency> frequencies, Integer hits, String controllerId, String monthFrom, String monthTo) {
         super();
         this.version = version;
         this.title = title;
-        this.templateId = templateId;
+        this.templateName = templateName;
         this.frequencies = frequencies;
         this.hits = hits;
         this.controllerId = controllerId;
@@ -163,27 +165,30 @@ public class Report implements IInventoryObject, IConfigurationObject, IReleaseO
     }
 
     /**
-     * non negative integer
+     * Template identifier for report
      * <p>
      * 
-     * (Required)
      * 
      */
-    @JsonProperty("templateId")
-    public Integer getTemplateId() {
-        return templateId;
+    @JsonProperty("templateName")
+    public TemplateId getTemplateName() {
+        return templateName;
     }
 
     /**
-     * non negative integer
+     * Template identifier for report
      * <p>
      * 
-     * (Required)
      * 
      */
+    @JsonProperty("templateName")
+    public void setTemplateName(TemplateId templateName) {
+        this.templateName = templateName;
+    }
+    
     @JsonProperty("templateId")
-    public void setTemplateId(Integer templateId) {
-        this.templateId = templateId;
+    public void setTemplateName(Integer templateId) {
+        this.templateName = TemplateId.fromValue(templateId);
     }
 
     /**
@@ -268,12 +273,12 @@ public class Report implements IInventoryObject, IConfigurationObject, IReleaseO
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("version", version).append("title", title).append("templateId", templateId).append("frequencies", frequencies).append("hits", hits).append("controllerId", controllerId).append("monthFrom", monthFrom).append("monthTo", monthTo).toString();
+        return new ToStringBuilder(this).append("version", version).append("title", title).append("templateName", templateName).append("frequencies", frequencies).append("hits", hits).append("controllerId", controllerId).append("monthFrom", monthFrom).append("monthTo", monthTo).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(hits).append(controllerId).append(monthFrom).append(title).append(templateId).append(version).append(frequencies).append(monthTo).toHashCode();
+        return new HashCodeBuilder().append(hits).append(controllerId).append(templateName).append(monthFrom).append(title).append(version).append(frequencies).append(monthTo).toHashCode();
     }
 
     @Override
@@ -285,7 +290,7 @@ public class Report implements IInventoryObject, IConfigurationObject, IReleaseO
             return false;
         }
         Report rhs = ((Report) other);
-        return new EqualsBuilder().append(hits, rhs.hits).append(controllerId, rhs.controllerId).append(monthFrom, rhs.monthFrom).append(title, rhs.title).append(templateId, rhs.templateId).append(version, rhs.version).append(frequencies, rhs.frequencies).append(monthTo, rhs.monthTo).isEquals();
+        return new EqualsBuilder().append(hits, rhs.hits).append(controllerId, rhs.controllerId).append(templateName, rhs.templateName).append(monthFrom, rhs.monthFrom).append(title, rhs.title).append(version, rhs.version).append(frequencies, rhs.frequencies).append(monthTo, rhs.monthTo).isEquals();
     }
 
 }

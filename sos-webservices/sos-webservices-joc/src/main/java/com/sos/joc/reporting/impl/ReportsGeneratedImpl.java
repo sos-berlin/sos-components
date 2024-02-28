@@ -17,14 +17,19 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.reporting.ReportHistoryFilter;
 import com.sos.joc.model.reporting.ReportItem;
 import com.sos.joc.model.reporting.ReportItems;
-import com.sos.joc.reporting.resource.IReportHistoryResource;
+import com.sos.joc.reporting.resource.IReportsGeneratedResource;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
 
 
 @Path(WebservicePaths.REPORTING)
-public class ReportHistoryImpl extends JOCResourceImpl implements IReportHistoryResource {
+public class ReportsGeneratedImpl extends JOCResourceImpl implements IReportsGeneratedResource {
+    
+    @Override
+    public JOCDefaultResponse showHistory(String accessToken, byte[] filterBytes) { //TODO deprecated
+        return show(accessToken, filterBytes);
+    }
     
     @Override
     public JOCDefaultResponse show(String accessToken, byte[] filterBytes) {

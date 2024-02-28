@@ -6,6 +6,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.Collections;
@@ -13,12 +15,15 @@ import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.model.reporting.Report;
 
 public abstract class AReporting {
     
@@ -115,6 +120,30 @@ public abstract class AReporting {
         } catch (Exception e) {
             LOGGER.warn("", e);
         }
+    }
+    
+    protected static LocalDateTime getLocalDateFrom(final String monthFrom) { //yyyy-MM[-dd]
+        if (monthFrom == null) {
+            return null; //should not occur
+        }
+        String[] yearMonthFrom = monthFrom.split("-");
+        return LocalDate.of(Integer.valueOf(yearMonthFrom[0]).intValue(), Integer.valueOf(yearMonthFrom[1]).intValue(), 1)
+                .atStartOfDay();
+    }
+    
+    protected static LocalDateTime getLocalDateTo(final String monthTo) { //yyyy-MM[-dd]
+        if (monthTo != null) {
+            return getLocalDateFrom(monthTo).plusMonths(1).minusSeconds(1);
+        }
+        return null;
+    }
+    
+    protected static LocalDateTime getLocalDateToOrNowIfNull(final String monthTo) { //yyyy-MM[-dd]
+        if (monthTo == null) {
+            LocalDate now = LocalDate.now();
+            return LocalDate.of(now.getYear(), now.getMonth(), 1).atStartOfDay().plusMonths(1).minusSeconds(1);
+        }
+        return getLocalDateFrom(monthTo).plusMonths(1).minusSeconds(1);
     }
     
 }

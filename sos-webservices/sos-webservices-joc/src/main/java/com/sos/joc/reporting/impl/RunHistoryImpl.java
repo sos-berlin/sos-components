@@ -69,7 +69,7 @@ public class RunHistoryImpl extends JOCResourceImpl implements IRunHistoryResour
                     item.setFrequencies(Arrays.asList(dbItem.getFrequencies().split(",")).stream().map(Integer::valueOf).sorted().map(
                             Frequency::fromValue).filter(Objects::nonNull).collect(Collectors.toSet()));
                     item.setHits(dbItem.getHits());
-                    item.setTemplateId(dbItem.getTemplateId());
+                    item.setTemplateName(dbItem.getTemplateId());
                     item.setModified(dbItem.getModified());
                     item.setErrorText(dbItem.getErrorText());
                     item.setState(getState(dbItem.getStateAsEnum()));

@@ -4,11 +4,14 @@ package com.sos.joc.model.reporting;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.report.Frequency;
+import com.sos.inventory.model.report.TemplateId;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -24,15 +27,15 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "id",
     "runId",
-    "name",
+    "path",
     "title",
-    "templateId",
+    "templateName",
     "frequency",
     "hits",
     "dateFrom",
     "dateTo",
-    "modified",
     "created",
+    "modified",
     "data"
 })
 public class ReportItem {
@@ -72,14 +75,15 @@ public class ReportItem {
     @JsonProperty("title")
     private String title;
     /**
-     * non negative integer
+     * Template identifier for report
      * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("templateId")
-    private Integer templateId;
+    @JsonProperty("templateName")
+    @JsonAlias({ "templateId" })
+    private TemplateId templateName;
     /**
      * Frequencies for report
      * <p>
@@ -233,29 +237,34 @@ public class ReportItem {
     public void setTitle(String title) {
         this.title = title;
     }
-
+    
     /**
-     * non negative integer
+     * Template identifier for report
      * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("templateId")
-    public Integer getTemplateId() {
-        return templateId;
+    @JsonProperty("templateName")
+    public TemplateId getTemplateName() {
+        return templateName;
     }
 
     /**
-     * non negative integer
+     * Template identifier for report
      * <p>
      * 
      * (Required)
      * 
      */
+    @JsonProperty("templateName")
+    public void setTemplateName(TemplateId templateName) {
+        this.templateName = templateName;
+    }
+    
     @JsonProperty("templateId")
-    public void setTemplateId(Integer templateId) {
-        this.templateId = templateId;
+    public void setTemplateName(Integer templateId) {
+        this.templateName = TemplateId.fromValue(templateId);
     }
 
     /**
@@ -371,7 +380,7 @@ public class ReportItem {
     public void setCreated(Date created) {
         this.created = created;
     }
-    
+
     /**
      * timestamp
      * <p>
@@ -416,12 +425,12 @@ public class ReportItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("runId", runId).append("path", path).append("title", title).append("templateId", templateId).append("frequency", frequency).append("hits", hits).append("dateFrom", dateFrom).append("dateTo", dateTo).append("created", created).append("modified", modified).append("data", data).toString();
+        return new ToStringBuilder(this).append("id", id).append("runId", runId).append("path", path).append("title", title).append("templateName", templateName).append("frequency", frequency).append("hits", hits).append("dateFrom", dateFrom).append("dateTo", dateTo).append("created", created).append("modified", modified).append("data", data).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(hits).append(data).append(created).append(modified).append(path).append(dateTo).append(id).append(runId).append(title).append(templateId).append(dateFrom).append(frequency).toHashCode();
+        return new HashCodeBuilder().append(data).append(created).append(title).append(dateFrom).append(frequency).append(hits).append(path).append(templateName).append(dateTo).append(modified).append(id).append(runId).toHashCode();
     }
 
     @Override
@@ -433,7 +442,7 @@ public class ReportItem {
             return false;
         }
         ReportItem rhs = ((ReportItem) other);
-        return new EqualsBuilder().append(hits, rhs.hits).append(data, rhs.data).append(created, rhs.created).append(modified, rhs.modified).append(path, rhs.path).append(dateTo, rhs.dateTo).append(id, rhs.id).append(runId, rhs.runId).append(title, rhs.title).append(templateId, rhs.templateId).append(dateFrom, rhs.dateFrom).append(frequency, rhs.frequency).isEquals();
+        return new EqualsBuilder().append(data, rhs.data).append(created, rhs.created).append(title, rhs.title).append(dateFrom, rhs.dateFrom).append(frequency, rhs.frequency).append(hits, rhs.hits).append(path, rhs.path).append(templateName, rhs.templateName).append(dateTo, rhs.dateTo).append(modified, rhs.modified).append(id, rhs.id).append(runId, rhs.runId).isEquals();
     }
 
 }

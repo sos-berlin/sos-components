@@ -57,8 +57,8 @@ public class DBItemReportRun extends DBItem {
     @Temporal(TemporalType.TIMESTAMP)
     private Date dateTo;
 
-//    @Column(name = "[CONTROLLER_ID]", nullable = true)
-//    private String controllerId;
+    @Column(name = "[CONTROLLER_ID]", nullable = true)
+    private String controllerId;
 
     @Column(name = "[STATE]", nullable = false)
     private Integer state;
@@ -149,13 +149,13 @@ public class DBItemReportRun extends DBItem {
         dateTo = val;
     }
     
-//    public String getControllerId() {
-//        return controllerId;
-//    }
-//
-//    public void setControllerId(String val) {
-//        controllerId = val;
-//    }
+    public String getControllerId() {
+        return controllerId;
+    }
+
+    public void setControllerId(String val) {
+        controllerId = val;
+    }
     
     public Integer getState() {
         return state;

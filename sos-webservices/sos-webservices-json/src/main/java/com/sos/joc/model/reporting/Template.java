@@ -4,6 +4,7 @@ package com.sos.joc.model.reporting;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.inventory.model.report.TemplateId;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -17,20 +18,24 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "templateId",
+    "templateName",
+    "isSupported",
     "title",
     "data"
 })
 public class Template {
 
     /**
-     * non negative integer
+     * Template identifier for report
      * <p>
      * 
+     * (Required)
      * 
      */
-    @JsonProperty("templateId")
-    private Integer templateId;
+    @JsonProperty("templateName")
+    private TemplateId templateName;
+    @JsonProperty("isSupported")
+    private Boolean isSupported = true;
     /**
      * string without < and >
      * <p>
@@ -42,16 +47,6 @@ public class Template {
     @JsonProperty("data")
     private TemplateData data;
 
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("templateId")
-    public Integer getTemplateId() {
-        return templateId;
-    }
 
     /**
      * non negative integer
@@ -61,14 +56,41 @@ public class Template {
      */
     @JsonProperty("templateId")
     public void setTemplateId(Integer templateId) {
-        this.templateId = templateId;
+        this.templateName = TemplateId.fromValue(templateId);
     }
-    
-    // the templates from joc-cockpit repo have an "id": "template_nr"
-    // this will be mapped during the deserialisation to "templateId": nr
-    @JsonProperty("id")
-    public void setId(String id) {
-        this.templateId = Integer.valueOf(id.replaceAll("\\D", ""));
+
+    /**
+     * Template identifier for report
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("templateName")
+    public TemplateId getTemplateName() {
+        return templateName;
+    }
+
+    /**
+     * Template identifier for report
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("templateName")
+    public void setTemplateName(TemplateId templateName) {
+        this.templateName = templateName;
+    }
+
+    @JsonProperty("isSupported")
+    public Boolean getIsSupported() {
+        return isSupported;
+    }
+
+    @JsonProperty("isSupported")
+    public void setIsSupported(Boolean isSupported) {
+        this.isSupported = isSupported;
     }
 
     /**
@@ -105,12 +127,12 @@ public class Template {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("templateId", templateId).append("title", title).append("data", data).toString();
+        return new ToStringBuilder(this).append("templateName", templateName).append("isSupported", isSupported).append("title", title).append("data", data).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(templateId).append(title).append(data).toHashCode();
+        return new HashCodeBuilder().append(isSupported).append(title).append(data).append(templateName).toHashCode();
     }
 
     @Override
@@ -122,7 +144,7 @@ public class Template {
             return false;
         }
         Template rhs = ((Template) other);
-        return new EqualsBuilder().append(templateId, rhs.templateId).append(title, rhs.title).append(data, rhs.data).isEquals();
+        return new EqualsBuilder().append(isSupported, rhs.isSupported).append(title, rhs.title).append(data, rhs.data).append(templateName, rhs.templateName).isEquals();
     }
 
 }

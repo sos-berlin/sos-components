@@ -55,6 +55,7 @@ import com.sos.inventory.model.job.InternalExecutableType;
 import com.sos.inventory.model.job.Job;
 import com.sos.inventory.model.jobresource.JobResource;
 import com.sos.inventory.model.jobtemplate.JobTemplate;
+import com.sos.inventory.model.report.Report;
 import com.sos.inventory.model.schedule.OrderParameterisation;
 import com.sos.inventory.model.schedule.OrderPositions;
 import com.sos.inventory.model.schedule.Schedule;
@@ -256,6 +257,11 @@ public class Validator {
             if (board.getEndOfLife() != null) {
                 validateExpression("$.endOfLife: ", board.getEndOfLife());
             }
+        } else if (ConfigurationType.REPORT.equals(type)) {
+            Report report = (Report) config;
+            if (!report.getTemplateName().isSupported()) {
+                throw new JocConfigurationException(String.format( "Template '%s' is not longer supported", report.getTemplateName().value()));
+            }
         }
     }
     
@@ -329,6 +335,11 @@ public class Validator {
                 // TODO something like validateOrderPreparation(workflow.getOrderPreparation());
                 validateJobResourceRefs(jobTemplate.getJobResourceNames(), invObjNames.getOrDefault(ConfigurationType.JOBRESOURCE, Collections
                         .emptySet()));
+            } else if (ConfigurationType.REPORT.equals(type)) {
+                Report report = (Report) config;
+                if (!report.getTemplateName().isSupported()) {
+                    throw new JocConfigurationException(String.format( "Template '%s' is not longer supported", report.getTemplateName().value()));
+                }
             }
         }
     }

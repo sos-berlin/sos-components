@@ -10,11 +10,16 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
-public interface IReportHistoryResource {
+public interface IReportsGeneratedResource {
 
-    public static final String PATH = "report/history";
+    public static final String PATH = "reports/generated";
     public static final String IMPL_PATH = WebservicePaths.getResourceImplPath(WebservicePaths.REPORTING, PATH);
 
+    @POST
+    @Path("report/history")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse showHistory(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    
     @POST
     @Path(PATH)
     @Produces({ MediaType.APPLICATION_JSON })

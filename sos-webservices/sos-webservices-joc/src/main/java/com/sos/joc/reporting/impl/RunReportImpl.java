@@ -17,7 +17,6 @@ import com.sos.joc.classes.reporting.RunReport;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.reporting.Report;
@@ -57,14 +56,7 @@ public class RunReportImpl extends JOCResourceImpl implements IRunReportResource
                 
                 Report reportRun = Globals.objectMapper.readValue(dbItem.getContent(), Report.class);
                 reportRun.setPath(dbItem.getPath());
-                // TODO: map relative monthFrom/To to specific Month from now
-                if (reportRun.getMonthFrom() != null && !reportRun.getMonthFrom().matches("\\d{4}-\\d{2}")) {
-                    throw new JocNotImplementedException("unsupported relative monthFrom");
-                }
-                if (reportRun.getMonthTo() != null && !reportRun.getMonthTo().matches("\\d{4}-\\d{2}")) {
-                    throw new JocNotImplementedException("unsupported relative monthTo");
-                }
-                // TODO: event when ready without exception
+                
                 RunReport.run(reportRun).thenAccept(e -> ProblemHelper.postExceptionEventIfExist(e, accessToken, getJocError(), null));
             }
             

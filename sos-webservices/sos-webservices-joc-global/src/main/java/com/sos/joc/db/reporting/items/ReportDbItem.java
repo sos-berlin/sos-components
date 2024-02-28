@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.util.SOSDate;
 import com.sos.inventory.model.report.Frequency;
+import com.sos.inventory.model.report.TemplateId;
 import com.sos.joc.model.reporting.ReportItem;
 
 public class ReportDbItem extends ReportItem {
@@ -13,6 +14,8 @@ public class ReportDbItem extends ReportItem {
     @JsonIgnore
     private byte[] content;
     
+//    @JsonIgnore
+//    private Integer templateId;
     
     @JsonIgnore
     public byte[] getContent() {
@@ -26,6 +29,15 @@ public class ReportDbItem extends ReportItem {
     
     public void setFrequency(Integer frequency) {
         super.setFrequency(Frequency.fromValue(frequency));
+    }
+    
+    @Override
+    public void setTemplateName(Integer templateId) {
+        try {
+            super.setTemplateName(TemplateId.fromValue(templateId));
+        } catch (IllegalArgumentException e) {
+            super.setTemplateName((TemplateId) null);
+        }
     }
     
     public void setDateFrom(Date dateFrom) {

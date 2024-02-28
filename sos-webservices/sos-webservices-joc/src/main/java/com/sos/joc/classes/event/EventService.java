@@ -52,6 +52,7 @@ import com.sos.joc.event.bean.proxy.ProxyCoupled;
 import com.sos.joc.event.bean.proxy.ProxyEvent;
 import com.sos.joc.event.bean.proxy.ProxyRemoved;
 import com.sos.joc.event.bean.proxy.ProxyRestarted;
+import com.sos.joc.event.bean.reporting.ReportingEvent;
 import com.sos.joc.event.bean.yade.YadeEvent;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerConnectionResetException;
@@ -328,6 +329,15 @@ public class EventService {
         eventSnapshot.setEventId(evt.getEventId() / 1000);
         eventSnapshot.setEventType(evt.getKey()); // InventoryTagsUpdated
         eventSnapshot.setObjectType(EventType.TAG);
+        addEvent(eventSnapshot);
+    }
+    
+    @Subscribe({ ReportingEvent.class })
+    public void createReportingEvent(ReportingEvent evt) {
+        EventSnapshot eventSnapshot = new EventSnapshot();
+        eventSnapshot.setEventId(evt.getEventId() / 1000);
+        eventSnapshot.setEventType(evt.getKey()); // ReportsUpdated, ReportRunsUpdated
+        eventSnapshot.setObjectType(EventType.REPORT);
         addEvent(eventSnapshot);
     }
 

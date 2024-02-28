@@ -20,6 +20,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.db.history.HistoryFilter;
 import com.sos.joc.db.history.JobHistoryDBLayer;
+import com.sos.joc.exceptions.JocBadRequestException;
 
 import io.vavr.control.Either;
 
@@ -34,16 +35,7 @@ public class LoadData extends AReporting {
      * @return
      */
     public static CompletableFuture<Either<Exception, Void>> writeCSVFiles(final String monthFrom, final String monthTo) {
-        String[] yearMonthFrom = monthFrom.split("-");
-        LocalDateTime from = LocalDate.of(Integer.valueOf(yearMonthFrom[0]).intValue(), Integer.valueOf(yearMonthFrom[1]).intValue(), 1)
-                .atStartOfDay();
-        LocalDateTime to = null;
-        if (monthTo != null) {
-            String[] yearMonthTo = monthTo.split("-");
-            to = LocalDate.of(Integer.valueOf(yearMonthTo[0]).intValue(), Integer.valueOf(yearMonthTo[1]).intValue(), 1).atStartOfDay().plusMonths(1)
-                    .minusSeconds(1);
-        }
-        return writeCSVFiles(from, to);
+        return writeCSVFiles(getLocalDateFrom(monthFrom), getLocalDateTo(monthTo));
     }
     
     /**
@@ -53,6 +45,23 @@ public class LoadData extends AReporting {
      * @return
      */
     public static CompletableFuture<Either<Exception, Void>> writeCSVFiles(final LocalDateTime monthFrom, final LocalDateTime monthTo) {
+        LocalDateTime firstDayOfCurrentMonth = LocalDate.now(ZoneId.systemDefault()).withDayOfMonth(1).atStartOfDay();
+        
+        if (!monthFrom.isBefore(firstDayOfCurrentMonth)) {
+            throw new JocBadRequestException("monthFrom has to be in the past");
+        }
+//        if (monthTo != null) {
+//            if (!monthTo.isBefore(firstDayOfCurrentMonth)) {
+//                throw new JocBadRequestException("monthTo has to be in the past");
+//            }
+//            if (monthTo.isBefore(monthFrom)) {
+//                throw new JocBadRequestException("monthTo must not be older than monthFrom");
+//            }
+//        }
+        
+        final LocalDateTime toMonth = (monthTo != null && !monthTo.isBefore(firstDayOfCurrentMonth)) ? monthTo : firstDayOfCurrentMonth;
+        
+        
         return CompletableFuture.supplyAsync(() -> {
             SOSHibernateSession session = null;
             ScrollableResults jobResult = null;
@@ -64,9 +73,7 @@ public class LoadData extends AReporting {
                 session = Globals.createSosHibernateStatelessConnection("ReportingLoadData");
                 JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(session, new HistoryFilter());
                 
-                LocalDateTime firstDayOfCurrentMonth = LocalDate.now(ZoneId.systemDefault()).withDayOfMonth(1).atStartOfDay();
                 LocalDateTime month = monthFrom;
-                LocalDateTime toMonth = (monthTo == null) ? firstDayOfCurrentMonth : monthTo;
                 
                 ReportingLoader jobsReporting = new ReportingLoader(ReportingType.JOBS);
                 ReportingLoader ordersReporting = new ReportingLoader(ReportingType.ORDERS);

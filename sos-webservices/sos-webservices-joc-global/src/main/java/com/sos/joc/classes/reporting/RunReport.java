@@ -15,6 +15,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -29,6 +31,9 @@ import com.sos.joc.classes.JOCSOSShell;
 import com.sos.joc.db.reporting.DBItemReport;
 import com.sos.joc.db.reporting.DBItemReportRun;
 import com.sos.joc.db.reporting.ReportingDBLayer;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.reporting.ReportRunsUpdated;
+import com.sos.joc.event.bean.reporting.ReportsUpdated;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.model.reporting.Report;
 import com.sos.joc.model.reporting.ReportRunStateText;
@@ -40,20 +45,14 @@ public class RunReport extends AReporting {
     private static final Logger LOGGER = LoggerFactory.getLogger(RunReport.class);
     
     public static CompletableFuture<Either<Exception, Void>> run(final Report in) {
-        
+
         in.setMonthFrom(relativeDateToSpecificDate(in.getMonthFrom()));
         in.setMonthTo(relativeDateToSpecificDate(in.getMonthTo()));
-        
-        //TODO: check in.getMonthFrom() in the past, in.getMonthFrom() before in.getMonthTo()
-        
-        if (in.getMonthFrom() != null) { //automatically load report data before run report
-            
-            return LoadData.writeCSVFiles(in.getMonthFrom(), in.getMonthTo()).thenApply(e -> {
-                if (e.isLeft()) {
-                    return e;
-                }
-                return _run(in);
-            });
+
+        if (in.getMonthFrom() != null) { // automatically load report data before run report
+
+            return LoadData.writeCSVFiles(in.getMonthFrom(), in.getMonthTo()).thenApply(e -> e.isLeft() ? e : _run(in));
+
         } else {
             return CompletableFuture.supplyAsync(() -> _run(in));
         }
@@ -63,10 +62,25 @@ public class RunReport extends AReporting {
         if (month == null) {
             return null;
         }
-        // TODO
+        if (month.matches("\\d+\\s*[mMyY]")) { //month is relative
+            Matcher m = Pattern.compile("(\\d+)\\s*([mMyY])").matcher(month);
+            if (m.find()) {
+                LocalDate ld = null;
+                switch(m.group(1).toLowerCase()) { //unit
+                case "m":
+                    ld = LocalDate.now().minusMonths(Long.valueOf(m.group(0)).longValue());
+                    break;
+                case "y":
+                    ld = LocalDate.now().minusYears(Long.valueOf(m.group(0)).longValue());
+                    break;
+                }
+                
+                return ld.getYear() + "-" + (ld.getMonthValue() < 10 ?  "" + ld.getMonthValue() : "0" + ld.getMonthValue());
+            }
+        }
         return month;
     }
-
+    
     private static Either<Exception, Void> _run(final Report in) {
         Set<Path> tempDirs = new HashSet<>();
         List<DBItemReport> dbItems = new ArrayList<>();
@@ -84,9 +98,11 @@ public class RunReport extends AReporting {
             }
             
             insert(in, runDbItem, dbItems);
+            EventBus.getInstance().post(new ReportsUpdated());
             return Either.right(null);
         } catch (Exception e) {
             updateFailedRun(runDbItem, e);
+            EventBus.getInstance().post(new ReportRunsUpdated());
             return Either.left(e);
         } finally {
             tempDirs.forEach(dir -> deleteTmpDir(dir));
@@ -96,7 +112,7 @@ public class RunReport extends AReporting {
     private static String getCommonScript(final Report in) {
         StringBuilder s = new StringBuilder()
                 .append("node app/run-report.js -i data -t app/templates/template_")
-                .append(in.getTemplateId())
+                .append(in.getTemplateName().intValue())
                 .append(".json");
         if (in.getMonthFrom() != null) {
             s.append(" -s ").append(in.getMonthFrom());
@@ -174,13 +190,13 @@ public class RunReport extends AReporting {
         dbItem.setPath(in.getPath());
         dbItem.setFolder(JOCResourceImpl.getParent(in.getPath()));
         dbItem.setTitle(in.getTitle());
-        dbItem.setTemplateId(in.getTemplateId());
+        dbItem.setTemplateId(in.getTemplateName().intValue());
         dbItem.setHits(in.getHits());
         dbItem.setFrequencies(in.getFrequencies().stream().map(Frequency::intValue).sorted().map(i -> i.toString()).collect(Collectors.joining(",")));
         dbItem.setDateFrom(getDate(getLocalDateFrom(in.getMonthFrom())));
-        dbItem.setDateTo(getDate(getLocalDateTo(in.getMonthTo())));
+        dbItem.setDateTo(getDate(getLocalDateToOrNowIfNull(in.getMonthTo())));
         dbItem.setState(state.intValue());
-//        dbItem.setControllerId(in.getControllerId());
+        dbItem.setControllerId(in.getControllerId());
         dbItem.setModified(now);
         dbItem.setCreated(now);
         return dbItem;
@@ -208,24 +224,6 @@ public class RunReport extends AReporting {
         return LocalDate.of(year, month, dayOfMonth).atStartOfDay();
     }
     
-    private static LocalDateTime getLocalDateFrom(final String yyyymm) {
-        if (yyyymm == null) {
-            return null; //should not occur
-        }
-        String[] dateParts = yyyymm.split("-");
-        int year = Integer.valueOf(dateParts[0]).intValue();
-        int month = Integer.valueOf(dateParts[1]).intValue();
-        return LocalDate.of(year, month, 1).atStartOfDay();
-    }
-    
-    private static LocalDateTime getLocalDateTo(final String yyyymm) {
-        if (yyyymm == null) {
-            LocalDate now = LocalDate.now();
-            return LocalDate.of(now.getYear(), now.getMonth(), 1).atStartOfDay().plusMonths(1).minusSeconds(1);
-        }
-        return getLocalDateFrom(yyyymm).plusMonths(1).minusSeconds(1);
-    }
-    
     private static LocalDateTime getLocalDateTo(LocalDateTime dateFrom, final Frequency frequency) {
         switch(frequency) {
         case WEEKLY:
@@ -251,6 +249,7 @@ public class RunReport extends AReporting {
         try {
             session = Globals.createSosHibernateStatelessConnection("StoreReportRun");
             session.save(runDbItem);
+            EventBus.getInstance().post(new ReportRunsUpdated());
             return runDbItem.getId();
         } finally {
             Globals.disconnect(session);
@@ -286,11 +285,12 @@ public class RunReport extends AReporting {
             Date now = Date.from(Instant.now());
             
             for (DBItemReport dbItem : dbItems) {
-                dbItem.setHits(runDbItem.getHits());
-                dbItem.setTemplateId(runDbItem.getTemplateId());
-                dbItem.setConstraintHash(dbItem.hashConstraint());
+                //dbItem.setHits(runDbItem.getHits());
+                //dbItem.setTemplateId(runDbItem.getTemplateId());
+                String constraintHash = dbItem.hashConstraint(runDbItem.getTemplateId(), runDbItem.getHits(), runDbItem.getControllerId());
+                dbItem.setConstraintHash(constraintHash);
 
-                DBItemReport oldItem = dbLayer.getReport(dbItem.getConstraintHash());
+                DBItemReport oldItem = dbLayer.getReport(constraintHash);
                 if (oldItem != null) {
                     oldItem.setRunId(runDbItem.getId());
                     oldItem.setModified(now);

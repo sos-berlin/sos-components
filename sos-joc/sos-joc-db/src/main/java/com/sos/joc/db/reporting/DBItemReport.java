@@ -36,15 +36,9 @@ public class DBItemReport extends DBItem {
     @Column(name = "[RUN_ID]", nullable = false)
     private Long runId;
 
-    @Column(name = "[TEMPLATE_ID]", nullable = false)
-    private Integer templateId;
-
     @Column(name = "[FREQUENCY]", nullable = false)
     private Integer frequency;
     
-    @Column(name = "[HITS]", nullable = false)
-    private Integer hits;
-
     @Column(name = "[DATE_FROM]", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date dateFrom;
@@ -90,14 +84,6 @@ public class DBItemReport extends DBItem {
         runId = val;
     }
     
-    public Integer getTemplateId() {
-        return templateId;
-    }
-
-    public void setTemplateId(Integer val) {
-        templateId = val;
-    }
-
     public Integer getFrequency() {
         return frequency;
     }
@@ -109,14 +95,6 @@ public class DBItemReport extends DBItem {
     @Transient
     public Frequency getFrequencyAsEnum() {
         return Frequency.fromValue(frequency);
-    }
-
-    public Integer getHits() {
-        return hits;
-    }
-
-    public void setHits(Integer val) {
-        hits = val;
     }
 
     public byte[] getContent() {
@@ -178,8 +156,9 @@ public class DBItemReport extends DBItem {
     }
     
     @Transient
-    public String hashConstraint() {
-        return SOSString.hash256(new StringBuilder().append(templateId).append(frequency).append(dateFrom).append(hits).toString());
+    public String hashConstraint(Integer templateId, Integer hits, String controllerId) {
+        return SOSString.hash256(new StringBuilder().append(templateId).append(frequency).append(dateFrom).append(hits).append(controllerId == null
+                ? "" : controllerId).toString());
     }
 
 }
