@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.sos.inventory.model.report.TemplateId;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -21,16 +22,19 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "ids",
+    "runIds",
     "compact",
     "dateFrom",
-    "dateTo"
+    "dateTo",
+    "templateNames"
 })
-public class ReportHistoryFilter {
+public class ReportHistoryFilter
+    extends ReportPaths
+{
 
-    @JsonProperty("ids")
+    @JsonProperty("runIds")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<Long> ids = new LinkedHashSet<Long>();
+    private Set<Long> runIds = new LinkedHashSet<Long>();
     /**
      * compact parameter
      * <p>
@@ -58,15 +62,18 @@ public class ReportHistoryFilter {
     @JsonProperty("dateTo")
     @JsonPropertyDescription("ISO date YYYY-MM-DD")
     private String dateTo;
+    @JsonProperty("templateNames")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<TemplateId> templateNames = new LinkedHashSet<TemplateId>();
 
-    @JsonProperty("ids")
-    public Set<Long> getIds() {
-        return ids;
+    @JsonProperty("runIds")
+    public Set<Long> getRunIds() {
+        return runIds;
     }
 
-    @JsonProperty("ids")
-    public void setIds(Set<Long> ids) {
-        this.ids = ids;
+    @JsonProperty("runIds")
+    public void setRunIds(Set<Long> runIds) {
+        this.runIds = runIds;
     }
 
     /**
@@ -135,14 +142,24 @@ public class ReportHistoryFilter {
         this.dateTo = dateTo;
     }
 
+    @JsonProperty("templateNames")
+    public Set<TemplateId> getTemplateNames() {
+        return templateNames;
+    }
+
+    @JsonProperty("templateNames")
+    public void setTemplateNames(Set<TemplateId> templateNames) {
+        this.templateNames = templateNames;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("ids", ids).append("compact", compact).append("dateFrom", dateFrom).append("dateTo", dateTo).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("runIds", runIds).append("compact", compact).append("dateFrom", dateFrom).append("dateTo", dateTo).append("templateNames", templateNames).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(dateTo).append(ids).append(compact).append(dateFrom).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(dateTo).append(runIds).append(templateNames).append(compact).append(dateFrom).toHashCode();
     }
 
     @Override
@@ -154,7 +171,7 @@ public class ReportHistoryFilter {
             return false;
         }
         ReportHistoryFilter rhs = ((ReportHistoryFilter) other);
-        return new EqualsBuilder().append(dateTo, rhs.dateTo).append(ids, rhs.ids).append(compact, rhs.compact).append(dateFrom, rhs.dateFrom).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(dateTo, rhs.dateTo).append(runIds, rhs.runIds).append(templateNames, rhs.templateNames).append(compact, rhs.compact).append(dateFrom, rhs.dateFrom).isEquals();
     }
 
 }

@@ -3,8 +3,8 @@ package com.sos.joc.db.reporting;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.hibernate.query.Query;
@@ -12,6 +12,7 @@ import org.hibernate.query.Query;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.inventory.model.report.TemplateId;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.reporting.items.ReportDbItem;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -26,7 +27,8 @@ public class ReportingDBLayer extends DBLayer {
         super(session);
     }
     
-    public List<ReportDbItem> getAllReports(Set<Long> ids, boolean compact) throws DBConnectionRefusedException, DBInvalidDataException {
+    public List<ReportDbItem> getGeneratedReports(Collection<Long> runIds, boolean compact, Collection<String> reportPaths,
+            Collection<TemplateId> templateNames, Date dateFrom, Date dateTo) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder();
             hql.append("select rh.id as id");
@@ -47,14 +49,68 @@ public class ReportingDBLayer extends DBLayer {
             hql.append("left join ").append(DBLayer.DBITEM_REPORT_RUN).append(" rr ");
             hql.append("on rh.runId=rr.id");
             
-            if (ids != null && !ids.isEmpty()) {
-                hql.append(" where rh.id in (:ids)");
+            List<String> clause = new ArrayList<>(4);
+            
+            if (runIds != null && !runIds.isEmpty()) {
+                if (runIds.size() == 1) {
+                    clause.add("rr.id =:runId");
+                } else {
+                    clause.add("rr.id in (:runIds)");
+                }
+            }
+            if (reportPaths != null && !reportPaths.isEmpty()) {
+                if (reportPaths.size() == 1) {
+                    clause.add("rr.name =:reportPath");
+                } else {
+                    clause.add("rr.name in (:reportPaths)");
+                }
+            }
+            if (templateNames != null && !templateNames.isEmpty()) {
+                if (templateNames.size() == 1) {
+                    clause.add("rr.templateId =:templateId");
+                } else {
+                    clause.add("rr.templateId in (:templateIds)");
+                }
+            }
+            if (dateFrom != null) {
+                clause.add("rh.dateFrom >= :dateFrom");
+            }
+            if (dateTo != null) {
+                clause.add("rh.dateTo < :dateTo");
+            }
+            
+            if (!clause.isEmpty()) {
+                hql.append(clause.stream().collect(Collectors.joining(" and ", " where ", "")));
             }
             
             Query<ReportDbItem> query = getSession().createQuery(hql.toString(), ReportDbItem.class);
             
-            if (ids != null && !ids.isEmpty()) {
-                query.setParameterList("ids", ids);
+            if (runIds != null && !runIds.isEmpty()) {
+                if (runIds.size() == 1) {
+                    query.setParameter("runId", runIds.iterator().next());
+                } else {
+                    query.setParameterList("runIds", runIds);
+                }
+            }
+            if (reportPaths != null && !reportPaths.isEmpty()) {
+                if (reportPaths.size() == 1) {
+                    query.setParameter("reportPath", JocInventory.pathToName(reportPaths.iterator().next()));
+                } else {
+                    query.setParameterList("reportPaths", reportPaths.stream().map(JocInventory::pathToName).collect(Collectors.toSet()));
+                }
+            }
+            if (templateNames != null && !templateNames.isEmpty()) {
+                if (templateNames.size() == 1) {
+                    query.setParameter("templateId", templateNames.iterator().next().intValue());
+                } else {
+                    query.setParameterList("templateIds", templateNames.stream().map(TemplateId::intValue).collect(Collectors.toList()));
+                }
+            }
+            if (dateFrom != null) {
+                query.setParameter("dateFrom", dateFrom);
+            }
+            if (dateTo != null) {
+                query.setParameter("dateTo", dateTo);
             }
             
             List<ReportDbItem> result = getSession().getResultList(query);
@@ -94,30 +150,30 @@ public class ReportingDBLayer extends DBLayer {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_REPORT_RUN);
             List<String> clause = new ArrayList<>(3);
-//            if (reportNames != null && !reportNames.isEmpty()) {
-//                clause.add("name in (:reportNames)");
-//            } else {
+            if (reportNames != null && !reportNames.isEmpty()) {
+                clause.add("name in (:reportNames)");
+            } else {
                if (templateNames != null && !templateNames.isEmpty()) {
                    clause.add("templateId in (:templateIds)");
                }
                if (states != null && !states.isEmpty()) {
                    clause.add("state in (:states)");
                } 
-//            }
+            }
             if (!clause.isEmpty()) {
                 sql.append(clause.stream().collect(Collectors.joining(" and ", " where ", "")));
             }
             Query<DBItemReportRun> query = getSession().createQuery(sql.toString());
-//            if (reportNames != null && !reportNames.isEmpty()) {
-//                query.setParameterList("reportNames", reportNames);
-//            } else {
+            if (reportNames != null && !reportNames.isEmpty()) {
+                query.setParameterList("reportNames", reportNames.stream().map(JocInventory::pathToName).collect(Collectors.toSet()));
+            } else {
                if (templateNames != null && !templateNames.isEmpty()) {
                    query.setParameterList("templateIds", templateNames.stream().map(TemplateId::intValue).collect(Collectors.toList()));
                }
                if (states != null && !states.isEmpty()) {
                    query.setParameterList("states", states.stream().map(ReportRunStateText::intValue).collect(Collectors.toList()));
                } 
-//            }
+            }
             List<DBItemReportRun> result = getSession().getResultList(query);
             if (result == null) {
                 return Collections.emptyList();

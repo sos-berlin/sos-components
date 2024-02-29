@@ -17,10 +17,11 @@ import com.sos.joc.classes.reporting.RunReport;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.reporting.Report;
-import com.sos.joc.model.reporting.ReportPaths;
+import com.sos.joc.model.reporting.RunReports;
 import com.sos.joc.reporting.resource.IRunReportResource;
 import com.sos.schema.JsonValidator;
 
@@ -35,8 +36,8 @@ public class RunReportImpl extends JOCResourceImpl implements IRunReportResource
         SOSHibernateSession connection = null;
         try {
             initLogging(IMPL_PATH, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, ReportPaths.class);
-            ReportPaths in = Globals.objectMapper.readValue(filterBytes, ReportPaths.class);
+            JsonValidator.validateFailFast(filterBytes, RunReports.class);
+            RunReports in = Globals.objectMapper.readValue(filterBytes, RunReports.class);
             
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getReports().getManage());
             if (response != null) {
@@ -45,6 +46,8 @@ public class RunReportImpl extends JOCResourceImpl implements IRunReportResource
             
             connection = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
+            
+            storeAuditLog(in.getAuditLog(), CategoryType.CONTROLLER);
             
             InventoryDBLayer dbLayer = new InventoryDBLayer(connection);
             List<String> reportNames = in.getReportPaths().stream().map(JocInventory::pathToName).collect(Collectors.toList());

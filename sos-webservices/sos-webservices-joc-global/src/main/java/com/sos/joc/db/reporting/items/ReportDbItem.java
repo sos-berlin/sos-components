@@ -14,9 +14,6 @@ public class ReportDbItem extends ReportItem {
     @JsonIgnore
     private byte[] content;
     
-//    @JsonIgnore
-//    private Integer templateId;
-    
     @JsonIgnore
     public byte[] getContent() {
         return content;

@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -20,6 +21,7 @@ import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.db.reporting.DBItemReportRun;
 import com.sos.joc.db.reporting.ReportingDBLayer;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.reporting.ReportRunState;
 import com.sos.joc.model.reporting.ReportRunStateText;
 import com.sos.joc.model.reporting.RunHistoryFilter;
@@ -59,8 +61,13 @@ public class RunHistoryImpl extends JOCResourceImpl implements IRunHistoryResour
                 return response;
             }
             
+            final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
+            
             Function<DBItemReportRun, RunItem> mapToRunItem = dbItem -> {
                 try {
+                    if (!folderIsPermitted(dbItem.getFolder(), permittedFolders)) {
+                        return null;
+                    }
                     RunItem item = new RunItem();
                     item.setRunId(dbItem.getId());
                     item.setPath(dbItem.getPath());

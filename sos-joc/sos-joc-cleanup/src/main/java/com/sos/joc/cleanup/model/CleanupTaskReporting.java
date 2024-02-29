@@ -55,7 +55,7 @@ public class CleanupTaskReporting extends CleanupTaskModel {
         StringBuilder log = new StringBuilder("[").append(getIdentifier()).append("][reports]");
         log.append("[").append(datetime.getAge().getConfigured()).append(" ").append(getDateTime(datetime.getDatetime())).append("][deleted]");
 
-        CleanupPartialResult r = deleteEntries(datetime, DBLayer.TABLE_REPORTS, columnQuotedCreated);
+        CleanupPartialResult r = deleteEntries(datetime, DBLayer.TABLE_REPORTS, columnQuotedModified);
         totalReports += r.getDeletedTotal();
         log.append(getDeleted(DBLayer.TABLE_REPORTS, r.getDeletedTotal(), totalReports));
         LOGGER.info(log.toString());

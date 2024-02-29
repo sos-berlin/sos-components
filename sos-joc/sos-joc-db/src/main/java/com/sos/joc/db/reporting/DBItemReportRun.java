@@ -37,6 +37,9 @@ public class DBItemReportRun extends DBItem {
     @Column(name = "[FOLDER]", nullable = false)
     private String folder;
 
+    @Column(name = "[NAME]", nullable = false)
+    private String name;
+
     @Column(name = "[TITLE]", nullable = true)
     private String title;
 
@@ -101,6 +104,14 @@ public class DBItemReportRun extends DBItem {
         folder = val;
     }
     
+    public void setName(String val) {
+        name = val;
+    }
+    
+    public String getName() {
+        return name;
+    }
+
     public String getTitle() {
         return title;
     }

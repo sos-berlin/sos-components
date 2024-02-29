@@ -1,8 +1,12 @@
 package com.sos.joc.reporting.impl;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -14,6 +18,7 @@ import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.db.reporting.ReportingDBLayer;
 import com.sos.joc.db.reporting.items.ReportDbItem;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.reporting.ReportHistoryFilter;
 import com.sos.joc.model.reporting.ReportItem;
 import com.sos.joc.model.reporting.ReportItems;
@@ -44,25 +49,13 @@ public class ReportsGeneratedImpl extends JOCResourceImpl implements IReportsGen
                 return response;
             }
             
-//            Function<DBItemReportHistory, ReportItem> mapToReportItem = dbItem -> {
-//                try {
-//                    ReportItem item = Globals.objectMapper.readValue(dbItem.getContent(), ReportItem.class);
-//                    item.setId(dbItem.getId());
-//                    item.setDateFrom(SOSDate.getDateAsString(dbItem.getDateFrom()));
-//                    item.setDateTo(SOSDate.getDateAsString(dbItem.getDateTo()));
-//                    item.setFrequency(dbItem.getFrequencyAsEnum());
-//                    item.setSize(dbItem.getSize());
-//                    item.setTemplateId(dbItem.getTemplateId());
-//                    item.setCreated(dbItem.getCreated());
-//                    return item;
-//                } catch (Exception e) {
-//                    // TODO: error handling
-//                    return null;
-//                }
-//            };
+            final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             
             Function<ReportDbItem, ReportItem> mapToReportItem = dbItem -> {
                 try {
+                    if (!canAdd(dbItem.getPath(), permittedFolders)) {
+                       return null; 
+                    }
                     if (in.getCompact() != Boolean.TRUE) {
                         dbItem.setData(Globals.objectMapper.readValue(dbItem.getContent(), ReportItem.class).getData());
                     } else {
@@ -80,8 +73,11 @@ public class ReportsGeneratedImpl extends JOCResourceImpl implements IReportsGen
             ReportingDBLayer dbLayer = new ReportingDBLayer(session);
             ReportItems entity = new ReportItems();
             // TODO more request filter
-            entity.setReports(dbLayer.getAllReports(in.getIds(), in.getCompact() == Boolean.TRUE).stream().map(mapToReportItem).filter(
-                    Objects::nonNull).collect(Collectors.toList()));
+            Date dateFrom = getLocalDateTimeToDate(getLocalDateFrom(in.getDateFrom()));
+            Date dateTo = getLocalDateTimeToDate(getLocalDateTo(in.getDateTo()));
+            
+            entity.setReports(dbLayer.getGeneratedReports(in.getRunIds(), in.getCompact() == Boolean.TRUE, in.getReportPaths(), in.getTemplateNames(),
+                    dateFrom, dateTo).stream().map(mapToReportItem).filter(Objects::nonNull).collect(Collectors.toList()));
             entity.setDeliveryDate(Date.from(Instant.now()));
             
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
@@ -93,6 +89,27 @@ public class ReportsGeneratedImpl extends JOCResourceImpl implements IReportsGen
         } finally {
             Globals.disconnect(session);
         }
+    }
+    
+    private static LocalDateTime getLocalDateFrom(final String dateFrom) { // yyyy-MM-dd
+        if (dateFrom == null) {
+            return null;
+        }
+        String[] yearMonthDayFrom = dateFrom.split("-");
+        return LocalDate.of(Integer.valueOf(yearMonthDayFrom[0]).intValue(), Integer.valueOf(yearMonthDayFrom[1]).intValue(), Integer.valueOf(
+                yearMonthDayFrom[2])).atStartOfDay();
+    }
+    
+    private static LocalDateTime getLocalDateTo(final String dateTo) { //yyyy-MM-dd
+        LocalDateTime ld = getLocalDateFrom(dateTo);
+        return ld == null ? null : ld.plusDays(1);
+    }
+    
+    private static Date getLocalDateTimeToDate(final LocalDateTime ld) { //yyyy-MM-dd
+        if (ld == null) {
+            return null;
+        }
+        return Date.from(ld.atZone(ZoneId.systemDefault()).toInstant());
     }
 
 }

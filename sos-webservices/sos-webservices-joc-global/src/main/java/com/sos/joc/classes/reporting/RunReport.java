@@ -28,6 +28,7 @@ import com.sos.inventory.model.report.Frequency;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JOCSOSShell;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.reporting.DBItemReport;
 import com.sos.joc.db.reporting.DBItemReportRun;
 import com.sos.joc.db.reporting.ReportingDBLayer;
@@ -188,6 +189,7 @@ public class RunReport extends AReporting {
         DBItemReportRun dbItem = new DBItemReportRun();
         dbItem.setId(null);
         dbItem.setPath(in.getPath());
+        dbItem.setName(JocInventory.pathToName(in.getPath()));
         dbItem.setFolder(JOCResourceImpl.getParent(in.getPath()));
         dbItem.setTitle(in.getTitle());
         dbItem.setTemplateId(in.getTemplateName().intValue());
