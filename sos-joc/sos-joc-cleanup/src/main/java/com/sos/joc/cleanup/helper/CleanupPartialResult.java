@@ -1,5 +1,9 @@
 package com.sos.joc.cleanup.helper;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.hibernate.query.NativeQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +21,7 @@ public class CleanupPartialResult {
     private final String table;
 
     private JocServiceTaskAnswerState state;
+    private Map<String, Object> parameters = null;
     private long deletedTotal;
     private int deletedLast;
 
@@ -24,27 +29,43 @@ public class CleanupPartialResult {
         this.table = table;
     }
 
+    public void run(CleanupTaskModel task, StringBuilder deleteSQL) throws SOSHibernateException {
+        run(task, deleteSQL, null);
+    }
+
     public void run(CleanupTaskModel task, StringBuilder deleteSQL, Long maxMainParentId) throws SOSHibernateException {
 
         int runCounter = 0;
         long lastRunsDeleted = 0;
-        String logPrefix = "[" + task.getIdentifier() + "][maxMainParentId=" + maxMainParentId + "]";
+        String logPrefix = "[" + task.getIdentifier() + "]";
+        if (maxMainParentId != null) {
+            logPrefix += "[maxMainParentId=" + maxMainParentId + "]";
+        }
 
         boolean doRun = true;
+        state = JocServiceTaskAnswerState.UNCOMPLETED;
         while (doRun) {
             if (task.isStopped()) {
-                setState(JocServiceTaskAnswerState.UNCOMPLETED);
                 return;
             }
 
             task.tryOpenSession();
+            NativeQuery<Object> query = task.getDbLayer().getSession().createNativeQuery(deleteSQL.toString());
+            if (parameters != null) {
+                parameters.entrySet().forEach(e -> {
+                    query.setParameter(e.getKey(), e.getValue());
+                });
+            }
 
             task.getDbLayer().beginTransaction();
-            addDeletedLast(task.getDbLayer().getSession().executeUpdate(task.getDbLayer().getSession().createNativeQuery(deleteSQL.toString())));
+            addDeletedLast(task.getDbLayer().getSession().executeUpdate(query));
             task.getDbLayer().commit();
 
             if (getDeletedLast() == 0) {
-                LOGGER.info(logPrefix + task.getDeleted(table, lastRunsDeleted, getDeletedTotal()).toString());
+                state = JocServiceTaskAnswerState.COMPLETED;
+                if (deletedTotal > 0) {
+                    LOGGER.info(logPrefix + task.getDeleted(table, lastRunsDeleted, getDeletedTotal()).toString());
+                }
                 return;
             }
 
@@ -61,8 +82,15 @@ public class CleanupPartialResult {
         return state;
     }
 
-    public void setState(JocServiceTaskAnswerState val) {
-        state = val;
+    public void setParameters(Map<String, Object> val) {
+        parameters = val;
+    }
+
+    public void addParameter(String name, Object val) {
+        if (parameters == null) {
+            parameters = new HashMap<>();
+        }
+        parameters.put(name, val);
     }
 
     public long getDeletedTotal() {
@@ -73,7 +101,7 @@ public class CleanupPartialResult {
         return deletedLast;
     }
 
-    public void addDeletedLast(int val) {
+    private void addDeletedLast(int val) {
         deletedLast = Math.abs(val);
         deletedTotal += deletedLast;
     }

@@ -13,7 +13,7 @@ public class ConfigurationGlobalsCleanup extends AConfigurationSection {
     private ConfigurationEntry periodBegin = new ConfigurationEntry("period_begin", "01:00", GlobalSettingsSectionValueType.TIME);
     private ConfigurationEntry periodEnd = new ConfigurationEntry("period_end", "04:00", GlobalSettingsSectionValueType.TIME);
     private ConfigurationEntry batchSize = new ConfigurationEntry("batch_size", "1000", GlobalSettingsSectionValueType.POSITIVEINTEGER);
-    private ConfigurationEntry maxPoolSize = new ConfigurationEntry("max_pool_size", "5", GlobalSettingsSectionValueType.POSITIVEINTEGER);
+    private ConfigurationEntry maxPoolSize = new ConfigurationEntry("max_pool_size", "8", GlobalSettingsSectionValueType.POSITIVEINTEGER);
 
     private ConfigurationEntry orderHistoryAge = new ConfigurationEntry("order_history_age", "90d", GlobalSettingsSectionValueType.DURATION);
     private ConfigurationEntry orderHistoryLogsAge = new ConfigurationEntry("order_history_logs_age", "90d", GlobalSettingsSectionValueType.DURATION);
@@ -29,6 +29,7 @@ public class ConfigurationGlobalsCleanup extends AConfigurationSection {
             GlobalSettingsSectionValueType.DURATION);
     private ConfigurationEntry deploymentHistoryVersions = new ConfigurationEntry("deployment_history_versions", "10",
             GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
+    private ConfigurationEntry reportingAge = new ConfigurationEntry("reporting_age", "90d", GlobalSettingsSectionValueType.DURATION);
 
     public ConfigurationGlobalsCleanup() {
         int index = -1;
@@ -54,6 +55,8 @@ public class ConfigurationGlobalsCleanup extends AConfigurationSection {
         // PROFILE
         profileAge.setOrdering(++index);
         failedLoginHistoryAge.setOrdering(++index);
+        // REPORTING
+        reportingAge.setOrdering(++index);
         // DEPLOYMENT
         deploymentHistoryVersions.setOrdering(++index);
     }
@@ -116,6 +119,10 @@ public class ConfigurationGlobalsCleanup extends AConfigurationSection {
 
     public ConfigurationEntry getFailedLoginHistoryAge() {
         return failedLoginHistoryAge;
+    }
+
+    public ConfigurationEntry getReportingAge() {
+        return reportingAge;
     }
 
     public ConfigurationEntry getDeploymentHistoryVersions() {

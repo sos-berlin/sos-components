@@ -38,6 +38,7 @@ public class CleanupServiceConfiguration {
     private Age notificationHistoryAge;
     private Age profileAge;
     private Age failedLoginHistoryAge;
+    private Age reportingAge;
     private int deploymentHistoryVersions;
     private int batchSize;
     private int maxPoolSize;
@@ -66,6 +67,7 @@ public class CleanupServiceConfiguration {
         this.notificationHistoryAge = new Age(configuration.getNotificationHistoryAge());
         this.profileAge = new Age(configuration.getProfileAge());
         this.failedLoginHistoryAge = new Age(configuration.getFailedLoginHistoryAge());
+        this.reportingAge = new Age(configuration.getReportingAge());
         try {
             this.deploymentHistoryVersions = Integer.parseInt(configuration.getDeploymentHistoryVersions().getValue());
         } catch (Throwable e) {
@@ -141,6 +143,10 @@ public class CleanupServiceConfiguration {
 
     public Age getFailedLoginHistoryAge() {
         return failedLoginHistoryAge;
+    }
+
+    public Age getReportingAge() {
+        return reportingAge;
     }
 
     public int getDeploymentHistoryVersions() {
