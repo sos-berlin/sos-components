@@ -59,7 +59,7 @@ public class LoadData extends AReporting {
 //            }
 //        }
         
-        final LocalDateTime toMonth = (monthTo != null && !monthTo.isBefore(firstDayOfCurrentMonth)) ? monthTo : firstDayOfCurrentMonth;
+        final LocalDateTime toMonth = (monthTo == null || !monthTo.isBefore(firstDayOfCurrentMonth)) ? firstDayOfCurrentMonth : monthTo;
         
         
         return CompletableFuture.supplyAsync(() -> {

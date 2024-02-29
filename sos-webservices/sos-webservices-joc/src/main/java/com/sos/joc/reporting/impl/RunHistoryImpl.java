@@ -22,9 +22,11 @@ import com.sos.joc.db.reporting.ReportingDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.reporting.ReportRunState;
 import com.sos.joc.model.reporting.ReportRunStateText;
+import com.sos.joc.model.reporting.RunHistoryFilter;
 import com.sos.joc.model.reporting.RunItem;
 import com.sos.joc.model.reporting.RunItems;
 import com.sos.joc.reporting.resource.IRunHistoryResource;
+import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
 
@@ -49,10 +51,9 @@ public class RunHistoryImpl extends JOCResourceImpl implements IRunHistoryResour
         SOSHibernateSession session = null;
         try {
             initLogging(IMPL_PATH, filterBytes, accessToken);
-            //JsonValidator.validateFailFast(filterBytes, RunFilter.class);
-            //RunFilter in = Globals.objectMapper.readValue(filterBytes, RunFilter.class);
+            JsonValidator.validateFailFast(filterBytes, RunHistoryFilter.class);
+            RunHistoryFilter in = Globals.objectMapper.readValue(filterBytes, RunHistoryFilter.class);
             
-            // TODO: filter request
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getReports().getView());
             if (response != null) {
                 return response;
@@ -84,7 +85,8 @@ public class RunHistoryImpl extends JOCResourceImpl implements IRunHistoryResour
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             ReportingDBLayer dbLayer = new ReportingDBLayer(session);
             RunItems entity = new RunItems();
-            entity.setRuns(dbLayer.getAllRuns().stream().map(mapToRunItem).filter(Objects::nonNull).collect(Collectors.toList()));
+            entity.setRuns(dbLayer.getRuns(in.getReportPaths(), in.getTemplateNames(), in.getStates()).stream().map(mapToRunItem).filter(
+                    Objects::nonNull).collect(Collectors.toList()));
             entity.setDeliveryDate(Date.from(Instant.now()));
             
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
