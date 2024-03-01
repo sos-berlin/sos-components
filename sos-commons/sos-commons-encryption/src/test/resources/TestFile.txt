@@ -1,0 +1,3 @@
+My text in the file to en-/decrypt.
+and another line.
+and so on...
