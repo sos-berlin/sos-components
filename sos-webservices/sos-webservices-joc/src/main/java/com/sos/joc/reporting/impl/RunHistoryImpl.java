@@ -63,6 +63,11 @@ public class RunHistoryImpl extends JOCResourceImpl implements IRunHistoryResour
             
             final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             
+            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+            ReportingDBLayer dbLayer = new ReportingDBLayer(session);
+            RunItems entity = new RunItems();
+            final Map<Long, Long> numOfReports = dbLayer.getNumReports(null);
+            
             Function<DBItemReportRun, RunItem> mapToRunItem = dbItem -> {
                 try {
                     if (!folderIsPermitted(dbItem.getFolder(), permittedFolders)) {
@@ -81,6 +86,7 @@ public class RunHistoryImpl extends JOCResourceImpl implements IRunHistoryResour
                     item.setModified(dbItem.getModified());
                     item.setErrorText(dbItem.getErrorText());
                     item.setState(getState(dbItem.getStateAsEnum()));
+                    item.setNumOfReports(numOfReports.getOrDefault(dbItem.getId(), 0L));
                     item.setVersion(null);
                     return item;
                 } catch (Exception e) {
@@ -89,9 +95,6 @@ public class RunHistoryImpl extends JOCResourceImpl implements IRunHistoryResour
                 }
             };
             
-            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
-            ReportingDBLayer dbLayer = new ReportingDBLayer(session);
-            RunItems entity = new RunItems();
             entity.setRuns(dbLayer.getRuns(in.getReportPaths(), in.getTemplateNames(), in.getStates()).stream().map(mapToRunItem).filter(
                     Objects::nonNull).collect(Collectors.toList()));
             entity.setDeliveryDate(Date.from(Instant.now()));

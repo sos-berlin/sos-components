@@ -31,6 +31,7 @@ import com.sos.joc.classes.JOCSOSShell;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.reporting.DBItemReport;
 import com.sos.joc.db.reporting.DBItemReportRun;
+import com.sos.joc.db.reporting.DBItemReportTemplate;
 import com.sos.joc.db.reporting.ReportingDBLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.reporting.ReportRunsUpdated;
@@ -89,13 +90,14 @@ public class RunReport extends AReporting {
         
         try {
             runDbItem = getRunDBItem(in);
-            insertRun(runDbItem);
+            byte[] template = insertRunAndReadTemplate(runDbItem, in);
             String commonScript = getCommonScript(in);
             //TODO SOSTimeout timeout = new SOSTimeout(10, TimeUnit.Hours);
             for (Frequency f : in.getFrequencies()) {
-                Path tempDir = runPerFrequency(f, commonScript);
+                Path tempDir = runPerFrequency(f, commonScript, in, template);
                 tempDirs.add(tempDir);
-                dbItems.addAll(Files.list(tempDir).map(file -> getHistoryDBItem(file, f)).collect(Collectors.toList()));
+                dbItems.addAll(Files.list(tempDir).filter(file -> !file.getFileName().toString().startsWith(templateFilePrefix)).map(
+                        file -> getHistoryDBItem(file, f)).collect(Collectors.toList()));
             }
             
             insert(in, runDbItem, dbItems);
@@ -112,9 +114,7 @@ public class RunReport extends AReporting {
     
     private static String getCommonScript(final Report in) {
         StringBuilder s = new StringBuilder()
-                .append("node app/run-report.js -i data -t app/templates/template_")
-                .append(in.getTemplateName().intValue())
-                .append(".json");
+                .append("node app/run-report.js -i data");
         if (in.getMonthFrom() != null) {
             s.append(" -s ").append(in.getMonthFrom());
         }
@@ -124,16 +124,24 @@ public class RunReport extends AReporting {
         if (in.getHits() != null) {
             s.append(" -n ").append(in.getHits());
         }
-        s.append(" -p ");
         return s.toString();
     }
     
-    private static Path runPerFrequency(Frequency f, String commonScript) throws IOException, JocBadRequestException {
+    private static Path runPerFrequency(Frequency f, String commonScript, final Report in, byte[] template) throws IOException, JocBadRequestException {
         Path tempDir = null;
         try {
             tempDir = createTempDirectory();
             // reportingDir is working directory
-            String script = commonScript + f.strValue() + " -o " + reportingDir.relativize(tempDir).toString().replace('\\', '/');
+            Path relativizeReportingDir = reportingDir.relativize(tempDir);
+            Path templateFile = tempDir.resolve(templateFilePrefix + in.getTemplateName().intValue() + ".json");
+            Path relativizeTemplateFile = reportingDir.relativize(templateFile);
+            Files.write(templateFile, template);
+            StringBuilder s = new StringBuilder(commonScript);
+            s.append(" -t ").append(relativizeTemplateFile.toString().replace('\\', '/'));
+            s.append(" -p ").append(f.strValue());
+            s.append(" -o ").append(relativizeReportingDir.toString().replace('\\', '/'));
+            String script = s.toString();
+            //String script = commonScript + f.strValue() + " -t " + relativizeReportingDir + " -o " + relativizeReportingDir.toString().replace('\\', '/');
             LOGGER.info("[Reporting][run] " + script);
             SOSCommandResult cResult = JOCSOSShell.executeCommand(script, reportingDir);
             
@@ -246,13 +254,26 @@ public class RunReport extends AReporting {
         return null;
     }
     
-    private static Long insertRun(final DBItemReportRun runDbItem) throws Exception {
+//    private static Long insertRun(final DBItemReportRun runDbItem) throws Exception {
+//        SOSHibernateSession session = null;
+//        try {
+//            session = Globals.createSosHibernateStatelessConnection("StoreReportRun");
+//            session.save(runDbItem);
+//            EventBus.getInstance().post(new ReportRunsUpdated());
+//            return runDbItem.getId();
+//        } finally {
+//            Globals.disconnect(session);
+//        }
+//    }
+    
+    private static byte[] insertRunAndReadTemplate(final DBItemReportRun runDbItem, final Report in) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection("StoreReportRun");
+            DBItemReportTemplate dbTemplate = session.get(DBItemReportTemplate.class, in.getTemplateName().intValue());
             session.save(runDbItem);
             EventBus.getInstance().post(new ReportRunsUpdated());
-            return runDbItem.getId();
+            return dbTemplate.getContent();
         } finally {
             Globals.disconnect(session);
         }

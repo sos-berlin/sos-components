@@ -538,6 +538,7 @@ public class DBLayer implements Serializable {
         
         cl.add(DBItemReport.class);
         cl.add(DBItemReportRun.class);
+        cl.add(DBItemReportTemplate.class);
 
         cl.merge(getHistoryClassMapping().getClasses());
         cl.merge(getDailyPlanClassMapping().getClasses());

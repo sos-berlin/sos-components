@@ -1,5 +1,6 @@
 package com.sos.joc.classes.reporting;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,23 +31,21 @@ public class Templates extends AReporting {
     private static final Logger LOGGER = LoggerFactory.getLogger(Templates.class);
     private static final Path templatesDir = reportingDir.resolve("app/templates");
     
-    public static List<Template> getTemplates() throws IOException {
+    public static List<Template> getTemplates_() throws IOException {
         
         Function<TemplateId, Template> mapToTemplateFromFile = templateId -> {
             Path templateFile = templatesDir.resolve("template_" + templateId.intValue() + ".json");
             Template template = new Template();
-            if (templateId.isSupported()) {
-                if (Files.exists(templateFile)) {
-                    try {
-                        template = Globals.objectMapper.readValue(Files.readAllBytes(templateFile), Template.class);
-                    } catch (Exception e) {
-                        LOGGER.error("", e);
-                        return null;
-                    }
-                } else {
-                    LOGGER.warn(templateFile.toString() + " doesn't exist");
+            if (Files.exists(templateFile)) {
+                try {
+                    template = Globals.objectMapper.readValue(Files.readAllBytes(templateFile), Template.class);
+                } catch (Exception e) {
+                    LOGGER.error("", e);
                     return null;
                 }
+            } else {
+                LOGGER.warn(templateFile.toString() + " doesn't exist");
+                return null;
             }
             template.setIsSupported(templateId.isSupported());
             template.setTemplateName(templateId);
@@ -58,7 +57,7 @@ public class Templates extends AReporting {
         
     }
 
-    public static List<Template> getTemplates_() {
+    public static List<Template> getTemplates() {
 
         SOSHibernateSession session = null;
         try {
@@ -67,7 +66,7 @@ public class Templates extends AReporting {
             Map<Integer, byte[]> dbTemplates = dbLayer.getTemplates().stream().collect(Collectors.toMap(DBItemReportTemplate::getTemplateId,
                     DBItemReportTemplate::getContent));
             
-            return EnumSet.allOf(TemplateId.class).stream().map(templateId -> {
+            Function<TemplateId, Template> mapToTemplateFromDb = templateId -> {
                 Template template = new Template();
                 if (dbTemplates.containsKey(templateId.intValue())) {
                     try {
@@ -81,22 +80,10 @@ public class Templates extends AReporting {
                 template.setTemplateName(templateId);
                 template.setTemplateId(templateId.intValue());
                 return template;
-            }).filter(Objects::nonNull).collect(Collectors.toList());
+            };
             
-//            return dbLayer.getTemplates().stream().map(t -> {
-//                try {
-//                    TemplateId templateId = TemplateId.fromValue(t.getTemplateId());
-//                    Template template = Globals.objectMapper.readValue(t.getContent(), Template.class);
-//                    template.setIsSupported(templateId.isSupported());
-//                    template.setTemplateId(t.getTemplateId());
-//                    template.setTemplateName(templateId);
-//                    return template;
-//                } catch (Exception e) {
-//                    // template is missing in Enum
-//                    return null;
-//                }
-//            }).filter(Objects::nonNull).collect(Collectors.toList());
-
+            return EnumSet.allOf(TemplateId.class).stream().map(mapToTemplateFromDb).filter(Objects::nonNull).collect(Collectors.toList());
+            
         } finally {
             Globals.disconnect(session);
         }
@@ -107,17 +94,34 @@ public class Templates extends AReporting {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection("UpdateTemplates");
-            Set<Path> templates = Files.list(templatesDir).filter(f -> f.getFileName().toString().matches("template_\\d+\\.json")).collect(Collectors
-                    .toSet());
-            Date now = Date.from(Instant.now());
-            for (Path template : templates) {
-                updateTemplate(template, session, now);
-                Files.deleteIfExists(template);
-            }
+            updateTemplates(templatesDir, session);
         } catch (Exception e) {
             //
         } finally {
             Globals.disconnect(session);
+        }
+    }
+    
+    public static void updateTemplates(Path templatesDir, SOSHibernateSession session) throws IOException, SOSHibernateException {
+
+        Set<Path> templates = Files.list(templatesDir).filter(f -> f.getFileName().toString().matches("template_\\d+\\.json")).collect(Collectors
+                .toSet());
+        if (templates.isEmpty()) {
+           throw new FileNotFoundException("Couldn't find any template files according the pattern 'template_\\d+\\.json' in " + templatesDir.toString()); 
+        } else {
+            LOGGER.debug(templates.size() + " template files are found in " + templatesDir.toString());
+        }
+        Date now = Date.from(Instant.now());
+        for (Path template : templates) {
+            updateTemplate(template, session, now);
+            Files.deleteIfExists(template);
+        }
+        if (Files.list(templatesDir).count() == 0L) {
+            try {
+                Files.deleteIfExists(templatesDir);
+            } catch (IOException e) {
+                //
+            } 
         }
     }
     

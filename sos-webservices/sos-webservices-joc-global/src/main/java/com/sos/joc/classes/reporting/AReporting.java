@@ -15,15 +15,12 @@ import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.model.reporting.Report;
 
 public abstract class AReporting {
     
@@ -36,6 +33,7 @@ public abstract class AReporting {
     protected static final Path reportingDir = Paths.get("reporting").toAbsolutePath();
     protected static final Path dataDir = reportingDir.resolve("data");
     protected static final Path tmpDir = reportingDir.resolve("tmp");
+    protected static final String templateFilePrefix = "template_";
     private static final Logger LOGGER = LoggerFactory.getLogger(AReporting.class);
     
     protected static final Map<ReportingType, Collection<CSVColumns>> CSV_COLUMNS = Collections.unmodifiableMap(
