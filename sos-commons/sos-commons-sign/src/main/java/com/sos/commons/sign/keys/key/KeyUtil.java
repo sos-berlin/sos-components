@@ -889,7 +889,13 @@ public abstract class KeyUtil {
     
     public static PrivateKey getPrivateKeyFromString (String privateKey)
             throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
-        PrivateKeyInfo privateKeyInfo = (PrivateKeyInfo)KeyUtil.readPemObject(privateKey);
+      Object pemObject = KeyUtil.readPemObject(privateKey);
+      PrivateKeyInfo privateKeyInfo = null;
+      if (pemObject instanceof PEMKeyPair) {
+        privateKeyInfo = ((PEMKeyPair) pemObject).getPrivateKeyInfo();
+      } else {
+        privateKeyInfo = (PrivateKeyInfo)KeyUtil.readPemObject(privateKey);
+      }
         try {
             KeyFactory kf = KeyFactory.getInstance(SOSKeyConstants.RSA_ALGORITHM_NAME);
             return kf.generatePrivate(new PKCS8EncodedKeySpec(privateKeyInfo.getEncoded()));

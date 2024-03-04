@@ -9,7 +9,10 @@ import java.nio.file.Paths;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.util.Base64;
@@ -27,6 +30,10 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class EncryptionUtils {
 
+  private static final String AES_FORMAT = "PBKDF2WithHmacSHA256";
+  private static final String CIPHER_ALGORITHM = "AES/CBC/PKCS5Padding";
+
+
   public static IvParameterSpec generateIv() {
     byte[] iv = new byte[16];
     new SecureRandom().nextBytes(iv);
@@ -41,7 +48,7 @@ public class EncryptionUtils {
   }
 
   public static SecretKey getSecretKeyFromPassword(String password, String salt) throws NoSuchAlgorithmException, InvalidKeySpecException {
-    SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+    SecretKeyFactory factory = SecretKeyFactory.getInstance(AES_FORMAT);
     KeySpec spec = new PBEKeySpec(password.toCharArray(), salt.getBytes(), 65536, 256);
     SecretKey secret = new SecretKeySpec(factory.generateSecret(spec).getEncoded(), "AES");
     return secret;
@@ -69,13 +76,13 @@ public class EncryptionUtils {
   public static void enOrDecryptFile(String algorithm, SecretKey key, IvParameterSpec iv, String inputFile, String outputFile, int cipherMode)
       throws IOException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException,
       BadPaddingException, IllegalBlockSizeException {
-      enOrDecryptFile(algorithm, key, iv, Paths.get(inputFile), Paths.get(outputFile), cipherMode);
+    enOrDecryptFile(algorithm, key, iv, Paths.get(inputFile), Paths.get(outputFile), cipherMode);
   }
 
   public static void enOrDecryptFile(String algorithm, SecretKey key, IvParameterSpec iv, Path inputFile, Path outputFile, int cipherMode)
       throws IOException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException,
       BadPaddingException, IllegalBlockSizeException {
-      enOrDecryptFile(algorithm, key, iv, inputFile.toFile(), outputFile.toFile(), cipherMode);
+    enOrDecryptFile(algorithm, key, iv, inputFile.toFile(), outputFile.toFile(), cipherMode);
   }
 
   public static void enOrDecryptFile(String algorithm, SecretKey key, IvParameterSpec iv, File inputFile, File outputFile, int cipherMode)
@@ -95,7 +102,7 @@ public class EncryptionUtils {
           outputStream.write(output);
         }
       }
-      if(Cipher.ENCRYPT_MODE == cipherMode) {
+      if (Cipher.ENCRYPT_MODE == cipherMode) {
         // encrypt
         byte[] outputBytes = cipher.doFinal();
         if (outputBytes != null) {
@@ -112,5 +119,20 @@ public class EncryptionUtils {
       inputStream.close();
       outputStream.close();
     }
+  }
+
+  public static byte[] encryptSymmetricKey(SecretKey secretKey, X509Certificate cert) throws NoSuchAlgorithmException, NoSuchPaddingException,
+      InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+    PublicKey publicKey = cert.getPublicKey();
+    Cipher cipher = Cipher.getInstance(publicKey.getAlgorithm());
+    cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+    return Base64.getEncoder().encode(cipher.doFinal(secretKey.getEncoded()));
+  }
+
+  public static byte[] decryptSymmetricKey(byte[] encryptedSecretKey, PrivateKey privateKey) throws NoSuchAlgorithmException, NoSuchPaddingException,
+      InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+    Cipher cipher = Cipher.getInstance(privateKey.getAlgorithm());
+    cipher.init(Cipher.DECRYPT_MODE, privateKey);
+    return cipher.doFinal(Base64.getDecoder().decode(encryptedSecretKey));
   }
 }
