@@ -279,8 +279,11 @@ public class HistoryMonitoringModel implements Serializable {
                 case OrderFinished:
                     hob = (HistoryOrderBean) b;
                     orderFinished(dbLayer, hob);
-
-                    toNotify.getSuccessOrders().add(hob);
+                    if (hob.getError()) {
+                        toNotify.getErrorOrders().add(hob);
+                    } else {
+                        toNotify.getSuccessOrders().add(hob);
+                    }
                     break;
                 // OrderStep
                 case OrderProcessingStarted:
