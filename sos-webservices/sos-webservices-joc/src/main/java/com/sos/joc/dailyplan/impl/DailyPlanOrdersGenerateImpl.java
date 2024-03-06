@@ -287,14 +287,23 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
 
     public List<GenerateRequest> getGenerateRequests(String date, List<String> workflowPaths, List<String> schedulePaths, String controllerId)
             throws ParseException {
-        return getGenerateRequests(date, workflowPaths, schedulePaths, controllerId, true);
+        return getGenerateRequests(date, workflowPaths, schedulePaths, controllerId, true, false);
     }
 
+    public List<GenerateRequest> getGenerateRequestsForReleaseDeploy(String date, List<String> workflowPaths, List<String> schedulePaths, String controllerId, Boolean withSubmit)
+        throws ParseException {
+    return getGenerateRequests(date, workflowPaths, schedulePaths, controllerId, withSubmit, true);
+}
+
     public List<GenerateRequest> getGenerateRequests(String date, List<String> workflowPaths, List<String> schedulePaths, String controllerId,
-            Boolean withSubmit) throws ParseException {
+            Boolean withSubmit, boolean forReleaseDeploy) throws ParseException {
         setSettings();
         int planDaysAhead = getSettings().getDayAheadPlan();
         int submitDaysAhead = getSettings().getDayAheadSubmit();
+        if(forReleaseDeploy) {
+          planDaysAhead += 1;
+          submitDaysAhead += 1;
+        }
         List<GenerateRequest> generateRequests = new ArrayList<>();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Instant now = Instant.now();

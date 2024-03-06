@@ -774,9 +774,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 throw new JocBadRequestException("'dateFrom' must be older than 'dateTo'");
             }
 
-                                                                                                          
             dateToFilter = o -> {
-                                                                                                                                                  
                 Instant scheduledFor = OrdersHelper.getScheduledForInstant(o);
                 if (scheduledFor != null) {
                     if (scheduledFor.toEpochMilli() == JobSchedulerDate.NEVER_MILLIS.longValue()) { // pending orders
