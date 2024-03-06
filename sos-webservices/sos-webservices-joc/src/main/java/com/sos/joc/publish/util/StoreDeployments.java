@@ -191,10 +191,10 @@ public class StoreDeployments {
                     }
                     List<GenerateRequest> requests = new ArrayList<GenerateRequest>();
                     if(!schedulePathsWithSubmit.isEmpty()) {
-                        requests.addAll(ordersGenerate.getGenerateRequests(dailyPlanDate, null, schedulePathsWithSubmit, controllerId, true));
+                        requests.addAll(ordersGenerate.getGenerateRequestsForReleaseDeploy(dailyPlanDate, null, schedulePathsWithSubmit, controllerId, true));
                     }
                     if(!schedulePathsWithoutSubmit.isEmpty()) {
-                        requests.addAll(ordersGenerate.getGenerateRequests(dailyPlanDate, null, schedulePathsWithoutSubmit, controllerId, false));
+                        requests.addAll(ordersGenerate.getGenerateRequestsForReleaseDeploy(dailyPlanDate, null, schedulePathsWithoutSubmit, controllerId, false));
                     }
                     if(!requests.isEmpty()) {
                         boolean successful = ordersGenerate.generateOrders(requests, accessToken, false);
