@@ -33,6 +33,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "workflowIds",
     "states",
     "folders",
+    "dateFrom",
     "dateTo",
     "timeZone",
     "orderType",
@@ -69,6 +70,15 @@ public class ModifyOrders {
      */
     @JsonProperty("folders")
     private List<Folder> folders = new ArrayList<Folder>();
+    /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
+    @JsonProperty("dateFrom")
+    @JsonPropertyDescription("0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp")
+    private String dateFrom;
     /**
      * string for dateFrom and dateTo as search filter
      * <p>
@@ -112,9 +122,9 @@ public class ModifyOrders {
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
     private Variables variables;
     /**
-     * timestamp with now
+     * non negative long
      * <p>
-     * ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS or empty
+     * 
      * 
      */
     @JsonProperty("cycleEndTime")
@@ -210,6 +220,28 @@ public class ModifyOrders {
      *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
      * 
      */
+    @JsonProperty("dateFrom")
+    public String getDateFrom() {
+        return dateFrom;
+    }
+
+    /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
+    @JsonProperty("dateFrom")
+    public void setDateFrom(String dateFrom) {
+        this.dateFrom = dateFrom;
+    }
+
+    /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
     @JsonProperty("dateTo")
     public String getDateTo() {
         return dateTo;
@@ -279,7 +311,7 @@ public class ModifyOrders {
     public void setKill(Boolean kill) {
         this.kill = kill;
     }
-    
+
     @JsonProperty("deep")
     public Boolean getDeep() {
         return deep;
@@ -328,9 +360,9 @@ public class ModifyOrders {
     }
 
     /**
-     * timestamp with now
+     * non negative long
      * <p>
-     * ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS or empty
+     * 
      * 
      */
     @JsonProperty("cycleEndTime")
@@ -339,9 +371,10 @@ public class ModifyOrders {
     }
 
     /**
-     * timestamp with now
+     * non negative long
      * <p>
-     * ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS or empty
+                                                                                            
+     * 
      * 
      */
     @JsonProperty("cycleEndTime")
@@ -373,12 +406,12 @@ public class ModifyOrders {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderIds", orderIds).append("workflowIds", workflowIds).append("states", states).append("folders", folders).append("dateTo", dateTo).append("timeZone", timeZone).append("orderType", orderType).append("kill", kill).append("deep", deep).append("position", position).append("variables", variables).append("cycleEndTime", cycleEndTime).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderIds", orderIds).append("workflowIds", workflowIds).append("states", states).append("folders", folders).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("orderType", orderType).append("kill", kill).append("deep", deep).append("position", position).append("variables", variables).append("cycleEndTime", cycleEndTime).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowIds).append(orderType).append(variables).append(folders).append(controllerId).append(auditLog).append(timeZone).append(kill).append(deep).append(states).append(cycleEndTime).append(dateTo).append(orderIds).append(position).toHashCode();
+        return new HashCodeBuilder().append(workflowIds).append(orderType).append(deep).append(variables).append(folders).append(controllerId).append(auditLog).append(timeZone).append(dateFrom).append(kill).append(states).append(cycleEndTime).append(dateTo).append(orderIds).append(position).toHashCode();
     }
 
     @Override
@@ -390,7 +423,7 @@ public class ModifyOrders {
             return false;
         }
         ModifyOrders rhs = ((ModifyOrders) other);
-        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(orderType, rhs.orderType).append(variables, rhs.variables).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(timeZone, rhs.timeZone).append(kill, rhs.kill).append(deep, rhs.deep).append(states, rhs.states).append(cycleEndTime, rhs.cycleEndTime).append(dateTo, rhs.dateTo).append(orderIds, rhs.orderIds).append(position, rhs.position).isEquals();
+        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(orderType, rhs.orderType).append(deep, rhs.deep).append(variables, rhs.variables).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(kill, rhs.kill).append(states, rhs.states).append(cycleEndTime, rhs.cycleEndTime).append(dateTo, rhs.dateTo).append(orderIds, rhs.orderIds).append(position, rhs.position).isEquals();
     }
 
 }
