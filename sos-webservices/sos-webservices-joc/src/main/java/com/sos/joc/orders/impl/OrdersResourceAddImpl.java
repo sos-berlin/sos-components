@@ -130,7 +130,8 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             }
 
             final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-            Predicate<AddOrder> permissions = order -> canAdd(WorkflowPaths.getPath(order.getWorkflowPath()), permittedFolders);
+            Predicate<AddOrder> permissions = order -> canAdd(WorkflowPaths.getPath(JocInventory.pathToName(order.getWorkflowPath())),
+                    permittedFolders);
 
             final JControllerProxy proxy = Proxy.of(controllerId);
             final JControllerState currentState = proxy.currentState();
@@ -186,7 +187,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     
                     // TODO check if endPos not before startPos
                     JFreshOrder o = OrdersHelper.mapToFreshOrder(order, zoneId, startPos, endPoss, jBrachPath, forceJobAdmission);
-                    auditLogDetails.add(new AuditLogDetail(WorkflowPaths.getPath(order.getWorkflowPath()), o.id().string(), controllerId));
+                    auditLogDetails.add(new AuditLogDetail(WorkflowPaths.getPath(workflowName), o.id().string(), controllerId));
                     either = Either.right(o);
                 } catch (Exception ex) {
                     either = Either.left(new BulkError(LOGGER).get(ex, getJocError(), order));
