@@ -29,6 +29,8 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JOCSOSShell;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
+import com.sos.joc.cluster.configuration.globals.common.ConfigurationEntry;
 import com.sos.joc.db.reporting.DBItemReport;
 import com.sos.joc.db.reporting.DBItemReportRun;
 import com.sos.joc.db.reporting.DBItemReportTemplate;
@@ -45,6 +47,7 @@ import io.vavr.control.Either;
 public class RunReport extends AReporting {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(RunReport.class);
+    private static final String nodeCLOs = "--max-old-space-size=1536";
     
     public static CompletableFuture<Either<Exception, Void>> run(final Report in) {
 
@@ -91,7 +94,7 @@ public class RunReport extends AReporting {
         try {
             runDbItem = getRunDBItem(in);
             byte[] template = insertRunAndReadTemplate(runDbItem, in);
-            String commonScript = getCommonScript(in);
+            String commonScript = getCommonScript(in, getCommandLineOptions());
             //TODO SOSTimeout timeout = new SOSTimeout(10, TimeUnit.Hours);
             for (Frequency f : in.getFrequencies()) {
                 Path tempDir = runPerFrequency(f, commonScript, in, template);
@@ -112,9 +115,21 @@ public class RunReport extends AReporting {
         }
     }
     
-    private static String getCommonScript(final Report in) {
-        StringBuilder s = new StringBuilder()
-                .append("node app/run-report.js -i data");
+    private static String getCommandLineOptions() {
+        ConfigurationGlobalsJoc jocSettings = Globals.getConfigurationGlobalsJoc();
+        ConfigurationEntry nodeCommandLineOptions = jocSettings.getNodeCommandLineOptions();
+        String nCLO = nodeCommandLineOptions.getValue();
+        if (nCLO == null || nCLO.isEmpty()) {
+            nCLO = nodeCommandLineOptions.getDefault();
+        }
+        if (nCLO == null || nCLO.isEmpty()) {
+            nCLO = nodeCLOs;
+        }
+        return nCLO;
+    }
+
+    private static String getCommonScript(final Report in, String commandLineOptions) {
+        StringBuilder s = new StringBuilder().append("node ").append(commandLineOptions).append(" app/run-report.js -i data");
         if (in.getMonthFrom() != null) {
             s.append(" -s ").append(in.getMonthFrom());
         }
@@ -220,17 +235,23 @@ public class RunReport extends AReporting {
     }
     
     private static LocalDateTime getLocalDateFrom(final Path report) {
-        String[] fileNameParts = report.getFileName().toString().replaceFirst("\\.json$", "").split("[-_]");
+        String reportBaseFilename = report.getFileName().toString().replaceFirst("\\.json$", "");
+        String[] fileNameParts = reportBaseFilename.split("[-_]");
         int year = Integer.valueOf(fileNameParts[0]).intValue();
         int month = 1;
-        if (fileNameParts[1].matches("Q[1-4]")) {
-            month = (Integer.valueOf(fileNameParts[1].substring(1)) * 3) - 2;
-        } else if (fileNameParts[1].matches("H[12]")) {
-            month = (Integer.valueOf(fileNameParts[1].substring(1)) * 6) - 5;
-        } else {
-            month = Integer.valueOf(fileNameParts[1]).intValue();
+        int dayOfMonth = 1;
+        if (!reportBaseFilename.matches("\\d{4}") && !reportBaseFilename.matches("\\d{4}[-_]\\d{4}")) { // yearly or 3 years frequency
+            if (fileNameParts[1].matches("Q[1-4]")) {
+                month = (Integer.valueOf(fileNameParts[1].substring(1)) * 3) - 2;
+            } else if (fileNameParts[1].matches("H[12]")) {
+                month = (Integer.valueOf(fileNameParts[1].substring(1)) * 6) - 5;
+            } else {
+                month = Integer.valueOf(fileNameParts[1]).intValue();
+            }
+            if (fileNameParts.length > 2) {
+                dayOfMonth = Integer.valueOf(fileNameParts[2]).intValue();
+            }
         }
-        int dayOfMonth = fileNameParts.length > 2 ? Integer.valueOf(fileNameParts[2]).intValue() : 1;
         return LocalDate.of(year, month, dayOfMonth).atStartOfDay();
     }
     

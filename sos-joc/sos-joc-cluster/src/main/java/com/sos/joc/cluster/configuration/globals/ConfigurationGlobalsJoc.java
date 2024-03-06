@@ -94,6 +94,9 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     private ConfigurationEntry allowEmptyArguments = new ConfigurationEntry("allow_empty_arguments", "false", GlobalSettingsSectionValueType.BOOLEAN);
     private ConfigurationEntry allowUndeclaredVariables = new ConfigurationEntry("allow_undeclared_variables", "false", GlobalSettingsSectionValueType.BOOLEAN);
 
+    //reporting: node command line options
+    private ConfigurationEntry nodeCommandLineOptions = new ConfigurationEntry("node_command_line_options", "--max-old-space-size=1536", GlobalSettingsSectionValueType.STRING);
+
     private Charset encodingCharset = null;
     private boolean encodingCharsetReaded = false;
 
@@ -147,6 +150,8 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
 
         allowEmptyArguments.setOrdering(++index);
         allowUndeclaredVariables.setOrdering(++index);
+        
+        nodeCommandLineOptions.setOrdering(++index);
     }
 
     public static List<String> getAuditLogComments() {
@@ -310,6 +315,10 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
             return displayFoldersInViews.getDefault().equalsIgnoreCase("true");
         }
         return displayFoldersInViews.getValue().equalsIgnoreCase("true");
+    }
+    
+    public ConfigurationEntry getNodeCommandLineOptions() {
+        return nodeCommandLineOptions;
     }
     
 }
