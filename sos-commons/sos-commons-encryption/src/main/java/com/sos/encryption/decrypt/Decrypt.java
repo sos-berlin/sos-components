@@ -1,6 +1,5 @@
 package com.sos.encryption.decrypt;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.security.InvalidAlgorithmParameterException;
@@ -30,12 +29,6 @@ public class Decrypt {
   }
 
   public static void decryptFile(String algorithm, SecretKey key, IvParameterSpec iv, Path inputFile, Path outputFile)
-      throws IOException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException,
-      BadPaddingException, IllegalBlockSizeException {
-    EncryptionUtils.enOrDecryptFile(algorithm, key, iv, inputFile, outputFile, Cipher.DECRYPT_MODE);
-  }
-
-  public static void decryptFile(String algorithm, SecretKey key, IvParameterSpec iv, File inputFile, File outputFile)
       throws IOException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException,
       BadPaddingException, IllegalBlockSizeException {
     EncryptionUtils.enOrDecryptFile(algorithm, key, iv, inputFile, outputFile, Cipher.DECRYPT_MODE);

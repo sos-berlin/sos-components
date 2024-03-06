@@ -4,6 +4,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.InvalidAlgorithmParameterException;
@@ -33,10 +37,17 @@ public class EncryptionUtils {
   private static final String AES_FORMAT = "PBKDF2WithHmacSHA256";
   private static final String CIPHER_ALGORITHM = "AES/CBC/PKCS5Padding";
 
-
   public static IvParameterSpec generateIv() {
     byte[] iv = new byte[16];
     new SecureRandom().nextBytes(iv);
+    return new IvParameterSpec(iv);
+  }
+  
+  public static byte[] getIv(IvParameterSpec ivSpec) {
+    return ivSpec.getIV();
+  }
+  
+  public static IvParameterSpec updateIvParameterSpec(byte[] iv) {
     return new IvParameterSpec(iv);
   }
 
@@ -82,19 +93,12 @@ public class EncryptionUtils {
   public static void enOrDecryptFile(String algorithm, SecretKey key, IvParameterSpec iv, Path inputFile, Path outputFile, int cipherMode)
       throws IOException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException,
       BadPaddingException, IllegalBlockSizeException {
-    enOrDecryptFile(algorithm, key, iv, inputFile.toFile(), outputFile.toFile(), cipherMode);
-  }
-
-  public static void enOrDecryptFile(String algorithm, SecretKey key, IvParameterSpec iv, File inputFile, File outputFile, int cipherMode)
-      throws IOException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException,
-      BadPaddingException, IllegalBlockSizeException {
-
     Cipher cipher = Cipher.getInstance(algorithm);
     cipher.init(cipherMode, key, iv);
-    FileInputStream inputStream = new FileInputStream(inputFile);
-    FileOutputStream outputStream = new FileOutputStream(outputFile);
+    InputStream inputStream = Files.newInputStream(inputFile);
+    OutputStream outputStream = Files.newOutputStream(outputFile);
     try {
-      byte[] buffer = new byte[64];
+      byte[] buffer = new byte[16];
       int bytesRead;
       while ((bytesRead = inputStream.read(buffer)) != -1) {
         byte[] output = cipher.update(buffer, 0, bytesRead);
