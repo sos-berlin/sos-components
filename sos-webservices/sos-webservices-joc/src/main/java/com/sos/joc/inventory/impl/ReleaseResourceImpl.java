@@ -673,7 +673,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                                     List<GenerateRequest> requests = schedules.entrySet().stream().filter(entry -> entry.getKey() != null)
                                         .map(entry -> {
                                             try {
-                                                return ordersGenerate.getGenerateRequests(
+                                                return ordersGenerate.getGenerateRequestsForReleaseDeploy(
                                                         addOrdersDateFrom, null, entry.getValue(), controllerId, entry.getKey());
                                             } catch(ParseException ex) {
                                                 return null;
