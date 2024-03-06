@@ -2,6 +2,7 @@ package com.sos.encryption;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -64,6 +65,7 @@ public class EncryptionTests {
   public void test02EncryptFileAndDecrypt() throws NoSuchAlgorithmException, IOException, IllegalBlockSizeException, InvalidKeyException,
       BadPaddingException, InvalidAlgorithmParameterException, NoSuchPaddingException {
     LOGGER.trace("*  Test encrypt a source file, store new encrypted file, decrypt and store new target started  *");
+    System.setProperty("file.encoding", "UTF-8");
     // Paths
     Path userdir = Paths.get(System.getProperty("user.dir"));
     Path input = userdir.resolve("src/test/resources/TestFile.txt");
@@ -85,20 +87,26 @@ public class EncryptionTests {
       Files.delete(decrypted);
     }
     Files.createFile(decrypted);
-    File encryptedFile = encrypted.toFile();
-    File decryptedFile = decrypted.toFile();
     // objects for en-/decryption
     SecretKey key = EncryptionUtils.generateSecretKey(128);
     String algorithm = "AES/CBC/PKCS5Padding";
     IvParameterSpec ivParameterSpec = EncryptionUtils.generateIv();
-
-    Encrypt.encryptFile(algorithm, key, ivParameterSpec, inputFile, encryptedFile);
-    Decrypt.decryptFile(algorithm, key, ivParameterSpec, encryptedFile, decryptedFile);
-    LOGGER.trace("[INPUT]\n" + new String(Files.readAllBytes(input)));
-    LOGGER.trace("[ENCRYPTED]\n" + new String(Files.readAllBytes(encrypted)));
-    LOGGER.trace("[DECRYPTED]\n" + new String(Files.readAllBytes(decrypted)));
+    
+    Encrypt.encryptFile(algorithm, key, ivParameterSpec, input, encrypted);
+    Decrypt.decryptFile(algorithm, key, ivParameterSpec, encrypted, decrypted);
+    LOGGER.trace("[INPUT]\n" + new String(Files.readAllBytes(input), StandardCharsets.UTF_8));
+    LOGGER.trace("[ENCRYPTED]\n" + new String(Files.readAllBytes(encrypted), StandardCharsets.UTF_8));
+    LOGGER.trace("[DECRYPTED]\n" + new String(Files.readAllBytes(decrypted), StandardCharsets.UTF_8));
     Assert.assertEquals(new String(Files.readAllBytes(input)), new String(Files.readAllBytes(decrypted)));
     LOGGER.trace("*  Test encrypt a source file, store new encrypted file, decrypt and store new target finished *");
+  }
+  
+  @Test
+  public void testIvParameterSpec() {
+    IvParameterSpec ivSpecOrig =  EncryptionUtils.generateIv();
+    byte[] iv = EncryptionUtils.getIv(ivSpecOrig);
+    IvParameterSpec ivSpecAfter = EncryptionUtils.updateIvParameterSpec(iv);
+    Assert.assertEquals(new String(ivSpecOrig.getIV()), new String(ivSpecAfter.getIV()));
   }
 
 }
