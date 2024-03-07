@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -40,6 +41,9 @@ import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.deploy.DeployHistoryFileOrdersSourceEvent;
+import com.sos.joc.event.bean.deploy.DeployHistoryWorkflowEvent;
 import com.sos.joc.inventory.impl.ReleaseResourceImpl;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
@@ -132,6 +136,15 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             if (workflowInvIds != null && !workflowInvIds.isEmpty()) {
                 InventoryTagDBLayer dbTagLayer = new InventoryTagDBLayer(session);
                 dbTagLayer.getTags(workflowInvIds).stream().distinct().forEach(JocInventory::postTaggingEvent);
+            }
+            // post events for updating workflows and fileordersources
+            if (allDeployments != null) {
+                allDeployments.stream().filter(dbItem -> DeployType.FILEORDERSOURCE.intValue() == dbItem.getType()).map(
+                        DBItemDeploymentHistory::getControllerId).distinct().map(controllerId -> new DeployHistoryFileOrdersSourceEvent(controllerId))
+                        .forEach(evt -> EventBus.getInstance().post(evt));
+                allDeployments.stream().filter(dbItem -> DeployType.WORKFLOW.intValue() == dbItem.getType()).map(
+                        DBItemDeploymentHistory::getControllerId).distinct().map(controllerId -> new DeployHistoryWorkflowEvent(controllerId))
+                        .forEach(evt -> EventBus.getInstance().post(evt));
             }
             
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
