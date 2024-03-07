@@ -43,7 +43,9 @@ public class WorkflowPaths {
 
     @Subscribe({ DeployHistoryWorkflowEvent.class })
     public void updateMap(DeployHistoryWorkflowEvent evt) {
-        namePathMap.put(evt.getName(), evt.getPath());
+        if (evt.getName() != null) {
+            namePathMap.put(evt.getName(), evt.getPath());
+        }
     }
 
     public static ConcurrentMap<String, String> getNamePathMap() {
