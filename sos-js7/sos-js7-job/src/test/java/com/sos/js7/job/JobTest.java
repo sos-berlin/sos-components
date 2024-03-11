@@ -46,7 +46,7 @@ public class JobTest {
         LOGGER.info("job super class=" + job.getClass().getSuperclass());
         LOGGER.info("job super class(generic super class)=" + job.getClass().getSuperclass().getGenericSuperclass());
 
-        TestJobArguments args = (TestJobArguments) getJobArgumensClass(job).newInstance();
+        TestJobArguments args = (TestJobArguments) getJobArgumensClass(job).getDeclaredConstructor().newInstance();
         LOGGER.info("name(superClass)=" + args.getTestSuperClass().getName());
         LOGGER.info("name=" + args.getTest().getName());
     }
@@ -61,7 +61,7 @@ public class JobTest {
         LOGGER.info("job super class=" + job.getClass().getSuperclass());
         LOGGER.info("job super class(generic super class)=" + job.getClass().getSuperclass().getGenericSuperclass());
 
-        TestJobArguments args = (TestJobArguments) getJobArgumensClass(job).newInstance();
+        TestJobArguments args = (TestJobArguments) getJobArgumensClass(job).getDeclaredConstructor().newInstance();
         LOGGER.info("name(superClass)=" + args.getTestSuperClass().getName());
         LOGGER.info("name=" + args.getTest().getName());
     }
@@ -76,7 +76,7 @@ public class JobTest {
         LOGGER.info("job super class=" + job.getClass().getSuperclass());
         LOGGER.info("job super class(generic super class)=" + job.getClass().getSuperclass().getGenericSuperclass());
 
-        Object args = (Object) getJobArgumensClass(job).newInstance();
+        Object args = (Object) getJobArgumensClass(job).getDeclaredConstructor().newInstance();
         LOGGER.info("args=" + args.getClass());
     }
 

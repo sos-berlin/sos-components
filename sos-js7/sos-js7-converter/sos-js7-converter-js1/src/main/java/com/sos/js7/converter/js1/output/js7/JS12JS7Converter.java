@@ -1122,7 +1122,7 @@ public class JS12JS7Converter {
                                 setBackDelays.add(lastDelay);
                             }
                             if (d.getDelay() != null) {
-                                int delaySeconds = new Long(SOSDate.getTimeAsSeconds(d.getDelay())).intValue();
+                                int delaySeconds = Long.valueOf(SOSDate.getTimeAsSeconds(d.getDelay())).intValue();
                                 setBackDelays.add(delaySeconds);
                                 lastSetbackCount = d.getSetbackCount();
                                 lastDelay = delaySeconds;
@@ -1162,7 +1162,7 @@ public class JS12JS7Converter {
                                 errorDelays.add(lastDelay);
                             }
                             if (d.getDelay() != null && !d.getDelay().equalsIgnoreCase("stop")) {
-                                int delaySeconds = new Long(SOSDate.getTimeAsSeconds(d.getDelay())).intValue();
+                                int delaySeconds = Long.valueOf(SOSDate.getTimeAsSeconds(d.getDelay())).intValue();
                                 errorDelays.add(delaySeconds);
                                 lastErrorCount = d.getErrorCount();
                                 lastDelay = delaySeconds;

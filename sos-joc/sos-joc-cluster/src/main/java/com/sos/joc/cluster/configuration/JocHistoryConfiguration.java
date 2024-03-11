@@ -18,7 +18,7 @@ import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc.LogExtT
 
 public class JocHistoryConfiguration implements Serializable {
 
-    public static final Long ID_NOT_STARTED_ORDER = new Long(0);
+    public static final Long ID_NOT_STARTED_ORDER = Long.valueOf(0);
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(JocHistoryConfiguration.class);

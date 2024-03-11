@@ -26,7 +26,7 @@ public class SSHJob extends Job<SSHJobArguments> {
                 executeCommand(provider, step);
             }
 
-            Integer testExitCode = new Integer(0);
+            Integer testExitCode = Integer.valueOf(0);
             if (step.getDeclaredArguments().getExitCodesToIgnore().getValue() != null) {
                 step.getLogger().info("[getExitCodesToIgnore.size=]" + step.getDeclaredArguments().getExitCodesToIgnore().getValue().size());
                 for (Object o : step.getDeclaredArguments().getExitCodesToIgnore().getValue()) {

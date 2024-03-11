@@ -62,8 +62,8 @@ public class TestExecutePatch {
         try {
             Path copiedPath = Files.copy(warFilePath, tempDir.resolve("joc.war"), REPLACE_EXISTING);
             System.out.println("copiedPath = " + copiedPath);
-            FileSystem sourceFileSystem = FileSystems.newFileSystem(patchFilePath, null);
-            FileSystem targetFileSystem = FileSystems.newFileSystem(copiedPath, null);
+            FileSystem sourceFileSystem = FileSystems.newFileSystem(patchFilePath);
+            FileSystem targetFileSystem = FileSystems.newFileSystem(copiedPath);
             EnumSet<FileVisitOption> options = EnumSet.of(FileVisitOption.FOLLOW_LINKS);
             Files.walkFileTree(sourceFileSystem.getPath("/"), options, Integer.MAX_VALUE, new FileVisitor<Path>() {
 
@@ -112,8 +112,8 @@ public class TestExecutePatch {
         try {
             Path copiedPath = Files.copy(warFilePath, tempDir.resolve("joc.war"), REPLACE_EXISTING);
             System.out.println("copiedPath = " + copiedPath);
-            FileSystem sourceFileSystem = FileSystems.newFileSystem(patchFilePath, null);
-            FileSystem targetFileSystem = FileSystems.newFileSystem(copiedPath, null);
+            FileSystem sourceFileSystem = FileSystems.newFileSystem(patchFilePath);
+            FileSystem targetFileSystem = FileSystems.newFileSystem(copiedPath);
             EnumSet<FileVisitOption> options = EnumSet.of(FileVisitOption.FOLLOW_LINKS);
             Files.walkFileTree(sourceFileSystem.getPath("/"), options, Integer.MAX_VALUE, new FileVisitor<Path>() {
 

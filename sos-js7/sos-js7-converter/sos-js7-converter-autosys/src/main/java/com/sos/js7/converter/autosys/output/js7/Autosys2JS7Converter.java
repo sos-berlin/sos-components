@@ -1236,7 +1236,7 @@ public class Autosys2JS7Converter {
             if (jilJob.getRunTime().getStartMins().getValue().size() == 60) {
                 p.setOffsets(Collections.singletonList(60L));
             } else {
-                p.setOffsets(jilJob.getRunTime().getStartMins().getValue().stream().map(e -> new Long(e * 60)).collect(Collectors.toList()));
+                p.setOffsets(jilJob.getRunTime().getStartMins().getValue().stream().map(e -> Long.valueOf(e * 60L)).collect(Collectors.toList()));
             }
 
             DailyPeriod dp = new DailyPeriod();

@@ -118,7 +118,7 @@ public class SOSHibernateExecuterTest {
         List<SOSBatchObject> rowValues = new ArrayList<>();
         int index = 1;// beginning with 1
         rowValues.add(new SOSBatchObject(index, "NAME", "Tester"));
-        rowValues.add(new SOSBatchObject(++index, "AGE", new Integer(33)));
+        rowValues.add(new SOSBatchObject(++index, "AGE", Integer.valueOf(33)));
         rowValues.add(new SOSBatchObject(++index, "COUNTRY", "DE"));
         return rowValues;
     }
