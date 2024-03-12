@@ -31,7 +31,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.pekko.util.OptionConverters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -140,6 +139,7 @@ import reactor.core.publisher.Flux;
 import scala.Function1;
 import scala.Option;
 import scala.collection.JavaConverters;
+import scala.jdk.javaapi.OptionConverters;
 
 public class OrdersHelper {
 

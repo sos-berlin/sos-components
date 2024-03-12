@@ -148,6 +148,18 @@
 			<groupId>com.auth0</groupId>
 			<artifactId>java-jwt</artifactId>
 		</dependency>
+		<!-- temporary -->
+		<dependency>
+			<groupId>org.typelevel</groupId>
+			<artifactId>cats-core_3</artifactId>
+			<version>2.10.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.typelevel</groupId>
+			<artifactId>cats-kernel_3</artifactId>
+			<version>2.10.0</version>
+		</dependency>
+		<!-- why we need this? -->
     <dependency>
       <groupId>org.scala-lang.modules</groupId>
       <artifactId>scala-java8-compat_3</artifactId>
