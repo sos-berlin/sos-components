@@ -638,7 +638,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                                     if (!successful) {
                                         JocError je = getJocError();
                                         if (je != null && je.printMetaInfo() != null) {
-                                            LOGGER.info(je.printMetaInfo());
+                                            LOGGER.warn(je.printMetaInfo());
                                         }
                                         LOGGER.warn("Order delete failed due to missing permission.");
                                     }
@@ -694,11 +694,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                                     Globals.disconnect(session);
                                 }
                             } else {
-                                JocError je = getJocError();
-                                if (je != null && je.printMetaInfo() != null) {
-                                    LOGGER.info(je.printMetaInfo());
-                                }
-                                LOGGER.warn("Order cancel failed due to missing permission.");
+                              LOGGER.warn(either.getLeft().messageWithCause());
                             }
                         });
                     }
