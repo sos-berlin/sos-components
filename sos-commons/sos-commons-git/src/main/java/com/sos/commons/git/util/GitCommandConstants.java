@@ -66,6 +66,8 @@ public class GitCommandConstants {
     public static final String CMD_GIT_CONFIG_GET_GLOBAL_SSH_COMMAND = "git config --global --get core.sshCommand";
     // git config command - usage to get user.name setting from global config
     public static final String CMD_GIT_CONFIG_GET_GLOBAL_USER_NAME = "git config --global --get user.name";
+    // git config command - usage to get user.password setting from global config
+    public static final String CMD_GIT_CONFIG_GET_GLOBAL_USER_PWD = "git config --global --get user.password";
     // git config command - usage to get user.email setting from global config
     public static final String CMD_GIT_CONFIG_GET_GLOBAL_USER_EMAIL = "git config --global --get user.email";
     // git config command - usage to get safe.directory setting from global config
@@ -74,6 +76,8 @@ public class GitCommandConstants {
     public static final String CMD_GIT_CONFIG_UNSET_GLOBAL_SSH_COMMAND = "git config --global --unset core.sshCommand";
     // git config command - usage to unset user.name from global config
     public static final String CMD_GIT_CONFIG_UNSET_GLOBAL_USER_NAME = "git config --global --unset user.name";
+    // git config command - usage to unset user.password from global config
+    public static final String CMD_GIT_CONFIG_UNSET_GLOBAL_USER_PWD = "git config --global --unset user.password";
     // git config command - usage to unset user.email from global config
     public static final String CMD_GIT_CONFIG_UNSET_GLOBAL_USER_EMAIL = "git config --global --unset user.email";
     // git config command - usage to unset safe.directory setting from global config
@@ -86,6 +90,9 @@ public class GitCommandConstants {
     // git config command - usage to set different user.name for global config
     public static final String CMD_GIT_CONFIG_ADD_GLOBAL_USER_NAME_FORMAT_WIN = "git config --global --add user.name \"%1$s\"";
     public static final String CMD_GIT_CONFIG_ADD_GLOBAL_USER_NAME_FORMAT_LINUX = "git config --global --add user.name '%1$s'";
+    // git config command - usage to set different user.password for global config
+    public static final String CMD_GIT_CONFIG_ADD_GLOBAL_USER_PWD_FORMAT_WIN = "git config --global --add user.password \"%1$s\"";
+    public static final String CMD_GIT_CONFIG_ADD_GLOBAL_USER_PWD_FORMAT_LINUX = "git config --global --add user.password '%1$s'";
     // git config command - usage to set different user.email for global config
     public static final String CMD_GIT_CONFIG_ADD_GLOBAL_USER_EMAIL_FORMAT_WIN = "git config --global --add user.email \"%1$s\"";
     public static final String CMD_GIT_CONFIG_ADD_GLOBAL_USER_EMAIL_FORMAT_LINUX = "git config --global --add user.email '%1$s'";
@@ -99,6 +106,8 @@ public class GitCommandConstants {
     public static final String CMD_GIT_CONFIG_GET_LOCAL_SSH_COMMAND = "git config --get --local core.sshCommand";
     // git config command - usage to get user.name setting from global config
     public static final String CMD_GIT_CONFIG_GET_LOCAL_USER_NAME = "git config --get --local user.name";
+    // git config command - usage to get user.password setting from global config
+    public static final String CMD_GIT_CONFIG_GET_LOCAL_USER_PWD = "git config --get --local user.password";
     // git config command - usage to get user.email setting from global config
     public static final String CMD_GIT_CONFIG_GET_LOCAL_USER_EMAIL = "git config --get --local user.email";
     // git config command - usage to get safe.directory setting from global config
@@ -107,6 +116,8 @@ public class GitCommandConstants {
     public static final String CMD_GIT_CONFIG_UNSET_LOCAL_SSH_COMMAND = "git config --local --unset core.sshCommand";
     // git config command - usage to unset user.name from global config
     public static final String CMD_GIT_CONFIG_UNSET_LOCAL_USER_NAME = "git config --local --unset user.name";
+    // git config command - usage to unset user.password from global config
+    public static final String CMD_GIT_CONFIG_UNSET_LOCAL_USER_PWD = "git config --local --unset user.password";
     // git config command - usage to unset user.email from global config
     public static final String CMD_GIT_CONFIG_UNSET_LOCAL_USER_EMAIL = "git config --local --unset user.email";
     // git config command - usage to unset safe.directory setting from local config
@@ -119,6 +130,9 @@ public class GitCommandConstants {
     // git config command - usage to set different user.name for global config
     public static final String CMD_GIT_CONFIG_ADD_LOCAL_USER_NAME_FORMAT_WIN = "git config --local --add user.name \"%1$s\"";
     public static final String CMD_GIT_CONFIG_ADD_LOCAL_USER_NAME_FORMAT_LINUX = "git config --local --add user.name '%1$s'";
+    // git config command - usage to set different user.password for global config
+    public static final String CMD_GIT_CONFIG_ADD_LOCAL_USER_PWD_FORMAT_WIN = "git config --local --add user.password \"%1$s\"";
+    public static final String CMD_GIT_CONFIG_ADD_LOCAL_USER_PWD_FORMAT_LINUX = "git config --local --add user.password '%1$s'";
     // git config command - usage to set different user.email for global config
     public static final String CMD_GIT_CONFIG_ADD_LOCAL_USER_EMAIL_FORMAT_WIN = "git config --local --add user.email \"%1$s\"";
     public static final String CMD_GIT_CONFIG_ADD_LOCAL_USER_EMAIL_FORMAT_LINUX = "git config --local --add user.email '%1$s'";
@@ -134,6 +148,9 @@ public class GitCommandConstants {
     // git config command - usage to get user.name setting from global config
     public static final String CMD_GIT_CONFIG_GET_FILE_USER_NAME_WIN = "git config --get --file \"%1$s\" user.name";
     public static final String CMD_GIT_CONFIG_GET_FILE_USER_NAME_LINUX = "git config --get --file '%1$s' user.name";
+    // git config command - usage to get user.password setting from global config
+    public static final String CMD_GIT_CONFIG_GET_FILE_USER_PWD_WIN = "git config --get --file \"%1$s\" user.password";
+    public static final String CMD_GIT_CONFIG_GET_FILE_USER_PWD_LINUX = "git config --get --file '%1$s' user.password";
     // git config command - usage to get user.email setting from global config
     public static final String CMD_GIT_CONFIG_GET_FILE_USER_EMAIL_WIN = "git config --get --file \"%1$s\" user.email";
     public static final String CMD_GIT_CONFIG_GET_FILE_USER_EMAIL_LINUX = "git config --get --file '%1$s' user.email";
@@ -146,6 +163,9 @@ public class GitCommandConstants {
     // git config command - usage to unset user.name from global config
     public static final String CMD_GIT_CONFIG_UNSET_FILE_USER_NAME_WIN = "git config --file \"%1$s\" --unset user.name";
     public static final String CMD_GIT_CONFIG_UNSET_FILE_USER_NAME_LINUX = "git config --file '%1$s' --unset user.name";
+    // git config command - usage to unset user.password from global config
+    public static final String CMD_GIT_CONFIG_UNSET_FILE_USER_PWD_WIN = "git config --file \"%1$s\" --unset user.password";
+    public static final String CMD_GIT_CONFIG_UNSET_FILE_USER_PWD_LINUX = "git config --file '%1$s' --unset user.password";
     // git config command - usage to unset user.email from global config
     public static final String CMD_GIT_CONFIG_UNSET_FILE_USER_EMAIL_WIN = "git config --file \"%1$s\" --unset user.email";
     public static final String CMD_GIT_CONFIG_UNSET_FILE_USER_EMAIL_LINUX = "git config --file '%1$s' --unset user.email";
@@ -160,6 +180,9 @@ public class GitCommandConstants {
     // git config command - usage to set different user.name for global config
     public static final String CMD_GIT_CONFIG_ADD_FILE_USER_NAME_FORMAT_WIN = "git config --file \"%1$s\" --add user.name \"%2$s\"";
     public static final String CMD_GIT_CONFIG_ADD_FILE_USER_NAME_FORMAT_LINUX = "git config --file '%1$s' --add user.name '%2$s'";
+    // git config command - usage to set different user.password for global config
+    public static final String CMD_GIT_CONFIG_ADD_FILE_USER_PWD_FORMAT_WIN = "git config --file \"%1$s\" --add user.password \"%2$s\"";
+    public static final String CMD_GIT_CONFIG_ADD_FILE_USER_PWD_FORMAT_LINUX = "git config --file '%1$s' --add user.password '%2$s'";
     // git config command - usage to set different user.email for global config
     public static final String CMD_GIT_CONFIG_ADD_FILE_USER_EMAIL_FORMAT_WIN = "git config --file \"%1$s\" --add user.email \"%2$s\"";
     public static final String CMD_GIT_CONFIG_ADD_FILE_USER_EMAIL_FORMAT_LINUX = "git config --file '%1$s' --add user.email '%2$s'";

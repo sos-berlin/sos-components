@@ -732,6 +732,38 @@ public class GitCommand {
         }
     }
     
+    public static GitCommandResult executeGitConfigUserpwdAdd(GitConfigType configType, String pwd, Charset charset) throws SOSException {
+      return executeGitConfigUserpwdAdd(configType, pwd, null, null, null, charset);
+  }
+  
+  public static GitCommandResult executeGitConfigUserpwdAdd(GitConfigType configType, String pwd, Path repository, Charset charset)
+          throws SOSException {
+      return executeGitConfigUserpwdAdd(configType, pwd, repository, null, null, charset);
+  }
+  
+  public static GitCommandResult executeGitConfigUserpwdAdd(GitConfigType configType, String pwd, Charset charset, Path gitConfigPath)
+          throws SOSException {
+      return executeGitConfigUserpwdAdd(configType, pwd, null, null, gitConfigPath, charset);
+  }
+  
+  public static GitCommandResult executeGitConfigUserpwdAdd(GitConfigType configType, String pwd, Path repository, Path gitConfigPath,
+          Charset charset) throws SOSException {
+      return executeGitConfigUserpwdAdd(configType, pwd, repository, null, gitConfigPath, charset);
+  }
+  
+  public static GitCommandResult executeGitConfigUserpwdAdd(GitConfigType configType, String pwd, Path repository, Path workingDir,
+          Path gitConfigPath, Charset charset) throws SOSException {
+      String command = GitUtil.getConfigUserpwd(configType, GitConfigAction.ADD, pwd, gitConfigPath);
+      if (repository == null) {
+          return GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(command, charset, TIMEMOUT_SHORT));
+      } else {
+          GitCommandResult result = GitUtil.createGitConfigCommandResult(SOSShell.executeCommand(getPathifiedCommand(
+                  repository, workingDir, command), charset, TIMEMOUT_SHORT), command);
+          switchBackToWorkingDir(workingDir, charset);
+          return result;
+      }
+  }
+  
     public static GitCommandResult executeGitConfigUserEmailAdd(GitConfigType configType, String email, Charset charset) throws SOSException {
         return executeGitConfigUserEmailAdd(configType, email, null, null, null, charset);
     }
