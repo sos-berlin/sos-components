@@ -950,17 +950,20 @@ public class GitCommandUtils {
     }
     
     public static final GitConfigCommandResult prepareConfigFileForCloning (Charset charset, GitCredentials credentials) {
-        return prepareConfigFile(charset, Paths.get(credentials.getKeyfilePath()), null, credentials.getUsername(),
-                credentials.getEmail());
+        return prepareConfigFile(charset, 
+            (credentials.getKeyfilePath()!= null ? Paths.get(credentials.getKeyfilePath()) : null), 
+            null, credentials.getUsername(), credentials.getEmail(), 
+            (credentials.getPassword() == null ? credentials.getPersonalAccessToken() : credentials.getPassword()));
     }
     
     public static final GitConfigCommandResult prepareConfigFile (Charset charset, GitCredentials credentials, Path localRepoPath) {
-        return prepareConfigFile(charset, Paths.get(credentials.getKeyfilePath()), localRepoPath, credentials.getUsername(),
-                credentials.getEmail());
+        return prepareConfigFile(charset, 
+            (credentials.getKeyfilePath()!= null ? Paths.get(credentials.getKeyfilePath()) : null), localRepoPath, credentials.getUsername(),
+                credentials.getEmail(), (credentials.getPassword() == null ? credentials.getPersonalAccessToken() : credentials.getPassword()));
     }
     
     public static final GitConfigCommandResult prepareConfigFile (Charset charset, Path gitKeyFilePath, Path localRepoPath, String username,
-            String userEmail) {
+            String userEmail, String pwd) {
         GitConfigCommandResult configResult = null;
         Path gitConfigPath = Paths.get(System.getProperty("user.home")).resolve(GitCommandConstants.GIT_CONFIG_DEFAULT_FILENAME);
         Path gitConfigTmpPath = Paths.get(System.getProperty("java.io.tmpdir"))
@@ -986,6 +989,13 @@ public class GitCommandUtils {
                     throw new JocGitException(String.format("update config command exit code <%1$d> with message: %2$s", 
                             configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
                 }
+            }
+            if(pwd != null) {
+              configResult = (GitConfigCommandResult)GitCommand.executeGitConfigUserpwdAdd(GitConfigType.FILE, pwd, charset, gitConfigTmpPath);
+              if(configResult.getExitCode() != 0) {
+                  throw new JocGitException(String.format("update config command exit code <%1$d> with message: %2$s", 
+                          configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
+              }
             }
             if (userEmail != null) {
                 configResult = (GitConfigCommandResult)GitCommand.executeGitConfigUserEmailAdd(GitConfigType.FILE, userEmail, charset,
