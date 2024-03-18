@@ -46,11 +46,7 @@
       <artifactId>js7-launcher-for-java_3</artifactId>
       <scope>provided</scope>
     </dependency>
-    <dependency>
-      <groupId>org.scala-lang.modules</groupId>
-      <artifactId>scala-java8-compat_3</artifactId>
-      <scope>provided</scope>
-    </dependency>
+    
     <!-- 3RD PARTY DEPENDENCIES -->
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
@@ -65,7 +61,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-slf4j-impl</artifactId>
+      <artifactId>log4j-slf4j2-impl</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
