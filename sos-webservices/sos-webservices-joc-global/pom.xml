@@ -102,7 +102,7 @@
 		</dependency>
 		<dependency>
             <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-slf4j-impl</artifactId>
+            <artifactId>log4j-slf4j2-impl</artifactId>
         </dependency>
         
 		<!-- dependency> <groupId>org.apache.shiro</groupId> <artifactId>shiro-core</artifactId> 
@@ -148,11 +148,6 @@
 			<groupId>com.auth0</groupId>
 			<artifactId>java-jwt</artifactId>
 		</dependency>
-		<!-- why we need this? -->
-    <dependency>
-      <groupId>org.scala-lang.modules</groupId>
-      <artifactId>scala-java8-compat_3</artifactId>
-    </dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
