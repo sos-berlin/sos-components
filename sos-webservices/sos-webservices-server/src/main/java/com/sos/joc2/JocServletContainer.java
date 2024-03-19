@@ -89,8 +89,7 @@ public class JocServletContainer extends ServletContainer {
 
     private void updateCertificate() {
         System.setProperty("jetty.base", "C:\\ProgramData\\sos-berlin.com\\js7\\joc\\jetty_base");
-        JocCertificate jocCertificate = JocCertificate.getInstance();
-        jocCertificate.updateCertificate();
+        JocCertificate.updateCertificate();
     }
     
 }

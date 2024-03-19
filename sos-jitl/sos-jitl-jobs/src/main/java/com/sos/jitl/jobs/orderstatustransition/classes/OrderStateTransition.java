@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.sos.jitl.jobs.checklicense.CheckLicenseJobArguments;
 import com.sos.jitl.jobs.orderstatustransition.OrderStateTransitionJobArguments;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.ModifyOrders;

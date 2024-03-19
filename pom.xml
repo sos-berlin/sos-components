@@ -48,6 +48,7 @@
     <apache.commons.lang.version>3.14.0</apache.commons.lang.version>
     <apache.commons.compress.version>1.26.0</apache.commons.compress.version>
     <apache.commons.csv.version>1.10.0</apache.commons.csv.version>
+    <apache.commons.text.version>1.11.0</apache.commons.text.version>
     <apache.commons.net.version>3.10.0</apache.commons.net.version>
     <apache.httpcomponents.httpclient.version>4.5.14</apache.httpcomponents.httpclient.version>
     <json.version>1.1.4</json.version>
@@ -68,11 +69,11 @@
     <io.vavr.version>0.10.4</io.vavr.version>
     <txtmark.version>0.13</txtmark.version>
     <jakarta.ws.rs-api.version>3.0.0</jakarta.ws.rs-api.version>
-    <bouncycastle.version>1.75</bouncycastle.version>
+    <bouncycastle.version>1.77</bouncycastle.version>
     <dom4j.version>2.1.3</dom4j.version>
     <xml.apis.version>1.4.01</xml.apis.version>
     <google.findbugs.version>3.0.2</google.findbugs.version>
-    <typesafe.config.version>1.4.2</typesafe.config.version>
+    <typesafe.config.version>1.4.3</typesafe.config.version>
     <keepass.java2.version>2.2.1</keepass.java2.version>
     <!-- KeePass makes use of Guava 19, to use current guava version the next dependency is needed -->
     <guava.version>32.1.1-jre</guava.version>
@@ -550,6 +551,11 @@
         <version>${apache.commons.csv.version}</version>
       </dependency>
       <dependency>
+		<groupId>org.apache.commons</groupId>
+		<artifactId>commons-text</artifactId>
+		<version>${apache.commons.text.version}</version>
+		</dependency>
+      <dependency>
         <groupId>org.apache.httpcomponents</groupId>
         <artifactId>httpclient</artifactId>
         <version>${apache.httpcomponents.httpclient.version}</version>
@@ -740,17 +746,17 @@
       </dependency>
       <dependency>
         <groupId>org.bouncycastle</groupId>
-        <artifactId>bcprov-jdk15to18</artifactId>  
+        <artifactId>bcprov-jdk18on</artifactId>  
         <version>${bouncycastle.version}</version>
       </dependency>
       <dependency>
         <groupId>org.bouncycastle</groupId>
-        <artifactId>bcpg-jdk15to18</artifactId>
+        <artifactId>bcpg-jdk18on</artifactId>
         <version>${bouncycastle.version}</version>
       </dependency>
       <dependency>
         <groupId>org.bouncycastle</groupId>
-        <artifactId>bcpkix-jdk15to18</artifactId>
+        <artifactId>bcpkix-jdk18on</artifactId>
         <version>${bouncycastle.version}</version>
       </dependency>
       <!-- KeePass makes use of Guava 19, to use current guava version the next dependency is needed -->

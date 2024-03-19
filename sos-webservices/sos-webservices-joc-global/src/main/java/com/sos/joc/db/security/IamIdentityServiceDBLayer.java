@@ -1,7 +1,5 @@
 package com.sos.joc.db.security;
 
-import java.nio.file.AccessDeniedException;
-import java.security.KeyStore;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -11,16 +9,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.auth.classes.SOSAuthHelper;
-import com.sos.auth.classes.SOSIdentityService;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.joc.db.authentication.DBItemIamAccount;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
-import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
 public class IamIdentityServiceDBLayer {
 

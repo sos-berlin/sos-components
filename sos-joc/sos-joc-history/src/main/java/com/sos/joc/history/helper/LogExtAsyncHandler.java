@@ -17,7 +17,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import org.apache.commons.compress.utils.IOUtils;
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -256,7 +255,7 @@ public class LogExtAsyncHandler {
                 if (item != null && !item.fileContentIsNull()) {
                     try (OutputStream out = Files.newOutputStream(l.getFile(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
                         InputStream is = new ByteArrayInputStream(item.getFileContent());
-                        IOUtils.copy(is, out);
+                        is.transferTo(out);
                         try {
                             is.close();
                         } catch (Throwable e) {

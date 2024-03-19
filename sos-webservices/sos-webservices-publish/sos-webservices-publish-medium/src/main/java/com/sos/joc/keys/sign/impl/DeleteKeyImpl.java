@@ -14,7 +14,6 @@ import com.sos.joc.keys.sign.resource.IDeleteKey;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.publish.DeleteKeyFilter;
-import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;

@@ -24,7 +24,6 @@ import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.instruction.AddOrder;
 import com.sos.inventory.model.instruction.ConsumeNotices;
 import com.sos.inventory.model.instruction.Cycle;
-import com.sos.inventory.model.instruction.Fail;
 import com.sos.inventory.model.instruction.Finish;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.ForkList;

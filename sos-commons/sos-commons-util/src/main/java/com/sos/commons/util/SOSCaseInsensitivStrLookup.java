@@ -2,9 +2,9 @@ package com.sos.commons.util;
 
 import java.util.Map;
 
-import org.apache.commons.lang3.text.StrLookup;
+import org.apache.commons.text.lookup.StringLookup;
 
-public class SOSCaseInsensitivStrLookup<V> extends StrLookup<V> {
+public class SOSCaseInsensitivStrLookup<V> implements StringLookup {
 
     private final Map<String, V> map;
 
@@ -18,7 +18,7 @@ public class SOSCaseInsensitivStrLookup<V> extends StrLookup<V> {
         if (map == null) {
             return null;
         }
-        final Object obj = map.get(lowercaseKey);
+        final V obj = map.get(lowercaseKey);
         if (obj == null) {
             return null;
         }

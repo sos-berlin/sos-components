@@ -41,6 +41,7 @@ import js7.data.event.Stamped;
 import js7.data.order.Order;
 import js7.data.order.OrderId;
 import js7.data_for_java.cluster.JClusterState;
+import js7.data_for_java.controller.JControllerCommand;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrderPredicates;
@@ -277,7 +278,7 @@ public class ProxyTest {
                 //evtBus.subscribe(Collections.emptyList(), callbackOfCurrentController);
                 TimeUnit.SECONDS.sleep(5);
                 //evtBus.subscribe(Arrays.asList(ControllerEvent.class, ClusterEvent.class), callbackOfCurrentController);
-                controllerProxy.api().executeCommandJson(restartJson).get();
+                controllerProxy.api().executeCommand(JControllerCommand.fromJson(restartJson).get());
                 controllerReady = finished.get(240, TimeUnit.SECONDS);
             } catch (Exception e) {
                 LOGGER.error("", e);

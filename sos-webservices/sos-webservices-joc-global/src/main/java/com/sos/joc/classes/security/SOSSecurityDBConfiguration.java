@@ -1,6 +1,5 @@
 package com.sos.joc.classes.security;
 
-import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -11,7 +10,6 @@ import com.sos.auth.classes.SOSInitialPasswordSetting;
 import com.sos.auth.classes.SOSPasswordHasher;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.db.authentication.DBItemIamAccount;
 import com.sos.joc.db.authentication.DBItemIamAccount2RoleWithName;
@@ -25,7 +23,6 @@ import com.sos.joc.db.security.IamAccountFilter;
 import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.exceptions.JocError;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocInfoException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.security.configuration.SecurityConfiguration;
@@ -37,7 +34,6 @@ import com.sos.joc.model.security.configuration.permissions.IniControllers;
 import com.sos.joc.model.security.configuration.permissions.IniPermission;
 import com.sos.joc.model.security.configuration.permissions.IniPermissions;
 import com.sos.joc.model.security.configuration.permissions.SecurityConfigurationFolders;
-import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
 public class SOSSecurityDBConfiguration {
 

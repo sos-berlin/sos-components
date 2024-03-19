@@ -19,7 +19,6 @@ import java.util.Map;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import org.apache.commons.compress.utils.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -225,7 +224,7 @@ public class LogTaskContent {
         InputStream is = getLogStream();
         if (is != null) {
             try (OutputStream out = Files.newOutputStream(targetFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
-                IOUtils.copy(is, out);
+                is.transferTo(out);
                 try {
                     is.close();
                 } catch (Throwable e) {

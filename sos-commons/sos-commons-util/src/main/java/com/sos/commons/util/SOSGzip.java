@@ -23,7 +23,6 @@ import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
-import org.apache.commons.compress.utils.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -191,7 +190,7 @@ public class SOSGzip {
             result.addDirectory(target);
 
             try (TarArchiveInputStream tis = new TarArchiveInputStream(inputStream)) {
-                for (TarArchiveEntry entry = tis.getNextTarEntry(); entry != null;) {
+                for (TarArchiveEntry entry = tis.getNextEntry(); entry != null;) {
                     if (isDebugEnabled) {
                         LOGGER.debug(String.format("[decompress][entry]%s", entry.getName()));
                     }
@@ -211,7 +210,7 @@ public class SOSGzip {
                             }
                         }
                         try (OutputStream out = Files.newOutputStream(outputPath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
-                            IOUtils.copy(tis, out);
+                            tis.transferTo(out);
                         }
                         result.addFile(outputPath);
 
@@ -225,7 +224,7 @@ public class SOSGzip {
                         }
                     }
 
-                    entry = tis.getNextTarEntry();
+                    entry = tis.getNextEntry();
                 }
             }
             result.getDirectories().remove(target.toString());

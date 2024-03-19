@@ -11,16 +11,19 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang3.text.StrSubstitutor;
+//import org.apache.commons.lang3.text.StrSubstitutor;
+import org.apache.commons.text.StringSubstitutor;
+
 
 public class SOSParameterSubstitutor {
 
-    private HashMap<String, String> keylist;
-    private StrSubstitutor strSubstitutorEnv;
-    private StrSubstitutor strSubstitutor;
+    private Map<String, String> keylist;
+    private StringSubstitutor strSubstitutorEnv;
+    private StringSubstitutor strSubstitutor;
     private boolean caseSensitive = false;
     private String openTag = "${";
     private String closeTag = "}";
@@ -68,7 +71,7 @@ public class SOSParameterSubstitutor {
 
     public String replaceEnvVars(String source) {
         if (strSubstitutorEnv == null) {
-            strSubstitutorEnv = new StrSubstitutor(System.getenv());
+            strSubstitutorEnv = new StringSubstitutor(System.getenv());
         }
         strSubstitutorEnv.setVariablePrefix(openTag);
         strSubstitutorEnv.setVariableSuffix(closeTag);
@@ -76,15 +79,15 @@ public class SOSParameterSubstitutor {
     }
 
     public String replaceSystemProperties(String source) {
-        return StrSubstitutor.replaceSystemProperties(source);
+        return StringSubstitutor.replaceSystemProperties(source);
     }
 
     public String replace(final String source) {
         if (strSubstitutor == null) {
             if (caseSensitive) {
-                strSubstitutor = new StrSubstitutor(keylist);
+                strSubstitutor = new StringSubstitutor(keylist);
             } else {
-                strSubstitutor = new StrSubstitutor(new SOSCaseInsensitivStrLookup<String>(keylist));
+                strSubstitutor = new StringSubstitutor(new SOSCaseInsensitivStrLookup<String>(keylist));
             }
         }
         strSubstitutor.setVariablePrefix(openTag);

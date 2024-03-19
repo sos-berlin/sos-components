@@ -665,7 +665,7 @@ public class MappingTest {
             LOGGER.trace("In File Path: " + sourceFilePath);
             LOGGER.trace("archive path: " + targetFilePath);
             LOGGER.trace("path inside archive: " + pathInArchive);
-            TarArchiveEntry entry = tarArchiveIn.getNextTarEntry();
+            TarArchiveEntry entry = tarArchiveIn.getNextEntry();
             pathInArchiveAfter = entry.getName();
             LOGGER.trace("path inside archive after store: " + pathInArchiveAfter);
         } finally {

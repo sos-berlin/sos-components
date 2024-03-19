@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 
-import org.apache.commons.compress.utils.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -286,14 +285,14 @@ public class LogOrderContent {
             final List<OrderLogEntry> logItems = ol.getLogEvents();
             try (OutputStream out = Files.newOutputStream(targetFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
                 for (OrderLogEntry i : logItems) {
-                    IOUtils.copy(getLogLine(i), out);
+                    getLogLine(i).transferTo(out);
 
                     if (i.getLogEvent() == EventType.OrderProcessingStarted) {
                         // read tasklog
                         LogTaskContent tl = new LogTaskContent(i.getTaskId());
                         InputStream is = tl.getLogStream();
                         if (is != null) {
-                            IOUtils.copy(is, out);
+                            is.transferTo(out);
                             try {
                                 is.close();
                             } catch (Throwable e) {

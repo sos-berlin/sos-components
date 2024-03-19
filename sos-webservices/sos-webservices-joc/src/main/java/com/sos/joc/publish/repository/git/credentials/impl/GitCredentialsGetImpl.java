@@ -16,7 +16,6 @@ import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.publish.git.GitCredentialsList;

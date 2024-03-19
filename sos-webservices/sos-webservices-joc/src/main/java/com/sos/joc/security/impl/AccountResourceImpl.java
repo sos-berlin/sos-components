@@ -1,6 +1,5 @@
 package com.sos.joc.security.impl;
 
-import java.security.KeyStore;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
@@ -25,7 +24,6 @@ import com.sos.auth.interfaces.ISOSLogin;
 import com.sos.auth.ldap.classes.SOSLdapLogin;
 import com.sos.auth.sosintern.classes.SOSInternAuthLogin;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;

@@ -2,7 +2,6 @@ package com.sos.jitl.jobs.inventory.setjobresource;
 
 import java.util.Map;
 
-import com.sos.jitl.jobs.checklicense.CheckLicenseJobArguments;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.read.RequestFilter;
 import com.sos.js7.job.DetailValue;

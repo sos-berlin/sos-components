@@ -1,14 +1,10 @@
 package com.sos.joc.db.deploy.items;
 
 import java.util.Date;
-import java.util.List;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.joc.Globals;
 
 public class DeployedContent {
