@@ -52,8 +52,8 @@ public class SOSKeycloakHandler {
     }
 
     private String getRelativePath() {
-        if (this.webserviceCredentials.getCompatibility() == null || this.webserviceCredentials.getCompatibility().isEmpty()
-                || this.webserviceCredentials.getCompatibility().equalsIgnoreCase(KEYCLOAK_COMPATIBILITY)) {
+        if (this.webserviceCredentials.getCompatibility() == null || this.webserviceCredentials.getCompatibility().equalsIgnoreCase(
+                KEYCLOAK_COMPATIBILITY)) {
             return "/auth";
         } else {
             return "";
@@ -157,7 +157,8 @@ public class SOSKeycloakHandler {
         body.put("grant_type", "password");
         body.put("client_secret", webserviceCredentials.getClientSecret());
 
-        String response = getFormResponse(POST, this.getRelativePath() + "/realms/" + webserviceCredentials.getRealm() + "/protocol/openid-connect/token", body, null);
+        String response = getFormResponse(POST, this.getRelativePath() + "/realms/" + webserviceCredentials.getRealm()
+                + "/protocol/openid-connect/token", body, null);
 
         SOSKeycloakAccountAccessToken sosKeycloakUserAccessToken = Globals.objectMapper.readValue(response, SOSKeycloakAccountAccessToken.class);
 
@@ -171,8 +172,8 @@ public class SOSKeycloakHandler {
         body.put("token", sosKeycloakAccountAccessToken.getAccess_token());
         body.put("client_secret", webserviceCredentials.getClientSecret());
 
-        String response = getFormResponse(POST, this.getRelativePath() + "/realms/" + webserviceCredentials.getRealm() + "/protocol/openid-connect/token/introspect",
-                body, null);
+        String response = getFormResponse(POST, this.getRelativePath() + "/realms/" + webserviceCredentials.getRealm()
+                + "/protocol/openid-connect/token/introspect", body, null);
         LOGGER.debug("accountTokenIsValid");
 
         SOSKeycloakIntrospectRepresentation sosKeycloakUserAccessToken = Globals.objectMapper.readValue(response,
@@ -194,8 +195,8 @@ public class SOSKeycloakHandler {
             body.put("client_secret", webserviceCredentials.getClientSecret());
             body.put("refresh_token", sosKeycloakAccountAccessToken.getRefresh_token());
 
-            String response = getFormResponse(POST, this.getRelativePath() + "/realms/" + webserviceCredentials.getRealm() + "/protocol/openid-connect/token", body,
-                    null);
+            String response = getFormResponse(POST, this.getRelativePath() + "/realms/" + webserviceCredentials.getRealm()
+                    + "/protocol/openid-connect/token", body, null);
 
             SOSKeycloakAccountAccessToken newKeycloakUserAccessToken = Globals.objectMapper.readValue(response, SOSKeycloakAccountAccessToken.class);
 
@@ -216,8 +217,8 @@ public class SOSKeycloakHandler {
         body.put("client_secret", webserviceCredentials.getClientSecret());
 
         try {
-            String response = getFormResponse(POST, this.getRelativePath() + "/realms/" + webserviceCredentials.getRealm() + "/protocol/openid-connect/token", body,
-                    null);
+            String response = getFormResponse(POST, this.getRelativePath() + "/realms/" + webserviceCredentials.getRealm()
+                    + "/protocol/openid-connect/token", body, null);
             SOSKeycloakAccountAccessToken sosKeycloakUserAccessToken = Globals.objectMapper.readValue(response, SOSKeycloakAccountAccessToken.class);
 
             return sosKeycloakUserAccessToken;
@@ -230,8 +231,8 @@ public class SOSKeycloakHandler {
     private SOSKeycloakUserRepresentation getUserId(SOSKeycloakAccountAccessToken adminAccessToken) throws SocketException, SOSException,
             JsonMappingException, JsonProcessingException {
 
-        String response = getFormResponse(GET, this.getRelativePath() + "/admin/realms/" + webserviceCredentials.getRealm() + "/users/?username=" + webserviceCredentials
-                .getAccount(), null, adminAccessToken.getAccess_token());
+        String response = getFormResponse(GET, this.getRelativePath() + "/admin/realms/" + webserviceCredentials.getRealm() + "/users/?username="
+                + webserviceCredentials.getAccount(), null, adminAccessToken.getAccess_token());
         SOSKeycloakUserRepresentation[] sosKeycloakUserRepresentation = Globals.objectMapper.readValue(response,
                 SOSKeycloakUserRepresentation[].class);
         if (sosKeycloakUserRepresentation.length > 0) {
@@ -257,8 +258,8 @@ public class SOSKeycloakHandler {
 
     private SOSKeycloakRoleRepresentation[] getAccountRealmRoles(SOSKeycloakAccountAccessToken adminAccessToken,
             SOSKeycloakUserRepresentation userRepresentation) throws SocketException, SOSException, JsonMappingException, JsonProcessingException {
-        String response = getFormResponse(GET, this.getRelativePath() + "/admin/realms/" + webserviceCredentials.getRealm() + "/users/" + userRepresentation.getId()
-                + "/role-mappings/realm", null, adminAccessToken.getAccess_token());
+        String response = getFormResponse(GET, this.getRelativePath() + "/admin/realms/" + webserviceCredentials.getRealm() + "/users/"
+                + userRepresentation.getId() + "/role-mappings/realm", null, adminAccessToken.getAccess_token());
         SOSKeycloakRoleRepresentation[] sosKeycloakRoleRepresentation = Globals.objectMapper.readValue(response,
                 SOSKeycloakRoleRepresentation[].class);
         return sosKeycloakRoleRepresentation;
@@ -268,8 +269,8 @@ public class SOSKeycloakHandler {
             SOSKeycloakGroupRepresentation sosKeycloakGroupRepresentation) throws SocketException, SOSException, JsonMappingException,
             JsonProcessingException {
 
-        String response = getFormResponse(GET, this.getRelativePath() + "/admin/realms/" + webserviceCredentials.getRealm() + "/groups/" + sosKeycloakGroupRepresentation
-                .getId() + "/role-mappings/realm", null, adminAccessToken.getAccess_token());
+        String response = getFormResponse(GET, this.getRelativePath() + "/admin/realms/" + webserviceCredentials.getRealm() + "/groups/"
+                + sosKeycloakGroupRepresentation.getId() + "/role-mappings/realm", null, adminAccessToken.getAccess_token());
         SOSKeycloakRoleRepresentation[] sosKeycloakRoleRepresentation = Globals.objectMapper.readValue(response,
                 SOSKeycloakRoleRepresentation[].class);
         return sosKeycloakRoleRepresentation;
@@ -278,8 +279,9 @@ public class SOSKeycloakHandler {
     private SOSKeycloakRoleRepresentation[] getGroupClientRoles(SOSKeycloakAccountAccessToken adminAccessToken,
             SOSKeycloakGroupRepresentation sosKeycloakGroupRepresentation, SOSKeycloakClientRepresentation clientRepresentation)
             throws SocketException, SOSException, JsonMappingException, JsonProcessingException {
-        String response = getFormResponse(GET, this.getRelativePath() + "/admin/realms/" + webserviceCredentials.getRealm() + "/groups/" + sosKeycloakGroupRepresentation
-                .getId() + "/role-mappings/clients/" + clientRepresentation.getId(), null, adminAccessToken.getAccess_token());
+        String response = getFormResponse(GET, this.getRelativePath() + "/admin/realms/" + webserviceCredentials.getRealm() + "/groups/"
+                + sosKeycloakGroupRepresentation.getId() + "/role-mappings/clients/" + clientRepresentation.getId(), null, adminAccessToken
+                        .getAccess_token());
         SOSKeycloakRoleRepresentation[] sosKeycloakRoleRepresentation = Globals.objectMapper.readValue(response,
                 SOSKeycloakRoleRepresentation[].class);
         return sosKeycloakRoleRepresentation;
@@ -289,8 +291,8 @@ public class SOSKeycloakHandler {
             SOSKeycloakUserRepresentation userRepresentation, SOSKeycloakClientRepresentation clientRepresentation) throws SocketException,
             SOSException, JsonMappingException, JsonProcessingException {
 
-        String response = getFormResponse(GET, this.getRelativePath() + "/admin/realms/" + webserviceCredentials.getRealm() + "/users/" + userRepresentation.getId()
-                + "/role-mappings/clients/" + clientRepresentation.getId(), null, adminAccessToken.getAccess_token());
+        String response = getFormResponse(GET, this.getRelativePath() + "/admin/realms/" + webserviceCredentials.getRealm() + "/users/"
+                + userRepresentation.getId() + "/role-mappings/clients/" + clientRepresentation.getId(), null, adminAccessToken.getAccess_token());
         SOSKeycloakRoleRepresentation[] sosKeycloakRoleRepresentation = Globals.objectMapper.readValue(response,
                 SOSKeycloakRoleRepresentation[].class);
         return sosKeycloakRoleRepresentation;
@@ -299,8 +301,8 @@ public class SOSKeycloakHandler {
     private SOSKeycloakGroupRepresentation[] getAccountGroups(SOSKeycloakAccountAccessToken adminAccessToken,
             SOSKeycloakUserRepresentation userRepresentation) throws SocketException, SOSException, JsonMappingException, JsonProcessingException {
 
-        String response = getFormResponse(GET, this.getRelativePath() + "/admin/realms/" + webserviceCredentials.getRealm() + "/users/" + userRepresentation.getId()
-                + "/groups", null, adminAccessToken.getAccess_token());
+        String response = getFormResponse(GET, this.getRelativePath() + "/admin/realms/" + webserviceCredentials.getRealm() + "/users/"
+                + userRepresentation.getId() + "/groups", null, adminAccessToken.getAccess_token());
         SOSKeycloakGroupRepresentation[] sosKeycloakGroupRepresentation = Globals.objectMapper.readValue(response,
                 SOSKeycloakGroupRepresentation[].class);
         return sosKeycloakGroupRepresentation;
