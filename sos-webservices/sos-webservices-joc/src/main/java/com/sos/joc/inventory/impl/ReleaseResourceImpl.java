@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
@@ -120,8 +121,19 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
 
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             Globals.beginTransaction(session);
+            // released schedules with referenced workflows
             Map<String, List<String>> renamedOldSchedulePathsWithWorkflowNames = getReleasedSchedulePathsWithWorkflowNames(in, dbLayer);
-            cancelOrdersForRenamedSchedules(in.getAddOrdersDateFrom(), renamedOldSchedulePathsWithWorkflowNames, dbLayer, accessToken);
+            // schedules from the request
+            Set<String> inSchedulesPaths = in.getUpdate().stream().map(RequestFilter::getPath).collect(Collectors.toSet());
+            // already releasedschedules with no renaming
+            Set<String> keys = renamedOldSchedulePathsWithWorkflowNames.keySet().stream().filter(path -> inSchedulesPaths.contains(path))
+                .collect(Collectors.toSet());
+            // remove schedules that are not renamed
+            keys.stream().forEach(key -> renamedOldSchedulePathsWithWorkflowNames.remove(key));
+            // cancel based on the old name of renamed schedules 
+            if(!renamedOldSchedulePathsWithWorkflowNames.isEmpty()) {
+              cancelOrdersForRenamedSchedules(in.getAddOrdersDateFrom(), renamedOldSchedulePathsWithWorkflowNames, dbLayer, accessToken);
+            }
             Globals.commit(session);
             Globals.beginTransaction(session);
             List<Err419> errors = new ArrayList<>();
@@ -500,6 +512,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             conf.setContent(Globals.objectMapper.writeValueAsString(jt));
         }
     }
+    
     private Map<String, List<String>> getReleasedSchedulePathsWithWorkflowNames (ReleaseFilter in, InventoryDBLayer dbLayer) {
         // in case a schedule has been renamed, this collects the schedules with their old names to be able to delete orders referencing this
         Map<String, List<String>> schedulePathsWithWorkflowNames = new HashMap<String, List<String>>();
@@ -576,8 +589,8 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                                 }
                             }
                         }
-                    } else if (ConfigurationType.WORKINGDAYSCALENDAR.equals(conf.getTypeAsEnum()) || ConfigurationType.NONWORKINGDAYSCALENDAR.equals(
-                            conf.getTypeAsEnum())) {
+                    } else if (ConfigurationType.WORKINGDAYSCALENDAR.equals(conf.getTypeAsEnum()) 
+                            || ConfigurationType.NONWORKINGDAYSCALENDAR.equals(conf.getTypeAsEnum())) {
                         // only add if planOrderAutomatically = true
                         List<DBItemInventoryConfiguration> schedules = dbLayer.getUsedSchedulesByCalendarName(conf.getName());
                         if (schedules != null) {
