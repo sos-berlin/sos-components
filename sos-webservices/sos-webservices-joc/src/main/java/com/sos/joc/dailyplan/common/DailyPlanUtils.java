@@ -38,7 +38,9 @@ public class DailyPlanUtils {
             // TODO not planned start time is relevant
             //filter.setDailyPlanInterval(in.getDailyPlanDateFrom(), in.getDailyPlanDateTo(), settings.getTimeZone(), settings.getPeriodBegin());
             // instead join to submissions
-            filter.setSubmissionForDateFrom(JobSchedulerDate.getDateFrom(in.getDailyPlanDateFrom() + "T00:00:00Z", "UTC"));
+            if (in.getDailyPlanDateFrom() != null) {
+                filter.setSubmissionForDateFrom(JobSchedulerDate.getDateFrom(in.getDailyPlanDateFrom() + "T00:00:00Z", "UTC"));
+            }
             if (in.getDailyPlanDateTo() != null) {
                 filter.setSubmissionForDateTo(JobSchedulerDate.getDateFrom(in.getDailyPlanDateTo() + "T00:00:00Z", "UTC"));
             }

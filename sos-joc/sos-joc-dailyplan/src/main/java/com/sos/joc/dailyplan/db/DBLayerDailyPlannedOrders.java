@@ -1200,14 +1200,18 @@ public class DBLayerDailyPlannedOrders {
     public List<Long> getSubmissionIds(String controllerId, Date dateFrom, Date dateTo) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select id from ").append(DBLayer.DBITEM_DPL_SUBMISSIONS);
         hql.append(" where controllerId = :controllerId");
-        hql.append(" and submissionForDate >= :dateFrom");
+        if (dateFrom != null) {
+            hql.append(" and submissionForDate >= :dateFrom");
+        }
         if (dateTo != null) {
             hql.append(" and submissionForDate <= :dateTo");
         }
 
         Query<Long> query = session.createQuery(hql.toString());
         query.setParameter("controllerId", controllerId);
-        query.setParameter("dateFrom", dateFrom);
+        if (dateFrom != null) {
+            query.setParameter("dateFrom", dateFrom);
+        }
         if (dateTo != null) {
             query.setParameter("dateTo", dateTo);
         }
