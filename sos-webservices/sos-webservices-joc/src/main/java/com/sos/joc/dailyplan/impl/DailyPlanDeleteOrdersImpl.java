@@ -57,7 +57,8 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
         LOGGER.debug("Delete orders from the daily plan");
         try {
             initLogging(IMPL_PATH, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, DailyPlanOrderFilterDef.class);
+            // validation without required dailyPlanDateFrom 
+            JsonValidator.validateFailFast(filterBytes, "orderManagement/dailyplan/dailyPlanOrdersFilterDef-schema.json");
             DailyPlanOrderFilterDef in = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilterDef.class);
             
             JOCDefaultResponse response = initPermissions(null, true);
@@ -135,25 +136,27 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
                 dbLayer.deleteCascading(filter);
                 //Globals.commit(session);
                 if (withEvent) {
-                    EventBus.getInstance().post(new DailyPlanEvent(controllerId, in.getDailyPlanDateFrom()));
-                    if (in.getDailyPlanDateTo() != null) {
-                        Instant from = JobSchedulerDate.getInstantFromISO8601String(in.getDailyPlanDateFrom() + "T00:00:00Z");
-                        Instant to = JobSchedulerDate.getInstantFromISO8601String(in.getDailyPlanDateTo() + "T00:00:00Z");
-                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault());
-                        if (from != null && to != null) {
-                            from = from.plusSeconds(86400); // plus one day
-                            int i = 0; 
-                            while (from.isBefore(to) && i < 31) { // one month is max in GUI
-                                i++;
-                                try {
-                                    EventBus.getInstance().post(new DailyPlanEvent(controllerId, formatter.format(from)));
-                                } catch (Exception e) {
-                                    //
-                                }
+                    if (in.getDailyPlanDateFrom() != null) {
+                        EventBus.getInstance().post(new DailyPlanEvent(controllerId, in.getDailyPlanDateFrom()));
+                        if (in.getDailyPlanDateTo() != null) {
+                            Instant from = JobSchedulerDate.getInstantFromISO8601String(in.getDailyPlanDateFrom() + "T00:00:00Z");
+                            Instant to = JobSchedulerDate.getInstantFromISO8601String(in.getDailyPlanDateTo() + "T00:00:00Z");
+                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault());
+                            if (from != null && to != null) {
                                 from = from.plusSeconds(86400); // plus one day
+                                int i = 0;
+                                while (from.isBefore(to) && i < 31) { // one month is max in GUI
+                                    i++;
+                                    try {
+                                        EventBus.getInstance().post(new DailyPlanEvent(controllerId, formatter.format(from)));
+                                    } catch (Exception e) {
+                                        //
+                                    }
+                                    from = from.plusSeconds(86400); // plus one day
+                                }
                             }
+                            EventBus.getInstance().post(new DailyPlanEvent(controllerId, in.getDailyPlanDateTo()));
                         }
-                        EventBus.getInstance().post(new DailyPlanEvent(controllerId, in.getDailyPlanDateTo()));
                     }
                 }
             } catch (Exception e) {
