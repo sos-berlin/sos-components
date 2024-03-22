@@ -100,20 +100,30 @@ public class EncryptionUtils {
     try {
       byte[] buffer = new byte[16];
       int bytesRead;
-      while ((bytesRead = inputStream.read(buffer)) != -1) {
-        byte[] output = cipher.update(buffer, 0, bytesRead);
-        if (output != null) {
-          outputStream.write(output);
-        }
-      }
       if (Cipher.ENCRYPT_MODE == cipherMode) {
+        while ((bytesRead = inputStream.read(buffer)) != -1) {
+          byte[] output = cipher.update(buffer, 0, bytesRead);
+          if (output != null) {
+            output = Base64.getEncoder().encode(output);
+            outputStream.write(output);
+          }
+        }
         // encrypt
         byte[] outputBytes = cipher.doFinal();
         if (outputBytes != null) {
+          outputBytes = Base64.getEncoder().encode(outputBytes);
           outputStream.write(outputBytes);
         }
       } else if (Cipher.DECRYPT_MODE == cipherMode) {
+        buffer = new byte[24];
         // decrypt
+        while ((bytesRead = inputStream.read(buffer)) != -1) {
+          byte[] output = Base64.getDecoder().decode(buffer);
+          if (output != null) {
+            output = cipher.update(output);
+            outputStream.write(output);
+          }
+        }
         byte[] outputBytes = cipher.doFinal();
         if (outputBytes != null) {
           outputStream.write(outputBytes);
