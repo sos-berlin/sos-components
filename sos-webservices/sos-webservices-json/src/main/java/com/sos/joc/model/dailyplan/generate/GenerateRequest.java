@@ -85,7 +85,7 @@ public class GenerateRequest {
      */
     @JsonProperty("withSubmit")
     @JsonPropertyDescription("controls if the order should be submitted to the controller")
-    private Boolean withSubmit = true;
+    private Boolean withSubmit = false;
     /**
      * includes non-automatically planned orders iff true
      * 
