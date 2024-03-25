@@ -540,8 +540,8 @@ public class DailyPlanRunner extends TimerTask {
 
     // DailyPlanOrdersGenerateImpl, SchedulesImpl
     public Collection<DailyPlanSchedule> convert(List<DBBeanReleasedSchedule2DeployedWorkflow> items, Set<Folder> permittedFolders,
-            Map<String, Boolean> checkedFolders, boolean infoOnMissingDeployedWorkflow) {
-        return convert(items, false, true, permittedFolders, checkedFolders, infoOnMissingDeployedWorkflow);
+            Map<String, Boolean> checkedFolders, boolean onlyPlanOrderAutomatically, boolean infoOnMissingDeployedWorkflow) {
+        return convert(items, onlyPlanOrderAutomatically, true, permittedFolders, checkedFolders, infoOnMissingDeployedWorkflow);
     }
 
     private Collection<DailyPlanSchedule> convert(List<DBBeanReleasedSchedule2DeployedWorkflow> items, boolean onlyPlanOrderAutomatically,
