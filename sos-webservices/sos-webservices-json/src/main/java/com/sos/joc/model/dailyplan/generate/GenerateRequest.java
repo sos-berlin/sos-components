@@ -26,6 +26,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "workflowPaths",
     "overwrite",
     "withSubmit",
+    "includeNonAutoPlannedOrders",
     "auditLog"
 })
 public class GenerateRequest {
@@ -85,6 +86,13 @@ public class GenerateRequest {
     @JsonProperty("withSubmit")
     @JsonPropertyDescription("controls if the order should be submitted to the controller")
     private Boolean withSubmit = true;
+    /**
+     * includes non-automatically planned orders iff true
+     * 
+     */
+    @JsonProperty("includeNonAutoPlannedOrders")
+    @JsonPropertyDescription("includes non-automatically planned orders iff true")
+    private Boolean includeNonAutoPlannedOrders = false;
     /**
      * auditParams
      * <p>
@@ -231,6 +239,24 @@ public class GenerateRequest {
     }
 
     /**
+     * includes non-automatically planned orders iff true
+     * 
+     */
+    @JsonProperty("includeNonAutoPlannedOrders")
+    public Boolean getIncludeNonAutoPlannedOrders() {
+        return includeNonAutoPlannedOrders;
+    }
+
+    /**
+     * includes non-automatically planned orders iff true
+     * 
+     */
+    @JsonProperty("includeNonAutoPlannedOrders")
+    public void setIncludeNonAutoPlannedOrders(Boolean includeNonAutoPlannedOrders) {
+        this.includeNonAutoPlannedOrders = includeNonAutoPlannedOrders;
+    }
+
+    /**
      * auditParams
      * <p>
      * 
@@ -254,12 +280,12 @@ public class GenerateRequest {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("dailyPlanDate", dailyPlanDate).append("schedulePaths", schedulePaths).append("workflowPaths", workflowPaths).append("overwrite", overwrite).append("withSubmit", withSubmit).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("dailyPlanDate", dailyPlanDate).append("schedulePaths", schedulePaths).append("workflowPaths", workflowPaths).append("overwrite", overwrite).append("withSubmit", withSubmit).append("includeNonAutoPlannedOrders", includeNonAutoPlannedOrders).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(schedulePaths).append(dailyPlanDate).append(controllerId).append(auditLog).append(withSubmit).append(workflowPaths).append(overwrite).toHashCode();
+        return new HashCodeBuilder().append(includeNonAutoPlannedOrders).append(schedulePaths).append(dailyPlanDate).append(controllerId).append(auditLog).append(withSubmit).append(workflowPaths).append(overwrite).toHashCode();
     }
 
     @Override
@@ -271,7 +297,7 @@ public class GenerateRequest {
             return false;
         }
         GenerateRequest rhs = ((GenerateRequest) other);
-        return new EqualsBuilder().append(schedulePaths, rhs.schedulePaths).append(dailyPlanDate, rhs.dailyPlanDate).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(withSubmit, rhs.withSubmit).append(workflowPaths, rhs.workflowPaths).append(overwrite, rhs.overwrite).isEquals();
+        return new EqualsBuilder().append(includeNonAutoPlannedOrders, rhs.includeNonAutoPlannedOrders).append(schedulePaths, rhs.schedulePaths).append(dailyPlanDate, rhs.dailyPlanDate).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(withSubmit, rhs.withSubmit).append(workflowPaths, rhs.workflowPaths).append(overwrite, rhs.overwrite).isEquals();
     }
 
 }
