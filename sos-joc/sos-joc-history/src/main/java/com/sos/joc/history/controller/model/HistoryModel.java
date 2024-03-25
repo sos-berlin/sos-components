@@ -593,9 +593,12 @@ public class HistoryModel {
         if (hob == null) {
             return;
         }
-
-        EventBus.getInstance().post(new HistoryOrderStarted(controllerConfiguration.getCurrent().getId(), hob.getOrderId(), hob.getWorkflowPath(), hob
-                .getWorkflowVersionId(), hob));
+        try {
+            EventBus.getInstance().post(new HistoryOrderStarted(controllerConfiguration.getCurrent().getId(), hob.getOrderId(), hob.getWorkflowPath(),
+                    hob.getWorkflowVersionId(), hob));
+        } catch (Throwable e) {
+            LOGGER.warn("[postEventOrderStarted]" + e, e);
+        }
     }
 
     // OrderCancelled, OrderFinished, OrderBroken
@@ -605,8 +608,12 @@ public class HistoryModel {
         }
         cacheHandler.clear(CacheType.orderWithChildOrders, hob.getOrderId());
 
-        EventBus.getInstance().post(new HistoryOrderTerminated(controllerConfiguration.getCurrent().getId(), hob.getOrderId(), hob.getWorkflowPath(),
-                hob.getWorkflowVersionId(), hob));
+        try {
+            EventBus.getInstance().post(new HistoryOrderTerminated(controllerConfiguration.getCurrent().getId(), hob.getOrderId(), hob
+                    .getWorkflowPath(), hob.getWorkflowVersionId(), hob));
+        } catch (Throwable e) {
+            LOGGER.warn("[postEventOrderTerminated]" + e, e);
+        }
     }
 
     private void postEventOrderUpdated(HistoryOrderBean hob) {
@@ -614,8 +621,12 @@ public class HistoryModel {
             return;
         }
 
-        EventBus.getInstance().post(new HistoryOrderUpdated(controllerConfiguration.getCurrent().getId(), hob.getOrderId(), hob.getWorkflowPath(), hob
-                .getWorkflowVersionId(), hob));
+        try {
+            EventBus.getInstance().post(new HistoryOrderUpdated(controllerConfiguration.getCurrent().getId(), hob.getOrderId(), hob.getWorkflowPath(),
+                    hob.getWorkflowVersionId(), hob));
+        } catch (Throwable e) {
+            LOGGER.warn("[postEventOrderUpdated]" + e, e);
+        }
     }
 
     private void postEventOrderTaskStarted(DBLayerHistory dbLayer, FatEventOrderStepStarted evt, HistoryOrderStepBean hosb) {
@@ -630,8 +641,12 @@ public class HistoryModel {
             //
         }
         if (co != null) {
-            EventBus.getInstance().post(new HistoryOrderTaskStarted(controllerConfiguration.getCurrent().getId(), co.getOrderId(), co
-                    .getWorkflowPath(), co.getWorkflowVersionId(), hosb));
+            try {
+                EventBus.getInstance().post(new HistoryOrderTaskStarted(controllerConfiguration.getCurrent().getId(), co.getOrderId(), co
+                        .getWorkflowPath(), co.getWorkflowVersionId(), hosb));
+            } catch (Throwable e) {
+                LOGGER.warn("[postEventOrderTaskStarted]" + e, e);
+            }
         }
     }
 
@@ -648,8 +663,12 @@ public class HistoryModel {
             //
         }
         if (co != null) {
-            EventBus.getInstance().post(new HistoryOrderTaskTerminated(controllerConfiguration.getCurrent().getId(), co.getOrderId(), co
-                    .getWorkflowPath(), co.getWorkflowVersionId(), hosb));
+            try {
+                EventBus.getInstance().post(new HistoryOrderTaskTerminated(controllerConfiguration.getCurrent().getId(), co.getOrderId(), co
+                        .getWorkflowPath(), co.getWorkflowVersionId(), hosb));
+            } catch (Throwable e) {
+                LOGGER.warn("[postEventOrderTaskTerminated]" + e, e);
+            }
         }
     }
 
@@ -658,17 +677,29 @@ public class HistoryModel {
             HistoryOrderStepBean hosb = cos.convert(EventType.OrderStderrWritten, eventId, controllerConfiguration.getCurrent().getId(), co
                     .getWorkflowPath());
             hosb.setCriticality(getJobCriticality(job));
-            EventBus.getInstance().post(new HistoryOrderTaskLogFirstStderr(controllerConfiguration.getCurrent().getId(), hosb));
+            try {
+                EventBus.getInstance().post(new HistoryOrderTaskLogFirstStderr(controllerConfiguration.getCurrent().getId(), hosb));
+            } catch (Throwable e) {
+                LOGGER.warn("[postEventTaskLogFirstStderr]" + e, e);
+            }
         }
     }
 
     private void postEventTaskLog(LogEntry entry, String content, boolean newLine) {
-        EventBus.getInstance().post(new HistoryOrderTaskLog(entry.getEventType().value(), entry.getHistoryOrderId(), entry.getHistoryOrderStepId(),
-                content, newLine));
+        try {
+            EventBus.getInstance().post(new HistoryOrderTaskLog(entry.getEventType().value(), entry.getHistoryOrderId(), entry
+                    .getHistoryOrderStepId(), content, newLine));
+        } catch (Throwable e) {
+            LOGGER.warn("[postEventTaskLog]" + e, e);
+        }
     }
 
     private void postEventOrderLog(LogEntry entry, OrderLogEntry orderEntry) {
-        EventBus.getInstance().post(new HistoryOrderLog(entry.getEventType().value(), entry.getHistoryOrderId(), orderEntry));
+        try {
+            EventBus.getInstance().post(new HistoryOrderLog(entry.getEventType().value(), entry.getHistoryOrderId(), orderEntry));
+        } catch (Throwable e) {
+            LOGGER.warn("[postEventOrderLog]" + e, e);
+        }
     }
 
     private Duration showSummary(Long startEventId, Long firstEventId, Instant start, Counter counter) {
