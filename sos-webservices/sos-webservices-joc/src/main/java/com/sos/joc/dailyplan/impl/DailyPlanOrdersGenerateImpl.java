@@ -165,8 +165,9 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
         settings.setSubmissionTime(new Date());
 
         DailyPlanRunner runner = new DailyPlanRunner(settings);
+        boolean onlyPlanOrderAutomatically = in.getIncludeNonAutoPlannedOrders() != Boolean.TRUE;
         Collection<DailyPlanSchedule> dailyPlanSchedules = getSchedules(runner, controllerId, scheduleFolders, scheduleSingles, workflowFolders,
-                workflowSingles, permittedFolders, checkedFolders);
+                workflowSingles, permittedFolders, checkedFolders, onlyPlanOrderAutomatically);
 
         Map<PlannedOrderKey, PlannedOrder> generatedOrders = runner.generateDailyPlan(StartupMode.manual, controllerId, dailyPlanSchedules, in
                 .getDailyPlanDate(), in.getWithSubmit(), getJocError(), accessToken);
@@ -210,7 +211,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
 
     private Collection<DailyPlanSchedule> getSchedules(DailyPlanRunner runner, String controllerId, Set<Folder> scheduleFolders,
             Set<String> scheduleSingles, Set<Folder> workflowFolders, Set<String> workflowSingles, Set<Folder> permittedFolders,
-            Map<String, Boolean> checkedFolders) throws IOException, SOSHibernateException {
+            Map<String, Boolean> checkedFolders, boolean onlyPlanOrderAutomatically) throws IOException, SOSHibernateException {
 
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
         boolean hasSelectedSchedules = (scheduleFolders != null && scheduleFolders.size() > 0) || (scheduleSingles != null && scheduleSingles
@@ -257,7 +258,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
                 return new ArrayList<DailyPlanSchedule>();
             }
 
-            return runner.convert(scheduleItems, permittedFolders, checkedFolders, true);
+            return runner.convert(scheduleItems, permittedFolders, checkedFolders, onlyPlanOrderAutomatically, true);
         } finally {
             Globals.disconnect(session);
         }
