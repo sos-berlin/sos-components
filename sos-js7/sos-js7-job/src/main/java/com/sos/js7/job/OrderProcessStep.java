@@ -695,15 +695,13 @@ public class OrderProcessStep<A extends JobArguments> {
     }
 
     protected JOutcome.Completed success() {
-        return JOutcome.succeeded(mapProcessResult(outcome.hasVariables() ? JobHelper.asEngineValues(outcome.getVariables()) : null,
-                getReturnCodeSucceeded(outcome.getReturnCode())));
+        return JOutcome.succeeded(mapProcessResult(getOutcomeVariables(), getReturnCodeSucceeded(outcome.getReturnCode())));
     }
 
     private JOutcome.Completed failed() {
         String fm = SOSString.isEmpty(outcome.getMessage()) ? "" : outcome.getMessage();
         logger.failed2slf4j(getStepInfo(), fm);
-        return JOutcome.failed(fm, mapProcessResult(outcome.hasVariables() ? JobHelper.asEngineValues(outcome.getVariables()) : null,
-                getReturnCodeFailed(outcome.getReturnCode())));
+        return JOutcome.failed(fm, mapProcessResult(getOutcomeVariables(), getReturnCodeFailed(outcome.getReturnCode())));
     }
 
     protected JOutcome.Completed failed(final String msg, Throwable e) {
@@ -711,8 +709,12 @@ public class OrderProcessStep<A extends JobArguments> {
         String fm = SOSString.isEmpty(msg) ? "" : msg;
         Throwable ex = logger.handleException(e);
         logger.failed2slf4j(getStepInfo(), e.toString(), ex);
-        return JOutcome.failed(logger.throwable2String(fm, ex), mapProcessResult(null, getReturnCodeFailed(JobHelper.DEFAULT_RETURN_CODE_FAILED)));
+        return JOutcome.failed(logger.throwable2String(fm, ex), mapProcessResult(getOutcomeVariables(), getReturnCodeFailed(
+                JobHelper.DEFAULT_RETURN_CODE_FAILED)));
+    }
 
+    private Map<String, Value> getOutcomeVariables() {
+        return outcome.hasVariables() ? JobHelper.asEngineValues(outcome.getVariables()) : null;
     }
 
     private Map<String, Value> mapProcessResult(Map<String, Value> map, Integer returnCode) {
