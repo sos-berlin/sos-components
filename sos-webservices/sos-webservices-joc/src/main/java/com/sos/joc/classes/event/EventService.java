@@ -367,7 +367,9 @@ public class EventService {
             eventSnapshot.setEventId(evt.getEventId() / 1000);
             eventSnapshot.setEventType(evt.getKey());
             eventSnapshot.setObjectType(EventType.DAILYPLAN);
-            eventSnapshot.setMessage(evt.getDailyPlanDate());
+            if (evt.getDailyPlanDate() != null && !evt.getDailyPlanDate().isEmpty()) {
+                eventSnapshot.setMessage(evt.getDailyPlanDate());
+            }
             addEvent(eventSnapshot);
         }
     }
