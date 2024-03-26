@@ -157,6 +157,8 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
                             }
                             EventBus.getInstance().post(new DailyPlanEvent(controllerId, in.getDailyPlanDateTo()));
                         }
+                    } else {
+                        EventBus.getInstance().post(new DailyPlanEvent(controllerId, null));
                     }
                 }
             } catch (Exception e) {
