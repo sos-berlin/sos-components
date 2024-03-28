@@ -26,7 +26,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "iamKeycloakAdminAccount",
     "iamKeycloakAdminPassword",
     "iamKeycloakRealm",
-    "iamKeycloakCompatibility"
+    "iamKeycloakVersionCompatibility"
 })
 public class KeycloakProperties {
 
@@ -108,8 +108,8 @@ public class KeycloakProperties {
      * 
      * 
      */
-    @JsonProperty("iamKeycloakCompatibility")
-    private String iamKeycloakCompatibility;
+    @JsonProperty("iamKeycloakVersionCompatibility")
+    private String iamKeycloakVersionCompatibility;
 
     /**
      * No args constructor for use in serialization
@@ -123,15 +123,15 @@ public class KeycloakProperties {
      * @param iamKeycloakTruststorePath
      * @param iamKeycloakUrl
      * @param iamKeycloakClientSecret
+     * @param iamKeycloakVersionCompatibility
      * @param iamKeycloakTruststorePassword
      * @param iamKeycloakAdminPassword
      * @param iamKeycloakRealm
      * @param iamKeycloakAdminAccount
-     * @param iamKeycloakCompatibility
      * @param iamKeycloakTruststoreType
      * @param iamKeycloakClientId
      */
-    public KeycloakProperties(String iamKeycloakUrl, String iamKeycloakTruststorePath, String iamKeycloakTruststorePassword, String iamKeycloakTruststoreType, String iamKeycloakClientSecret, String iamKeycloakClientId, String iamKeycloakAdminAccount, String iamKeycloakAdminPassword, String iamKeycloakRealm, String iamKeycloakCompatibility) {
+    public KeycloakProperties(String iamKeycloakUrl, String iamKeycloakTruststorePath, String iamKeycloakTruststorePassword, String iamKeycloakTruststoreType, String iamKeycloakClientSecret, String iamKeycloakClientId, String iamKeycloakAdminAccount, String iamKeycloakAdminPassword, String iamKeycloakRealm, String iamKeycloakVersionCompatibility) {
         super();
         this.iamKeycloakUrl = iamKeycloakUrl;
         this.iamKeycloakTruststorePath = iamKeycloakTruststorePath;
@@ -142,7 +142,7 @@ public class KeycloakProperties {
         this.iamKeycloakAdminAccount = iamKeycloakAdminAccount;
         this.iamKeycloakAdminPassword = iamKeycloakAdminPassword;
         this.iamKeycloakRealm = iamKeycloakRealm;
-        this.iamKeycloakCompatibility = iamKeycloakCompatibility;
+        this.iamKeycloakVersionCompatibility = iamKeycloakVersionCompatibility;
     }
 
     /**
@@ -349,9 +349,9 @@ public class KeycloakProperties {
      * 
      * 
      */
-    @JsonProperty("iamKeycloakCompatibility")
-    public String getIamKeycloakCompatibility() {
-        return iamKeycloakCompatibility;
+    @JsonProperty("iamKeycloakVersionCompatibility")
+    public String getIamKeycloakVersionCompatibility() {
+        return iamKeycloakVersionCompatibility;
     }
 
     /**
@@ -360,19 +360,19 @@ public class KeycloakProperties {
      * 
      * 
      */
-    @JsonProperty("iamKeycloakCompatibility")
-    public void setIamKeycloakCompatibility(String iamKeycloakCompatibility) {
-        this.iamKeycloakCompatibility = iamKeycloakCompatibility;
+    @JsonProperty("iamKeycloakVersionCompatibility")
+    public void setIamKeycloakVersionCompatibility(String iamKeycloakVersionCompatibility) {
+        this.iamKeycloakVersionCompatibility = iamKeycloakVersionCompatibility;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("iamKeycloakUrl", iamKeycloakUrl).append("iamKeycloakTruststorePath", iamKeycloakTruststorePath).append("iamKeycloakTruststorePassword", iamKeycloakTruststorePassword).append("iamKeycloakTruststoreType", iamKeycloakTruststoreType).append("iamKeycloakClientSecret", iamKeycloakClientSecret).append("iamKeycloakClientId", iamKeycloakClientId).append("iamKeycloakAdminAccount", iamKeycloakAdminAccount).append("iamKeycloakAdminPassword", iamKeycloakAdminPassword).append("iamKeycloakRealm", iamKeycloakRealm).append("iamKeycloakCompatibility", iamKeycloakCompatibility).toString();
+        return new ToStringBuilder(this).append("iamKeycloakUrl", iamKeycloakUrl).append("iamKeycloakTruststorePath", iamKeycloakTruststorePath).append("iamKeycloakTruststorePassword", iamKeycloakTruststorePassword).append("iamKeycloakTruststoreType", iamKeycloakTruststoreType).append("iamKeycloakClientSecret", iamKeycloakClientSecret).append("iamKeycloakClientId", iamKeycloakClientId).append("iamKeycloakAdminAccount", iamKeycloakAdminAccount).append("iamKeycloakAdminPassword", iamKeycloakAdminPassword).append("iamKeycloakRealm", iamKeycloakRealm).append("iamKeycloakVersionCompatibility", iamKeycloakVersionCompatibility).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(iamKeycloakTruststorePath).append(iamKeycloakUrl).append(iamKeycloakClientSecret).append(iamKeycloakTruststorePassword).append(iamKeycloakAdminPassword).append(iamKeycloakRealm).append(iamKeycloakAdminAccount).append(iamKeycloakCompatibility).append(iamKeycloakTruststoreType).append(iamKeycloakClientId).toHashCode();
+        return new HashCodeBuilder().append(iamKeycloakTruststorePath).append(iamKeycloakUrl).append(iamKeycloakClientSecret).append(iamKeycloakVersionCompatibility).append(iamKeycloakTruststorePassword).append(iamKeycloakAdminPassword).append(iamKeycloakRealm).append(iamKeycloakAdminAccount).append(iamKeycloakTruststoreType).append(iamKeycloakClientId).toHashCode();
     }
 
     @Override
@@ -384,7 +384,7 @@ public class KeycloakProperties {
             return false;
         }
         KeycloakProperties rhs = ((KeycloakProperties) other);
-        return new EqualsBuilder().append(iamKeycloakTruststorePath, rhs.iamKeycloakTruststorePath).append(iamKeycloakUrl, rhs.iamKeycloakUrl).append(iamKeycloakClientSecret, rhs.iamKeycloakClientSecret).append(iamKeycloakTruststorePassword, rhs.iamKeycloakTruststorePassword).append(iamKeycloakAdminPassword, rhs.iamKeycloakAdminPassword).append(iamKeycloakRealm, rhs.iamKeycloakRealm).append(iamKeycloakAdminAccount, rhs.iamKeycloakAdminAccount).append(iamKeycloakCompatibility, rhs.iamKeycloakCompatibility).append(iamKeycloakTruststoreType, rhs.iamKeycloakTruststoreType).append(iamKeycloakClientId, rhs.iamKeycloakClientId).isEquals();
+        return new EqualsBuilder().append(iamKeycloakTruststorePath, rhs.iamKeycloakTruststorePath).append(iamKeycloakUrl, rhs.iamKeycloakUrl).append(iamKeycloakClientSecret, rhs.iamKeycloakClientSecret).append(iamKeycloakVersionCompatibility, rhs.iamKeycloakVersionCompatibility).append(iamKeycloakTruststorePassword, rhs.iamKeycloakTruststorePassword).append(iamKeycloakAdminPassword, rhs.iamKeycloakAdminPassword).append(iamKeycloakRealm, rhs.iamKeycloakRealm).append(iamKeycloakAdminAccount, rhs.iamKeycloakAdminAccount).append(iamKeycloakTruststoreType, rhs.iamKeycloakTruststoreType).append(iamKeycloakClientId, rhs.iamKeycloakClientId).isEquals();
     }
 
 }
