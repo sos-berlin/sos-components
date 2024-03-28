@@ -165,6 +165,13 @@ public class AgentStoreUtils {
                             throw new JocBadRequestException(
                                     String.format("Subagent url %s is already used by Agent %s", s.getUri(), s.getAgentId()));
                         });
+        
+        // check uniqueness of (Sub-)AgentId with DB per controller
+        dbAgents.stream().filter(a -> a.getControllerId().equals(controllerId)).map(DBItemInventoryAgentInstance::getAgentId).filter(
+                aId -> requestedSubagentIds.contains(aId)).findAny().ifPresent(aId -> {
+                    throw new JocBadRequestException(String.format("Subagent id '%s' is already used by an Agent", aId));
+                });
+        
         int position = -1;
         if (dbAgents != null && !dbAgents.isEmpty()) {
             for (DBItemInventoryAgentInstance dbAgent : dbAgents) {

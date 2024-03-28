@@ -88,9 +88,15 @@ public class SubAgentStoreImpl extends JOCResourceImpl implements ISubAgentStore
                     .getUri())).findAny().ifPresent(s -> {
                         throw new JocBadRequestException(String.format("Subagent url %s is already used by Subagent %s", s.getUri(), s.getSubAgentId()));
                     });
-            dbAgents.stream().filter(a -> a.getUri() != null && !a.getUri().isEmpty() && !a.getAgentId().equals(agentId)).filter(
+            dbAgents.stream().filter(a -> !a.getAgentId().equals(agentId)).filter(a -> a.getUri() != null && !a.getUri().isEmpty()).filter(
                     a -> requestedSubagentUrls.contains(a.getUri())).findAny().ifPresent(a -> {
                         throw new JocBadRequestException(String.format("Subagent url %s is already used by Agent %s", a.getUri(), a.getAgentId()));
+                    });
+            
+            // check uniqueness of (Sub-)AgentId with DB per controller
+            dbAgents.stream().filter(a -> a.getControllerId().equals(controllerId)).map(DBItemInventoryAgentInstance::getAgentId).filter(
+                    aId -> requestedSubagentIds.contains(aId)).findAny().ifPresent(aId -> {
+                        throw new JocBadRequestException(String.format("Subagent id '%s' is already used by an Agent", aId));
                     });
             
             AgentStoreUtils.saveOrUpdate(dbLayer, new InventorySubagentClustersDBLayer(connection), dbAgent, dbSubAgents, subAgentsParam.getSubagents(), true);
