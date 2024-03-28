@@ -161,7 +161,7 @@ public class SOSKeycloakWebserviceCredentials {
                 }
 
                 if (compatibility == null) {
-                    compatibility = getProperty(properties.getKeycloak().getIamKeycloakCompatibility(), "/auth");
+                    compatibility = getProperty(properties.getKeycloak().getIamKeycloakVersionCompatibility(), "16");
                 }
 
                 String truststorePathGui = getProperty(properties.getKeycloak().getIamKeycloakTruststorePath(), "");

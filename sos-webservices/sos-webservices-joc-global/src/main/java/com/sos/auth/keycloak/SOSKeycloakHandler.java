@@ -54,7 +54,7 @@ public class SOSKeycloakHandler {
     private String getRelativePath() {
         if (this.webserviceCredentials.getCompatibility() == null || this.webserviceCredentials.getCompatibility().equalsIgnoreCase(
                 KEYCLOAK_COMPATIBILITY)) {
-            return "/auth";
+            return "auth";
         } else {
             return "";
         }
