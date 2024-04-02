@@ -19,6 +19,11 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>com.sos-berlin</groupId>
+      <artifactId>sos-commons-encryption</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcprov-jdk15to18</artifactId>
     </dependency>
@@ -33,7 +38,7 @@
     <dependency>
   		<groupId>javax.xml.bind</groupId>
   		<artifactId>jaxb-api</artifactId>
-	</dependency>
+		</dependency>
     
     <dependency>
       <groupId>commons-io</groupId>
@@ -45,12 +50,6 @@
     </dependency>
 
     <!-- test dependencies -->
-    <dependency>
-      <groupId>com.sos-berlin</groupId>
-      <artifactId>sos-commons-encryption</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

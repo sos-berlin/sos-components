@@ -1,4 +1,4 @@
-package com.sos.encryption.decrypt;
+package com.sos.commons.encryption.encrypt;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -13,25 +13,25 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 
-import com.sos.encryption.EncryptionUtils;
+import com.sos.commons.encryption.EncryptionUtils;
 
-public class Decrypt {
+public class Encrypt {
 
-  public static String decrypt(String algorithm, String input, SecretKey key, IvParameterSpec iv) throws NoSuchPaddingException,
+  public static String encrypt(String algorithm, String input, SecretKey key, IvParameterSpec iv) throws NoSuchPaddingException,
   NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
-    return EncryptionUtils.enOrDecrypt(algorithm, input, key, iv, Cipher.DECRYPT_MODE);
+    return EncryptionUtils.enOrDecrypt(algorithm, input, key, iv, Cipher.ENCRYPT_MODE);
   }
-
-  public static void decryptFile(String algorithm, SecretKey key, IvParameterSpec iv, String inputFile, String outputFile)
+  
+  public static void encryptFile(String algorithm, SecretKey key, IvParameterSpec iv, String inputFile, String outputFile)
       throws IOException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException,
       BadPaddingException, IllegalBlockSizeException {
-    EncryptionUtils.enOrDecryptFile(algorithm, key, iv, inputFile, outputFile, Cipher.DECRYPT_MODE);
+    EncryptionUtils.enOrDecryptFile(algorithm, key, iv, inputFile, outputFile, Cipher.ENCRYPT_MODE);
   }
 
-  public static void decryptFile(String algorithm, SecretKey key, IvParameterSpec iv, Path inputFile, Path outputFile)
+  public static void encryptFile(String algorithm, SecretKey key, IvParameterSpec iv, Path inputFile, Path outputFile)
       throws IOException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException,
       BadPaddingException, IllegalBlockSizeException {
-    EncryptionUtils.enOrDecryptFile(algorithm, key, iv, inputFile, outputFile, Cipher.DECRYPT_MODE);
+    EncryptionUtils.enOrDecryptFile(algorithm, key, iv, inputFile, outputFile, Cipher.ENCRYPT_MODE);
   }
 
 }

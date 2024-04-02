@@ -21,6 +21,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -29,6 +30,7 @@ import java.util.zip.ZipOutputStream;
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
+import javax.security.auth.x500.X500Principal;
 import javax.xml.bind.DatatypeConverter;
 
 import org.bouncycastle.cert.CertException;
@@ -86,9 +88,18 @@ public class CATests {
             rootCertificate.verify(rootKeyPair.getPublic());
             LOGGER.trace("root certificate was successfully verified.");
             LOGGER.trace("\nCertificate cerdentials :\n" + ((X509Certificate)rootCertificate).toString());
-            List<String> usages = ((X509Certificate)rootCertificate).getExtendedKeyUsage();
-            LOGGER.trace("IssuerDN: " + ((X509Certificate)rootCertificate).getIssuerDN().toString());
-            LOGGER.trace("SubjectDN: " + ((X509Certificate)rootCertificate).getSubjectDN().toString());
+            X509Certificate c = ((X509Certificate)rootCertificate);
+            List<String> usages = c.getExtendedKeyUsage();
+            LOGGER.info("IssuerDN: " + c.getIssuerDN().getName());
+            LOGGER.info("X500Principal IssuerDN: " + c.getIssuerX500Principal().getName());
+            LOGGER.info("SubjectDN: " + c.getSubjectDN().getName());
+            LOGGER.info("X500Principal SubjectDN: " + c.getSubjectX500Principal().getName());
+//            public static final String RFC1779 = "RFC1779";
+//            public static final String CANONICAL = "CANONICAL";
+            LOGGER.info("X500Principal SubjectDN: " + c.getSubjectX500Principal().getName(X500Principal.RFC1779));
+            LOGGER.info("X500Principal SubjectDN: " + c.getSubjectX500Principal().getName(X500Principal.CANONICAL));
+            LOGGER.info("X500Principal SubjectDN: " + c.getSubjectX500Principal().getName(X500Principal.RFC1779, Collections.singletonMap("2.5.4.46", "DN")));
+
             if (usages != null) {
                 for (String usage : usages) {
                     LOGGER.trace("Usage: " + usage);
