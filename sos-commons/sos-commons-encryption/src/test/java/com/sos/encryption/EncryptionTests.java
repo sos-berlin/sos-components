@@ -25,8 +25,9 @@ import org.junit.runners.MethodSorters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.encryption.decrypt.Decrypt;
-import com.sos.encryption.encrypt.Encrypt;
+import com.sos.commons.encryption.EncryptionUtils;
+import com.sos.commons.encryption.decrypt.Decrypt;
+import com.sos.commons.encryption.encrypt.Encrypt;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class EncryptionTests {
