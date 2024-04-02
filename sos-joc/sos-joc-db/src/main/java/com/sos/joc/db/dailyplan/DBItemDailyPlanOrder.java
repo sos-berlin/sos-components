@@ -321,7 +321,7 @@ public class DBItemDailyPlanOrder extends DBItem {
     
     @Transient
     public void setIsLastOfCyclic(boolean val) {
-        isLastOfCycle = val;;
+        isLastOfCycle = val;
     }
 
     @Transient

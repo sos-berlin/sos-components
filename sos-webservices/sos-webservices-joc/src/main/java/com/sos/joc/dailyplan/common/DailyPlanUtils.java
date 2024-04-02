@@ -1,7 +1,10 @@
 package com.sos.joc.dailyplan.common;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -9,6 +12,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.dailyplan.db.DBLayerDailyPlannedOrders;
 import com.sos.joc.dailyplan.db.FilterDailyPlannedOrders;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
@@ -51,5 +55,24 @@ public class DailyPlanUtils {
         } finally {
             Globals.disconnect(session);
         }
+    }
+    
+    public static List<String> getDistinctOrderIds(Collection<String> orderIds) {
+        Set<String> result = new HashSet<>();
+        Set<String> cyclic = new HashSet<>();
+        for (String orderId : orderIds) {
+            if (OrdersHelper.isCyclicOrderId(orderId)) {
+                String mainPart = OrdersHelper.getCyclicOrderIdMainPart(orderId);
+                if (!cyclic.contains(mainPart)) {
+                    cyclic.add(mainPart);
+                    result.add(orderId);
+                }
+            } else {
+                if (!result.contains(orderId)) {
+                    result.add(orderId);
+                }
+            }
+        }
+        return result.stream().collect(Collectors.toList());
     }
 }

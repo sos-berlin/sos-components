@@ -1,5 +1,7 @@
 package com.sos.joc.dailyplan.db;
 
+import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 
 import org.hibernate.query.Query;
@@ -87,5 +89,25 @@ public class DBLayerOrderVariables extends DBLayer {
 
     public int update(String controllerId, String oldOrderId, String newOrderId) throws SOSHibernateException {
         return update(controllerId, oldOrderId, newOrderId, false);
+    }
+    
+    public DBItemDailyPlanVariable copy(String controllerId, String oldOrderId, String newOrderId, boolean isCyclic) throws SOSHibernateException {
+        DBItemDailyPlanVariable vars = getOrderVariable(controllerId, oldOrderId, isCyclic);
+        if (vars != null) {
+            DBItemDailyPlanVariable copiedVars = new DBItemDailyPlanVariable();
+            copiedVars.setControllerId(vars.getControllerId());
+            copiedVars.setCreated(Date.from(Instant.now()));
+            copiedVars.setId(null);
+            copiedVars.setModified(copiedVars.getCreated());
+            copiedVars.setOrderId(newOrderId);
+            copiedVars.setVariableValue(vars.getVariableValue());
+            getSession().save(copiedVars);
+            return copiedVars;
+        }
+        return null;
+    }
+
+    public DBItemDailyPlanVariable copy(String controllerId, String oldOrderId, String newOrderId) throws SOSHibernateException {
+        return copy(controllerId, oldOrderId, newOrderId, false);
     }
 }
