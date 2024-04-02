@@ -1,4 +1,4 @@
-package com.sos.encryption;
+package com.sos.commons.encryption;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,7 +31,11 @@ import javax.crypto.spec.SecretKeySpec;
 public class EncryptionUtils {
 
   private static final String AES_FORMAT = "PBKDF2WithHmacSHA256";
-  private static final String CIPHER_ALGORITHM = "AES/CBC/PKCS5Padding";
+  private static final String KEY_ALGORITHM = "AES";
+  public static final String CIPHER_ALGORITHM = "AES/CBC/PKCS5Padding";
+  public static final String ENV_KEY = "JS7_ENCRYPTED_KEY";
+  public static final String ENV_VALUE = "JS7_ENCRYPTED_VALUE";
+  public static final String ENV_FILE = "JS7_ENCRYPTED_FILE";
 
   public static IvParameterSpec generateIv() {
     byte[] iv = new byte[16];
@@ -48,7 +52,7 @@ public class EncryptionUtils {
   }
 
   public static SecretKey generateSecretKey(int n) throws NoSuchAlgorithmException {
-    KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+    KeyGenerator keyGenerator = KeyGenerator.getInstance(KEY_ALGORITHM);
     keyGenerator.init(n);
     SecretKey key = keyGenerator.generateKey();
     return key;
@@ -57,7 +61,7 @@ public class EncryptionUtils {
   public static SecretKey getSecretKeyFromPassword(String password, String salt) throws NoSuchAlgorithmException, InvalidKeySpecException {
     SecretKeyFactory factory = SecretKeyFactory.getInstance(AES_FORMAT);
     KeySpec spec = new PBEKeySpec(password.toCharArray(), salt.getBytes(), 65536, 256);
-    SecretKey secret = new SecretKeySpec(factory.generateSecret(spec).getEncoded(), "AES");
+    SecretKey secret = new SecretKeySpec(factory.generateSecret(spec).getEncoded(), KEY_ALGORITHM);
     return secret;
   }
 
