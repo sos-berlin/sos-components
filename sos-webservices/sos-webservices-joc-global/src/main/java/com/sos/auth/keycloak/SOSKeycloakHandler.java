@@ -54,7 +54,7 @@ public class SOSKeycloakHandler {
     private String getRelativePath() {
         if (this.webserviceCredentials.getCompatibility() == null || this.webserviceCredentials.getCompatibility().equalsIgnoreCase(
                 KEYCLOAK_COMPATIBILITY)) {
-            return "auth";
+            return "/auth";
         } else {
             return "";
         }
@@ -76,7 +76,12 @@ public class SOSKeycloakHandler {
         if (truststore != null) {
             restApiClient.setSSLContext(null, null, truststore);
         }
-        URI requestUri = URI.create(webserviceCredentials.getServiceUrl() + api);
+
+        String serviceUrl = webserviceCredentials.getServiceUrl();
+        if (serviceUrl.endsWith("/")) {
+            serviceUrl = serviceUrl.substring(0, serviceUrl.length() - 1);
+        }
+        URI requestUri = URI.create(serviceUrl + api);
         if (post && body != null) {
             for (java.util.Map.Entry<String, String> e : body.entrySet()) {
                 if (e.getKey().contains("password") || e.getKey().contains("client_secret")) {
@@ -176,13 +181,19 @@ public class SOSKeycloakHandler {
                 + "/protocol/openid-connect/token/introspect", body, null);
         LOGGER.debug("accountTokenIsValid");
 
-        SOSKeycloakIntrospectRepresentation sosKeycloakUserAccessToken = Globals.objectMapper.readValue(response,
-                SOSKeycloakIntrospectRepresentation.class);
+        SOSKeycloakIntrospectRepresentation sosKeycloakUserAccessToken = null;
+        try {
+            sosKeycloakUserAccessToken = Globals.objectMapper.readValue(response, SOSKeycloakIntrospectRepresentation.class);
+        } catch (com.fasterxml.jackson.databind.exc.MismatchedInputException e) {
+            LOGGER.warn("Could deserialize the response: " + response);
+            throw e;
+        }
 
         LOGGER.debug(SOSString.toString(sosKeycloakAccountAccessToken));
         boolean valid = (sosKeycloakUserAccessToken.getActive() && sosKeycloakAccountAccessToken.getExpires_in()
                 - SOSAuthAccessTokenHandler.TIME_GAP_SECONDS > 0);
         return valid;
+
     }
 
     public SOSKeycloakAccountAccessToken renewAccountAccess(SOSKeycloakAccountAccessToken sosKeycloakAccountAccessToken) throws SOSException,

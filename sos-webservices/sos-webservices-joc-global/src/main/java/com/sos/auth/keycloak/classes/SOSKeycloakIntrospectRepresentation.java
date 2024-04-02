@@ -6,7 +6,7 @@ public class SOSKeycloakIntrospectRepresentation {
     private Long iat;
     private String jti;
     private String iss;
-    private String aud;
+    // private List<String> aud;
     private String sub;
     private String typ;
     private String azp;
@@ -19,7 +19,7 @@ public class SOSKeycloakIntrospectRepresentation {
     private String client_id;
     private String username;
     private Boolean active;
-    
+
     public Long getExp() {
         return exp;
     }
@@ -82,11 +82,6 @@ public class SOSKeycloakIntrospectRepresentation {
 
     public Boolean getActive() {
         return active;
-    }
-
-    
-    public String getAud() {
-        return aud;
     }
 
 }
