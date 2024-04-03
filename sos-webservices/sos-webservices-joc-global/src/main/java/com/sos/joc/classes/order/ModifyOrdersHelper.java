@@ -16,7 +16,7 @@ public class ModifyOrdersHelper extends DailyPlanModifyOrder {
     @JsonIgnore
     private Optional<Long> secondsFromCurDate = Optional.empty();
     @JsonIgnore
-    private Instant utcScheduledFor = null;
+    private Optional<Instant> utcScheduledFor = null;
     @JsonIgnore
     private boolean isBulkOperation = false;
     
@@ -35,7 +35,7 @@ public class ModifyOrdersHelper extends DailyPlanModifyOrder {
         } else if (secondsFromCurDate.isPresent()) {
             return oldPlannedStart.toInstant().plusSeconds(secondsFromCurDate.get());
         }
-        return utcScheduledFor;
+        return utcScheduledFor.isPresent() ? utcScheduledFor.get() : Instant.now();
     }
     
     protected static boolean isCurDate(String datetime) {
@@ -51,16 +51,16 @@ public class ModifyOrdersHelper extends DailyPlanModifyOrder {
     }
     
     private void setUtcScheduledFor() throws JocBadRequestException {
-        utcScheduledFor = Instant.now();
+        utcScheduledFor = Optional.empty();
         // a "cur" date cannot be checked if future or not and a date without time only roughly
         if (!isCurDate(getScheduledFor())) {
 
             Optional<Instant> scheduledForUtc = getScheduledForInUTC(getScheduledFor(), getTimeZone());
             if (scheduledForUtc.isPresent()) { // not present for now
-                if (!isBulkOperation && scheduledForUtc.get().isBefore(utcScheduledFor)) {
-                    throw new JocBadRequestException("The new planned start must be in the future.");
+                if (!isBulkOperation && scheduledForUtc.get().isBefore(Instant.now())) {
+                    throw new JocBadRequestException("The planned start time must be in the future.");
                 }
-                utcScheduledFor = scheduledForUtc.get();
+                utcScheduledFor = scheduledForUtc;
             }
         }
     }
