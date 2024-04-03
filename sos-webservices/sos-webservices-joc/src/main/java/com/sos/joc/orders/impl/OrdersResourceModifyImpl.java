@@ -58,6 +58,7 @@ import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.dailyplan.DailyPlanEvent;
 import com.sos.joc.exceptions.ControllerObjectNotExistException;
+import com.sos.joc.exceptions.JocAccessDeniedException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
@@ -123,12 +124,13 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     public JOCDefaultResponse postOrdersResume(String accessToken, byte[] filterBytes) {
         try {
             ModifyOrders modifyOrders = initRequest(Action.RESUME, accessToken, filterBytes);
-            boolean perm = getControllerPermissions(modifyOrders.getControllerId(), accessToken).getOrders().getSuspendResume();
-            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getControllerId(), perm);
+            boolean permSuspendResume = getControllerPermissions(modifyOrders.getControllerId(), accessToken).getOrders().getSuspendResume();
+            boolean permResumeFailed = getControllerPermissions(modifyOrders.getControllerId(), accessToken).getOrders().getResumeFailed();
+            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getControllerId(), permSuspendResume || permResumeFailed);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            postResumeOrders(modifyOrders);
+            postResumeOrders(modifyOrders, permResumeFailed && !permSuspendResume);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -276,7 +278,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     }
 
     @SuppressWarnings("unchecked")
-    public void postResumeOrders(ModifyOrders modifyOrders) throws Exception {
+    public void postResumeOrders(ModifyOrders modifyOrders, boolean hasOnlyResumeFailedPermission) throws Exception {
 
         String controllerId = modifyOrders.getControllerId();
         DBItemJocAuditLog dbAuditLog = storeAuditLog(modifyOrders.getAuditLog(), controllerId, CategoryType.CONTROLLER);
@@ -291,9 +293,14 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         boolean withOrders = orders != null && !orders.isEmpty();
         boolean withFolderFilter = modifyOrders.getFolders() != null && !modifyOrders.getFolders().isEmpty();
         Set<Folder> permittedFolders = addPermittedFolder(modifyOrders.getFolders());
-
+        
         if (withOrders) {
             //
+            if (hasOnlyResumeFailedPermission) {
+                if (currentState.ordersBy(o -> modifyOrders.getOrderIds().contains(o.id().string())).anyMatch(OrdersHelper::isNotFailed)) {
+                    throw new JocAccessDeniedException("Resuming only for failed orders permitted");
+                }
+            }
         } else if (workflowIds != null && !workflowIds.isEmpty()) {
             Predicate<WorkflowId> versionNotEmpty = w -> w.getVersionId() != null && !w.getVersionId().isEmpty();
             Set<VersionedItemId<WorkflowPath>> workflowPaths = workflowIds.stream().filter(versionNotEmpty).map(w -> JWorkflowId.of(JocInventory
@@ -302,8 +309,12 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     .pathToName(w.getPath()))).collect(Collectors.toSet());
             Function1<Order<Order.State>, Object> workflowFilter = o -> (workflowPaths.contains(o.workflowId()) || workflowPaths2.contains(o
                     .workflowId().path()));
-            orders = currentState.ordersBy(getWorkflowStateFilter(modifyOrders, surveyDateMillis, workflowFilter, zoneId)).parallel().filter(
-                    getDateToFilter(modifyOrders, Action.RESUME)).map(JOrder::id).map(OrderId::string).collect(Collectors.toSet());
+            Stream<JOrder> jOrdersStream = currentState.ordersBy(getWorkflowStateFilter(modifyOrders, surveyDateMillis, workflowFilter, zoneId))
+                    .parallel().filter(getDateToFilter(modifyOrders, Action.RESUME));
+            if (hasOnlyResumeFailedPermission && jOrdersStream.anyMatch(OrdersHelper::isNotFailed)) {
+                throw new JocAccessDeniedException("Resuming only for failed orders permitted");
+            }
+            orders = jOrdersStream.map(JOrder::id).map(OrderId::string).collect(Collectors.toSet());
         } else if (withFolderFilter && (permittedFolders == null || permittedFolders.isEmpty())) {
             // no permission
         } else {
@@ -311,8 +322,12 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     .collect(Collectors.toList()), currentState, permittedFolders);
             if (workflowIds2 != null && !workflowIds2.isEmpty()) {
                 Function1<Order<Order.State>, Object> workflowFilter = o -> workflowIds2.contains(o.workflowId());
-                orders = currentState.ordersBy(getWorkflowStateFilter(modifyOrders, surveyDateMillis, workflowFilter, zoneId)).parallel().filter(
-                        getDateToFilter(modifyOrders, Action.RESUME)).map(JOrder::id).map(OrderId::string).collect(Collectors.toSet());
+                Stream<JOrder> jOrdersStream = currentState.ordersBy(getWorkflowStateFilter(modifyOrders, surveyDateMillis, workflowFilter, zoneId))
+                        .parallel().filter(getDateToFilter(modifyOrders, Action.RESUME));
+                if (hasOnlyResumeFailedPermission && jOrdersStream.anyMatch(OrdersHelper::isNotFailed)) {
+                    throw new JocAccessDeniedException("Resuming only for failed orders allowed");
+                }
+                orders = jOrdersStream.map(JOrder::id).map(OrderId::string).collect(Collectors.toSet());
             }
         }
 
