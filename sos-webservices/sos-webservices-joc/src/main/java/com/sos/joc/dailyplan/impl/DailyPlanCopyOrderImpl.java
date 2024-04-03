@@ -377,7 +377,7 @@ public class DailyPlanCopyOrderImpl extends JOCOrderResourceImpl implements IDai
                     if (isBulkOperation) {
                         newPlannedStart = now;
                     } else {
-                        throw new JocBadRequestException("The new planned start must be in the future.");
+                        throw new JocBadRequestException("The planned start time must be in the future.");
                     }
                 }
 
@@ -541,6 +541,8 @@ public class DailyPlanCopyOrderImpl extends JOCOrderResourceImpl implements IDai
                 cyclicOrdersOfItem = dbLayer.getDailyPlanOrdersByCyclicMainPart(in.getControllerId(), mainPart).stream().collect(Collectors
                         .toCollection(() -> new TreeSet<>(comp)));
                 
+                Instant now = Instant.now();
+                
                 DBItemDailyPlanOrder firstOrderOfCycle = cyclicOrdersOfItem.first();
                 Instant newPlannedStartOfFirst = in.getNewPlannedStart(firstOrderOfCycle.getPlannedStart());
                 
@@ -548,9 +550,8 @@ public class DailyPlanCopyOrderImpl extends JOCOrderResourceImpl implements IDai
                 Instant newPlannedStartOfLast = lastOrderOfCycle.getPlannedStart().toInstant().plusMillis(newPlannedStartOfFirst.toEpochMilli()
                         - firstOrderOfCycle.getPlannedStart().getTime());
                 
-                Instant now = Instant.now();
                 if (newPlannedStartOfLast.isBefore(now)) {
-                    throw new JocBadRequestException("The new planned start must be in the future.");
+                    throw new JocBadRequestException("The planned start time must be in the future.");
                 }
             }
             
