@@ -15,6 +15,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "create",
     "cancel",
     "suspendResume",
+    "resumeFailed",
     "modify",
     "managePositions"
 })
@@ -43,6 +44,9 @@ public class Orders {
     @JsonProperty("suspendResume")
     @JsonPropertyDescription("suspend, resume")
     private Boolean suspendResume = false;
+    @JsonProperty("resumeFailed")
+    @JsonPropertyDescription("resume failed orders")
+    private Boolean resumeFailed = false;
     @JsonProperty("modify")
     private Boolean modify = true;
     /**
@@ -66,15 +70,17 @@ public class Orders {
      * @param modify
      * @param view
      * @param suspendResume
+     * @param resumeFailed
      * @param managePositions
      * @param create
      */
-    public Orders(Boolean view, Boolean create, Boolean cancel, Boolean suspendResume, Boolean modify, Boolean managePositions) {
+    public Orders(Boolean view, Boolean create, Boolean cancel, Boolean suspendResume, Boolean resumeFailed, Boolean modify, Boolean managePositions) {
         super();
         this.view = view;
         this.create = create;
         this.cancel = cancel;
         this.suspendResume = suspendResume;
+        this.resumeFailed = resumeFailed;
         this.modify = modify;
         this.managePositions = managePositions;
     }
@@ -142,6 +148,16 @@ public class Orders {
     public void setSuspendResume(Boolean suspendResume) {
         this.suspendResume = suspendResume;
     }
+    
+    @JsonProperty("resumeFailed")
+    public Boolean getResumeFailed() {
+        return resumeFailed;
+    }
+
+    @JsonProperty("resumeFailed")
+    public void setResumeFailed(Boolean resumeFailed) {
+        this.resumeFailed = resumeFailed;
+    }
 
     @JsonProperty("modify")
     public Boolean getModify() {
@@ -173,12 +189,12 @@ public class Orders {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("view", view).append("create", create).append("cancel", cancel).append("suspendResume", suspendResume).append("modify", modify).append("managePositions", managePositions).toString();
+        return new ToStringBuilder(this).append("view", view).append("create", create).append("cancel", cancel).append("suspendResume", suspendResume).append("resumeFailed", resumeFailed).append("modify", modify).append("managePositions", managePositions).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(cancel).append(modify).append(view).append(suspendResume).append(managePositions).append(create).toHashCode();
+        return new HashCodeBuilder().append(cancel).append(modify).append(view).append(suspendResume).append(resumeFailed).append(managePositions).append(create).toHashCode();
     }
 
     @Override
@@ -190,7 +206,7 @@ public class Orders {
             return false;
         }
         Orders rhs = ((Orders) other);
-        return new EqualsBuilder().append(cancel, rhs.cancel).append(modify, rhs.modify).append(view, rhs.view).append(suspendResume, rhs.suspendResume).append(managePositions, rhs.managePositions).append(create, rhs.create).isEquals();
+        return new EqualsBuilder().append(cancel, rhs.cancel).append(modify, rhs.modify).append(view, rhs.view).append(suspendResume, rhs.suspendResume).append(resumeFailed, rhs.resumeFailed).append(managePositions, rhs.managePositions).append(create, rhs.create).isEquals();
     }
 
 }

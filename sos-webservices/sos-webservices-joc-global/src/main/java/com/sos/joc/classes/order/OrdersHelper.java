@@ -329,6 +329,10 @@ public class OrdersHelper {
         }
         return OrderStateText.FAILED.equals(getGroupedState(o.state().getClass()));
     }
+    
+    public static boolean isNotFailed(JOrder order) {
+        return !OrderStateText.FAILED.equals(getGroupedState(order.asScala().state().getClass()));
+    }
 
     public static boolean isPendingOrScheduledOrBlocked(JOrder order) {
         Order<Order.State> o = order.asScala();
