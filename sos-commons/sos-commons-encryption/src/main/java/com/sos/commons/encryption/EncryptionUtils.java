@@ -28,6 +28,8 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import com.sos.commons.exception.SOSException;
+
 public class EncryptionUtils {
 
   private static final String AES_FORMAT = "PBKDF2WithHmacSHA256";
@@ -136,11 +138,15 @@ public class EncryptionUtils {
   }
 
   public static byte[] encryptSymmetricKey(SecretKey secretKey, X509Certificate cert) throws NoSuchAlgorithmException, NoSuchPaddingException,
-      InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
-    PublicKey publicKey = cert.getPublicKey();
-    Cipher cipher = Cipher.getInstance(publicKey.getAlgorithm());
-    cipher.init(Cipher.ENCRYPT_MODE, publicKey);
-    return Base64.getEncoder().encode(cipher.doFinal(secretKey.getEncoded()));
+      InvalidKeyException, IllegalBlockSizeException, BadPaddingException, SOSException {
+    if(cert != null) {
+      PublicKey publicKey = cert.getPublicKey();
+      Cipher cipher = Cipher.getInstance(publicKey.getAlgorithm());
+      cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+      return Base64.getEncoder().encode(cipher.doFinal(secretKey.getEncoded()));
+    } else {
+      throw new SOSException("Cannot read public key from certificate. no certificate present.");
+    }
   }
 
   public static byte[] decryptSymmetricKey(byte[] encryptedSecretKey, PrivateKey privateKey) throws NoSuchAlgorithmException, NoSuchPaddingException,

@@ -17,6 +17,7 @@ import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
 import java.security.SignatureException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
@@ -37,10 +38,12 @@ import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
 import org.bouncycastle.crypto.DataLengthException;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.pkcs.PKCSException;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 import org.slf4j.Logger;
@@ -1246,6 +1249,14 @@ public class KeyTests {
             
     }
 
+    @Test
+    @Ignore
+    public void test30ParseKey () throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, PKCSException {
+        LOGGER.trace("*********************  Test 30: parse a private key  *******************************************");
+        String privateKeyString = new String(Files.readAllBytes(Paths.get("C:\\sp\\devel\\js7\\keys\\centostest_primary\\agent.key")));
+        PrivateKey key = KeyUtil.getPrivateKeyFromString(privateKeyString);
+    }
+    
     @SuppressWarnings("unused")
     private static String byteArrayToHexString(byte[] ba) {
         MessageDigest digest;
