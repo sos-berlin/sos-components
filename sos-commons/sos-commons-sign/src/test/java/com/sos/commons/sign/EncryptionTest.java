@@ -2,7 +2,6 @@ package com.sos.commons.sign;
 
 import static org.junit.Assert.assertEquals;
 
-import java.beans.Encoder;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -201,26 +200,7 @@ public class EncryptionTest {
 
   @Test
   @Ignore
-  public void test05EncryptionWithEnv() throws CertificateException, IOException, NoSuchAlgorithmException, InvalidKeyException,
-        NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException,
-        InvalidKeySpecException {
-    String original = "MyP4ssw0rd";
-    LOGGER.trace("*************  Test 'encrypt value, export as env variable and decrypt' started  ****************");
-    Encrypt.encrypt(KeyUtil.getX509Certificate(Paths.get("C:/sp/devel/js7/keys/sp.crt")), original);
-    LOGGER.trace("encrypted secret key from env:");
-    LOGGER.trace(System.getProperty(EncryptionUtils.ENV_KEY));
-    LOGGER.trace("encrypted value with IV from env:");
-    LOGGER.trace(System.getProperty(EncryptionUtils.ENV_VALUE));
-    LOGGER.trace("original value:");
-    LOGGER.trace(original);
-    LOGGER.trace("decrypted value:");
-    Decrypt.decrypt(KeyUtil.getPrivateKeyFromString(new String(Files.readAllBytes(Paths.get("C:/sp/devel/js7/keys/sp.key")), StandardCharsets.UTF_8)));
-    LOGGER.trace("*************  Test 'encrypt value, export as env variable and decrypt' finished ****************");
-  }
-
-  @Test
-  @Ignore
-  public void test06Decrypt() throws CertificateException, IOException, NoSuchAlgorithmException, InvalidKeyException,
+  public void test05Decrypt() throws CertificateException, IOException, NoSuchAlgorithmException, InvalidKeyException,
         NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException,
         InvalidKeySpecException {
     LOGGER.trace("****************************  Test 'decrypt value' started  *************************************");

@@ -1,7 +1,9 @@
 package com.sos.commons.encryption.executable;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -17,40 +19,42 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import com.sos.commons.encryption.EncryptionUtils;
+import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.sign.keys.key.KeyUtil;
 
 public class Decrypt {
 
   private static final String HELP = "--help";
   private static final String KEY = "--key";
-  private static final String ENCRYPTED_KEY = "--encrypt_key";
+  private static final String ENCRYPTED_KEY = "--encrypted-key";
   private static final String IV = "--iv";
   private static final String IN = "--in";
-  private static final String IN_FILE = "--in_file";
+  private static final String IN_FILE = "--in-file";
+  private static final String OUT_FILE = "--out-file";
 
   private static String keyPath;
   private static String iv;
   private static String encryptedKey;
   private static String encryptedValue;
   private static String encryptedFile;
+  private static String outFile;
 
-  public static String decrypt(PrivateKey privKey) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException,
-      IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException {
-    String encryptedSecretKey = System.getProperty(EncryptionUtils.ENV_KEY);
-    String encryptedValueWithIv = System.getProperty(EncryptionUtils.ENV_VALUE);
-    String exportedIv = encryptedValueWithIv.substring(0, 24);
-    String exportedValue = encryptedValueWithIv.substring(24);
-    return decrypt(privKey, exportedIv, encryptedSecretKey, exportedValue);
-  }
-
-  public static String decrypt(PrivateKey privKey, String iv, String encryptedKey, String encryptedValue) throws InvalidKeyException, 
-      NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException,
-      InvalidAlgorithmParameterException {
+  public static String decrypt(PrivateKey privKey, String iv, String encryptedKey, String encryptedValue)
+      throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException,
+      BadPaddingException, InvalidAlgorithmParameterException {
     SecretKey key = new SecretKeySpec(EncryptionUtils.decryptSymmetricKey(encryptedKey.getBytes(), privKey), "AES");
     byte[] decodedIV = Base64.getDecoder().decode(iv);
     String decryptedValue = com.sos.commons.encryption.decrypt.Decrypt.decrypt(EncryptionUtils.CIPHER_ALGORITHM, encryptedValue, key,
         new IvParameterSpec(decodedIV));
     return decryptedValue;
+  }
+  
+  public static void decryptFile(PrivateKey privKey, String iv, Path inFile, Path outFile) throws InvalidKeyException,
+      NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, BadPaddingException,
+      IllegalBlockSizeException, IOException {
+    SecretKey key = new SecretKeySpec(EncryptionUtils.decryptSymmetricKey(encryptedKey.getBytes(), privKey), "AES");
+    byte[] decodedIV = Base64.getDecoder().decode(iv);
+    com.sos.commons.encryption.decrypt.Decrypt.decryptFile(EncryptionUtils.CIPHER_ALGORITHM, key, new IvParameterSpec(decodedIV), inFile, outFile);
   }
   
   public static void main(String[] args) {
@@ -72,13 +76,72 @@ public class Decrypt {
             encryptedValue = split[1];
           } else if (args[i].startsWith(IN_FILE + "=")) {
             encryptedFile = split[1];
+          } else if (args[i].startsWith(OUT_FILE + "=")) {
+            outFile = split[1];
           }
         }
         String decryptedValue = null;
-        if(iv != null && encryptedKey != null && encryptedValue != null) {
-          decryptedValue = decrypt(privKey, iv, encryptedKey, encryptedValue);
+        if(keyPath == null || encryptedKey == null || iv == null || (encryptedValue == null && encryptedFile == null)) {
+          if(keyPath == null) {
+            if(encryptedKey == null && iv == null) {
+              if(encryptedValue == null && encryptedFile == null) {
+                throw new SOSMissingDataException("The parameters --key, --encrypted-key and --iv and at least one of the parameters --in or --in-file are not set, but are required!");
+              } else {
+                throw new SOSMissingDataException("The parameters --key, --encrypted-key and --iv are not set, but are required!");
+              }
+            } else if (iv == null && encryptedKey != null) {
+              if(encryptedValue == null && encryptedFile == null) {
+                throw new SOSMissingDataException("The parameters --key and --iv and at least one of the parameters --in or --in-file are not set, but are required!");
+              } else {
+                throw new SOSMissingDataException("The parameters --key and --iv are not set, but are required!");
+              }
+            } else if (iv != null && encryptedKey == null) {
+              if(encryptedValue == null && encryptedFile == null) {
+                throw new SOSMissingDataException("The parameters --key and --encrypted-key and at least one of the parameters --in or --in-file are not set, but are required!");
+              } else {
+                throw new SOSMissingDataException("The parameters --key and --encrypted-key are not set, but are required!");
+              }
+            } else {
+              if(encryptedValue == null && encryptedFile == null) {
+                throw new SOSMissingDataException("The parameter --key and at least one of the parameters --in or --in-file are not set, but are required!");
+              } else {
+                throw new SOSMissingDataException("The parameter --key is not set, but is required!");
+              }
+            }
+          } else {
+            if(encryptedKey == null && iv == null) {
+              if(encryptedValue == null && encryptedFile == null) {
+                throw new SOSMissingDataException("The parameters --encrypted-key and --iv and at least one of the parameters --in or --in-file are not set, but are required!");
+              } else {
+                throw new SOSMissingDataException("The parameters --encrypted-key and --iv are not set, but are required!");
+              }
+            } else if (iv == null && encryptedKey != null) {
+              if(encryptedValue == null && encryptedFile == null) {
+                throw new SOSMissingDataException("The parameters --iv and at least one of the parameters --in or --in-file are not set, but are required!");
+              } else {
+                throw new SOSMissingDataException("The parameters --iv is not set, but is required!");
+              }
+            } else if (iv != null && encryptedKey == null) {
+              if(encryptedValue == null && encryptedFile == null) {
+                throw new SOSMissingDataException("The parameters --encrypted-key and at least one of the parameters --in or --in-file are not set, but are required!");
+              } else {
+                throw new SOSMissingDataException("The parameters --encrypted-key is not set, but is required!");
+              }
+            }
+          }
+        }
+        if(keyPath != null && iv != null && encryptedKey != null && encryptedValue != null) {
+          if (encryptedValue != null) {
+            decryptedValue = decrypt(privKey, iv, encryptedKey, encryptedValue);
+          } else if (encryptedFile != null){
+            if(outFile == null) {
+              outFile = encryptedFile.concat(".decrypted");
+            }
+            decryptFile(privKey, iv, Paths.get(encryptedFile), Paths.get(outFile));
+          }
         } else {
-          decryptedValue = decrypt(privKey);
+          System.err.println("One of the required parameters is missing.");
+          System.exit(1);
         }
         if(decryptedValue != null) {
           System.out.println(decryptedValue);
