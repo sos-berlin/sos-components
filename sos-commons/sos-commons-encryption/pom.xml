@@ -9,6 +9,12 @@
 
 <dependencies>
 
+    <dependency>
+      <groupId>com.sos-berlin</groupId>
+      <artifactId>sos-commons-exception</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
     <!-- test dependencies -->
     <dependency>
       <groupId>org.slf4j</groupId>
