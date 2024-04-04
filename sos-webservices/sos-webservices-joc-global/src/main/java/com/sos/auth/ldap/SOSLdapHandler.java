@@ -57,13 +57,20 @@ public class SOSLdapHandler {
 
                 if (sosLdapWebserviceCredentials.getTruststorePath() != null && !sosLdapWebserviceCredentials.getTruststorePath().isEmpty()) {
                     Globals.sosCockpitProperties.getProperties().put("ldap_truststore_path", sosLdapWebserviceCredentials.getTruststorePath());
+                } else {
+                    Globals.sosCockpitProperties.getProperties().put("ldap_truststore_path", "");
                 }
                 if (sosLdapWebserviceCredentials.getTruststorePassword() != null && !sosLdapWebserviceCredentials.getTruststorePassword().isEmpty()) {
                     Globals.sosCockpitProperties.getProperties().put("ldap_truststore_password", sosLdapWebserviceCredentials
                             .getTruststorePassword());
+                } else {
+                    Globals.sosCockpitProperties.getProperties().put("ldap_truststore_password", "");
                 }
                 if (sosLdapWebserviceCredentials.getTruststoreType() != null) {
-                    Globals.sosCockpitProperties.getProperties().put("ldap_truststore_type", sosLdapWebserviceCredentials.getTruststoreType().value());
+                    Globals.sosCockpitProperties.getProperties().put("ldap_truststore_type", sosLdapWebserviceCredentials.getTruststoreType()
+                            .value());
+                } else {
+                    Globals.sosCockpitProperties.getProperties().put("ldap_truststore_type", "");
                 }
             }
 
@@ -135,16 +142,16 @@ public class SOSLdapHandler {
             if (password == null || password.isEmpty()) {
                 msg = "Password is empty";
             }
-            
 
-            if (sosLdapWebserviceCredentials.isSSL() && sosLdapWebserviceCredentials.getTruststorePath() != null && !sosLdapWebserviceCredentials.getTruststorePath().isEmpty()) {
+            if (sosLdapWebserviceCredentials.isSSL() && sosLdapWebserviceCredentials.getTruststorePath() != null && !sosLdapWebserviceCredentials
+                    .getTruststorePath().isEmpty()) {
                 Path p = Globals.sosCockpitProperties.resolvePath(sosLdapWebserviceCredentials.getTruststorePath().trim());
 
-                if (!(Files.exists(p) && Files.isRegularFile(p))){
+                if (!(Files.exists(p) && Files.isRegularFile(p))) {
                     msg = "Truststore file not exists: " + sosLdapWebserviceCredentials.getTruststorePath();
                 }
             }
-                       
+
             if (msg.isEmpty()) {
                 createDirContext(sosLdapWebserviceCredentials, password);
                 sosAuthAccessToken = new SOSAuthAccessToken();
