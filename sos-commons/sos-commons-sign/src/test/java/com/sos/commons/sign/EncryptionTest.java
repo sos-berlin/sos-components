@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.encryption.EncryptionUtils;
 import com.sos.commons.encryption.executable.Decrypt;
 import com.sos.commons.encryption.executable.Encrypt;
+import com.sos.commons.exception.SOSException;
 import com.sos.commons.sign.keys.key.KeyUtil;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -56,7 +57,8 @@ public class EncryptionTest {
   @Ignore
   @Test
   public void test01SecretKeyEncryption() throws NoSuchAlgorithmException, IOException, IllegalBlockSizeException, InvalidKeyException,
-      BadPaddingException, InvalidAlgorithmParameterException, NoSuchPaddingException, CertificateException, InvalidKeySpecException {
+      BadPaddingException, InvalidAlgorithmParameterException, NoSuchPaddingException, CertificateException, InvalidKeySpecException,
+      SOSException {
     LOGGER.trace("*************  Test 'create secret key encrypt it and decrypt it again' started  ****************");
     // Paths
     Path certificatePath = Paths.get("C:/sp/devel/js7/keys/sp.crt"); 
@@ -92,7 +94,8 @@ public class EncryptionTest {
   @Test
   @Ignore
   public void test02FileEncryption() throws NoSuchAlgorithmException, IOException, IllegalBlockSizeException, InvalidKeyException,
-      BadPaddingException, InvalidAlgorithmParameterException, NoSuchPaddingException, CertificateException, InvalidKeySpecException {
+      BadPaddingException, InvalidAlgorithmParameterException, NoSuchPaddingException, CertificateException, InvalidKeySpecException,
+      SOSException {
     LOGGER.trace("*************  Test 'create encrypted file and decrypt it again' started  ***********************");
     // Paths
     Path certificatePath = Paths.get("C:/sp/devel/js7/keys/sp.crt"); 
@@ -156,7 +159,8 @@ public class EncryptionTest {
   @Test
   @Ignore
   public void test03PWEncryption() throws CertificateException, IOException, NoSuchAlgorithmException, InvalidKeyException,
-        NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException {
+        NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException,
+        SOSException {
     LOGGER.trace("*************  Test 'encrypt password, export as env variable and decrypt' started  *************");
     String pwd = "Myt3stP4ssw0rd";
     Path certificatePath = Paths.get("C:/sp/devel/js7/keys/sp.crt"); 

@@ -44,11 +44,11 @@ public class EncryptionUtils {
     new SecureRandom().nextBytes(iv);
     return new IvParameterSpec(iv);
   }
-  
+
   public static byte[] getIv(IvParameterSpec ivSpec) {
     return ivSpec.getIV();
   }
-  
+
   public static IvParameterSpec updateIvParameterSpec(byte[] iv) {
     return new IvParameterSpec(iv);
   }
@@ -133,16 +133,26 @@ public class EncryptionUtils {
       }
     } finally {
       inputStream.close();
+      outputStream.flush();
       outputStream.close();
     }
   }
 
-  public static byte[] encryptSymmetricKey(SecretKey secretKey, X509Certificate cert) throws NoSuchAlgorithmException, NoSuchPaddingException,
-      InvalidKeyException, IllegalBlockSizeException, BadPaddingException, SOSException {
-    if(cert != null) {
+  public static byte[] encryptSymmetricKey(SecretKey secretKey, X509Certificate cert) throws NoSuchAlgorithmException,
+      NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, SOSException {
+    if (cert != null) {
       PublicKey publicKey = cert.getPublicKey();
-      Cipher cipher = Cipher.getInstance(publicKey.getAlgorithm());
-      cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+      return encryptSymmetricKey(secretKey, publicKey);
+    } else {
+      throw new SOSException("Cannot read public key from certificate. no certificate present.");
+    }
+  }
+
+  public static byte[] encryptSymmetricKey(SecretKey secretKey, PublicKey key) throws NoSuchAlgorithmException,
+      NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, SOSException {
+    if (key != null) {
+      Cipher cipher = Cipher.getInstance(key.getAlgorithm());
+      cipher.init(Cipher.ENCRYPT_MODE, key);
       return Base64.getEncoder().encode(cipher.doFinal(secretKey.getEncoded()));
     } else {
       throw new SOSException("Cannot read public key from certificate. no certificate present.");
