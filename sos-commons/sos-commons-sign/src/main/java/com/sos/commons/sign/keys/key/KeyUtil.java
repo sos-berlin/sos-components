@@ -91,6 +91,8 @@ import org.bouncycastle.openssl.PEMEncryptedKeyPair;
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.bc.BcPEMDecryptorProvider;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
+import org.bouncycastle.openssl.jcajce.JceOpenSSLPKCS8DecryptorProviderBuilder;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.InputDecryptorProvider;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
@@ -923,7 +925,7 @@ public abstract class KeyUtil {
     return privKey;
   }
 
-  public static PrivateKey getPrivateEncryptedRSAKey(String privateKey, String keyPasswd) throws NoSuchAlgorithmException,
+  public static PrivateKey getPrivateEncryptedKey(String privateKey, String keyPasswd) throws NoSuchAlgorithmException,
       InvalidKeySpecException, IOException, PKCSException {
     Security.addProvider(new BouncyCastleProvider());
     PrivateKey privKey = null;
@@ -931,18 +933,42 @@ public abstract class KeyUtil {
     PEMParser pemParser = new PEMParser(new StringReader(privateKey));
     Object readObject = pemParser.readObject();
     if (readObject instanceof PKCS8EncryptedPrivateKeyInfo) {
-      PKCS8EncryptedPrivateKeyInfo keyInfo = (PKCS8EncryptedPrivateKeyInfo) readObject;
-      JcePKCSPBEInputDecryptorProviderBuilder provider = new JcePKCSPBEInputDecryptorProviderBuilder();
-      InputDecryptorProvider prov = provider.build(keyPasswd.toCharArray());
-      final byte[] privateEncoded = keyInfo.decryptPrivateKeyInfo(prov).getEncoded();
-      privKey = kf.generatePrivate(new PKCS8EncodedKeySpec(privateEncoded));
+      try {// RSA
+        PKCS8EncryptedPrivateKeyInfo keyInfo = (PKCS8EncryptedPrivateKeyInfo) readObject;
+        JcePKCSPBEInputDecryptorProviderBuilder provider = new JcePKCSPBEInputDecryptorProviderBuilder();
+        InputDecryptorProvider prov = provider.build(keyPasswd.toCharArray());
+        final byte[] privateEncoded = keyInfo.decryptPrivateKeyInfo(prov).getEncoded();
+        privKey = kf.generatePrivate(new PKCS8EncodedKeySpec(privateEncoded));
+      } catch (Exception e) {// RSA
+        try {
+          JceOpenSSLPKCS8DecryptorProviderBuilder jce = new JceOpenSSLPKCS8DecryptorProviderBuilder();
+          JcaPEMKeyConverter converter = new JcaPEMKeyConverter();
+          PKCS8EncryptedPrivateKeyInfo encryptedKeyInfo = (PKCS8EncryptedPrivateKeyInfo) readObject;
+          jce.setProvider("BC");
+          InputDecryptorProvider decProv = jce.build(keyPasswd.toCharArray());
+          PrivateKeyInfo keyInfo = encryptedKeyInfo.decryptPrivateKeyInfo(decProv);
+          privKey = kf.generatePrivate(new PKCS8EncodedKeySpec(keyInfo.getEncoded()));
+        } catch (Exception e1) { // try ECDSA
+          PKCS8EncryptedPrivateKeyInfo keyInfo = (PKCS8EncryptedPrivateKeyInfo) readObject;
+          JcePKCSPBEInputDecryptorProviderBuilder provider = new JcePKCSPBEInputDecryptorProviderBuilder();
+          InputDecryptorProvider prov = provider.build(keyPasswd.toCharArray());
+          final byte[] privateEncoded = keyInfo.decryptPrivateKeyInfo(prov).getEncoded();
+          kf = KeyFactory.getInstance(SOSKeyConstants.ECDSA_ALGORITHM_NAME);
+          privKey = kf.generatePrivate(new PKCS8EncodedKeySpec(privateEncoded));
+        }
+      }
       return privKey;
     } else {
       PEMEncryptedKeyPair pemEncryptedKeyPair = (PEMEncryptedKeyPair) readObject;
       PEMDecryptorProvider keyDecryptorProvider = new BcPEMDecryptorProvider(keyPasswd.toCharArray());
       PEMKeyPair pemKeyPair = pemEncryptedKeyPair.decryptKeyPair(keyDecryptorProvider);
       final byte[] privateEncoded = pemKeyPair.getPrivateKeyInfo().getEncoded();
-      privKey = kf.generatePrivate(new PKCS8EncodedKeySpec(privateEncoded));
+      try { // RSA
+        privKey = kf.generatePrivate(new PKCS8EncodedKeySpec(privateEncoded));
+      } catch (Exception e) {
+        kf = KeyFactory.getInstance(SOSKeyConstants.ECDSA_ALGORITHM_NAME);
+        privKey = kf.generatePrivate(new PKCS8EncodedKeySpec(privateEncoded));
+      }
       return privKey;
     }
   }
@@ -998,6 +1024,8 @@ public abstract class KeyUtil {
 
   public static PublicKey getRSAPublicKeyFromString(String publicKey) throws NoSuchAlgorithmException, InvalidKeySpecException {
     byte[] decoded = null;
+    Provider bcProvider = new BouncyCastleProvider();
+    Security.addProvider(bcProvider);
     KeyFactory kf = KeyFactory.getInstance(SOSKeyConstants.RSA_ALGORITHM_NAME);
     if (publicKey.startsWith(SOSKeyConstants.PUBLIC_RSA_KEY_HEADER)) {
       decoded = Base64.decode(stripFormatFromPublicRSAKey(publicKey));
@@ -1015,7 +1043,7 @@ public abstract class KeyUtil {
     Provider bcProvider = new BouncyCastleProvider();
     Security.addProvider(bcProvider);
     KeyFactory kf = KeyFactory.getInstance(SOSKeyConstants.ECDSA_ALGORITHM_NAME);
-    if (publicKey.startsWith(SOSKeyConstants.PUBLIC_RSA_KEY_HEADER)) {
+    if (publicKey.startsWith(SOSKeyConstants.PUBLIC_EC_KEY_HEADER) || publicKey.startsWith(SOSKeyConstants.PUBLIC_ECDSA_KEY_HEADER)) {
       decoded = Base64.decode(stripFormatFromPublicECDSAKey(publicKey));
     } else {
       decoded = Base64.decode(publicKey);
@@ -1058,6 +1086,7 @@ public abstract class KeyUtil {
   }
 
   public static PublicKey convertToRSAPublicKey(byte[] pubKey) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
+    Security.addProvider(new BouncyCastleProvider());
     ASN1Sequence primitive = (ASN1Sequence) ASN1Sequence.fromByteArray(pubKey);
     Enumeration<?> e = primitive.getObjects();
     BigInteger modulus = ((ASN1Integer) e.nextElement()).getValue();

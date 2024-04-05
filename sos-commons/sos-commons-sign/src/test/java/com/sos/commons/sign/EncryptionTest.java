@@ -57,7 +57,8 @@ public class EncryptionTest {
   @Ignore
   @Test
   public void test01SecretKeyEncryption() throws NoSuchAlgorithmException, IOException, IllegalBlockSizeException, InvalidKeyException,
-      BadPaddingException, InvalidAlgorithmParameterException, NoSuchPaddingException, CertificateException, InvalidKeySpecException, SOSException {
+      BadPaddingException, InvalidAlgorithmParameterException, NoSuchPaddingException, CertificateException, InvalidKeySpecException,
+      SOSException {
     LOGGER.trace("*************  Test 'create secret key encrypt it and decrypt it again' started  ****************");
     // Paths
     Path certificatePath = Paths.get("C:/sp/devel/js7/keys/sp.crt"); 
@@ -93,7 +94,8 @@ public class EncryptionTest {
   @Test
   @Ignore
   public void test02FileEncryption() throws NoSuchAlgorithmException, IOException, IllegalBlockSizeException, InvalidKeyException,
-      BadPaddingException, InvalidAlgorithmParameterException, NoSuchPaddingException, CertificateException, InvalidKeySpecException, SOSException {
+      BadPaddingException, InvalidAlgorithmParameterException, NoSuchPaddingException, CertificateException, InvalidKeySpecException,
+      SOSException {
     LOGGER.trace("*************  Test 'create encrypted file and decrypt it again' started  ***********************");
     // Paths
     Path certificatePath = Paths.get("C:/sp/devel/js7/keys/sp.crt"); 
@@ -157,7 +159,8 @@ public class EncryptionTest {
   @Test
   @Ignore
   public void test03PWEncryption() throws CertificateException, IOException, NoSuchAlgorithmException, InvalidKeyException,
-        NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, SOSException {
+        NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException,
+        SOSException {
     LOGGER.trace("*************  Test 'encrypt password, export as env variable and decrypt' started  *************");
     String pwd = "Myt3stP4ssw0rd";
     Path certificatePath = Paths.get("C:/sp/devel/js7/keys/sp.crt"); 
@@ -192,7 +195,7 @@ public class EncryptionTest {
 
   @Test
   public void test04PrintEnDecryptUsage() throws CertificateException, IOException, NoSuchAlgorithmException, InvalidKeyException,
-        NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, SOSException {
+        NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException {
     LOGGER.trace("*************  Test 'encrypt value, export as env variable and decrypt' started  ****************");
     Encrypt.printUsage();
     Decrypt.printUsage();
@@ -203,7 +206,7 @@ public class EncryptionTest {
   @Ignore
   public void test05Decrypt() throws CertificateException, IOException, NoSuchAlgorithmException, InvalidKeyException,
         NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException,
-        InvalidKeySpecException, SOSException {
+        InvalidKeySpecException {
     LOGGER.trace("****************************  Test 'decrypt value' started  *************************************");
     String original = "MyP4ssw0rd";
     String encrypted = "ZcEANDl7dWrSvJk1+EhAikjzFtgmIjRH6UtAuNZakJN4awOZ1rJRvPRzRP6N3/pYVYL33hiUYD4nik6KtIhBH7cETdD56TBzenAqRkubf5O8fR0KkPmHEJPQ64M7N8NzS/Sn4n3scYqQemojokr7B169iGLW2na/hUpMG2fsCtXVuM4qeG12zbBwZZHlzAcdafqicAe7WDeJUqIgYYF5ZWkaV9yCqGGTK1IjXHQoDwED5aI78YLL6ZWiAEOV69Tj3DmgDJ7ujxb/b+xmbb4QF9zwvrX7BLtoSdehx4MBoo/00iNqIpLJIS85C3Ou/dBDhKE3v5hCSzLZsly3mvM7oHDWuJaULhTq9wcJHO/t1Am27jOTnerjM2aVFFz/Do4enpZxXQ6REYOVOAe/Vneg7dz9q6EparuHDxmeMDJGxOJFIwNR73tdK2mGmMZ/eJKwu89uQyZqgOxxLhe+ZazD+RYtdQPwsdOKHNuIqN6XdoeyowgndeZywbOVIBVP5w7zmCxfUXlXl+3NdQvVrYsY8RmbM+kMXgQS30lJmcmn7TJ4jh6gSeA3RxUOF/B4wrXkTIOeGNwgJw3hbIhW8Ky/UJVc/JaulUeAyR/BMPLg6PDZ4BDxUrKbtHkAvuKrfMCuKmQZXqZWj7r9JvfRsPzaCEFlmt5qaI/xgqluxcpZSwo= j7u4QfwnSxiVC4Sv4LGSWQ== IEDjzonnjv3ugMQqZ89Wbg==";

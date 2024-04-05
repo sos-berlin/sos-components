@@ -26,11 +26,12 @@ public class Decrypt {
 
   private static final String HELP = "--help";
   private static final String KEY = "--key";
+  private static final String KEY_PWD = "--key-password";
   private static final String ENCRYPTED_KEY = "--encrypted-key";
   private static final String IV = "--iv";
   private static final String IN = "--in";
-  private static final String IN_FILE = "--in-file";
-  private static final String OUT_FILE = "--out-file";
+  private static final String IN_FILE = "--infile";
+  private static final String OUT_FILE = "--outfile";
 
   private static String keyPath;
   private static String iv;
@@ -38,14 +39,15 @@ public class Decrypt {
   private static String encryptedValue;
   private static String encryptedFile;
   private static String outFile;
+  private static String keyPwd;
 
   public static String decrypt(PrivateKey privKey, String iv, String encryptedKey, String encryptedValue)
       throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException,
       BadPaddingException, InvalidAlgorithmParameterException {
     SecretKey key = new SecretKeySpec(EncryptionUtils.decryptSymmetricKey(encryptedKey.getBytes(), privKey), "AES");
     byte[] decodedIV = Base64.getDecoder().decode(iv);
-    String decryptedValue = com.sos.commons.encryption.decrypt.Decrypt.decrypt(EncryptionUtils.CIPHER_ALGORITHM, encryptedValue, key,
-        new IvParameterSpec(decodedIV));
+    String decryptedValue = com.sos.commons.encryption.decrypt.Decrypt.decrypt(EncryptionUtils.CIPHER_ALGORITHM,
+        encryptedValue, key, new IvParameterSpec(decodedIV));
     return decryptedValue;
   }
   
@@ -54,11 +56,13 @@ public class Decrypt {
       IllegalBlockSizeException, IOException {
     SecretKey key = new SecretKeySpec(EncryptionUtils.decryptSymmetricKey(encryptedKey.getBytes(), privKey), "AES");
     byte[] decodedIV = Base64.getDecoder().decode(iv);
-    com.sos.commons.encryption.decrypt.Decrypt.decryptFile(EncryptionUtils.CIPHER_ALGORITHM, key, new IvParameterSpec(decodedIV), inFile, outFile);
+    com.sos.commons.encryption.decrypt.Decrypt.decryptFile(EncryptionUtils.CIPHER_ALGORITHM, key,
+        new IvParameterSpec(decodedIV), inFile, outFile);
   }
   
   public static void main(String[] args) {
     PrivateKey privKey = null;
+    String fileContent = null;
     try {
       if (args == null || args.length == 0 || (args.length == 1 && args[0].equalsIgnoreCase("--help"))) {
         printUsage();
@@ -67,7 +71,9 @@ public class Decrypt {
           String[] split = args[i].split("=", 2);
           if (args[i].startsWith(KEY + "=")) {
             keyPath = split[1];
-            privKey = KeyUtil.getPrivateKeyFromString(new String(Files.readAllBytes(Paths.get(keyPath)), StandardCharsets.UTF_8));
+            fileContent = new String(Files.readAllBytes(Paths.get(keyPath)), StandardCharsets.UTF_8);
+          } else if (args[i].startsWith(KEY_PWD + "=")) {
+            keyPwd = split[1];
           } else if (args[i].startsWith(IV + "=")) {
             iv = split[1];
           } else if (args[i].startsWith(ENCRYPTED_KEY + "=")) {
@@ -78,6 +84,17 @@ public class Decrypt {
             encryptedFile = split[1];
           } else if (args[i].startsWith(OUT_FILE + "=")) {
             outFile = split[1];
+          }
+        }
+        if(fileContent != null) {
+          if(fileContent.contains("ENCRYPTED")) {
+            if(keyPwd != null) {
+              privKey = KeyUtil.getPrivateEncryptedKey(fileContent, keyPwd);
+            } else {
+              throw new SOSMissingDataException("The parameter --key-pwd is required for a password encrypted private key.");
+            }
+          } else {
+            privKey = KeyUtil.getPrivateKeyFromString(fileContent);
           }
         }
         String decryptedValue = null;
@@ -130,43 +147,44 @@ public class Decrypt {
             }
           }
         }
-        if(keyPath != null && iv != null && encryptedKey != null && encryptedValue != null) {
+        if(keyPath != null && iv != null && encryptedKey != null && (encryptedValue != null || encryptedFile != null)) {
           if (encryptedValue != null) {
             decryptedValue = decrypt(privKey, iv, encryptedKey, encryptedValue);
           } else if (encryptedFile != null){
             if(outFile == null) {
-              outFile = encryptedFile.concat(".decrypted");
+              throw new SOSMissingDataException("The parameters --outfile is not set, but is required!");
             }
             decryptFile(privKey, iv, Paths.get(encryptedFile), Paths.get(outFile));
           }
-        } else {
-          System.err.println("One of the required parameters is missing.");
-          System.exit(1);
         }
         if(decryptedValue != null) {
           System.out.println(decryptedValue);
         }
       }
       System.exit(0);
-    } catch (Exception e) {
+    } catch (SOSMissingDataException e) {
       e.printStackTrace(System.err);
       System.exit(1);
+    } catch (Exception e) {
+      e.printStackTrace(System.err);
+      System.exit(2);
     }
   }
 
   public static void printUsage() {
     System.out.println();
-    System.out.println("Decrypts a string. The encrypted string as well as the dynamically generated secret key\n and the IV have to be provided.");
-//        + " are read from environment variables as " + EncryptionUtils.ENV_KEY + " and " + EncryptionUtils.ENV_VALUE + " if exist. Otherwise");
+    System.out.println("Decrypts a string or file. The encrypted content as well as the dynamically generated secret key\n and the IV have to be provided.");
     System.out.println();
     System.out.println(" [Decrypt] [Options]");
     System.out.println();
     System.out.printf("  %-29s | %s%n", HELP, "Shows this help page, this option is exclusive and has no value");
     System.out.printf("  %-29s | %s%n", KEY + "=<PATH TO PRIVATE KEY>", "Path to the PrivateKey the encrypted secret key should be decrypted with.");
+    System.out.printf("  %-29s | %s%n", KEY_PWD + "=", "The password for the private key in case a passphrase is used.");
     System.out.printf("  %-29s | %s%n", IV + "=", "Base64 encoded IV.");
     System.out.printf("  %-29s | %s%n", ENCRYPTED_KEY + "=", "Base64 encoded encrypted secret key.");
     System.out.printf("  %-29s | %s%n", IN + "=", "The encrypted value to decrypt.");
-//    System.out.printf("  %-29s | %s%n", IN_FILE + "=", "The encrypted file to decrypt.");
+    System.out.printf("  %-29s | %s%n", IN_FILE + "=", "The path to the encrypted file to decrypt.");
+    System.out.printf("  %-29s | %s%n", OUT_FILE + "=", "The path to the output file holding the decrypted content.");
     System.out.println();
   }
 
