@@ -25,6 +25,7 @@ import com.sos.commons.sign.keys.key.KeyUtil;
 public class Decrypt {
 
   private static final String HELP = "--help";
+  private static final String HELP_SHORT = "-h";
   private static final String KEY = "--key";
   private static final String KEY_PWD = "--key-password";
   private static final String ENCRYPTED_KEY = "--encrypted-key";
@@ -64,7 +65,7 @@ public class Decrypt {
     PrivateKey privKey = null;
     String fileContent = null;
     try {
-      if (args == null || args.length == 0 || (args.length == 1 && args[0].equalsIgnoreCase("--help"))) {
+      if (args == null || args.length == 0 || (args.length == 1 && (args[0].equalsIgnoreCase(HELP) || args[0].equalsIgnoreCase(HELP_SHORT)))) {
         printUsage();
       } else {
         for (int i = 0; i < args.length; i++) {
@@ -172,19 +173,22 @@ public class Decrypt {
   }
 
   public static void printUsage() {
+//    System.out.println();
+//    System.out.println("Decrypts a string or file. The encrypted content as well as the dynamically generated secret key\n and the IV have to be provided.");
     System.out.println();
-    System.out.println("Decrypts a string or file. The encrypted content as well as the dynamically generated secret key\n and the IV have to be provided.");
+    System.out.println("Usage: decrypt [Options] [Switches]");
     System.out.println();
-    System.out.println(" [Decrypt] [Options]");
+    System.out.println("  Options:");
+    System.out.printf("  %-29s | %s%n", KEY + "=<path>", "path to private key file for decryption.");
+    System.out.printf("  %-29s | %s%n", KEY_PWD + "=<password>", "The password for the private key.");
+    System.out.printf("  %-29s | %s%n", IV + "=<initialization-vector>", "base64 encoded initialization vector (returned by encryption).");
+    System.out.printf("  %-29s | %s%n", ENCRYPTED_KEY + "=<key>", "base64 encoded encrypted symmetric key (returned by encryption).");
+    System.out.printf("  %-29s | %s%n", IN + "=<encrypted-secret>", "encrypted secret to decrypt (returned by encryption).");
+    System.out.printf("  %-29s | %s%n", IN_FILE + "=<path-to-file>", "path to encrypted input file.");
+    System.out.printf("  %-29s | %s%n", OUT_FILE + "=<path-to-file>", "path to decrypted output file.");
     System.out.println();
-    System.out.printf("  %-29s | %s%n", HELP, "Shows this help page, this option is exclusive and has no value");
-    System.out.printf("  %-29s | %s%n", KEY + "=<PATH TO PRIVATE KEY>", "Path to the PrivateKey the encrypted secret key should be decrypted with.");
-    System.out.printf("  %-29s | %s%n", KEY_PWD + "=", "The password for the private key in case a passphrase is used.");
-    System.out.printf("  %-29s | %s%n", IV + "=", "Base64 encoded IV.");
-    System.out.printf("  %-29s | %s%n", ENCRYPTED_KEY + "=", "Base64 encoded encrypted secret key.");
-    System.out.printf("  %-29s | %s%n", IN + "=", "The encrypted value to decrypt.");
-    System.out.printf("  %-29s | %s%n", IN_FILE + "=", "The path to the encrypted file to decrypt.");
-    System.out.printf("  %-29s | %s%n", OUT_FILE + "=", "The path to the output file holding the decrypted content.");
+    System.out.println("  Switches:");
+    System.out.printf("  %-29s | %s%n", HELP +" | " + HELP_SHORT, "displays usage. This switch is exclusive without any [Options].");
     System.out.println();
   }
 

@@ -26,6 +26,7 @@ import com.sos.commons.sign.keys.key.KeyUtil;
 public class Encrypt {
 
   private static final String HELP = "--help";
+  private static final String HELP_SHORT = "-h";
   private static final String CERT = "--cert";
   private static final String IN = "--in";
   private static final String IN_FILE = "--infile";
@@ -107,7 +108,7 @@ public class Encrypt {
     PublicKey pubKey = null;
     String input = null;
     try {
-      if (args == null || args.length == 0 || (args.length == 1 && args[0].equalsIgnoreCase("--help"))) {
+      if (args == null || args.length == 0 || (args.length == 1 && (args[0].equalsIgnoreCase(HELP) || args[0].equalsIgnoreCase(HELP_SHORT)))) {
         printUsage();
       } else {
         for (int i = 0; i < args.length; i++) {
@@ -179,20 +180,21 @@ public class Encrypt {
   }
 
   public static void printUsage() {
+//    System.out.println();
+//    System.out.println("Encrypts a string or a file. The encrypted content as well as the dynamically generated secret key\n"
+//        + " are published as a single string to STDOUT separated with blanks like <encrypted key> <iv> <encrypted value>"
+//        + " or as <encrypted key> <iv> <path to encrypted file> respectively.");
     System.out.println();
-    System.out.println("Encrypts a string or a file. The encrypted content as well as the dynamically generated secret key\n"
-        + " are published as a single string to STDOUT separated with blanks like <encrypted key> <iv> <encrypted value>"
-        + " or as <encrypted key> <iv> <path to encrypted file> respectively.");
+    System.out.println("Usage: encrypt [Options] [Switches]");
     System.out.println();
-    System.out.println(" [Encrypt] [Options]");
+    System.out.println("  Options:");
+    System.out.printf("  %-29s | %s%n", CERT + "=<path-to-certificate>", "path to the X.509 certificate or public key file used to encrypt the secret.");
+    System.out.printf("  %-29s | %s%n", IN + "=<secret>", "secret that should be encrypted.");
+    System.out.printf("  %-29s | %s%n", IN_FILE + "=<path-to-file>", "path to input file that should be encrypted.");
+    System.out.printf("  %-29s | %s%n", OUT_FILE + "=<path-to-file>", "path to output file with the encrypted content.");
     System.out.println();
-    System.out.printf("  %-29s | %s%n", HELP, "Shows this help page, this option is exclusive and has no value");
-    System.out.printf("  %-29s | %s%n", CERT + "=<PATH TO CERTIFICATE>",
-        "Path to the X509 certificate, the dynamically created secret key has to be encrypted with.");
-    System.out.printf("  %-29s | %s%n", IN + "=<VALUE>", "The input value, that should be encrypted with the dynamically created secret key.");
-    System.out.printf("  %-29s | %s%n", IN_FILE + "=<PATH>",
-        "The path to the input file, that should be encrypted with the dynamically created secret key.");
-    System.out.printf("  %-29s | %s%n", OUT_FILE + "=<PATH>", "The path to the output file, that holds the encrypted content.");
+    System.out.println("  Switches:");
+    System.out.printf("  %-29s | %s%n", HELP +" | " + HELP_SHORT, "displays usage. This switch is exclusive without any [Options].");
     System.out.println();
   }
 
