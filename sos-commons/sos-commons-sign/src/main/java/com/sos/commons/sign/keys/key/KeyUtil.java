@@ -942,7 +942,6 @@ public abstract class KeyUtil {
       } catch (Exception e) {// RSA
         try {
           JceOpenSSLPKCS8DecryptorProviderBuilder jce = new JceOpenSSLPKCS8DecryptorProviderBuilder();
-          JcaPEMKeyConverter converter = new JcaPEMKeyConverter();
           PKCS8EncryptedPrivateKeyInfo encryptedKeyInfo = (PKCS8EncryptedPrivateKeyInfo) readObject;
           jce.setProvider("BC");
           InputDecryptorProvider decProv = jce.build(keyPasswd.toCharArray());
