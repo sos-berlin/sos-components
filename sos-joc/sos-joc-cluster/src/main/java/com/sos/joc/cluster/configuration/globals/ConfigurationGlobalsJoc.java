@@ -95,7 +95,7 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     private ConfigurationEntry allowUndeclaredVariables = new ConfigurationEntry("allow_undeclared_variables", "false", GlobalSettingsSectionValueType.BOOLEAN);
 
     //reporting: node command line options
-    private ConfigurationEntry nodeCommandLineOptions = new ConfigurationEntry("node_command_line_options", "--max-old-space-size=1536", GlobalSettingsSectionValueType.STRING);
+    private ConfigurationEntry nodeCommandLineOptions = new ConfigurationEntry("node_command_line_options", "--max-old-space-size=2048", GlobalSettingsSectionValueType.STRING);
 
     private Charset encodingCharset = null;
     private boolean encodingCharsetReaded = false;

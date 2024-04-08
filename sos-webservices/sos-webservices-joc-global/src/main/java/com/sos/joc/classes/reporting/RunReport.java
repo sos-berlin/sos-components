@@ -47,7 +47,7 @@ import io.vavr.control.Either;
 public class RunReport extends AReporting {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(RunReport.class);
-    private static final String nodeCLOs = "--max-old-space-size=1536";
+    private static final String nodeCLOs = "--max-old-space-size=2048";
     
     public static CompletableFuture<Either<Exception, Void>> run(final Report in) {
 
