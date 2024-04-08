@@ -27,6 +27,7 @@ import com.sos.joc.model.audit.ObjectType;
 public class JocAuditLog {
 
     private static final Logger AUDIT_LOGGER = LoggerFactory.getLogger(WebserviceConstants.AUDIT_LOGGER);
+    private static final Logger AUDIT_OBJECTS_LOGGER = LoggerFactory.getLogger(WebserviceConstants.AUDIT_OBJECTS_LOGGER);
     private static final Logger LOGGER = LoggerFactory.getLogger(JocAuditLog.class);
     private String user;
     private String request;
@@ -60,8 +61,15 @@ public class JocAuditLog {
         }
         return params;
     }
-
+    
     public void logAuditMessage(AuditParams audit) {
+        logAuditMessage(audit, 0L);
+    }
+
+    public void logAuditMessage(AuditParams audit, Long auditLogId) {
+        if (auditLogId == null) {
+            auditLogId = 0L;
+        }
         if (!isLogged) {
             isLogged = true;
             try {
@@ -79,8 +87,8 @@ public class JocAuditLog {
                         ticketLink = audit.getTicketLink();
                     }
                 }
-                AUDIT_LOGGER.info(String.format("REQUEST: %1$s - USER: %2$s - PARAMS: %3$s - COMMENT: %4$s - TIMESPENT: %5$s - TICKET: %6$s",
-                        request, user, params, comment, timeSpent, ticketLink));
+                AUDIT_LOGGER.info(String.format("ID: %7$d - REQUEST: %1$s - USER: %2$s - PARAMS: %3$s - COMMENT: %4$s - TIMESPENT: %5$s - TICKET: %6$s",
+                        request, user, params, comment, timeSpent, ticketLink, auditLogId));
                 truncateParams();
                 
             } catch (Exception e) {

@@ -505,8 +505,8 @@ public class JocInventory {
             }
         }
         if (auditLog != null) {
-            auditLog.logAuditMessage(auditParams);
             DBItemJocAuditLog auditItem = auditLog.storeAuditLogEntry(auditParams, CategoryType.INVENTORY.intValue());
+            auditLog.logAuditMessage(auditParams, auditItem.getId());
             if (details != null) {
                 JocAuditLog.storeAuditLogDetails(details, auditItem.getId(), auditItem.getCreated());
             }

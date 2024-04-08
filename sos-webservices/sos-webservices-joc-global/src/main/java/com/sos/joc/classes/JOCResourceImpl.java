@@ -211,26 +211,25 @@ public class JOCResourceImpl {
         return jocAuditLog;
     }
 
-    public void logAuditMessage(AuditParams audit) {
-        jocAuditLog.logAuditMessage(audit);
-    }
-
     public DBItemJocAuditLog storeAuditLog(AuditParams audit, CategoryType category) {
         checkRequiredComment(audit);
-        jocAuditLog.logAuditMessage(audit);
-        return jocAuditLog.storeAuditLogEntry(audit, category.intValue());
+        DBItemJocAuditLog logDbItem = jocAuditLog.storeAuditLogEntry(audit, category.intValue());
+        jocAuditLog.logAuditMessage(audit, logDbItem.getId());
+        return logDbItem;
     }
 
     public DBItemJocAuditLog storeAuditLog(AuditParams audit, String controllerId, CategoryType category) {
         checkRequiredComment(audit);
-        jocAuditLog.logAuditMessage(audit);
-        return jocAuditLog.storeAuditLogEntry(audit, controllerId, category.intValue());
+        DBItemJocAuditLog logDbItem = jocAuditLog.storeAuditLogEntry(audit, controllerId, category.intValue());
+        jocAuditLog.logAuditMessage(audit, logDbItem.getId());
+        return logDbItem;
     }
 
     public DBItemJocAuditLog storeAuditLog(AuditParams audit, String controllerId, CategoryType category, SOSHibernateSession connection) {
         checkRequiredComment(audit);
-        jocAuditLog.logAuditMessage(audit);
-        return jocAuditLog.storeAuditLogEntry(audit, controllerId, category.intValue(), connection);
+        DBItemJocAuditLog logDbItem = jocAuditLog.storeAuditLogEntry(audit, controllerId, category.intValue(), connection);
+        jocAuditLog.logAuditMessage(audit, logDbItem.getId());
+        return logDbItem;
     }
 
     public void storeAuditLogDetails(Collection<AuditLogDetail> details, DBItemJocAuditLog dbAuditLog) {
