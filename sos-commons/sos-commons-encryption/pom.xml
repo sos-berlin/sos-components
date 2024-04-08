@@ -14,6 +14,10 @@
       <artifactId>sos-commons-exception</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcprov-jdk15to18</artifactId>
+    </dependency>
 
     <!-- test dependencies -->
     <dependency>

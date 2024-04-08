@@ -12,6 +12,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
+import java.security.Security;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
@@ -27,6 +28,9 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
+
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.jce.spec.IESParameterSpec;
 
 import com.sos.commons.exception.SOSException;
 
@@ -139,7 +143,8 @@ public class EncryptionUtils {
   }
 
   public static byte[] encryptSymmetricKey(SecretKey secretKey, X509Certificate cert) throws NoSuchAlgorithmException,
-      NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, SOSException {
+      NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, SOSException,
+      InvalidAlgorithmParameterException {
     if (cert != null) {
       PublicKey publicKey = cert.getPublicKey();
       return encryptSymmetricKey(secretKey, publicKey);
@@ -149,10 +154,19 @@ public class EncryptionUtils {
   }
 
   public static byte[] encryptSymmetricKey(SecretKey secretKey, PublicKey key) throws NoSuchAlgorithmException,
-      NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, SOSException {
+      NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, SOSException,
+      InvalidAlgorithmParameterException {
+    Cipher cipher = null;
+    IESParameterSpec spec = null;
     if (key != null) {
-      Cipher cipher = Cipher.getInstance(key.getAlgorithm());
-      cipher.init(Cipher.ENCRYPT_MODE, key);
+      String algorithm = key.getAlgorithm();
+      if(algorithm.contains("EC")) {
+        algorithm = "ECIES";
+        spec = new IESParameterSpec(null, null, 256, 256, null, false);
+      }
+      cipher = Cipher.getInstance(algorithm);
+//      Cipher cipher = Cipher.getInstance(key.getAlgorithm());
+      cipher.init(Cipher.ENCRYPT_MODE, key, spec);
       return Base64.getEncoder().encode(cipher.doFinal(secretKey.getEncoded()));
     } else {
       throw new SOSException("Cannot read public key from certificate. no certificate present.");
@@ -160,9 +174,16 @@ public class EncryptionUtils {
   }
 
   public static byte[] decryptSymmetricKey(byte[] encryptedSecretKey, PrivateKey privateKey) throws NoSuchAlgorithmException, NoSuchPaddingException,
-      InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
-    Cipher cipher = Cipher.getInstance(privateKey.getAlgorithm());
-    cipher.init(Cipher.DECRYPT_MODE, privateKey);
+      InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException {
+    Cipher cipher = null;
+    IESParameterSpec spec = null;
+    String algorithm = privateKey.getAlgorithm();
+    if(algorithm.contains("EC")) {
+      algorithm = "ECIES";
+      spec = new IESParameterSpec(null, null, 256, 256, null, false);
+    }
+    cipher = Cipher.getInstance(algorithm);
+    cipher.init(Cipher.DECRYPT_MODE, privateKey, spec);
     return cipher.doFinal(Base64.getDecoder().decode(encryptedSecretKey));
   }
 }

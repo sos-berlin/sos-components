@@ -144,12 +144,13 @@ public class Encrypt {
         if (certPath == null || (input == null && filePath == null)) {
           if (certPath == null) {
             if (input == null && filePath == null) {
-              throw new SOSMissingDataException("The parameter --cert and at least one of the parameters " + "--in or --in-file is required!");
+              throw new SOSMissingDataException("The parameter " + CERT + " and at least one of the parameters " 
+                    + IN + " or " + IN_FILE + " is required!");
             } else {
-              throw new SOSMissingDataException("The parameter --cert is not set, but is required!");
+              throw new SOSMissingDataException("The parameter " + CERT + " is not set, but is required!");
             }
           } else if (input == null && filePath == null) {
-            throw new SOSMissingDataException("At least one of the parameters --in or --in-file is required!");
+            throw new SOSMissingDataException("At least one of the parameters " + IN + " or " + IN_FILE + " is required!");
           }
         }
         if (input != null) {
@@ -160,7 +161,8 @@ public class Encrypt {
           }
         } else if (filePath != null) {
           if (outfilePath == null) {
-            outfilePath = filePath.concat(".encrypted");
+            throw new SOSMissingDataException("When the parameter " + IN_FILE + " is used, the parameter " + OUT_FILE 
+                + " is also required!");
           }
           if (cert != null) {
             encryptFile(cert, Paths.get(filePath), Paths.get(outfilePath));
@@ -180,10 +182,6 @@ public class Encrypt {
   }
 
   public static void printUsage() {
-//    System.out.println();
-//    System.out.println("Encrypts a string or a file. The encrypted content as well as the dynamically generated secret key\n"
-//        + " are published as a single string to STDOUT separated with blanks like <encrypted key> <iv> <encrypted value>"
-//        + " or as <encrypted key> <iv> <path to encrypted file> respectively.");
     System.out.println();
     System.out.println("Usage: encrypt [Options] [Switches]");
     System.out.println();

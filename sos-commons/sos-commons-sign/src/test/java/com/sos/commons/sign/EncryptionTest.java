@@ -9,7 +9,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.Security;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
@@ -222,5 +225,45 @@ public class EncryptionTest {
     LOGGER.trace("decrypted value: " + decryptedValue);
     assertEquals(original, decryptedValue);
     LOGGER.trace("****************************  Test 'decrypt value' finished *************************************");
+  }
+  
+  @Test
+  @Ignore
+  public void test06EcKey () throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, CertificateException, InvalidKeyException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, SOSException, InvalidAlgorithmParameterException {
+    LOGGER.trace("************************  Test encryption with EC key started  **********************************");
+    Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+    byte[] bytesRead = Files.readAllBytes(Paths.get("/sp/tmp/myECprivate.key"));
+    String pwd = "m1PwdT03ncry9t";
+    String bytesNewString = new String(bytesRead);
+    KeyPair kp = KeyUtil.getKeyPairFromECDSAPrivatKeyString(bytesNewString);
+    PrivateKey privKey = kp.getPrivate();
+
+    Path certificatePath = Paths.get("/sp/tmp/myX509.crt"); 
+    X509Certificate cert = KeyUtil.getX509Certificate(certificatePath);
+    SecretKey key = EncryptionUtils.generateSecretKey(128);
+    byte[] encryptedKey = EncryptionUtils.encryptSymmetricKey(key, cert);
+    String algorithm = "AES/CBC/PKCS5Padding";
+    IvParameterSpec ivParameterSpec = EncryptionUtils.generateIv();
+    byte[] ivBase64Encoded = Base64.getEncoder().encode(ivParameterSpec.getIV());
+    String encryptedPwd = EncryptionUtils.enOrDecrypt(algorithm, pwd, key, ivParameterSpec, Cipher.ENCRYPT_MODE);
+    LOGGER.trace("encrypted Pwd:");
+    LOGGER.trace(encryptedPwd);
+    String exportKey = new String(encryptedKey);
+    LOGGER.trace("encrypted Key:");
+    LOGGER.trace(exportKey);
+    String exportIvPlusPwd = new String(ivBase64Encoded).concat(encryptedPwd);
+    LOGGER.trace(exportIvPlusPwd);
+    LOGGER.trace("-------------------------------------------------------------------------------------------------");
+    String exportedIv = exportIvPlusPwd.substring(0, 24);
+    LOGGER.trace(exportedIv);
+    String exportedPwd = exportIvPlusPwd.substring(24);
+    LOGGER.trace(exportedPwd);
+    byte[] decodedIv = Base64.getDecoder().decode(exportedIv);
+    byte[] decryptedSecretKey = EncryptionUtils.decryptSymmetricKey(encryptedKey, privKey);
+    SecretKey decrypted = new SecretKeySpec(decryptedSecretKey, "AES");
+ 
+    String decryptedPwd = EncryptionUtils.enOrDecrypt(algorithm, exportedPwd, decrypted, new IvParameterSpec(decodedIv), Cipher.DECRYPT_MODE);
+
+    LOGGER.trace("************************  Test encryption with EC key finished  *********************************");
   }
 }
