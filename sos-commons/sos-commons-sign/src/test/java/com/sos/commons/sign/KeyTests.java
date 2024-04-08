@@ -8,36 +8,48 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
+import java.security.Security;
 import java.security.SignatureException;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.Date;
 
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
 
 import org.apache.commons.io.IOUtils;
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.asn1.x500.style.IETFUtils;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
 import org.bouncycastle.crypto.DataLengthException;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openssl.PEMKeyPair;
+import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.pkcs.PKCSException;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.AfterClass;
@@ -1255,6 +1267,42 @@ public class KeyTests {
         LOGGER.trace("*********************  Test 30: parse a private key  *******************************************");
         String privateKeyString = new String(Files.readAllBytes(Paths.get("C:\\sp\\devel\\js7\\keys\\centostest_primary\\agent.key")));
         PrivateKey key = KeyUtil.getPrivateKeyFromString(privateKeyString);
+    }
+    
+    @Test
+    @Ignore
+    public void test31createECKeyAndValidInvalidCerts () throws NoSuchAlgorithmException, NoSuchProviderException,
+          InvalidAlgorithmParameterException, InvalidKeySpecException, IOException, CertificateEncodingException {
+      LOGGER.trace("***********  Test 31: create EC key and valid and invalid certs  *******************************");
+      String account = "sp";
+      String dn = "CN=sp,OU=devel,O=sos-berlin,L=Berlin,ST=Berlin,C=DE";
+      JocKeyPair jocKeyPair = KeyUtil.createECDSAJOCKeyPair(account, dn);
+      KeyPair kp = KeyUtil.getKeyPairFromECDSAPrivatKeyString(jocKeyPair.getPrivateKey());
+        Files.write(Paths.get("./target/private.key"), jocKeyPair.getPrivateKey().getBytes());
+        X509Certificate certValidNewest = KeyUtil.generateCertificateFromKeyPair(kp, account, 
+            SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, dn);
+        long secondsYear = 365 * 24 * 60 * 60;
+        long secondsTwoDays = 2 * 24 * 60 * 60;
+        long secondsFourDays = 4 * 24 * 60 * 60;
+        Date dateYearAgo = Date.from(Instant.now().minusSeconds(secondsYear));
+        Date dateTwoDaysAgo = Date.from(Instant.now().minusSeconds(secondsTwoDays));
+        Date dateTwoDaysAhead = Date.from(Instant.now().plusSeconds(secondsTwoDays));
+        Date dateFourDaysAgo = Date.from(Instant.now().minusSeconds(secondsFourDays));
+        Date dateFourDaysAhead = Date.from(Instant.now().plusSeconds(secondsFourDays));
+        
+        X509Certificate certInvalidTwoDaysAgo = KeyUtil.generateCertificateFromKeyPair(kp, account, 
+            SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, dn, dateYearAgo, dateTwoDaysAgo);
+        X509Certificate certInvalidFourDaysAgo = KeyUtil.generateCertificateFromKeyPair(kp, account, 
+            SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, dn, dateYearAgo, dateFourDaysAgo);
+        X509Certificate certValidFourDaysAhead = KeyUtil.generateCertificateFromKeyPair(kp, account, 
+            SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, dn, dateTwoDaysAgo, dateFourDaysAhead);
+        X509Certificate certNotYetValidFourDaysAhead = KeyUtil.generateCertificateFromKeyPair(kp, account, 
+            SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, dn, dateTwoDaysAhead, dateFourDaysAhead);
+        Files.write(Paths.get("./target/sp_valid-newest.crt"), Base64.getEncoder().encode(certValidNewest.getEncoded()));
+        Files.write(Paths.get("./target/sp_invalid-2days-ago.crt"), Base64.getEncoder().encode(certInvalidTwoDaysAgo.getEncoded()));
+        Files.write(Paths.get("./target/sp_invalid-4days-ago.crt"), Base64.getEncoder().encode(certInvalidFourDaysAgo.getEncoded()));
+        Files.write(Paths.get("./target/sp_valid-4Days-ahead.crt"), Base64.getEncoder().encode(certValidFourDaysAhead.getEncoded()));
+        Files.write(Paths.get("./target/sp_valid-in2Days-4Days-ahead.crt"), Base64.getEncoder().encode(certNotYetValidFourDaysAhead.getEncoded()));
     }
     
     @SuppressWarnings("unused")
