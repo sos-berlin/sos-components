@@ -161,6 +161,7 @@ public class EncryptionUtils {
     if (key != null) {
       String algorithm = key.getAlgorithm();
       if(algorithm.contains("EC")) {
+        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
         algorithm = "ECIES";
         spec = new IESParameterSpec(null, null, 256, 256, null, false);
       }
@@ -179,6 +180,7 @@ public class EncryptionUtils {
     IESParameterSpec spec = null;
     String algorithm = privateKey.getAlgorithm();
     if(algorithm.contains("EC")) {
+      Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
       algorithm = "ECIES";
       spec = new IESParameterSpec(null, null, 256, 256, null, false);
     }
