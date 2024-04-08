@@ -941,6 +941,7 @@ public abstract class KeyUtil {
         privKey = kf.generatePrivate(new PKCS8EncodedKeySpec(privateEncoded));
       } catch (Exception e) {// RSA
         try {
+          // https://github.com/bcgit/bc-java/issues/400
           JceOpenSSLPKCS8DecryptorProviderBuilder jce = new JceOpenSSLPKCS8DecryptorProviderBuilder();
           PKCS8EncryptedPrivateKeyInfo encryptedKeyInfo = (PKCS8EncryptedPrivateKeyInfo) readObject;
           jce.setProvider("BC");
@@ -1126,11 +1127,22 @@ public abstract class KeyUtil {
     return cf.generateCertificate(certificate);
   }
 
-  public static X509Certificate generateCertificateFromKeyPair(KeyPair keyPair, String account, String signatureAlgorithm, String dn) {
+  public static X509Certificate generateCertificateFromKeyPair(KeyPair keyPair, String account, String signatureAlgorithm,
+      String dn) {
+    return generateCertificateFromKeyPair(keyPair, account, signatureAlgorithm, dn, null, null);
+  }
+  
+  
+  public static X509Certificate generateCertificateFromKeyPair(KeyPair keyPair, String account, String signatureAlgorithm,
+      String dn, Date startDate, Date expiryDate) {
     try {
       BigInteger serialNumber = BigInteger.valueOf(System.currentTimeMillis());
-      Date startDate = Date.from(Instant.now());
-      Date expiryDate = Date.from(Instant.now().plusSeconds(365 * 24 * 60 * 60));
+      if(startDate == null) {
+        startDate = Date.from(Instant.now());
+      }
+      if(expiryDate == null) {
+        expiryDate = Date.from(Instant.now().plusSeconds(365 * 24 * 60 * 60));
+      }
       X500Name issuer = new X500Name("O=JOC,OU=Self Signed");
       X500Name subject = null;
       if (dn != null && !dn.isEmpty()) {

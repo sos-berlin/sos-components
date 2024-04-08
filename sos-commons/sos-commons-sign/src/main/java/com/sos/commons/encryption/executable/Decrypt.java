@@ -92,7 +92,7 @@ public class Decrypt {
             if(keyPwd != null) {
               privKey = KeyUtil.getPrivateEncryptedKey(fileContent, keyPwd);
             } else {
-              throw new SOSMissingDataException("The parameter --key-pwd is required for a password encrypted private key.");
+              throw new SOSMissingDataException("The parameter " + KEY_PWD + " is required for a password encrypted private key.");
             }
           } else {
             privKey = KeyUtil.getPrivateKeyFromString(fileContent);
@@ -103,47 +103,57 @@ public class Decrypt {
           if(keyPath == null) {
             if(encryptedKey == null && iv == null) {
               if(encryptedValue == null && encryptedFile == null) {
-                throw new SOSMissingDataException("The parameters --key, --encrypted-key and --iv and at least one of the parameters --in or --in-file are not set, but are required!");
+                throw new SOSMissingDataException("The parameters " + KEY + ", " + ENCRYPTED_KEY + " and " + IV 
+                    + " and at least one of the parameters " + IN + " or " + IN_FILE + " are not set, but are required!");
               } else {
-                throw new SOSMissingDataException("The parameters --key, --encrypted-key and --iv are not set, but are required!");
+                throw new SOSMissingDataException("The parameters " + KEY + ", " + ENCRYPTED_KEY + " and " + IV 
+                    + " are not set, but are required!");
               }
             } else if (iv == null && encryptedKey != null) {
               if(encryptedValue == null && encryptedFile == null) {
-                throw new SOSMissingDataException("The parameters --key and --iv and at least one of the parameters --in or --in-file are not set, but are required!");
+                throw new SOSMissingDataException("The parameters " + KEY + " and " + IV + " and at least one of the parameters "
+                    + IN + " or " + IN_FILE + " are not set, but are required!");
               } else {
-                throw new SOSMissingDataException("The parameters --key and --iv are not set, but are required!");
+                throw new SOSMissingDataException("The parameters " + KEY + " and " + IV + " are not set, but are required!");
               }
             } else if (iv != null && encryptedKey == null) {
               if(encryptedValue == null && encryptedFile == null) {
-                throw new SOSMissingDataException("The parameters --key and --encrypted-key and at least one of the parameters --in or --in-file are not set, but are required!");
+                throw new SOSMissingDataException("The parameters " + KEY + " and " + ENCRYPTED_KEY + " and at least "
+                    + "one of the parameters " + IN + " or " + IN_FILE + " are not set, but are required!");
               } else {
-                throw new SOSMissingDataException("The parameters --key and --encrypted-key are not set, but are required!");
+                throw new SOSMissingDataException("The parameters " + KEY + " and " + ENCRYPTED_KEY + " are not set,"
+                    + " but are required!");
               }
             } else {
               if(encryptedValue == null && encryptedFile == null) {
-                throw new SOSMissingDataException("The parameter --key and at least one of the parameters --in or --in-file are not set, but are required!");
+                throw new SOSMissingDataException("The parameter " + KEY + " and at least one of the parameters "
+                    + IN + " or " + IN_FILE + " are not set, but are required!");
               } else {
-                throw new SOSMissingDataException("The parameter --key is not set, but is required!");
+                throw new SOSMissingDataException("The parameter " + KEY + " is not set, but is required!");
               }
             }
           } else {
             if(encryptedKey == null && iv == null) {
               if(encryptedValue == null && encryptedFile == null) {
-                throw new SOSMissingDataException("The parameters --encrypted-key and --iv and at least one of the parameters --in or --in-file are not set, but are required!");
+                throw new SOSMissingDataException("The parameters " + ENCRYPTED_KEY + " and " + IV + " and at least"
+                    + " one of the parameters " + IN + " or " + IN_FILE + " are not set, but are required!");
               } else {
-                throw new SOSMissingDataException("The parameters --encrypted-key and --iv are not set, but are required!");
+                throw new SOSMissingDataException("The parameters " + ENCRYPTED_KEY + " and " + IV + " are not set,"
+                    + " but are required!");
               }
             } else if (iv == null && encryptedKey != null) {
               if(encryptedValue == null && encryptedFile == null) {
-                throw new SOSMissingDataException("The parameters --iv and at least one of the parameters --in or --in-file are not set, but are required!");
+                throw new SOSMissingDataException("The parameters " + IV + " and at least one of the parameters "
+                    + IN + " or " + IN_FILE + " are not set, but are required!");
               } else {
-                throw new SOSMissingDataException("The parameters --iv is not set, but is required!");
+                throw new SOSMissingDataException("The parameters " + IV + " is not set, but is required!");
               }
             } else if (iv != null && encryptedKey == null) {
               if(encryptedValue == null && encryptedFile == null) {
-                throw new SOSMissingDataException("The parameters --encrypted-key and at least one of the parameters --in or --in-file are not set, but are required!");
+                throw new SOSMissingDataException("The parameters " + ENCRYPTED_KEY + " and at least one of "
+                    + "the parameters " + IN + " or " + IN_FILE + " are not set, but are required!");
               } else {
-                throw new SOSMissingDataException("The parameters --encrypted-key is not set, but is required!");
+                throw new SOSMissingDataException("The parameters " + ENCRYPTED_KEY + " is not set, but is required!");
               }
             }
           }
@@ -153,7 +163,7 @@ public class Decrypt {
             decryptedValue = decrypt(privKey, iv, encryptedKey, encryptedValue);
           } else if (encryptedFile != null){
             if(outFile == null) {
-              throw new SOSMissingDataException("The parameters --outfile is not set, but is required!");
+              throw new SOSMissingDataException("The parameter " + OUT_FILE + " is not set, but is required!");
             }
             decryptFile(privKey, iv, Paths.get(encryptedFile), Paths.get(outFile));
           }
@@ -166,15 +176,13 @@ public class Decrypt {
     } catch (SOSMissingDataException e) {
       e.printStackTrace(System.err);
       System.exit(1);
-    } catch (Exception e) {
+    } catch (Throwable e) {
       e.printStackTrace(System.err);
       System.exit(2);
     }
   }
 
   public static void printUsage() {
-//    System.out.println();
-//    System.out.println("Decrypts a string or file. The encrypted content as well as the dynamically generated secret key\n and the IV have to be provided.");
     System.out.println();
     System.out.println("Usage: decrypt [Options] [Switches]");
     System.out.println();
