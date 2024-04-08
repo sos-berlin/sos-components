@@ -648,8 +648,9 @@ public class DBLayerDailyPlannedOrders {
                 q.append(DBLayer.DBITEM_HISTORY_ORDERS).append(" o on p.orderId = o.orderId ");
             }
             q.append(getWhere(filter, "p.schedulePath", useHistoryOrderState)).append(" ");
-            q.append("group by p.submissionHistoryId,p.repeatInterval,p.periodBegin,p.periodEnd,p.orderName,p.scheduleName,p.workflowName ");
-
+            //q.append("group by p.submissionHistoryId,p.repeatInterval,p.periodBegin,p.periodEnd,p.orderName,p.scheduleName,p.workflowName ");
+            q.append("group by p.controllerId, substring(p.orderId, 1, " + OrdersHelper.mainOrderIdLength + ") ");
+            
             hql.append("select p.id as plannedOrderId,p.submissionHistoryId as submissionHistoryId,p.controllerId as controllerId");
             hql.append(",p.workflowName as workflowName, p.workflowPath as workflowPath,p.orderId as orderId,p.orderName as orderName");
             hql.append(",p.scheduleName as scheduleName, p.schedulePath as schedulePath");
