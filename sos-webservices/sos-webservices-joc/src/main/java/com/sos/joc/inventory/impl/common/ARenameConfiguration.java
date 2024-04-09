@@ -18,12 +18,14 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
+import com.sos.joc.classes.audit.JocAuditObjectsLog;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryTagging;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
+import com.sos.joc.db.joc.DBItemJocAuditLogDetails;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -184,9 +186,11 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
                 
                 events.addAll(JocInventory.deepCopy(config, p.getFileName().toString(), dbLayer));
                 
-                JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), session, dbAuditLog);
+                DBItemJocAuditLogDetails auditLogDetail = JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()),
+                        session, dbAuditLog);
                 setItem(config, p, dbAuditLog.getId());
                 JocInventory.updateConfiguration(dbLayer, config);
+                JocAuditObjectsLog.log(auditLogDetail, dbAuditLog.getId());
                 
                 //rename TAGGINGS
                 boolean isRename = !oldPath.getFileName().toString().equals(p.getFileName().toString());

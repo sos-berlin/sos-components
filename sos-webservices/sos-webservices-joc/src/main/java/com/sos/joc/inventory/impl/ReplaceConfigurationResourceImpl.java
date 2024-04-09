@@ -20,6 +20,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
+import com.sos.joc.classes.audit.JocAuditObjectsLog;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
@@ -99,6 +100,8 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
             
             List<DBItemInventoryConfiguration> dBFolderContent = dbLayer.getFolderContent(config.getPath(), true, null, false).stream().filter(
                     notFolderFilter).filter(regexFilter).collect(Collectors.toList());
+            JocAuditObjectsLog auditLogObjectsLogging = new JocAuditObjectsLog(dbAuditLog.getId());
+            
             for (DBItemInventoryConfiguration item : dBFolderContent) {
                 String newName = item.getName().replaceAll(search, replace);
                 SOSCheckJavaVariableName.test("name", newName);
@@ -108,12 +111,14 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
                 }
                 events.addAll(JocInventory.deepCopy(item, newName, dBFolderContent, dbLayer));
 
-                JocAuditLog.storeAuditLogDetail(new AuditLogDetail(item.getPath(), item.getType()), session, dbAuditLog);
+                auditLogObjectsLogging.addDetail(JocAuditLog.storeAuditLogDetail(new AuditLogDetail(item.getPath(), item.getType()), session, dbAuditLog));
                 setItem(item, Paths.get(item.getFolder()).resolve(newName), dbAuditLog.getId());
                 JocInventory.updateConfiguration(dbLayer, item);
             }
             
             session.commit();
+            auditLogObjectsLogging.log();
+            
             for (String event : events) {
                 JocInventory.postEvent(event);
             }
@@ -150,6 +155,8 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
             String search = in.getSearch().replaceAll("%", ".*");
             String replace = in.getReplace() == null ? "" : in.getReplace();
             Set<RequestFilter> requests = in.getObjects().stream().filter(isFolder.negate()).collect(Collectors.toSet());
+            JocAuditObjectsLog auditLogObjectsLogging = new JocAuditObjectsLog(dbAuditLog.getId());
+            
             for (RequestFilter r : requests) {
                 DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, r, folderPermissions);
 
@@ -183,7 +190,8 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
                 }
 
                 events.addAll(JocInventory.deepCopy(config, p.getFileName().toString(), dbLayer));
-                JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), session, dbAuditLog);
+                auditLogObjectsLogging.addDetail(JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), session,
+                        dbAuditLog));
                 setItem(config, p, dbAuditLog.getId());
                 JocInventory.updateConfiguration(dbLayer, config);
                 events.add(config.getFolder());
@@ -193,6 +201,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
             }
 
             Globals.commit(session);
+            auditLogObjectsLogging.log();
             events.forEach(JocInventory::postEvent);
             // post event: InventoryTaggingUpdated
             if (workflowInvIds != null && !workflowInvIds.isEmpty()) {

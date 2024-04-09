@@ -24,6 +24,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
+import com.sos.joc.classes.audit.JocAuditObjectsLog;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JocInventory.InventoryPath;
 import com.sos.joc.classes.inventory.ReferenceValidator;
@@ -33,6 +34,7 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
+import com.sos.joc.db.joc.DBItemJocAuditLogDetails;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
@@ -116,7 +118,9 @@ public abstract class AStoreConfiguration extends JOCResourceImpl {
                 } else {
                     JocInventory.postEvent(item.getFolder());
                 }
-                JocAuditLog.storeAuditLogDetail(new AuditLogDetail(item.getPath(), item.getType()), session, dbAuditLog);
+                DBItemJocAuditLogDetails auditLogDetail = JocAuditLog.storeAuditLogDetail(new AuditLogDetail(item.getPath(), item.getType()), session,
+                        dbAuditLog);
+                JocAuditObjectsLog.log(auditLogDetail, dbAuditLog.getId());
             }
             session.commit();
 

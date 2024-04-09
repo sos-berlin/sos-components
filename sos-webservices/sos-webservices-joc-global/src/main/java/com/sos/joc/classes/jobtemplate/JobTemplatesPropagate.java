@@ -125,6 +125,7 @@ public class JobTemplatesPropagate {
             dbWorkflow.setModified(now);
             dbWorkflow.setAuditLogId(dbAuditLog.getId());
             JocInventory.updateConfiguration(dbLayer, dbWorkflow, workflow);
+            // TODO JOC-1645
             JocAuditLog.storeAuditLogDetail(new AuditLogDetail(dbWorkflow.getPath(), dbWorkflow.getType()), dbLayer.getSession(), dbAuditLog);
         }
         return report;

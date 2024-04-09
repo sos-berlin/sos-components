@@ -28,6 +28,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
+import com.sos.joc.classes.audit.JocAuditObjectsLog;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.settings.ClusterSettings;
@@ -81,6 +82,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             DBLayerDeploy deployDbLayer = new DBLayerDeploy(session);
             Set<String> foldersForEvent = new HashSet<>();
             List<Long> workflowInvIds = new ArrayList<>();
+            JocAuditObjectsLog auditLogObjectsLogging = new JocAuditObjectsLog(dbAuditLog.getId());
             
             for (RequestFilter r : in.getObjects().stream().filter(isFolder.negate()).collect(Collectors.toSet())) {
                 DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, r, folderPermissions);
@@ -88,10 +90,11 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
 
                 if (JocInventory.isReleasable(type)) {
                     cancelOrders(accessToken, config, in.getCancelOrdersDateFrom(), dbLayer);
-                    ReleaseResourceImpl.delete(config, dbLayer, dbAuditLog, false, false);
+                    ReleaseResourceImpl.delete(config, dbLayer, dbAuditLog, false, auditLogObjectsLogging, false);
                     foldersForEvent.add(config.getFolder());
-                    JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), dbLayer.getSession(), dbAuditLog);
-                    
+                    auditLogObjectsLogging.addDetail(JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), dbLayer
+                            .getSession(), dbAuditLog));
+
                 } else if (JocInventory.isDeployable(type)) {
                     // TODO restrict to allowed Controllers
                     List<DBItemDeploymentHistory> allDeploymentsPerObject = deployDbLayer.getDeployedConfigurations(config.getName(), config.getType());
@@ -105,7 +108,8 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                     }
                     if (deployments == null || deployments.isEmpty()) {
                         JocInventory.deleteInventoryConfigurationAndPutToTrash(config, dbLayer, ConfigurationType.FOLDER);
-                        JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), dbLayer.getSession(), dbAuditLog);
+                        auditLogObjectsLogging.addDetail(JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()),
+                                dbLayer.getSession(), dbAuditLog));
                         foldersForEvent.add(config.getFolder());
                         if (JocInventory.isWorkflow(config.getType())) {
                             workflowInvIds.add(config.getId());
@@ -127,6 +131,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                         DBItemInventoryConfiguration::getId).collect(Collectors.toList()));
             }
             Globals.commit(session);
+            auditLogObjectsLogging.log();
             // post events
             for (String folder: foldersForEvent) {
                 JocInventory.postEvent(folder);
@@ -177,9 +182,11 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             } else {
                 folder = JocInventory.getConfiguration(dbLayer, null, in.getPath(), ConfigurationType.FOLDER, folderPermissions);
             }
+            JocAuditObjectsLog auditLogObjectsLogging = new JocAuditObjectsLog(dbAuditLog.getId());
+            
             if (!forDescriptors) {
                 cancelOrders(accessToken, folder, in.getCancelOrdersDateFrom(),dbLayer);
-                ReleaseResourceImpl.delete(folder, dbLayer, dbAuditLog, false, false);
+                ReleaseResourceImpl.delete(folder, dbLayer, dbAuditLog, false, auditLogObjectsLogging, false);
                 // TODO restrict to allowed Controllers
                 List<DBItemInventoryConfiguration> deployables = dbLayer.getFolderContent(folder.getPath(), true, JocInventory.getDeployableTypes(),
                         forDescriptors);
@@ -208,6 +215,8 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             JocInventory.deleteEmptyFolders(dbLayer, folder.getPath(), forDescriptors);
             
             Globals.commit(session);
+            auditLogObjectsLogging.log();
+            
             JocInventory.postFolderEvent(folder.getFolder());
             JocInventory.postTrashFolderEvent(folder.getFolder());
             JocInventory.postTrashEvent(folder.getPath());
@@ -242,15 +251,18 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                 //throw new 
             }
             Set<String> foldersForEvent = new HashSet<>();
+            JocAuditObjectsLog auditLogObjectsLogging = new JocAuditObjectsLog(dbAuditLog.getId());
             for (RequestFilter r : in.getObjects().stream().filter(isFolder.negate()).collect(Collectors.toSet())) {
                 DBItemInventoryConfigurationTrash config = JocInventory.getTrashConfiguration(dbLayer, r, folderPermissions);
                 deleteTaggings(config.getName(), config.getTypeAsEnum(), dbLayer, dbTagLayer);
                 session.delete(config);
                 foldersForEvent.add(config.getFolder());
-                JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), session, dbAuditLog);
+                auditLogObjectsLogging.addDetail(JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), session,
+                        dbAuditLog));
             }
             
             Globals.commit(session);
+            auditLogObjectsLogging.log();
             // post events
             for (String folder: foldersForEvent) {
                 JocInventory.postTrashEvent(folder);

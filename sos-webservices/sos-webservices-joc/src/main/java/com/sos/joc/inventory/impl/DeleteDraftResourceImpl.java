@@ -22,6 +22,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
+import com.sos.joc.classes.audit.JocAuditObjectsLog;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
@@ -103,6 +104,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             ResponseItem entity = new ResponseItem();
             Set<RequestFilter> requests = in.getObjects().stream().filter(isFolder.negate()).collect(Collectors.toSet());
             DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
+            JocAuditObjectsLog auditLogObjectsLogging = new JocAuditObjectsLog(dbAuditLog.getId());
             for (RequestFilter r : requests) {
                 DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, r, folderPermissions);
                 if (config.getDeployed() || config.getReleased()) {
@@ -117,9 +119,12 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
                 if (JocInventory.isWorkflow(config.getType())) {
                     workflowInvIds.add(config.getId());
                 }
-                JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), session, dbAuditLog);
+                auditLogObjectsLogging.addDetail(JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), session,
+                        dbAuditLog));
             }
             Globals.commit(session);
+            
+            auditLogObjectsLogging.log();
 
             entity.setDeleted(deleted);
             entity.setUpdated(updated);
@@ -161,11 +166,13 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             List<DBItemInventoryConfiguration> dbFolderContent = dbLayer.getFolderContent(config.getPath(), true, null, false);
             DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
             List<Long> workflowInvIds = new ArrayList<>();
+            JocAuditObjectsLog auditLogObjectsLogging = new JocAuditObjectsLog(dbAuditLog.getId());
             
             for (DBItemInventoryConfiguration item : dbFolderContent) {
                 if (!item.getDeployed() && !item.getReleased() && !ConfigurationType.FOLDER.intValue().equals(item.getType())) {
                     deleteUpdateDraft(item.getTypeAsEnum(), dbLayer, item, dbAuditLog.getId());
-                    JocAuditLog.storeAuditLogDetail(new AuditLogDetail(item.getPath(), item.getType()), session, dbAuditLog);
+                    auditLogObjectsLogging.addDetail(JocAuditLog.storeAuditLogDetail(new AuditLogDetail(item.getPath(), item.getType()), session,
+                            dbAuditLog));
                     if (JocInventory.isWorkflow(item.getType())) {
                         workflowInvIds.add(item.getId());
                     }
@@ -181,6 +188,8 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
                 }).collect(Collectors.toSet()));
             }
             Globals.commit(session);
+            
+            auditLogObjectsLogging.log();
 
             entity.setDeleted(deleted);
             entity.setUpdated(updated);

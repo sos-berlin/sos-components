@@ -5,8 +5,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
@@ -27,7 +25,6 @@ import com.sos.joc.model.audit.ObjectType;
 public class JocAuditLog {
 
     private static final Logger AUDIT_LOGGER = LoggerFactory.getLogger(WebserviceConstants.AUDIT_LOGGER);
-    private static final Logger AUDIT_OBJECTS_LOGGER = LoggerFactory.getLogger(WebserviceConstants.AUDIT_OBJECTS_LOGGER);
     private static final Logger LOGGER = LoggerFactory.getLogger(JocAuditLog.class);
     private String user;
     private String request;
@@ -210,26 +207,22 @@ public class JocAuditLog {
     
     public static synchronized void storeAuditLogDetails(Collection<AuditLogDetail> details, SOSHibernateSession connection, Long auditlogId, Date now) {
         if (details != null && !details.isEmpty() && auditlogId != null && auditlogId != 0L) {
-            Set<AuditLogDetail> details2 = details.stream().peek(d -> d.setControllerId(null)).collect(Collectors.toSet());
             if (connection == null) {
+                SOSHibernateSession connection2 = null;
                 try {
-                    connection = Globals.createSosHibernateStatelessConnection("storeAuditLogDetail");
-                    for (AuditLogDetail detail : details2) {
-                        storeAuditLogDetail(detail.getAuditLogDetail(auditlogId, now), connection);
-                    }
+                    connection2 = Globals.createSosHibernateStatelessConnection("storeAuditLogDetail");
+                    storeAuditLogDetails(details, connection2, auditlogId, now);
                 } catch (Exception e) {
                     LOGGER.error("", e);
                 } finally {
-                    Globals.disconnect(connection);
+                    Globals.disconnect(connection2);
                 }
             } else {
-                for (AuditLogDetail detail : details2) {
-                    storeAuditLogDetail(detail.getAuditLogDetail(auditlogId, now), connection);
-                }
+                storeAuditLogDetails(details.stream().peek(d -> d.setControllerId(null)).distinct(), connection, auditlogId);
+                details.stream().filter(AuditLogDetail::hasControllerId).filter(d -> typesOfWorkflowEvent.contains(d.getConfigurationType())).peek(d -> d
+                        .setOrderId(null)).distinct().forEach(d -> EventBus.getInstance().post(new AuditlogWorkflowEvent(d.getControllerId(), d
+                                .getPath())));
             }
-            details.stream().filter(AuditLogDetail::hasControllerId).filter(d -> typesOfWorkflowEvent.contains(d.getConfigurationType())).peek(d -> d
-                    .setOrderId(null)).distinct().forEach(d -> EventBus.getInstance().post(new AuditlogWorkflowEvent(d.getControllerId(), d
-                            .getPath())));
         }
     }
     
@@ -258,16 +251,17 @@ public class JocAuditLog {
                     Globals.disconnect(connection2);
                 }
             } else {
-                details.forEach(detail -> storeAuditLogDetail(detail.getAuditLogDetail(auditlogId, now), connection));
+                JocAuditObjectsLog.log(details.map(detail -> storeAuditLogDetail(detail.getAuditLogDetail(auditlogId, now), connection)),
+                        auditlogId);
             }
         }
     }
     
-    public static void storeAuditLogDetail(AuditLogDetail detail, SOSHibernateSession connection, DBItemJocAuditLog dbAudit) {
-        storeAuditLogDetail(detail, connection, dbAudit.getId(), dbAudit.getCreated());
+    public static DBItemJocAuditLogDetails storeAuditLogDetail(AuditLogDetail detail, SOSHibernateSession connection, DBItemJocAuditLog dbAudit) {
+        return storeAuditLogDetail(detail, connection, dbAudit.getId(), dbAudit.getCreated());
     }
     
-    private static void storeAuditLogDetail(AuditLogDetail detail, SOSHibernateSession connection, Long auditlogId, Date now) {
+    private static DBItemJocAuditLogDetails storeAuditLogDetail(AuditLogDetail detail, SOSHibernateSession connection, Long auditlogId, Date now) {
         if (detail != null && auditlogId != null) {
             if (now == null) {
                 now = Date.from(Instant.now());
@@ -275,25 +269,28 @@ public class JocAuditLog {
             if (connection == null) {
                 try {
                     connection = Globals.createSosHibernateStatelessConnection("storeAuditLogDetail");
-                    storeAuditLogDetail(detail.getAuditLogDetail(auditlogId, now), connection);
+                    return storeAuditLogDetail(detail.getAuditLogDetail(auditlogId, now), connection);
                 } catch (Exception e) {
                     LOGGER.error("", e);
                 } finally {
                     Globals.disconnect(connection);
                 }
             } else {
-                storeAuditLogDetail(detail.getAuditLogDetail(auditlogId, now), connection);
+                return storeAuditLogDetail(detail.getAuditLogDetail(auditlogId, now), connection);
             }
         }
+        return null;
     }
     
-    private static void storeAuditLogDetail(DBItemJocAuditLogDetails dbItem, SOSHibernateSession connection) {
+    private static DBItemJocAuditLogDetails storeAuditLogDetail(DBItemJocAuditLogDetails dbItem, SOSHibernateSession connection) {
         try {
             if (dbItem != null && dbItem.getAuditLogId() != 0L) {
                 connection.save(dbItem);
             }
+            return dbItem;
         } catch (Exception e) {
             LOGGER.error("", e);
+            return null;
         }
     }
     

@@ -87,6 +87,7 @@ public class DocumentationHelper {
     public static void saveOrUpdate(DBItemDocumentation doc, DocumentationDBLayer dbLayer, DBItemJocAuditLog dbAudit)
             throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, JocConfigurationException, DBOpenSessionException {
         if (dbAudit != null) {
+            // TODO JOC-1645
             JocAuditLog.storeAuditLogDetail(new AuditLogDetail(doc.getPath(), ObjectType.DOCUMENTATION.intValue()), dbLayer.getSession(), dbAudit);
         }
         saveOrUpdate(dbLayer, doc);

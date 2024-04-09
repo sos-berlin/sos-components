@@ -1531,6 +1531,7 @@ public class WorkflowsHelper {
 
     public static CompletableFuture<Either<Exception, Void>> storeAuditLogDetailsFromWorkflowPath(WorkflowPath workflowPath,
             DBItemJocAuditLog dbAuditLog, String controllerId) {
+        // TODO JOC-1645
         return CompletableFuture.supplyAsync(() -> {
             try {
                 JocAuditLog.storeAuditLogDetail(new AuditLogDetail(WorkflowPaths.getPath(workflowPath.string()), ObjectType.WORKFLOW.intValue(),

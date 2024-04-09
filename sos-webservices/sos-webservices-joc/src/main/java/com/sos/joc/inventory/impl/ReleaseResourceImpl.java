@@ -42,6 +42,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
+import com.sos.joc.classes.audit.JocAuditObjectsLog;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonSerializer;
 import com.sos.joc.classes.inventory.Validator;
@@ -139,13 +140,16 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             List<Err419> errors = new ArrayList<>();
 
             DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
+            JocAuditObjectsLog auditLogObjectsLogging = new JocAuditObjectsLog(dbAuditLog.getId());
 
             if (in.getDelete() != null && !in.getDelete().isEmpty()) {
-                errors.addAll(delete(in.getDelete(), dbLayer, folderPermissions, getJocError(), dbAuditLog, withDeletionOfEmptyFolders));
+                errors.addAll(delete(in.getDelete(), dbLayer, folderPermissions, getJocError(), dbAuditLog, auditLogObjectsLogging,
+                        withDeletionOfEmptyFolders));
             }
 
             if (in.getUpdate() != null && !in.getUpdate().isEmpty()) {
-                errors.addAll(update(in.getUpdate(), dbLayer, folderPermissions, getJocError(), dbAuditLog, withDeletionOfEmptyFolders));
+                errors.addAll(update(in.getUpdate(), dbLayer, folderPermissions, getJocError(), dbAuditLog, auditLogObjectsLogging,
+                        withDeletionOfEmptyFolders));
             }
 
             if (errors != null && !errors.isEmpty()) {
@@ -153,6 +157,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 return errors;
             }
             Globals.commit(session);
+            auditLogObjectsLogging.log();
             Globals.beginTransaction(session);
             Map<String, List<String>> schedulePathsWithWorkflowNames = getSchedulePathsWithWorkflowNames(in, dbLayer);
             cancelAndRecreateOrders(in.getAddOrdersDateFrom(), schedulePathsWithWorkflowNames,  accessToken);
@@ -167,7 +172,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
     }
 
     private static List<Err419> delete(List<RequestFilter> toDelete, InventoryDBLayer dbLayer, SOSAuthFolderPermissions folderPermissions,
-            JocError jocError, DBItemJocAuditLog dbAuditLog, boolean withDeletionOfEmptyFolders) {
+            JocError jocError, DBItemJocAuditLog dbAuditLog, JocAuditObjectsLog auditLogObjectsLogging, boolean withDeletionOfEmptyFolders) {
         List<Err419> bulkErrors = new ArrayList<>();
         for (RequestFilter requestFilter : toDelete) {
             if (requestFilter == null) {
@@ -175,7 +180,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             }
             try {
                 DBItemInventoryConfiguration conf = JocInventory.getConfiguration(dbLayer, requestFilter, folderPermissions);
-                delete(conf, dbLayer, dbAuditLog, withDeletionOfEmptyFolders, true);
+                delete(conf, dbLayer, dbAuditLog, withDeletionOfEmptyFolders, auditLogObjectsLogging, true);
             } catch (DBMissingDataException ex) {
                 // ignore missing objects at deletion
             } catch (Exception ex) {
@@ -212,10 +217,10 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
     }
 
     public static void delete(DBItemInventoryConfiguration conf, InventoryDBLayer dbLayer, DBItemJocAuditLog dbAuditLog,
-            boolean withDeletionOfEmptyFolders, boolean withEvent) throws SOSHibernateException {
+            boolean withDeletionOfEmptyFolders, JocAuditObjectsLog auditLogObjectsLogging, boolean withEvent) throws SOSHibernateException {
 
         if (ConfigurationType.FOLDER.intValue() == conf.getType()) {
-            deleteReleasedFolder(conf, dbLayer, dbAuditLog, withDeletionOfEmptyFolders);
+            deleteReleasedFolder(conf, dbLayer, dbAuditLog, withDeletionOfEmptyFolders, auditLogObjectsLogging);
             if (withEvent) {
                 JocInventory.postEvent(conf.getFolder());
             }
@@ -223,7 +228,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             throw new ControllerInvalidResponseDataException(String.format("%s is not a 'Scheduling Object': %s", conf.getPath(), conf
                     .getTypeAsEnum()));
         } else {
-            deleteReleasedObject(conf, dbAuditLog, dbLayer);
+            deleteReleasedObject(conf, dbAuditLog, dbLayer, auditLogObjectsLogging);
             if (withEvent) {
                 JocInventory.postEvent(conf.getFolder());
             }
@@ -232,7 +237,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
     }
 
     private List<Err419> update(List<RequestFilter> toUpdate, InventoryDBLayer dbLayer, SOSAuthFolderPermissions folderPermissions, JocError jocError,
-            DBItemJocAuditLog dbAuditLog, boolean withDeletionOfEmptyFolders) {
+            DBItemJocAuditLog dbAuditLog, JocAuditObjectsLog auditLogObjectsLogging, boolean withDeletionOfEmptyFolders) {
 
         List<Err419> bulkErrors = new ArrayList<>();
         Map<String, Workflow> cachedWorkflows = new HashMap<>();
@@ -243,7 +248,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             try {
                 DBItemInventoryConfiguration conf = JocInventory.getConfiguration(dbLayer, requestFilter, folderPermissions);
                 if (ConfigurationType.FOLDER.intValue() == conf.getType()) {
-                    bulkErrors.addAll(updateReleasedFolder(conf, dbLayer, cachedWorkflows, dbAuditLog));
+                    bulkErrors.addAll(updateReleasedFolder(conf, dbLayer, cachedWorkflows, dbAuditLog, auditLogObjectsLogging));
                     JocInventory.postEvent(conf.getFolder());
                 } else if (!JocInventory.isReleasable(conf.getTypeAsEnum())) {
                     throw new ControllerInvalidResponseDataException(String.format("%s is not a 'Scheduling Object': %s", conf.getPath(), conf
@@ -251,7 +256,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 } else if (!conf.getValid()) {
                     throw new ControllerInvalidResponseDataException(String.format("%s is not valid", conf.getPath()));
                 } else {
-                    bulkErrors.addAll(updateReleasedObject(conf, dbLayer, cachedWorkflows, dbAuditLog));
+                    bulkErrors.addAll(updateReleasedObject(conf, dbLayer, cachedWorkflows, dbAuditLog, auditLogObjectsLogging));
                     JocInventory.postEvent(conf.getFolder());
                 }
             } catch (Exception ex) {
@@ -295,7 +300,8 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
     }
 
     private List<Err419> updateReleasedFolder(DBItemInventoryConfiguration conf, InventoryDBLayer dbLayer, Map<String, Workflow> cachedWorkflows,
-            DBItemJocAuditLog dbAuditLog) throws SOSHibernateException, JsonParseException, JsonMappingException, IOException {
+            DBItemJocAuditLog dbAuditLog, JocAuditObjectsLog auditLogObjectsLogging) throws SOSHibernateException, JsonParseException,
+            JsonMappingException, IOException {
         List<Err419> errors = new ArrayList<>();
         List<DBItemInventoryConfiguration> folderContent = dbLayer.getFolderContent(conf.getPath(), true, JocInventory.getReleasableTypes(), false);
 
@@ -307,14 +313,15 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 if (item.getReleased() || !item.getValid()) {
                     continue;
                 }
-                errors.addAll(updateReleasedObject(item, dbLayer, cachedWorkflows, dbAuditLog));
+                errors.addAll(updateReleasedObject(item, dbLayer, cachedWorkflows, dbAuditLog, auditLogObjectsLogging));
             }
         }
         return errors;
     }
 
     private List<Err419> updateReleasedObject(DBItemInventoryConfiguration conf, InventoryDBLayer dbLayer, Map<String, Workflow> cachedWorkflows,
-            DBItemJocAuditLog dbAuditLog) throws SOSHibernateException, JsonParseException, JsonMappingException, IOException {
+            DBItemJocAuditLog dbAuditLog, JocAuditObjectsLog auditLogObjectsLogging) throws SOSHibernateException, JsonParseException,
+            JsonMappingException, IOException {
 
         List<Err419> errors = checkConfiguration(dbLayer, conf, cachedWorkflows);
         if (errors.size() > 0) {
@@ -346,7 +353,8 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         conf.setReleased(true);
         conf.setModified(dbAuditLog.getCreated());
         dbLayer.getSession().update(conf);
-        JocAuditLog.storeAuditLogDetail(new AuditLogDetail(conf.getPath(), conf.getType()), dbLayer.getSession(), dbAuditLog);
+        auditLogObjectsLogging.addDetail(JocAuditLog.storeAuditLogDetail(new AuditLogDetail(conf.getPath(), conf.getType()), dbLayer.getSession(),
+                dbAuditLog));
 
         return errors;
     }
@@ -478,14 +486,15 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
     }
 
     private static void deleteReleasedFolder(DBItemInventoryConfiguration conf, InventoryDBLayer dbLayer, DBItemJocAuditLog dbAuditLog,
-            boolean withDeletionOfEmptyFolders) throws SOSHibernateException {
+            boolean withDeletionOfEmptyFolders, JocAuditObjectsLog auditLogObjectsLogging) throws SOSHibernateException {
         List<DBItemInventoryConfiguration> folderContent = dbLayer.getFolderContent(conf.getPath(), true, JocInventory.getReleasableTypes(), false);
 
         if (folderContent != null && !folderContent.isEmpty()) {
             dbLayer.deleteReleasedItemsByConfigurationIds(folderContent.stream().map(DBItemInventoryConfiguration::getId).distinct().collect(
                     Collectors.toList()));
             for (DBItemInventoryConfiguration item : folderContent) {
-                JocAuditLog.storeAuditLogDetail(new AuditLogDetail(item.getPath(), item.getType()), dbLayer.getSession(), dbAuditLog);
+                auditLogObjectsLogging.addDetail(JocAuditLog.storeAuditLogDetail(new AuditLogDetail(item.getPath(), item.getType()), dbLayer
+                        .getSession(), dbAuditLog));
                 // delete releasable objects in INV_CONFIGURATION
                 JocInventory.deleteInventoryConfigurationAndPutToTrash(item, dbLayer, ConfigurationType.FOLDER);
             }
@@ -496,12 +505,13 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
 
     }
 
-    private static void deleteReleasedObject(DBItemInventoryConfiguration conf, DBItemJocAuditLog dbAuditLog, InventoryDBLayer dbLayer)
-            throws SOSHibernateException {
+    private static void deleteReleasedObject(DBItemInventoryConfiguration conf, DBItemJocAuditLog dbAuditLog, InventoryDBLayer dbLayer,
+            JocAuditObjectsLog auditLogObjectsLogging) throws SOSHibernateException {
         conf.setAuditLogId(dbAuditLog.getId());
         dbLayer.deleteReleasedItemsByConfigurationIds(Collections.singletonList(conf.getId()));
         JocInventory.deleteInventoryConfigurationAndPutToTrash(conf, dbLayer, ConfigurationType.FOLDER);
-        JocAuditLog.storeAuditLogDetail(new AuditLogDetail(conf.getPath(), conf.getType()), dbLayer.getSession(), dbAuditLog);
+        auditLogObjectsLogging.addDetail(JocAuditLog.storeAuditLogDetail(new AuditLogDetail(conf.getPath(), conf.getType()), dbLayer.getSession(),
+                dbAuditLog));
     }
     
     private static void addHash(DBItemInventoryConfiguration conf) throws IOException {

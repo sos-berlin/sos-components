@@ -31,6 +31,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
+import com.sos.joc.classes.audit.JocAuditObjectsLog;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JocInventory.InventoryPath;
 import com.sos.joc.classes.inventory.Validator;
@@ -124,16 +125,20 @@ public class ConvertCronImpl extends JOCResourceImpl implements IConvertCronReso
             Map<WorkflowEdit, ScheduleEdit> scheduledWorkflows = CronUtils.cronFile2Workflows(invDbLayer, bufferedReader, cal, filter.getAgentName(),
                     filter.getSubagentClusterId(), timezone, filter.getSystemCrontab());
             Set<ConfigurationObject> objects = new HashSet<ConfigurationObject>();
+            JocAuditObjectsLog auditLogObjectsLogging = new JocAuditObjectsLog(dbAuditItem.getId());
+            
             for (Map.Entry<WorkflowEdit, ScheduleEdit> entry : scheduledWorkflows.entrySet()) {
                 entry.getKey().setPath(Paths.get(filter.getFolder()).resolve(entry.getKey().getName()).toString().replace('\\', '/'));
                 entry.getKey().setObjectType(ConfigurationType.WORKFLOW);
                 entry.getValue().setPath(Paths.get(filter.getFolder()).resolve(entry.getValue().getName()).toString().replace('\\', '/'));
                 entry.getValue().setObjectType(ConfigurationType.SCHEDULE);
-                store(invDbLayer, entry.getKey(), dbAuditItem);
+                store(invDbLayer, entry.getKey(), dbAuditItem, auditLogObjectsLogging);
                 objects.add(entry.getKey());
-                store(invDbLayer, entry.getValue(), dbAuditItem);
+                store(invDbLayer, entry.getValue(), dbAuditItem, auditLogObjectsLogging);
                 objects.add(entry.getValue());
             }
+            
+            auditLogObjectsLogging.log();
             
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -151,7 +156,7 @@ public class ConvertCronImpl extends JOCResourceImpl implements IConvertCronReso
         }
 	}
 	
-	private void store(InventoryDBLayer dbLayer, ConfigurationObject in, DBItemJocAuditLog dbAuditLog) throws Exception{
+	private void store(InventoryDBLayer dbLayer, ConfigurationObject in, DBItemJocAuditLog dbAuditLog, JocAuditObjectsLog auditLogObjectsLogging) throws Exception{
         DBItemInventoryConfiguration item;
         checkRequiredParameter("path", in.getPath());
         checkRequiredParameter("objectType", in.getObjectType());
@@ -190,8 +195,9 @@ public class ConvertCronImpl extends JOCResourceImpl implements IConvertCronReso
         } else {
             JocInventory.postEvent(item.getFolder());
         }
-        JocAuditLog.storeAuditLogDetail(new AuditLogDetail(item.getPath(), item.getType()), dbLayer.getSession(), dbAuditLog);
-	}
+        auditLogObjectsLogging.addDetail(JocAuditLog.storeAuditLogDetail(new AuditLogDetail(item.getPath(), item.getType()), dbLayer.getSession(),
+                dbAuditLog));
+    }
 	
     private DBItemInventoryConfiguration setProperties(ConfigurationObject in, DBItemInventoryConfiguration item, InventoryDBLayer dbLayer,
             boolean isNew) throws Exception {

@@ -1,6 +1,7 @@
 package com.sos.joc.documentation.impl;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Date;
 
 import jakarta.ws.rs.Path;
@@ -11,9 +12,11 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
+import com.sos.joc.classes.audit.JocAuditObjectsLog;
 import com.sos.joc.db.documentation.DBItemDocumentation;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
+import com.sos.joc.db.joc.DBItemJocAuditLogDetails;
 import com.sos.joc.documentation.resource.IDocumentationEditResource;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
@@ -49,8 +52,10 @@ public class DocumentationEditResourceImpl extends JOCResourceImpl implements ID
             if (dbItem == null) {
                 throw new DBMissingDataException("Couldn't find a documentation with the name (" + path + ")");
             }
-            JocAuditLog.storeAuditLogDetail(new AuditLogDetail(path, ObjectType.DOCUMENTATION.intValue()), connection, dbAudit);
-            
+            DBItemJocAuditLogDetails auditLogDetail = JocAuditLog.storeAuditLogDetail(new AuditLogDetail(path, ObjectType.DOCUMENTATION.intValue()),
+                    connection, dbAudit);
+            JocAuditObjectsLog.log(auditLogDetail, dbAudit.getId());
+
             if (documentationFilter.getAssignReference() != null && !documentationFilter.getAssignReference().isEmpty()) {
                 if (documentationFilter.getAssignReference().equals(dbItem.getDocRef())) {
                     // Nothing to do
