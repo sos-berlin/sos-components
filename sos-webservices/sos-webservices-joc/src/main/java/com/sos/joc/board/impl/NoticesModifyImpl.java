@@ -48,6 +48,7 @@ public class NoticesModifyImpl extends JOCResourceImpl implements INoticesModify
             if (proxy.currentState().pathToBoard().get(board) == null) {
                 throw new ControllerObjectNotExistException("Controller '" + controllerId + "' couldn't find the Notice Board '" + board.string() + "'");
             }
+            // TODO Batch command
             filter.getNoticeIds().stream().map(NoticeId::of).map(n -> new ControllerCommand.DeleteNotice(board, n)).map(JControllerCommand::apply)
                     .forEach(command -> proxy.api().executeCommand(command).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken,
                             getJocError(), controllerId)));
