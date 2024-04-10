@@ -10,6 +10,11 @@ import jakarta.ws.rs.core.MediaType;
 
 public interface IUriResource {
 
+    @Path("url")
+    @POST
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse setUrl(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
+    
     @Path("uri")
     @POST
     @Produces({ MediaType.APPLICATION_JSON })

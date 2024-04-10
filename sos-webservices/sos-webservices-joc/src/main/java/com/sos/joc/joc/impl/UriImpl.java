@@ -21,7 +21,12 @@ import com.sos.schema.JsonValidator;
 @jakarta.ws.rs.Path("joc")
 public class UriImpl extends JOCResourceImpl implements IUriResource {
     
-    private final static String API_CALL = "./joc/uri";
+    private final static String API_CALL = "./joc/url";
+    
+    @Override
+    public JOCDefaultResponse setUrl(String accessToken, byte[] filterBytes) {
+        return setUri(accessToken, filterBytes);
+    }
     
     @Override
     public JOCDefaultResponse setUri(String accessToken, byte[] filterBytes) {
