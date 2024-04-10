@@ -48,6 +48,7 @@ public class AgentsResetImpl extends JOCResourceImpl implements IAgentsReset {
 
             JControllerApi api = ControllerApi.of(controllerId);
             storeAuditLog(agentParameter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+            // TODO Batch command 
             getResetCommands(agentParameter.getAgentIds(), agentParameter.getForce() == Boolean.TRUE).forEach(c -> {
                 LOGGER.debug("Reset Agent: " + c.toJson());
                 api.executeCommand(c).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(),

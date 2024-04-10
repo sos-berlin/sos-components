@@ -34,4 +34,9 @@ public interface IOrdersResourceModify {
     @Path("confirm")
     @Produces({ "application/json" })
     public JOCDefaultResponse postOrdersConfirm(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    
+    @POST
+    @Path("continue")
+    @Produces({ "application/json" })
+    public JOCDefaultResponse postOrdersContinue(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 }

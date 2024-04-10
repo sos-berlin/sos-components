@@ -84,8 +84,13 @@ public class JocAuditLog {
                         ticketLink = audit.getTicketLink();
                     }
                 }
-                AUDIT_LOGGER.info(String.format("ID: %7$d - REQUEST: %1$s - USER: %2$s - PARAMS: %3$s - COMMENT: %4$s - TIMESPENT: %5$s - TICKET: %6$s",
+                if (auditLogId == 0L) {
+                    AUDIT_LOGGER.info(String.format("REQUEST: %1$s - USER: %2$s - PARAMS: %3$s - COMMENT: %4$s - TIMESPENT: %5$s - TICKET: %6$s",
+                            request, user, params, comment, timeSpent, ticketLink));
+                } else {
+                    AUDIT_LOGGER.info(String.format("REQUEST: %1$s - ID: %7$d - USER: %2$s - PARAMS: %3$s - COMMENT: %4$s - TIMESPENT: %5$s - TICKET: %6$s",
                         request, user, params, comment, timeSpent, ticketLink, auditLogId));
+                }
                 truncateParams();
                 
             } catch (Exception e) {

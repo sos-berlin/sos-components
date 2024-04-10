@@ -67,6 +67,7 @@ import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.ModifyOrders;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.Position;
+import com.sos.joc.model.security.configuration.permissions.controller.Orders;
 import com.sos.joc.orders.resource.IOrdersResourceModify;
 import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
@@ -98,7 +99,28 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     private static final Logger LOGGER = LoggerFactory.getLogger(OrdersResourceModifyImpl.class);
 
     private enum Action {
-        CANCEL, SUSPEND, RESUME, REMOVE_WHEN_TERMINATED, ANSWER_PROMPT
+        CANCEL, SUSPEND, RESUME, REMOVE_WHEN_TERMINATED, ANSWER_PROMPT, CONTINUE
+    }
+    
+    @Override
+    public JOCDefaultResponse postOrdersContinue(String accessToken, byte[] filterBytes) {
+        try {
+            ModifyOrders modifyOrders = initRequest(Action.CONTINUE, accessToken, filterBytes);
+            // TODO permission
+            Orders orderPerms = getControllerPermissions(modifyOrders.getControllerId(), accessToken).getOrders();
+            boolean perm = orderPerms.getCancel() || orderPerms.getResumeFailed() || orderPerms.getSuspendResume();
+            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getControllerId(), perm);
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+            postOrdersModify(Action.CONTINUE, modifyOrders);
+            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
     }
 
     @Override
@@ -617,15 +639,20 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     public Set<JOrder> getJOrders(Action action, Stream<JOrder> orderStream, String controllerId, boolean withPostProblem) {
         switch (action) {
         case RESUME:
-            Map<Boolean, Set<JOrder>> suspendedOrFailedOrders = orderStream.collect(Collectors.groupingBy(o -> OrdersHelper.isSuspendedOrFailed(o),
+//            Map<Boolean, Set<JOrder>> suspendedOrFailedOrders = orderStream.collect(Collectors.groupingBy(o -> OrdersHelper.isSuspendedOrFailed(o),
+//                    Collectors.toSet()));
+//            postProblem(suspendedOrFailedOrders, controllerId, withPostProblem, "failed or suspended");
+//            return suspendedOrFailedOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
+            Map<Boolean, Set<JOrder>> resumableOrders = orderStream.collect(Collectors.groupingBy(o -> o.asScala().isResumable(),
                     Collectors.toSet()));
-            postProblem(suspendedOrFailedOrders, controllerId, withPostProblem, "failed or suspended");
-            return suspendedOrFailedOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
+            postProblem(resumableOrders, controllerId, withPostProblem, "resumable");
+            return resumableOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
         case ANSWER_PROMPT:
             Map<Boolean, Set<JOrder>> promptingOrders = orderStream.collect(Collectors.groupingBy(o -> OrdersHelper.isPrompting(o), Collectors
                     .toSet()));
             postProblem(promptingOrders, controllerId, withPostProblem, "prompting");
             return promptingOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
+        //case CONTINUE: TODO
         default:
             return orderStream.collect(Collectors.toSet());
         }
@@ -698,10 +725,18 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             }
 
         case ANSWER_PROMPT:
-            // No bulk operation in API
+            // TODO batch command -  No bulk operation in API
             JControllerApi api = ControllerApi.of(controllerId);
-            oIdsStream.map(oId -> JControllerCommand.apply(new ControllerCommand.AnswerOrderPrompt(oId))).forEach(command -> api.executeCommand(
+            oIdsStream.map(ControllerCommand.AnswerOrderPrompt::new).map(JControllerCommand::apply).forEach(command -> api.executeCommand(
                     command).thenAccept(either -> ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId)));
+            return CompletableFuture.supplyAsync(() -> Either.right(null));
+            
+        case CONTINUE:
+            // TODO batch command -  No bulk operation in API
+            JControllerApi api2 = ControllerApi.of(controllerId);
+            jOrders.stream().map(o -> new ControllerCommand.GoOrder(o.id(), o.asScala().position())).map(JControllerCommand::apply).forEach(
+                    command -> api2.executeCommand(command).thenAccept(either -> ProblemHelper.postProblemEventIfExist(either, getAccessToken(),
+                            getJocError(), controllerId)));
             return CompletableFuture.supplyAsync(() -> Either.right(null));
 
         default: // case REMOVE_WHEN_TERMINATED
