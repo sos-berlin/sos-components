@@ -74,11 +74,12 @@ public class ClusterWatch {
     
     @Subscribe({ ActiveClusterChangedEvent.class })
     public void listenEvent(ActiveClusterChangedEvent evt) {
-        LOGGER.debug("[ClusterWatch] memberId = " + memberId);
-        LOGGER.info("[ClusterWatch] current watched Controller clusters by " + toStringWithId() + ": " + startedWatches.keySet().toString());
-        LOGGER.info("[ClusterWatch] receive event: " + evt.toString());
         onStart = false;
         if (evt.getNewClusterMemberId() != null) {
+            LOGGER.debug("[ClusterWatch] memberId = " + memberId);
+            LOGGER.info("[ClusterWatch] current watched Controller clusters by " + toStringWithId() + ": " + startedWatches.keySet().toString());
+            LOGGER.info("[ClusterWatch] receive event: " + evt.toString());
+            
             if (memberId.equals(evt.getOldClusterMemberId())) {
                 // stop for all controllerIds
                 if (!startedWatches.isEmpty()) {
