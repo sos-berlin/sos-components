@@ -19,28 +19,38 @@ public class JocAuditObjectsLog {
     private static final Logger AUDIT_OBJECTS_LOGGER = LoggerFactory.getLogger(WebserviceConstants.AUDIT_OBJECTS_LOGGER);
     private Long auditLogId;
     private Set<DBItemJocAuditLogDetails> details = null;
+    private boolean isEnabled = false;
     
     public JocAuditObjectsLog(Long auditLogId) {
         this.auditLogId = auditLogId;
+        this.isEnabled = AUDIT_OBJECTS_LOGGER.isInfoEnabled();
     }
     
     public void addDetail(DBItemJocAuditLogDetails detail) {
-        if (details == null) {
-            details = new HashSet<>();
+        if (isEnabled) {
+            if (details == null) {
+                details = new HashSet<>();
+            }
+            details.add(detail);
         }
-        details.add(detail);
     }
     
     public void log() {
-        if (details == null) {
-            JocAuditObjectsLog.log(Stream.empty(), auditLogId);
-        } else {
-            JocAuditObjectsLog.log(details.stream(), auditLogId);
+        if (isEnabled) {
+            if (details == null) {
+                JocAuditObjectsLog.log(Stream.empty(), auditLogId);
+            } else {
+                JocAuditObjectsLog.log(details.stream(), auditLogId);
+            }
         }
     }
     
+    public static boolean isEnabled() {
+        return AUDIT_OBJECTS_LOGGER.isInfoEnabled();
+    }
+    
     public static void log(DBItemJocAuditLogDetails detail, Long auditlogId) {
-        if (detail != null) {
+        if (isEnabled() && detail != null) {
             log(Collections.singleton(detail).stream(), auditlogId);
         }
     }

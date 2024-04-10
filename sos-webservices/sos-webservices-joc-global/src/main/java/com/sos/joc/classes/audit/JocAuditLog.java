@@ -84,7 +84,7 @@ public class JocAuditLog {
                         ticketLink = audit.getTicketLink();
                     }
                 }
-                if (auditLogId == 0L) {
+                if (!JocAuditObjectsLog.isEnabled() || auditLogId == 0L) {
                     AUDIT_LOGGER.info(String.format("REQUEST: %1$s - USER: %2$s - PARAMS: %3$s - COMMENT: %4$s - TIMESPENT: %5$s - TICKET: %6$s",
                             request, user, params, comment, timeSpent, ticketLink));
                 } else {
@@ -256,8 +256,10 @@ public class JocAuditLog {
                     Globals.disconnect(connection2);
                 }
             } else {
-                JocAuditObjectsLog.log(details.map(detail -> storeAuditLogDetail(detail.getAuditLogDetail(auditlogId, now), connection)),
-                        auditlogId);
+                if (JocAuditObjectsLog.isEnabled()) {
+                    JocAuditObjectsLog.log(details.map(detail -> storeAuditLogDetail(detail.getAuditLogDetail(auditlogId, now), connection)),
+                            auditlogId);
+                }
             }
         }
     }
