@@ -57,7 +57,7 @@ public class JocAuditObjectsLog {
 
     public static void log(Stream<DBItemJocAuditLogDetails> details, Long auditlogId) {
         AUDIT_OBJECTS_LOGGER.info(details.map(JocAuditObjectsLog::toLogString).filter(Objects::nonNull).collect(Collectors.joining(",",
-                "{\"id\"=" + auditlogId + ",\"objects\"=[", "]}")));
+                "{\"id\":" + auditlogId + ",\"objects\":[", "]}")));
     }
     
     private static String toLogString(DBItemJocAuditLogDetails dbItem) {
@@ -68,9 +68,9 @@ public class JocAuditObjectsLog {
             ObjectType oType = ObjectType.fromValue(dbItem.getType());
             switch (oType) {
             case ORDER:
-                return String.format("{\"order\"=\"%s\",\"workflow\"=\"%s\"}", dbItem.getOrderId(), dbItem.getName());
+                return String.format("{\"order\":\"%s\",\"workflow\":\"%s\"}", dbItem.getOrderId(), dbItem.getName());
             default:
-                return String.format("{\"%s\"=\"%s\"}", oType.value().toLowerCase(), dbItem.getName());
+                return String.format("{\"%s\":\"%s\"}", oType.value().toLowerCase(), dbItem.getName());
             }
         } catch (Exception e) {
             return null;
