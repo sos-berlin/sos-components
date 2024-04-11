@@ -47,301 +47,324 @@ import jakarta.ws.rs.Path;
 @Path("iam")
 public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
 
-    private static final String API_CALL_IDENTITY_PROVIDERS = "./iam/identityproviders";
-    private static final String API_CALL_IDENTITY_CLIENTS = "./iam/identitycliens";
-    private static final String API_CALL_IMPORT_ICON = "./iam/import";
-    private static final String API_CALL_GET_ICON = "./iam/icon";
+	private static final String API_CALL_IDENTITY_PROVIDERS = "./iam/identityproviders";
+	private static final String API_CALL_IDENTITY_CLIENTS = "./iam/identitycliens";
+	private static final String API_CALL_IMPORT_ICON = "./iam/import";
+	private static final String API_CALL_GET_ICON = "./iam/icon";
 
-    private String getProperty(String value, String defaultValue) {
-        if (value == null || value.isEmpty()) {
-            return defaultValue;
-        } else {
-            return value;
-        }
-    }
+	private String getProperty(String value, String defaultValue) {
+		if (value == null || value.isEmpty()) {
+			return defaultValue;
+		} else {
+			return value;
+		}
+	}
 
-    @Override
-    public JOCDefaultResponse postIdentityproviders() {
-        SOSHibernateSession sosHibernateSession = null;
-        try {
+	@Override
+	public JOCDefaultResponse postIdentityproviders() {
+		SOSHibernateSession sosHibernateSession = null;
+		try {
 
-            initLogging(API_CALL_IDENTITY_PROVIDERS, null);
+			initLogging(API_CALL_IDENTITY_PROVIDERS, null);
 
-            IdentityProviders identityProviders = new IdentityProviders();
+			IdentityProviders identityProviders = new IdentityProviders();
 
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_IDENTITY_PROVIDERS);
-            IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
-            IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
-            filter.setDisabled(false);
-            filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC);
-            List<DBItemIamIdentityService> listOfIdentityServicesOIdc = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
-            filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC_JOC);
-            List<DBItemIamIdentityService> listOfIdentityServicesOIdcJoc = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
+			sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_IDENTITY_PROVIDERS);
+			IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
+			IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
+			filter.setDisabled(false);
+			filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC);
+			List<DBItemIamIdentityService> listOfIdentityServicesOIdc = iamIdentityServiceDBLayer
+					.getIdentityServiceList(filter, 0);
+			filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC_JOC);
+			List<DBItemIamIdentityService> listOfIdentityServicesOIdcJoc = iamIdentityServiceDBLayer
+					.getIdentityServiceList(filter, 0);
 
-            JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
-            JocConfigurationFilter jocConfigurationFilter = new JocConfigurationFilter();
-            jocConfigurationFilter.setConfigurationType(SOSAuthHelper.CONFIGURATION_TYPE_IAM);
+			JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
+			JocConfigurationFilter jocConfigurationFilter = new JocConfigurationFilter();
+			jocConfigurationFilter.setConfigurationType(SOSAuthHelper.CONFIGURATION_TYPE_IAM);
 
-            for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServicesOIdc) {
-                OidcIdentityProvider oidcIdentityProvider = new OidcIdentityProvider();
-                oidcIdentityProvider.setIdentityServiceName(dbItemIamIdentityService.getIdentityServiceName());
+			for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServicesOIdc) {
+				OidcIdentityProvider oidcIdentityProvider = new OidcIdentityProvider();
+				oidcIdentityProvider.setIdentityServiceName(dbItemIamIdentityService.getIdentityServiceName());
 
-                jocConfigurationFilter.setName(dbItemIamIdentityService.getIdentityServiceName());
-                jocConfigurationFilter.setObjectType(IdentityServiceTypes.OIDC.value());
-                List<DBItemJocConfiguration> listOfJocConfigurations = jocConfigurationDBLayer.getJocConfigurationList(jocConfigurationFilter, 0);
-                if (listOfJocConfigurations.size() == 1) {
-                    DBItemJocConfiguration dbItem = listOfJocConfigurations.get(0);
-                    com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(dbItem.getConfigurationItem(),
-                            com.sos.joc.model.security.properties.Properties.class);
+				jocConfigurationFilter.setName(dbItemIamIdentityService.getIdentityServiceName());
+				jocConfigurationFilter.setObjectType(IdentityServiceTypes.OIDC.value());
+				List<DBItemJocConfiguration> listOfJocConfigurations = jocConfigurationDBLayer
+						.getJocConfigurationList(jocConfigurationFilter, 0);
+				if (listOfJocConfigurations.size() == 1) {
+					DBItemJocConfiguration dbItem = listOfJocConfigurations.get(0);
+					com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(
+							dbItem.getConfigurationItem(), com.sos.joc.model.security.properties.Properties.class);
 
-                    if (properties.getOidc() != null) {
+					if (properties.getOidc() != null) {
 
-                        if (!properties.getOidc().getIamOidcFlowType().equals(OidcFlowTypes.CLIENT_CREDENTIAL)) {
+						if (!properties.getOidc().getIamOidcFlowType().equals(OidcFlowTypes.CLIENT_CREDENTIAL)) {
 
-                            DocumentationDBLayer dbLayer = new DocumentationDBLayer(sosHibernateSession);
-                            String iconPath = DocumentationDBLayer.SOS_IMAGES_FOLDER + "/" + dbItemIamIdentityService.getIdentityServiceName();
-                            DBItemDocumentation dbItemDocumentation = dbLayer.getDocumentation(iconPath);
-                            if (dbItemDocumentation != null) {
-                                oidcIdentityProvider.setIamIconUrl("/iam/icon/" + JOCJsonCommand.urlEncodedPath(oidcIdentityProvider
-                                        .getIdentityServiceName()));
-                            }
+							DocumentationDBLayer dbLayer = new DocumentationDBLayer(sosHibernateSession);
+							String iconPath = DocumentationDBLayer.SOS_IMAGES_FOLDER + "/"
+									+ dbItemIamIdentityService.getIdentityServiceName();
+							DBItemDocumentation dbItemDocumentation = dbLayer.getDocumentation(iconPath);
+							if (dbItemDocumentation != null) {
+								oidcIdentityProvider.setIamIconUrl("/iam/icon/"
+										+ JOCJsonCommand.urlEncodedPath(oidcIdentityProvider.getIdentityServiceName()));
+							}
 
-                            oidcIdentityProvider.setIamOidcAuthenticationUrl(getProperty(properties.getOidc().getIamOidcAuthenticationUrl(), ""));
-                            oidcIdentityProvider.setIamOidcName(getProperty(properties.getOidc().getIamOidcName(), ""));
-                            identityProviders.getOidcServiceItems().add(oidcIdentityProvider);
-                        }
-                    }
-                }
-            }
+							oidcIdentityProvider.setIamOidcAuthenticationUrl(
+									getProperty(properties.getOidc().getIamOidcAuthenticationUrl(), ""));
+							oidcIdentityProvider.setIamOidcName(getProperty(properties.getOidc().getIamOidcName(), ""));
+							identityProviders.getOidcServiceItems().add(oidcIdentityProvider);
+						}
+					}
+				}
+			}
 
-            for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServicesOIdcJoc) {
-                OidcIdentityProvider oidcIdentityProvider = new OidcIdentityProvider();
-                oidcIdentityProvider.setIdentityServiceName(dbItemIamIdentityService.getIdentityServiceName());
+			for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServicesOIdcJoc) {
+				OidcIdentityProvider oidcIdentityProvider = new OidcIdentityProvider();
+				oidcIdentityProvider.setIdentityServiceName(dbItemIamIdentityService.getIdentityServiceName());
 
-                jocConfigurationFilter.setName(dbItemIamIdentityService.getIdentityServiceName());
-                jocConfigurationFilter.setObjectType(IdentityServiceTypes.OIDC_JOC.value());
-                List<DBItemJocConfiguration> listOfJocConfigurations = jocConfigurationDBLayer.getJocConfigurationList(jocConfigurationFilter, 0);
-                if (listOfJocConfigurations.size() == 1) {
-                    DBItemJocConfiguration dbItem = listOfJocConfigurations.get(0);
-                    com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(dbItem.getConfigurationItem(),
-                            com.sos.joc.model.security.properties.Properties.class);
+				jocConfigurationFilter.setName(dbItemIamIdentityService.getIdentityServiceName());
+				jocConfigurationFilter.setObjectType(IdentityServiceTypes.OIDC_JOC.value());
+				List<DBItemJocConfiguration> listOfJocConfigurations = jocConfigurationDBLayer
+						.getJocConfigurationList(jocConfigurationFilter, 0);
+				if (listOfJocConfigurations.size() == 1) {
+					DBItemJocConfiguration dbItem = listOfJocConfigurations.get(0);
+					com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(
+							dbItem.getConfigurationItem(), com.sos.joc.model.security.properties.Properties.class);
 
-                    if (properties.getOidc() != null) {
+					if (properties.getOidc() != null) {
+						if (!properties.getOidc().getIamOidcFlowType().equals(OidcFlowTypes.CLIENT_CREDENTIAL)) {
 
-                        DocumentationDBLayer dbLayer = new DocumentationDBLayer(sosHibernateSession);
-                        String iconPath = DocumentationDBLayer.SOS_IMAGES_FOLDER + "/" + dbItemIamIdentityService.getIdentityServiceName();
-                        DBItemDocumentation dbItemDocumentation = dbLayer.getDocumentation(iconPath);
-                        if (dbItemDocumentation != null) {
-                            oidcIdentityProvider.setIamIconUrl("/iam/icon/" + JOCJsonCommand.urlEncodedPath(oidcIdentityProvider
-                                    .getIdentityServiceName()));
-                        }
+							DocumentationDBLayer dbLayer = new DocumentationDBLayer(sosHibernateSession);
+							String iconPath = DocumentationDBLayer.SOS_IMAGES_FOLDER + "/"
+									+ dbItemIamIdentityService.getIdentityServiceName();
+							DBItemDocumentation dbItemDocumentation = dbLayer.getDocumentation(iconPath);
+							if (dbItemDocumentation != null) {
+								oidcIdentityProvider.setIamIconUrl("/iam/icon/"
+										+ JOCJsonCommand.urlEncodedPath(oidcIdentityProvider.getIdentityServiceName()));
+							}
 
-                        oidcIdentityProvider.setIamOidcAuthenticationUrl(getProperty(properties.getOidc().getIamOidcAuthenticationUrl(), ""));
-                        oidcIdentityProvider.setIamOidcName(getProperty(properties.getOidc().getIamOidcName(), ""));
-                    }
-                }
-                identityProviders.getOidcServiceItems().add(oidcIdentityProvider);
-            }
+							oidcIdentityProvider.setIamOidcAuthenticationUrl(
+									getProperty(properties.getOidc().getIamOidcAuthenticationUrl(), ""));
+							oidcIdentityProvider.setIamOidcName(getProperty(properties.getOidc().getIamOidcName(), ""));
+						}
+					}
+				}
+				identityProviders.getOidcServiceItems().add(oidcIdentityProvider);
+			}
 
-            filter.setIamIdentityServiceType(IdentityServiceTypes.FIDO);
-            List<DBItemIamIdentityService> listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
+			filter.setIamIdentityServiceType(IdentityServiceTypes.FIDO);
+			List<DBItemIamIdentityService> listOfIdentityServices = iamIdentityServiceDBLayer
+					.getIdentityServiceList(filter, 0);
 
-            for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
-                FidoIdentityProvider fidoIdentityProvider = new FidoIdentityProvider();
-                fidoIdentityProvider.setIdentityServiceName(dbItemIamIdentityService.getIdentityServiceName());
+			for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
+				FidoIdentityProvider fidoIdentityProvider = new FidoIdentityProvider();
+				fidoIdentityProvider.setIdentityServiceName(dbItemIamIdentityService.getIdentityServiceName());
 
-                com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getIamProperties(dbItemIamIdentityService
-                        .getIdentityServiceName(),IdentityServiceTypes.FIDO);
+				com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper
+						.getIamProperties(dbItemIamIdentityService.getIdentityServiceName(), IdentityServiceTypes.FIDO);
 
-                if (properties != null) {
-                    if (properties.getFido() != null) {
+				if (properties != null) {
+					if (properties.getFido() != null) {
 
-                        DocumentationDBLayer dbLayer = new DocumentationDBLayer(sosHibernateSession);
-                        String iconPath = DocumentationDBLayer.SOS_IMAGES_FOLDER + "/" + dbItemIamIdentityService.getIdentityServiceName();
-                        DBItemDocumentation dbItemDocumentation = dbLayer.getDocumentation(iconPath);
-                        if (dbItemDocumentation != null) {
-                            fidoIdentityProvider.setIamIconUrl("/iam/icon/" + JOCJsonCommand.urlEncodedPath(fidoIdentityProvider
-                                    .getIdentityServiceName()));
-                        }
-                    }
-                }
-                if (dbItemIamIdentityService.getSecondFactor()) {
-                    identityProviders.getFido2ndFactorServiceItems().add(fidoIdentityProvider);
-                } else {
-                    identityProviders.getFidoServiceItems().add(fidoIdentityProvider);
-                }
-            }
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityProviders));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
-        } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-        } finally {
-            Globals.disconnect(sosHibernateSession);
-        }
-    }
+						DocumentationDBLayer dbLayer = new DocumentationDBLayer(sosHibernateSession);
+						String iconPath = DocumentationDBLayer.SOS_IMAGES_FOLDER + "/"
+								+ dbItemIamIdentityService.getIdentityServiceName();
+						DBItemDocumentation dbItemDocumentation = dbLayer.getDocumentation(iconPath);
+						if (dbItemDocumentation != null) {
+							fidoIdentityProvider.setIamIconUrl("/iam/icon/"
+									+ JOCJsonCommand.urlEncodedPath(fidoIdentityProvider.getIdentityServiceName()));
+						}
+					}
+				}
+				if (dbItemIamIdentityService.getSecondFactor()) {
+					identityProviders.getFido2ndFactorServiceItems().add(fidoIdentityProvider);
+				} else {
+					identityProviders.getFidoServiceItems().add(fidoIdentityProvider);
+				}
+			}
+			return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityProviders));
+		} catch (JocException e) {
+			e.addErrorMetaInfo(getJocError());
+			return JOCDefaultResponse.responseStatusJSError(e);
+		} catch (Exception e) {
+			return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+		} finally {
+			Globals.disconnect(sosHibernateSession);
+		}
+	}
 
-    @Override
-    public JOCDefaultResponse postIdentityclient(byte[] body) {
-        SOSHibernateSession sosHibernateSession = null;
-        try {
+	@Override
+	public JOCDefaultResponse postIdentityclient(byte[] body) {
+		SOSHibernateSession sosHibernateSession = null;
+		try {
 
-            initLogging(API_CALL_IDENTITY_CLIENTS, body);
-            JsonValidator.validateFailFast(body, IdentityServiceFilter.class);
-            IdentityServiceFilter identityServiceFilter = Globals.objectMapper.readValue(body, IdentityServiceFilter.class);
+			initLogging(API_CALL_IDENTITY_CLIENTS, body);
+			JsonValidator.validateFailFast(body, IdentityServiceFilter.class);
+			IdentityServiceFilter identityServiceFilter = Globals.objectMapper.readValue(body,
+					IdentityServiceFilter.class);
 
-            checkRequiredParameter("identityServiceName", identityServiceFilter.getIdentityServiceName());
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_IDENTITY_CLIENTS);
-            IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
-            IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
-            filter.setDisabled(false);
-            filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC);
-            filter.setIdentityServiceName(identityServiceFilter.getIdentityServiceName());
-            List<DBItemIamIdentityService> listOfIdentityServicesOidc = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
+			checkRequiredParameter("identityServiceName", identityServiceFilter.getIdentityServiceName());
+			sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_IDENTITY_CLIENTS);
+			IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
+			IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
+			filter.setDisabled(false);
+			filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC);
+			filter.setIdentityServiceName(identityServiceFilter.getIdentityServiceName());
+			List<DBItemIamIdentityService> listOfIdentityServicesOidc = iamIdentityServiceDBLayer
+					.getIdentityServiceList(filter, 0);
 
-            filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC_JOC);
-            List<DBItemIamIdentityService> listOfIdentityServicesOidcJoc = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
+			filter.setIamIdentityServiceType(IdentityServiceTypes.OIDC_JOC);
+			List<DBItemIamIdentityService> listOfIdentityServicesOidcJoc = iamIdentityServiceDBLayer
+					.getIdentityServiceList(filter, 0);
 
-            OidcIdentityProvider identityProvider = new OidcIdentityProvider();
+			OidcIdentityProvider identityProvider = new OidcIdentityProvider();
 
-            JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
-            JocConfigurationFilter jocConfigurationFilter = new JocConfigurationFilter();
-            jocConfigurationFilter.setConfigurationType(SOSAuthHelper.CONFIGURATION_TYPE_IAM);
+			JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
+			JocConfigurationFilter jocConfigurationFilter = new JocConfigurationFilter();
+			jocConfigurationFilter.setConfigurationType(SOSAuthHelper.CONFIGURATION_TYPE_IAM);
 
-            if (listOfIdentityServicesOidcJoc.size() > 0) {
+			if (listOfIdentityServicesOidcJoc.size() > 0) {
 
-                identityProvider.setIdentityServiceName(listOfIdentityServicesOidcJoc.get(0).getIdentityServiceName());
+				identityProvider.setIdentityServiceName(listOfIdentityServicesOidcJoc.get(0).getIdentityServiceName());
 
-                jocConfigurationFilter.setName(listOfIdentityServicesOidcJoc.get(0).getIdentityServiceName());
-                jocConfigurationFilter.setObjectType(IdentityServiceTypes.OIDC_JOC.value());
-                List<DBItemJocConfiguration> listOfJocConfigurations = jocConfigurationDBLayer.getJocConfigurationList(jocConfigurationFilter, 0);
-                if (listOfJocConfigurations.size() == 1) {
-                    DBItemJocConfiguration dbItem = listOfJocConfigurations.get(0);
-                    com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(dbItem.getConfigurationItem(),
-                            com.sos.joc.model.security.properties.Properties.class);
+				jocConfigurationFilter.setName(listOfIdentityServicesOidcJoc.get(0).getIdentityServiceName());
+				jocConfigurationFilter.setObjectType(IdentityServiceTypes.OIDC_JOC.value());
+				List<DBItemJocConfiguration> listOfJocConfigurations = jocConfigurationDBLayer
+						.getJocConfigurationList(jocConfigurationFilter, 0);
+				if (listOfJocConfigurations.size() == 1) {
+					DBItemJocConfiguration dbItem = listOfJocConfigurations.get(0);
+					com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(
+							dbItem.getConfigurationItem(), com.sos.joc.model.security.properties.Properties.class);
 
-                    if (properties.getOidc() != null) {
-                        identityProvider.setIamOidcClientId(getProperty(properties.getOidc().getIamOidcClientId(), ""));
-                        identityProvider.setIamOidcClientSecret(getProperty(properties.getOidc().getIamOidcClientSecret(), ""));
-                    }
-                }
-            }
+					if (properties.getOidc() != null) {
+						identityProvider.setIamOidcClientId(getProperty(properties.getOidc().getIamOidcClientId(), ""));
+						identityProvider
+								.setIamOidcClientSecret(getProperty(properties.getOidc().getIamOidcClientSecret(), ""));
+					}
+				}
+			}
 
-            if (listOfIdentityServicesOidc.size() > 0) {
-                identityProvider.setIdentityServiceName(listOfIdentityServicesOidc.get(0).getIdentityServiceName());
-                jocConfigurationFilter.setName(listOfIdentityServicesOidc.get(0).getIdentityServiceName());
-                jocConfigurationFilter.setObjectType(IdentityServiceTypes.OIDC.value());
-                List<DBItemJocConfiguration> listOfJocConfigurations = jocConfigurationDBLayer.getJocConfigurationList(jocConfigurationFilter, 0);
-                if (listOfJocConfigurations.size() == 1) {
-                    DBItemJocConfiguration dbItem = listOfJocConfigurations.get(0);
-                    com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(dbItem.getConfigurationItem(),
-                            com.sos.joc.model.security.properties.Properties.class);
+			if (listOfIdentityServicesOidc.size() > 0) {
+				identityProvider.setIdentityServiceName(listOfIdentityServicesOidc.get(0).getIdentityServiceName());
+				jocConfigurationFilter.setName(listOfIdentityServicesOidc.get(0).getIdentityServiceName());
+				jocConfigurationFilter.setObjectType(IdentityServiceTypes.OIDC.value());
+				List<DBItemJocConfiguration> listOfJocConfigurations = jocConfigurationDBLayer
+						.getJocConfigurationList(jocConfigurationFilter, 0);
+				if (listOfJocConfigurations.size() == 1) {
+					DBItemJocConfiguration dbItem = listOfJocConfigurations.get(0);
+					com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(
+							dbItem.getConfigurationItem(), com.sos.joc.model.security.properties.Properties.class);
 
-                    if (properties.getOidc() != null) {
-                        identityProvider.setIamOidcClientId(getProperty(properties.getOidc().getIamOidcClientId(), ""));
-                        identityProvider.setIamOidcClientSecret(getProperty(properties.getOidc().getIamOidcClientSecret(), ""));
-                    }
-                }
-            }
+					if (properties.getOidc() != null) {
+						identityProvider.setIamOidcClientId(getProperty(properties.getOidc().getIamOidcClientId(), ""));
+						identityProvider
+								.setIamOidcClientSecret(getProperty(properties.getOidc().getIamOidcClientSecret(), ""));
+					}
+				}
+			}
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityProvider));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
-        } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-        } finally {
-            Globals.disconnect(sosHibernateSession);
-        }
-    }
+			return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityProvider));
+		} catch (JocException e) {
+			e.addErrorMetaInfo(getJocError());
+			return JOCDefaultResponse.responseStatusJSError(e);
+		} catch (Exception e) {
+			return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+		} finally {
+			Globals.disconnect(sosHibernateSession);
+		}
+	}
 
-    @Override
-    public JOCDefaultResponse postImportDocumentations(String xAccessToken, String identityServiceName, FormDataBodyPart file, String timeSpent,
-            String ticketLink, String comment) {
-        InputStream stream = null;
-        SOSHibernateSession sosHibernateSession = null;
-        try {
-            initLogging(API_CALL_IMPORT_ICON, null, xAccessToken);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getAdministration().getAccounts()
-                    .getManage());
-            if (jocDefaultResponse != null) {
-                return jocDefaultResponse;
-            }
+	@Override
+	public JOCDefaultResponse postImportDocumentations(String xAccessToken, String identityServiceName,
+			FormDataBodyPart file, String timeSpent, String ticketLink, String comment) {
+		InputStream stream = null;
+		SOSHibernateSession sosHibernateSession = null;
+		try {
+			initLogging(API_CALL_IMPORT_ICON, null, xAccessToken);
+			JOCDefaultResponse jocDefaultResponse = initPermissions("",
+					getJocPermissions(xAccessToken).getAdministration().getAccounts().getManage());
+			if (jocDefaultResponse != null) {
+				return jocDefaultResponse;
+			}
 
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_IMPORT_ICON);
-            IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
-            IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
-            filter.setIdentityServiceName(identityServiceName);
-            DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(filter);
+			sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_IMPORT_ICON);
+			IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
+			IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
+			filter.setIdentityServiceName(identityServiceName);
+			DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer
+					.getUniqueIdentityService(filter);
 
-            if (dbItemIamIdentityService == null) {
-                throw new JocObjectNotExistException("Couldn't find the Identity Service <" + identityServiceName + ">");
-            }
+			if (dbItemIamIdentityService == null) {
+				throw new JocObjectNotExistException(
+						"Couldn't find the Identity Service <" + identityServiceName + ">");
+			}
 
-            if (file == null) {
-                throw new JocMissingRequiredParameterException("undefined 'file'");
-            }
+			if (file == null) {
+				throw new JocMissingRequiredParameterException("undefined 'file'");
+			}
 
-            if (identityServiceName == null || identityServiceName.isEmpty()) {
-                throw new JocMissingRequiredParameterException("undefined 'identityServiceName'");
-            }
+			if (identityServiceName == null || identityServiceName.isEmpty()) {
+				throw new JocMissingRequiredParameterException("undefined 'identityServiceName'");
+			}
 
-            AuditParams auditLog = new AuditParams();
-            auditLog.setComment(comment);
-            auditLog.setTicketLink(ticketLink);
-            try {
-                auditLog.setTimeSpent(Integer.valueOf(timeSpent));
-            } catch (Exception e) {
-            }
+			AuditParams auditLog = new AuditParams();
+			auditLog.setComment(comment);
+			auditLog.setTicketLink(ticketLink);
+			try {
+				auditLog.setTimeSpent(Integer.valueOf(timeSpent));
+			} catch (Exception e) {
+			}
 
-            final String mediaSubType = file.getMediaType().getSubtype().replaceFirst("^x-", "");
-            Optional<String> supportedSubType = SOSAuthHelper.SUPPORTED_SUBTYPES.stream().filter(s -> mediaSubType.contains(s)).findFirst();
+			final String mediaSubType = file.getMediaType().getSubtype().replaceFirst("^x-", "");
+			Optional<String> supportedSubType = SOSAuthHelper.SUPPORTED_SUBTYPES.stream()
+					.filter(s -> mediaSubType.contains(s)).findFirst();
 
-            if (supportedSubType.isPresent()) {
-                DBItemJocAuditLog dbAudit = storeAuditLog(auditLog, null, CategoryType.IDENTITY, sosHibernateSession);
-                DocumentationsImportResourceImpl.postImportDocumentations(DocumentationDBLayer.SOS_IMAGES_FOLDER, identityServiceName, file,
-                        new DocumentationDBLayer(sosHibernateSession), dbAudit);
-            } else {
-                throw new JocUnsupportedFileTypeException("Unsupported image file type (" + mediaSubType + "), supported types are "
-                        + DocumentationHelper.SUPPORTED_SUBTYPES.toString());
-            }
+			if (supportedSubType.isPresent()) {
+				DBItemJocAuditLog dbAudit = storeAuditLog(auditLog, null, CategoryType.IDENTITY, sosHibernateSession);
+				DocumentationsImportResourceImpl.postImportDocumentations(DocumentationDBLayer.SOS_IMAGES_FOLDER,
+						identityServiceName, file, new DocumentationDBLayer(sosHibernateSession), dbAudit);
+			} else {
+				throw new JocUnsupportedFileTypeException("Unsupported image file type (" + mediaSubType
+						+ "), supported types are " + DocumentationHelper.SUPPORTED_SUBTYPES.toString());
+			}
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
-        } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-        } finally {
-            Globals.disconnect(sosHibernateSession);
-            try {
-                if (stream != null) {
-                    stream.close();
-                }
-            } catch (Exception e) {
-            }
-        }
-    }
+			return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+		} catch (JocException e) {
+			e.addErrorMetaInfo(getJocError());
+			return JOCDefaultResponse.responseStatusJSError(e);
+		} catch (Exception e) {
+			return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+		} finally {
+			Globals.disconnect(sosHibernateSession);
+			try {
+				if (stream != null) {
+					stream.close();
+				}
+			} catch (Exception e) {
+			}
+		}
+	}
 
-    @Override
-    public JOCDefaultResponse getIcon(String identityServiceName) {
-        try {
-            if (identityServiceName == null) {
-                identityServiceName = "";
-            }
-            String request = String.format("%s/%s", API_CALL_GET_ICON, identityServiceName);
-            initLogging(request, null);
+	@Override
+	public JOCDefaultResponse getIcon(String identityServiceName) {
+		try {
+			if (identityServiceName == null) {
+				identityServiceName = "";
+			}
+			String request = String.format("%s/%s", API_CALL_GET_ICON, identityServiceName);
+			initLogging(request, null);
 
-            checkRequiredParameter("identityServiceName", identityServiceName);
-            return DocumentationResourceImpl.postDocumentation(DocumentationDBLayer.SOS_IMAGES_FOLDER + "/" + identityServiceName);
+			checkRequiredParameter("identityServiceName", identityServiceName);
+			return DocumentationResourceImpl
+					.postDocumentation(DocumentationDBLayer.SOS_IMAGES_FOLDER + "/" + identityServiceName);
 
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseHTMLStatusJSError(e);
-        } catch (Exception e) {
-            return JOCDefaultResponse.responseHTMLStatusJSError(e, getJocError());
-        }
-    }
+		} catch (JocException e) {
+			e.addErrorMetaInfo(getJocError());
+			return JOCDefaultResponse.responseHTMLStatusJSError(e);
+		} catch (Exception e) {
+			return JOCDefaultResponse.responseHTMLStatusJSError(e, getJocError());
+		}
+	}
 
 }
