@@ -47,7 +47,7 @@ import io.vavr.control.Either;
 public class RunReport extends AReporting {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(RunReport.class);
-    private static final String nodeCLOs = "--max-old-space-size=2048";
+//    private static final String nodeCLOs = "--max-old-space-size=2048";
     
     public static CompletableFuture<Either<Exception, Void>> run(final Report in) {
 
@@ -118,14 +118,14 @@ public class RunReport extends AReporting {
     private static String getCommandLineOptions() {
         ConfigurationGlobalsJoc jocSettings = Globals.getConfigurationGlobalsJoc();
         ConfigurationEntry nodeCommandLineOptions = jocSettings.getNodeCommandLineOptions();
-        String nCLO = nodeCommandLineOptions.getValue();
-        if (nCLO == null || nCLO.isEmpty()) {
-            nCLO = nodeCommandLineOptions.getDefault();
-        }
-        if (nCLO == null || nCLO.isEmpty()) {
-            nCLO = nodeCLOs;
-        }
-        return nCLO;
+//        String nCLO = nodeCommandLineOptions.getValue();
+//        if (nCLO == null || nCLO.isEmpty()) {
+//            nCLO = nodeCommandLineOptions.getDefault();
+//        }
+//        if (nCLO == null || nCLO.isEmpty()) {
+//            nCLO = nodeCLOs;
+//        }
+        return nodeCommandLineOptions.getValue();
     }
 
     private static String getCommonScript(final Report in, String commandLineOptions) {
