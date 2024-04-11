@@ -55,7 +55,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "requirements",
     "cyclicOrder",
     "hasChildOrders",
-    "canLeave"
+    "canLeave",
+    "isContinuable"
 })
 public class OrderV {
 
@@ -248,6 +249,8 @@ public class OrderV {
     @JsonProperty("canLeave")
     @JsonPropertyDescription("only relevant for state COMPLETED")
     private Boolean canLeave;
+    @JsonProperty("isContinuable")
+    private Boolean isContinuable;
 
     /**
      * No args constructor for use in serialization
@@ -274,6 +277,7 @@ public class OrderV {
      * @param marked
      * @param requirements
      * @param canLeave
+     * @param isContinuable
      * @param surveyDate
      * @param question
      * @param hasChildOrders
@@ -285,7 +289,7 @@ public class OrderV {
      * @param position
      * @param workflowId
      */
-    public OrderV(Date deliveryDate, Date surveyDate, String orderId, Variables arguments, WorkflowId workflowId, OrderState state, OrderMark marked, OrderAttachedState attachedState, String agentId, String subagentId, OrderCycleState cycleState, List<ExpectedNotice> expectedNotices, String label, List<Object> position, String positionString, Boolean positionIsImplicitEnd, List<Object> endPositions, Long scheduledFor, Boolean scheduledNever, String question, Outcome lastOutcome, List<HistoricOutcome> historicOutcome, Requirements requirements, CyclicOrderInfos cyclicOrder, Boolean hasChildOrders, Boolean canLeave) {
+    public OrderV(Date deliveryDate, Date surveyDate, String orderId, Variables arguments, WorkflowId workflowId, OrderState state, OrderMark marked, OrderAttachedState attachedState, String agentId, String subagentId, OrderCycleState cycleState, List<ExpectedNotice> expectedNotices, String label, List<Object> position, String positionString, Boolean positionIsImplicitEnd, List<Object> endPositions, Long scheduledFor, Boolean scheduledNever, String question, Outcome lastOutcome, List<HistoricOutcome> historicOutcome, Requirements requirements, CyclicOrderInfos cyclicOrder, Boolean hasChildOrders, Boolean canLeave, Boolean isContinuable) {
         super();
         this.deliveryDate = deliveryDate;
         this.surveyDate = surveyDate;
@@ -313,6 +317,7 @@ public class OrderV {
         this.cyclicOrder = cyclicOrder;
         this.hasChildOrders = hasChildOrders;
         this.canLeave = canLeave;
+        this.isContinuable = isContinuable;
     }
 
     /**
@@ -820,10 +825,20 @@ public class OrderV {
     public void setCanLeave(Boolean canLeave) {
         this.canLeave = canLeave;
     }
+    
+    @JsonProperty("isContinuable")
+    public Boolean getIsContinuable() {
+        return isContinuable;
+    }
+
+    @JsonProperty("isContinuable")
+    public void setIsContinuable(Boolean isContinuable) {
+        this.isContinuable = isContinuable;
+    }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("orderId", orderId).append("arguments", arguments).append("workflowId", workflowId).append("state", state).append("marked", marked).append("attachedState", attachedState).append("agentId", agentId).append("subagentId", subagentId).append("cycleState", cycleState).append("expectedNotices", expectedNotices).append("label", label).append("position", position).append("positionString", positionString).append("positionIsImplicitEnd", positionIsImplicitEnd).append("endPositions", endPositions).append("scheduledFor", scheduledFor).append("scheduledNever", scheduledNever).append("question", question).append("lastOutcome", lastOutcome).append("historicOutcome", historicOutcome).append("requirements", requirements).append("cyclicOrder", cyclicOrder).append("hasChildOrders", hasChildOrders).append("canLeave", canLeave).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("orderId", orderId).append("arguments", arguments).append("workflowId", workflowId).append("state", state).append("marked", marked).append("attachedState", attachedState).append("agentId", agentId).append("subagentId", subagentId).append("cycleState", cycleState).append("expectedNotices", expectedNotices).append("label", label).append("position", position).append("positionString", positionString).append("positionIsImplicitEnd", positionIsImplicitEnd).append("endPositions", endPositions).append("scheduledFor", scheduledFor).append("scheduledNever", scheduledNever).append("question", question).append("lastOutcome", lastOutcome).append("historicOutcome", historicOutcome).append("requirements", requirements).append("cyclicOrder", cyclicOrder).append("hasChildOrders", hasChildOrders).append("canLeave", canLeave).append("isContinuable", isContinuable).toString();
     }
 
     @Override

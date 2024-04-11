@@ -17,12 +17,11 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import jakarta.ws.rs.Path;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,6 +72,7 @@ import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
 
 import io.vavr.control.Either;
+import jakarta.ws.rs.Path;
 import js7.base.problem.Problem;
 import js7.data.controller.ControllerCommand;
 import js7.data.item.VersionedItemId;
@@ -88,7 +88,6 @@ import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrderPredicates;
 import js7.data_for_java.workflow.JWorkflowId;
 import js7.data_for_java.workflow.position.JPosition;
-import js7.proxy.javaapi.JControllerApi;
 import scala.Function1;
 import scala.collection.JavaConverters;
 
@@ -652,7 +651,11 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     .toSet()));
             postProblem(promptingOrders, controllerId, withPostProblem, "prompting");
             return promptingOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
-        //case CONTINUE: TODO
+        case CONTINUE:
+            Map<Boolean, Set<JOrder>> continuableOrders = orderStream.collect(Collectors.groupingBy(o -> o.asScala().isGoCommandable(), Collectors
+                    .toSet()));
+            postProblem(continuableOrders, controllerId, withPostProblem, "continuable");
+            return continuableOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
         default:
             return orderStream.collect(Collectors.toSet());
         }
@@ -726,22 +729,27 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
         case ANSWER_PROMPT:
             // TODO batch command -  No bulk operation in API
-            JControllerApi api = ControllerApi.of(controllerId);
-            oIdsStream.map(ControllerCommand.AnswerOrderPrompt::new).map(JControllerCommand::apply).forEach(command -> api.executeCommand(
-                    command).thenAccept(either -> ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId)));
-            return CompletableFuture.supplyAsync(() -> Either.right(null));
+//            JControllerApi api = ControllerApi.of(controllerId);
+//            oIdsStream.map(ControllerCommand.AnswerOrderPrompt::new).map(JControllerCommand::apply).forEach(command -> api.executeCommand(
+//                    command).thenAccept(either -> ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId)));
+//            return CompletableFuture.supplyAsync(() -> Either.right(null));
             
+            ControllerApi.of(controllerId).executeCommand(JControllerCommand.batch(oIdsStream.map(ControllerCommand.AnswerOrderPrompt::new).map(
+                    JControllerCommand::apply).collect(Collectors.toList()))).thenApply(OrdersResourceModifyImpl::castEither);
+            return null;
+
         case CONTINUE:
-            // TODO batch command -  No bulk operation in API
-            JControllerApi api2 = ControllerApi.of(controllerId);
-            jOrders.stream().map(o -> new ControllerCommand.GoOrder(o.id(), o.asScala().position())).map(JControllerCommand::apply).forEach(
-                    command -> api2.executeCommand(command).thenAccept(either -> ProblemHelper.postProblemEventIfExist(either, getAccessToken(),
-                            getJocError(), controllerId)));
-            return CompletableFuture.supplyAsync(() -> Either.right(null));
+            Function<JOrder, JControllerCommand> toContinueCommand = o -> JControllerCommand.goOrder(o.id(), JPosition.apply(o.asScala().position()));
+            return ControllerApi.of(controllerId).executeCommand(JControllerCommand.batch(jOrders.stream().map(toContinueCommand).collect(Collectors
+                    .toList()))).thenApply(OrdersResourceModifyImpl::castEither);
 
         default: // case REMOVE_WHEN_TERMINATED
             return ControllerApi.of(controllerId).deleteOrdersWhenTerminated(oIdsStream.collect(Collectors.toSet()));
         }
+    }
+    
+    private static Either<Problem, Void> castEither(Either<Problem, ControllerCommand.Response> either) {
+        return either.isRight() ? Either.right(null) : Either.left(either.getLeft());
     }
     
     private Stream<OrderId> getChildren(JControllerState currentState, Set<JOrder> jOrders) {

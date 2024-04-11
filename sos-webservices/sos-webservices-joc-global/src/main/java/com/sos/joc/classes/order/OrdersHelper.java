@@ -533,6 +533,10 @@ public class OrdersHelper {
         o.setWorkflowId(wId);
         // only label of a job instruction is available
         orderPositionToLabel(jOrder, controllerState).ifPresent(l -> o.setLabel(l));
+        // completed order
+        if (jOrder.asScala().isGoCommandable()) {
+            o.setIsContinuable(true);
+        }
         return o;
     }
     
