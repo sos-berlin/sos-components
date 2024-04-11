@@ -66,7 +66,6 @@ import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.ModifyOrders;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.Position;
-import com.sos.joc.model.security.configuration.permissions.controller.Orders;
 import com.sos.joc.orders.resource.IOrdersResourceModify;
 import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
@@ -105,9 +104,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     public JOCDefaultResponse postOrdersContinue(String accessToken, byte[] filterBytes) {
         try {
             ModifyOrders modifyOrders = initRequest(Action.CONTINUE, accessToken, filterBytes);
-            // TODO permission
-            Orders orderPerms = getControllerPermissions(modifyOrders.getControllerId(), accessToken).getOrders();
-            boolean perm = orderPerms.getCancel() || orderPerms.getResumeFailed() || orderPerms.getSuspendResume();
+            boolean perm = getControllerPermissions(modifyOrders.getControllerId(), accessToken).getOrders().getModify();
             JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getControllerId(), perm);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
