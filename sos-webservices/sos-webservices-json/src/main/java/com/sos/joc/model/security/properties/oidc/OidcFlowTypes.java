@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum OidcFlowTypes {
 
     AUTHENTICATION("AUTHENTICATION"),
-    IMPLICITE("IMPLICITE"),
+    IMPLICIT("IMPLICIT"),
     CLIENT_CREDENTIAL("CLIENT-CREDENTIAL");
     private final String value;
     private final static Map<String, OidcFlowTypes> CONSTANTS = new HashMap<String, OidcFlowTypes>();
