@@ -13,8 +13,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.Globals;
@@ -38,10 +36,10 @@ import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
 
 import io.vavr.control.Either;
+import jakarta.ws.rs.Path;
 import js7.base.problem.Problem;
-import js7.data.controller.ControllerCommand.Response;
-import js7.data.workflow.WorkflowPathControl;
 import js7.data.workflow.WorkflowPath;
+import js7.data.workflow.WorkflowPathControl;
 import js7.data_for_java.controller.JControllerCommand;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.workflow.JWorkflowId;
@@ -140,10 +138,19 @@ public class WorkflowsModifyImpl extends JOCResourceImpl implements IWorkflowsMo
         List<WorkflowPath> workflowPaths2 = getCheckedWorkflows(action, workflowsStream, currentState, controllerId, withWorkflowPaths);
 
         if (!workflowPaths2.isEmpty()) {
-            // TODO we need plural function controlWorkflows
+            // TODO batch command or we need plural function controlWorkflows
             // max. 32 request possible -> We use 24
-            partition(workflowPaths2, 24).forEach(w -> command(controllerId, action, w, dbAuditLog));
+            // partition(workflowPaths2, 24).forEach(w -> command(controllerId, action, w, dbAuditLog));
             //workflowPaths2.forEach(w -> command(controllerId, action, w, dbAuditLog));
+            
+            ControllerApi.of(controllerId).executeCommand(JControllerCommand.batch(workflowPaths2.stream().filter(w -> !w.isEmpty()).map(
+                    w -> command2(controllerId, action, w, dbAuditLog)).collect(Collectors.toList()))).thenAccept(either -> {
+                        ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
+                        if (either.isRight()) {
+                            WorkflowsHelper.storeAuditLogDetailsFromWorkflowPaths(workflowPaths2, dbAuditLog.getId(), controllerId).thenAccept(
+                                    either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
+                        }
+                    });
         } else {
             throwControllerObjectNotExistException(action);
         }
@@ -187,14 +194,19 @@ public class WorkflowsModifyImpl extends JOCResourceImpl implements IWorkflowsMo
         }
     }
     
-    private void command(String controllerId, Action action, List<WorkflowPath> workflowPaths, DBItemJocAuditLog dbAuditLog) {
-        if (!workflowPaths.isEmpty()) {
-            boolean suspend = action.equals(Action.SUSPEND);
-            JControllerCommand commmand = JControllerCommand.controlWorkflowPath(workflowPaths.get(0), Optional.of(suspend), Collections.emptyMap());
-            ControllerApi.of(controllerId).executeCommand(commmand).thenAccept(either -> {
-                thenAcceptHandler(either, controllerId, action, workflowPaths, dbAuditLog);
-            });
-        }
+//    private void command(String controllerId, Action action, List<WorkflowPath> workflowPaths, DBItemJocAuditLog dbAuditLog) {
+//        if (!workflowPaths.isEmpty()) {
+//            boolean suspend = action.equals(Action.SUSPEND);
+//            JControllerCommand commmand = JControllerCommand.controlWorkflowPath(workflowPaths.get(0), Optional.of(suspend), Collections.emptyMap());
+//            ControllerApi.of(controllerId).executeCommand(commmand).thenAccept(either -> {
+//                thenAcceptHandler(either, controllerId, action, workflowPaths, dbAuditLog);
+//            });
+//        }
+//    }
+    
+    private JControllerCommand command2(String controllerId, Action action, WorkflowPath workflowPath, DBItemJocAuditLog dbAuditLog) {
+        boolean suspend = action.equals(Action.SUSPEND);
+        return JControllerCommand.controlWorkflowPath(workflowPath, Optional.of(suspend), Collections.emptyMap());
     }
 
     private ModifyWorkflows initRequest(Action action, String accessToken, byte[] filterBytes) throws SOSJsonSchemaException, IOException {
@@ -203,16 +215,16 @@ public class WorkflowsModifyImpl extends JOCResourceImpl implements IWorkflowsMo
         return Globals.objectMapper.readValue(filterBytes, ModifyWorkflows.class);
     }
     
-    private void thenAcceptHandler(Either<Problem, Response> either, String controllerId, Action action, List<WorkflowPath> workflowPaths,
-            DBItemJocAuditLog dbAuditLog) {
-        WorkflowPath w = workflowPaths.remove(0);
-        ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
-        if (either.isRight()) {
-            WorkflowsHelper.storeAuditLogDetailsFromWorkflowPath(w, dbAuditLog, controllerId).thenAccept(either2 -> ProblemHelper
-                    .postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
-        }
-        command(controllerId, action, workflowPaths, dbAuditLog);
-    }
+//    private void thenAcceptHandler(Either<Problem, Response> either, String controllerId, Action action, List<WorkflowPath> workflowPaths,
+//            DBItemJocAuditLog dbAuditLog) {
+//        WorkflowPath w = workflowPaths.remove(0);
+//        ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
+//        if (either.isRight()) {
+//            WorkflowsHelper.storeAuditLogDetailsFromWorkflowPath(w, dbAuditLog, controllerId).thenAccept(either2 -> ProblemHelper
+//                    .postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
+//        }
+//        command(controllerId, action, workflowPaths, dbAuditLog);
+//    }
 
     private static <T> Collection<List<T>> partition(List<T> collection, int n) {
         return IntStream.range(0, collection.size()).boxed().collect(Collectors.groupingBy(i -> i % n, Collectors.mapping(collection::get, Collectors

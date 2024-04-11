@@ -1531,11 +1531,24 @@ public class WorkflowsHelper {
 
     public static CompletableFuture<Either<Exception, Void>> storeAuditLogDetailsFromWorkflowPath(WorkflowPath workflowPath,
             DBItemJocAuditLog dbAuditLog, String controllerId) {
-        // TODO JOC-1645
         return CompletableFuture.supplyAsync(() -> {
             try {
                 JocAuditLog.storeAuditLogDetail(new AuditLogDetail(WorkflowPaths.getPath(workflowPath.string()), ObjectType.WORKFLOW.intValue(),
                         controllerId), null, dbAuditLog);
+                return Either.right(null);
+            } catch (Exception e) {
+                return Either.left(e);
+            }
+        });
+    }
+    
+    public static CompletableFuture<Either<Exception, Void>> storeAuditLogDetailsFromWorkflowPaths(Collection<WorkflowPath> workflowPaths,
+            Long dbAuditLogId, String controllerId) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                Stream<AuditLogDetail> details = workflowPaths.stream().filter(w -> !w.isEmpty()).map(WorkflowPath::string).map(
+                        WorkflowPaths::getPath).map(s -> new AuditLogDetail(WorkflowPaths.getPath(s), ObjectType.WORKFLOW.intValue(), controllerId));
+                JocAuditLog.storeAuditLogDetails(details, dbAuditLogId);
                 return Either.right(null);
             } catch (Exception e) {
                 return Either.left(e);
