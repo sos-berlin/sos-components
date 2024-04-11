@@ -37,8 +37,8 @@ import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.data.job.JobResourcePath;
 import js7.data.order.HistoricOutcome;
-import js7.data.order.Outcome;
-import js7.data.order.Outcome.Completed;
+import js7.data.order.OrderOutcome;
+import js7.data.order.OrderOutcome.Completed;
 import js7.data.value.NumberValue;
 import js7.data.value.Value;
 import js7.data_for_java.order.JOutcome;
@@ -276,11 +276,11 @@ public class OrderProcessStep<A extends JobArguments> {
     }
 
     public Map<String, DetailValue> getLastSucceededOutcomes() {
-        return getLastOutcomes().get(Outcome.Succeeded.class.getSimpleName());
+        return getLastOutcomes().get(OrderOutcome.Succeeded.class.getSimpleName());
     }
 
     public Map<String, DetailValue> getLastFailedOutcomes() {
-        return getLastOutcomes().get(Outcome.Failed.class.getSimpleName());
+        return getLastOutcomes().get(OrderOutcome.Failed.class.getSimpleName());
     }
 
     protected BlockingInternalJob.Step getInternalStep() {
@@ -764,7 +764,7 @@ public class OrderProcessStep<A extends JobArguments> {
 
         Map<String, Map<String, DetailValue>> resultMap = new TreeMap<>();
         for (HistoricOutcome ho : l) {
-            Outcome outcome = ho.outcome();
+            OrderOutcome outcome = ho.outcome();
             if (outcome instanceof Completed) {
                 Completed c = (Completed) outcome;
                 if (c.namedValues() != null) {

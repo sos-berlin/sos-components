@@ -53,12 +53,12 @@ import js7.data.order.OrderEvent.OrderNoticePosted;
 import js7.data.order.OrderEvent.OrderNoticesConsumptionStarted;
 import js7.data.order.OrderEvent.OrderOutcomeAdded;
 import js7.data.order.OrderId;
-import js7.data.order.Outcome;
-import js7.data.order.Outcome.Completed;
-import js7.data.order.Outcome.Disrupted;
-import js7.data.order.Outcome.Failed;
-import js7.data.order.Outcome.Killed;
-import js7.data.order.Outcome.TimedOut;
+import js7.data.order.OrderOutcome;
+import js7.data.order.OrderOutcome.Completed;
+import js7.data.order.OrderOutcome.Disrupted;
+import js7.data.order.OrderOutcome.Failed;
+import js7.data.order.OrderOutcome.Killed;
+import js7.data.order.OrderOutcome.TimedOut;
 import js7.data.subagent.SubagentId;
 import js7.data.subagent.SubagentItemStateEvent.SubagentDedicated;
 import js7.data.value.Value;
@@ -376,7 +376,7 @@ public class HistoryEventEntry {
             return stepInfo;
         }
 
-        public OutcomeInfo getOutcomeInfo(Outcome outcome) throws Exception {
+        public OutcomeInfo getOutcomeInfo(OrderOutcome outcome) throws Exception {
             if (outcomeInfo == null) {
                 outcomeInfo = new OutcomeInfo(outcome);
             }
@@ -399,13 +399,13 @@ public class HistoryEventEntry {
             return outcomeInfo;
         }
 
-        public OutcomeInfo getOutcomeInfo(Option<Outcome.NotSucceeded> problem) throws Exception {
+        public OutcomeInfo getOutcomeInfo(Option<OrderOutcome.NotSucceeded> problem) throws Exception {
             if (outcomeInfo == null) {
                 if (problem == null) {
                     outcomeInfo = newOutcomeInfo(OutcomeType.failed);
                     return outcomeInfo;
                 }
-                Optional<Outcome.NotSucceeded> op = OptionConverters.toJava(problem);
+                Optional<OrderOutcome.NotSucceeded> op = OptionConverters.toJava(problem);
                 if (!op.isPresent()) {
                     outcomeInfo = newOutcomeInfo(OutcomeType.failed);
                     return outcomeInfo;
@@ -714,7 +714,7 @@ public class HistoryEventEntry {
             private String errorCode;
             private String errorMessage;
 
-            private OutcomeInfo(Outcome outcome) {
+            private OutcomeInfo(OrderOutcome outcome) {
                 if (outcome instanceof Completed) {
                     Completed c = (Completed) outcome;
                     isSucceeded = c.isSucceeded();
@@ -762,7 +762,7 @@ public class HistoryEventEntry {
                 }
             }
 
-            private OutcomeInfo(OutcomeType type, Outcome.NotSucceeded problem) {
+            private OutcomeInfo(OutcomeType type, OrderOutcome.NotSucceeded problem) {
                 this.type = type;
                 if (problem instanceof Disrupted) {
                     handleDisrupted(null, (Disrupted) problem);
@@ -802,7 +802,7 @@ public class HistoryEventEntry {
                 setError(failed);
             }
 
-            private void handleDisrupted(Outcome outcome, Disrupted problem) {
+            private void handleDisrupted(OrderOutcome outcome, Disrupted problem) {
                 returnCode = null; // TODO ?
                 isSucceeded = problem.isSucceeded();
                 isFailed = !isSucceeded; // problem.isFailed();
@@ -820,7 +820,7 @@ public class HistoryEventEntry {
                 }
             }
 
-            private void handleKilled(Outcome outcome, Killed problem) {
+            private void handleKilled(OrderOutcome outcome, Killed problem) {
                 returnCode = null;
                 isSucceeded = problem.isSucceeded();
                 isFailed = !isSucceeded; // problem.isFailed();
@@ -835,7 +835,7 @@ public class HistoryEventEntry {
                 }
             }
 
-            private void handleTimedOut(Outcome outcome, TimedOut problem) {
+            private void handleTimedOut(OrderOutcome outcome, TimedOut problem) {
                 returnCode = null;
                 isSucceeded = problem.isSucceeded();
                 isFailed = !isSucceeded; // problem.isFailed();
