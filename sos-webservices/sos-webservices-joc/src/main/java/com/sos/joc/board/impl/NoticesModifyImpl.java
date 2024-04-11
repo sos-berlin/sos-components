@@ -58,9 +58,13 @@ public class NoticesModifyImpl extends JOCResourceImpl implements INoticesModify
                 throw new ControllerObjectNotExistException("Controller '" + controllerId + "' couldn't find the Notice Board '" + board.string() + "'");
             }
             // TODO Batch command
-            filter.getNoticeIds().stream().map(NoticeId::of).map(n -> new ControllerCommand.DeleteNotice(board, n)).map(JControllerCommand::apply)
-                    .forEach(command -> proxy.api().executeCommand(command).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken,
-                            getJocError(), controllerId)));
+//            filter.getNoticeIds().stream().map(NoticeId::of).map(n -> new ControllerCommand.DeleteNotice(board, n)).map(JControllerCommand::apply)
+//                    .forEach(command -> proxy.api().executeCommand(command).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken,
+//                            getJocError(), controllerId)));
+//            
+            proxy.api().executeCommand(JControllerCommand.batch(filter.getNoticeIds().stream().map(NoticeId::of).map(
+                    n -> new ControllerCommand.DeleteNotice(board, n)).map(JControllerCommand::apply).collect(Collectors.toList()))).thenAccept(
+                            e -> ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId));
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -102,9 +106,9 @@ public class NoticesModifyImpl extends JOCResourceImpl implements INoticesModify
             Optional<Instant> endOfLife = getEndOfLife(in.getEndOfLife(), in.getTimeZone(), now);
             NoticeId notice = NoticeId.of(in.getNoticeId());
 
-            // TODO Batch command
-            map.getOrDefault(Boolean.TRUE, Collections.emptyList()).stream().forEach(b -> proxy.api().postNotice(b, notice, endOfLife).thenAccept(
-                    e -> ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId)));
+            proxy.api().executeCommand(JControllerCommand.batch(map.getOrDefault(Boolean.TRUE, Collections.emptyList()).stream().map(
+                    b -> JControllerCommand.postNotice(b, notice, endOfLife)).collect(Collectors.toList()))).thenAccept(e -> ProblemHelper
+                            .postProblemEventIfExist(e, accessToken, getJocError(), controllerId));
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(now));
         } catch (JocException e) {

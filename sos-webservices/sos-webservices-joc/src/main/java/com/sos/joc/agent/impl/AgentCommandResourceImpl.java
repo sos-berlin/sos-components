@@ -72,9 +72,8 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
             JControllerCommand resetAgentCommand = JControllerCommand.apply(getResetCommand(agentCommand.getAgentId(), agentCommand
                     .getForce() == Boolean.TRUE));
             LOGGER.debug("Reset Agent: " + resetAgentCommand.toJson());
-            ControllerApi.of(controllerId).executeCommand(resetAgentCommand).thenAccept(e -> {
-                ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId);
-            });
+            ControllerApi.of(controllerId).executeCommand(resetAgentCommand).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken,
+                    getJocError(), controllerId));
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
