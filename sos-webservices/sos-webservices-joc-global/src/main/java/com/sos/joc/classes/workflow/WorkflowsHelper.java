@@ -1554,7 +1554,7 @@ public class WorkflowsHelper {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 Stream<AuditLogDetail> details = workflowPaths.stream().filter(w -> !w.isEmpty()).map(WorkflowPath::string).map(
-                        WorkflowPaths::getPath).map(s -> new AuditLogDetail(WorkflowPaths.getPath(s), ObjectType.WORKFLOW.intValue(), controllerId));
+                        WorkflowPaths::getPath).map(s -> new AuditLogDetail(s, ObjectType.WORKFLOW.intValue(), controllerId));
                 JocAuditLog.storeAuditLogDetails(details, dbAuditLogId);
                 return Either.right(null);
             } catch (Exception e) {

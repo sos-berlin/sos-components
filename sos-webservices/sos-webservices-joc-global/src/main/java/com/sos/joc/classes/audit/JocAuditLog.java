@@ -256,9 +256,12 @@ public class JocAuditLog {
                     Globals.disconnect(connection2);
                 }
             } else {
+                Stream<DBItemJocAuditLogDetails> dbDetails = details.map(detail -> storeAuditLogDetail(detail.getAuditLogDetail(auditlogId, now),
+                        connection));
                 if (JocAuditObjectsLog.isEnabled()) {
-                    JocAuditObjectsLog.log(details.map(detail -> storeAuditLogDetail(detail.getAuditLogDetail(auditlogId, now), connection)),
-                            auditlogId);
+                    JocAuditObjectsLog.log(dbDetails, auditlogId);
+                } else {
+                    dbDetails.close();
                 }
             }
         }
