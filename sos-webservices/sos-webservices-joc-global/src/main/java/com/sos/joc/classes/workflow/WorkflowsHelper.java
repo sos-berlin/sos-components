@@ -560,6 +560,13 @@ public class WorkflowsHelper {
                 if (stoppedPositions.contains(jPos)) {
                     inst.setState(getState(InstructionStateText.STOPPED));
                 }
+                if (inst.getLabel() != null && skippedLabels.contains(inst.getLabel())) {
+                    if (inst.getState() != null && InstructionStateText.STOPPED.equals(inst.getState().get_text())) {
+                        inst.setState(getState(InstructionStateText.STOPPED_AND_SKIPPED));
+                    } else {
+                        inst.setState(getState(InstructionStateText.SKIPPED));
+                    }
+                }
                 inst.setPositionString(getJPositionString(jPos));
                 switch (inst.getTYPE()) {
                 case FORK:
@@ -655,16 +662,16 @@ public class WorkflowsHelper {
                     setWorkflowPositionsAndForkListVariables(extendArray(pos, "cycle"), c.getCycleWorkflow().getInstructions(), forkListVariables,
                             expectedNoticeBoards, postNoticeBoards, consumeNoticeBoards, workflowNamesFromAddOrders, skippedLabels, stoppedPositions);
                     break;
-                case EXECUTE_NAMED:
-                    NamedJob nj = inst.cast();
-                    if (skippedLabels.contains(nj.getLabel())) {
-                        if (inst.getState() != null && InstructionStateText.STOPPED.equals(inst.getState().get_text())) {
-                            inst.setState(getState(InstructionStateText.STOPPED_AND_SKIPPED));
-                        } else {
-                            inst.setState(getState(InstructionStateText.SKIPPED));
-                        }
-                    }
-                    break;
+//                case EXECUTE_NAMED:
+//                    NamedJob nj = inst.cast();
+//                    if (skippedLabels.contains(nj.getLabel())) {
+//                        if (inst.getState() != null && InstructionStateText.STOPPED.equals(inst.getState().get_text())) {
+//                            inst.setState(getState(InstructionStateText.STOPPED_AND_SKIPPED));
+//                        } else {
+//                            inst.setState(getState(InstructionStateText.SKIPPED));
+//                        }
+//                    }
+//                    break;
                 case STICKY_SUBAGENT:
                     StickySubagent sticky = inst.cast();
                     setWorkflowPositionsAndForkListVariables(extendArray(pos, "stickySubagent"), sticky.getSubworkflow().getInstructions(),

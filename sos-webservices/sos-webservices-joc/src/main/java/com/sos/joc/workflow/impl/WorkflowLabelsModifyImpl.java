@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -302,8 +303,9 @@ public class WorkflowLabelsModifyImpl extends JOCResourceImpl implements IWorkfl
         return false;
     }
     
-    private Optional<NamedJob> checkWorkflow(Action action, WorkflowJobs wj, JControllerState currentState, JWorkflow jWorkflow, List<String> requestedLabels) throws IOException {
-        
+    private Optional<NamedJob> checkWorkflow(Action action, WorkflowJobs wj, JControllerState currentState, JWorkflow jWorkflow,
+            List<String> requestedLabels) throws IOException {
+
         Set<String> knownLabels = new HashSet<>();
         Workflow wV = jWorkflow.asScala();
         requestedLabels.forEach(l -> {
@@ -327,11 +329,11 @@ public class WorkflowLabelsModifyImpl extends JOCResourceImpl implements IWorkfl
 
         if (!requestedLabels.isEmpty()) {
             if (requestedLabels.size() == 1) {
-                throw new ControllerObjectNotExistException("Couldn't find a Job instruction with the label '" + requestedLabels.get(0) + "' in the Workflow '" + wj.getPath()
-                        + "'.");
+                throw new ControllerObjectNotExistException("Couldn't find an instruction with the label '" + requestedLabels.get(0)
+                        + "' in the Workflow '" + wj.getPath() + "'.");
             }
-            throw new ControllerObjectNotExistException("Couldn't find a Job instructions with the labels " + requestedLabels.toString() + " in the workflow '" + wj.getPath()
-                    + "'.");
+            throw new ControllerObjectNotExistException("Couldn't find instructions with the labels " + requestedLabels.toString()
+                    + " in the workflow '" + wj.getPath() + "'.");
         }
 
         Optional<NamedJob> nj = Optional.empty();
@@ -377,8 +379,8 @@ public class WorkflowLabelsModifyImpl extends JOCResourceImpl implements IWorkfl
     private boolean thenAcceptHandler(Either<Problem, Response> either, String controllerId, WorkflowJobs wj, DBItemJocAuditLog dbAuditLog) {
         ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
         if (either.isRight()) {
-            WorkflowsHelper.storeAuditLogDetailsFromWorkflowPath(wj.getWorkflowPath(), dbAuditLog, controllerId).thenAccept(either2 -> ProblemHelper
-                    .postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
+            WorkflowsHelper.storeAuditLogDetailsFromWorkflowPaths(Collections.singleton(wj.getWorkflowPath()), dbAuditLog.getId(), controllerId)
+                    .thenAccept(either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
             return true;
         }
         return false;
