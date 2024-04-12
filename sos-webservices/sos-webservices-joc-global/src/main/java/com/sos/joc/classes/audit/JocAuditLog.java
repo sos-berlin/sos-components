@@ -261,7 +261,7 @@ public class JocAuditLog {
                 if (JocAuditObjectsLog.isEnabled()) {
                     JocAuditObjectsLog.log(dbDetails, auditlogId);
                 } else {
-                    dbDetails.close();
+                    dbDetails.count();
                 }
             }
         }
