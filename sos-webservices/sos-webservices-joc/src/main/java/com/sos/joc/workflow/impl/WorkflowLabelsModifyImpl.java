@@ -17,9 +17,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.order.OrderModeType;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.InstructionStateText;
 import com.sos.inventory.model.instruction.NamedJob;
@@ -34,6 +38,8 @@ import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
+import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
+import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.JocBadRequestException;
@@ -162,9 +168,9 @@ public class WorkflowLabelsModifyImpl extends JOCResourceImpl implements IWorkfl
 
         JWorkflow jWorkflow = workflowV.get();
         
-        Optional<NamedJob> nj = checkWorkflow(action, wj, currentState, jWorkflow, new ArrayList<>(modifyWorkflow.getLabels()));
+        Optional<NamedJob> nj = checkWorkflow(action, controllerId, wj, currentState, jWorkflow, new ArrayList<>(modifyWorkflow.getLabels()));
         CompletableFuture<Boolean> future = command(controllerId, action, wj, dbAuditLog);
-        
+
         if (action.equals(Action.UNSKIP) && firstJobWasSkippedAndWillBeUnskipped(nj, modifyWorkflow)) { // JOC-1561 Reassigning orders
             future.thenAccept(bool -> {
                 if (bool) {
@@ -303,8 +309,8 @@ public class WorkflowLabelsModifyImpl extends JOCResourceImpl implements IWorkfl
         return false;
     }
     
-    private Optional<NamedJob> checkWorkflow(Action action, WorkflowJobs wj, JControllerState currentState, JWorkflow jWorkflow,
-            List<String> requestedLabels) throws IOException {
+    private static Optional<NamedJob> checkWorkflow(Action action, String controllerId, WorkflowJobs wj, JControllerState currentState,
+            JWorkflow jWorkflow, List<String> requestedLabels) throws IOException {
 
         Set<String> knownLabels = new HashSet<>();
         Workflow wV = jWorkflow.asScala();
@@ -328,6 +334,19 @@ public class WorkflowLabelsModifyImpl extends JOCResourceImpl implements IWorkfl
         requestedLabels.removeAll(wj.getLabels());
 
         if (!requestedLabels.isEmpty()) {
+            // get Workflow from database and check if label is known in the inventory
+            // if yes then error message with re-deploy info
+            Set<String> labelsFromInv = getLabelsFromInventory(action, controllerId, wj.getPath());
+            labelsFromInv.retainAll(requestedLabels);
+            if (!labelsFromInv.isEmpty()) {
+                if (labelsFromInv.size() == 1) {
+                    throw new ControllerObjectNotExistException("The label '" + labelsFromInv.iterator().next()
+                            + "' is known in the inventory of the workflow '" + wj.getPath()
+                            + "' but couldn't find at the Controller. Please re-deploy the workflow!");
+                }
+                throw new ControllerObjectNotExistException("The labels " + labelsFromInv.toString() + " are known in the inventory of the workflow '"
+                        + wj.getPath() + "' but couldn't find at the Controller. Please re-deploy the workflow!");
+            }
             if (requestedLabels.size() == 1) {
                 throw new ControllerObjectNotExistException("Couldn't find an instruction with the label '" + requestedLabels.get(0)
                         + "' in the Workflow '" + wj.getPath() + "'.");
@@ -361,6 +380,24 @@ public class WorkflowLabelsModifyImpl extends JOCResourceImpl implements IWorkfl
         }
         
         return nj;
+    }
+    
+    private static Set<String> getLabelsFromInventory(Action action, String controllerId, String workflowName) throws JsonMappingException,
+            JsonProcessingException {
+        SOSHibernateSession connection = null;
+        try {
+            connection = Globals.createSosHibernateStatelessConnection(API_CALL + action.name().toLowerCase());
+            DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
+            DeployedContent lastContent = dbLayer.getDeployedInventory(controllerId, DeployType.WORKFLOW.intValue(), workflowName);
+            if (lastContent != null && lastContent.getContent() != null && !lastContent.getContent().isEmpty()) {
+                com.sos.inventory.model.workflow.Workflow workflow = Globals.objectMapper.readValue(lastContent.getContent(),
+                        com.sos.inventory.model.workflow.Workflow.class);
+                return WorkflowsHelper.getLabelToPositionsMap(workflow).keySet();
+            }
+        } finally {
+            Globals.disconnect(connection);
+        }
+        return Collections.emptySet();
     }
     
     private ModifyWorkflowLabels initRequest(Action action, String accessToken, byte[] filterBytes) throws SOSJsonSchemaException, IOException {
