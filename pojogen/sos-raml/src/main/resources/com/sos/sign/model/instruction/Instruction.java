@@ -1,4 +1,3 @@
-
 package com.sos.sign.model.instruction;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -23,7 +22,8 @@ import com.sos.inventory.model.instruction.InstructionType;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "TYPE"
+    "TYPE",
+    "label"
 })
 @JsonTypeInfo(
 		use = JsonTypeInfo.Id.NAME, 
@@ -68,6 +68,10 @@ public abstract class Instruction
     @JsonIgnore
     private InstructionType tYPE;
     
+    @JsonProperty("label")
+    private String label;
+    
+    
     /**
      * No args constructor for use in serialization
      * 
@@ -109,6 +113,16 @@ public abstract class Instruction
         this.tYPE = tYPE;
     }
     
+    @JsonProperty("label")
+    public String getLabel() {
+        return label;
+    }
+    
+    @JsonProperty("label")
+    public void setLabel(String label) {
+        this.label = label;
+    }
+    
     @JsonIgnore
 	public Boolean isRetry() {
 		try {
@@ -124,7 +138,7 @@ public abstract class Instruction
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("tYPE", tYPE).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("tYPE", tYPE).append("label", label).toString();
     }
 
     @Override

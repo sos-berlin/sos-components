@@ -9,6 +9,9 @@
   "properties": {
     "TYPE": {
       "$ref": "../../../inventory/schemas/instruction/instructionType-schema.json"
+    },
+    "label": {
+      "type": "string"
     }
   },
   "additionalProperties": false
