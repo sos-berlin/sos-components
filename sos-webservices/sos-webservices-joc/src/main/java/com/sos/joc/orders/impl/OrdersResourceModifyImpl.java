@@ -731,9 +731,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 //                    command).thenAccept(either -> ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId)));
 //            return CompletableFuture.supplyAsync(() -> Either.right(null));
             
-            ControllerApi.of(controllerId).executeCommand(JControllerCommand.batch(oIdsStream.map(ControllerCommand.AnswerOrderPrompt::new).map(
+            return ControllerApi.of(controllerId).executeCommand(JControllerCommand.batch(oIdsStream.map(ControllerCommand.AnswerOrderPrompt::new).map(
                     JControllerCommand::apply).collect(Collectors.toList()))).thenApply(OrdersResourceModifyImpl::castEither);
-            return null;
 
         case CONTINUE:
             Function<JOrder, JControllerCommand> toContinueCommand = o -> JControllerCommand.goOrder(o.id(), JPosition.apply(o.asScala().position()));
