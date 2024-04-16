@@ -1,9 +1,15 @@
 package com.sos.commons.hibernate;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.nio.file.Paths;
+import java.security.Provider;
+import java.security.Security;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.json.Json;
 import javax.json.JsonObjectBuilder;
@@ -14,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.common.SOSBatchObject;
+import com.sos.commons.hibernate.exception.SOSHibernateFactoryBuildException;
 
 public class SOSHibernateExecuterTest {
 
@@ -131,4 +138,16 @@ public class SOSHibernateExecuterTest {
         return factory;
     }
 
+    // @Ignore
+    @Test
+    public void testEncryption() throws SOSHibernateFactoryBuildException {
+        // Arrays.stream(Security.getProviders())
+        // .flatMap(provider -> provider.getServices().stream())
+        // .filter(service -> "Cipher".equals(service.getType()))
+        // .map(Provider.Service::getAlgorithm)
+        // .forEach(item -> LOGGER.info(item));
+
+        SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/sp.hibernate.cfg.xml"));
+        factory.build();
+    }
 }

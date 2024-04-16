@@ -70,8 +70,23 @@
       <groupId>com.sos-berlin.js7.engine</groupId>
       <artifactId>js7-data-for-java_3</artifactId>
     </dependency>
-
+<!--
+	<dependency>
+	  <groupId>com.sos-berlin.js7.engine</groupId>
+	  <artifactId>js7-base_3</artifactId>
+	</dependency>
+	<dependency>
+	  <groupId>com.sos-berlin.js7.engine</groupId>
+	  <artifactId>js7-data_3</artifactId>
+	</dependency>
+-->
     <!-- 3RD PARTY DEPENDENCIES -->
+<!-- 
+	<dependency>
+	  <groupId>org.scala-lang.modules</groupId>
+	  <artifactId>scala-java8-compat_3</artifactId>
+	</dependency>
+-->
     <dependency>
       <groupId>org.glassfish.jersey.media</groupId>
       <artifactId>jersey-media-multipart</artifactId>

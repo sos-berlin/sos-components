@@ -52,6 +52,9 @@ public class SOSHibernate {
     public static final String HIBERNATE_SOS_PROPERTY_CREDENTIAL_STORE_KEY_FILE = "hibernate.sos.credential_store_key_file";
     public static final String HIBERNATE_SOS_PROPERTY_CREDENTIAL_STORE_PASSWORD = "hibernate.sos.credential_store_password";
     public static final String HIBERNATE_SOS_PROPERTY_CREDENTIAL_STORE_ENTRY_PATH = "hibernate.sos.credential_store_entry_path";
+    
+    // SOS configuration properties for en-/decryption
+    public static final String HIBERNATE_SOS_PROPERTY_DECRYPTION_PRIVATE_KEY = "hibernate.sos.decryption_key";
 
     public static final int LIMIT_IN_CLAUSE = 1000;
 

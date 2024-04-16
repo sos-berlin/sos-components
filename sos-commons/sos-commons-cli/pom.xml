@@ -1,18 +1,18 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>com.sos-berlin</groupId>
-		<artifactId>sos-commons</artifactId>
-		<version>2.7.0-SNAPSHOT</version>
-	</parent>
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.sos-berlin</groupId>
+    <artifactId>sos-commons</artifactId>
+    <version>2.7.0-SNAPSHOT</version>
+  </parent>
 
-	<artifactId>sos-commons-cli</artifactId>
+  <artifactId>sos-commons-cli</artifactId>
 
-	<!-- build as uber jar (fat jar) to run autonomously without classpath needed -->
-	<!-- std. (simple) jar -> ca. 9kB, uber jar -> ca. 21.857 kB -->
-	<!--build>
+  <!-- build as uber jar (fat jar) to run autonomously without classpath needed -->
+  <!-- std. (simple) jar -> ca. 9kB, uber jar -> ca. 21.857 kB -->
+  <!--build>
 		<plugins>
 			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
@@ -42,32 +42,39 @@
 		</plugins>
 	</build-->
 
-	<dependencies>
-		<dependency>
-			<groupId>com.sos-berlin</groupId>
-			<artifactId>sos-commons-sign</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.sos-berlin</groupId>
-			<artifactId>sos-commons-credentialstore</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.sos-berlin</groupId>
-			<artifactId>sos-commons-httpclient</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>com.typesafe</groupId>
-			<artifactId>config</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<scope>test</scope>
-		</dependency>
-	</dependencies>
+  <dependencies>
+    <dependency>
+      <groupId>com.sos-berlin</groupId>
+      <artifactId>sos-commons-sign</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.sos-berlin</groupId>
+      <artifactId>sos-commons-credentialstore</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.sos-berlin</groupId>
+      <artifactId>sos-commons-httpclient</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.typesafe</groupId>
+      <artifactId>config</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
 
 </project>

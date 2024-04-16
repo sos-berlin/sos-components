@@ -1,23 +1,25 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>com.sos-berlin</groupId>
-		<artifactId>sos-commons</artifactId>
-		<version>2.7.0-SNAPSHOT</version>
-	</parent>
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.sos-berlin</groupId>
+    <artifactId>sos-commons</artifactId>
+    <version>2.7.0-SNAPSHOT</version>
+  </parent>
 
-	<artifactId>sos-commons-sign</artifactId>
+  <artifactId>sos-commons-sign</artifactId>
 
-	<dependencies>
+  <dependencies>
 
     <!-- compile dependencies -->
+    <!--
     <dependency>
       <groupId>com.sos-berlin</groupId>
       <artifactId>sos-webservices-json</artifactId>
       <version>${project.version}</version>
     </dependency>
+-->
     <dependency>
       <groupId>com.sos-berlin</groupId>
       <artifactId>sos-commons-encryption</artifactId>
@@ -36,10 +38,10 @@
       <artifactId>bcpkix-jdk18on</artifactId>
     </dependency>
     <dependency>
-  		<groupId>javax.xml.bind</groupId>
-  		<artifactId>jaxb-api</artifactId>
-		</dependency>
-    
+      <groupId>javax.xml.bind</groupId>
+      <artifactId>jaxb-api</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
@@ -47,6 +49,14 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
     </dependency>
 
     <!-- test dependencies -->
@@ -66,6 +76,6 @@
       <scope>test</scope>
     </dependency>
 
-	</dependencies>
+  </dependencies>
 
 </project>

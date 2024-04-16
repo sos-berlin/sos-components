@@ -6,8 +6,10 @@ import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.PrivateKey;
 import java.sql.Connection;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +17,10 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 import javax.persistence.PersistenceException;
 
 import org.hibernate.SessionFactory;
@@ -30,6 +36,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.credentialstore.keepass.SOSKeePassResolver;
+import com.sos.commons.encryption.EncryptionUtils;
+import com.sos.commons.encryption.decrypt.Decrypt;
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.commons.hibernate.exception.SOSHibernateConvertException;
 import com.sos.commons.hibernate.exception.SOSHibernateFactoryBuildException;
@@ -38,6 +46,7 @@ import com.sos.commons.hibernate.function.date.SOSHibernateSecondsDiff;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue;
 import com.sos.commons.hibernate.function.regex.SOSHibernateRegexp;
 import com.sos.commons.hibernate.type.SOSHibernateJsonType;
+import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.commons.util.SOSClassList;
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSDate;
@@ -527,6 +536,7 @@ public class SOSHibernateFactory implements Serializable {
         configure();
         setConfigurationProperties();
         resolveCredentialStoreProperties();
+        decryptValues();
         substituteJS7Environment();
     }
 
@@ -628,6 +638,80 @@ public class SOSHibernateFactory implements Serializable {
                 configuration.setProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD, r.resolve(password));
             }
 
+        } catch (Throwable e) {
+            throw new SOSHibernateConfigurationException(e.toString(), e);
+        }
+    }
+
+    private void decryptValues() throws SOSHibernateConfigurationException {
+    	final String ENCRYPTION_IDENTIFIER = "enc://";
+        if (configuration == null) {
+            return;
+        }
+
+        try {
+            String encryptedPwdValue = configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD);
+            String encryptedURL = configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL);
+            String encryptedUsername = configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME);
+            String privateKeyPath = null;
+            if ((encryptedPwdValue != null && encryptedPwdValue.startsWith(ENCRYPTION_IDENTIFIER)) 
+                    || (encryptedURL != null && encryptedURL.startsWith(ENCRYPTION_IDENTIFIER)) 
+                    || (encryptedUsername != null &&  encryptedUsername.startsWith(ENCRYPTION_IDENTIFIER))) {
+                // read private key path from hibernate configuration
+                privateKeyPath = configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DECRYPTION_PRIVATE_KEY);
+                PrivateKey privKey = null;
+                if(privateKeyPath != null) {
+                    privKey = KeyUtil.getPrivateKeyFromString(Files.readString(Paths.get(privateKeyPath)));
+                } else {
+                    throw new SOSHibernateConfigurationException("No private key found at " + privateKeyPath);
+                }
+                //TODO: read private key from keystore configured in joc.properties
+                if (encryptedPwdValue != null && encryptedPwdValue.startsWith(ENCRYPTION_IDENTIFIER)) {
+                    encryptedPwdValue = encryptedPwdValue.replace(ENCRYPTION_IDENTIFIER, "");
+                    String[] split = encryptedPwdValue.split(" ");
+                    String encryptedSymmetricKey = split[0];
+                    String base64IV = split[1];
+                    String encryptedPwd = split[2];
+                    SecretKey key = new SecretKeySpec(
+                            EncryptionUtils.decryptSymmetricKey(encryptedSymmetricKey.getBytes(), privKey),
+                            EncryptionUtils.CIPHER_ALGORITHM);
+                    String decryptedPwd = EncryptionUtils.enOrDecrypt(EncryptionUtils.CIPHER_ALGORITHM, encryptedPwd, key,
+                            new IvParameterSpec(Base64.getDecoder().decode(base64IV)), Cipher.DECRYPT_MODE);
+                    if (decryptedPwd != null) {
+                        configuration.setProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD, decryptedPwd);
+                    }
+                }
+                if(encryptedURL != null && encryptedURL.startsWith(ENCRYPTION_IDENTIFIER)) {
+                    encryptedURL = encryptedURL.replace(ENCRYPTION_IDENTIFIER, "");
+                    String[] split = encryptedURL.split(" ");
+                    String encryptedSymmetricKey = split[0];
+                    String base64IV = split[1];
+                    String encryptedUrl = split[2];
+                    SecretKey key = new SecretKeySpec(
+                            EncryptionUtils.decryptSymmetricKey(encryptedSymmetricKey.getBytes(), privKey),
+                            EncryptionUtils.CIPHER_ALGORITHM);
+                    String decryptedURL = EncryptionUtils.enOrDecrypt(EncryptionUtils.CIPHER_ALGORITHM, encryptedUrl, key,
+                            new IvParameterSpec(Base64.getDecoder().decode(base64IV)), Cipher.DECRYPT_MODE);
+                    if (decryptedURL != null) {
+                        configuration.setProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL, decryptedURL);
+                    }
+                }
+                if (encryptedUsername != null &&  encryptedUsername.startsWith(ENCRYPTION_IDENTIFIER)) {
+                    encryptedUsername = encryptedUsername.replace(ENCRYPTION_IDENTIFIER, "");
+                    String[] split = encryptedUsername.split(" ");
+                    String encryptedSymmetricKey = split[0];
+                    String base64IV = split[1];
+                    String encryptedUser = split[2];
+                    SecretKey key = new SecretKeySpec(
+                            EncryptionUtils.decryptSymmetricKey(encryptedSymmetricKey.getBytes(), privKey),
+                            EncryptionUtils.CIPHER_ALGORITHM);
+                    String decryptedUsername = EncryptionUtils.enOrDecrypt(EncryptionUtils.CIPHER_ALGORITHM, encryptedUser, key,
+                            new IvParameterSpec(Base64.getDecoder().decode(base64IV)), Cipher.DECRYPT_MODE);
+                    if (decryptedUsername != null) {
+                        configuration.setProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME, decryptedUsername);
+                    }
+                }
+            }
         } catch (Throwable e) {
             throw new SOSHibernateConfigurationException(e.toString(), e);
         }
