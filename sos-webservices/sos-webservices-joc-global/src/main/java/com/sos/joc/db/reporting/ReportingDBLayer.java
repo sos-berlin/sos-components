@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.inventory.model.report.TemplateId;
 import com.sos.joc.classes.inventory.JocInventory;
@@ -124,6 +125,17 @@ public class ReportingDBLayer extends DBLayer {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public void delete(Long id) {
+        try {
+            DBItemReport item = getSession().get(DBItemReport.class, id);
+            if (item != null) {
+                getSession().delete(item);
+            }
+        } catch (SOSHibernateException e) {
+            throw new DBInvalidDataException(e);
         }
     }
     

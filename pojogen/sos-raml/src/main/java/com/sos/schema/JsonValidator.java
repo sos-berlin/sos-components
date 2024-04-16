@@ -374,6 +374,7 @@ public class JsonValidator {
             put("com.sos.joc.model.reporting.ReportsFilter", "reporting/reports-request-schema.json");
             put("com.sos.joc.model.reporting.RunReports", "reporting/run-reports-schema.json");
             put("com.sos.joc.model.reporting.RunHistoryFilter", "reporting/runHistory-request-schema.json");
+            put("com.sos.joc.model.reporting.DeleteReports", "reporting/delete-request-schema.json");
 
 
             // TODO complete the map
