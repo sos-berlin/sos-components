@@ -216,7 +216,7 @@ public class JsonValidator {
             put("com.sos.joc.model.descriptor.restore.RequestFilter", "descriptor/restore/request-filter-schema.json");
 
             put("com.sos.joc.model.publish.DeleteKeyFilter", "publish/deleteKey-schema.json");
-            put("com.sos.joc.model.publish.SetKeyFilter", "publish/setKeyFilter-schema.json");
+            put("com.sos.joc.model.publish.SetKeyFilter", "publish/setKey-schema.json");
             put("com.sos.joc.model.publish.GenerateKeyFilter", "publish/generateKey-schema.json");
             put("com.sos.joc.model.publish.ExportFilter", "publish/exportFilter-schema.json");
             put("com.sos.joc.model.publish.folder.ExportFolderFilter", "publish/folder/exportFolderFilter-schema.json");
