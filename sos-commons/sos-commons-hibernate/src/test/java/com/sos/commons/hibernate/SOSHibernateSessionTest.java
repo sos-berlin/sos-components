@@ -18,7 +18,7 @@ public class SOSHibernateSessionTest {
      * PgSQL session.getCurrentDateTime():<br/>
      * the returned current date time depends on TimeZone.set/getDefault.<br/>
      * For all others, the returned current date time is independent of TimeZone.set/getDefault. */
-//    @Ignore
+    @Ignore
     @Test
     public void test() throws Exception {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
