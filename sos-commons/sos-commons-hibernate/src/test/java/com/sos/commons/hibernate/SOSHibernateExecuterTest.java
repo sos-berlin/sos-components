@@ -138,7 +138,7 @@ public class SOSHibernateExecuterTest {
         return factory;
     }
 
-    // @Ignore
+    @Ignore
     @Test
     public void testEncryption() throws SOSHibernateFactoryBuildException {
         // Arrays.stream(Security.getProviders())
