@@ -32,6 +32,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "templateName",
     "frequency",
     "hits",
+    "controllerId",
     "dateFrom",
     "dateTo",
     "created",
@@ -100,6 +101,8 @@ public class ReportItem {
      */
     @JsonProperty("hits")
     private Integer hits;
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * date
      * <p>
@@ -310,6 +313,16 @@ public class ReportItem {
     public void setHits(Integer hits) {
         this.hits = hits;
     }
+    
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
+    }
+
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
+    }
 
     /**
      * date
@@ -425,12 +438,12 @@ public class ReportItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("runId", runId).append("path", path).append("title", title).append("templateName", templateName).append("frequency", frequency).append("hits", hits).append("dateFrom", dateFrom).append("dateTo", dateTo).append("created", created).append("modified", modified).append("data", data).toString();
+        return new ToStringBuilder(this).append("id", id).append("runId", runId).append("path", path).append("title", title).append("templateName", templateName).append("frequency", frequency).append("hits", hits).append("controllerId", controllerId).append("dateFrom", dateFrom).append("dateTo", dateTo).append("created", created).append("modified", modified).append("data", data).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(data).append(created).append(title).append(dateFrom).append(frequency).append(hits).append(path).append(templateName).append(dateTo).append(modified).append(id).append(runId).toHashCode();
+        return new HashCodeBuilder().append(data).append(created).append(title).append(dateFrom).append(frequency).append(hits).append(controllerId).append(path).append(templateName).append(dateTo).append(modified).append(id).append(runId).toHashCode();
     }
 
     @Override
@@ -442,7 +455,7 @@ public class ReportItem {
             return false;
         }
         ReportItem rhs = ((ReportItem) other);
-        return new EqualsBuilder().append(data, rhs.data).append(created, rhs.created).append(title, rhs.title).append(dateFrom, rhs.dateFrom).append(frequency, rhs.frequency).append(hits, rhs.hits).append(path, rhs.path).append(templateName, rhs.templateName).append(dateTo, rhs.dateTo).append(modified, rhs.modified).append(id, rhs.id).append(runId, rhs.runId).isEquals();
+        return new EqualsBuilder().append(data, rhs.data).append(created, rhs.created).append(title, rhs.title).append(dateFrom, rhs.dateFrom).append(frequency, rhs.frequency).append(hits, rhs.hits).append(controllerId, rhs.controllerId).append(path, rhs.path).append(templateName, rhs.templateName).append(dateTo, rhs.dateTo).append(modified, rhs.modified).append(id, rhs.id).append(runId, rhs.runId).isEquals();
     }
 
 }

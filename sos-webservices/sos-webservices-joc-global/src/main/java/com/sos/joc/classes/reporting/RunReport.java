@@ -155,6 +155,9 @@ public class RunReport extends AReporting {
             s.append(" -t ").append(relativizeTemplateFile.toString().replace('\\', '/'));
             s.append(" -p ").append(f.strValue());
             s.append(" -o ").append(relativizeReportingDir.toString().replace('\\', '/'));
+            if (in.getControllerId() != null && !in.getControllerId().isBlank()) {
+                s.append(" -c ").append(in.getControllerId());
+            }
             String script = s.toString();
             //String script = commonScript + f.strValue() + " -t " + relativizeReportingDir + " -o " + relativizeReportingDir.toString().replace('\\', '/');
             LOGGER.info("[Reporting][run] " + script);

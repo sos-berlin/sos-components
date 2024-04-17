@@ -41,9 +41,9 @@ public class RunHistoryImpl extends JOCResourceImpl implements IRunHistoryResour
         private static final long serialVersionUID = 1L;
 
         {
-            put(ReportRunStateText.SUCCESSFUL, 0);
-            put(ReportRunStateText.IN_PROGRESS, 1);
-            put(ReportRunStateText.FAILED, 2);
+            put(ReportRunStateText.SUCCESSFUL, 6); //darkblue
+            put(ReportRunStateText.IN_PROGRESS, 3); //lightblue
+            put(ReportRunStateText.FAILED, 2); //red
             put(ReportRunStateText.UNKNOWN, 2);
         }
     });

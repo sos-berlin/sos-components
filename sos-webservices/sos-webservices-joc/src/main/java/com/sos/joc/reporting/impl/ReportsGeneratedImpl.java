@@ -10,6 +10,9 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -30,6 +33,8 @@ import jakarta.ws.rs.Path;
 
 @Path(WebservicePaths.REPORTING)
 public class ReportsGeneratedImpl extends JOCResourceImpl implements IReportsGeneratedResource {
+    
+    private static final Logger LOGGER = LoggerFactory.getLogger(ReportsGeneratedImpl.class);
     
     @Override
     public JOCDefaultResponse showHistory(String accessToken, byte[] filterBytes) { //TODO deprecated
@@ -64,7 +69,11 @@ public class ReportsGeneratedImpl extends JOCResourceImpl implements IReportsGen
                     dbItem.setContent(null);
                     return dbItem;
                 } catch (Exception e) {
-                    // TODO: error handling
+                    if (getJocError() != null && !getJocError().getMetaInfo().isEmpty()) {
+                        LOGGER.info(getJocError().printMetaInfo());
+                        getJocError().clearMetaInfo();
+                    }
+                    LOGGER.error(String.format("[%s] %s", dbItem.getPath(), e.toString()));
                     return null;
                 }
             };
