@@ -1,15 +1,9 @@
 package com.sos.commons.hibernate;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.nio.file.Paths;
-import java.security.Provider;
-import java.security.Security;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.json.Json;
 import javax.json.JsonObjectBuilder;
@@ -148,6 +142,11 @@ public class SOSHibernateExecuterTest {
         // .forEach(item -> LOGGER.info(item));
 
         SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/sp.hibernate.cfg.xml"));
+        factory.setKeystorePath("src/test/resources/JOC-1770_keystore.p12");
+        factory.setKeystorePassword("jobscheduler");
+        factory.setKeystoreKeyalias("rsa_test");
+        factory.setKeystoreType("PKCS12");
         factory.build();
+        factory.close();
     }
 }

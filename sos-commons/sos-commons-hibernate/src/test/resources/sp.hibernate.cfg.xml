@@ -4,7 +4,7 @@
         <property name="hibernate.connection.driver_class">org.mariadb.jdbc.Driver</property>
 <!--         <property name="hibernate.connection.password">jobscheduler</property> -->
         <property name="hibernate.connection.url">jdbc:mysql://sp.sos:3306/jobscheduler200?serverTimezone=UTC</property>
-        <property name="hibernate.connection.username">jobscheduler</property>
+        <property name="hibernate.connection.username">enc://XflZsziiYbozB9DQiEhZ+4IO8Nlj6GKBYzrNyfFoCLjsZJERZR+Ka79LxUYsOXH4UfX6OjtzanwaYwfdszIuUqOH5bDxIHIZ/J48Fi2akLex3IhpVBjdM26M1T3ix2WH14UrfFd1R4n/kXtnA3vEgv2qZomae1468b1H4szmlniI97iBgU7ow0ZPZFLHHNpbj2dAOA6e0OzVnVpmgH92H4iT9t0gWJ/nnk1ZRaaCWgYLBcoff+8a8+zIUcbS2qhXZLgqJoclEFgSfkJgYE2HOWHKTvfaPhz2yoRDrv1klY8LsDFv7n0vAB69NheEumU00DtSQR1spdjIR1gxYPE88g== bfzm03hlSw6+AyGqAPJe9g== 3EuW0we5S374TtMGYP8jcg==</property>
         <property name="hibernate.dialect">org.hibernate.dialect.MySQLInnoDBDialect</property>
         <property name="hibernate.show_sql">false</property>
         <property name="hibernate.format_sql">true</property>
@@ -13,7 +13,7 @@
         <!-- Hikari Connection Pool -->
         <property name="hibernate.connection.provider_class">org.hibernate.hikaricp.internal.HikariCPConnectionProvider</property>
         <property name="hibernate.hikari.maximumPoolSize">10</property>
-        <property name="hibernate.sos.decryption_key">C:\sp\devel\js7\keys\sp.key</property>
+        <!-->property name="hibernate.sos.decryption_key">C:\sp\devel\js7\keys\sp.key</property-->
         <!--
         <property name="hibernate.dialect">org.hibernate.dialect.Oracle10gDialect</property>
         <property name="hibernate.dialect">org.hibernate.dialect.MySQLInnoDBDialect</property>
@@ -32,7 +32,7 @@
         <property name="hibernate.connection.url">jdbc:postgresql://localhost:5432/jobscheduler_2</property-->
        
   
-  		<property name="hibernate.connection.password">enc://fr8d768vBAX5l88TAZwAAA3i0HsYempmXVk/uH8LaG8XtCNzrlPDl9p+WeGGrqQo+q5/5+YIXOn2RLrW0cRKgEmX02Ahi28xVxFeiSdLIIAIQ/xhE9CX/6xfhwP+TJw05mt7K8wYklu8BpEIJsmi7FHYFRTjoslc120W14zUvAC6Czr3wKSZU6oQ5wCSxWhvK7Rxqr6WJAtqut1YnkaQkb+7+a+/S+hBjWQrWbHsz7/h6sxd4XMgH8KAHs3SW5zCKhI4/XGwcH+s+kkEVyzQCgPrzM6OzMrpdRFM8nich4181Eu+lxPEQ89zBRZnle1wNZ6i34jKHPXTIH8tMvVEFL2lp7DYUGqYuqx2cAr6dtmgq/iLeSBRgAQX9xgX1YhjI1AqWP1TQD1qEeNWBgeE8mgLYpajjpF7vO2VXzUJahyeanV270pEtfxjdcs+mZbdb3v0kV4I8Wi96Ae+A+C1JIwnQnzQXOV8Q7Ts6fOxv2kH61KZRaHbaGfKxmKzjYaV+sYXrA88HJ400DZiHlSgEmX7agI09QbZaAYHpvWezgpB9SPQHSqCeZxqX/LkWTta8i9rhi/Zy2MoulfdEFSv6WxqARylovdUxqGJR99gyUnPU8NJomgym1jAUxqhn29fbmQZ3OpuIXJrKLoyQl4O0CWRUcanqg4Cl7huG7tXcro= DXL29LUkxCAGs3SaeqrF1g== pcJhnIPUAupy3WxJsd4QUQ==</property>
+  		<property name="hibernate.connection.password">enc://XflZsziiYbozB9DQiEhZ+4IO8Nlj6GKBYzrNyfFoCLjsZJERZR+Ka79LxUYsOXH4UfX6OjtzanwaYwfdszIuUqOH5bDxIHIZ/J48Fi2akLex3IhpVBjdM26M1T3ix2WH14UrfFd1R4n/kXtnA3vEgv2qZomae1468b1H4szmlniI97iBgU7ow0ZPZFLHHNpbj2dAOA6e0OzVnVpmgH92H4iT9t0gWJ/nnk1ZRaaCWgYLBcoff+8a8+zIUcbS2qhXZLgqJoclEFgSfkJgYE2HOWHKTvfaPhz2yoRDrv1klY8LsDFv7n0vAB69NheEumU00DtSQR1spdjIR1gxYPE88g== bfzm03hlSw6+AyGqAPJe9g== 3EuW0we5S374TtMGYP8jcg==</property>
 <!--
 		<property name="hibernate.connection.username">jobscheduler_2</property>
 		      

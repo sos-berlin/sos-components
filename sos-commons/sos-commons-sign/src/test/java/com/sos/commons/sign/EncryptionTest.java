@@ -161,50 +161,48 @@ public class EncryptionTest {
   }
 
   @Test
-  @Ignore
+//  @Ignore
   public void test03PWEncryption() throws CertificateException, IOException, NoSuchAlgorithmException, InvalidKeyException,
         NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException,
         SOSException, InvalidKeySpecException {
     LOGGER.trace("*************  Test 'encrypt password, export as env variable and decrypt' started  *************");
     String pwd = "jobscheduler";
-//    String pwd = "Myt3stP4ssw0rd";
-    Path certificatePath = Paths.get("C:/sp/devel/js7/keys/sp.crt"); 
+    Path certificatePath = Paths.get("src/test/resources/rsa_test.crt"); 
     X509Certificate cert = KeyUtil.getX509Certificate(certificatePath);
-//    SecretKey key = EncryptionUtils.generateSecretKey(128);
     SecretKey key = EncryptionUtils.generateSecretKey(256);
     String origSecretKey = new String(key.getEncoded());
-    LOGGER.info("secret:");
-    LOGGER.info(origSecretKey);
+    LOGGER.trace("secret:");
+    LOGGER.trace(origSecretKey);
     byte[] encryptedKey = EncryptionUtils.encryptSymmetricKey(key, cert);
     String algorithm = EncryptionUtils.CIPHER_ALGORITHM;
     IvParameterSpec ivParameterSpec = EncryptionUtils.generateIv();
     byte[] ivBase64Encoded = Base64.getEncoder().encode(ivParameterSpec.getIV());
     String encryptedPwd = EncryptionUtils.enOrDecrypt(algorithm, pwd, key, ivParameterSpec, Cipher.ENCRYPT_MODE);
-    LOGGER.info("encrypted Pwd:");
-    LOGGER.info(encryptedPwd);
+    LOGGER.trace("encrypted Pwd:");
+    LOGGER.trace(encryptedPwd);
     String exportKey = new String(encryptedKey);
-    LOGGER.info("encrypted Key:");
-    LOGGER.info(exportKey);
+    LOGGER.trace("encrypted Key:");
+    LOGGER.trace(exportKey);
     String exportIvPlusPwd = new String(exportKey).concat(" ").concat(new String(ivBase64Encoded)).concat(" ").concat(encryptedPwd);
-    LOGGER.info("output:");
-    LOGGER.info(exportIvPlusPwd);
+    LOGGER.trace("output:");
+    LOGGER.trace(exportIvPlusPwd);
     System.setProperty("JS7_ENCRYPTED_KEY", exportKey);
     System.setProperty("JS7_ENCRYPTED_PW", exportIvPlusPwd);
-    LOGGER.info("-------------------------------------------------------------------------------------------------");
+    LOGGER.trace("-------------------------------------------------------------------------------------------------");
     String exportedIvPlusPwd = System.getProperty("JS7_ENCRYPTED_PW");
     String[] split = exportedIvPlusPwd.split(" ");
     String exportedKey = split[0]; 
     String exportedIv = split[1];//exportedIvPlusPwd.substring(0, 24);
-    LOGGER.info(exportedIv);
+    LOGGER.trace(exportedIv);
     String exportedPwd = split[2];//exportedIvPlusPwd.substring(24);
-    LOGGER.info(exportedPwd);
+    LOGGER.trace(exportedPwd);
     byte[] decodedIv = Base64.getDecoder().decode(exportedIv);
-    PrivateKey priv = KeyUtil.getPrivateKeyFromString(Files.readString(Paths.get("C:/sp/devel/js7/keys/sp.key")));
+    PrivateKey priv = KeyUtil.getPrivateKeyFromString(Files.readString(Paths.get("src/test/resources/rsa_test.key.pkcs8")));
     SecretKey decryptedSecretKey = new SecretKeySpec(EncryptionUtils.decryptSymmetricKey(exportedKey.getBytes(), priv), algorithm);
-    LOGGER.info("dec:");
-    LOGGER.info(new String(decryptedSecretKey.getEncoded()));
+    LOGGER.trace("dec:");
+    LOGGER.trace(new String(decryptedSecretKey.getEncoded()));
     String decryptedPwd = EncryptionUtils.enOrDecrypt(algorithm, exportedPwd, decryptedSecretKey, new IvParameterSpec(decodedIv), Cipher.DECRYPT_MODE);
-    LOGGER.info(decryptedPwd);
+    LOGGER.trace(decryptedPwd);
     Assert.assertEquals(pwd, decryptedPwd);
     LOGGER.trace("*************  Test 'encrypt password, export as env variable and decrypt' finished *************");
   }

@@ -55,6 +55,14 @@ public class SOSHibernate {
     
     // SOS configuration properties for en-/decryption
     public static final String HIBERNATE_SOS_PROPERTY_DECRYPTION_PRIVATE_KEY = "hibernate.sos.decryption_key";
+    public static final String HIBERNATE_SOS_PROPERTY_DECRYPTION_PRIVATE_KEYPWD = "hibernate.sos.decryption_keypassword";
+    public static final String HIBERNATE_SOS_PROPERTY_KEYSTORE = "hibernate.sos.keystore_path";
+    public static final String HIBERNATE_SOS_PROPERTY_KEYSTORE_TYPE = "hibernate.sos.keystore_type";
+    public static final String HIBERNATE_SOS_PROPERTY_KEYSTORE_PWD = "hibernate.sos.keystore_password";
+    public static final String HIBERNATE_SOS_PROPERTY_KEYSTORE_KEYPWD = "hibernate.sos.keystore_keypassword";
+    public static final String HIBERNATE_SOS_PROPERTY_KEYSTORE_KEYALIAS = "hibernate.sos.keystore_keyalias";
+    // Identifiers
+    public static final String ENCRYPTION_IDENTIFIER = "enc://";
 
     public static final int LIMIT_IN_CLAUSE = 1000;
 
