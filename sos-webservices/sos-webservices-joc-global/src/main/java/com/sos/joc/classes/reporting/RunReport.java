@@ -38,6 +38,7 @@ import com.sos.joc.db.reporting.ReportingDBLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.reporting.ReportRunsUpdated;
 import com.sos.joc.event.bean.reporting.ReportsUpdated;
+import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.model.reporting.Report;
 import com.sos.joc.model.reporting.ReportRunStateText;
@@ -278,18 +279,6 @@ public class RunReport extends AReporting {
         return null;
     }
     
-//    private static Long insertRun(final DBItemReportRun runDbItem) throws Exception {
-//        SOSHibernateSession session = null;
-//        try {
-//            session = Globals.createSosHibernateStatelessConnection("StoreReportRun");
-//            session.save(runDbItem);
-//            EventBus.getInstance().post(new ReportRunsUpdated());
-//            return runDbItem.getId();
-//        } finally {
-//            Globals.disconnect(session);
-//        }
-//    }
-    
     private static byte[] insertRunAndReadTemplate(final DBItemReportRun runDbItem, final Report in) throws Exception {
         SOSHibernateSession session = null;
         try {
@@ -297,6 +286,10 @@ public class RunReport extends AReporting {
             DBItemReportTemplate dbTemplate = session.get(DBItemReportTemplate.class, in.getTemplateName().intValue());
             session.save(runDbItem);
             EventBus.getInstance().post(new ReportRunsUpdated());
+            if (dbTemplate == null) {
+                throw new DBMissingDataException("Couldn't find report template '" + in.getTemplateName().value() + "'(id:" + in.getTemplateName()
+                        .intValue() + ")");
+            }
             return dbTemplate.getContent();
         } finally {
             Globals.disconnect(session);
