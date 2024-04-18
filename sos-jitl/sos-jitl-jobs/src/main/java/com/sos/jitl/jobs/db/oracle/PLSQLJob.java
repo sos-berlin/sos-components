@@ -62,8 +62,8 @@ public class PLSQLJob extends Job<PLSQLJobArguments> {
         } else {
             Properties p = new Properties();
             // required
-            p.put(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, "org.hibernate.dialect.Oracle12cDialect");
-            p.put("hibernate.connection.driver_class", "oracle.jdbc.OracleDriver");
+            p.put(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, args.getDbDialect());
+            p.put(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_DRIVERCLASS, args.getDbDriverClass());
             p.put(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL, args.getDbUrl());
             // optional
             if(args.getDbUser() != null && !args.getDbUser().isEmpty()) {

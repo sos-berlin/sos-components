@@ -29,6 +29,9 @@ public class PLSQLJobArguments extends JobArguments {
     private JobArgument<String> dbUrl = new JobArgument<String>("db_url", false);
     private JobArgument<String> dbUser = new JobArgument<String>("db_user", false);
 
+    private JobArgument<String> dbDialect = new JobArgument<String>("db_dialect", false, "org.hibernate.dialect.Oracle12cDialect");
+    private JobArgument<String> dbDriverClass = new JobArgument<String>("db_jdbc_driverclass", false, "oracle.jdbc.OracleDriver");
+
     // CSV/XML/JSON export
     private JobArgument<ResultSetAs> resultSetAs = new JobArgument<ResultSetAs>("resultset_as", false);
     private JobArgument<Path> resultFile = new JobArgument<Path>("result_file", false);
@@ -152,6 +155,22 @@ public class PLSQLJobArguments extends JobArguments {
             throw new JobRequiredArgumentMissingException(resultFile.getName());
         }
 
+    }
+    
+    public JobArgument<String> getDbDialect() {
+        return dbDialect;
+    }
+    
+    public void setDbDialect(JobArgument<String> dbDialect) {
+        this.dbDialect = dbDialect;
+    }
+    
+    public JobArgument<String> getDbDriverClass() {
+        return dbDriverClass;
+    }
+    
+    public void setDbDriverClass(JobArgument<String> dbDriverClass) {
+        this.dbDriverClass = dbDriverClass;
     }
 
 }
