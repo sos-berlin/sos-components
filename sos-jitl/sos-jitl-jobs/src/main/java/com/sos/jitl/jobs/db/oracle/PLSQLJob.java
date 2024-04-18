@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -14,6 +15,7 @@ import org.hibernate.cfg.Configuration;
 import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.credentialstore.CredentialStoreArguments.CredentialStoreResolver;
 import com.sos.commons.hibernate.SOSHibernate;
+import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.jitl.jobs.db.common.Export2CSV;
 import com.sos.jitl.jobs.db.common.Export2JSON;
@@ -33,66 +35,52 @@ public class PLSQLJob extends Job<PLSQLJobArguments> {
     @Override
     public void processOrder(OrderProcessStep<PLSQLJobArguments> step) throws Exception {
         step.getDeclaredArguments().checkRequired();
-
-        Connection conn = null;
+        
+        SOSHibernateFactory factory = null;
         try {
-            conn = getConnection(step);
-            process(step, conn);
+            factory = getHibernateFactory(step);
+            process(step, factory.openStatelessSession(PLSQLJob.class.getSimpleName()).getConnection());
         } catch (Throwable e) {
             throw e;
         } finally {
-            if (conn != null) {
+            if (factory != null) {
                 try {
-                    conn.close();
-                } catch (Throwable e) {
-                }
+                    factory.close();
+                } catch (Throwable e) {}
             }
         }
     }
 
-    private Connection getConnection(OrderProcessStep<PLSQLJobArguments> step) throws Exception {
+    private SOSHibernateFactory getHibernateFactory(OrderProcessStep<PLSQLJobArguments> step) throws Exception {
         PLSQLJobArguments args = step.getDeclaredArguments();
-        CredentialStoreArguments csArgs = step.getIncludedArguments(CredentialStoreArguments.class);
+        SOSHibernateFactory f = null;
         if (args.useHibernateFile()) {
             if (!Files.exists(args.getHibernateFile())) {
                 throw new SOSHibernateConfigurationException(String.format("hibernate config file not found: %s", args.getHibernateFile()));
             }
-            Configuration configuration = new Configuration();
-            configuration.configure(args.getHibernateFile().toFile());
-
-            String s = configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL);
-            if (s != null) {
-                args.setDbUrl(s);
-            }
-            s = configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME);
-            if (s != null) {
-                args.setDbUser(s);
-            }
-            s = configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD);
-            if (s != null) {
-                args.setDbPassword(s);
-            }
-        }
-        if (csArgs.getFile().getValue() != null) {
-            CredentialStoreResolver r = csArgs.newResolver();
-
-            args.setDbUrl(r.resolve(args.getDbUrl().getValue()));
-            args.setDbUser(r.resolve(args.getDbUser().getValue()));
-            args.setDbPassword(r.resolve(args.getDbPassword().getValue()));
-        }
-        step.getLogger().debug("dbUrl=%s, dbUser=%s, dbPassword=%s", args.getDbUrl().getDisplayValue(), args.getDbUser().getDisplayValue(), args
-                .getDbPassword().getDisplayValue());
-
-        DriverManager.registerDriver(new oracle.jdbc.OracleDriver());
-        Connection connection = null;
-        if (args.getDbUser().getValue() != null && args.getDbPassword().getValue() != null) {
-            step.getLogger().debug("Connecting with user and password.");
-            connection = DriverManager.getConnection(args.getDbUrl().getValue(), args.getDbUser().getValue(), args.getDbPassword().getValue());
+            f = new SOSHibernateFactory(args.getHibernateFile());
         } else {
-            step.getLogger().debug("Empty user and password. Trying wallet");
-            connection = DriverManager.getConnection(args.getDbUrl().getValue());
+            Properties p = new Properties();
+            // required
+            p.put(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, "org.hibernate.dialect.Oracle12cDialect");
+            p.put("hibernate.connection.driver_class", "oracle.jdbc.OracleDriver");
+            p.put(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL, args.getDbUrl());
+            // optional
+            if(args.getDbUser() != null && !args.getDbUser().isEmpty()) {
+                p.put(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME, args.getDbUser());
+            } else {
+                p.put(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME, "");
+            }
+            if (args.getDbPassword() != null && ! args.getDbPassword().isEmpty()) {
+                p.put(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD, args.getDbPassword());
+            } else {
+                p.put(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD, "");
+            }
+            f = new SOSHibernateFactory();
+            f.getConfigurationProperties().putAll(p);
         }
-        return connection;
+        f.build();
+        return f;
     }
 
     private void process(OrderProcessStep<PLSQLJobArguments> step, final Connection connection) throws Exception {

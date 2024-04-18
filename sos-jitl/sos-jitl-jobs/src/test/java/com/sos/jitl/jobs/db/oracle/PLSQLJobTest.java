@@ -22,7 +22,7 @@ public class PLSQLJobTest {
     @Test
     public void test() throws Exception {
         Map<String, Object> args = new HashMap<>();
-        args.put("hibernate_configuration_file", Paths.get("src/test/resources/hibernate.cfg.xml"));
+        args.put("hibernate_configuration_file", Paths.get("src/test/resources/sp.hibernate.cfg.xml"));
         args.put("command", "select 1 from dual");
         args.put("resultset_as", ResultSetAs.XML);
         args.put("result_file", Paths.get("src/test/resources/plsqljob_export.xml"));

@@ -23,6 +23,11 @@
 			<artifactId>js7-launcher-for-java_3</artifactId>
 			<scope>provided</scope>
 		</dependency>
+    <dependency>
+      <groupId>com.sos-berlin.js7.engine</groupId>
+      <artifactId>js7-data-for-java_3</artifactId>
+      <scope>provided</scope>
+    </dependency>
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
 			<artifactId>sos-commons-credentialstore</artifactId>
@@ -47,12 +52,6 @@
 		<dependency>
 			<groupId>com.typesafe</groupId>
 			<artifactId>config</artifactId>
-			<scope>provided</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>com.oracle.database.jdbc</groupId>
-			<artifactId>ojdbc8</artifactId>
 			<scope>provided</scope>
 		</dependency>
 
