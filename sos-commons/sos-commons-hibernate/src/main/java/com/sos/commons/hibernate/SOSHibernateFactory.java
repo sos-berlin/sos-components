@@ -15,6 +15,7 @@ import java.sql.Connection;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -656,132 +657,6 @@ public class SOSHibernateFactory implements Serializable {
         }
     }
 
-    private void decryptValues() throws SOSHibernateConfigurationException {
-        if (configuration == null) {
-            return;
-        }
-        // encrypted values from configuration file
-        String encryptedPwdValue = configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD);
-        String encryptedURL = configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL);
-        String encryptedUsername = configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME);
-        // check if the encryption identifier is in use
-        if ((encryptedPwdValue != null && encryptedPwdValue.startsWith(SOSHibernate.ENCRYPTION_IDENTIFIER)) 
-                || (encryptedURL != null && encryptedURL.startsWith(SOSHibernate.ENCRYPTION_IDENTIFIER)) 
-                || (encryptedUsername != null &&  encryptedUsername.startsWith(SOSHibernate.ENCRYPTION_IDENTIFIER))) {
-
-            // required credentials
-            String privateKeyPath = 
-                    configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DECRYPTION_PRIVATE_KEY);
-            // preferred configured in file
-            // fallback configured by setters
-            String keystorePath = 
-                    configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE) != null 
-                        ? configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE) 
-                        : getKeystorePath();
-            String keystoreType = 
-                    configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE_TYPE) != null
-                        ? configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE_TYPE) 
-                        : getKeystoreType();
-            String keystorePwd = 
-                    configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE_PWD) != null
-                        ? configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE_PWD) 
-                        : getKeystorePassword();
-            String keystoreKeyPwd = 
-                    configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE_KEYPWD) != null 
-                        ? configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE_KEYPWD) 
-                        : getKeystoreKeypassword();
-            String keystoreAlias = 
-                    configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE_KEYALIAS) != null 
-                        ? configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE_KEYALIAS) 
-                        : getKeystoreKeyalias();
-
-            try {
-                if(privateKeyPath != null && keystorePath != null) {
-                    throw new SOSHibernateConfigurationException("key path and keystore path found. "
-                            + "These configuration items are exclusive. Please do configure only one of them.");
-                }
-                // read private key path from hibernate configuration
-                PrivateKey privKey = null;
-                KeyStore keystore = null;
-                if(privateKeyPath != null) {
-                    if(!Files.exists(Paths.get(privateKeyPath))) {
-                        throw new SOSHibernateConfigurationException("File with path - " + privateKeyPath + " - does not exist.");
-                    }
-                    String privateKeyPwd = configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DECRYPTION_PRIVATE_KEYPWD);
-                    if(privateKeyPwd != null && !privateKeyPwd.isEmpty()) {
-                        privKey = KeyUtil.getPrivateEncryptedKey(Files.readString(Paths.get(privateKeyPath)), privateKeyPwd);
-                    } else {
-                        privKey = KeyUtil.getPrivateKeyFromString(Files.readString(Paths.get(privateKeyPath)));
-                    }
-                } else if (keystorePath != null) {
-                // the credentials can be configured in 
-                //     - the hibernate configuration file
-                //     - joc.properties
-                //     - private.conf of an agent
-                // determined by the calling application
-                    KeystoreType type = null;
-                    if(keystoreType == null) {
-                        type = KeystoreType.PKCS12;
-                    } else {
-                        type = KeystoreType.valueOf(keystoreType);
-                    }
-                    keystore = KeyStoreUtil.readKeyStore(keystorePath, type, keystorePwd);
-                    if(keystoreKeyPwd != null) {
-                        privKey = (PrivateKey) keystore.getKey(keystoreAlias, keystoreKeyPwd.toCharArray());
-                    } else {
-                        privKey = (PrivateKey) keystore.getKey(keystoreAlias, "".toCharArray());
-                    }
-                }
-                if (encryptedPwdValue != null && encryptedPwdValue.startsWith(SOSHibernate.ENCRYPTION_IDENTIFIER)) {
-                    encryptedPwdValue = encryptedPwdValue.replace(SOSHibernate.ENCRYPTION_IDENTIFIER, "");
-                    String[] split = encryptedPwdValue.split(" ");
-                    String encryptedSymmetricKey = split[0];
-                    String base64IV = split[1];
-                    String encryptedPwd = split[2];
-                    String decryptedPwd = decrypt(privKey, encryptedSymmetricKey, base64IV, encryptedPwd);
-                    if (decryptedPwd != null) {
-                        configuration.setProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD, decryptedPwd);
-                    }
-                }
-                if(encryptedURL != null && encryptedURL.startsWith(SOSHibernate.ENCRYPTION_IDENTIFIER)) {
-                    encryptedURL = encryptedURL.replace(SOSHibernate.ENCRYPTION_IDENTIFIER, "");
-                    String[] split = encryptedURL.split(" ");
-                    String encryptedSymmetricKey = split[0];
-                    String base64IV = split[1];
-                    String encryptedUrl = split[2];
-                    String decryptedURL = decrypt(privKey, encryptedSymmetricKey, base64IV, encryptedUrl);
-                    if (decryptedURL != null) {
-                        configuration.setProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL, decryptedURL);
-                    }
-                }
-                if (encryptedUsername != null &&  encryptedUsername.startsWith(SOSHibernate.ENCRYPTION_IDENTIFIER)) {
-                    encryptedUsername = encryptedUsername.replace(SOSHibernate.ENCRYPTION_IDENTIFIER, "");
-                    String[] split = encryptedUsername.split(" ");
-                    String encryptedSymmetricKey = split[0];
-                    String base64IV = split[1];
-                    String encryptedUser = split[2];
-                    String decryptedUsername = decrypt(privKey, encryptedSymmetricKey, base64IV, encryptedUser);
-                    if (decryptedUsername != null) {
-                        configuration.setProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME, decryptedUsername);
-                    }
-                }
-            } catch (Throwable e) {
-                throw new SOSHibernateConfigurationException(e.toString(), e);
-            }
-        }
-    }
-    
-    private String decrypt(PrivateKey privKey, String encryptedKey, String encodedIv, String encryptedValue)
-            throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException,
-            BadPaddingException, InvalidAlgorithmParameterException {
-        SecretKey key = new SecretKeySpec(
-                EncryptionUtils.decryptSymmetricKey(encryptedKey.getBytes(), privKey),
-                EncryptionUtils.CIPHER_ALGORITHM);
-        String decryptedValue = EncryptionUtils.enOrDecrypt(EncryptionUtils.CIPHER_ALGORITHM, encryptedValue, key,
-                new IvParameterSpec(Base64.getDecoder().decode(encodedIv)), Cipher.DECRYPT_MODE);
-        return decryptedValue;
-    }
-
     private void substituteJS7Environment() {
         // JOC-1510
         if (configuration == null) {
@@ -899,7 +774,7 @@ public class SOSHibernateFactory implements Serializable {
             }
         }
     }
-
+    
     public SOSHibernateDatabaseMetaData getDatabaseMetaData() {
         return databaseMetaData;
     }
@@ -909,6 +784,143 @@ public class SOSHibernateFactory implements Serializable {
     }
 
     
+    private void decryptValues() throws SOSHibernateConfigurationException {
+        if (configuration == null) {
+            return;
+        }
+        // encrypted values from configuration file
+        String encryptedPwdValue = configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD);
+        String encryptedURL = configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL);
+        String encryptedUsername = configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME);
+        // check if the encryption identifier is in use
+        if ((encryptedPwdValue != null && encryptedPwdValue.startsWith(SOSHibernate.ENCRYPTION_IDENTIFIER)) 
+                || (encryptedURL != null && encryptedURL.startsWith(SOSHibernate.ENCRYPTION_IDENTIFIER)) 
+                || (encryptedUsername != null &&  encryptedUsername.startsWith(SOSHibernate.ENCRYPTION_IDENTIFIER))) {
+
+            // required credentials
+            String privateKeyPath = 
+                    configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DECRYPTION_PRIVATE_KEY);
+            // preferred configured in file
+            // fallback configured by setters
+            String keystorePath = 
+                    configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE) != null 
+                        ? configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE) 
+                        : getKeystorePath();
+            String keystoreType = 
+                    configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE_TYPE) != null
+                        ? configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE_TYPE) 
+                        : getKeystoreType();
+            String keystorePwd = 
+                    configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE_PWD) != null
+                        ? configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE_PWD) 
+                        : getKeystorePassword();
+            String keystoreKeyPwd = 
+                    configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE_KEYPWD) != null 
+                        ? configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE_KEYPWD) 
+                        : getKeystoreKeypassword();
+            String keystoreAlias = 
+                    configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE_KEYALIAS) != null 
+                        ? configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE_KEYALIAS) 
+                        : getKeystoreKeyalias();
+
+            try {
+                if(privateKeyPath != null && keystorePath != null) {
+                    throw new SOSHibernateConfigurationException("key path and keystore path found. "
+                            + "These configuration items are exclusive. Please do configure only one of them.");
+                }
+                // read private key path from hibernate configuration
+                PrivateKey privKey = null;
+                KeyStore keystore = null;
+                if(privateKeyPath != null) {
+                    if(!Files.exists(Paths.get(privateKeyPath))) {
+                        throw new SOSHibernateConfigurationException("File with path - " + privateKeyPath + " - does not exist.");
+                    }
+                    String privateKeyPwd = configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DECRYPTION_PRIVATE_KEYPWD);
+                    if(privateKeyPwd != null && !privateKeyPwd.isEmpty()) {
+                        privKey = KeyUtil.getPrivateEncryptedKey(Files.readString(Paths.get(privateKeyPath)), privateKeyPwd);
+                    } else {
+                        privKey = KeyUtil.getPrivateKeyFromString(Files.readString(Paths.get(privateKeyPath)));
+                    }
+                } else if (keystorePath != null) {
+                // the credentials can be configured in 
+                //     - the hibernate configuration file
+                //     - joc.properties
+                //     - private.conf of an agent
+                // determined by the calling application
+                    KeystoreType type = null;
+                    if(keystoreType == null) {
+                        type = KeystoreType.PKCS12;
+                    } else {
+                        type = KeystoreType.valueOf(keystoreType);
+                    }
+                    keystore = KeyStoreUtil.readKeyStore(keystorePath, type, keystorePwd);
+                    if(keystoreAlias == null) {
+                        Enumeration<String> aliases =  keystore.aliases();
+                        if(aliases.hasMoreElements()) {
+                            String alias = aliases.nextElement();
+                            if(keystore.isKeyEntry(alias)) {
+                                keystoreAlias = alias; 
+                                LOGGER.debug(String.format("no key alias configured, use first found alias <%1$s> to retrieve key.",
+                                        keystoreAlias));
+                            }
+                        }
+                    }
+                    if(keystoreKeyPwd != null) {
+                        privKey = (PrivateKey) keystore.getKey(keystoreAlias, keystoreKeyPwd.toCharArray());
+                    } else {
+                        privKey = (PrivateKey) keystore.getKey(keystoreAlias, "".toCharArray());
+                    }
+                }
+                if (encryptedPwdValue != null && encryptedPwdValue.startsWith(SOSHibernate.ENCRYPTION_IDENTIFIER)) {
+                    encryptedPwdValue = encryptedPwdValue.replace(SOSHibernate.ENCRYPTION_IDENTIFIER, "");
+                    String[] split = encryptedPwdValue.split(" ");
+                    String encryptedSymmetricKey = split[0];
+                    String base64IV = split[1];
+                    String encryptedPwd = split[2];
+                    String decryptedPwd = decrypt(privKey, encryptedSymmetricKey, base64IV, encryptedPwd);
+                    if (decryptedPwd != null) {
+                        configuration.setProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD, decryptedPwd);
+                    }
+                }
+                if(encryptedURL != null && encryptedURL.startsWith(SOSHibernate.ENCRYPTION_IDENTIFIER)) {
+                    encryptedURL = encryptedURL.replace(SOSHibernate.ENCRYPTION_IDENTIFIER, "");
+                    String[] split = encryptedURL.split(" ");
+                    String encryptedSymmetricKey = split[0];
+                    String base64IV = split[1];
+                    String encryptedUrl = split[2];
+                    String decryptedURL = decrypt(privKey, encryptedSymmetricKey, base64IV, encryptedUrl);
+                    if (decryptedURL != null) {
+                        configuration.setProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL, decryptedURL);
+                    }
+                }
+                if (encryptedUsername != null &&  encryptedUsername.startsWith(SOSHibernate.ENCRYPTION_IDENTIFIER)) {
+                    encryptedUsername = encryptedUsername.replace(SOSHibernate.ENCRYPTION_IDENTIFIER, "");
+                    String[] split = encryptedUsername.split(" ");
+                    String encryptedSymmetricKey = split[0];
+                    String base64IV = split[1];
+                    String encryptedUser = split[2];
+                    String decryptedUsername = decrypt(privKey, encryptedSymmetricKey, base64IV, encryptedUser);
+                    if (decryptedUsername != null) {
+                        configuration.setProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME, decryptedUsername);
+                    }
+                }
+            } catch (Throwable e) {
+                throw new SOSHibernateConfigurationException(e.toString(), e);
+            }
+        }
+    }
+    
+    private String decrypt(PrivateKey privKey, String encryptedKey, String encodedIv, String encryptedValue)
+            throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException,
+            BadPaddingException, InvalidAlgorithmParameterException {
+        SecretKey key = new SecretKeySpec(
+                EncryptionUtils.decryptSymmetricKey(encryptedKey.getBytes(), privKey),
+                EncryptionUtils.CIPHER_ALGORITHM);
+        String decryptedValue = EncryptionUtils.enOrDecrypt(EncryptionUtils.CIPHER_ALGORITHM, encryptedValue, key,
+                new IvParameterSpec(Base64.getDecoder().decode(encodedIv)), Cipher.DECRYPT_MODE);
+        return decryptedValue;
+    }
+
     public String getKeystorePath() {
         return keystorePath;
     }

@@ -4,7 +4,7 @@
         <property name="hibernate.connection.driver_class">org.mariadb.jdbc.Driver</property>
 <!--         <property name="hibernate.connection.password">jobscheduler</property> -->
         <property name="hibernate.connection.url">jdbc:mysql://sp.sos:3306/jobscheduler200?serverTimezone=UTC</property>
-        <property name="hibernate.connection.username">enc://XflZsziiYbozB9DQiEhZ+4IO8Nlj6GKBYzrNyfFoCLjsZJERZR+Ka79LxUYsOXH4UfX6OjtzanwaYwfdszIuUqOH5bDxIHIZ/J48Fi2akLex3IhpVBjdM26M1T3ix2WH14UrfFd1R4n/kXtnA3vEgv2qZomae1468b1H4szmlniI97iBgU7ow0ZPZFLHHNpbj2dAOA6e0OzVnVpmgH92H4iT9t0gWJ/nnk1ZRaaCWgYLBcoff+8a8+zIUcbS2qhXZLgqJoclEFgSfkJgYE2HOWHKTvfaPhz2yoRDrv1klY8LsDFv7n0vAB69NheEumU00DtSQR1spdjIR1gxYPE88g== bfzm03hlSw6+AyGqAPJe9g== 3EuW0we5S374TtMGYP8jcg==</property>
+        <property name="hibernate.connection.username">enc://BBFzQJSWD8lVzwf02qkX81PmXGiSxDc9Uf2fs594jjRJLycsBnrYJaUBjjl9a5Fo4IZ6I17mFww6xdGxTj2eZHuKmwKy2+Txae+kvJxImd+ZUdL8Gn2UrUtHdjsS4cOD1n6CysJBckh1EVGecriZPeque/kd KFPflA0MAilZ1KYfPDSiGw== 2sO5Qtw07FD1X4JsQycDhQ==</property>
         <property name="hibernate.dialect">org.hibernate.dialect.MySQLInnoDBDialect</property>
         <property name="hibernate.show_sql">false</property>
         <property name="hibernate.format_sql">true</property>
@@ -32,7 +32,7 @@
         <property name="hibernate.connection.url">jdbc:postgresql://localhost:5432/jobscheduler_2</property-->
        
   
-  		<property name="hibernate.connection.password">enc://XflZsziiYbozB9DQiEhZ+4IO8Nlj6GKBYzrNyfFoCLjsZJERZR+Ka79LxUYsOXH4UfX6OjtzanwaYwfdszIuUqOH5bDxIHIZ/J48Fi2akLex3IhpVBjdM26M1T3ix2WH14UrfFd1R4n/kXtnA3vEgv2qZomae1468b1H4szmlniI97iBgU7ow0ZPZFLHHNpbj2dAOA6e0OzVnVpmgH92H4iT9t0gWJ/nnk1ZRaaCWgYLBcoff+8a8+zIUcbS2qhXZLgqJoclEFgSfkJgYE2HOWHKTvfaPhz2yoRDrv1klY8LsDFv7n0vAB69NheEumU00DtSQR1spdjIR1gxYPE88g== bfzm03hlSw6+AyGqAPJe9g== 3EuW0we5S374TtMGYP8jcg==</property>
+  		<property name="hibernate.connection.password">enc://BBFzQJSWD8lVzwf02qkX81PmXGiSxDc9Uf2fs594jjRJLycsBnrYJaUBjjl9a5Fo4IZ6I17mFww6xdGxTj2eZHuKmwKy2+Txae+kvJxImd+ZUdL8Gn2UrUtHdjsS4cOD1n6CysJBckh1EVGecriZPeque/kd KFPflA0MAilZ1KYfPDSiGw== 2sO5Qtw07FD1X4JsQycDhQ==</property>
 <!--
 		<property name="hibernate.connection.username">jobscheduler_2</property>
 		      

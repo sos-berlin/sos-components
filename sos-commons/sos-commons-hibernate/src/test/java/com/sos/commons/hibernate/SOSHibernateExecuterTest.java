@@ -142,9 +142,12 @@ public class SOSHibernateExecuterTest {
         // .forEach(item -> LOGGER.info(item));
 
         SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/sp.hibernate.cfg.xml"));
-        factory.setKeystorePath("src/test/resources/JOC-1770_keystore.p12");
+        // JOC-1770_keystore.p12 contains for key pairs, setting of an alias is required
+        // JOC-1770_keystore2.p12 contains a single key pair, setting alias is not required
+        factory.setKeystorePath("src/test/resources/JOC-1770_keystore2.p12");
         factory.setKeystorePassword("jobscheduler");
-        factory.setKeystoreKeyalias("rsa_test");
+//        factory.setKeystoreKeypassword("jobscheduler");
+//        factory.setKeystoreKeyalias("ec_test");
         factory.setKeystoreType("PKCS12");
         factory.build();
         factory.close();
