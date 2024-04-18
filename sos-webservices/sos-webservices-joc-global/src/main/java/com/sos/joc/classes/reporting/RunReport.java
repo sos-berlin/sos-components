@@ -290,7 +290,7 @@ public class RunReport extends AReporting {
                 throw new DBMissingDataException("Couldn't find report template '" + in.getTemplateName().value() + "'(id:" + in.getTemplateName()
                         .intValue() + ")");
             }
-            return dbTemplate.getContent();
+            return dbTemplate.getContentBytes();
         } finally {
             Globals.disconnect(session);
         }

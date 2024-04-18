@@ -63,7 +63,7 @@ public class Templates extends AReporting {
         try {
             session = Globals.createSosHibernateStatelessConnection("GetTemplates");
             ReportingDBLayer dbLayer = new ReportingDBLayer(session);
-            Map<Integer, byte[]> dbTemplates = dbLayer.getTemplates().stream().collect(Collectors.toMap(DBItemReportTemplate::getTemplateId,
+            Map<Integer, String> dbTemplates = dbLayer.getTemplates().stream().collect(Collectors.toMap(DBItemReportTemplate::getTemplateId,
                     DBItemReportTemplate::getContent));
             
             Function<TemplateId, Template> mapToTemplateFromDb = templateId -> {
@@ -163,7 +163,7 @@ public class Templates extends AReporting {
                     throw new DBMissingDataException("Template " + tId.value() + " is not longer supported.");
                 }
             }
-            return item.getContent();
+            return item.getContentBytes();
         } finally {
             Globals.disconnect(session);
         }
