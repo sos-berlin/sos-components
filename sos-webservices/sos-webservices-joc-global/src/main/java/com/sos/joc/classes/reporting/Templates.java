@@ -107,22 +107,23 @@ public class Templates extends AReporting {
         Set<Path> templates = Files.list(templatesDir).filter(f -> f.getFileName().toString().matches("template_\\d+\\.json")).collect(Collectors
                 .toSet());
         if (templates.isEmpty()) {
-           throw new FileNotFoundException("Couldn't find any template files according the pattern 'template_\\d+\\.json' in " + templatesDir.toString()); 
+            throw new FileNotFoundException("Couldn't find any template files according the pattern 'template_\\d+\\.json' in " + templatesDir
+                    .toString());
         } else {
             LOGGER.debug(templates.size() + " template files are found in " + templatesDir.toString());
         }
         Date now = Date.from(Instant.now());
         for (Path template : templates) {
             updateTemplate(template, session, now);
-            Files.deleteIfExists(template);
+//            Files.deleteIfExists(template);
         }
-        if (Files.list(templatesDir).count() == 0L) {
-            try {
-                Files.deleteIfExists(templatesDir);
-            } catch (IOException e) {
-                //
-            } 
-        }
+//        if (Files.list(templatesDir).count() == 0L) {
+//            try {
+//                Files.deleteIfExists(templatesDir);
+//            } catch (IOException e) {
+//                //
+//            } 
+//        }
     }
     
     private static void updateTemplate(Path template, SOSHibernateSession session, Date now) throws SOSHibernateException, IOException {
