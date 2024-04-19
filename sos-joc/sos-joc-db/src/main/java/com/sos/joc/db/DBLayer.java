@@ -536,9 +536,9 @@ public class DBLayer implements Serializable {
         cl.add(DBItemIamFido2Requests.class);
         cl.add(DBItemIamFido2Devices.class);
         
-        cl.add(DBItemReport.class);
-        cl.add(DBItemReportRun.class);
-        cl.add(DBItemReportTemplate.class);
+//        cl.add(DBItemReport.class);
+//        cl.add(DBItemReportRun.class);
+//        cl.add(DBItemReportTemplate.class);
 
         cl.merge(getHistoryClassMapping().getClasses());
         cl.merge(getDailyPlanClassMapping().getClasses());
