@@ -119,7 +119,7 @@ public class HistoryControllerHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryControllerHandler.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
-    private static final String TORN_PROBLEM_CODE = "SnapshotForUnknownEventId";
+    private static final String TORN_PROBLEM_CODE_REGEXP = "UnknownEventId|SnapshotForUnknownEventId";
 
     private final SOSHibernateFactory factory;
     private final ControllerConfiguration controllerConfig;
@@ -322,6 +322,8 @@ public class HistoryControllerHandler {
             flux = flux.doOnComplete(this::fluxDoOnComplete);
             flux = flux.doOnCancel(this::fluxDoOnCancel);
             flux = flux.doFinally(this::fluxDoFinally);
+            // TODO test flux.publishOn
+            // flux = flux.publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool()));
 
             flux.takeUntilOther(stopper.stopped()).map(this::map2fat).filter(e -> e.getEventId() != null).bufferTimeout(config
                     .getBufferTimeoutMaxSize(), Duration.ofSeconds(config.getBufferTimeoutMaxTime())).toIterable().forEach(list -> {
@@ -793,7 +795,7 @@ public class HistoryControllerHandler {
         try {
             Optional<ProblemCode> code = JProblem.apply(ex.problem()).maybeCode();
             if (code.isPresent()) {
-                if (TORN_PROBLEM_CODE.equalsIgnoreCase(code.get().string())) {
+                if (code.get().string().matches(TORN_PROBLEM_CODE_REGEXP)) {
                     return true;
                 }
             }

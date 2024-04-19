@@ -162,6 +162,9 @@ public class HistoryControllerHandlerTest {
             flux = flux.doOnCancel(this::fluxDoOnCancel);
             flux = flux.doFinally(this::fluxDoFinally);
             flux = flux.onErrorStop();
+            // TODO test flux.publishOn
+            // flux = flux.publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool()));
+
             flux.takeUntilOther(stopper.stopped()).map(this::map2fat).filter(e -> e.getEventId() != null).bufferTimeout(1000, Duration.ofSeconds(1))
                     .toIterable().forEach(list -> {
                         LOGGER.info("[HANDLE BLOCK][START][" + closed.get() + "]" + list.size());
