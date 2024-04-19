@@ -814,8 +814,12 @@
             <artifactId>logback-classic</artifactId> 
           </exclusion>
           <exclusion>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-core</artifactId> 
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk18on</artifactId> 
+          </exclusion>
+          <exclusion>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId> 
           </exclusion>
           <exclusion>
             <groupId>junit</groupId>
