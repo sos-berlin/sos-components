@@ -29,8 +29,6 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JOCSOSShell;
 import com.sos.joc.classes.inventory.JocInventory;
-import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
-import com.sos.joc.cluster.configuration.globals.common.ConfigurationEntry;
 import com.sos.joc.db.reporting.DBItemReport;
 import com.sos.joc.db.reporting.DBItemReportRun;
 import com.sos.joc.db.reporting.DBItemReportTemplate;
@@ -117,16 +115,9 @@ public class RunReport extends AReporting {
     }
     
     private static String getCommandLineOptions() {
-        ConfigurationGlobalsJoc jocSettings = Globals.getConfigurationGlobalsJoc();
-        ConfigurationEntry nodeCommandLineOptions = jocSettings.getNodeCommandLineOptions();
-//        String nCLO = nodeCommandLineOptions.getValue();
-//        if (nCLO == null || nCLO.isEmpty()) {
-//            nCLO = nodeCommandLineOptions.getDefault();
-//        }
-//        if (nCLO == null || nCLO.isEmpty()) {
-//            nCLO = nodeCLOs;
-//        }
-        return nodeCommandLineOptions.getValue();
+//        ConfigurationGlobalsJoc jocSettings = Globals.getConfigurationGlobalsJoc();
+//        ConfigurationEntry nodeCommandLineOptions = jocSettings.getNodeCommandLineOptions();
+        return ""; //nodeCommandLineOptions.getValue();
     }
 
     private static String getCommonScript(final Report in, String commandLineOptions) {
