@@ -16,7 +16,7 @@
     </dependency>
     <dependency>
       <groupId>org.bouncycastle</groupId>
-      <artifactId>bcprov-jdk18on</artifactId>
+      <artifactId>bcprov-jdk15to18</artifactId>
     </dependency>
 
     <!-- test dependencies -->
