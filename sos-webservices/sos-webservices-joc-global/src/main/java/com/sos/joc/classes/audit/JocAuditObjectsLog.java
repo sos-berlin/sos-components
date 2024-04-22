@@ -10,6 +10,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.db.joc.DBItemJocAuditLogDetails;
 import com.sos.joc.model.audit.ObjectType;
@@ -23,7 +24,7 @@ public class JocAuditObjectsLog {
     
     public JocAuditObjectsLog(Long auditLogId) {
         this.auditLogId = auditLogId;
-        this.isEnabled = AUDIT_OBJECTS_LOGGER.isInfoEnabled();
+        this.isEnabled = JocCockpitProperties.auditObjectsLoggerIsDefined.get() && AUDIT_OBJECTS_LOGGER.isInfoEnabled();
     }
     
     public void addDetail(DBItemJocAuditLogDetails detail) {
@@ -46,7 +47,7 @@ public class JocAuditObjectsLog {
     }
     
     public static boolean isEnabled() {
-        return AUDIT_OBJECTS_LOGGER.isInfoEnabled();
+        return JocCockpitProperties.auditObjectsLoggerIsDefined.get() && AUDIT_OBJECTS_LOGGER.isInfoEnabled();
     }
     
     public static void log(DBItemJocAuditLogDetails detail, Long auditlogId) {

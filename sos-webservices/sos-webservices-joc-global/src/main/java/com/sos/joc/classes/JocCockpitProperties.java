@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -28,6 +29,7 @@ public class JocCockpitProperties {
 	private SOSParameterSubstitutor parameterSubstitutor = new SOSParameterSubstitutor();
 	private volatile long modTime = 0L;
 	private volatile long log4jModTime = 0L;
+	public static AtomicBoolean auditObjectsLoggerIsDefined = new AtomicBoolean(false);
 
 	public JocCockpitProperties() {
 		readProperties();
@@ -170,6 +172,7 @@ public class JocCockpitProperties {
                         if (log4jModTime != Files.getLastModifiedTime(p).toMillis()) {
                             Configurator.reconfigure(p.toUri());
                             log4jModTime = Files.getLastModifiedTime(p).toMillis();
+                            setAuditObjectsLoggerIsDefined(p);
                         }
                     } catch (Exception e) {
                         LOGGER.warn("", e);
@@ -191,6 +194,7 @@ public class JocCockpitProperties {
                     try {
                         Configurator.reconfigure(p.toUri());
                         log4jModTime = Files.getLastModifiedTime(p).toMillis();
+                        setAuditObjectsLoggerIsDefined(p);
                     } catch (Exception e) {
                         LOGGER.warn("", e);
                     }
@@ -199,6 +203,11 @@ public class JocCockpitProperties {
                 }
             }
         }
+    }
+    
+    private void setAuditObjectsLoggerIsDefined(Path p) {
+        auditObjectsLoggerIsDefined.getAndSet(Configurator.initialize("joc_config", null, p.toUri()).getConfiguration().getLoggers().values().stream()
+                .map(l -> l.getName()).anyMatch(l -> l.equals(WebserviceConstants.AUDIT_OBJECTS_LOGGER)));
     }
 
 	private void substituteProperties() {
