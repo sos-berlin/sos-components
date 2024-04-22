@@ -97,7 +97,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
 					com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(
 							dbItem.getConfigurationItem(), com.sos.joc.model.security.properties.Properties.class);
 
-					if (properties.getOidc() != null) {
+					if (properties.getOidc() != null && properties.getOidc().getIamOidcFlowType() != null) {
 
 						if (!properties.getOidc().getIamOidcFlowType().equals(OidcFlowTypes.CLIENT_CREDENTIAL)) {
 
@@ -132,7 +132,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
 					com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(
 							dbItem.getConfigurationItem(), com.sos.joc.model.security.properties.Properties.class);
 
-					if (properties.getOidc() != null) {
+					if (properties.getOidc() != null && properties.getOidc().getIamOidcFlowType() != null) {
 						if (!properties.getOidc().getIamOidcFlowType().equals(OidcFlowTypes.CLIENT_CREDENTIAL)) {
 
 							DocumentationDBLayer dbLayer = new DocumentationDBLayer(sosHibernateSession);

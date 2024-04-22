@@ -636,7 +636,7 @@ public class SOSServicePermissionIam {
                     try {
                         clientId = getClientId(idToken, properties);
 
-                        if (properties != null && properties.getOidc() != null && properties.getOidc().getIamOidcFlowType().equals(
+                        if (properties != null && properties.getOidc() != null && properties.getOidc().getIamOidcFlowType() != null && properties.getOidc().getIamOidcFlowType().equals(
                                 OidcFlowTypes.CLIENT_CREDENTIAL) && properties.getOidc().getIamOidcClientId().equals(clientId)) {
                             return dbItemIamIdentityService.getIdentityServiceName();
                         }
