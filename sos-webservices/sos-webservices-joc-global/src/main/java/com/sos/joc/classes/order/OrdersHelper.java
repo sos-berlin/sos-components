@@ -106,6 +106,7 @@ import com.sos.sign.model.workflow.Workflow;
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.data.agent.AgentPath;
+import js7.data.item.VersionedItemId;
 import js7.data.order.Order;
 import js7.data.order.OrderId;
 import js7.data.order.OrderMark.Cancelling;
@@ -123,6 +124,7 @@ import js7.data.workflow.instructions.ImplicitEnd;
 import js7.data.workflow.position.Label;
 import js7.data.workflow.position.Position;
 import js7.data.workflow.position.PositionOrLabel;
+import js7.data.workflow.position.WorkflowPosition;
 import js7.data_for_java.command.JCancellationMode;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JFreshOrder;
@@ -428,6 +430,7 @@ public class OrdersHelper {
         o.setAttachedState(oItem.getAttachedState());
         o.setOrderId(oItem.getId());
         o.setHasChildOrders(null);
+        boolean isChildOrder = oItem.getId().contains("|");
 
         List<HistoricOutcome> outcomes = oItem.getHistoricOutcomes();
         if (outcomes != null && !outcomes.isEmpty()) {
@@ -477,7 +480,7 @@ public class OrdersHelper {
                     //
                 }
             }
-        } else if (oItem.getId().contains("|")) { // is (not running) child order
+        } else if (isChildOrder) { // is (not running) child order
             orderIsInImplicitEnd(jOrder, controllerState).ifPresent(b -> o.setPositionIsImplicitEnd(b ? true : null));
         }
         Long scheduledFor = getScheduledForMillis(jOrder, zoneId);
@@ -516,7 +519,18 @@ public class OrdersHelper {
         }
         // completed order
         if (OrderStateText.FINISHED.equals(o.getState().get_text()) || OrderStateText.CANCELLED.equals(o.getState().get_text())) {
-            o.setCanLeave(!o.getOrderId().matches(".*#F[0-9]+-.*")); // true if not file order
+            o.setCanLeave(!o.getOrderId().matches(".*#F[0-9]+-.*") && !isChildOrder); // true if not file order and not child order
+            if (isChildOrder && OrderStateText.CANCELLED.equals(o.getState().get_text())) {
+                // force canceled child order to position of branch's implicit end
+                try {
+                    pos = moveChildOrderPosToImplicitEnd(pos, jOrder, controllerState);
+                    o.setPosition(pos.toList());
+                    o.setPositionString(pos.toString());
+                    o.setPositionIsImplicitEnd(true);
+                } catch (Exception e) {
+                    //
+                }
+            }
         }
         o.setMarked(getMark(jOrder.asScala().mark()));
         // o.setIsCancelable(jOrder.asScala().isCancelable() ? null : false);
@@ -534,6 +548,36 @@ public class OrdersHelper {
         // only label of a job instruction is available
         orderPositionToLabel(jOrder, controllerState).ifPresent(l -> o.setLabel(l));
         return o;
+    }
+    
+    private static JPosition moveChildOrderPosToImplicitEnd(JPosition pos, JOrder o, JControllerState controllerState) {
+        JPosition p = pos;
+        if (controllerState != null && o != null && o.id().string().contains("|")) { // is childOrder
+            VersionedItemId<WorkflowPath> wId = o.asScala().workflowPosition().workflowId();
+            if (!orderIsInImplicitEnd(o.asScala().workflowPosition(), controllerState)) {
+                List<Object> lpos = pos.toList();
+                int indexOfParentFork = lpos.size();
+                boolean parentForkFound = false;
+                for (int j = lpos.size() - 2; j > 0; j -= 2) {
+                    if (lpos.get(j).toString().startsWith("fork")) {
+                        indexOfParentFork = j;
+                        parentForkFound = true;
+                        break;
+                    }
+                }
+                if (parentForkFound) {
+                    List<Object> sublpos = new ArrayList<>(lpos.subList(0, indexOfParentFork + 2));
+                    Integer lastpos = (Integer) lpos.get(indexOfParentFork + 1);
+                    int limit = lastpos + 1000; // avoiding endless loop
+                    do {
+                        lastpos++;
+                        sublpos.set(sublpos.size() - 1, lastpos);
+                        p = JPosition.fromList(sublpos).get();
+                    } while (lastpos < limit && !orderIsInImplicitEnd(WorkflowPosition.apply(wId, p.asScala()), controllerState));
+                }
+            }
+        }
+        return p;
     }
     
     private static Optional<String> orderPositionToLabel(JOrder order, JControllerState controllerState) {
@@ -1433,7 +1477,11 @@ public class OrdersHelper {
         if (controllerState == null || o == null) {
             return Optional.empty();
         }
-        return Optional.of(controllerState.asScala().instruction(o.asScala().workflowPosition()) instanceof ImplicitEnd);
+        return Optional.of(orderIsInImplicitEnd(o.asScala().workflowPosition(), controllerState));
+    }
+    
+    private static boolean orderIsInImplicitEnd(WorkflowPosition wPos, JControllerState controllerState) {
+        return controllerState.asScala().instruction(wPos) instanceof ImplicitEnd;
     }
 
     public static Long getScheduledForMillis(String orderId, ZoneId zoneId, Long defaultMillis) {
