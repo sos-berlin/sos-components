@@ -111,4 +111,8 @@ public class SOSInternAuthSubject implements ISOSAuthSubject {
         return setOfAccountPermissions;
     }
 
+    @Override
+    public Set<String> getListOfAccountRoles() {
+        return this.setOfRoles;
+    }
 }

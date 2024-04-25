@@ -82,8 +82,7 @@ public class SOSVaultSubject implements ISOSAuthSubject {
         getVaultSession().setAccessToken(accessToken);
     }
 
-    public void setPermissionAndRoles(List<String> listOfTokenRoles, String accountName)
-            throws SOSHibernateException {
+    public void setPermissionAndRoles(List<String> listOfTokenRoles, String accountName) throws SOSHibernateException {
         SOSHibernateSession sosHibernateSession = null;
         try {
             setOfRoles = new HashSet<String>();
@@ -106,7 +105,7 @@ public class SOSVaultSubject implements ISOSAuthSubject {
                     .getIdentityServiceId());
             mapOfFolderPermissions = SOSAuthHelper.getMapOfFolderPermissions(listOfPermissions);
             setOfAccountPermissions = SOSAuthHelper.getSetOfPermissions(listOfPermissions);
-           
+
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -134,5 +133,10 @@ public class SOSVaultSubject implements ISOSAuthSubject {
     @Override
     public Set<String> getListOfAccountPermissions() {
         return setOfAccountPermissions;
+    }
+
+    @Override
+    public Set<String> getListOfAccountRoles() {
+        return this.setOfRoles;
     }
 }

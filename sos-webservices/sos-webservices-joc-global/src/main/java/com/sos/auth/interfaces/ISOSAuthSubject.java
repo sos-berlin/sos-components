@@ -17,9 +17,9 @@ public interface ISOSAuthSubject {
     public Map<String, List<String>> getMapOfFolderPermissions();
 
     public Set<String> getListOfAccountPermissions();
-    
+
+    public Set<String> getListOfAccountRoles();
+
     public ISOSSession getSession();
-    
-    
 
 }
