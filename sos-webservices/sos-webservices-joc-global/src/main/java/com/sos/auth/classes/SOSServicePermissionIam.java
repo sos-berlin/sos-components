@@ -756,7 +756,7 @@ public class SOSServicePermissionIam {
                                         kid = "[token verified using kid: " + currentAccount.getKid() + "]";
                                     }
 
-                                    LOGGER.info("Login with Identity Service " + dbItemIamIdentityService.getIdentityServiceName() + " successful."
+                                    LOGGER.info("Authentication with Identity Service " + dbItemIamIdentityService.getIdentityServiceName() + " successful."
                                             + kid);
                                     addFolder(currentAccount);
                                     break;
@@ -781,6 +781,18 @@ public class SOSServicePermissionIam {
 
                 }
                 IamHistoryDbLayer iamHistoryDbLayer = new IamHistoryDbLayer(sosHibernateSession);
+
+                if (currentAccount.getCurrentSubject() != null && currentAccount.getCurrentSubject().getListOfAccountPermissions() != null) {
+                    if (currentAccount.getRoles().size() == 0) {
+                        msg = "login denied: no role assignment found";
+                        currentAccount.setCurrentSubject(null);
+                    } else {
+                        if (currentAccount.getCurrentSubject().getListOfAccountPermissions().size() == 0) {
+                            msg = "login denied: no permission assignment found";
+                            currentAccount.setCurrentSubject(null);
+                        }
+                    }
+                }
 
                 if (currentAccount.getCurrentSubject() != null && currentAccount.getCurrentSubject().getListOfAccountPermissions() != null) {
                     iamHistoryDbLayer.addLoginAttempt(currentAccount.getAccountname(), authenticationResult, true);

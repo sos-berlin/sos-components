@@ -69,7 +69,7 @@ public class SOSOpenIdSubject implements ISOSAuthSubject {
 
     private SOSOpenIdSession getOpenIdSession() {
         if (session == null) {
-            session = new SOSOpenIdSession(currentAccount,identityService);
+            session = new SOSOpenIdSession(currentAccount, identityService);
         }
         return session;
     }
@@ -82,8 +82,7 @@ public class SOSOpenIdSubject implements ISOSAuthSubject {
     public void setAccessToken(SOSOpenIdAccountAccessToken accessToken) {
         getOpenIdSession().setAccessToken(accessToken);
     }
- 
-    
+
     public void setPermissionAndRoles(Set<String> setOfTokenRoles, String accountName) throws SOSHibernateException {
         SOSHibernateSession sosHibernateSession = null;
         try {
@@ -134,5 +133,10 @@ public class SOSOpenIdSubject implements ISOSAuthSubject {
     @Override
     public Set<String> getListOfAccountPermissions() {
         return setOfAccountPermissions;
+    }
+
+    @Override
+    public Set<String> getListOfAccountRoles() {
+        return this.setOfRoles;
     }
 }

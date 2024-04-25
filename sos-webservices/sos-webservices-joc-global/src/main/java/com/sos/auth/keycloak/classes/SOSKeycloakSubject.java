@@ -133,4 +133,9 @@ public class SOSKeycloakSubject implements ISOSAuthSubject {
     public Set<String> getListOfAccountPermissions() {
         return setOfAccountPermissions;
     }
+
+    @Override
+    public Set<String> getListOfAccountRoles() {
+        return this.setOfRoles;
+    }
 }
