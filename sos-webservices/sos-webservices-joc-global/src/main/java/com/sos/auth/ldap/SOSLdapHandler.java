@@ -105,7 +105,7 @@ public class SOSLdapHandler {
     }
 
     public SOSAuthAccessToken login(SOSLdapWebserviceCredentials sosLdapWebserviceCredentials, String password) throws SOSHibernateException {
-        if (Globals.withHostnameVerification) {
+        if (sosLdapWebserviceCredentials.isHostnameVerification()) {
             System.setProperty("com.sun.jndi.ldap.object.disableEndpointIdentification", "false");
             LOGGER.info("hostname verification is enabled");
         } else {
