@@ -5,10 +5,11 @@ import java.util.List;
 
 import org.hibernate.QueryException;
 import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.engine.spi.Mapping;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.type.StringType;
-import org.hibernate.type.Type;
+import org.hibernate.query.ReturnableType;
+import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.type.StandardBasicTypes;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
 
@@ -23,7 +24,8 @@ public class SOSHibernateJsonValue extends StandardSQLFunction {
     private SOSHibernateFactory factory;
 
     public SOSHibernateJsonValue(SOSHibernateFactory factory) {
-        super(NAME);
+        //TODO 6.4.5.Final
+        super(NAME, StandardBasicTypes.STRING);
         this.factory = factory;
     }
 
@@ -40,33 +42,107 @@ public class SOSHibernateJsonValue extends StandardSQLFunction {
                 .toString();
     }
 
-    @SuppressWarnings("rawtypes")
+    //TODO 6.4.5.Final
+//    @SuppressWarnings("rawtypes")
+//    @Override
+//    public String render(Type firstArgumentType, List arguments, SessionFactoryImplementor factory) throws QueryException {
+//        if (arguments == null || arguments.size() < 3) {
+//            throw new QueryException("missing arguments");
+//        }
+//        String property = arguments.get(1).toString();
+//        String path = arguments.get(2).toString();
+//        ReturnType returnType;
+//
+//        switch (this.factory.getDbms()) {
+//        case MYSQL:
+//            returnType = argument2ReturnType(arguments.get(0).toString());
+//            // path = '$.ports.usb' -> '$.ports.usb'
+//            String extract = "JSON_EXTRACT(" + property + "," + path + ")";
+//            if (returnType.equals(ReturnType.SCALAR)) {
+//                return "JSON_UNQUOTE(" + extract + ")";
+//            } else {
+//                return extract;
+//            }
+//        case MSSQL:
+//            returnType = argument2ReturnType(arguments.get(0).toString());
+//            if (returnType.equals(ReturnType.SCALAR)) {
+//                return "JSON_VALUE(" + property + "," + path + ")";
+//            } else {
+//                return "JSON_QUERY(" + property + "," + path + ")";
+//            }
+//        case ORACLE:
+//            // TODO
+//            // returning clob
+//            // ---- SELECT json_value(j, '$.bar' returning clob) FROM j
+//            // -------- available from 18c? 12c - ORA-40444 error ..;
+//            // ERROR ON ERROR
+//            // ---- SELECT json_value(j, '$.bar' returning varchar2(32000) ERROR ON ERROR) FROM j;
+//            returnType = argument2ReturnType(arguments.get(0).toString());
+//            if (returnType.equals(ReturnType.SCALAR)) {
+//                // tested with 18c - not support RETURNING CLOB - gets empty value - use VARCHAR2(32000)?
+//                return "JSON_VALUE(" + property + "," + path + ")";
+//            } else {
+//                if (this.factory.getDatabaseMetaData().supportJsonReturningClob()) {
+//                    return "JSON_QUERY(" + property + "," + path + " RETURNING CLOB)";
+//                } else {
+//                    return "JSON_QUERY(" + property + "," + path + ")";
+//                }
+//            }
+//        case PGSQL:
+//            // path = '$.ports.usb' -> 'ports'->>'usb'
+//            // '<column>->'ports'->>'usb'
+//            // path = '$.arg' -> 'arg'
+//            // '<column>->>'arg'
+//
+//            // StringBuilder r = new StringBuilder(property.toString());
+//            StringBuilder r = new StringBuilder(property.toString()).append("::jsonb");
+//            String[] arr = path.replaceAll("'", "").substring(2).split("\\.");
+//            if (arr.length == 1) {
+//                r.append("->>'").append(arr[0]).append("'");
+//            } else {
+//                r.append("->'");
+//                r.append(String.join("'->'", Arrays.copyOf(arr, arr.length - 1)));
+//                r.append("'->>'").append(arr[arr.length - 1]).append("'");
+//            }
+//            return r.toString();
+//        case H2:
+//            // path = '$.ports.usb' -> '$.ports.usb'
+//            return com.sos.commons.hibernate.function.json.h2.Functions.NAME_JSON_VALUE + "(" + property + "," + path + ")";
+//        default:
+//            return NAME;
+//        }
+//    }
+    
+    
     @Override
-    public String render(Type firstArgumentType, List arguments, SessionFactoryImplementor factory) throws QueryException {
+    public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> arguments, ReturnableType<?> returnType, SqlAstTranslator<?> translator)
+            throws QueryException {
         if (arguments == null || arguments.size() < 3) {
-            throw new QueryException("missing arguments");
+            throw new QueryException("missing arguments", null, null);
         }
         String property = arguments.get(1).toString();
         String path = arguments.get(2).toString();
-        ReturnType returnType;
+        ReturnType retType;
 
         switch (this.factory.getDbms()) {
         case MYSQL:
-            returnType = argument2ReturnType(arguments.get(0).toString());
+            retType = argument2ReturnType(arguments.get(0).toString());
             // path = '$.ports.usb' -> '$.ports.usb'
             String extract = "JSON_EXTRACT(" + property + "," + path + ")";
-            if (returnType.equals(ReturnType.SCALAR)) {
-                return "JSON_UNQUOTE(" + extract + ")";
+            if (retType.equals(ReturnType.SCALAR)) {
+                sqlAppender.append("JSON_UNQUOTE(" + extract + ")");
             } else {
-                return extract;
+                sqlAppender.append(extract);
             }
+            break;
         case MSSQL:
-            returnType = argument2ReturnType(arguments.get(0).toString());
-            if (returnType.equals(ReturnType.SCALAR)) {
-                return "JSON_VALUE(" + property + "," + path + ")";
+            retType = argument2ReturnType(arguments.get(0).toString());
+            if (retType.equals(ReturnType.SCALAR)) {
+                sqlAppender.append("JSON_VALUE(" + property + "," + path + ")");
             } else {
-                return "JSON_QUERY(" + property + "," + path + ")";
+                sqlAppender.append("JSON_QUERY(" + property + "," + path + ")");
             }
+            break;
         case ORACLE:
             // TODO
             // returning clob
@@ -74,17 +150,18 @@ public class SOSHibernateJsonValue extends StandardSQLFunction {
             // -------- available from 18c? 12c - ORA-40444 error ..;
             // ERROR ON ERROR
             // ---- SELECT json_value(j, '$.bar' returning varchar2(32000) ERROR ON ERROR) FROM j;
-            returnType = argument2ReturnType(arguments.get(0).toString());
-            if (returnType.equals(ReturnType.SCALAR)) {
+            retType = argument2ReturnType(arguments.get(0).toString());
+            if (retType.equals(ReturnType.SCALAR)) {
                 // tested with 18c - not support RETURNING CLOB - gets empty value - use VARCHAR2(32000)?
-                return "JSON_VALUE(" + property + "," + path + ")";
+                sqlAppender.append("JSON_VALUE(" + property + "," + path + ")");
             } else {
                 if (this.factory.getDatabaseMetaData().supportJsonReturningClob()) {
-                    return "JSON_QUERY(" + property + "," + path + " RETURNING CLOB)";
+                    sqlAppender.append("JSON_QUERY(" + property + "," + path + " RETURNING CLOB)");
                 } else {
-                    return "JSON_QUERY(" + property + "," + path + ")";
+                    sqlAppender.append("JSON_QUERY(" + property + "," + path + ")");
                 }
             }
+            break;
         case PGSQL:
             // path = '$.ports.usb' -> 'ports'->>'usb'
             // '<column>->'ports'->>'usb'
@@ -101,12 +178,15 @@ public class SOSHibernateJsonValue extends StandardSQLFunction {
                 r.append(String.join("'->'", Arrays.copyOf(arr, arr.length - 1)));
                 r.append("'->>'").append(arr[arr.length - 1]).append("'");
             }
-            return r.toString();
+            sqlAppender.append(r.toString());
+            break;
         case H2:
             // path = '$.ports.usb' -> '$.ports.usb'
-            return com.sos.commons.hibernate.function.json.h2.Functions.NAME_JSON_VALUE + "(" + property + "," + path + ")";
+            sqlAppender.append(com.sos.commons.hibernate.function.json.h2.Functions.NAME_JSON_VALUE + "(" + property + "," + path + ")");
+            break;
         default:
-            return NAME;
+            sqlAppender.append(NAME);
+            break;
         }
     }
 
@@ -114,23 +194,24 @@ public class SOSHibernateJsonValue extends StandardSQLFunction {
         try {
             return ReturnType.valueOf(arg.replaceAll("'", ""));
         } catch (Exception e) {
-            throw new QueryException(String.format("[argument=%s]%s", arg, e.toString()), e);
+            throw new QueryException(String.format("[argument=%s]%s", arg, e.toString()), null, e);
         }
     }
 
-    @Override
-    public boolean hasParenthesesIfNoArguments() {
-        return false;
-    }
-
-    @Override
-    public boolean hasArguments() {
-        return true;
-    }
-
-    @Override
-    public Type getReturnType(Type firstArgumentType, Mapping mapping) throws QueryException {
-        return new StringType();
-    }
+    //TODO 6.4.5.Final
+//    @Override
+//    public boolean hasParenthesesIfNoArguments() {
+//        return false;
+//    }
+//
+//    @Override
+//    public boolean hasArguments() {
+//        return true;
+//    }
+//
+//    @Override
+//    public Type getReturnType(Type firstArgumentType, Mapping mapping) throws QueryException {
+//        return new StringType();
+//    }
 
 }

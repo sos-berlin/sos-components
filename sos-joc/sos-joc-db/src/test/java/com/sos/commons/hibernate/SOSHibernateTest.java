@@ -8,8 +8,7 @@ import java.util.List;
 import org.hibernate.ScrollableResults;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
-import org.hibernate.type.LongType;
-import org.hibernate.type.StringType;
+import org.hibernate.type.StandardBasicTypes;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -109,7 +108,7 @@ public class SOSHibernateTest {
     public void testScroll() throws Exception {
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
-        ScrollableResults sr = null;
+        ScrollableResults<DBItemHistoryOrderStep> sr = null;
         try {
             factory = createFactory();
             session = factory.openStatelessSession();
@@ -120,7 +119,7 @@ public class SOSHibernateTest {
 
             sr = session.scroll(query);
             while (sr.next()) {
-                DBItemHistoryOrderStep step = (DBItemHistoryOrderStep) sr.get(0);
+                DBItemHistoryOrderStep step = sr.get();
                 LOGGER.info(SOSHibernate.toString(step));
             }
 
@@ -161,9 +160,9 @@ public class SOSHibernateTest {
             sql.append(factory.quoteColumn("ho.ID")).append("=").append(factory.quoteColumn("hos.HO_ID"));
 
             NativeQuery<MyJoinEntity> query = session.createNativeQuery(sql.toString(), MyJoinEntity.class); // pass MyJoinEntity as resultType
-            query.addScalar("orderId", StringType.INSTANCE); // map column value to property type
-            query.addScalar("stepId", LongType.INSTANCE);
-            query.addScalar("jobName", StringType.INSTANCE);
+            query.addScalar("orderId", StandardBasicTypes.STRING); // map column value to property type
+            query.addScalar("stepId", StandardBasicTypes.LONG);
+            query.addScalar("jobName", StandardBasicTypes.STRING);
 
             query.setMaxResults(10); // only for this test
             List<MyJoinEntity> result = session.getResultList(query);

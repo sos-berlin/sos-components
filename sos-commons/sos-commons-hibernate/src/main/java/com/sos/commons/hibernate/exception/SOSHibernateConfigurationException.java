@@ -1,6 +1,6 @@
 package com.sos.commons.hibernate.exception;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 public class SOSHibernateConfigurationException extends SOSHibernateException {
 

@@ -4,10 +4,11 @@ import java.util.List;
 
 import org.hibernate.QueryException;
 import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.engine.spi.Mapping;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.ReturnableType;
+import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.Type;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
 
@@ -18,7 +19,8 @@ public class SOSHibernateSecondsDiff extends StandardSQLFunction {
     private SOSHibernateFactory factory;
 
     public SOSHibernateSecondsDiff(SOSHibernateFactory factory) {
-        super(NAME);
+        //TODO 6.4.5.Final
+        super(NAME, StandardBasicTypes.INTEGER);
         this.factory = factory;
     }
 
@@ -26,45 +28,82 @@ public class SOSHibernateSecondsDiff extends StandardSQLFunction {
         return new StringBuilder(NAME).append("(").append(startTimeProperty).append(",").append(endTimeProperty).append(")").toString();
     }
 
-    @SuppressWarnings("rawtypes")
+    //TODO 6.4.5.Final
+//    @SuppressWarnings("rawtypes")
+//    @Override
+//    public String render(Type firstArgumentType, List arguments, SessionFactoryImplementor factory) throws QueryException {
+//        if (arguments == null || arguments.size() < 2) {
+//            throw new QueryException("missing arguments");
+//        }
+//        String startTimeProperty = arguments.get(0).toString();
+//        String endTimeProperty = arguments.get(1).toString();
+//
+//        switch (this.factory.getDbms()) {
+//        case MYSQL:
+//            return "TIMESTAMPDIFF(SECOND," + startTimeProperty + "," + endTimeProperty + ")";
+//        case MSSQL:
+//            return "DATEDIFF(SECOND," + startTimeProperty + "," + endTimeProperty + ")";
+//        case ORACLE:
+//            return "ROUND(24*60*60*(" + endTimeProperty + "-" + startTimeProperty + "))";
+//        case PGSQL:
+//            return "CAST(EXTRACT(EPOCH FROM(" + endTimeProperty + "-" + startTimeProperty + ")) AS INTEGER)";
+//        case H2:
+//            return "DATEDIFF(ss," + startTimeProperty + "," + endTimeProperty + ")";
+//        case SYBASE:
+//            return "DATEDIFF(ss," + endTimeProperty + "," + startTimeProperty + ")";
+//        default:
+//            return "(" + endTimeProperty + "-" + startTimeProperty + ")";
+//        }
+//    }
+    
+
     @Override
-    public String render(Type firstArgumentType, List arguments, SessionFactoryImplementor factory) throws QueryException {
+    public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> arguments, ReturnableType<?> returnType, SqlAstTranslator<?> translator)
+            throws QueryException {
         if (arguments == null || arguments.size() < 2) {
-            throw new QueryException("missing arguments");
+            throw new QueryException("missing arguments", null, null);
         }
         String startTimeProperty = arguments.get(0).toString();
         String endTimeProperty = arguments.get(1).toString();
-
+        
         switch (this.factory.getDbms()) {
         case MYSQL:
-            return "TIMESTAMPDIFF(SECOND," + startTimeProperty + "," + endTimeProperty + ")";
+            sqlAppender.append("TIMESTAMPDIFF(SECOND," + startTimeProperty + "," + endTimeProperty + ")");
+            break;
         case MSSQL:
-            return "DATEDIFF(SECOND," + startTimeProperty + "," + endTimeProperty + ")";
+            sqlAppender.append("DATEDIFF(SECOND," + startTimeProperty + "," + endTimeProperty + ")");
+            break;
         case ORACLE:
-            return "ROUND(24*60*60*(" + endTimeProperty + "-" + startTimeProperty + "))";
+            sqlAppender.append("ROUND(24*60*60*(" + endTimeProperty + "-" + startTimeProperty + "))");
+            break;
         case PGSQL:
-            return "CAST(EXTRACT(EPOCH FROM(" + endTimeProperty + "-" + startTimeProperty + ")) AS INTEGER)";
+            sqlAppender.append("CAST(EXTRACT(EPOCH FROM(" + endTimeProperty + "-" + startTimeProperty + ")) AS INTEGER)");
+            break;
         case H2:
-            return "DATEDIFF(ss," + startTimeProperty + "," + endTimeProperty + ")";
+            sqlAppender.append("DATEDIFF(ss," + startTimeProperty + "," + endTimeProperty + ")");
+            break;
         case SYBASE:
-            return "DATEDIFF(ss," + endTimeProperty + "," + startTimeProperty + ")";
+            sqlAppender.append("DATEDIFF(ss," + endTimeProperty + "," + startTimeProperty + ")");
+            break;
         default:
-            return "(" + endTimeProperty + "-" + startTimeProperty + ")";
+            sqlAppender.append("(" + endTimeProperty + "-" + startTimeProperty + ")");
+            break;
         }
     }
 
-    @Override
-    public boolean hasParenthesesIfNoArguments() {
-        return true;
-    }
-
-    @Override
-    public boolean hasArguments() {
-        return true;
-    }
-
-    @Override
-    public Type getReturnType(Type firstArgumentType, Mapping mapping) throws QueryException {
-        return StandardBasicTypes.INTEGER;
-    }
+    //TODO 6.4.5.Final
+//    @Override
+//    public boolean hasParenthesesIfNoArguments() {
+//        return true;
+//    }
+//
+//    @Override
+//    public boolean hasArguments() {
+//        return true;
+//    }
+//
+//    @Override
+//    public Type getReturnType(Type firstArgumentType, Mapping mapping) throws QueryException {
+//        return StandardBasicTypes.INTEGER;
+//    }
 }

@@ -15,7 +15,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.ScrollableResults;
 import org.hibernate.query.Query;
@@ -78,7 +78,7 @@ public class JobHistoryDBLayer {
         }
     }
 
-    public ScrollableResults getJobs() throws DBConnectionRefusedException, DBInvalidDataException {
+    public ScrollableResults<DBItemHistoryOrderStep> getJobs() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             Query<DBItemHistoryOrderStep> query = createQuery(new StringBuilder().append("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEPS).append(
                     getOrderStepsWhere()).append(" order by startTime desc").toString());
@@ -94,7 +94,7 @@ public class JobHistoryDBLayer {
         }
     }
     
-    public ScrollableResults getCSV(ReportingLoader loader, LocalDateTime month) throws DBConnectionRefusedException, DBInvalidDataException {
+    public ScrollableResults<String> getCSV(ReportingLoader loader, LocalDateTime month) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             filter.setExecutedFrom(Date.from(month.atZone(ZoneId.systemDefault()).toInstant()));
             filter.setExecutedTo(Date.from(month.plusMonths(1).atZone(ZoneId.systemDefault()).toInstant()));
@@ -113,7 +113,7 @@ public class JobHistoryDBLayer {
         }
     }
     
-    public ScrollableResults getCSVJobs(Stream<String> columns) throws DBConnectionRefusedException, DBInvalidDataException {
+    public ScrollableResults<CSVItem> getCSVJobs(Stream<String> columns) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             Query<CSVItem> query = createQuery(new StringBuilder().append("select workflowFolder as folder").append(columns.collect(Collectors
                     .joining(",''),';',coalesce(", ", concat(coalesce(", ",'')) as csv"))).append(" from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEPS)
@@ -130,8 +130,8 @@ public class JobHistoryDBLayer {
         }
     }
 
-    public ScrollableResults getJobsFromHistoryIdAndPosition(Map<Long, Set<String>> mapOfHistoryIdAndPosition) throws DBConnectionRefusedException,
-            DBInvalidDataException {
+    public ScrollableResults<DBItemHistoryOrderStep> getJobsFromHistoryIdAndPosition(Map<Long, Set<String>> mapOfHistoryIdAndPosition)
+            throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             List<String> l = new ArrayList<String>();
             String where = "";
@@ -165,7 +165,7 @@ public class JobHistoryDBLayer {
         }
     }
     
-    public ScrollableResults getCSVJobsFromHistoryIdAndPosition(Stream<String> columns, Map<Long, Set<String>> mapOfHistoryIdAndPosition)
+    public ScrollableResults<CSVItem> getCSVJobsFromHistoryIdAndPosition(Stream<String> columns, Map<Long, Set<String>> mapOfHistoryIdAndPosition)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             List<String> l = new ArrayList<String>();
@@ -257,7 +257,7 @@ public class JobHistoryDBLayer {
         }
     }
 
-    public ScrollableResults getMainOrders() throws DBConnectionRefusedException, DBInvalidDataException {
+    public ScrollableResults<DBItemHistoryOrder> getMainOrders() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             boolean isMainOrder = filter.isMainOrder();
             filter.setMainOrder(true);
@@ -717,8 +717,8 @@ public class JobHistoryDBLayer {
         return result;
     }
 
-    private <T> ScrollableResults executeScroll(Query<T> query) throws SOSHibernateException {
-        ScrollableResults result = null;
+    private <T> ScrollableResults<T> executeScroll(Query<T> query) throws SOSHibernateException {
+        ScrollableResults<T> result = null;
         int count = 0;
         boolean run = true;
         while (run) {

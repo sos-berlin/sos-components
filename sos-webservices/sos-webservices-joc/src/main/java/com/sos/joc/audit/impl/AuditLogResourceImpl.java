@@ -158,11 +158,11 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
         return categories.stream().anyMatch(c -> !CategoryType.CONTROLLER.equals(c));
     }
 
-    private void setAuditLogItems(List<AuditLogItem> auditLogItems, ScrollableResults sr) throws Exception {
+    private void setAuditLogItems(List<AuditLogItem> auditLogItems, ScrollableResults<AuditLogDBItem> sr) throws Exception {
         try {
             if (sr != null) {
                 while (sr.next()) {
-                    auditLogItems.add(((AuditLogDBItem) sr.get(0)).toAuditLogItem());
+                    auditLogItems.add(sr.get().toAuditLogItem());
                 }
             }
         } catch (Exception e) {

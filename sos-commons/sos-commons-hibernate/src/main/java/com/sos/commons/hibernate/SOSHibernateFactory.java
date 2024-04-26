@@ -14,7 +14,6 @@ import java.security.PrivateKey;
 import java.sql.Connection;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +28,6 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import javax.persistence.PersistenceException;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -37,8 +35,6 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.NumericBooleanType;
-import org.hibernate.type.TimestampType;
 import org.hibernate.type.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,9 +54,10 @@ import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.commons.sign.keys.keyStore.KeystoreType;
 import com.sos.commons.util.SOSClassList;
 import com.sos.commons.util.SOSClassUtil;
-import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
+
+import jakarta.persistence.PersistenceException;
 
 public class SOSHibernateFactory implements Serializable {
 
@@ -383,29 +380,30 @@ public class SOSHibernateFactory implements Serializable {
         if (value == null) {
             return "NULL";
         }
-        try {
-            if (type instanceof org.hibernate.type.NumericBooleanType) {
-                return NumericBooleanType.INSTANCE.objectToSQLString((Boolean) value, dialect);
-            } else if (type instanceof org.hibernate.type.LongType) {
-                return org.hibernate.type.LongType.INSTANCE.objectToSQLString((Long) value, dialect);
-            } else if (type instanceof org.hibernate.type.StringType) {
-                return "'" + value.toString().replaceAll("'", "''") + "'";
-            } else if (type instanceof org.hibernate.type.TimestampType) {
-                String val;
-                switch (dbms) {
-                case ORACLE:
-                    val = SOSDate.format((Date) value, "yyyy-MM-dd HH:mm:ss");
-                    return "to_date('" + val + "','yyyy-mm-dd HH24:MI:SS')";
-                case MSSQL:
-                    val = SOSDate.format((Date) value, "yyyy-MM-dd HH:mm:ss.SSS");
-                    return "'" + val.replace(" ", "T") + "'";
-                default:
-                    return TimestampType.INSTANCE.objectToSQLString((Date) value, dialect);
-                }
-            }
-        } catch (Exception e) {
-            throw new SOSHibernateConvertException(String.format("can't convert value=%s to SQL string", value), e);
-        }
+        //TODO 6.4.5.Final
+//        try {
+//            if (type instanceof org.hibernate.type.NumericBooleanType) {
+//                return NumericBooleanType.INSTANCE.objectToSQLString((Boolean) value, dialect);
+//            } else if (type instanceof org.hibernate.type.LongType) {
+//                return org.hibernate.type.LongType.INSTANCE.objectToSQLString((Long) value, dialect);
+//            } else if (type instanceof org.hibernate.type.StringType) {
+//                return "'" + value.toString().replaceAll("'", "''") + "'";
+//            } else if (type instanceof org.hibernate.type.TimestampType) {
+//                String val;
+//                switch (dbms) {
+//                case ORACLE:
+//                    val = SOSDate.format((Date) value, "yyyy-MM-dd HH:mm:ss");
+//                    return "to_date('" + val + "','yyyy-mm-dd HH24:MI:SS')";
+//                case MSSQL:
+//                    val = SOSDate.format((Date) value, "yyyy-MM-dd HH:mm:ss.SSS");
+//                    return "'" + val.replace(" ", "T") + "'";
+//                default:
+//                    return TimestampType.INSTANCE.objectToSQLString((Date) value, dialect);
+//                }
+//            }
+//        } catch (Exception e) {
+//            throw new SOSHibernateConvertException(String.format("can't convert value=%s to SQL string", value), e);
+//        }
         return value + "";
     }
 
@@ -562,6 +560,7 @@ public class SOSHibernateFactory implements Serializable {
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_USE_SCROLLABLE_RESULTSET, "true");
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_CURRENT_SESSION_CONTEXT_CLASS, "jta");
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_JAVAX_PERSISTENCE_VALIDATION_MODE, "none");
+        defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_JAKARTA_PERSISTENCE_VALIDATION_MODE, "none");
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_ID_NEW_GENERATOR_MAPPINGS, "false");
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_SOS_PROPERTY_MSSQL_LOCK_TIMEOUT, "30000");// 30s
         configurationProperties = new Properties();
@@ -755,7 +754,7 @@ public class SOSHibernateFactory implements Serializable {
     private void changeJsonAnnotations4H2() {
         for (Class<?> c : classMapping.getClasses()) {
             List<Field> fields = Arrays.stream(c.getDeclaredFields()).filter(m -> m.isAnnotationPresent(org.hibernate.annotations.Type.class) && m
-                    .getAnnotation(org.hibernate.annotations.Type.class).type().equals(SOSHibernateJsonType.TYPE_NAME)).collect(Collectors.toList());
+                    .getAnnotation(org.hibernate.annotations.Type.class).value().equals(SOSHibernateJsonType.class)).collect(Collectors.toList());
             if (fields != null && fields.size() > 0) {
                 for (Field field : fields) {
                     field.setAccessible(true);

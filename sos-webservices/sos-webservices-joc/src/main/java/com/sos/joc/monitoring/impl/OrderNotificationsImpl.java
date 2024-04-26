@@ -82,7 +82,7 @@ public class OrderNotificationsImpl extends JOCResourceImpl implements IOrderNot
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             MonitoringDBLayer dbLayer = new MonitoringDBLayer(session);
             List<OrderNotificationItem> notifications = new ArrayList<OrderNotificationItem>();
-            ScrollableResults sr = null;
+            ScrollableResults<NotificationDBItemEntity> sr = null;
             try {
                 if (in.getNotificationIds() == null || in.getNotificationIds().size() == 0) {
                     sr = dbLayer.getOrderNotifications(JobSchedulerDate.getDateFrom(in.getDateFrom(), in.getTimeZone()), allowedControllers, types, in
@@ -91,7 +91,7 @@ public class OrderNotificationsImpl extends JOCResourceImpl implements IOrderNot
                     sr = dbLayer.getOrderNotifications(in.getNotificationIds(), allowedControllers, types);
                 }
                 while (sr.next()) {
-                    OrderNotificationItem item = convert((NotificationDBItemEntity) sr.get(0));
+                    OrderNotificationItem item = convert(sr.get());
                     if (canAdd(item.getWorkflow(), permittedFolders.get(item.getControllerId()))) {
                         notifications.add(item);
                     }

@@ -9,9 +9,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.persistence.EmbeddedId;
-import javax.persistence.Id;
-import javax.persistence.Parameter;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Id;
+import jakarta.persistence.Parameter;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.exception.ConstraintViolationException;
@@ -37,6 +37,7 @@ public class SOSHibernate {
     public static final String HIBERNATE_PROPERTY_CURRENT_SESSION_CONTEXT_CLASS = "hibernate.current_session_context_class";
     public static final String HIBERNATE_PROPERTY_ID_NEW_GENERATOR_MAPPINGS = "hibernate.id.new_generator_mappings";
     public static final String HIBERNATE_PROPERTY_JAVAX_PERSISTENCE_VALIDATION_MODE = "javax.persistence.validation.mode";
+    public static final String HIBERNATE_PROPERTY_JAKARTA_PERSISTENCE_VALIDATION_MODE = "jakarta.persistence.validation.mode";
     public static final String HIBERNATE_PROPERTY_JDBC_FETCH_SIZE = "hibernate.jdbc.fetch_size";
     public static final String HIBERNATE_PROPERTY_TRANSACTION_ISOLATION = "hibernate.connection.isolation";
     public static final String HIBERNATE_PROPERTY_USE_SCROLLABLE_RESULTSET = "hibernate.jdbc.use_scrollable_resultset";

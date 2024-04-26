@@ -2,18 +2,19 @@ package com.sos.joc.db.authentication;
 
 import java.util.Date;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import javax.persistence.UniqueConstraint;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.UniqueConstraint;
 
-import org.hibernate.annotations.Type;
+import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.joc.db.DBLayer;
 
@@ -58,15 +59,15 @@ public class DBItemIamFido2Registration {
     private String challenge;
 
     @Column(name = "[DEFERRED]", nullable = false)
-    @Type(type = "numeric_boolean")
+    @Convert(converter = NumericBooleanConverter.class)
     private Boolean deferred;
 
     @Column(name = "[CONFIRMED]", nullable = false)
-    @Type(type = "numeric_boolean")
+    @Convert(converter = NumericBooleanConverter.class)
     private Boolean confirmed;
 
     @Column(name = "[COMPLETED]", nullable = false)
-    @Type(type = "numeric_boolean")
+    @Convert(converter = NumericBooleanConverter.class)
     private Boolean completed;
 
     @Temporal(TemporalType.TIMESTAMP)

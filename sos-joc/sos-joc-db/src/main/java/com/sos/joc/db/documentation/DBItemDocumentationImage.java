@@ -1,17 +1,19 @@
 package com.sos.joc.db.documentation;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
-import javax.persistence.Table;
+import java.sql.Types;
 
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = DBLayer.TABLE_INV_DOCUMENTATION_IMAGES)
@@ -26,7 +28,9 @@ public class DBItemDocumentationImage extends DBItem {
     private Long id;
 
     @Column(name = "[IMAGE]", nullable = false)
-    @Type(type = "org.hibernate.type.BinaryType")
+    //TODO 6.4.5.Final 
+    //@Type(type = "org.hibernate.type.BinaryType")
+    @JdbcTypeCode(Types.BINARY)
     private byte[] image;
 
     @Column(name = "[MD5_HASH]", nullable = false)

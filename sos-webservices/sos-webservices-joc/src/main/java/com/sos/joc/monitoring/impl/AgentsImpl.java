@@ -73,11 +73,11 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
             // dateFrom, dateTo - already UTC time , use UTC instead of in.getTimeZone()
             Date dateFrom = JobSchedulerDate.getDateFrom(in.getDateFrom(), "UTC");
             Date dateTo = JobSchedulerDate.getDateTo(in.getDateTo(), "UTC");
-            ScrollableResults sr = null;
+            ScrollableResults<DBItemHistoryAgent> sr = null;
             try {
                 sr = dbLayer.getAgents(allowedControllers, dateFrom, dateTo);
                 while (sr.next()) {
-                    DBItemHistoryAgent item = (DBItemHistoryAgent) sr.get(0);
+                    DBItemHistoryAgent item = sr.get();
 
                     Map<String, List<DBItemHistoryAgent>> m = map.getOrDefault(item.getControllerId(), new HashMap<>());
                     List<DBItemHistoryAgent> l = m.getOrDefault(item.getAgentId(), new ArrayList<>());

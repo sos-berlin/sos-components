@@ -2,21 +2,22 @@ package com.sos.joc.db.joc;
 
 import java.util.Date;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import javax.persistence.UniqueConstraint;
-
-import org.hibernate.annotations.Type;
+import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.UniqueConstraint;
 
 @Entity
 @Table(name = DBLayer.TABLE_JOC_CONFIGURATIONS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONTROLLER_ID]", "[ACCOUNT]",
@@ -51,7 +52,7 @@ public class DBItemJocConfiguration extends DBItem {
     private String name;
 
     @Column(name = "[SHARED]", nullable = false)
-    @Type(type = "numeric_boolean")
+    @Convert(converter = NumericBooleanConverter.class)
     private Boolean shared;
 
     @Column(name = "[CONFIGURATION_ITEM]", nullable = false)

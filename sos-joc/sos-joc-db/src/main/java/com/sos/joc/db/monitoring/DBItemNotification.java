@@ -2,16 +2,7 @@ package com.sos.joc.db.monitoring;
 
 import java.util.Date;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
-import javax.persistence.Table;
-import javax.persistence.Transient;
-
-import org.hibernate.annotations.Type;
+import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.history.JobWarning;
 import com.sos.joc.db.DBItem;
@@ -19,6 +10,16 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.common.MonitoringConstants;
 import com.sos.monitoring.notification.NotificationType;
 import com.sos.monitoring.notification.OrderNotificationRange;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
 @Entity
 @Table(name = DBLayer.TABLE_MON_NOTIFICATIONS)
@@ -45,7 +46,7 @@ public class DBItemNotification extends DBItem {
     private Long recoveredId;// reference ID
 
     @Column(name = "[HAS_MONITORS]", nullable = false)
-    @Type(type = "numeric_boolean")
+    @Convert(converter = NumericBooleanConverter.class)
     private boolean hasMonitors;
 
     @Column(name = "[WARN]", nullable = false)

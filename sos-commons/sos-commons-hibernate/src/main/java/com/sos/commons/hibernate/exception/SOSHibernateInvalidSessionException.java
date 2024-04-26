@@ -2,7 +2,7 @@ package com.sos.commons.hibernate.exception;
 
 import java.sql.SQLException;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.query.Query;
 

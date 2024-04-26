@@ -5,10 +5,11 @@ import java.util.regex.Pattern;
 
 import org.hibernate.QueryException;
 import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.engine.spi.Mapping;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.ReturnableType;
+import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.Type;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.util.SOSString;
@@ -20,7 +21,8 @@ public class SOSHibernateRegexp extends StandardSQLFunction {
     private SOSHibernateFactory factory;
 
     public SOSHibernateRegexp(SOSHibernateFactory factory) {
-        super(NAME);
+        //TODO 6.4.5.Final
+        super(NAME, StandardBasicTypes.INTEGER);
         this.factory = factory;
     }
 
@@ -33,11 +35,60 @@ public class SOSHibernateRegexp extends StandardSQLFunction {
                 .toString();
     }
 
-    @SuppressWarnings("rawtypes")
+    //TODO 6.4.5.Final
+//    @SuppressWarnings("rawtypes")
+//    @Override
+//    public String render(Type firstArgumentType, List arguments, SessionFactoryImplementor factory) throws QueryException {
+//        if (arguments == null || arguments.size() < 2) {
+//            throw new QueryException("missing arguments");
+//        }
+//        String property = arguments.get(0).toString();
+//        String regexp = arguments.get(1).toString();
+//        String mssqlRegexp = arguments.size() == 3 ? arguments.get(2).toString() : null;
+//
+//        switch (this.factory.getDbms()) {
+//        case MYSQL:
+//            // REGEXP_LIKE from MySQL 8.0
+//            return property + " REGEXP " + regexp;
+//        case MSSQL:
+//            // TODO
+//            String innRegexp = null;
+//            String quote = "'";
+//            if (mssqlRegexp == null) {
+//                if (!SOSString.isEmpty(regexp) && !regexp.equals("?")) {
+//                    regexp = regexp.replaceAll(Pattern.quote(".*"), "%");
+//                    innRegexp = regexp.substring(1, regexp.length() - 1);
+//                    if (!innRegexp.startsWith("^")) {
+//                        innRegexp = "%" + innRegexp;
+//                    }
+//                    if (!innRegexp.endsWith("$")) {
+//                        innRegexp = innRegexp + "%";
+//                    }
+//                } else {
+//                    innRegexp = "?";
+//                    quote = "";
+//                }
+//            } else {
+//                innRegexp = mssqlRegexp.substring(1, mssqlRegexp.length() - 1);
+//            }
+//            return "(case when (" + property + " like " + quote + innRegexp + quote + ") then 1 else 0 end)";
+//        case ORACLE:
+//            return "(case when (REGEXP_LIKE(" + property + "," + regexp + ")) then 1 else 0 end)";
+//        case PGSQL:
+//            return "(case when (" + property + " ~ " + regexp + ") then 1 else 0 end)";
+//        case H2:
+//            return "REGEXP_LIKE(" + property + "," + regexp + ")";
+//        default:
+//            return NAME;
+//        }
+//    }
+    
+    
     @Override
-    public String render(Type firstArgumentType, List arguments, SessionFactoryImplementor factory) throws QueryException {
+    public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> arguments, ReturnableType<?> returnType, SqlAstTranslator<?> translator)
+            throws QueryException {
         if (arguments == null || arguments.size() < 2) {
-            throw new QueryException("missing arguments");
+            throw new QueryException("missing arguments", null, null);
         }
         String property = arguments.get(0).toString();
         String regexp = arguments.get(1).toString();
@@ -46,7 +97,8 @@ public class SOSHibernateRegexp extends StandardSQLFunction {
         switch (this.factory.getDbms()) {
         case MYSQL:
             // REGEXP_LIKE from MySQL 8.0
-            return property + " REGEXP " + regexp;
+            sqlAppender.append(property + " REGEXP " + regexp);
+            break;
         case MSSQL:
             // TODO
             String innRegexp = null;
@@ -68,32 +120,38 @@ public class SOSHibernateRegexp extends StandardSQLFunction {
             } else {
                 innRegexp = mssqlRegexp.substring(1, mssqlRegexp.length() - 1);
             }
-            return "(case when (" + property + " like " + quote + innRegexp + quote + ") then 1 else 0 end)";
+            sqlAppender.append("(case when (" + property + " like " + quote + innRegexp + quote + ") then 1 else 0 end)");
+            break;
         case ORACLE:
-            return "(case when (REGEXP_LIKE(" + property + "," + regexp + ")) then 1 else 0 end)";
+            sqlAppender.append("(case when (REGEXP_LIKE(" + property + "," + regexp + ")) then 1 else 0 end)");
+            break;
         case PGSQL:
-            return "(case when (" + property + " ~ " + regexp + ") then 1 else 0 end)";
+            sqlAppender.append("(case when (" + property + " ~ " + regexp + ") then 1 else 0 end)");
+            break;
         case H2:
-            return "REGEXP_LIKE(" + property + "," + regexp + ")";
+            sqlAppender.append("REGEXP_LIKE(" + property + "," + regexp + ")");
+            break;
         default:
-            return NAME;
+            sqlAppender.append(NAME);
+            break;
         }
     }
 
-    @Override
-    public boolean hasParenthesesIfNoArguments() {
-        return true;
-    }
-
-    @Override
-    public boolean hasArguments() {
-        return true;
-    }
-
-    @Override
-    public Type getReturnType(Type firstArgumentType, Mapping mapping) throws QueryException {
-        return StandardBasicTypes.INTEGER;
-    }
+    //TODO 6.4.5.Final
+//    @Override
+//    public boolean hasParenthesesIfNoArguments() {
+//        return true;
+//    }
+//
+//    @Override
+//    public boolean hasArguments() {
+//        return true;
+//    }
+//
+//    @Override
+//    public Type getReturnType(Type firstArgumentType, Mapping mapping) throws QueryException {
+//        return StandardBasicTypes.INTEGER;
+//    }
 
     private static String quote(String regexp) {
         if (regexp == null) {

@@ -13,9 +13,9 @@ import java.util.Optional;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 
-import javax.persistence.Column;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import jakarta.persistence.Column;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;

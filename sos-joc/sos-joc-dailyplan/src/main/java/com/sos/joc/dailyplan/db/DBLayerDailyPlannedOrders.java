@@ -707,8 +707,8 @@ public class DBLayerDailyPlannedOrders {
         sql.append(") a ");
         sql.append("join ").append(DBLayer.TABLE_DPL_ORDERS).append(" b ");
         sql.append("on ").append(quote("a.ID")).append("=").append(quote("b.ID"));
-
-        Query<Object[]> query = session.createNativeQuery(sql.toString());
+        //TODO 6.4.5.Final
+        Query<Object[]> query = session.createNativeQuery(sql.toString(), Object[].class);
         query.setParameter("orderId", mainOrderId + "%");
         query.setParameter("controllerId", controllerId);
         if (plannedStartFrom != null) {

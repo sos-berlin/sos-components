@@ -2,18 +2,19 @@ package com.sos.joc.db.monitoring;
 
 import java.util.Date;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.Transient;
-
-import org.hibernate.annotations.Type;
+import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.inventory.model.job.JobCriticality;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.common.HistoryConstants;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
 @Entity
 @Table(name = DBLayer.TABLE_MON_ORDER_STEPS)
@@ -88,7 +89,7 @@ public class DBItemMonitoringOrderStep extends DBItem {
     private Integer severity;
 
     @Column(name = "[ERROR]", nullable = false)
-    @Type(type = "numeric_boolean")
+    @Convert(converter = NumericBooleanConverter.class)
     private boolean error;
 
     @Column(name = "[ERROR_STATE]", nullable = true)

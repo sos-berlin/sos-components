@@ -249,7 +249,7 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
         }
 
         if (stmt != null) {
-            List<String> result = connection.getResultListNativeQuery(stmt);
+            List<String> result = connection.getResultListNativeQuery(stmt, String.class);
             if (!result.isEmpty()) {
                 version = result.get(0);
                 if (version.contains("\n")) {

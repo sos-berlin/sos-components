@@ -1,16 +1,17 @@
 package com.sos.joc.db.authentication;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
-import javax.persistence.Table;
-import javax.persistence.Transient;
-import javax.persistence.UniqueConstraint;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import jakarta.persistence.UniqueConstraint;
 
-import org.hibernate.annotations.Type;
+import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.model.security.identityservice.IdentityServiceAuthenticationScheme;
@@ -39,18 +40,18 @@ public class DBItemIamIdentityService {
     private String authenticationScheme;
 
     @Column(name = "[SECOND_FACTOR]", nullable = false)
-    @Type(type = "numeric_boolean")
+    @Convert(converter = NumericBooleanConverter.class)
     private Boolean secondFactor;
 
     @Column(name = "[ORDERING]", nullable = false)
     private Integer ordering;
 
     @Column(name = "[DISABLED]", nullable = false)
-    @Type(type = "numeric_boolean")
+    @Convert(converter = NumericBooleanConverter.class)
     private Boolean disabled;
 
     @Column(name = "[REQUIRED]", nullable = false)
-    @Type(type = "numeric_boolean")
+    @Convert(converter = NumericBooleanConverter.class)
     private Boolean required;
 
     public DBItemIamIdentityService() {

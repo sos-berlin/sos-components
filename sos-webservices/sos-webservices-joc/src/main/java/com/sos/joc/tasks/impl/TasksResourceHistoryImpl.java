@@ -110,7 +110,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                 session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
                 JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(session, dbFilter);
 
-                ScrollableResults sr = null;
+                ScrollableResults<DBItemHistoryOrderStep> sr = null;
                 try {
                     boolean profiler = false;
                     Instant profilerStart = Instant.now();
@@ -132,7 +132,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                         while (sr.next()) {
                             i++;
 
-                            DBItemHistoryOrderStep item = (DBItemHistoryOrderStep) sr.get(0);
+                            DBItemHistoryOrderStep item = sr.get();
                             if (profiler && i == 1) {
                                 profilerFirstEntry = Instant.now();
                             }

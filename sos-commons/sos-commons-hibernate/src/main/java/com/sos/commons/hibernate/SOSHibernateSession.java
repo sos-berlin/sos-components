@@ -10,9 +10,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.Entity;
-import javax.persistence.NoResultException;
-import javax.persistence.PersistenceException;
+import javax.annotation.Nonnull;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -23,12 +25,9 @@ import org.hibernate.Session;
 import org.hibernate.StaleStateException;
 import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.exception.LockAcquisitionException;
-import org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory;
-import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.internal.StatelessSessionImpl;
 import org.hibernate.jdbc.Work;
@@ -238,13 +237,17 @@ public class SOSHibernateSession implements Serializable {
     }
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateLockAcquisitionException, SOSHibernateQueryException */
-    public <T> NativeQuery<T> createNativeQuery(String sql) throws SOSHibernateException {
+//    public <T> NativeQuery<T> createNativeQuery(String sql) throws SOSHibernateException {
+//        return createNativeQuery(sql, null);
+//    }
+    //TODO 6.4.5.Final
+    public NativeQuery<Object> createNativeQuery(String sql) throws SOSHibernateException {
         return createNativeQuery(sql, null);
     }
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateLockAcquisitionException, SOSHibernateQueryException */
     @SuppressWarnings("unchecked")
-    public <T> NativeQuery<T> createNativeQuery(String sql, Class<T> resultType) throws SOSHibernateException {
+    public <T> NativeQuery<T> createNativeQuery(String sql, @Nonnull Class<T> resultType) throws SOSHibernateException {
         if (SOSString.isEmpty(sql)) {
             throw new SOSHibernateQueryException("sql statement is empty");
         }
@@ -258,19 +261,25 @@ public class SOSHibernateSession implements Serializable {
         try {
             if (isStatelessSession) {
                 if (resultType == null) {
-                    q = ((StatelessSession) currentSession).createNativeQuery(sql);
+                    //TODO 6.4.5.Final: resultType == null not longer allowed
+//                    q = ((StatelessSession) currentSession).createNativeQuery(sql);
+                    throw new IllegalArgumentException("result type is missing");
                 } else {
-                    // q = ((StatelessSession) currentSession).createNativeQuery(sql, resultType);
-                    q = ((StatelessSession) currentSession).createNativeQuery(sql);
-                    q = (NativeQuery<T>) setResultTransformer(q, resultType);
+                    //TODO 6.4.5.Final
+                    q = ((StatelessSession) currentSession).createNativeQuery(sql, resultType);
+//                    q = ((StatelessSession) currentSession).createNativeQuery(sql);
+//                    q = (NativeQuery<T>) setResultTransformer(q, resultType);
                 }
             } else {
                 if (resultType == null) {
-                    q = ((Session) currentSession).createNativeQuery(sql);
+                    //TODO 6.4.5.Final: resultType == null not longer allowed
+//                    q = ((Session) currentSession).createNativeQuery(sql);
+                    throw new IllegalArgumentException("result type is missing");
                 } else {
-                    // q = ((Session) currentSession).createNativeQuery(sql, entityClass);
-                    q = ((Session) currentSession).createNativeQuery(sql);
-                    q = (NativeQuery<T>) setResultTransformer(q, resultType);
+                    //TODO 6.4.5.Final
+                    q = ((Session) currentSession).createNativeQuery(sql, resultType);
+//                    q = ((Session) currentSession).createNativeQuery(sql);
+//                    q = (NativeQuery<T>) setResultTransformer(q, resultType);
                 }
             }
         } catch (IllegalStateException e) {
@@ -350,7 +359,7 @@ public class SOSHibernateSession implements Serializable {
                 session.delete(item);
             } else {
                 Session session = ((Session) currentSession);
-                session.delete(item);
+                session.remove(item);
                 session.flush();
             }
         } catch (IllegalStateException e) {
@@ -393,7 +402,6 @@ public class SOSHibernateSession implements Serializable {
     }
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateLockAcquisitionException, SOSHibernateObjectOperationException */
-    @SuppressWarnings("unchecked")
     public <T> T get(Class<T> entityClass, Serializable id) throws SOSHibernateException {
         if (entityClass == null) {
             throw new SOSHibernateObjectOperationException("entityClass is NULL", null);
@@ -441,14 +449,16 @@ public class SOSHibernateSession implements Serializable {
             if (isStatelessSession) {
                 StatelessSessionImpl sf = (StatelessSessionImpl) currentSession;
                 try {
-                    return sf.connection();
+                    //TODO 6.4.5.Final
+                    return sf.getJdbcConnectionAccess().obtainConnection();
                 } catch (NullPointerException e) {
                     throw new SOSHibernateConnectionException("can't get the SQL connection from the StatelessSessionImpl(NullPointerException)");
                 }
             } else {
                 SessionImpl sf = (SessionImpl) currentSession;
                 try {
-                    return sf.connection();
+                    //TODO 6.4.5.Final
+                    return sf.getJdbcConnectionAccess().obtainConnection();
                 } catch (NullPointerException e) {
                     throw new SOSHibernateConnectionException("can't get the SQL connection from the SessionImpl(NullPointerException)");
                 }
@@ -457,6 +467,9 @@ public class SOSHibernateSession implements Serializable {
             throwException(e, new SOSHibernateConnectionException(e));
             return null;
         } catch (PersistenceException e) {
+            throwException(e, new SOSHibernateConnectionException(e));
+            return null;
+        } catch (SQLException e) {
             throwException(e, new SOSHibernateConnectionException(e));
             return null;
         }
@@ -486,7 +499,7 @@ public class SOSHibernateSession implements Serializable {
      *             SOSHibernateQueryNonUniqueResultException */
     public String getLastSequenceValue(String sequenceName) throws SOSHibernateException {
         String stmt = factory.getSequenceLastValString(sequenceName);
-        return stmt == null ? null : getSingleValueNativeQuery(stmt);
+        return stmt == null ? null : getSingleValueNativeQuery(stmt, String.class);
     }
 
     /** execute a SELECT query(NativeQuery or Query)
@@ -595,8 +608,8 @@ public class SOSHibernateSession implements Serializable {
     }
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateLockAcquisitionException, SOSHibernateQueryException */
-    public <T> List<T> getResultListNativeQuery(String sql) throws SOSHibernateException {
-        return getResultList(createNativeQuery(sql));
+    public <T> List<T> getResultListNativeQuery(String sql, Class<T> resultType) throws SOSHibernateException {
+        return getResultList(createNativeQuery(sql, resultType));
     }
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateLockAcquisitionException, SOSHibernateQueryException */
@@ -731,8 +744,8 @@ public class SOSHibernateSession implements Serializable {
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateLockAcquisitionException, SOSHibernateQueryException,
      *             SOSHibernateQueryNonUniqueResultException */
-    public <T> T getSingleResultNativeQuery(String sql) throws SOSHibernateException {
-        return getSingleResult(createNativeQuery(sql));
+    public <T> T getSingleResultNativeQuery(String sql, Class<T> resultType) throws SOSHibernateException {
+        return getSingleResult(createNativeQuery(sql,resultType));
     }
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateLockAcquisitionException, SOSHibernateQueryException,
@@ -810,14 +823,14 @@ public class SOSHibernateSession implements Serializable {
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateLockAcquisitionException, SOSHibernateQueryException,
      *             SOSHibernateQueryNonUniqueResultException */
-    public <T> T getSingleValueNativeQuery(String sql) throws SOSHibernateException {
-        return getSingleValue(createNativeQuery(sql));
+    public <T> T getSingleValueNativeQuery(String sql, Class<T> returnType) throws SOSHibernateException {
+        return getSingleValue(createNativeQuery(sql, returnType));
     }
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateLockAcquisitionException, SOSHibernateQueryException,
      *             SOSHibernateQueryNonUniqueResultException */
-    public <T> String getSingleValueNativeQueryAsString(String sql) throws SOSHibernateException {
-        T result = getSingleValueNativeQuery(sql);
+    public <T> String getSingleValueNativeQueryAsString(String sql, Class<T> returnType) throws SOSHibernateException {
+        T result = getSingleValueNativeQuery(sql, returnType);
         if (result != null) {
             return result + "";
         }
@@ -917,6 +930,7 @@ public class SOSHibernateSession implements Serializable {
                 if (entityName == null) {
                     session.refresh(item);
                 } else {
+                    //TODO 6.4.5.Final 
                     session.refresh(entityName, item);
                 }
             }
@@ -981,7 +995,7 @@ public class SOSHibernateSession implements Serializable {
                 session.insert(item);
             } else {
                 Session session = ((Session) currentSession);
-                session.save(item);
+                session.persist(item);
                 session.flush();
             }
         } catch (IllegalStateException e) {
@@ -996,14 +1010,14 @@ public class SOSHibernateSession implements Serializable {
     }
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateLockAcquisitionException, SOSHibernateQueryException */
-    public <T> ScrollableResults scroll(Query<T> query) throws SOSHibernateException {
+    public <T> ScrollableResults<T> scroll(Query<T> query) throws SOSHibernateException {
         return scroll(query, ScrollMode.FORWARD_ONLY);
     }
 
     /** execute a SELECT query(NativeQuery or Query)
      * 
      * @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateLockAcquisitionException, SOSHibernateQueryException */
-    public <T> ScrollableResults scroll(Query<T> query, ScrollMode scrollMode) throws SOSHibernateException {
+    public <T> ScrollableResults<T> scroll(Query<T> query, ScrollMode scrollMode) throws SOSHibernateException {
         if (query == null) {
             throw new SOSHibernateQueryException("query is NULL");
         }
@@ -1090,7 +1104,7 @@ public class SOSHibernateSession implements Serializable {
                 session.update(item);
             } else {
                 Session session = ((Session) currentSession);
-                session.update(item);
+                session.merge(item);
                 session.flush();
             }
         } catch (IllegalStateException e) {
@@ -1233,6 +1247,13 @@ public class SOSHibernateSession implements Serializable {
         }
         throw ex;
     }
+    
+    private void throwException(SQLException cause, SOSHibernateException ex) throws SOSHibernateException {
+        if (cause.getCause() == null) {
+            throw new SOSHibernateInvalidSessionException(cause, ex.getStatement());
+        }
+        throw ex;
+    }
 
     private void throwException(PersistenceException cause, SOSHibernateException ex) throws SOSHibernateException {
         Throwable e = cause;
@@ -1288,13 +1309,15 @@ public class SOSHibernateSession implements Serializable {
             return null;
         }
         try {
-            ASTQueryTranslatorFactory f = new ASTQueryTranslatorFactory();
-            SessionFactoryImplementor impl = (SessionFactoryImplementor) factory.getSessionFactory();
-            String hql = query.unwrap(org.hibernate.query.Query.class).getQueryString();
-
-            QueryTranslator qt = f.createQueryTranslator("", hql, java.util.Collections.EMPTY_MAP, impl, null);
-            qt.compile(java.util.Collections.EMPTY_MAP, false);
-            return String.format("[%s][maxResults=%s][%s]", qt.getSQLString(), query.getMaxResults(), SOSHibernate.getQueryParametersAsString(query));
+            //TODO 6.4.5.Final
+//            ASTQueryTranslatorFactory f = new ASTQueryTranslatorFactory();
+//            SessionFactoryImplementor impl = (SessionFactoryImplementor) factory.getSessionFactory();
+//            String hql = query.unwrap(org.hibernate.query.Query.class).getQueryString();
+//
+//            QueryTranslator qt = f.createQueryTranslator("", hql, java.util.Collections.EMPTY_MAP, impl, null);
+//            qt.compile(java.util.Collections.EMPTY_MAP, false);
+//            return String.format("[%s][maxResults=%s][%s]", qt.getSQLString(), query.getMaxResults(), SOSHibernate.getQueryParametersAsString(query));
+            return String.format("[maxResults=%s][%s]", query.getMaxResults(), SOSHibernate.getQueryParametersAsString(query));
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         }
@@ -1328,10 +1351,10 @@ public class SOSHibernateSession implements Serializable {
      * For all others, the returned current date time is independent of TimeZone.set/getDefault.<br/>
      * see SOSHibernateSessionTest */
     public Date getCurrentDateTime() throws SOSHibernateException {
-        return (Date) getSingleResultNativeQuery(factory.getCurrentTimestampSelectString());
+        return getSingleResultNativeQuery(factory.getCurrentTimestampSelectString(), Date.class);
     }
 
     public Date getCurrentUTCDateTime() throws SOSHibernateException {
-        return (Date) getSingleResultNativeQuery(factory.getCurrentUTCTimestampSelectString());
+        return getSingleResultNativeQuery(factory.getCurrentUTCTimestampSelectString(), Date.class);
     }
 }

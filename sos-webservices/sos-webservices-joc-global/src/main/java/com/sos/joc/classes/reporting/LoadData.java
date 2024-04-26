@@ -115,7 +115,7 @@ public class LoadData extends AReporting {
     private static boolean writeCSVFile(ReportingLoader loader, LocalDateTime month, JobHistoryDBLayer dbLayer, List<String> emptyMonths,
             List<String> existingMonths) throws IOException {
         boolean skipped = true;
-        ScrollableResults result = null;
+        ScrollableResults<String> result = null;
         try {
             String _month = month.format(yearMonthFormatter);
             Path monthFile = getMonthFile(loader, _month);
@@ -127,9 +127,9 @@ public class LoadData extends AReporting {
                     if (result.next()) {
                         try (OutputStream output = Files.newOutputStream(tmpMonthFile)) {
                             output.write(loader.getHeadline());
-                            output.write(getCsvBytes(result.get(0)));
+                            output.write(getCsvBytes(result.get()));
                             while (result.next()) {
-                                output.write(getCsvBytes(result.get(0)));
+                                output.write(getCsvBytes(result.get()));
                             }
                             output.flush();
                             LOGGER.info("[Reporting][loading] Write " + loader.getType().name().toLowerCase() + " data for " + month + " ("

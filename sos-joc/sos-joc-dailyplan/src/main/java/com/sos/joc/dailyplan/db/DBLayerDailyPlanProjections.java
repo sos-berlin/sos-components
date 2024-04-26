@@ -159,7 +159,7 @@ public class DBLayerDailyPlanProjections extends DBLayer {
         return getSession().getResultList(query);
     }
 
-    public ScrollableResults getDailyPlanOrdersBySubmission(Long submissionHistoryId) throws SOSHibernateException {
+    public ScrollableResults<DBItemDailyPlanOrder> getDailyPlanOrdersBySubmission(Long submissionHistoryId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
         hql.append("where submissionHistoryId=:submissionHistoryId ");
 

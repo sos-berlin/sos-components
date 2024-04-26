@@ -1,20 +1,24 @@
 package com.sos.joc.db.history;
 
+import java.sql.Types;
 import java.util.Date;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
-import javax.persistence.Table;
-import javax.persistence.Transient;
-
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Type;
+import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
+
+import jakarta.persistence.Column;
 
 @Entity
 @Table(name = DBLayer.TABLE_HISTORY_LOGS)
@@ -41,7 +45,7 @@ public class DBItemHistoryLog extends DBItem {
     private Long historyOrderStepId;
 
     @Column(name = "[COMPRESSED]", nullable = false)
-    @Type(type = "numeric_boolean")
+    @Convert(converter = NumericBooleanConverter.class)
     private boolean compressed;
 
     @Column(name = "[FILE_BASENAME]", nullable = false)
@@ -53,7 +57,9 @@ public class DBItemHistoryLog extends DBItem {
     @Column(name = "[FILE_LINES_UNCOMPRESSED]", nullable = false)
     private Long fileLinesUncompressed;
 
-    @Type(type = "org.hibernate.type.BinaryType")
+    //TODO 6.4.5.Final 
+    //@Type(type = "org.hibernate.type.BinaryType")
+    @JdbcTypeCode(Types.BINARY)
     @Column(name = "[FILE_CONTENT]", nullable = false)
     private byte[] fileContent;
 

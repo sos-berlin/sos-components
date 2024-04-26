@@ -2,7 +2,7 @@ package com.sos.joc.db.master;
 
 import java.util.Date;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.query.Query;
 

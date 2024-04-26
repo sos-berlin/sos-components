@@ -20,13 +20,13 @@ import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
  * ORACLE (from 12.1.0.2)- CLOB<br />
  * PGSQL (from 9.4.2) -JSONB<br />
  */
-public class SOSHibernateJsonType implements UserType {
+public class SOSHibernateJsonType implements UserType<Object> {
 
     public static final String COLUMN_TRANSFORMER_WRITE_DEFAULT = "?";
     public static final String COLUMN_TRANSFORMER_WRITE_H2 = "? FORMAT JSON";
-    public static final String TYPE_NAME = "sos_json";
+    private static final String TYPE_NAME = "sos_json";
 
-    private final int[] sqlTypes = new int[] { Types.JAVA_OBJECT };
+    private final int sqlType = Types.JAVA_OBJECT ;
     private Dbms dbms;
 
     @Override
@@ -49,11 +49,11 @@ public class SOSHibernateJsonType implements UserType {
             st.setObject(index, value);
         }
     }
-
+    
     @Override
-    public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner) throws HibernateException,
+    public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws HibernateException,
             SQLException {
-        String val = rs.getString(names[0]);
+        String val = rs.getString(position);
         if (val == null) {
             return null;
         }
@@ -86,11 +86,10 @@ public class SOSHibernateJsonType implements UserType {
     }
 
     @Override
-    public int[] sqlTypes() {
-        return sqlTypes;
+    public int getSqlType() {
+        return sqlType;
     }
 
-    @SuppressWarnings("rawtypes")
     @Override
     public Class returnedClass() {
         return String.class;

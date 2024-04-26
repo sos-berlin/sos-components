@@ -2,11 +2,10 @@ package com.sos.commons.hibernate.exception;
 
 import java.sql.SQLException;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.JDBCException;
 import org.hibernate.StaleStateException;
-import org.hibernate.hql.internal.ast.QuerySyntaxException;
 import org.hibernate.query.Query;
 
 import com.sos.commons.exception.SOSException;
@@ -25,19 +24,20 @@ public class SOSHibernateException extends SOSException {
     public SOSHibernateException(IllegalArgumentException cause, String stmt) {
         Throwable e = cause;
         while (e != null) {
-            if (e instanceof QuerySyntaxException) {
-                QuerySyntaxException je = (QuerySyntaxException) e;
-
-                initCause(je);
-                message = je.getMessage();// message can contains hql as [hql statement]
-                statement = je.getQueryString();
-                // remove hql statement from the message
-                if (message != null && statement != null) {
-                    message = message.replace("[" + statement + "]", "");
-                }
-
-                return;
-            }
+            //TODO 6.4.5.Final
+//            if (e instanceof QuerySyntaxException) {
+//                QuerySyntaxException je = (QuerySyntaxException) e;
+//
+//                initCause(je);
+//                message = je.getMessage();// message can contains hql as [hql statement]
+//                statement = je.getQueryString();
+//                // remove hql statement from the message
+//                if (message != null && statement != null) {
+//                    message = message.replace("[" + statement + "]", "");
+//                }
+//
+//                return;
+//            }
             e = e.getCause();
         }
         initCause(cause);

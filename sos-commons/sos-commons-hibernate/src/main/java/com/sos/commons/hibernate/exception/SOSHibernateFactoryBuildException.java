@@ -4,7 +4,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 import javax.xml.stream.XMLStreamException;
 
 import com.sos.commons.util.SOSString;
