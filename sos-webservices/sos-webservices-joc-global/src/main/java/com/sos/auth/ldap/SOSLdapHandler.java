@@ -118,13 +118,6 @@ public class SOSLdapHandler {
         IdentityServiceTypes identityServiceType = sosLdapWebserviceCredentials.getIdentityService().getIdentyServiceType();
         try {
 
-            if (identityServiceType == IdentityServiceTypes.LDAP_JOC) {
-                if (!SOSAuthHelper.accountExist(sosLdapWebserviceCredentials.getAccount(), sosLdapWebserviceCredentials.getIdentityServiceId())) {
-                    msg = "Account has no roles. Login skipped.";
-                    return null;
-                }
-            }
-
             if (identityServiceType == IdentityServiceTypes.LDAP && sosLdapWebserviceCredentials.getSearchBaseNotNull().isEmpty() && "memberOf"
                     .equals(sosLdapWebserviceCredentials.getGroupNameAttribute())) {
                 msg = "LDAP configuration is not valid: Missing setting 'searchBase'";
