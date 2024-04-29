@@ -476,6 +476,7 @@ public class SOSHibernateFactory implements Serializable {
             }
             setDbms(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT));
             databaseMetaData = new SOSHibernateDatabaseMetaData(dbms);
+            mapDialect(dbms);
         } catch (MalformedURLException e) {
             throw new SOSHibernateConfigurationException(String.format("exception on get configFile %s as url", configFile), e);
         } catch (PersistenceException e) {
@@ -488,6 +489,41 @@ public class SOSHibernateFactory implements Serializable {
             configuration.addSqlFunction(SOSHibernateJsonValue.NAME, new SOSHibernateJsonValue(this));
             configuration.addSqlFunction(SOSHibernateRegexp.NAME, new SOSHibernateRegexp(this));
             configuration.addSqlFunction(SOSHibernateSecondsDiff.NAME, new SOSHibernateSecondsDiff(this));
+        }
+    }
+    
+    private void mapDialect(Dbms dbms) {
+        // with Hibernate 6: Version-specific and spatial-specific dialects are deprecated
+        // simply MySQL8Dialect, SQLServer2012Dialect, SQLServer2016Dialect are still implemented
+        // so, old dialects are mapped: Example: org.hibernate.dialect.MySQLInnoDBDialect -> org.hibernate.dialect.MySQLDialect
+        if (configuration != null) {
+            String dialect = configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
+            if (dialect != null) {
+                switch (dbms) {
+                case MYSQL:
+                    if (!dialect.equals("org.hibernate.dialect.MySQL8Dialect")) {
+                        configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, "org.hibernate.dialect.MySQLDialect");
+                    }
+                    break;
+                case ORACLE:
+                    configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, "org.hibernate.dialect.OracleDialect");
+                    break;
+                case PGSQL:
+                    configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, "org.hibernate.dialect.PostgreSQLDialect");
+                    break;
+                case MSSQL:
+                    if (!Arrays.asList("org.hibernate.dialect.SQLServer2012Dialect", "org.hibernate.dialect.SQLServer2016Dialect").contains(
+                            dialect)) {
+                        configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, "org.hibernate.dialect.SQLServerDialect");
+                    }
+                    break;
+                case H2:
+                    configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, "org.hibernate.dialect.H2Dialect");
+                    break;
+                default:
+                    break;
+                }
+            }
         }
     }
 
