@@ -84,11 +84,6 @@
 			<groupId>org.glassfish</groupId>
 			<artifactId>javax.json</artifactId>
 		</dependency>
-    <!-- jaxb-runtime dependency needed to overwrite outdated version used by hibernate-core -->
-		<dependency>
-			<groupId>org.glassfish.jaxb</groupId>
-			<artifactId>jaxb-runtime</artifactId>
-		</dependency>
     
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>

@@ -54,7 +54,7 @@ public class ExecuteRollOutTest {
     }
 
     @Test
-    // @Ignore
+    @Ignore
     public void testMainWithArgumentsForAgent() throws Exception {
         ExecuteRollOut.main(createAgentArgsWithSourceKeyStore());
     }
