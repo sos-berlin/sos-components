@@ -135,7 +135,7 @@ public class SOSPermissionsCreator {
             controllerPermissions.getOrders().setModify(haveRight(controllerId, "sos:products:controller:orders:modify"));
             controllerPermissions.getOrders().setSuspendResume(haveRight(controllerId, "sos:products:controller:orders:suspend_resume"));
             controllerPermissions.getOrders().setResumeFailed(haveRight(controllerId, "sos:products:controller:orders:resume_failed"));
-            controllerPermissions.getOrders().setResumeFailed(haveRight(controllerId, "sos:products:controller:orders:confirm"));
+            controllerPermissions.getOrders().setConfirm(haveRight(controllerId, "sos:products:controller:orders:confirm"));
             controllerPermissions.getOrders().setManagePositions(haveRight(controllerId, "sos:products:controller:orders:manage_positions"));
 
         }
