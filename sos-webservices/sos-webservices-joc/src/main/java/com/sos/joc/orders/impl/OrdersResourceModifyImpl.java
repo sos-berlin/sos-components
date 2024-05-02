@@ -181,7 +181,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     public JOCDefaultResponse postOrdersConfirm(String accessToken, byte[] filterBytes) {
         try {
             ModifyOrders modifyOrders = initRequest(Action.ANSWER_PROMPT, accessToken, filterBytes);
-            boolean perm = getControllerPermissions(modifyOrders.getControllerId(), accessToken).getOrders().getModify();
+            boolean perm = getControllerPermissions(modifyOrders.getControllerId(), accessToken).getOrders().getConfirm();
             JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getControllerId(), perm);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

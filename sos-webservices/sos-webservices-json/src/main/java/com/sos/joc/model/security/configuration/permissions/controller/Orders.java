@@ -17,7 +17,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "suspendResume",
     "resumeFailed",
     "modify",
-    "managePositions"
+    "managePositions",
+    "confirm"
 })
 public class Orders {
 
@@ -56,6 +57,8 @@ public class Orders {
     @JsonProperty("managePositions")
     @JsonPropertyDescription("skip, unskip, stop, unstop workflow jobs and add/modify order with special start-/endposition")
     private Boolean managePositions = true;
+    @JsonProperty("confirm")
+    private Boolean confirm = false;
 
     /**
      * No args constructor for use in serialization
@@ -66,15 +69,16 @@ public class Orders {
 
     /**
      * 
-     * @param cancel
-     * @param modify
      * @param view
+     * @param create
+     * @param cancel
      * @param suspendResume
      * @param resumeFailed
+     * @param modify
      * @param managePositions
-     * @param create
+     * @param confirm
      */
-    public Orders(Boolean view, Boolean create, Boolean cancel, Boolean suspendResume, Boolean resumeFailed, Boolean modify, Boolean managePositions) {
+    public Orders(Boolean view, Boolean create, Boolean cancel, Boolean suspendResume, Boolean resumeFailed, Boolean modify, Boolean managePositions, Boolean confirm) {
         super();
         this.view = view;
         this.create = create;
@@ -83,6 +87,7 @@ public class Orders {
         this.resumeFailed = resumeFailed;
         this.modify = modify;
         this.managePositions = managePositions;
+        this.confirm = confirm;
     }
 
     /**
@@ -186,15 +191,25 @@ public class Orders {
     public void setManagePositions(Boolean managePositions) {
         this.managePositions = managePositions;
     }
+    
+    @JsonProperty("confirm")
+    public Boolean getConfirm() {
+        return confirm;
+    }
+
+    @JsonProperty("confirm")
+    public void setConfirm(Boolean confirm) {
+        this.confirm = confirm;
+    }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("view", view).append("create", create).append("cancel", cancel).append("suspendResume", suspendResume).append("resumeFailed", resumeFailed).append("modify", modify).append("managePositions", managePositions).toString();
+        return new ToStringBuilder(this).append("view", view).append("create", create).append("cancel", cancel).append("suspendResume", suspendResume).append("resumeFailed", resumeFailed).append("modify", modify).append("managePositions", managePositions).append("confirm", confirm).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(cancel).append(modify).append(view).append(suspendResume).append(resumeFailed).append(managePositions).append(create).toHashCode();
+        return new HashCodeBuilder().append(cancel).append(modify).append(view).append(suspendResume).append(resumeFailed).append(managePositions).append(create).append(confirm).toHashCode();
     }
 
     @Override
@@ -206,7 +221,7 @@ public class Orders {
             return false;
         }
         Orders rhs = ((Orders) other);
-        return new EqualsBuilder().append(cancel, rhs.cancel).append(modify, rhs.modify).append(view, rhs.view).append(suspendResume, rhs.suspendResume).append(resumeFailed, rhs.resumeFailed).append(managePositions, rhs.managePositions).append(create, rhs.create).isEquals();
+        return new EqualsBuilder().append(cancel, rhs.cancel).append(modify, rhs.modify).append(view, rhs.view).append(suspendResume, rhs.suspendResume).append(resumeFailed, rhs.resumeFailed).append(managePositions, rhs.managePositions).append(create, rhs.create).append(confirm, rhs.confirm).isEquals();
     }
 
 }
