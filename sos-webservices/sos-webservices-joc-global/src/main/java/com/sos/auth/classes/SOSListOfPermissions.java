@@ -71,6 +71,7 @@ public class SOSListOfPermissions {
         addPermission(sosPermissions.getSosPermissions(), "sos:products:controller:orders:modify");
         addPermission(sosPermissions.getSosPermissions(), "sos:products:controller:orders:suspend_resume");
         addPermission(sosPermissions.getSosPermissions(), "sos:products:controller:orders:resume_failed");
+        addPermission(sosPermissions.getSosPermissions(), "sos:products:controller:orders:confirm");
         addPermission(sosPermissions.getSosPermissions(), "sos:products:controller:orders:manage_positions");
 
     }
