@@ -1013,7 +1013,8 @@ public class OrdersHelper {
         final List<List<Object>> endPositions = getPositions(dailyplanModifyOrder.getEndPositions(), labelMap);
         final boolean forceJobAdmission = dailyplanModifyOrder.getForceJobAdmission() == Boolean.TRUE;
         final boolean allowEmptyArguments = ClusterSettings.getAllowEmptyArguments(Globals.getConfigurationGlobalsJoc());
-        final boolean variablesAreModified = dailyplanModifyOrder.getVariables() != null && !dailyplanModifyOrder.getVariables().getAdditionalProperties().isEmpty();
+        final boolean variablesAreModified = dailyplanModifyOrder.getVariables() != null && !dailyplanModifyOrder.getVariables()
+                .getAdditionalProperties().isEmpty();
         final boolean variablesAreRemoved = dailyplanModifyOrder.getRemoveVariables() != null;
         final Optional<Long> secondsFromCurDate = JobSchedulerDate.getSecondsOfRelativeCurDate(dailyplanModifyOrder.getScheduledFor());
         Map<String, Requirements> cachedRequirements = new HashMap<>(1);
