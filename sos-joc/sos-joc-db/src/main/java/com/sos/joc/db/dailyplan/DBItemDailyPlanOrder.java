@@ -340,6 +340,14 @@ public class DBItemDailyPlanOrder extends DBItem {
     }
     
     @Transient
+    public String getDailyPlanDateFromOrderId() {
+        if (orderId == null) {
+            return null;
+        }
+        return orderId.substring(1,11);
+    }
+    
+    @Transient
     public void setDailyPlanDate(String yyyyMMdd) {
         dailyPlanDate = yyyyMMdd;
     }

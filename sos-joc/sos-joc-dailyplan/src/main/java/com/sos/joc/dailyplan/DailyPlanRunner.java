@@ -264,7 +264,7 @@ public class DailyPlanRunner extends TimerTask {
         }
     }
 
-    /* service (createPlan) & DailyPlanModifyOrderImpl, DailyPlanOrdersGenerateImpl **/
+    /* service (createPlan) & DailyPlanOrdersGenerateImpl */
     public Map<PlannedOrderKey, PlannedOrder> generateDailyPlan(StartupMode startupMode, String controllerId,
             Collection<DailyPlanSchedule> dailyPlanSchedules, String dailyPlanDate, Boolean withSubmit, JocError jocError, String accessToken)
             throws JsonParseException, JsonMappingException, DBMissingDataException, DBConnectionRefusedException, DBInvalidDataException,
@@ -273,7 +273,7 @@ public class DailyPlanRunner extends TimerTask {
         return generateDailyPlan(startupMode, controllerId, dailyPlanSchedules, dailyPlanDate, null, withSubmit, jocError, accessToken);
     }
 
-    /* DailyPlanModifyOrderImpl **/
+    /* DailyPlanOrdersGenerateImpl */
     public Map<PlannedOrderKey, PlannedOrder> generateDailyPlan(StartupMode startupMode, String controllerId,
             Collection<DailyPlanSchedule> dailyPlanSchedules, String dailyPlanDate, DBItemDailyPlanSubmission submission, Boolean withSubmit,
             JocError jocError, String accessToken) throws JsonParseException, JsonMappingException, DBMissingDataException,
@@ -825,8 +825,10 @@ public class DailyPlanRunner extends TimerTask {
         Map<String, Calendar> nonWorkingCalendars = new HashMap<String, Calendar>();
         OrderListSynchronizer synchronizer = new OrderListSynchronizer(settings);
         InventoryDBLayer invDbLayer = new InventoryDBLayer(null);
+        String submissionForDate = dailyPlanDate;
         if (submission != null) {
             synchronizer.setSubmission(submission);
+            submissionForDate = SOSDate.getDateAsString(submission.getSubmissionForDate());
         }
 
         // tmpUseOnlyActDate=true (introduced for optimization with JOC-1647)
@@ -1101,25 +1103,25 @@ public class DailyPlanRunner extends TimerTask {
 
                                     for (OrderParameterisation orderParameterisation : schedule.getOrderParameterisations()) {
                                         for (DailyPlanScheduleWorkflow sw : dailyPlanSchedule.getWorkflows()) {
-
-                                            FreshOrder freshOrder = buildFreshOrder(dailyPlanDate, dailyPlanSchedule.getSchedule(), sw,
+                                            
+                                            if (synchronizer.getSubmission() == null) {
+                                                synchronizer.setSubmission(addDailyPlanSubmission(controllerId, date));
+                                            }
+                                            
+                                            FreshOrder freshOrder = buildFreshOrder(submissionForDate, dailyPlanSchedule.getSchedule(), sw,
                                                     orderParameterisation, periodEntry.getKey(), startMode);
 
                                             if (!fromService) {
                                                 schedule.setSubmitOrderToControllerWhenPlanned(settings.isSubmit());
                                             }
 
-                                            if (synchronizer.getSubmission() == null) {
-                                                synchronizer.setSubmission(addDailyPlanSubmission(controllerId, date));
-                                            }
-
                                             PlannedOrder plannedOrder = new PlannedOrder(controllerId, freshOrder, dailyPlanSchedule, sw, calendar
                                                     .getId());
                                             plannedOrder.setPeriod(p);
                                             plannedOrder.setSubmissionHistoryId(synchronizer.getSubmission().getId());
-                                            plannedOrder.setSubmissionForDate(date);
+                                            plannedOrder.setSubmissionForDate(synchronizer.getSubmission().getSubmissionForDate());
                                             plannedOrder.setOrderName(DailyPlanHelper.getOrderName(schedule, orderParameterisation));
-                                            synchronizer.add(startupMode, plannedOrder, controllerId, dailyPlanDate);
+                                            synchronizer.add(startupMode, plannedOrder, controllerId, submissionForDate);
                                             plannedOrdersCount++;
                                         }
                                     }
