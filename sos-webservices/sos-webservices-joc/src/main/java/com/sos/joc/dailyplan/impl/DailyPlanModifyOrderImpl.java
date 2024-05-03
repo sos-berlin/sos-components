@@ -725,10 +725,11 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             SOSInvalidDataException, SOSHibernateException {
         
         Set<Long> submissionIds = items.stream().map(DBItemDailyPlanOrder::getSubmissionHistoryId).collect(Collectors.toSet());
-        Set<String> oldDailyPlanDates = items.stream().map(DBItemDailyPlanOrder::getOrderId).map(s -> s.substring(1, 11)).collect(Collectors.toSet());
+        Set<String> oldDailyPlanDates = items.stream().map(DBItemDailyPlanOrder::getDailyPlanDateFromOrderId).collect(Collectors.toSet());
         
         SOSHibernateSession session = null;
         boolean isBulkOperation = items.size() > 1;
+        boolean stickDailyPlan = in.getStickDailyPlanDate() == Boolean.TRUE;
         final String settingTimeZone = getSettings().getTimeZone();
         Instant now = Instant.now();
         Long settingPeriodBeginSecondsOpt = JobSchedulerDate.getSecondsOfHHmmss(getSettings().getPeriodBegin());
@@ -770,7 +771,9 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                     firstOrderOfCycle.setExpectedEnd(null);
                     firstOrderOfCycle.setIsLastOfCyclic(true);
                     
-                    String dailyPlanDateOfFirst = firstOrderOfCycle.getDailyPlanDate("Etc/UTC", 0);
+                    String dailyPlanDateOfFirst = stickDailyPlan ? firstOrderOfCycle.getDailyPlanDateFromOrderId() : firstOrderOfCycle
+                            .getDailyPlanDate("Etc/UTC", 0);
+
                     //dailyPlanDates.add(dailyPlanDateOfFirst);
                     if (!dailyPlanSubmissions.containsKey(dailyPlanDateOfFirst)) {
                         DBItemDailyPlanSubmission submission = newSubmission(in.getControllerId(), dailyPlanDateOfFirst);
@@ -802,7 +805,8 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                         lastOrderOfCycle.setPlannedStart(Date.from(newPlannedStartOfLast));
                         lastOrderOfCycle.setIsLastOfCyclic(true);
 
-                        String dailyPlanDateOfLast = lastOrderOfCycle.getDailyPlanDate(settingTimeZone, settingPeriodBeginSeconds);
+                        String dailyPlanDateOfLast = stickDailyPlan ? lastOrderOfCycle.getDailyPlanDateFromOrderId() : lastOrderOfCycle
+                                .getDailyPlanDate(settingTimeZone, settingPeriodBeginSeconds);
                         //dailyPlanDates.add(dailyPlanDateOfLast);
                         if (!dailyPlanSubmissions.containsKey(dailyPlanDateOfLast)) {
                             DBItemDailyPlanSubmission submission = newSubmission(in.getControllerId(), dailyPlanDateOfLast);
@@ -823,8 +827,9 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
                     } else {
                         
-                        String dailyPanDateOfFirst = getDailyPlanDate(newPlannedStartOfFirst, settingTimeZone, settingPeriodBeginSeconds);
-                        
+                        String dailyPlanDateOfFirst = getDailyPlanDate(newPlannedStartOfFirst, settingTimeZone, settingPeriodBeginSeconds);
+                        String stickyDailyPlanDateOfFirst = stickDailyPlan ? firstOrderOfCycle.getDailyPlanDateFromOrderId() : dailyPlanDateOfFirst;
+
                         Cycle cycle = new Cycle();
                         cycle.setRepeat(getPeriodRepeat(item.getRepeatInterval()));
                         Instant newPeriodbegin = in.getNewPlannedStart(item.getPeriodBegin());
@@ -841,17 +846,17 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                             cycle.setEnd("24:00:00");
                         }
                         
-                        if (!dailyPlanSubmissions.containsKey(dailyPanDateOfFirst)) {
-                            DBItemDailyPlanSubmission submission = newSubmission(in.getControllerId(), dailyPanDateOfFirst);
+                        if (!dailyPlanSubmissions.containsKey(stickyDailyPlanDateOfFirst)) {
+                            DBItemDailyPlanSubmission submission = newSubmission(in.getControllerId(), stickyDailyPlanDateOfFirst);
                             session.save(submission);
-                            dailyPlanSubmissions.put(dailyPanDateOfFirst, submission);
+                            dailyPlanSubmissions.put(stickyDailyPlanDateOfFirst, submission);
                         }
 
-                        modifyStartTimeCycle(in, dailyPanDateOfFirst, cycle, item, cyclicOrdersOfItem, dailyPlanSubmissions.get(dailyPanDateOfFirst),
-                                auditlog).ifPresent(newOrderId -> {
+                        modifyStartTimeCycle(in, dailyPlanDateOfFirst, cycle, item, cyclicOrdersOfItem, dailyPlanSubmissions.get(
+                                stickyDailyPlanDateOfFirst), auditlog).ifPresent(newOrderId -> {
                                     result.getAdditionalProperties().put(item.getOrderId(), newOrderId);
                                 });
-                        
+
 //                        dailyPlanDates.add(dailyPanDateOfFirst);
 //                        
 //                        for (DBItemDailyPlanOrder cItem : cyclicOrdersOfItem.descendingSet()) {
@@ -899,7 +904,8 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 item.setPlannedStart(Date.from(newPlannedStart));
 
                 // TODO dailyPlanDate from above newPlannedStart (not from now)?
-                String dailyPlanDate = item.getDailyPlanDate(settingTimeZone, settingPeriodBeginSeconds);
+                String dailyPlanDate = stickDailyPlan ? item.getDailyPlanDateFromOrderId() : item.getDailyPlanDate(settingTimeZone,
+                        settingPeriodBeginSeconds);
                 //dailyPlanDates.add(dailyPlanDate);
                 if (!dailyPlanSubmissions.containsKey(dailyPlanDate)) {
                     DBItemDailyPlanSubmission submission = newSubmission(in.getControllerId(), dailyPlanDate);
@@ -1009,7 +1015,8 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                     submitOrdersToController(toSubmit, in.getForceJobAdmission());
                 }
                 
-                dailyPlanSubmissions.keySet().forEach(dailyPlanDate -> EventBus.getInstance().post(new DailyPlanEvent(in.getControllerId(), dailyPlanDate)));
+                dailyPlanSubmissions.keySet().forEach(dailyPlanDate -> EventBus.getInstance().post(new DailyPlanEvent(in.getControllerId(),
+                        dailyPlanDate)));
                 oldDailyPlanDates.forEach(dailyPlanDate -> EventBus.getInstance().post(new DailyPlanEvent(in.getControllerId(), dailyPlanDate)));
 
                 OrdersHelper.storeAuditLogDetails(allItems.stream().map(item -> new AuditLogDetail(item.getWorkflowPath(), item.getOrderId(), in
@@ -1031,16 +1038,19 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
     private Optional<String> modifyStartTimeCycle(ModifyOrdersHelper in, DBItemDailyPlanOrder mainItem,
             TreeSet<DBItemDailyPlanOrder> cyclicOrdersOfItem, DBItemJocAuditLog auditlog) throws SOSHibernateException,
             ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
-            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
-        return modifyStartTimeCycle(in, in.getScheduledFor(), in.getCycle(), mainItem, cyclicOrdersOfItem, null, auditlog);
+            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException, SOSInvalidDataException {
+        String submissionForDate = in.getStickDailyPlanDate() == Boolean.TRUE ? mainItem.getDailyPlanDateFromOrderId() : in.getScheduledFor();
+        return modifyStartTimeCycle(in, in.getScheduledFor(), in.getCycle(), mainItem, cyclicOrdersOfItem, newSubmission(in.getControllerId(),
+                submissionForDate), auditlog);
     }
     
     private Optional<String> modifyStartTimeCycle(ModifyOrdersHelper in, String dailyplanDate, Cycle cycle, DBItemDailyPlanOrder mainItem,
             TreeSet<DBItemDailyPlanOrder> cyclicOrdersOfItem, DBItemDailyPlanSubmission submission, DBItemJocAuditLog auditlog)
             throws SOSHibernateException, ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
             JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
+        
         Long oldSubmissionId = mainItem.getSubmissionHistoryId();
-        String oldDailyPlanDate = mainItem.getOrderId().substring(1, 11);
+        String oldDailyPlanDate = mainItem.getDailyPlanDateFromOrderId();
 
         SOSHibernateSession session = null;
         Map<PlannedOrderKey, PlannedOrder> generatedOrders = Collections.emptyMap();
@@ -1076,12 +1086,14 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             session.beginTransaction();
             dbLayer.deleteCascading(mainItem, false);
             session.commit();
-            if (submission == null) {
-                submission = insertNewSubmission(in.getControllerId(), dailyplanDate, session);
+            
+            String submissionForDate = SOSDate.getDateAsString(submission.getSubmissionForDate());
+            if (submission.getId() == null) {
+                submission = insertNewSubmission(submission, session);
             }
             
             DailyPlanRunner runner = getDailyPlanRunner(mainItem.getSubmitted(), submission.getSubmissionForDate());
-            OrderListSynchronizer synchronizer = calculateStartTimes(in, cycle, runner, submission, mainItem, variable);
+            OrderListSynchronizer synchronizer = calculateStartTimes(in, cycle, runner, dailyplanDate, submission, mainItem, variable);
             synchronizer.substituteOrderIds();
             generatedOrders = synchronizer.getPlannedOrders();
             
@@ -1121,7 +1133,9 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                         }
                         
                         EventBus.getInstance().post(new DailyPlanEvent(in.getControllerId(), oldDailyPlanDate));
-                        EventBus.getInstance().post(new DailyPlanEvent(in.getControllerId(), dailyplanDate));
+                        if (!oldDailyPlanDate.equals(submissionForDate)) {
+                            EventBus.getInstance().post(new DailyPlanEvent(in.getControllerId(), submissionForDate));
+                        }
                     }
                 });
             } else {
@@ -1135,7 +1149,9 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 runner.addPlannedOrderToControllerAndDB(in.getControllerId(), dailyplanDate, mainItem.getSubmitted(), synchronizer);
                 
                 EventBus.getInstance().post(new DailyPlanEvent(in.getControllerId(), oldDailyPlanDate));
-                EventBus.getInstance().post(new DailyPlanEvent(in.getControllerId(), dailyplanDate));
+                if (!oldDailyPlanDate.equals(submissionForDate)) {
+                    EventBus.getInstance().post(new DailyPlanEvent(in.getControllerId(), submissionForDate));
+                }
                 
             }
             
@@ -1210,7 +1226,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         return new DailyPlanRunner(settings);
     }
     
-    private OrderListSynchronizer calculateStartTimes(DailyPlanModifyOrder in, Cycle cycle, DailyPlanRunner runner,
+    private OrderListSynchronizer calculateStartTimes(DailyPlanModifyOrder in, Cycle cycle, DailyPlanRunner runner, String dailyPlanDate,
             DBItemDailyPlanSubmission newSubmission, final DBItemDailyPlanOrder mainItem, DBItemDailyPlanVariable variable) {
 
         try {
@@ -1256,8 +1272,8 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             DailyPlanScheduleWorkflow w = new DailyPlanScheduleWorkflow(mainItem.getWorkflowName(), mainItem.getWorkflowPath(), null);
             DailyPlanSchedule dailyPlanSchedule = new DailyPlanSchedule(schedule, Arrays.asList(w));
 
-            return runner.calculateStartTimes(StartupMode.manual, in.getControllerId(), Arrays.asList(dailyPlanSchedule), SOSDate.getDateAsString(
-                    newSubmission.getSubmissionForDate()), newSubmission, calendar.getId(), getJocError(), getAccessToken());
+            return runner.calculateStartTimes(StartupMode.manual, in.getControllerId(), Arrays.asList(dailyPlanSchedule), dailyPlanDate,
+                    newSubmission, calendar.getId(), getJocError(), getAccessToken());
 
         } catch (JocConfigurationException | DBConnectionRefusedException | ControllerConnectionResetException | ControllerConnectionRefusedException
                 | DBMissingDataException | DBOpenSessionException | DBInvalidDataException | IOException | ParseException | SOSException
@@ -1383,13 +1399,12 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         }
     }
 
-    private DBItemDailyPlanSubmission insertNewSubmission(String controllerId, String dailyPlanDate, SOSHibernateSession session)
+    private DBItemDailyPlanSubmission insertNewSubmission(DBItemDailyPlanSubmission item, SOSHibernateSession session)
             throws SOSHibernateException, SOSInvalidDataException {
-        DBItemDailyPlanSubmission item = newSubmission(controllerId, dailyPlanDate);
         boolean sessionIsNull = session == null;
         try {
             if (sessionIsNull) {
-                session = Globals.createSosHibernateStatelessConnection(IMPL_PATH + "[insertNewSubmission][" + dailyPlanDate + "]");
+                session = Globals.createSosHibernateStatelessConnection(IMPL_PATH + "[insertNewSubmission]");
             }
             session.beginTransaction();
             session.save(item);
