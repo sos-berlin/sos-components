@@ -41,6 +41,7 @@ import com.sos.inventory.model.script.Script;
 import com.sos.inventory.model.workflow.Branch;
 import com.sos.inventory.model.workflow.Jobs;
 import com.sos.inventory.model.workflow.ListParameterType;
+import com.sos.inventory.model.workflow.ListParameters;
 import com.sos.inventory.model.workflow.ParameterType;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.inventory.model.workflow.Workflow;
@@ -53,10 +54,9 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.common.IDeployObject;
 import com.sos.sign.model.job.ExecutableJava;
 import com.sos.sign.model.job.ExecutableScript;
-import com.sos.sign.model.workflow.ListParameters;
+import com.sos.sign.model.workflow.ObjectParameter;
 import com.sos.sign.model.workflow.OrderPreparation;
 import com.sos.sign.model.workflow.Parameter;
-import com.sos.sign.model.workflow.ParameterListType;
 import com.sos.sign.model.workflow.Parameters;
 
 import io.vavr.control.Either;
@@ -636,18 +636,28 @@ public class JsonConverter {
         p.setFinal(value.getFinal());
         if (ParameterType.List.equals(value.getType())) {
             p.setType(invListParameterToSignListParameter(value.getListParameters()));
+        } else if (ParameterType.Map.equals(value.getType())) {
+            p.setType(invObjectParameterToSignObjectParameter(value.getListParameters()));
         } else {
             p.setType(value.getType()); // wrong type enum
         }
         return p;
     }
     
-    private static ParameterListType invListParameterToSignListParameter(com.sos.inventory.model.workflow.ListParameters ilps) {
-        ListParameters lps = new ListParameters();
+    private static com.sos.sign.model.workflow.ListParameter invListParameterToSignListParameter(ListParameters ilps) {
+        ObjectParameter lps = new ObjectParameter();
         if (ilps != null && ilps.getAdditionalProperties() != null) {
             ilps.getAdditionalProperties().forEach((k1, v1) -> lps.setAdditionalProperty(k1, v1.getType()));
         }
-        return new ParameterListType("List", lps);
+        return new com.sos.sign.model.workflow.ListParameter("List", lps);
+    }
+    
+    private static ObjectParameter invObjectParameterToSignObjectParameter(ListParameters ilps) {
+        ObjectParameter ops = new ObjectParameter();
+        if (ilps != null && ilps.getAdditionalProperties() != null) {
+            ilps.getAdditionalProperties().forEach((k1, v1) -> ops.setAdditionalProperty(k1, v1.getType()));
+        }
+        return ops;
     }
     
     public static Requirements signOrderPreparationToInvOrderPreparation(OrderPreparation orderPreparation) {
@@ -672,31 +682,38 @@ public class JsonConverter {
                                 p.setType(ParameterType.fromValue((String) v.getType()));
                             } catch (Exception e) {
                             }
-                        } else if (v.getType() instanceof ParameterListType) {
+                        } else if (v.getType() instanceof com.sos.sign.model.workflow.ListParameter) {
                             p.setType(ParameterType.List);
-                            ParameterListType plt = (ParameterListType) v.getType();
+                            com.sos.sign.model.workflow.ListParameter plt = (com.sos.sign.model.workflow.ListParameter) v.getType();
                             if (plt.getElementType() != null && plt.getElementType().getAdditionalProperties() != null) {
-                                com.sos.inventory.model.workflow.ListParameters lp = new com.sos.inventory.model.workflow.ListParameters();
+                                ListParameters lp = new ListParameters();
                                 plt.getElementType().getAdditionalProperties().forEach((k1, v1) -> {
                                     lp.setAdditionalProperty(k1, new com.sos.inventory.model.workflow.ListParameter(v1, null));
                                     p.setListParameters(lp);
                                 });
                             }
+                        } else if (v.getType() instanceof ObjectParameter) {
+                            p.setType(ParameterType.Map);
+                            ObjectParameter pot = (ObjectParameter) v.getType();
+                            if (pot.getAdditionalProperties() != null) {
+                                ListParameters lp = new ListParameters();
+                                pot.getAdditionalProperties().forEach((k1, v1) -> {
+                                    lp.setAdditionalProperty(k1, new com.sos.inventory.model.workflow.ListParameter(v1, null));
+                                    p.setListParameters(lp);
+                                });
+                            }
                         } else if (v.getType() instanceof Map) {
-                            p.setType(ParameterType.List);
+                            p.setType(ParameterType.Map);
+                            
                             Map<String, String> slp = (Map<String, String>) ((Map<String, Object>) v.getType()).get("elementType");
                             if (slp != null) {
-                                com.sos.inventory.model.workflow.ListParameters lp = new com.sos.inventory.model.workflow.ListParameters();
-                                slp.forEach((k1, v1) -> {
-                                    if (!"TYPE".equals(k1)) {
-                                        try {
-                                            lp.setAdditionalProperty(k1, new com.sos.inventory.model.workflow.ListParameter(ListParameterType
-                                                    .fromValue(v1), null));
-                                            p.setListParameters(lp);
-                                        } catch (Exception e) {
-                                        }
-                                    }
-                                });
+                                p.setType(ParameterType.List);
+                                p.setListParameters(listParamsfromMap(slp));
+                            } else {
+                                Map<String, String> olp = (Map<String, String>) v.getType();
+                                if (olp != null) {
+                                    p.setListParameters(listParamsfromMap(olp));
+                                }
                             }
                         }
                     }
@@ -705,6 +722,24 @@ public class JsonConverter {
             });
         }
         return new Requirements(params, orderPreparation.getAllowUndeclared()); 
+    }
+    
+    private static ListParameters listParamsfromMap(Map<String, String> p) {
+        if (p != null) {
+            ListParameters lp = new ListParameters();
+            p.forEach((k1, v1) -> {
+                if (!"TYPE".equals(k1)) {
+                    try {
+                        lp.setAdditionalProperty(k1, new com.sos.inventory.model.workflow.ListParameter(ListParameterType
+                                .fromValue(v1), null));
+                        
+                    } catch (Exception e) {
+                    }
+                }
+            });
+            return lp;
+        }
+        return null;
     }
 
 }

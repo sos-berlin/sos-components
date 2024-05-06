@@ -1360,8 +1360,12 @@ public class Validator {
                     }
                     break;
                 case List:
-                    invalid = (_default instanceof List) == false;
-                    // TODO check list params types
+                    //invalid = (_default instanceof List) == false;
+                    // TODO check list params: see validateListParameters below
+                    break;
+                case Map:
+                    //invalid = (_default instanceof Map) == false;
+                    // TODO check list params: see validateListParameters below
                     break;
                 }
                 if (invalid) {
@@ -1373,17 +1377,16 @@ public class Validator {
             if (value.getFinal() != null) {
                 validateExpression("$.orderPreparation.parameters['" + key + "'].final: ", value.getFinal());
             }
-            if (ParameterType.List.equals(value.getType())) {
-                validateListParameters(value.getListParameters(), key);
+            if (ParameterType.List.equals(value.getType()) || ParameterType.Map.equals(value.getType())) {
+                validateListParameters(value.getType(), value.getListParameters(), key);
             }
         });
     }
     
-    private static void validateListParameters(ListParameters listParameters, String key) throws JocConfigurationException {
-        if (listParameters == null || listParameters.getAdditionalProperties() == null || listParameters.getAdditionalProperties()
-                .isEmpty()) {
+    private static void validateListParameters(ParameterType type, ListParameters listParameters, String key) throws JocConfigurationException {
+        if (listParameters == null || listParameters.getAdditionalProperties() == null || listParameters.getAdditionalProperties().isEmpty()) {
             throw new JocConfigurationException(String.format(
-                    "$.orderPreparation.parameters['%s'].listParameters: missing but required if the parameter is of type 'List'", key));
+                    "$.orderPreparation.parameters['%s'].listParameters: missing but required if the parameter is of type '%s'", key, type.value()));
         }
         listParameters.getAdditionalProperties().forEach((listKey, listParam) -> {
             if (listParam.getDefault() != null) {
@@ -1470,7 +1473,8 @@ public class Validator {
                         invalid = (curArg instanceof Boolean) == false;
                         break;
                     case List:
-                        invalid = (curArg instanceof List) == false;
+                    case Map:
+                        //invalid = (curArg instanceof List) == false;
                         // TODO check list params types
                         break;
                     }
@@ -1530,14 +1534,14 @@ public class Validator {
         }
     }
 
-    private static void validateJobArguments(Jobs jobs, Requirements orderPreparation) {
-        if (jobs != null) {
-            jobs.getAdditionalProperties().forEach((key, value) -> {
-                // validateArguments(value.getDefaultArguments(), orderPreparation, "$.jobs['" + key + "'].defaultArguments");
-                // validateArgumentKeys(value.getDefaultArguments(), "$.jobs['" + key + "'].defaultArguments");
-            });
-        }
-    }
+//    private static void validateJobArguments(Jobs jobs, Requirements orderPreparation) {
+//        if (jobs != null) {
+//            jobs.getAdditionalProperties().forEach((key, value) -> {
+//                // validateArguments(value.getDefaultArguments(), orderPreparation, "$.jobs['" + key + "'].defaultArguments");
+//                // validateArgumentKeys(value.getDefaultArguments(), "$.jobs['" + key + "'].defaultArguments");
+//            });
+//        }
+//    }
 
     private static void validateExpression(String prefix, Map<String, String> map) throws JocConfigurationException {
         if (map != null) {

@@ -1,0 +1,15 @@
+{
+	"title": "object type parameter",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.sign.model.workflow.ObjectParameter",
+	"type": "object",
+	"properties": {
+		"TYPE": {
+    		"type": "string",
+    		"default": "Object"
+    	}
+    },
+    "additionalProperties": {
+    		"$ref": "../../../inventory/schemas/workflow/listParameterType-schema.json"
+  	}
+}

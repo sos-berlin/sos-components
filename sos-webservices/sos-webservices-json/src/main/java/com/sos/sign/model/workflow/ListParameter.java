@@ -20,7 +20,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "TYPE",
     "elementType"
 })
-public class ParameterListType {
+public class ListParameter {
 
     /**
      * 
@@ -30,18 +30,20 @@ public class ParameterListType {
     @JsonProperty("TYPE")
     private String tYPE = "List";
     /**
+     * object type parameter
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("elementType")
-    private ListParameters elementType;
+    private ObjectParameter elementType;
 
     /**
      * No args constructor for use in serialization
      * 
      */
-    public ParameterListType() {
+    public ListParameter() {
     }
 
     /**
@@ -49,7 +51,7 @@ public class ParameterListType {
      * @param tYPE
      * @param elementType
      */
-    public ParameterListType(String tYPE, ListParameters elementType) {
+    public ListParameter(String tYPE, ObjectParameter elementType) {
         super();
         this.tYPE = tYPE;
         this.elementType = elementType;
@@ -76,22 +78,26 @@ public class ParameterListType {
     }
 
     /**
+     * object type parameter
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("elementType")
-    public ListParameters getElementType() {
+    public ObjectParameter getElementType() {
         return elementType;
     }
 
     /**
+     * object type parameter
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("elementType")
-    public void setElementType(ListParameters elementType) {
+    public void setElementType(ObjectParameter elementType) {
         this.elementType = elementType;
     }
 
@@ -110,10 +116,10 @@ public class ParameterListType {
         if (other == this) {
             return true;
         }
-        if ((other instanceof ParameterListType) == false) {
+        if ((other instanceof ListParameter) == false) {
             return false;
         }
-        ParameterListType rhs = ((ParameterListType) other);
+        ListParameter rhs = ((ListParameter) other);
         return new EqualsBuilder().append(tYPE, rhs.tYPE).append(elementType, rhs.elementType).isEquals();
     }
 

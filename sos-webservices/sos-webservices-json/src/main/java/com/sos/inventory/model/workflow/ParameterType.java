@@ -11,7 +11,8 @@ public enum ParameterType {
     String("String"),
     Number("Number"),
     Boolean("Boolean"),
-    List("List");
+    List("List"),
+    Map("Map");
     private final java.lang.String value;
     private final static Map<java.lang.String, ParameterType> CONSTANTS = new HashMap<java.lang.String, ParameterType>();
 

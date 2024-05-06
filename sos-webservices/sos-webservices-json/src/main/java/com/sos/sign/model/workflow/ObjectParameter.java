@@ -1,7 +1,7 @@
 
 package com.sos.sign.model.workflow;
 
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
@@ -14,29 +14,36 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
+
+/**
+ * object type parameter
+ * <p>
+ * 
+ * 
+ */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "TYPE"
 })
-public class ListParameters {
+public class ObjectParameter {
 
     @JsonProperty("TYPE")
     private String tYPE = "Object";
     @JsonIgnore
-    private Map<String, ListParameterType> additionalProperties = new LinkedHashMap<String, ListParameterType>();
+    private Map<String, ListParameterType> additionalProperties = new HashMap<String, ListParameterType>();
 
     /**
      * No args constructor for use in serialization
      * 
      */
-    public ListParameters() {
+    public ObjectParameter() {
     }
 
     /**
      * 
      * @param tYPE
      */
-    public ListParameters(String tYPE) {
+    public ObjectParameter(String tYPE) {
         super();
         this.tYPE = tYPE;
     }
@@ -76,10 +83,10 @@ public class ListParameters {
         if (other == this) {
             return true;
         }
-        if ((other instanceof ListParameters) == false) {
+        if ((other instanceof ObjectParameter) == false) {
             return false;
         }
-        ListParameters rhs = ((ListParameters) other);
+        ObjectParameter rhs = ((ObjectParameter) other);
         return new EqualsBuilder().append(tYPE, rhs.tYPE).append(additionalProperties, rhs.additionalProperties).isEquals();
     }
 

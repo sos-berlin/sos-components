@@ -1,5 +1,5 @@
 {
-  "title": "order or job requirements",
+  "title": "OrderPreparation",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.sign.model.workflow.OrderPreparation",
   "type": "object",
