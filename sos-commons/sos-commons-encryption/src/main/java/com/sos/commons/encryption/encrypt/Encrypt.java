@@ -34,4 +34,8 @@ public class Encrypt {
     EncryptionUtils.enOrDecryptFile(algorithm, key, iv, inputFile, outputFile, Cipher.ENCRYPT_MODE);
   }
 
+  public static String concatOutput (String encryptedKey, String ivBase64Encoded, String encryptedValue) {
+    return encryptedKey.concat(" ").concat(ivBase64Encoded).concat(" ").concat(encryptedValue);
+  }
+  
 }

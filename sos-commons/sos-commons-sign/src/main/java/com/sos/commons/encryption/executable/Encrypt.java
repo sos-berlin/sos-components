@@ -70,7 +70,7 @@ public class Encrypt {
     String ivBase64Encoded = new String(Base64.getEncoder().encode(iv.getIV()));
     String encryptedValue = com.sos.commons.encryption.encrypt.Encrypt.encrypt(EncryptionUtils.CIPHER_ALGORITHM, input, key, iv);
     // concatenating the output
-    String output = encryptedKey.concat(" ").concat(ivBase64Encoded).concat(" ").concat(encryptedValue);
+    String output = com.sos.commons.encryption.encrypt.Encrypt.concatOutput(encryptedKey, ivBase64Encoded, encryptedValue);
     System.out.println(output);
   }
 
