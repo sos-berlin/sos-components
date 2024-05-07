@@ -42,11 +42,11 @@ public class SOSHibernateEncryptionResolver implements ISOSHibernateConfiguratio
     private String keystoreKeyPassword;
     private String keystoreKeyAlias;
 
-    /** The credentials can be configured in:<br />
-     * - the hibernate configuration file<br />
-     * - joc.properties<br />
-     * - private.conf of an agent<br />
-     * determined by the calling application<br />
+    /** The credentials can be configured in:
+     * - the hibernate configuration file
+     * - joc.properties
+     * - private.conf of an agent
+     * determined by the calling application
      */
     @Override
     public Configuration resolve(Configuration configuration) throws SOSHibernateConfigurationException {
@@ -61,8 +61,7 @@ public class SOSHibernateEncryptionResolver implements ISOSHibernateConfiguratio
             try {
                 PrivateKey privKey = getPrivateKey(configuration);
                 if (privKey == null) {
-                    // TODO is an error ?
-                    return configuration;
+                    throw new SOSHibernateConfigurationException("encrypted values found, but no private key provided for decryption!");
                 }
 
                 if (url != null) {
