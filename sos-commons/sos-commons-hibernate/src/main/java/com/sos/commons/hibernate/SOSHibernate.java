@@ -43,7 +43,10 @@ public class SOSHibernate {
     public static final String HIBERNATE_PROPERTY_CONNECTION_USERNAME = "hibernate.connection.username";
     public static final String HIBERNATE_PROPERTY_CONNECTION_PASSWORD = "hibernate.connection.password";
     public static final String HIBERNATE_PROPERTY_CURRENT_SESSION_CONTEXT_CLASS = "hibernate.current_session_context_class";
+    // TODO check if really used
     public static final String HIBERNATE_PROPERTY_ID_NEW_GENERATOR_MAPPINGS = "hibernate.id.new_generator_mappings";
+    // introduced with 6.x
+    public static final String HIBERNATE_PROPERTY_ID_STRUCTURE_NAMING_STRATEGY = "hibernate.id.db_structure_naming_strategy";
     public static final String HIBERNATE_PROPERTY_JAVAX_PERSISTENCE_VALIDATION_MODE = "javax.persistence.validation.mode";
     public static final String HIBERNATE_PROPERTY_JAKARTA_PERSISTENCE_VALIDATION_MODE = "jakarta.persistence.validation.mode";
     public static final String HIBERNATE_PROPERTY_TRANSACTION_ISOLATION = "hibernate.connection.isolation";
