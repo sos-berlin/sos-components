@@ -2,6 +2,7 @@ package com.sos.commons.hibernate.configuration;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.hibernate.cfg.Configuration;
 
@@ -32,9 +33,10 @@ public class SOSHibernateConfigurationResolver {
         return configuration;
     }
 
-    public void addResolver(ISOSHibernateConfigurationResolver r) {
-        // Remove all instances of the same type as r
-        resolvers.removeIf(instance -> instance.getClass().equals(r.getClass()));
-        resolvers.add(r);
+    public void addResolver(ISOSHibernateConfigurationResolver resolver) {
+        Optional<ISOSHibernateConfigurationResolver> existingInstance = resolvers.stream().filter(instance -> instance.getClass().equals(resolver
+                .getClass())).findFirst();
+        // Add or replace the existing resolver of the same type as the new resolver
+        existingInstance.ifPresentOrElse(instance -> resolvers.set(resolvers.indexOf(instance), resolver), () -> resolvers.add(resolver));
     }
 }
