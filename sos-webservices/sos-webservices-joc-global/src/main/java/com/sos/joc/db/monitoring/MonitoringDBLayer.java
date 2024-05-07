@@ -25,8 +25,8 @@ public class MonitoringDBLayer extends DBLayer {
         super(session);
     }
 
-    public ScrollableResults getOrderNotifications(Date dateFrom, Collection<String> controllerIds, List<Integer> types, Integer limit)
-            throws SOSHibernateException {
+    public ScrollableResults<NotificationDBItemEntity> getOrderNotifications(Date dateFrom, Collection<String> controllerIds, List<Integer> types,
+            Integer limit) throws SOSHibernateException {
         if (controllerIds == null) {
             controllerIds = Collections.emptySet();
         }
@@ -65,8 +65,8 @@ public class MonitoringDBLayer extends DBLayer {
         return getSession().scroll(query);
     }
 
-    public ScrollableResults getSystemNotifications(Date dateFrom, List<Integer> types, List<Integer> categories, Integer limit)
-            throws SOSHibernateException {
+    public ScrollableResults<SystemNotificationDBItemEntity> getSystemNotifications(Date dateFrom, List<Integer> types, List<Integer> categories,
+            Integer limit) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder(getSystemNotificationsMainHQL());
         String add = "where ";
         if (dateFrom != null) {
@@ -113,8 +113,8 @@ public class MonitoringDBLayer extends DBLayer {
         return getSession().scroll(query);
     }
 
-    public ScrollableResults getOrderNotifications(List<Long> notificationIds, Collection<String> controllerIds, List<Integer> types)
-            throws SOSHibernateException {
+    public ScrollableResults<NotificationDBItemEntity> getOrderNotifications(List<Long> notificationIds, Collection<String> controllerIds,
+            List<Integer> types) throws SOSHibernateException {
         int size = notificationIds.size();
         if (controllerIds == null) {
             controllerIds = Collections.emptySet();
@@ -154,8 +154,8 @@ public class MonitoringDBLayer extends DBLayer {
         return getSession().scroll(query);
     }
 
-    public ScrollableResults getSystemNotifications(List<Long> notificationIds, List<Integer> types, List<Integer> categories)
-            throws SOSHibernateException {
+    public ScrollableResults<SystemNotificationDBItemEntity> getSystemNotifications(List<Long> notificationIds, List<Integer> types,
+            List<Integer> categories) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder(getSystemNotificationsMainHQL());
         String add = "where ";
         int typesSize = types == null ? 0 : types.size();
@@ -310,7 +310,7 @@ public class MonitoringDBLayer extends DBLayer {
         return hql;
     }
 
-    public ScrollableResults getControllers(String controllerId, Date dateFrom, Date dateTo) throws SOSHibernateException {
+    public ScrollableResults<DBItemHistoryController> getControllers(String controllerId, Date dateFrom, Date dateTo) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_CONTROLLERS).append(" ");
         List<String> where = new ArrayList<>();
         if (!SOSString.isEmpty(controllerId)) {
@@ -400,7 +400,7 @@ public class MonitoringDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
-    public ScrollableResults getAgents(Collection<String> controllerIds, Date dateFrom, Date dateTo) throws SOSHibernateException {
+    public ScrollableResults<DBItemHistoryAgent> getAgents(Collection<String> controllerIds, Date dateFrom, Date dateTo) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_AGENTS).append(" ");
         List<String> where = new ArrayList<>();
         if (controllerIds != null && !controllerIds.isEmpty()) {

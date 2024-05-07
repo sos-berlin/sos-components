@@ -55,7 +55,7 @@ public class SystemNotificationsImpl extends JOCResourceImpl implements ISystemN
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             MonitoringDBLayer dbLayer = new MonitoringDBLayer(session);
             List<SystemNotificationItem> notifications = new ArrayList<>();
-            ScrollableResults sr = null;
+            ScrollableResults<SystemNotificationDBItemEntity> sr = null;
             try {
                 if (in.getNotificationIds() == null || in.getNotificationIds().size() == 0) {
                     sr = dbLayer.getSystemNotifications(JobSchedulerDate.getDateFrom(in.getDateFrom(), in.getTimeZone()), types, categories, in
@@ -64,7 +64,7 @@ public class SystemNotificationsImpl extends JOCResourceImpl implements ISystemN
                     sr = dbLayer.getSystemNotifications(in.getNotificationIds(), types, categories);
                 }
                 while (sr.next()) {
-                    notifications.add(convert((SystemNotificationDBItemEntity) sr.get(0)));
+                    notifications.add(convert(sr.get()));
                 }
             } catch (Exception e) {
                 throw e;

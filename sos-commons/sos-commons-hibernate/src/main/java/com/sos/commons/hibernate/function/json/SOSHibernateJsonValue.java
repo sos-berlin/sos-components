@@ -5,10 +5,12 @@ import java.util.List;
 
 import org.hibernate.QueryException;
 import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.engine.spi.Mapping;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.type.StringType;
-import org.hibernate.type.Type;
+import org.hibernate.query.ReturnableType;
+import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.QueryLiteral;
+import org.hibernate.type.StandardBasicTypes;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
 
@@ -23,7 +25,7 @@ public class SOSHibernateJsonValue extends StandardSQLFunction {
     private SOSHibernateFactory factory;
 
     public SOSHibernateJsonValue(SOSHibernateFactory factory) {
-        super(NAME);
+        super(NAME, StandardBasicTypes.STRING);
         this.factory = factory;
     }
 
@@ -40,33 +42,52 @@ public class SOSHibernateJsonValue extends StandardSQLFunction {
                 .toString();
     }
 
-    @SuppressWarnings("rawtypes")
     @Override
-    public String render(Type firstArgumentType, List arguments, SessionFactoryImplementor factory) throws QueryException {
+    public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> arguments, ReturnableType<?> returnType, SqlAstTranslator<?> translator)
+            throws QueryException {
         if (arguments == null || arguments.size() < 3) {
-            throw new QueryException("missing arguments");
+            throw new QueryException("missing arguments", null, null);
         }
-        String property = arguments.get(1).toString();
-        String path = arguments.get(2).toString();
-        ReturnType returnType;
 
+        ReturnType retType;
         switch (this.factory.getDbms()) {
         case MYSQL:
-            returnType = argument2ReturnType(arguments.get(0).toString());
+            retType = argument2ReturnType(arguments.get(0));
             // path = '$.ports.usb' -> '$.ports.usb'
-            String extract = "JSON_EXTRACT(" + property + "," + path + ")";
-            if (returnType.equals(ReturnType.SCALAR)) {
-                return "JSON_UNQUOTE(" + extract + ")";
+            if (retType.equals(ReturnType.SCALAR)) {
+                // JSON_UNQUOTE(JSON_EXTRACT(property,path))
+                sqlAppender.append("JSON_UNQUOTE(JSON_EXTRACT(");
+                arguments.get(1).accept(translator);
+                sqlAppender.append(",");
+                arguments.get(2).accept(translator);
+                sqlAppender.append("))");
             } else {
-                return extract;
+                // JSON_EXTRACT(property,path)
+                sqlAppender.append("JSON_EXTRACT(");
+                arguments.get(1).accept(translator);
+                sqlAppender.append(",");
+                arguments.get(2).accept(translator);
+                sqlAppender.append(")");
             }
+            break;
         case MSSQL:
-            returnType = argument2ReturnType(arguments.get(0).toString());
-            if (returnType.equals(ReturnType.SCALAR)) {
-                return "JSON_VALUE(" + property + "," + path + ")";
+            retType = argument2ReturnType(arguments.get(0));
+            if (retType.equals(ReturnType.SCALAR)) {
+                // JSON_VALUE(property,path)
+                sqlAppender.append("JSON_VALUE(");
+                arguments.get(1).accept(translator);
+                sqlAppender.append(",");
+                arguments.get(2).accept(translator);
+                sqlAppender.append(")");
             } else {
-                return "JSON_QUERY(" + property + "," + path + ")";
+                // JSON_QUERY(property,path)
+                sqlAppender.append("JSON_QUERY(");
+                arguments.get(1).accept(translator);
+                sqlAppender.append(",");
+                arguments.get(2).accept(translator);
+                sqlAppender.append(")");
             }
+            break;
         case ORACLE:
             // TODO
             // returning clob
@@ -74,26 +95,35 @@ public class SOSHibernateJsonValue extends StandardSQLFunction {
             // -------- available from 18c? 12c - ORA-40444 error ..;
             // ERROR ON ERROR
             // ---- SELECT json_value(j, '$.bar' returning varchar2(32000) ERROR ON ERROR) FROM j;
-            returnType = argument2ReturnType(arguments.get(0).toString());
-            if (returnType.equals(ReturnType.SCALAR)) {
+            retType = argument2ReturnType(arguments.get(0));
+            if (retType.equals(ReturnType.SCALAR)) {
                 // tested with 18c - not support RETURNING CLOB - gets empty value - use VARCHAR2(32000)?
-                return "JSON_VALUE(" + property + "," + path + ")";
+                // JSON_VALUE(property,path)
+                sqlAppender.append("JSON_VALUE(");
+                arguments.get(1).accept(translator);
+                sqlAppender.append(",");
+                arguments.get(2).accept(translator);
+                sqlAppender.append(")");
             } else {
+                // JSON_QUERY(property,path <RETURNING CLOB>)
+                sqlAppender.append("JSON_QUERY(");
+                arguments.get(1).accept(translator);
+                sqlAppender.append(",");
+                arguments.get(2).accept(translator);
                 if (this.factory.getDatabaseMetaData().supportJsonReturningClob()) {
-                    return "JSON_QUERY(" + property + "," + path + " RETURNING CLOB)";
-                } else {
-                    return "JSON_QUERY(" + property + "," + path + ")";
+                    sqlAppender.append(" RETURNING CLOB");
                 }
+                sqlAppender.append(")");
             }
+            break;
         case PGSQL:
             // path = '$.ports.usb' -> 'ports'->>'usb'
             // '<column>->'ports'->>'usb'
             // path = '$.arg' -> 'arg'
             // '<column>->>'arg'
-
-            // StringBuilder r = new StringBuilder(property.toString());
-            StringBuilder r = new StringBuilder(property.toString()).append("::jsonb");
+            String path = getLiteralValue(arguments.get(2));
             String[] arr = path.replaceAll("'", "").substring(2).split("\\.");
+            StringBuilder r = new StringBuilder();
             if (arr.length == 1) {
                 r.append("->>'").append(arr[0]).append("'");
             } else {
@@ -101,36 +131,37 @@ public class SOSHibernateJsonValue extends StandardSQLFunction {
                 r.append(String.join("'->'", Arrays.copyOf(arr, arr.length - 1)));
                 r.append("'->>'").append(arr[arr.length - 1]).append("'");
             }
-            return r.toString();
+            // property::jsonb
+            arguments.get(1).accept(translator);
+            sqlAppender.append("::jsonb");
+            sqlAppender.append(r.toString());
+            break;
         case H2:
             // path = '$.ports.usb' -> '$.ports.usb'
-            return com.sos.commons.hibernate.function.json.h2.Functions.NAME_JSON_VALUE + "(" + property + "," + path + ")";
+            // SOS_JSON_VALUE(property,path)
+            sqlAppender.append(com.sos.commons.hibernate.function.json.h2.Functions.NAME_JSON_VALUE);
+            sqlAppender.append("(");
+            arguments.get(1).accept(translator);
+            sqlAppender.append(",");
+            arguments.get(2).accept(translator);
+            sqlAppender.append(")");
+            break;
         default:
-            return NAME;
+            sqlAppender.append(NAME);
+            break;
         }
     }
 
-    private ReturnType argument2ReturnType(String arg) throws QueryException {
+    private String getLiteralValue(SqlAstNode arg) {
+        return ((QueryLiteral<?>) arg).getLiteralValue().toString();
+    }
+
+    private ReturnType argument2ReturnType(SqlAstNode arg) throws QueryException {
         try {
-            return ReturnType.valueOf(arg.replaceAll("'", ""));
+            return ReturnType.valueOf(getLiteralValue(arg));
         } catch (Exception e) {
-            throw new QueryException(String.format("[argument=%s]%s", arg, e.toString()), e);
+            throw new QueryException(String.format("[argument=%s]%s", arg, e.toString()), null, e);
         }
-    }
-
-    @Override
-    public boolean hasParenthesesIfNoArguments() {
-        return false;
-    }
-
-    @Override
-    public boolean hasArguments() {
-        return true;
-    }
-
-    @Override
-    public Type getReturnType(Type firstArgumentType, Mapping mapping) throws QueryException {
-        return new StringType();
     }
 
 }

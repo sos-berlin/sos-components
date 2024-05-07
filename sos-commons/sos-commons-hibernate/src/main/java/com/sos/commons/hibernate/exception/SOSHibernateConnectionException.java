@@ -1,6 +1,8 @@
 package com.sos.commons.hibernate.exception;
 
-import javax.persistence.PersistenceException;
+import java.sql.SQLException;
+
+import jakarta.persistence.PersistenceException;
 
 /** can occurs if JDBC connection methods are called */
 public class SOSHibernateConnectionException extends SOSHibernateException {
@@ -16,6 +18,10 @@ public class SOSHibernateConnectionException extends SOSHibernateException {
     }
 
     public SOSHibernateConnectionException(PersistenceException cause) {
+        super(cause);
+    }
+    
+    public SOSHibernateConnectionException(SQLException cause) {
         super(cause);
     }
 

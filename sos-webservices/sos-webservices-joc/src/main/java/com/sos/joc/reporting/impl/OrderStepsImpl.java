@@ -40,7 +40,7 @@ public class OrderStepsImpl extends JOCResourceImpl implements IOrderStepsResour
     public final class MyStreamingOutput implements StreamingOutput {
 
         private final boolean withGzipEncoding;
-        private final ScrollableResults result;
+        private final ScrollableResults<CSVItem> result;
         private final SOSHibernateSession session;
         private final boolean isFolderPermissionsAreChecked;
         private final Set<Folder> permittedFolders;
@@ -72,7 +72,7 @@ public class OrderStepsImpl extends JOCResourceImpl implements IOrderStepsResour
                     Map<String, Boolean> checkedFolders = new HashMap<>();
                     output.write(headline.getBytes(StandardCharsets.UTF_8));
                     while (result.next()) {
-                        CSVItem item = (CSVItem) result.get(0);
+                        CSVItem item = result.get();
                         if (!isFolderPermissionsAreChecked && !canAdd(item.getFolder(), permittedFolders, checkedFolders)) {
                             continue;
                         }
@@ -104,7 +104,7 @@ public class OrderStepsImpl extends JOCResourceImpl implements IOrderStepsResour
             return result;
         }
         
-        private ScrollableResults getResult(HistoryFilter filter, Stream<String> columns, List<TaskIdOfOrder> historyIds) {
+        private ScrollableResults<CSVItem> getResult(HistoryFilter filter, Stream<String> columns, List<TaskIdOfOrder> historyIds) {
             JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(session, filter);
             if (filter.hasPermission()) {
                 if (filter.getTaskFromHistoryIdAndNode()) {

@@ -9,9 +9,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.persistence.EmbeddedId;
-import javax.persistence.Id;
-import javax.persistence.Parameter;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Id;
+import jakarta.persistence.Parameter;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.exception.ConstraintViolationException;
@@ -26,6 +26,14 @@ import com.sos.commons.hibernate.exception.SOSHibernateOpenSessionException;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 
+/** Removed: <br/>
+ * - 2024-05-06<br/>
+ * -- hibernate.sos.mssql_lock_timeout<br/>
+ * ---- SOSHibernateSession.onOpenSession getSQLExecutor().execute("set LOCK_TIMEOUT " + value); only created overhead for each session and had no effect<br/>
+ * ---- For MSSQL, the JDBC URL lockTimeout=30000 should be used instead<br/>
+ * -- hibernate.jdbc.fetch_size HIBERNATE_PROPERTY_JDBC_FETCH_SIZE<br/>
+ * --- not used<br/>
+ */
 public class SOSHibernate {
 
     public static final String HIBERNATE_PROPERTY_DIALECT = "hibernate.dialect";
@@ -37,24 +45,18 @@ public class SOSHibernate {
     public static final String HIBERNATE_PROPERTY_CURRENT_SESSION_CONTEXT_CLASS = "hibernate.current_session_context_class";
     public static final String HIBERNATE_PROPERTY_ID_NEW_GENERATOR_MAPPINGS = "hibernate.id.new_generator_mappings";
     public static final String HIBERNATE_PROPERTY_JAVAX_PERSISTENCE_VALIDATION_MODE = "javax.persistence.validation.mode";
-    public static final String HIBERNATE_PROPERTY_JDBC_FETCH_SIZE = "hibernate.jdbc.fetch_size";
+    public static final String HIBERNATE_PROPERTY_JAKARTA_PERSISTENCE_VALIDATION_MODE = "jakarta.persistence.validation.mode";
     public static final String HIBERNATE_PROPERTY_TRANSACTION_ISOLATION = "hibernate.connection.isolation";
     public static final String HIBERNATE_PROPERTY_USE_SCROLLABLE_RESULTSET = "hibernate.jdbc.use_scrollable_resultset";
-    
-    //JS7 Environment variables for substitution
-    public static final String JS7_DBMS_URL_PARAMETER = "JS7_DBMS_URL_PARAMETER";
-    public static final String JS7_DBMS_USER = "JS7_DBMS_USER";
-    public static final String JS7_DBMS_PASSWORD = "JS7_DBMS_PASSWORD";
 
     // SOS configuration properties
-    public static final String HIBERNATE_SOS_PROPERTY_MSSQL_LOCK_TIMEOUT = "hibernate.sos.mssql_lock_timeout";
     public static final String HIBERNATE_SOS_PROPERTY_SHOW_CONFIGURATION_PROPERTIES = "hibernate.sos.show_configuration_properties";
+    // SOS configuration properties: credential store
     public static final String HIBERNATE_SOS_PROPERTY_CREDENTIAL_STORE_FILE = "hibernate.sos.credential_store_file";
     public static final String HIBERNATE_SOS_PROPERTY_CREDENTIAL_STORE_KEY_FILE = "hibernate.sos.credential_store_key_file";
     public static final String HIBERNATE_SOS_PROPERTY_CREDENTIAL_STORE_PASSWORD = "hibernate.sos.credential_store_password";
     public static final String HIBERNATE_SOS_PROPERTY_CREDENTIAL_STORE_ENTRY_PATH = "hibernate.sos.credential_store_entry_path";
-    
-    // SOS configuration properties for en-/decryption
+    // SOS configuration properties: encryption
     public static final String HIBERNATE_SOS_PROPERTY_DECRYPTION_PRIVATE_KEY = "hibernate.sos.decryption_key";
     public static final String HIBERNATE_SOS_PROPERTY_DECRYPTION_PRIVATE_KEYPWD = "hibernate.sos.decryption_keypassword";
     public static final String HIBERNATE_SOS_PROPERTY_KEYSTORE = "hibernate.sos.keystore_path";
@@ -62,8 +64,6 @@ public class SOSHibernate {
     public static final String HIBERNATE_SOS_PROPERTY_KEYSTORE_PWD = "hibernate.sos.keystore_password";
     public static final String HIBERNATE_SOS_PROPERTY_KEYSTORE_KEYPWD = "hibernate.sos.keystore_keypassword";
     public static final String HIBERNATE_SOS_PROPERTY_KEYSTORE_KEYALIAS = "hibernate.sos.keystore_keyalias";
-    // Identifiers
-    public static final String ENCRYPTION_IDENTIFIER = "enc://";
 
     public static final int LIMIT_IN_CLAUSE = 1000;
 

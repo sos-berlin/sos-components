@@ -154,14 +154,14 @@ public class DailyPlanProjections {
                     // database- ordered by submissionFordate, otherwise order with java ...
                     result.lastDate = s.getSubmissionForDate();
 
-                    ScrollableResults sr = null;
+                    ScrollableResults<DBItemDailyPlanOrder> sr = null;
                     try {
                         // TODO manage cyclic jobs more performantly
                         sr = dbLayer.getDailyPlanOrdersBySubmission(s.getId());
                         if (sr != null) {
                             Set<String> cyclic = new HashSet<>();
                             while (sr.next()) {
-                                DBItemDailyPlanOrder item = (DBItemDailyPlanOrder) sr.get(0);
+                                DBItemDailyPlanOrder item = sr.get();
 
                                 if (item.isCyclic()) {
                                     String cyclicMainPart = OrdersHelper.getCyclicOrderIdMainPart(item.getOrderId());

@@ -6,30 +6,13 @@ import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.KeyStore;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
 import java.sql.Connection;
 import java.util.Arrays;
-import java.util.Base64;
-import java.util.Date;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Collectors;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
-import javax.persistence.PersistenceException;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -37,35 +20,28 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.NumericBooleanType;
-import org.hibernate.type.TimestampType;
-import org.hibernate.type.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.credentialstore.keepass.SOSKeePassResolver;
-import com.sos.commons.encryption.EncryptionUtils;
+import com.sos.commons.hibernate.configuration.SOSHibernateConfigurationResolver;
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
-import com.sos.commons.hibernate.exception.SOSHibernateConvertException;
 import com.sos.commons.hibernate.exception.SOSHibernateFactoryBuildException;
 import com.sos.commons.hibernate.exception.SOSHibernateOpenSessionException;
 import com.sos.commons.hibernate.function.date.SOSHibernateSecondsDiff;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue;
 import com.sos.commons.hibernate.function.regex.SOSHibernateRegexp;
 import com.sos.commons.hibernate.type.SOSHibernateJsonType;
-import com.sos.commons.sign.keys.key.KeyUtil;
-import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
-import com.sos.commons.sign.keys.keyStore.KeystoreType;
 import com.sos.commons.util.SOSClassList;
 import com.sos.commons.util.SOSClassUtil;
-import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
+
+import jakarta.persistence.PersistenceException;
 
 public class SOSHibernateFactory implements Serializable {
 
     public enum Dbms {
-        DB2, H2, FBSQL, MSSQL, MYSQL, ORACLE, PGSQL, SYBASE, UNKNOWN
+        H2, MSSQL, MYSQL, ORACLE, PGSQL, UNKNOWN
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSHibernateFactory.class);
@@ -77,11 +53,12 @@ public class SOSHibernateFactory implements Serializable {
     private Configuration configuration;
     private SessionFactory sessionFactory;
     private Dialect dialect;
+    /** SOSHibernateConfigurationResolver is set to NULL after the configuration is processed */
+    private SOSHibernateConfigurationResolver configurationResolver;
     private Properties configurationProperties;
     private Properties defaultConfigurationProperties;
     private Dbms dbms = Dbms.UNKNOWN;
     private Optional<Path> configFile = Optional.empty();
-    private Optional<Integer> jdbcFetchSize = Optional.empty();
 
     private String identifier;
     private String logIdentifier;
@@ -89,11 +66,6 @@ public class SOSHibernateFactory implements Serializable {
     private String currentUTCTimestampSelectString;
     private boolean useDefaultConfigurationProperties = true;
     private boolean readDatabaseMetaData;
-    private String keystorePath;
-    private String keystoreType;
-    private String keystorePassword;
-    private String keystoreKeypassword;
-    private String keystoreKeyalias;
 
     public SOSHibernateFactory() {
         this((String) null);
@@ -255,10 +227,6 @@ public class SOSHibernateFactory implements Serializable {
         return identifier;
     }
 
-    public Optional<Integer> getJdbcFetchSize() {
-        return jdbcFetchSize;
-    }
-
     /** Hibernate Dialect does not provide the functions to identify the last inserted sequence value.
      * 
      * only for the next value:
@@ -278,11 +246,6 @@ public class SOSHibernateFactory implements Serializable {
             return "SELECT currval('" + sequenceName + "');";
         case H2:
             return "SELECT LAST_INSERT_ID();";
-        case DB2:
-            return "SELECT IDENTITY_VAL_LOCAL() AS INSERT_ID FROM SYSIBM.SYSDUMMY1";
-        case SYBASE:
-            return "SELECT @@IDENTITY";
-        case FBSQL:
         case UNKNOWN:
             break;
         }
@@ -327,7 +290,7 @@ public class SOSHibernateFactory implements Serializable {
             case PGSQL:
                 currentUTCTimestampSelectString = "select timezone('UTC', now())";
                 break;
-            default:// TODO - DB2, FBSQL,SYBASE
+            default:
                 currentUTCTimestampSelectString = getCurrentTimestampSelectString();
                 break;
             }
@@ -377,36 +340,6 @@ public class SOSHibernateFactory implements Serializable {
         session.openSession();
         CONNECTION_POOL_LOGGER.debug("--------> GET CONNECTION: " + session.getIdentifier() + " (" + SOSClassUtil.getMethodName(3) + ") --------");
         return session;
-    }
-
-    public String quote(Type type, Object value) throws SOSHibernateConvertException {
-        if (value == null) {
-            return "NULL";
-        }
-        try {
-            if (type instanceof org.hibernate.type.NumericBooleanType) {
-                return NumericBooleanType.INSTANCE.objectToSQLString((Boolean) value, dialect);
-            } else if (type instanceof org.hibernate.type.LongType) {
-                return org.hibernate.type.LongType.INSTANCE.objectToSQLString((Long) value, dialect);
-            } else if (type instanceof org.hibernate.type.StringType) {
-                return "'" + value.toString().replaceAll("'", "''") + "'";
-            } else if (type instanceof org.hibernate.type.TimestampType) {
-                String val;
-                switch (dbms) {
-                case ORACLE:
-                    val = SOSDate.format((Date) value, "yyyy-MM-dd HH:mm:ss");
-                    return "to_date('" + val + "','yyyy-mm-dd HH24:MI:SS')";
-                case MSSQL:
-                    val = SOSDate.format((Date) value, "yyyy-MM-dd HH:mm:ss.SSS");
-                    return "'" + val.replace(" ", "T") + "'";
-                default:
-                    return TimestampType.INSTANCE.objectToSQLString((Date) value, dialect);
-                }
-            }
-        } catch (Exception e) {
-            throw new SOSHibernateConvertException(String.format("can't convert value=%s to SQL string", value), e);
-        }
-        return value + "";
     }
 
     public String quoteColumn(String columnName) {
@@ -478,6 +411,7 @@ public class SOSHibernateFactory implements Serializable {
             }
             setDbms(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT));
             databaseMetaData = new SOSHibernateDatabaseMetaData(dbms);
+            mapDialect(dbms);
         } catch (MalformedURLException e) {
             throw new SOSHibernateConfigurationException(String.format("exception on get configFile %s as url", configFile), e);
         } catch (PersistenceException e) {
@@ -490,6 +424,41 @@ public class SOSHibernateFactory implements Serializable {
             configuration.addSqlFunction(SOSHibernateJsonValue.NAME, new SOSHibernateJsonValue(this));
             configuration.addSqlFunction(SOSHibernateRegexp.NAME, new SOSHibernateRegexp(this));
             configuration.addSqlFunction(SOSHibernateSecondsDiff.NAME, new SOSHibernateSecondsDiff(this));
+        }
+    }
+
+    private void mapDialect(Dbms dbms) {
+        // with Hibernate 6: Version-specific and spatial-specific dialects are deprecated
+        // simply MySQL8Dialect, SQLServer2012Dialect, SQLServer2016Dialect are still implemented
+        // so, old dialects are mapped: Example: org.hibernate.dialect.MySQLInnoDBDialect -> org.hibernate.dialect.MySQLDialect
+        if (configuration != null) {
+            String dialect = configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
+            if (dialect != null) {
+                switch (dbms) {
+                case MYSQL:
+                    if (!dialect.equals("org.hibernate.dialect.MySQL8Dialect")) {
+                        configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, "org.hibernate.dialect.MySQLDialect");
+                    }
+                    break;
+                case ORACLE:
+                    configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, "org.hibernate.dialect.OracleDialect");
+                    break;
+                case PGSQL:
+                    configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, "org.hibernate.dialect.PostgreSQLDialect");
+                    break;
+                case MSSQL:
+                    if (!Arrays.asList("org.hibernate.dialect.SQLServer2012Dialect", "org.hibernate.dialect.SQLServer2016Dialect").contains(
+                            dialect)) {
+                        configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, "org.hibernate.dialect.SQLServerDialect");
+                    }
+                    break;
+                case H2:
+                    configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, "org.hibernate.dialect.H2Dialect");
+                    break;
+                default:
+                    break;
+                }
+            }
         }
     }
 
@@ -515,12 +484,8 @@ public class SOSHibernateFactory implements Serializable {
         Dbms dbms = Dbms.UNKNOWN;
         if (dialect != null) {
             String dialectClassName = dialect.toLowerCase();
-            if (dialectClassName.contains("db2")) {
-                dbms = Dbms.DB2;
-            } else if (dialectClassName.contains("h2")) {
+            if (dialectClassName.contains("h2")) {
                 dbms = Dbms.H2;
-            } else if (dialectClassName.contains("firebird")) {
-                dbms = Dbms.FBSQL;
             } else if (dialectClassName.contains("sqlserver")) {
                 dbms = Dbms.MSSQL;
             } else if (dialectClassName.contains("mysql")) {
@@ -529,8 +494,6 @@ public class SOSHibernateFactory implements Serializable {
                 dbms = Dbms.ORACLE;
             } else if (dialectClassName.contains("postgre")) {
                 dbms = Dbms.PGSQL;
-            } else if (dialectClassName.contains("sybase")) {
-                dbms = Dbms.SYBASE;
             }
         }
         return dbms;
@@ -549,9 +512,8 @@ public class SOSHibernateFactory implements Serializable {
         setDefaultConfigurationProperties();
         configure();
         setConfigurationProperties();
-        resolveCredentialStoreProperties();
-        decryptValues();
-        substituteJS7Environment();
+        configuration = configurationResolver.resolve(configuration);
+        configurationResolver = null;
     }
 
     private void initConfigurationProperties() {
@@ -562,9 +524,11 @@ public class SOSHibernateFactory implements Serializable {
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_USE_SCROLLABLE_RESULTSET, "true");
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_CURRENT_SESSION_CONTEXT_CLASS, "jta");
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_JAVAX_PERSISTENCE_VALIDATION_MODE, "none");
+        defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_JAKARTA_PERSISTENCE_VALIDATION_MODE, "none");
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_ID_NEW_GENERATOR_MAPPINGS, "false");
-        defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_SOS_PROPERTY_MSSQL_LOCK_TIMEOUT, "30000");// 30s
+
         configurationProperties = new Properties();
+        configurationResolver = new SOSHibernateConfigurationResolver();
     }
 
     private void initSessionFactory() {
@@ -616,113 +580,7 @@ public class SOSHibernateFactory implements Serializable {
                     LOGGER.trace(String.format("%s %s=%s", method, key, value));
                 }
             }
-            if (configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_JDBC_FETCH_SIZE) != null) {
-                try {
-                    jdbcFetchSize = Optional.of(Integer.parseInt(configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_JDBC_FETCH_SIZE)));
-                } catch (Exception ex) {
-                    //
-                }
-            }
         }
-    }
-
-    private void resolveCredentialStoreProperties() throws SOSHibernateConfigurationException {
-        if (configuration == null) {
-            return;
-        }
-
-        try {
-            String f = configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_CREDENTIAL_STORE_FILE);
-            String kf = configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_CREDENTIAL_STORE_KEY_FILE);
-            String p = configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_CREDENTIAL_STORE_PASSWORD);
-            String ep = configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_CREDENTIAL_STORE_ENTRY_PATH);
-            SOSKeePassResolver r = new SOSKeePassResolver(f, kf, p);
-            r.setEntryPath(ep);
-
-            String url = configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL);
-            if (url != null) {
-                configuration.setProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL, r.resolve(url));
-            }
-            String username = configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME);
-            if (username != null) {
-                configuration.setProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME, r.resolve(username));
-            }
-            String password = configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD);
-            if (password != null) {
-                configuration.setProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD, r.resolve(password));
-            }
-
-        } catch (Throwable e) {
-            throw new SOSHibernateConfigurationException(e.toString(), e);
-        }
-    }
-
-    private void substituteJS7Environment() {
-        // JOC-1510
-        if (configuration == null) {
-            return;
-        }
-
-        String url = configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL);
-        if (url != null && url.contains("${" + SOSHibernate.JS7_DBMS_URL_PARAMETER + "}")) {
-            configuration.setProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL, substituteJS7Environment(url,
-                    SOSHibernate.JS7_DBMS_URL_PARAMETER));
-        }
-        String username = configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME);
-        if (username != null && username.contains("${" + SOSHibernate.JS7_DBMS_USER + "}")) {
-            configuration.setProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME, substituteJS7Environment(username,
-                    SOSHibernate.JS7_DBMS_USER));
-        }
-        String password = configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD);
-        if (password != null && password.contains("${" + SOSHibernate.JS7_DBMS_PASSWORD + "}")) {
-            configuration.setProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD, substituteJS7Environment(password,
-                    SOSHibernate.JS7_DBMS_PASSWORD));
-        }
-    }
-
-    private String substituteJS7Environment(String confValue, String key) {
-        String envVar = getEnvironmentVariable(key);
-        if (SOSHibernate.JS7_DBMS_URL_PARAMETER.equals(key)) {
-            envVar = normalizeJS7UrlParam(envVar, confValue);
-        }
-        return confValue.replaceFirst("\\$\\{" + key + "\\}", envVar);
-    }
-
-    private String getEnvironmentVariable(String key) {
-        String envVar = System.getProperty(getSystemPropKey(key));
-        if (envVar == null) {
-            envVar = System.getenv(key);
-        }
-        if (envVar == null) {
-            envVar = "";
-        }
-        return envVar;
-    }
-
-    private String getSystemPropKey(String key) {
-        // e.g. env key to system prop key: JS7_DBMS_PASSWORD -> js7.dbms.password
-        return key.toLowerCase().replace('_', '.');
-    }
-
-    private String normalizeJS7UrlParam(String envVar, String url) {
-        if (!envVar.isEmpty()) {
-            int index = url.indexOf("${" + SOSHibernate.JS7_DBMS_URL_PARAMETER + "}");
-            if (index > -1) {
-                char firstCharOfEnvVar = envVar.charAt(0);
-                if (firstCharOfEnvVar == '&' || firstCharOfEnvVar == '?') {
-                    envVar = envVar.substring(1);
-                }
-                char charBeforeEnvVar = url.charAt(index - 1);
-                if (charBeforeEnvVar != '&' && charBeforeEnvVar != '?') {
-                    if (url.contains("?")) {
-                        envVar = "&" + envVar;
-                    } else {
-                        envVar = "?" + envVar;
-                    }
-                }
-            }
-        }
-        return envVar;
     }
 
     private void setDbms(String dialect) {
@@ -755,7 +613,7 @@ public class SOSHibernateFactory implements Serializable {
     private void changeJsonAnnotations4H2() {
         for (Class<?> c : classMapping.getClasses()) {
             List<Field> fields = Arrays.stream(c.getDeclaredFields()).filter(m -> m.isAnnotationPresent(org.hibernate.annotations.Type.class) && m
-                    .getAnnotation(org.hibernate.annotations.Type.class).type().equals(SOSHibernateJsonType.TYPE_NAME)).collect(Collectors.toList());
+                    .getAnnotation(org.hibernate.annotations.Type.class).value().equals(SOSHibernateJsonType.class)).collect(Collectors.toList());
             if (fields != null && fields.size() > 0) {
                 for (Field field : fields) {
                     field.setAccessible(true);
@@ -774,7 +632,7 @@ public class SOSHibernateFactory implements Serializable {
             }
         }
     }
-    
+
     public SOSHibernateDatabaseMetaData getDatabaseMetaData() {
         return databaseMetaData;
     }
@@ -783,177 +641,8 @@ public class SOSHibernateFactory implements Serializable {
         return readDatabaseMetaData;
     }
 
-    
-    private void decryptValues() throws SOSHibernateConfigurationException {
-        if (configuration == null) {
-            return;
-        }
-        // encrypted values from configuration file
-        String encryptedPwdValue = configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD);
-        String encryptedURL = configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL);
-        String encryptedUsername = configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME);
-        // check if the encryption identifier is in use
-        if ((encryptedPwdValue != null && encryptedPwdValue.startsWith(SOSHibernate.ENCRYPTION_IDENTIFIER)) 
-                || (encryptedURL != null && encryptedURL.startsWith(SOSHibernate.ENCRYPTION_IDENTIFIER)) 
-                || (encryptedUsername != null &&  encryptedUsername.startsWith(SOSHibernate.ENCRYPTION_IDENTIFIER))) {
-
-            // required credentials
-            String privateKeyPath = 
-                    configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DECRYPTION_PRIVATE_KEY);
-            // preferred configured in file
-            // fallback configured by setters
-            String keystorePath = 
-                    configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE) != null 
-                        ? configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE) 
-                        : getKeystorePath();
-            String keystoreType = 
-                    configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE_TYPE) != null
-                        ? configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE_TYPE) 
-                        : getKeystoreType();
-            String keystorePwd = 
-                    configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE_PWD) != null
-                        ? configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE_PWD) 
-                        : getKeystorePassword();
-            String keystoreKeyPwd = 
-                    configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE_KEYPWD) != null 
-                        ? configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE_KEYPWD) 
-                        : getKeystoreKeypassword();
-            String keystoreAlias = 
-                    configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE_KEYALIAS) != null 
-                        ? configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE_KEYALIAS) 
-                        : getKeystoreKeyalias();
-
-            try {
-                if(privateKeyPath != null && keystorePath != null) {
-                    throw new SOSHibernateConfigurationException("key path and keystore path found. "
-                            + "These configuration items are exclusive. Please do configure only one of them.");
-                }
-                // read private key path from hibernate configuration
-                PrivateKey privKey = null;
-                KeyStore keystore = null;
-                if(privateKeyPath != null) {
-                    if(!Files.exists(Paths.get(privateKeyPath))) {
-                        throw new SOSHibernateConfigurationException("File with path - " + privateKeyPath + " - does not exist.");
-                    }
-                    String privateKeyPwd = configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_DECRYPTION_PRIVATE_KEYPWD);
-                    if(privateKeyPwd != null && !privateKeyPwd.isEmpty()) {
-                        privKey = KeyUtil.getPrivateEncryptedKey(Files.readString(Paths.get(privateKeyPath)), privateKeyPwd);
-                    } else {
-                        privKey = KeyUtil.getPrivateKeyFromString(Files.readString(Paths.get(privateKeyPath)));
-                    }
-                } else if (keystorePath != null) {
-                // the credentials can be configured in 
-                //     - the hibernate configuration file
-                //     - joc.properties
-                //     - private.conf of an agent
-                // determined by the calling application
-                    KeystoreType type = null;
-                    if(keystoreType == null) {
-                        type = KeystoreType.PKCS12;
-                    } else {
-                        type = KeystoreType.valueOf(keystoreType);
-                    }
-                    keystore = KeyStoreUtil.readKeyStore(keystorePath, type, keystorePwd);
-                    if(keystoreAlias == null) {
-                        Enumeration<String> aliases =  keystore.aliases();
-                        if(aliases.hasMoreElements()) {
-                            String alias = aliases.nextElement();
-                            if(keystore.isKeyEntry(alias)) {
-                                keystoreAlias = alias; 
-                                LOGGER.debug(String.format("no key alias configured, use first found alias <%1$s> to retrieve key.",
-                                        keystoreAlias));
-                            }
-                        }
-                    }
-                    if(keystoreKeyPwd != null) {
-                        privKey = (PrivateKey) keystore.getKey(keystoreAlias, keystoreKeyPwd.toCharArray());
-                    } else {
-                        privKey = (PrivateKey) keystore.getKey(keystoreAlias, "".toCharArray());
-                    }
-                }
-                if (encryptedPwdValue != null && encryptedPwdValue.startsWith(SOSHibernate.ENCRYPTION_IDENTIFIER)) {
-                    encryptedPwdValue = encryptedPwdValue.replace(SOSHibernate.ENCRYPTION_IDENTIFIER, "");
-                    String[] split = encryptedPwdValue.split(" ");
-                    String encryptedSymmetricKey = split[0];
-                    String base64IV = split[1];
-                    String encryptedPwd = split[2];
-                    String decryptedPwd = decrypt(privKey, encryptedSymmetricKey, base64IV, encryptedPwd);
-                    if (decryptedPwd != null) {
-                        configuration.setProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD, decryptedPwd);
-                    }
-                }
-                if(encryptedURL != null && encryptedURL.startsWith(SOSHibernate.ENCRYPTION_IDENTIFIER)) {
-                    encryptedURL = encryptedURL.replace(SOSHibernate.ENCRYPTION_IDENTIFIER, "");
-                    String[] split = encryptedURL.split(" ");
-                    String encryptedSymmetricKey = split[0];
-                    String base64IV = split[1];
-                    String encryptedUrl = split[2];
-                    String decryptedURL = decrypt(privKey, encryptedSymmetricKey, base64IV, encryptedUrl);
-                    if (decryptedURL != null) {
-                        configuration.setProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL, decryptedURL);
-                    }
-                }
-                if (encryptedUsername != null &&  encryptedUsername.startsWith(SOSHibernate.ENCRYPTION_IDENTIFIER)) {
-                    encryptedUsername = encryptedUsername.replace(SOSHibernate.ENCRYPTION_IDENTIFIER, "");
-                    String[] split = encryptedUsername.split(" ");
-                    String encryptedSymmetricKey = split[0];
-                    String base64IV = split[1];
-                    String encryptedUser = split[2];
-                    String decryptedUsername = decrypt(privKey, encryptedSymmetricKey, base64IV, encryptedUser);
-                    if (decryptedUsername != null) {
-                        configuration.setProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME, decryptedUsername);
-                    }
-                }
-            } catch (Throwable e) {
-                throw new SOSHibernateConfigurationException(e.toString(), e);
-            }
-        }
-    }
-    
-    private String decrypt(PrivateKey privKey, String encryptedKey, String encodedIv, String encryptedValue)
-            throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException,
-            BadPaddingException, InvalidAlgorithmParameterException {
-        SecretKey key = new SecretKeySpec(
-                EncryptionUtils.decryptSymmetricKey(encryptedKey.getBytes(), privKey),
-                EncryptionUtils.CIPHER_ALGORITHM);
-        String decryptedValue = EncryptionUtils.enOrDecrypt(EncryptionUtils.CIPHER_ALGORITHM, encryptedValue, key,
-                new IvParameterSpec(Base64.getDecoder().decode(encodedIv)), Cipher.DECRYPT_MODE);
-        return decryptedValue;
-    }
-
-    public String getKeystorePath() {
-        return keystorePath;
-    }
-    public void setKeystorePath(String keystorePath) {
-        this.keystorePath = keystorePath;
-    }
-    
-    public String getKeystoreType() {
-        return keystoreType;
-    }
-    public void setKeystoreType(String keystoreType) {
-        this.keystoreType = keystoreType;
-    }
-    
-    public String getKeystorePassword() {
-        return keystorePassword;
-    }
-    public void setKeystorePassword(String keystorePassword) {
-        this.keystorePassword = keystorePassword;
-    }
-    
-    public String getKeystoreKeypassword() {
-        return keystoreKeypassword;
-    }
-    public void setKeystoreKeypassword(String keystoreKeypassword) {
-        this.keystoreKeypassword = keystoreKeypassword;
-    }
-    
-    public String getKeystoreKeyalias() {
-        return keystoreKeyalias;
-    }
-    public void setKeystoreKeyalias(String keystoreKeyalias) {
-        this.keystoreKeyalias = keystoreKeyalias;
+    public SOSHibernateConfigurationResolver getConfigurationResolver() {
+        return configurationResolver;
     }
 
 }

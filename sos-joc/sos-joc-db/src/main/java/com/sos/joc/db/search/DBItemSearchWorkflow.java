@@ -2,30 +2,32 @@ package com.sos.joc.db.search;
 
 import java.util.Date;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
-import org.hibernate.annotations.TypeDefs;
+import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.commons.hibernate.type.SOSHibernateJsonType;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+
 @Entity
 @Table(name = DBLayer.TABLE_SEARCH_WORKFLOWS)
 @SequenceGenerator(name = DBLayer.TABLE_SEARCH_WORKFLOWS_SEQUENCE, sequenceName = DBLayer.TABLE_SEARCH_WORKFLOWS_SEQUENCE, allocationSize = 1)
-@TypeDefs({ @TypeDef(name = SOSHibernateJsonType.TYPE_NAME, typeClass = SOSHibernateJsonType.class) })
+//@TypeDefs({ @TypeDef(name = SOSHibernateJsonType.TYPE_NAME, typeClass = SOSHibernateJsonType.class) })
+//TODO 6.4.5.Final ? is @TypeDef still necessary?
+//@Convert(attributeName = "sos_json", converter = SOSHibernateJsonType.class)
 public class DBItemSearchWorkflow extends DBItem {
 
     private static final long serialVersionUID = 1L;
@@ -41,7 +43,7 @@ public class DBItemSearchWorkflow extends DBItem {
     private Long inventoryConfigurationId;
 
     @Column(name = "[DEPLOYED]", nullable = false)
-    @Type(type = "numeric_boolean")
+    @Convert(converter = NumericBooleanConverter.class)
     private boolean deployed;
 
     @Column(name = "[CONTENT_HASH]", nullable = false)
@@ -51,27 +53,27 @@ public class DBItemSearchWorkflow extends DBItem {
     private Integer jobsCount;
 
     @Column(name = "[JOBS]", nullable = false)
-    @Type(type = SOSHibernateJsonType.TYPE_NAME)
+    @Type(value = SOSHibernateJsonType.class)
     @ColumnTransformer(write = SOSHibernateJsonType.COLUMN_TRANSFORMER_WRITE_DEFAULT)
     private String jobs;
 
     @Column(name = "[ARGS]", nullable = false)
-    @Type(type = SOSHibernateJsonType.TYPE_NAME)
+    @Type(value = SOSHibernateJsonType.class)
     @ColumnTransformer(write = SOSHibernateJsonType.COLUMN_TRANSFORMER_WRITE_DEFAULT)
     private String args;
 
     @Column(name = "[JOBS_SCRIPTS]", nullable = false)
-    @Type(type = SOSHibernateJsonType.TYPE_NAME)
+    @Type(value = SOSHibernateJsonType.class)
     @ColumnTransformer(write = SOSHibernateJsonType.COLUMN_TRANSFORMER_WRITE_DEFAULT)
     private String jobsScripts;
 
     @Column(name = "[INSTRUCTIONS]", nullable = false)
-    @Type(type = SOSHibernateJsonType.TYPE_NAME)
+    @Type(value = SOSHibernateJsonType.class)
     @ColumnTransformer(write = SOSHibernateJsonType.COLUMN_TRANSFORMER_WRITE_DEFAULT)
     private String instructions;
 
     @Column(name = "[INSTRUCTIONS_ARGS]", nullable = false)
-    @Type(type = SOSHibernateJsonType.TYPE_NAME)
+    @Type(value = SOSHibernateJsonType.class)
     @ColumnTransformer(write = SOSHibernateJsonType.COLUMN_TRANSFORMER_WRITE_DEFAULT)
     private String instructionsArgs;
 

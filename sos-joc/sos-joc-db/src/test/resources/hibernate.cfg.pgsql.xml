@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hibernate-configuration>
+	<session-factory>
+		<property name="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</property>
+		<property name="hibernate.connection.driver_class">org.postgresql.Driver</property>
+		<property name="hibernate.connection.url">jdbc:postgresql://localhost:5432/js7_x</property>
+		<property name="hibernate.connection.username">scheduler</property>
+		<property name="hibernate.connection.password">scheduler</property>
+
+		<property name="hibernate.show_sql">true</property>
+		<property name="hibernate.format_sql">true</property>
+		<property name="hibernate.temp.use_jdbc_metadata_defaults">false</property>
+		<property name="javax.persistence.validation.mode">none</property>
+		
+
+		<property name="hibernate.connection.provider_class">org.hibernate.hikaricp.internal.HikariCPConnectionProvider</property>
+		<property name="hibernate.hikari.maximumPoolSize">10</property>
+	</session-factory>
+</hibernate-configuration>

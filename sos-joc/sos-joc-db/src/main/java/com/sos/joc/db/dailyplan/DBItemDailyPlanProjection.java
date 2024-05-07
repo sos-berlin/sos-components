@@ -4,20 +4,21 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.Types;
 import java.util.Date;
 import java.util.zip.GZIPOutputStream;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.Transient;
-
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
 
 import com.sos.commons.util.SOSStreamUnzip;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
 @Entity
 @Table(name = DBLayer.TABLE_DPL_PROJECTIONS)
@@ -32,7 +33,9 @@ public class DBItemDailyPlanProjection extends DBItem {
     @Column(name = "[ID]")
     private Long id;
 
-    @Type(type = "org.hibernate.type.BinaryType")
+    //TODO 6.4.5.Final 
+    //@Type(type = "org.hibernate.type.BinaryType")
+    @JdbcTypeCode(Types.BINARY)
     @Column(name = "[CONTENT]", nullable = false)
     private byte[] content;
 

@@ -13,6 +13,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -20,8 +21,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
-
-import javax.persistence.TemporalType;
 
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
@@ -67,6 +66,8 @@ import com.sos.schema.exception.SOSJsonSchemaException;
 import com.sos.sign.model.instruction.IfElse;
 import com.sos.sign.model.instruction.NamedJob;
 import com.sos.sign.model.workflow.Workflow;
+
+import jakarta.persistence.TemporalType;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class MappingTest {
@@ -257,12 +258,13 @@ public class MappingTest {
             switch (item) {
             case "from":
             case "to":
-                query.setParameter(item + "Date", FilterAttributesMapper.getValueByFilterAttribute(filter.getDetailFilter(), item),
+                query.setParameter(item + "Date", (Date) FilterAttributesMapper.getValueByFilterAttribute(filter.getDetailFilter(), item),
                         TemporalType.TIMESTAMP);
                 break;
             case "deploymentDate":
             case "deleteDate":
-                query.setParameter(item, FilterAttributesMapper.getValueByFilterAttribute(filter.getDetailFilter(), item), TemporalType.TIMESTAMP);
+                query.setParameter(item, (Date) FilterAttributesMapper.getValueByFilterAttribute(filter.getDetailFilter(), item),
+                        TemporalType.TIMESTAMP);
                 break;
             default:
                 query.setParameter(item, FilterAttributesMapper.getValueByFilterAttribute(filter.getDetailFilter(), item));

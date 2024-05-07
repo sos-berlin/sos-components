@@ -31,7 +31,7 @@ public class MonitoringDBLayerTest {
 
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
-        ScrollableResults sr = null;
+        ScrollableResults<NotificationDBItemEntity> sr = null;
         try {
             factory = createFactory();
             session = factory.openStatelessSession();
@@ -44,8 +44,7 @@ public class MonitoringDBLayerTest {
             sr = dbLayer.getOrderNotifications(dateFrom, Collections.singleton(controllerId), null, limit);
             int size = 0;
             while (sr.next()) {
-                NotificationDBItemEntity item = (NotificationDBItemEntity) sr.get(0);
-                LOGGER.info(SOSHibernate.toString(item));
+                LOGGER.info(SOSHibernate.toString(sr.get()));
                 size++;
             }
             LOGGER.info("SIZE=" + size);
@@ -71,7 +70,7 @@ public class MonitoringDBLayerTest {
 
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
-        ScrollableResults sr = null;
+        ScrollableResults<DBItemHistoryController> sr = null;
         try {
             factory = createFactory();
             session = factory.openStatelessSession();
@@ -85,7 +84,7 @@ public class MonitoringDBLayerTest {
 
             Map<String, List<DBItemHistoryController>> map = new HashMap<>();
             while (sr.next()) {
-                DBItemHistoryController item = (DBItemHistoryController) sr.get(0);
+                DBItemHistoryController item = sr.get();
                 List<DBItemHistoryController> l = map.containsKey(item.getControllerId()) ? map.get(item.getControllerId()) : new ArrayList<>();
 
                 l.add(item);

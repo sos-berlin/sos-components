@@ -1,6 +1,5 @@
 package com.sos.commons.hibernate;
 
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -10,29 +9,20 @@ import javax.json.JsonObjectBuilder;
 
 import org.junit.Ignore;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.common.SOSBatchObject;
-import com.sos.commons.hibernate.exception.SOSHibernateFactoryBuildException;
 
 public class SOSHibernateExecuterTest {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(SOSHibernateExecuterTest.class);
 
     @Ignore
     @Test
     public void testInfos() throws Exception {
         SOSHibernateFactory factory = null;
-        SOSHibernateSession session = null;
         try {
-            factory = createFactory();
+            factory = SOSHibernateSessionTest.createFactory();
         } catch (Exception e) {
             throw e;
         } finally {
-            if (session != null) {
-                session.close();
-            }
             if (factory != null) {
                 factory.close();
             }
@@ -45,7 +35,7 @@ public class SOSHibernateExecuterTest {
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
         try {
-            factory = createFactory();
+            factory = SOSHibernateSessionTest.createFactory();
 
             JsonObjectBuilder builder = Json.createObjectBuilder();
             builder.add("workflowNames", Json.createArrayBuilder().add("name1").add("name2").add("name3"));
@@ -66,11 +56,8 @@ public class SOSHibernateExecuterTest {
         } catch (Exception e) {
             throw e;
         } finally {
-            if (session != null) {
-                session.close();
-            }
             if (factory != null) {
-                factory.close();
+                factory.close(session);
             }
         }
     }
@@ -93,7 +80,7 @@ public class SOSHibernateExecuterTest {
             rows.add(addRow());
 
             // create connection
-            factory = createFactory();
+            factory = SOSHibernateSessionTest.createFactory();
             session = factory.openStatelessSession();
 
             // execute
@@ -103,11 +90,8 @@ public class SOSHibernateExecuterTest {
         } catch (Exception e) {
             throw e;
         } finally {
-            if (session != null) {
-                session.close();
-            }
             if (factory != null) {
-                factory.close();
+                factory.close(session);
             }
         }
     }
@@ -124,32 +108,4 @@ public class SOSHibernateExecuterTest {
         return rowValues;
     }
 
-    private SOSHibernateFactory createFactory() throws Exception {
-        SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/hibernate.cfg.xml"));
-        factory.build();
-
-        LOGGER.info("DBMS=" + factory.getDbms() + ", DIALECT=" + factory.getDialect());
-        return factory;
-    }
-
-    @Ignore
-    @Test
-    public void testEncryption() throws SOSHibernateFactoryBuildException {
-        // Arrays.stream(Security.getProviders())
-        // .flatMap(provider -> provider.getServices().stream())
-        // .filter(service -> "Cipher".equals(service.getType()))
-        // .map(Provider.Service::getAlgorithm)
-        // .forEach(item -> LOGGER.info(item));
-
-        SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/sp.hibernate.cfg.xml"));
-        // JOC-1770_keystore.p12 contains for key pairs, setting of an alias is required
-        // JOC-1770_keystore2.p12 contains a single key pair, setting alias is not required
-        factory.setKeystorePath("src/test/resources/JOC-1770_keystore2.p12");
-        factory.setKeystorePassword("jobscheduler");
-//        factory.setKeystoreKeypassword("jobscheduler");
-//        factory.setKeystoreKeyalias("ec_test");
-        factory.setKeystoreType("PKCS12");
-        factory.build();
-        factory.close();
-    }
 }

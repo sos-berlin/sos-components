@@ -1,6 +1,6 @@
 package com.sos.commons.hibernate.exception;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 /** can occurs if following methods are called: delete, update. Occurs if we try delete or update a row that does not exist. */
 public class SOSHibernateObjectOperationStaleStateException extends SOSHibernateObjectOperationException {

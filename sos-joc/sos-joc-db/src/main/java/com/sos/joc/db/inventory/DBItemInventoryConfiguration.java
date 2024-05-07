@@ -2,32 +2,34 @@ package com.sos.joc.db.inventory;
 
 import java.util.Date;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import javax.persistence.Transient;
-import javax.persistence.UniqueConstraint;
-
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
-import org.hibernate.annotations.TypeDefs;
+import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.commons.hibernate.type.SOSHibernateJsonType;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.Transient;
+import jakarta.persistence.UniqueConstraint;
+
 @Entity
 @Table(name = DBLayer.TABLE_INV_CONFIGURATIONS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[TYPE]", "[PATH]" }) })
 @SequenceGenerator(name = DBLayer.TABLE_INV_CONFIGURATIONS_SEQUENCE, sequenceName = DBLayer.TABLE_INV_CONFIGURATIONS_SEQUENCE, allocationSize = 1)
-@TypeDefs({ @TypeDef(name = SOSHibernateJsonType.TYPE_NAME, typeClass = SOSHibernateJsonType.class) })
+//@TypeDefs({ @TypeDef(name = SOSHibernateJsonType.TYPE_NAME, typeClass = SOSHibernateJsonType.class) })
+//TODO 6.4.5.Final ? is @TypeDef still necessary?
+//@Convert(attributeName = "sos_json", converter = SOSHibernateJsonType.class)
 public class DBItemInventoryConfiguration extends DBItem {
 
     private static final long serialVersionUID = 1L;
@@ -56,28 +58,28 @@ public class DBItemInventoryConfiguration extends DBItem {
     private String content;
     
     @Column(name = "[JSON_CONTENT]", nullable = true)
-    @Type(type = SOSHibernateJsonType.TYPE_NAME)
+    @Type(value = SOSHibernateJsonType.class)
     @ColumnTransformer(write = SOSHibernateJsonType.COLUMN_TRANSFORMER_WRITE_DEFAULT)
     private String jsonContent;
 
     @Column(name = "[VALID]", nullable = false)
-    @Type(type = "numeric_boolean")
+    @Convert(converter = NumericBooleanConverter.class)
     private boolean valid;
 
     @Column(name = "[DELETED]", nullable = false)
-    @Type(type = "numeric_boolean")
+    @Convert(converter = NumericBooleanConverter.class)
     private boolean deleted;
 
     @Column(name = "[DEPLOYED]", nullable = false)
-    @Type(type = "numeric_boolean")
+    @Convert(converter = NumericBooleanConverter.class)
     private boolean deployed;
 
     @Column(name = "[RELEASED]", nullable = false)
-    @Type(type = "numeric_boolean")
+    @Convert(converter = NumericBooleanConverter.class)
     private boolean released;
 
     @Column(name = "[REPO_CTRL]", nullable = false)
-    @Type(type = "numeric_boolean")
+    @Convert(converter = NumericBooleanConverter.class)
     private boolean repoControlled = false;
 
     @Column(name = "[AUDIT_LOG_ID]", nullable = false)

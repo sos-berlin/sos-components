@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.ScrollableResults;
 import org.hibernate.query.Query;
@@ -48,10 +48,10 @@ public class AuditLogDBLayer {
         }
     }
 
-    public ScrollableResults getAuditLogs(AuditLogFilter filter, Collection<String> controllerIds, Collection<CategoryType> categories,
-            boolean withDeployment) throws DBConnectionRefusedException, DBInvalidDataException {
+    public ScrollableResults<AuditLogDBItem> getAuditLogs(AuditLogFilter filter, Collection<String> controllerIds,
+            Collection<CategoryType> categories, boolean withDeployment) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
-            
+        
             // advanced search with objects or folders
             boolean withFolders = filter.getFolders() != null && !filter.getFolders().isEmpty();
             boolean withObjectName = filter.getObjectName() != null && !filter.getObjectName().isEmpty();

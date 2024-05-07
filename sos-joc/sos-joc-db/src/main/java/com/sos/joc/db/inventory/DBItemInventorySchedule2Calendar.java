@@ -1,15 +1,16 @@
 package com.sos.joc.db.inventory;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
-
-import org.hibernate.annotations.Type;
+import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 @Entity
 @Table(name = DBLayer.VIEW_INV_SCHEDULE2CALENDARS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[SCHEDULE_NAME]", "[CALENDAR_NAME]" }) })
@@ -29,7 +30,7 @@ public class DBItemInventorySchedule2Calendar extends DBItem {
     private String calendarName;
 
     @Column(name = "[RELEASED]", nullable = false)
-    @Type(type = "numeric_boolean")
+    @Convert(converter = NumericBooleanConverter.class)
     private boolean released;
 
     public String getScheduleName() {

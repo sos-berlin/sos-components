@@ -27,7 +27,7 @@ public class AuditLogDBLayerTest {
 
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
-        ScrollableResults sr = null;
+        ScrollableResults<AuditLogDBItem> sr = null;
         try {
             factory = createFactory();
             session = factory.openStatelessSession();
@@ -45,8 +45,7 @@ public class AuditLogDBLayerTest {
             sr = dbLayer.getAuditLogs(aFilter, Collections.emptySet(), Collections.emptySet(), false);
             int size = 0;
             while (sr.next()) {
-                AuditLogDBItem item = (AuditLogDBItem) sr.get(0);
-                LOGGER.info(SOSHibernate.toString(item));
+                LOGGER.info(SOSHibernate.toString(sr.get()));
                 size++;
             }
             LOGGER.info("SIZE=" + size);

@@ -1,6 +1,6 @@
 package com.sos.commons.hibernate.exception;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 /** can occurs if following methods are called: clearSession, sessionDoWork */
 public class SOSHibernateSessionException extends SOSHibernateException {

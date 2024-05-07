@@ -2,15 +2,15 @@ package com.sos.commons.hibernate.exception;
 
 import java.sql.SQLException;
 
-import javax.persistence.PersistenceException;
-
 import org.hibernate.JDBCException;
 import org.hibernate.StaleStateException;
-import org.hibernate.hql.internal.ast.QuerySyntaxException;
 import org.hibernate.query.Query;
+import org.hibernate.query.SyntaxException;
 
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernate;
+
+import jakarta.persistence.PersistenceException;
 
 public class SOSHibernateException extends SOSException {
 
@@ -25,17 +25,15 @@ public class SOSHibernateException extends SOSException {
     public SOSHibernateException(IllegalArgumentException cause, String stmt) {
         Throwable e = cause;
         while (e != null) {
-            if (e instanceof QuerySyntaxException) {
-                QuerySyntaxException je = (QuerySyntaxException) e;
-
+            if (e instanceof SyntaxException) {
+                SyntaxException je = (SyntaxException) e;
                 initCause(je);
-                message = je.getMessage();// message can contains hql as [hql statement]
+                message = je.getMessage();
                 statement = je.getQueryString();
-                // remove hql statement from the message
+                // to avoid double printing of the HQL statement, remove the HQL statement from the message if it is included
                 if (message != null && statement != null) {
                     message = message.replace("[" + statement + "]", "");
                 }
-
                 return;
             }
             e = e.getCause();

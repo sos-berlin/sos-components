@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSDate;
 
+/** More test - see sos-joc-db/src/test/java/com/sos/commons/hibernate/ */
 public class SOSHibernateSessionTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSHibernateSessionTest.class);
@@ -20,7 +21,7 @@ public class SOSHibernateSessionTest {
      * For all others, the returned current date time is independent of TimeZone.set/getDefault. */
     @Ignore
     @Test
-    public void test() throws Exception {
+    public void testDateTime() throws Exception {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 
         SOSHibernateFactory factory = null;
@@ -36,16 +37,13 @@ public class SOSHibernateSessionTest {
         } catch (Exception e) {
             throw e;
         } finally {
-            if (session != null) {
-                session.close();
-            }
             if (factory != null) {
-                factory.close();
+                factory.close(session);
             }
         }
     }
 
-    private SOSHibernateFactory createFactory() throws Exception {
+    protected static SOSHibernateFactory createFactory() throws Exception {
         SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/hibernate.cfg.xml"));
         factory.build();
 

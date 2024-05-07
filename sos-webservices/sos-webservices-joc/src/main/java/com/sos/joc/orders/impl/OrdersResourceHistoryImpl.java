@@ -157,7 +157,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
 
                 session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
                 JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(session, dbFilter);
-                ScrollableResults sr = null;
+                ScrollableResults<DBItemHistoryOrder> sr = null;
 
                 try {
                     boolean profiler = false;
@@ -171,7 +171,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                     while (sr.next()) {
                         i++;
 
-                        DBItemHistoryOrder item = (DBItemHistoryOrder) sr.get(0);
+                        DBItemHistoryOrder item = sr.get();
                         if (profiler && i == 1) {
                             profilerFirstEntry = Instant.now();
                         }

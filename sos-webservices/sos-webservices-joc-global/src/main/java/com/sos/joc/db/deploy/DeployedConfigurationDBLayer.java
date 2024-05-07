@@ -11,7 +11,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.hibernate.criterion.MatchMode;
 import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernate;
@@ -753,7 +752,7 @@ public class DeployedConfigurationDBLayer {
             query.setParameter("controllerId", controllerId);
             if (folderName != null && !folderName.isEmpty() && !folderName.equals("/")) {
                 query.setParameter("folderName", folderName);
-                query.setParameter("likeFolderName", MatchMode.START.toMatchString(folderName + "/"));
+                query.setParameter("likeFolderName", folderName + "/%");
             }
             if (types != null && !types.isEmpty()) {
                 if (types.size() == 1) {

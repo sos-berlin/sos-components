@@ -54,12 +54,12 @@ public class ControllersImpl extends JOCResourceImpl implements IControllers {
             // dateFrom, dateTo - already UTC time , use UTC instead of in.getTimeZone()
             Date dateFrom = JobSchedulerDate.getDateFrom(in.getDateFrom(), "UTC");
             Date dateTo = JobSchedulerDate.getDateTo(in.getDateTo(), "UTC");
-            ScrollableResults sr = null;
+            ScrollableResults<DBItemHistoryController> sr = null;
             try {
                 sr = dbLayer.getControllers(in.getControllerId(), dateFrom, dateTo);
 
                 while (sr.next()) {
-                    DBItemHistoryController item = (DBItemHistoryController) sr.get(0);
+                    DBItemHistoryController item = sr.get();
                     List<DBItemHistoryController> l = map.containsKey(item.getControllerId()) ? map.get(item.getControllerId()) : new ArrayList<>();
 
                     l.add(item);

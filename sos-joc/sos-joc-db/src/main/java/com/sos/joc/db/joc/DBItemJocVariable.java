@@ -1,15 +1,17 @@
 package com.sos.joc.db.joc;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import java.sql.Types;
 
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 @Entity
 @Table(name = DBLayer.TABLE_JOC_VARIABLES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[NAME]" }) })
@@ -27,7 +29,9 @@ public class DBItemJocVariable extends DBItem {
     @Column(name = "[TEXT_VALUE]", nullable = true)
     private String textValue;
 
-    @Type(type = "org.hibernate.type.BinaryType")
+    //TODO 6.4.5.Final 
+    //@Type(type = "org.hibernate.type.BinaryType")
+    @JdbcTypeCode(Types.BINARY)
     @Column(name = "[BINARY_VALUE]", nullable = true)
     private byte[] binaryValue;
 

@@ -4,8 +4,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.hibernate.criterion.MatchMode;
-
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -187,7 +185,7 @@ public abstract class FilterAttributesMapper {
         case "folder":
             return filter.getFolder();
         case "likeFolder":
-            return MatchMode.START.toMatchString(filter.getFolder());
+            return filter.getFolder() + "%";
         }
         return null;
     }
