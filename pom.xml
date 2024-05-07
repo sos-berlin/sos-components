@@ -83,7 +83,7 @@
     <jna.version>5.14.0</jna.version>
 <!--    <yaml.version>1.33</yaml.version> -->
     <yaml.version>2.0</yaml.version>
-    <jaxb.version>4.0.5</jaxb.version>
+    <jaxb.version>3.0.1</jaxb.version>
     <jaxb.api.version>2.4.0-b180830.0359</jaxb.api.version>
     <jwt.version>4.2.2</jwt.version>
     <json.schema.validator.version>1.0.76</json.schema.validator.version>
@@ -452,6 +452,11 @@
         <version>${jaxb.api.version}</version>
       </dependency>
       <dependency>
+        <groupId>jakarta.xml.bind</groupId>
+        <artifactId>jakarta.xml.bind-api</artifactId>
+        <version>${jaxb.version}</version>
+      </dependency>
+      <dependency>
         <groupId>com.sun.xml.bind</groupId>
         <artifactId>jaxb-impl</artifactId>
         <version>${jaxb.version}</version>
@@ -641,7 +646,7 @@
 
       <!-- hibernate libraries -->
       <dependency>
-        <groupId>org.hibernate</groupId>
+        <groupId>org.hibernate.orm</groupId>
         <artifactId>hibernate-core</artifactId>
         <version>${hibernate.version}</version>
         <exclusions>
@@ -652,12 +657,12 @@
         </exclusions>
       </dependency>
       <dependency>
-        <groupId>org.hibernate</groupId>
+        <groupId>org.hibernate.orm</groupId>
         <artifactId>hibernate-c3p0</artifactId>
         <version>${hibernate.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.hibernate</groupId>
+        <groupId>org.hibernate.orm</groupId>
         <artifactId>hibernate-hikaricp</artifactId>
         <version>${hibernate.version}</version>
       </dependency>
