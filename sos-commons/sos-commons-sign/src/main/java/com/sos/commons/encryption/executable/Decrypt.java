@@ -81,6 +81,12 @@ public class Decrypt {
             encryptedKey = split[1];
           } else if (args[i].startsWith(IN + "=")) {
             encryptedValue = split[1];
+            if(encryptedValue.contains(" ")) {
+              String[] splittedValues = encryptedValue.split(" ");
+              encryptedKey = splittedValues[0];
+              iv = splittedValues[1];
+              encryptedValue = splittedValues[2];
+            }
           } else if (args[i].startsWith(IN_FILE + "=")) {
             encryptedFile = split[1];
           } else if (args[i].startsWith(OUT_FILE + "=")) {
