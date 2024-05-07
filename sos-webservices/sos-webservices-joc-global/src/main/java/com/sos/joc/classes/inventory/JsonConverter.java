@@ -614,7 +614,8 @@ public class JsonConverter {
         return str;
     }
     
-    private static OrderPreparation invOrderPreparationToSignOrderPreparation(Requirements orderPreparation, String workflowPath) {
+    //protected for test
+    protected static OrderPreparation invOrderPreparationToSignOrderPreparation(Requirements orderPreparation, String workflowPath) {
         if (orderPreparation == null) {
             orderPreparation = new Requirements();
             //return null;
@@ -624,7 +625,7 @@ public class JsonConverter {
             orderPreparation.getParameters().getAdditionalProperties().forEach((k, v) -> params.setAdditionalProperty(k,
                     invParameterToSignParameter(v)));
         }
-        if (!params.getAdditionalProperties().containsKey("js7Workflow.path")) {
+        if (!params.getAdditionalProperties().containsKey("js7Workflow.path") && workflowPath != null) {
             params.setAdditionalProperty("js7Workflow.path", new Parameter(ParameterType.String.value(), null, workflowPath));
         }
         return new OrderPreparation(params, orderPreparation.getAllowUndeclared());

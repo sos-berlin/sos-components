@@ -1,7 +1,9 @@
 package com.sos.joc.classes.inventory;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -9,10 +11,14 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.sign.model.job.JobReturnCode;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.sos.inventory.model.workflow.Requirements;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.sign.model.job.ExecutableScript;
+import com.sos.sign.model.job.JobReturnCode;
+import com.sos.sign.model.workflow.OrderPreparation;
 
 
 public class ConverterTest {
@@ -20,6 +26,10 @@ public class ConverterTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConverterTest.class);
     private static final String jsonTemplate =
             "{\"TYPE\": \"Workflow\",\"jobs\":{\"job1\":{\"executable\":{\"TYPE\": \"ShellScriptExecutable\", \"returnCodeMeaning\": %s}}}}";
+    private static final String invOrderPreparation =
+            "{\"parameters\":{\"myOptionalNumberVar\":{\"type\":\"Number\",\"default\":\"0\"},\"myFinalVar\":{\"final\":\"'hello'\"},\"myRequiredStringVar\":{\"type\":\"String\"},\"myListVar\":{\"type\":\"List\",\"listParameters\":{\"myListVar2\":{\"type\":\"String\"},\"myListVar1\":{\"type\":\"Number\"}}}},\"allowUndeclared\":false}";
+    private static final String signOrderPreparation =
+            "{\"parameters\":{\"myOptionalNumberVar\":{\"type\":\"Number\",\"default\":\"0\"},\"myFinalVar\":{\"final\":\"'hello'\"},\"myRequiredStringVar\":{\"type\":\"String\"},\"myListVar\":{\"type\":{\"TYPE\":\"List\",\"elementType\":{\"TYPE\":\"Object\",\"myListVar2\":\"String\",\"myListVar1\":\"Number\"}}}},\"allowUndeclared\":false}";
 
     private static final List<String> jsons = Arrays.asList(
             String.format(jsonTemplate, "{\"warning\": [1,2]}"),
@@ -93,6 +103,25 @@ public class ConverterTest {
     @Test
     public void testReturnCodeWarnings8() {
         testTemplate(7);
+    }
+    
+    @Test
+    public void signOrderPrepToInvOrderPrep() throws JsonParseException, JsonMappingException, IOException {
+        OrderPreparation conf = Globals.objectMapper.readValue(signOrderPreparation, OrderPreparation.class);
+        Requirements r = JsonConverter.signOrderPreparationToInvOrderPreparation(conf); 
+        String result = Globals.objectMapper.writeValueAsString(r);
+//        System.out.println(invOrderPreparation);
+//        System.out.println(result);
+        assertEquals("signOrderPrepToInvOrderPrep", result, invOrderPreparation);
+    }
+    
+    @Test
+    public void invOrderPrepToSignOrderPrep() throws JsonParseException, JsonMappingException, IOException {
+        Requirements conf = Globals.objectMapper.readValue(invOrderPreparation, Requirements.class);
+        OrderPreparation op = JsonConverter.invOrderPreparationToSignOrderPreparation(conf, null);
+        String result = Globals.objectMapper.writeValueAsString(op);
+//        System.out.println(result);
+        assertEquals("invOrderPrepToSignOrderPrep", result, signOrderPreparation);
     }
 
 }
