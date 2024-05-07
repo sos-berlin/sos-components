@@ -18,12 +18,13 @@ public class SOSHibernateConfigurationResolver {
 
     public SOSHibernateConfigurationResolver() {
         resolvers = new ArrayList<>();
-        // standard resolvers
-        resolvers.add(new SOSHibernateCredentiaStoreResolver());
-        resolvers.add(new SOSHibernateEncryptionResolver());
 
-        // TODO: JS7 resolver should be added with addResolver in the js7 packages...
+        // 1 - decrypt entries
+        resolvers.add(new SOSHibernateEncryptionResolver());
+        // 2- resolve environment variables
         resolvers.add(new SOSHibernateJS7Resolver());
+        // 3 - resolve cs:// entries
+        resolvers.add(new SOSHibernateCredentiaStoreResolver());
     }
 
     public Configuration resolve(Configuration configuration) throws SOSHibernateConfigurationException {
