@@ -728,21 +728,8 @@ public class SOSHibernateSQLExecutor implements Serializable {
             String defaultTransactionIsolation = "SELECT set_config('default_transaction_isolation', 'repeatable read', true)";
             execute(lcNumeric, dateStyle, defaultTransactionIsolation);
             break;
-        case SYBASE:
-            dateFormat = "set DATEFORMAT 'ymd'";
-            language = "set LANGUAGE us_english";
-            String isolationLevel = "set TRANSACTION ISOLATION LEVEL READ COMMITTED";
-            String chainedOn = "set CHAINED ON";
-            String quotedIdentifier = "set QUOTED_IDENTIFIER ON";
-            String lockTimeout = "set LOCK WAIT 3";
-            String closeOnEndtran = "set CLOSE ON ENDTRAN ON";
-            String datefirst = "set DATEFIRST 1";
-            String textsize = "set TEXTSIZE 2048000";
-            execute(isolationLevel, chainedOn, quotedIdentifier, lockTimeout, closeOnEndtran, datefirst, dateFormat, language, textsize);
-            break;
-        case DB2:
+
         case H2:
-        case FBSQL:
         case UNKNOWN:
             break;
         }

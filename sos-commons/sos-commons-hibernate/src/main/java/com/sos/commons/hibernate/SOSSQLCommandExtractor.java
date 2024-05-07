@@ -303,25 +303,6 @@ public class SOSSQLCommandExtractor {
                 commandCloser = "$$ LANGUAGE plpgsql;";
                 addCommandCloser = false;
                 break;
-            case DB2:
-                commandSpltter = "\n@\n";
-                break;
-            case SYBASE:
-                commandSpltter = "\ngo\n";
-                break;
-            case FBSQL:
-                StringBuilder patterns = new StringBuilder("set+[\\s]*term[inator]*[\\s]*(.*);");
-                Pattern p = Pattern.compile(patterns.toString());
-                Matcher matcher = p.matcher(content.toString().toLowerCase().trim());
-                if (matcher.find()) {
-                    commandSpltter = "\\" + matcher.group(1);
-                    String ct = content.replaceAll("(?i)set+[\\s]*term[inator]*[\\s]*.*\\n", "");
-                    sb.delete(0, sb.length());
-                    sb.append(ct);
-                } else {
-                    commandSpltter = "\n/\n";
-                }
-                break;
             default:
                 throw new SOSHibernateSQLCommandExtractorException(String.format("unsupported dbms=%s", dbms));
             }

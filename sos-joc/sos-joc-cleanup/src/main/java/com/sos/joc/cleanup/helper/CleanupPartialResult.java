@@ -50,7 +50,7 @@ public class CleanupPartialResult {
             }
 
             task.tryOpenSession();
-            NativeQuery<Object> query = task.getDbLayer().getSession().createNativeQuery(deleteSQL.toString());
+            NativeQuery<?> query = task.getDbLayer().getSession().createNativeQuery(deleteSQL.toString());
             if (parameters != null) {
                 parameters.entrySet().forEach(e -> {
                     query.setParameter(e.getKey(), e.getValue());

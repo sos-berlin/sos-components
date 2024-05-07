@@ -34,19 +34,17 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.search.RequestSearchAdvancedItem;
 import com.sos.joc.model.inventory.search.RequestSearchReturnType;
 
-
 public class InventorySearchDBLayer extends DBLayer {
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(InventorySearchDBLayer.class);
-    private boolean tmpShowLog = false; // TODO to remove
 
     private static final String FIND_ALL = "*";
 
     public InventorySearchDBLayer(SOSHibernateSession session) {
         super(session);
     }
-    
+
     public List<InventoryQuickSearchItem> getQuickSearchInventoryConfigurations(Collection<RequestSearchReturnType> types, String search)
             throws SOSHibernateException {
         return getQuickSearchInventoryConfigurations(requestSearchReturnTypesToConfigurationTypeIntValues(types), search,
@@ -58,7 +56,7 @@ public class InventorySearchDBLayer extends DBLayer {
         return getQuickSearchInventoryConfigurations(requestSearchReturnTypesToConfigurationTypeIntValues(types), search,
                 DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
     }
-    
+
     private static List<Integer> requestSearchReturnTypesToConfigurationTypeIntValues(Collection<RequestSearchReturnType> types) {
         if (types == null) {
             return Collections.emptyList();
@@ -237,9 +235,6 @@ public class InventorySearchDBLayer extends DBLayer {
                 query.setParameterList("tags", tags);
             }
         }
-        if (tmpShowLog) {
-            LOGGER.info("[getBasicSearchInventoryConfigurations]" + getSession().getSQLString(query));
-        }
         return getSession().getResultList(query);
     }
 
@@ -342,9 +337,6 @@ public class InventorySearchDBLayer extends DBLayer {
                 query.setParameterList("tags", tags);
             }
         }
-        if (tmpShowLog) {
-            LOGGER.info("[getBasicSearchDeployedOrReleasedConfigurations]" + getSession().getSQLString(query));
-        }
         return getSession().getResultList(query);
     }
 
@@ -372,7 +364,7 @@ public class InventorySearchDBLayer extends DBLayer {
         List<String> l = getSession().getResultList(query);
         return l == null || l.size() == 0 ? null : l.get(0);
     }
-    
+
     public List<InventorySearchItem> getAdvancedSearchInventoryConfigurations(RequestSearchReturnType type, String search,
             RequestSearchAdvancedItem advanced) throws SOSHibernateException {
         return getAdvancedSearchInventoryConfigurations(type, search, null, null, null, null, advanced);
@@ -544,8 +536,7 @@ public class InventorySearchDBLayer extends DBLayer {
             jobScript = setHQLAndGetParameterValue(hql, "and", "jobScript", advanced.getJobScript(), "sw.jobsScripts", "$.scripts");
             includeScript = setHQLAndGetParameterValue(hql, "and", "includeScript", advanced.getIncludeScript(), "sw.jobsScripts", "$.scripts");
             jobTemplate = setHQLAndGetParameterValue(hql, "and", "jobTemplate", advanced.getJobTemplate(), "sw.jobs", "$.jobTemplates");
-            noticeBoard = setHQLAndGetParameterValue(hql, "and", "noticeBoards", advanced.getNoticeBoard(), "sw.instructions",
-                    "$.noticeBoardNames");
+            noticeBoard = setHQLAndGetParameterValue(hql, "and", "noticeBoards", advanced.getNoticeBoard(), "sw.instructions", "$.noticeBoardNames");
             lock = setHQLAndGetParameterValue(hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
             envName = setHQLAndGetParameterValue(hql, "and", "envName", advanced.getEnvName(), "sw.args", "$.jobEnvNames");
             envValue = setHQLAndGetParameterValue(hql, "and", "envValue", advanced.getEnvValue(), "sw.args", "$.jobEnvValues");
@@ -790,8 +781,7 @@ public class InventorySearchDBLayer extends DBLayer {
             jobScript = setHQLAndGetParameterValue(hql, "and", "jobScript", advanced.getJobScript(), "sw.jobsScripts", "$.scripts");
             includeScript = setHQLAndGetParameterValue(hql, "and", "includeScript", advanced.getIncludeScript(), "sw.jobsScripts", "$.scripts");
             jobTemplate = setHQLAndGetParameterValue(hql, "and", "jobTemplate", advanced.getJobTemplate(), "sw.jobs", "$.jobTemplates");
-            noticeBoard = setHQLAndGetParameterValue(hql, "and", "noticeBoards", advanced.getNoticeBoard(), "sw.instructions",
-                    "$.noticeBoardNames");
+            noticeBoard = setHQLAndGetParameterValue(hql, "and", "noticeBoards", advanced.getNoticeBoard(), "sw.instructions", "$.noticeBoardNames");
             lock = setHQLAndGetParameterValue(hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
             envName = setHQLAndGetParameterValue(hql, "and", "envName", advanced.getEnvName(), "sw.args", "$.jobEnvNames");
             envValue = setHQLAndGetParameterValue(hql, "and", "envValue", advanced.getEnvValue(), "sw.args", "$.jobEnvValues");
@@ -886,9 +876,6 @@ public class InventorySearchDBLayer extends DBLayer {
         }
         if (argumentValue != null) {
             query.setParameter("argumentValue", '%' + argumentValue.toLowerCase() + '%');
-        }
-        if (tmpShowLog) {
-            LOGGER.info("[getAdvancedSearchInventoryConfigurations]" + getSession().getSQLString(query));
         }
         if (isWorkflowType && jobNameExactMatch && !SOSString.isEmpty(jobNameForExactMatch)) {
             return checkJobNameExactMatch(getSession().getResultList(query), false, jobNameForExactMatch);
@@ -1108,8 +1095,7 @@ public class InventorySearchDBLayer extends DBLayer {
             jobTemplate = setHQLAndGetParameterValue(hql, "and", "jobTemplate", advanced.getJobTemplate(), "sw.jobs", "$.jobTemplates");
             jobScript = setHQLAndGetParameterValue(hql, "and", "jobScript", advanced.getJobScript(), "sw.jobsScripts", "$.scripts");
             includeScript = setHQLAndGetParameterValue(hql, "and", "includeScript", advanced.getIncludeScript(), "sw.jobsScripts", "$.scripts");
-            noticeBoard = setHQLAndGetParameterValue(hql, "and", "noticeBoards", advanced.getNoticeBoard(), "sw.instructions",
-                    "$.noticeBoardNames");
+            noticeBoard = setHQLAndGetParameterValue(hql, "and", "noticeBoards", advanced.getNoticeBoard(), "sw.instructions", "$.noticeBoardNames");
             lock = setHQLAndGetParameterValue(hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
             envName = setHQLAndGetParameterValue(hql, "and", "envName", advanced.getEnvName(), "sw.args", "$.jobEnvNames");
             envValue = setHQLAndGetParameterValue(hql, "and", "envValue", advanced.getEnvValue(), "sw.args", "$.jobEnvValues");
@@ -1381,8 +1367,7 @@ public class InventorySearchDBLayer extends DBLayer {
             jobTemplate = setHQLAndGetParameterValue(hql, "and", "jobTemplate", advanced.getJobTemplate(), "sw.jobs", "$.jobTemplates");
             jobScript = setHQLAndGetParameterValue(hql, "and", "jobScript", advanced.getJobScript(), "sw.jobsScripts", "$.scripts");
             includeScript = setHQLAndGetParameterValue(hql, "and", "includeScript", advanced.getIncludeScript(), "sw.jobsScripts", "$.scripts");
-            noticeBoard = setHQLAndGetParameterValue(hql, "and", "noticeBoards", advanced.getNoticeBoard(), "sw.instructions",
-                    "$.noticeBoardNames");
+            noticeBoard = setHQLAndGetParameterValue(hql, "and", "noticeBoards", advanced.getNoticeBoard(), "sw.instructions", "$.noticeBoardNames");
             lock = setHQLAndGetParameterValue(hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
             envName = setHQLAndGetParameterValue(hql, "and", "envName", advanced.getEnvName(), "sw.args", "$.jobEnvNames");
             envValue = setHQLAndGetParameterValue(hql, "and", "envValue", advanced.getEnvValue(), "sw.args", "$.jobEnvValues");
@@ -1395,7 +1380,7 @@ public class InventorySearchDBLayer extends DBLayer {
         default:
             break;
         }
-        
+
         if (searchInTags) {
             if (isReleasable) {
                 hql.append(" group by mt.cid,mt.path,mt.type,mt.folder,mt.name,mt.title ");
@@ -1486,9 +1471,6 @@ public class InventorySearchDBLayer extends DBLayer {
         }
         if (argumentValue != null) {
             query.setParameter("argumentValue", '%' + argumentValue.toLowerCase() + '%');
-        }
-        if (tmpShowLog) {
-            LOGGER.info("[getAdvancedSearchDeployedOrReleasedConfigurations]" + getSession().getSQLString(query));
         }
         if (isWorkflowType && jobNameExactMatch && !SOSString.isEmpty(jobNameForExactMatch)) {
             return checkJobNameExactMatch(getSession().getResultList(query), true, jobNameForExactMatch);

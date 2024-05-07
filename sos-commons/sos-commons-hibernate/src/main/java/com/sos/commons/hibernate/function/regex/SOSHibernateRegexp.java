@@ -9,6 +9,7 @@ import org.hibernate.query.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.type.StandardBasicTypes;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
@@ -21,7 +22,6 @@ public class SOSHibernateRegexp extends StandardSQLFunction {
     private SOSHibernateFactory factory;
 
     public SOSHibernateRegexp(SOSHibernateFactory factory) {
-        //TODO 6.4.5.Final
         super(NAME, StandardBasicTypes.INTEGER);
         this.factory = factory;
     }
@@ -35,123 +35,89 @@ public class SOSHibernateRegexp extends StandardSQLFunction {
                 .toString();
     }
 
-    //TODO 6.4.5.Final
-//    @SuppressWarnings("rawtypes")
-//    @Override
-//    public String render(Type firstArgumentType, List arguments, SessionFactoryImplementor factory) throws QueryException {
-//        if (arguments == null || arguments.size() < 2) {
-//            throw new QueryException("missing arguments");
-//        }
-//        String property = arguments.get(0).toString();
-//        String regexp = arguments.get(1).toString();
-//        String mssqlRegexp = arguments.size() == 3 ? arguments.get(2).toString() : null;
-//
-//        switch (this.factory.getDbms()) {
-//        case MYSQL:
-//            // REGEXP_LIKE from MySQL 8.0
-//            return property + " REGEXP " + regexp;
-//        case MSSQL:
-//            // TODO
-//            String innRegexp = null;
-//            String quote = "'";
-//            if (mssqlRegexp == null) {
-//                if (!SOSString.isEmpty(regexp) && !regexp.equals("?")) {
-//                    regexp = regexp.replaceAll(Pattern.quote(".*"), "%");
-//                    innRegexp = regexp.substring(1, regexp.length() - 1);
-//                    if (!innRegexp.startsWith("^")) {
-//                        innRegexp = "%" + innRegexp;
-//                    }
-//                    if (!innRegexp.endsWith("$")) {
-//                        innRegexp = innRegexp + "%";
-//                    }
-//                } else {
-//                    innRegexp = "?";
-//                    quote = "";
-//                }
-//            } else {
-//                innRegexp = mssqlRegexp.substring(1, mssqlRegexp.length() - 1);
-//            }
-//            return "(case when (" + property + " like " + quote + innRegexp + quote + ") then 1 else 0 end)";
-//        case ORACLE:
-//            return "(case when (REGEXP_LIKE(" + property + "," + regexp + ")) then 1 else 0 end)";
-//        case PGSQL:
-//            return "(case when (" + property + " ~ " + regexp + ") then 1 else 0 end)";
-//        case H2:
-//            return "REGEXP_LIKE(" + property + "," + regexp + ")";
-//        default:
-//            return NAME;
-//        }
-//    }
-    
-    
     @Override
     public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> arguments, ReturnableType<?> returnType, SqlAstTranslator<?> translator)
             throws QueryException {
         if (arguments == null || arguments.size() < 2) {
             throw new QueryException("missing arguments", null, null);
         }
-        String property = arguments.get(0).toString();
-        String regexp = arguments.get(1).toString();
-        String mssqlRegexp = arguments.size() == 3 ? arguments.get(2).toString() : null;
 
         switch (this.factory.getDbms()) {
         case MYSQL:
             // REGEXP_LIKE from MySQL 8.0
-            sqlAppender.append(property + " REGEXP " + regexp);
+            // property REGEXP regexp
+            arguments.get(0).accept(translator);
+            sqlAppender.append(" REGEXP ");
+            arguments.get(1).accept(translator);
             break;
         case MSSQL:
-            // TODO
+            String regexp = getLiteralValue(arguments.get(1));
+            String mssqlRegexp = arguments.size() == 3 ? getLiteralValue(arguments.get(2)) : null;
+
             String innRegexp = null;
-            String quote = "'";
             if (mssqlRegexp == null) {
                 if (!SOSString.isEmpty(regexp) && !regexp.equals("?")) {
-                    regexp = regexp.replaceAll(Pattern.quote(".*"), "%");
-                    innRegexp = regexp.substring(1, regexp.length() - 1);
-                    if (!innRegexp.startsWith("^")) {
-                        innRegexp = "%" + innRegexp;
+                    innRegexp = regexp.replaceAll(Pattern.quote(".*"), "%");
+                    if (innRegexp.startsWith("^")) {
+                        innRegexp = innRegexp.substring(1);
+                    } else {
+                        if (!innRegexp.startsWith("%")) {
+                            innRegexp = "%" + innRegexp;
+                        }
                     }
-                    if (!innRegexp.endsWith("$")) {
-                        innRegexp = innRegexp + "%";
+                    if (innRegexp.endsWith("$")) {
+                        innRegexp = innRegexp.substring(0, innRegexp.length() - 1);
+                    } else {
+                        if (!innRegexp.endsWith("%")) {
+                            innRegexp = innRegexp + "%";
+                        }
                     }
-                } else {
-                    innRegexp = "?";
-                    quote = "";
                 }
             } else {
-                innRegexp = mssqlRegexp.substring(1, mssqlRegexp.length() - 1);
+                innRegexp = mssqlRegexp;
             }
-            sqlAppender.append("(case when (" + property + " like " + quote + innRegexp + quote + ") then 1 else 0 end)");
+            // (case when (property like quote + innRegexp + quote) then 1 else 0 end)
+            sqlAppender.append("(case when (");
+            arguments.get(0).accept(translator);
+            sqlAppender.append(" like ");
+            if (innRegexp == null) {// column, like :name
+                arguments.get(1).accept(translator);
+            } else {
+                sqlAppender.append("'");
+                sqlAppender.append(innRegexp);
+                sqlAppender.append("'");
+            }
+            sqlAppender.append(") then 1 else 0 end)");
             break;
         case ORACLE:
-            sqlAppender.append("(case when (REGEXP_LIKE(" + property + "," + regexp + ")) then 1 else 0 end)");
+            // (case when (REGEXP_LIKE(property,regexp)) then 1 else 0 end)
+            sqlAppender.append("(case when (REGEXP_LIKE(");
+            arguments.get(0).accept(translator);
+            sqlAppender.append(",");
+            arguments.get(1).accept(translator);
+            sqlAppender.append(")) then 1 else 0 end)");
             break;
         case PGSQL:
-            sqlAppender.append("(case when (" + property + " ~ " + regexp + ") then 1 else 0 end)");
+            // (case when (property ~ regexp) then 1 else 0 end)
+            sqlAppender.append("(case when (");
+            arguments.get(0).accept(translator);
+            sqlAppender.append(" ~ ");
+            arguments.get(1).accept(translator);
+            sqlAppender.append(") then 1 else 0 end)");
             break;
         case H2:
-            sqlAppender.append("REGEXP_LIKE(" + property + "," + regexp + ")");
+            // REGEXP_LIKE(property,regexp)
+            sqlAppender.append("REGEXP_LIKE(");
+            arguments.get(0).accept(translator);
+            sqlAppender.append(",");
+            arguments.get(1).accept(translator);
+            sqlAppender.append(")");
             break;
         default:
             sqlAppender.append(NAME);
             break;
         }
     }
-
-    //TODO 6.4.5.Final
-//    @Override
-//    public boolean hasParenthesesIfNoArguments() {
-//        return true;
-//    }
-//
-//    @Override
-//    public boolean hasArguments() {
-//        return true;
-//    }
-//
-//    @Override
-//    public Type getReturnType(Type firstArgumentType, Mapping mapping) throws QueryException {
-//        return StandardBasicTypes.INTEGER;
-//    }
 
     private static String quote(String regexp) {
         if (regexp == null) {
@@ -161,4 +127,10 @@ public class SOSHibernateRegexp extends StandardSQLFunction {
         return regexp.startsWith(":") ? regexp : "'" + regexp + "'";
     }
 
+    private String getLiteralValue(SqlAstNode arg) {
+        if (arg instanceof QueryLiteral) {
+            return ((QueryLiteral<?>) arg).getLiteralValue().toString();
+        }
+        return null;
+    }
 }
