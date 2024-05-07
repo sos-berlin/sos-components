@@ -2,6 +2,8 @@ package com.sos.joc.db.xmleditor;
 
 import java.util.Date;
 
+import org.hibernate.annotations.GenericGenerator;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -23,6 +25,7 @@ public class DBItemXmlEditorConfiguration extends DBItem {
     /** Primary Key */
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_XML_EDITOR_CONFIGURATIONS_SEQUENCE)
+    @GenericGenerator(name = DBLayer.TABLE_XML_EDITOR_CONFIGURATIONS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 

@@ -2,6 +2,8 @@ package com.sos.joc.db.deployment;
 
 import java.util.Date;
 
+import org.hibernate.annotations.GenericGenerator;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -24,6 +26,7 @@ public class DBItemDepSignatures extends DBItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_DEP_SIGNATURES_SEQUENCE)
+    @GenericGenerator(name = DBLayer.TABLE_DEP_SIGNATURES_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
@@ -42,45 +45,51 @@ public class DBItemDepSignatures extends DBItem {
     @Column(name = "[MODIFIED]", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date modified;
-    
+
     public Long getId() {
         return id;
     }
+
     public void setId(Long id) {
         this.id = id;
     }
-    
+
     public Long getInvConfigurationId() {
         return invConfigurationId;
     }
+
     public void setInvConfigurationId(Long invConfigurationId) {
         this.invConfigurationId = invConfigurationId;
     }
-    
+
     public Long getDepHistoryId() {
         return depHistoryId;
     }
+
     public void setDepHistoryId(Long depHistoryId) {
         this.depHistoryId = depHistoryId;
     }
-    
+
     public String getSignature() {
         return signature;
     }
+
     public void setSignature(String signature) {
         this.signature = signature;
     }
-    
+
     public String getAccount() {
         return account;
     }
+
     public void setAccount(String account) {
         this.account = account;
     }
-    
+
     public Date getModified() {
         return modified;
     }
+
     public void setModified(Date modified) {
         this.modified = modified;
     }

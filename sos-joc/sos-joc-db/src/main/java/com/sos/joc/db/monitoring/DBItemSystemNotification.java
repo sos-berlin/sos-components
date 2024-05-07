@@ -2,6 +2,7 @@ package com.sos.joc.db.monitoring;
 
 import java.util.Date;
 
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.commons.util.SOSString;
@@ -30,6 +31,7 @@ public class DBItemSystemNotification extends DBItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_MON_SYSNOTIFICATIONS_SEQUENCE)
+    @GenericGenerator(name = DBLayer.TABLE_MON_SYSNOTIFICATIONS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 

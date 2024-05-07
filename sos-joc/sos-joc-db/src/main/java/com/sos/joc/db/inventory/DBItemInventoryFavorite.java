@@ -2,6 +2,7 @@ package com.sos.joc.db.inventory;
 
 import java.util.Date;
 
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.joc.db.DBItem;
@@ -30,6 +31,7 @@ public class DBItemInventoryFavorite extends DBItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_INV_FAVORITES_SEQUENCE)
+    @GenericGenerator(name = DBLayer.TABLE_INV_FAVORITES_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 

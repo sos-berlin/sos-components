@@ -2,6 +2,7 @@ package com.sos.joc.db.inventory;
 
 import java.util.Date;
 
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.joc.db.DBItem;
@@ -28,6 +29,7 @@ public class DBItemInventoryAgentInstance extends DBItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_INV_AGENT_INSTANCES_SEQUENCE)
+    @GenericGenerator(name = DBLayer.TABLE_INV_AGENT_INSTANCES_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
@@ -42,13 +44,13 @@ public class DBItemInventoryAgentInstance extends DBItem {
 
     @Column(name = "[CONTROLLER_ID]", nullable = false)
     private String controllerId;
-    
+
     @Column(name = "[PROCESS_LIMIT]", nullable = true)
     private Integer processLimit;
-    
+
     @Column(name = "[ORDERING]", nullable = false)
     private Integer ordering;
-    
+
     /* foreign key INVENTORY_OPERTATION_SYSTEM.ID */
     @Column(name = "[OS_ID]", nullable = false)
     private Long osId;
@@ -64,10 +66,10 @@ public class DBItemInventoryAgentInstance extends DBItem {
 
     @Column(name = "[STARTED_AT]", nullable = true)
     private Date startedAt;
-    
+
     @Column(name = "[CERTIFICATE]", nullable = true)
     private String certificate;
-    
+
     /* 0=no, 1=yes */
     @Column(name = "[IS_WATCHER]", nullable = false)
     @Convert(converter = NumericBooleanConverter.class)
@@ -110,7 +112,7 @@ public class DBItemInventoryAgentInstance extends DBItem {
         }
         uri = val;
     }
-    
+
     public String getAgentId() {
         return agentId;
     }
@@ -118,7 +120,7 @@ public class DBItemInventoryAgentInstance extends DBItem {
     public void setAgentId(String val) {
         agentId = val;
     }
-    
+
     public String getAgentName() {
         return agentName;
     }
@@ -126,7 +128,7 @@ public class DBItemInventoryAgentInstance extends DBItem {
     public void setAgentName(String val) {
         agentName = val;
     }
-    
+
     public String getControllerId() {
         return controllerId;
     }
@@ -134,7 +136,7 @@ public class DBItemInventoryAgentInstance extends DBItem {
     public void setControllerId(String val) {
         controllerId = val;
     }
-    
+
     public Integer getProcessLimit() {
         return processLimit;
     }
@@ -142,7 +144,7 @@ public class DBItemInventoryAgentInstance extends DBItem {
     public void setProcessLimit(Integer val) {
         processLimit = val;
     }
-    
+
     public Integer getOrdering() {
         return ordering;
     }
@@ -153,7 +155,7 @@ public class DBItemInventoryAgentInstance extends DBItem {
         }
         ordering = val;
     }
-    
+
     public Long getOsId() {
         return osId;
     }
@@ -164,7 +166,7 @@ public class DBItemInventoryAgentInstance extends DBItem {
         }
         osId = val;
     }
-    
+
     public String getTitle() {
         return title;
     }
@@ -180,7 +182,7 @@ public class DBItemInventoryAgentInstance extends DBItem {
     public void setVersion(String val) {
         version = val;
     }
-    
+
     public String getJavaVersion() {
         return javaVersion;
     }
@@ -196,7 +198,7 @@ public class DBItemInventoryAgentInstance extends DBItem {
     public void setStartedAt(Date val) {
         startedAt = val;
     }
-    
+
     public boolean getIsWatcher() {
         return isWatcher;
     }
@@ -212,7 +214,7 @@ public class DBItemInventoryAgentInstance extends DBItem {
     public void setHidden(boolean val) {
         hidden = val;
     }
-    
+
     public boolean getDisabled() {
         return disabled;
     }
@@ -220,7 +222,7 @@ public class DBItemInventoryAgentInstance extends DBItem {
     public void setDisabled(boolean val) {
         disabled = val;
     }
-    
+
     public boolean getDeployed() {
         return deployed;
     }
@@ -236,11 +238,11 @@ public class DBItemInventoryAgentInstance extends DBItem {
     public Date getModified() {
         return modified;
     }
-    
+
     public String getCertificate() {
         return certificate;
     }
-    
+
     public void setCertificate(String certificate) {
         this.certificate = certificate;
     }

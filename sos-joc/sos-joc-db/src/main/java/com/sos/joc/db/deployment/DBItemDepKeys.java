@@ -9,6 +9,8 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
+import org.hibernate.annotations.GenericGenerator;
+
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
@@ -21,6 +23,7 @@ public class DBItemDepKeys extends DBItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_DEP_KEYS_SEQUENCE)
+    @GenericGenerator(name = DBLayer.TABLE_DEP_KEYS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
@@ -48,6 +51,7 @@ public class DBItemDepKeys extends DBItem {
     public Long getId() {
         return id;
     }
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -55,6 +59,7 @@ public class DBItemDepKeys extends DBItem {
     public Integer getKeyType() {
         return keyType;
     }
+
     public void setKeyType(Integer type) {
         this.keyType = type;
     }
@@ -62,6 +67,7 @@ public class DBItemDepKeys extends DBItem {
     public Integer getKeyAlgorithm() {
         return keyAlgorithm;
     }
+
     public void setKeyAlgorithm(Integer keyAlgorithm) {
         this.keyAlgorithm = keyAlgorithm;
     }
@@ -69,6 +75,7 @@ public class DBItemDepKeys extends DBItem {
     public String getKey() {
         return key;
     }
+
     public void setKey(String key) {
         this.key = key;
     }
@@ -76,6 +83,7 @@ public class DBItemDepKeys extends DBItem {
     public String getCertificate() {
         return certificate;
     }
+
     public void setCertificate(String certificate) {
         this.certificate = certificate;
     }
@@ -83,13 +91,15 @@ public class DBItemDepKeys extends DBItem {
     public String getAccount() {
         return account;
     }
+
     public void setAccount(String account) {
         this.account = account;
     }
-    
+
     public Integer getSecLvl() {
         return secLvl;
     }
+
     public void setSecLvl(Integer secLvl) {
         this.secLvl = secLvl;
     }

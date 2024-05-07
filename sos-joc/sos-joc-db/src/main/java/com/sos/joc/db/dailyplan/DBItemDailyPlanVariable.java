@@ -2,6 +2,8 @@ package com.sos.joc.db.dailyplan;
 
 import java.util.Date;
 
+import org.hibernate.annotations.GenericGenerator;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -25,6 +27,7 @@ public class DBItemDailyPlanVariable extends DBItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_DPL_ORDER_VARIABLES_SEQUENCE)
+    @GenericGenerator(name = DBLayer.TABLE_DPL_ORDER_VARIABLES_SEQUENCE)
     @Column(name = "[ID]")
     private Long id;
 

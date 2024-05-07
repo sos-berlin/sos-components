@@ -14,20 +14,20 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.UniqueConstraint;
 
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.joc.db.DBLayer;
 
 @Entity
 @Table(name = DBLayer.TABLE_IAM_FIDO2_REGISTRATIONS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[IDENTITY_SERVICE_ID]",
-        "[ACCOUNT_NAME]" , "[ORIGIN]" }) })
-
+        "[ACCOUNT_NAME]", "[ORIGIN]" }) })
 @SequenceGenerator(name = DBLayer.TABLE_IAM_FIDO2_REGISTRATIONS_SEQUENCE, sequenceName = DBLayer.TABLE_IAM_FIDO2_REGISTRATIONS_SEQUENCE, allocationSize = 1)
-
 public class DBItemIamFido2Registration {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_IAM_FIDO2_REGISTRATIONS_SEQUENCE)
+    @GenericGenerator(name = DBLayer.TABLE_IAM_FIDO2_REGISTRATIONS_SEQUENCE)
     @Column(name = "[ID]")
     private Long id;
 
@@ -190,12 +190,10 @@ public class DBItemIamFido2Registration {
         this.algorithm = algorithm;
     }
 
-    
     public String getOrigin() {
         return origin;
     }
 
-    
     public void setOrigin(String origin) {
         this.origin = origin;
     }

@@ -11,6 +11,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.joc.db.DBLayer;
@@ -24,6 +25,7 @@ public class DBItemIamIdentityService {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_IAM_IDENTITY_SERVICES_SEQUENCE)
+    @GenericGenerator(name = DBLayer.TABLE_IAM_IDENTITY_SERVICES_SEQUENCE)
     @Column(name = "[ID]")
     private Long id;
 

@@ -9,6 +9,8 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
+import org.hibernate.annotations.GenericGenerator;
+
 import com.sos.joc.db.DBLayer;
 
 @Entity
@@ -19,6 +21,7 @@ public class DBItemIamRole {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_IAM_ROLES_SEQUENCE)
+    @GenericGenerator(name = DBLayer.TABLE_IAM_ROLES_SEQUENCE)
     @Column(name = "[ID]")
     private Long id;
 

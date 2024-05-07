@@ -2,6 +2,7 @@ package com.sos.joc.db.history;
 
 import java.util.Date;
 
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.commons.util.SOSString;
@@ -31,6 +32,7 @@ public class DBItemHistoryOrder extends DBItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_HISTORY_ORDERS_SEQUENCE)
+    @GenericGenerator(name = DBLayer.TABLE_HISTORY_ORDERS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 

@@ -15,6 +15,7 @@ import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.ColumnTransformer;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
 import com.sos.commons.hibernate.type.SOSHibernateJsonType;
@@ -31,6 +32,7 @@ public class DBItemInventoryReleasedConfiguration extends DBItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_INV_RELEASED_CONFIGURATIONS_SEQUENCE)
+    @GenericGenerator(name = DBLayer.TABLE_INV_RELEASED_CONFIGURATIONS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 

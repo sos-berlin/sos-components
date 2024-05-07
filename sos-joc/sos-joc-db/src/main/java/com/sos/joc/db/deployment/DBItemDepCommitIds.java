@@ -8,6 +8,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
+import org.hibernate.annotations.GenericGenerator;
+
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
@@ -20,6 +22,7 @@ public class DBItemDepCommitIds extends DBItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_DEP_COMMIT_IDS_SEQUENCE)
+    @GenericGenerator(name = DBLayer.TABLE_DEP_COMMIT_IDS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
@@ -34,38 +37,43 @@ public class DBItemDepCommitIds extends DBItem {
 
     @Column(name = "[COMMIT_ID]", nullable = false)
     private String commitId;
-    
+
     public Long getId() {
         return id;
     }
+
     public void setId(Long id) {
         this.id = id;
     }
-    
+
     public Long getInvConfigurationId() {
         return invConfigurationId;
     }
+
     public void setInvConfigurationId(Long invConfigurationId) {
         this.invConfigurationId = invConfigurationId;
     }
-    
+
     public Long getDepHistoryId() {
         return depHistoryId;
     }
+
     public void setDepHistoryId(Long depHistoryId) {
         this.depHistoryId = depHistoryId;
     }
-    
+
     public String getConfigPath() {
         return configPath;
     }
+
     public void setConfigPath(String configPath) {
         this.configPath = configPath;
     }
-    
+
     public String getCommitId() {
         return commitId;
     }
+
     public void setCommitId(String commitId) {
         this.commitId = commitId;
     }

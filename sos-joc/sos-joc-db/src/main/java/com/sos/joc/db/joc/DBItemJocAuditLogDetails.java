@@ -2,6 +2,8 @@ package com.sos.joc.db.joc;
 
 import java.util.Date;
 
+import org.hibernate.annotations.GenericGenerator;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -26,6 +28,7 @@ public class DBItemJocAuditLogDetails extends DBItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_JOC_AUDIT_LOG_DETAILS_SEQUENCE)
+    @GenericGenerator(name = DBLayer.TABLE_JOC_AUDIT_LOG_DETAILS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
@@ -66,11 +69,11 @@ public class DBItemJocAuditLogDetails extends DBItem {
     public Long getAuditLogId() {
         return auditLogId;
     }
-    
+
     public Integer getType() {
         return type;
     }
-    
+
     @Transient
     public ObjectType getTypeAsEnum() {
         try {
@@ -112,7 +115,7 @@ public class DBItemJocAuditLogDetails extends DBItem {
     public void setFolder(String val) {
         folder = val;
     }
-    
+
     public String getOrderId() {
         return orderId;
     }
@@ -120,7 +123,7 @@ public class DBItemJocAuditLogDetails extends DBItem {
     public void setOrderId(String val) {
         orderId = val;
     }
-    
+
     public Date getCreated() {
         return created;
     }

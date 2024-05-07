@@ -2,6 +2,8 @@ package com.sos.joc.db.deployment;
 
 import java.util.Date;
 
+import org.hibernate.annotations.GenericGenerator;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -24,6 +26,7 @@ public class DBItemDepVersions extends DBItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_DEP_VERSIONS_SEQUENCE)
+    @GenericGenerator(name = DBLayer.TABLE_DEP_VERSIONS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
@@ -39,24 +42,27 @@ public class DBItemDepVersions extends DBItem {
     @Column(name = "[MODIFIED]", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date modified;
-    
+
     public Long getId() {
         return id;
     }
+
     public void setId(Long id) {
         this.id = id;
     }
-    
+
     public Long getInvConfigurationId() {
         return invConfigurationId;
     }
+
     public void setInvConfigurationId(Long invConfigurationId) {
         this.invConfigurationId = invConfigurationId;
     }
-    
+
     public Long getDepHistoryId() {
         return depHistoryId;
     }
+
     public void setDepHistoryId(Long depHistoryId) {
         this.depHistoryId = depHistoryId;
     }
@@ -64,13 +70,15 @@ public class DBItemDepVersions extends DBItem {
     public String getVersion() {
         return version;
     }
+
     public void setVersion(String version) {
         this.version = version;
     }
-    
+
     public Date getModified() {
         return modified;
     }
+
     public void setModified(Date modified) {
         this.modified = modified;
     }

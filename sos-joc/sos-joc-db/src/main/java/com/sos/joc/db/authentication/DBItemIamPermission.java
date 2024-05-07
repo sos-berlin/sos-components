@@ -2,6 +2,7 @@ package com.sos.joc.db.authentication;
 
 import jakarta.persistence.*;
 
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.joc.db.DBLayer;
@@ -14,6 +15,7 @@ public class DBItemIamPermission {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_IAM_PERMISSIONS_SEQUENCE)
+    @GenericGenerator(name = DBLayer.TABLE_IAM_PERMISSIONS_SEQUENCE)
     @Column(name = "[ID]")
     private Long id;
 

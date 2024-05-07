@@ -8,6 +8,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
+import org.hibernate.annotations.GenericGenerator;
+
 import com.sos.joc.db.DBLayer;
 
 @Entity
@@ -19,6 +21,7 @@ public class DBItemIamFido2Devices {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_IAM_FIDO2_DEVICES_SEQUENCE)
+    @GenericGenerator(name = DBLayer.TABLE_IAM_FIDO2_DEVICES_SEQUENCE)
     @Column(name = "[ID]")
     private Long id;
 

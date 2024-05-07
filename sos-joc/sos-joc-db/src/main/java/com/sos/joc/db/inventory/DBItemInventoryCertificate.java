@@ -1,5 +1,6 @@
 package com.sos.joc.db.inventory;
 
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.joc.db.DBItem;
@@ -24,6 +25,7 @@ public class DBItemInventoryCertificate extends DBItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_INV_CERTS_SEQUENCE)
+    @GenericGenerator(name = DBLayer.TABLE_INV_CERTS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
@@ -49,10 +51,10 @@ public class DBItemInventoryCertificate extends DBItem {
     @Column(name = "[SECLVL]", nullable = false)
     private Integer secLvl;
 
-    
     public Long getId() {
         return id;
     }
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -60,13 +62,15 @@ public class DBItemInventoryCertificate extends DBItem {
     public Integer getKeyType() {
         return keyType;
     }
+
     public void setKeyType(Integer keyType) {
         this.keyType = keyType;
     }
-    
+
     public Integer getKeyAlgorithm() {
         return keyAlgorithm;
     }
+
     public void setKeyAlgorithm(Integer keyAlgorithm) {
         this.keyAlgorithm = keyAlgorithm;
     }
@@ -74,6 +78,7 @@ public class DBItemInventoryCertificate extends DBItem {
     public String getPem() {
         return pem;
     }
+
     public void setPem(String pem) {
         this.pem = pem;
     }
@@ -81,6 +86,7 @@ public class DBItemInventoryCertificate extends DBItem {
     public boolean isCa() {
         return ca;
     }
+
     public void setCa(boolean ca) {
         this.ca = ca;
     }
@@ -88,13 +94,15 @@ public class DBItemInventoryCertificate extends DBItem {
     public String getAccount() {
         return account;
     }
+
     public void setAccount(String account) {
         this.account = account;
     }
-    
+
     public Integer getSecLvl() {
         return secLvl;
     }
+
     public void setSecLvl(Integer secLvl) {
         this.secLvl = secLvl;
     }
