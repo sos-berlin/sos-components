@@ -56,9 +56,9 @@
     <hibernate.version>6.5.0.Final</hibernate.version>
     <hibernate.commons.annotation.version>6.0.6.Final</hibernate.commons.annotation.version>
     <hibernate.jpa.version>1.0.2.Final</hibernate.jpa.version>
-    <c3p0.version>0.9.5.5</c3p0.version>
-    <hikari.version>3.2.0</hikari.version>
-    <mchange.commons.version>0.2.20</mchange.commons.version>
+    <c3p0.version>0.10.0</c3p0.version>
+    <hikari.version>5.1.0</hikari.version>
+    <mchange.commons.version>0.3.1</mchange.commons.version>
     <maria.db.driver.version>2.2.6</maria.db.driver.version>
     <postgresql.version>42.4.4</postgresql.version>
     <classmate.version>1.3.0</classmate.version>
