@@ -1,5 +1,6 @@
 package com.sos.joc.controllers.impl;
 
+import java.sql.SQLException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
@@ -247,21 +248,30 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
         default:
             break;
         }
+        try {
+            version = connection.getDatabaseMetaData().getDatabaseProductVersion();
+        } catch (SQLException e) {
+            //
+        }
 
-        if (stmt != null) {
-            List<String> result = connection.getResultListNativeQuery(stmt, String.class);
-            if (!result.isEmpty()) {
-                version = result.get(0);
-                if (version.contains("\n")) {
-                    version = version.substring(0, version.indexOf("\n"));
+        if (stmt != null && version == null) {
+            try {
+                List<String> result = connection.getResultListNativeQuery(stmt, String.class);
+                if (!result.isEmpty()) {
+                    version = result.get(0);
+                    if (version.contains("\n")) {
+                        version = version.substring(0, version.indexOf("\n"));
+                    }
                 }
-            }
-            if (version != null) {
-                if (Dbms.MSSQL.equals(dbms)) {
-                    // only first line
-                    version = version.trim().split("\r?\n", 2)[0];
+                if (version != null) {
+                    if (Dbms.MSSQL.equals(dbms)) {
+                        // only first line
+                        version = version.trim().split("\r?\n", 2)[0];
+                    }
+                    version = version.trim();
                 }
-                version = version.trim();
+            } catch (SOSHibernateException e) {
+                //
             }
         }
         // TODO different states
