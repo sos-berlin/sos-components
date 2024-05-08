@@ -13,6 +13,10 @@ import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Id;
 import jakarta.persistence.Parameter;
 
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.JdbcSettings;
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.cfg.ValidationSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
@@ -26,7 +30,12 @@ import com.sos.commons.hibernate.exception.SOSHibernateOpenSessionException;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 
-/** Removed: <br/>
+/** Hibernate constant values:<br/>
+ * - https://docs.jboss.org/hibernate/orm/6.5/javadocs/org/hibernate/cfg/<br/>
+ * - https://docs.jboss.org/hibernate/orm/6.5/javadocs/constant-values.html<br/>
+ * Hibernate documentation:<br/>
+ * - https://docs.jboss.org/hibernate/orm/6.5/userguide/html_single/Hibernate_User_Guide.html<br />
+ * SOSHibernate Removed: <br/>
  * - 2024-05-06<br/>
  * -- hibernate.sos.mssql_lock_timeout<br/>
  * ---- SOSHibernateSession.onOpenSession getSQLExecutor().execute("set LOCK_TIMEOUT " + value); only created overhead for each session and had no effect<br/>
@@ -36,30 +45,47 @@ import com.sos.commons.util.SOSString;
  */
 public class SOSHibernate {
 
-    public static final String HIBERNATE_PROPERTY_DIALECT = "hibernate.dialect";
-    public static final String HIBERNATE_PROPERTY_CONNECTION_DRIVERCLASS = "hibernate.connection.driver_class";
-    public static final String HIBERNATE_PROPERTY_CONNECTION_AUTO_COMMIT = "hibernate.connection.autocommit";
-    public static final String HIBERNATE_PROPERTY_CONNECTION_URL = "hibernate.connection.url";
-    public static final String HIBERNATE_PROPERTY_CONNECTION_USERNAME = "hibernate.connection.username";
-    public static final String HIBERNATE_PROPERTY_CONNECTION_PASSWORD = "hibernate.connection.password";
-    public static final String HIBERNATE_PROPERTY_CURRENT_SESSION_CONTEXT_CLASS = "hibernate.current_session_context_class";
-    // TODO check if really used
-    public static final String HIBERNATE_PROPERTY_ID_NEW_GENERATOR_MAPPINGS = "hibernate.id.new_generator_mappings";
-    // introduced with 6.x
-    public static final String HIBERNATE_PROPERTY_ID_STRUCTURE_NAMING_STRATEGY = "hibernate.id.db_structure_naming_strategy";
-    public static final String HIBERNATE_PROPERTY_JAVAX_PERSISTENCE_VALIDATION_MODE = "javax.persistence.validation.mode";
-    public static final String HIBERNATE_PROPERTY_JAKARTA_PERSISTENCE_VALIDATION_MODE = "jakarta.persistence.validation.mode";
-    public static final String HIBERNATE_PROPERTY_TRANSACTION_ISOLATION = "hibernate.connection.isolation";
-    public static final String HIBERNATE_PROPERTY_USE_SCROLLABLE_RESULTSET = "hibernate.jdbc.use_scrollable_resultset";
+    /** JdbcSettings */
+    // hibernate.connection.driver_class - The JPA-standard setting {@link #JAKARTA_JDBC_DRIVER} is now preferred - jakarta.persistence.jdbc.driver
+    @SuppressWarnings("deprecation")
+    public static final String HIBERNATE_PROPERTY_CONNECTION_DRIVERCLASS = JdbcSettings.DRIVER;
+    // hibernate.connection.url - The JPA-standard setting {@link #JAKARTA_JDBC_URL} is now preferred - jakarta.persistence.jdbc.url
+    @SuppressWarnings("deprecation")
+    public static final String HIBERNATE_PROPERTY_CONNECTION_URL = JdbcSettings.URL;
+    // hibernate.connection.username - The JPA-standard setting {@link #JAKARTA_JDBC_USER} is now preferred - jakarta.persistence.jdbc.user
+    @SuppressWarnings("deprecation")
+    public static final String HIBERNATE_PROPERTY_CONNECTION_USERNAME = JdbcSettings.USER;
+    // hibernate.connection.password - The JPA-standard setting {@link #JAKARTA_JDBC_PASSWORD} is now preferred - jakarta.persistence.jdbc.password
+    @SuppressWarnings("deprecation")
+    public static final String HIBERNATE_PROPERTY_CONNECTION_PASSWORD = JdbcSettings.PASS;
 
-    // SOS configuration properties
+    // hibernate.dialect
+    public static final String HIBERNATE_PROPERTY_DIALECT = JdbcSettings.DIALECT;
+    // hibernate.connection.autocommit
+    public static final String HIBERNATE_PROPERTY_CONNECTION_AUTO_COMMIT = JdbcSettings.AUTOCOMMIT;
+    // hibernate.connection.isolation
+    public static final String HIBERNATE_PROPERTY_TRANSACTION_ISOLATION = JdbcSettings.ISOLATION;
+    // hibernate.jdbc.use_scrollable_resultset
+    public static final String HIBERNATE_PROPERTY_USE_SCROLLABLE_RESULTSET = JdbcSettings.USE_SCROLLABLE_RESULTSET;
+
+    /** AvailableSettings */
+    // hibernate.current_session_context_class
+    public static final String HIBERNATE_PROPERTY_CURRENT_SESSION_CONTEXT_CLASS = AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS;
+    /** MappingSettings */
+    // hibernate.id.db_structure_naming_strategy (introduced with 6.x)
+    public static final String HIBERNATE_PROPERTY_ID_STRUCTURE_NAMING_STRATEGY = MappingSettings.ID_DB_STRUCTURE_NAMING_STRATEGY;
+    /** ValidationSettings */
+    // jakarta.persistence.validation.mode
+    public static final String HIBERNATE_PROPERTY_PERSISTENCE_VALIDATION_MODE = ValidationSettings.JAKARTA_VALIDATION_MODE;
+
+    /** SOS Settings */
     public static final String HIBERNATE_SOS_PROPERTY_SHOW_CONFIGURATION_PROPERTIES = "hibernate.sos.show_configuration_properties";
-    // SOS configuration properties: credential store
+    // SOS Settings: credential store
     public static final String HIBERNATE_SOS_PROPERTY_CREDENTIAL_STORE_FILE = "hibernate.sos.credential_store_file";
     public static final String HIBERNATE_SOS_PROPERTY_CREDENTIAL_STORE_KEY_FILE = "hibernate.sos.credential_store_key_file";
     public static final String HIBERNATE_SOS_PROPERTY_CREDENTIAL_STORE_PASSWORD = "hibernate.sos.credential_store_password";
     public static final String HIBERNATE_SOS_PROPERTY_CREDENTIAL_STORE_ENTRY_PATH = "hibernate.sos.credential_store_entry_path";
-    // SOS configuration properties: encryption
+    // SOS Settings: encryption
     public static final String HIBERNATE_SOS_PROPERTY_DECRYPTION_PRIVATE_KEY = "hibernate.sos.decryption_key";
     public static final String HIBERNATE_SOS_PROPERTY_DECRYPTION_PRIVATE_KEYPWD = "hibernate.sos.decryption_keypassword";
     public static final String HIBERNATE_SOS_PROPERTY_KEYSTORE = "hibernate.sos.keystore_path";

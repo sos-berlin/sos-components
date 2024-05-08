@@ -523,10 +523,9 @@ public class SOSHibernateFactory implements Serializable {
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_AUTO_COMMIT, "false");
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_USE_SCROLLABLE_RESULTSET, "true");
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_CURRENT_SESSION_CONTEXT_CLASS, "jta");
-        defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_JAVAX_PERSISTENCE_VALIDATION_MODE, "none");
-        defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_JAKARTA_PERSISTENCE_VALIDATION_MODE, "none");
-        defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_ID_NEW_GENERATOR_MAPPINGS, "false");
+        defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_PERSISTENCE_VALIDATION_MODE, "none");
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_ID_STRUCTURE_NAMING_STRATEGY, "legacy");
+        // defaultConfigurationProperties.put("hibernate.jpa.compliance.global_id_generators", "false");
 
         configurationProperties = new Properties();
         configurationResolver = new SOSHibernateConfigurationResolver();

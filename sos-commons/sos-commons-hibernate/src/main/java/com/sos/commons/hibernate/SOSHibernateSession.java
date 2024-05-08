@@ -408,7 +408,7 @@ public class SOSHibernateSession implements Serializable {
         try {
             SharedSessionContractImplementor impl = (SharedSessionContractImplementor) currentSession;
             try {
-                return impl.getJdbcConnectionAccess().obtainConnection();
+                return impl.getJdbcCoordinator().getLogicalConnection().getPhysicalConnection();
             } catch (NullPointerException e) {
                 throw new SOSHibernateConnectionException("can't get the SQL connection from the StatelessSessionImpl(NullPointerException)");
             }
@@ -416,9 +416,6 @@ public class SOSHibernateSession implements Serializable {
             throwException(e, new SOSHibernateConnectionException(e));
             return null;
         } catch (PersistenceException e) {
-            throwException(e, new SOSHibernateConnectionException(e));
-            return null;
-        } catch (SQLException e) {
             throwException(e, new SOSHibernateConnectionException(e));
             return null;
         }
@@ -1097,6 +1094,7 @@ public class SOSHibernateSession implements Serializable {
         throw ex;
     }
 
+    @SuppressWarnings("unused")
     private void throwException(SQLException cause, SOSHibernateException ex) throws SOSHibernateException {
         if (cause.getCause() == null) {
             throw new SOSHibernateInvalidSessionException(cause, ex.getStatement());
