@@ -139,7 +139,6 @@
           <includeSystemScope>true</includeSystemScope>
           <includeTestScope>false</includeTestScope>
           <includeLicenseText>false</includeLicenseText>
-          <excludeGroupId>com.sos-berlin</excludeGroupId>
           <excludeArtifactId>sos-annotator</excludeArtifactId>
           <outputReactorProjects>false</outputReactorProjects>
           <outputFormat>json</outputFormat>
