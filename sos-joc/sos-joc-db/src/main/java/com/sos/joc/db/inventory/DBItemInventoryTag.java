@@ -2,6 +2,11 @@ package com.sos.joc.db.inventory;
 
 import java.util.Date;
 
+import org.hibernate.annotations.GenericGenerator;
+
+import com.sos.joc.db.DBItem;
+import com.sos.joc.db.DBLayer;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -13,9 +18,6 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.UniqueConstraint;
 
-import com.sos.joc.db.DBItem;
-import com.sos.joc.db.DBLayer;
-
 @Entity
 @Table(name = DBLayer.TABLE_INV_TAGS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[NAME]" }) })
 @SequenceGenerator(name = DBLayer.TABLE_INV_TAGS_SEQUENCE, sequenceName = DBLayer.TABLE_INV_TAGS_SEQUENCE, allocationSize = 1)
@@ -25,6 +27,7 @@ public class DBItemInventoryTag extends DBItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_INV_TAGS_SEQUENCE)
+    @GenericGenerator(name = DBLayer.TABLE_INV_TAGS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 

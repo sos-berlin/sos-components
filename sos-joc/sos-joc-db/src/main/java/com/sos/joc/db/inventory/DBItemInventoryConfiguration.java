@@ -3,6 +3,7 @@ package com.sos.joc.db.inventory;
 import java.util.Date;
 
 import org.hibernate.annotations.ColumnTransformer;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.hibernate.type.NumericBooleanConverter;
 
@@ -27,15 +28,16 @@ import jakarta.persistence.UniqueConstraint;
 @Entity
 @Table(name = DBLayer.TABLE_INV_CONFIGURATIONS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[TYPE]", "[PATH]" }) })
 @SequenceGenerator(name = DBLayer.TABLE_INV_CONFIGURATIONS_SEQUENCE, sequenceName = DBLayer.TABLE_INV_CONFIGURATIONS_SEQUENCE, allocationSize = 1)
-//@TypeDefs({ @TypeDef(name = SOSHibernateJsonType.TYPE_NAME, typeClass = SOSHibernateJsonType.class) })
-//TODO 6.4.5.Final ? is @TypeDef still necessary?
-//@Convert(attributeName = "sos_json", converter = SOSHibernateJsonType.class)
+// @TypeDefs({ @TypeDef(name = SOSHibernateJsonType.TYPE_NAME, typeClass = SOSHibernateJsonType.class) })
+// TODO 6.4.5.Final ? is @TypeDef still necessary?
+// @Convert(attributeName = "sos_json", converter = SOSHibernateJsonType.class)
 public class DBItemInventoryConfiguration extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_INV_CONFIGURATIONS_SEQUENCE)
+    @GenericGenerator(name = DBLayer.TABLE_INV_CONFIGURATIONS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
@@ -56,7 +58,7 @@ public class DBItemInventoryConfiguration extends DBItem {
 
     @Column(name = "[CONTENT]", nullable = true)
     private String content;
-    
+
     @Column(name = "[JSON_CONTENT]", nullable = true)
     @Type(value = SOSHibernateJsonType.class)
     @ColumnTransformer(write = SOSHibernateJsonType.COLUMN_TRANSFORMER_WRITE_DEFAULT)
@@ -163,14 +165,14 @@ public class DBItemInventoryConfiguration extends DBItem {
         content = val;
         jsonContent = val;
     }
-    
+
     public String getJsonContent() {
         return jsonContent;
     }
 
-//    public void setJsonContent(String val) {
-//        jsonContent = val;
-//    }
+    // public void setJsonContent(String val) {
+    // jsonContent = val;
+    // }
 
     public boolean getValid() {
         return valid;

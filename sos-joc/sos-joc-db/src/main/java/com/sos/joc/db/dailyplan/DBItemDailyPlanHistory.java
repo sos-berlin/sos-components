@@ -2,6 +2,7 @@ package com.sos.joc.db.dailyplan;
 
 import java.util.Date;
 
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.joc.db.DBItem;
@@ -28,6 +29,7 @@ public class DBItemDailyPlanHistory extends DBItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_DPL_HISTORY_SEQUENCE)
+    @GenericGenerator(name = DBLayer.TABLE_DPL_HISTORY_SEQUENCE)
     @Column(name = "[ID]")
     private Long id;
 

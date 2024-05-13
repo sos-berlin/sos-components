@@ -2,6 +2,8 @@ package com.sos.joc.db.inventory;
 
 import java.util.Date;
 
+import org.hibernate.annotations.GenericGenerator;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -27,6 +29,7 @@ public class DBItemInventoryTagging extends DBItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_INV_TAGGINGS_SEQUENCE)
+    @GenericGenerator(name = DBLayer.TABLE_INV_TAGGINGS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
@@ -53,7 +56,7 @@ public class DBItemInventoryTagging extends DBItem {
     public void setId(Long val) {
         id = val;
     }
-    
+
     public Long getCid() {
         return cid;
     }

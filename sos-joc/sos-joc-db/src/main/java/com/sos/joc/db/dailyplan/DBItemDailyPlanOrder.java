@@ -7,6 +7,7 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.commons.util.SOSString;
@@ -36,6 +37,7 @@ public class DBItemDailyPlanOrder extends DBItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_DPL_ORDERS_SEQUENCE)
+    @GenericGenerator(name = DBLayer.TABLE_DPL_ORDERS_SEQUENCE)
     @Column(name = "[ID]")
     private Long id;
 
@@ -112,10 +114,10 @@ public class DBItemDailyPlanOrder extends DBItem {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[MODIFIED]", nullable = true)
     private Date modified;
-    
+
     @Transient
-    private String  dailyPlanDate;
-    
+    private String dailyPlanDate;
+
     @Transient
     private boolean isLastOfCycle = false;
 
@@ -314,12 +316,12 @@ public class DBItemDailyPlanOrder extends DBItem {
     public boolean isCyclic() {
         return startMode != null && startMode.equals(Integer.valueOf(1));
     }
-    
+
     @Transient
     public boolean isLastOfCyclic() {
         return isLastOfCycle;
     }
-    
+
     @Transient
     public void setIsLastOfCyclic(boolean val) {
         isLastOfCycle = val;
@@ -339,20 +341,20 @@ public class DBItemDailyPlanOrder extends DBItem {
     public void setRepeatInterval(String repeat) throws ParseException {
         setRepeatInterval(DailyPlanDate.getRepeatInterval(repeat));
     }
-    
+
     @Transient
     public String getDailyPlanDateFromOrderId() {
         if (orderId == null) {
             return null;
         }
-        return orderId.substring(1,11);
+        return orderId.substring(1, 11);
     }
-    
+
     @Transient
     public void setDailyPlanDate(String yyyyMMdd) {
         dailyPlanDate = yyyyMMdd;
     }
-    
+
     @Transient
     public String getDailyPlanDate() {
         return dailyPlanDate;
@@ -365,7 +367,7 @@ public class DBItemDailyPlanOrder extends DBItem {
         }
         return getDailyPlanDate(timeZone, getSecondsFromPeriodBegin(periodBegin));
     }
-    
+
     @Transient
     public String getDailyPlanDate(String timeZone, long periodBeginSeconds) {
         if (dailyPlanDate != null) {
@@ -379,7 +381,7 @@ public class DBItemDailyPlanOrder extends DBItem {
         dailyPlanDate = format.format(Date.from(plannedStart.toInstant().minusSeconds(periodBeginSeconds)));
         return dailyPlanDate;
     }
-    
+
     @Transient
     private long getSecondsFromPeriodBegin(String periodBegin) {
         Matcher m = Pattern.compile("^(\\d{1,2}):(\\d{1,2}):(\\d{1,2})").matcher(periodBegin + ":00");

@@ -93,7 +93,7 @@ public class JobHistoryDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public ScrollableResults<String> getCSV(ReportingLoader loader, LocalDateTime month) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             filter.setExecutedFrom(Date.from(month.atZone(ZoneId.systemDefault()).toInstant()));
@@ -112,7 +112,7 @@ public class JobHistoryDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public ScrollableResults<CSVItem> getCSVJobs(Stream<String> columns) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             Query<CSVItem> query = createQuery(new StringBuilder().append("select workflowFolder as folder").append(columns.collect(Collectors
@@ -164,7 +164,7 @@ public class JobHistoryDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public ScrollableResults<CSVItem> getCSVJobsFromHistoryIdAndPosition(Stream<String> columns, Map<Long, Set<String>> mapOfHistoryIdAndPosition)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
@@ -225,7 +225,7 @@ public class JobHistoryDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public Long getHistoryId() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             Query<Long> query = createQuery(new StringBuilder().append("select id from ").append(DBLayer.DBITEM_HISTORY_ORDERS).append(
@@ -275,7 +275,7 @@ public class JobHistoryDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public List<String> getOrderIds() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             Query<String> query = createQuery(new StringBuilder().append("select orderId from ").append(DBLayer.DBITEM_HISTORY_ORDERS).append(
@@ -433,27 +433,27 @@ public class JobHistoryDBLayer {
                 where.append(and).append(" startTime < :startTimeTo");
                 and = " and";
             }
-            
+
             if (filter.getEndFrom() != null) {
                 where.append(and).append(" endTime >= :endTimeFrom");
                 and = " and";
             }
- 
+
             if (filter.getEndTo() != null) {
                 where.append(and).append(" endTime < :endTimeTo");
                 and = " and";
             }
-            
+
             if (filter.getStateFrom() != null) {
                 where.append(and).append(" stateTime >= :stateTimeFrom");
                 and = " and";
             }
- 
+
             if (filter.getStateTo() != null) {
                 where.append(and).append(" stateTime < :stateTimeTo");
                 and = " and";
             }
-            
+
             if (filter.getStates() != null && !filter.getStates().isEmpty()) {
                 clause = filter.getStates().stream().map(state -> STATEMAP.get(state)).collect(Collectors.joining(" or "));
                 if (filter.getStates().size() > 1) {
@@ -462,7 +462,7 @@ public class JobHistoryDBLayer {
                 where.append(and).append(" ").append(clause);
                 and = " and";
             }
-            
+
             if (filter.getOrderStates() != null && !filter.getOrderStates().isEmpty()) {
                 where.append(and).append(" state in (:orderStates)");
                 and = " and";
@@ -606,11 +606,11 @@ public class JobHistoryDBLayer {
         }
         return where.toString();
     }
-    
+
     private <T> Query<T> createQuery(String hql) throws SOSHibernateException {
         return createQuery(hql, null);
     }
-    
+
     private <T> Query<T> createQuery(String hql, Class<T> clazz) throws SOSHibernateException {
         Query<T> query = null;
         if (clazz == null) {
@@ -620,7 +620,7 @@ public class JobHistoryDBLayer {
         }
         if (filter.getControllerIds() != null && !filter.getControllerIds().isEmpty()) {
             if (filter.getControllerIds().size() == 1) {
-                query.setParameter("controllerIds", filter.getControllerIds());
+                query.setParameter("controllerIds", filter.getControllerIds().iterator().next());
             } else {
                 query.setParameterList("controllerIds", filter.getControllerIds());
             }

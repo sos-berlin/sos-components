@@ -2,6 +2,8 @@ package com.sos.joc.db.inventory;
 
 import java.util.Date;
 
+import org.hibernate.annotations.GenericGenerator;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -17,7 +19,8 @@ import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.TABLE_INV_SUBAGENT_CLUSTER_MEMBERS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[SUBAGENT_CLUSTER_ID]", "[SUBAGENT_ID]" }) })
+@Table(name = DBLayer.TABLE_INV_SUBAGENT_CLUSTER_MEMBERS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[SUBAGENT_CLUSTER_ID]",
+        "[SUBAGENT_ID]" }) })
 @SequenceGenerator(name = DBLayer.TABLE_INV_SUBAGENT_CLUSTER_MEMBERS_SEQUENCE, sequenceName = DBLayer.TABLE_INV_SUBAGENT_CLUSTER_MEMBERS_SEQUENCE, allocationSize = 1)
 public class DBItemInventorySubAgentClusterMember extends DBItem {
 
@@ -25,6 +28,7 @@ public class DBItemInventorySubAgentClusterMember extends DBItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_INV_SUBAGENT_CLUSTER_MEMBERS_SEQUENCE)
+    @GenericGenerator(name = DBLayer.TABLE_INV_SUBAGENT_CLUSTER_MEMBERS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
@@ -48,7 +52,7 @@ public class DBItemInventorySubAgentClusterMember extends DBItem {
     public void setId(Long val) {
         id = val;
     }
-    
+
     public String getSubAgentClusterId() {
         return subAgentClusterId;
     }
@@ -56,7 +60,7 @@ public class DBItemInventorySubAgentClusterMember extends DBItem {
     public void setSubAgentClusterId(String val) {
         subAgentClusterId = val;
     }
-    
+
     public String getSubAgentId() {
         return subAgentId;
     }
@@ -64,7 +68,7 @@ public class DBItemInventorySubAgentClusterMember extends DBItem {
     public void setSubAgentId(String val) {
         subAgentId = val;
     }
-    
+
     public Integer getPriority() {
         return priority;
     }

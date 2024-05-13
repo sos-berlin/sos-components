@@ -2,6 +2,7 @@ package com.sos.joc.db.inventory;
 
 import java.util.Date;
 
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.joc.db.DBItem;
@@ -30,6 +31,7 @@ public class DBItemInventorySubAgentInstance extends DBItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_INV_SUBAGENT_INSTANCES_SEQUENCE)
+    @GenericGenerator(name = DBLayer.TABLE_INV_SUBAGENT_INSTANCES_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
@@ -45,10 +47,10 @@ public class DBItemInventorySubAgentInstance extends DBItem {
     /* 0=no, 1=primary, 2=standby */
     @Column(name = "[IS_DIRECTOR]", nullable = false)
     private Integer isDirector;
-    
+
     @Column(name = "[ORDERING]", nullable = false)
     private Integer ordering;
-    
+
     /* 0=no, 1=yes */
     @Column(name = "[IS_WATCHER]", nullable = false)
     @Convert(converter = NumericBooleanConverter.class)
@@ -63,7 +65,7 @@ public class DBItemInventorySubAgentInstance extends DBItem {
     @Column(name = "[DEPLOYED]", nullable = false)
     @Convert(converter = NumericBooleanConverter.class)
     private boolean deployed;
-    
+
     @Column(name = "[TITLE]", nullable = true)
     private String title;
 
@@ -79,11 +81,11 @@ public class DBItemInventorySubAgentInstance extends DBItem {
 
     @Column(name = "[CERTIFICATE]", nullable = true)
     private String certificate;
-    
+
     @Column(name = "[MODIFIED]", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date modified;
-    
+
     @Transient
     private String transaction = "none";
 
@@ -94,7 +96,7 @@ public class DBItemInventorySubAgentInstance extends DBItem {
     public void setId(Long val) {
         id = val;
     }
-    
+
     public String getSubAgentId() {
         return subAgentId;
     }
@@ -102,7 +104,7 @@ public class DBItemInventorySubAgentInstance extends DBItem {
     public void setSubAgentId(String val) {
         subAgentId = val;
     }
-    
+
     public String getAgentId() {
         return agentId;
     }
@@ -129,7 +131,7 @@ public class DBItemInventorySubAgentInstance extends DBItem {
     public void setIsDirector(Integer val) {
         isDirector = val;
     }
-    
+
     @Transient
     public SubagentDirectorType getDirectorAsEnum() {
         try {
@@ -143,7 +145,7 @@ public class DBItemInventorySubAgentInstance extends DBItem {
     public void setIsDirector(SubagentDirectorType val) {
         setIsDirector(val == null ? null : val.intValue());
     }
-    
+
     public Integer getOrdering() {
         return ordering;
     }
@@ -151,7 +153,7 @@ public class DBItemInventorySubAgentInstance extends DBItem {
     public void setOrdering(Integer val) {
         ordering = val;
     }
-    
+
     public Long getOsId() {
         return osId;
     }
@@ -178,7 +180,7 @@ public class DBItemInventorySubAgentInstance extends DBItem {
     public void setVersion(String val) {
         version = val;
     }
-    
+
     public String getJavaVersion() {
         return javaVersion;
     }
@@ -190,7 +192,7 @@ public class DBItemInventorySubAgentInstance extends DBItem {
     public void setModified(Date val) {
         modified = val;
     }
-    
+
     public boolean getIsWatcher() {
         return isWatcher;
     }
@@ -218,15 +220,15 @@ public class DBItemInventorySubAgentInstance extends DBItem {
     public Date getModified() {
         return modified;
     }
-    
+
     public String getCertificate() {
         return certificate;
     }
-    
+
     public void setCertificate(String certificate) {
         this.certificate = certificate;
     }
-    
+
     @Transient
     public String getTransaction() {
         return transaction;

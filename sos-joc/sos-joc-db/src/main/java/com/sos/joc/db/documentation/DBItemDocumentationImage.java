@@ -2,6 +2,7 @@ package com.sos.joc.db.documentation;
 
 import java.sql.Types;
 
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.JdbcTypeCode;
 
 import com.sos.joc.db.DBItem;
@@ -24,12 +25,13 @@ public class DBItemDocumentationImage extends DBItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_INV_DOCUMENTATION_IMAGES_SEQUENCE)
+    @GenericGenerator(name = DBLayer.TABLE_INV_DOCUMENTATION_IMAGES_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
     @Column(name = "[IMAGE]", nullable = false)
-    //TODO 6.4.5.Final 
-    //@Type(type = "org.hibernate.type.BinaryType")
+    // TODO 6.4.5.Final
+    // @Type(type = "org.hibernate.type.BinaryType")
     @JdbcTypeCode(Types.BINARY)
     private byte[] image;
 

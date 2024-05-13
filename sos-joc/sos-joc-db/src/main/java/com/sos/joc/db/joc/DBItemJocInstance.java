@@ -2,6 +2,7 @@ package com.sos.joc.db.joc;
 
 import java.util.Date;
 
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.commons.util.SOSString;
@@ -31,6 +32,7 @@ public class DBItemJocInstance extends DBItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_JOC_INSTANCES_SEQUENCE)
+    @GenericGenerator(name = DBLayer.TABLE_JOC_INSTANCES_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
@@ -72,7 +74,7 @@ public class DBItemJocInstance extends DBItem {
     @Column(name = "[API_SERVER]", nullable = false)
     @Convert(converter = NumericBooleanConverter.class)
     private boolean apiServer;
-    
+
     @Column(name = "[VERSION]", nullable = true)
     private String version;
 
@@ -196,7 +198,7 @@ public class DBItemJocInstance extends DBItem {
     public boolean getApiServer() {
         return apiServer;
     }
-    
+
     public String getVersion() {
         return version;
     }
@@ -207,11 +209,11 @@ public class DBItemJocInstance extends DBItem {
         }
         version = val;
     }
-    
+
     public String getCertificate() {
         return certificate;
     }
-    
+
     public void setCertificate(String certificate) {
         this.certificate = certificate;
     }

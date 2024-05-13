@@ -2,6 +2,7 @@ package com.sos.joc.db.inventory;
 
 import java.util.Date;
 
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.joc.db.DBItem;
@@ -28,6 +29,7 @@ public class DBItemInventoryJSInstance extends DBItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_INV_JS_INSTANCES_SEQUENCE)
+    @GenericGenerator(name = DBLayer.TABLE_INV_JS_INSTANCES_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
@@ -91,7 +93,7 @@ public class DBItemInventoryJSInstance extends DBItem {
     public void setControllerId(String val) {
         controllerId = val;
     }
-    
+
     public Integer getSecurityLevel() {
         return securityLevel;
     }
@@ -151,7 +153,7 @@ public class DBItemInventoryJSInstance extends DBItem {
         }
         javaVersion = val;
     }
-    
+
     public Date getStartedAt() {
         return startedAt;
     }
@@ -194,11 +196,11 @@ public class DBItemInventoryJSInstance extends DBItem {
     public Date getModified() {
         return modified;
     }
-    
+
     public String getCertificate() {
         return certificate;
     }
-    
+
     public void setCertificate(String certificate) {
         this.certificate = certificate;
     }

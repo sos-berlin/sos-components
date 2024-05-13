@@ -2,6 +2,7 @@ package com.sos.joc.db.inventory;
 
 import java.util.Date;
 
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.joc.db.DBItem;
@@ -28,6 +29,7 @@ public class DBItemInventorySubAgentCluster extends DBItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_INV_SUBAGENT_CLUSTERS_SEQUENCE)
+    @GenericGenerator(name = DBLayer.TABLE_INV_SUBAGENT_CLUSTERS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
@@ -46,7 +48,7 @@ public class DBItemInventorySubAgentCluster extends DBItem {
 
     @Column(name = "[ORDERING]", nullable = false)
     private Integer ordering;
-    
+
     @Column(name = "[MODIFIED]", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date modified;
@@ -58,7 +60,7 @@ public class DBItemInventorySubAgentCluster extends DBItem {
     public void setId(Long val) {
         id = val;
     }
-    
+
     public String getAgentId() {
         return agentId;
     }
@@ -66,7 +68,7 @@ public class DBItemInventorySubAgentCluster extends DBItem {
     public void setAgentId(String val) {
         agentId = val;
     }
-    
+
     public String getSubAgentClusterId() {
         return subAgentClusterId;
     }
@@ -74,7 +76,7 @@ public class DBItemInventorySubAgentCluster extends DBItem {
     public void setSubAgentClusterId(String val) {
         subAgentClusterId = val;
     }
-    
+
     public String getTitle() {
         return title;
     }
@@ -82,7 +84,7 @@ public class DBItemInventorySubAgentCluster extends DBItem {
     public void setTitle(String val) {
         title = val;
     }
-    
+
     public boolean getDeployed() {
         return deployed;
     }
@@ -101,7 +103,7 @@ public class DBItemInventorySubAgentCluster extends DBItem {
         }
         ordering = val;
     }
-    
+
     public void setModified(Date val) {
         modified = val;
     }

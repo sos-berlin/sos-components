@@ -3,6 +3,8 @@ package com.sos.joc.db.reporting;
 import java.nio.file.Path;
 import java.util.Date;
 
+import org.hibernate.annotations.GenericGenerator;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -29,6 +31,7 @@ public class DBItemReport extends DBItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_REPORTS_SEQUENCE)
+    @GenericGenerator(name = DBLayer.TABLE_REPORTS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
@@ -38,7 +41,7 @@ public class DBItemReport extends DBItem {
 
     @Column(name = "[FREQUENCY]", nullable = false)
     private Integer frequency;
-    
+
     @Column(name = "[DATE_FROM]", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date dateFrom;
@@ -53,18 +56,17 @@ public class DBItemReport extends DBItem {
     @Column(name = "[MODIFIED]", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date modified;
-    
+
     @Column(name = "[CREATED]", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date created;
-    
+
     @Column(name = "[CONSTRAINT_HASH]", nullable = false)
     private String constraintHash; // hash from templateId, frequency, dateFrom, hits
 
-    
     @Transient
     private Path reportFile;
-    
+
     public DBItemReport() {
     }
 
@@ -75,7 +77,7 @@ public class DBItemReport extends DBItem {
     public void setId(Long val) {
         id = val;
     }
-    
+
     public Long getRunId() {
         return runId;
     }
@@ -83,7 +85,7 @@ public class DBItemReport extends DBItem {
     public void setRunId(Long val) {
         runId = val;
     }
-    
+
     public Integer getFrequency() {
         return frequency;
     }
@@ -91,7 +93,7 @@ public class DBItemReport extends DBItem {
     public void setFrequency(Integer val) {
         frequency = val;
     }
-    
+
     @Transient
     public Frequency getFrequencyAsEnum() {
         return Frequency.fromValue(frequency);
@@ -104,7 +106,7 @@ public class DBItemReport extends DBItem {
     public void setContent(byte[] val) {
         content = val;
     }
-    
+
     public Date getDateFrom() {
         return dateFrom;
     }
@@ -112,7 +114,7 @@ public class DBItemReport extends DBItem {
     public void setDateFrom(Date val) {
         dateFrom = val;
     }
-    
+
     public Date getDateTo() {
         return dateTo;
     }
@@ -124,7 +126,7 @@ public class DBItemReport extends DBItem {
     public Date getModified() {
         return modified;
     }
-    
+
     public void setModified(Date val) {
         modified = val;
     }
@@ -132,11 +134,11 @@ public class DBItemReport extends DBItem {
     public Date getCreated() {
         return created;
     }
-    
+
     public void setCreated(Date val) {
         created = val;
     }
-    
+
     public String getConstraintHash() {
         return constraintHash;
     }
@@ -144,17 +146,17 @@ public class DBItemReport extends DBItem {
     public void setConstraintHash(String val) {
         constraintHash = val;
     }
-    
+
     @Transient
     public Path getReportFile() {
         return reportFile;
     }
-    
+
     @Transient
     public void setReportFile(Path val) {
         reportFile = val;
     }
-    
+
     @Transient
     public String hashConstraint(Integer templateId, Integer hits, String controllerId) {
         return SOSString.hash256(new StringBuilder().append(templateId).append(frequency).append(dateFrom).append(hits).append(controllerId == null
