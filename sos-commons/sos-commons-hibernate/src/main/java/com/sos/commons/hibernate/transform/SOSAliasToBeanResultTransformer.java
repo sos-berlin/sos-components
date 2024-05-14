@@ -13,13 +13,11 @@ import com.sos.commons.util.SOSReflection;
 
 public class SOSAliasToBeanResultTransformer<T> implements TupleTransformer<T> {
 
-    private final boolean initialized;
     private final Class<T> resultClass;
 
-    private Map<String, Method> setter;
+    private Map<String, Method> setter = null;
 
     public SOSAliasToBeanResultTransformer(Class<T> resultClass) {
-        this.initialized = false;
         this.resultClass = resultClass;
     }
 
@@ -29,7 +27,7 @@ public class SOSAliasToBeanResultTransformer<T> implements TupleTransformer<T> {
             throw new IllegalArgumentException("Length of aliases array must match length of tuple array");
         }
         try {
-            if (!initialized) {
+            if (setter == null) {
                 initialize();
             }
 
