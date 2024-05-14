@@ -1,48 +1,29 @@
 package com.sos.joc.db.inventory.items;
 
-import java.util.Date;
-
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.ResponseFolderItem;
 
-public class InventoryTreeFolderItem {
+public class InventoryTreeFolderItem extends ResponseFolderItem {
 
-    private Long id;
-    private Integer type;
-    private String path;
-    private String name;
-    private String title;
-    private boolean valid;
-    private boolean deleted;
-    private boolean deployed;
-    private boolean released;
-    private Date modified;
-    private Number countDeployed;
-    private Number countReleased;
-
-    public ResponseFolderItem toResponseFolderItem() {
-        try {
-            ResponseFolderItem item = new ResponseFolderItem();
-            item.setId(id);
-            item.setPath(path);
-            item.setName(name);
-            item.setObjectType(ConfigurationType.fromValue(type));
-            item.setWorkflowNames(null);
-            item.setTitle(title);
-            item.setValid(valid);
-            item.setDeleted(deleted);
-            item.setDeployed(deployed);
-            item.setReleased(released);
-            item.setModified(modified);
-            item.setHasDeployments(countDeployed.intValue() > 0);
-            item.setHasReleases(countReleased.intValue() > 0);
-            return item;
-        } catch (Throwable e) {// e.g. unknown type
-            return null;
-        }
+    public void setCountDeployed(Long val) {
+        super.setHasDeployments(val.intValue() > 0);
     }
     
-    public String getName() {
-        return name;
+    public void setCountReleased(Long val) {
+        super.setHasReleases(val.intValue() > 0);
+    }
+    
+    public void setType(Integer val) {
+        try {
+            super.setObjectType(ConfigurationType.fromValue(val));
+        } catch (Throwable e) {// e.g. unknown type
+        }
+    }
+
+    public ResponseFolderItem toResponseFolderItem() {
+        if (getObjectType() == null) {
+            return null;
+        }
+        return this;
     }
 }

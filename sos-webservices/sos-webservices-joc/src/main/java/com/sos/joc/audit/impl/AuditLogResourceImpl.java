@@ -162,7 +162,7 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
         try {
             if (sr != null) {
                 while (sr.next()) {
-                    auditLogItems.add(sr.get().toAuditLogItem());
+                    auditLogItems.add(sr.get());
                 }
             }
         } catch (Exception e) {
