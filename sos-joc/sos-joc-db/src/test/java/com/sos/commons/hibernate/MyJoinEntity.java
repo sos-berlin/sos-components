@@ -1,25 +1,16 @@
 package com.sos.commons.hibernate;
 
-public class MyJoinEntity {
+public class MyJoinEntity extends MyJoinEntityParent {
 
-    private Long stepId;
-    private String orderId;
+    private String stepId;
     private String jobName;
 
-    public Long getStepId() {
+    public String getStepId() {
         return stepId;
     }
 
     public void setStepId(Long val) {
-        stepId = val;
-    }
-
-    public String getOrderId() {
-        return orderId;
-    }
-
-    public void setOrderId(String val) {
-        orderId = val;
+        stepId = val == null ? null : String.valueOf(val);
     }
 
     public String getJobName() {
