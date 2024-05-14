@@ -1,14 +1,25 @@
 package com.sos.commons.hibernate.transform;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import org.hibernate.query.TupleTransformer;
 
+import com.sos.commons.util.SOSReflection;
+
 public class SOSAliasToBeanResultTransformer<T> implements TupleTransformer<T> {
 
+    private final boolean initialized;
     private final Class<T> resultClass;
 
+    private Map<String, Method> setter;
+
     public SOSAliasToBeanResultTransformer(Class<T> resultClass) {
+        this.initialized = false;
         this.resultClass = resultClass;
     }
 
@@ -18,13 +29,13 @@ public class SOSAliasToBeanResultTransformer<T> implements TupleTransformer<T> {
             throw new IllegalArgumentException("Length of aliases array must match length of tuple array");
         }
         try {
+            if (!initialized) {
+                initialize();
+            }
+
             T obj = resultClass.getDeclaredConstructor().newInstance();
             for (int i = 0; i < aliases.length; i++) {
-                Field field = getFieldByName(resultClass, aliases[i]);
-                if (field != null) {
-                    field.setAccessible(true);
-                    field.set(obj, tuple[i]);
-                }
+                invokeSetter(obj, aliases[i], tuple[i]);
             }
             return obj;
         } catch (Throwable e) {
@@ -32,15 +43,20 @@ public class SOSAliasToBeanResultTransformer<T> implements TupleTransformer<T> {
         }
     }
 
-    private Field getFieldByName(Class<?> clazz, String fieldName) {
-        try {
-            return clazz.getDeclaredField(fieldName);
-        } catch (NoSuchFieldException e) {
-            if (clazz.getSuperclass() != null) {
-                return getFieldByName(clazz.getSuperclass(), fieldName);
-            }
-            return null;
+    private void initialize() {
+        setter = SOSReflection.getAllDeclaredMethodsAsMap(resultClass).entrySet().stream().filter(e -> e.getKey().startsWith("set") && e.getValue()
+                .getParameterCount() == 1).collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+    }
+
+    private void invokeSetter(Object obj, String fieldName, Object value) throws Exception {
+        Method m = setter.get(getSetterName(fieldName));
+        if (m != null) {
+            m.invoke(obj, value);
         }
+    }
+
+    private static String getSetterName(String fieldName) {
+        return "set" + fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
     }
 
 }

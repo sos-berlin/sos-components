@@ -8,6 +8,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -83,6 +84,19 @@ public class SOSReflection {
         List<Method> result = new ArrayList<>();
         for (Class<?> c = type; c != null; c = c.getSuperclass()) {
             result.addAll(Arrays.asList(c.getDeclaredMethods()));
+        }
+        return result;
+    }
+
+    public static Map<String, Method> getAllDeclaredMethodsAsMap(Class<?> type) {
+        if (type == null) {
+            return null;
+        }
+        Map<String, Method> result = new HashMap<>();
+        for (Class<?> c = type; c != null; c = c.getSuperclass()) {
+            for (Method m : c.getDeclaredMethods()) {
+                result.put(m.getName(), m);
+            }
         }
         return result;
     }
