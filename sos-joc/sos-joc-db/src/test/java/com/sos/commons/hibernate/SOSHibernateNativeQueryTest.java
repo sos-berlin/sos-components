@@ -1,5 +1,6 @@
 package com.sos.commons.hibernate;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -10,6 +11,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBLayer;
 
@@ -21,7 +23,7 @@ public class SOSHibernateNativeQueryTest {
 
     @Ignore
     @Test
-    public void testNativeSimpleList() throws Exception {
+    public void testNativeMultipleValuesList() throws Exception {
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
         try {
@@ -61,6 +63,54 @@ public class SOSHibernateNativeQueryTest {
                 r.entrySet().stream().forEach(e -> {
                     LOGGER.info("    [" + e.getKey() + "][" + (e.getValue() == null ? "" : e.getValue().getClass()) + "]" + e.getValue());
                 });
+            }
+
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            if (factory != null) {
+                factory.close(session);
+            }
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testNativeSingleValueList() throws Exception {
+        SOSHibernateFactory factory = null;
+        SOSHibernateSession session = null;
+        try {
+            factory = SOSHibernateTest.createFactory();
+            session = factory.openStatelessSession();
+
+            StringBuilder sql = new StringBuilder("select ID ");
+            sql.append("from ").append(DBLayer.TABLE_DEP_HISTORY).append(" ");
+            if (factory.getDbms().equals(Dbms.MYSQL)) {
+                sql.append("limit 0,10");
+            }
+
+            LOGGER.info("[getResultListNativeQuery]List<String>-----------------------]");
+            List<String> result1 = session.getResultListNativeQuery(sql.toString());
+            for (String r : result1) {
+                LOGGER.info("ID=" + r);
+            }
+
+            sql = new StringBuilder("select DEPLOYMENT_DATE ");
+            sql.append("from ").append(DBLayer.TABLE_DEP_HISTORY).append(" ");
+            if (factory.getDbms().equals(Dbms.MYSQL)) {
+                sql.append("limit 0,10");
+            }
+
+            LOGGER.info("[getResultListNativeQuery]List<String>-----------------------]");
+            result1 = session.getResultListNativeQuery(sql.toString());
+            for (String r : result1) {
+                LOGGER.info("DEPLOYMENT_DATE=" + r);
+            }
+
+            LOGGER.info("[getResultListNativeQuery]List<Date>-----------------------]");
+            List<Date> result2 = session.getResultListNativeQuery(sql.toString(), Date.class);
+            for (Date r : result2) {
+                LOGGER.info("DEPLOYMENT_DATE=" + r);
             }
 
         } catch (Exception e) {

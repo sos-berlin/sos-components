@@ -244,11 +244,9 @@ public class SOSHibernateSession implements Serializable {
         }
         NativeQuery<T> q = null;
         try {
-            // one of the types Object[],java.util.List,java.util.Map
-            if (resultType.isArray() || List.class.isAssignableFrom(resultType) || Map.class.isAssignableFrom(resultType)) {
-                q = currentSession.createNativeQuery(sql, resultType);
-            } else {// custom entity - see createQuery description
-                q = currentSession.createNativeQuery(sql, resultType);
+            q = currentSession.createNativeQuery(sql, resultType);
+            if (!resultType.getPackageName().startsWith("java.")) {
+                // custom entity - see createQuery description
                 q.setTupleTransformer(new SOSAliasToBeanResultTransformer<T>(resultType));
             }
         } catch (IllegalStateException e) {
@@ -410,7 +408,8 @@ public class SOSHibernateSession implements Serializable {
             try {
                 return impl.getJdbcCoordinator().getLogicalConnection().getPhysicalConnection();
             } catch (NullPointerException e) {
-                throw new SOSHibernateConnectionException("can't get the SQL connection from the StatelessSessionImpl(NullPointerException)");
+                throw new SOSHibernateConnectionException(
+                        "can't get the SQL connection from the SharedSessionContractImplementor(NullPointerException)");
             }
         } catch (IllegalStateException e) {
             throwException(e, new SOSHibernateConnectionException(e));
@@ -542,6 +541,10 @@ public class SOSHibernateSession implements Serializable {
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateLockAcquisitionException, SOSHibernateQueryException */
     public <T> List<T> getResultListNativeQuery(String sql, Class<T> resultType) throws SOSHibernateException {
         return getResultList(createNativeQuery(sql, resultType));
+    }
+
+    public List<String> getResultListNativeQuery(String sql) throws SOSHibernateException {
+        return getResultList(createNativeQuery(sql, String.class));
     }
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateLockAcquisitionException, SOSHibernateQueryException */
