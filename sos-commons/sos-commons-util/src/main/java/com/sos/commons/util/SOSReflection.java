@@ -95,7 +95,7 @@ public class SOSReflection {
         Map<String, Method> result = new HashMap<>();
         for (Class<?> c = type; c != null; c = c.getSuperclass()) {
             for (Method m : c.getDeclaredMethods()) {
-                result.put(m.getName(), m);
+                result.putIfAbsent(m.getName(), m);
             }
         }
         return result;
