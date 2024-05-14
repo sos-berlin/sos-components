@@ -1,9 +1,11 @@
 package com.sos.joc.classes.reporting;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -46,6 +48,7 @@ import io.vavr.control.Either;
 public class RunReport extends AReporting {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(RunReport.class);
+    private static final String className = "com.sos.reports.ReportGenerator";
 //    private static final String nodeCLOs = "--max-old-space-size=2048";
     
     public static CompletableFuture<Either<Exception, Void>> run(final Report in) {
@@ -121,7 +124,13 @@ public class RunReport extends AReporting {
     }
 
     private static String getCommonScript(final Report in, String commandLineOptions) {
-        StringBuilder s = new StringBuilder().append("node ").append(commandLineOptions).append(" app/run-report.js -i data");
+        // StringBuilder s = new StringBuilder().append("node ").append(commandLineOptions).append(" app/run-report.js -i data");
+        StringBuilder s = new StringBuilder().append("\"").append(Paths.get(System.getProperty("java.home"), "bin", "java").toString()).append("\"")
+                .append(commandLineOptions)
+                //.append(" -cp ../lib/ext/joc/*").append(File.pathSeparator).append("../webapps/joc/WEB-INF/lib/* ")
+                .append(" -cp ../webapps/joc/WEB-INF/lib/* ")
+                .append(className)
+                .append(" -i data");
         if (in.getMonthFrom() != null) {
             s.append(" -s ").append(in.getMonthFrom());
         }

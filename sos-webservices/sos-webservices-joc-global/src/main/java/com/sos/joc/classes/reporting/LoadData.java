@@ -64,8 +64,6 @@ public class LoadData extends AReporting {
         
         return CompletableFuture.supplyAsync(() -> {
             SOSHibernateSession session = null;
-            ScrollableResults jobResult = null;
-            ScrollableResults orderResult = null;
             List<String> emptyMonths = new ArrayList<>();
             List<String> existingMonths = new ArrayList<>();
 
@@ -79,7 +77,6 @@ public class LoadData extends AReporting {
                 ReportingLoader ordersReporting = new ReportingLoader(ReportingType.ORDERS);
                 
                 while (month.isBefore(toMonth)) {
-                    jobResult = dbLayer.getCSV(jobsReporting, month);
                     boolean skipped = writeCSVFile(jobsReporting, month, dbLayer, emptyMonths, existingMonths);
                     if (!skipped) {
                         writeCSVFile(ordersReporting, month, dbLayer, emptyMonths, existingMonths);
@@ -94,12 +91,6 @@ public class LoadData extends AReporting {
             } catch (Exception e) {
                 return Either.left(e);
             } finally {
-                if (jobResult != null) {
-                    jobResult.close();
-                }
-                if (orderResult != null) {
-                    orderResult.close();
-                }
                 Globals.disconnect(session);
                 
                 if (!emptyMonths.isEmpty()) {

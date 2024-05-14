@@ -100,7 +100,7 @@ public class JobHistoryDBLayer {
             filter.setExecutedTo(Date.from(month.plusMonths(1).atZone(ZoneId.systemDefault()).toInstant()));
 
             Query<String> query = createQuery(new StringBuilder().append("select ").append(loader.getColumnHql()).append(" as csv from ").append(
-                    loader.getDbTable()).append(getOrderStepsWhere()).toString());
+                    loader.getDbTable()).append(getOrderStepsWhere()).append(" order by startTime").toString());
             if (filter.getLimit() > 0) {
                 query.setMaxResults(filter.getLimit());
             }

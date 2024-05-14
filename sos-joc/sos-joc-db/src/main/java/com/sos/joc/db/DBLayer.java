@@ -133,6 +133,10 @@ public class DBLayer implements Serializable {
     public static final String TABLE_HISTORY_LOGS = "HISTORY_LOGS";
     public static final String TABLE_HISTORY_LOGS_SEQUENCE = "SEQ_HISTORY_L";
 
+//    public static final String DBITEM_HISTORY_ORDER_TAGS = DBItemHistoryOrderTag.class.getSimpleName();
+//    public static final String TABLE_HISTORY_ORDER_TAGS = "HISTORY_ORDER_TAGS";
+//    public static final String TABLE_HISTORY_ORDER_TAGS_SEQUENCE = "SEQ_HISTORY_OTAGS";
+
     /** MONITORING Tables */
     public static final String DBITEM_MON_ORDERS = DBItemMonitoringOrder.class.getSimpleName();
     public static final String TABLE_MON_ORDERS = "MON_ORDERS";
@@ -536,9 +540,9 @@ public class DBLayer implements Serializable {
         cl.add(DBItemIamFido2Requests.class);
         cl.add(DBItemIamFido2Devices.class);
         
-//        cl.add(DBItemReport.class);
-//        cl.add(DBItemReportRun.class);
-//        cl.add(DBItemReportTemplate.class);
+        cl.add(DBItemReport.class);
+        cl.add(DBItemReportRun.class);
+        cl.add(DBItemReportTemplate.class);
 
         cl.merge(getHistoryClassMapping().getClasses());
         cl.merge(getDailyPlanClassMapping().getClasses());

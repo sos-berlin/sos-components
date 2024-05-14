@@ -1,5 +1,6 @@
 package com.sos.joc.db;
 
+import java.io.FileNotFoundException;
 //import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -21,8 +22,10 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSClassList;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
+import com.sos.joc.classes.reporting.Templates;
 //import com.sos.joc.classes.reporting.Templates;
 import com.sos.joc.db.joc.DBItemJocVariable;
+import com.sos.joc.db.reporting.DBItemReportTemplate;
 //import com.sos.joc.db.reporting.DBItemReportTemplate;
 import com.sos.joc.exceptions.JocConfigurationException;
 
@@ -33,7 +36,7 @@ public class DbInstaller {
             "_alter\\.sql$", "_procedure\\.sql$");
     private static final List<String> sqlFileSpecsInsert = Arrays.asList("_insert\\.sql$", "_trigger\\.sql$");
     private static final EnumSet<Dbms> supportedDbms = EnumSet.of(Dbms.ORACLE, Dbms.MSSQL, Dbms.MYSQL, Dbms.PGSQL, Dbms.H2);
-//    private static final Path templatesDir = Paths.get("reporting/app/templates");
+    private static final Path templatesDir = Paths.get("reporting/app/templates");
 
     public static void createTables() throws JocConfigurationException, SOSHibernateException, IOException {
 
@@ -68,7 +71,7 @@ public class DbInstaller {
                     // factory.addClassMapping(sosClassList);
                     SOSClassList cl = new SOSClassList();
                     cl.add(DBItemJocVariable.class);
-//                    cl.add(DBItemReportTemplate.class);
+                    cl.add(DBItemReportTemplate.class);
                     factory.addClassMapping(cl);
                     factory.setAutoCommit(false);
                     factory.build();
@@ -85,8 +88,8 @@ public class DbInstaller {
 
                     if (updateIsNecessary(session) || Globals.sosCockpitProperties.getProperty("create_db_tables", false)) {
                         create(session, dbms.name(), sqlsFolderParent);
-//                        factory.setAutoCommit(true);
-//                        updateTemplates(session);
+                        factory.setAutoCommit(true);
+                        updateTemplates(session);
                     }
 
                 }
@@ -144,13 +147,13 @@ public class DbInstaller {
         }
     }
     
-//    private static void updateTemplates(SOSHibernateSession session) throws SOSHibernateException, IOException {
-//        if (Files.isDirectory(templatesDir)) {
-//            Templates.updateTemplates(templatesDir, session);
-//        } else {
-//            throw new FileNotFoundException(templatesDir.toString() + " is not a directory.");
-//        }
-//    }
+    private static void updateTemplates(SOSHibernateSession session) throws SOSHibernateException, IOException {
+        if (Files.isDirectory(templatesDir)) {
+            Templates.updateTemplates(templatesDir, session);
+        } else {
+            throw new FileNotFoundException(templatesDir.toString() + " is not a directory.");
+        }
+    }
 
     // private boolean missingAnyTable(SOSClassList sosClassList, SOSHibernateSession session) throws SOSHibernateException {
     // for (Class<?> clazz : sosClassList.getClasses()) {
