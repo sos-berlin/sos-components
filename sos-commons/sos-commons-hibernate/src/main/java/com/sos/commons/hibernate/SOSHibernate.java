@@ -68,6 +68,8 @@ public class SOSHibernate {
     public static final String HIBERNATE_PROPERTY_TRANSACTION_ISOLATION = JdbcSettings.ISOLATION;
     // hibernate.jdbc.use_scrollable_resultset
     public static final String HIBERNATE_PROPERTY_USE_SCROLLABLE_RESULTSET = JdbcSettings.USE_SCROLLABLE_RESULTSET;
+    // hibernate.boot.allow_jdbc_metadata_access
+    public static final String HIBERNATE_PROPERTY_ALLOW_METADATA_ON_BOOT = JdbcSettings.ALLOW_METADATA_ON_BOOT;
 
     /** AvailableSettings */
     // hibernate.current_session_context_class
