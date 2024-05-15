@@ -30,18 +30,22 @@ public class MonitoringDBLayer extends DBLayer {
         if (controllerIds == null) {
             controllerIds = Collections.emptySet();
         }
+        String add = "where";
         StringBuilder hql = new StringBuilder(getOrderNotificationsMainHQL());
         if (dateFrom != null) {
-            hql.append("and n.created >= :dateFrom ");
+            hql.append(add).append(" n.created >= :dateFrom ");
+            add = "and";
         }
         if (!controllerIds.isEmpty()) {
-            hql.append("and o.controllerId in (:controllerIds) ");
+            hql.append(add).append(" o.controllerId in (:controllerIds) ");
+            add = "and";
         }
         int typesSize = types == null ? 0 : types.size();
         if (typesSize > 0) {
-            hql.append("and ");
+            hql.append(add).append(" ");
             hql.append(typesSize == 1 ? "n.type=:type" : "n.type in :types");
             hql.append(" ");
+            add = "and";
         }
         hql.append("order by n.id desc");
 
@@ -119,22 +123,28 @@ public class MonitoringDBLayer extends DBLayer {
         if (controllerIds == null) {
             controllerIds = Collections.emptySet();
         }
+        String add = "where";
         StringBuilder hql = new StringBuilder(getOrderNotificationsMainHQL());
         if (!controllerIds.isEmpty()) {
-            hql.append("and o.controllerId in (:controllerIds) ");
+            hql.append(add).append(" o.controllerId in (:controllerIds) ");
+            add = "and";
         }
         int typesSize = types == null ? 0 : types.size();
         if (typesSize > 0) {
-            hql.append("and ");
+            hql.append(add).append(" ");
             hql.append(typesSize == 1 ? "n.type=:type" : "n.type in :types");
             hql.append(" ");
+            add = "and";
         }
+        hql.append(add);
         if (size == 1) {
-            hql.append("and n.id=:notificationId");
+            hql.append(" n.id=:notificationId");
         } else {
-            hql.append("and n.id in :notificationIds ");
+            hql.append(" n.id in :notificationIds ");
             hql.append("order by n.id desc");
         }
+        add = "and";
+
         Query<NotificationDBItemEntity> query = getSession().createQuery(hql.toString(), NotificationDBItemEntity.class);
         if (!controllerIds.isEmpty()) {
             query.setParameterList("controllerIds", controllerIds);
@@ -280,12 +290,11 @@ public class MonitoringDBLayer extends DBLayer {
         hql.append(",a.comment as acknowledgementComment");
         hql.append(",a.created as acknowledgementCreated ");
         hql.append("from ").append(DBITEM_MON_NOTIFICATIONS).append(" n ");
-        hql.append(",").append(DBITEM_MON_NOT_WORKFLOWS).append(" w ");
+        hql.append("inner join ").append(DBITEM_MON_NOT_WORKFLOWS).append(" w on n.id=w.notificationId ");
         hql.append("left join ").append(DBITEM_MON_ORDERS).append(" o on w.orderHistoryId=o.historyId ");
         hql.append("left join ").append(DBITEM_MON_ORDER_STEPS).append(" os on w.orderStepHistoryId=os.historyId ");
         hql.append("left join ").append(DBITEM_MON_NOT_ACKNOWLEDGEMENTS).append(" a on n.id=a.id.notificationId ");
         hql.append("and a.id.application=").append(NotificationApplication.ORDER_NOTIFICATION.intValue()).append(" ");
-        hql.append("where n.id=w.notificationId ");
         return hql;
     }
 
@@ -400,7 +409,8 @@ public class MonitoringDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
-    public ScrollableResults<DBItemHistoryAgent> getAgents(Collection<String> controllerIds, Date dateFrom, Date dateTo) throws SOSHibernateException {
+    public ScrollableResults<DBItemHistoryAgent> getAgents(Collection<String> controllerIds, Date dateFrom, Date dateTo)
+            throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_AGENTS).append(" ");
         List<String> where = new ArrayList<>();
         if (controllerIds != null && !controllerIds.isEmpty()) {
