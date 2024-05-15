@@ -83,7 +83,8 @@
     <jna.version>5.14.0</jna.version>
 <!--    <yaml.version>1.33</yaml.version> -->
     <yaml.version>2.0</yaml.version>
-    <jaxb.version>3.0.1</jaxb.version>
+    <jaxb.impl.version>2.4.0-b180830.0438</jaxb.impl.version>
+    <jaxb.core.version>4.0.5</jaxb.core.version>
     <jaxb.api.version>2.4.0-b180830.0359</jaxb.api.version>
     <jwt.version>4.2.2</jwt.version>
     <json.schema.validator.version>1.0.76</json.schema.validator.version>
@@ -450,16 +451,24 @@
         <artifactId>jaxb-api</artifactId>
         <version>${jaxb.api.version}</version>
       </dependency>
+      <!--
       <dependency>
         <groupId>jakarta.xml.bind</groupId>
         <artifactId>jakarta.xml.bind-api</artifactId>
         <version>${jaxb.version}</version>
       </dependency>
+      -->
       <dependency>
         <groupId>com.sun.xml.bind</groupId>
         <artifactId>jaxb-impl</artifactId>
-        <version>${jaxb.version}</version>
+        <version>${jaxb.impl.version}</version>
       </dependency>
+      <dependency>
+        <groupId>com.sun.xml.bind</groupId>
+        <artifactId>jaxb-core</artifactId>
+        <version>${jaxb.core.version}</version>
+      </dependency>
+      <!--
       <dependency>
         <groupId>org.glassfish.jaxb</groupId>
         <artifactId>jaxb-bom</artifactId>
@@ -470,6 +479,7 @@
         <artifactId>jaxb-runtime</artifactId>
         <version>${jaxb.version}</version>
       </dependency>
+      -->
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
@@ -648,6 +658,7 @@
         <groupId>org.hibernate.orm</groupId>
         <artifactId>hibernate-core</artifactId>
         <version>${hibernate.version}</version>
+        <!--
         <exclusions>
           <exclusion>
             <groupId>org.glassfish.jaxb</groupId>
@@ -658,6 +669,7 @@
             <artifactId>jakarta.xml.bind-api</artifactId>
           </exclusion>
         </exclusions>
+        -->
       </dependency>
       <dependency>
         <groupId>org.hibernate.orm</groupId>
@@ -823,10 +835,6 @@
           <exclusion>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpkix-jdk18on</artifactId> 
-          </exclusion>
-          <exclusion>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId> 
           </exclusion>
           <exclusion>
             <groupId>junit</groupId>
