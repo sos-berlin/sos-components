@@ -30,22 +30,22 @@ public class MonitoringDBLayer extends DBLayer {
         if (controllerIds == null) {
             controllerIds = Collections.emptySet();
         }
-        String add = "where";
+        String add = "where ";
         StringBuilder hql = new StringBuilder(getOrderNotificationsMainHQL());
         if (dateFrom != null) {
-            hql.append(add).append(" n.created >= :dateFrom ");
-            add = "and";
+            hql.append(add).append("n.created >= :dateFrom ");
+            add = "and ";
         }
         if (!controllerIds.isEmpty()) {
-            hql.append(add).append(" o.controllerId in (:controllerIds) ");
-            add = "and";
+            hql.append(add).append("o.controllerId in (:controllerIds) ");
+            add = "and ";
         }
         int typesSize = types == null ? 0 : types.size();
         if (typesSize > 0) {
-            hql.append(add).append(" ");
+            hql.append(add);
             hql.append(typesSize == 1 ? "n.type=:type" : "n.type in :types");
             hql.append(" ");
-            add = "and";
+            add = "and ";
         }
         hql.append("order by n.id desc");
 
@@ -123,27 +123,27 @@ public class MonitoringDBLayer extends DBLayer {
         if (controllerIds == null) {
             controllerIds = Collections.emptySet();
         }
-        String add = "where";
+        String add = "where ";
         StringBuilder hql = new StringBuilder(getOrderNotificationsMainHQL());
         if (!controllerIds.isEmpty()) {
-            hql.append(add).append(" o.controllerId in (:controllerIds) ");
-            add = "and";
+            hql.append(add).append("o.controllerId in (:controllerIds) ");
+            add = "and ";
         }
         int typesSize = types == null ? 0 : types.size();
         if (typesSize > 0) {
-            hql.append(add).append(" ");
+            hql.append(add);
             hql.append(typesSize == 1 ? "n.type=:type" : "n.type in :types");
             hql.append(" ");
-            add = "and";
+            add = "and ";
         }
         hql.append(add);
         if (size == 1) {
-            hql.append(" n.id=:notificationId");
+            hql.append("n.id=:notificationId");
         } else {
-            hql.append(" n.id in :notificationIds ");
+            hql.append("n.id in :notificationIds ");
             hql.append("order by n.id desc");
         }
-        add = "and";
+        add = "and ";
 
         Query<NotificationDBItemEntity> query = getSession().createQuery(hql.toString(), NotificationDBItemEntity.class);
         if (!controllerIds.isEmpty()) {
