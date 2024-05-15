@@ -1,30 +1,24 @@
 package com.sos.joc.db.deployment;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
-
-import org.hibernate.annotations.GenericGenerator;
-
+import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+
 @Entity
 @Table(name = DBLayer.TABLE_DEP_KEYS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[ACCOUNT]", "[KEY_TYPE]", "[SECLVL]" }) })
-@SequenceGenerator(name = DBLayer.TABLE_DEP_KEYS_SEQUENCE, sequenceName = DBLayer.TABLE_DEP_KEYS_SEQUENCE, allocationSize = 1)
 public class DBItemDepKeys extends DBItem {
 
     private static final long serialVersionUID = 5376577176035147194L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_DEP_KEYS_SEQUENCE)
-    @GenericGenerator(name = DBLayer.TABLE_DEP_KEYS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
+    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_DEP_KEYS_SEQUENCE)
     private Long id;
 
     /* 0=PRIVATE, 1=PUBLIC */

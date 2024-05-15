@@ -2,34 +2,28 @@ package com.sos.joc.db.joc;
 
 import java.util.Date;
 
-import org.hibernate.annotations.GenericGenerator;
+import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.joc.db.DBItem;
+import com.sos.joc.db.DBLayer;
+import com.sos.joc.model.audit.CategoryType;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 
-import com.sos.joc.db.DBItem;
-import com.sos.joc.db.DBLayer;
-import com.sos.joc.model.audit.CategoryType;
-
 @Entity
 @Table(name = DBLayer.TABLE_JOC_AUDIT_LOG)
-@SequenceGenerator(name = DBLayer.TABLE_JOC_AUDIT_LOG_SEQUENCE, sequenceName = DBLayer.TABLE_JOC_AUDIT_LOG_SEQUENCE, allocationSize = 1)
 public class DBItemJocAuditLog extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_JOC_AUDIT_LOG_SEQUENCE)
-    @GenericGenerator(name = DBLayer.TABLE_JOC_AUDIT_LOG_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
+    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_JOC_AUDIT_LOG_SEQUENCE)
     private Long id;
 
     @Column(name = "[CONTROLLER_ID]", nullable = false)

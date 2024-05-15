@@ -2,33 +2,26 @@ package com.sos.joc.db.dailyplan;
 
 import java.util.Date;
 
-import org.hibernate.annotations.GenericGenerator;
+import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.joc.db.DBItem;
+import com.sos.joc.db.DBLayer;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
-import com.sos.joc.db.DBItem;
-import com.sos.joc.db.DBLayer;
-
 @Entity
 @Table(name = DBLayer.TABLE_DPL_ORDER_VARIABLES)
-@SequenceGenerator(name = DBLayer.TABLE_DPL_ORDER_VARIABLES_SEQUENCE, sequenceName = DBLayer.TABLE_DPL_ORDER_VARIABLES_SEQUENCE, allocationSize = 1)
-
 public class DBItemDailyPlanVariable extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_DPL_ORDER_VARIABLES_SEQUENCE)
-    @GenericGenerator(name = DBLayer.TABLE_DPL_ORDER_VARIABLES_SEQUENCE)
     @Column(name = "[ID]")
+    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_DPL_ORDER_VARIABLES_SEQUENCE)
     private Long id;
 
     @Column(name = "[CONTROLLER_ID]", nullable = false)

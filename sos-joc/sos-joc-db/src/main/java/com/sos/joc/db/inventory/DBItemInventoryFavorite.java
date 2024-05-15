@@ -2,9 +2,9 @@ package com.sos.joc.db.inventory;
 
 import java.util.Date;
 
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.type.NumericBooleanConverter;
 
+import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.model.favorite.FavoriteType;
@@ -12,10 +12,7 @@ import com.sos.joc.model.favorite.FavoriteType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
@@ -24,15 +21,13 @@ import jakarta.persistence.UniqueConstraint;
 
 @Entity
 @Table(name = DBLayer.TABLE_INV_FAVORITES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[TYPE]", "[NAME]", "[ACCOUNT]" }) })
-@SequenceGenerator(name = DBLayer.TABLE_INV_FAVORITES_SEQUENCE, sequenceName = DBLayer.TABLE_INV_FAVORITES_SEQUENCE, allocationSize = 1)
 public class DBItemInventoryFavorite extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_INV_FAVORITES_SEQUENCE)
-    @GenericGenerator(name = DBLayer.TABLE_INV_FAVORITES_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
+    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_INV_FAVORITES_SEQUENCE)
     private Long id;
 
     @Column(name = "[TYPE]", nullable = false)
@@ -107,7 +102,7 @@ public class DBItemInventoryFavorite extends DBItem {
     public void setFavorite(String val) {
         favorite = val;
     }
-    
+
     public Integer getOrdering() {
         return ordering;
     }
@@ -123,7 +118,7 @@ public class DBItemInventoryFavorite extends DBItem {
     public void setAccount(String val) {
         account = val;
     }
-    
+
     public boolean getShared() {
         return shared;
     }

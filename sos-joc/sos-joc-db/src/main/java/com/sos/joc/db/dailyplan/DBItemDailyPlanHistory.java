@@ -2,35 +2,29 @@ package com.sos.joc.db.dailyplan;
 
 import java.util.Date;
 
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.type.NumericBooleanConverter;
 
+import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
 @Entity
 @Table(name = DBLayer.TABLE_DPL_HISTORY)
-@SequenceGenerator(name = DBLayer.TABLE_DPL_HISTORY_SEQUENCE, sequenceName = DBLayer.TABLE_DPL_HISTORY_SEQUENCE, allocationSize = 1)
-
 public class DBItemDailyPlanHistory extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_DPL_HISTORY_SEQUENCE)
-    @GenericGenerator(name = DBLayer.TABLE_DPL_HISTORY_SEQUENCE)
     @Column(name = "[ID]")
+    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_DPL_HISTORY_SEQUENCE)
     private Long id;
 
     @Column(name = "[CONTROLLER_ID]", nullable = false)

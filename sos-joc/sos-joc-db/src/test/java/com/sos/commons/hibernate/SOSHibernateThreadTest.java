@@ -1,6 +1,5 @@
 package com.sos.commons.hibernate;
 
-import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
 
 import org.hibernate.query.Query;
@@ -10,16 +9,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
-import com.sos.commons.hibernate.common.SOSHibernateThreadFactory;
 
 public class SOSHibernateThreadTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSHibernateThreadTest.class);
 
     private static final int THREADS = 5;
-    private static final int MAX_POOL_SIZE = 1;
-
     private static final int WAIT_SECONDS = 40;
+    // false - session.createNativeQuery, true - session.getSQLExecutor().execute
+    private static final boolean USE_SQL_EXECUTER = false;
 
     private String statement = null;
 
@@ -28,11 +26,13 @@ public class SOSHibernateThreadTest {
     public void testCreateThreadsWithNewSession() throws Exception {
         SOSHibernateFactory factory = null;
         try {
-            factory = createFactory();
+            factory = SOSHibernateTest.createFactory();
             setStatement(factory);
 
             for (int i = 1; i <= THREADS; i++) {
-                Thread thread = createThreadWithNewSession(factory);
+                Boolean autoCommit = i % 2 == 0;
+                // autoCommit = null;
+                Thread thread = createThreadWithNewSession(factory, autoCommit);
                 thread.start();
             }
 
@@ -53,7 +53,7 @@ public class SOSHibernateThreadTest {
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
         try {
-            factory = createFactory();
+            factory = SOSHibernateTest.createFactory();
             setStatement(factory);
             session = factory.openStatelessSession();
 
@@ -66,23 +66,20 @@ public class SOSHibernateThreadTest {
         } catch (Exception e) {
             throw e;
         } finally {
-            if (session != null) {
-                session.close();
-            }
             if (factory != null) {
-                factory.close();
+                factory.close(session);
             }
         }
     }
 
-    private Thread createThreadWithNewSession(SOSHibernateFactory factory) {
+    private Thread createThreadWithNewSession(SOSHibernateFactory factory, Boolean autoCommit) {
         Thread thread = new Thread(new Runnable() {
 
             @Override
             public void run() {
                 String name = Thread.currentThread().getName();
                 LOGGER.info(String.format("[%s]start", name));
-                executeStatement(factory, name);
+                executeStatement(factory, name, autoCommit);
                 LOGGER.info(String.format("[%s]end", name));
             }
         });
@@ -103,11 +100,13 @@ public class SOSHibernateThreadTest {
         return thread;
     }
 
-    private void executeStatement(SOSHibernateFactory factory, String threadName) {
+    private void executeStatement(SOSHibernateFactory factory, String threadName, Boolean autoCommit) {
         SOSHibernateSession session = null;
         try {
             session = factory.openStatelessSession();
-
+            if (autoCommit != null) {
+                session.setAutoCommit(autoCommit);
+            }
             executeStatement(session, threadName);
         } catch (Exception e) {
             LOGGER.error(e.toString(), e);
@@ -120,18 +119,15 @@ public class SOSHibernateThreadTest {
 
     private void executeStatement(SOSHibernateSession session, String threadName) {
         try {
-            Query<?> query = session.createNativeQuery(statement);
-            LOGGER.info("[" + threadName + "][first]" + SOSHibernate.toString(session.getSingleResult(query)));
+            if (USE_SQL_EXECUTER) {
+                session.getSQLExecutor().execute(statement);
+            } else {
+                Query<?> query = session.createNativeQuery(statement);
+                LOGGER.info("[" + threadName + "][first]" + SOSHibernate.toString(session.getSingleResult(query)));
+            }
         } catch (Exception e) {
             LOGGER.error(e.toString(), e);
         }
-    }
-
-    private SOSHibernateFactory createFactory() throws Exception {
-        SOSHibernateFactory factory = new SOSHibernateThreadFactory(Paths.get("src/test/resources/hibernate.cfg.xml"), 1, MAX_POOL_SIZE);
-        factory.build();
-
-        return factory;
     }
 
     private void setStatement(SOSHibernateFactory factory) {

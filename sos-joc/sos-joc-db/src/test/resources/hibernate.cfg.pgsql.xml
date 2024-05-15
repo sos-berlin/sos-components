@@ -7,9 +7,9 @@
 		<property name="hibernate.connection.username">scheduler</property>
 		<property name="hibernate.connection.password">scheduler</property>
 
-		<property name="hibernate.show_sql">true</property>
+		<property name="hibernate.show_sql">false</property>
 		<property name="hibernate.format_sql">true</property>
-		<property name="hibernate.temp.use_jdbc_metadata_defaults">false</property>
+		<property name="hibernate.boot.allow_jdbc_metadata_access">false</property>
 		<property name="javax.persistence.validation.mode">none</property>
 		
 

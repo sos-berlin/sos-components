@@ -2,9 +2,9 @@ package com.sos.joc.db.history;
 
 import java.util.Date;
 
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.type.NumericBooleanConverter;
 
+import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.inventory.model.job.JobCriticality;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -15,25 +15,20 @@ import com.sos.joc.model.order.OrderStateText;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 
 @Entity
 @Table(name = DBLayer.TABLE_HISTORY_ORDER_STEPS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONSTRAINT_HASH]" }) })
-@SequenceGenerator(name = DBLayer.TABLE_HISTORY_ORDER_STEPS_SEQUENCE, sequenceName = DBLayer.TABLE_HISTORY_ORDER_STEPS_SEQUENCE, allocationSize = 1)
 public class DBItemHistoryOrderStep extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_HISTORY_ORDER_STEPS_SEQUENCE)
-    @GenericGenerator(name = DBLayer.TABLE_HISTORY_ORDER_STEPS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
+    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_HISTORY_ORDER_STEPS_SEQUENCE)
     private Long id;
 
     @Column(name = "[CONTROLLER_ID]", nullable = false)

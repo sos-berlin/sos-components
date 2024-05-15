@@ -2,9 +2,9 @@ package com.sos.joc.db.monitoring;
 
 import java.util.Date;
 
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.type.NumericBooleanConverter;
 
+import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.common.HistoryConstants;
@@ -14,24 +14,19 @@ import com.sos.monitoring.MonitorType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
 @Entity
 @Table(name = DBLayer.TABLE_MON_NOT_MONITORS)
-@SequenceGenerator(name = DBLayer.TABLE_MON_NOT_MONITORS_SEQUENCE, sequenceName = DBLayer.TABLE_MON_NOT_MONITORS_SEQUENCE, allocationSize = 1)
 public class DBItemNotificationMonitor extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_MON_NOT_MONITORS_SEQUENCE)
-    @GenericGenerator(name = DBLayer.TABLE_MON_NOT_MONITORS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
+    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_MON_NOT_MONITORS_SEQUENCE)
     private Long id;
 
     @Column(name = "[NOT_ID]", nullable = false)

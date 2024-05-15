@@ -3,13 +3,13 @@
 	<session-factory>
 		<property name="hibernate.dialect">org.hibernate.dialect.SQLServer2005Dialect</property>
 		<property name="hibernate.connection.driver_class">com.microsoft.sqlserver.jdbc.SQLServerDriver</property>
-		<property name="hibernate.connection.url">jdbc:sqlserver://localhost:1433;sendStringParametersAsUnicode=false;selectMethod=cursor;lockTimeout=30000;databaseName=js7_x</property>
+		<property name="hibernate.connection.url">jdbc:sqlserver://localhost:1433;sendStringParametersAsUnicode=false;selectMethod=cursor;lockTimeout=30000;databaseName=js7_x;encrypt=false</property>
 		<property name="hibernate.connection.username">jobscheduler</property>
 		<property name="hibernate.connection.password">jobscheduler</property>
 
-		<property name="hibernate.show_sql">true</property>
+		<property name="hibernate.show_sql">false</property>
 		<property name="hibernate.format_sql">true</property>
-		<property name="hibernate.temp.use_jdbc_metadata_defaults">false</property>
+		<property name="hibernate.boot.allow_jdbc_metadata_access">false</property>
 		<property name="javax.persistence.validation.mode">none</property>
 		
 

@@ -2,33 +2,27 @@ package com.sos.joc.db.history;
 
 import java.util.Date;
 
-import org.hibernate.annotations.GenericGenerator;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
-
+import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.common.HistoryConstants;
 import com.sos.joc.model.order.OrderStateText;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+
 @Entity
 @Table(name = DBLayer.TABLE_HISTORY_ORDER_STATES)
-@SequenceGenerator(name = DBLayer.TABLE_HISTORY_ORDER_STATES_SEQUENCE, sequenceName = DBLayer.TABLE_HISTORY_ORDER_STATES_SEQUENCE, allocationSize = 1)
 public class DBItemHistoryOrderState extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_HISTORY_ORDER_STATES_SEQUENCE)
-    @GenericGenerator(name = DBLayer.TABLE_HISTORY_ORDER_STATES_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
+    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_HISTORY_ORDER_STATES_SEQUENCE)
     private Long id;
 
     /** Foreign key - TABLE_HISTORY_ORDERS.MAIN_PARENT_ID */

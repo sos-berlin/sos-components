@@ -3,10 +3,10 @@ package com.sos.joc.db.search;
 import java.util.Date;
 
 import org.hibernate.annotations.ColumnTransformer;
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.hibernate.type.NumericBooleanConverter;
 
+import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.commons.hibernate.type.SOSHibernateJsonType;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBItem;
@@ -15,20 +15,13 @@ import com.sos.joc.db.DBLayer;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
 @Entity
 @Table(name = DBLayer.TABLE_SEARCH_WORKFLOWS)
-@SequenceGenerator(name = DBLayer.TABLE_SEARCH_WORKFLOWS_SEQUENCE, sequenceName = DBLayer.TABLE_SEARCH_WORKFLOWS_SEQUENCE, allocationSize = 1)
-// @TypeDefs({ @TypeDef(name = SOSHibernateJsonType.TYPE_NAME, typeClass = SOSHibernateJsonType.class) })
-// TODO 6.4.5.Final ? is @TypeDef still necessary?
-// @Convert(attributeName = "sos_json", converter = SOSHibernateJsonType.class)
 public class DBItemSearchWorkflow extends DBItem {
 
     private static final long serialVersionUID = 1L;
@@ -36,9 +29,8 @@ public class DBItemSearchWorkflow extends DBItem {
     private static final String DEFAULT_JSON_VALUE = "{}";
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_SEARCH_WORKFLOWS_SEQUENCE)
-    @GenericGenerator(name = DBLayer.TABLE_SEARCH_WORKFLOWS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
+    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_SEARCH_WORKFLOWS_SEQUENCE)
     private Long id;
 
     @Column(name = "[INV_CID]", nullable = false) /* INV_CONFIGURATIONS.ID */

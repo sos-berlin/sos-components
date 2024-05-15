@@ -1,0 +1,10 @@
+set MODE MYSQL;
+
+CREATE TABLE IF NOT EXISTS INV_TAGS (
+    "ID"                    INT  UNSIGNED NOT NULL AUTO_INCREMENT,
+    "NAME"                  VARCHAR(255)  NOT NULL,
+    "ORDERING"              INT           NOT NULL DEFAULT 0,
+    "MODIFIED"              DATETIME      NOT NULL,
+    CONSTRAINT UNIQUE_IT_N UNIQUE ("NAME"),
+    PRIMARY KEY ("ID")
+) ENGINE=InnoDB;

@@ -2,33 +2,28 @@ package com.sos.joc.db.authentication;
 
 import java.util.Date;
 
+import org.hibernate.type.NumericBooleanConverter;
+
+import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.joc.db.DBLayer;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.UniqueConstraint;
 
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.type.NumericBooleanConverter;
-
-import com.sos.joc.db.DBLayer;
-
 @Entity
 @Table(name = DBLayer.TABLE_IAM_FIDO2_REGISTRATIONS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[IDENTITY_SERVICE_ID]",
         "[ACCOUNT_NAME]", "[ORIGIN]" }) })
-@SequenceGenerator(name = DBLayer.TABLE_IAM_FIDO2_REGISTRATIONS_SEQUENCE, sequenceName = DBLayer.TABLE_IAM_FIDO2_REGISTRATIONS_SEQUENCE, allocationSize = 1)
 public class DBItemIamFido2Registration {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_IAM_FIDO2_REGISTRATIONS_SEQUENCE)
-    @GenericGenerator(name = DBLayer.TABLE_IAM_FIDO2_REGISTRATIONS_SEQUENCE)
     @Column(name = "[ID]")
+    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_IAM_FIDO2_REGISTRATIONS_SEQUENCE)
     private Long id;
 
     @Column(name = "[IDENTITY_SERVICE_ID]", nullable = false)

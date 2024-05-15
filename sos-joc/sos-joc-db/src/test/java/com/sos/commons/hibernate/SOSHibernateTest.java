@@ -2,7 +2,9 @@ package com.sos.commons.hibernate;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Date;
 import java.util.List;
 
 import org.hibernate.ScrollableResults;
@@ -13,9 +15,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSPath;
+import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
+import com.sos.joc.db.inventory.DBItemInventoryTag;
 
 /** HQL Tests<br/>
  * NativeQueries - see SOSHibernateNativeQueryTest<br/>
@@ -72,7 +76,7 @@ public class SOSHibernateTest {
             query.setMaxResults(10); // only for this test
             List<MyJoinEntity> result = session.getResultList(query);
             for (MyJoinEntity item : result) {
-                LOGGER.info(SOSHibernate.toString(item));
+                LOGGER.info(SOSString.toString(item));
             }
 
         } catch (Exception e) {
@@ -153,6 +157,59 @@ public class SOSHibernateTest {
 
     @Ignore
     @Test
+    public void testInsertUpdateDeleteItem() throws Exception {
+        SOSHibernateFactory factory = null;
+        SOSHibernateSession session = null;
+        try {
+            factory = createFactory();
+            session = factory.openStatelessSession();
+
+            DBItemInventoryTag t = new DBItemInventoryTag();
+            t.setName(new Date().toString());
+            t.setOrdering(Integer.valueOf(1));
+            t.setModified(new Date());
+
+            session.beginTransaction();
+            session.save(t);
+
+            t.setOrdering(Integer.valueOf(2));
+            session.update(t);
+
+            session.delete(t);
+
+            session.commit();
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            if (factory != null) {
+                factory.close(session);
+            }
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testDelete() throws Exception {
+        SOSHibernateFactory factory = null;
+        SOSHibernateSession session = null;
+        try {
+            factory = createFactory();
+            session = factory.openStatelessSession();
+
+            session.beginTransaction();
+            session.executeUpdate("delete from " + DBLayer.DBITEM_HISTORY_ORDER_STEPS + " where jobName='YxxxxYxxxx'");
+            session.commit();
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            if (factory != null) {
+                factory.close(session);
+            }
+        }
+    }
+
+    @Ignore
+    @Test
     public void testNormalizeValueLen() throws IOException {
         String s = SOSPath.readFile(Paths.get("my_file.txt"), StandardCharsets.UTF_8);
         String n = DBItemHistoryOrderStep.normalizeErrorText(s);
@@ -160,11 +217,30 @@ public class SOSHibernateTest {
     }
 
     public static SOSHibernateFactory createFactory() throws Exception {
-        SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/hibernate.cfg.mysql.xml"));
+        // System.setProperty("java.util.logging.config.file", Paths.get("src/test/resources/mssql/logging.properties").toString());
+        Path hibernateFile = Paths.get("src/test/resources/hibernate.cfg.h2.xml");
+        tryDoInsertIfH2(hibernateFile, false);
+
+        SOSHibernateFactory factory = new SOSHibernateFactory(hibernateFile);
+        // factory.addClassMapping(DBItemInventoryTag.class);
         factory.addClassMapping(DBLayer.getJocClassMapping());
-        factory.build();
+        // factory.setAutoCommit(true);
+        factory.build(true);
         LOGGER.info("DBMS=" + factory.getDbms() + ", DIALECT=" + factory.getDialect());
         return factory;
+    }
+
+    /** one-time execution</br>
+     * when SOSHibernateFileProcessor.main is called, the call ends with System.exit() - so, only insert is executed<br />
+     * handle this behavior by setting insert=true|false */
+    private static void tryDoInsertIfH2(Path hibernateFile, boolean insert) throws Exception {
+        if (insert) {
+            String hf = hibernateFile.toAbsolutePath().toString();
+            if (hf.endsWith("h2.xml")) {
+                Path h2InsertFile = Paths.get("src/test/resources/h2/insert.sql");
+                SOSHibernateFileProcessor.main(new String[] { hf, h2InsertFile.toAbsolutePath().toString() });
+            }
+        }
     }
 
 }

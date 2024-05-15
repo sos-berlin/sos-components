@@ -4,36 +4,30 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Date;
 
-import org.hibernate.annotations.GenericGenerator;
+import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.commons.util.SOSString;
+import com.sos.inventory.model.report.Frequency;
+import com.sos.joc.db.DBItem;
+import com.sos.joc.db.DBLayer;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 
-import com.sos.commons.util.SOSString;
-import com.sos.inventory.model.report.Frequency;
-import com.sos.joc.db.DBItem;
-import com.sos.joc.db.DBLayer;
-
 @Entity
 @Table(name = DBLayer.TABLE_REPORTS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONSTRAINT_HASH]" }) })
-@SequenceGenerator(name = DBLayer.TABLE_REPORTS_SEQUENCE, sequenceName = DBLayer.TABLE_REPORTS_SEQUENCE, allocationSize = 1)
 public class DBItemReport extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_REPORTS_SEQUENCE)
-    @GenericGenerator(name = DBLayer.TABLE_REPORTS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
+    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_REPORTS_SEQUENCE)
     private Long id;
 
     // ID from REPORT_RUN_HISTORY
@@ -103,11 +97,11 @@ public class DBItemReport extends DBItem {
     public String getContent() {
         return content;
     }
-    
+
     public void setContent(String val) {
         content = val;
     }
-    
+
     @Transient
     public byte[] getContentBytes() {
         if (content != null) {

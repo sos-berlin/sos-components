@@ -1,22 +1,23 @@
 package com.sos.joc.db.authentication;
 
-import jakarta.persistence.*;
-
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.type.NumericBooleanConverter;
 
+import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.joc.db.DBLayer;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = DBLayer.TABLE_IAM_PERMISSIONS)
-@SequenceGenerator(name = DBLayer.TABLE_IAM_PERMISSIONS_SEQUENCE, sequenceName = DBLayer.TABLE_IAM_PERMISSIONS_SEQUENCE, allocationSize = 1)
-
 public class DBItemIamPermission {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_IAM_PERMISSIONS_SEQUENCE)
-    @GenericGenerator(name = DBLayer.TABLE_IAM_PERMISSIONS_SEQUENCE)
     @Column(name = "[ID]")
+    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_IAM_PERMISSIONS_SEQUENCE)
     private Long id;
 
     @Column(name = "[IDENTITY_SERVICE_ID]", nullable = false)

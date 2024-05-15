@@ -15,6 +15,7 @@ import jakarta.persistence.Parameter;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.JdbcSettings;
+import org.hibernate.cfg.JpaComplianceSettings;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.ValidationSettings;
 import org.hibernate.dialect.Dialect;
@@ -77,6 +78,9 @@ public class SOSHibernate {
     /** ValidationSettings */
     // jakarta.persistence.validation.mode
     public static final String HIBERNATE_PROPERTY_PERSISTENCE_VALIDATION_MODE = ValidationSettings.JAKARTA_VALIDATION_MODE;
+    /** JpaComplianceSettings */
+    public static final String HIBERNATE_PROPERTY_JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE =
+            JpaComplianceSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE;
 
     /** SOS Settings */
     public static final String HIBERNATE_SOS_PROPERTY_SHOW_CONFIGURATION_PROPERTIES = "hibernate.sos.show_configuration_properties";

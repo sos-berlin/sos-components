@@ -2,38 +2,33 @@ package com.sos.joc.db.inventory;
 
 import java.util.Date;
 
+import org.hibernate.annotations.ColumnTransformer;
+import org.hibernate.annotations.Type;
+
+import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.commons.hibernate.type.SOSHibernateJsonType;
+import com.sos.joc.db.DBItem;
+import com.sos.joc.db.DBLayer;
+import com.sos.joc.model.inventory.common.ConfigurationType;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 
-import org.hibernate.annotations.ColumnTransformer;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Type;
-
-import com.sos.commons.hibernate.type.SOSHibernateJsonType;
-import com.sos.joc.db.DBItem;
-import com.sos.joc.db.DBLayer;
-import com.sos.joc.model.inventory.common.ConfigurationType;
-
 @Entity
 @Table(name = DBLayer.TABLE_INV_RELEASED_CONFIGURATIONS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[TYPE]", "[PATH]" }) })
-@SequenceGenerator(name = DBLayer.TABLE_INV_RELEASED_CONFIGURATIONS_SEQUENCE, sequenceName = DBLayer.TABLE_INV_RELEASED_CONFIGURATIONS_SEQUENCE, allocationSize = 1)
 public class DBItemInventoryReleasedConfiguration extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_INV_RELEASED_CONFIGURATIONS_SEQUENCE)
-    @GenericGenerator(name = DBLayer.TABLE_INV_RELEASED_CONFIGURATIONS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
+    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_INV_RELEASED_CONFIGURATIONS_SEQUENCE)
     private Long id;
 
     @Column(name = "[TYPE]", nullable = false)

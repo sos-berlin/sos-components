@@ -3,17 +3,18 @@
 	<session-factory>
 		<property name="hibernate.dialect">org.hibernate.dialect.MySQLDialect</property>
 		<property name="hibernate.connection.driver_class">org.mariadb.jdbc.Driver</property>
-		<property name="hibernate.connection.url">jdbc:mysql://centostest_primary.sos:5306/jobscheduler200</property>
-		<property name="hibernate.connection.password">jobscheduler</property>
-		<property name="hibernate.connection.username">jobscheduler</property>
+		<property name="hibernate.connection.url">jdbc:mysql://localhost:3306/js7_x</property>
+		<property name="hibernate.connection.password">root</property>
+		<property name="hibernate.connection.username">root</property>
 
 
-		<property name="hibernate.show_sql">true</property>
+		<property name="hibernate.show_sql">false</property>
 		<property name="hibernate.connection.autocommit">false</property>
 		<property name="hibernate.format_sql">true</property>
-		<property name="hibernate.temp.use_jdbc_metadata_defaults">false</property>
+		<property name="hibernate.boot.allow_jdbc_metadata_access">false</property>
 
-		<property name="hibernate.connection.provider_class">org.hibernate.hikaricp.internal.HikariCPConnectionProvider</property>
+		<property name="hibernate.connection.provider_class">org.hibernate.hikaricp.internal.HikariCPConnectionProvider
+		</property>
 		<property name="hibernate.hikari.maximumPoolSize">10</property>
 	</session-factory>
 </hibernate-configuration>

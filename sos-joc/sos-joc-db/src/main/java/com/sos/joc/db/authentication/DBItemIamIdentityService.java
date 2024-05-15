@@ -1,32 +1,26 @@
 package com.sos.joc.db.authentication;
 
+import org.hibernate.type.NumericBooleanConverter;
+
+import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.joc.db.DBLayer;
+import com.sos.joc.model.security.identityservice.IdentityServiceAuthenticationScheme;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.type.NumericBooleanConverter;
-
-import com.sos.joc.db.DBLayer;
-import com.sos.joc.model.security.identityservice.IdentityServiceAuthenticationScheme;
-
 @Entity
 @Table(name = DBLayer.TABLE_IAM_IDENTITY_SERVICES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[IDENTITY_SERVICE_NAME]" }) })
-@SequenceGenerator(name = DBLayer.TABLE_IAM_IDENTITY_SERVICES_SEQUENCE, sequenceName = DBLayer.TABLE_IAM_IDENTITY_SERVICES_SEQUENCE, allocationSize = 1)
-
 public class DBItemIamIdentityService {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_IAM_IDENTITY_SERVICES_SEQUENCE)
-    @GenericGenerator(name = DBLayer.TABLE_IAM_IDENTITY_SERVICES_SEQUENCE)
     @Column(name = "[ID]")
+    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_IAM_IDENTITY_SERVICES_SEQUENCE)
     private Long id;
 
     @Column(name = "[IDENTITY_SERVICE_TYPE]", nullable = false)

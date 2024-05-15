@@ -29,8 +29,6 @@ public class DBItemJocVariable extends DBItem {
     @Column(name = "[TEXT_VALUE]", nullable = true)
     private String textValue;
 
-    //TODO 6.4.5.Final 
-    //@Type(type = "org.hibernate.type.BinaryType")
     @JdbcTypeCode(Types.BINARY)
     @Column(name = "[BINARY_VALUE]", nullable = true)
     private byte[] binaryValue;

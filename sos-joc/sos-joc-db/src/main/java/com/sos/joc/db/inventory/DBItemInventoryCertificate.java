@@ -1,32 +1,27 @@
 package com.sos.joc.db.inventory;
 
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.type.NumericBooleanConverter;
 
+import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
 @Entity
 @Table(name = DBLayer.TABLE_INV_CERTS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[KEY_TYPE]", "[CA]" }) })
-@SequenceGenerator(name = DBLayer.TABLE_INV_CERTS_SEQUENCE, sequenceName = DBLayer.TABLE_INV_CERTS_SEQUENCE, allocationSize = 1)
 public class DBItemInventoryCertificate extends DBItem {
 
     private static final long serialVersionUID = 5376578176235147194L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_INV_CERTS_SEQUENCE)
-    @GenericGenerator(name = DBLayer.TABLE_INV_CERTS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
+    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_INV_CERTS_SEQUENCE)
     private Long id;
 
     /* 0=PRIVATE, 1=PUBLIC */

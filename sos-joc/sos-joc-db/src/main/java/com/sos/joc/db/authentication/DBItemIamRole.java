@@ -1,28 +1,21 @@
 package com.sos.joc.db.authentication;
 
+import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.joc.db.DBLayer;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
-import org.hibernate.annotations.GenericGenerator;
-
-import com.sos.joc.db.DBLayer;
-
 @Entity
 @Table(name = DBLayer.TABLE_IAM_ROLES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[IDENTITY_SERVICE_ID]", "[ROLE_NAME]" }) })
-@SequenceGenerator(name = DBLayer.TABLE_IAM_ROLES_SEQUENCE, sequenceName = DBLayer.TABLE_IAM_ROLES_SEQUENCE, allocationSize = 1)
-
 public class DBItemIamRole {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_IAM_ROLES_SEQUENCE)
-    @GenericGenerator(name = DBLayer.TABLE_IAM_ROLES_SEQUENCE)
     @Column(name = "[ID]")
+    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_IAM_ROLES_SEQUENCE)
     private Long id;
 
     @Column(name = "[IDENTITY_SERVICE_ID]", nullable = false)

@@ -33,8 +33,6 @@ public class DBItemDailyPlanProjection extends DBItem {
     @Column(name = "[ID]")
     private Long id;
 
-    //TODO 6.4.5.Final 
-    //@Type(type = "org.hibernate.type.BinaryType")
     @JdbcTypeCode(Types.BINARY)
     @Column(name = "[CONTENT]", nullable = false)
     private byte[] content;

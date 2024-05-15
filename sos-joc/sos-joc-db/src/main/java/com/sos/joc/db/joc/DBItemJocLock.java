@@ -4,26 +4,21 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.annotations.GenericGenerator;
+import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.joc.db.DBItem;
+import com.sos.joc.db.DBLayer;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 
-import com.sos.joc.db.DBItem;
-import com.sos.joc.db.DBLayer;
-
 @Entity
 @Table(name = DBLayer.TABLE_JOC_LOCKS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[RANGE]", "[FOLDER]" }) })
-@SequenceGenerator(name = DBLayer.TABLE_JOC_LOCKS_SEQUENCE, sequenceName = DBLayer.TABLE_JOC_LOCKS_SEQUENCE, allocationSize = 1)
 public class DBItemJocLock extends DBItem {
 
     private static final long serialVersionUID = 1L;
@@ -64,9 +59,8 @@ public class DBItemJocLock extends DBItem {
     }
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_JOC_LOCKS_SEQUENCE)
-    @GenericGenerator(name = DBLayer.TABLE_JOC_LOCKS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
+    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_JOC_LOCKS_SEQUENCE)
     private Long id;
 
     @Column(name = "[RANGE]", nullable = false)

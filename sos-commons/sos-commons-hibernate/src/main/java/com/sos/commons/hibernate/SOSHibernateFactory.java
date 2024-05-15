@@ -227,7 +227,9 @@ public class SOSHibernateFactory implements Serializable {
         return identifier;
     }
 
-    /** Hibernate Dialect does not provide the functions to identify the last inserted sequence value.
+    /** TODO check: dialect.getSequenceSupport().getSequencePreviousValString(sequenceName);
+     * 
+     * Hibernate Dialect does not provide the functions to identify the last inserted sequence value.
      * 
      * only for the next value:
      * 
@@ -249,6 +251,7 @@ public class SOSHibernateFactory implements Serializable {
         case UNKNOWN:
             break;
         }
+
         return null;
     }
 
@@ -525,7 +528,8 @@ public class SOSHibernateFactory implements Serializable {
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_CURRENT_SESSION_CONTEXT_CLASS, "jta");
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_PERSISTENCE_VALIDATION_MODE, "none");
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_ID_STRUCTURE_NAMING_STRATEGY, "legacy");
-        // defaultConfigurationProperties.put("hibernate.jpa.compliance.global_id_generators", "false");
+        defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE, "false");
+        // defaultConfigurationProperties.put("hibernate.jdbc.use_get_generated_keys", "false");
 
         configurationProperties = new Properties();
         configurationResolver = new SOSHibernateConfigurationResolver();

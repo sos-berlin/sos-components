@@ -44,7 +44,7 @@ public class SOSHibernateSessionTest {
     }
 
     protected static SOSHibernateFactory createFactory() throws Exception {
-        SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/hibernate.cfg.xml"));
+        SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/hibernate.cfg.h2.xml"));
         factory.build();
 
         LOGGER.info("DBMS=" + factory.getDbms() + ", DIALECT=" + factory.getDialect());

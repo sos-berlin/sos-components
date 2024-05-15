@@ -11,7 +11,6 @@ import com.sos.joc.db.DBLayer;
 
 @Entity
 @Table(name = DBLayer.TABLE_DEP_NAMEPATHS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONTROLLER_ID]", "[TYPE]", "[PATH]" }) })
-
 public class DBItemDepNamePaths extends DBItem {
 
     private static final long serialVersionUID = 1L;
