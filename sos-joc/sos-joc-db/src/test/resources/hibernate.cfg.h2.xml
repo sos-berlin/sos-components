@@ -9,8 +9,7 @@
         
         <property name="hibernate.show_sql">false</property>
         <property name="hibernate.format_sql">true</property>
-        <property name="hibernate.boot.allow_jdbc_metadata_access">false</property>
-		
+     	
         <!-- Hikari Connection Pool -->
         <property name="hibernate.connection.provider_class">org.hibernate.hikaricp.internal.HikariCPConnectionProvider</property>
         <property name="hibernate.hikari.maximumPoolSize">10</property> 

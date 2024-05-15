@@ -19,12 +19,13 @@
 		</RollingFile>
 	</Appenders>
 	<Loggers>
-		<Root level="debug">
+		<Root level="trace">
 			<AppenderRef ref="console" />
 			<AppenderRef ref="fileLogger" />
 		</Root>
 		<Logger name="org.hibernate" level="warn" />
 		<Logger name="org.hibernate.SQL" level="debug" />
+		<Logger name="org.hibernate.orm.jdbc.bind" level="trace"/>
 		<Logger name="com.mchange.v2" level="fatal" />
 		<logger name="com.zaxxer.hikari" level="OFF" />
 		<Logger name="com.sos" level="debug" />

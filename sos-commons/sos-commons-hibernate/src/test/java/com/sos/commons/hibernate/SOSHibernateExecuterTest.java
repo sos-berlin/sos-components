@@ -1,5 +1,7 @@
 package com.sos.commons.hibernate;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -51,6 +53,30 @@ public class SOSHibernateExecuterTest {
             // execute
             session.beginTransaction();
             session.getSQLExecutor().execute(sql.toString());
+            session.commit();
+
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            if (factory != null) {
+                factory.close(session);
+            }
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testH2Insert() throws Exception {
+        SOSHibernateFactory factory = null;
+        SOSHibernateSession session = null;
+        try {
+            factory = SOSHibernateSessionTest.createFactory();
+
+            session = factory.openStatelessSession();
+            // execute
+            session.beginTransaction();
+            session.getSQLExecutor().execute(Files.readString(Paths.get("src/test/resources/h2/json_functions.sql")));
+
             session.commit();
 
         } catch (Exception e) {
