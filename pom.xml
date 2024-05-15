@@ -65,10 +65,10 @@
 <!--    <sos.ojdbc8.version>21.8.0.0</sos.ojdbc8.version> -->
     <sos.ojdbc8.version>19.19.0.0</sos.ojdbc8.version>
     <com.sun.javax.mail.version>1.6.2</com.sun.javax.mail.version>
-    <jersey.glassfish.version>3.0.11</jersey.glassfish.version>
+    <jersey.glassfish.version>3.1.6</jersey.glassfish.version>
     <io.vavr.version>0.10.4</io.vavr.version>
     <txtmark.version>0.13</txtmark.version>
-    <jakarta.ws.rs-api.version>3.0.0</jakarta.ws.rs-api.version>
+    <jakarta.ws.rs-api.version>3.1.0</jakarta.ws.rs-api.version>
     <bouncycastle.version>1.78.1</bouncycastle.version>
     <dom4j.version>2.1.3</dom4j.version>
     <xml.apis.version>1.4.01</xml.apis.version>
@@ -84,8 +84,10 @@
 <!--    <yaml.version>1.33</yaml.version> -->
     <yaml.version>2.0</yaml.version>
     <jaxb.impl.version>2.4.0-b180830.0438</jaxb.impl.version>
-    <jaxb.core.version>4.0.5</jaxb.core.version>
+    <!-- important: same version like org_galssfish dependency in hibernate -->
+    <jaxb.core.version>4.0.2</jaxb.core.version>
     <jaxb.api.version>2.4.0-b180830.0359</jaxb.api.version>
+    <!-- <xml.bind.version>3.0.1</xml.bind.version> -->
     <jwt.version>4.2.2</jwt.version>
     <json.schema.validator.version>1.0.76</json.schema.validator.version>
     <scala.java8.compat.version>1.0.2</scala.java8.compat.version>
@@ -455,7 +457,7 @@
       <dependency>
         <groupId>jakarta.xml.bind</groupId>
         <artifactId>jakarta.xml.bind-api</artifactId>
-        <version>${jaxb.version}</version>
+        <version>${xml.bind.version}</version>
       </dependency>
       -->
       <dependency>
