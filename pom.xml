@@ -84,10 +84,9 @@
 <!--    <yaml.version>1.33</yaml.version> -->
     <yaml.version>2.0</yaml.version>
     <jaxb.impl.version>2.4.0-b180830.0438</jaxb.impl.version>
-    <!-- important: same version like org_galssfish dependency in hibernate -->
+    <!-- important: same version like org_galssfish dependency in hibernate, see comment at com.sun.xml.bind:jaxb-core dependency -->
     <jaxb.core.version>4.0.2</jaxb.core.version>
     <jaxb.api.version>2.4.0-b180830.0359</jaxb.api.version>
-    <!-- <xml.bind.version>3.0.1</xml.bind.version> -->
     <jwt.version>4.2.2</jwt.version>
     <json.schema.validator.version>1.0.76</json.schema.validator.version>
     <scala.java8.compat.version>1.0.2</scala.java8.compat.version>
@@ -453,35 +452,31 @@
         <artifactId>jaxb-api</artifactId>
         <version>${jaxb.api.version}</version>
       </dependency>
-      <!--
-      <dependency>
-        <groupId>jakarta.xml.bind</groupId>
-        <artifactId>jakarta.xml.bind-api</artifactId>
-        <version>${xml.bind.version}</version>
-      </dependency>
-      -->
       <dependency>
         <groupId>com.sun.xml.bind</groupId>
         <artifactId>jaxb-impl</artifactId>
         <version>${jaxb.impl.version}</version>
       </dependency>
+      <!-- com.sun.xml.bind:jaxb-core:jar:4.0.2 contains
+      * org.glassfish.jaxb:jaxb-core:jar:4.0.2
+      	+- org.glassfish.jaxb:txw2:jar:4.0.2
+      	\- com.sun.istack:istack-commons-runtime:jar:4.1.1
+      which is transitive dependency of 
+      * org.hibernate.orm:hibernate-core:jar:6.5.0.Final
+        +- org.glassfish.jaxb:jaxb-runtime:jar:4.0.2
+        
+      keepass needs com.sun.xml.bind:jaxb-core:jar:4.0.2
+      hibernate needs org.glassfish.jaxb:jaxb-core:jar:4.0.2
+      
+      Consequence for sos-commons-hibernate:
+      exclusion in org.hibernate.orm:hibernate-core:jar:6.5.0.Final
+      add com.sun.xml.bind:jaxb-core:jar:4.0.2 in pom.xml
+      -->
       <dependency>
         <groupId>com.sun.xml.bind</groupId>
         <artifactId>jaxb-core</artifactId>
         <version>${jaxb.core.version}</version>
       </dependency>
-      <!--
-      <dependency>
-        <groupId>org.glassfish.jaxb</groupId>
-        <artifactId>jaxb-bom</artifactId>
-        <version>${jaxb.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.glassfish.jaxb</groupId>
-        <artifactId>jaxb-runtime</artifactId>
-        <version>${jaxb.version}</version>
-      </dependency>
-      -->
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
@@ -660,18 +655,12 @@
         <groupId>org.hibernate.orm</groupId>
         <artifactId>hibernate-core</artifactId>
         <version>${hibernate.version}</version>
-        <!--
         <exclusions>
           <exclusion>
             <groupId>org.glassfish.jaxb</groupId>
-            <artifactId>jaxb-runtime</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>jakarta.xml.bind</groupId>
-            <artifactId>jakarta.xml.bind-api</artifactId>
+            <artifactId>jaxb-core</artifactId>
           </exclusion>
         </exclusions>
-        -->
       </dependency>
       <dependency>
         <groupId>org.hibernate.orm</groupId>
