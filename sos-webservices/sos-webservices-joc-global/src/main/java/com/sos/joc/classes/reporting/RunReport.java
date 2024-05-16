@@ -1,6 +1,5 @@
 package com.sos.joc.classes.reporting;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -33,12 +32,10 @@ import com.sos.joc.classes.JOCSOSShell;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.reporting.DBItemReport;
 import com.sos.joc.db.reporting.DBItemReportRun;
-import com.sos.joc.db.reporting.DBItemReportTemplate;
 import com.sos.joc.db.reporting.ReportingDBLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.reporting.ReportRunsUpdated;
 import com.sos.joc.event.bean.reporting.ReportsUpdated;
-import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.model.reporting.Report;
 import com.sos.joc.model.reporting.ReportRunStateText;
@@ -95,13 +92,13 @@ public class RunReport extends AReporting {
         
         try {
             runDbItem = getRunDBItem(in);
-            byte[] template = insertRunAndReadTemplate(runDbItem, in);
+            insertRunAndReadTemplate(runDbItem, in);
             String commonScript = getCommonScript(in, getCommandLineOptions());
             //TODO SOSTimeout timeout = new SOSTimeout(10, TimeUnit.Hours);
             for (Frequency f : in.getFrequencies()) {
-                Path tempDir = runPerFrequency(f, commonScript, in, template);
+                Path tempDir = runPerFrequency(f, commonScript, in);
                 tempDirs.add(tempDir);
-                dbItems.addAll(Files.list(tempDir).filter(file -> !file.getFileName().toString().startsWith(templateFilePrefix)).map(
+                dbItems.addAll(Files.list(tempDir).filter(file -> file.getFileName().toString().startsWith(reportFilePrefix)).map(
                         file -> getHistoryDBItem(file, f)).collect(Collectors.toList()));
             }
             
@@ -143,17 +140,18 @@ public class RunReport extends AReporting {
         return s.toString();
     }
     
-    private static Path runPerFrequency(Frequency f, String commonScript, final Report in, byte[] template) throws IOException, JocBadRequestException {
+    private static Path runPerFrequency(Frequency f, String commonScript, final Report in) throws IOException, JocBadRequestException {
         Path tempDir = null;
         try {
             tempDir = createTempDirectory();
             // reportingDir is working directory
             Path relativizeReportingDir = reportingDir.relativize(tempDir);
-            Path templateFile = tempDir.resolve(templateFilePrefix + in.getTemplateName().intValue() + ".json");
-            Path relativizeTemplateFile = reportingDir.relativize(templateFile);
-            Files.write(templateFile, template);
+            //Path templateFile = tempDir.resolve(templateFilePrefix + in.getTemplateName().intValue() + ".json");
+            //Path relativizeTemplateFile = reportingDir.relativize(templateFile);
+            //Files.write(templateFile, template);
             StringBuilder s = new StringBuilder(commonScript);
-            s.append(" -t ").append(relativizeTemplateFile.toString().replace('\\', '/'));
+            //s.append(" -t ").append(relativizeTemplateFile.toString().replace('\\', '/'));
+            s.append(" -r ").append(in.getTemplateName().intValue());
             s.append(" -p ").append(f.strValue());
             s.append(" -o ").append(relativizeReportingDir.toString().replace('\\', '/'));
             if (in.getControllerId() != null && !in.getControllerId().isBlank()) {
@@ -239,7 +237,7 @@ public class RunReport extends AReporting {
     }
     
     private static LocalDateTime getLocalDateFrom(final Path report) {
-        String reportBaseFilename = report.getFileName().toString().replaceFirst("\\.json$", "");
+        String reportBaseFilename = report.getFileName().toString().replaceFirst("^" + reportFilePrefix, "").replaceFirst("\\.json$", "");
         String[] fileNameParts = reportBaseFilename.split("[-_]");
         int year = Integer.valueOf(fileNameParts[0]).intValue();
         int month = 1;
@@ -252,7 +250,7 @@ public class RunReport extends AReporting {
             } else {
                 month = Integer.valueOf(fileNameParts[1]).intValue();
             }
-            if (fileNameParts.length > 2) {
+            if (fileNameParts.length > 3) { // _frequencyId is always trailing part
                 dayOfMonth = Integer.valueOf(fileNameParts[2]).intValue();
             }
         }
@@ -279,18 +277,18 @@ public class RunReport extends AReporting {
         return null;
     }
     
-    private static byte[] insertRunAndReadTemplate(final DBItemReportRun runDbItem, final Report in) throws Exception {
+    private static void insertRunAndReadTemplate(final DBItemReportRun runDbItem, final Report in) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection("StoreReportRun");
-            DBItemReportTemplate dbTemplate = session.get(DBItemReportTemplate.class, in.getTemplateName().intValue());
+            //DBItemReportTemplate dbTemplate = session.get(DBItemReportTemplate.class, in.getTemplateName().intValue());
             session.save(runDbItem);
             EventBus.getInstance().post(new ReportRunsUpdated());
-            if (dbTemplate == null) {
-                throw new DBMissingDataException("Couldn't find report template '" + in.getTemplateName().value() + "'(id:" + in.getTemplateName()
-                        .intValue() + ")");
-            }
-            return dbTemplate.getContentBytes();
+//            if (dbTemplate == null) {
+//                throw new DBMissingDataException("Couldn't find report template '" + in.getTemplateName().value() + "'(id:" + in.getTemplateName()
+//                        .intValue() + ")");
+//            }
+//            return dbTemplate.getContentBytes();
         } finally {
             Globals.disconnect(session);
         }

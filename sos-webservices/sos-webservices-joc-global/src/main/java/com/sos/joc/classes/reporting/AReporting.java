@@ -34,6 +34,7 @@ public abstract class AReporting {
     protected static final Path dataDir = reportingDir.resolve("data");
     protected static final Path tmpDir = reportingDir.resolve("tmp");
     protected static final String templateFilePrefix = "template_";
+    protected static final String reportFilePrefix = "report_";
     private static final Logger LOGGER = LoggerFactory.getLogger(AReporting.class);
     
     protected static final Map<ReportingType, Collection<CSVColumns>> CSV_COLUMNS = Collections.unmodifiableMap(
