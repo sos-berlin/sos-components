@@ -36,7 +36,10 @@ import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Id;
 import jakarta.persistence.Parameter;
 
-/** Hibernate constant values:<br/>
+/** Hibernate releases:<br />
+ * - https://hibernate.org/orm/releases/6.5/<br/>
+ * -- see "Releases in this series" -> "Resolved issues"<br/>
+ * Hibernate constant values:<br/>
  * - https://docs.jboss.org/hibernate/orm/6.5/javadocs/org/hibernate/cfg/<br/>
  * - https://docs.jboss.org/hibernate/orm/6.5/javadocs/constant-values.html<br/>
  * Hibernate documentation:<br/>

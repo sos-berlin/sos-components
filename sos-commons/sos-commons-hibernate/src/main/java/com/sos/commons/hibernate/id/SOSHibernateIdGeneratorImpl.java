@@ -50,8 +50,8 @@ public class SOSHibernateIdGeneratorImpl implements BeforeExecutionGenerator, Co
         }
     }
 
-    /** true - AutoIncrement/Identity - MySQL/MSSQL<br />
-     * false - Sequence - Oracle, PgSQL<br/>
+    /** true - AutoIncrement/Identity - H2/MySQL/MSSQL<br />
+     * false - Sequence - Oracle/PgSQL<br/>
      */
     @Override
     public boolean generatedOnExecution() {
