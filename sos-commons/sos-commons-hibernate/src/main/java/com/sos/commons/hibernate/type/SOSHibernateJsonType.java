@@ -24,9 +24,8 @@ public class SOSHibernateJsonType implements UserType<Object> {
 
     public static final String COLUMN_TRANSFORMER_WRITE_DEFAULT = "?";
     public static final String COLUMN_TRANSFORMER_WRITE_H2 = "? FORMAT JSON";
-    private static final String TYPE_NAME = "sos_json";
 
-    private final int sqlType = Types.JAVA_OBJECT ;
+    private final int sqlType = Types.JAVA_OBJECT;
     private Dbms dbms;
 
     @Override
@@ -49,7 +48,7 @@ public class SOSHibernateJsonType implements UserType<Object> {
             st.setObject(index, value);
         }
     }
-    
+
     @Override
     public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws HibernateException,
             SQLException {
@@ -90,6 +89,7 @@ public class SOSHibernateJsonType implements UserType<Object> {
         return sqlType;
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public Class returnedClass() {
         return String.class;

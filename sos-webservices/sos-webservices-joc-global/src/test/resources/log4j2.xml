@@ -21,6 +21,8 @@
 		<Logger name="js7" level="debug"/>
 		<Logger name="com.mchange.v2" level="fatal" />
 		<Logger name="org.hibernate" level="fatal" />
+		<Logger name="org.hibernate.SQL" level="debug" />
+		<Logger name="org.hibernate.orm.jdbc.bind" level="trace"/>
 		<Root level="debug">
 			<AppenderRef ref="console" />
 		</Root>

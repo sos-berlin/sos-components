@@ -25,7 +25,7 @@ public class MonitoringDBLayerTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MonitoringDBLayerTest.class);
 
-    @Ignore
+    // @Ignore
     @Test
     public void test() throws Exception {
 
@@ -49,6 +49,7 @@ public class MonitoringDBLayerTest {
             }
             LOGGER.info("SIZE=" + size);
         } catch (Exception e) {
+            LOGGER.error(e.toString(), e);
             throw e;
         } finally {
             if (sr != null) {
@@ -143,7 +144,7 @@ public class MonitoringDBLayerTest {
     }
 
     private SOSHibernateFactory createFactory() throws Exception {
-        SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/hibernate.cfg.xml"));
+        SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/joc/hibernate.cfg.xml"));
         factory.addClassMapping(DBLayer.getMonitoringClassMapping());
         factory.addClassMapping(DBItemHistoryController.class);
         factory.addClassMapping(DBItemHistoryAgent.class);

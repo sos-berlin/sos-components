@@ -9,16 +9,17 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.Id;
-import jakarta.persistence.Parameter;
-
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.cfg.JpaComplianceSettings;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.ValidationSettings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.query.Query;
@@ -30,6 +31,10 @@ import com.sos.commons.hibernate.exception.SOSHibernateLockAcquisitionException;
 import com.sos.commons.hibernate.exception.SOSHibernateOpenSessionException;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
+
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Id;
+import jakarta.persistence.Parameter;
 
 /** Hibernate constant values:<br/>
  * - https://docs.jboss.org/hibernate/orm/6.5/javadocs/org/hibernate/cfg/<br/>
@@ -46,45 +51,66 @@ import com.sos.commons.util.SOSString;
  */
 public class SOSHibernate {
 
-    /** JdbcSettings */
-    // hibernate.connection.driver_class - The JPA-standard setting {@link #JAKARTA_JDBC_DRIVER} is now preferred - jakarta.persistence.jdbc.driver
-    @SuppressWarnings("deprecation")
-    public static final String HIBERNATE_PROPERTY_CONNECTION_DRIVERCLASS = JdbcSettings.DRIVER;
-    // hibernate.connection.url - The JPA-standard setting {@link #JAKARTA_JDBC_URL} is now preferred - jakarta.persistence.jdbc.url
-    @SuppressWarnings("deprecation")
-    public static final String HIBERNATE_PROPERTY_CONNECTION_URL = JdbcSettings.URL;
-    // hibernate.connection.username - The JPA-standard setting {@link #JAKARTA_JDBC_USER} is now preferred - jakarta.persistence.jdbc.user
-    @SuppressWarnings("deprecation")
-    public static final String HIBERNATE_PROPERTY_CONNECTION_USERNAME = JdbcSettings.USER;
-    // hibernate.connection.password - The JPA-standard setting {@link #JAKARTA_JDBC_PASSWORD} is now preferred - jakarta.persistence.jdbc.password
-    @SuppressWarnings("deprecation")
-    public static final String HIBERNATE_PROPERTY_CONNECTION_PASSWORD = JdbcSettings.PASS;
+    protected static final String DEFAULT_DIALECT_MYSQL = MySQLDialect.class.getName();
+    protected static final String DEFAULT_DIALECT_ORACLE = OracleDialect.class.getName();
+    protected static final String DEFAULT_DIALECT_PGSQL = PostgreSQLDialect.class.getName();
+    protected static final String DEFAULT_DIALECT_MSSQL = SQLServerDialect.class.getName();
+    protected static final String DEFAULT_DIALECT_H2 = H2Dialect.class.getName();
 
-    // hibernate.dialect
+    /** ---- JdbcSettings ---- */
+    /** hibernate.connection.driver_class - deprecated<br/>
+     * The JPA-standard setting {@link #JAKARTA_JDBC_DRIVER} is now preferred - jakarta.persistence.jdbc.driver */
+    @SuppressWarnings("deprecation")
+    protected static final String HIBERNATE_PROPERTY_CONNECTION_DRIVERCLASS_DEPRECATED = JdbcSettings.DRIVER;
+    /** jakarta.persistence.jdbc.driver */
+    public static final String HIBERNATE_PROPERTY_CONNECTION_DRIVERCLASS = JdbcSettings.JAKARTA_JDBC_DRIVER;
+    /** hibernate.connection.url - deprecated<br/>
+     * The JPA-standard setting {@link #JAKARTA_JDBC_URL} is now preferred - jakarta.persistence.jdbc.url */
+    @SuppressWarnings("deprecation")
+    protected static final String HIBERNATE_PROPERTY_CONNECTION_URL_DEPRECATED = JdbcSettings.URL;
+    /** jakarta.persistence.jdbc.url */
+    public static final String HIBERNATE_PROPERTY_CONNECTION_URL = JdbcSettings.JAKARTA_JDBC_URL;
+    /** hibernate.connection.username - deprecated<br />
+     * The JPA-standard setting {@link #JAKARTA_JDBC_USER} is now preferred - jakarta.persistence.jdbc.user */
+    @SuppressWarnings("deprecation")
+    protected static final String HIBERNATE_PROPERTY_CONNECTION_USERNAME_DEPRECATED = JdbcSettings.USER;
+    /** jakarta.persistence.jdbc.user */
+    public static final String HIBERNATE_PROPERTY_CONNECTION_USERNAME = JdbcSettings.JAKARTA_JDBC_USER;
+    /** hibernate.connection.password - deprecated<br/>
+     * The JPA-standard setting {@link #JAKARTA_JDBC_PASSWORD} is now preferred - jakarta.persistence.jdbc.password */
+    @SuppressWarnings("deprecation")
+    protected static final String HIBERNATE_PROPERTY_CONNECTION_PASSWORD_DEPRECATED = JdbcSettings.PASS;
+    /** jakarta.persistence.jdbc.password */
+    public static final String HIBERNATE_PROPERTY_CONNECTION_PASSWORD = JdbcSettings.JAKARTA_JDBC_PASSWORD;
+    /** hibernate.dialect - deprecated<br/>
+     * - HHH90000025: ...Dialect does not need to be specified explicitly using 'hibernate.dialect' */
     public static final String HIBERNATE_PROPERTY_DIALECT = JdbcSettings.DIALECT;
-    // hibernate.connection.autocommit
-    public static final String HIBERNATE_PROPERTY_CONNECTION_AUTO_COMMIT = JdbcSettings.AUTOCOMMIT;
-    // hibernate.connection.isolation
-    public static final String HIBERNATE_PROPERTY_TRANSACTION_ISOLATION = JdbcSettings.ISOLATION;
-    // hibernate.jdbc.use_scrollable_resultset
-    public static final String HIBERNATE_PROPERTY_USE_SCROLLABLE_RESULTSET = JdbcSettings.USE_SCROLLABLE_RESULTSET;
-    // hibernate.boot.allow_jdbc_metadata_access
+    /** hibernate.boot.allow_jdbc_metadata_access - SOS default: false <br/>
+     * true - automatically detects Dialect if hibernate.dialect is not configured<br/>
+     * --- sets org.hibernate.dialect.MariaDBDialect instead of MySQLDialect when using a Mariadb driver is used */
     public static final String HIBERNATE_PROPERTY_ALLOW_METADATA_ON_BOOT = JdbcSettings.ALLOW_METADATA_ON_BOOT;
+    /** hibernate.connection.autocommit - SOS default: false */
+    public static final String HIBERNATE_PROPERTY_CONNECTION_AUTO_COMMIT = JdbcSettings.AUTOCOMMIT;
+    /** hibernate.connection.isolation - SOS default: Connection.TRANSACTION_READ_COMMITTED */
+    public static final String HIBERNATE_PROPERTY_TRANSACTION_ISOLATION = JdbcSettings.ISOLATION;
+    /** hibernate.jdbc.use_scrollable_resultset SOS default: true */
+    public static final String HIBERNATE_PROPERTY_USE_SCROLLABLE_RESULTSET = JdbcSettings.USE_SCROLLABLE_RESULTSET;
 
-    /** AvailableSettings */
-    // hibernate.current_session_context_class
+    /** ---- AvailableSettings ---- */
+    /** hibernate.current_session_context_class - SOS default: jta */
     public static final String HIBERNATE_PROPERTY_CURRENT_SESSION_CONTEXT_CLASS = AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS;
-    /** MappingSettings */
-    // hibernate.id.db_structure_naming_strategy (introduced with 6.x)
+    /** ---- MappingSettings ---- */
+    /** hibernate.id.db_structure_naming_strategy - SOS default: legacy */
     public static final String HIBERNATE_PROPERTY_ID_STRUCTURE_NAMING_STRATEGY = MappingSettings.ID_DB_STRUCTURE_NAMING_STRATEGY;
-    /** ValidationSettings */
-    // jakarta.persistence.validation.mode
+    /** ---- ValidationSettings ---- */
+    /** jakarta.persistence.validation.mode - SOS default: none */
     public static final String HIBERNATE_PROPERTY_PERSISTENCE_VALIDATION_MODE = ValidationSettings.JAKARTA_VALIDATION_MODE;
-    /** JpaComplianceSettings */
+    /** ---- JpaComplianceSettings ---- */
+    /** hibernate.jpa.compliance.global_id_generators - SOS default: false */
     public static final String HIBERNATE_PROPERTY_JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE =
             JpaComplianceSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE;
 
-    /** SOS Settings */
+    /** ---- SOS Settings ---- */
     public static final String HIBERNATE_SOS_PROPERTY_SHOW_CONFIGURATION_PROPERTIES = "hibernate.sos.show_configuration_properties";
     // SOS Settings: credential store
     public static final String HIBERNATE_SOS_PROPERTY_CREDENTIAL_STORE_FILE = "hibernate.sos.credential_store_file";

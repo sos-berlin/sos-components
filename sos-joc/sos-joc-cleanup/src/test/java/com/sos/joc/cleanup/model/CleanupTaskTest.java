@@ -117,7 +117,7 @@ public class CleanupTaskTest {
     }
 
     private JocClusterHibernateFactory createFactory() throws Exception {
-        JocClusterHibernateFactory factory = new JocClusterHibernateFactory(Paths.get("src/test/resources/hibernate.cfg.xml"), 1, 1);
+        JocClusterHibernateFactory factory = new JocClusterHibernateFactory(Paths.get("src/test/resources/hibernate/hibernate.cfg.mysql.xml"), 1, 1);
         factory.addClassMapping(DBLayer.getJocClassMapping());
         factory.setAutoCommit(false);
         factory.build();

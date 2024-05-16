@@ -132,7 +132,7 @@ public class DBLayerMonitoringTest {
     }
 
     private SOSHibernateFactory createFactory() throws Exception {
-        SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/hibernate.cfg.xml"));
+        SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/hibernate/hibernate.cfg.mysql.xml"));
         factory.addClassMapping(DBLayer.getMonitoringClassMapping());
         factory.build();
         return factory;

@@ -412,6 +412,7 @@ public class SOSHibernateFactory implements Serializable {
                 }
 
             }
+            mapConfigurationProperties();
             setDbms(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT));
             databaseMetaData = new SOSHibernateDatabaseMetaData(dbms);
             mapDialect(dbms);
@@ -430,6 +431,25 @@ public class SOSHibernateFactory implements Serializable {
         }
     }
 
+    private void mapConfigurationProperties() {
+        // map deprecated
+        mapDeprecatedConfigurationProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_DRIVERCLASS_DEPRECATED,
+                SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_DRIVERCLASS);
+        mapDeprecatedConfigurationProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL_DEPRECATED, SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL);
+        mapDeprecatedConfigurationProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME_DEPRECATED,
+                SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME);
+        mapDeprecatedConfigurationProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD_DEPRECATED,
+                SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD);
+    }
+
+    private void mapDeprecatedConfigurationProperty(String deprecatedName, String newName) {
+        String val = configuration.getProperties().getProperty(deprecatedName);
+        if (val != null) {
+            configuration.getProperties().setProperty(newName, val);
+            configuration.getProperties().remove(deprecatedName);
+        }
+    }
+
     private void mapDialect(Dbms dbms) {
         // with Hibernate 6: Version-specific and spatial-specific dialects are deprecated
         // simply MySQL8Dialect, SQLServer2012Dialect, SQLServer2016Dialect are still implemented
@@ -440,23 +460,23 @@ public class SOSHibernateFactory implements Serializable {
                 switch (dbms) {
                 case MYSQL:
                     if (!dialect.equals("org.hibernate.dialect.MySQL8Dialect")) {
-                        configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, "org.hibernate.dialect.MySQLDialect");
+                        configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, SOSHibernate.DEFAULT_DIALECT_MYSQL);
                     }
                     break;
                 case ORACLE:
-                    configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, "org.hibernate.dialect.OracleDialect");
+                    configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, SOSHibernate.DEFAULT_DIALECT_ORACLE);
                     break;
                 case PGSQL:
-                    configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, "org.hibernate.dialect.PostgreSQLDialect");
+                    configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, SOSHibernate.DEFAULT_DIALECT_PGSQL);
                     break;
                 case MSSQL:
                     if (!Arrays.asList("org.hibernate.dialect.SQLServer2012Dialect", "org.hibernate.dialect.SQLServer2016Dialect").contains(
                             dialect)) {
-                        configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, "org.hibernate.dialect.SQLServerDialect");
+                        configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, SOSHibernate.DEFAULT_DIALECT_MSSQL);
                     }
                     break;
                 case H2:
-                    configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, "org.hibernate.dialect.H2Dialect");
+                    configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, SOSHibernate.DEFAULT_DIALECT_H2);
                     break;
                 default:
                     break;
@@ -491,7 +511,7 @@ public class SOSHibernateFactory implements Serializable {
                 dbms = Dbms.H2;
             } else if (dialectClassName.contains("sqlserver")) {
                 dbms = Dbms.MSSQL;
-            } else if (dialectClassName.contains("mysql")) {
+            } else if (dialectClassName.contains("mysql") || dialectClassName.contains("mariadb")) {
                 dbms = Dbms.MYSQL;
             } else if (dialectClassName.contains("oracle")) {
                 dbms = Dbms.ORACLE;
@@ -543,6 +563,9 @@ public class SOSHibernateFactory implements Serializable {
         ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build();
         sessionFactory = configuration.buildSessionFactory(serviceRegistry);
         dialect = ((SessionFactoryImplementor) sessionFactory).getJdbcServices().getDialect();
+        if (Dbms.UNKNOWN.equals(dbms)) {
+            setDbms(dialect.getClass().getSimpleName());
+        }
     }
 
     private void showConfigurationProperties() {
