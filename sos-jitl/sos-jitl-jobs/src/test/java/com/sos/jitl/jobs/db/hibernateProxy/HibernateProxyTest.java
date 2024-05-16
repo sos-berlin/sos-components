@@ -42,6 +42,7 @@ public class HibernateProxyTest extends Job<HibernateProxyTestJobArguments> {
             } finally {
                 if (factory != null) {
                     step.getLogger().info(prefix + "closeJobHibernateFactory");
+
                     factory.close(session);
                 }
             }
