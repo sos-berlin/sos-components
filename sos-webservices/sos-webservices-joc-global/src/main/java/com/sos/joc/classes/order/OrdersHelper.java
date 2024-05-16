@@ -1296,6 +1296,7 @@ public class OrdersHelper {
         return Collections.emptyMap();
     }
 
+    @SuppressWarnings("unchecked")
     public static Map<String, Value> variablesToScalaValuedArguments(Map<String, Object> vars) {
         Map<String, Value> arguments = new HashMap<>();
         if (vars != null) {
@@ -1317,10 +1318,11 @@ public class OrdersHelper {
                 } else if (val instanceof BigDecimal) {
                     arguments.put(key, NumberValue.of((BigDecimal) val));
                 } else if (val instanceof List) {
-                    @SuppressWarnings("unchecked")
                     List<Value> valueList = ((List<Map<String, Object>>) val).stream().map(m -> ObjectValue.of(variablesToScalaValuedArguments(m)))
                             .collect(Collectors.toList());
                     arguments.put(key, ListValue.of(valueList));
+                } else if (val instanceof Map) {
+                    arguments.put(key, ObjectValue.of(variablesToScalaValuedArguments((Map<String, Object>) val)));
                 }
             });
         }
@@ -1347,6 +1349,10 @@ public class OrdersHelper {
                         }
                     });
                     variables.setAdditionalProperty(k, l1);
+                } else if (v instanceof js7.data.value.ObjectValue) {
+                    Map<String, Object> m = new HashMap<>();
+                    ((js7.data.value.ObjectValue) v).toJava().forEach((k1, v1) -> m.put(k1, v1.toJava()));
+                    variables.setAdditionalProperty(k, m);
                 } else {
                     variables.setAdditionalProperty(k, v.toJava());
                 }
@@ -1354,6 +1360,25 @@ public class OrdersHelper {
         }
         return variables;
     }
+    
+//    public static CompletableFuture<Either<Exception, Void>> storeTags(Collection<DBItemHistoryOrderTag> orderTags) {
+//        return CompletableFuture.supplyAsync(() -> {
+//            SOSHibernateSession connection = null;
+//            try {
+//                Date now = Date.from(Instant.now());
+//                connection = Globals.createSosHibernateStatelessConnection("storeOrderTags");
+//                for (DBItemHistoryOrderTag item : orderTags) {
+//                    item.setModified(now);
+//                    connection.save(item);
+//                }
+//                return Either.right(null);
+//            } catch (Exception e) {
+//                return Either.left(e);
+//            } finally {
+//                Globals.disconnect(connection);
+//            }
+//        });
+//    }
 
     public static CompletableFuture<Either<Exception, Void>> storeAuditLogDetails(Collection<AuditLogDetail> auditLogDetails, Long auditlogId) {
         return CompletableFuture.supplyAsync(() -> {
