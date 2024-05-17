@@ -19,10 +19,11 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "workflow_name",
-    "start_time",
-    "end_time",
-    "order_state",
+    "jobName",
+    "workflowName",
+    "startTime",
+    "endTime",
+    "orderState",
     "state",
     "duration"
 })
@@ -34,34 +35,42 @@ public class ReportResultDataItem {
      * 
      * 
      */
-    @JsonProperty("workflow_name")
-    private String workflow_name;
+    @JsonProperty("jobName")
+    private String jobName;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflowName")
+    private String workflowName;
     /**
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("start_time")
+    @JsonProperty("startTime")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    private Date start_time;
+    private Date startTime;
     /**
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("end_time")
+    @JsonProperty("endTime")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    private Date end_time;
+    private Date endTime;
     /**
      * non negative long
      * <p>
      * 
      * 
      */
-    @JsonProperty("order_state")
-    private Long order_state;
+    @JsonProperty("orderState")
+    private Long orderState;
     /**
      * non negative long
      * <p>
@@ -85,9 +94,9 @@ public class ReportResultDataItem {
      * 
      * 
      */
-    @JsonProperty("workflow_name")
-    public String getWorkflow_name() {
-        return workflow_name;
+    @JsonProperty("jobName")
+    public String getJobName() {
+        return jobName;
     }
 
     /**
@@ -96,9 +105,31 @@ public class ReportResultDataItem {
      * 
      * 
      */
-    @JsonProperty("workflow_name")
-    public void setWorkflow_name(String workflow_name) {
-        this.workflow_name = workflow_name;
+    @JsonProperty("jobName")
+    public void setJobName(String jobName) {
+        this.jobName = jobName;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflowName")
+    public String getWorkflowName() {
+        return workflowName;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflowName")
+    public void setWorkflowName(String workflowName) {
+        this.workflowName = workflowName;
     }
 
     /**
@@ -107,9 +138,9 @@ public class ReportResultDataItem {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("start_time")
-    public Date getStart_time() {
-        return start_time;
+    @JsonProperty("startTime")
+    public Date getStartTime() {
+        return startTime;
     }
 
     /**
@@ -118,9 +149,9 @@ public class ReportResultDataItem {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("start_time")
-    public void setStart_time(Date start_time) {
-        this.start_time = start_time;
+    @JsonProperty("startTime")
+    public void setStartTime(Date startTime) {
+        this.startTime = startTime;
     }
 
     /**
@@ -129,9 +160,9 @@ public class ReportResultDataItem {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("end_time")
-    public Date getEnd_time() {
-        return end_time;
+    @JsonProperty("endTime")
+    public Date getEndTime() {
+        return endTime;
     }
 
     /**
@@ -140,9 +171,9 @@ public class ReportResultDataItem {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("end_time")
-    public void setEnd_time(Date end_time) {
-        this.end_time = end_time;
+    @JsonProperty("endTime")
+    public void setEndTime(Date endTime) {
+        this.endTime = endTime;
     }
 
     /**
@@ -151,9 +182,9 @@ public class ReportResultDataItem {
      * 
      * 
      */
-    @JsonProperty("order_state")
-    public Long getOrder_state() {
-        return order_state;
+    @JsonProperty("orderState")
+    public Long getOrderState() {
+        return orderState;
     }
 
     /**
@@ -162,9 +193,9 @@ public class ReportResultDataItem {
      * 
      * 
      */
-    @JsonProperty("order_state")
-    public void setOrder_state(Long order_state) {
-        this.order_state = order_state;
+    @JsonProperty("orderState")
+    public void setOrderState(Long orderState) {
+        this.orderState = orderState;
     }
 
     /**
@@ -213,12 +244,12 @@ public class ReportResultDataItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("workflow_name", workflow_name).append("start_time", start_time).append("end_time", end_time).append("order_state", order_state).append("state", state).append("duration", duration).toString();
+        return new ToStringBuilder(this).append("jobName", jobName).append("workflowName", workflowName).append("startTime", startTime).append("endTime", endTime).append("orderState", orderState).append("state", state).append("duration", duration).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(duration).append(start_time).append(workflow_name).append(end_time).append(state).append(order_state).toHashCode();
+        return new HashCodeBuilder().append(jobName).append(duration).append(workflowName).append(startTime).append(endTime).append(state).append(orderState).toHashCode();
     }
 
     @Override
@@ -230,7 +261,7 @@ public class ReportResultDataItem {
             return false;
         }
         ReportResultDataItem rhs = ((ReportResultDataItem) other);
-        return new EqualsBuilder().append(duration, rhs.duration).append(start_time, rhs.start_time).append(workflow_name, rhs.workflow_name).append(end_time, rhs.end_time).append(state, rhs.state).append(order_state, rhs.order_state).isEquals();
+        return new EqualsBuilder().append(jobName, rhs.jobName).append(duration, rhs.duration).append(workflowName, rhs.workflowName).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(state, rhs.state).append(orderState, rhs.orderState).isEquals();
     }
 
 }

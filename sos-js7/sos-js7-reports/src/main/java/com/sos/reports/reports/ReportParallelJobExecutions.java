@@ -25,14 +25,14 @@ import com.sos.reports.classes.ReportArguments;
 import com.sos.reports.classes.ReportHelper;
 import com.sos.reports.classes.ReportRecord;
 
-public class ReportFailedWorkflows implements IReport {
+public class ReportParallelJobExecutions implements IReport {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ReportFailedWorkflows.class);
-    private static final String REPORT_TITLE = "Top ${hits} frequently failed workflows";
+    private static final Logger LOGGER = LoggerFactory.getLogger(ReportParallelJobExecutions.class);
+    private static final String REPORT_TITLE = "Top ${hits} agents with most parallel job execution";
     private ReportArguments reportArguments;
-    
     Map<String, ReportResultData> failedWorkflows = new HashMap<String, ReportResultData>();
- 
+
+    
     public void count(ReportRecord orderRecord) {
         if (orderRecord.getError()) {
             ReportResultData reportResultData = failedWorkflows.get(orderRecord.getWorkflowName());
@@ -121,7 +121,7 @@ public class ReportFailedWorkflows implements IReport {
 
     @Override
     public ReportHelper.ReportTypes getType() {
-        return ReportHelper.ReportTypes.ORDER;
+        return ReportHelper.ReportTypes.JOB;
     }
 
     

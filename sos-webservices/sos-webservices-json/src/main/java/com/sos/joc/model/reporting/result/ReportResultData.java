@@ -2,9 +2,11 @@
 package com.sos.joc.model.reporting.result;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -12,15 +14,19 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
- * report result data item
+ * report result data
  * <p>
  * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "workflow_name",
+    "agentName",
+    "jobName",
+    "workflowName",
     "count",
+    "startTime",
+    "duration",
     "data"
 })
 public class ReportResultData {
@@ -31,8 +37,24 @@ public class ReportResultData {
      * 
      * 
      */
-    @JsonProperty("workflow_name")
-    private String workflow_name;
+    @JsonProperty("agentName")
+    private String agentName;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("jobName")
+    private String jobName;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflowName")
+    private String workflowName;
     /**
      * non negative long
      * <p>
@@ -41,6 +63,23 @@ public class ReportResultData {
      */
     @JsonProperty("count")
     private Long count;
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("startTime")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
+    private Date startTime;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("duration")
+    private Long duration;
     @JsonProperty("data")
     private List<ReportResultDataItem> data = new ArrayList<ReportResultDataItem>();
 
@@ -50,9 +89,9 @@ public class ReportResultData {
      * 
      * 
      */
-    @JsonProperty("workflow_name")
-    public String getWorkflow_name() {
-        return workflow_name;
+    @JsonProperty("agentName")
+    public String getAgentName() {
+        return agentName;
     }
 
     /**
@@ -61,9 +100,53 @@ public class ReportResultData {
      * 
      * 
      */
-    @JsonProperty("workflow_name")
-    public void setWorkflow_name(String workflow_name) {
-        this.workflow_name = workflow_name;
+    @JsonProperty("agentName")
+    public void setAgentName(String agentName) {
+        this.agentName = agentName;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("jobName")
+    public String getJobName() {
+        return jobName;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("jobName")
+    public void setJobName(String jobName) {
+        this.jobName = jobName;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflowName")
+    public String getWorkflowName() {
+        return workflowName;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflowName")
+    public void setWorkflowName(String workflowName) {
+        this.workflowName = workflowName;
     }
 
     /**
@@ -88,6 +171,50 @@ public class ReportResultData {
         this.count = count;
     }
 
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("startTime")
+    public Date getStartTime() {
+        return startTime;
+    }
+
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("startTime")
+    public void setStartTime(Date startTime) {
+        this.startTime = startTime;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("duration")
+    public Long getDuration() {
+        return duration;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("duration")
+    public void setDuration(Long duration) {
+        this.duration = duration;
+    }
+
     @JsonProperty("data")
     public List<ReportResultDataItem> getData() {
         return data;
@@ -100,12 +227,12 @@ public class ReportResultData {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("workflow_name", workflow_name).append("count", count).append("data", data).toString();
+        return new ToStringBuilder(this).append("agentName", agentName).append("jobName", jobName).append("workflowName", workflowName).append("count", count).append("startTime", startTime).append("duration", duration).append("data", data).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(count).append(data).append(workflow_name).toHashCode();
+        return new HashCodeBuilder().append(jobName).append(duration).append(data).append(count).append(agentName).append(workflowName).append(startTime).toHashCode();
     }
 
     @Override
@@ -117,7 +244,7 @@ public class ReportResultData {
             return false;
         }
         ReportResultData rhs = ((ReportResultData) other);
-        return new EqualsBuilder().append(count, rhs.count).append(data, rhs.data).append(workflow_name, rhs.workflow_name).isEquals();
+        return new EqualsBuilder().append(jobName, rhs.jobName).append(duration, rhs.duration).append(data, rhs.data).append(count, rhs.count).append(agentName, rhs.agentName).append(workflowName, rhs.workflowName).append(startTime, rhs.startTime).isEquals();
     }
 
 }

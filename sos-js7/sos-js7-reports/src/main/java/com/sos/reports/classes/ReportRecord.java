@@ -2,7 +2,7 @@ package com.sos.reports.classes;
 
 import java.time.LocalDateTime;
 
-public class OrderRecord {
+public class ReportRecord {
 
     private Integer id;
     private String controllerId;
@@ -14,8 +14,15 @@ public class OrderRecord {
     private LocalDateTime plannedTime;
     private LocalDateTime endTime;
     private Boolean error;
-    private Integer orderState;
     private Integer state;
+    private Integer orderState;
+
+    private Integer position;
+    private String jobName;
+    private Integer criticality;
+    private String agentId;
+    private String agentName;
+
     private LocalDateTime created;
     private LocalDateTime modified;
 
@@ -71,7 +78,7 @@ public class OrderRecord {
         this.startTime = startTime;
     }
 
-    public void setStartTime(String startTime) {  
+    public void setStartTime(String startTime) {
         startTime = startTime.replace(' ', 'T');
         this.startTime = LocalDateTime.parse(startTime);
     }
@@ -138,14 +145,6 @@ public class OrderRecord {
         this.modified = LocalDateTime.parse(modified);
     }
 
-    public Integer getOrderState() {
-        return orderState;
-    }
-
-    public void setOrderState(Integer orderState) {
-        this.orderState = orderState;
-    }
-
     public void setOrderState(String orderState) {
         this.state = ReportHelper.string2Integer(orderState);
     }
@@ -172,6 +171,67 @@ public class OrderRecord {
 
     public void setState(Integer state) {
         this.state = state;
+    }
+
+    public void setOrderState(Integer orderState) {
+        this.orderState = orderState;
+    }
+
+    public Integer getPosition() {
+        return position;
+    }
+
+    public void setPosition(Integer position) {
+        this.position = position;
+    }
+
+    public String getJobName() {
+        return jobName;
+    }
+
+    public void setJobName(String jobName) {
+        this.jobName = jobName;
+    }
+
+    public Integer getCriticality() {
+        return criticality;
+    }
+
+    public void setCriticality(Integer criticality) {
+        this.criticality = criticality;
+    }
+
+    public String getAgentId() {
+        return agentId;
+    }
+
+    public void setAgentId(String agentId) {
+        this.agentId = agentId;
+    }
+
+    public String getAgentName() {
+        return agentName;
+    }
+
+    public void setAgentName(String agentName) {
+        this.agentName = agentName;
+    }
+
+    public String getJobNameWithWorkflowName() {
+        return getWorkflowName() + "__" + jobName;
+
+    }
+
+    public void setCriticality(String criticality) {
+        this.criticality = ReportHelper.string2Integer(criticality);
+    }
+
+    public void setPosition(String position) {
+        this.position = ReportHelper.string2Integer(position);
+    }
+
+    public Integer getOrderState() {
+        return orderState;
     }
 
 }

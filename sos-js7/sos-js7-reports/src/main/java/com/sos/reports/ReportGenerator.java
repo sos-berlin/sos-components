@@ -1,5 +1,6 @@
 package com.sos.reports;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -10,6 +11,8 @@ import java.util.TimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.exception.SOSException;
+import com.sos.commons.exception.SOSRequiredArgumentMissingException;
 import com.sos.reports.classes.ReportArguments;
 
 // 1. top n frequently failed workflows
@@ -56,7 +59,7 @@ public class ReportGenerator {
         System.out.println(s);
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SOSException {
         TimeZone.setDefault(TimeZone.getTimeZone(UTC));
         int exitCode = 0;
         String paramFrequency = null;
@@ -198,12 +201,11 @@ public class ReportGenerator {
                 reportArguments.setReqportFrequency(paramFrequency);
             }
 
-            String msg = reportArguments.checkRequired();
-            if (msg.isEmpty()) {
+            try {
+                reportArguments.checkRequired();
                 exitCode = reportGeneratorExecuter.execute(reportArguments);
-            } else {
-                LOGGER.error(msg);
-                System.err.println(msg);
+            } catch (IOException | SOSRequiredArgumentMissingException e) {
+                                e.printStackTrace(System.err);
                 System.exit(1);
             }
 
