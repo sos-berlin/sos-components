@@ -8,6 +8,7 @@ import org.hibernate.cfg.Configuration;
 
 import com.sos.commons.encryption.common.EncryptedValue;
 import com.sos.commons.encryption.decrypt.Decrypt;
+import com.sos.commons.encryption.exception.SOSEncryptionException;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.commons.sign.keys.key.KeyUtil;
@@ -34,12 +35,19 @@ public class SOSHibernateEncryptionResolver implements ISOSHibernateConfiguratio
             return configuration;
         }
 
-        EncryptedValue url = EncryptedValue.getInstance(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL, 
-                configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL));
-        EncryptedValue username = EncryptedValue.getInstance(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME, 
-                configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME));
-        EncryptedValue password = EncryptedValue.getInstance(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD, 
-                    configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD));
+        EncryptedValue url = null;
+        EncryptedValue username = null;
+        EncryptedValue password = null; 
+        try {
+            url = EncryptedValue.getInstance(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL, 
+                    configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL));
+            username = EncryptedValue.getInstance(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME, 
+                    configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME));
+            password = EncryptedValue.getInstance(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD, 
+                        configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD));
+        } catch (SOSEncryptionException e) {
+            throw new SOSHibernateConfigurationException(e.toString(), e);
+        }
         if (password != null || url != null || username != null) {
             try {
                 PrivateKey privKey = getPrivateKey(configuration);

@@ -1,14 +1,10 @@
 package com.sos.commons.encryption.common;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.encryption.EncryptionUtils;
 import com.sos.commons.encryption.exception.SOSEncryptionException;
 
 public class EncryptedValue {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(EncryptedValue.class);
     private String propertyName;
     private String propertyValue;
 
@@ -32,7 +28,7 @@ public class EncryptedValue {
         this.encryptedValue = value;
     }
     
-    public static EncryptedValue getInstance(String propertyName, String propertyValue) {
+    public static EncryptedValue getInstance(String propertyName, String propertyValue) throws SOSEncryptionException {
         if(propertyValue != null) {
             if(propertyValue.startsWith(EncryptionUtils.ENCRYPTION_IDENTIFIER)) {
                 propertyValue = propertyValue.replace(EncryptionUtils.ENCRYPTION_IDENTIFIER, "");
@@ -40,7 +36,7 @@ public class EncryptedValue {
             if(propertyValue.contains(" ")) {
                 String[] splitted = propertyValue.split(" ");
                 if (splitted.length < 3) {
-                    LOGGER.warn(String.format("[%s][%s] %s of 3 required values found", propertyName, propertyValue, splitted.length));
+                    throw new SOSEncryptionException(String.format("[%s][%s] %s of 3 required values found", propertyName, propertyValue, splitted.length));
                 } else {
                     return new EncryptedValue(propertyName, propertyValue, splitted[0], splitted[1], splitted[2]);
                 }
