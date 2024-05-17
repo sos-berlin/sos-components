@@ -12,15 +12,15 @@ import com.sos.joc.model.reporting.ReportItem;
 public class ReportDbItem extends ReportItem {
     
     @JsonIgnore
-    private byte[] content;
+    private String content;
     
     @JsonIgnore
-    public byte[] getContent() {
+    public String getContent() {
         return content;
     }
     
     @JsonIgnore
-    public void setContent(byte[] content) {
+    public void setContent(String content) {
         this.content = content;
     }
     
