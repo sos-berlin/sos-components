@@ -2,6 +2,7 @@ package com.sos.reports.classes;
 
 import java.time.LocalDate;
 
+import com.sos.commons.exception.SOSRequiredArgumentMissingException;
 import com.sos.inventory.model.report.Frequency;
 import com.sos.reports.frequency.Every2weeks;
 import com.sos.reports.frequency.Every3months;
@@ -95,10 +96,10 @@ public class ReportArguments {
         }
     }
 
-    public String checkRequired() {
+    public void checkRequired() throws SOSRequiredArgumentMissingException {
         String msg = "";
         if (reportId == null) {
-            msg += ("Missing parameter value for <-r --report") + "\n";
+            msg += ("Missing parameter value for <-r --report>") + "\n";
         }
         if (inputDirectory == null) {
             msg += ("Missing parameter value for <-i --inputDirectory>") + "\n";
@@ -112,15 +113,18 @@ public class ReportArguments {
         if (monthFrom == null) {
             msg += ("Missing parameter value for <-s --monthFrom>") + "\n";
         }
-        return msg;
-    }
+        if (!msg.isEmpty()) {
+            throw new SOSRequiredArgumentMissingException(msg);
+        }
+     }
 
     public void setReportId(String reportId) {
         this.reportId = reportId;
     }
 
     public String getOutputFilename() {
-        return outputDirectory + "/report_" + reportFrequency.getFromMonth() + "_" + reportFrequency.getFrequency().intValue() +  ".json";
+        return outputDirectory + "/report_" + reportFrequency.getFromMonth() + "-" + String.format("%02d", reportFrequency.getTo().getDayOfMonth())
+                + "_" + reportFrequency.getFrequency().intValue() + ".json";
     }
 
 }

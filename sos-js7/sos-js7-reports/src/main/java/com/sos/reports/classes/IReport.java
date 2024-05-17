@@ -5,10 +5,12 @@ import com.sos.reports.classes.ReportHelper.ReportTypes;
 
 public interface IReport {
 
-    public void count(OrderRecord orderRecord);
+    public void count(ReportRecord orderRecord);
     public void reset();
     public String getTitle();
     public ReportTypes getType();
-    public ReportResult putHits(ReportArguments reportArguments);
+    public ReportResult putHits();
+    public void setReportArguments(ReportArguments reportArguments);
+
 }
  
