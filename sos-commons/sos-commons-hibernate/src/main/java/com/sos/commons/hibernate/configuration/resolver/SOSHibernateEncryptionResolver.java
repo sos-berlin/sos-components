@@ -5,12 +5,9 @@ import java.nio.file.Paths;
 import java.security.PrivateKey;
 
 import org.hibernate.cfg.Configuration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.sos.commons.encryption.common.EncryptedValue;
 import com.sos.commons.encryption.decrypt.Decrypt;
-import com.sos.commons.encryption.exception.SOSEncryptionException;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.commons.sign.keys.key.KeyUtil;
@@ -19,7 +16,6 @@ import com.sos.commons.util.SOSString;
 public class SOSHibernateEncryptionResolver implements ISOSHibernateConfigurationResolver {
 
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SOSHibernateEncryptionResolver.class);
     private String keystorePath;
     private String keystoreType;
     private String keystorePassword;
@@ -38,27 +34,12 @@ public class SOSHibernateEncryptionResolver implements ISOSHibernateConfiguratio
             return configuration;
         }
 
-        EncryptedValue url = null;
-        EncryptedValue username = null;
-        EncryptedValue password = null;
-        try {
-            url = new EncryptedValue(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL, 
-                    configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL));
-        } catch(SOSEncryptionException e) {
-            LOGGER.debug(e.getMessage());
-        }
-        try {
-            username = new EncryptedValue(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME, 
-                    configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME));
-        } catch(SOSEncryptionException e) {
-            LOGGER.debug(e.getMessage());
-        }
-        try {
-            password = new EncryptedValue(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD, 
+        EncryptedValue url = EncryptedValue.getInstance(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL, 
+                configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL));
+        EncryptedValue username = EncryptedValue.getInstance(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME, 
+                configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME));
+        EncryptedValue password = EncryptedValue.getInstance(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD, 
                     configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD));
-        } catch(SOSEncryptionException e) {
-            LOGGER.debug(e.getMessage());
-        }
         if (password != null || url != null || username != null) {
             try {
                 PrivateKey privKey = getPrivateKey(configuration);
