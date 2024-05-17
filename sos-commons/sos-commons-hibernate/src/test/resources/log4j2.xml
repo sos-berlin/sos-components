@@ -26,8 +26,9 @@
 		<Logger name="org.hibernate" level="warn" />
 		<Logger name="org.hibernate.SQL" level="debug" />
 		<Logger name="org.hibernate.orm.jdbc.bind" level="trace"/>
+		<Logger name="org.hibernate.orm.deprecation" level="warn" />
 		<Logger name="com.mchange.v2" level="fatal" />
-		<logger name="com.zaxxer.hikari" level="OFF" />
+		<logger name="com.zaxxer.hikari" level="debug" />
 		<Logger name="com.sos" level="debug" />
 	</Loggers>
 </Configuration>
