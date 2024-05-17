@@ -32,7 +32,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-    <sos.engine.version>2.7.0</sos.engine.version>
+    <sos.engine.version>2.7.1-SNAPSHOT</sos.engine.version>
     <api.schema.version>${project.version}</api.schema.version>
     <inventory.schema.version>1.7.1-SNAPSHOT</inventory.schema.version>
     <sos.license.version>1.1.2</sos.license.version>
@@ -52,7 +52,7 @@
     <apache.commons.net.version>3.10.0</apache.commons.net.version>
     <apache.httpcomponents.httpclient.version>4.5.14</apache.httpcomponents.httpclient.version>
     <json.version>1.1.4</json.version>
-    <servlet.version>5.0.0</servlet.version>
+    <servlet.version>6.0.0</servlet.version>
     <hibernate.version>6.5.1.Final</hibernate.version>
     <hibernate.commons.annotation.version>6.0.6.Final</hibernate.commons.annotation.version>
     <hibernate.jpa.version>1.0.2.Final</hibernate.jpa.version>
@@ -742,12 +742,6 @@
         <groupId>org.glassfish.jersey.media</groupId>
         <artifactId>jersey-media-moxy</artifactId>
         <version>${jersey.glassfish.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.eclipse.parsson</groupId>
-            <artifactId>parsson</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.glassfish.jersey.media</groupId>
@@ -928,11 +922,6 @@
         <groupId>com.networknt</groupId>
         <artifactId>json-schema-validator</artifactId>
         <version>${json.schema.validator.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.eclipse.parsson</groupId>
-        <artifactId>parsson</artifactId>
-        <version>1.0.5</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
