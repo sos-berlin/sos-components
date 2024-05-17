@@ -12,11 +12,13 @@ import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.KeyStore;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -91,7 +93,6 @@ import org.bouncycastle.openssl.PEMEncryptedKeyPair;
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.bc.BcPEMDecryptorProvider;
-import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.bouncycastle.openssl.jcajce.JceOpenSSLPKCS8DecryptorProviderBuilder;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.InputDecryptorProvider;
@@ -107,6 +108,9 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.certificate.CertificateUtils;
+import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
+import com.sos.commons.sign.keys.keyStore.KeystoreType;
+import com.sos.exception.SOSKeyException;
 import com.sos.joc.model.sign.JocKeyAlgorithm;
 import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.model.sign.JocKeyType;
@@ -1307,4 +1311,79 @@ public abstract class KeyUtil {
     }
     throw new IllegalArgumentException("Can't find signing key in key ring.");
   }
+
+  public static PrivateKey getPrivateKey (String privateKeyPath) throws SOSKeyException {
+      if(privateKeyPath == null) {
+          throw new SOSKeyException("the provided path to the private key file is null!");
+      }
+      return getPrivateKey(Paths.get(privateKeyPath), null);
+  }
+  
+  public static PrivateKey getPrivateKey (String privateKeyPath, String privateKeySecret) throws SOSKeyException {
+      if(privateKeyPath == null) {
+          throw new SOSKeyException("the provided path to the private key file is null!");
+      }
+      return getPrivateKey(Paths.get(privateKeyPath), privateKeySecret);
+  }
+  
+  public static PrivateKey getPrivateKey (Path privateKeyPath) throws SOSKeyException {
+      if(privateKeyPath == null) {
+          throw new SOSKeyException("the provided path to the private key file is null!");
+      }
+      return getPrivateKey(privateKeyPath, null);
+  }
+  
+  public static PrivateKey getPrivateKey (Path privateKeyPath, String privateKeySecret) throws SOSKeyException {
+      if(privateKeyPath == null) {
+          throw new SOSKeyException("the provided path to the private key file is null!");
+      }
+      PrivateKey privKey = null;
+      try {
+          if (privateKeyPath != null) {
+              if (privateKeySecret != null && !privateKeySecret.isEmpty()) {
+                  privKey = getPrivateEncryptedKey(Files.readString(privateKeyPath), privateKeySecret);
+              } else {
+                  privKey = getPrivateKeyFromString(Files.readString(privateKeyPath));
+              }
+          }
+      } catch (Throwable e) {
+          throw new SOSKeyException(e.toString(), e);
+      }
+      return privKey;
+  }
+  
+  public static PrivateKey getPrivateKey(String keystorePath, String keystoreType, String keystorePwd, String keystoreKeyPwd,
+          String keystoreAlias) throws SOSKeyException {
+      PrivateKey privKey = null;
+      try {
+          if (keystorePath != null) {
+              KeystoreType type = null;
+              if (keystoreType == null) {
+                  type = KeystoreType.PKCS12;
+              } else {
+                  type = KeystoreType.valueOf(keystoreType);
+              }
+              KeyStore keystore = KeyStoreUtil.readKeyStore(keystorePath, type, keystorePwd);
+              if (keystoreAlias == null) {
+                  Enumeration<String> aliases = keystore.aliases();
+                  if (aliases.hasMoreElements()) {
+                      String alias = aliases.nextElement();
+                      if (keystore.isKeyEntry(alias)) {
+                          keystoreAlias = alias;
+                          LOGGER.debug(String.format("no key alias configured, use first found alias <%1$s> to retrieve key.", keystoreAlias));
+                      }
+                  }
+              }
+              if (keystoreKeyPwd != null) {
+                  privKey = (PrivateKey) keystore.getKey(keystoreAlias, keystoreKeyPwd.toCharArray());
+              } else {
+                  privKey = (PrivateKey) keystore.getKey(keystoreAlias, "".toCharArray());
+              }
+          }
+      } catch (Throwable e) {
+          throw new SOSKeyException(e.toString(), e);
+      }
+      return privKey;
+  }
+  
 }

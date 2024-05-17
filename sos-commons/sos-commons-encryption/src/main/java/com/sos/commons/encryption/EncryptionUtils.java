@@ -43,6 +43,7 @@ public class EncryptionUtils {
   public static final String ENV_KEY = "JS7_ENCRYPTED_KEY";
   public static final String ENV_VALUE = "JS7_ENCRYPTED_VALUE";
   public static final String ENV_FILE = "JS7_ENCRYPTED_FILE";
+  public static final String ENCRYPTION_IDENTIFIER = "enc://";
 
   public static IvParameterSpec generateIv() {
     byte[] iv = new byte[16];
@@ -196,4 +197,5 @@ public class EncryptionUtils {
     }
     return cipher.doFinal(Base64.getDecoder().decode(encryptedSecretKey));
   }
+
 }
