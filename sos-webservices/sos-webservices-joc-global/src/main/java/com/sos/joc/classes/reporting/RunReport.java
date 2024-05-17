@@ -30,6 +30,8 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JOCSOSShell;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
+import com.sos.joc.cluster.configuration.globals.common.ConfigurationEntry;
 import com.sos.joc.db.reporting.DBItemReport;
 import com.sos.joc.db.reporting.DBItemReportRun;
 import com.sos.joc.db.reporting.ReportingDBLayer;
@@ -46,7 +48,6 @@ public class RunReport extends AReporting {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(RunReport.class);
     private static final String className = "com.sos.reports.ReportGenerator";
-//    private static final String nodeCLOs = "--max-old-space-size=2048";
     
     public static CompletableFuture<Either<Exception, Void>> run(final Report in) {
 
@@ -115,17 +116,17 @@ public class RunReport extends AReporting {
     }
     
     private static String getCommandLineOptions() {
-//        ConfigurationGlobalsJoc jocSettings = Globals.getConfigurationGlobalsJoc();
-//        ConfigurationEntry nodeCommandLineOptions = jocSettings.getNodeCommandLineOptions();
-        return ""; //nodeCommandLineOptions.getValue();
+        ConfigurationGlobalsJoc jocSettings = Globals.getConfigurationGlobalsJoc();
+        ConfigurationEntry reportJavaOptions = jocSettings.getReportJavaOptions();
+        return reportJavaOptions.getValue();
     }
 
     private static String getCommonScript(final Report in, String commandLineOptions) {
         // StringBuilder s = new StringBuilder().append("node ").append(commandLineOptions).append(" app/run-report.js -i data");
-        StringBuilder s = new StringBuilder().append("\"").append(Paths.get(System.getProperty("java.home"), "bin", "java").toString()).append("\"")
+        StringBuilder s = new StringBuilder().append("\"").append(Paths.get(System.getProperty("java.home"), "bin", "java").toString()).append("\" ")
                 .append(commandLineOptions)
                 //.append(" -cp ../lib/ext/joc/*").append(File.pathSeparator).append("../webapps/joc/WEB-INF/lib/* ")
-                .append(" -cp ../webapps/joc/WEB-INF/lib/* ")
+                .append(" -cp \"../webapps/joc/WEB-INF/lib/*\" ")
                 .append(className)
                 .append(" -i data");
         if (in.getMonthFrom() != null) {
@@ -158,7 +159,6 @@ public class RunReport extends AReporting {
                 s.append(" -c ").append(in.getControllerId());
             }
             String script = s.toString();
-            //String script = commonScript + f.strValue() + " -t " + relativizeReportingDir + " -o " + relativizeReportingDir.toString().replace('\\', '/');
             LOGGER.info("[Reporting][run] " + script);
             SOSCommandResult cResult = JOCSOSShell.executeCommand(script, reportingDir);
             
