@@ -6,6 +6,7 @@ import java.security.PrivateKey;
 
 import org.hibernate.cfg.Configuration;
 
+import com.sos.commons.encryption.EncryptionUtils;
 import com.sos.commons.encryption.common.EncryptedValue;
 import com.sos.commons.encryption.decrypt.Decrypt;
 import com.sos.commons.encryption.exception.SOSEncryptionException;
@@ -39,12 +40,18 @@ public class SOSHibernateEncryptionResolver implements ISOSHibernateConfiguratio
         EncryptedValue username = null;
         EncryptedValue password = null; 
         try {
-            url = EncryptedValue.getInstance(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL, 
-                    configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL));
-            username = EncryptedValue.getInstance(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME, 
-                    configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME));
-            password = EncryptedValue.getInstance(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD, 
+            if(hasEncryptedValue(configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL))) {
+                url = EncryptedValue.getInstance(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL, 
+                        configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL));
+            }
+            if(hasEncryptedValue(configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME))) {
+                username = EncryptedValue.getInstance(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME, 
+                        configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME));
+            }
+            if(hasEncryptedValue(configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD))) {
+                password = EncryptedValue.getInstance(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD, 
                         configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD));
+            }
         } catch (SOSEncryptionException e) {
             throw new SOSHibernateConfigurationException(e.toString(), e);
         }
@@ -156,4 +163,7 @@ public class SOSHibernateEncryptionResolver implements ISOSHibernateConfiguratio
         keystoreKeyAlias = val;
     }
 
+    private boolean hasEncryptedValue(String propertyValue) {
+        return propertyValue.startsWith(EncryptionUtils.ENCRYPTION_IDENTIFIER);
+    }
 }
