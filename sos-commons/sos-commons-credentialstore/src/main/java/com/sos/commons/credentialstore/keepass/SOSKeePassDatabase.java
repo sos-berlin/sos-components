@@ -16,6 +16,7 @@ import com.sos.commons.credentialstore.keepass.exceptions.SOSKeePassDatabaseExce
 import com.sos.commons.credentialstore.keepass.exceptions.SOSKeePassEntryExpiredException;
 import com.sos.commons.credentialstore.keepass.exceptions.SOSKeePassEntryNotFoundException;
 import com.sos.commons.credentialstore.keepass.exceptions.SOSKeePassPropertyNotFoundException;
+import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 
 public class SOSKeePassDatabase {
@@ -388,8 +389,7 @@ public class SOSKeePassDatabase {
     }
 
     public static Path getDefaultKeyFile(Path database) {
-        String keyFileName = new StringBuilder(com.google.common.io.Files.getNameWithoutExtension(database.getFileName().toString())).append(".key")
-                .toString();
+        String keyFileName = new StringBuilder(SOSPath.getFileNameWithoutExtension(database.getFileName())).append(".key").toString();
         Path parentDir = database.getParent();
         Path keyFile = parentDir == null ? Paths.get(keyFileName) : parentDir.resolve(keyFileName);
         if (Files.notExists(keyFile)) {// .key
