@@ -38,6 +38,8 @@ import jakarta.persistence.Parameter;
 
 /** Bug - not fixed<br/>
  * - https://hibernate.atlassian.net/browse/HHH-14694<br/>
+ * - https://hibernate.atlassian.net/browse/HHH-17946<br/>
+ * -- https://hibernate.atlassian.net/browse/HHH-17818<br/>
  * Hibernate releases:<br />
  * - https://hibernate.org/orm/releases/6.5/<br/>
  * -- see "Releases in this series" -> "Resolved issues"<br/>
