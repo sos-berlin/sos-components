@@ -59,13 +59,31 @@ public class SOSAliasToBeanResultTransformer<T> implements TupleTransformer<T> {
         String setterName = getSetterName(alias);
         Method m = setter.get(setterName);
         if (m == null) {
-            throw new RuntimeException("[" + resultClass + "][alias=" + alias + ",setter=" + setterName + "]setter not found");
+            throw new RuntimeException("[" + resultClass + "][alias=" + alias + "][setter=" + setterName + "]setter not found");
         }
         try {
             m.invoke(obj, value);
         } catch (Throwable e) {
-            throw new RuntimeException("[" + resultClass + "][alias=" + alias + ",setter=" + setterName + "]failed to invoke setter method", e);
+            throw new RuntimeException("[" + resultClass + "][alias=" + alias + "][setter=" + setterName + " parameterType=" + getSetterParameterType(
+                    m) + "][value=" + value + ",type=" + getValueType(value) + "][failed to invoke setter method]" + e.toString(), e);
         }
+    }
+
+    private String getSetterParameterType(Method m) {
+        String type = "";
+        try {
+            type = m.getParameterTypes()[0].getName();
+        } catch (Throwable e) {
+            type = "<exception:" + e.toString() + ">";
+        }
+        return type;
+    }
+
+    private String getValueType(Object value) {
+        if (value == null) {
+            return "<null>";
+        }
+        return value.getClass().getName();
     }
 
     private static String getSetterName(String alias) {

@@ -65,8 +65,11 @@ public class SOSHibernateTest {
             factory = createFactory();
             session = factory.openStatelessSession();
 
-            StringBuilder hql = new StringBuilder("select ho.orderId as orderId "); // set aliases for all properties
-            hql.append(",hos.id as stepId,hos.jobName as jobName ");
+            StringBuilder hql = new StringBuilder("select ");
+            hql.append("ho.orderId as orderId "); // set aliases for all properties
+            hql.append(",0 as numberValue");
+            hql.append(",hos.id as stepId");
+            hql.append(",hos.jobName as jobName ");
             hql.append("from " + DBLayer.DBITEM_HISTORY_ORDERS).append(" ho ");
             hql.append(",").append(DBLayer.DBITEM_HISTORY_ORDER_STEPS).append(" hos ");
             hql.append("where ho.id=hos.historyOrderId ");
@@ -218,7 +221,7 @@ public class SOSHibernateTest {
 
     public static SOSHibernateFactory createFactory() throws Exception {
         // System.setProperty("java.util.logging.config.file", Paths.get("src/test/resources/mssql/logging.properties").toString());
-        Path hibernateFile = Paths.get("src/test/resources/hibernate.cfg.h2.xml");
+        Path hibernateFile = Paths.get("src/test/resources/hibernate.cfg.mysql.xml");
         tryDoInsertIfH2(hibernateFile, false);
 
         SOSHibernateFactory factory = new SOSHibernateFactory(hibernateFile);

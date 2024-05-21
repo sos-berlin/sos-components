@@ -13,6 +13,10 @@ public class MyJoinEntity extends MyJoinEntityParent {
         stepId = val == null ? null : String.valueOf(val);
     }
 
+    public void setNumberValue(Number val) {
+
+    }
+
     public String getJobName() {
         return jobName;
     }
