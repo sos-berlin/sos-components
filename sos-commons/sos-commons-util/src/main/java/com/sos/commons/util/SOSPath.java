@@ -365,9 +365,16 @@ public class SOSPath {
         return retVal;
     }
 
-    public static String getFileNameWithoutExtension(Path filename) {
-        if (filename != null) {
-            return filename.toString().replaceFirst("\\.[^.]$", "");
+    public static String getFileNameWithoutExtension(Path path) {
+        if (path != null) {
+            return path.getFileName().toString().replaceFirst("\\.[^.]+$", "");
+        }
+        return null;
+    }
+
+    public static String getBasename(Path path) {
+        if (path != null) {
+            return path.getFileName().toString();
         }
         return null;
     }

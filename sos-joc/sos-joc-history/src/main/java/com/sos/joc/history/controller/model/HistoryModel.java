@@ -1941,7 +1941,7 @@ public class HistoryModel {
                 item.setHistoryOrderStepId(historyOrderStepId);
                 item.setCompressed(isTask);
 
-                item.setFileBasename(SOSPath.getFileNameWithoutExtension(file.getFileName()));
+                item.setFileBasename(SOSPath.getBasename(file));
                 item.setFileSizeUncomressed(Files.size(file));
                 item.setFileLinesUncomressed(SOSPath.getLineCount(file));
 
