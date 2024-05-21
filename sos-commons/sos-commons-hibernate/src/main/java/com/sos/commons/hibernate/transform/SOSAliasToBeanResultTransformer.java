@@ -22,7 +22,7 @@ public class SOSAliasToBeanResultTransformer<T> implements TupleTransformer<T> {
     @Override
     public T transformTuple(Object[] tuple, String[] aliases) {
         if (tuple.length != aliases.length) {
-            throw new IllegalArgumentException("Length of aliases array must match length of tuple array");
+            throw new IllegalArgumentException("length of aliases array must match length of tuple array");
         }
 
         if (setter == null) {
@@ -41,7 +41,7 @@ public class SOSAliasToBeanResultTransformer<T> implements TupleTransformer<T> {
             setter = SOSReflection.getAllDeclaredMethodsAsMap(resultClass).entrySet().stream().filter(e -> e.getKey().startsWith("set") && e
                     .getValue().getParameterCount() == 1).collect(Collectors.toMap(Entry::getKey, Entry::getValue));
         } catch (Throwable e) {
-            throw new RuntimeException("[" + resultClass + "]Failed to initialize setter methods", e);
+            throw new RuntimeException("[" + resultClass + "]failed to initialize setter methods", e);
         }
     }
 
@@ -50,26 +50,26 @@ public class SOSAliasToBeanResultTransformer<T> implements TupleTransformer<T> {
         try {
             obj = resultClass.getDeclaredConstructor().newInstance();
         } catch (Throwable e) {
-            throw new RuntimeException("[" + resultClass + "]Failed to instantiate result class", e);
+            throw new RuntimeException("[" + resultClass + "]failed to instantiate result class", e);
         }
         return obj;
     }
 
-    private void invokeSetter(Object obj, String fieldName, Object value) {
-        String setterName = getSetterName(fieldName);
+    private void invokeSetter(Object obj, String alias, Object value) {
+        String setterName = getSetterName(alias);
         Method m = setter.get(setterName);
         if (m == null) {
-            throw new RuntimeException("[" + resultClass + "][" + setterName + "]setter not found");
+            throw new RuntimeException("[" + resultClass + "][alias=" + alias + ",setter=" + setterName + "]setter not found");
         }
         try {
             m.invoke(obj, value);
         } catch (Throwable e) {
-            throw new RuntimeException("[" + resultClass + "][" + setterName + "]Failed to invoke setter method", e);
+            throw new RuntimeException("[" + resultClass + "][alias=" + alias + ",setter=" + setterName + "]failed to invoke setter method", e);
         }
     }
 
-    private static String getSetterName(String fieldName) {
-        return "set" + fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
+    private static String getSetterName(String alias) {
+        return "set" + alias.substring(0, 1).toUpperCase() + alias.substring(1);
     }
 
 }
