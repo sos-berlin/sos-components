@@ -31,4 +31,12 @@ public class SOSPathTest {
         }
     }
 
+    @Ignore
+    @Test
+    public void testFileName() throws IOException {
+        Path source = Paths.get("./src/test/resources/test.txt");
+
+        LOGGER.info("basename=" + SOSPath.getBasename(source));
+        LOGGER.info("withoutExtension=" + SOSPath.getFileNameWithoutExtension(source));
+    }
 }
