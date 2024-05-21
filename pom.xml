@@ -742,6 +742,12 @@
         <groupId>org.glassfish.jersey.media</groupId>
         <artifactId>jersey-media-moxy</artifactId>
         <version>${jersey.glassfish.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.eclipse.angus</groupId>
+            <artifactId>angus-mail</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.glassfish.jersey.media</groupId>
