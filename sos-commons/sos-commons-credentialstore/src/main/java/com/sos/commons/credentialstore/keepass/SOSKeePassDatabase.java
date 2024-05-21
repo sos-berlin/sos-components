@@ -389,7 +389,7 @@ public class SOSKeePassDatabase {
     }
 
     public static Path getDefaultKeyFile(Path database) {
-        String keyFileName = new StringBuilder(SOSPath.getFileNameWithoutExtension(database.getFileName())).append(".key").toString();
+        String keyFileName = new StringBuilder(SOSPath.getFileNameWithoutExtension(database)).append(".key").toString();
         Path parentDir = database.getParent();
         Path keyFile = parentDir == null ? Paths.get(keyFileName) : parentDir.resolve(keyFileName);
         if (Files.notExists(keyFile)) {// .key
