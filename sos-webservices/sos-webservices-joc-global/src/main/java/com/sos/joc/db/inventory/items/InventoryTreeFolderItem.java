@@ -5,11 +5,11 @@ import com.sos.joc.model.inventory.common.ResponseFolderItem;
 
 public class InventoryTreeFolderItem extends ResponseFolderItem {
 
-    public void setCountDeployed(Long val) {
+    public void setCountDeployed(Number val) {
         setHasDeployments(val.intValue() > 0);
     }
     
-    public void setCountReleased(Long val) {
+    public void setCountReleased(Number val) {
         setHasReleases(val.intValue() > 0);
     }
     
