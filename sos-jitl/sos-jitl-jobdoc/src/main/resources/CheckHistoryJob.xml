@@ -48,7 +48,7 @@
                             <li>startedTo, default=0d</li>
                             <li>completedFrom, default=0d</li>
                             <li>completedTo, default=0d</li>
-                            <li>count, default=1</li>
+                            <li>count, default is count=1</li>
                         </ul>
                     </p>
                     <p>
@@ -64,7 +64,11 @@
                         </ul>
                     </p>
                     <p>
-                        The 'count' value specifies the number of expected history items.
+                        The 'count' value specifies the number of history items that is expected to be returned for the given period. By default at least one history item is expected (count&gt;0).
+                        The CheckHistoryJob will fail if the number of expected history entries specified by this argument not correspond to the number of history items returned.
+Values for operator: =, &lt;=, &lt;, &gt;, &gt;=
+Example count &gt; 10 
+==&gt; The CheckHistoryJob will fail if the number of history entries is not greater then 10
                         <ul>
                             <li>Example: isCompleted( completedFrom=-1d, completedTo=-1d, count=2 ) specifies that the workflow or job completed twice yesterday.</li>
                         </ul>
