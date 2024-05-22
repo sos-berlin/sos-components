@@ -108,7 +108,7 @@ public class RunReport extends AReporting {
                     break;
                 }
                 
-                String leadingMonthZero = ld.getMonthValue() < 10 ?  "" : "0";
+                String leadingMonthZero = ld.getMonthValue() < 10 ?  "0" : "";
                 return ld.getYear() + "-" + leadingMonthZero + ld.getMonthValue();
             }
         }
