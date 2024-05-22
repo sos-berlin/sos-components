@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='UTF-8'?> 
+<entity-mappings>
+    <entity class="com.sos.joc.db.history.DBItemHistoryOrder" name="DBItemHistoryOrder" lazy="false"></entity>
+   <entity class="com.sos.joc.db.inventory.DBItemInventoryTag" name="DBItemInventoryTag" lazy="false"></entity>
+ </entity-mappings>
