@@ -2,6 +2,8 @@ package com.sos.joc.db.history;
 
 import java.util.Date;
 
+import org.hibernate.annotations.Proxy;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -11,8 +13,10 @@ import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.common.HistoryConstants;
 
+@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_HISTORY_AGENTS)
+@Proxy(lazy = false)
 public class DBItemHistoryAgent extends DBItem {
 
     private static final long serialVersionUID = 1L;

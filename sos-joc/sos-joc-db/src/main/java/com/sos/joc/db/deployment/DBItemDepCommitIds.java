@@ -1,5 +1,7 @@
 package com.sos.joc.db.deployment;
 
+import org.hibernate.annotations.Proxy;
+
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -9,8 +11,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_DEP_COMMIT_IDS)
+@Proxy(lazy = false)
 public class DBItemDepCommitIds extends DBItem {
 
     private static final long serialVersionUID = 1L;

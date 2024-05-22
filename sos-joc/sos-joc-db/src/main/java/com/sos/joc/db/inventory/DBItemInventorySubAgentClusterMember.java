@@ -2,6 +2,8 @@ package com.sos.joc.db.inventory;
 
 import java.util.Date;
 
+import org.hibernate.annotations.Proxy;
+
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -14,9 +16,11 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.UniqueConstraint;
 
+@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_INV_SUBAGENT_CLUSTER_MEMBERS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[SUBAGENT_CLUSTER_ID]",
         "[SUBAGENT_ID]" }) })
+@Proxy(lazy = false)
 public class DBItemInventorySubAgentClusterMember extends DBItem {
 
     private static final long serialVersionUID = 1L;

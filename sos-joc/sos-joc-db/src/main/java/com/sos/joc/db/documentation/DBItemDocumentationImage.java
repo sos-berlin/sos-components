@@ -3,6 +3,7 @@ package com.sos.joc.db.documentation;
 import java.sql.Types;
 
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.Proxy;
 
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.joc.db.DBItem;
@@ -13,8 +14,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_INV_DOCUMENTATION_IMAGES)
+@Proxy(lazy = false)
 public class DBItemDocumentationImage extends DBItem {
 
     private static final long serialVersionUID = 1L;

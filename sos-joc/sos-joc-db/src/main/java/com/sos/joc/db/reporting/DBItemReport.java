@@ -4,6 +4,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Date;
 
+import org.hibernate.annotations.Proxy;
+
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.report.Frequency;
@@ -19,8 +21,10 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 
+@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_REPORTS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONSTRAINT_HASH]" }) })
+@Proxy(lazy = false)
 public class DBItemReport extends DBItem {
 
     private static final long serialVersionUID = 1L;

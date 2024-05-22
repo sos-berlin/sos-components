@@ -1,5 +1,6 @@
 package com.sos.joc.db.authentication;
 
+import org.hibernate.annotations.Proxy;
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
@@ -14,8 +15,10 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 
+@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_IAM_IDENTITY_SERVICES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[IDENTITY_SERVICE_NAME]" }) })
+@Proxy(lazy = false)
 public class DBItemIamIdentityService {
 
     @Id

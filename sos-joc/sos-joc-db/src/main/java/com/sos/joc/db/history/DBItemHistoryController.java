@@ -2,6 +2,8 @@ package com.sos.joc.db.history;
 
 import java.util.Date;
 
+import org.hibernate.annotations.Proxy;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -10,8 +12,10 @@ import jakarta.persistence.Table;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
+@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_HISTORY_CONTROLLERS)
+@Proxy(lazy = false)
 public class DBItemHistoryController extends DBItem {
 
     private static final long serialVersionUID = 1L;

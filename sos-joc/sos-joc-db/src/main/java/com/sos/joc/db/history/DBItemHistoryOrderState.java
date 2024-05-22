@@ -2,6 +2,8 @@ package com.sos.joc.db.history;
 
 import java.util.Date;
 
+import org.hibernate.annotations.Proxy;
+
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -14,8 +16,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
+@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_HISTORY_ORDER_STATES)
+@Proxy(lazy = false)
 public class DBItemHistoryOrderState extends DBItem {
 
     private static final long serialVersionUID = 1L;

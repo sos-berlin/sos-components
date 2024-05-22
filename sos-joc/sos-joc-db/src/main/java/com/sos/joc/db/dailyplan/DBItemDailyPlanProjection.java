@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.zip.GZIPOutputStream;
 
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.Proxy;
 
 import com.sos.commons.util.SOSStreamUnzip;
 import com.sos.joc.db.DBItem;
@@ -22,6 +23,7 @@ import jakarta.persistence.Transient;
 
 @Entity
 @Table(name = DBLayer.TABLE_DPL_PROJECTIONS)
+@Proxy(lazy = false)
 public class DBItemDailyPlanProjection extends DBItem {
 
     private static final long serialVersionUID = 1L;

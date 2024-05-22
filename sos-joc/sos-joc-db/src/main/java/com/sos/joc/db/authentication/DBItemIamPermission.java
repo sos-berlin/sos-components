@@ -1,5 +1,6 @@
 package com.sos.joc.db.authentication;
 
+import org.hibernate.annotations.Proxy;
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
@@ -11,8 +12,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_IAM_PERMISSIONS)
+@Proxy(lazy = false)
 public class DBItemIamPermission {
 
     @Id

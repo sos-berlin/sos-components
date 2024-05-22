@@ -1,5 +1,6 @@
 package com.sos.joc.db.inventory;
 
+import org.hibernate.annotations.Proxy;
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.joc.db.DBItem;
@@ -12,8 +13,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
+@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.VIEW_INV_SCHEDULE2WORKFLOWS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[SCHEDULE_NAME]", "[WORKFLOW_NAME]" }) })
+@Proxy(lazy = false)
 public class DBItemInventorySchedule2Workflow extends DBItem {
 
     private static final long serialVersionUID = 1L;

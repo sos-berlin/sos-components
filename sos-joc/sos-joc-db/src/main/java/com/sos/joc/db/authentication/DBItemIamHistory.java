@@ -2,6 +2,7 @@ package com.sos.joc.db.authentication;
 
 import java.util.Date;
 
+import org.hibernate.annotations.Proxy;
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
@@ -15,8 +16,10 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
+@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_IAM_HISTORY)
+@Proxy(lazy = false)
 public class DBItemIamHistory {
 
     @Id

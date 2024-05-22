@@ -2,6 +2,7 @@ package com.sos.joc.db.monitoring;
 
 import java.util.Date;
 
+import org.hibernate.annotations.Proxy;
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.commons.util.SOSString;
@@ -17,8 +18,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
+@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_MON_ORDERS)
+@Proxy(lazy = false)
 public class DBItemMonitoringOrder extends DBItem {
 
     private static final long serialVersionUID = 1L;

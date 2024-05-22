@@ -2,6 +2,8 @@ package com.sos.joc.db.deployment;
 
 import java.util.Date;
 
+import org.hibernate.annotations.Proxy;
+
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -13,8 +15,10 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
+@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_DEP_SIGNATURES)
+@Proxy(lazy = false)
 public class DBItemDepSignatures extends DBItem {
 
     private static final long serialVersionUID = 1L;

@@ -2,6 +2,7 @@ package com.sos.joc.db.authentication;
 
 import java.util.Date;
 
+import org.hibernate.annotations.Proxy;
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
@@ -16,9 +17,11 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.UniqueConstraint;
 
+@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_IAM_FIDO2_REGISTRATIONS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[IDENTITY_SERVICE_ID]",
         "[ACCOUNT_NAME]", "[ORIGIN]" }) })
+@Proxy(lazy = false)
 public class DBItemIamFido2Registration {
 
     @Id

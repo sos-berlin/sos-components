@@ -4,6 +4,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.annotations.Proxy;
+
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -17,8 +19,10 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 
+@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_JOC_LOCKS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[RANGE]", "[FOLDER]" }) })
+@Proxy(lazy = false)
 public class DBItemJocLock extends DBItem {
 
     private static final long serialVersionUID = 1L;

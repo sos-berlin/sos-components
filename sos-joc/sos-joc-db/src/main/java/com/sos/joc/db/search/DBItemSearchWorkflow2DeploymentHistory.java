@@ -5,11 +5,15 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import org.hibernate.annotations.Proxy;
+
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
+@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_SEARCH_WORKFLOWS_DEPLOYMENT_HISTORY)
+@Proxy(lazy = false)
 public class DBItemSearchWorkflow2DeploymentHistory extends DBItem {
 
     private static final long serialVersionUID = 1L;

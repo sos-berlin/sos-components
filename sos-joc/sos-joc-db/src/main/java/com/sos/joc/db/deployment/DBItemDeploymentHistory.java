@@ -3,6 +3,8 @@ package com.sos.joc.db.deployment;
 import java.nio.file.Paths;
 import java.util.Date;
 
+import org.hibernate.annotations.Proxy;
+
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.db.DBItem;
@@ -18,9 +20,11 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 
+@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_DEP_HISTORY, uniqueConstraints = { @UniqueConstraint(columnNames = { "[NAME]", "[TYPE]", "[CONTROLLER_ID]",
         "[COMMIT_ID]" }) })
+@Proxy(lazy = false)
 public class DBItemDeploymentHistory extends DBItem {
 
     private static final long serialVersionUID = 1L;

@@ -3,6 +3,8 @@ package com.sos.joc.db.deployment;
 import java.nio.file.Paths;
 import java.util.Date;
 
+import org.hibernate.annotations.Proxy;
+
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -14,8 +16,10 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
+@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_DEP_SUBMISSIONS)
+@Proxy(lazy = false)
 public class DBItemDeploymentSubmission extends DBItem {
 
     private static final long serialVersionUID = 1L;
@@ -42,13 +46,13 @@ public class DBItemDeploymentSubmission extends DBItem {
 
     @Column(name = "[INV_CID]", nullable = false)
     private Long inventoryConfigurationId;
-    
+
     @Column(name = "[INV_IID]", nullable = false)
     private Long controllerInstanceId;
-    
+
     @Column(name = "[CONTROLLER_ID]", nullable = false)
     private String controllerId;
-    
+
     @Column(name = "[CONTENT]", nullable = false)
     private String content;
 
@@ -60,7 +64,7 @@ public class DBItemDeploymentSubmission extends DBItem {
 
     @Column(name = "[VERSION]", nullable = false)
     private String version;
-    
+
     /* ADD, UPDATE, DELETE */
     @Column(name = "[OPERATION]", nullable = false)
     private Integer operation;
@@ -76,6 +80,7 @@ public class DBItemDeploymentSubmission extends DBItem {
     public Long getId() {
         return id;
     }
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -83,6 +88,7 @@ public class DBItemDeploymentSubmission extends DBItem {
     public Long getDepHistoryId() {
         return depHistoryId;
     }
+
     public void setDepHistoryId(Long depHistoryId) {
         this.depHistoryId = depHistoryId;
     }
@@ -90,16 +96,18 @@ public class DBItemDeploymentSubmission extends DBItem {
     public String getAccount() {
         return account;
     }
+
     public void setAccount(String account) {
         this.account = account;
     }
-    
+
     public String getFolder() {
         if (folder == null || folder.isEmpty()) {
             folder = Paths.get(path).getParent().toString().replaceAll("\\\\", "/");
         }
         return folder;
     }
+
     public void setFolder(String folder) {
         this.folder = folder;
     }
@@ -107,13 +115,15 @@ public class DBItemDeploymentSubmission extends DBItem {
     public String getPath() {
         return path;
     }
+
     public void setPath(String path) {
         this.path = path;
     }
-    
+
     public Integer getType() {
         return type;
     }
+
     public void setType(Integer type) {
         this.type = type;
     }
@@ -121,20 +131,23 @@ public class DBItemDeploymentSubmission extends DBItem {
     public Long getInventoryConfigurationId() {
         return inventoryConfigurationId;
     }
+
     public void setInventoryConfigurationId(Long inventoryConfigurationId) {
         this.inventoryConfigurationId = inventoryConfigurationId;
     }
-    
+
     public Long getControllerInstanceId() {
         return controllerInstanceId;
     }
+
     public void setControllerInstanceId(Long controllerInstanceId) {
         this.controllerInstanceId = controllerInstanceId;
     }
-    
+
     public String getControllerId() {
         return controllerId;
     }
+
     public void setControllerId(String controllerId) {
         this.controllerId = controllerId;
     }
@@ -142,34 +155,39 @@ public class DBItemDeploymentSubmission extends DBItem {
     public String getContent() {
         return content;
     }
+
     public void setContent(String content) {
         this.content = content;
     }
-    
+
     public String getSignedContent() {
         return signedContent;
     }
+
     public void setSignedContent(String signedContent) {
         this.signedContent = signedContent;
     }
-    
+
     public String getCommitId() {
         return commitId;
     }
+
     public void setCommitId(String commitId) {
         this.commitId = commitId;
     }
-    
+
     public String getVersion() {
         return version;
     }
+
     public void setVersion(String version) {
         this.version = version;
     }
-    
+
     public Integer getOperation() {
         return operation;
     }
+
     public void setOperation(Integer operation) {
         this.operation = operation;
     }
@@ -177,6 +195,7 @@ public class DBItemDeploymentSubmission extends DBItem {
     public Date getCreated() {
         return created;
     }
+
     public void setCreated(Date created) {
         this.created = created;
     }
@@ -184,6 +203,7 @@ public class DBItemDeploymentSubmission extends DBItem {
     public Date getDeletedDate() {
         return deletedDate;
     }
+
     public void setDeletedDate(Date deletedDate) {
         this.deletedDate = deletedDate;
     }

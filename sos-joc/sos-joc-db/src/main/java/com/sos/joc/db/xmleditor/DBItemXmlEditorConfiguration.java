@@ -2,6 +2,8 @@ package com.sos.joc.db.xmleditor;
 
 import java.util.Date;
 
+import org.hibernate.annotations.Proxy;
+
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -11,8 +13,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_XML_EDITOR_CONFIGURATIONS)
+@Proxy(lazy = false)
 public class DBItemXmlEditorConfiguration extends DBItem {
 
     private static final long serialVersionUID = 1L;

@@ -3,6 +3,11 @@ package com.sos.joc.db.reporting;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
+import org.hibernate.annotations.Proxy;
+
+import com.sos.joc.db.DBItem;
+import com.sos.joc.db.DBLayer;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -10,13 +15,11 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
-import jakarta.persistence.UniqueConstraint;
 
-import com.sos.joc.db.DBItem;
-import com.sos.joc.db.DBLayer;
-
+@SuppressWarnings("deprecation")
 @Entity
-@Table(name = DBLayer.TABLE_REPORT_TEMPLATES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[TEMPLATE_ID]" }) })
+@Table(name = DBLayer.TABLE_REPORT_TEMPLATES)
+@Proxy(lazy = false)
 public class DBItemReportTemplate extends DBItem {
 
     private static final long serialVersionUID = 1L;

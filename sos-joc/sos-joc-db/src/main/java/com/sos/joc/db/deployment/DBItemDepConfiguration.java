@@ -2,6 +2,8 @@ package com.sos.joc.db.deployment;
 
 import java.util.Date;
 
+import org.hibernate.annotations.Proxy;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -13,8 +15,10 @@ import jakarta.persistence.UniqueConstraint;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
+@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_DEP_CONFIGURATIONS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONTROLLER_ID]", "[TYPE]", "[PATH]" }) })
+@Proxy(lazy = false)
 public class DBItemDepConfiguration extends DBItem {
 
     private static final long serialVersionUID = 1L;

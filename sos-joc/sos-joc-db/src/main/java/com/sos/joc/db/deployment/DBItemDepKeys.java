@@ -1,5 +1,7 @@
 package com.sos.joc.db.deployment;
 
+import org.hibernate.annotations.Proxy;
+
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -10,8 +12,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
+@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_DEP_KEYS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[ACCOUNT]", "[KEY_TYPE]", "[SECLVL]" }) })
+@Proxy(lazy = false)
 public class DBItemDepKeys extends DBItem {
 
     private static final long serialVersionUID = 5376577176035147194L;

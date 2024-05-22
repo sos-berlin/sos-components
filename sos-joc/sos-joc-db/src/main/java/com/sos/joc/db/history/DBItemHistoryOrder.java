@@ -2,6 +2,7 @@ package com.sos.joc.db.history;
 
 import java.util.Date;
 
+import org.hibernate.annotations.Proxy;
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
@@ -20,8 +21,10 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 
+@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_HISTORY_ORDERS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONSTRAINT_HASH]" }) })
+@Proxy(lazy = false)
 public class DBItemHistoryOrder extends DBItem {
 
     private static final long serialVersionUID = 1L;

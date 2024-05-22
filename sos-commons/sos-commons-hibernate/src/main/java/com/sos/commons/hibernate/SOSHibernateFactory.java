@@ -15,11 +15,9 @@ import java.util.Properties;
 import java.util.stream.Collectors;
 
 import org.hibernate.SessionFactory;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.service.ServiceRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -113,7 +111,7 @@ public class SOSHibernateFactory implements Serializable {
             showConfigurationProperties();
             configurationResolver = null;
             adjustAnnotations(dbms);
-            initSessionFactory();
+            buildSessionFactory();
             if (LOGGER.isDebugEnabled()) {
                 String method = SOSHibernate.getMethodName(logIdentifier, "build");
                 int isolationLevel = getTransactionIsolation();
@@ -473,12 +471,11 @@ public class SOSHibernateFactory implements Serializable {
         configuration = configurationResolver.resolve(configuration);
     }
 
-    private void initSessionFactory() {
+    private void buildSessionFactory() {
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(SOSHibernate.getMethodName(logIdentifier, "initSessionFactory"));
+            LOGGER.debug(SOSHibernate.getMethodName(logIdentifier, "buildSessionFactory"));
         }
-        ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build();
-        sessionFactory = configuration.buildSessionFactory(serviceRegistry);
+        sessionFactory = configuration.buildSessionFactory();
         dialect = ((SessionFactoryImplementor) sessionFactory).getJdbcServices().getDialect();
         if (Dbms.UNKNOWN.equals(dbms)) {
             setDbms(dialect.getClass().getSimpleName());

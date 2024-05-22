@@ -6,11 +6,15 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
+import org.hibernate.annotations.Proxy;
+
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
+@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_DEP_NAMEPATHS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONTROLLER_ID]", "[TYPE]", "[PATH]" }) })
+@Proxy(lazy = false)
 public class DBItemDepNamePaths extends DBItem {
 
     private static final long serialVersionUID = 1L;

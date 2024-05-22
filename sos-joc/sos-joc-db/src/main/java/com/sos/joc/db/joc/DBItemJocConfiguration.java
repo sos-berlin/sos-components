@@ -2,6 +2,7 @@ package com.sos.joc.db.joc;
 
 import java.util.Date;
 
+import org.hibernate.annotations.Proxy;
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
@@ -17,9 +18,11 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.UniqueConstraint;
 
+@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_JOC_CONFIGURATIONS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONTROLLER_ID]", "[ACCOUNT]",
         "[OBJECT_TYPE]", "[CONFIGURATION_TYPE]", "[NAME]" }) })
+@Proxy(lazy = false)
 public class DBItemJocConfiguration extends DBItem {
 
     private static final long serialVersionUID = 1L;

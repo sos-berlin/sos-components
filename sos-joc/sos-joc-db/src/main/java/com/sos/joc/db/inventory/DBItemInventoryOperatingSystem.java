@@ -2,6 +2,8 @@ package com.sos.joc.db.inventory;
 
 import java.util.Date;
 
+import org.hibernate.annotations.Proxy;
+
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -15,8 +17,10 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 
+@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_INV_OPERATING_SYSTEMS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[HOSTNAME]" }) })
+@Proxy(lazy = false)
 public class DBItemInventoryOperatingSystem extends DBItem {
 
     private static final long serialVersionUID = 1L;

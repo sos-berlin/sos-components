@@ -1,5 +1,6 @@
 package com.sos.joc.db.inventory;
 
+import org.hibernate.annotations.Proxy;
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
@@ -13,8 +14,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
+@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_INV_CERTS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[KEY_TYPE]", "[CA]" }) })
+@Proxy(lazy = false)
 public class DBItemInventoryCertificate extends DBItem {
 
     private static final long serialVersionUID = 5376578176235147194L;

@@ -2,6 +2,8 @@ package com.sos.joc.db.joc;
 
 import java.util.Date;
 
+import org.hibernate.annotations.Proxy;
+
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -15,8 +17,10 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 
+@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_JOC_AUDIT_LOG_DETAILS)
+@Proxy(lazy = false)
 public class DBItemJocAuditLogDetails extends DBItem {
 
     private static final long serialVersionUID = 1L;
