@@ -56,10 +56,10 @@ public class ReportGeneratorExecuter {
         report.setReportArguments(reportArguments);
 
         switch (report.getType()) {
-        case JOB:
+        case JOBS:
             csvFileReader.readJobs(report, reportArguments);
             break;
-        case ORDER:
+        case ORDERS:
             csvFileReader.readOrders(report, reportArguments);
             break;
         default: throw new SOSException("Unknown report type: " + report.getType());

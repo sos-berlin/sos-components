@@ -20,12 +20,13 @@ public class ReportGeneratorTestMain {
     @Test
     public void test() throws Exception {
 
-        String report = "8";
-        String hits = "3";
-        String inputDirectory = "c:/temp/1/jobs";
+        String report = "1";
+        String hits = "10";
+        String inputDirectory = "C:/Program Files/sos-berlin.com/js7/joc/jetty_base/reporting/data";
         String outputDirectory = "c:/temp";
         String frequency = "weekly";
         String monthFrom = "2023-01";
+        String controller = "controller";
 
         List<String> args = new ArrayList<>();
         args.add("-r");args.add(report);
@@ -34,6 +35,7 @@ public class ReportGeneratorTestMain {
         args.add("-p");args.add(frequency);
         args.add("-o");args.add(outputDirectory);
         args.add("-s");args.add(monthFrom);
+        args.add("-c");args.add(controller);
 
         ReportGenerator.main(args.stream().toArray(String[]::new));
     }

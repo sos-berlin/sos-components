@@ -32,7 +32,6 @@ public class ReportParallelJobExecutions implements IReport {
     private ReportArguments reportArguments;
     Map<String, ReportResultData> failedWorkflows = new HashMap<String, ReportResultData>();
 
-    
     public void count(ReportRecord orderRecord) {
         if (orderRecord.getError()) {
             ReportResultData reportResultData = failedWorkflows.get(orderRecord.getWorkflowName());
@@ -70,10 +69,10 @@ public class ReportParallelJobExecutions implements IReport {
     }
 
     public ReportResult putHits() {
-        Comparator<ReportResultData> byCount = (ReportResultData obj1, ReportResultData obj2) -> obj1.getCount().compareTo(obj2.getCount());
-        LinkedHashMap<String, ReportResultData> failedWorkflowsResult = failedWorkflows.entrySet().stream().sorted(Map.Entry
-                .<String, ReportResultData> comparingByValue(byCount)).limit(reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey,
-                        Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+        Comparator<ReportResultData> byCount = (obj1, obj2) -> obj1.getCount().compareTo(obj2.getCount());
+        LinkedHashMap<String, ReportResultData> failedWorkflowsResult = failedWorkflows.entrySet().stream().sorted(Map.Entry.comparingByValue(
+                byCount)).limit(reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1,
+                        LinkedHashMap::new));
 
         ReportResult reportResult = new ReportResult();
 
@@ -121,10 +120,9 @@ public class ReportParallelJobExecutions implements IReport {
 
     @Override
     public ReportHelper.ReportTypes getType() {
-        return ReportHelper.ReportTypes.JOB;
+        return ReportHelper.ReportTypes.JOBS;
     }
 
-    
     public void setReportArguments(ReportArguments reportArguments) {
         this.reportArguments = reportArguments;
     }

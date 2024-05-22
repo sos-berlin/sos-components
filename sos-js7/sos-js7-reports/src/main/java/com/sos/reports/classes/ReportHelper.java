@@ -21,7 +21,7 @@ public class ReportHelper {
             .configure(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true).configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
             .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false).configure(SerializationFeature.INDENT_OUTPUT, true);    
     public enum ReportTypes {
-        JOB, ORDER
+        JOBS, ORDERS
     }
 
  

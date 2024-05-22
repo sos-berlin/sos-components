@@ -33,10 +33,10 @@ public class ReportLongestOrderExecution implements IReport {
     Map<String, ReportResultData> longestExecutionWorkflows = new HashMap<String, ReportResultData>();
 
     private void removeSmallesItem() {
-        Comparator<ReportResultData> byDuration = (ReportResultData obj1, ReportResultData obj2) -> obj2.getDuration().compareTo(obj1.getDuration());
+        Comparator<ReportResultData> byDuration = (obj1, obj2) -> obj2.getDuration().compareTo(obj1.getDuration());
         LinkedHashMap<String, ReportResultData> longesExecutionWorkflowsResult = longestExecutionWorkflows.entrySet().stream().sorted(Map.Entry
-                .<String, ReportResultData> comparingByValue(byDuration)).limit(reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey,
-                        Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+                .comparingByValue(byDuration)).limit(reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1,
+                        e2) -> e1, LinkedHashMap::new));
         longestExecutionWorkflows.clear();
         longestExecutionWorkflows = longesExecutionWorkflowsResult.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
                 Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
@@ -68,10 +68,10 @@ public class ReportLongestOrderExecution implements IReport {
     }
 
     public ReportResult putHits() {
-        Comparator<ReportResultData> byDuration = (ReportResultData obj1, ReportResultData obj2) -> obj2.getDuration().compareTo(obj1.getDuration());
+        Comparator<ReportResultData> byDuration = (obj1, obj2) -> obj2.getDuration().compareTo(obj1.getDuration());
         LinkedHashMap<String, ReportResultData> longesExecutionWorkflowsResult = longestExecutionWorkflows.entrySet().stream().sorted(Map.Entry
-                .<String, ReportResultData> comparingByValue(byDuration)).limit(reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey,
-                        Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+                .comparingByValue(byDuration)).limit(reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1,
+                        e2) -> e1, LinkedHashMap::new));
 
         ReportResult reportResult = new ReportResult();
 
@@ -82,7 +82,7 @@ public class ReportLongestOrderExecution implements IReport {
         for (Entry<String, ReportResultData> entry : longesExecutionWorkflowsResult.entrySet()) {
             entry.getValue().setData(null);
             reportResult.getData().add(entry.getValue());
-            
+
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("-----New Entry -----------------------");
                 LOGGER.debug("workflowName:" + entry.getValue().getWorkflowName());
@@ -114,7 +114,7 @@ public class ReportLongestOrderExecution implements IReport {
 
     @Override
     public ReportHelper.ReportTypes getType() {
-        return ReportHelper.ReportTypes.ORDER;
+        return ReportHelper.ReportTypes.ORDERS;
     }
 
     public void setReportArguments(ReportArguments reportArguments) {

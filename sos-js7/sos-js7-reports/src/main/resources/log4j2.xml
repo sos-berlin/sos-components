@@ -23,6 +23,6 @@
 			<AppenderRef ref="console" />
 			<!-- AppenderRef ref="fileLogger" / -->
 		</Root>
-		<Logger name="com.sos.js7" level="info" />
+		<Logger name="com.sos.js7" level="debug" />
 	</Loggers>
 </Configuration>
