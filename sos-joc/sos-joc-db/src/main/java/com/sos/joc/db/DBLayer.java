@@ -31,6 +31,8 @@ import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.deployment.DBItemDeploymentSubmission;
 import com.sos.joc.db.documentation.DBItemDocumentation;
 import com.sos.joc.db.documentation.DBItemDocumentationImage;
+import com.sos.joc.db.encipherment.DBItemEncAgentCertificate;
+import com.sos.joc.db.encipherment.DBItemEncCertificate;
 import com.sos.joc.db.history.DBItemHistoryAgent;
 import com.sos.joc.db.history.DBItemHistoryController;
 import com.sos.joc.db.history.DBItemHistoryLog;
@@ -365,7 +367,13 @@ public class DBLayer implements Serializable {
     
     public static final String DBITEM_REPORT_TEMPLATE = DBItemReportTemplate.class.getSimpleName();
     public static final String TABLE_REPORT_TEMPLATES = "REPORT_TEMPLATES";
-
+    
+    public static final String DBITEM_ENC_CERTIFICATE = DBItemEncCertificate.class.getSimpleName();
+    public static final String TABLE_ENC_CERTIFICATE = "ENC_CERTIFICATES";
+    
+    public static final String DBITEM_ENC_AGENT_CERTIFICATES = DBItemEncAgentCertificate.class.getSimpleName();
+    public static final String TABLE_ENC_AGENT_CERTIFICATES = "ENC_AGENT_CERTIFICATES";
+    
     // public static final String DEFAULT_FOLDER = "/";
     // public static final Long DEFAULT_ID = 0L;
     public static final String DEFAULT_KEY = ".";
@@ -543,6 +551,9 @@ public class DBLayer implements Serializable {
         cl.add(DBItemReport.class);
         cl.add(DBItemReportRun.class);
         cl.add(DBItemReportTemplate.class);
+        
+        cl.add(DBItemEncCertificate.class);
+        cl.add(DBItemEncAgentCertificate.class);
 
         cl.merge(getHistoryClassMapping().getClasses());
         cl.merge(getDailyPlanClassMapping().getClasses());
