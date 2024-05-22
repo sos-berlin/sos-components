@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSDate;
 import com.sos.inventory.model.report.Frequency;
+import com.sos.inventory.model.report.TemplateId;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -82,7 +83,7 @@ public class RunHistoryImpl extends JOCResourceImpl implements IRunHistoryResour
                     item.setFrequencies(Arrays.asList(dbItem.getFrequencies().split(",")).stream().map(Integer::valueOf).sorted().map(
                             Frequency::fromValue).filter(Objects::nonNull).collect(Collectors.toSet()));
                     item.setHits(dbItem.getHits());
-                    item.setTemplateName(dbItem.getTemplateId());
+                    item.setTemplateName(TemplateId.fromValue(dbItem.getTemplateId()));
                     item.setModified(dbItem.getModified());
                     item.setErrorText(dbItem.getErrorText());
                     item.setState(getState(dbItem.getStateAsEnum()));

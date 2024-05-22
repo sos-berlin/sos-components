@@ -45,7 +45,7 @@ public class Report implements IInventoryObject, IConfigurationObject, IReleaseO
      */
     @JsonProperty("version")
     @JsonPropertyDescription("inventory repository version")
-    private String version = "1.6.1";
+    private String version = "1.7.1";
     /**
      * string without < and >
      * <p>

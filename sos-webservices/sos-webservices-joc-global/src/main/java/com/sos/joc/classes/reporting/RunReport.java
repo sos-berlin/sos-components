@@ -64,23 +64,52 @@ public class RunReport extends AReporting {
     }
     
     private static String relativeDateToSpecificDate(String month) {
+        // TODO for unit y -> always 01-yyyy
+        // for unit q -> always 01-yyyy, 04-yyyy, 07-yyyy or 10-yyyy
         if (month == null) {
             return null;
         }
-        if (month.matches("\\d+\\s*[mMyY]")) { //month is relative
-            Matcher m = Pattern.compile("(\\d+)\\s*([mMyY])").matcher(month);
+        if (month.matches("[+-]*\\d+\\s*[mMQqyY]")) { //month is relative
+            Matcher m = Pattern.compile("[+-]*(\\d+)\\s*([mMQqyY])").matcher(month);
             if (m.find()) {
                 LocalDate ld = null;
                 switch(m.group(1).toLowerCase()) { //unit
                 case "m":
-                    ld = LocalDate.now().minusMonths(Long.valueOf(m.group(0)).longValue());
+                    ld = LocalDate.now().withDayOfMonth(1).minusMonths(Long.valueOf(m.group(0)).longValue());
+                    break;
+                case "q":
+                    ld = LocalDate.now().withDayOfMonth(1);
+                    switch(ld.getMonth()) {
+                    case JANUARY:
+                    case FEBRUARY:
+                    case MARCH:
+                        ld = ld.withMonth(1);
+                        break;
+                    case APRIL:
+                    case MAY:
+                    case JUNE:
+                        ld = ld.withMonth(4);
+                        break;
+                    case JULY:
+                    case AUGUST:
+                    case SEPTEMBER:
+                        ld = ld.withMonth(7);
+                        break;
+                    case OCTOBER:
+                    case NOVEMBER:
+                    case DECEMBER:
+                        ld = ld.withMonth(10);
+                        break;
+                    }
+                    ld = ld.minusMonths(Long.valueOf(m.group(0)).longValue() * 3);
                     break;
                 case "y":
-                    ld = LocalDate.now().minusYears(Long.valueOf(m.group(0)).longValue());
+                    ld = LocalDate.now().withDayOfMonth(1).withMonth(1).minusYears(Long.valueOf(m.group(0)).longValue());
                     break;
                 }
                 
-                return ld.getYear() + "-" + (ld.getMonthValue() < 10 ?  "" + ld.getMonthValue() : "0" + ld.getMonthValue());
+                String leadingMonthZero = ld.getMonthValue() < 10 ?  "" : "0";
+                return ld.getYear() + "-" + leadingMonthZero + ld.getMonthValue();
             }
         }
         return month;
