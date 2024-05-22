@@ -73,9 +73,9 @@ public class RunReport extends AReporting {
             Matcher m = Pattern.compile("[+-]*(\\d+)\\s*([mMQqyY])").matcher(month);
             if (m.find()) {
                 LocalDate ld = null;
-                switch(m.group(1).toLowerCase()) { //unit
+                switch(m.group(2).toLowerCase()) { //unit
                 case "m":
-                    ld = LocalDate.now().withDayOfMonth(1).minusMonths(Long.valueOf(m.group(0)).longValue());
+                    ld = LocalDate.now().withDayOfMonth(1).minusMonths(Long.valueOf(m.group(1)).longValue());
                     break;
                 case "q":
                     ld = LocalDate.now().withDayOfMonth(1);
@@ -101,10 +101,10 @@ public class RunReport extends AReporting {
                         ld = ld.withMonth(10);
                         break;
                     }
-                    ld = ld.minusMonths(Long.valueOf(m.group(0)).longValue() * 3);
+                    ld = ld.minusMonths(Long.valueOf(m.group(1)).longValue() * 3);
                     break;
                 case "y":
-                    ld = LocalDate.now().withDayOfMonth(1).withMonth(1).minusYears(Long.valueOf(m.group(0)).longValue());
+                    ld = LocalDate.now().withDayOfMonth(1).withMonth(1).minusYears(Long.valueOf(m.group(1)).longValue());
                     break;
                 }
                 
