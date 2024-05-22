@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.encipherment.DBItemEncAgentCertificate;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.db.inventory.DBItemInventoryTag;
@@ -156,6 +157,26 @@ public class SOSHibernateTest {
                 factory.close(session);
             }
         }
+    }
+
+    @Ignore
+    @Test
+    public void testEqualsAndSetId() throws Exception {
+        DBItemEncAgentCertificate i1 = new DBItemEncAgentCertificate();
+        i1.setAgentId("agent_1");
+        i1.setCertAlias("alias_1");
+
+        DBItemEncAgentCertificate i2 = new DBItemEncAgentCertificate();
+        i2.setAgentId("agent_1");
+        i2.setCertAlias("alias_2");
+        LOGGER.info("equals=" + i1.equals(i2));
+
+        Object[] id = new Object[2];
+        id[0] = "1";
+        id[1] = "2";
+        DBItemEncAgentCertificate i3 = new DBItemEncAgentCertificate();
+        SOSHibernate.setId(i3, id);
+        LOGGER.info("i3=" + SOSHibernate.toString(i3));
     }
 
     @Ignore

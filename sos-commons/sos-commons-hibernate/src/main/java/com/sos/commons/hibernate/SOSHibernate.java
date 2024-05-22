@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -30,6 +29,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.commons.hibernate.exception.SOSHibernateLockAcquisitionException;
 import com.sos.commons.hibernate.exception.SOSHibernateOpenSessionException;
 import com.sos.commons.util.SOSDate;
+import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
 
 import jakarta.persistence.EmbeddedId;
@@ -180,42 +180,74 @@ public class SOSHibernate {
     }
 
     public static Object getId(Object item) throws SOSHibernateException {
-        if (item != null) {
-            Optional<Field> of = Arrays.stream(item.getClass().getDeclaredFields()).filter(m -> m.isAnnotationPresent(Id.class)).findFirst();
-            boolean present = of.isPresent();
-            if (!present) {
-                of = Arrays.stream(item.getClass().getDeclaredFields()).filter(m -> m.isAnnotationPresent(EmbeddedId.class)).findFirst();
-                present = of.isPresent();
-            }
-            if (present) {
-                Field field = of.get();
+        if (item == null) {
+            return null;
+        }
+
+        List<Field> l = Arrays.stream(item.getClass().getDeclaredFields()).filter(m -> m.isAnnotationPresent(Id.class)).collect(Collectors.toList());
+        int size = l.size();
+        if (size < 1) {
+            l = Arrays.stream(item.getClass().getDeclaredFields()).filter(m -> m.isAnnotationPresent(EmbeddedId.class)).collect(Collectors.toList());
+            size = l.size();
+        }
+        if (size < 1) {
+            return null;
+        }
+
+        Object[] id = new Object[size];
+        for (int i = 0; i < size; i++) {
+            Field field = l.get(i);
+            try {
                 field.setAccessible(true);
-                try {
-                    return field.get(item);
-                } catch (Exception ex) {
-                    throw new SOSHibernateException(String.format("[getId][can't get field]%s", item.getClass().getSimpleName(), ex.toString()), ex);
-                }
+                id[i] = field.get(item);
+            } catch (Throwable e) {
+                throw new SOSHibernateException(String.format("[getId][can't get field]%s", item.getClass().getSimpleName(), e.toString()), e);
             }
         }
-        return null;
+        if (size == 1) {
+            return id[0];
+        }
+        return id;
     }
 
     public static void setId(Object item, Object value) throws SOSHibernateException {
-        if (item != null) {
-            Optional<Field> of = Arrays.stream(item.getClass().getDeclaredFields()).filter(m -> m.isAnnotationPresent(Id.class)).findFirst();
-            boolean present = of.isPresent();
-            if (!present) {
-                of = Arrays.stream(item.getClass().getDeclaredFields()).filter(m -> m.isAnnotationPresent(EmbeddedId.class)).findFirst();
-                present = of.isPresent();
-            }
-            if (present) {
-                Field field = of.get();
-                field.setAccessible(true);
-                try {
-                    field.set(item, value);
-                } catch (Exception ex) {
-                    throw new SOSHibernateException(String.format("[setId][can't set field]%s", item.getClass().getSimpleName(), ex.toString()), ex);
+        if (item == null) {
+            return;
+        }
+        List<Field> l = Arrays.stream(item.getClass().getDeclaredFields()).filter(m -> m.isAnnotationPresent(Id.class)).collect(Collectors.toList());
+        int size = l.size();
+        if (size < 1) {
+            l = Arrays.stream(item.getClass().getDeclaredFields()).filter(m -> m.isAnnotationPresent(EmbeddedId.class)).collect(Collectors.toList());
+            size = l.size();
+        }
+        if (size < 1) {
+            return;
+        }
+
+        Object[] id = new Object[size];
+        if (size == 1) {
+            id[0] = value;
+        } else {
+            Object[] o = null;
+            if (SOSReflection.isArray(value.getClass())) {
+                o = (Object[]) value;
+            } else {
+                // TODO List etc.
+                for (int i = 0; i < size; i++) {
+                    id[i] = value;
                 }
+            }
+            for (int i = 0; i < size; i++) {
+                id[i] = o[i];
+            }
+        }
+        for (int i = 0; i < size; i++) {
+            Field field = l.get(i);
+            try {
+                field.setAccessible(true);
+                field.set(item, id[i]);
+            } catch (Exception ex) {
+                throw new SOSHibernateException(String.format("[setId][can't set field]%s", item.getClass().getSimpleName(), ex.toString()), ex);
             }
         }
     }

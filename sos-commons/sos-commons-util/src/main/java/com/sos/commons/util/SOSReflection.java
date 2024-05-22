@@ -145,6 +145,10 @@ public class SOSReflection {
         return true;
     }
 
+    public static boolean isArray(Class<?> cls) {
+        return cls.isArray();
+    }
+
     public static boolean isCollection(Type type) throws ClassNotFoundException {
         return isCollection(Class.forName(normalizeClassForName(type.getTypeName())));
     }
