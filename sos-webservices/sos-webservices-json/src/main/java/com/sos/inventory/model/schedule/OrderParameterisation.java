@@ -1,10 +1,12 @@
 
 package com.sos.inventory.model.schedule;
 
+import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.sos.inventory.model.common.Variables;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -22,16 +24,11 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "orderName",
     "variables",
     "positions",
+    "tags",
     "forceJobAdmission"
 })
 public class OrderParameterisation {
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("orderName")
     private String orderName;
     /**
@@ -52,26 +49,17 @@ public class OrderParameterisation {
     @JsonProperty("positions")
     @JsonPropertyDescription("start and end position")
     private OrderPositions positions;
+    @JsonProperty("tags")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<String> tags = null;
     @JsonProperty("forceJobAdmission")
     private Boolean forceJobAdmission;
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("orderName")
     public String getOrderName() {
         return orderName;
     }
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("orderName")
     public void setOrderName(String orderName) {
         this.orderName = orderName;
@@ -121,6 +109,16 @@ public class OrderParameterisation {
         this.positions = positions;
     }
 
+    @JsonProperty("tags")
+    public Set<String> getTags() {
+        return tags;
+    }
+
+    @JsonProperty("tags")
+    public void setTags(Set<String> tags) {
+        this.tags = tags;
+    }
+
     @JsonProperty("forceJobAdmission")
     public Boolean getForceJobAdmission() {
         return forceJobAdmission;
@@ -133,12 +131,12 @@ public class OrderParameterisation {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("orderName", orderName).append("variables", variables).append("positions", positions).append("forceJobAdmission", forceJobAdmission).toString();
+        return new ToStringBuilder(this).append("orderName", orderName).append("variables", variables).append("positions", positions).append("tags", tags).append("forceJobAdmission", forceJobAdmission).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(forceJobAdmission).append(variables).append(positions).append(orderName).toHashCode();
+        return new HashCodeBuilder().append(forceJobAdmission).append(variables).append(positions).append(orderName).append(tags).toHashCode();
     }
 
     @Override
@@ -150,7 +148,7 @@ public class OrderParameterisation {
             return false;
         }
         OrderParameterisation rhs = ((OrderParameterisation) other);
-        return new EqualsBuilder().append(forceJobAdmission, rhs.forceJobAdmission).append(variables, rhs.variables).append(positions, rhs.positions).append(orderName, rhs.orderName).isEquals();
+        return new EqualsBuilder().append(forceJobAdmission, rhs.forceJobAdmission).append(variables, rhs.variables).append(positions, rhs.positions).append(orderName, rhs.orderName).append(tags, rhs.tags).isEquals();
     }
 
 }

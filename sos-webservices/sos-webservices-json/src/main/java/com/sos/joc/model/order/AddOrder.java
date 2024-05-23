@@ -2,11 +2,14 @@
 package com.sos.joc.model.order;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.sos.inventory.model.common.Variables;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -29,7 +32,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "startPosition",
     "endPositions",
     "blockPosition",
-    "forceJobAdmission"
+    "forceJobAdmission",
+    "tags"
 })
 public class AddOrder {
 
@@ -79,6 +83,9 @@ public class AddOrder {
     private Object blockPosition;
     @JsonProperty("forceJobAdmission")
     private Boolean forceJobAdmission = false;
+    @JsonProperty("tags")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<String> tags = new LinkedHashSet<String>();
 
     @JsonProperty("orderName")
     public String getOrderName() {
@@ -236,14 +243,24 @@ public class AddOrder {
         this.forceJobAdmission = forceJobAdmission;
     }
 
+    @JsonProperty("tags")
+    public Set<String> getTags() {
+        return tags;
+    }
+
+    @JsonProperty("tags")
+    public void setTags(Set<String> tags) {
+        this.tags = tags;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("orderName", orderName).append("workflowPath", workflowPath).append("scheduledFor", scheduledFor).append("timeZone", timeZone).append("arguments", arguments).append("startPosition", startPosition).append("endPositions", endPositions).append("blockPosition", blockPosition).append("forceJobAdmission", forceJobAdmission).toString();
+        return new ToStringBuilder(this).append("orderName", orderName).append("workflowPath", workflowPath).append("scheduledFor", scheduledFor).append("timeZone", timeZone).append("arguments", arguments).append("startPosition", startPosition).append("endPositions", endPositions).append("blockPosition", blockPosition).append("forceJobAdmission", forceJobAdmission).append("tags", tags).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(endPositions).append(workflowPath).append(scheduledFor).append(blockPosition).append(timeZone).append(forceJobAdmission).append(arguments).append(startPosition).append(orderName).toHashCode();
+        return new HashCodeBuilder().append(endPositions).append(workflowPath).append(scheduledFor).append(blockPosition).append(timeZone).append(forceJobAdmission).append(arguments).append(startPosition).append(orderName).append(tags).toHashCode();
     }
 
     @Override
@@ -255,7 +272,7 @@ public class AddOrder {
             return false;
         }
         AddOrder rhs = ((AddOrder) other);
-        return new EqualsBuilder().append(endPositions, rhs.endPositions).append(workflowPath, rhs.workflowPath).append(scheduledFor, rhs.scheduledFor).append(blockPosition, rhs.blockPosition).append(timeZone, rhs.timeZone).append(forceJobAdmission, rhs.forceJobAdmission).append(arguments, rhs.arguments).append(startPosition, rhs.startPosition).append(orderName, rhs.orderName).isEquals();
+        return new EqualsBuilder().append(endPositions, rhs.endPositions).append(workflowPath, rhs.workflowPath).append(scheduledFor, rhs.scheduledFor).append(blockPosition, rhs.blockPosition).append(timeZone, rhs.timeZone).append(forceJobAdmission, rhs.forceJobAdmission).append(arguments, rhs.arguments).append(startPosition, rhs.startPosition).append(orderName, rhs.orderName).append(tags, rhs.tags).isEquals();
     }
 
 }
