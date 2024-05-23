@@ -226,12 +226,11 @@ public class SOSShell {
         }
 
         String name = runtimeBean.getName();
-        String pid = name.split("@")[0];
 
         StringBuilder sb = new StringBuilder();
         sb.append("[JVM]");
         sb.append("[").append(name).append("]");
-        sb.append("[pid=").append(pid).append("]");
+        sb.append("[pid=").append(getPID(runtimeBean)).append("]");
         sb.append("[version=").append(System.getProperty("java.version")).append("]");
         sb.append("[vm=").append(runtimeBean.getVmVendor()).append(" ").append(runtimeBean.getVmName()).append("]");
         sb.append("[available processors=").append(Runtime.getRuntime().availableProcessors()).append("]");
@@ -242,6 +241,21 @@ public class SOSShell {
         sb.append("]");
         sb.append("[input arguments=").append(runtimeBean.getInputArguments()).append("]");
         return sb.toString();
+    }
+
+    public static Integer getPID() {
+        return getPID(ManagementFactory.getRuntimeMXBean());
+    }
+
+    public static Integer getPID(RuntimeMXBean runtimeBean) {
+        if (runtimeBean == null) {
+            runtimeBean = ManagementFactory.getRuntimeMXBean();
+        }
+        try {
+            return Integer.parseInt(runtimeBean.getName().split("@")[0]);
+        } catch (Throwable e) {
+            return null;
+        }
     }
 
     public static String getJavaHome() {

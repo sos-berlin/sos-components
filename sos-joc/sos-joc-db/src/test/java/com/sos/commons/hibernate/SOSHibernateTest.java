@@ -31,7 +31,7 @@ public class SOSHibernateTest {
 
     @Ignore
     @Test
-    public void testEntity() throws Exception {
+    public void testGetResultList() throws Exception {
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
         try {
@@ -47,6 +47,32 @@ public class SOSHibernateTest {
                 LOGGER.info(SOSHibernate.toString(item));
             }
 
+        } catch (Exception e) {
+            LOGGER.error(e.toString(), e);
+            throw e;
+        } finally {
+            if (factory != null) {
+                factory.close(session);
+            }
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testGet() throws Exception {
+        SOSHibernateFactory factory = null;
+        SOSHibernateSession session = null;
+        try {
+            factory = createFactory();
+            session = factory.openStatelessSession();
+
+            Long id = session.getSingleValue("select min(id) from " + DBLayer.DBITEM_HISTORY_ORDERS);
+            if (id == null) {
+                LOGGER.info("not found");
+            } else {
+                DBItemHistoryOrder item = session.get(DBItemHistoryOrder.class, id);
+                LOGGER.info(SOSHibernate.toString(item));
+            }
         } catch (Exception e) {
             LOGGER.error(e.toString(), e);
             throw e;
