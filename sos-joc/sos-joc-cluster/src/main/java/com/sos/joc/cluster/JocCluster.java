@@ -323,7 +323,7 @@ public class JocCluster {
                                 lastActiveMemberId, SOSHibernate.toString(item)));
                     }
 
-                    item = handleCurrentMemberOnProcess(mode, dbLayer, item, configurations, isFirstRun);
+                    item = handleCurrentMemberOnProcess(mode, dbLayer, item, configurations, isFirstRun, isDebugEnabled);
                     if (item != null) {
                         activeMemberId = item.getMemberId();
                         if (isDebugEnabled) {
@@ -411,10 +411,15 @@ public class JocCluster {
     }
 
     private DBItemJocCluster handleCurrentMemberOnProcess(StartupMode mode, DBLayerJocCluster dbLayer, DBItemJocCluster item,
-            ConfigurationGlobals configurations, boolean isFirstRun) throws Exception {
+            ConfigurationGlobals configurations, boolean isFirstRun, boolean isDebugEnabled) throws Exception {
         if (item == null) {
-            if (!config.getClusterModeResult().getUse() && !isFirstRun) {
-                inactiveMemberTryStopServices(configurations);
+            if (!config.getClusterModeResult().getUse() && !isFirstRun && !isRestart(mode)) {
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format(
+                            "[%s][current=%s][handleCurrentMemberOnProcess][item=null,config.getClusterModeResult.getUse=false,isFirstRun=false,isRestart=false]inactiveMemberTryStopServices...",
+                            mode, currentMemberId));
+                }
+                inactiveMemberTryStopServices(configurations, isDebugEnabled);
                 return null;
             }
             item = new DBItemJocCluster();
@@ -440,11 +445,16 @@ public class JocCluster {
         }
         if (item != null) {
             if (item.getMemberId().equals(currentMemberId)) {
-                item = trySwitchActiveMemberOnProcess(mode, dbLayer, item, configurations, isFirstRun);
+                item = trySwitchActiveMemberOnProcess(mode, dbLayer, item, configurations, isFirstRun, isDebugEnabled);
             } else {
                 if (isHeartBeatExceeded(dbLayer.getNowUTC(), item.getHeartBeat())) {
                     if (!config.getClusterModeResult().getUse()) {
                         if (!isFirstRun) {// extra check when active JOC was killed/not removed from database
+                            if (isDebugEnabled) {
+                                LOGGER.debug(String.format(
+                                        "[%s][current=%s][handleCurrentMemberOnProcess][config.getClusterModeResult.getUse=false,isFirstRun=false][return null on isHeartBeatExceeded=true]%s",
+                                        mode, currentMemberId, SOSHibernate.toString(item)));
+                            }
                             return null;
                         }
                     }
@@ -479,10 +489,10 @@ public class JocCluster {
                         LOGGER.info(String.format("[%s][active changed]%s", mode, SOSHibernate.toString(item)));
                     }
                 } else {
-                    if (LOGGER.isDebugEnabled()) {
+                    if (isDebugEnabled) {
                         LOGGER.debug("[" + mode + "]inactive");
                     }
-                    inactiveMemberTryStopServices(configurations);
+                    inactiveMemberTryStopServices(configurations, isDebugEnabled);
                     inactiveMemberHandleConfigurationGlobalsChanged(item);
                 }
             }
@@ -490,11 +500,15 @@ public class JocCluster {
         return item;
     }
 
-    private void inactiveMemberTryStopServices(ConfigurationGlobals configurations) {
+    private void inactiveMemberTryStopServices(ConfigurationGlobals configurations, boolean isDebugEnabled) {
         if (activeMemberHandler.isActive()) {
             StartupMode mode = StartupMode.automatic;
             LOGGER.info("[" + mode + "][start][stop services because current is inactive]" + currentMemberId);
             activeMemberHandler.perform(mode, PerformType.STOP, configurations);
+        } else {
+            if (isDebugEnabled) {
+                LOGGER.debug("[inactiveMemberTryStopServices][skip]activeMemberHandler.isActive=false");
+            }
         }
     }
 
@@ -710,8 +724,9 @@ public class JocCluster {
         return answer;
     }
 
+    /** called if item.getMemberId().equals(currentMemberId) */
     private DBItemJocCluster trySwitchActiveMemberOnProcess(StartupMode mode, DBLayerJocCluster dbLayer, DBItemJocCluster item,
-            ConfigurationGlobals configurations, boolean isFirstRun) throws Exception {
+            ConfigurationGlobals configurations, boolean isFirstRun, boolean isDebugEnabled) throws Exception {
         skipPerform = false;
         item.setMemberId(currentMemberId);
 
@@ -771,9 +786,20 @@ public class JocCluster {
             }
         } else {
             if (!config.getClusterModeResult().getUse()) {
-                if (!activeMemberHandler.isActive() && !isFirstRun) { // changed in the database directly
+                if (!activeMemberHandler.isActive() && !isFirstRun && !isRestart(mode)) {
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format(
+                                "[%s][current=%s][trySwitchActiveMemberOnProcess][config.getClusterModeResult.getUse=false,activeMemberHandler.isActive=false,isFirstRun=false,isRestart=false]skip",
+                                mode, currentMemberId));
+                    }
                     return null;
                 }
+            }
+
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format(
+                        "[%s][current=%s][trySwitchActiveMemberOnProcess][activeMemberHandler.isActive=%s,isFirstRun=%s]update cluster..", mode,
+                        currentMemberId, activeMemberHandler.isActive(), isFirstRun));
             }
 
             dbLayer.beginTransaction();
@@ -782,6 +808,13 @@ public class JocCluster {
             dbLayer.commit();
         }
         return item;
+    }
+
+    private boolean isRestart(StartupMode mode) {
+        if (mode == null) {
+            return false;
+        }
+        return StartupMode.manual_restart.equals(mode);
     }
 
     private void inactiveMemberHandleConfigurationGlobalsChanged(DBItemJocCluster item) {
