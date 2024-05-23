@@ -31,6 +31,7 @@ import com.sos.joc.model.security.configuration.permissions.joc.Calendars;
 import com.sos.joc.model.security.configuration.permissions.joc.Cluster;
 import com.sos.joc.model.security.configuration.permissions.joc.DailyPlan;
 import com.sos.joc.model.security.configuration.permissions.joc.Documentations;
+import com.sos.joc.model.security.configuration.permissions.joc.Encipherment;
 import com.sos.joc.model.security.configuration.permissions.joc.FileTransfer;
 import com.sos.joc.model.security.configuration.permissions.joc.Inventory;
 import com.sos.joc.model.security.configuration.permissions.joc.Notification;
@@ -195,7 +196,7 @@ public class SOSAuthCurrentAccount {
         ControllerPermissions controllerDefaults = new ControllerPermissions(false, false, false, false, false, new Deployments(), new Orders(),
                 new Agents(), new NoticeBoards(), new Locks(), new Workflows());
         JocPermissions joc = new JocPermissions(false, administration, new Cluster(), new Inventory(), new Calendars(), new Documentations(),
-                new AuditLog(), new DailyPlan(), new FileTransfer(), new Notification(), new Reports(), new Others());
+                new AuditLog(), new DailyPlan(), new FileTransfer(), new Notification(), new Encipherment(), new Reports(), new Others());
         return new Permissions(getRoles(), joc, controllerDefaults, new com.sos.joc.model.security.configuration.permissions.Controllers());
     }
 

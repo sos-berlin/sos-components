@@ -22,6 +22,7 @@ import com.sos.joc.model.security.configuration.permissions.joc.Calendars;
 import com.sos.joc.model.security.configuration.permissions.joc.Cluster;
 import com.sos.joc.model.security.configuration.permissions.joc.DailyPlan;
 import com.sos.joc.model.security.configuration.permissions.joc.Documentations;
+import com.sos.joc.model.security.configuration.permissions.joc.Encipherment;
 import com.sos.joc.model.security.configuration.permissions.joc.FileTransfer;
 import com.sos.joc.model.security.configuration.permissions.joc.Inventory;
 import com.sos.joc.model.security.configuration.permissions.joc.Notification;
@@ -71,7 +72,7 @@ public class SOSPermissionsCreator {
 
         JocPermissions jocPermissions = new JocPermissions(false, new Administration(new Accounts(), new Settings(), new Controllers(),
                 new Certificates(), new Customization()), new Cluster(), new Inventory(), new Calendars(), new Documentations(), new AuditLog(),
-                new DailyPlan(), new FileTransfer(), new Notification(), new Reports(), new Others());
+                new DailyPlan(), new FileTransfer(), new Notification(), new Encipherment(), new Reports(), new Others());
 
         if (currentAccount != null && currentAccount.getCurrentSubject() != null) {
 
@@ -107,6 +108,7 @@ public class SOSPermissionsCreator {
             jocPermissions.getReports().setManage(haveRight("", "sos:products:joc:reports:manage"));
             jocPermissions.getOthers().setView(haveRight("", "sos:products:joc:others:view"));
             jocPermissions.getOthers().setManage(haveRight("", "sos:products:joc:others:manage"));
+            jocPermissions.getEncipherment().setEncrypt(haveRight("", "sos:products:joc:encipherment:encrypt"));
         }
 
         return jocPermissions;

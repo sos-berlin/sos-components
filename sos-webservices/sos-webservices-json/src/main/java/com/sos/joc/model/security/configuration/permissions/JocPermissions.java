@@ -10,6 +10,7 @@ import com.sos.joc.model.security.configuration.permissions.joc.Calendars;
 import com.sos.joc.model.security.configuration.permissions.joc.Cluster;
 import com.sos.joc.model.security.configuration.permissions.joc.DailyPlan;
 import com.sos.joc.model.security.configuration.permissions.joc.Documentations;
+import com.sos.joc.model.security.configuration.permissions.joc.Encipherment;
 import com.sos.joc.model.security.configuration.permissions.joc.FileTransfer;
 import com.sos.joc.model.security.configuration.permissions.joc.Inventory;
 import com.sos.joc.model.security.configuration.permissions.joc.Notification;
@@ -31,6 +32,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "dailyPlan",
     "fileTransfer",
     "notification",
+    "encipherment",
     "reports",
     "others"
 })
@@ -56,6 +58,8 @@ public class JocPermissions {
     private FileTransfer fileTransfer;
     @JsonProperty("notification")
     private Notification notification;
+    @JsonProperty("encipherment")
+    private Encipherment encipherment;
     @JsonProperty("reports")
     private Reports reports;
     @JsonProperty("others")
@@ -70,20 +74,21 @@ public class JocPermissions {
 
     /**
      * 
+     * @param encipherment
      * @param cluster
-     * @param notification
      * @param reports
      * @param auditLog
-     * @param dailyPlan
      * @param fileTransfer
-     * @param calendars
      * @param getLog
      * @param administration
      * @param documentations
      * @param inventory
+     * @param notification
+     * @param dailyPlan
+     * @param calendars
      * @param others
      */
-    public JocPermissions(Boolean getLog, Administration administration, Cluster cluster, Inventory inventory, Calendars calendars, Documentations documentations, AuditLog auditLog, DailyPlan dailyPlan, FileTransfer fileTransfer, Notification notification, Reports reports, Others others) {
+    public JocPermissions(Boolean getLog, Administration administration, Cluster cluster, Inventory inventory, Calendars calendars, Documentations documentations, AuditLog auditLog, DailyPlan dailyPlan, FileTransfer fileTransfer, Notification notification, Encipherment encipherment, Reports reports, Others others) {
         super();
         this.getLog = getLog;
         this.administration = administration;
@@ -95,6 +100,7 @@ public class JocPermissions {
         this.dailyPlan = dailyPlan;
         this.fileTransfer = fileTransfer;
         this.notification = notification;
+        this.encipherment = encipherment;
         this.reports = reports;
         this.others = others;
     }
@@ -199,6 +205,16 @@ public class JocPermissions {
         this.notification = notification;
     }
 
+    @JsonProperty("encipherment")
+    public Encipherment getEncipherment() {
+        return encipherment;
+    }
+
+    @JsonProperty("encipherment")
+    public void setEncipherment(Encipherment encipherment) {
+        this.encipherment = encipherment;
+    }
+
     @JsonProperty("reports")
     public Reports getReports() {
         return reports;
@@ -221,12 +237,12 @@ public class JocPermissions {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("getLog", getLog).append("administration", administration).append("cluster", cluster).append("inventory", inventory).append("calendars", calendars).append("documentations", documentations).append("auditLog", auditLog).append("dailyPlan", dailyPlan).append("fileTransfer", fileTransfer).append("notification", notification).append("reports", reports).append("others", others).toString();
+        return new ToStringBuilder(this).append("getLog", getLog).append("administration", administration).append("cluster", cluster).append("inventory", inventory).append("calendars", calendars).append("documentations", documentations).append("auditLog", auditLog).append("dailyPlan", dailyPlan).append("fileTransfer", fileTransfer).append("notification", notification).append("encipherment", encipherment).append("reports", reports).append("others", others).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(cluster).append(reports).append(auditLog).append(fileTransfer).append(getLog).append(administration).append(documentations).append(inventory).append(notification).append(dailyPlan).append(calendars).append(others).toHashCode();
+        return new HashCodeBuilder().append(encipherment).append(cluster).append(reports).append(auditLog).append(fileTransfer).append(getLog).append(administration).append(documentations).append(inventory).append(notification).append(dailyPlan).append(calendars).append(others).toHashCode();
     }
 
     @Override
@@ -238,7 +254,7 @@ public class JocPermissions {
             return false;
         }
         JocPermissions rhs = ((JocPermissions) other);
-        return new EqualsBuilder().append(cluster, rhs.cluster).append(reports, rhs.reports).append(auditLog, rhs.auditLog).append(fileTransfer, rhs.fileTransfer).append(getLog, rhs.getLog).append(administration, rhs.administration).append(documentations, rhs.documentations).append(inventory, rhs.inventory).append(notification, rhs.notification).append(dailyPlan, rhs.dailyPlan).append(calendars, rhs.calendars).append(others, rhs.others).isEquals();
+        return new EqualsBuilder().append(encipherment, rhs.encipherment).append(cluster, rhs.cluster).append(reports, rhs.reports).append(auditLog, rhs.auditLog).append(fileTransfer, rhs.fileTransfer).append(getLog, rhs.getLog).append(administration, rhs.administration).append(documentations, rhs.documentations).append(inventory, rhs.inventory).append(notification, rhs.notification).append(dailyPlan, rhs.dailyPlan).append(calendars, rhs.calendars).append(others, rhs.others).isEquals();
     }
 
 }

@@ -49,6 +49,7 @@ public class SOSListOfPermissions {
         addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:reports:manage");
         addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:others:view");
         addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:others:manage");
+        addPermission(sosPermissions.getSosPermissions(), "sos:products:joc:encipherment:encrypt");
 
         // ControllerPermissions
         addPermission(sosPermissions.getSosPermissions(), "sos:products:controller:view");
