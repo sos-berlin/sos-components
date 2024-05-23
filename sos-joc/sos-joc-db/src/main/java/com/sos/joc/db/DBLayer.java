@@ -331,7 +331,7 @@ public class DBLayer implements Serializable {
 
     public static final String DBITEM_IAM_FIDO2_REQUESTS = DBItemIamFido2Requests.class.getSimpleName();
     public static final String TABLE_IAM_FIDO2_REQUESTS = "IAM_FIDO2_REQUESTS";
-    public static final String TABLE_IAM_FIDO2_REQUESTS_SEQUENCE = "SEQ_IAM_FIDO2__REQUESTS";
+    public static final String TABLE_IAM_FIDO2_REQUESTS_SEQUENCE = "SEQ_IAM_FIDO2_REQUESTS";
 
     public static final String DBITEM_IAM_HISTORY = DBItemIamHistory.class.getSimpleName();
     public static final String TABLE_IAM_HISTORY = "IAM_HISTORY";
