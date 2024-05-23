@@ -3,6 +3,7 @@ package com.sos.jitl.jobs.examples;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 
@@ -127,91 +128,25 @@ public class InfoJob extends Job<InfoJobArguments> {
         step.getLogger().info("  resolve cs://@title=" + r.resolve("cs://@title"));
 
         step.getLogger().info("----------COLLECTION ARGUMENTS -----------------");
-        step.getLogger().info(args.getListBigDecimalValues().getName() + "=" + args.getListBigDecimalValues().getValue());
-        if (args.getListBigDecimalValues().getValue() != null) {
-            step.getLogger().info("  " + args.getListBigDecimalValues().getValue().getClass());
-            for (Object o : args.getListBigDecimalValues().getValue()) {
-                step.getLogger().info("    " + o + "(" + o.getClass() + ")");
-            }
-        }
-        step.getLogger().info(args.getListBooleanValues().getName() + "=" + args.getListBooleanValues().getValue());
-        if (args.getListBooleanValues().getValue() != null) {
-            step.getLogger().info("  " + args.getListBooleanValues().getValue().getClass());
-            for (Object o : args.getListBooleanValues().getValue()) {
-                step.getLogger().info("    " + o + "(" + o.getClass() + ")");
-            }
-        }
-        step.getLogger().info(args.getListCharsetValues().getName() + "=" + args.getListCharsetValues().getValue());
-        if (args.getListCharsetValues().getValue() != null) {
-            step.getLogger().info("  " + args.getListCharsetValues().getValue().getClass());
-            for (Object o : args.getListCharsetValues().getValue()) {
-                step.getLogger().info("    " + o + "(" + o.getClass() + ")");
-            }
-        }
-        step.getLogger().info(args.getListEnumValues().getName() + "=" + args.getListEnumValues().getValue());
-        if (args.getListEnumValues().getValue() != null) {
-            step.getLogger().info("  " + args.getListEnumValues().getValue().getClass());
-            for (Object o : args.getListEnumValues().getValue()) {
-                step.getLogger().info("    " + o + "(" + o.getClass() + ")");
-            }
-        }
-        step.getLogger().info(args.getListFileValues().getName() + "=" + args.getListFileValues().getValue());
-        if (args.getListFileValues().getValue() != null) {
-            step.getLogger().info("  " + args.getListFileValues().getValue().getClass());
-            for (Object o : args.getListFileValues().getValue()) {
-                step.getLogger().info("    " + o + "(" + o.getClass() + ")");
-            }
-        }
-        step.getLogger().info(args.getListIntegerValues().getName() + "=" + args.getListIntegerValues().getValue());
-        if (args.getListIntegerValues().getValue() != null) {
-            step.getLogger().info("  " + args.getListIntegerValues().getValue().getClass());
-            for (Object o : args.getListIntegerValues().getValue()) {
-                step.getLogger().info("    " + o + "(" + o.getClass() + ")");
-            }
-        }
-        step.getLogger().info(args.getListLongValues().getName() + "=" + args.getListLongValues().getValue());
-        if (args.getListLongValues().getValue() != null) {
-            step.getLogger().info("  " + args.getListLongValues().getValue().getClass());
-            for (Object o : args.getListLongValues().getValue()) {
-                step.getLogger().info("    " + o + "(" + o.getClass() + ")");
-            }
-        }
-        step.getLogger().info(args.getListPathValues().getName() + "=" + args.getListPathValues().getValue());
-        if (args.getListPathValues().getValue() != null) {
-            step.getLogger().info("  " + args.getListPathValues().getValue().getClass());
-            for (Object o : args.getListPathValues().getValue()) {
-                step.getLogger().info("    " + o + "(" + o.getClass() + ")");
-            }
-        }
-        step.getLogger().info(args.getListStringValues().getName() + "=" + args.getListStringValues().getValue());
-        if (args.getListStringValues().getValue() != null) {
-            step.getLogger().info("  " + args.getListStringValues().getValue().getClass());
-            for (Object o : args.getListStringValues().getValue()) {
-                step.getLogger().info("    " + o + "(" + o.getClass() + ")");
-            }
-        }
-        step.getLogger().info(args.getListUriValues().getName() + "=" + args.getListUriValues().getValue());
-        if (args.getListUriValues().getValue() != null) {
-            step.getLogger().info("  " + args.getListUriValues().getValue().getClass());
-            for (Object o : args.getListUriValues().getValue()) {
-                step.getLogger().info("    " + o + "(" + o.getClass() + ")");
-            }
-        }
+        showCollectionArgument(step, args.getListBigDecimalValues());
+        showCollectionArgument(step, args.getListBooleanValues());
+        showCollectionArgument(step, args.getListCharsetValues());
+        showCollectionArgument(step, args.getListEnumValues());
+        showCollectionArgument(step, args.getListFileValues());
+        showCollectionArgument(step, args.getListIntegerValues());
+        showCollectionArgument(step, args.getListLongValues());
+        showCollectionArgument(step, args.getListPathValues());
+        showCollectionArgument(step, args.getListStringValues());
+        showCollectionArgument(step, args.getListUriValues());
+        showCollectionArgument(step, args.getSetIntegerValues());
+        showCollectionArgument(step, args.getSetStringValues());
 
-        step.getLogger().info(args.getSetIntegerValues().getName() + "=" + args.getSetIntegerValues().getValue());
-        if (args.getSetIntegerValues().getValue() != null) {
-            step.getLogger().info("  " + args.getSetIntegerValues().getValue().getClass());
-            for (Object o : args.getSetIntegerValues().getValue()) {
-                step.getLogger().info("    " + o + "(" + o.getClass() + ")");
-            }
-        }
-        step.getLogger().info(args.getSetStringValues().getName() + "=" + args.getSetStringValues().getValue());
-        if (args.getSetStringValues().getValue() != null) {
-            step.getLogger().info("  " + args.getSetStringValues().getValue().getClass());
-            for (Object o : args.getSetStringValues().getValue()) {
-                step.getLogger().info("    " + o + "(" + o.getClass() + ")");
-            }
-        }
+        step.getLogger().info("----------MAP ARGUMENTS -----------------");
+        showMapArgument(step, args.getMapStringValues());
+        showMapArgument(step, args.getMapIntegerValues());
+        showMapArgument(step, args.getMapPathValues());
+        showMapArgument(step, args.getMapObjectValues());
+        showMapArgument(step, args.getMapWildcardValues());
 
         step.getLogger().info("----------RETURN-----------------");
         if (args.getRedefineShowEnv().getValue() || !args.getReturnVariables().isEmpty()) {
@@ -247,6 +182,26 @@ public class InfoJob extends Job<InfoJobArguments> {
             step.getLogger().info("[SUCCESS][java][step outcome]%s", outcome);
             // step.getLogger().info("[SUCCESS]");
             // return step.success();
+        }
+    }
+
+    private void showCollectionArgument(OrderProcessStep<InfoJobArguments> step, JobArgument<? extends Collection<?>> a) {
+        step.getLogger().info(a.getName() + "=" + a.getValue());
+        if (a.getValue() != null) {
+            step.getLogger().info("  " + a.getValue().getClass());
+            for (Object o : a.getValue()) {
+                step.getLogger().info("    " + o + "(" + o.getClass() + ")");
+            }
+        }
+    }
+
+    private void showMapArgument(OrderProcessStep<InfoJobArguments> step, JobArgument<? extends Map<String, ?>> a) {
+        step.getLogger().info(a.getName() + "=" + a.getValue());
+        if (a.getValue() != null) {
+            step.getLogger().info("  " + a.getValue().getClass());
+            a.getValue().entrySet().forEach(e -> {
+                step.getLogger().info("    " + e.getKey() + "=" + e.getValue() + "(" + e.getValue().getClass() + ")");
+            });
         }
     }
 

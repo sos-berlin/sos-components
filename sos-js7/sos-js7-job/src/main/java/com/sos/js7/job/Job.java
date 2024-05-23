@@ -272,6 +272,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         }
     }
 
+    @SuppressWarnings("unchecked")
     private Map<String, Object> mergeJobAndStepArguments(final OrderProcessStep<A> step) {
         Map<String, Object> map = null;
         if (step == null) {
@@ -404,8 +405,8 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
             // Preference 3 - JobArgument or Argument or Java Default
             if (val == null || SOSString.isEmpty(val.toString())) {
                 if (LOGGER.isTraceEnabled()) {
-                    LOGGER.trace(String.format("[setDeclaredJobArgument][%s]val=%s(%s),defaultVal=%s(%s)", arg.getName(), arg.getValue(),
-                            getClassName(arg.getValue()), arg.getDefaultValue(), getClassName(arg.getDefaultValue())));
+                    LOGGER.trace(String.format("[setDeclaredJobArgument][%s][setDefaultValue]defaultVal=%s(%s)", arg.getName(), arg.getDefaultValue(),
+                            getClassName(arg.getDefaultValue())));
                 }
                 arg.setValue(arg.getDefaultValue());
                 setValueType(arg, field, arg.getValue());
@@ -444,19 +445,18 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
 
     @SuppressWarnings("unchecked")
     private <V> V getValue(Object val, JobArgument<V> arg, Field field) throws ClassNotFoundException {
-
-        if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace(String.format("[getValue][%s]val=%s(%s),defaultVal=%s(%s)", arg.getName(), arg.getValue(), getClassName(arg.getValue()), arg
-                    .getDefaultValue(), getClassName(arg.getDefaultValue())));
+        boolean isTraceEnabled = LOGGER.isTraceEnabled();
+        if (isTraceEnabled) {
+            LOGGER.trace(String.format("[getValue][%s][arg value=%s(%s),defaultValue=%s(%s)]val=%s(%s)", arg.getName(), arg.getValue(), getClassName(
+                    arg.getValue()), arg.getDefaultValue(), getClassName(arg.getDefaultValue()), val, getClassName(val)));
         }
         if (val instanceof String) {
             val = val.toString().trim();
             setValueType(arg, field, val);
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace(String.format("[getValue][%s][type=%s][fromString]val=%s(%s),defaultVal=%s(%s)", arg.getName(), arg.getClazzType(), arg
-                        .getValue(), getClassName(arg.getValue()), arg.getDefaultValue(), getClassName(arg.getDefaultValue())));
-            }
             Type type = arg.getClazzType();
+            if (isTraceEnabled) {
+                LOGGER.trace(String.format("[getValue][%s][val instanceof String]arg type=%s", arg.getName(), type));
+            }
             if (type.equals(String.class)) {
                 if (((String) val).startsWith(BASE64_VALUE_PREFIX)) {
                     try {
@@ -496,6 +496,9 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         } else if (val instanceof BigDecimal) {
             setValueType(arg, field, val);
             Type type = arg.getClazzType();
+            if (isTraceEnabled) {
+                LOGGER.trace(String.format("[getValue][%s][val instanceof BigDecimal]arg type=%s", arg.getName(), type));
+            }
             if (type.equals(Integer.class)) {
                 val = Integer.valueOf(((BigDecimal) val).intValue());
             } else if (type.equals(Long.class)) {
@@ -508,6 +511,9 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         } else if (val instanceof Boolean) {
             setValueType(arg, field, val);
             Type type = arg.getClazzType();
+            if (isTraceEnabled) {
+                LOGGER.trace(String.format("[getValue][%s][val instanceof Boolean]arg type=%s", arg.getName(), type));
+            }
             if (type.equals(Boolean.class)) {
                 val = Boolean.valueOf(val.toString());
             } else if (SOSReflection.isCollection(type)) {
@@ -515,107 +521,115 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
             }
         } else if (val instanceof List) {
             setValueType(arg, field, val);
+            if (isTraceEnabled) {
+                LOGGER.trace(String.format("[getValue][%s][val instanceof List]arg type=%s", arg.getName(), arg.getClazzType()));
+            }
             val = (List<?>) val;
+        } else if (val instanceof Map) {
+            setValueType(arg, field, val);
+            if (isTraceEnabled) {
+                LOGGER.trace(String.format("[getValue][%s][val instanceof Map]arg type=%s", arg.getName(), arg.getClazzType()));
+            }
+            val = getMapValue(val, arg, arg.getClazzType());
         }
         return (V) val;
     }
 
-    @SuppressWarnings("unchecked")
-    private <V> V getCollectionValue(Object val, JobArgument<V> arg, Type type) {
-        String listVal = val.toString();
+    private <V> Function<? super String, ? extends Object> getStreamMapValueFunction(Object val, JobArgument<V> arg, Type type) {
+        String valAsString = val.toString();
         Type subType = ((ParameterizedType) type).getActualTypeArguments()[0];
 
-        Function<? super String, ? extends Object> mapFunc = (v) -> {
+        Function<? super String, ? extends Object> f = (v) -> {
             return v.trim();
         };
 
         if (subType.equals(String.class)) {
         } else if (subType.equals(Integer.class)) {
-            mapFunc = (v) -> {
+            f = (v) -> {
                 try {
                     return Integer.valueOf(v.trim());
                 } catch (Throwable e) {
-                    arg.setNotAcceptedValue(v + " of " + listVal, e);
+                    arg.setNotAcceptedValue(v + " of " + valAsString, e);
                     arg.getNotAcceptedValue().setSource(arg.getValueSource());
                     arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
                     return null;
                 }
             };
         } else if (subType.equals(Long.class)) {
-            mapFunc = (v) -> {
+            f = (v) -> {
                 try {
                     return Long.valueOf(v.trim());
                 } catch (Throwable e) {
-                    arg.setNotAcceptedValue(v + " of " + listVal, e);
+                    arg.setNotAcceptedValue(v + " of " + valAsString, e);
                     arg.getNotAcceptedValue().setSource(arg.getValueSource());
                     arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
                     return null;
                 }
             };
         } else if (subType.equals(BigDecimal.class)) {
-            mapFunc = (v) -> {
+            f = (v) -> {
                 try {
-                    if (listVal.contains(".") || listVal.contains(",")) {
+                    if (valAsString.contains(".") || valAsString.contains(",")) {
                         return BigDecimal.valueOf(Double.valueOf(v.trim()));
                     }
                     return BigDecimal.valueOf(Long.valueOf(v.trim()));
                 } catch (Throwable e) {
-                    arg.setNotAcceptedValue(v + " of " + listVal, e);
+                    arg.setNotAcceptedValue(v + " of " + valAsString, e);
                     arg.getNotAcceptedValue().setSource(arg.getValueSource());
                     arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
                     return null;
                 }
             };
         } else if (subType.equals(Path.class)) {
-            mapFunc = (v) -> {
+            f = (v) -> {
                 try {
                     return Paths.get(v.trim());
                 } catch (Throwable e) {
-                    arg.setNotAcceptedValue(v + " of " + listVal, e);
+                    arg.setNotAcceptedValue(v + " of " + valAsString, e);
                     arg.getNotAcceptedValue().setSource(arg.getValueSource());
                     arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
                     return null;
                 }
             };
         } else if (subType.equals(File.class)) {
-            mapFunc = (v) -> {
+            f = (v) -> {
                 try {
                     return new File(v.trim());
                 } catch (Throwable e) {
-                    arg.setNotAcceptedValue(v + " of " + listVal, e);
+                    arg.setNotAcceptedValue(v + " of " + valAsString, e);
                     arg.getNotAcceptedValue().setSource(arg.getValueSource());
                     arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
                     return null;
                 }
             };
         } else if (subType.equals(URI.class)) {
-            mapFunc = (v) -> {
+            f = (v) -> {
                 try {
                     return URI.create(v.trim());
                 } catch (Throwable e) {
-                    arg.setNotAcceptedValue(v + " of " + listVal, e);
+                    arg.setNotAcceptedValue(v + " of " + valAsString, e);
                     arg.getNotAcceptedValue().setSource(arg.getValueSource());
                     arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
                     return null;
                 }
             };
         } else if (subType.equals(Charset.class)) {
-            mapFunc = (v) -> {
+            f = (v) -> {
                 try {
                     return Charset.forName(v.trim());
                 } catch (Throwable e) {
-                    arg.setNotAcceptedValue(v + " of " + listVal, e);
+                    arg.setNotAcceptedValue(v + " of " + valAsString, e);
                     arg.getNotAcceptedValue().setSource(arg.getValueSource());
                     arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
                     return null;
                 }
             };
         } else if (subType.equals(Boolean.class)) {
-            mapFunc = (v) -> {
+            f = (v) -> {
                 try {
                     return Boolean.valueOf(v.trim());
                 } catch (Throwable e) {
-                    arg.setNotAcceptedValue(v + " of " + listVal, e);
+                    arg.setNotAcceptedValue(v + " of " + valAsString, e);
                     arg.getNotAcceptedValue().setSource(arg.getValueSource());
                     arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
                     return null;
@@ -624,11 +638,11 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         } else {
             try {
                 if (SOSReflection.isEnum(subType)) {
-                    mapFunc = (v) -> {
+                    f = (v) -> {
                         try {
                             return SOSReflection.enumIgnoreCaseValueOf(subType.getTypeName(), v.trim());
                         } catch (ClassNotFoundException e) {
-                            arg.setNotAcceptedValue(v + " of " + listVal, e);
+                            arg.setNotAcceptedValue(v + " of " + valAsString, e);
                             arg.getNotAcceptedValue().setSource(arg.getValueSource());
                             arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
                             return null;
@@ -636,30 +650,96 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
                     };
                 }
             } catch (ClassNotFoundException e) {
-                arg.setNotAcceptedValue(listVal, e);
+                arg.setNotAcceptedValue(valAsString, e);
                 arg.getNotAcceptedValue().setSource(arg.getValueSource());
                 arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
 
-                mapFunc = (v) -> {
+                f = (v) -> {
                     return null;
                 };
             }
         }
+        return f;
+    }
 
+    @SuppressWarnings("unchecked")
+    private <V> V getCollectionValue(Object val, JobArgument<V> arg, Type type) {
+
+        Function<? super String, ? extends Object> mapFunc = getStreamMapValueFunction(val, arg, type);
+        String valAsString = val.toString();
         try {
-            Stream<? extends Object> stream = Stream.of(listVal.split(SOSArgumentHelper.LIST_VALUE_DELIMITER)).map(mapFunc).filter(Objects::nonNull);
+            Stream<? extends Object> stream = Stream.of(valAsString.split(SOSArgumentHelper.LIST_VALUE_DELIMITER)).map(mapFunc).filter(
+                    Objects::nonNull);
             if (SOSReflection.isSet(type)) {
                 val = stream.collect(Collectors.toSet());
             } else {
                 val = stream.collect(Collectors.toList());
             }
         } catch (Throwable e) {
-            arg.setNotAcceptedValue(listVal, e);
+            arg.setNotAcceptedValue(valAsString, e);
             arg.getNotAcceptedValue().setSource(arg.getValueSource());
             arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
             val = arg.getDefaultValue();
         }
         return (V) val;
+    }
+
+    @SuppressWarnings("unchecked")
+    private <V> V getMapValue(Object val, JobArgument<V> arg, Type argMapType) {
+        final String valAsString = val.toString();
+        try {
+            Type argMapValueType = ((ParameterizedType) argMapType).getActualTypeArguments()[1];
+            val = ((Map<String, ?>) val).entrySet().stream().map(entry -> {
+                try {
+                    return Map.entry(entry.getKey(), getMapValue(entry.getValue(), argMapValueType));
+                } catch (Throwable e) {
+                    arg.setNotAcceptedValue(entry.getValue() + " of " + valAsString, e);
+                    arg.getNotAcceptedValue().setSource(arg.getValueSource());
+                    arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
+                    return null;
+                }
+            }).filter(Objects::nonNull).collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+        } catch (Throwable e) {
+            arg.setNotAcceptedValue(valAsString, e);
+            arg.getNotAcceptedValue().setSource(arg.getValueSource());
+            arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
+            val = arg.getDefaultValue();
+        }
+        return (V) val;
+    }
+
+    /** TODO reduce conversion methods... */
+    private Object getMapValue(Object val, Type mapValueType) throws Exception {
+        String v = val.toString().trim();
+        if (mapValueType.equals(String.class)) {
+            return v;
+        } else if (mapValueType.equals(Integer.class)) {
+            return Integer.valueOf(v);
+        } else if (mapValueType.equals(Long.class)) {
+            return Long.valueOf(v);
+        } else if (mapValueType.equals(BigDecimal.class)) {
+            if (v.contains(".") || v.contains(",")) {
+                return BigDecimal.valueOf(Double.valueOf(v));
+            }
+            return BigDecimal.valueOf(Long.valueOf(v));
+        } else if (mapValueType.equals(Path.class)) {
+            return Paths.get(v);
+        } else if (mapValueType.equals(File.class)) {
+            return new File(v);
+        } else if (mapValueType.equals(URI.class)) {
+            return URI.create(v);
+        } else if (mapValueType.equals(Charset.class)) {
+            return Charset.forName(v);
+        } else if (mapValueType.equals(Boolean.class)) {
+            return Boolean.valueOf(v);
+        } else if (mapValueType.toString().equals("?")) {
+            return val;
+        } else {
+            if (SOSReflection.isEnum(mapValueType)) {
+                return SOSReflection.enumIgnoreCaseValueOf(mapValueType.getTypeName(), v.trim());
+            }
+        }
+        return val;
     }
 
     private <V> void setValueType(JobArgument<V> arg, Field field, Object val) {
@@ -672,8 +752,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
 
     private <V> void setValueType(JobArgument<V> arg, Object val) {
         if (arg.getClazzType() == null) {
-            LOGGER.info("arg=" + arg.getName());
-
+            // LOGGER.info("arg=" + arg.getName());
             if (arg.getValue() != null) {
                 try {
                     arg.setClazzType(arg.getValue().getClass());
@@ -700,6 +779,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         }
     }
 
+    @SuppressWarnings("unchecked")
     private <V> void setValueSource(final OrderProcessStep<A> step, Field field, JobArgument<V> arg, List<String> allNames, boolean isNamedValue,
             Map<String, DetailValue> jobResources) {
         if (arg.getName() == null) {// source Java - internal usage
@@ -717,7 +797,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
                     source = new ValueSource(ValueSourceType.JOB_ARGUMENT);
                 }
             }
-            v = fromMap((Map<String,Value>)step.getInternalStep().arguments(), allNames);
+            v = fromMap((Map<String, Value>) step.getInternalStep().arguments(), allNames);
             if (v != null) {
                 source = new ValueSource(ValueSourceType.JOB);
             }

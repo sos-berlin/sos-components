@@ -18,6 +18,7 @@ import com.sos.js7.job.ValueSource.ValueSourceType;
  * - java.io.File<br/>
  * - java.util.List&lt;T&gt; (T - see supported types above, returns an ArrayList&lt;T&gt;)<br/>
  * - java.util.Set&lt;T&gt; (T - see supported types above, returns a HashSet&lt;T&gt;)<br/>
+ * - java.util.Map&lt;String,T&gt; (T - see supported types above, returns a LinkedHashMap&lt;String,T&gt;)<br/>
  */
 public class JobArgument<T> extends SOSArgument<T> {
 

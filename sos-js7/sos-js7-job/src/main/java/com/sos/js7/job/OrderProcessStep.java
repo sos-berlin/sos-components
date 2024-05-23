@@ -375,6 +375,7 @@ public class OrderProcessStep<A extends JobArguments> {
             }
 
             // Preference 3 - JobArgument
+            @SuppressWarnings("unchecked")
             Map<String, Object> j = JobHelper.asJavaValues(internalStep.arguments());
             if (j != null && j.size() > 0) {
                 j.entrySet().stream().forEach(e -> {
@@ -854,6 +855,7 @@ public class OrderProcessStep<A extends JobArguments> {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void logArgumentsBySource(LogLevel logLevel) throws Exception {
         logOutcomes(logLevel);
 

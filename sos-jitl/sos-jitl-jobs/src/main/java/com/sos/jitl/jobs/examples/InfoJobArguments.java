@@ -6,6 +6,7 @@ import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.sos.commons.credentialstore.CredentialStoreArguments;
@@ -39,6 +40,12 @@ public class InfoJobArguments extends JobArguments {
 
     private JobArgument<Set<String>> setStringValues = new JobArgument<>("set_string_values", false);
     private JobArgument<Set<Integer>> setIntegerValues = new JobArgument<>("set_integer_values", false);
+
+    private JobArgument<Map<String, String>> mapStringValues = new JobArgument<>("map_string_values", false);
+    private JobArgument<Map<String, Integer>> mapIntegerValues = new JobArgument<>("map_integer_values", false);
+    private JobArgument<Map<String, Path>> mapPathValues = new JobArgument<>("map_path_values", false);
+    private JobArgument<Map<String, Object>> mapObjectValues = new JobArgument<>("map_object_values", false);
+    private JobArgument<Map<String, ?>> mapWildcardValues = new JobArgument<>("map_wildcard_values", false);
 
     public InfoJobArguments() {
         super(new CredentialStoreArguments());
@@ -90,6 +97,26 @@ public class InfoJobArguments extends JobArguments {
 
     public JobArgument<Set<Integer>> getSetIntegerValues() {
         return setIntegerValues;
+    }
+
+    public JobArgument<Map<String, String>> getMapStringValues() {
+        return mapStringValues;
+    }
+
+    public JobArgument<Map<String, Integer>> getMapIntegerValues() {
+        return mapIntegerValues;
+    }
+
+    public JobArgument<Map<String, Path>> getMapPathValues() {
+        return mapPathValues;
+    }
+
+    public JobArgument<Map<String, Object>> getMapObjectValues() {
+        return mapObjectValues;
+    }
+
+    public JobArgument<Map<String, ?>> getMapWildcardValues() {
+        return mapWildcardValues;
     }
 
     public JobArgument<Boolean> getShowEnv() {

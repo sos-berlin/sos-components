@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -15,11 +16,11 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.sos.js7.job.exception.JobProblemException;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgumentHelper;
+import com.sos.js7.job.exception.JobProblemException;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
@@ -92,8 +93,8 @@ public class JobHelper {
         } else if (o instanceof ListValue) {
             List<Object> l = new ArrayList<>();
             ((ListValue) o).toJava().forEach(item -> {
-                if (item instanceof js7.data.value.ObjectValue) {
-                    Map<String, Object> m = new HashMap<>();
+                if (item instanceof ObjectValue) {
+                    Map<String, Object> m = new LinkedHashMap<>();
                     ((ObjectValue) item).toJava().forEach((k1, v1) -> m.put(k1, v1.toJava()));
                     l.add(m);
                 } else {
@@ -101,6 +102,10 @@ public class JobHelper {
                 }
             });
             return l;
+        } else if (o instanceof ObjectValue) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            ((ObjectValue) o).toJava().forEach((k1, v1) -> m.put(k1, v1.toJava()));
+            return m;
         }
         return o;
     }
