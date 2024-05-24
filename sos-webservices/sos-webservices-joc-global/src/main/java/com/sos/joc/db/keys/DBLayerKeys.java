@@ -1,6 +1,7 @@
 package com.sos.joc.db.keys;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateEncodingException;
 import java.security.spec.InvalidKeySpecException;
@@ -18,6 +19,7 @@ import com.sos.commons.sign.keys.certificate.CertificateUtils;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDepKeys;
+import com.sos.joc.db.encipherment.DBItemEncCertificate;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.sign.JocKeyAlgorithm;
@@ -338,5 +340,51 @@ public class DBLayerKeys {
         int row = session.executeUpdate(query);
         return row;
     }
+    
+    public void storeEnciphermentCertificate (String alias, String certificate, Path privateKeyPath) throws SOSHibernateException {
+        if (privateKeyPath != null) {
+            storeEnciphermentCertificate(alias, certificate, privateKeyPath.toString().replace('\\', '/'));
+        } else {
+            storeEnciphermentCertificate(alias, certificate, (String)null);
+        }
+    }
 
+    public void storeEnciphermentCertificate (String alias, String certificate, String privateKeyPath) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_ENC_CERTIFICATE).append(" where ");
+        hql.append(" where alias = :alias");
+        Query<DBItemEncCertificate> query = session.createQuery(hql.toString());
+        query.setParameter("alias", alias);
+        DBItemEncCertificate existingCertificate = session.getSingleResult(query);
+        if(existingCertificate == null) {
+            DBItemEncCertificate newCert = new DBItemEncCertificate();
+            newCert.setAlias(alias);
+            newCert.setCertificate(certificate);
+            newCert.setPrivateKeyPath(privateKeyPath);
+            session.save(newCert);
+        } else {
+            existingCertificate.setCertificate(certificate);
+            existingCertificate.setPrivateKeyPath(privateKeyPath);
+            session.update(existingCertificate);
+        }
+    }
+
+    public List<DBItemEncCertificate> getAllEnciphermentCertificates () throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_ENC_CERTIFICATE);
+        Query<DBItemEncCertificate> query = session.createQuery(hql.toString());
+        List<DBItemEncCertificate> results = session.getResultList(query);
+        if(results == null || results.isEmpty()) {
+            return Collections.emptyList();
+        } else {
+            return results;
+        }
+    }
+    
+    public DBItemEncCertificate getEnciphermentCertificate (String certAlias) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_ENC_CERTIFICATE).append(" where ");
+        hql.append(" where alias = :alias");
+        Query<DBItemEncCertificate> query = session.createQuery(hql.toString());
+        query.setParameter("alias", certAlias);
+        return session.getSingleResult(query);
+    }
+    
 }

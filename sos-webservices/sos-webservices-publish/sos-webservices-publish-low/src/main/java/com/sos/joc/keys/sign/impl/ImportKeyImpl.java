@@ -83,7 +83,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             if(keyPair == null) {
                 keyPair = new JocKeyPair();
             }
-            String keyFromFile = readFileContent(stream, filter);
+            String keyFromFile = PublishUtils.readFileContent(stream);
             keyPair.setKeyAlgorithm(filter.getKeyAlgorithm());
             String publicKey = null;
             String reason = null;
@@ -167,19 +167,6 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
                 }
             } catch (Exception e) {}
         }
-    }
-
-    private String readFileContent(InputStream inputStream, ImportKeyFilter filter) throws DBConnectionRefusedException, DBInvalidDataException,
-            SOSHibernateException, IOException, JocUnsupportedFileTypeException, JocConfigurationException, DBOpenSessionException {
-        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-        try {
-            PublishUtils.inputStream2OutputStream(inputStream, outStream);
-        } finally {
-            if (inputStream != null) {
-                try { inputStream.close(); } catch (IOException e) {}
-            }
-        }
-        return outStream.toString();
     }
 
 }
