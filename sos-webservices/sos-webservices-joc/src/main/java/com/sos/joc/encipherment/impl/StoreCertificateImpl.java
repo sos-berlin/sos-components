@@ -8,6 +8,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.db.keys.DBLayerKeys;
 import com.sos.joc.encipherment.resource.IStoreCertificate;
 import com.sos.joc.exceptions.JocConcurrentAccessException;
 import com.sos.joc.exceptions.JocException;
@@ -32,9 +33,11 @@ public class StoreCertificateImpl extends JOCResourceImpl implements IStoreCerti
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-
             storeAuditLog(filter.getAuditLog(), CategoryType.CERTIFICATES);
-        // TODO Auto-generated method stub
+
+            hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            DBLayerKeys dbLayer = new DBLayerKeys(hibernateSession);
+            dbLayer.storeEnciphermentCertificate(filter.getCertAlias(), filter.getCertificate(), filter.getPrivateKeyPath());
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocConcurrentAccessException e) {
             ProblemHelper.postMessageAsHintIfExist(e.getMessage(), xAccessToken, getJocError(), null);

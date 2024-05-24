@@ -80,7 +80,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             stream = body.getEntityAs(InputStream.class);
 
             JocKeyPair keyPair = new JocKeyPair();
-            String keyFromFile = readFileContent(stream, filter);
+            String keyFromFile = PublishUtils.readFileContent(stream);
             keyPair.setPrivateKey(null);
             keyPair.setKeyAlgorithm(filter.getKeyAlgorithm());
             String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
@@ -164,19 +164,6 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
                 }
             } catch (Exception e) {}
         }
-    }
-
-    private String readFileContent(InputStream inputStream, ImportKeyFilter filter) throws DBConnectionRefusedException, DBInvalidDataException,
-            SOSHibernateException, IOException, JocUnsupportedFileTypeException, JocConfigurationException, DBOpenSessionException {
-        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-        try {
-            PublishUtils.inputStream2OutputStream(inputStream, outStream);
-        } finally {
-            if (inputStream != null) {
-                try { inputStream.close(); } catch (IOException e) {}
-            }
-        }
-        return outStream.toString();
     }
 
 }

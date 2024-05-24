@@ -1,5 +1,6 @@
 package com.sos.joc.publish.util;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -1810,4 +1811,17 @@ public abstract class PublishUtils {
 //        } catch (JsonProcessingException e) {
 //        }
     }
+    
+    public static String readFileContent(InputStream inputStream) throws IOException {
+        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+        try {
+            inputStream2OutputStream(inputStream, outStream);
+        } finally {
+            if (inputStream != null) {
+                try { inputStream.close(); } catch (IOException e) {}
+            }
+        }
+        return outStream.toString();
+    }
+
 }
