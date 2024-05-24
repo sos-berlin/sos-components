@@ -1,5 +1,11 @@
 package com.sos.js7.job;
 
+import java.io.File;
+import java.math.BigDecimal;
+import java.net.URI;
+import java.nio.charset.Charset;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 import com.sos.commons.util.common.SOSArgument;
@@ -143,7 +149,7 @@ public class JobArgument<T> extends SOSArgument<T> {
     }
 
     protected void reset() {
-        setValue(null);
+        setValue((T) null);
         this.valueSource = new ValueSource(ValueSourceType.JAVA);
         setIsDirty(false);
     }
@@ -199,6 +205,47 @@ public class JobArgument<T> extends SOSArgument<T> {
         return sb.toString();
     }
 
+    @SuppressWarnings("unchecked")
+    protected void setValue(String val) {
+        super.setValue((T) val);
+    }
+
+    @SuppressWarnings("unchecked")
+    public void applyValue(String val) {
+        if (clazzType == null || clazzType.equals(String.class)) {
+            setValue(val);
+            return;
+        }
+        try {
+            if (clazzType.equals(Integer.class)) {
+                super.setValue((T) Integer.valueOf(val));
+            } else if (clazzType.equals(Long.class)) {
+                super.setValue((T) Long.valueOf(val));
+            } else if (clazzType.equals(BigDecimal.class)) {
+                if (val.contains(".") || val.contains(",")) {
+                    super.setValue((T) BigDecimal.valueOf(Double.valueOf(val)));
+                } else {
+                    super.setValue((T) BigDecimal.valueOf(Long.valueOf(val)));
+                }
+            } else if (clazzType.equals(Path.class)) {
+                super.setValue((T) Paths.get(val));
+            } else if (clazzType.equals(File.class)) {
+                super.setValue((T) new File(val));
+            } else if (clazzType.equals(URI.class)) {
+                super.setValue((T) URI.create(val));
+            } else if (clazzType.equals(Charset.class)) {
+                super.setValue((T) Charset.forName(val));
+            } else if (clazzType.equals(Boolean.class)) {
+                super.setValue((T) Boolean.valueOf(val));
+            } else {
+                setValue(val);
+            }
+        } catch (Throwable e) {
+            reset();
+            setNotAcceptedValue(val, e);
+        }
+    }
+
     protected boolean isScopeAll() {
         return scope != null && scope.equals(Scope.ALL);
     }
@@ -207,12 +254,16 @@ public class JobArgument<T> extends SOSArgument<T> {
         return scope != null && scope.equals(Scope.ORDER_PREPARATION);
     }
 
-    protected void setNotAcceptedValue(Object value, Throwable exception) {
+    public void setNotAcceptedValue(Object value, Throwable exception) {
         notAcceptedValue = new NotAcceptedValue(value, exception);
     }
 
     protected NotAcceptedValue getNotAcceptedValue() {
         return notAcceptedValue;
+    }
+
+    protected void resetNotAcceptedValue() {
+        notAcceptedValue = null;
     }
 
     protected void setClazzType(java.lang.reflect.Type val) {
@@ -233,6 +284,10 @@ public class JobArgument<T> extends SOSArgument<T> {
         private NotAcceptedValue(Object value, Throwable exception) {
             this.value = value;
             this.exception = exception;
+        }
+
+        protected Object getValue() {
+            return this.value;
         }
 
         protected void setSource(ValueSource val) {

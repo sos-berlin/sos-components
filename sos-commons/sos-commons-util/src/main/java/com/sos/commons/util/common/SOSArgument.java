@@ -11,7 +11,7 @@ import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
  */
 public class SOSArgument<T> {
 
-    private String name;
+    private final String name;
     private boolean required;
     private T defaultValue;
     private DisplayMode displayMode;
@@ -44,10 +44,6 @@ public class SOSArgument<T> {
 
     public String getName() {
         return name;
-    }
-
-    public void setName(String val) {
-        name = val;
     }
 
     public boolean isRequired() {

@@ -29,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
-import com.sos.commons.util.SOSBase64;
 import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgumentHelper;
@@ -49,7 +48,6 @@ import js7.launcher.forjava.internal.BlockingInternalJob;
 public abstract class Job<A extends JobArguments> implements BlockingInternalJob {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Job.class);
-    private static final String BASE64_VALUE_PREFIX = "base64:";
     private static final String OPERATION_CANCEL_KILL = "cancel/kill";
 
     private JobEnvironment<A> jobEnvironment;
@@ -458,39 +456,32 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
                 LOGGER.trace(String.format("[getValue][%s][val instanceof String]arg type=%s", arg.getName(), type));
             }
             if (type.equals(String.class)) {
-                if (((String) val).startsWith(BASE64_VALUE_PREFIX)) {
-                    try {
-                        val = SOSBase64.decode(val.toString().substring(BASE64_VALUE_PREFIX.length()));
-                    } catch (Throwable e) {
-                        arg.setNotAcceptedValue(val, e);
-                    }
-                }
             } else {
-                if (type.equals(Path.class)) {
-                    val = Paths.get(val.toString());
-                } else if (type.equals(File.class)) {
-                    val = new File(val.toString());
-                } else if (type.equals(URI.class)) {
-                    val = URI.create(val.toString());
-                } else if (SOSReflection.isCollection(type)) {
-                    val = getCollectionValue(val, arg, type);
-                } else if (SOSReflection.isEnum(type)) {
-                    Object v = SOSReflection.enumIgnoreCaseValueOf(type.getTypeName(), val.toString());
-                    if (v == null) {
-                        arg.setNotAcceptedValue(val, null);
-                        arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
-                        val = arg.getDefaultValue();
-                    } else {
-                        val = v;
-                    }
-                } else if (type.equals(Charset.class)) {
-                    try {
+                try {
+                    if (type.equals(Path.class)) {
+                        val = Paths.get(val.toString());
+                    } else if (type.equals(File.class)) {
+                        val = new File(val.toString());
+                    } else if (type.equals(URI.class)) {
+                        val = URI.create(val.toString());
+                    } else if (SOSReflection.isCollection(type)) {
+                        val = getCollectionValue(val, arg, type);
+                    } else if (SOSReflection.isEnum(type)) {
+                        Object v = SOSReflection.enumIgnoreCaseValueOf(type.getTypeName(), val.toString());
+                        if (v == null) {
+                            arg.setNotAcceptedValue(val, null);
+                            arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
+                            val = arg.getDefaultValue();
+                        } else {
+                            val = v;
+                        }
+                    } else if (type.equals(Charset.class)) {
                         val = Charset.forName(val.toString());
-                    } catch (Throwable e) {
-                        arg.setNotAcceptedValue(val, e);
-                        arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
-                        val = arg.getDefaultValue();
                     }
+                } catch (Throwable e) {
+                    arg.setNotAcceptedValue(val, e);
+                    arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
+                    val = arg.getDefaultValue();
                 }
             }
         } else if (val instanceof BigDecimal) {

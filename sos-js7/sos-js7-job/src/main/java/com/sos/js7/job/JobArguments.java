@@ -2,7 +2,6 @@ package com.sos.js7.job;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,9 +23,6 @@ public class JobArguments {
 
     private JobArgument<LogLevel> logLevel = new JobArgument<>("log_level", false, LogLevel.INFO);
     private JobArgument<MockLevel> mockLevel = new JobArgument<>("mock_level", false, MockLevel.OFF);
-
-    private JobArgument<String> enciphermentCertificate = new JobArgument<>("encipherment_certificate", false);
-    private JobArgument<Path> enciphermentPrivateKeyPath = new JobArgument<>("encipherment_private_key_path", false);
 
     private Map<String, List<JobArgument<?>>> includedArguments;
     private List<JobArgument<?>> dynamicArgumentFields;
@@ -87,13 +83,5 @@ public class JobArguments {
 
     public JobArgument<MockLevel> getMockLevel() {
         return mockLevel;
-    }
-
-    public JobArgument<String> getEnciphermentCertificate() {
-        return enciphermentCertificate;
-    }
-
-    public JobArgument<Path> getEnciphermentPrivateKeyPath() {
-        return enciphermentPrivateKeyPath;
     }
 }

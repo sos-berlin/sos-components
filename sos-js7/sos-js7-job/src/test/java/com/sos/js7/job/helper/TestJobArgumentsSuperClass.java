@@ -1,5 +1,6 @@
 package com.sos.js7.job.helper;
 
+import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -15,6 +16,7 @@ public class TestJobArgumentsSuperClass extends JobArguments {
     private JobArgument<LinkedList<String>> linkedList = new JobArgument<>("linked_list", false);
     private JobArgument<List<AuthMethod>> authMethods = new JobArgument<>("auth_methods", false);
     private JobArgument<String> test = new JobArgument<>("test", false);
+    private JobArgument<Path> path = new JobArgument<>("path", false);
 
     public JobArgument<String> getTestSuperClass() {
         return testSuperClass;
@@ -34,5 +36,9 @@ public class TestJobArgumentsSuperClass extends JobArguments {
 
     public JobArgument<String> getTest() {
         return test;
+    }
+
+    public JobArgument<Path> getPath() {
+        return path;
     }
 }

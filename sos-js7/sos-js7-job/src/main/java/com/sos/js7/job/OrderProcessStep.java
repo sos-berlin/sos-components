@@ -32,6 +32,7 @@ import com.sos.js7.job.ValueSource.ValueSourceType;
 import com.sos.js7.job.exception.JobArgumentException;
 import com.sos.js7.job.exception.JobProblemException;
 import com.sos.js7.job.exception.JobRequiredArgumentMissingException;
+import com.sos.js7.job.resolver.JobArgumentValueResolverCache;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
@@ -434,6 +435,37 @@ public class OrderProcessStep<A extends JobArguments> {
                     allArguments.put(e.getKey(), new JobArgument<>(e.getKey(), e.getValue(), new ValueSource(ValueSourceType.JOB_ARGUMENT)));
                 }
             });
+        }
+
+        resolveArgumenValues();
+    }
+
+    /** IJobArgumentValueResolver */
+    private void resolveArgumenValues() {
+        if (allDeclaredArguments != null) {
+            Map<String, Object> am = getAllArgumentsAsNameValueMap();
+            for (String prefix : JobArgumentValueResolverCache.getResolverPrefixes()) {
+                // allArguments ?
+                List<JobArgument<?>> l = allDeclaredArguments.stream().map(e -> {
+                    if (e.getValue() == null && e.getNotAcceptedValue() != null) {
+                        if (e.getNotAcceptedValue().getValue() != null) {
+                            String v = (String) e.getNotAcceptedValue().getValue();
+                            if (v.startsWith(prefix)) {
+                                e.setValue(v);
+                                e.resetNotAcceptedValue();
+                            }
+                        }
+                    }
+                    return e;
+                }).filter(e -> e.getValue() != null && e.getValue().toString().startsWith(prefix)).collect(Collectors.toList());
+                try {
+                    if (l.size() > 0) {
+                        JobArgumentValueResolverCache.resolve(prefix, l, logger, am);
+                    }
+                } catch (Throwable e) {
+                    logger.error(e.toString(), e);
+                }
+            }
         }
     }
 
@@ -1009,7 +1041,8 @@ public class OrderProcessStep<A extends JobArguments> {
                 if (a.getNotAcceptedValue().getException() != null) {
                     exception = new StringBuilder("(").append(a.getNotAcceptedValue().getException().toString()).append(")").toString();
                 }
-                String nvsn = a.getNotAcceptedValue().getSource().getType() == null ? "" : a.getNotAcceptedValue().getSource().getType().name() + " ";
+                String nvsn = a.getNotAcceptedValue().getSource() == null || a.getNotAcceptedValue().getSource().getType() == null ? "" : a
+                        .getNotAcceptedValue().getSource().getType().name() + " ";
                 sb.append(a.getName()).append("=").append(a.getDisplayValue());
                 sb.append("(");
                 sb.append(nvsn).append("value=").append(a.getNotAcceptedValue().getDisplayValue());
