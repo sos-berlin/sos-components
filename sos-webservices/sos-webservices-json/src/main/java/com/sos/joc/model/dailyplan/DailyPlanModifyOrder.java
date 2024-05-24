@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.common.Variables;
-import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -21,56 +20,17 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "controllerId",
-    "scheduledFor",
-    "cycle",
-    "timeZone",
     "variables",
     "removeVariables",
-    "orderIds",
     "dailyPlanDate",
     "startPosition",
     "endPositions",
-    "blockPosition",
-    "forceJobAdmission",
-    "auditLog"
+    "blockPosition"
 })
-public class DailyPlanModifyOrder {
+public class DailyPlanModifyOrder
+    extends DailyPlanCopyOrder
+{
 
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    private String controllerId;
-    /**
-     * timestamp with now
-     * <p>
-     * ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS or empty
-     * 
-     */
-    @JsonProperty("scheduledFor")
-    @JsonPropertyDescription("ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS or empty")
-    private String scheduledFor;
-    /**
-     * Cyclic Order
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("cycle")
-    private Cycle cycle;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("timeZone")
-    private String timeZone;
     /**
      * key-value pairs
      * <p>
@@ -82,13 +42,6 @@ public class DailyPlanModifyOrder {
     private Variables variables;
     @JsonProperty("removeVariables")
     private List<String> removeVariables = null;
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("orderIds")
-    private List<String> orderIds = null;
     /**
      * date
      * <p>
@@ -104,108 +57,6 @@ public class DailyPlanModifyOrder {
     private List<Object> endPositions = null;
     @JsonProperty("blockPosition")
     private Object blockPosition;
-    @JsonProperty("forceJobAdmission")
-    private Boolean forceJobAdmission = false;
-    @JsonProperty("stickDailyPlanDate")
-    private Boolean stickDailyPlanDate = false;
-    /**
-     * auditParams
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("auditLog")
-    private AuditParams auditLog;
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
-
-    /**
-     * timestamp with now
-     * <p>
-     * ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS or empty
-     * 
-     */
-    @JsonProperty("scheduledFor")
-    public String getScheduledFor() {
-        return scheduledFor;
-    }
-
-    /**
-     * timestamp with now
-     * <p>
-     * ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS or empty
-     * 
-     */
-    @JsonProperty("scheduledFor")
-    public void setScheduledFor(String scheduledFor) {
-        this.scheduledFor = scheduledFor;
-    }
-
-    /**
-     * Cyclic Order
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("cycle")
-    public Cycle getCycle() {
-        return cycle;
-    }
-
-    /**
-     * Cyclic Order
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("cycle")
-    public void setCycle(Cycle cycle) {
-        this.cycle = cycle;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("timeZone")
-    public String getTimeZone() {
-        return timeZone;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("timeZone")
-    public void setTimeZone(String timeZone) {
-        this.timeZone = timeZone;
-    }
 
     /**
      * key-value pairs
@@ -237,26 +88,6 @@ public class DailyPlanModifyOrder {
     @JsonProperty("removeVariables")
     public void setRemoveVariables(List<String> removeVariables) {
         this.removeVariables = removeVariables;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("orderIds")
-    public List<String> getOrderIds() {
-        return orderIds;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("orderIds")
-    public void setOrderIds(List<String> orderIds) {
-        this.orderIds = orderIds;
     }
 
     /**
@@ -311,56 +142,14 @@ public class DailyPlanModifyOrder {
         this.blockPosition = blockPosition;
     }
 
-    @JsonProperty("forceJobAdmission")
-    public Boolean getForceJobAdmission() {
-        return forceJobAdmission;
-    }
-
-    @JsonProperty("forceJobAdmission")
-    public void setForceJobAdmission(Boolean forceJobAdmission) {
-        this.forceJobAdmission = forceJobAdmission;
-    }
-
-    @JsonProperty("stickDailyPlanDate")
-    public Boolean getStickDailyPlanDate() {
-        return stickDailyPlanDate;
-    }
-
-    @JsonProperty("stickDailyPlanDate")
-    public void setStickDailyPlanDate(Boolean stickDailyPlanDate) {
-        this.stickDailyPlanDate = stickDailyPlanDate;
-    }
-
-    /**
-     * auditParams
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("auditLog")
-    public AuditParams getAuditLog() {
-        return auditLog;
-    }
-
-    /**
-     * auditParams
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("auditLog")
-    public void setAuditLog(AuditParams auditLog) {
-        this.auditLog = auditLog;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("scheduledFor", scheduledFor).append("cycle", cycle).append("timeZone", timeZone).append("variables", variables).append("removeVariables", removeVariables).append("orderIds", orderIds).append("dailyPlanDate", dailyPlanDate).append("startPosition", startPosition).append("endPositions", endPositions).append("blockPosition", blockPosition).append("forceJobAdmission", forceJobAdmission).append("stickDailyPlanDate", stickDailyPlanDate).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("variables", variables).append("removeVariables", removeVariables).append("dailyPlanDate", dailyPlanDate).append("startPosition", startPosition).append("endPositions", endPositions).append("blockPosition", blockPosition).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(variables).append(removeVariables).append(dailyPlanDate).append(controllerId).append(auditLog).append(blockPosition).append(timeZone).append(cycle).append(startPosition).append(endPositions).append(scheduledFor).append(forceJobAdmission).append(stickDailyPlanDate).append(orderIds).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(variables).append(removeVariables).append(endPositions).append(dailyPlanDate).append(blockPosition).append(startPosition).toHashCode();
     }
 
     @Override
@@ -372,7 +161,7 @@ public class DailyPlanModifyOrder {
             return false;
         }
         DailyPlanModifyOrder rhs = ((DailyPlanModifyOrder) other);
-        return new EqualsBuilder().append(variables, rhs.variables).append(removeVariables, rhs.removeVariables).append(dailyPlanDate, rhs.dailyPlanDate).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(blockPosition, rhs.blockPosition).append(timeZone, rhs.timeZone).append(cycle, rhs.cycle).append(startPosition, rhs.startPosition).append(endPositions, rhs.endPositions).append(scheduledFor, rhs.scheduledFor).append(forceJobAdmission, rhs.forceJobAdmission).append(stickDailyPlanDate, rhs.stickDailyPlanDate).append(orderIds, rhs.orderIds).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(variables, rhs.variables).append(removeVariables, rhs.removeVariables).append(endPositions, rhs.endPositions).append(dailyPlanDate, rhs.dailyPlanDate).append(blockPosition, rhs.blockPosition).append(startPosition, rhs.startPosition).isEquals();
     }
 
 }
