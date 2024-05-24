@@ -22,19 +22,22 @@ public class DefaultEncryptionResolver implements IJobArgumentValueResolver {
         String ec = getArgumentValue(allArguments, ARG_NAME_ENCIPHERMENT_CERTIFICATE);
         String epkp = getArgumentValue(allArguments, ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH);
 
+        // TODO: read PK
+        // TODO: validate PK against certificate
+        
         for (JobArgument<?> arg : toResolve) {
             try {
-                arg.applyValue(encrypt((String) arg.getValue(), ec, epkp));
-                arg.setDisplayMode(DisplayMode.MASKED);
+                arg.applyValue(decrypt((String) arg.getValue(), epkp));
+                // TODO: activated before finalize
+//                arg.setDisplayMode(DisplayMode.MASKED);
             } catch (Throwable e) {
-                e.printStackTrace();
                 arg.setNotAcceptedValue(arg.getValue(), e);
             }
         }
     }
 
     /*** TODO */
-    private static String encrypt(String valWithPrefix, String enciphermentCertificate, String enciphermentPrivateKeyPath) {
+    private static String decrypt(String valWithPrefix, String enciphermentPrivateKeyPath) {
         String val = valWithPrefix.substring(getPrefix().length());
         return val;
     }

@@ -4,13 +4,17 @@ import java.time.Instant;
 import java.util.Date;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.db.encipherment.DBItemEncCertificate;
+import com.sos.joc.db.keys.DBLayerKeys;
 import com.sos.joc.encipherment.resource.IDeleteCertificate;
 import com.sos.joc.exceptions.JocConcurrentAccessException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.encipherment.DeleteCertificateRequestFilter;
 import com.sos.schema.JsonValidator;
 
@@ -30,16 +34,21 @@ public class DeleteCertificateImpl extends JOCResourceImpl implements IDeleteCer
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-        // TODO Auto-generated method stub
+            hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            hibernateSession.setAutoCommit(false);
+            DBLayerKeys dbLayer = new DBLayerKeys(hibernateSession);
+            DBItemEncCertificate dbCert = dbLayer.getEnciphermentCertificate(filter.getCertAlias());
+            Globals.beginTransaction(hibernateSession);
+            dbLayer.deleteEnciphermentCertificateMappings(dbCert.getAlias());
+            hibernateSession.delete(dbCert);
+            Globals.commit(hibernateSession);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocConcurrentAccessException e) {
-            ProblemHelper.postMessageAsHintIfExist(e.getMessage(), xAccessToken, getJocError(), null);
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatus434JSError(e);
         } catch (JocException e) {
+            Globals.rollback(hibernateSession);
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
+            Globals.rollback(hibernateSession);
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
             Globals.disconnect(hibernateSession);

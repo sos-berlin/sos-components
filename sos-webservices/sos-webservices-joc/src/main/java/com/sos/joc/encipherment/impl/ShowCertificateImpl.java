@@ -8,10 +8,12 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.db.encipherment.DBItemEncCertificate;
+import com.sos.joc.db.keys.DBLayerKeys;
 import com.sos.joc.encipherment.resource.IShowCertificate;
 import com.sos.joc.exceptions.JocConcurrentAccessException;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.encipherment.DeleteCertificateRequestFilter;
+import com.sos.joc.model.encipherment.EncCertificate;
 import com.sos.joc.model.encipherment.ShowCertificateRequestFilter;
 import com.sos.schema.JsonValidator;
 
@@ -31,8 +33,14 @@ public class ShowCertificateImpl extends JOCResourceImpl implements IShowCertifi
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-        // TODO Auto-generated method stub
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            DBLayerKeys dbLayer = new DBLayerKeys(hibernateSession);
+            DBItemEncCertificate dbCert = dbLayer.getEnciphermentCertificate(filter.getCertAlias());
+            EncCertificate cert = new EncCertificate();
+            cert.setCertAlias(dbCert.getAlias());
+            cert.setCertificate(dbCert.getCertificate());
+            cert.setPrivateKeyPath(dbCert.getPrivateKeyPath());
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(cert));
         } catch (JocConcurrentAccessException e) {
             ProblemHelper.postMessageAsHintIfExist(e.getMessage(), xAccessToken, getJocError(), null);
             e.addErrorMetaInfo(getJocError());
