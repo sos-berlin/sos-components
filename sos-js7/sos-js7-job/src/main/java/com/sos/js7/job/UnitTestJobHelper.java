@@ -54,6 +54,9 @@ public class UnitTestJobHelper<A extends JobArguments> {
         final OrderProcessStep<A> step = newOrderProcessStep(args);
         return CompletableFuture.supplyAsync(() -> {
             try {
+                ArgumentsResult r = toArgs(args, job.onCreateJobArguments(null, step));
+                step.init(r.instance, r.undeclared);
+
                 step.checkAndLogParameterization(null, null);
                 this.job.processOrder(step);
                 return step.processed();
@@ -93,10 +96,6 @@ public class UnitTestJobHelper<A extends JobArguments> {
                 return aj;
             }
         };
-
-        ArgumentsResult r = toArgs(args, job.onCreateJobArguments(null, step));
-        step.init(r.instance, r.undeclared);
-
         return step;
     }
 

@@ -210,14 +210,14 @@ public class OrderProcessStep<A extends JobArguments> {
         cancelableExecuteJobs = null;
     }
 
-    protected void init(A arguments) {
+    protected void init(A arguments) throws Exception {
         this.declaredArguments = arguments;
         this.logger.init(arguments);
 
         setAllArguments();
     }
 
-    protected void init(A arguments, Map<String, Object> unitTestUndeclaredArguments) {
+    protected void init(A arguments, Map<String, Object> unitTestUndeclaredArguments) throws Exception {
         this.unitTestUndeclaredArguments = unitTestUndeclaredArguments;
         init(arguments);
     }
@@ -321,7 +321,7 @@ public class OrderProcessStep<A extends JobArguments> {
         return SOSArgumentHelper.getDisplayValue(value, ar.getDisplayMode());
     }
 
-    private void setAllArguments() {
+    private void setAllArguments() throws Exception {
         allArguments = new TreeMap<>();
 
         setOrderPreparationParameterNames();
@@ -441,7 +441,7 @@ public class OrderProcessStep<A extends JobArguments> {
     }
 
     /** IJobArgumentValueResolver */
-    private void resolveArgumenValues() {
+    private void resolveArgumenValues() throws Exception {
         if (allDeclaredArguments != null) {
             Map<String, Object> am = getAllArgumentsAsNameValueMap();
             for (String prefix : JobArgumentValueResolverCache.getResolverPrefixes()) {
@@ -458,12 +458,14 @@ public class OrderProcessStep<A extends JobArguments> {
                     }
                     return e;
                 }).filter(e -> e.getValue() != null && e.getValue().toString().startsWith(prefix)).collect(Collectors.toList());
-                try {
-                    if (l.size() > 0) {
+                if (l.size() > 0) {
+                    try {
                         JobArgumentValueResolverCache.resolve(prefix, l, logger, am);
+                    } catch (Throwable e) {
+                        Throwable ex = e.getCause() == null ? e : e.getCause();
+                        throw new JobArgumentException(String.format("[%s]%s", JobArgumentValueResolverCache.getResolverClassName(prefix), ex
+                                .toString()), ex);
                     }
-                } catch (Throwable e) {
-                    logger.error(e.toString(), e);
                 }
             }
         }
