@@ -5,6 +5,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -36,6 +37,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsDailyPlan;
 import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.dailyplan.DailyPlanRunner;
 import com.sos.joc.dailyplan.common.DailyPlanHelper;
@@ -302,8 +304,13 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
         int planDaysAhead = getSettings().getDayAheadPlan();
         int submitDaysAhead = getSettings().getDayAheadSubmit();
         if(forReleaseDeploy) {
-          planDaysAhead += 1;
-          submitDaysAhead += 1;
+          ConfigurationGlobalsDailyPlan dailyPlanConfiguration = Globals.getConfigurationGlobalsDailyPlan();
+          Calendar cal = DailyPlanRunner.getStartTimeCalendar(dailyPlanConfiguration.getStartTime().getValue(),
+              dailyPlanConfiguration.getPeriodBegin().getValue(), dailyPlanConfiguration.getTimeZone().getValue());
+          if ((Instant.now().toEpochMilli() - cal.getTimeInMillis()) > 0) {
+            planDaysAhead += 1;
+            submitDaysAhead += 1;
+          }
         }
         List<GenerateRequest> generateRequests = new ArrayList<>();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
