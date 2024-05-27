@@ -122,16 +122,7 @@ public class DailyPlanRunner extends TimerTask {
         java.util.Calendar now = java.util.Calendar.getInstance(TimeZone.getTimeZone(settings.getTimeZone()));
         if (startCalendar == null) {
             // TODO duplicate calculation, see com.sos.joc.dailyplan.DailyPlanService.start() -> DailyPlanHelper.getStartTimeAsString
-            if (!"".equals(settings.getDailyPlanStartTime())) {
-                startCalendar = DailyPlanHelper.getCalendar(settings.getDailyPlanStartTime(), settings.getTimeZone());
-            } else {
-                startCalendar = DailyPlanHelper.getCalendar(settings.getPeriodBegin(), settings.getTimeZone());
-                startCalendar.add(java.util.Calendar.DATE, 1);
-                startCalendar.add(java.util.Calendar.MINUTE, -30);
-            }
-            if (startCalendar.before(now)) {
-                startCalendar.add(java.util.Calendar.DATE, 1);
-            }
+            startCalendar = getStartTimeCalendar(settings);
         }
 
         java.util.Calendar calendar = DailyPlanHelper.getCalendar(settings.getPeriodBegin(), settings.getTimeZone());
@@ -1304,5 +1295,25 @@ public class DailyPlanRunner extends TimerTask {
         cal.setId(id);
         return cal;
     }
+    
+    public static java.util.Calendar getStartTimeCalendar(DailyPlanSettings settings) {
+      return getStartTimeCalendar(settings.getDailyPlanStartTime(), settings.getPeriodBegin(), settings.getTimeZone());
+    }
 
-}
+    public static java.util.Calendar getStartTimeCalendar(String startTime, String periodBegin, String timezone) {
+      java.util.Calendar cal = null;
+      if (!"".equals(startTime)) {
+        cal = DailyPlanHelper.getCalendar(startTime, timezone);
+      } else {
+        cal = DailyPlanHelper.getCalendar(periodBegin, timezone);
+        cal.add(java.util.Calendar.DATE, 1);
+        cal.add(java.util.Calendar.MINUTE, -30);
+      }
+      java.util.Calendar now = java.util.Calendar.getInstance(TimeZone.getTimeZone(timezone));
+      if (cal.before(now)) {
+        cal.add(java.util.Calendar.DATE, 1);
+      }
+      return cal;
+    }
+    
+  }
