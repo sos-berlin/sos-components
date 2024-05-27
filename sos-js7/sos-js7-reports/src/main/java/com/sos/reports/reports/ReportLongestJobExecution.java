@@ -43,24 +43,25 @@ public class ReportLongestJobExecution implements IReport {
 
     }
 
-    public void count(ReportRecord orderRecord) {
-        if (orderRecord.getError()) {
+    public void count(ReportRecord jobRecord) {
+        if (jobRecord.getError()) {
 
-            if (orderRecord.getEndTime() != null) {
-                ReportResultData reportResultData = longestExecutionWorkflows.get(orderRecord.getWorkflowName());
+            if (jobRecord.getEndTime() != null) {
+                ReportResultData reportResultData = longestExecutionWorkflows.get(jobRecord.getWorkflowName());
                 if (reportResultData == null) {
                     reportResultData = new ReportResultData();
                 }
 
-                Duration d = Duration.between(orderRecord.getStartTime(), orderRecord.getEndTime());
+                Duration d = Duration.between(jobRecord.getStartTime(), jobRecord.getEndTime());
                 reportResultData.setDuration(d.toSeconds());
 
-                Instant instant = orderRecord.getStartTime().toInstant(ZoneOffset.UTC);
+                Instant instant = jobRecord.getStartTime().toInstant(ZoneOffset.UTC);
                 reportResultData.setStartTime(Date.from(instant));
 
-                reportResultData.setWorkflowName(orderRecord.getWorkflowName());
-                reportResultData.setJobName(orderRecord.getJobName());
-                longestExecutionWorkflows.put(orderRecord.getWorkflowName(), reportResultData);
+                reportResultData.setWorkflowName(jobRecord.getWorkflowName());
+                reportResultData.setJobName(jobRecord.getJobName());
+                
+                longestExecutionWorkflows.put(jobRecord.getJobNameWithWorkflowName(), reportResultData);
                 if (longestExecutionWorkflows.size() > reportArguments.hits) {
                     removeSmallesItem();
                 }
@@ -71,8 +72,8 @@ public class ReportLongestJobExecution implements IReport {
     public ReportResult putHits() {
         Comparator<ReportResultData> byDuration = (obj1, obj2) -> obj2.getDuration().compareTo(obj1.getDuration());
         LinkedHashMap<String, ReportResultData> longesExecutionWorkflowsResult = longestExecutionWorkflows.entrySet().stream().sorted(Map.Entry
-                .comparingByValue(byDuration)).limit(reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1,
-                        e2) -> e1, LinkedHashMap::new));
+                .<String, ReportResultData> comparingByValue(byDuration).reversed()).limit(reportArguments.hits).collect(Collectors.toMap(
+                        Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 
         ReportResult reportResult = new ReportResult();
 
@@ -87,6 +88,7 @@ public class ReportLongestJobExecution implements IReport {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("-----New Entry -----------------------");
                 LOGGER.debug("workflowName:" + entry.getValue().getWorkflowName());
+                LOGGER.debug("jobName:" + entry.getValue().getJobName());
                 LOGGER.debug("startTime:" + entry.getValue().getStartTime());
                 LOGGER.debug("duration:" + entry.getValue().getDuration());
                 LOGGER.debug("---------");

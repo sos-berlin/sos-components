@@ -26,15 +26,15 @@ import com.sos.reports.classes.ReportHelper;
 import com.sos.reports.classes.ReportPeriod;
 import com.sos.reports.classes.ReportRecord;
 
-public class ReportParallelJobExecutions implements IReport {
+public class ReportParallelWorkflowExecutions implements IReport {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ReportParallelWorkflowExecutions.class);
-    private static final String REPORT_TITLE = "Top ${hits} periods during which mostly jobs executed";
+    private static final String REPORT_TITLE = "Top ${hits} periods during which mostly workflows executed";
     private ReportArguments reportArguments;
 
     Map<String, ReportResultData> periods = new HashMap<String, ReportResultData>();
 
-    private void count(ReportRecord jobRecord, ReportPeriod reportPeriod) {
+    private void count(ReportRecord orderRecord, ReportPeriod reportPeriod) {
 
         String periodKey = reportPeriod.periodKey();
 
@@ -49,40 +49,41 @@ public class ReportParallelJobExecutions implements IReport {
         }
         ReportResultDataItem reportResultDataItem = new ReportResultDataItem();
 
-        if (jobRecord.getEndTime() != null) {
-            Duration d = Duration.between(jobRecord.getStartTime(), jobRecord.getEndTime());
+        if (orderRecord.getEndTime() != null) {
+            Duration d = Duration.between(orderRecord.getStartTime(), orderRecord.getEndTime());
             reportResultDataItem.setDuration(d.toSeconds());
 
-            Instant instant = jobRecord.getEndTime().toInstant(ZoneOffset.UTC);
+            Instant instant = orderRecord.getEndTime().toInstant(ZoneOffset.UTC);
             reportResultDataItem.setEndTime(Date.from(instant));
         }
-        Instant instant = jobRecord.getStartTime().toInstant(ZoneOffset.UTC);
+        Instant instant = orderRecord.getStartTime().toInstant(ZoneOffset.UTC);
         reportResultDataItem.setStartTime(Date.from(instant));
-   
-        if (jobRecord.getState() != null) {
-            reportResultDataItem.setState(Long.valueOf(jobRecord.getState()));
+        if (orderRecord.getOrderState() != null) {
+            reportResultDataItem.setOrderState(Long.valueOf(orderRecord.getOrderState()));
+        }
+        if (orderRecord.getState() != null) {
+            reportResultDataItem.setState(Long.valueOf(orderRecord.getState()));
         }
 
-        reportResultDataItem.setWorkflowName(jobRecord.getWorkflowName());
-        reportResultDataItem.setJobName(jobRecord.getJobName());
+        reportResultDataItem.setWorkflowName(orderRecord.getWorkflowName());
 
         reportResultData.getData().add(reportResultDataItem);
         periods.put(periodKey, reportResultData);
 
     }
 
-    public void count(ReportRecord jobRecord) {
+    public void count(ReportRecord orderRecord) {
 
         ReportPeriod reportPeriod = new ReportPeriod();
-        reportPeriod.setFrom(jobRecord.getStartTime());
-        if (jobRecord.getEndTime() == null) {
-            reportPeriod.setEnd(jobRecord.getModified());
+        reportPeriod.setFrom(orderRecord.getStartTime());
+        if (orderRecord.getEndTime() == null) {
+            reportPeriod.setEnd(orderRecord.getModified());
         } else {
-            reportPeriod.setEnd(jobRecord.getEndTime());
+            reportPeriod.setEnd(orderRecord.getEndTime());
         }
 
         while (!reportPeriod.periodEnded()) {
-            count(jobRecord, reportPeriod);
+            count(orderRecord, reportPeriod);
             reportPeriod.next();
         }
 
@@ -91,7 +92,7 @@ public class ReportParallelJobExecutions implements IReport {
     public ReportResult putHits() {
         Comparator<ReportResultData> byCount = (obj1, obj2) -> obj1.getCount().compareTo(obj2.getCount());
  
-        LinkedHashMap<String, ReportResultData> jobsInPeriodResult = periods.entrySet().stream().sorted(Map.Entry
+        LinkedHashMap<String, ReportResultData> workflowsInPeriodResult = periods.entrySet().stream().sorted(Map.Entry
                 .<String, ReportResultData> comparingByValue(byCount).reversed()).limit(reportArguments.hits).collect(Collectors.toMap(
                         Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 
@@ -101,7 +102,7 @@ public class ReportParallelJobExecutions implements IReport {
         reportResult.setTitle(getTitle());
         reportResult.setType(getType().name());
 
-        for (Entry<String, ReportResultData> entry : jobsInPeriodResult.entrySet()) {
+        for (Entry<String, ReportResultData> entry : workflowsInPeriodResult.entrySet()) {
             LOGGER.debug("-----New Entry -----------------------");
             LOGGER.debug(entry.getKey() + ":" + entry.getValue().getCount());
             reportResult.getData().add(entry.getValue());
@@ -110,7 +111,6 @@ public class ReportParallelJobExecutions implements IReport {
                 for (ReportResultDataItem dataItem : entry.getValue().getData()) {
                     LOGGER.debug("--- New entry detail ---");
                     LOGGER.debug("workflowName:" + dataItem.getWorkflowName());
-                    LOGGER.debug("jobName:" + dataItem.getJobName());
                     LOGGER.debug("orderState:" + dataItem.getOrderState());
                     LOGGER.debug("state:" + dataItem.getState());
                     LOGGER.debug("startTime:" + dataItem.getStartTime());
@@ -142,7 +142,7 @@ public class ReportParallelJobExecutions implements IReport {
 
     @Override
     public ReportHelper.ReportTypes getType() {
-        return ReportHelper.ReportTypes.JOBS;
+        return ReportHelper.ReportTypes.ORDERS;
     }
 
     public void setReportArguments(ReportArguments reportArguments) {

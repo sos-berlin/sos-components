@@ -12,10 +12,15 @@ import com.sos.inventory.model.report.TemplateId;
 import com.sos.reports.classes.CSVFileReader;
 import com.sos.reports.classes.IReport;
 import com.sos.reports.classes.ReportArguments;
+import com.sos.reports.classes.ReportPeriod;
 import com.sos.reports.reports.ReportFailedJobs;
 import com.sos.reports.reports.ReportFailedWorkflows;
+import com.sos.reports.reports.ReportFailedWorkflowsWithCancelledOrders;
+import com.sos.reports.reports.ReportHighCriticalFailedJobs;
 import com.sos.reports.reports.ReportLongestJobExecution;
 import com.sos.reports.reports.ReportLongestOrderExecution;
+import com.sos.reports.reports.ReportParallelJobExecutions;
+import com.sos.reports.reports.ReportParallelWorkflowExecutions;
 
 public class ReportGeneratorExecuter {
 
@@ -45,11 +50,23 @@ public class ReportGeneratorExecuter {
         case "2":
             report = new ReportFailedJobs();
             break;
+        case "5":
+            report = new ReportHighCriticalFailedJobs();
+            break;
+        case "6":
+            report = new ReportFailedWorkflowsWithCancelledOrders();
+            break;
         case "7":
             report = new ReportLongestOrderExecution();
             break;
         case "8":
             report = new ReportLongestJobExecution();
+            break;
+        case "9":
+            report = new ReportParallelWorkflowExecutions();
+            break;
+        case "10":
+            report = new ReportParallelJobExecutions();
             break;
         default: throw new SOSException("Not yet implemented: " + TemplateId.fromValue(Integer.valueOf(reportArguments.reportId)).name());
         }

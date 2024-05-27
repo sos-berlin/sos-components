@@ -47,7 +47,7 @@ public class Interval {
     }
 
     public Boolean end() {
-        return ((currentMonth > monthTo) && (currentYear == yearTo) || currentYear > yearTo);
+        return ((currentMonth > monthTo) && (currentYear.equals(yearTo)) || currentYear > yearTo);
     }
 
     public String currentInterval() {

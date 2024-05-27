@@ -24,7 +24,8 @@ public class CSVFileReader {
 
         while (!interval.end()) {
 
-            Path path = Paths.get(reportArguments.inputDirectory + "/" + report.getType().toString().toLowerCase() + "/" + interval.currentInterval() + ".csv");
+            Path path = Paths.get(reportArguments.inputDirectory + "/" + report.getType().toString().toLowerCase() + "/" + interval.currentInterval()
+                    + ".csv");
 
             if (Files.exists(path)) {
 
@@ -38,31 +39,33 @@ public class CSVFileReader {
                             ReportRecord orderRecord = new ReportRecord();
                             orderRecord.setId(values[0]);
                             orderRecord.setControllerId(values[1]);
-                            orderRecord.setOrderId(values[2]);
-                            orderRecord.setWorkflowPath(values[3]);
-                            orderRecord.setWorkflowVersionId(values[4]);
-                            orderRecord.setWorkflowName(values[5]);
-                            orderRecord.setStartTime(values[6]);
-                            orderRecord.setPlannedTime(values[7]);
-                            orderRecord.setEndTime(values[8]);
-                            orderRecord.setError(values[9]);
-                            orderRecord.setCreated(values[10]);
-                            orderRecord.setModified(values[11]);
-                            orderRecord.setOrderState(values[12]);
-                            orderRecord.setState(values[13]);
+                            if (reportArguments.controllerId == null || reportArguments.controllerId.isEmpty() || reportArguments.controllerId.equals(
+                                    orderRecord.getControllerId())) {
+                                orderRecord.setOrderId(values[2]);
+                                orderRecord.setWorkflowPath(values[3]);
+                                orderRecord.setWorkflowVersionId(values[4]);
+                                orderRecord.setWorkflowName(values[5]);
+                                orderRecord.setStartTime(values[6]);
+                                orderRecord.setPlannedTime(values[7]);
+                                orderRecord.setEndTime(values[8]);
+                                orderRecord.setError(values[9]);
+                                orderRecord.setCreated(values[10]);
+                                orderRecord.setModified(values[11]);
+                                orderRecord.setOrderState(values[12]);
+                                orderRecord.setState(values[13]);
 
-                            if (reportArguments.reportFrequency.endOfInterval(orderRecord.getStartTime().toLocalDate())) {
-                                LOGGER.debug("Interval end reached:" + reportArguments.reportFrequency.getFrom() + " to "
-                                        + reportArguments.reportFrequency.getTo());
+                                if (reportArguments.reportFrequency.endOfInterval(orderRecord.getStartTime().toLocalDate())) {
+                                    LOGGER.debug("Interval end reached:" + reportArguments.reportFrequency.getFrom() + " to "
+                                            + reportArguments.reportFrequency.getTo());
 
-                                report.putHits();
-                                report.reset();
-                                reportArguments.reportFrequency.nextPeriod();
-                                LOGGER.debug("new frequency interval:" + reportArguments.reportFrequency.getFrom() + " to "
-                                        + reportArguments.reportFrequency.getTo());
+                                    report.putHits();
+                                    report.reset();
+                                    reportArguments.reportFrequency.nextPeriod();
+                                    LOGGER.debug("new frequency interval:" + reportArguments.reportFrequency.getFrom() + " to "
+                                            + reportArguments.reportFrequency.getTo());
+                                }
+                                report.count(orderRecord);
                             }
-                            report.count(orderRecord);
-
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -73,7 +76,7 @@ public class CSVFileReader {
                     e1.printStackTrace();
                 }
             } else {
-                LOGGER.debug("File:" + path.getFileName() + " not found");
+                LOGGER.debug("File:" + path.getFileName() + " not found in " + path.getParent());
             }
             interval.next();
         }
@@ -88,14 +91,15 @@ public class CSVFileReader {
 
         while (!interval.end()) {
 
-            Path path = Paths.get(reportArguments.inputDirectory + interval.currentInterval() + ".csv");
+            Path path = Paths.get(reportArguments.inputDirectory + "/" + report.getType().toString().toLowerCase() + "/" + interval.currentInterval()
+                    + ".csv");
 
             if (Files.exists(path)) {
 
                 LOGGER.debug("File:" + path.getFileName());
                 Files.newBufferedReader(path);
                 BufferedReader br = Files.newBufferedReader(path);
-                
+
                 String line;
 
                 line = br.readLine();
@@ -105,36 +109,38 @@ public class CSVFileReader {
 
                     jobRecord.setId(values[0]);
                     jobRecord.setControllerId(values[1]);
-                    jobRecord.setOrderId(values[2]);
-                    jobRecord.setWorkflowPath(values[3]);
-                    jobRecord.setWorkflowVersionId(values[4]);
-                    jobRecord.setWorkflowName(values[5]);
+                    if (reportArguments.controllerId == null || reportArguments.controllerId.isEmpty() || reportArguments.controllerId.equals(
+                            jobRecord.getControllerId())) {
+                        jobRecord.setOrderId(values[2]);
+                        jobRecord.setWorkflowPath(values[3]);
+                        jobRecord.setWorkflowVersionId(values[4]);
+                        jobRecord.setWorkflowName(values[5]);
 
-                    jobRecord.setPosition(values[6]);
-                    jobRecord.setJobName(values[7]);
-                    jobRecord.setCriticality(values[8]);
-                    jobRecord.setAgentId(values[9]);
-                    jobRecord.setAgentName(values[10]);
+                        jobRecord.setPosition(values[6]);
+                        jobRecord.setJobName(values[7]);
+                        jobRecord.setCriticality(values[8]);
+                        jobRecord.setAgentId(values[9]);
+                        jobRecord.setAgentName(values[10]);
 
-                    jobRecord.setStartTime(values[11]);
-                    jobRecord.setEndTime(values[12]);
-                    jobRecord.setError(values[13]);
-                    jobRecord.setCreated(values[14]);
-                    jobRecord.setModified(values[15]);
-                    jobRecord.setState(values[16]);
+                        jobRecord.setStartTime(values[11]);
+                        jobRecord.setEndTime(values[12]);
+                        jobRecord.setError(values[13]);
+                        jobRecord.setCreated(values[14]);
+                        jobRecord.setModified(values[15]);
+                        jobRecord.setState(values[16]);
 
-                    if (reportArguments.reportFrequency.endOfInterval(jobRecord.getStartTime().toLocalDate())) {
-                        LOGGER.debug("Interval end reached:" + reportArguments.reportFrequency.getFrom() + " to " + reportArguments.reportFrequency
-                                .getTo());
+                        if (reportArguments.reportFrequency.endOfInterval(jobRecord.getStartTime().toLocalDate())) {
+                            LOGGER.debug("Interval end reached:" + reportArguments.reportFrequency.getFrom() + " to "
+                                    + reportArguments.reportFrequency.getTo());
 
-                        report.putHits();
-                        report.reset();
-                        reportArguments.reportFrequency.nextPeriod();
-                        LOGGER.debug("new frequency interval:" + reportArguments.reportFrequency.getFrom() + " to " + reportArguments.reportFrequency
-                                .getTo());
+                            report.putHits();
+                            report.reset();
+                            reportArguments.reportFrequency.nextPeriod();
+                            LOGGER.debug("new frequency interval:" + reportArguments.reportFrequency.getFrom() + " to "
+                                    + reportArguments.reportFrequency.getTo());
+                        }
+                        report.count(jobRecord);
                     }
-                    report.count(jobRecord);
-
                 }
 
             } else {

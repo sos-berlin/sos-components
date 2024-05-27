@@ -35,8 +35,8 @@ public class ReportLongestOrderExecution implements IReport {
     private void removeSmallesItem() {
         Comparator<ReportResultData> byDuration = (obj1, obj2) -> obj2.getDuration().compareTo(obj1.getDuration());
         LinkedHashMap<String, ReportResultData> longesExecutionWorkflowsResult = longestExecutionWorkflows.entrySet().stream().sorted(Map.Entry
-                .comparingByValue(byDuration)).limit(reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1,
-                        e2) -> e1, LinkedHashMap::new));
+                .<String, ReportResultData> comparingByValue(byDuration).reversed()).limit(reportArguments.hits).collect(Collectors.toMap(
+                        Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
         longestExecutionWorkflows.clear();
         longestExecutionWorkflows = longesExecutionWorkflowsResult.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
                 Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));

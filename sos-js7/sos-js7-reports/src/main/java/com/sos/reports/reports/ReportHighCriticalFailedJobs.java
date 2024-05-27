@@ -23,75 +23,51 @@ import com.sos.joc.model.reporting.result.ReportResultDataItem;
 import com.sos.reports.classes.IReport;
 import com.sos.reports.classes.ReportArguments;
 import com.sos.reports.classes.ReportHelper;
-import com.sos.reports.classes.ReportPeriod;
 import com.sos.reports.classes.ReportRecord;
 
-public class ReportParallelJobExecutions implements IReport {
+public class ReportHighCriticalFailedJobs implements IReport {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ReportParallelWorkflowExecutions.class);
-    private static final String REPORT_TITLE = "Top ${hits} periods during which mostly jobs executed";
+    private static final Logger LOGGER = LoggerFactory.getLogger(ReportHighCriticalFailedJobs.class);
+    private static final String REPORT_TITLE = "Top ${hits} high criticality failed jobs";
     private ReportArguments reportArguments;
 
-    Map<String, ReportResultData> periods = new HashMap<String, ReportResultData>();
-
-    private void count(ReportRecord jobRecord, ReportPeriod reportPeriod) {
-
-        String periodKey = reportPeriod.periodKey();
-
-        ReportResultData reportResultData = periods.get(periodKey);
-        if (reportResultData == null) {
-            reportResultData = new ReportResultData();
-            reportResultData.setData(new ArrayList<ReportResultDataItem>());
-            reportResultData.setPeriod(periodKey);
-            reportResultData.setCount(1L);
-        } else {
-            reportResultData.setCount(reportResultData.getCount() + 1);
-        }
-        ReportResultDataItem reportResultDataItem = new ReportResultDataItem();
-
-        if (jobRecord.getEndTime() != null) {
-            Duration d = Duration.between(jobRecord.getStartTime(), jobRecord.getEndTime());
-            reportResultDataItem.setDuration(d.toSeconds());
-
-            Instant instant = jobRecord.getEndTime().toInstant(ZoneOffset.UTC);
-            reportResultDataItem.setEndTime(Date.from(instant));
-        }
-        Instant instant = jobRecord.getStartTime().toInstant(ZoneOffset.UTC);
-        reportResultDataItem.setStartTime(Date.from(instant));
-   
-        if (jobRecord.getState() != null) {
-            reportResultDataItem.setState(Long.valueOf(jobRecord.getState()));
-        }
-
-        reportResultDataItem.setWorkflowName(jobRecord.getWorkflowName());
-        reportResultDataItem.setJobName(jobRecord.getJobName());
-
-        reportResultData.getData().add(reportResultDataItem);
-        periods.put(periodKey, reportResultData);
-
-    }
+    Map<String, ReportResultData> failedJobs = new HashMap<String, ReportResultData>();
 
     public void count(ReportRecord jobRecord) {
+        if (jobRecord.getError() && jobRecord.getCriticality() > 0) {
+            ReportResultData reportResultData = failedJobs.get(jobRecord.getJobNameWithWorkflowName());
+            if (reportResultData == null) {
+                reportResultData = new ReportResultData();
+                reportResultData.setData(new ArrayList<ReportResultDataItem>());
+                reportResultData.setWorkflowName(jobRecord.getWorkflowName());
+                reportResultData.setJobName(jobRecord.getJobName());
+                reportResultData.setCount(1L);
+            } else {
+                reportResultData.setCount(reportResultData.getCount() + 1);
+            }
+            ReportResultDataItem reportResultDataItem = new ReportResultDataItem();
 
-        ReportPeriod reportPeriod = new ReportPeriod();
-        reportPeriod.setFrom(jobRecord.getStartTime());
-        if (jobRecord.getEndTime() == null) {
-            reportPeriod.setEnd(jobRecord.getModified());
-        } else {
-            reportPeriod.setEnd(jobRecord.getEndTime());
+            if (jobRecord.getEndTime() != null) {
+                Duration d = Duration.between(jobRecord.getStartTime(), jobRecord.getEndTime());
+                reportResultDataItem.setDuration(d.toSeconds());
+
+                Instant instant = jobRecord.getEndTime().toInstant(ZoneOffset.UTC);
+                reportResultDataItem.setEndTime(Date.from(instant));
+            }
+            Instant instant = jobRecord.getStartTime().toInstant(ZoneOffset.UTC);
+            reportResultDataItem.setStartTime(Date.from(instant));
+            if (jobRecord.getState() != null) {
+                reportResultDataItem.setState(Long.valueOf(jobRecord.getState()));
+            }
+
+            reportResultData.getData().add(reportResultDataItem);
+            failedJobs.put(jobRecord.getJobNameWithWorkflowName(), reportResultData);
         }
-
-        while (!reportPeriod.periodEnded()) {
-            count(jobRecord, reportPeriod);
-            reportPeriod.next();
-        }
-
     }
 
     public ReportResult putHits() {
         Comparator<ReportResultData> byCount = (obj1, obj2) -> obj1.getCount().compareTo(obj2.getCount());
- 
-        LinkedHashMap<String, ReportResultData> jobsInPeriodResult = periods.entrySet().stream().sorted(Map.Entry
+        LinkedHashMap<String, ReportResultData> failedJobsResult = failedJobs.entrySet().stream().sorted(Map.Entry
                 .<String, ReportResultData> comparingByValue(byCount).reversed()).limit(reportArguments.hits).collect(Collectors.toMap(
                         Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 
@@ -101,7 +77,7 @@ public class ReportParallelJobExecutions implements IReport {
         reportResult.setTitle(getTitle());
         reportResult.setType(getType().name());
 
-        for (Entry<String, ReportResultData> entry : jobsInPeriodResult.entrySet()) {
+        for (Entry<String, ReportResultData> entry : failedJobsResult.entrySet()) {
             LOGGER.debug("-----New Entry -----------------------");
             LOGGER.debug(entry.getKey() + ":" + entry.getValue().getCount());
             reportResult.getData().add(entry.getValue());
@@ -109,9 +85,6 @@ public class ReportParallelJobExecutions implements IReport {
             if (LOGGER.isDebugEnabled()) {
                 for (ReportResultDataItem dataItem : entry.getValue().getData()) {
                     LOGGER.debug("--- New entry detail ---");
-                    LOGGER.debug("workflowName:" + dataItem.getWorkflowName());
-                    LOGGER.debug("jobName:" + dataItem.getJobName());
-                    LOGGER.debug("orderState:" + dataItem.getOrderState());
                     LOGGER.debug("state:" + dataItem.getState());
                     LOGGER.debug("startTime:" + dataItem.getStartTime());
                     LOGGER.debug("endTime:" + dataItem.getEndTime());
@@ -132,7 +105,7 @@ public class ReportParallelJobExecutions implements IReport {
     }
 
     public void reset() {
-        periods.clear();
+        failedJobs.clear();
     }
 
     @Override
@@ -148,4 +121,5 @@ public class ReportParallelJobExecutions implements IReport {
     public void setReportArguments(ReportArguments reportArguments) {
         this.reportArguments = reportArguments;
     }
+
 }

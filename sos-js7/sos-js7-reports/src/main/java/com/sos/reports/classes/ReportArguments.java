@@ -73,21 +73,27 @@ public class ReportArguments {
             switch (frequency) {
             case WEEKLY:
                 this.reportFrequency = new Weekly();
+                break;
             case TWO_WEEKS:
                 this.reportFrequency = new Every2weeks();
+                break;
             case MONTHLY:
                 this.reportFrequency = new Monthly();
+                break;
             case THREE_MONTHS:
                 this.reportFrequency = new Every3months();
+                break;
             case SIX_MONTHS:
                 this.reportFrequency = new Every6months();
+                break;
             case YEARLY:
                 this.reportFrequency = new Yearly();
+                break;
             case THREE_YEARS:
                 this.reportFrequency = new Every3years();
+                break;
             default:
                 this.reportFrequency = new Monthly();
-
             }
             this.reportFrequency.initPeriod(monthFrom);
             this.reportFrequency.setFrequency(frequency);

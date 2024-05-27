@@ -9,6 +9,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -61,14 +62,16 @@ public class ReportFailedJobs implements IReport {
             }
 
             reportResultData.getData().add(reportResultDataItem);
-            failedJobs.put(jobRecord.getWorkflowName(), reportResultData);
+            failedJobs.put(jobRecord.getJobNameWithWorkflowName(), reportResultData);
         }
     }
 
     public ReportResult putHits() {
         Comparator<ReportResultData> byCount = (obj1, obj2) -> obj1.getCount().compareTo(obj2.getCount());
-        LinkedHashMap<String, ReportResultData> failedJobsResult = failedJobs.entrySet().stream().sorted(Map.Entry.comparingByValue(byCount)).limit(
-                reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+
+        LinkedHashMap<String, ReportResultData> failedJobsResult = failedJobs.entrySet().stream().sorted(Map.Entry
+                .<String, ReportResultData> comparingByValue(byCount).reversed()).limit(reportArguments.hits).collect(Collectors.toMap(
+                        Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 
         ReportResult reportResult = new ReportResult();
 

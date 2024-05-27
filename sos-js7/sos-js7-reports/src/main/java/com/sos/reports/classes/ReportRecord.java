@@ -146,7 +146,7 @@ public class ReportRecord {
     }
 
     public void setOrderState(String orderState) {
-        this.state = ReportHelper.string2Integer(orderState);
+        this.orderState = ReportHelper.string2Integer(orderState);
     }
 
     public Integer getState() {
