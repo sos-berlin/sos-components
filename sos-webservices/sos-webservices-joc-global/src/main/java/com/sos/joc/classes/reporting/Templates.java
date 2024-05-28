@@ -57,6 +57,7 @@ public class Templates extends AReporting {
         
     }
 
+    @Deprecated
     public static List<Template> getTemplates() {
 
         SOSHibernateSession session = null;

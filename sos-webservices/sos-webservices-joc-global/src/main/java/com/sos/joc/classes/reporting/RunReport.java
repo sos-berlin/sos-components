@@ -51,8 +51,8 @@ public class RunReport extends AReporting {
     
     public static CompletableFuture<Either<Exception, Void>> run(final Report in) {
 
-        in.setMonthFrom(relativeDateToSpecificDate(in.getMonthFrom()));
-        in.setMonthTo(relativeDateToSpecificDate(in.getMonthTo()));
+        in.setMonthFrom(relativeDateToSpecificDateFrom(in.getMonthFrom()));
+        in.setMonthTo(relativeDateToSpecificDateTo(in.getMonthTo()));
 
         if (in.getMonthFrom() != null) { // automatically load report data before run report
 
@@ -63,7 +63,17 @@ public class RunReport extends AReporting {
         }
     }
     
-    private static String relativeDateToSpecificDate(String month) {
+    // protected for JUnit test
+    protected static String relativeDateToSpecificDateFrom(String month) {
+        return relativeDateToSpecificDate(month, false);
+    }
+    
+    // protected for JUnit test
+    protected static String relativeDateToSpecificDateTo(String month) {
+        return relativeDateToSpecificDate(month, true);
+    }
+    
+    private static String relativeDateToSpecificDate(String month, boolean to) {
         // TODO for unit y -> always 01-yyyy
         // for unit q -> always 01-yyyy, 04-yyyy, 07-yyyy or 10-yyyy
         if (month == null) {
@@ -102,9 +112,15 @@ public class RunReport extends AReporting {
                         break;
                     }
                     ld = ld.minusMonths(Long.valueOf(m.group(1)).longValue() * 3);
+                    if (to) {
+                        ld = ld.plusMonths(3).minusDays(1);
+                    }
                     break;
                 case "y":
                     ld = LocalDate.now().withDayOfMonth(1).withMonth(1).minusYears(Long.valueOf(m.group(1)).longValue());
+                    if (to) {
+                        ld = ld.plusYears(1).minusDays(1);
+                    }
                     break;
                 }
                 
