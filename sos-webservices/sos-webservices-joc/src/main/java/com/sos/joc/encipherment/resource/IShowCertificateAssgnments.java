@@ -8,10 +8,10 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
-public interface IEncrypt {
+public interface IShowCertificateAssgnments {
 
     @POST
-    @Path("encrypt")
+    @Path("assignment")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postEncrypt(@HeaderParam("X-Access-Token") String xAccessToken, byte[] encryptFilter) throws Exception;
+    public JOCDefaultResponse postShowCertificateAssignment(@HeaderParam("X-Access-Token") String xAccessToken, byte[] showAssignmentFilter) throws Exception;
 }

@@ -250,7 +250,17 @@ public class JsonValidator {
             put("com.sos.joc.model.publish.repository.DeleteFromFilter", "publish/repository/deleteFromRepositoryFilter-schema.json");
             put("com.sos.joc.model.publish.repository.ReadFromFilter", "publish/repository/readFromRepositoryFilter-schema.json");
             put("com.sos.joc.model.publish.repository.UpdateFromFilter", "publish/repository/updateFromRepositoryFilter-schema.json");
-
+            
+            // encipherment
+            put("AgentAssignmentRequestFilter", "encipherment/agentAssignmentRequestFilter-schema.json");
+            put("ShowAgentAssignmentsRequestFilter", "encipherment/showAgentAssignmentsRequestFilter-schema.json");
+            put("StoreCertificateRequestFilter", "encipherment/storeCertRequestFilter-schema.json");
+            put("ImportCertificateRequestFilter", "encipherment/importCertRequestFilter-schema.json");
+            put("ShowCertificateRequestFilter", "encipherment/showCertificateRequestFilter-schema.json");
+            put("DeleteCertificateRequestFilter", "encipherment/deleteCertificateRequestFilter-schema.json");
+            put("EncryptRequestFilter", "encipherment/encryptRequestFilter-schema.json");
+            
+            
             // schedules
             put("com.sos.webservices.order.initiator.model.ScheduleSelector", "orderManagement/orders/schedulesSelector-schema.json");
 

@@ -388,7 +388,7 @@ public class DBLayerKeys {
         return session.getSingleResult(query);
     }
     
-    public void deleteEnciphermentCertificateMappings(String certAlias) throws SOSHibernateException {
+    public void removeAllEnciphermentCertificateMappingsByAgent(String certAlias) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_ENC_AGENT_CERTIFICATES).append(" where ");
         hql.append(" certAlias = :certAlias");
         Query<DBItemEncAgentCertificate> query = session.createQuery(hql.toString());
@@ -396,4 +396,80 @@ public class DBLayerKeys {
         session.executeUpdate(query);
     }
 
+    public void removeEnciphermentCertificateMapping(String certAlias, String agentId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_ENC_AGENT_CERTIFICATES).append(" where ");
+        hql.append(" certAlias = :certAlias");
+        hql.append(" agentId = :agentId");
+        Query<DBItemEncAgentCertificate> query = session.createQuery(hql.toString());
+        query.setParameter("certAlias", certAlias);
+        query.setParameter("agentId", agentId);
+        DBItemEncAgentCertificate result = session.getSingleResult(query);
+        if (result != null) {
+            session.delete(result);
+        }
+    }
+
+    public List<DBItemEncAgentCertificate> getEnciphermentCertificateMappings(String certAlias) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_ENC_AGENT_CERTIFICATES).append(" where ");
+        hql.append(" certAlias = :certAlias");
+        Query<DBItemEncAgentCertificate> query = session.createQuery(hql.toString());
+        query.setParameter("certAlias", certAlias);
+        List<DBItemEncAgentCertificate> results = session.getResultList(query);
+        if(results == null) {
+            results = Collections.emptyList();
+        }
+        return results;
+    }
+
+    public List<DBItemEncAgentCertificate> getEnciphermentCertificateMappingsByAgents(List<String> agentIds) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_ENC_AGENT_CERTIFICATES).append(" where ");
+        hql.append(" agentId in :agentIds");
+        Query<DBItemEncAgentCertificate> query = session.createQuery(hql.toString());
+        query.setParameterList("agentIds", agentIds);
+        List<DBItemEncAgentCertificate> results = session.getResultList(query);
+        if(results == null) {
+            results = Collections.emptyList();
+        }
+        return results;
+    }
+
+    public List<DBItemEncAgentCertificate> getEnciphermentCertificateMappingsByCertAliases(List<String> certAliases) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_ENC_AGENT_CERTIFICATES).append(" where ");
+        hql.append(" certAlias in :certAliases");
+        Query<DBItemEncAgentCertificate> query = session.createQuery(hql.toString());
+        query.setParameterList("certAlias", certAliases);
+        List<DBItemEncAgentCertificate> results = session.getResultList(query);
+        if(results == null) {
+            results = Collections.emptyList();
+        }
+        return results;
+    }
+
+    public List<DBItemEncAgentCertificate> getAllEnciphermentCertificateMappings() throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_ENC_AGENT_CERTIFICATES);
+        Query<DBItemEncAgentCertificate> query = session.createQuery(hql.toString());
+        List<DBItemEncAgentCertificate> results = session.getResultList(query);
+        if(results == null) {
+            results = Collections.emptyList();
+        }
+        return results;
+    }
+    
+    public void addEnciphermentCertificateMapping(String certAlias, String agentId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_ENC_AGENT_CERTIFICATES).append(" where ");
+        hql.append(" certAlias = :certAlias and ");
+        hql.append(" agentId = :agentId");
+        Query<DBItemEncAgentCertificate> query = session.createQuery(hql.toString());
+        query.setParameter("certAlias", certAlias);
+        query.setParameter("agentId", agentId);
+        DBItemEncAgentCertificate result = session.getSingleResult(query);
+        if(result == null) {
+            DBItemEncAgentCertificate newItem = new DBItemEncAgentCertificate();
+            newItem.setAgentId(agentId);
+            newItem.setCertAlias(certAlias);
+            session.save(newItem);
+        } else {
+            LOGGER.warn("a certificate mapping for this certificate and agent already exists.");
+        }
+    }
 }
