@@ -54,6 +54,9 @@ public class ReportGenerator {
         s.append("  -s | --monthFrom=<monthFrom> | required: Month from for input file selection e.g. YYYY-MM").append(System.lineSeparator());
         s.append("  -e | --monthTo=<monthTo> | optional: Month to for input file selection e.g. YYYY-MM;default month before now").append(System
                 .lineSeparator());
+        s.append("  -a | --periodLength=<periodLength> | optional: Length of period in minutes. Default=5").append(System.lineSeparator());
+        s.append("  -b | --periodStep=<periodStep> | optional: Step for next period in minutes. Default=5").append(System
+                .lineSeparator());
         s.append("  -n | --hits=<hits> | optional: Define the hits of report;default=10").append(System.lineSeparator());
         s.append("  -d | --logDir=<directory> | optional: Specify the log directory").append(System.lineSeparator());
         System.out.println(s);
@@ -85,6 +88,10 @@ public class ReportGenerator {
             double2SingleOpt.put("--controllerId", "-c");
             double2SingleOpt.put("--monthFrom", "-s");
             double2SingleOpt.put("--monthTo", "-e");
+            double2SingleOpt.put("--periodLength", "-a");
+            double2SingleOpt.put("--periodStep", "-b");
+            double2SingleOpt.put("--periodLength", "-a");
+            double2SingleOpt.put("--periodStep", "-b");
             double2SingleOpt.put("--hits", "-n");
             double2SingleOpt.put("--logDir", "-d");
 
@@ -166,6 +173,18 @@ public class ReportGenerator {
                 case "--monthTo":
                     if (paramValue != null && !paramValue.isEmpty()) {
                         reportArguments.setMonthTo(paramValue);
+                    }
+                    break;
+                case "-a":
+                case "--periodLength":
+                    if (paramValue != null && !paramValue.isEmpty()) {
+                        reportArguments.setPeriodLength(paramValue);
+                    }
+                    break;
+                case "-b":
+                case "--periodStep":
+                    if (paramValue != null && !paramValue.isEmpty()) {
+                        reportArguments.setPeriodStep(paramValue);
                     }
                     break;
                 case "-n":

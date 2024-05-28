@@ -20,11 +20,11 @@ public class ReportGeneratorTestMain {
     @Test
     public void test() throws Exception {
 
-        String report = "10";
+        String report = "9";
         String hits = "4";
         String inputDirectory = "c:/temp/1";
         String outputDirectory = "c:/temp";
-        String frequency = "monthly";
+        String frequency = "weekly";
         String monthFrom = "2023-01";
         String monthTo = "2024-08";
         String controller = "controller";

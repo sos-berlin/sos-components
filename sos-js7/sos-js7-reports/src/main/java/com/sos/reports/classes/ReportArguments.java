@@ -20,6 +20,8 @@ public class ReportArguments {
     public String outputDirectory;
     public String controllerId;
     public LocalDate monthFrom;
+    public Integer periodLength;
+    public Integer periodStep;
     public LocalDate monthTo;
     public Integer hits = 10;
     public String logDir;
@@ -122,15 +124,30 @@ public class ReportArguments {
         if (!msg.isEmpty()) {
             throw new SOSRequiredArgumentMissingException(msg);
         }
-     }
+    }
 
     public void setReportId(String reportId) {
         this.reportId = reportId;
     }
 
     public String getOutputFilename() {
-        return outputDirectory + "/report_" + reportFrequency.getFromMonth() + "-" + String.format("%02d", reportFrequency.getTo().getDayOfMonth())
+        return outputDirectory + "/report_" + reportFrequency.getFromMonth() + "-" + String.format("%02d", reportFrequency.getFrom().getDayOfMonth())
                 + "_" + reportFrequency.getFrequency().intValue() + ".json";
     }
 
+    public void setPeriodLength(String periodLength) {
+        try {
+            this.periodLength = Integer.valueOf(periodLength);
+        } catch (NumberFormatException e) {
+            throw e;
+        }
+    }
+
+    public void setPeriodStep(String periodStep) {
+        try {
+            this.periodStep = Integer.valueOf(periodStep);
+        } catch (NumberFormatException e) {
+            throw e;
+        }
+    }
 }
