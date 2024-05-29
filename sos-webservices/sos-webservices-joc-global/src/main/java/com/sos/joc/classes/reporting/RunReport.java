@@ -173,7 +173,8 @@ public class RunReport extends AReporting {
                 //.append(" -cp ../lib/ext/joc/*").append(File.pathSeparator).append("../webapps/joc/WEB-INF/lib/* ")
                 .append(" -cp \"../webapps/joc/WEB-INF/lib/*\" ")
                 .append(className)
-                .append(" -i data");
+                .append(" -i data")
+                .append(" -r ").append(in.getTemplateName().getJavaClass());
         if (in.getMonthFrom() != null) {
             s.append(" -s ").append(in.getMonthFrom());
         }
@@ -182,6 +183,17 @@ public class RunReport extends AReporting {
         }
         if (in.getHits() != null) {
             s.append(" -n ").append(in.getHits());
+        }
+        if (in.getPeriod() != null) {
+            if (in.getPeriod().getLength() != null) {
+                s.append(" -a ").append(in.getPeriod().getLength());
+            }
+            if (in.getPeriod().getStep() != null) {
+                s.append(" -b ").append(in.getPeriod().getStep());
+            }
+        }
+        if (in.getSort() != null) {
+            s.append(" -f ").append(in.getSort());
         }
         return s.toString();
     }
@@ -192,12 +204,7 @@ public class RunReport extends AReporting {
             tempDir = createTempDirectory();
             // reportingDir is working directory
             Path relativizeReportingDir = reportingDir.relativize(tempDir);
-            //Path templateFile = tempDir.resolve(templateFilePrefix + in.getTemplateName().intValue() + ".json");
-            //Path relativizeTemplateFile = reportingDir.relativize(templateFile);
-            //Files.write(templateFile, template);
             StringBuilder s = new StringBuilder(commonScript);
-            //s.append(" -t ").append(relativizeTemplateFile.toString().replace('\\', '/'));
-            s.append(" -r ").append(in.getTemplateName().intValue());
             s.append(" -p ").append(f.strValue());
             s.append(" -o ").append(relativizeReportingDir.toString().replace('\\', '/'));
             if (in.getControllerId() != null && !in.getControllerId().isBlank()) {
