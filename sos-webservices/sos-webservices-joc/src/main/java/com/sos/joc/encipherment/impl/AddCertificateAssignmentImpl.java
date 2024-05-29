@@ -19,6 +19,7 @@ import com.sos.schema.JsonValidator;
 public class AddCertificateAssignmentImpl extends JOCResourceImpl implements IAddCertificateAssgnment{
 
     private static final String API_CALL = "./encipherment/assignment/add";
+    
     @Override
     public JOCDefaultResponse postAddCertificateAssgnment(String xAccessToken, byte[] agentAssignmentFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
