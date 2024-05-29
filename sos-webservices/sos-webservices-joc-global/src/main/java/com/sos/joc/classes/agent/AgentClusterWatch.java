@@ -106,7 +106,7 @@ public class AgentClusterWatch {
     
     private Optional<NodeId> _getLostNodeId(JAgentRefState agentRefState) {
         Map<NodeId, ClusterWatchProblems.ClusterNodeLossNotConfirmedProblem> lostNodeIds = JavaConverters.asJava(agentRefState.asScala()
-                .nodeToClusterNodeProblem());
+                .nodeToLossNotConfirmedProblem());
         if (!lostNodeIds.isEmpty()) {
             return Optional.of(lostNodeIds.values().iterator().next().event().lostNodeId());
         }
