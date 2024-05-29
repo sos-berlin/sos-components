@@ -27,6 +27,7 @@ import com.sos.joc.agents.resource.IAgentsResourceState;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.agent.AgentClusterWatch;
 import com.sos.joc.classes.agent.AgentDirectorClusterState;
 import com.sos.joc.classes.agent.AgentHelper;
 import com.sos.joc.classes.controller.States;
@@ -240,10 +241,15 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                                         subagent.setState(getState(AgentStateText.UNKNOWN, null));
                                         
                                         Optional<SubagentDirectorType> subagentIsLost = Optional.empty();
-                                        if (clusterState != null && ClusterType.NODE_LOSS_TO_BE_CONFIRMED.equals(clusterState.getTYPE())
-                                                && clusterState.getLostNodeId() != null) {
-                                            if (subagent.getIsDirector().equals(subagentDirectors.get(clusterState.getLostNodeId().toLowerCase()))) {
-                                                subagentIsLost = Optional.of(subagent.getIsDirector());
+                                        if (clusterState != null) {
+                                            if (ClusterType.NODE_LOSS_TO_BE_CONFIRMED.equals(clusterState.getTYPE()) && clusterState
+                                                    .getLostNodeId() != null) {
+                                                if (subagent.getIsDirector().equals(subagentDirectors.get(clusterState.getLostNodeId()
+                                                        .toLowerCase()))) {
+                                                    subagentIsLost = Optional.of(subagent.getIsDirector());
+                                                }
+                                            } else {
+                                                AgentClusterWatch.clean(controllerId, AgentPath.of(dbSubagents.getKey()));
                                             }
                                         }
                                         
@@ -545,7 +551,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
             try {
                 clusterState = Globals.objectMapper.readValue(jAgentRefState.clusterState().toJson(), AgentDirectorClusterState.class);
                 Map<NodeId, ClusterWatchProblems.ClusterNodeLossNotConfirmedProblem> lostNodeIds = JavaConverters.asJava(jAgentRefState.asScala()
-                        .nodeToClusterNodeProblem());
+                        .nodeToLossNotConfirmedProblem());
                 if (!lostNodeIds.isEmpty()) {
                     clusterState.setTYPE(ClusterType.NODE_LOSS_TO_BE_CONFIRMED);
                     ClusterWatchProblems.ClusterNodeLossNotConfirmedProblem problem = lostNodeIds.values().iterator().next(); 
