@@ -380,6 +380,19 @@ public class DBLayerKeys {
         }
     }
     
+    public List<DBItemEncCertificate> getEnciphermentCertificates (List<String> certAliases) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_ENC_CERTIFICATE).append(" where ");
+        hql.append(" alias in :aliases");
+        Query<DBItemEncCertificate> query = session.createQuery(hql.toString());
+        query.setParameterList("aliases", certAliases);
+        List<DBItemEncCertificate> results = session.getResultList(query);
+        if(results == null) {
+            return Collections.emptyList();
+        } else {
+            return results;
+        }
+    }
+    
     public DBItemEncCertificate getEnciphermentCertificate (String certAlias) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_ENC_CERTIFICATE).append(" where ");
         hql.append(" alias = :alias");

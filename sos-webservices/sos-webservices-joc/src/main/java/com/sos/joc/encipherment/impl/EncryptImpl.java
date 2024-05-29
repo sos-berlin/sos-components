@@ -23,6 +23,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.db.encipherment.DBItemEncCertificate;
 import com.sos.joc.db.keys.DBLayerKeys;
 import com.sos.joc.encipherment.resource.IEncrypt;
 import com.sos.joc.exceptions.JocConcurrentAccessException;
@@ -39,6 +40,7 @@ public class EncryptImpl extends JOCResourceImpl implements IEncrypt {
 
     @Override
     public JOCDefaultResponse postEncrypt(String xAccessToken, byte[] encryptFilter) throws Exception {
+        SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL, encryptFilter, xAccessToken);
             JsonValidator.validateFailFast(encryptFilter, EncryptRequestFilter.class);
@@ -48,7 +50,10 @@ public class EncryptImpl extends JOCResourceImpl implements IEncrypt {
                 return jocDefaultResponse;
             }
             storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
-            return JOCDefaultResponse.responseStatus200(encrypt(filter));
+            
+            hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            
+            return JOCDefaultResponse.responseStatus200(encrypt(filter, hibernateSession));
         } catch (JocConcurrentAccessException e) {
             ProblemHelper.postMessageAsHintIfExist(e.getMessage(), xAccessToken, getJocError(), null);
             e.addErrorMetaInfo(getJocError());
@@ -58,13 +63,25 @@ public class EncryptImpl extends JOCResourceImpl implements IEncrypt {
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(hibernateSession);
         }
     }
 
-    private EncryptResponse encrypt(EncryptRequestFilter filter) throws CertificateException, UnsupportedEncodingException,
+    private EncryptResponse encrypt(EncryptRequestFilter filter, SOSHibernateSession hibernateSession) throws CertificateException, UnsupportedEncodingException,
             NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException, InvalidAlgorithmParameterException,
             BadPaddingException, IllegalBlockSizeException, SOSException {
-        X509Certificate cert = KeyUtil.getX509Certificate(filter.getCertificate());
+        String certString = null;
+        if(filter.getCertAlias() != null) {
+            DBLayerKeys dbLayer = new DBLayerKeys(hibernateSession);
+            DBItemEncCertificate encCert = dbLayer.getEnciphermentCertificate(filter.getCertAlias());
+            if(encCert != null) {
+                certString = encCert.getCertificate();
+            }
+        } else {
+            certString = filter.getCertificate();
+        }
+        X509Certificate cert = KeyUtil.getX509Certificate(certString);
         SecretKey key = EncryptionUtils.generateSecretKey(128);
         IvParameterSpec iv = EncryptionUtils.generateIv();
         String encryptedValue = Encrypt.encrypt(EncryptionUtils.CIPHER_ALGORITHM, filter.getToEncrypt(), key, iv);

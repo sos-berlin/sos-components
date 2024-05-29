@@ -23,6 +23,7 @@ public interface IImportCertificate {
             @FormDataParam("file") FormDataBodyPart body,
             @FormDataParam("certAlias") String certAlias,
             @FormDataParam("privateKeyPath") String privateKeyPath,
+            @FormDataParam("jobResourceFolder") String jobResourceFolder,
             @FormDataParam("timeSpent") String timeSpent,
             @FormDataParam("ticketLink") String ticketLink,
             @FormDataParam("comment") String comment) throws Exception;
