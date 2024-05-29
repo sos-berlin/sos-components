@@ -21,6 +21,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "certAlias",
     "certificate",
     "privateKeyPath",
+    "jobResourceFolder",
     "auditLog"
 })
 public class StoreCertificateRequestFilter {
@@ -41,6 +42,13 @@ public class StoreCertificateRequestFilter {
     private String certificate;
     @JsonProperty("privateKeyPath")
     private String privateKeyPath;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("jobResourceFolder")
+    private String jobResourceFolder;
     /**
      * auditParams
      * <p>
@@ -101,6 +109,26 @@ public class StoreCertificateRequestFilter {
     }
 
     /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("jobResourceFolder")
+    public String getJobResourceFolder() {
+        return jobResourceFolder;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("jobResourceFolder")
+    public void setJobResourceFolder(String jobResourceFolder) {
+        this.jobResourceFolder = jobResourceFolder;
+    }
+
+    /**
      * auditParams
      * <p>
      * 
@@ -124,12 +152,12 @@ public class StoreCertificateRequestFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("certAlias", certAlias).append("certificate", certificate).append("privateKeyPath", privateKeyPath).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("certAlias", certAlias).append("certificate", certificate).append("privateKeyPath", privateKeyPath).append("jobResourceFolder", jobResourceFolder).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(certAlias).append(certificate).append(privateKeyPath).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(certAlias).append(certificate).append(privateKeyPath).append(auditLog).append(jobResourceFolder).toHashCode();
     }
 
     @Override
@@ -141,7 +169,7 @@ public class StoreCertificateRequestFilter {
             return false;
         }
         StoreCertificateRequestFilter rhs = ((StoreCertificateRequestFilter) other);
-        return new EqualsBuilder().append(certAlias, rhs.certAlias).append(certificate, rhs.certificate).append(privateKeyPath, rhs.privateKeyPath).append(auditLog, rhs.auditLog).isEquals();
+        return new EqualsBuilder().append(certAlias, rhs.certAlias).append(certificate, rhs.certificate).append(privateKeyPath, rhs.privateKeyPath).append(auditLog, rhs.auditLog).append(jobResourceFolder, rhs.jobResourceFolder).isEquals();
     }
 
 }
