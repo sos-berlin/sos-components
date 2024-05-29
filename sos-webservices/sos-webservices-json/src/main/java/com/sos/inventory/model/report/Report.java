@@ -33,7 +33,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "controllerId",
     "monthFrom",
     "monthTo",
-    "period"
+    "period",
+    "sort"
 })
 public class Report implements IInventoryObject, IConfigurationObject, IReleaseObject
 {
@@ -99,6 +100,8 @@ public class Report implements IInventoryObject, IConfigurationObject, IReleaseO
      */
     @JsonProperty("period")
     private ReportPeriod period;
+    @JsonProperty("sort")
+    private ReportOrder sort = ReportOrder.fromValue("HIGHEST");
 
     /**
      * No args constructor for use in serialization
@@ -114,12 +117,13 @@ public class Report implements IInventoryObject, IConfigurationObject, IReleaseO
      * @param controllerId
      * @param templateName
      * @param monthFrom
+     * @param sort
      * @param title
      * @param version
      * @param frequencies
      * @param monthTo
      */
-    public Report(String version, String title, TemplateId templateName, Set<Frequency> frequencies, Integer hits, String controllerId, String monthFrom, String monthTo, ReportPeriod period) {
+    public Report(String version, String title, TemplateId templateName, Set<Frequency> frequencies, Integer hits, String controllerId, String monthFrom, String monthTo, ReportPeriod period, ReportOrder sort) {
         super();
         this.version = version;
         this.title = title;
@@ -130,6 +134,7 @@ public class Report implements IInventoryObject, IConfigurationObject, IReleaseO
         this.monthFrom = monthFrom;
         this.monthTo = monthTo;
         this.period = period;
+        this.sort = sort;
     }
 
     /**
@@ -187,7 +192,7 @@ public class Report implements IInventoryObject, IConfigurationObject, IReleaseO
     public TemplateId getTemplateName() {
         return templateName;
     }
-    
+
     /**
      * Template identifier for report
      * <p>
@@ -307,14 +312,24 @@ public class Report implements IInventoryObject, IConfigurationObject, IReleaseO
         this.period = period;
     }
 
+    @JsonProperty("sort")
+    public ReportOrder getSort() {
+        return sort;
+    }
+
+    @JsonProperty("sort")
+    public void setSort(ReportOrder sort) {
+        this.sort = sort;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("version", version).append("title", title).append("templateName", templateName).append("frequencies", frequencies).append("hits", hits).append("controllerId", controllerId).append("monthFrom", monthFrom).append("monthTo", monthTo).append("period", period).toString();
+        return new ToStringBuilder(this).append("version", version).append("title", title).append("templateName", templateName).append("frequencies", frequencies).append("hits", hits).append("controllerId", controllerId).append("monthFrom", monthFrom).append("monthTo", monthTo).append("period", period).append("sort", sort).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(hits).append(period).append(controllerId).append(templateName).append(monthFrom).append(title).append(version).append(frequencies).append(monthTo).toHashCode();
+        return new HashCodeBuilder().append(hits).append(period).append(controllerId).append(templateName).append(monthFrom).append(sort).append(title).append(version).append(frequencies).append(monthTo).toHashCode();
     }
 
     @Override
@@ -326,7 +341,7 @@ public class Report implements IInventoryObject, IConfigurationObject, IReleaseO
             return false;
         }
         Report rhs = ((Report) other);
-        return new EqualsBuilder().append(hits, rhs.hits).append(period, rhs.period).append(controllerId, rhs.controllerId).append(templateName, rhs.templateName).append(monthFrom, rhs.monthFrom).append(title, rhs.title).append(version, rhs.version).append(frequencies, rhs.frequencies).append(monthTo, rhs.monthTo).isEquals();
+        return new EqualsBuilder().append(hits, rhs.hits).append(period, rhs.period).append(controllerId, rhs.controllerId).append(templateName, rhs.templateName).append(monthFrom, rhs.monthFrom).append(sort, rhs.sort).append(title, rhs.title).append(version, rhs.version).append(frequencies, rhs.frequencies).append(monthTo, rhs.monthTo).isEquals();
     }
 
 }
