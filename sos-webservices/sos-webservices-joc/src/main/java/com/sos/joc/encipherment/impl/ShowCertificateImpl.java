@@ -1,5 +1,10 @@
 package com.sos.joc.encipherment.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -12,6 +17,7 @@ import com.sos.joc.exceptions.JocConcurrentAccessException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.encipherment.EncCertificate;
 import com.sos.joc.model.encipherment.ShowCertificateRequestFilter;
+import com.sos.joc.model.encipherment.ShowCertificateResponse;
 import com.sos.schema.JsonValidator;
 
 @jakarta.ws.rs.Path("encipherment")
@@ -24,20 +30,24 @@ public class ShowCertificateImpl extends JOCResourceImpl implements IShowCertifi
         SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL, showCertificateFilter, xAccessToken);
-            JsonValidator.validateFailFast(showCertificateFilter, ShowCertificateRequestFilter.class);
-            ShowCertificateRequestFilter filter = Globals.objectMapper.readValue(showCertificateFilter, ShowCertificateRequestFilter.class);
+            ShowCertificateRequestFilter filter = null;
+            if (showCertificateFilter != null) {
+                JsonValidator.validateFailFast(showCertificateFilter, ShowCertificateRequestFilter.class);
+                filter = Globals.objectMapper.readValue(showCertificateFilter, ShowCertificateRequestFilter.class);
+            }
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getAdministration().getCertificates().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerKeys dbLayer = new DBLayerKeys(hibernateSession);
-            DBItemEncCertificate dbCert = dbLayer.getEnciphermentCertificate(filter.getCertAlias());
-            EncCertificate cert = new EncCertificate();
-            cert.setCertAlias(dbCert.getAlias());
-            cert.setCertificate(dbCert.getCertificate());
-            cert.setPrivateKeyPath(dbCert.getPrivateKeyPath());
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(cert));
+            List<DBItemEncCertificate> dbCertificates = new ArrayList<DBItemEncCertificate>();
+            if(filter != null && (filter.getCertAliases() != null && !filter.getCertAliases().isEmpty())) {
+                dbCertificates = dbLayer.getEnciphermentCertificates(filter.getCertAliases());
+            } else {
+                dbCertificates = dbLayer.getAllEnciphermentCertificates();
+            }
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(mapDBitemsToJson(dbCertificates)));
         } catch (JocConcurrentAccessException e) {
             ProblemHelper.postMessageAsHintIfExist(e.getMessage(), xAccessToken, getJocError(), null);
             e.addErrorMetaInfo(getJocError());
@@ -52,4 +62,15 @@ public class ShowCertificateImpl extends JOCResourceImpl implements IShowCertifi
         }
     }
 
+    private ShowCertificateResponse mapDBitemsToJson (List<DBItemEncCertificate> dbCertificates) {
+        ShowCertificateResponse response = new ShowCertificateResponse();
+        dbCertificates.stream().filter(Objects::nonNull).map(item -> {
+            EncCertificate jsonItem = new EncCertificate();
+            jsonItem.setCertAlias(item.getAlias());
+            jsonItem.setCertificate(item.getCertificate());
+            jsonItem.setPrivateKeyPath(item.getPrivateKeyPath());
+            return jsonItem;
+        }).collect(Collectors.toList());
+        return response;
+    }
 }

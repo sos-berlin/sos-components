@@ -4,17 +4,13 @@ import java.time.Instant;
 import java.util.Date;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.db.encipherment.DBItemEncCertificate;
 import com.sos.joc.db.keys.DBLayerKeys;
 import com.sos.joc.encipherment.resource.IDeleteCertificate;
-import com.sos.joc.exceptions.JocConcurrentAccessException;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.encipherment.DeleteCertificateRequestFilter;
 import com.sos.schema.JsonValidator;
 

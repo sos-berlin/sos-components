@@ -409,8 +409,7 @@ public class DBLayerDeploy {
             Query<DBItemInventoryConfiguration> query = session.createQuery(sql.toString());
             query.setParameter("name", name);
             query.setParameter("type", type);
-            DBItemInventoryConfiguration result = session.getSingleResult(query);
-            return result;
+            return session.getSingleResult(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {

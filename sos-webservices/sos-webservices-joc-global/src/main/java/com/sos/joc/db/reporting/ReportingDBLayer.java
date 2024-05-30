@@ -239,24 +239,6 @@ public class ReportingDBLayer extends DBLayer {
         }
     }
     
-    public List<DBItemReportTemplate> getTemplates() throws DBConnectionRefusedException, DBInvalidDataException {
-        try {
-            StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(DBLayer.DBITEM_REPORT_TEMPLATE);
-            Query<DBItemReportTemplate> query = getSession().createQuery(sql.toString());
-            List<DBItemReportTemplate> result = getSession().getResultList(query);
-            if (result == null) {
-                return Collections.emptyList();
-            }
-            return result;
-            
-        } catch (SOSHibernateInvalidSessionException ex) {
-            throw new DBConnectionRefusedException(ex);
-        } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
-        }
-    }
-    
     public DBItemReport getReport(String constraint) {
         try {
             StringBuilder sql = new StringBuilder();

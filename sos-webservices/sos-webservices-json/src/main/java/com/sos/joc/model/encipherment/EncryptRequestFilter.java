@@ -21,7 +21,6 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "toEncrypt",
     "certAlias",
     "certificate",
-    "jobResourceName",
     "auditLog"
 })
 public class EncryptRequestFilter {
@@ -32,8 +31,6 @@ public class EncryptRequestFilter {
     private String certAlias;
     @JsonProperty("certificate")
     private String certificate;
-    @JsonProperty("jobResourceName")
-    private String jobResourceName;
     /**
      * auditParams
      * <p>
@@ -73,16 +70,6 @@ public class EncryptRequestFilter {
         this.certificate = certificate;
     }
 
-    @JsonProperty("jobResourceName")
-    public String getJobResourceName() {
-        return jobResourceName;
-    }
-
-    @JsonProperty("jobResourceName")
-    public void setJobResourceName(String jobResourceName) {
-        this.jobResourceName = jobResourceName;
-    }
-
     /**
      * auditParams
      * <p>
@@ -107,12 +94,12 @@ public class EncryptRequestFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("toEncrypt", toEncrypt).append("certAlias", certAlias).append("certificate", certificate).append("jobResourceName", jobResourceName).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("toEncrypt", toEncrypt).append("certAlias", certAlias).append("certificate", certificate).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(certAlias).append(certificate).append(toEncrypt).append(jobResourceName).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(certAlias).append(certificate).append(toEncrypt).append(auditLog).toHashCode();
     }
 
     @Override
@@ -124,7 +111,7 @@ public class EncryptRequestFilter {
             return false;
         }
         EncryptRequestFilter rhs = ((EncryptRequestFilter) other);
-        return new EqualsBuilder().append(certAlias, rhs.certAlias).append(certificate, rhs.certificate).append(toEncrypt, rhs.toEncrypt).append(jobResourceName, rhs.jobResourceName).append(auditLog, rhs.auditLog).isEquals();
+        return new EqualsBuilder().append(certAlias, rhs.certAlias).append(certificate, rhs.certificate).append(toEncrypt, rhs.toEncrypt).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }

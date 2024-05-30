@@ -20,6 +20,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "certAlias",
     "privateKeyPath",
+    "jobResourceFolder",
     "auditLog"
 })
 public class ImportCertificateRequestFilter {
@@ -33,6 +34,13 @@ public class ImportCertificateRequestFilter {
     private String certAlias;
     @JsonProperty("privateKeyPath")
     private String privateKeyPath;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("jobResourceFolder")
+    private String jobResourceFolder;
     /**
      * auditParams
      * <p>
@@ -73,6 +81,26 @@ public class ImportCertificateRequestFilter {
     }
 
     /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("jobResourceFolder")
+    public String getJobResourceFolder() {
+        return jobResourceFolder;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("jobResourceFolder")
+    public void setJobResourceFolder(String jobResourceFolder) {
+        this.jobResourceFolder = jobResourceFolder;
+    }
+
+    /**
      * auditParams
      * <p>
      * 
@@ -96,12 +124,12 @@ public class ImportCertificateRequestFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("certAlias", certAlias).append("privateKeyPath", privateKeyPath).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("certAlias", certAlias).append("privateKeyPath", privateKeyPath).append("jobResourceFolder", jobResourceFolder).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(certAlias).append(privateKeyPath).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(certAlias).append(privateKeyPath).append(auditLog).append(jobResourceFolder).toHashCode();
     }
 
     @Override
@@ -113,7 +141,7 @@ public class ImportCertificateRequestFilter {
             return false;
         }
         ImportCertificateRequestFilter rhs = ((ImportCertificateRequestFilter) other);
-        return new EqualsBuilder().append(certAlias, rhs.certAlias).append(privateKeyPath, rhs.privateKeyPath).append(auditLog, rhs.auditLog).isEquals();
+        return new EqualsBuilder().append(certAlias, rhs.certAlias).append(privateKeyPath, rhs.privateKeyPath).append(auditLog, rhs.auditLog).append(jobResourceFolder, rhs.jobResourceFolder).isEquals();
     }
 
 }

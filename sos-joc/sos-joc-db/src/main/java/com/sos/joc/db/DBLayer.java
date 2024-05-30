@@ -39,6 +39,7 @@ import com.sos.joc.db.history.DBItemHistoryLog;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.DBItemHistoryOrderState;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
+//import com.sos.joc.db.history.DBItemHistoryOrderTag;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryAgentName;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
@@ -73,7 +74,6 @@ import com.sos.joc.db.monitoring.DBItemNotificationWorkflow;
 import com.sos.joc.db.monitoring.DBItemSystemNotification;
 import com.sos.joc.db.reporting.DBItemReport;
 import com.sos.joc.db.reporting.DBItemReportRun;
-import com.sos.joc.db.reporting.DBItemReportTemplate;
 import com.sos.joc.db.search.DBItemSearchWorkflow;
 import com.sos.joc.db.search.DBItemSearchWorkflow2DeploymentHistory;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
@@ -365,9 +365,6 @@ public class DBLayer implements Serializable {
     public static final String TABLE_REPORT_RUNS = "REPORT_RUNS";
     public static final String TABLE_REPORT_RUNS_SEQUENCE = "SEQ_REP_RUN";
     
-    public static final String DBITEM_REPORT_TEMPLATE = DBItemReportTemplate.class.getSimpleName();
-    public static final String TABLE_REPORT_TEMPLATES = "REPORT_TEMPLATES";
-    
     public static final String DBITEM_ENC_CERTIFICATE = DBItemEncCertificate.class.getSimpleName();
     public static final String TABLE_ENC_CERTIFICATE = "ENC_CERTIFICATES";
     
@@ -550,7 +547,6 @@ public class DBLayer implements Serializable {
         
         cl.add(DBItemReport.class);
         cl.add(DBItemReportRun.class);
-        cl.add(DBItemReportTemplate.class);
         
         cl.add(DBItemEncCertificate.class);
         cl.add(DBItemEncAgentCertificate.class);
@@ -560,6 +556,8 @@ public class DBLayer implements Serializable {
         cl.merge(getMonitoringClassMapping().getClasses());
 
         cl.add(DBItemXmlEditorConfiguration.class);
+        
+//        cl.add(DBItemHistoryOrderTag.class);
         return cl;
     }
 

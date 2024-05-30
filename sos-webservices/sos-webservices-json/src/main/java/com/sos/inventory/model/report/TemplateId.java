@@ -7,20 +7,21 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum TemplateId {
 
-    WORKFLOWS_FREQUENTLY_FAILED(1, true, "Top ${hits} frequently failed workflows"),
-    JOBS_FREQUENTLY_FAILED(2, true, "Top ${hits} frequently failed jobs"),
-    AGENTS_PARALLEL_JOB_EXECUTIONS(3, true, "Top ${hits} agents with most parallel job execution"),
-    JOBS_HIGH_LOW_EXECUTION_PERIODS(4, true, "Top ${hits} periods of low and high parallelism of job executions"),
-    JOBS_EXECUTIONS_FREQUENCY(5, true, "Top ${hits} high criticality failed jobs"),
-    ORDERS_EXECUTIONS_FREQUENCY(6, true, "Top ${hits} frequently failed workflows with cancelled orders"),
-    WORKFLOWS_LONGEST_EXECUTION_TIMES(7, true, "Top ${hits} workflows with the longest execution time"),
-    JOBS_LONGEST_EXECUTION_TIMES(8, true, "Top ${hits} jobs with the longest execution time"),
-    PERIODS_MOST_ORDER_EXECUTIONS(9, true, "Top ${hits} periods during which mostly workflows executed"),
-    PERIODS_MOST_JOB_EXECUTIONS(10, true, "Top ${hits} periods during which mostly jobs executed");
+    WORKFLOWS_FREQUENTLY_FAILED(1, true, "Top ${hits} frequently failed workflows", "ReportFailedWorkflows"),
+    JOBS_FREQUENTLY_FAILED(2, true, "Top ${hits} frequently failed jobs", "ReportFailedJobs"),
+    AGENTS_PARALLEL_JOB_EXECUTIONS(3, true, "Top ${hits} agents with most parallel job execution", "ReportParallelAgentExecution"),
+    //JOBS_HIGH_LOW_EXECUTION_PERIODS(4, true, "Top ${hits} periods of low and high parallelism of job executions", ""),
+    JOBS_EXECUTIONS_FREQUENCY(5, true, "Top ${hits} high criticality failed jobs", "ReportHighCriticalFailedJobs"),
+    ORDERS_EXECUTIONS_FREQUENCY(6, true, "Top ${hits} frequently failed workflows with cancelled orders", "ReportFailedWorkflowsWithCancelledOrders"),
+    WORKFLOWS_LONGEST_EXECUTION_TIMES(7, true, "Top ${hits} workflows with the longest execution time", "ReportLongestOrderExecution"),
+    JOBS_LONGEST_EXECUTION_TIMES(8, true, "Top ${hits} jobs with the longest execution time", "ReportLongestJobExecution"),
+    PERIODS_MOST_ORDER_EXECUTIONS(9, true, "Top ${hits} periods during which mostly workflows executed", "ReportParallelWorkflowExecutions"),
+    PERIODS_MOST_JOB_EXECUTIONS(10, true, "Top ${hits} periods during which mostly jobs executed", "ReportParallelJobExecutions");
     
     private final Boolean supported;
     private final Integer intValue;
     private final String title;
+    private final String javaClass;
     private final static Map<String, TemplateId> CONSTANTS = new HashMap<String, TemplateId>();
     private final static Map<Integer, TemplateId> INTCONSTANTS = new HashMap<Integer, TemplateId>();
 
@@ -36,10 +37,11 @@ public enum TemplateId {
         }
     }
 
-    private TemplateId(Integer intValue, Boolean supported, String title) {
+    private TemplateId(Integer intValue, Boolean supported, String title, String javaClass) {
         this.intValue = intValue;
         this.supported = supported;
         this.title = title;
+        this.javaClass = javaClass;
     }
 
     @Override
@@ -62,6 +64,10 @@ public enum TemplateId {
     
     public String getTitle() {
         return this.title;
+    }
+    
+    public String getJavaClass() {
+        return this.javaClass;
     }
 
     @JsonCreator

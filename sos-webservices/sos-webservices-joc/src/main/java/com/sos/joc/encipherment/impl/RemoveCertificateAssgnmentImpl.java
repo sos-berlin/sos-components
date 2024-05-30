@@ -18,7 +18,7 @@ import com.sos.schema.JsonValidator;
 @jakarta.ws.rs.Path("encipherment/assignment")
 public class RemoveCertificateAssgnmentImpl extends JOCResourceImpl implements IRemoveCertificateAssgnment{
 
-    private static final String API_CALL = "./encipherment/assignment";
+    private static final String API_CALL = "./encipherment/assignment/remove";
 
     @Override
     public JOCDefaultResponse postRemoveCertificateAssgnment(String xAccessToken, byte[] agentAssignmentFilter) throws Exception {
