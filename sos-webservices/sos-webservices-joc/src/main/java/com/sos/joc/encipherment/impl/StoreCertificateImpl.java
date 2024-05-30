@@ -3,17 +3,30 @@ package com.sos.joc.encipherment.impl;
 import java.time.Instant;
 import java.util.Date;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.inventory.model.job.Environment;
+import com.sos.inventory.model.jobresource.JobResource;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.inventory.Validator;
+import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.keys.DBLayerKeys;
 import com.sos.joc.encipherment.resource.IStoreCertificate;
+import com.sos.joc.encipherment.util.EnciphermentUtils;
 import com.sos.joc.exceptions.JocConcurrentAccessException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.encipherment.StoreCertificateRequestFilter;
+import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.publish.db.DBLayerDeploy;
+import com.sos.joc.publish.util.StoreDeployments;
 import com.sos.schema.JsonValidator;
 
 
@@ -33,11 +46,15 @@ public class StoreCertificateImpl extends JOCResourceImpl implements IStoreCerti
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            storeAuditLog(filter.getAuditLog(), CategoryType.CERTIFICATES);
+            DBItemJocAuditLog auditLog = storeAuditLog(filter.getAuditLog(), CategoryType.CERTIFICATES);
 
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerKeys dbLayer = new DBLayerKeys(hibernateSession);
             dbLayer.storeEnciphermentCertificate(filter.getCertAlias(), filter.getCertificate(), filter.getPrivateKeyPath());
+            // create or Update JobResource 
+            EnciphermentUtils.createRelatedJobResource(hibernateSession, filter, auditLog.getId());
+            // TODO and Deploy the JobResource to all controllers
+            
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocConcurrentAccessException e) {
             ProblemHelper.postMessageAsHintIfExist(e.getMessage(), xAccessToken, getJocError(), null);
@@ -51,6 +68,10 @@ public class StoreCertificateImpl extends JOCResourceImpl implements IStoreCerti
         } finally {
             Globals.disconnect(hibernateSession);
         }
+    }
+    
+        
+        
     }
 
 }
