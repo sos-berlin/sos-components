@@ -24,9 +24,9 @@ import com.sos.reports.classes.ReportArguments;
 import com.sos.reports.classes.ReportHelper;
 import com.sos.reports.classes.ReportRecord;
 
-public class ReportLongestOrderExecution implements IReport {
+public class ReportOrderExecution implements IReport {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ReportLongestOrderExecution.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ReportOrderExecution.class);
     private static final String REPORT_TITLE = "Top {hits} workflows with the longest execution time";
     private ReportArguments reportArguments;
 

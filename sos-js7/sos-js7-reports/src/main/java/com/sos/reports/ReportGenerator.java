@@ -10,6 +10,7 @@ import java.util.TimeZone;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
@@ -55,8 +56,8 @@ public class ReportGenerator {
         s.append("  -e | --monthTo=<monthTo> | optional: Month to for input file selection e.g. YYYY-MM;default month before now").append(System
                 .lineSeparator());
         s.append("  -a | --periodLength=<periodLength> | optional: Length of period in minutes. Default=5").append(System.lineSeparator());
-        s.append("  -b | --periodStep=<periodStep> | optional: Step for next period in minutes. Default=5").append(System
-                .lineSeparator());
+        s.append("  -b | --periodStep=<periodStep> | optional: Step for next period in minutes. Default=5").append(System.lineSeparator());
+        s.append("  -f | --sort=<highest|lowest> | optional: To show the highest or lowest values. Default=highest").append(System.lineSeparator());
         s.append("  -n | --hits=<hits> | optional: Define the hits of report;default=10").append(System.lineSeparator());
         s.append("  -d | --logDir=<directory> | optional: Specify the log directory").append(System.lineSeparator());
         System.out.println(s);
@@ -64,173 +65,185 @@ public class ReportGenerator {
 
     public static void main(String[] args) throws SOSException {
         TimeZone.setDefault(TimeZone.getTimeZone(UTC));
-        int exitCode = 0;
-        String paramFrequency = null;
 
-        if (args.length == 0 || args[0].matches("-{0,2}h(?:elp)?")) {
-            if (args.length == 0) {
-                exitCode = 1;
-                LOGGER.error("... missing parameter");
-                System.err.println("... missing parameter");
-            }
-            usage();
-        } else {
+        MDC.put("clusterService", "service-reports");
+        try {
 
-            ReportGeneratorExecuter reportGeneratorExecuter = new ReportGeneratorExecuter();
+            int exitCode = 0;
+            String paramFrequency = null;
 
-            List<String> argsList = new ArrayList<String>();
-            Map<String, String> optsList = new HashMap<String, String>();
-            Map<String, String> double2SingleOpt = new HashMap<String, String>();
-            double2SingleOpt.put("--report", "-r");
-            double2SingleOpt.put("--inputDirectory", "-i");
-            double2SingleOpt.put("--frequencies", "-p");
-            double2SingleOpt.put("--outputDirectory", "-o");
-            double2SingleOpt.put("--controllerId", "-c");
-            double2SingleOpt.put("--monthFrom", "-s");
-            double2SingleOpt.put("--monthTo", "-e");
-            double2SingleOpt.put("--periodLength", "-a");
-            double2SingleOpt.put("--periodStep", "-b");
-            double2SingleOpt.put("--periodLength", "-a");
-            double2SingleOpt.put("--periodStep", "-b");
-            double2SingleOpt.put("--hits", "-n");
-            double2SingleOpt.put("--logDir", "-d");
-
-            for (int i = 0; i < args.length; i++) {
-                switch (args[i].charAt(0)) {
-                case '-':
-                    if (args[i].length() < 2) {
-                        throw new IllegalArgumentException("Not a valid argument: " + args[i]);
-                    }
-                    if (args[i].charAt(1) == '-') {
-                        if (args[i].length() < 3)
-                            throw new IllegalArgumentException("Not a valid argument: " + args[i]);
-                        // --opt
-                        String opt = double2SingleOpt.get(args[i]);
-                        if (opt == null) {
-                            throw new IllegalArgumentException("Not a valid argument: " + args[i]);
-                        }
-                        optsList.put(opt, args[i + 1]);
-                    } else {
-                        if (args.length - 1 == i) {
-                            throw new IllegalArgumentException("Expected arg after: " + args[i]);
-                        }
-                        // -opt
-                        optsList.put(args[i], args[i + 1]);
-                        i++;
-                    }
-                    break;
-                default:
-                    // arg
-                    argsList.add(args[i]);
-                    break;
+            if (args.length == 0 || args[0].matches("-{0,2}h(?:elp)?")) {
+                if (args.length == 0) {
+                    exitCode = 1;
+                    LOGGER.error("... missing parameter");
+                    System.err.println("... missing parameter");
                 }
-            }
+                usage();
+            } else {
 
-            ReportArguments reportArguments = new ReportArguments();
+                ReportGeneratorExecuter reportGeneratorExecuter = new ReportGeneratorExecuter();
 
-            for (Entry<String, String> arg : optsList.entrySet()) {
-                String paramName = arg.getKey();
-                String paramValue = arg.getValue();
-                switch (paramName) {
-                case "-r":
-                case "--report":
-                    if (paramValue != null && !paramValue.isEmpty()) {
-                        reportArguments.setReportId(paramValue);
-                    }
-                    break;
-                case "-i":
-                case "--inputDirectory":
-                    if (paramValue != null && !paramValue.isEmpty()) {
-                        reportArguments.setInputDirectory(paramValue);
-                    }
+                List<String> argsList = new ArrayList<String>();
+                Map<String, String> optsList = new HashMap<String, String>();
+                Map<String, String> double2SingleOpt = new HashMap<String, String>();
+                double2SingleOpt.put("--report", "-r");
+                double2SingleOpt.put("--inputDirectory", "-i");
+                double2SingleOpt.put("--frequencies", "-p");
+                double2SingleOpt.put("--outputDirectory", "-o");
+                double2SingleOpt.put("--controllerId", "-c");
+                double2SingleOpt.put("--monthFrom", "-s");
+                double2SingleOpt.put("--monthTo", "-e");
+                double2SingleOpt.put("--periodLength", "-a");
+                double2SingleOpt.put("--periodStep", "-b");
+                double2SingleOpt.put("--sort", "-f");
+                double2SingleOpt.put("--hits", "-n");
+                double2SingleOpt.put("--logDir", "-d");
 
-                    break;
-                case "-p":
-                case "--frequencies":
-                    if (paramValue != null && !paramValue.isEmpty()) {
-                        paramFrequency = paramValue;
-                    }
-                    break;
-                case "-o":
-                case "--outputDirectory":
-                    if (paramValue != null && !paramValue.isEmpty()) {
-                        reportArguments.setOutputDirectory(paramValue);
-                    }
-                    break;
-                case "-c":
-                case "--controllerId":
-                    if (paramValue != null && !paramValue.isEmpty()) {
-                        reportArguments.setControllerId(paramValue);
-                    }
-                    break;
-                case "-s":
-                case "--monthFrom":
-                    if (paramValue != null && !paramValue.isEmpty()) {
-                        reportArguments.setMonthFrom(paramValue);
-                    }
-                    break;
-                case "-e":
-                case "--monthTo":
-                    if (paramValue != null && !paramValue.isEmpty()) {
-                        reportArguments.setMonthTo(paramValue);
-                    }
-                    break;
-                case "-a":
-                case "--periodLength":
-                    if (paramValue != null && !paramValue.isEmpty()) {
-                        reportArguments.setPeriodLength(paramValue);
-                    }
-                    break;
-                case "-b":
-                case "--periodStep":
-                    if (paramValue != null && !paramValue.isEmpty()) {
-                        reportArguments.setPeriodStep(paramValue);
-                    }
-                    break;
-                case "-n":
-                case "--hits":
-                    if (paramValue != null && !paramValue.isEmpty()) {
-                        try {
-                            reportArguments.setHits(paramValue);
-                        } catch (NumberFormatException e) {
-                            LOGGER.error("Error wrong parameter value for <-n --hits>. Integer value expected." + "\n" + e.getMessage() + ":" + e
-                                    .getCause());
-                            System.err.println("Error wrong parameter value for <-n --hits>. Integer value expected." + "\n" + e.getMessage() + ":"
-                                    + e.getCause());
-                            System.exit(1);
+                for (int i = 0; i < args.length; i++) {
+                    switch (args[i].charAt(0)) {
+                    case '-':
+                        if (args[i].length() < 2) {
+                            throw new IllegalArgumentException("Not a valid argument: " + args[i]);
                         }
+                        if (args[i].charAt(1) == '-') {
+                            if (args[i].length() < 3)
+                                throw new IllegalArgumentException("Not a valid argument: " + args[i]);
+                            // --opt
+                            String opt = double2SingleOpt.get(args[i]);
+                            if (opt == null) {
+                                throw new IllegalArgumentException("Not a valid argument: " + args[i]);
+                            }
+                            optsList.put(opt, args[i + 1]);
+                        } else {
+                            if (args.length - 1 == i) {
+                                throw new IllegalArgumentException("Expected arg after: " + args[i]);
+                            }
+                            // -opt
+                            optsList.put(args[i], args[i + 1]);
+                            i++;
+                        }
+                        break;
+                    default:
+                        // arg
+                        argsList.add(args[i]);
+                        break;
                     }
-                    break;
-                case "-d":
-                case "--logDir":
-                    if (paramValue != null && !paramValue.isEmpty()) {
-                        reportArguments.setLogDir(paramValue);
+                }
+
+                ReportArguments reportArguments = new ReportArguments();
+
+                for (Entry<String, String> arg : optsList.entrySet()) {
+                    String paramName = arg.getKey();
+                    String paramValue = arg.getValue();
+                    switch (paramName) {
+                    case "-r":
+                    case "--report":
+                        if (paramValue != null && !paramValue.isEmpty()) {
+                            reportArguments.setReportId(paramValue);
+                        }
+                        break;
+                    case "-i":
+                    case "--inputDirectory":
+                        if (paramValue != null && !paramValue.isEmpty()) {
+                            reportArguments.setInputDirectory(paramValue);
+                        }
+
+                        break;
+                    case "-p":
+                    case "--frequencies":
+                        if (paramValue != null && !paramValue.isEmpty()) {
+                            paramFrequency = paramValue;
+                        }
+                        break;
+                    case "-o":
+                    case "--outputDirectory":
+                        if (paramValue != null && !paramValue.isEmpty()) {
+                            reportArguments.setOutputDirectory(paramValue);
+                        }
+                        break;
+                    case "-c":
+                    case "--controllerId":
+                        if (paramValue != null && !paramValue.isEmpty()) {
+                            reportArguments.setControllerId(paramValue);
+                        }
+                        break;
+                    case "-s":
+                    case "--monthFrom":
+                        if (paramValue != null && !paramValue.isEmpty()) {
+                            reportArguments.setMonthFrom(paramValue);
+                        }
+                        break;
+                    case "-e":
+                    case "--monthTo":
+                        if (paramValue != null && !paramValue.isEmpty()) {
+                            reportArguments.setMonthTo(paramValue);
+                        }
+                        break;
+                    case "-f":
+                    case "--sort":
+                        if (paramValue != null && !paramValue.isEmpty()) {
+                            reportArguments.setSort(paramValue);
+                        }
+                        break;
+                    case "-a":
+                    case "--periodLength":
+                        if (paramValue != null && !paramValue.isEmpty()) {
+                            reportArguments.setPeriodLength(paramValue);
+                        }
+                        break;
+                    case "-b":
+                    case "--periodStep":
+                        if (paramValue != null && !paramValue.isEmpty()) {
+                            reportArguments.setPeriodStep(paramValue);
+                        }
+                        break;
+                    case "-n":
+                    case "--hits":
+                        if (paramValue != null && !paramValue.isEmpty()) {
+                            try {
+                                reportArguments.setHits(paramValue);
+                            } catch (NumberFormatException e) {
+                                LOGGER.error("Error wrong parameter value for <-n --hits>. Integer value expected." + "\n" + e.getMessage() + ":" + e
+                                        .getCause());
+                                System.err.println("Error wrong parameter value for <-n --hits>. Integer value expected." + "\n" + e.getMessage()
+                                        + ":" + e.getCause());
+                                System.exit(1);
+                            }
+                        }
+                        break;
+                    case "-d":
+                    case "--logDir":
+                        if (paramValue != null && !paramValue.isEmpty()) {
+                            reportArguments.setLogDir(paramValue);
+                        }
+                        break;
+                    default:
+                        LOGGER.error("... wrong parameter: " + paramName);
+                        System.err.println("... wrong parameter: " + paramName);
+                        usage();
+                        System.exit(1);
+
                     }
-                    break;
-                default:
-                    LOGGER.error("... wrong parameter: " + paramName);
-                    System.err.println("... wrong parameter: " + paramName);
-                    usage();
+                }
+
+                if (paramFrequency != null && !paramFrequency.isEmpty()) {
+                    reportArguments.setReqportFrequency(paramFrequency);
+                }
+
+                try {
+                    reportArguments.checkRequired();
+                    exitCode = reportGeneratorExecuter.execute(reportArguments);
+                } catch (IOException | SOSRequiredArgumentMissingException e) {
+                    e.printStackTrace(System.err);
                     System.exit(1);
-
                 }
+
             }
 
-            if (paramFrequency != null && !paramFrequency.isEmpty()) {
-                reportArguments.setReqportFrequency(paramFrequency);
-            }
-
-            try {
-                reportArguments.checkRequired();
-                exitCode = reportGeneratorExecuter.execute(reportArguments);
-            } catch (IOException | SOSRequiredArgumentMissingException e) {
-                                e.printStackTrace(System.err);
-                System.exit(1);
-            }
-
+            System.exit(exitCode);
+        } finally {
+            MDC.remove("service-reports");
         }
-
-        System.exit(exitCode);
 
     }
 

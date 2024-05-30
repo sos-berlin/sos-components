@@ -75,6 +75,8 @@ public class ReportParallelWorkflowExecutions implements IReport {
     public void count(ReportRecord orderRecord) {
 
         ReportPeriod reportPeriod = new ReportPeriod();
+        reportPeriod.setPeriodLength(reportArguments.periodLength);
+        reportPeriod.setPeriodStep(reportArguments.periodStep);
         reportPeriod.setFrom(orderRecord.getStartTime());
         if (orderRecord.getEndTime() == null) {
             reportPeriod.setEnd(orderRecord.getModified());
@@ -91,7 +93,7 @@ public class ReportParallelWorkflowExecutions implements IReport {
 
     public ReportResult putHits() {
         Comparator<ReportResultData> byCount = (obj1, obj2) -> obj1.getCount().compareTo(obj2.getCount());
- 
+
         LinkedHashMap<String, ReportResultData> workflowsInPeriodResult = periods.entrySet().stream().sorted(Map.Entry
                 .<String, ReportResultData> comparingByValue(byCount).reversed()).limit(reportArguments.hits).collect(Collectors.toMap(
                         Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));

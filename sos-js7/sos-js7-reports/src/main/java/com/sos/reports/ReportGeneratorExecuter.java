@@ -17,8 +17,9 @@ import com.sos.reports.reports.ReportFailedJobs;
 import com.sos.reports.reports.ReportFailedWorkflows;
 import com.sos.reports.reports.ReportFailedWorkflowsWithCancelledOrders;
 import com.sos.reports.reports.ReportHighCriticalFailedJobs;
-import com.sos.reports.reports.ReportLongestJobExecution;
-import com.sos.reports.reports.ReportLongestOrderExecution;
+import com.sos.reports.reports.ReportJobExecution;
+import com.sos.reports.reports.ReportOrderExecution;
+import com.sos.reports.reports.ReportParallelAgentExecution;
 import com.sos.reports.reports.ReportParallelJobExecutions;
 import com.sos.reports.reports.ReportParallelWorkflowExecutions;
 
@@ -43,32 +44,45 @@ public class ReportGeneratorExecuter {
         }
 
         IReport report = null;
-        switch (reportArguments.reportId) {
+        switch (reportArguments.reportId.toLowerCase()) {
         case "1":
+        case "reportfailedworkflows":
             report = new ReportFailedWorkflows();
             break;
         case "2":
+        case "reportfailedjobs":
             report = new ReportFailedJobs();
             break;
-        case "5":
+        case "3":
+        case "reportparallelagentexecution":
+            report = new ReportParallelAgentExecution();
+            break;
+        case "4":
+        case "reporthighcriticalfailedjobs":
             report = new ReportHighCriticalFailedJobs();
             break;
-        case "6":
+        case "5":
+        case "reportfailedworkflowswithCancelledOrders":
             report = new ReportFailedWorkflowsWithCancelledOrders();
             break;
+        case "6":
+        case "reportlongestorderexecution":
+            report = new ReportOrderExecution();
+            break;
         case "7":
-            report = new ReportLongestOrderExecution();
+        case "reportjobexecution":
+            report = new ReportJobExecution();
             break;
         case "8":
-            report = new ReportLongestJobExecution();
-            break;
-        case "9":
+        case "reportparallelworkflowexecutions":
             report = new ReportParallelWorkflowExecutions();
             break;
-        case "10":
+        case "9":
+        case "reportparalleljobexecutions":
             report = new ReportParallelJobExecutions();
             break;
-        default: throw new SOSException("Not yet implemented: " + TemplateId.fromValue(Integer.valueOf(reportArguments.reportId)).name());
+        default:
+            throw new SOSException("Not yet implemented: " + TemplateId.fromValue(Integer.valueOf(reportArguments.reportId)).name());
         }
         report.setReportArguments(reportArguments);
 
@@ -79,7 +93,8 @@ public class ReportGeneratorExecuter {
         case ORDERS:
             csvFileReader.readOrders(report, reportArguments);
             break;
-        default: throw new SOSException("Unknown report type: " + report.getType());
+        default:
+            throw new SOSException("Unknown report type: " + report.getType());
         }
     }
 

@@ -5,8 +5,10 @@ import java.time.format.DateTimeFormatter;
 
 public class ReportPeriod {
 
-    private static final int periodLength = 5;
-    private static final int periodStep = 5;
+    private static final int periodLengthDefault = 5;
+    private static final int periodStepDefault = 5;
+    private Integer periodLength = periodLengthDefault;
+    private Integer periodStep = periodStepDefault;
     protected LocalDateTime from;
     protected LocalDateTime end;
     private LocalDateTime to;
@@ -58,6 +60,30 @@ public class ReportPeriod {
         DateTimeFormatter formatterTo = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:00");
         return from.format(formatterFrom) + " - " + to.format(formatterTo);
 
+    }
+
+    public Integer getPeriodLength() {
+        return periodLength;
+    }
+
+    public void setPeriodLength(Integer periodLength) {
+        if (periodLength == null) {
+            this.periodLength = periodLengthDefault;
+        } else {
+            this.periodLength = periodLength;
+        }
+    }
+
+    public Integer getPeriodStep() {
+        return periodStep;
+    }
+
+    public void setPeriodStep(Integer periodStep) {
+        if (periodStep == null) {
+            this.periodStep = periodStepDefault;
+        } else {
+            this.periodStep = periodStep;
+        }
     }
 
 }

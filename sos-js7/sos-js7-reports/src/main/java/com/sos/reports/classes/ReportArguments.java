@@ -25,6 +25,7 @@ public class ReportArguments {
     public LocalDate monthTo;
     public Integer hits = 10;
     public String logDir;
+    public String sort;
 
     public void setInputDirectory(String inputDirectory) {
         if (!inputDirectory.endsWith("/")) {
@@ -149,5 +150,10 @@ public class ReportArguments {
         } catch (NumberFormatException e) {
             throw e;
         }
+    }
+
+    public void setSort(String sort) {
+        this.sort = sort;
+
     }
 }

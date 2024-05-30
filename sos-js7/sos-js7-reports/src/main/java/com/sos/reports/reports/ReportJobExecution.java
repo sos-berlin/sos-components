@@ -24,9 +24,9 @@ import com.sos.reports.classes.ReportArguments;
 import com.sos.reports.classes.ReportHelper;
 import com.sos.reports.classes.ReportRecord;
 
-public class ReportLongestJobExecution implements IReport {
+public class ReportJobExecution implements IReport {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ReportLongestJobExecution.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ReportJobExecution.class);
     private static final String REPORT_TITLE = "Top {hits} jobs with the longest execution time";
     private ReportArguments reportArguments;
 
