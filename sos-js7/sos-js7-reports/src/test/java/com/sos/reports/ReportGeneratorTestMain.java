@@ -19,13 +19,13 @@ public class ReportGeneratorTestMain {
     @Test
     public void test() throws Exception {
 
-        String report = "5";
-        String hits = "10";
-        String inputDirectory = "c:/temp/1";
+        String report = "3";
+        String hits = "3";
+        String inputDirectory = "c:/temp/in";
         String outputDirectory = "c:/temp";
         String frequency = "monthly";
-        String monthFrom = "2024-01";
-        String monthTo = "";
+        String monthFrom = "2023-09";
+        String monthTo = "2023-09";
         String controller = "controller";
         String sort = "HIGHEST";
         

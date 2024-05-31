@@ -49,25 +49,15 @@ public class ReportParallelAgentExecution implements IReport {
         if (reportPeriod.getTo() == null) {
             reportPeriod.setTo(reportPeriod.getFrom());
         }
-        boolean found = false;
+
         for (ReportPeriod period : periods) {
             if ((reportPeriod.getFrom().isAfter(period.getFrom()) && reportPeriod.getFrom().isBefore(period.getTo())) || (reportPeriod.getTo()
                     .isAfter(period.getFrom()) && reportPeriod.getTo().isBefore(period.getTo())) || (reportPeriod.getFrom().isBefore(period.getFrom())
                             && reportPeriod.getTo().isAfter(period.getTo()))) {
-                found = true;
-                period.addCount();
-
-                if (period.getTo().isBefore(reportPeriod.getTo())) {
-                    period.setTo(reportPeriod.getTo());
-                }
-                if (period.getFrom().isAfter(reportPeriod.getFrom())) {
-                    period.setFrom(reportPeriod.getFrom());
-                }
+                reportPeriod.addCount();
             }
         }
-        if (!found) {
-            periods.add(reportPeriod);
-        }
+        periods.add(reportPeriod);
 
         agents.put(orderRecord.getAgentId(), periods);
     }
@@ -80,7 +70,6 @@ public class ReportParallelAgentExecution implements IReport {
 
         ReportResult reportResult = new ReportResult();
 
-        
         for (Entry<String, List<ReportPeriod>> entryAgentPeriods : agents.entrySet()) {
             List<ReportPeriod> periods = entryAgentPeriods.getValue();
 
