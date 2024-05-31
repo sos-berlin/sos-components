@@ -66,7 +66,7 @@ public class ImportCertificateImpl extends JOCResourceImpl implements IImportCer
             dbLayer.storeEnciphermentCertificate(filter.getCertAlias(), certificateFromFile, filter.getPrivateKeyPath());
             // create or Update JobResource 
             EnciphermentUtils.createRelatedJobResource(hibernateSession, filter, certificateFromFile, auditLog.getId());
-            // TODO and Deploy the JobResource to all controllers
+            
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocConcurrentAccessException e) {
             ProblemHelper.postMessageAsHintIfExist(e.getMessage(), xAccessToken, getJocError(), null);
@@ -80,6 +80,7 @@ public class ImportCertificateImpl extends JOCResourceImpl implements IImportCer
         } finally {
             Globals.disconnect(hibernateSession);
         }
+        // TODO and Deploy the JobResource to all controllers
     }
 
 }

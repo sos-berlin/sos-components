@@ -26,6 +26,8 @@ import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.encipherment.StoreCertificateRequestFilter;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.publish.db.DBLayerDeploy;
+import com.sos.joc.publish.impl.DeployImpl;
+import com.sos.joc.publish.resource.IDeploy;
 import com.sos.joc.publish.util.StoreDeployments;
 import com.sos.schema.JsonValidator;
 
@@ -53,8 +55,6 @@ public class StoreCertificateImpl extends JOCResourceImpl implements IStoreCerti
             dbLayer.storeEnciphermentCertificate(filter.getCertAlias(), filter.getCertificate(), filter.getPrivateKeyPath());
             // create or Update JobResource 
             EnciphermentUtils.createRelatedJobResource(hibernateSession, filter, auditLog.getId());
-            // TODO and Deploy the JobResource to all controllers
-            
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocConcurrentAccessException e) {
             ProblemHelper.postMessageAsHintIfExist(e.getMessage(), xAccessToken, getJocError(), null);
@@ -67,11 +67,10 @@ public class StoreCertificateImpl extends JOCResourceImpl implements IStoreCerti
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
             Globals.disconnect(hibernateSession);
+            // TODO Deploy the JobResource to all controllers
+            IDeploy deploy = new DeployImpl();
+            deploy.postDeploy(xAccessToken, storeCertificateFilter);
         }
-    }
-    
-        
         
     }
-
 }
