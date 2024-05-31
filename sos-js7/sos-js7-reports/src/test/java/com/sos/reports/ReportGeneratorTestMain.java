@@ -19,15 +19,16 @@ public class ReportGeneratorTestMain {
     @Test
     public void test() throws Exception {
 
-        String report = "3";
-        String hits = "3";
+        String report = "5";
+        String hits = "10";
         String inputDirectory = "c:/temp/1";
         String outputDirectory = "c:/temp";
         String frequency = "monthly";
-        String monthFrom = "2023-01";
-        String monthTo = "2024-08";
+        String monthFrom = "2024-01";
+        String monthTo = "";
         String controller = "controller";
-
+        String sort = "HIGHEST";
+        
         List<String> args = new ArrayList<>();
         args.add("-r");args.add(report);
         args.add("-n");args.add(hits);
@@ -37,6 +38,7 @@ public class ReportGeneratorTestMain {
         args.add("-s");args.add(monthFrom);
         args.add("-c");args.add(controller);
         args.add("-e");args.add(monthTo);
+        args.add("-f");args.add(sort);
 
         ReportGenerator.main(args.stream().toArray(String[]::new));
     }

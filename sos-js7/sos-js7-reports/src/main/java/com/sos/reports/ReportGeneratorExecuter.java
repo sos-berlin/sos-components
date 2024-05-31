@@ -17,8 +17,8 @@ import com.sos.reports.reports.ReportFailedJobs;
 import com.sos.reports.reports.ReportFailedWorkflows;
 import com.sos.reports.reports.ReportFailedWorkflowsWithCancelledOrders;
 import com.sos.reports.reports.ReportHighCriticalFailedJobs;
-import com.sos.reports.reports.ReportJobExecution;
-import com.sos.reports.reports.ReportOrderExecution;
+import com.sos.reports.reports.ReportLongestJobExecution;
+import com.sos.reports.reports.ReportLongestOrderExecution;
 import com.sos.reports.reports.ReportParallelAgentExecution;
 import com.sos.reports.reports.ReportParallelJobExecutions;
 import com.sos.reports.reports.ReportParallelWorkflowExecutions;
@@ -62,16 +62,16 @@ public class ReportGeneratorExecuter {
             report = new ReportHighCriticalFailedJobs();
             break;
         case "5":
-        case "reportfailedworkflowswithCancelledOrders":
+        case "reportfailedworkflowswithcancelledorders":
             report = new ReportFailedWorkflowsWithCancelledOrders();
             break;
         case "6":
         case "reportlongestorderexecution":
-            report = new ReportOrderExecution();
+            report = new ReportLongestOrderExecution();
             break;
         case "7":
-        case "reportjobexecution":
-            report = new ReportJobExecution();
+        case "reportlongestjobexecution":
+            report = new ReportLongestJobExecution();
             break;
         case "8":
         case "reportparallelworkflowexecutions":
@@ -82,7 +82,7 @@ public class ReportGeneratorExecuter {
             report = new ReportParallelJobExecutions();
             break;
         default:
-            throw new SOSException("Not yet implemented: " + TemplateId.fromValue(Integer.valueOf(reportArguments.reportId)).name());
+            throw new SOSException("Not yet implemented: " + reportArguments.reportId);
         }
         report.setReportArguments(reportArguments);
 

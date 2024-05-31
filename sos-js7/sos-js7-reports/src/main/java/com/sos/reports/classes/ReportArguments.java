@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
 import com.sos.inventory.model.report.Frequency;
+import com.sos.inventory.model.report.ReportOrder;
 import com.sos.reports.frequency.Every2weeks;
 import com.sos.reports.frequency.Every3months;
 import com.sos.reports.frequency.Every3years;
@@ -25,7 +26,7 @@ public class ReportArguments {
     public LocalDate monthTo;
     public Integer hits = 10;
     public String logDir;
-    public String sort;
+    public ReportOrder sort;
 
     public void setInputDirectory(String inputDirectory) {
         if (!inputDirectory.endsWith("/")) {
@@ -152,8 +153,12 @@ public class ReportArguments {
         }
     }
 
-    public void setSort(String sort) {
+    public void setSort(ReportOrder sort) {
         this.sort = sort;
 
+    }
+
+    public void setSort(String paramValue) {
+        this.sort = ReportOrder.valueOf(paramValue);
     }
 }

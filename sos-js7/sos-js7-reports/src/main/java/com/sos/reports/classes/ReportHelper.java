@@ -23,7 +23,6 @@ public class ReportHelper {
     public enum ReportTypes {
         JOBS, ORDERS
     }
-
  
     public static Integer string2Integer(String s) {
         Integer result;

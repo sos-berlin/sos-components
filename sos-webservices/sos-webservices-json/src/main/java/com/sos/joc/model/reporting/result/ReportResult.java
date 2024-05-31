@@ -19,7 +19,6 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "title",
     "type",
     "data"
 })
@@ -31,40 +30,10 @@ public class ReportResult {
      * 
      * 
      */
-    @JsonProperty("title")
-    private String title;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("type")
     private String type;
     @JsonProperty("data")
     private List<ReportResultData> data = new ArrayList<ReportResultData>();
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("title")
-    public String getTitle() {
-        return title;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("title")
-    public void setTitle(String title) {
-        this.title = title;
-    }
 
     /**
      * string without < and >
@@ -100,12 +69,12 @@ public class ReportResult {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("title", title).append("type", type).append("data", data).toString();
+        return new ToStringBuilder(this).append("type", type).append("data", data).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(title).append(type).append(data).toHashCode();
+        return new HashCodeBuilder().append(type).append(data).toHashCode();
     }
 
     @Override
@@ -117,7 +86,7 @@ public class ReportResult {
             return false;
         }
         ReportResult rhs = ((ReportResult) other);
-        return new EqualsBuilder().append(title, rhs.title).append(type, rhs.type).append(data, rhs.data).isEquals();
+        return new EqualsBuilder().append(type, rhs.type).append(data, rhs.data).isEquals();
     }
 
 }

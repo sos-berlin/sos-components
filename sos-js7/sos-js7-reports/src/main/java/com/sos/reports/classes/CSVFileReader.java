@@ -18,7 +18,7 @@ public class CSVFileReader {
 
     public void readOrders(IReport report, ReportArguments reportArguments) {
 
-        LOGGER.debug("read data for report:" + report.getType() + "/" + report.getTitle());
+        LOGGER.debug("read data for report:" + report.getType() + "/" + reportArguments.reportId);
         Interval interval = new Interval();
         interval.setInterval(reportArguments.monthFrom, reportArguments.monthTo);
 
@@ -85,7 +85,7 @@ public class CSVFileReader {
 
     public void readJobs(IReport report, ReportArguments reportArguments) throws IOException {
 
-        LOGGER.debug("read data for report:" + report.getType() + "/" + report.getTitle());
+        LOGGER.debug("read data for report:" + report.getType() + "/" + reportArguments.reportId);
         Interval interval = new Interval();
         interval.setInterval(reportArguments.monthFrom, reportArguments.monthTo);
 
