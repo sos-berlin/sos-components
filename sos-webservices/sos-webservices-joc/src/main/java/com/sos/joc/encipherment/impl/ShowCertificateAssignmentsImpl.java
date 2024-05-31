@@ -1,10 +1,6 @@
 package com.sos.joc.encipherment.impl;
 
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -22,7 +18,7 @@ import com.sos.joc.model.encipherment.ShowAgentAssignmentsRequestFilter;
 import com.sos.joc.model.encipherment.ShowAgentAssignmentsResponse;
 import com.sos.schema.JsonValidator;
 
-@jakarta.ws.rs.Path("encipherment")
+@jakarta.ws.rs.Path("encipherment/assignment")
 public class ShowCertificateAssignmentsImpl extends JOCResourceImpl implements IShowCertificateAssgnments {
 
     private static final String API_CALL = "./encipherment/assignment";
@@ -32,7 +28,7 @@ public class ShowCertificateAssignmentsImpl extends JOCResourceImpl implements I
         SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL, showAssignmentFilter, xAccessToken);
-            JsonValidator.validateFailFast(showAssignmentFilter, ShowAgentAssignmentsRequestFilter.class);
+            JsonValidator.validate(showAssignmentFilter, ShowAgentAssignmentsRequestFilter.class);
             ShowAgentAssignmentsRequestFilter filter = Globals.objectMapper.readValue(showAssignmentFilter, ShowAgentAssignmentsRequestFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getAdministration().getCertificates().getView());
             if (jocDefaultResponse != null) {

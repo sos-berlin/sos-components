@@ -20,7 +20,7 @@ import com.sos.joc.model.encipherment.ShowCertificateRequestFilter;
 import com.sos.joc.model.encipherment.ShowCertificateResponse;
 import com.sos.schema.JsonValidator;
 
-@jakarta.ws.rs.Path("encipherment")
+@jakarta.ws.rs.Path("encipherment/certificate")
 public class ShowCertificateImpl extends JOCResourceImpl implements IShowCertificate {
 
     private static final String API_CALL = "./encipherment/certificate";
