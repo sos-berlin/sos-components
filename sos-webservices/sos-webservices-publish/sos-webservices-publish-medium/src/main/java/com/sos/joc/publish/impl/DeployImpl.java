@@ -9,6 +9,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
+import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.publish.DeployFilter;
 import com.sos.joc.publish.resource.IDeploy;
 import com.sos.schema.JsonValidator;
@@ -40,7 +41,7 @@ public class DeployImpl extends ADeploy implements IDeploy {
             
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
-            deploy(xAccessToken, deployFilter, hibernateSession, dbAuditlog, account, API_CALL);
+            deploy(xAccessToken, deployFilter, hibernateSession, dbAuditlog, account, JocSecurityLevel.MEDIUM, API_CALL);
             
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {

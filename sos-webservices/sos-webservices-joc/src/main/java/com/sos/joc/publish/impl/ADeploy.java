@@ -63,7 +63,7 @@ public abstract class ADeploy extends JOCResourceImpl {
     private static final Logger LOGGER = LoggerFactory.getLogger(ADeploy.class);
 
     public void deploy(String xAccessToken,DeployFilter deployFilter, SOSHibernateSession hibernateSession,
-            DBItemJocAuditLog dbAuditlog, String account, String apiCall) throws Exception {
+            DBItemJocAuditLog dbAuditlog, String account, JocSecurityLevel secLvl, String apiCall) throws Exception {
         
         Set<String> allowedControllerIds = Collections.emptySet();
         allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream()
@@ -151,7 +151,7 @@ public abstract class ADeploy extends JOCResourceImpl {
         final String commitId = UUID.randomUUID().toString();
 
         DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
-        JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, JocSecurityLevel.MEDIUM);
+        JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, secLvl);
         if (keyPair == null) {
             throw new JocMissingKeyException(
                     "No private key found for signing! - Please check your private key from the key management section in your profile.");
