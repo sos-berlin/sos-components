@@ -43,20 +43,14 @@ public class DefaultEncryptionResolver implements IJobArgumentValueResolver {
         
         for (JobArgument<?> arg : toResolve) {
             try {
-                String decrypted = decrypt((String) arg.getValue(), privateKeyPath);
-                logger.info(decrypted);
-                arg.applyValue(decrypted);
-                System.out.println("decrypted: " + decrypted);
-                // TODO: activated before finalize
-//                arg.setDisplayMode(DisplayMode.MASKED);
-                arg.setDisplayMode(DisplayMode.UNMASKED);
+                arg.applyValue(decrypt((String) arg.getValue(), privateKeyPath));
+                arg.setDisplayMode(DisplayMode.MASKED);
             } catch (Throwable e) {
                 arg.setNotAcceptedValue(arg.getValue(), e);
             }
         }
     }
 
-    /*** TODO */
     private static String decrypt(String valWithPrefix, String enciphermentPrivateKeyPath) throws Exception {
         String val = valWithPrefix.substring(getPrefix().length());
         String[] splittedValues = val.split(" ");

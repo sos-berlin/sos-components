@@ -37,7 +37,7 @@ public class JobTest {
         LOGGER.info(String.format("[RESULT]%s", result));
     }
 
-//    @Ignore
+    @Ignore
     @Test
     public void testEncryptionResolver() throws Exception {
         Path certificatePath = Paths.get("/sp/tmp/myX509.crt"); 
