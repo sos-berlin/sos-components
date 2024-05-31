@@ -1,6 +1,5 @@
 package com.sos.joc.encipherment.util;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
@@ -17,38 +16,37 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
-import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.encipherment.ImportCertificateRequestFilter;
 import com.sos.joc.model.encipherment.StoreCertificateRequestFilter;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.publish.db.DBLayerDeploy;
-import com.sos.schema.exception.SOSJsonSchemaException;
 
 public class EnciphermentUtils {
 
     public static final String ARG_NAME_ENCIPHERMENT_CERTIFICATE = "encipherment_certificate";
     public static final String ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH = "encipherment_private_key_path";
 
-    public static void createRelatedJobResource(SOSHibernateSession hibernateSession, ImportCertificateRequestFilter filter,
+    public static DBItemInventoryConfiguration createRelatedJobResource(SOSHibernateSession hibernateSession, ImportCertificateRequestFilter filter,
             String certificate, Long auditLogId)
                     throws SOSHibernateException, JsonMappingException, JsonProcessingException {
-        createRelatedJobResource(hibernateSession, filter.getCertAlias(), certificate, filter.getPrivateKeyPath(),
+        return createRelatedJobResource(hibernateSession, filter.getCertAlias(), certificate, filter.getPrivateKeyPath(),
                 filter.getJobResourceFolder(), auditLogId);
     }
     
-    public static void createRelatedJobResource(SOSHibernateSession hibernateSession, StoreCertificateRequestFilter filter,
+    public static DBItemInventoryConfiguration createRelatedJobResource(SOSHibernateSession hibernateSession, StoreCertificateRequestFilter filter,
             Long auditLogId) throws SOSHibernateException, JsonMappingException, JsonProcessingException {
-        createRelatedJobResource(hibernateSession, filter.getCertAlias(), filter.getCertificate(), 
+        return createRelatedJobResource(hibernateSession, filter.getCertAlias(), filter.getCertificate(), 
                 filter.getPrivateKeyPath(), filter.getJobResourceFolder(), auditLogId);
     }
 
-    public static void createRelatedJobResource(SOSHibernateSession hibernateSession, String certAlias, String certificate,
+    public static DBItemInventoryConfiguration createRelatedJobResource(SOSHibernateSession hibernateSession, String certAlias, String certificate,
             String privateKeyPath, String jobResourceFolder, Long auditLogId)
                     throws SOSHibernateException, JsonMappingException, JsonProcessingException {
         DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
         DBItemInventoryConfiguration dbExistingJobResource = dbLayer.getInventoryConfigurationByNameAndType(certAlias,
                 ConfigurationType.JOBRESOURCE.intValue());
         Path path = null;
+        DBItemInventoryConfiguration jr = null;
         if (dbExistingJobResource != null) {
             JobResource existingJobResource = Globals.objectMapper.readValue(dbExistingJobResource.getContent(),
                     JobResource.class);
@@ -64,6 +62,7 @@ public class EnciphermentUtils {
             dbExistingJobResource.setModified(Date.from(Instant.now()));
             hibernateSession.update(dbExistingJobResource);
             path = Paths.get(dbExistingJobResource.getPath());
+            jr = dbExistingJobResource;
         } else {
             DBItemInventoryConfiguration newDBJobResource = new DBItemInventoryConfiguration();
             JobResource newJobResource = new JobResource();
@@ -93,10 +92,12 @@ public class EnciphermentUtils {
                 newDBJobResource.setValid(false);
             }
             hibernateSession.save(newDBJobResource);
+            jr = newDBJobResource;
         }
         JocInventory.makeParentDirs(new InventoryDBLayer(hibernateSession), path.getParent(), ConfigurationType.FOLDER);
         JocInventory.postEvent(jobResourceFolder);
         JocInventory.postFolderEvent(jobResourceFolder);
+        return jr;
     }
     
 }
