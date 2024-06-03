@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.sos.inventory.model.report.ReportOrder;
 import com.sos.joc.model.reporting.result.ReportResult;
 import com.sos.joc.model.reporting.result.ReportResultData;
 import com.sos.joc.model.reporting.result.ReportResultDataItem;
@@ -28,7 +29,6 @@ import com.sos.reports.classes.ReportRecord;
 public class ReportFailedWorkflows implements IReport {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ReportFailedWorkflows.class);
-    private static final String REPORT_TITLE = "Top ${hits} frequently failed workflows";
     private ReportArguments reportArguments;
 
     Map<String, ReportResultData> failedWorkflows = new HashMap<String, ReportResultData>();
@@ -71,14 +71,20 @@ public class ReportFailedWorkflows implements IReport {
 
     public ReportResult putHits() {
         Comparator<ReportResultData> byCount = (obj1, obj2) -> obj1.getCount().compareTo(obj2.getCount());
-        LinkedHashMap<String, ReportResultData> failedWorkflowsResult = failedWorkflows.entrySet().stream().sorted(Map.Entry
-                .<String, ReportResultData> comparingByValue(byCount).reversed()).limit(reportArguments.hits).collect(Collectors.toMap(
-                        Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+
+        LinkedHashMap<String, ReportResultData> failedWorkflowsResult = null;
+        if (this.reportArguments.sort.equals(ReportOrder.HIGHEST)) {
+            failedWorkflowsResult = failedWorkflows.entrySet().stream().sorted(Map.Entry.<String, ReportResultData> comparingByValue(byCount)
+                    .reversed()).limit(reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1,
+                            LinkedHashMap::new));
+        } else {
+            failedWorkflowsResult = failedWorkflows.entrySet().stream().sorted(Map.Entry.<String, ReportResultData> comparingByValue(byCount)).limit(
+                    reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+        }
 
         ReportResult reportResult = new ReportResult();
 
         reportResult.setData(new ArrayList<ReportResultData>());
-        reportResult.setTitle(getTitle());
         reportResult.setType(getType().name());
 
         for (Entry<String, ReportResultData> entry : failedWorkflowsResult.entrySet()) {
@@ -112,11 +118,6 @@ public class ReportFailedWorkflows implements IReport {
 
     public void reset() {
         failedWorkflows.clear();
-    }
-
-    @Override
-    public String getTitle() {
-        return REPORT_TITLE;
     }
 
     @Override

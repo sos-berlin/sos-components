@@ -1,14 +1,11 @@
 package com.sos.reports.reports;
 
 import java.io.IOException;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -17,9 +14,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.sos.inventory.model.report.ReportOrder;
 import com.sos.joc.model.reporting.result.ReportResult;
 import com.sos.joc.model.reporting.result.ReportResultData;
-import com.sos.joc.model.reporting.result.ReportResultDataItem;
 import com.sos.reports.classes.IReport;
 import com.sos.reports.classes.ReportArguments;
 import com.sos.reports.classes.ReportHelper;
@@ -28,72 +25,41 @@ import com.sos.reports.classes.ReportRecord;
 
 public class ReportParallelAgentExecution implements IReport {
 
+    private static final int MAX_PERIODS_IN_LIST = 1000;
     private static final Logger LOGGER = LoggerFactory.getLogger(ReportParallelAgentExecution.class);
-    private static final String REPORT_TITLE = "Top ${hits} agents with most parallel job execution";
     private ReportArguments reportArguments;
 
-    Map<String, Map<String, ReportResultData>> agents = new HashMap<String, Map<String, ReportResultData>>();
-
-    private void count(ReportRecord orderRecord, ReportPeriod reportPeriod, Map<String, ReportResultData> periods) {
-
-        String periodKey = reportPeriod.periodKey();
-
-        ReportResultData reportResultData = periods.get(periodKey);
-        if (reportResultData == null) {
-            reportResultData = new ReportResultData();
-            reportResultData.setData(new ArrayList<ReportResultDataItem>());
-            reportResultData.setPeriod(periodKey);
-            reportResultData.setCount(1L);
-        } else {
-            reportResultData.setCount(reportResultData.getCount() + 1);
-        }
-        ReportResultDataItem reportResultDataItem = new ReportResultDataItem();
-
-        if (orderRecord.getEndTime() != null) {
-            Duration d = Duration.between(orderRecord.getStartTime(), orderRecord.getEndTime());
-            reportResultDataItem.setDuration(d.toSeconds());
-
-            Instant instant = orderRecord.getEndTime().toInstant(ZoneOffset.UTC);
-            reportResultDataItem.setEndTime(Date.from(instant));
-        }
-        Instant instant = orderRecord.getStartTime().toInstant(ZoneOffset.UTC);
-        reportResultDataItem.setStartTime(Date.from(instant));
-        if (orderRecord.getOrderState() != null) {
-            reportResultDataItem.setOrderState(Long.valueOf(orderRecord.getOrderState()));
-        }
-        if (orderRecord.getState() != null) {
-            reportResultDataItem.setState(Long.valueOf(orderRecord.getState()));
-        }
-
-        reportResultDataItem.setWorkflowName(orderRecord.getWorkflowName());
-
-        reportResultData.getData().add(reportResultDataItem);
-        periods.put(periodKey, reportResultData);
-
-    }
+    Map<String, List<ReportPeriod>> agents = new HashMap<String, List<ReportPeriod>>();
 
     public void count(ReportRecord orderRecord) {
-        Map<String, ReportResultData> periods = agents.get(orderRecord.getAgentId());
+        List<ReportPeriod> periods = agents.get(orderRecord.getAgentId());
         if (periods == null) {
-            periods = new HashMap<String, ReportResultData>();
+            periods = new ArrayList<ReportPeriod>();
             agents.put(orderRecord.getAgentId(), periods);
         }
 
         ReportPeriod reportPeriod = new ReportPeriod();
-        reportPeriod.setPeriodLength(1);
-        reportPeriod.setPeriodStep(1);
-
+        reportPeriod.setCount(1L);
         reportPeriod.setFrom(orderRecord.getStartTime());
         if (orderRecord.getEndTime() == null) {
-            reportPeriod.setEnd(orderRecord.getModified());
+            reportPeriod.setTo(orderRecord.getModified());
         } else {
-            reportPeriod.setEnd(orderRecord.getEndTime());
+            reportPeriod.setTo(orderRecord.getEndTime());
         }
 
-        while (!reportPeriod.periodEnded()) {
-            count(orderRecord, reportPeriod, periods);
-            reportPeriod.next();
+        if (reportPeriod.getTo() == null) {
+            reportPeriod.setTo(reportPeriod.getFrom());
         }
+
+        for (ReportPeriod period : periods) {
+            if ((reportPeriod.getFrom().isAfter(period.getFrom()) && reportPeriod.getFrom().isBefore(period.getTo())) || (reportPeriod.getTo()
+                    .isAfter(period.getFrom()) && reportPeriod.getTo().isBefore(period.getTo())) || (reportPeriod.getFrom().isBefore(period.getFrom())
+                            && reportPeriod.getTo().isAfter(period.getTo()))) {
+                reportPeriod.addCount();
+            }
+        }
+        periods.add(reportPeriod);
+        removeOldPeriods(reportPeriod, orderRecord.getAgentId());
         agents.put(orderRecord.getAgentId(), periods);
     }
 
@@ -102,47 +68,38 @@ public class ReportParallelAgentExecution implements IReport {
         Map<String, ReportResultData> parallelAgents = new HashMap<String, ReportResultData>();
 
         Comparator<ReportResultData> byCount = (obj1, obj2) -> obj1.getCount().compareTo(obj2.getCount());
-        for (Entry<String, Map<String, ReportResultData>> entryAgentPeriods : agents.entrySet()) {
-            Map<String, ReportResultData> periods = entryAgentPeriods.getValue();
-
-            LinkedHashMap<String, ReportResultData> agentPeriods = periods.entrySet().stream().sorted(Map.Entry
-                    .<String, ReportResultData> comparingByValue(byCount).reversed()).limit(1).collect(Collectors.toMap(Map.Entry::getKey,
-                            Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
-
-            for (Entry<String, ReportResultData> entryAgent : agentPeriods.entrySet()) {
-                parallelAgents.put(entryAgent.getValue().getAgentName(), entryAgent.getValue());
-            }
-        }
-
-        LinkedHashMap<String, ReportResultData> agentsParallelPeriodsResult = parallelAgents.entrySet().stream().sorted(Map.Entry
-                .<String, ReportResultData> comparingByValue(byCount).reversed()).limit(reportArguments.hits).collect(Collectors.toMap(
-                        Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 
         ReportResult reportResult = new ReportResult();
 
+        for (Entry<String, List<ReportPeriod>> entryAgentPeriods : agents.entrySet()) {
+            List<ReportPeriod> periods = entryAgentPeriods.getValue();
+
+            ReportPeriod maxValue = periods.stream().max(Comparator.comparing(v -> v.getCount())).get();
+            ReportResultData reportResultData = new ReportResultData();
+            reportResultData.setAgentName(entryAgentPeriods.getKey());
+            reportResultData.setCount(maxValue.getCount());
+            parallelAgents.put(entryAgentPeriods.getKey(), reportResultData);
+        }
+
+        LinkedHashMap<String, ReportResultData> agentsParallelPeriodsResult = null;
+        if (this.reportArguments.sort.equals(ReportOrder.HIGHEST)) {
+            agentsParallelPeriodsResult = parallelAgents.entrySet().stream().sorted(Map.Entry.<String, ReportResultData> comparingByValue(byCount)
+                    .reversed()).limit(reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1,
+                            LinkedHashMap::new));
+        } else {
+            agentsParallelPeriodsResult = parallelAgents.entrySet().stream().sorted(Map.Entry.<String, ReportResultData> comparingByValue(byCount))
+                    .limit(reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1,
+                            LinkedHashMap::new));
+        }
+
         reportResult.setData(new ArrayList<ReportResultData>());
-        reportResult.setTitle(getTitle());
         reportResult.setType(getType().name());
 
         for (Entry<String, ReportResultData> entry : agentsParallelPeriodsResult.entrySet()) {
+            reportResult.getData().add(entry.getValue());
             LOGGER.debug("-----New Entry -----------------------");
             LOGGER.debug(entry.getKey() + ":" + entry.getValue().getCount());
-            entry.getValue().setAgentName(entry.getKey());
-            reportResult.getData().add(entry.getValue());
 
-            if (LOGGER.isDebugEnabled()) {
-                for (ReportResultDataItem dataItem : entry.getValue().getData()) {
-                    LOGGER.debug("--- New entry detail ---");
-                    LOGGER.debug("workflowName:" + dataItem.getWorkflowName());
-                    LOGGER.debug("jobName:" + dataItem.getJobName());
-                    LOGGER.debug("orderState:" + dataItem.getOrderState());
-                    LOGGER.debug("state:" + dataItem.getState());
-                    LOGGER.debug("startTime:" + dataItem.getStartTime());
-                    LOGGER.debug("endTime:" + dataItem.getEndTime());
-                    LOGGER.debug("duration:" + dataItem.getDuration());
-                    LOGGER.debug("---------");
-                }
-            }
         }
         ObjectWriter writer = ReportHelper.prettyPrintObjectMapper.writer();
 
@@ -155,18 +112,24 @@ public class ReportParallelAgentExecution implements IReport {
         return reportResult;
     }
 
+    private void removeOldPeriods(ReportPeriod reportPeriod, String agentId) {
+        List<ReportPeriod> periods = agents.get(agentId);
+        if (periods.size() > MAX_PERIODS_IN_LIST) {
+            ReportPeriod maxValue = periods.stream().max(Comparator.comparing(v -> v.getCount())).get();
+            periods.removeIf(p -> p.getTo().isBefore(reportPeriod.getFrom()));
+            if (maxValue.getTo().isBefore(reportPeriod.getFrom())) {
+                periods.add(reportPeriod);
+            }
+        }
+    }
+
     public void reset() {
         agents.clear();
     }
 
     @Override
-    public String getTitle() {
-        return REPORT_TITLE;
-    }
-
-    @Override
     public ReportHelper.ReportTypes getType() {
-        return ReportHelper.ReportTypes.ORDERS;
+        return ReportHelper.ReportTypes.JOBS;
     }
 
     public void setReportArguments(ReportArguments reportArguments) {

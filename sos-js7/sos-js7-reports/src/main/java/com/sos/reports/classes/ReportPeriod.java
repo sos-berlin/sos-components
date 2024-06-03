@@ -11,6 +11,7 @@ public class ReportPeriod {
     private Integer periodStep = periodStepDefault;
     protected LocalDateTime from;
     protected LocalDateTime end;
+    protected Long count;
     private LocalDateTime to;
 
     public LocalDateTime getFrom() {
@@ -84,6 +85,23 @@ public class ReportPeriod {
         } else {
             this.periodStep = periodStep;
         }
+    }
+
+    public Long getCount() {
+        return count;
+    }
+
+    public void setCount(Long count) {
+        this.count = count;
+    }
+
+    public void addCount() {
+        count += 1;
+    }
+
+    
+    public void setTo(LocalDateTime to) {
+        this.to = to;
     }
 
 }

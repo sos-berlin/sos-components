@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.sos.inventory.model.report.ReportOrder;
 import com.sos.joc.model.reporting.result.ReportResult;
 import com.sos.joc.model.reporting.result.ReportResultData;
 import com.sos.joc.model.reporting.result.ReportResultDataItem;
@@ -29,7 +30,6 @@ import com.sos.reports.classes.ReportRecord;
 public class ReportParallelJobExecutions implements IReport {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ReportParallelWorkflowExecutions.class);
-    private static final String REPORT_TITLE = "Top ${hits} periods during which mostly jobs executed";
     private ReportArguments reportArguments;
 
     Map<String, ReportResultData> periods = new HashMap<String, ReportResultData>();
@@ -58,7 +58,7 @@ public class ReportParallelJobExecutions implements IReport {
         }
         Instant instant = jobRecord.getStartTime().toInstant(ZoneOffset.UTC);
         reportResultDataItem.setStartTime(Date.from(instant));
-   
+
         if (jobRecord.getState() != null) {
             reportResultDataItem.setState(Long.valueOf(jobRecord.getState()));
         }
@@ -92,15 +92,19 @@ public class ReportParallelJobExecutions implements IReport {
 
     public ReportResult putHits() {
         Comparator<ReportResultData> byCount = (obj1, obj2) -> obj1.getCount().compareTo(obj2.getCount());
- 
-        LinkedHashMap<String, ReportResultData> jobsInPeriodResult = periods.entrySet().stream().sorted(Map.Entry
-                .<String, ReportResultData> comparingByValue(byCount).reversed()).limit(reportArguments.hits).collect(Collectors.toMap(
-                        Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+
+        LinkedHashMap<String, ReportResultData> jobsInPeriodResult = null;
+        if (this.reportArguments.sort.equals(ReportOrder.HIGHEST)) {
+            jobsInPeriodResult = periods.entrySet().stream().sorted(Map.Entry.<String, ReportResultData> comparingByValue(byCount).reversed()).limit(
+                    reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+        } else {
+            jobsInPeriodResult = periods.entrySet().stream().sorted(Map.Entry.<String, ReportResultData> comparingByValue(byCount)).limit(
+                    reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+        }
 
         ReportResult reportResult = new ReportResult();
 
         reportResult.setData(new ArrayList<ReportResultData>());
-        reportResult.setTitle(getTitle());
         reportResult.setType(getType().name());
 
         for (Entry<String, ReportResultData> entry : jobsInPeriodResult.entrySet()) {
@@ -135,11 +139,6 @@ public class ReportParallelJobExecutions implements IReport {
 
     public void reset() {
         periods.clear();
-    }
-
-    @Override
-    public String getTitle() {
-        return REPORT_TITLE;
     }
 
     @Override
