@@ -153,7 +153,10 @@ public class LoadData extends AReporting {
     private static void atomicRename(ReportingLoader loader, String month) throws IOException {
         Path monthFile = getMonthFile(loader, month);
         Path tmpMonthFile = getTmpMonthFile(loader, month);
-        Files.move(tmpMonthFile, monthFile, StandardCopyOption.ATOMIC_MOVE);
+        if (Files.exists(tmpMonthFile)) {
+            Files.deleteIfExists(monthFile);
+            Files.move(tmpMonthFile, monthFile, StandardCopyOption.ATOMIC_MOVE);
+        }
     }
     
     private static Path getMonthFile(ReportingLoader loader, String month) {

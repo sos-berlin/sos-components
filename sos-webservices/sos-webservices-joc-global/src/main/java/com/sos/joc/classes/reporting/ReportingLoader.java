@@ -12,13 +12,15 @@ public class ReportingLoader {
     private byte[] headline;
     private String dbTable;
     private ReportingType type;
+    private boolean withChildOrders;
     
     public ReportingLoader(ReportingType type) throws IOException {
-        outDir = AReporting.getDataDirectory(type);
-        headline = AReporting.getCsvHeadLine(type);
-        hql = AReporting.getCsvHQL(type);
-        dbTable = AReporting.DB_TABLE.get(type);
+        this.outDir = AReporting.getDataDirectory(type);
+        this.headline = AReporting.getCsvHeadLine(type);
+        this.hql = AReporting.getCsvHQL(type);
+        this.dbTable = AReporting.DB_TABLE.get(type);
         this.type = type;
+        this.withChildOrders = ReportingType.JOBS.equals(type);
     }
 
     public Path getOutDir() {
@@ -39,5 +41,9 @@ public class ReportingLoader {
     
     public ReportingType getType() {
         return type;
+    }
+    
+    public boolean withoutChildOrders() {
+        return !withChildOrders;
     }
 }

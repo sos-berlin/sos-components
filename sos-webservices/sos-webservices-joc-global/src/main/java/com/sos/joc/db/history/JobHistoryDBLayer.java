@@ -98,6 +98,7 @@ public class JobHistoryDBLayer {
         try {
             filter.setExecutedFrom(Date.from(month.atZone(ZoneId.systemDefault()).toInstant()));
             filter.setExecutedTo(Date.from(month.plusMonths(1).atZone(ZoneId.systemDefault()).toInstant()));
+            filter.setMainOrder(loader.withoutChildOrders());
 
             Query<String> query = createQuery(new StringBuilder().append("select ").append(loader.getColumnHql()).append(" as csv from ").append(
                     loader.getDbTable()).append(getOrderStepsWhere()).append(" order by startTime").toString());

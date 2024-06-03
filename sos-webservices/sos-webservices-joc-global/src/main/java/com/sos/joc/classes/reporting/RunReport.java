@@ -138,11 +138,11 @@ public class RunReport extends AReporting {
         
         try {
             runDbItem = getRunDBItem(in);
-            insertRunAndReadTemplate(runDbItem, in);
+            insertRun(runDbItem);
             String commonScript = getCommonScript(in, getCommandLineOptions());
             //TODO SOSTimeout timeout = new SOSTimeout(10, TimeUnit.Hours);
             for (Frequency f : in.getFrequencies()) {
-                Path tempDir = runPerFrequency(f, commonScript, in);
+                Path tempDir = runPerFrequency(f, commonScript);
                 tempDirs.add(tempDir);
                 dbItems.addAll(Files.list(tempDir).filter(file -> file.getFileName().toString().startsWith(reportFilePrefix)).map(
                         file -> getHistoryDBItem(file, f)).collect(Collectors.toList()));
@@ -170,10 +170,10 @@ public class RunReport extends AReporting {
         // StringBuilder s = new StringBuilder().append("node ").append(commandLineOptions).append(" app/run-report.js -i data");
         StringBuilder s = new StringBuilder().append("\"").append(Paths.get(System.getProperty("java.home"), "bin", "java").toString()).append("\" ")
                 .append(commandLineOptions)
-                //.append(" -cp ../lib/ext/joc/*").append(File.pathSeparator).append("../webapps/joc/WEB-INF/lib/* ")
-                .append(" -cp \"../webapps/joc/WEB-INF/lib/*\" ")
+                //.append(" -cp lib/ext/joc/*").append(File.pathSeparator).append("webapps/joc/WEB-INF/lib/* ")
+                .append(" -cp \"webapps/joc/WEB-INF/lib/*\" ")
                 .append(className)
-                .append(" -i data")
+                .append(" -i reporting/data")
                 .append(" -r ").append(in.getTemplateName().getJavaClass());
         if (in.getMonthFrom() != null) {
             s.append(" -s ").append(in.getMonthFrom());
@@ -195,24 +195,24 @@ public class RunReport extends AReporting {
         if (in.getSort() != null) {
             s.append(" -f ").append(in.getSort());
         }
+        if (in.getControllerId() != null && !in.getControllerId().isBlank()) {
+            s.append(" -c ").append(in.getControllerId());
+        }
         return s.toString();
     }
     
-    private static Path runPerFrequency(Frequency f, String commonScript, final Report in) throws IOException, JocBadRequestException {
+    private static Path runPerFrequency(Frequency f, String commonScript) throws IOException, JocBadRequestException {
         Path tempDir = null;
         try {
             tempDir = createTempDirectory();
             // reportingDir is working directory
-            Path relativizeReportingDir = reportingDir.relativize(tempDir);
+            Path relativizeTempDir = workingDir.relativize(tempDir);
             StringBuilder s = new StringBuilder(commonScript);
             s.append(" -p ").append(f.strValue());
-            s.append(" -o ").append(relativizeReportingDir.toString().replace('\\', '/'));
-            if (in.getControllerId() != null && !in.getControllerId().isBlank()) {
-                s.append(" -c ").append(in.getControllerId());
-            }
+            s.append(" -o ").append(relativizeTempDir.toString().replace('\\', '/'));
             String script = s.toString();
             LOGGER.info("[Reporting][run] " + script);
-            SOSCommandResult cResult = JOCSOSShell.executeCommand(script, reportingDir);
+            SOSCommandResult cResult = JOCSOSShell.executeCommand(script, workingDir);
             
             if (cResult.hasError()) {
                 if (cResult.getException() != null) {
@@ -329,18 +329,12 @@ public class RunReport extends AReporting {
         return null;
     }
     
-    private static void insertRunAndReadTemplate(final DBItemReportRun runDbItem, final Report in) throws Exception {
+    private static void insertRun(final DBItemReportRun runDbItem) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection("StoreReportRun");
-            //DBItemReportTemplate dbTemplate = session.get(DBItemReportTemplate.class, in.getTemplateName().intValue());
             session.save(runDbItem);
             EventBus.getInstance().post(new ReportRunsUpdated());
-//            if (dbTemplate == null) {
-//                throw new DBMissingDataException("Couldn't find report template '" + in.getTemplateName().value() + "'(id:" + in.getTemplateName()
-//                        .intValue() + ")");
-//            }
-//            return dbTemplate.getContentBytes();
         } finally {
             Globals.disconnect(session);
         }

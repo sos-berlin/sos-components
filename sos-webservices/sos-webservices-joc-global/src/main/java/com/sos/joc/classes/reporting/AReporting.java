@@ -30,7 +30,8 @@ public abstract class AReporting {
     }
     
     protected static final DateTimeFormatter yearMonthFormatter = DateTimeFormatter.ofPattern("yyyy-MM");
-    protected static final Path reportingDir = Paths.get("reporting").toAbsolutePath();
+    protected static final Path workingDir = Paths.get("").toAbsolutePath(); // jetty_base
+    protected static final Path reportingDir = workingDir.resolve("reporting").toAbsolutePath();
     protected static final Path dataDir = reportingDir.resolve("data");
     protected static final Path tmpDir = reportingDir.resolve("tmp");
     protected static final String templateFilePrefix = "template_";
@@ -69,10 +70,6 @@ public abstract class AReporting {
         return Files.createTempDirectory(tmpDir, "report");
     }
     
-    protected static Path createTempDirectoryRelativize() throws IOException {
-        return reportingDir.relativize(createTempDirectory());
-    }
-    
     private static Collection<CSVColumns> getOrdersColumns() {
         Collection<CSVColumns> es = EnumSet.allOf(CSVColumns.class);
         es.removeAll(EnumSet.of(CSVColumns.POSITION, CSVColumns.JOB_NAME, CSVColumns.CRITICALITY, CSVColumns.AGENT_ID,
@@ -106,11 +103,9 @@ public abstract class AReporting {
         LOGGER.info("cleanup temporary report directory: " + tmpDir.toString());
         try {
             if (Files.exists(tmpDir)) {
-                Files.walk(tmpDir).sorted(Comparator.reverseOrder()).forEach(entry -> {
+                Files.walk(tmpDir).sorted(Comparator.reverseOrder()).filter(entry -> !tmpDir.equals(entry)).forEach(entry -> {
                     try {
-                        if (!tmpDir.equals(entry)) {
-                            Files.delete(entry);
-                        }
+                        Files.delete(entry);
                     } catch (IOException e) {
                         throw new UncheckedIOException(String.format("%1$s couldn't be deleted: %2$s", entry.toString(), e.toString()), e);
                     }
