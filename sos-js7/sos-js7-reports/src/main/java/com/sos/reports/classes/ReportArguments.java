@@ -70,8 +70,8 @@ public class ReportArguments {
 
     public void setReqportFrequency(String frequencyValue) {
 
-        frequencyValue = frequencyValue.toUpperCase();
-        Frequency frequency = Frequency.valueOf(frequencyValue);
+        frequencyValue = frequencyValue.toLowerCase();
+        Frequency frequency = Frequency.fromValue(frequencyValue);
 
         try {
             switch (frequency) {

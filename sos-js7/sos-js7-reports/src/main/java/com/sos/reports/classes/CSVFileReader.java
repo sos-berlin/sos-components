@@ -24,8 +24,7 @@ public class CSVFileReader {
 
         while (!interval.end()) {
 
-            Path path = Paths.get(reportArguments.inputDirectory + "/" + report.getType().toString().toLowerCase() + "/" + interval.currentInterval()
-                    + ".csv");
+            Path path = Paths.get(reportArguments.inputDirectory, report.getType().toString().toLowerCase(), interval.currentInterval() + ".csv");
 
             if (Files.exists(path)) {
 
@@ -91,8 +90,7 @@ public class CSVFileReader {
 
         while (!interval.end()) {
 
-            Path path = Paths.get(reportArguments.inputDirectory + "/" + report.getType().toString().toLowerCase() + "/" + interval.currentInterval()
-                    + ".csv");
+            Path path = Paths.get(reportArguments.inputDirectory, report.getType().toString().toLowerCase(), interval.currentInterval() + ".csv");
 
             if (Files.exists(path)) {
 

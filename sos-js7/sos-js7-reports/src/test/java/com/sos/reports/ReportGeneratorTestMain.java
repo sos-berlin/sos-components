@@ -23,7 +23,7 @@ public class ReportGeneratorTestMain {
         String hits = "3";
         String inputDirectory = "c:/temp/in";
         String outputDirectory = "c:/temp";
-        String frequency = "monthly";
+        String frequency = "every3years";
         String monthFrom = "2023-09";
         String monthTo = "2023-09";
         String controller = "controller";

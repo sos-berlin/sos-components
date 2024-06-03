@@ -25,6 +25,7 @@ import com.sos.reports.classes.ReportRecord;
 
 public class ReportParallelAgentExecution implements IReport {
 
+    private static final int MAX_PERIODS_IN_LIST = 1000;
     private static final Logger LOGGER = LoggerFactory.getLogger(ReportParallelAgentExecution.class);
     private ReportArguments reportArguments;
 
@@ -58,7 +59,7 @@ public class ReportParallelAgentExecution implements IReport {
             }
         }
         periods.add(reportPeriod);
-
+        removeOldPeriods(reportPeriod, orderRecord.getAgentId());
         agents.put(orderRecord.getAgentId(), periods);
     }
 
@@ -109,6 +110,17 @@ public class ReportParallelAgentExecution implements IReport {
         }
 
         return reportResult;
+    }
+
+    private void removeOldPeriods(ReportPeriod reportPeriod, String agentId) {
+        List<ReportPeriod> periods = agents.get(agentId);
+        if (periods.size() > MAX_PERIODS_IN_LIST) {
+            ReportPeriod maxValue = periods.stream().max(Comparator.comparing(v -> v.getCount())).get();
+            periods.removeIf(p -> p.getTo().isBefore(reportPeriod.getFrom()));
+            if (maxValue.getTo().isBefore(reportPeriod.getFrom())) {
+                periods.add(reportPeriod);
+            }
+        }
     }
 
     public void reset() {
