@@ -295,23 +295,19 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
     }
 
     public List<GenerateRequest> getGenerateRequestsForReleaseDeploy(String date, List<String> workflowPaths, List<String> schedulePaths,
-            String controllerId, Boolean withSubmit, SOSHibernateSession session) throws ParseException, SOSHibernateException {
-        return getGenerateRequests(date, workflowPaths, schedulePaths, controllerId, withSubmit, true, session);
+            String controllerId, Boolean withSubmit, List<String> allowedDailyPlanDates) throws ParseException, SOSHibernateException {
+        return getGenerateRequests(date, workflowPaths, schedulePaths, controllerId, withSubmit, true, allowedDailyPlanDates);
     }
 
     public List<GenerateRequest> getGenerateRequests(String date, List<String> workflowPaths, List<String> schedulePaths, String controllerId,
-            Boolean withSubmit, boolean forReleaseDeploy, SOSHibernateSession session) throws ParseException, SOSHibernateException {
+            Boolean withSubmit, boolean forReleaseDeploy, List<String> allowedDailyPlanDates) throws ParseException, SOSHibernateException {
         setSettings();
         int planDaysAhead = getSettings().getDayAheadPlan();
         int submitDaysAhead = getSettings().getDayAheadSubmit();
+        
         if(forReleaseDeploy) {
-          ConfigurationGlobalsDailyPlan dailyPlanConfiguration = Globals.getConfigurationGlobalsDailyPlan();
-          Calendar cal = DailyPlanRunner.getStartTimeCalendar(dailyPlanConfiguration.getStartTime().getValue(),
-              dailyPlanConfiguration.getPeriodBegin().getValue(), dailyPlanConfiguration.getTimeZone().getValue());
-          if ((Instant.now().toEpochMilli() - cal.getTimeInMillis()) > 0) {
             planDaysAhead += 1;
             submitDaysAhead += 1;
-          }
         }
         List<GenerateRequest> generateRequests = new ArrayList<>();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
@@ -321,26 +317,14 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             instant = now;
         }
         
-        List<String> allowedDailyPlanDates = null;
-        if (forReleaseDeploy && session != null) {
-            DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
-            allowedDailyPlanDates = dbLayer.getSubmissionDates(controllerId, Date.from(instant.minusSeconds(TimeUnit.DAYS.toSeconds(1)))).stream()
-                    .map(d -> sdf.format(d)).collect(Collectors.toList());
-        }
-
         PathItem workflowsPathItem = new PathItem();
         PathItem schedulesPathItem = new PathItem();
         workflowsPathItem.setSingles(workflowPaths);
         schedulesPathItem.setSingles(schedulePaths);
 
         for (int i = 0; i < planDaysAhead; i++) {
-            if (now.isBefore(instant)) {
-                continue;
-            }
             String dailyPlanDate = sdf.format(Date.from(now));
-            if (allowedDailyPlanDates != null && !allowedDailyPlanDates.contains(dailyPlanDate)) {
-                continue;
-            }
+            
             GenerateRequest req = new GenerateRequest();
             req.setControllerId(controllerId);
             if (withSubmit) {
@@ -352,9 +336,19 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             req.setDailyPlanDate(dailyPlanDate);
             req.setWorkflowPaths(workflowsPathItem);
             req.setSchedulePaths(schedulesPathItem);
-            generateRequests.add(req);
+            boolean skip = allowedDailyPlanDates != null && !allowedDailyPlanDates.contains(dailyPlanDate);
+            if (!skip) {
+                generateRequests.add(req);
+            }
             now = now.plusSeconds(TimeUnit.DAYS.toSeconds(1));
         }
         return generateRequests;
+    }
+    
+    public List<String> getAllowedDailyPlanDates(SOSHibernateSession session, String controllerId) throws SOSHibernateException {
+        DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        return dbLayer.getSubmissionDates(controllerId, Date.from(Instant.now().minusSeconds(TimeUnit.DAYS.toSeconds(1)))).stream()
+                .map(d -> sdf.format(d)).collect(Collectors.toList());
     }
 }

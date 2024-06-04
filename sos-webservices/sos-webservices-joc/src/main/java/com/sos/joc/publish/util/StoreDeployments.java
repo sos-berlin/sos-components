@@ -190,13 +190,14 @@ public class StoreDeployments {
                         }
                     }
                     List<GenerateRequest> requests = new ArrayList<GenerateRequest>();
+                    List<String> allowedDailyPlanDates = ordersGenerate.getAllowedDailyPlanDates(newHibernateSession, controllerId);
                     if (!schedulePathsWithSubmit.isEmpty()) {
                         requests.addAll(ordersGenerate.getGenerateRequestsForReleaseDeploy(dailyPlanDate, null, schedulePathsWithSubmit, controllerId,
-                                true, newHibernateSession));
+                                true, allowedDailyPlanDates));
                     }
                     if (!schedulePathsWithoutSubmit.isEmpty()) {
                         requests.addAll(ordersGenerate.getGenerateRequestsForReleaseDeploy(dailyPlanDate, null, schedulePathsWithoutSubmit,
-                                controllerId, false, newHibernateSession));
+                                controllerId, false, allowedDailyPlanDates));
                     }
                     if(!requests.isEmpty()) {
                         boolean successful = ordersGenerate.generateOrders(requests, accessToken, false);
