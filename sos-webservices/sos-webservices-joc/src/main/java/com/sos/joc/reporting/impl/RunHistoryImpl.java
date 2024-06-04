@@ -79,7 +79,7 @@ public class RunHistoryImpl extends JOCResourceImpl implements IRunHistoryResour
                     item.setPath(dbItem.getPath());
                     item.setTitle(dbItem.getTitle());
                     item.setMonthFrom(SOSDate.format(dbItem.getDateFrom(), "yyyy-MM"));
-                    item.setMonthTo(SOSDate.format(dbItem.getDateFrom(), "yyyy-MM"));
+                    item.setMonthTo(SOSDate.format(dbItem.getDateTo(), "yyyy-MM"));
                     item.setFrequencies(Arrays.asList(dbItem.getFrequencies().split(",")).stream().map(Integer::valueOf).sorted().map(
                             Frequency::fromValue).filter(Objects::nonNull).collect(Collectors.toSet()));
                     item.setHits(dbItem.getHits());
