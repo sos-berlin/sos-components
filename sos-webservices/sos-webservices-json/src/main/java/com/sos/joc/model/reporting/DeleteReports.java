@@ -92,7 +92,7 @@ public class DeleteReports {
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(auditLog).append(reportIds).toHashCode();
+        return new HashCodeBuilder().append(reportIds).append(auditLog).toHashCode();
     }
 
     @Override
@@ -104,7 +104,7 @@ public class DeleteReports {
             return false;
         }
         DeleteReports rhs = ((DeleteReports) other);
-        return new EqualsBuilder().append(auditLog, rhs.auditLog).append(reportIds, rhs.reportIds).isEquals();
+        return new EqualsBuilder().append(reportIds, rhs.reportIds).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }

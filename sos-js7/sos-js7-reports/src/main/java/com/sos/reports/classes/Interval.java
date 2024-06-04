@@ -54,5 +54,13 @@ public class Interval {
         return String.valueOf(currentYear) + "-" + String.format("%02d", currentMonth);
     }
     
+    public Integer getCurrentMonth() {
+        return currentMonth;
+    }
+
+    public int getCurrentYear() {
+        return currentYear;
+    }
+    
 
 }

@@ -46,7 +46,7 @@ public class RunItem
     @JsonProperty("state")
     private ReportRunState state;
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
@@ -110,7 +110,7 @@ public class RunItem
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
@@ -121,7 +121,7 @@ public class RunItem
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 

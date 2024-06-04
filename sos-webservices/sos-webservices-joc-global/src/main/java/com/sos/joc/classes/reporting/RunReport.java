@@ -272,6 +272,9 @@ public class RunReport extends AReporting {
         dbItem.setTemplateId(in.getTemplateName().intValue());
         dbItem.setHits(in.getHits());
         dbItem.setFrequencies(in.getFrequencies().stream().map(Frequency::intValue).sorted().map(i -> i.toString()).collect(Collectors.joining(",")));
+        dbItem.setSort(in.getSort().intValue());
+        dbItem.setPeriodLength(in.getPeriod().getLength());
+        dbItem.setPeriodStep(in.getPeriod().getStep());
         dbItem.setDateFrom(getDate(getLocalDateFrom(in.getMonthFrom())));
         dbItem.setDateTo(getDate(getLocalDateToOrNowIfNull(in.getMonthTo())));
         dbItem.setState(state.intValue());

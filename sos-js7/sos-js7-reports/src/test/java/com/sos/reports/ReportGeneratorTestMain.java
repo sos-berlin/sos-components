@@ -3,6 +3,7 @@ package com.sos.reports;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class ReportGeneratorTestMain {
@@ -16,14 +17,14 @@ public class ReportGeneratorTestMain {
  // 9. top n periods during which mostly workflows executed.
  // 10. top n periods during which mostly jobs executed.
 
-    @Test
+     @Test
     public void test() throws Exception {
 
         String report = "3";
         String hits = "3";
         String inputDirectory = "c:/temp/in";
-        String outputDirectory = "c:/temp";
-        String frequency = "monthly";
+        String outputDirectory = "c:/tmp";
+        String frequency = "weekly";
         String monthFrom = "2023-01";
         String monthTo = "2023-12";
         String controller = "controller";

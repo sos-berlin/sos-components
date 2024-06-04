@@ -24,30 +24,15 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 })
 public class ReportPaths {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("reportPaths")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     private Set<String> reportPaths = new LinkedHashSet<String>();
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("reportPaths")
     public Set<String> getReportPaths() {
         return reportPaths;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("reportPaths")
     public void setReportPaths(Set<String> reportPaths) {
         this.reportPaths = reportPaths;

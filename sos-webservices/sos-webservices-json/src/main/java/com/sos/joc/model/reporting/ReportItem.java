@@ -4,13 +4,12 @@ package com.sos.joc.model.reporting;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.report.Frequency;
+import com.sos.inventory.model.report.ReportOrder;
 import com.sos.inventory.model.report.TemplateId;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -29,10 +28,13 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "runId",
     "path",
     "title",
+    "controllerId",
     "templateName",
     "frequency",
+    "sort",
+    "periodLength",
+    "periodStep",
     "hits",
-    "controllerId",
     "dateFrom",
     "dateTo",
     "created",
@@ -76,6 +78,14 @@ public class ReportItem {
     @JsonProperty("title")
     private String title;
     /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("controllerId")
+    private String controllerId;
+    /**
      * Template identifier for report
      * <p>
      * 
@@ -83,7 +93,6 @@ public class ReportItem {
      * 
      */
     @JsonProperty("templateName")
-    @JsonAlias({ "templateId" })
     private TemplateId templateName;
     /**
      * Frequencies for report
@@ -95,14 +104,36 @@ public class ReportItem {
     @JsonProperty("frequency")
     private Frequency frequency;
     /**
+     * Sorting Order for report
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("sort")
+    private ReportOrder sort = ReportOrder.fromValue("HIGHEST");
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("periodLength")
+    private Long periodLength;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("periodStep")
+    private Long periodStep;
+    /**
      * 
      * (Required)
      * 
      */
     @JsonProperty("hits")
     private Integer hits;
-    @JsonProperty("controllerId")
-    private String controllerId;
     /**
      * date
      * <p>
@@ -240,7 +271,29 @@ public class ReportItem {
     public void setTitle(String title) {
         this.title = title;
     }
-    
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
+    }
+
     /**
      * Template identifier for report
      * <p>
@@ -263,11 +316,6 @@ public class ReportItem {
     @JsonProperty("templateName")
     public void setTemplateName(TemplateId templateName) {
         this.templateName = templateName;
-    }
-    
-    @JsonProperty("templateId")
-    public void setTemplateName(Integer templateId) {
-        this.templateName = TemplateId.fromValue(templateId);
     }
 
     /**
@@ -295,6 +343,72 @@ public class ReportItem {
     }
 
     /**
+     * Sorting Order for report
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("sort")
+    public ReportOrder getSort() {
+        return sort;
+    }
+
+    /**
+     * Sorting Order for report
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("sort")
+    public void setSort(ReportOrder sort) {
+        this.sort = sort;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("periodLength")
+    public Long getPeriodLength() {
+        return periodLength;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("periodLength")
+    public void setPeriodLength(Long periodLength) {
+        this.periodLength = periodLength;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("periodStep")
+    public Long getPeriodStep() {
+        return periodStep;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("periodStep")
+    public void setPeriodStep(Long periodStep) {
+        this.periodStep = periodStep;
+    }
+
+    /**
      * 
      * (Required)
      * 
@@ -312,16 +426,6 @@ public class ReportItem {
     @JsonProperty("hits")
     public void setHits(Integer hits) {
         this.hits = hits;
-    }
-    
-    @JsonProperty("controllerId")
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    @JsonProperty("controllerId")
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
     }
 
     /**
@@ -438,12 +542,12 @@ public class ReportItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("runId", runId).append("path", path).append("title", title).append("templateName", templateName).append("frequency", frequency).append("hits", hits).append("controllerId", controllerId).append("dateFrom", dateFrom).append("dateTo", dateTo).append("created", created).append("modified", modified).append("data", data).toString();
+        return new ToStringBuilder(this).append("id", id).append("runId", runId).append("path", path).append("title", title).append("controllerId", controllerId).append("templateName", templateName).append("frequency", frequency).append("sort", sort).append("periodLength", periodLength).append("periodStep", periodStep).append("hits", hits).append("dateFrom", dateFrom).append("dateTo", dateTo).append("created", created).append("modified", modified).append("data", data).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(data).append(created).append(title).append(dateFrom).append(frequency).append(hits).append(controllerId).append(path).append(templateName).append(dateTo).append(modified).append(id).append(runId).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(data).append(periodStep).append(created).append(sort).append(title).append(dateFrom).append(frequency).append(hits).append(path).append(templateName).append(dateTo).append(modified).append(periodLength).append(id).append(runId).toHashCode();
     }
 
     @Override
@@ -455,7 +559,7 @@ public class ReportItem {
             return false;
         }
         ReportItem rhs = ((ReportItem) other);
-        return new EqualsBuilder().append(data, rhs.data).append(created, rhs.created).append(title, rhs.title).append(dateFrom, rhs.dateFrom).append(frequency, rhs.frequency).append(hits, rhs.hits).append(controllerId, rhs.controllerId).append(path, rhs.path).append(templateName, rhs.templateName).append(dateTo, rhs.dateTo).append(modified, rhs.modified).append(id, rhs.id).append(runId, rhs.runId).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(data, rhs.data).append(periodStep, rhs.periodStep).append(created, rhs.created).append(sort, rhs.sort).append(title, rhs.title).append(dateFrom, rhs.dateFrom).append(frequency, rhs.frequency).append(hits, rhs.hits).append(path, rhs.path).append(templateName, rhs.templateName).append(dateTo, rhs.dateTo).append(modified, rhs.modified).append(periodLength, rhs.periodLength).append(id, rhs.id).append(runId, rhs.runId).isEquals();
     }
 
 }

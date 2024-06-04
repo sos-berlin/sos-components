@@ -43,13 +43,21 @@ public abstract class ReportFrequency {
         return String.valueOf(from.getYear() + "-" + String.format("%02d", from.getMonthValue()));
     }
 
-    
     public Frequency getFrequency() {
         return frequency;
     }
 
-    
     public void setFrequency(Frequency frequency) {
         this.frequency = frequency;
+    }
+
+    public boolean isBefore(Interval interval) {
+        int m;
+        if (interval.getCurrentYear() > to.getYear()) {
+            m = 13;
+        } else {
+            m = interval.getCurrentMonth();
+        }
+        return (to.getMonth().getValue() < m);
     }
 }

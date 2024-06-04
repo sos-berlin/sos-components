@@ -47,18 +47,6 @@ public class Template {
     @JsonProperty("data")
     private TemplateData data;
 
-
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("templateId")
-    public void setTemplateId(Integer templateId) {
-        this.templateName = TemplateId.fromValue(templateId);
-    }
-
     /**
      * Template identifier for report
      * <p>

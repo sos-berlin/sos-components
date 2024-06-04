@@ -39,6 +39,9 @@ public class ReportingDBLayer extends DBLayer {
             hql.append(",rr.title as title");
             hql.append(",rr.templateId as templateName");
             hql.append(",rh.frequency as frequency");
+            hql.append(",rr.sort as sort");
+            hql.append(",rr.periodLength as periodLength");
+            hql.append(",rr.periodStep as periodStep");
             hql.append(",rr.hits as hits");
             hql.append(",rr.controllerId as controllerId");
             hql.append(",rh.dateFrom as dateFrom");

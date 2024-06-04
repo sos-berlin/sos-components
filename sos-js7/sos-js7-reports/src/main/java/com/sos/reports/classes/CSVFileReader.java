@@ -70,7 +70,11 @@ public class CSVFileReader {
                 LOGGER.debug("File:" + path.getFileName() + " not found in " + path.getParent());
             }
             interval.next();
-            reportArguments.reportFrequency.nextPeriod();
+            while (reportArguments.reportFrequency.isBefore(interval)) {
+                report.putHits();
+                report.reset();
+                reportArguments.reportFrequency.nextPeriod();
+            }
         }
     }
 
@@ -125,6 +129,7 @@ public class CSVFileReader {
 
                             report.putHits();
                             report.reset();
+                            reportArguments.reportFrequency.nextPeriod();
                             LOGGER.debug("new frequency interval:" + reportArguments.reportFrequency.getFrom() + " to "
                                     + reportArguments.reportFrequency.getTo());
                         }
@@ -136,7 +141,11 @@ public class CSVFileReader {
                 LOGGER.debug("File:" + path.getFileName() + " not found in " + path.getParent());
             }
             interval.next();
-            reportArguments.reportFrequency.nextPeriod();
+            while (reportArguments.reportFrequency.isBefore(interval)) {
+                report.putHits();
+                report.reset();
+                reportArguments.reportFrequency.nextPeriod();
+            }
         }
     }
 

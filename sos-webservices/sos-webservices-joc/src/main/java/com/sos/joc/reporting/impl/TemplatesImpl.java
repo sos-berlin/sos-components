@@ -38,7 +38,7 @@ public class TemplatesImpl extends JOCResourceImpl implements ITemplatesResource
                 Template template = new Template();
                 template.setIsSupported(templateId.isSupported());
                 template.setTemplateName(templateId);
-                template.setTemplateId(templateId.intValue());
+                template.setTemplateName(templateId);
                 template.setTitle(templateId.getTitle());
                 return template;
             };

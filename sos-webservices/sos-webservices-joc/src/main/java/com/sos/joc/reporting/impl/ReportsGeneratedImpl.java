@@ -84,7 +84,6 @@ public class ReportsGeneratedImpl extends JOCResourceImpl implements IReportsGen
             // TODO more request filter
             Date dateFrom = getLocalDateTimeToDate(getLocalDateFrom(in.getDateFrom()));
             Date dateTo = getLocalDateTimeToDate(getLocalDateTo(in.getDateTo()));
-            
             entity.setReports(dbLayer.getGeneratedReports(in.getRunIds(), in.getCompact() == Boolean.TRUE, in.getReportPaths(), in.getTemplateNames(),
                     dateFrom, dateTo).stream().map(mapToReportItem).filter(Objects::nonNull).collect(Collectors.toList()));
             entity.setDeliveryDate(Date.from(Instant.now()));
