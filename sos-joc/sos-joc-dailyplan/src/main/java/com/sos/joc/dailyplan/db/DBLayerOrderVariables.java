@@ -9,6 +9,7 @@ import org.hibernate.query.Query;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSString;
+import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanVariable;
@@ -84,7 +85,11 @@ public class DBLayerOrderVariables extends DBLayer {
             query.setParameter("orderId", oldOrderId);
         }
         query.setParameter("controllerId", controllerId);
-        return getSession().executeUpdate(query);
+        int i = getSession().executeUpdate(query);
+        
+        OrderTags.updateTagsOfOrder(controllerId, oldOrderId, newOrderId, getSession());
+        
+        return i;
     }
 
     public int update(String controllerId, String oldOrderId, String newOrderId) throws SOSHibernateException {
@@ -92,6 +97,9 @@ public class DBLayerOrderVariables extends DBLayer {
     }
     
     public DBItemDailyPlanVariable copy(String controllerId, String oldOrderId, String newOrderId, boolean isCyclic) throws SOSHibernateException {
+        
+        OrderTags.copyTagsOfOrder(controllerId, oldOrderId, newOrderId, getSession());
+        
         DBItemDailyPlanVariable vars = getOrderVariable(controllerId, oldOrderId, isCyclic);
         if (vars != null) {
             DBItemDailyPlanVariable copiedVars = new DBItemDailyPlanVariable();

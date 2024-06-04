@@ -26,7 +26,7 @@ public class FilterDailyPlannedOrders extends DBFilter {
     private Collection<Folder> scheduleFolders;
     private List<DailyPlanOrderStateText> states;
     private List<Long> submissionIds;
-    private List<String> cyclicOrdersMainParts;
+    private Set<String> cyclicOrdersMainParts;
     private List<String> workflowNames;
     private List<String> scheduleNames;
     private List<String> controllerIds;
@@ -143,11 +143,11 @@ public class FilterDailyPlannedOrders extends DBFilter {
         }
     }
 
-    public List<String> getCyclicOrdersMainParts() {
+    public Set<String> getCyclicOrdersMainParts() {
         return cyclicOrdersMainParts;
     }
 
-    public void setCyclicOrdersMainParts(List<String> val) {
+    public void setCyclicOrdersMainParts(Set<String> val) {
         cyclicOrdersMainParts = val;
     }
     

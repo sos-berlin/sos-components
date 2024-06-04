@@ -31,6 +31,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowPaths;
@@ -85,6 +86,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             boolean withWorkflowIdFilter = workflowIds != null && !workflowIds.isEmpty();
             boolean responseWithLabel = withWorkflowIdFilter && workflowIds.size() == 1;
             boolean withStateDate = ordersFilter.getStateDateFrom() != null || ordersFilter.getStateDateTo() != null;
+            boolean withTags = ordersFilter.getTags() != null && !ordersFilter.getTags().isEmpty();
             boolean orderStreamIsEmpty = false;
             if (ordersFilter.getLimit() == null) {
                 ordersFilter.setLimit(10000);
@@ -342,59 +344,75 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 }
             }
             
-            if (withStateDate && !orderStreamIsEmpty && !stateDateDisallowed) {
-                String regex = "[+-]?(\\d+)\\s*([smhdwMy])"; // relative date with only one unit
-                if (ordersFilter.getStateDateFrom() != null) {
-                    if (ordersFilter.getStateDateFrom().trim().matches(regex)) {
-                        ordersFilter.setStateDateFrom(ordersFilter.getStateDateFrom().trim().replaceFirst(regex, "-$1$2"));
-                    }
-                }
-                if (ordersFilter.getStateDateTo() != null) {
-                    if (ordersFilter.getStateDateTo().trim().matches(regex)) {
-                        ordersFilter.setStateDateTo(ordersFilter.getStateDateTo().trim().replaceFirst(regex, "-$1$2"));
-                    }
-                }
-                connection = Globals.createSosHibernateStatelessConnection(API_CALL);
-                HistoryFilter filter = new HistoryFilter();
-                filter.setControllerIds(Collections.singleton(ordersFilter.getControllerId()));
-                filter.addFolders(folders);
-                filter.setOrderState(states);
-                filter.setStateFrom(JobSchedulerDate.getDateFrom(ordersFilter.getStateDateFrom(), ordersFilter.getTimeZone()));
-                filter.setStateTo(JobSchedulerDate.getDateTo(ordersFilter.getStateDateTo(), ordersFilter.getTimeZone()));
-                JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(connection, filter);
-                List<String> stateDateOrderIds = dbLayer.getOrderIds();
-
-                orderStream = orderStream.filter(o -> stateDateOrderIds.contains(o.id().string()));
-            }
-
-            Map<List<Object>, String> positionToLabelsMap = responseWithLabel ? getPositionToLabelsMap(ordersFilter.getControllerId(), workflowIds
-                    .iterator().next()) : null;
-
-            Set<String> childOrders = OrdersHelper.getChildOrders(currentState);
-
-            Function<JOrder, OrderV> mapJOrderToOrderV = o -> {
-                try {
-                    OrderV order = OrdersHelper.mapJOrderToOrderV(o, currentState, ordersFilter.getCompact(), null,
-                            blockedButWaitingForAdmissionOrderIds, finalParamsPerWorkflow, surveyDateMillis, zoneId);
-                    order.setCyclicOrder(cycleInfos.get(order.getOrderId()));
-                    order.setHasChildOrders(childOrders.stream().anyMatch(s -> s.startsWith(order.getOrderId() + "|")));
-                    if (responseWithLabel) {
-                        order.setLabel(positionToLabelsMap.get(order.getPosition()));
-                    }
-                    return order;
-                } catch (Exception e) {
-                    if (getJocError() != null && !getJocError().getMetaInfo().isEmpty()) {
-                        LOGGER.info(getJocError().printMetaInfo());
-                        getJocError().clearMetaInfo();
-                    }
-                    LOGGER.error(String.format("[%s] %s", o.id().string(), e.toString()));
-                    return null;
-                }
-            };
-
             OrdersV entity = new OrdersV();
             entity.setSurveyDate(Date.from(surveyDateInstant));
-            entity.setOrders(orderStream.parallel().map(mapJOrderToOrderV).filter(Objects::nonNull).collect(Collectors.toList()));
+            entity.setOrders(Collections.emptyList());
+            
+            List<JOrder> jOrders = orderStream.collect(Collectors.toList());
+            
+            if (!jOrders.isEmpty()) {
+                connection = Globals.createSosHibernateStatelessConnection(API_CALL);
+
+                Map<String, Set<String>> orderTags = OrderTags.getTags(ordersFilter.getControllerId(), jOrders, connection);
+
+                if (withTags) {
+                    orderStream = OrderTags.filter(jOrders, orderTags, ordersFilter.getTags());
+                } else {
+                    orderStream = jOrders.stream();
+                }
+
+                if (withStateDate && !stateDateDisallowed) {
+                    String regex = "[+-]?(\\d+)\\s*([smhdwMy])"; // relative date with only one unit
+                    if (ordersFilter.getStateDateFrom() != null) {
+                        if (ordersFilter.getStateDateFrom().trim().matches(regex)) {
+                            ordersFilter.setStateDateFrom(ordersFilter.getStateDateFrom().trim().replaceFirst(regex, "-$1$2"));
+                        }
+                    }
+                    if (ordersFilter.getStateDateTo() != null) {
+                        if (ordersFilter.getStateDateTo().trim().matches(regex)) {
+                            ordersFilter.setStateDateTo(ordersFilter.getStateDateTo().trim().replaceFirst(regex, "-$1$2"));
+                        }
+                    }
+                    HistoryFilter filter = new HistoryFilter();
+                    filter.setControllerIds(Collections.singleton(ordersFilter.getControllerId()));
+                    filter.addFolders(folders);
+                    filter.setOrderState(states);
+                    filter.setStateFrom(JobSchedulerDate.getDateFrom(ordersFilter.getStateDateFrom(), ordersFilter.getTimeZone()));
+                    filter.setStateTo(JobSchedulerDate.getDateTo(ordersFilter.getStateDateTo(), ordersFilter.getTimeZone()));
+                    JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(connection, filter);
+                    List<String> stateDateOrderIds = dbLayer.getOrderIds();
+
+                    orderStream = orderStream.filter(o -> stateDateOrderIds.contains(o.id().string()));
+                }
+
+                Map<List<Object>, String> positionToLabelsMap = responseWithLabel ? getPositionToLabelsMap(ordersFilter.getControllerId(), workflowIds
+                        .iterator().next()) : null;
+
+                Set<String> childOrders = OrdersHelper.getChildOrders(currentState);
+
+                Function<JOrder, OrderV> mapJOrderToOrderV = o -> {
+                    try {
+                        OrderV order = OrdersHelper.mapJOrderToOrderV(o, currentState, ordersFilter.getCompact(), null, orderTags,
+                                blockedButWaitingForAdmissionOrderIds, finalParamsPerWorkflow, surveyDateMillis, zoneId);
+                        order.setCyclicOrder(cycleInfos.get(order.getOrderId()));
+                        order.setHasChildOrders(childOrders.stream().anyMatch(s -> s.startsWith(order.getOrderId() + "|")));
+                        if (responseWithLabel) {
+                            order.setLabel(positionToLabelsMap.get(order.getPosition()));
+                        }
+                        return order;
+                    } catch (Exception e) {
+                        if (getJocError() != null && !getJocError().getMetaInfo().isEmpty()) {
+                            LOGGER.info(getJocError().printMetaInfo());
+                            getJocError().clearMetaInfo();
+                        }
+                        LOGGER.error(String.format("[%s] %s", o.id().string(), e.toString()));
+                        return null;
+                    }
+                };
+
+                entity.setOrders(orderStream.parallel().map(mapJOrderToOrderV).filter(Objects::nonNull).collect(Collectors.toList()));
+            }
+            
             entity.setDeliveryDate(Date.from(Instant.now()));
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
@@ -416,5 +434,5 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             return Collections.emptyMap();
         }
     }
-
+    
 }

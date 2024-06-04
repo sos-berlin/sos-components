@@ -49,6 +49,7 @@ import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.order.ModifyOrdersHelper;
+import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.dailyplan.DailyPlanRunner;
@@ -568,6 +569,8 @@ public class DailyPlanCopyOrderImpl extends JOCOrderResourceImpl implements IDai
             DBItemDailyPlanVariable variable = new DBLayerOrderVariables(session).getOrderVariable(mainItem.getControllerId(), mainItem.getOrderId(),
                     true);
             
+            Set<String> orderTags = OrderTags.getTagsOfOrderId(mainItem.getControllerId(), mainItem.getOrderId(), session);
+            
             String submissionForDate = SOSDate.getDateAsString(submission.getSubmissionForDate());
             if (submission.getId() == null) {
                 submission = insertNewSubmission(submission, session);
@@ -576,7 +579,7 @@ public class DailyPlanCopyOrderImpl extends JOCOrderResourceImpl implements IDai
             //TODO submission.getSubmissionForDate() or dailyplanDate?
             DailyPlanRunner runner = getDailyPlanRunner(mainItem.getSubmitted(), submission.getSubmissionForDate());
             
-            OrderListSynchronizer synchronizer = calculateStartTimes(in, cycle, runner, dailyplanDate, submission, mainItem, variable);
+            OrderListSynchronizer synchronizer = calculateStartTimes(in, cycle, runner, dailyplanDate, submission, mainItem, variable, orderTags);
             synchronizer.substituteOrderIds();
             generatedOrders = synchronizer.getPlannedOrders();
             
@@ -660,7 +663,7 @@ public class DailyPlanCopyOrderImpl extends JOCOrderResourceImpl implements IDai
     }
     
     private OrderListSynchronizer calculateStartTimes(DailyPlanModifyOrder in, Cycle cycle, DailyPlanRunner runner, String dailyPlanDate,
-            DBItemDailyPlanSubmission newSubmission, final DBItemDailyPlanOrder mainItem, DBItemDailyPlanVariable variable) {
+            DBItemDailyPlanSubmission newSubmission, final DBItemDailyPlanOrder mainItem, DBItemDailyPlanVariable variable, Set<String> orderTags) {
 
         try {
             Schedule schedule = new Schedule();
@@ -685,7 +688,8 @@ public class DailyPlanCopyOrderImpl extends JOCOrderResourceImpl implements IDai
             // orderParameterisation.setStartPosition(null);
             // orderParameterisation.setEndPosition(null);
             orderParameterisation.setVariables(variables);
-            if (orderParameterisation.getVariables().getAdditionalProperties().size() > 0) {
+            orderParameterisation.setTags(orderTags);
+            if (!orderParameterisation.getVariables().getAdditionalProperties().isEmpty() || !orderParameterisation.getTags().isEmpty()) {
                 schedule.getOrderParameterisations().add(orderParameterisation);
             }
 

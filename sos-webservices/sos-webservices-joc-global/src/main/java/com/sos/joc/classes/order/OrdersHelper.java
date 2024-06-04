@@ -420,8 +420,9 @@ public class OrdersHelper {
     }
 
     public static OrderV mapJOrderToOrderV(JOrder jOrder, OrderItem oItem, JControllerState controllerState, Boolean compact,
-            Set<Folder> listOfFolders, Set<OrderId> blockedButWaitingForAdmissionOrderIds, Map<JWorkflowId, Collection<String>> finalParameters,
-            Long surveyDateMillis, ZoneId zoneId) throws IOException, JocFolderPermissionsException {
+            Set<Folder> listOfFolders, Map<String, Set<String>> orderTags, Set<OrderId> blockedButWaitingForAdmissionOrderIds,
+            Map<JWorkflowId, Collection<String>> finalParameters, Long surveyDateMillis, ZoneId zoneId) throws IOException,
+            JocFolderPermissionsException {
         OrderV o = new OrderV();
         WorkflowId wId = oItem.getWorkflowPosition().getWorkflowId();
         if (finalParameters != null) {
@@ -551,6 +552,12 @@ public class OrdersHelper {
         if (jOrder.asScala().isGoCommandable()) {
             o.setIsContinuable(true);
         }
+//        if (controllerState != null) {
+//            o.setTags(OrderTags.getTags(controllerState.asScala().controllerId().string(), o.getOrderId()));
+//        }
+        if (orderTags != null && !orderTags.isEmpty()) {
+            o.setTags(orderTags.get(OrdersHelper.getOrderIdMainPart(o.getOrderId())));
+        }
         return o;
     }
     
@@ -605,19 +612,21 @@ public class OrdersHelper {
     }
 
     public static OrderV mapJOrderToOrderV(JOrder jOrder, JControllerState controllerState, Boolean compact, Set<Folder> listOfFolders,
-            Set<OrderId> blockedButWaitingForAdmissionOrderIds, Map<JWorkflowId, Collection<String>> finalParameters, Long surveyDateMillis,
-            ZoneId zoneId) throws JsonParseException, JsonMappingException, IOException, JocFolderPermissionsException {
+            Map<String, Set<String>> orderTags, Set<OrderId> blockedButWaitingForAdmissionOrderIds,
+            Map<JWorkflowId, Collection<String>> finalParameters, Long surveyDateMillis, ZoneId zoneId) throws JsonParseException,
+            JsonMappingException, IOException, JocFolderPermissionsException {
         // TODO mapping without ObjectMapper
         OrderItem oItem = Globals.objectMapper.readValue(jOrder.toJson(), OrderItem.class);
-        return mapJOrderToOrderV(jOrder, oItem, controllerState, compact, listOfFolders, blockedButWaitingForAdmissionOrderIds, finalParameters,
-                surveyDateMillis, zoneId);
+        return mapJOrderToOrderV(jOrder, oItem, controllerState, compact, listOfFolders, orderTags, blockedButWaitingForAdmissionOrderIds,
+                finalParameters, surveyDateMillis, zoneId);
     }
 
-    public static OrderV mapJOrderToOrderV(JOrder jOrder, Boolean compact, Map<JWorkflowId, Collection<String>> finalParameters,
-            Long surveyDateMillis, ZoneId zoneId) throws JsonParseException, JsonMappingException, IOException, JocFolderPermissionsException {
+    public static OrderV mapJOrderToOrderV(JOrder jOrder, JControllerState controllerState, Boolean compact, Map<String, Set<String>> orderTags,
+            Map<JWorkflowId, Collection<String>> finalParameters, Long surveyDateMillis, ZoneId zoneId) throws JsonParseException,
+            JsonMappingException, IOException, JocFolderPermissionsException {
         // TODO mapping without ObjectMapper
         OrderItem oItem = Globals.objectMapper.readValue(jOrder.toJson(), OrderItem.class);
-        return mapJOrderToOrderV(jOrder, oItem, null, compact, null, null, finalParameters, surveyDateMillis, zoneId);
+        return mapJOrderToOrderV(jOrder, oItem, controllerState, compact, null, orderTags, null, finalParameters, surveyDateMillis, zoneId);
     }
 
     public static OrderPreparation getOrderPreparation(JOrder jOrder, JControllerState currentState) throws JsonParseException, JsonMappingException,
@@ -860,7 +869,7 @@ public class OrdersHelper {
             throw new JocMissingRequiredParameterException("Variables '" + listKeys.toString() + "' of the list variable '" + listKey
                     + "' aren't declared in the workflow");
         }
-        listVariables.forEach(listVariable -> checkObjectArgument(listVariable, listParams, listKey, allowEmptyValues, allowDollarInValue));
+        listVariables.forEach(listVariable -> checkObjectArgumentOfList(listVariable, listParams, listKey, allowEmptyValues, allowDollarInValue));
         return listVariables;
     }
     
@@ -881,17 +890,27 @@ public class OrdersHelper {
         return mapVariable;
     }
     
+    private static Map<String, Object> checkObjectArgumentOfList(Map<String, Object> mapVariable, Map<String, ListParameter> listParams, String listKey,
+            boolean allowEmptyValues, boolean allowDollarInValue) {
+        return checkObjectArgument(mapVariable, listParams, listKey, allowEmptyValues, allowDollarInValue, "list");
+    }
+    
     private static Map<String, Object> checkObjectArgument(Map<String, Object> mapVariable, Map<String, ListParameter> listParams, String listKey,
-            boolean allowEmptyValues, boolean allowDollarInValue) throws JocMissingRequiredParameterException, JocConfigurationException {
+            boolean allowEmptyValues, boolean allowDollarInValue) {
+        return checkObjectArgument(mapVariable, listParams, listKey, allowEmptyValues, allowDollarInValue, "map");
+    }
+    
+    private static Map<String, Object> checkObjectArgument(Map<String, Object> mapVariable, Map<String, ListParameter> listParams, String listKey,
+            boolean allowEmptyValues, boolean allowDollarInValue, String listOrMap) throws JocMissingRequiredParameterException, JocConfigurationException {
         boolean invalid = false;
         Set<String> listKeys = mapVariable.keySet().stream().filter(arg -> !listParams.containsKey(arg)).collect(Collectors.toSet());
         if (!listKeys.isEmpty()) {
             if (listKeys.size() == 1) {
-                throw new JocMissingRequiredParameterException("Variable '" + listKeys.iterator().next() + "' of the list variable '" + listKey
-                        + "' isn't declared in the workflow");
+                throw new JocMissingRequiredParameterException(String.format("Variable '%s' of the %s variable '%s' isn't declared in the workflow",
+                        listKeys.iterator().next(), listOrMap, listKey));
             }
-            throw new JocMissingRequiredParameterException("Variables '" + listKeys.toString() + "' of the list variable '" + listKey
-                    + "' aren't declared in the workflow");
+            throw new JocMissingRequiredParameterException(String.format("Variables '%s' of the %s variable '%s' aren't declared in the workflow",
+                    listKeys.toString(), listOrMap, listKey));
         }
         for (Map.Entry<String, ListParameter> p : listParams.entrySet()) {
             // if (!listVariable.containsKey(p.getKey()) && p.getValue().getDefault() == null) { // required
@@ -903,8 +922,8 @@ public class OrdersHelper {
 
             if (curListArg == null) { // TODO later only if it is nullable
                 if (p.getValue().getDefault() == null) { // required? TODO later only if it is nullable
-                    throw new JocMissingRequiredParameterException("Variable '" + p.getKey() + "' of list variable '" + listKey
-                            + "' is missing but required");
+                    throw new JocMissingRequiredParameterException(String.format("Variable '%s' of the %s variable '%s' is missing but required", p
+                            .getKey(), listOrMap, listKey));
                 } else {
                     mapVariable.put(p.getKey(), p.getValue().getDefault());
                 }
@@ -914,8 +933,8 @@ public class OrdersHelper {
             if (p.getValue().getType().equals(ListParameterType.String) && !allowEmptyValues) {
                 if ((curListArg instanceof String) && ((String) curListArg).isEmpty()) {
                     if (p.getValue().getDefault() == null) { // required? TODO later only if it is nullable
-                        throw new JocMissingRequiredParameterException("Variable '" + p.getKey() + "' of list variable '" + listKey
-                                + "' is missing but required");
+                        throw new JocMissingRequiredParameterException(String.format("Variable '%s' of the %s variable '%s' is missing but required",
+                                p.getKey(), listOrMap, listKey));
                     } else {
                         mapVariable.put(p.getKey(), p.getValue().getDefault());
                     }
@@ -934,12 +953,12 @@ public class OrdersHelper {
                 } else {
                     String strListArg = (String) curListArg;
                     if (!allowEmptyValues && strListArg.isEmpty()) {
-                        throw new JocMissingRequiredParameterException("Variable '" + p.getKey() + "' of list variable '" + listKey
-                                + "' is empty but required");
+                        throw new JocMissingRequiredParameterException(String.format("Variable '%s' of the %s variable '%s' is empty but required", p
+                                .getKey(), listOrMap, listKey));
                     }
 
                     try {
-                        StringSizeSanitizer.test("variable '" + p.getKey() + "' of list variable '" + listKey, strListArg);
+                        StringSizeSanitizer.test(String.format("variable '%s' of the %s variable '%s'", p.getKey(), listOrMap, listKey), strListArg);
                     } catch (IllegalArgumentException e1) {
                         throw new JocConfigurationException(e1.getMessage());
                     }
@@ -955,7 +974,8 @@ public class OrdersHelper {
                             mapVariable.put(p.getKey(), Boolean.FALSE);
                         } else if (allowDollarInValue && strArg.contains("$")) {
                             // only relevant for addOrder instruction
-                            Validator.validateExpression("Variable '" + p.getKey() + "' of list variable '" + listKey + "': ", strArg);
+                            Validator.validateExpression(String.format("Variable '%s' of the %s variable '%s': ", p.getKey(), listOrMap, listKey),
+                                    strArg);
                         } else {
                             invalid = true;
                         }
@@ -971,7 +991,7 @@ public class OrdersHelper {
                     String strArg = (String) curListArg;
                     if (allowDollarInValue && strArg.contains("$")) {
                         // only relevant for addOrder instruction
-                        Validator.validateExpression("Variable '" + p.getKey() + "' of list variable '" + listKey + "': ", strArg);
+                        Validator.validateExpression(String.format("Variable '%s' of the %s variable '%s': ", p.getKey(), listOrMap, listKey), strArg);
                     } else {
                         try {
                             BigDecimal number = new BigDecimal(strArg);
@@ -984,8 +1004,8 @@ public class OrdersHelper {
                 break;
             }
             if (invalid) {
-                throw new JocConfigurationException(String.format("Variable '%s' of list variable '%s': Wrong data type %s (%s is expected).", p
-                        .getKey(), listKey, curListArg.getClass().getSimpleName(), p.getValue().getType().value()));
+                throw new JocConfigurationException(String.format("Variable '%s' of %s variable '%s': Wrong data type %s (%s is expected).", p
+                        .getKey(), listOrMap, listKey, curListArg.getClass().getSimpleName(), p.getValue().getType().value()));
             }
         }
         return mapVariable;
@@ -1192,8 +1212,11 @@ public class OrdersHelper {
                             proxy.api().addOrders(Flux.fromIterable(freshOrders.values())).thenAccept(either3 -> {
                                 ProblemHelper.postProblemEventIfExist(either3, accessToken, jocError, controllerId);
                                 if (either3.isRight()) {
-                                    storeAuditLogDetails(auditLogDetails, auditlogId).thenAccept(either5 -> ProblemHelper.postExceptionEventIfExist(
+                                    
+                                    updateTags(controllerId, freshOrders).thenAccept(either5 -> ProblemHelper.postExceptionEventIfExist(
                                             either5, accessToken, jocError, controllerId));
+                                    storeAuditLogDetails(auditLogDetails, auditlogId).thenAccept(either6 -> ProblemHelper.postExceptionEventIfExist(
+                                            either6, accessToken, jocError, controllerId));
                                 }
                             });
                         }
@@ -1361,24 +1384,13 @@ public class OrdersHelper {
         return variables;
     }
     
-//    public static CompletableFuture<Either<Exception, Void>> storeTags(Collection<DBItemHistoryOrderTag> orderTags) {
-//        return CompletableFuture.supplyAsync(() -> {
-//            SOSHibernateSession connection = null;
-//            try {
-//                Date now = Date.from(Instant.now());
-//                connection = Globals.createSosHibernateStatelessConnection("storeOrderTags");
-//                for (DBItemHistoryOrderTag item : orderTags) {
-//                    item.setModified(now);
-//                    connection.save(item);
-//                }
-//                return Either.right(null);
-//            } catch (Exception e) {
-//                return Either.left(e);
-//            } finally {
-//                Globals.disconnect(connection);
-//            }
-//        });
-//    }
+    public static CompletableFuture<Either<Exception, Void>> storeTags(String controllerId, Map<String, Set<String>> orderTags) {
+        return CompletableFuture.supplyAsync(() -> OrderTags.addTags(controllerId, orderTags));
+    }
+    
+    public static CompletableFuture<Either<Exception, Void>> updateTags(String controllerId, Map<OrderId, JFreshOrder> freshOrders) {
+        return CompletableFuture.supplyAsync(() -> OrderTags.updateTagsOfOrders(controllerId, freshOrders));
+    }
 
     public static CompletableFuture<Either<Exception, Void>> storeAuditLogDetails(Collection<AuditLogDetail> auditLogDetails, Long auditlogId) {
         return CompletableFuture.supplyAsync(() -> {
@@ -1454,6 +1466,11 @@ public class OrdersHelper {
     // #2021-10-12#C40382260571-
     public static String getCyclicOrderIdMainPart(String orderId) {
         return orderId.substring(0, mainOrderIdLength);
+    }
+    
+    // alias
+    public static String getOrderIdMainPart(String orderId) {
+        return getCyclicOrderIdMainPart(orderId);
     }
 
     public static String getDateFromOrderId(String orderId) {

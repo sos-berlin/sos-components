@@ -107,7 +107,7 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
 
                 List<PlannedOrderItem> result = new ArrayList<>();
                 List<DBItemDailyPlanWithHistory> orders = getOrders(session, filter, false);
-                addOrders(session, controllerId, plannedStartFrom, plannedStartTo, in, orders, result, false);
+                addOrders(session, controllerId, plannedStartFrom, plannedStartTo, in, orders, result, false, Collections.emptyMap());
 
                 for (PlannedOrderItem p : result) {
                     String state = p.getState().get_text().value();

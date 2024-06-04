@@ -141,6 +141,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             final String defaultOrderName = SOSCheckJavaVariableName.makeStringRuleConform(getAccount());
             final boolean allowEmptyArguments = ClusterSettings.getAllowEmptyArguments(Globals.getConfigurationGlobalsJoc());
             List<AuditLogDetail> auditLogDetails = new ArrayList<>();
+            Map<String, Set<String>> orderTags = new HashMap<>();
 
             Function<AddOrder, Either<Err419, JFreshOrder>> mapper = order -> {
                 Either<Err419, JFreshOrder> either = null;
@@ -188,6 +189,9 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     // TODO check if endPos not before startPos
                     JFreshOrder o = OrdersHelper.mapToFreshOrder(order, zoneId, startPos, endPoss, jBrachPath, forceJobAdmission);
                     auditLogDetails.add(new AuditLogDetail(WorkflowPaths.getPath(workflowName), o.id().string(), controllerId));
+                    if (order.getTags() != null) {
+                        orderTags.put(OrdersHelper.getOrderIdMainPart(o.id().string()), order.getTags());
+                    }
                     either = Either.right(o);
                 } catch (Exception ex) {
                     either = Either.left(new BulkError(LOGGER).get(ex, getJocError(), order));
@@ -205,9 +209,8 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                         Function.identity()));
                 proxy.api().addOrders(Flux.fromIterable(freshOrders.values())).thenAccept(either -> {
                     if (either.isRight()) {
-//                        proxy.api().deleteOrdersWhenTerminated(freshOrders.keySet()).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e,
-//                                accessToken, getJocError(), addOrders.getControllerId()));
-                        // auditlog is written even "deleteOrdersWhenTerminated" has a problem
+                        OrdersHelper.storeTags(controllerId, orderTags).thenAccept(either2 -> ProblemHelper.postExceptionEventIfExist(either2,
+                                accessToken, getJocError(), addOrders.getControllerId()));
                         OrdersHelper.storeAuditLogDetails(auditLogDetails, dbAuditLog.getId()).thenAccept(either2 -> ProblemHelper
                                 .postExceptionEventIfExist(either2, accessToken, getJocError(), addOrders.getControllerId()));
                     } else {

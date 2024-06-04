@@ -39,7 +39,7 @@ import com.sos.joc.db.history.DBItemHistoryLog;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.DBItemHistoryOrderState;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
-//import com.sos.joc.db.history.DBItemHistoryOrderTag;
+import com.sos.joc.db.history.DBItemHistoryOrderTag;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryAgentName;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
@@ -135,9 +135,9 @@ public class DBLayer implements Serializable {
     public static final String TABLE_HISTORY_LOGS = "HISTORY_LOGS";
     public static final String TABLE_HISTORY_LOGS_SEQUENCE = "SEQ_HISTORY_L";
 
-//    public static final String DBITEM_HISTORY_ORDER_TAGS = DBItemHistoryOrderTag.class.getSimpleName();
-//    public static final String TABLE_HISTORY_ORDER_TAGS = "HISTORY_ORDER_TAGS";
-//    public static final String TABLE_HISTORY_ORDER_TAGS_SEQUENCE = "SEQ_HISTORY_OTAGS";
+    public static final String DBITEM_HISTORY_ORDER_TAGS = DBItemHistoryOrderTag.class.getSimpleName();
+    public static final String TABLE_HISTORY_ORDER_TAGS = "HISTORY_ORDER_TAGS";
+    public static final String TABLE_HISTORY_ORDER_TAGS_SEQUENCE = "SEQ_HISTORY_OTAGS";
 
     /** MONITORING Tables */
     public static final String DBITEM_MON_ORDERS = DBItemMonitoringOrder.class.getSimpleName();
@@ -557,7 +557,7 @@ public class DBLayer implements Serializable {
 
         cl.add(DBItemXmlEditorConfiguration.class);
         
-//        cl.add(DBItemHistoryOrderTag.class);
+        cl.add(DBItemHistoryOrderTag.class);
         return cl;
     }
 

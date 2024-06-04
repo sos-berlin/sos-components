@@ -5,13 +5,12 @@ import java.time.ZoneId;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
-
-import jakarta.ws.rs.Path;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,10 +19,12 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.board.common.BoardHelper;
+import com.sos.joc.board.common.ExpectingOrder;
 import com.sos.joc.boards.resource.IBoardsResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.DeployedConfigurationFilter;
@@ -36,6 +37,7 @@ import com.sos.joc.model.board.BoardsFilter;
 import com.sos.joc.model.common.Folder;
 import com.sos.schema.JsonValidator;
 
+import jakarta.ws.rs.Path;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
 
@@ -132,15 +134,18 @@ public class BoardsResourceImpl extends JOCResourceImpl implements IBoardsResour
                     }).filter(Objects::nonNull).collect(Collectors.toList()));
                 } else {
                     Integer limit = filter.getLimit() != null ? filter.getLimit() : 10000;
-                    ConcurrentMap<String, ConcurrentMap<String, List<JOrder>>> expectings = BoardHelper.getExpectingOrders(controllerState,
-                            boardNames, folders);
+                    List<ExpectingOrder> eos = BoardHelper.getExpectingOrdersStream(controllerState, boardNames, folders).collect(Collectors
+                            .toList());
+                    ConcurrentMap<String, ConcurrentMap<String, List<JOrder>>> expectings = BoardHelper.getExpectingOrders(eos.stream());
+                    Map<String, Set<String>> orderTags = OrderTags.getTags(controllerId, eos.stream().map(ExpectingOrder::getJOrder), session);
+
                     answer.setNoticeBoards(contents.stream().filter(dc -> canAdd(dc.getPath(), permittedFolders)).map(dc -> {
                         try {
                             if (dc.getContent() == null || dc.getContent().isEmpty()) {
                                 throw new DBMissingDataException("doesn't exist");
                             }
-                            return BoardHelper.getBoard(controllerState, dc, expectings.getOrDefault(dc.getName(), new ConcurrentHashMap<>()), limit,
-                                    zoneId, surveyDateMillis);
+                            return BoardHelper.getBoard(controllerState, dc, expectings.getOrDefault(dc.getName(), new ConcurrentHashMap<>()),
+                                    orderTags, limit, zoneId, surveyDateMillis);
                         } catch (Throwable e) {
                             if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
                                 LOGGER.info(jocError.printMetaInfo());

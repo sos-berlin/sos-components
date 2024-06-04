@@ -31,6 +31,7 @@ import com.sos.joc.classes.agent.AgentClusterWatch;
 import com.sos.joc.classes.agent.AgentDirectorClusterState;
 import com.sos.joc.classes.agent.AgentHelper;
 import com.sos.joc.classes.controller.States;
+import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
@@ -206,10 +207,12 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                         Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
                         Set<OrderId> waitingOrders = OrdersHelper.getWaitingForAdmissionOrderIds(jOrders.stream().map(JOrder::id).collect(Collectors
                                 .toSet()), currentState);
+                        Map<String, Set<String>> orderTags = OrderTags.getTags(controllerId, jOrders, connection);
+                        
                         ordersPerAgent.putAll(jOrders.stream().map(o -> {
                             try {
-                                return OrdersHelper.mapJOrderToOrderV(o, currentState, true, permittedFolders, waitingOrders, null, surveyDateMillis,
-                                        zoneId);
+                                return OrdersHelper.mapJOrderToOrderV(o, currentState, true, permittedFolders, orderTags, waitingOrders, null,
+                                        surveyDateMillis, zoneId);
                             } catch (Exception e) {
                                 return null;
                             }

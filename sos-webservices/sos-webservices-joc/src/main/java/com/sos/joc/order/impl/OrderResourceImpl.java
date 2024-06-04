@@ -15,6 +15,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
@@ -57,18 +58,20 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
             JControllerState currentState = Proxy.of(orderFilter.getControllerId()).currentState();
             Instant surveyDateInstant = currentState.instant();
             JOrder jOrder = currentState.idToOrder().get(OrderId.of(orderFilter.getOrderId()));
+            
+            connection = Globals.createSosHibernateStatelessConnection(API_CALL);
+            Map<String, Set<String>> orderTags = OrderTags.getTags(accessToken, Collections.singletonList(jOrder), connection);
 
             if (jOrder != null) {
                 Map<List<Object>, String> positionToLabelsMap = getPositionToLabelsMap(orderFilter.getControllerId(), jOrder.workflowId());
                 Set<OrderId> waitingOrders = OrdersHelper.getWaitingForAdmissionOrderIds(Collections.singleton(jOrder.id()), currentState);
                 OrderV o = OrdersHelper.mapJOrderToOrderV(jOrder, currentState, orderFilter.getCompact(), folderPermissions.getListOfFolders(),
-                        waitingOrders, Collections.singletonMap(jOrder.workflowId(), OrdersHelper.getFinalParameters(jOrder.workflowId(),
+                        orderTags, waitingOrders, Collections.singletonMap(jOrder.workflowId(), OrdersHelper.getFinalParameters(jOrder.workflowId(),
                                 currentState)), surveyDateInstant.toEpochMilli(), OrdersHelper.getDailyPlanTimeZone());
                 checkFolderPermissions(o.getWorkflowId().getPath());
                 o.setLabel(positionToLabelsMap.get(o.getPosition()));
                 o.setHasChildOrders(currentState.orderIds().stream().map(OrderId::string).anyMatch(s -> s.startsWith(o.getOrderId() + "|")));
                 if (orderStateWithRequirements.contains(o.getState().get_text())) {
-                    connection = Globals.createSosHibernateStatelessConnection(API_CALL);
                     o.setRequirements(OrdersHelper.getRequirements(jOrder, orderFilter.getControllerId(), new DeployedConfigurationDBLayer(connection)));
                     //o.setRequirements(OrdersHelper.getRequirements(jOrder, currentState));
                 }

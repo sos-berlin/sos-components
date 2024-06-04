@@ -79,8 +79,8 @@ public class BoardHelper {
         return item;
     }
     
-    public static Board getBoard(JControllerState controllerState, DeployedContent dc, ConcurrentMap<String, List<JOrder>> expectings, Integer limit,
-            ZoneId zoneId, long surveyDateMillis) throws Exception {
+    public static Board getBoard(JControllerState controllerState, DeployedContent dc, ConcurrentMap<String, List<JOrder>> expectings,
+            Map<String, Set<String>> orderTags, Integer limit, ZoneId zoneId, long surveyDateMillis) throws Exception {
         SyncStateText stateText = SyncStateText.UNKNOWN;
         Board item = init(dc);
 
@@ -107,7 +107,7 @@ public class BoardHelper {
                 notice.setExpectingOrders(jOrders.stream().sorted(Comparator.comparingLong(compareScheduleFor).reversed()).limit(limit.longValue())
                         .map(o -> {
                             try {
-                                return OrdersHelper.mapJOrderToOrderV(o, true, null, null, zoneId);
+                                return OrdersHelper.mapJOrderToOrderV(o, controllerState, true, orderTags, null, null, zoneId);
                             } catch (Exception e) {
                                 return null;
                             }
@@ -115,7 +115,7 @@ public class BoardHelper {
             } else {
                 notice.setExpectingOrders(jOrders.stream().map(o -> {
                     try {
-                        return OrdersHelper.mapJOrderToOrderV(o, true, null, null, zoneId);
+                        return OrdersHelper.mapJOrderToOrderV(o, controllerState, true, orderTags, null, null, zoneId);
                     } catch (Exception e) {
                         return null;
                     }
@@ -156,16 +156,23 @@ public class BoardHelper {
     
     public static ConcurrentMap<String, ConcurrentMap<String, List<JOrder>>> getExpectingOrders(JControllerState controllerState,
             Collection<String> boardPaths, Set<Folder> permittedFolders) {
-        return getExpectingOrdersStream(controllerState, boardPaths, permittedFolders).collect(Collectors.groupingByConcurrent(
+        return getExpectingOrders(getExpectingOrdersStream(controllerState, boardPaths, permittedFolders));
+    }
+    
+    public static ConcurrentMap<String, ConcurrentMap<String, List<JOrder>>> getExpectingOrders(Stream<ExpectingOrder> expectingOrders) {
+        return expectingOrders.collect(Collectors.groupingByConcurrent(
                 ExpectingOrder::getBoardPath, Collectors.groupingByConcurrent(ExpectingOrder::getNoticeId, Collectors.mapping(
                         ExpectingOrder::getJOrder, Collectors.toList()))));
     }
 
     public static ConcurrentMap<String, ConcurrentMap<String, Integer>> getNumOfExpectingOrders(JControllerState controllerState,
             Collection<String> boardPaths, Set<Folder> permittedFolders) {
-        return getExpectingOrdersStream(controllerState, boardPaths, permittedFolders).collect(Collectors.groupingByConcurrent(
-                ExpectingOrder::getBoardPath, Collectors.groupingByConcurrent(ExpectingOrder::getNoticeId, Collectors.reducing(0, e -> 1,
-                        Integer::sum))));
+        return getNumOfExpectingOrders(getExpectingOrdersStream(controllerState, boardPaths, permittedFolders));
+    }
+    
+    public static ConcurrentMap<String, ConcurrentMap<String, Integer>> getNumOfExpectingOrders(Stream<ExpectingOrder> expectingOrders) {
+        return expectingOrders.collect(Collectors.groupingByConcurrent(ExpectingOrder::getBoardPath, Collectors.groupingByConcurrent(
+                ExpectingOrder::getNoticeId, Collectors.reducing(0, e -> 1, Integer::sum))));
     }
     
     public static JControllerState getCurrentState(String controllerId) {
@@ -178,7 +185,7 @@ public class BoardHelper {
         return currentstate;
     }
     
-    private static Stream<ExpectingOrder> getExpectingOrdersStream(JControllerState controllerState, Collection<String> boardPaths,
+    public static Stream<ExpectingOrder> getExpectingOrdersStream(JControllerState controllerState, Collection<String> boardPaths,
             Set<Folder> permittedFolders) {
         if (controllerState == null || boardPaths == null || boardPaths.isEmpty()) {
             return Stream.empty();

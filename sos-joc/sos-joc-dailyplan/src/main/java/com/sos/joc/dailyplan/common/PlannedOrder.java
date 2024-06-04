@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.order.FreshOrder;
@@ -28,11 +29,12 @@ public class PlannedOrder {
     private Long averageDuration = 0L;
     private boolean storedInDb = false;
     private String orderName;
+    private Set<String> tags;
     private Map<String, List<Object>> labelToPositionMap = Collections.emptyMap(); 
     
 
     public PlannedOrder(String controllerId, FreshOrder freshOrder, DailyPlanSchedule dailyPlanSchedule, DailyPlanScheduleWorkflow scheduleWorkflow,
-            Long calendarId) {
+            Long calendarId, Set<String> tags) {
         this.controllerId = controllerId;
         this.freshOrder = freshOrder;
         this.calendarId = calendarId;
@@ -43,6 +45,7 @@ public class PlannedOrder {
         this.schedulePath = dailyPlanSchedule.getSchedule().getPath();
         this.submitOrderToControllerWhenPlanned = dailyPlanSchedule.getSchedule().getSubmitOrderToControllerWhenPlanned() == null ? false
                 : dailyPlanSchedule.getSchedule().getSubmitOrderToControllerWhenPlanned();
+        this.tags = tags;
         
         // TODO JOC-1453 create label->position map here from scheduleWorkflow.getContent() or store scheduleWorkflow.getContent() and do it later in OrderApi
     }
@@ -158,5 +161,13 @@ public class PlannedOrder {
         if (labelToPositionMap != null) {
             this.labelToPositionMap = labelToPositionMap;
         }
+    }
+    
+    public Set<String> getTags() {
+        return tags;
+    }
+    
+    public boolean hasTags() {
+        return tags != null && !tags.isEmpty();
     }
 }

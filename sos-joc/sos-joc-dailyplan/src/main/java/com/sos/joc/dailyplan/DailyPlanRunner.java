@@ -497,7 +497,7 @@ public class DailyPlanRunner extends TimerTask {
 
                 DailyPlanSchedule dailyPlanSchedule = new DailyPlanSchedule(schedule, Arrays.asList(dailyPlanScheduleWorkflow));
                 PlannedOrder p = new PlannedOrder(item.getControllerId(), freshOrder, dailyPlanSchedule, dailyPlanScheduleWorkflow, item
-                        .getCalendarId());
+                        .getCalendarId(), orderParameterisation.getTags());
                 p.setStoredInDb(true);
 
                 synchronizer.add(startupMode, p, controllerId, dailyPlanDate);
@@ -1107,7 +1107,7 @@ public class DailyPlanRunner extends TimerTask {
                                             }
 
                                             PlannedOrder plannedOrder = new PlannedOrder(controllerId, freshOrder, dailyPlanSchedule, sw, calendar
-                                                    .getId());
+                                                    .getId(), orderParameterisation.getTags());
                                             plannedOrder.setPeriod(p);
                                             plannedOrder.setSubmissionHistoryId(synchronizer.getSubmission().getId());
                                             plannedOrder.setSubmissionForDate(synchronizer.getSubmission().getSubmissionForDate());

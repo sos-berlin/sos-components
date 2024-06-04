@@ -1,11 +1,11 @@
 package com.sos.joc.dailyplan.common;
 
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -18,6 +18,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
@@ -82,11 +83,11 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         
         boolean hasPermission = true;
         
-        if (in.getTags() != null && !in.getTags().isEmpty()) {
+        if (in.getWorkflowTags() != null && !in.getWorkflowTags().isEmpty()) {
             if (in.getWorkflowPaths() == null) {
-                in.setWorkflowPaths(getWorkflowPathsFromTags(in.getTags(), controllerId));
+                in.setWorkflowPaths(getWorkflowPathsFromTags(in.getWorkflowTags(), controllerId));
             } else {
-                in.getWorkflowPaths().addAll(getWorkflowPathsFromTags(in.getTags(), controllerId));
+                in.getWorkflowPaths().addAll(getWorkflowPathsFromTags(in.getWorkflowTags(), controllerId));
                 in.setWorkflowPaths(in.getWorkflowPaths().stream().distinct().collect(Collectors.toList()));
             }
         }
@@ -126,6 +127,10 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
             hasPermission = evaluator.isHasPermission();
         }
         if (hasPermission) {
+            Set<String> cyclicMainParts = new HashSet<>();
+            if (in.getOrderTags() != null && !in.getOrderTags().isEmpty()) {
+                cyclicMainParts.addAll(OrderTags.getMainOrderIdsByTags(controllerId, in.getOrderTags()));
+            }
             if (in.getOrderIds() != null && !in.getOrderIds().isEmpty()) {
                 Set<String> orderIds = new HashSet<>();
                 if (selectCyclicOrders) {
@@ -134,7 +139,6 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
                         addCyclicOrderIds(orderIds, orderId, controllerId);
                     }
                 } else {
-                    List<String> cyclicMainParts = new ArrayList<>();
                     for (String orderId : in.getOrderIds()) {
                         if (OrdersHelper.isCyclicOrderId(orderId)) {
                             cyclicMainParts.add(OrdersHelper.getCyclicOrderIdMainPart(orderId));
@@ -142,11 +146,10 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
                             orderIds.add(orderId);
                         }
                     }
-                    filter.setCyclicOrdersMainParts(cyclicMainParts);
                 }
                 filter.setOrderIds(orderIds);
             }
-
+            filter.setCyclicOrdersMainParts(cyclicMainParts);
             filter.setControllerId(controllerId);
             filter.setSubmissionIds(in.getSubmissionHistoryIds());
             filter.setDailyPlanInterval(in.getDailyPlanDateFrom(), in.getDailyPlanDateTo(), settings.getTimeZone(), settings.getPeriodBegin());
@@ -224,13 +227,14 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
     }
 
     protected void addOrders(SOSHibernateSession session, String controllerId, Date plannedStartFrom, Date plannedStartTo, DailyPlanOrderFilterDef in,
-            List<DBItemDailyPlanWithHistory> orders, List<PlannedOrderItem> result, boolean getCyclicDetails) {
+            List<DBItemDailyPlanWithHistory> orders, List<PlannedOrderItem> result, boolean getCyclicDetails, Map<String, Set<String>> orderTags) {
 
         if (orders != null) {
             DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
             for (DBItemDailyPlanWithHistory item : orders) {
                 PlannedOrderItem p = createPlanItem(item);
                 p.setControllerId(controllerId);
+                p.setTags(orderTags.get(OrdersHelper.getOrderIdMainPart(p.getOrderId())));
 
                 if ((p.getStartMode().equals(DBLayerDailyPlannedOrders.START_MODE_CYCLIC) && !in.getExpandCycleOrders())) {
                     result.add(getCyclicPlannedOrder(dbLayer, plannedStartFrom, plannedStartTo, p, getCyclicDetails));

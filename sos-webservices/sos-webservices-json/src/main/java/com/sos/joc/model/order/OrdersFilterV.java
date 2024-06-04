@@ -32,6 +32,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "regex",
     "states",
     "folders",
+    "tags",
     "dateTo",
     "stateDateFrom",
     "stateDateTo",
@@ -84,6 +85,15 @@ public class OrdersFilterV {
      */
     @JsonProperty("folders")
     private List<Folder> folders = new ArrayList<Folder>();
+    /**
+     * tags
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("tags")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<String> tags = new LinkedHashSet<String>();
     /**
      * string for dateFrom and dateTo as search filter
      * <p>
@@ -254,6 +264,28 @@ public class OrdersFilterV {
     }
 
     /**
+     * tags
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("tags")
+    public Set<String> getTags() {
+        return tags;
+    }
+
+    /**
+     * tags
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("tags")
+    public void setTags(Set<String> tags) {
+        this.tags = tags;
+    }
+
+    /**
      * string for dateFrom and dateTo as search filter
      * <p>
      *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
@@ -375,12 +407,12 @@ public class OrdersFilterV {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderIds", orderIds).append("workflowIds", workflowIds).append("compact", compact).append("regex", regex).append("states", states).append("folders", folders).append("dateTo", dateTo).append("stateDateFrom", stateDateFrom).append("stateDateTo", stateDateTo).append("timeZone", timeZone).append("scheduledNever", scheduledNever).append("limit", limit).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderIds", orderIds).append("workflowIds", workflowIds).append("compact", compact).append("regex", regex).append("states", states).append("folders", folders).append("tags", tags).append("dateTo", dateTo).append("stateDateFrom", stateDateFrom).append("stateDateTo", stateDateTo).append("timeZone", timeZone).append("scheduledNever", scheduledNever).append("limit", limit).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowIds).append(scheduledNever).append(folders).append(controllerId).append(compact).append(timeZone).append(states).append(stateDateFrom).append(regex).append(dateTo).append(limit).append(orderIds).append(stateDateTo).toHashCode();
+        return new HashCodeBuilder().append(workflowIds).append(scheduledNever).append(folders).append(controllerId).append(compact).append(timeZone).append(states).append(tags).append(stateDateFrom).append(regex).append(dateTo).append(limit).append(orderIds).append(stateDateTo).toHashCode();
     }
 
     @Override
@@ -392,7 +424,7 @@ public class OrdersFilterV {
             return false;
         }
         OrdersFilterV rhs = ((OrdersFilterV) other);
-        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(scheduledNever, rhs.scheduledNever).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(timeZone, rhs.timeZone).append(states, rhs.states).append(stateDateFrom, rhs.stateDateFrom).append(regex, rhs.regex).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(orderIds, rhs.orderIds).append(stateDateTo, rhs.stateDateTo).isEquals();
+        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(scheduledNever, rhs.scheduledNever).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(timeZone, rhs.timeZone).append(states, rhs.states).append(tags, rhs.tags).append(stateDateFrom, rhs.stateDateFrom).append(regex, rhs.regex).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(orderIds, rhs.orderIds).append(stateDateTo, rhs.stateDateTo).isEquals();
     }
 
 }

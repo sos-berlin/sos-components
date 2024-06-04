@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 import java.util.function.ToLongFunction;
@@ -17,11 +18,13 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.common.SyncStateText;
 import com.sos.controller.model.lock.Lock;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.common.SyncStateHelper;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.model.lock.common.LockEntry;
@@ -52,12 +55,14 @@ public class LockEntryHelper {
     private final Boolean compact;
     private final Integer limit;
     private final ZoneId zoneId;
+    private final SOSHibernateSession session;
 
-    public LockEntryHelper(String controllerId, Boolean compact, Integer limit, ZoneId zoneId) {
+    public LockEntryHelper(String controllerId, Boolean compact, Integer limit, ZoneId zoneId, SOSHibernateSession session) {
         this.controllerId = controllerId;
         this.compact = compact;
         this.limit = limit;
         this.zoneId = zoneId;
+        this.session = session;
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LockEntryHelper.class);
@@ -113,7 +118,7 @@ public class LockEntryHelper {
             if (controllerState != null) {
                 if (compact != Boolean.TRUE) {
                     Long surveyDateMillis = controllerState.instant().toEpochMilli();
-                    ToLongFunction<JOrder> compareScheduleFor =  OrdersHelper.getCompareScheduledFor(zoneId, surveyDateMillis);
+                    ToLongFunction<JOrder> compareScheduleFor = OrdersHelper.getCompareScheduledFor(zoneId, surveyDateMillis);
 
                     List<JOrder> lockJOrders = controllerState.ordersBy(o -> lockOrderIds.contains(o.id())).sorted(Comparator.comparingLong(
                             compareScheduleFor).reversed()).collect(Collectors.toList());
@@ -125,11 +130,17 @@ public class LockEntryHelper {
                             .stream()).map(JOrder::workflowId).distinct().collect(Collectors.toConcurrentMap(Function.identity(), w -> OrdersHelper
                                     .getFinalParameters(w, controllerState)));
 
+                    Map<String, Set<String>> lockOrderTags = OrderTags.getTags(controllerState.asScala().controllerId().string(), lockJOrders,
+                            session);
+                    Map<String, Set<String>> lockQueuedOrderTags = OrderTags.getTags(controllerState.asScala().controllerId().string(),
+                            lockQueuedJOrders, session);
+
                     for (JOrder jo : lockJOrders) {
                         ordersHoldingLocksCount++;
                         LockOrder lo = new LockOrder();
                         if (ordersHoldingLocksCount <= limit) {
-                            lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, true, finalParamsPerWorkflow, surveyDateMillis, zoneId));
+                            lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, controllerState, true, lockOrderTags, finalParamsPerWorkflow,
+                                    surveyDateMillis, zoneId));
                         }
                         lo.setLock(getWorkflowLock(sharedAcquired, lockId, jo.id().string()));
 
@@ -145,7 +156,8 @@ public class LockEntryHelper {
                         ordersWaitingForLocksCount++;
                         LockOrder lo = new LockOrder();
                         if (ordersWaitingForLocksCount <= limit) {
-                            lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, true, finalParamsPerWorkflow, surveyDateMillis, zoneId));
+                            lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, controllerState, true, lockQueuedOrderTags, finalParamsPerWorkflow,
+                                    surveyDateMillis, zoneId));
                         }
                         lo.setLock(getWorkflowLock(controllerState, jo, queuedWorkflowLocks, lockId));
 

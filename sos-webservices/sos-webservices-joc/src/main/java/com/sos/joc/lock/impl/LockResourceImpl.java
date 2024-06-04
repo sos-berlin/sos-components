@@ -66,8 +66,6 @@ public class LockResourceImpl extends JOCResourceImpl implements ILockResource {
             session = Globals.createSosHibernateStatelessConnection(API_CALL);
             DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
             DeployedContent dc = dbLayer.getDeployedInventory(filter.getControllerId(), DeployType.LOCK.intValue(), filter.getLockPath());
-            Globals.disconnect(session);
-            session = null;
             
             if (dc == null || dc.getContent() == null || dc.getContent().isEmpty()) {
                 throw new DBMissingDataException(String.format("Lock '%s' doesn't exist", filter.getLockPath()));
@@ -75,7 +73,7 @@ public class LockResourceImpl extends JOCResourceImpl implements ILockResource {
             checkFolderPermissions(dc.getPath());
             
             LockEntryHelper helper = new LockEntryHelper(filter.getControllerId(), filter.getCompact(), filter.getLimit(), OrdersHelper
-                    .getDailyPlanTimeZone());
+                    .getDailyPlanTimeZone(), session);
             answer.setLock(helper.getLockEntry(currentstate, dc));
             answer.setDeliveryDate(Date.from(Instant.now()));
             return answer;

@@ -4,8 +4,11 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 
 import jakarta.ws.rs.Path;
 
@@ -13,9 +16,11 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.board.common.BoardHelper;
+import com.sos.joc.board.common.ExpectingOrder;
 import com.sos.joc.board.resource.IBoardResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.items.DeployedContent;
@@ -68,8 +73,6 @@ public class BoardResourceImpl extends JOCResourceImpl implements IBoardResource
             session = Globals.createSosHibernateStatelessConnection(API_CALL);
             DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
             DeployedContent dc = dbLayer.getDeployedInventory(filter.getControllerId(), DeployType.NOTICEBOARD.intValue(), filter.getNoticeBoardPath());
-            Globals.disconnect(session);
-            session = null;
             
             if (dc == null || dc.getContent() == null || dc.getContent().isEmpty()) {
                 throw new DBMissingDataException(String.format("Notice board '%s' doesn't exist", filter.getNoticeBoardPath()));
@@ -82,9 +85,13 @@ public class BoardResourceImpl extends JOCResourceImpl implements IBoardResource
                 answer.setNoticeBoard(BoardHelper.getCompactBoard(currentstate, dc, numOfExpectings));
             } else {
                 Integer limit = filter.getLimit() != null ? filter.getLimit() : 10000;
-                ConcurrentMap<String, List<JOrder>> expectings = BoardHelper.getExpectingOrders(currentstate, Collections.singleton(dc.getName()),
-                        folderPermissions.getListOfFolders()).getOrDefault(dc.getName(), new ConcurrentHashMap<>());
-                answer.setNoticeBoard(BoardHelper.getBoard(currentstate, dc, expectings, limit, OrdersHelper.getDailyPlanTimeZone(),
+                List<ExpectingOrder> eos = BoardHelper.getExpectingOrdersStream(currentstate, Collections.singleton(dc.getName()), folderPermissions
+                        .getListOfFolders()).collect(Collectors.toList());
+                ConcurrentMap<String, List<JOrder>> expectings = BoardHelper.getExpectingOrders(eos.stream()).getOrDefault(dc.getName(),
+                        new ConcurrentHashMap<>());
+                Map<String, Set<String>> orderTags = OrderTags.getTags(filter.getControllerId(), eos.stream().map(ExpectingOrder::getJOrder),
+                        session);
+                answer.setNoticeBoard(BoardHelper.getBoard(currentstate, dc, expectings, orderTags, limit, OrdersHelper.getDailyPlanTimeZone(),
                         surveyDateMillis));
             }
             answer.setDeliveryDate(Date.from(Instant.now()));

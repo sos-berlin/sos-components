@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -16,6 +17,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.WebservicePaths;
+import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
 import com.sos.joc.dailyplan.db.DBLayerDailyPlannedOrders;
@@ -109,7 +111,9 @@ public class DailyPlanOrdersImpl extends JOCOrderResourceImpl implements IDailyP
                 filter.setSubmissionForDateTo(dateTo);
 
                 List<DBItemDailyPlanWithHistory> orders = getOrders(session, filter, true);
-                addOrders(session, controllerId, plannedStartFrom, plannedStartTo, in, orders, result, true);
+                Map<String, Set<String>> orderTags = orders == null ? Collections.emptyMap() : OrderTags.getTagsByOrderIds(controllerId, orders
+                        .stream().map(DBItemDailyPlanWithHistory::getOrderId), session);
+                addOrders(session, controllerId, plannedStartFrom, plannedStartTo, in, orders, result, true, orderTags);
             }
 
             PlannedOrders answer = new PlannedOrders();

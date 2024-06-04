@@ -7,6 +7,7 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
@@ -244,6 +246,7 @@ public class OrderListSynchronizer {
             session.setAutoCommit(false);
             Globals.beginTransaction(session);
             ZoneId zoneId = ZoneId.of(settings.getTimeZone());
+            Map<String, Set<String>> orderTags = new HashMap<>();
 
             Map<MainCyclicOrderKey, List<PlannedOrder>> cyclics = new TreeMap<MainCyclicOrderKey, List<PlannedOrder>>();
             for (PlannedOrder plannedOrder : plannedOrders.values()) {
@@ -252,7 +255,11 @@ public class OrderListSynchronizer {
                     DBItemDailyPlanOrder item = dbLayer.getUniqueDailyPlan(plannedOrder);
                     if (settings.isOverwrite() || item == null) {
                         plannedOrder.setAverageDuration(durations.get(plannedOrder.getWorkflowPath()));
-                        dbLayer.store(plannedOrder, OrdersHelper.getUniqueOrderId(zoneId), 0, 0);
+                        item = dbLayer.store(plannedOrder, OrdersHelper.getUniqueOrderId(zoneId), 0, 0);
+                        
+                        if (plannedOrder.hasTags()) {
+                            orderTags.put(OrdersHelper.getOrderIdMainPart(item.getOrderId()), plannedOrder.getTags());
+                        }
 
                         plannedOrder.setStoredInDb(true);
                         counter.addStoredSingle();
@@ -286,8 +293,12 @@ public class OrderListSynchronizer {
                     DBItemDailyPlanOrder item = dbLayer.getUniqueDailyPlan(plannedOrder);
                     if (settings.isOverwrite() || item == null) {
                         plannedOrder.setAverageDuration(durations.get(plannedOrder.getWorkflowPath()));
-                        dbLayer.store(plannedOrder, id, nr, size);
+                        item = dbLayer.store(plannedOrder, id, nr, size);
 
+                        if (plannedOrder.hasTags()) {
+                            orderTags.put(OrdersHelper.getOrderIdMainPart(item.getOrderId()), plannedOrder.getTags());
+                        }
+                        
                         nr = nr + 1;
                         plannedOrder.setStoredInDb(true);
                         counter.addStoredCyclicTotal();
@@ -301,6 +312,8 @@ public class OrderListSynchronizer {
                     }
                 }
             }
+            
+            OrderTags.addTags(controllerId, orderTags);
 
             if (!counter.hasStored() && submission != null && submission.getId() != null) {
                 Long count = dbLayer.getCountOrdersBySubmissionId(controllerId, submission.getId());
@@ -370,12 +383,14 @@ public class OrderListSynchronizer {
 
                             if (item.getStartMode().equals(DBLayerDailyPlannedOrders.START_MODE_SINGLE)) {
                                 dbLayer.deleteSingleCascading(item);
+                                OrderTags.deleteTagsOfOrder(controllerId, item.getOrderId(), session4delete);
                             } else {
                                 String mainPart = OrdersHelper.getCyclicOrderIdMainPart(item.getOrderId());
                                 if (!cyclicMainParts.contains(mainPart)) {
                                     cyclicMainParts.add(mainPart);
                                 }
                                 dbLayer.delete(item.getId());
+                                OrderTags.deleteTagsOfOrder(controllerId, item.getOrderId(), session4delete);
                             }
                         }
                         // delete cyclic variables when all cyclic orders deleted

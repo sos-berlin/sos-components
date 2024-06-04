@@ -23,6 +23,7 @@ import com.sos.controller.model.order.FreshOrder;
 import com.sos.inventory.model.schedule.OrderParameterisation;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JobSchedulerDate;
+import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.cluster.common.JocClusterUtil;
 import com.sos.joc.dailyplan.common.PlannedOrder;
@@ -225,10 +226,10 @@ public class DBLayerDailyPlannedOrders {
     
     private void executeDeleteVariables(List<String> orderIds, String controllerId) throws SOSHibernateException {
         if (orderIds != null && !orderIds.isEmpty()) {
-            StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_DPL_ORDER_VARIABLES).append(" ");
-            hql.append("where orderId in (:orderIds) ");
+            StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_DPL_ORDER_VARIABLES);
+            hql.append(" where orderId in (:orderIds)");
             if (!SOSString.isEmpty(controllerId)) {
-                hql.append("and controllerId=:controllerId ");
+                hql.append(" and controllerId=:controllerId ");
             }
             
             Query<DBItemDailyPlanVariable> query = session.createQuery(hql);
@@ -237,6 +238,8 @@ public class DBLayerDailyPlannedOrders {
                 query.setParameter("controllerId", controllerId);
             }
             executeUpdate("executeDeleteVariables", query);
+            
+            OrderTags.deleteTags(controllerId, orderIds, session);
         }
     }
 
@@ -249,16 +252,8 @@ public class DBLayerDailyPlannedOrders {
         return executeUpdate("executeDelete", query);
     }
 
-    private String getCyclicOrderListSql(List<String> list) {
-        StringBuilder sql = new StringBuilder(" (");
-        for (int i = 0; i < list.size(); i++) {
-            if (i > 0) {
-                sql.append(" or ");
-            }
-            sql.append("p.orderId like '" + list.get(i) + "%'");
-        }
-        sql.append(")");
-        return sql.toString();
+    private String getCyclicOrderListSql(Collection<String> list) {
+        return list.stream().map(s -> "p.orderId like '" + s + "%'").collect(Collectors.joining(" or ", " (", ")"));
     }
 
     private String getWhere(FilterDailyPlannedOrders filter) {
@@ -1163,7 +1158,7 @@ public class DBLayerDailyPlannedOrders {
                     String cyclicMainPart = null;
                     try {
                         cyclicMainPart = OrdersHelper.getCyclicOrderIdMainPart(orderId);
-                        filterCyclic.setCyclicOrdersMainParts(Collections.singletonList(cyclicMainPart));
+                        filterCyclic.setCyclicOrdersMainParts(Collections.singleton(cyclicMainPart));
                         filterCyclic.setStartMode(START_MODE_CYCLIC);
                     } catch (Throwable e) {
                         filterCyclic.setDailyPlanDate(item.getDailyPlanDate(timeZone, periodBegin), timeZone, periodBegin);
