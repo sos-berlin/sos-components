@@ -20,6 +20,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.DeployedConfigurationFilter;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
@@ -61,16 +62,16 @@ public class QuickSearchStore {
         return getInstance()._checkToken(request, accessToken);
     }
     
-    public static DeployedObjectQuickSearchFilter checkToken(DeployedObjectQuickSearchFilter request, String accessToken) {
-        return getInstance()._checkToken(request, accessToken);
+    public static DeployedObjectQuickSearchFilter checkToken(DeployedObjectQuickSearchFilter request, String returnType, String accessToken) {
+        return getInstance()._checkToken(request, returnType, accessToken);
     }
     
     public static void putResult(String token, RequestQuickSearchFilter request, List<ResponseBaseSearchItem> result) {
         getInstance()._putResult(token, request, result);
     }
     
-    public static void putResult(String token, DeployedObjectQuickSearchFilter request, List<ResponseBaseSearchItem> result) {
-        getInstance()._putResult(token, request, result);
+    public static void putResult(String token, DeployedObjectQuickSearchFilter request, String returnType, List<ResponseBaseSearchItem> result) {
+        getInstance()._putResult(token, request, returnType, result);
     }
     
     public static void putResult(String token, QuickSearchRequest result) {
@@ -136,7 +137,7 @@ public class QuickSearchStore {
         ResponseQuickSearch answer = new ResponseQuickSearch();
 
         if (!in.getQuit()) {
-            in = checkToken(in, accessToken);
+            in = checkToken(in, type.value(), accessToken);
             answer.setResults(getBasicDeployedObjectsSearch(in, type, folderPermissions));
         } else {
             answer.setResults(Collections.emptyList());
@@ -150,7 +151,7 @@ public class QuickSearchStore {
                 answer.setToken(in.getToken());
                 updateTimeStamp(in.getToken(), now.toEpochMilli());
             } else {
-                QuickSearchRequest result = new QuickSearchRequest(in.getSearch(), in.getControllerId(), answer.getResults());
+                QuickSearchRequest result = new QuickSearchRequest(in.getSearch(), in.getControllerId(), type.value(), answer.getResults());
                 answer.setToken(result.createToken(accessToken));
                 putResult(answer.getToken(), result);
             }
@@ -162,11 +163,24 @@ public class QuickSearchStore {
     
     public static ResponseQuickSearch getTagsAnswer(DeployedObjectQuickSearchFilter in, final ConfigurationType type, final String accessToken,
             final SOSAuthFolderPermissions folderPermissions) throws SOSHibernateException {
+        return getTagsAnswer(in, type, null, accessToken, folderPermissions);
+    }
+
+    public static ResponseQuickSearch getOrderTagsAnswer(DeployedObjectQuickSearchFilter in, final String accessToken) throws SOSHibernateException {
+        return getTagsAnswer(in, null, "ORDER", accessToken, null);
+    }
+    
+    public static ResponseQuickSearch getTagsAnswer(DeployedObjectQuickSearchFilter in, final ConfigurationType type,
+            final String nonConfigurationType, final String accessToken, final SOSAuthFolderPermissions folderPermissions)
+            throws SOSHibernateException {
         ResponseQuickSearch answer = new ResponseQuickSearch();
+        
+        String returnType = type != null ? type.value() : nonConfigurationType;
+        returnType += "TAGS";
 
         if (!in.getQuit()) {
-            in = checkToken(in, accessToken);
-            answer.setResults(getBasicTagsSearch(in, type, folderPermissions));
+            in = checkToken(in, returnType, accessToken);
+            answer.setResults(getBasicTagsSearch(in, type, nonConfigurationType, folderPermissions));
         } else {
             answer.setResults(Collections.emptyList());
         }
@@ -179,7 +193,7 @@ public class QuickSearchStore {
                 answer.setToken(in.getToken());
                 updateTimeStamp(in.getToken(), now.toEpochMilli());
             } else {
-                QuickSearchRequest result = new QuickSearchRequest(in.getSearch(), in.getControllerId(), answer.getResults());
+                QuickSearchRequest result = new QuickSearchRequest(in.getSearch(), in.getControllerId(), returnType, answer.getResults());
                 answer.setToken(result.createToken(accessToken));
                 putResult(answer.getToken(), result);
             }
@@ -206,7 +220,7 @@ public class QuickSearchStore {
         return request;
     }
     
-    private DeployedObjectQuickSearchFilter _checkToken(DeployedObjectQuickSearchFilter request, String accessToken) {
+    private DeployedObjectQuickSearchFilter _checkToken(DeployedObjectQuickSearchFilter request, String returnType, String accessToken) {
         if (request == null) {
             return null;
         }
@@ -215,7 +229,7 @@ public class QuickSearchStore {
                 request.setToken(null);
             }
         } else {
-            String token = QuickSearchRequest.createToken(request.getSearch(), request.getControllerId(), accessToken);
+            String token = QuickSearchRequest.createToken(request.getSearch(), request.getControllerId(), returnType, accessToken);
             if (results.containsKey(token)) {
                 request.setToken(token);
             }
@@ -229,9 +243,9 @@ public class QuickSearchStore {
         }
     }
     
-    private void _putResult(String token, DeployedObjectQuickSearchFilter request, List<ResponseBaseSearchItem> result) {
+    private void _putResult(String token, DeployedObjectQuickSearchFilter request, String returnType, List<ResponseBaseSearchItem> result) {
         if (result != null) {
-            results.put(token, new QuickSearchRequest(request.getSearch(), request.getControllerId(), result));
+            results.put(token, new QuickSearchRequest(request.getSearch(), request.getControllerId(), returnType, result));
         }
     }
     
@@ -406,7 +420,7 @@ public class QuickSearchStore {
     }
     
     private static List<ResponseBaseSearchItem> getBasicTagsSearch(DeployedObjectQuickSearchFilter in, final ConfigurationType type,
-            final SOSAuthFolderPermissions folderPermissions) throws SOSHibernateException {
+            final String nonConfigurationType, final SOSAuthFolderPermissions folderPermissions) throws SOSHibernateException {
         SOSHibernateSession session = null;
         try {
 
@@ -421,18 +435,24 @@ public class QuickSearchStore {
             }
 
             session = Globals.createSosHibernateStatelessConnection("TagSearch");
-            DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
+            Comparator<ResponseBaseSearchItem> comp = Comparator.comparingInt(ResponseBaseSearchItem::getOrdering);
 
-            List<InventoryTagItem> items = dbLayer.getTagSearch(in.getControllerId(), Collections.singleton(type
-                    .intValue()), in.getSearch());
+            if (type != null) {
+                DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
+                List<InventoryTagItem> items = dbLayer.getTagSearch(in.getControllerId(), Collections.singleton(type.intValue()), in.getSearch());
 
-            if (items != null) {
-                Predicate<InventoryTagItem> isPermitted = item -> folderPermissions.isPermittedForFolder(item.getFolder());
-                Comparator<InventoryTagItem> comp = Comparator.comparingInt(InventoryTagItem::getOrdering);
-                return items.stream().filter(isPermitted).peek(item -> item.setFolder(null)).distinct().sorted(comp).collect(Collectors.toList());
-            } else {
-                return Collections.emptyList();
+                if (items != null) {
+                    Predicate<InventoryTagItem> isPermitted = item -> folderPermissions.isPermittedForFolder(item.getFolder());
+                    return items.stream().filter(isPermitted).peek(item -> item.setFolder(null)).distinct().sorted(comp).collect(Collectors.toList());
+                } else {
+                    return Collections.emptyList();
+                }
+
+            } else if (nonConfigurationType != null && nonConfigurationType.equals("ORDER")) {
+                return OrderTags.getTagSearch(in.getControllerId(), in.getSearch(), session).stream().distinct().sorted(comp).collect(Collectors
+                        .toList());
             }
+            return Collections.emptyList();
         } finally {
             Globals.disconnect(session);
         }

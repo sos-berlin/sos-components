@@ -30,9 +30,9 @@ public class QuickSearchRequest {
         this.timestamp = Instant.now().toEpochMilli();
     }
     
-    public QuickSearchRequest(String searchPrefix, String controllerId, List<ResponseBaseSearchItem> result) {
+    public QuickSearchRequest(String searchPrefix, String controllerId, String returnType, List<ResponseBaseSearchItem> result) {
         this.searchPrefix = normalizeSearchString(searchPrefix);
-        this.additionalProperty = normalizeControllerId(controllerId);
+        this.additionalProperty = normalizeControllerId(controllerId) + returnType;
         this.result = result == null ? Collections.emptyList() : result;
         this.timestamp = Instant.now().toEpochMilli();
     }
@@ -55,8 +55,8 @@ public class QuickSearchRequest {
         return SOSString.hash256(normalizeSearchString(searchPrefix) + normalizeReturnTypes(returnTypes) + accessToken);
     }
     
-    public static String createToken(String searchPrefix, String controllerId, String accessToken) {
-        return SOSString.hash256(normalizeSearchString(searchPrefix) + controllerId + accessToken);
+    public static String createToken(String searchPrefix, String controllerId, String returnType, String accessToken) {
+        return SOSString.hash256(normalizeSearchString(searchPrefix) + controllerId + returnType + accessToken);
     }
     
     @Override

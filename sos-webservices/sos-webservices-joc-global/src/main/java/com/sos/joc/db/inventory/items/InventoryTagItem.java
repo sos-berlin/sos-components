@@ -4,6 +4,7 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sos.joc.model.inventory.search.ResponseBaseSearchItem;
 
 public class InventoryTagItem extends ResponseBaseSearchItem {
@@ -54,6 +55,7 @@ public class InventoryTagItem extends ResponseBaseSearchItem {
         this.folder = val;
     }
     
+    @JsonIgnore
     public String getNullableName() {
         String nullableName = getName();
         if (nullableName == null) {

@@ -18,12 +18,15 @@ import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
+import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.common.SearchStringHelper;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanVariable;
 import com.sos.joc.db.history.DBItemHistoryOrderTag;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.model.inventory.search.ResponseBaseSearchItem;
 
 import io.vavr.control.Either;
 import js7.data.order.OrderId;
@@ -364,6 +367,42 @@ public class OrderTags {
             }
         }
         return Collections.emptyList();
+    }
+
+    public static List<ResponseBaseSearchItem> getTagSearch(String controllerId, String search, SOSHibernateSession session)
+            throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select tagName as name, min(ordering) as ordering from ");
+        hql.append(DBLayer.DBITEM_HISTORY_ORDER_TAGS);
+        List<String> whereClause = new ArrayList<>();
+        if (SOSString.isEmpty(controllerId)) {
+            controllerId = null;
+        } else {
+            whereClause.add("controllerId=:controllerId");
+        }
+        if (SOSString.isEmpty(search) || search.equals("*")) {
+            search = null;
+//            whereClause.add("tagName is not null");
+        } else {
+            whereClause.add("lower(tagName) like :search");
+        }
+        if (!whereClause.isEmpty()) {
+            hql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
+        }
+        hql.append(" group by tagName");
+
+        Query<ResponseBaseSearchItem> query = session.createQuery(hql.toString(), ResponseBaseSearchItem.class);
+        if (search != null) {
+            // (only) on the right hand side always %
+            query.setParameter("search", SearchStringHelper.globToSqlPattern(search.toLowerCase() + "%").replaceAll("%%+", "%"));
+        }
+        if (controllerId != null) {
+            query.setParameter("controllerId", controllerId);
+        }
+        List<ResponseBaseSearchItem> result = session.getResultList(query);
+        if (result == null) {
+            return Collections.emptyList();
+        }
+        return result;
     }
     
 //    public void updateMap(String controllerId, String orderId, Set<String> tags) {

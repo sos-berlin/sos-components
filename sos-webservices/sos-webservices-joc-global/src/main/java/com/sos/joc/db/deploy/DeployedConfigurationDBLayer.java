@@ -116,16 +116,16 @@ public class DeployedConfigurationDBLayer {
                 whereClause.add("c.type=:type");
             }
         }
+        if (SOSString.isEmpty(controllerId)) {
+            controllerId = null;
+        } else {
+            whereClause.add("c.controllerId=:controllerId");
+        }
         if (SOSString.isEmpty(search) || search.equals("*")) {
             search = null;
             whereClause.add("t.name is not null");
         } else {
             whereClause.add("lower(t.name) like :search");
-        }
-        if (SOSString.isEmpty(controllerId)) {
-            controllerId = null;
-        } else {
-            whereClause.add("c.controllerId = :controllerId");
         }
         if (!whereClause.isEmpty()) {
             hql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
@@ -142,7 +142,7 @@ public class DeployedConfigurationDBLayer {
         }
         if (search != null) {
             // (only) on the right hand side always %
-            query.setParameter("search", SearchStringHelper.globToSqlPattern(search.toLowerCase() + '%').replaceAll("%%+", "%"));
+            query.setParameter("search", SearchStringHelper.globToSqlPattern(search.toLowerCase() + "%").replaceAll("%%+", "%"));
         }
         if (controllerId != null) {
             query.setParameter("controllerId", controllerId);
