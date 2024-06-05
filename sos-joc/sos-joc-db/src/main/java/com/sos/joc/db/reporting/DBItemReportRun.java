@@ -19,7 +19,7 @@ import jakarta.persistence.Transient;
 
 @SuppressWarnings("deprecation")
 @Entity
-@Table(name = DBLayer.TABLE_REPORT_RUNS )
+@Table(name = DBLayer.TABLE_REPORT_RUNS)
 @Proxy(lazy = false)
 public class DBItemReportRun extends DBItem {
 
@@ -48,6 +48,15 @@ public class DBItemReportRun extends DBItem {
 
     @Column(name = "[FREQUENCIES]", nullable = false)
     private String frequencies;
+
+    @Column(name = "[SORT]", nullable = false)
+    private Integer sort;
+
+    @Column(name = "[PERIOD_LENGTH]", nullable = false)
+    private Integer periodLength;
+
+    @Column(name = "[PERIOD_STEP]", nullable = false)
+    private Integer periodStep;
 
     @Column(name = "[HITS]", nullable = false)
     private Integer hits;
@@ -207,6 +216,30 @@ public class DBItemReportRun extends DBItem {
 
     public void setCreated(Date val) {
         created = val;
+    }
+
+    public Integer getSort() {
+        return sort;
+    }
+
+    public void setSort(Integer sort) {
+        this.sort = sort;
+    }
+
+    public Integer getPeriodLength() {
+        return periodLength;
+    }
+
+    public void setPeriodLength(Integer periodLength) {
+        this.periodLength = periodLength;
+    }
+
+    public Integer getPeriodStep() {
+        return periodStep;
+    }
+
+    public void setPeriodStep(Integer periodStep) {
+        this.periodStep = periodStep;
     }
 
     @Transient

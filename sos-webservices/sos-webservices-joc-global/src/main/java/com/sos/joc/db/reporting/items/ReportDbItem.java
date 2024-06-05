@@ -25,25 +25,25 @@ public class ReportDbItem extends ReportItem {
         this.content = content;
     }
     
-    public void setFrequency(Integer frequency) {
-        super.setFrequency(Frequency.fromValue(frequency));
+    public void setFrequency(Number frequency) {
+        super.setFrequency(Frequency.fromValue(frequency.intValue()));
     }
 
-    public void setSort(Integer sort) {
-        super.setSort(ReportOrder.fromValue(sort));
+    public void setSort(Number sort) {
+        super.setSort(ReportOrder.fromValue(sort.intValue()));
     }
     
-    public void setPeriodLength(Integer periodLength) {
-        super.setPeriodLength(Long.valueOf(periodLength));
+    public void setPeriodLength(Number periodLength) {
+        super.setPeriodLength(Long.valueOf(periodLength.intValue()));
     }
     
-    public void setPeriodStep(Integer periodStep) {
-        super.setPeriodStep(Long.valueOf(periodStep));
+    public void setPeriodStep(Number periodStep) {
+        super.setPeriodStep(Long.valueOf(periodStep.intValue()));
     }
     
-    public void setTemplateName(Integer templateId) {
+    public void setTemplateName(Number templateId) {
         try {
-            super.setTemplateName(TemplateId.fromValue(templateId));
+            super.setTemplateName(TemplateId.fromValue(templateId.intValue()));
         } catch (IllegalArgumentException e) {
             super.setTemplateName((TemplateId) null);
         }

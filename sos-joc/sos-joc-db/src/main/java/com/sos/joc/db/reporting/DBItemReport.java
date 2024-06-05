@@ -174,9 +174,9 @@ public class DBItemReport extends DBItem {
     }
 
     @Transient
-    public String hashConstraint(Integer templateId, Integer hits, String controllerId) {
+    public String hashConstraint(Integer templateId, Integer hits, String controllerId, Integer sort, Integer periodLength, Integer periodStep) {
         return SOSString.hash256(new StringBuilder().append(templateId).append(frequency).append(dateFrom).append(hits).append(controllerId == null
-                ? "" : controllerId).toString());
+                ? "" : controllerId).append(sort).append(periodLength).append(periodStep).toString());
     }
 
 }

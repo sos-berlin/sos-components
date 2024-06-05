@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.inventory.model.report.Frequency;
+import com.sos.inventory.model.report.ReportPeriod;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JOCSOSShell;
@@ -45,10 +46,10 @@ import com.sos.joc.model.reporting.ReportRunStateText;
 import io.vavr.control.Either;
 
 public class RunReport extends AReporting {
-    
+
     private static final Logger LOGGER = LoggerFactory.getLogger(RunReport.class);
     private static final String className = "com.sos.reports.ReportGenerator";
-    
+
     public static CompletableFuture<Either<Exception, Void>> run(final Report in) {
 
         in.setMonthFrom(relativeDateToSpecificDateFrom(in.getMonthFrom()));
@@ -62,34 +63,34 @@ public class RunReport extends AReporting {
             return CompletableFuture.supplyAsync(() -> _run(in));
         }
     }
-    
+
     // protected for JUnit test
     protected static String relativeDateToSpecificDateFrom(String month) {
         return relativeDateToSpecificDate(month, false);
     }
-    
+
     // protected for JUnit test
     protected static String relativeDateToSpecificDateTo(String month) {
         return relativeDateToSpecificDate(month, true);
     }
-    
+
     private static String relativeDateToSpecificDate(String month, boolean to) {
         // TODO for unit y -> always 01-yyyy
         // for unit q -> always 01-yyyy, 04-yyyy, 07-yyyy or 10-yyyy
         if (month == null) {
             return null;
         }
-        if (month.matches("[+-]*\\d+\\s*[mMQqyY]")) { //month is relative
+        if (month.matches("[+-]*\\d+\\s*[mMQqyY]")) { // month is relative
             Matcher m = Pattern.compile("[+-]*(\\d+)\\s*([mMQqyY])").matcher(month);
             if (m.find()) {
                 LocalDate ld = null;
-                switch(m.group(2).toLowerCase()) { //unit
+                switch (m.group(2).toLowerCase()) { // unit
                 case "m":
                     ld = LocalDate.now().withDayOfMonth(1).minusMonths(Long.valueOf(m.group(1)).longValue());
                     break;
                 case "q":
                     ld = LocalDate.now().withDayOfMonth(1);
-                    switch(ld.getMonth()) {
+                    switch (ld.getMonth()) {
                     case JANUARY:
                     case FEBRUARY:
                     case MARCH:
@@ -123,31 +124,31 @@ public class RunReport extends AReporting {
                     }
                     break;
                 }
-                
-                String leadingMonthZero = ld.getMonthValue() < 10 ?  "0" : "";
+
+                String leadingMonthZero = ld.getMonthValue() < 10 ? "0" : "";
                 return ld.getYear() + "-" + leadingMonthZero + ld.getMonthValue();
             }
         }
         return month;
     }
-    
+
     private static Either<Exception, Void> _run(final Report in) {
         Set<Path> tempDirs = new HashSet<>();
         List<DBItemReport> dbItems = new ArrayList<>();
         DBItemReportRun runDbItem = null;
-        
+
         try {
             runDbItem = getRunDBItem(in);
             insertRun(runDbItem);
             String commonScript = getCommonScript(in, getCommandLineOptions());
-            //TODO SOSTimeout timeout = new SOSTimeout(10, TimeUnit.Hours);
+            // TODO SOSTimeout timeout = new SOSTimeout(10, TimeUnit.Hours);
             for (Frequency f : in.getFrequencies()) {
                 Path tempDir = runPerFrequency(f, commonScript);
                 tempDirs.add(tempDir);
                 dbItems.addAll(Files.list(tempDir).filter(file -> file.getFileName().toString().startsWith(reportFilePrefix)).map(
                         file -> getHistoryDBItem(file, f)).collect(Collectors.toList()));
             }
-            
+
             insert(in, runDbItem, dbItems);
             EventBus.getInstance().post(new ReportsUpdated());
             return Either.right(null);
@@ -159,7 +160,7 @@ public class RunReport extends AReporting {
             tempDirs.forEach(dir -> deleteTmpDir(dir));
         }
     }
-    
+
     private static String getCommandLineOptions() {
         ConfigurationGlobalsJoc jocSettings = Globals.getConfigurationGlobalsJoc();
         ConfigurationEntry reportJavaOptions = jocSettings.getReportJavaOptions();
@@ -170,11 +171,9 @@ public class RunReport extends AReporting {
         // StringBuilder s = new StringBuilder().append("node ").append(commandLineOptions).append(" app/run-report.js -i data");
         StringBuilder s = new StringBuilder().append("\"").append(Paths.get(System.getProperty("java.home"), "bin", "java").toString()).append("\" ")
                 .append(commandLineOptions)
-                //.append(" -cp lib/ext/joc/*").append(File.pathSeparator).append("webapps/joc/WEB-INF/lib/* ")
-                .append(" -cp \"webapps/joc/WEB-INF/lib/*\" ")
-                .append(className)
-                .append(" -i reporting/data")
-                .append(" -r ").append(in.getTemplateName().getJavaClass());
+                // .append(" -cp lib/ext/joc/*").append(File.pathSeparator).append("webapps/joc/WEB-INF/lib/* ")
+                .append(" -cp \"webapps/joc/WEB-INF/lib/*\" ").append(className).append(" -i reporting/data").append(" -r ").append(in
+                        .getTemplateName().getJavaClass());
         if (in.getMonthFrom() != null) {
             s.append(" -s ").append(in.getMonthFrom());
         }
@@ -200,7 +199,7 @@ public class RunReport extends AReporting {
         }
         return s.toString();
     }
-    
+
     private static Path runPerFrequency(Frequency f, String commonScript) throws IOException, JocBadRequestException {
         Path tempDir = null;
         try {
@@ -213,7 +212,7 @@ public class RunReport extends AReporting {
             String script = s.toString();
             LOGGER.info("[Reporting][run] " + script);
             SOSCommandResult cResult = JOCSOSShell.executeCommand(script, workingDir);
-            
+
             if (cResult.hasError()) {
                 if (cResult.getException() != null) {
                     throw new JocBadRequestException(cResult.getException());
@@ -229,7 +228,7 @@ public class RunReport extends AReporting {
             throw e;
         }
     }
-    
+
     private static void deleteTmpDir(final Path tempDir) {
         if (tempDir != null) {
             try {
@@ -242,11 +241,11 @@ public class RunReport extends AReporting {
                 });
                 Files.deleteIfExists(tempDir);
             } catch (IOException e1) {
-                //;
+                // ;
             }
         }
     }
-    
+
     private static DBItemReport getHistoryDBItem(final Path report, final Frequency frequency) throws UncheckedIOException {
         LocalDateTime localDateFrom = getLocalDateFrom(report);
         DBItemReport dbItem = new DBItemReport();
@@ -257,11 +256,11 @@ public class RunReport extends AReporting {
         dbItem.setReportFile(report);
         return dbItem;
     }
-    
+
     private static DBItemReportRun getRunDBItem(final Report in) {
         return getRunDBItem(in, ReportRunStateText.IN_PROGRESS, Date.from(Instant.now()));
     }
-    
+
     private static DBItemReportRun getRunDBItem(final Report in, final ReportRunStateText state, final Date now) {
         DBItemReportRun dbItem = new DBItemReportRun();
         dbItem.setId(null);
@@ -273,8 +272,14 @@ public class RunReport extends AReporting {
         dbItem.setHits(in.getHits());
         dbItem.setFrequencies(in.getFrequencies().stream().map(Frequency::intValue).sorted().map(i -> i.toString()).collect(Collectors.joining(",")));
         dbItem.setSort(in.getSort().intValue());
-        dbItem.setPeriodLength(in.getPeriod().getLength());
-        dbItem.setPeriodStep(in.getPeriod().getStep());
+        ReportPeriod period = in.getPeriod();
+        if (period == null) {
+            period = new ReportPeriod();
+        }
+
+        dbItem.setPeriodLength(period.getLength());
+        dbItem.setPeriodStep(period.getStep());
+
         dbItem.setDateFrom(getDate(getLocalDateFrom(in.getMonthFrom())));
         dbItem.setDateTo(getDate(getLocalDateToOrNowIfNull(in.getMonthTo())));
         dbItem.setState(state.intValue());
@@ -283,14 +288,14 @@ public class RunReport extends AReporting {
         dbItem.setCreated(now);
         return dbItem;
     }
-    
+
     private static Date getDate(final LocalDateTime localDate) {
         if (localDate == null) {
             return null;
         }
         return Date.from(localDate.atZone(ZoneId.systemDefault()).toInstant());
     }
-    
+
     private static LocalDateTime getLocalDateFrom(final Path report) {
         String reportBaseFilename = report.getFileName().toString().replaceFirst("^" + reportFilePrefix, "").replaceFirst("\\.json$", "");
         String[] fileNameParts = reportBaseFilename.split("[-_]");
@@ -311,9 +316,9 @@ public class RunReport extends AReporting {
         }
         return LocalDate.of(year, month, dayOfMonth).atStartOfDay();
     }
-    
+
     private static LocalDateTime getLocalDateTo(LocalDateTime dateFrom, final Frequency frequency) {
-        switch(frequency) {
+        switch (frequency) {
         case WEEKLY:
             return dateFrom.plusWeeks(1).minusSeconds(1);
         case TWO_WEEKS:
@@ -331,7 +336,7 @@ public class RunReport extends AReporting {
         }
         return null;
     }
-    
+
     private static void insertRun(final DBItemReportRun runDbItem) throws Exception {
         SOSHibernateSession session = null;
         try {
@@ -342,7 +347,7 @@ public class RunReport extends AReporting {
             Globals.disconnect(session);
         }
     }
-    
+
     private static void updateFailedRun(final DBItemReportRun runDbItem, Exception e) {
         SOSHibernateSession session = null;
         if (runDbItem != null) {
@@ -353,51 +358,54 @@ public class RunReport extends AReporting {
                 runDbItem.setModified(Date.from(Instant.now()));
                 session.update(runDbItem);
             } catch (Exception e1) {
-                //TODO error handling?
+                // TODO error handling?
             } finally {
                 Globals.disconnect(session);
             }
         }
     }
-    
+
     private static void insert(final Report in, DBItemReportRun runDbItem, Collection<DBItemReport> dbItems) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection("ReportingStoreData");
             session.setAutoCommit(false);
             Globals.beginTransaction(session);
-            
+
             ReportingDBLayer dbLayer = new ReportingDBLayer(session);
-            
+
             Date now = Date.from(Instant.now());
-            
+
             for (DBItemReport dbItem : dbItems) {
-                //dbItem.setHits(runDbItem.getHits());
-                //dbItem.setTemplateId(runDbItem.getTemplateId());
-                String constraintHash = dbItem.hashConstraint(runDbItem.getTemplateId(), runDbItem.getHits(), runDbItem.getControllerId());
+                // dbItem.setHits(runDbItem.getHits());
+                // dbItem.setTemplateId(runDbItem.getTemplateId());
+                String constraintHash = dbItem.hashConstraint(runDbItem.getTemplateId(), runDbItem.getHits(), runDbItem.getControllerId(), runDbItem.getSort(), runDbItem.getPeriodLength(), runDbItem.getPeriodStep());
                 dbItem.setConstraintHash(constraintHash);
 
                 DBItemReport oldItem = dbLayer.getReport(constraintHash);
                 if (oldItem != null) {
                     oldItem.setRunId(runDbItem.getId());
                     oldItem.setModified(now);
-                    
+
                     session.update(oldItem);
                 } else {
                     dbItem.setRunId(runDbItem.getId());
                     dbItem.setCreated(now);
                     dbItem.setModified(now);
                     dbItem.setContent(Files.readAllBytes(dbItem.getReportFile()));
-                    
+
                     session.save(dbItem);
                 }
-                
+
             }
-            
+
+            runDbItem.setSort(in.getSort().intValue());
+            runDbItem.setPeriodLength(in.getPeriod().getLength());
+            runDbItem.setPeriodStep(in.getPeriod().getStep());
             runDbItem.setState(ReportRunStateText.SUCCESSFUL.intValue());
             runDbItem.setModified(now);
             session.update(runDbItem);
-            
+
             Globals.commit(session);
         } catch (Exception e) {
             Globals.rollback(session);
