@@ -1,27 +1,28 @@
 
 package com.sos.joc.classes.reporting;
 
+import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
+
 public enum CSVColumns {
 
-    ID("id", "0"),
-    CONTROLLER_ID("controllerId", "''"),
-    ORDER_ID("orderId", "''"),
-    WORKFLOW_PATH("workflowPath", "''"),
-    WORKFLOW_VERSION_ID("workflowVersionId", "''"),
-    WORKFLOW_NAME("workflowName", "''"),
-    POSITION("position", "0"), //only order steps
-    JOB_NAME("jobName", "''"), //only order steps
-    CRITICALITY("criticality", "0"), //only order steps
-    AGENT_ID("agentId", "''"), //only order steps
-    AGENT_NAME("agentName", "''"), //only order steps
-    START_TIME("startTime", "''"),
-    PLANNED_TIME("startTimeScheduled", "''"), //only orders
-    END_TIME("endTime", "''"),
-    ERROR("error", "0"),
-    CREATED("created", "''"),
-    MODIFIED("modified", "''"),
-    ORDER_STATE("state", "99"), //only orders
-    STATE("severity", "1");
+    ID("id", null),
+    CONTROLLER_ID("controllerId", null),
+    ORDER_ID("orderId", null),
+    WORKFLOW_PATH("workflowPath", null),
+    WORKFLOW_VERSION_ID("workflowVersionId", null),
+    WORKFLOW_NAME("workflowName", null),
+    POSITION("position", null), //only order steps
+    JOB_NAME("jobName", null), //only order steps
+    CRITICALITY("criticality", null), //only order steps
+    AGENT_ID("agentId", null), //only order steps
+    START_TIME("startTime", null),
+    PLANNED_TIME("startTimeScheduled", "''"), //only orders, nullable
+    END_TIME("endTime", "''"),//nullable
+    ERROR("error", null),
+    CREATED("created", null),
+    MODIFIED("modified", null),
+    ORDER_STATE("state", null), //only orders
+    STATE("severity", null);
     
     private final String dbColumn;
     private final String defaultValue;
@@ -40,7 +41,10 @@ public enum CSVColumns {
         return this.dbColumn;
     }
     
-    public String hqlValue() {
+    public String hqlValue(Dbms dbms) {
+        if (defaultValue == null || Dbms.ORACLE.equals(dbms)) {
+            return dbColumn; 
+        }
         return "coalesce(" + dbColumn + ", " + defaultValue + ")";
     }
 

@@ -3,6 +3,7 @@ package com.sos.joc.classes.reporting;
 import java.io.IOException;
 import java.nio.file.Path;
 
+import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 import com.sos.joc.classes.reporting.AReporting.ReportingType;
 
 public class ReportingLoader {
@@ -14,10 +15,10 @@ public class ReportingLoader {
     private ReportingType type;
     private boolean withChildOrders;
     
-    public ReportingLoader(ReportingType type) throws IOException {
+    public ReportingLoader(ReportingType type, Dbms dbms) throws IOException {
         this.outDir = AReporting.getDataDirectory(type);
         this.headline = AReporting.getCsvHeadLine(type);
-        this.hql = AReporting.getCsvHQL(type);
+        this.hql = AReporting.getCsvHQL(type, dbms);
         this.dbTable = AReporting.DB_TABLE.get(type);
         this.type = type;
         this.withChildOrders = ReportingType.JOBS.equals(type);

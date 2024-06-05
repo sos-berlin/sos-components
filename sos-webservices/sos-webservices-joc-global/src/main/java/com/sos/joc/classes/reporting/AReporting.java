@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 import com.sos.joc.db.DBLayer;
 
 public abstract class AReporting {
@@ -72,8 +73,7 @@ public abstract class AReporting {
     
     private static Collection<CSVColumns> getOrdersColumns() {
         Collection<CSVColumns> es = EnumSet.allOf(CSVColumns.class);
-        es.removeAll(EnumSet.of(CSVColumns.POSITION, CSVColumns.JOB_NAME, CSVColumns.CRITICALITY, CSVColumns.AGENT_ID,
-                CSVColumns.AGENT_NAME));
+        es.removeAll(EnumSet.of(CSVColumns.POSITION, CSVColumns.JOB_NAME, CSVColumns.CRITICALITY, CSVColumns.AGENT_ID));
         return es;
     }
 
@@ -95,8 +95,8 @@ public abstract class AReporting {
         return getCsvBytes(CSV_COLUMNS.get(type).stream().map(CSVColumns::name).collect(Collectors.joining(";")));
     }
     
-    protected static String getCsvHQL(ReportingType type) {
-        return CSV_COLUMNS.get(type).stream().map(CSVColumns::hqlValue).collect(Collectors.joining(",';',", "concat(", ")"));
+    protected static String getCsvHQL(ReportingType type, Dbms dbms) {
+        return CSV_COLUMNS.get(type).stream().map(col -> col.hqlValue(dbms)).collect(Collectors.joining(",';',", "concat(", ")"));
     }
     
     public static void deleteTmpFolder() {

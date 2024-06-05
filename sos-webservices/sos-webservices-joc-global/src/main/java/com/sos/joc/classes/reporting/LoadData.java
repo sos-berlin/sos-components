@@ -16,6 +16,7 @@ import org.hibernate.ScrollableResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.db.history.HistoryFilter;
@@ -72,9 +73,10 @@ public class LoadData extends AReporting {
                 JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(session, new HistoryFilter());
                 
                 LocalDateTime month = monthFrom;
+                Dbms dbms = session.getFactory().getDbms();
                 
-                ReportingLoader jobsReporting = new ReportingLoader(ReportingType.JOBS);
-                ReportingLoader ordersReporting = new ReportingLoader(ReportingType.ORDERS);
+                ReportingLoader jobsReporting = new ReportingLoader(ReportingType.JOBS, dbms);
+                ReportingLoader ordersReporting = new ReportingLoader(ReportingType.ORDERS, dbms);
                 
                 while (month.isBefore(toMonth)) {
                     if (!writeCSVFile(jobsReporting, month, dbLayer, emptyMonths, existingMonths)) {
