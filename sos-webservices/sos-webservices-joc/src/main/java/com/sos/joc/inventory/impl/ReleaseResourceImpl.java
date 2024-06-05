@@ -655,8 +655,9 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                                 localOrderFilter.setControllerIds(Collections.singletonList(controllerId));
                                 localOrderFilter.setDailyPlanDateFrom(orderFilter.getDailyPlanDateFrom());
                                 localOrderFilter.setSchedulePaths(orderFilter.getSchedulePaths());
-                                SOSHibernateSession session = null;
+                                SOSHibernateSession session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
                                 try {
+                                    session.setAutoCommit(false);
                                     boolean successful = deleteOrdersImpl.deleteOrders(localOrderFilter, xAccessToken, false, false);
                                     if (!successful) {
                                         JocError je = getJocError();
@@ -673,8 +674,6 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                                             return null;
                                         }
                                     };
-                                    session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
-                                    session.setAutoCommit(false);
                                     InventoryDBLayer dbLayerForCompleteableFuture = new InventoryDBLayer(session);
                                     List<String> schedulePaths = Collections.emptyList();
                                     if(ordersPerController.isEmpty()) {
@@ -693,12 +692,13 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                                             allSchedules.stream().collect(Collectors.groupingBy(grouper, 
                                                     Collectors.mapping(DBItemInventoryConfiguration::getPath, Collectors.toList())));
                                     // create all GenerateRequest 
+                                    List<String> allowedDailyPlanDates = ordersGenerate.getAllowedDailyPlanDates(session, controllerId);
                                     List<GenerateRequest> requests = schedules.entrySet().stream().filter(entry -> entry.getKey() != null)
                                         .map(entry -> {
                                             try {
                                                 return ordersGenerate.getGenerateRequestsForReleaseDeploy(
-                                                        addOrdersDateFrom, null, entry.getValue(), controllerId, entry.getKey());
-                                            } catch(ParseException ex) {
+                                                        addOrdersDateFrom, null, entry.getValue(), controllerId, entry.getKey(), allowedDailyPlanDates);
+                                            } catch(Exception ex) {
                                                 return null;
                                             }
                                         }).filter(Objects::nonNull).flatMap(List::stream).collect(Collectors.toList());
