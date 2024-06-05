@@ -527,7 +527,17 @@ public class SOSServicePermissionIam {
 
             String accessToken = sosSessionHandler.getAccessToken().toString();
             currentAccount.setAccessToken(identityServiceName, accessToken);
-            Globals.jocWebserviceDataContainer.getCurrentAccountsList().addAccount(currentAccount);
+
+            boolean authorization = true;
+            if (currentAccount.getCurrentSubject() != null && currentAccount.getCurrentSubject().getListOfAccountPermissions() != null) {
+                if (currentAccount.getCurrentSubject().getListOfAccountPermissions().size() == 0) {
+                    authorization = false;
+                }
+            }
+
+            if (authorization) {
+                Globals.jocWebserviceDataContainer.getCurrentAccountsList().addAccount(currentAccount);
+            }
 
             resetTimeOut(currentAccount);
 
@@ -636,8 +646,9 @@ public class SOSServicePermissionIam {
                     try {
                         clientId = getClientId(idToken, properties);
 
-                        if (properties != null && properties.getOidc() != null && properties.getOidc().getIamOidcFlowType() != null && properties.getOidc().getIamOidcFlowType().equals(
-                                OidcFlowTypes.CLIENT_CREDENTIAL) && properties.getOidc().getIamOidcClientId().equals(clientId)) {
+                        if (properties != null && properties.getOidc() != null && properties.getOidc().getIamOidcFlowType() != null && properties
+                                .getOidc().getIamOidcFlowType().equals(OidcFlowTypes.CLIENT_CREDENTIAL) && properties.getOidc().getIamOidcClientId()
+                                        .equals(clientId)) {
                             return dbItemIamIdentityService.getIdentityServiceName();
                         }
                     } finally {
@@ -756,8 +767,8 @@ public class SOSServicePermissionIam {
                                         kid = "[token verified using kid: " + currentAccount.getKid() + "]";
                                     }
 
-                                    LOGGER.info("Authentication with Identity Service " + dbItemIamIdentityService.getIdentityServiceName() + " successful."
-                                            + kid);
+                                    LOGGER.info("Authentication with Identity Service " + dbItemIamIdentityService.getIdentityServiceName()
+                                            + " successful." + kid);
                                     addFolder(currentAccount);
                                     break;
                                 }
