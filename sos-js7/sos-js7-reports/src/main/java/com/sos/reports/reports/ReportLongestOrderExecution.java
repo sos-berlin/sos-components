@@ -68,7 +68,7 @@ public class ReportLongestOrderExecution implements IReport {
     }
 
     public ReportResult putHits() {
-        Comparator<ReportResultData> byDuration = (obj1, obj2) -> obj2.getDuration().compareTo(obj1.getDuration());
+        Comparator<ReportResultData> byDuration = (obj1, obj2) -> obj1.getDuration().compareTo(obj2.getDuration());
 
         LinkedHashMap<String, ReportResultData> longestExecutionWorkflowsResult = null;
         if (this.reportArguments.sort.equals(ReportOrder.HIGHEST)) {
