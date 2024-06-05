@@ -903,6 +903,23 @@ public class DBLayerDailyPlannedOrders {
             return getDailyPlanListExecute(filter, limit);
         }
     }
+    
+    public List<Date> getSubmissionDates(String controllerId, Date dateFrom) throws SOSHibernateException {
+
+        StringBuilder hql = new StringBuilder("select submissionForDate from ").append(DBLayer.DBITEM_DPL_SUBMISSIONS);
+        hql.append(" where controllerId=:controllerId");
+        hql.append(" and submissionForDate >= :dateFrom");
+        hql.append(" group by submissionForDate");
+
+        Query<Date> query = session.createQuery(hql.toString());
+        query.setParameter("controllerId", controllerId);
+        query.setParameter("dateFrom", dateFrom);
+        List<Date> result = session.getResultList(query);
+        if (result == null) {
+            return Collections.emptyList();
+        }
+        return result;
+    }
 
     public DBItemDailyPlanOrder getUniqueDailyPlan(PlannedOrder order) throws JocConfigurationException, DBConnectionRefusedException,
             SOSHibernateException {
