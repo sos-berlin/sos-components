@@ -47,6 +47,7 @@ import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
 import com.sos.joc.dailyplan.common.PlannedOrder;
 import com.sos.joc.dailyplan.common.PlannedOrderKey;
 import com.sos.joc.dailyplan.db.DBBeanReleasedSchedule2DeployedWorkflow;
+import com.sos.joc.dailyplan.db.DBLayerDailyPlannedOrders;
 import com.sos.joc.dailyplan.db.DBLayerSchedules;
 import com.sos.joc.dailyplan.resource.IDailyPlanOrdersGenerateResource;
 import com.sos.joc.db.inventory.InventoryDBLayer;
@@ -289,28 +290,24 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
     }
 
     public List<GenerateRequest> getGenerateRequests(String date, List<String> workflowPaths, List<String> schedulePaths, String controllerId)
-            throws ParseException {
-        return getGenerateRequests(date, workflowPaths, schedulePaths, controllerId, true, false);
+            throws ParseException, SOSHibernateException {
+        return getGenerateRequests(date, workflowPaths, schedulePaths, controllerId, true, false, null);
     }
 
-    public List<GenerateRequest> getGenerateRequestsForReleaseDeploy(String date, List<String> workflowPaths, List<String> schedulePaths, String controllerId, Boolean withSubmit)
-        throws ParseException {
-    return getGenerateRequests(date, workflowPaths, schedulePaths, controllerId, withSubmit, true);
-}
+    public List<GenerateRequest> getGenerateRequestsForReleaseDeploy(String date, List<String> workflowPaths, List<String> schedulePaths,
+            String controllerId, Boolean withSubmit, List<String> allowedDailyPlanDates) throws ParseException, SOSHibernateException {
+        return getGenerateRequests(date, workflowPaths, schedulePaths, controllerId, withSubmit, true, allowedDailyPlanDates);
+    }
 
     public List<GenerateRequest> getGenerateRequests(String date, List<String> workflowPaths, List<String> schedulePaths, String controllerId,
-            Boolean withSubmit, boolean forReleaseDeploy) throws ParseException {
+            Boolean withSubmit, boolean forReleaseDeploy, List<String> allowedDailyPlanDates) throws ParseException, SOSHibernateException {
         setSettings();
         int planDaysAhead = getSettings().getDayAheadPlan();
         int submitDaysAhead = getSettings().getDayAheadSubmit();
+        
         if(forReleaseDeploy) {
-          ConfigurationGlobalsDailyPlan dailyPlanConfiguration = Globals.getConfigurationGlobalsDailyPlan();
-          Calendar cal = DailyPlanRunner.getStartTimeCalendar(dailyPlanConfiguration.getStartTime().getValue(),
-              dailyPlanConfiguration.getPeriodBegin().getValue(), dailyPlanConfiguration.getTimeZone().getValue());
-          if ((Instant.now().toEpochMilli() - cal.getTimeInMillis()) > 0) {
             planDaysAhead += 1;
             submitDaysAhead += 1;
-          }
         }
         List<GenerateRequest> generateRequests = new ArrayList<>();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
@@ -319,16 +316,15 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
         if (instant.isBefore(now)) {
             instant = now;
         }
-
+        
         PathItem workflowsPathItem = new PathItem();
         PathItem schedulesPathItem = new PathItem();
         workflowsPathItem.setSingles(workflowPaths);
         schedulesPathItem.setSingles(schedulePaths);
 
         for (int i = 0; i < planDaysAhead; i++) {
-            if (now.isBefore(instant)) {
-                continue;
-            }
+            String dailyPlanDate = sdf.format(Date.from(now));
+            
             GenerateRequest req = new GenerateRequest();
             req.setControllerId(controllerId);
             if (withSubmit) {
@@ -337,12 +333,22 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
                 req.setWithSubmit(false);
             }
             req.setOverwrite(true);
-            req.setDailyPlanDate(sdf.format(Date.from(now)));
+            req.setDailyPlanDate(dailyPlanDate);
             req.setWorkflowPaths(workflowsPathItem);
             req.setSchedulePaths(schedulesPathItem);
-            generateRequests.add(req);
+            boolean skip = allowedDailyPlanDates != null && !allowedDailyPlanDates.contains(dailyPlanDate);
+            if (!skip) {
+                generateRequests.add(req);
+            }
             now = now.plusSeconds(TimeUnit.DAYS.toSeconds(1));
         }
         return generateRequests;
+    }
+    
+    public List<String> getAllowedDailyPlanDates(SOSHibernateSession session, String controllerId) throws SOSHibernateException {
+        DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        return dbLayer.getSubmissionDates(controllerId, Date.from(Instant.now().minusSeconds(TimeUnit.DAYS.toSeconds(1)))).stream()
+                .map(d -> sdf.format(d)).collect(Collectors.toList());
     }
 }
