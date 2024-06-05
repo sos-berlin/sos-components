@@ -77,12 +77,13 @@ public class LoadData extends AReporting {
                 ReportingLoader ordersReporting = new ReportingLoader(ReportingType.ORDERS);
                 
                 while (month.isBefore(toMonth)) {
-                    boolean skipped = writeCSVFile(jobsReporting, month, dbLayer, emptyMonths, existingMonths);
-                    if (!skipped) {
-                        writeCSVFile(ordersReporting, month, dbLayer, emptyMonths, existingMonths);
+                    if (!writeCSVFile(jobsReporting, month, dbLayer, emptyMonths, existingMonths)) {
                         
-                        atomicRename(ordersReporting, month);
                         atomicRename(jobsReporting, month);
+                        if (!writeCSVFile(ordersReporting, month, dbLayer, emptyMonths, existingMonths)) {
+                            
+                            atomicRename(ordersReporting, month);
+                        }
                     }
                     month = month.plusMonths(1);
                 }
@@ -150,10 +151,10 @@ public class LoadData extends AReporting {
         atomicRename(loader, _month);
     }
     
-    private static void atomicRename(ReportingLoader loader, String month) throws IOException {
+    private synchronized static void atomicRename(ReportingLoader loader, String month) throws IOException {
         Path monthFile = getMonthFile(loader, month);
         Path tmpMonthFile = getTmpMonthFile(loader, month);
-        if (Files.exists(tmpMonthFile)) {
+        if (Files.exists(tmpMonthFile) && !Files.exists(monthFile)) {
             Files.deleteIfExists(monthFile);
             Files.move(tmpMonthFile, monthFile, StandardCopyOption.ATOMIC_MOVE);
         }

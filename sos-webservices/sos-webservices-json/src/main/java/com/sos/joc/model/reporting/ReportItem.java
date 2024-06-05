@@ -112,21 +112,21 @@ public class ReportItem {
     @JsonProperty("sort")
     private ReportOrder sort = ReportOrder.fromValue("HIGHEST");
     /**
-     * non negative long
+     * non negative integer
      * <p>
      * 
      * 
      */
     @JsonProperty("periodLength")
-    private Long periodLength;
+    private Integer periodLength;
     /**
-     * non negative long
+     * non negative integer
      * <p>
      * 
      * 
      */
     @JsonProperty("periodStep")
-    private Long periodStep;
+    private Integer periodStep;
     /**
      * 
      * (Required)
@@ -365,46 +365,46 @@ public class ReportItem {
     }
 
     /**
-     * non negative long
+     * non negative integer
      * <p>
      * 
      * 
      */
     @JsonProperty("periodLength")
-    public Long getPeriodLength() {
+    public Integer getPeriodLength() {
         return periodLength;
     }
 
     /**
-     * non negative long
+     * non negative integer
      * <p>
      * 
      * 
      */
     @JsonProperty("periodLength")
-    public void setPeriodLength(Long periodLength) {
+    public void setPeriodLength(Integer periodLength) {
         this.periodLength = periodLength;
     }
 
     /**
-     * non negative long
+     * non negative integer
      * <p>
      * 
      * 
      */
     @JsonProperty("periodStep")
-    public Long getPeriodStep() {
+    public Integer getPeriodStep() {
         return periodStep;
     }
 
     /**
-     * non negative long
+     * non negative integer
      * <p>
      * 
      * 
      */
     @JsonProperty("periodStep")
-    public void setPeriodStep(Long periodStep) {
+    public void setPeriodStep(Integer periodStep) {
         this.periodStep = periodStep;
     }
 

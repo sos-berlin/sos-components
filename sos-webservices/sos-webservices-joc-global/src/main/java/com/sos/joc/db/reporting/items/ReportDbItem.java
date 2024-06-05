@@ -26,19 +26,27 @@ public class ReportDbItem extends ReportItem {
     }
     
     public void setFrequency(Number frequency) {
-        super.setFrequency(Frequency.fromValue(frequency.intValue()));
+        try {
+            super.setFrequency(Frequency.fromValue(frequency.intValue()));
+        } catch (IllegalArgumentException e) {
+            super.setFrequency((Frequency) null);
+        }
     }
 
     public void setSort(Number sort) {
-        super.setSort(ReportOrder.fromValue(sort.intValue()));
+        try {
+            super.setSort(ReportOrder.fromValue(sort.intValue()));
+        } catch (IllegalArgumentException e) {
+            super.setSort((ReportOrder) null);
+        }
     }
     
     public void setPeriodLength(Number periodLength) {
-        super.setPeriodLength(Long.valueOf(periodLength.intValue()));
+        super.setPeriodLength(periodLength.intValue());
     }
     
     public void setPeriodStep(Number periodStep) {
-        super.setPeriodStep(Long.valueOf(periodStep.intValue()));
+        super.setPeriodStep(periodStep.intValue());
     }
     
     public void setTemplateName(Number templateId) {

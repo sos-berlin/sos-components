@@ -168,7 +168,6 @@ public class RunReport extends AReporting {
     }
 
     private static String getCommonScript(final Report in, String commandLineOptions) {
-        // StringBuilder s = new StringBuilder().append("node ").append(commandLineOptions).append(" app/run-report.js -i data");
         StringBuilder s = new StringBuilder().append("\"").append(Paths.get(System.getProperty("java.home"), "bin", "java").toString()).append("\" ")
                 .append(commandLineOptions)
                 // .append(" -cp lib/ext/joc/*").append(File.pathSeparator).append("webapps/joc/WEB-INF/lib/* ")
@@ -204,7 +203,7 @@ public class RunReport extends AReporting {
         Path tempDir = null;
         try {
             tempDir = createTempDirectory();
-            // reportingDir is working directory
+            // workingDir (jetty_base) is working directory
             Path relativizeTempDir = workingDir.relativize(tempDir);
             StringBuilder s = new StringBuilder(commonScript);
             s.append(" -p ").append(f.strValue());
@@ -377,9 +376,8 @@ public class RunReport extends AReporting {
             Date now = Date.from(Instant.now());
 
             for (DBItemReport dbItem : dbItems) {
-                // dbItem.setHits(runDbItem.getHits());
-                // dbItem.setTemplateId(runDbItem.getTemplateId());
-                String constraintHash = dbItem.hashConstraint(runDbItem.getTemplateId(), runDbItem.getHits(), runDbItem.getControllerId(), runDbItem.getSort(), runDbItem.getPeriodLength(), runDbItem.getPeriodStep());
+                String constraintHash = dbItem.hashConstraint(runDbItem.getTemplateId(), runDbItem.getHits(), runDbItem.getControllerId(), runDbItem
+                        .getSort(), runDbItem.getPeriodLength(), runDbItem.getPeriodStep());
                 dbItem.setConstraintHash(constraintHash);
 
                 DBItemReport oldItem = dbLayer.getReport(constraintHash);
@@ -400,8 +398,12 @@ public class RunReport extends AReporting {
             }
 
             runDbItem.setSort(in.getSort().intValue());
-            runDbItem.setPeriodLength(in.getPeriod().getLength());
-            runDbItem.setPeriodStep(in.getPeriod().getStep());
+            ReportPeriod period = in.getPeriod();
+            if (period == null) {
+                period = new ReportPeriod();
+            }
+            runDbItem.setPeriodLength(period.getLength());
+            runDbItem.setPeriodStep(period.getStep());
             runDbItem.setState(ReportRunStateText.SUCCESSFUL.intValue());
             runDbItem.setModified(now);
             session.update(runDbItem);
