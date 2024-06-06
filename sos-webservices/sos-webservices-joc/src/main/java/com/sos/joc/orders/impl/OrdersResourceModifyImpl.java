@@ -624,12 +624,12 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             postProblem(resumableOrders, controllerId, withPostProblem, "resumable");
             return resumableOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
         case ANSWER_PROMPT:
-            Map<Boolean, Set<JOrder>> promptingOrders = orderStream.collect(Collectors.groupingBy(o -> OrdersHelper.isPrompting(o), Collectors
+            Map<Boolean, Set<JOrder>> promptingOrders = orderStream.collect(Collectors.groupingBy(OrdersHelper::isPrompting, Collectors
                     .toSet()));
             postProblem(promptingOrders, controllerId, withPostProblem, "prompting");
             return promptingOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
         case SUSPEND:
-            Map<Boolean, Set<JOrder>> suspendibleOrders = orderStream.collect(Collectors.groupingBy(o -> o.asScala().isSuspendible(),
+            Map<Boolean, Set<JOrder>> suspendibleOrders = orderStream.collect(Collectors.groupingBy(OrdersHelper::isSuspendible,
                     Collectors.toSet()));
             postProblem(suspendibleOrders, controllerId, withPostProblem, "suspendible");
             return suspendibleOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
