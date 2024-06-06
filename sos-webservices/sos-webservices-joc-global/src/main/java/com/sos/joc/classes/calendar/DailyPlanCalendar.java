@@ -72,9 +72,11 @@ public class DailyPlanCalendar {
                             LOGGER.error(ProblemHelper.getErrorMessage(e.getLeft()));
                         }
                     });
+                } else {
+                    LOGGER.info("DailyPlanCalendar already submitted to " + controller);
                 }
             } catch (Exception e) {
-                //
+                LOGGER.error("Error at submitting DailyPlanCalendar to " + controller, e);
             }
         }
     }
