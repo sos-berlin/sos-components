@@ -48,6 +48,8 @@ public class ActiveSessionsResourceImpl extends JOCResourceImpl implements IActi
                 if (sosAuthCurrentAccount == null) {
                     continue;
                 }
+
+
                 if ((activeSessionsFilter.getLimit() == 0 || activeSessionsFilter.getLimit() > count) && activeSessionsFilter.getAccountName() == null
                         || sosAuthCurrentAccount.getAccountname().equals(activeSessionsFilter.getAccountName())) {
                     ActiveSession activeSession = new ActiveSession();
@@ -106,6 +108,8 @@ public class ActiveSessionsResourceImpl extends JOCResourceImpl implements IActi
                 if (sosAuthCurrentAccount == null) {
                     continue;
                 }
+                }
+
                 if (activeSessionsCancelFilter.getAccountNames() != null) {
                     for (String accountName : activeSessionsCancelFilter.getAccountNames()) {
                         if (sosAuthCurrentAccount.getAccountname().equals(accountName)) {
