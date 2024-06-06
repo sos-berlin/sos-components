@@ -108,7 +108,7 @@ public class ActiveSessionsResourceImpl extends JOCResourceImpl implements IActi
                 if (sosAuthCurrentAccount == null) {
                     continue;
                 }
-                }
+               
 
                 if (activeSessionsCancelFilter.getAccountNames() != null) {
                     for (String accountName : activeSessionsCancelFilter.getAccountNames()) {
