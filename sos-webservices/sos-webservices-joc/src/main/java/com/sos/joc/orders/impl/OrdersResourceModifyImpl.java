@@ -23,6 +23,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,6 +88,7 @@ import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrderPredicates;
 import js7.data_for_java.workflow.JWorkflowId;
 import js7.data_for_java.workflow.position.JPosition;
+
 import scala.Function1;
 import scala.collection.JavaConverters;
 
@@ -623,9 +625,11 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     private void throwControllerObjectNotExistException(Action action) throws ControllerObjectNotExistException {
         switch (action) {
         case RESUME:
-            throw new ControllerObjectNotExistException("No failed or suspended orders found.");
+            throw new ControllerObjectNotExistException("No resumable orders found.");
         case ANSWER_PROMPT:
             throw new ControllerObjectNotExistException("No prompting orders found.");
+        case SUSPEND:
+            throw new ControllerObjectNotExistException("No suspendible orders found.");
         default:
             throw new ControllerObjectNotExistException("No orders found.");
         }
@@ -635,10 +639,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     public Set<JOrder> getJOrders(Action action, Stream<JOrder> orderStream, String controllerId, boolean withPostProblem) {
         switch (action) {
         case RESUME:
-//            Map<Boolean, Set<JOrder>> suspendedOrFailedOrders = orderStream.collect(Collectors.groupingBy(o -> OrdersHelper.isSuspendedOrFailed(o),
-//                    Collectors.toSet()));
-//            postProblem(suspendedOrFailedOrders, controllerId, withPostProblem, "failed or suspended");
-//            return suspendedOrFailedOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
+
             Map<Boolean, Set<JOrder>> resumableOrders = orderStream.collect(Collectors.groupingBy(o -> o.asScala().isResumable(),
                     Collectors.toSet()));
             postProblem(resumableOrders, controllerId, withPostProblem, "resumable");
@@ -648,9 +649,14 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     .toSet()));
             postProblem(promptingOrders, controllerId, withPostProblem, "prompting");
             return promptingOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
-        case CONTINUE:
-            Map<Boolean, Set<JOrder>> continuableOrders = orderStream.collect(Collectors.groupingBy(o -> o.asScala().isGoCommandable(), Collectors
+        case SUSPEND:
+            Map<Boolean, Set<JOrder>> suspendibleOrders = orderStream.collect(Collectors.groupingBy(o -> o.asScala().isSuspendible(), Collectors
                     .toSet()));
+            postProblem(suspendibleOrders, controllerId, withPostProblem, "suspendible");
+            return suspendibleOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
+        case CONTINUE:
+            Map<Boolean, Set<JOrder>> continuableOrders = orderStream.collect(Collectors.groupingBy(o -> o.asScala().isGoCommandable(),
+                    Collectors.toSet()));
             postProblem(continuableOrders, controllerId, withPostProblem, "continuable");
             return continuableOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
         default:
