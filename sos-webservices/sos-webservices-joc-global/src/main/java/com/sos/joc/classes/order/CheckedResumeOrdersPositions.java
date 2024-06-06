@@ -185,9 +185,8 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
             throw new JocObjectNotExistException(String.format("Unknown OrderId: %s", order));
         }
         jOrders = Collections.singleton(jOrder);
-        boolean isSuspendedOrFailed = OrdersHelper.isSuspendedOrFailed(jOrder);
-        if (withStatusCheck && !isSuspendedOrFailed) {
-            throw new JocBadRequestException("The order are neither failed nor suspended"); 
+        if (withStatusCheck && !jOrder.asScala().isResumable()) {
+            throw new JocBadRequestException("The order is not resumable."); 
         }
         
         if (!OrdersHelper.canAdd(WorkflowPaths.getPath(jOrder.workflowId()), permittedFolders)) {

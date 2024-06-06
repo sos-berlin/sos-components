@@ -605,9 +605,11 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     private void throwControllerObjectNotExistException(Action action) throws ControllerObjectNotExistException {
         switch (action) {
         case RESUME:
-            throw new ControllerObjectNotExistException("No failed or suspended orders found.");
+            throw new ControllerObjectNotExistException("No resumable orders found.");
         case ANSWER_PROMPT:
             throw new ControllerObjectNotExistException("No prompting orders found.");
+        case SUSPEND:
+            throw new ControllerObjectNotExistException("No suspendible orders found.");
         default:
             throw new ControllerObjectNotExistException("No orders found.");
         }
@@ -617,15 +619,20 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     public Set<JOrder> getJOrders(Action action, Stream<JOrder> orderStream, String controllerId, boolean withPostProblem) {
         switch (action) {
         case RESUME:
-            Map<Boolean, Set<JOrder>> suspendedOrFailedOrders = orderStream.collect(Collectors.groupingBy(o -> OrdersHelper.isSuspendedOrFailed(o),
+            Map<Boolean, Set<JOrder>> resumableOrders = orderStream.collect(Collectors.groupingBy(o -> o.asScala().isResumable(),
                     Collectors.toSet()));
-            postProblem(suspendedOrFailedOrders, controllerId, withPostProblem, "failed or suspended");
-            return suspendedOrFailedOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
+            postProblem(resumableOrders, controllerId, withPostProblem, "resumable");
+            return resumableOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
         case ANSWER_PROMPT:
             Map<Boolean, Set<JOrder>> promptingOrders = orderStream.collect(Collectors.groupingBy(o -> OrdersHelper.isPrompting(o), Collectors
                     .toSet()));
             postProblem(promptingOrders, controllerId, withPostProblem, "prompting");
             return promptingOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
+        case SUSPEND:
+            Map<Boolean, Set<JOrder>> suspendibleOrders = orderStream.collect(Collectors.groupingBy(o -> o.asScala().isSuspendible(),
+                    Collectors.toSet()));
+            postProblem(suspendibleOrders, controllerId, withPostProblem, "suspendible");
+            return suspendibleOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
         default:
             return orderStream.collect(Collectors.toSet());
         }

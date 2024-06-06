@@ -323,14 +323,6 @@ public class OrdersHelper {
         Order<Order.State> o = order.asScala();
         return OrderStateText.SCHEDULED.equals(getGroupedState(o.state().getClass()));
     }
-
-    public static boolean isSuspendedOrFailed(JOrder order) {
-        Order<Order.State> o = order.asScala();
-        if (o.isSuspended()) {
-            return true;
-        }
-        return OrderStateText.FAILED.equals(getGroupedState(o.state().getClass()));
-    }
     
     public static boolean isNotFailed(JOrder order) {
         return !OrderStateText.FAILED.equals(getGroupedState(order.asScala().state().getClass()));
@@ -533,8 +525,9 @@ public class OrdersHelper {
             }
         }
         o.setMarked(getMark(jOrder.asScala().mark()));
-        // o.setIsCancelable(jOrder.asScala().isCancelable() ? null : false);
-        // o.setIsSuspendible(jOrder.asScala().isSuspendible() ? null : false);
+        // o.setIsCancelable(jOrder.asScala().isCancelable() ? true : null);
+        o.setIsSuspendible(jOrder.asScala().isSuspendible() ? true : null);
+        o.setIsResumable(jOrder.asScala().isResumable() ? true : null);
         o.setScheduledFor(scheduledFor);
         o.setScheduledNever(JobSchedulerDate.NEVER_MILLIS.equals(scheduledFor));
         if (scheduledFor == null && surveyDateMillis != null && OrderStateText.SCHEDULED.equals(o.getState().get_text())) {
