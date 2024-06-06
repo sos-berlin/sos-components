@@ -1,6 +1,8 @@
 
 package com.sos.joc.classes.reporting;
 
+import java.util.EnumSet;
+
 import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 
 public enum CSVColumns {
@@ -42,7 +44,7 @@ public enum CSVColumns {
     }
     
     public String hqlValue(Dbms dbms) {
-        if (defaultValue == null || Dbms.ORACLE.equals(dbms)) {
+        if (defaultValue == null || EnumSet.of(Dbms.ORACLE, Dbms.PGSQL).contains(dbms)) {
             return dbColumn; 
         }
         return "coalesce(" + dbColumn + ", " + defaultValue + ")";
