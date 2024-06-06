@@ -5,7 +5,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -37,7 +36,6 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
-import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsDailyPlan;
 import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.dailyplan.DailyPlanRunner;
 import com.sos.joc.dailyplan.common.DailyPlanHelper;
@@ -312,6 +310,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
         List<GenerateRequest> generateRequests = new ArrayList<>();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Instant now = Instant.now();
+        String dailyPlanDateNow = sdf.format(Date.from(now));
         Instant instant = "now".equals(date) ? now : sdf.parse(date).toInstant();
         if (instant.isBefore(now)) {
             instant = now;
@@ -323,6 +322,10 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
         schedulesPathItem.setSingles(schedulePaths);
 
         for (int i = 0; i < planDaysAhead; i++) {
+            if (now.isBefore(instant)) {
+                now = now.plusSeconds(TimeUnit.DAYS.toSeconds(1));
+                continue;
+            }
             String dailyPlanDate = sdf.format(Date.from(now));
             
             GenerateRequest req = new GenerateRequest();
@@ -336,8 +339,9 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             req.setDailyPlanDate(dailyPlanDate);
             req.setWorkflowPaths(workflowsPathItem);
             req.setSchedulePaths(schedulesPathItem);
-            boolean skip = allowedDailyPlanDates != null && !allowedDailyPlanDates.contains(dailyPlanDate);
-            if (!skip) {
+            boolean dailyPlanDateIsToday = dailyPlanDateNow.equals(dailyPlanDate);
+            boolean allowed = allowedDailyPlanDates == null || allowedDailyPlanDates.contains(dailyPlanDate);
+            if (allowed || dailyPlanDateIsToday) {
                 generateRequests.add(req);
             }
             now = now.plusSeconds(TimeUnit.DAYS.toSeconds(1));
