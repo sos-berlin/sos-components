@@ -17,6 +17,7 @@ public enum CSVColumns {
     JOB_NAME("jobName", null), //only order steps
     CRITICALITY("criticality", null), //only order steps
     AGENT_ID("agentId", null), //only order steps
+    AGENT_NAME("agentName", "''"), //only order steps, nullable
     START_TIME("startTime", null),
     PLANNED_TIME("startTimeScheduled", "''"), //only orders, nullable
     END_TIME("endTime", "''"),//nullable
@@ -44,10 +45,10 @@ public enum CSVColumns {
     }
     
     public String hqlValue(Dbms dbms) {
-        if (defaultValue == null || EnumSet.of(Dbms.ORACLE, Dbms.PGSQL).contains(dbms)) {
-            return dbColumn; 
+        if (Dbms.MYSQL.equals(dbms) && defaultValue != null) {
+            return "coalesce(" + dbColumn + ", " + defaultValue + ")";
         }
-        return "coalesce(" + dbColumn + ", " + defaultValue + ")";
+        return dbColumn;
     }
 
 }
