@@ -1,8 +1,6 @@
 
 package com.sos.joc.classes.reporting;
 
-import java.util.EnumSet;
-
 import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 
 public enum CSVColumns {
