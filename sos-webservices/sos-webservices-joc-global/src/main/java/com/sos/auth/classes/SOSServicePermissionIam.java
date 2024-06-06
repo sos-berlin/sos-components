@@ -532,7 +532,17 @@ public class SOSServicePermissionIam {
 
             String accessToken = sosSessionHandler.getAccessToken().toString();
             currentAccount.setAccessToken(identityServiceName, accessToken);
-            Globals.jocWebserviceDataContainer.getCurrentAccountsList().addAccount(currentAccount);
+
+            boolean authorization = true;
+            if (currentAccount.getCurrentSubject() != null && currentAccount.getCurrentSubject().getListOfAccountPermissions() != null) {
+                if (currentAccount.getCurrentSubject().getListOfAccountPermissions().size() == 0) {
+                    authorization = false;
+                }
+            }
+
+            if (authorization) {
+                Globals.jocWebserviceDataContainer.getCurrentAccountsList().addAccount(currentAccount);
+            }
 
             resetTimeOut(currentAccount);
 
@@ -707,8 +717,8 @@ public class SOSServicePermissionIam {
                                         kid = "[token verified using kid: " + currentAccount.getKid() + "]";
                                     }
 
-                                    LOGGER.info("Authentication with Identity Service " + dbItemIamIdentityService.getIdentityServiceName() + " successful."
-                                            + kid);
+                                    LOGGER.info("Authentication with Identity Service " + dbItemIamIdentityService.getIdentityServiceName()
+                                            + " successful." + kid);
                                     addFolder(currentAccount);
                                     break;
                                 }
