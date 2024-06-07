@@ -32,7 +32,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "regex",
     "states",
     "folders",
-    "tags",
+    "orderTags",
+    "workflowTags",
     "dateTo",
     "stateDateFrom",
     "stateDateTo",
@@ -91,9 +92,18 @@ public class OrdersFilterV {
      * 
      * 
      */
-    @JsonProperty("tags")
+    @JsonProperty("orderTags")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<String> tags = new LinkedHashSet<String>();
+    private Set<String> orderTags = new LinkedHashSet<String>();
+    /**
+     * tags
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflowTags")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<String> workflowTags = new LinkedHashSet<String>();
     /**
      * string for dateFrom and dateTo as search filter
      * <p>
@@ -269,9 +279,9 @@ public class OrdersFilterV {
      * 
      * 
      */
-    @JsonProperty("tags")
-    public Set<String> getTags() {
-        return tags;
+    @JsonProperty("orderTags")
+    public Set<String> getOrderTags() {
+        return orderTags;
     }
 
     /**
@@ -280,9 +290,31 @@ public class OrdersFilterV {
      * 
      * 
      */
-    @JsonProperty("tags")
-    public void setTags(Set<String> tags) {
-        this.tags = tags;
+    @JsonProperty("orderTags")
+    public void setOrderTags(Set<String> orderTags) {
+        this.orderTags = orderTags;
+    }
+    
+    /**
+     * tags
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflowTags")
+    public Set<String> getWorkflowTags() {
+        return workflowTags;
+    }
+
+    /**
+     * tags
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflowTags")
+    public void setWorkflowTags(Set<String> workflowTags) {
+        this.workflowTags = workflowTags;
     }
 
     /**
@@ -407,12 +439,12 @@ public class OrdersFilterV {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderIds", orderIds).append("workflowIds", workflowIds).append("compact", compact).append("regex", regex).append("states", states).append("folders", folders).append("tags", tags).append("dateTo", dateTo).append("stateDateFrom", stateDateFrom).append("stateDateTo", stateDateTo).append("timeZone", timeZone).append("scheduledNever", scheduledNever).append("limit", limit).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderIds", orderIds).append("workflowIds", workflowIds).append("compact", compact).append("regex", regex).append("states", states).append("folders", folders).append("orderTags", orderTags).append("workflowTags", workflowTags).append("dateTo", dateTo).append("stateDateFrom", stateDateFrom).append("stateDateTo", stateDateTo).append("timeZone", timeZone).append("scheduledNever", scheduledNever).append("limit", limit).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowIds).append(scheduledNever).append(folders).append(controllerId).append(compact).append(timeZone).append(states).append(tags).append(stateDateFrom).append(regex).append(dateTo).append(limit).append(orderIds).append(stateDateTo).toHashCode();
+        return new HashCodeBuilder().append(workflowIds).append(scheduledNever).append(folders).append(controllerId).append(compact).append(timeZone).append(states).append(orderTags).append(workflowTags).append(stateDateFrom).append(regex).append(dateTo).append(limit).append(orderIds).append(stateDateTo).toHashCode();
     }
 
     @Override
@@ -424,7 +456,7 @@ public class OrdersFilterV {
             return false;
         }
         OrdersFilterV rhs = ((OrdersFilterV) other);
-        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(scheduledNever, rhs.scheduledNever).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(timeZone, rhs.timeZone).append(states, rhs.states).append(tags, rhs.tags).append(stateDateFrom, rhs.stateDateFrom).append(regex, rhs.regex).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(orderIds, rhs.orderIds).append(stateDateTo, rhs.stateDateTo).isEquals();
+        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(scheduledNever, rhs.scheduledNever).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(timeZone, rhs.timeZone).append(states, rhs.states).append(orderTags, rhs.orderTags).append(workflowTags, rhs.workflowTags).append(stateDateFrom, rhs.stateDateFrom).append(regex, rhs.regex).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(orderIds, rhs.orderIds).append(stateDateTo, rhs.stateDateTo).isEquals();
     }
 
 }

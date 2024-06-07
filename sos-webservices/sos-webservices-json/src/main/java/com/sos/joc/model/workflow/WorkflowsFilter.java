@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -31,7 +33,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "workflowIds",
     "compact",
     "folders",
-    "tags",
+    "workflowTags",
+    "orderTags",
     "states",
     "instructionStates",
     "regex",
@@ -73,9 +76,15 @@ public class WorkflowsFilter {
      * 
      * 
      */
-    @JsonProperty("tags")
+    @JsonProperty("workflowTags")
+    @JsonAlias ({
+        "tags"
+    })
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<String> tags = new LinkedHashSet<String>();
+    private Set<String> workflowTags = new LinkedHashSet<String>();
+    @JsonProperty("orderTags")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<String> orderTags = new LinkedHashSet<String>();
     @JsonProperty("states")
     private List<SyncStateText> states = new ArrayList<SyncStateText>();
     @JsonProperty("instructionStates")
@@ -176,9 +185,9 @@ public class WorkflowsFilter {
      * 
      * 
      */
-    @JsonProperty("tags")
-    public Set<String> getTags() {
-        return tags;
+    @JsonProperty("workflowTags")
+    public Set<String> getWorkflowTags() {
+        return workflowTags;
     }
 
     /**
@@ -187,9 +196,31 @@ public class WorkflowsFilter {
      * 
      * 
      */
-    @JsonProperty("tags")
-    public void setTags(Set<String> tags) {
-        this.tags = tags;
+    @JsonProperty("workflowTags")
+    public void setWorkflowTags(Set<String> workflowTags) {
+        this.workflowTags = workflowTags;
+    }
+    
+    /**
+     * tags
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("orderTags")
+    public Set<String> getOrderTags() {
+        return orderTags;
+    }
+
+    /**
+     * tags
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("orderTags")
+    public void setOrderTags(Set<String> orderTags) {
+        this.orderTags = orderTags;
     }
 
     @JsonProperty("states")
@@ -246,12 +277,12 @@ public class WorkflowsFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("workflowIds", workflowIds).append("compact", compact).append("folders", folders).append("tags", tags).append("states", states).append("instructionStates", instructionStates).append("regex", regex).append("agentNames", agentNames).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("workflowIds", workflowIds).append("compact", compact).append("folders", folders).append("workflowTags", workflowTags).append("orderTags", orderTags).append("states", states).append("instructionStates", instructionStates).append("regex", regex).append("agentNames", agentNames).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowIds).append(regex).append(folders).append(controllerId).append(compact).append(agentNames).append(tags).append(states).append(instructionStates).toHashCode();
+        return new HashCodeBuilder().append(workflowIds).append(regex).append(folders).append(controllerId).append(compact).append(agentNames).append(workflowTags).append(orderTags).append(states).append(instructionStates).toHashCode();
     }
 
     @Override
@@ -263,7 +294,7 @@ public class WorkflowsFilter {
             return false;
         }
         WorkflowsFilter rhs = ((WorkflowsFilter) other);
-        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(regex, rhs.regex).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(agentNames, rhs.agentNames).append(tags, rhs.tags).append(states, rhs.states).append(instructionStates, rhs.instructionStates).isEquals();
+        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(regex, rhs.regex).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(agentNames, rhs.agentNames).append(workflowTags, rhs.workflowTags).append(orderTags, rhs.orderTags).append(states, rhs.states).append(instructionStates, rhs.instructionStates).isEquals();
     }
 
 }

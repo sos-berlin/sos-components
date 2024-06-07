@@ -97,6 +97,10 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     //reporting: java options
     private ConfigurationEntry reportJavaOptions = new ConfigurationEntry("report_java_options", "", GlobalSettingsSectionValueType.STRING);
 
+    //order tags instead orderId
+    private ConfigurationEntry numOfTagsDisplayedAsOrderId = new ConfigurationEntry("num_of_tags_displayed_as_order_id", "0",
+            GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
+
     private Charset encodingCharset = null;
     private boolean encodingCharsetReaded = false;
 
@@ -152,6 +156,7 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         allowUndeclaredVariables.setOrdering(++index);
         
         reportJavaOptions.setOrdering(++index);
+        numOfTagsDisplayedAsOrderId.setOrdering(++index);
     }
 
     public static List<String> getAuditLogComments() {
@@ -319,6 +324,10 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     
     public ConfigurationEntry getReportJavaOptions() {
         return reportJavaOptions;
+    }
+    
+    public ConfigurationEntry getNumOfTagsDisplayedAsOrderId() {
+        return numOfTagsDisplayedAsOrderId;
     }
     
 }

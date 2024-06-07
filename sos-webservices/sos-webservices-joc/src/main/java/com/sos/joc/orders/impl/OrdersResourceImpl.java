@@ -38,6 +38,7 @@ import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.history.HistoryFilter;
 import com.sos.joc.db.history.JobHistoryDBLayer;
+import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.CyclicOrderInfos;
@@ -86,8 +87,9 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             boolean withWorkflowIdFilter = workflowIds != null && !workflowIds.isEmpty();
             boolean responseWithLabel = withWorkflowIdFilter && workflowIds.size() == 1;
             boolean withStateDate = ordersFilter.getStateDateFrom() != null || ordersFilter.getStateDateTo() != null;
-            boolean withTags = ordersFilter.getTags() != null && !ordersFilter.getTags().isEmpty();
-            boolean orderStreamIsEmpty = false;
+            boolean withOrderTags = ordersFilter.getOrderTags() != null && !ordersFilter.getOrderTags().isEmpty();
+            boolean withWorkflowTags = ordersFilter.getWorkflowTags() != null && !ordersFilter.getWorkflowTags().isEmpty();
+            //boolean orderStreamIsEmpty = false;
             if (ordersFilter.getLimit() == null) {
                 ordersFilter.setLimit(10000);
             }
@@ -247,7 +249,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             } else if (withFolderFilter && (folders == null || folders.isEmpty())) {
                 // no folder permissions
                 // orderStream = currentState.ordersBy(JOrderPredicates.none());
-                orderStreamIsEmpty = true;
+                //orderStreamIsEmpty = true;
             } else {
                 if (notCycledOrderFilter != null) {
                     orderStream = currentState.ordersBy(notCycledOrderFilter);
@@ -326,6 +328,16 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             // merge cycledOrders to orderStream and grouping by WorkflowId for folder permissions
             ConcurrentMap<JWorkflowId, List<JOrder>> groupedByWorkflowIds = Stream.concat(orderStream, cycledOrderStream).collect(Collectors
                     .groupingByConcurrent(JOrder::workflowId));
+            
+            if (withWorkflowTags) {
+                connection = Globals.createSosHibernateStatelessConnection(API_CALL);
+                InventoryTagDBLayer tagDbLayer = new InventoryTagDBLayer(connection);
+                List<String> taggedWorkflowNames = tagDbLayer.getWorkflowNamesHavingTags(ordersFilter.getWorkflowTags().stream().collect(Collectors
+                        .toList()));
+
+                groupedByWorkflowIds.keySet().removeIf(wId -> !taggedWorkflowNames.contains(wId.path().string()));
+            }
+            
             ConcurrentMap<JWorkflowId, Collection<String>> finalParamsPerWorkflow = groupedByWorkflowIds.keySet().parallelStream().collect(Collectors
                     .toConcurrentMap(Function.identity(), w -> OrdersHelper.getFinalParameters(w, currentState)));
 
@@ -351,12 +363,13 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             List<JOrder> jOrders = orderStream.collect(Collectors.toList());
             
             if (!jOrders.isEmpty()) {
-                connection = Globals.createSosHibernateStatelessConnection(API_CALL);
-
-                Map<String, Set<String>> orderTags = OrderTags.getTags(ordersFilter.getControllerId(), jOrders, connection);
-
-                if (withTags) {
-                    orderStream = OrderTags.filter(jOrders, orderTags, ordersFilter.getTags());
+                if (connection == null) {
+                    connection = Globals.createSosHibernateStatelessConnection(API_CALL);
+                }
+                
+                Map<String, Set<String>> orderTags = OrderTags.getTags(withOrderTags, ordersFilter.getControllerId(), jOrders, connection);
+                if (withOrderTags) {
+                    orderStream = OrderTags.filter(jOrders, orderTags, ordersFilter.getOrderTags());
                 } else {
                     orderStream = jOrders.stream();
                 }

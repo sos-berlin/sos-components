@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,6 +21,8 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
+import com.sos.joc.cluster.configuration.globals.common.ConfigurationEntry;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.common.SearchStringHelper;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanVariable;
@@ -231,25 +234,31 @@ public class OrderTags {
             }
     }
     
-    public static Stream<JOrder> filter(List<JOrder> jOrders, Map<String, Set<String>> orderTags, Set<String> tags) throws SOSHibernateException {
+    public static Stream<JOrder> filter(List<JOrder> jOrders, Map<String, Set<String>> orderTags, Set<String> requestedOrdertags)
+            throws SOSHibernateException {
         if (orderTags == null || orderTags.isEmpty()) {
             return Stream.empty();
         }
         if (jOrders == null || jOrders.isEmpty()) {
             return Stream.empty();
         }
-        return filter(jOrders.stream(), orderTags, tags);
+        return filter(jOrders.stream(), orderTags, requestedOrdertags);
+    }
+
+    private static Stream<JOrder> filter(Stream<JOrder> jOrders, Map<String, Set<String>> orderTags, Set<String> requestedOrdertags)
+            throws SOSHibernateException {
+        return jOrders.filter(o -> orderTags.containsKey(OrdersHelper.getOrderIdMainPart(o.id().string()))).filter(o -> new HashSet<>(orderTags.get(
+                OrdersHelper.getOrderIdMainPart(o.id().string()))).removeAll(requestedOrdertags)); // removeAll return true if set is changed
     }
     
-    public static Stream<JOrder> filter(Stream<JOrder> jOrders, Map<String, Set<String>> orderTags, Set<String> tags) throws SOSHibernateException {
-        if (orderTags == null || orderTags.isEmpty()) {
-            return Stream.empty();
-        }
-        return jOrders.filter(o -> orderTags.containsKey(OrdersHelper.getOrderIdMainPart(o.id().string()))).filter(o -> new HashSet<>(orderTags.get(
-                OrdersHelper.getOrderIdMainPart(o.id().string()))).removeAll(tags));
-    }
     
     public static Map<String, Set<String>> getTags(String controllerId, List<JOrder> jOrders, SOSHibernateSession connection)
+            throws SOSHibernateException {
+        return getTags(false, controllerId, jOrders, connection);
+    }
+    
+    // this function provides that returned Map<String, Set<String>> is final depends on withOrderTags
+    public static Map<String, Set<String>> getTags(boolean forced, String controllerId, List<JOrder> jOrders, SOSHibernateSession connection)
             throws SOSHibernateException {
         if (jOrders == null || jOrders.isEmpty()) {
             return Collections.emptyMap();
@@ -257,10 +266,15 @@ public class OrderTags {
         if (controllerId == null) {
             return Collections.emptyMap();
         }
-        return getTags(controllerId, jOrders.stream(), connection);
+        return getTags(forced, controllerId, jOrders.stream(), connection);
     }
     
     public static Map<String, Set<String>> getTags(String controllerId, Stream<JOrder> jOrders, SOSHibernateSession connection)
+            throws SOSHibernateException {
+        return getTags(false, controllerId, jOrders, connection);
+    }
+    
+    public static Map<String, Set<String>> getTags(boolean forced, String controllerId, Stream<JOrder> jOrders, SOSHibernateSession connection)
             throws SOSHibernateException {
         if (jOrders == null) {
             return Collections.emptyMap();
@@ -268,15 +282,23 @@ public class OrderTags {
         if (controllerId == null) {
             return Collections.emptyMap();
         }
-        return getTagsByOrderIds(controllerId, jOrders.map(JOrder::id).map(OrderId::string), connection);
+        return getTagsByOrderIds(forced, controllerId, jOrders.map(JOrder::id).map(OrderId::string), connection);
     }
     
     public static Map<String, Set<String>> getTagsByOrderIds(String controllerId, Stream<String> orderIds, SOSHibernateSession connection)
+            throws SOSHibernateException {
+        return getTagsByOrderIds(false, controllerId, orderIds, connection);
+    }
+    
+    public static Map<String, Set<String>> getTagsByOrderIds(boolean forced, String controllerId, Stream<String> orderIds, SOSHibernateSession connection)
             throws SOSHibernateException {
         if (orderIds == null) {
             return Collections.emptyMap();
         }
         if (controllerId == null) {
+            return Collections.emptyMap();
+        }
+        if (!forced && !withTagsDisplayedAsOrderId()) {
             return Collections.emptyMap();
         }
         return getTagsByOrderIds(controllerId, orderIds.map(OrdersHelper::getOrderIdMainPart).distinct().collect(Collectors.toList()), connection);
@@ -311,7 +333,7 @@ public class OrderTags {
                 return Collections.emptyMap();
             }
             return result.stream().collect(Collectors.groupingBy(DBItemHistoryOrderTag::getOrderId, Collectors.mapping(DBItemHistoryOrderTag::getTagName,
-                    Collectors.toSet())));
+                    Collectors.toCollection(LinkedHashSet::new))));
         }
     }
     
@@ -335,7 +357,7 @@ public class OrderTags {
         if (result == null) {
             return Collections.emptySet();
         }
-        return result.stream().collect(Collectors.toSet());
+        return result.stream().collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     public static List<String> getMainOrderIdsByTags(String controllerId, Set<String> oTags) throws SOSHibernateException {
@@ -403,6 +425,20 @@ public class OrderTags {
             return Collections.emptyList();
         }
         return result;
+    }
+    
+    private static Integer getNumOfTagsDisplayedAsOrderId() {
+        try {
+            ConfigurationGlobalsJoc jocSettings = Globals.getConfigurationGlobalsJoc();
+            ConfigurationEntry numOfTagsDisplayedAsOrderId = jocSettings.getNumOfTagsDisplayedAsOrderId();
+            return Integer.parseInt(numOfTagsDisplayedAsOrderId.getValue());
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+    
+    private static boolean withTagsDisplayedAsOrderId() {
+        return getNumOfTagsDisplayedAsOrderId() != 0;
     }
     
 //    public void updateMap(String controllerId, String orderId, Set<String> tags) {

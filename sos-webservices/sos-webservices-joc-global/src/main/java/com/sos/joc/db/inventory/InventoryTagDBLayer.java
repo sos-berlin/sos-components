@@ -692,6 +692,55 @@ public class InventoryTagDBLayer extends DBLayer {
         }
     }
     
+    public Set<String> getWorkflowNamesHavingTags(Collection<String> workflowNames, Set<String> tags) throws DBConnectionRefusedException,
+            DBInvalidDataException {
+        if (workflowNames == null || workflowNames.isEmpty()) {
+            return Collections.emptySet();
+        }
+        List<String> wNames = getWorkflowNamesHavingTags(tags.stream().collect(Collectors.toList()));
+        wNames.retainAll(workflowNames);
+        return wNames.stream().collect(Collectors.toSet());
+    }
+    
+    public List<String> getWorkflowNamesHavingTags(List<String> tags) throws DBConnectionRefusedException,
+            DBInvalidDataException {
+        if (tags == null || tags.isEmpty()) {
+            return Collections.emptyList();
+        }
+        if (tags == null || tags.isEmpty()) {
+            return Collections.emptyList();
+        }
+        if (tags.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            List<String> result = new ArrayList<>();
+            for (int i = 0; i < tags.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                result.addAll(getWorkflowNamesHavingTags(SOSHibernate.getInClausePartition(i, tags)));
+            }
+            return result;
+        } else {
+            try {
+                StringBuilder hql = new StringBuilder("select tg.name from ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg ");
+                hql.append(" left join ").append(DBLayer.DBITEM_INV_TAGS).append(" t on t.id=tg.tagId ");
+                hql.append("where tg.type=:type ");
+                hql.append("and t.name in (:tags) ");
+                hql.append("group by tg.name");
+
+                Query<String> query = getSession().createQuery(hql);
+                query.setParameter("type", ConfigurationType.WORKFLOW.intValue());
+                query.setParameterList("tags", tags);
+
+                List<String> result = getSession().getResultList(query);
+                if (result == null) {
+                    return Collections.emptyList();
+                }
+                return result;
+            } catch (SOSHibernateInvalidSessionException ex) {
+                throw new DBConnectionRefusedException(ex);
+            } catch (Exception ex) {
+                throw new DBInvalidDataException(ex);
+            }
+        }
+    }
+    
     public int delete(String name, Integer type) {
         try {
             StringBuilder sql = new StringBuilder();
