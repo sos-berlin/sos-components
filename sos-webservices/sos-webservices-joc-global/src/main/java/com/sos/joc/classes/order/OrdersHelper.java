@@ -326,7 +326,32 @@ public class OrdersHelper {
     
     public static boolean isSuspendible(JOrder order) {
         Order<Order.State> o = order.asScala();
-        return o.isSuspendible() && !o.isSuspended();
+        //return o.isSuspendible();
+        if (o.isSuspended() || isTerminated(o) || isFailed(o)) {
+            return false;
+        }
+        return true;
+    }
+    
+    public static boolean isResumable(JOrder order) {
+        Order<Order.State> o = order.asScala();
+        //return o.isResumable();
+        return o.isSuspended() || isFailed(o) || isSuspending(o.mark());
+    }
+    
+    private static boolean isTerminated(Order<Order.State> o) {
+        return ((o.state() instanceof Order.Finished$) || (o.state() instanceof Order.Cancelled$));
+    }
+    
+    private static boolean isFailed(Order<Order.State> o) {
+        return OrderStateText.FAILED.equals(getGroupedState(o.state().getClass()));
+    }
+    
+    private static boolean isSuspending(Option<js7.data.order.OrderMark> opt) {
+        if (opt.nonEmpty()) {
+            return (opt.get() instanceof Suspending);
+        }
+        return false;
     }
     
     public static boolean isNotFailed(JOrder order) {
@@ -532,7 +557,7 @@ public class OrdersHelper {
         o.setMarked(getMark(jOrder.asScala().mark()));
         // o.setIsCancelable(jOrder.asScala().isCancelable() ? true : null);
         o.setIsSuspendible(isSuspendible(jOrder) ? true : null);
-        o.setIsResumable(jOrder.asScala().isResumable() ? true : null);
+        o.setIsResumable(isResumable(jOrder) ? true : null);
         o.setScheduledFor(scheduledFor);
         o.setScheduledNever(JobSchedulerDate.NEVER_MILLIS.equals(scheduledFor));
         if (scheduledFor == null && surveyDateMillis != null && OrderStateText.SCHEDULED.equals(o.getState().get_text())) {

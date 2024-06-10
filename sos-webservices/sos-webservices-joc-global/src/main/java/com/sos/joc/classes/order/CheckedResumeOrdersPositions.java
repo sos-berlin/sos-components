@@ -185,7 +185,7 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
             throw new JocObjectNotExistException(String.format("Unknown OrderId: %s", order));
         }
         jOrders = Collections.singleton(jOrder);
-        if (withStatusCheck && !jOrder.asScala().isResumable()) {
+        if (withStatusCheck && !OrdersHelper.isResumable(jOrder)) {
             throw new JocBadRequestException("The order is not resumable."); 
         }
         
