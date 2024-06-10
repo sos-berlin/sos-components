@@ -440,34 +440,34 @@ public class OrderProcessStep<A extends JobArguments> {
 
         resolveArgumentValues();
     }
-    
+
     /** IJobArgumentValueResolver */
     private void resolveArgumentValues() throws Exception {
         if (allArguments != null) {
-            List<String> prefixes = JobArgumentValueResolverCache.getResolverPrefixes();
-            Map<String, List<JobArgument<?>>> groupedArguments = allArguments.values().stream().peek(arg -> {
-                if (arg.getValue() == null && arg.getNotAcceptedValue() != null && arg.getNotAcceptedValue().getValue() != null) {
-                    String v = (String) arg.getNotAcceptedValue().getValue();
-                    for (String p : prefixes) {
-                        if (v.startsWith(p)) {
-                            arg.setValue(v);
-                            arg.resetNotAcceptedValue();
-                        }
-                    }
-                }
-            }).flatMap(arg -> prefixes.stream().filter(prefix -> arg.getValue() != null && arg.getValue().toString().startsWith(prefix)).map(
-                    prefix -> new AbstractMap.SimpleEntry<>(prefix, arg))).collect(Collectors.groupingBy(Map.Entry::getKey, Collectors.mapping(
-                            Map.Entry::getValue, Collectors.toList())));
+            //List<String> prefixes = JobArgumentValueResolverCache.getResolverPrefixes();
+            //Map<String, List<JobArgument<?>>> groupedArguments = allArguments.values().stream().peek(arg -> {
+            //    if (arg.getValue() == null && arg.getNotAcceptedValue() != null && arg.getNotAcceptedValue().getValue() != null) {
+            //        String v = (String) arg.getNotAcceptedValue().getValue();
+            //        for (String p : prefixes) {
+            //            if (v.startsWith(p)) {
+            //                arg.setValue(v);
+            //                arg.resetNotAcceptedValue();
+            //            }
+            //        }
+            //    }
+            //}).flatMap(arg -> prefixes.stream().filter(prefix -> arg.getValue() != null && arg.getValue().toString().startsWith(prefix)).map(
+                    //prefix -> new AbstractMap.SimpleEntry<>(prefix, arg))).collect(Collectors.groupingBy(Map.Entry::getKey, Collectors.mapping(Map.Entry::getValue, Collectors.toList())));
+            //prefix -> new SimpleEntry<>(prefix, arg))).collect(Collectors.groupingBy(Map.Entry::getKey, Collectors.mapping(s-> s.getValue(), Collectors.toList())));
 
-            for (Map.Entry<String, List<JobArgument<?>>> entry : groupedArguments.entrySet()) {
-                try {
-                    JobArgumentValueResolverCache.resolve(entry.getKey(), entry.getValue(), logger, allArguments);
-                } catch (Throwable e) {
-                    Throwable ex = e.getCause() == null ? e : e.getCause();
-                    throw new JobArgumentException(String.format("[%s]%s", JobArgumentValueResolverCache.getResolverClassName(entry.getKey()), ex
-                            .toString()), ex);
-                }
-            }
+            //for (Map.Entry<String, List<JobArgument<?>>> entry : groupedArguments.entrySet()) {
+            //    try {
+            //        JobArgumentValueResolverCache.resolve(entry.getKey(), entry.getValue(), logger, allArguments);
+            //    } catch (Throwable e) {
+            //        Throwable ex = e.getCause() == null ? e : e.getCause();
+            //        throw new JobArgumentException(String.format("[%s]%s", JobArgumentValueResolverCache.getResolverClassName(entry.getKey()), ex
+            //                .toString()), ex);
+            //    }
+            //}
         }
     }
 
@@ -1102,6 +1102,33 @@ public class OrderProcessStep<A extends JobArguments> {
 
         protected boolean updateDeclaredArgumentsDefinition() {
             return updateDeclaredArgumentsDefinition;
+        }
+    }
+    
+    static class SimpleEntry<K, V> implements Map.Entry<K, V> {
+        private final K key;
+        private V value;
+
+        public SimpleEntry(K key, V value) {
+            this.key = key;
+            this.value = value;
+        }
+
+        @Override
+        public K getKey() {
+            return key;
+        }
+
+        @Override
+        public V getValue() {
+            return value;
+        }
+
+        @Override
+        public V setValue(V value) {
+            V old = this.value;
+            this.value = value;
+            return old;
         }
     }
 
