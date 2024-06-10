@@ -67,7 +67,7 @@ public class JobArgumentValueResolverCache {
         return METHOD_CACHE.entrySet().stream().map(e -> e.getKey()).collect(Collectors.toList());
     }
 
-    public static void resolve(String prefix, List<JobArgument<?>> toResolve, OrderProcessStepLogger logger, Map<String, Object> allArguments)
+    public static void resolve(String prefix, List<JobArgument<?>> toResolve, OrderProcessStepLogger logger, Map<String, JobArgument<?>> allArguments)
             throws Exception {
         METHOD_CACHE.get(prefix).invoke(null, toResolve, logger, allArguments);
     }

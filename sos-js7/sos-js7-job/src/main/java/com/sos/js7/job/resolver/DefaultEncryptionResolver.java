@@ -1,75 +1,87 @@
 package com.sos.js7.job.resolver;
 
-import java.nio.file.Paths;
 import java.security.PrivateKey;
-import java.security.cert.X509Certificate;
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
-import javax.crypto.SecretKey;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
-
 import com.sos.commons.encryption.EncryptionUtils;
+import com.sos.commons.encryption.common.EncryptedValue;
 import com.sos.commons.encryption.decrypt.Decrypt;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
+import com.sos.exception.SOSKeyException;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.OrderProcessStepLogger;
 
-public class DefaultEncryptionResolver implements IJobArgumentValueResolver {
+public class DefaultEncryptionResolver extends AJobArgumentValueResolver {
 
     public static final String ARG_NAME_ENCIPHERMENT_CERTIFICATE = "encipherment_certificate";
     public static final String ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH = "encipherment_private_key_path";
-    
-    private static PrivateKey privKey;
-    private static X509Certificate cert;
+    public static final String ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PASSWORD = "encipherment_private_key_password";
+    public static final String ARG_NAME_ENCIPHERMENT_FAIL_ON_ERROR = "encipherment_fail_on_error";// default true
+
+    private static final String CLASS_NAME = DefaultEncryptionResolver.class.getSimpleName();
 
     public static String getPrefix() {
         return EncryptionUtils.ENCRYPTION_IDENTIFIER;
     }
 
-    public static void resolve(List<JobArgument<?>> toResolve, OrderProcessStepLogger logger, Map<String, Object> allArguments) throws Exception {
+    public static void resolve(List<JobArgument<?>> toResolve, OrderProcessStepLogger logger, Map<String, JobArgument<?>> allArguments)
+            throws Exception {
 
-        String enciphermentCertificate = getArgumentValue(allArguments, ARG_NAME_ENCIPHERMENT_CERTIFICATE);
-        String privateKeyPath = getArgumentValue(allArguments, ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH);
+        PrivateKey privKey = getPrivateKey(allArguments);
+        validate(allArguments.get(ARG_NAME_ENCIPHERMENT_CERTIFICATE), privKey);
 
-        // TODO: read PK
-        privKey = KeyUtil.getPrivateKey(Paths.get(privateKeyPath));
-        cert = KeyUtil.getX509Certificate(enciphermentCertificate);
-        
-        // TODO: validate PK against certificate
-        
         for (JobArgument<?> arg : toResolve) {
+            debugArgument(logger, arg, CLASS_NAME);
             try {
-                arg.applyValue(decrypt((String) arg.getValue(), privateKeyPath));
+                arg.applyValue(Decrypt.decrypt(EncryptedValue.getInstance(arg.getName(), arg.getValue().toString()), privKey));
                 arg.setDisplayMode(DisplayMode.MASKED);
             } catch (Throwable e) {
+                if (getFailOnError(allArguments)) {
+                    throw e;
+                }
                 arg.setNotAcceptedValue(arg.getValue(), e);
             }
         }
     }
 
-    private static String decrypt(String valWithPrefix, String enciphermentPrivateKeyPath) throws Exception {
-        String val = valWithPrefix.substring(getPrefix().length());
-        String[] splittedValues = val.split(" ");
-        String encryptedKey = splittedValues[0];
-        String iv = splittedValues[1];
-        String encryptedValue = splittedValues[2];
-        SecretKey key = new SecretKeySpec(EncryptionUtils.decryptSymmetricKey(encryptedKey.getBytes(), privKey), "AES");
-        byte[] decodedIV = Base64.getDecoder().decode(iv);
-        String decryptedValue = Decrypt.decrypt(EncryptionUtils.CIPHER_ALGORITHM, encryptedValue, key,
-                new IvParameterSpec(decodedIV));
-        return decryptedValue;
+    private static PrivateKey getPrivateKey(Map<String, JobArgument<?>> allArguments) throws Exception {
+        JobArgument<?> arg = allArguments.get(ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH);
+        try {
+            PrivateKey pk = KeyUtil.getPrivateKey(arg == null || arg.getValue() == null ? null : arg.getValue().toString(), getPrivateKeyPassword(
+                    allArguments));
+            arg.setDisplayMode(DisplayMode.UNMASKED);
+            return pk;
+        } catch (Throwable e) {
+            String m = arg == null || arg.getValue() == null ? " missing" : ("=" + arg.getValue().toString());
+            throw new SOSKeyException("[argument " + ARG_NAME_ENCIPHERMENT_CERTIFICATE + m + "]" + e.toString(), e);
+        }
     }
 
-    private static String getArgumentValue(Map<String, Object> allArguments, String name) {
-        Object v = allArguments.get(name);
-        if (v == null) {
+    private static String getPrivateKeyPassword(Map<String, JobArgument<?>> allArguments) {
+        JobArgument<?> arg = allArguments.get(ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PASSWORD);
+        if (arg == null || arg.getValue() == null) {
             return null;
         }
-        return (String) v;
+        arg.setDisplayMode(DisplayMode.MASKED);
+        return arg.getValue().toString();
+    }
+
+    private static boolean getFailOnError(Map<String, JobArgument<?>> allArguments) {
+        JobArgument<?> arg = allArguments.get(ARG_NAME_ENCIPHERMENT_FAIL_ON_ERROR);
+        if (arg == null || arg.getValue() == null) {
+            return true;
+        }
+        return arg.getValue().toString().toLowerCase().equals("true");
+    }
+
+    // TODO: validate PK against certificate
+    private static void validate(JobArgument<?> argCertificate, PrivateKey privKey) throws Exception {
+        if (argCertificate == null || argCertificate.getValue() == null) {
+            return;
+        }
+        // X509Certificate cert = KeyUtil.getX509Certificate(argCertificate.getValue().toString());
     }
 
 }

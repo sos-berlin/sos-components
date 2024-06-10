@@ -2,6 +2,7 @@ package com.sos.js7.job;
 
 import java.lang.reflect.Field;
 import java.sql.Connection;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -437,35 +438,34 @@ public class OrderProcessStep<A extends JobArguments> {
             });
         }
 
-        resolveArgumenValues();
+        resolveArgumentValues();
     }
-
+    
     /** IJobArgumentValueResolver */
-    private void resolveArgumenValues() throws Exception {
-        if (allDeclaredArguments != null) {
-            Map<String, Object> am = getAllArgumentsAsNameValueMap();
-            for (String prefix : JobArgumentValueResolverCache.getResolverPrefixes()) {
-                // allArguments ?
-                List<JobArgument<?>> l = allDeclaredArguments.stream().map(e -> {
-                    if (e.getValue() == null && e.getNotAcceptedValue() != null) {
-                        if (e.getNotAcceptedValue().getValue() != null) {
-                            String v = (String) e.getNotAcceptedValue().getValue();
-                            if (v.startsWith(prefix)) {
-                                e.setValue(v);
-                                e.resetNotAcceptedValue();
-                            }
+    private void resolveArgumentValues() throws Exception {
+        if (allArguments != null) {
+            List<String> prefixes = JobArgumentValueResolverCache.getResolverPrefixes();
+            Map<String, List<JobArgument<?>>> groupedArguments = allArguments.values().stream().peek(arg -> {
+                if (arg.getValue() == null && arg.getNotAcceptedValue() != null && arg.getNotAcceptedValue().getValue() != null) {
+                    String v = (String) arg.getNotAcceptedValue().getValue();
+                    for (String p : prefixes) {
+                        if (v.startsWith(p)) {
+                            arg.setValue(v);
+                            arg.resetNotAcceptedValue();
                         }
                     }
-                    return e;
-                }).filter(e -> e.getValue() != null && e.getValue().toString().startsWith(prefix)).collect(Collectors.toList());
-                if (l.size() > 0) {
-                    try {
-                        JobArgumentValueResolverCache.resolve(prefix, l, logger, am);
-                    } catch (Throwable e) {
-                        Throwable ex = e.getCause() == null ? e : e.getCause();
-                        throw new JobArgumentException(String.format("[%s]%s", JobArgumentValueResolverCache.getResolverClassName(prefix), ex
-                                .toString()), ex);
-                    }
+                }
+            }).flatMap(arg -> prefixes.stream().filter(prefix -> arg.getValue() != null && arg.getValue().toString().startsWith(prefix)).map(
+                    prefix -> new AbstractMap.SimpleEntry<>(prefix, arg))).collect(Collectors.groupingBy(Map.Entry::getKey, Collectors.mapping(
+                            Map.Entry::getValue, Collectors.toList())));
+
+            for (Map.Entry<String, List<JobArgument<?>>> entry : groupedArguments.entrySet()) {
+                try {
+                    JobArgumentValueResolverCache.resolve(entry.getKey(), entry.getValue(), logger, allArguments);
+                } catch (Throwable e) {
+                    Throwable ex = e.getCause() == null ? e : e.getCause();
+                    throw new JobArgumentException(String.format("[%s]%s", JobArgumentValueResolverCache.getResolverClassName(entry.getKey()), ex
+                            .toString()), ex);
                 }
             }
         }
