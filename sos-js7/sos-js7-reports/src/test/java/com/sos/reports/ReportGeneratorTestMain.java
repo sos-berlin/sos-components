@@ -10,24 +10,24 @@ public class ReportGeneratorTestMain {
  // 1. top n frequently failed workflows
  // 2. top n frequently failed jobs
  // 3. top n agents with most parallel execution
- // 5. top n high criticality failed jobs
- // 6. top n frequently failed workflows with cancelled orders
- // 7. top n workflows with the longest execution time
- // 8. top n jobs with the longest execution time
- // 9. top n periods during which mostly workflows executed.
- // 10. top n periods during which mostly jobs executed.
+ // 4. top n high criticality failed jobs
+ // 5. top n frequently failed workflows with cancelled orders
+ // 6. top n workflows with the longest execution time
+ // 7. top n jobs with the longest execution time
+ // 8. top n periods during which mostly workflows executed.
+ // 9. top n periods during which mostly jobs executed.
 
      @Test
     public void test() throws Exception {
 
-        String report = "3";
-        String hits = "3";
-        String inputDirectory = "c:/temp/in";
+        String report = "1";
+        String hits = "8";
+        String inputDirectory = "C:/Program Files/sos-berlin.com/js7/joc/jetty_base/reporting/data";
         String outputDirectory = "c:/tmp";
         String frequency = "weekly";
         String monthFrom = "2023-01";
-        String monthTo = "2023-12";
-        String controller = "controller";
+        String monthTo = "2024-12";
+       // String controller = "controller";
         String sort = "HIGHEST";
         
         List<String> args = new ArrayList<>();
@@ -37,7 +37,7 @@ public class ReportGeneratorTestMain {
         args.add("-p");args.add(frequency);
         args.add("-o");args.add(outputDirectory);
         args.add("-s");args.add(monthFrom);
-        args.add("-c");args.add(controller);
+       // args.add("-c");args.add(controller);
         args.add("-e");args.add(monthTo);
         args.add("-f");args.add(sort);
 

@@ -79,8 +79,10 @@ public class ReportRecord {
     }
 
     public void setStartTime(String startTime) {
-        startTime = startTime.replace(' ', 'T');
-        this.startTime = LocalDateTime.parse(startTime);
+        if (!startTime.isEmpty()) {
+            startTime = startTime.replace(' ', 'T');
+            this.startTime = LocalDateTime.parse(startTime);
+        }
     }
 
     public LocalDateTime getPlannedTime() {
@@ -92,8 +94,10 @@ public class ReportRecord {
     }
 
     public void setPlannedTime(String plannedTime) {
-        plannedTime = plannedTime.replace(' ', 'T');
-        this.plannedTime = LocalDateTime.parse(plannedTime);
+        if (!plannedTime.isEmpty()) {
+            plannedTime = plannedTime.replace(' ', 'T');
+            this.plannedTime = LocalDateTime.parse(plannedTime);
+        }
     }
 
     public LocalDateTime getEndTime() {
@@ -128,8 +132,10 @@ public class ReportRecord {
     }
 
     public void setCreated(String created) {
-        created = created.replace(' ', 'T');
-        this.created = LocalDateTime.parse(created);
+        if (!created.isEmpty()) {
+            created = created.replace(' ', 'T');
+            this.created = LocalDateTime.parse(created);
+        }
     }
 
     public LocalDateTime getModified() {
@@ -141,8 +147,10 @@ public class ReportRecord {
     }
 
     public void setModified(String modified) {
-        modified = modified.replace(' ', 'T');
-        this.modified = LocalDateTime.parse(modified);
+        if (!modified.isEmpty()) {
+            modified = modified.replace(' ', 'T');
+            this.modified = LocalDateTime.parse(modified);
+        }
     }
 
     public void setOrderState(String orderState) {

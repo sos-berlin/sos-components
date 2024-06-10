@@ -8,11 +8,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.exception.SOSException;
-import com.sos.inventory.model.report.TemplateId;
 import com.sos.reports.classes.CSVFileReader;
 import com.sos.reports.classes.IReport;
 import com.sos.reports.classes.ReportArguments;
-import com.sos.reports.classes.ReportPeriod;
 import com.sos.reports.reports.ReportFailedJobs;
 import com.sos.reports.reports.ReportFailedWorkflows;
 import com.sos.reports.reports.ReportFailedWorkflowsWithCancelledOrders;
