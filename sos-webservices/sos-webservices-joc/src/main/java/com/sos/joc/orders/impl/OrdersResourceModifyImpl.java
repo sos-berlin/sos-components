@@ -541,7 +541,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             // TODO handle grouped fresh cyclicOrders
             Set<OrderId> orderIds = Collections.emptySet();
             if (OrdersHelper.isCyclicOrderId(oId.string())) {
-                orderIds = cyclicFreshOrderIds(Collections.singleton(oId.string()), currentState).filter(co -> co.asScala().isResumable()).map(
+                orderIds = cyclicFreshOrderIds(Collections.singleton(oId.string()), currentState).filter(OrdersHelper::isResumable).map(
                         JOrder::id).collect(Collectors.toSet());
             }
             if (orderIds.isEmpty()) {
@@ -640,8 +640,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     public Set<JOrder> getJOrders(Action action, Stream<JOrder> orderStream, String controllerId, boolean withPostProblem) {
         switch (action) {
         case RESUME:
+            Map<Boolean, Set<JOrder>> resumableOrders = orderStream.collect(Collectors.groupingBy(OrdersHelper::isResumable,
 
-            Map<Boolean, Set<JOrder>> resumableOrders = orderStream.collect(Collectors.groupingBy(o -> o.asScala().isResumable(),
                     Collectors.toSet()));
             postProblem(resumableOrders, controllerId, withPostProblem, "resumable");
             return resumableOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
@@ -718,7 +718,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
         case RESUME:
             Stream<OrderId> cyclicOrders = cyclicFreshOrderIds(jOrders.stream().map(JOrder::id).map(OrderId::string).collect(Collectors.toSet()),
-                    currentState).filter(co -> co.asScala().isResumable()).map(JOrder::id);
+                    currentState).filter(OrdersHelper::isResumable).map(JOrder::id);
             return ControllerApi.of(controllerId).resumeOrders(Stream.concat(oIdsStream, cyclicOrders).collect(Collectors.toSet()), true);
 
         case SUSPEND:
@@ -856,7 +856,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 Predicate<JOrder> actionFilter = o -> !o.asScala().isSuspended();
                 return actionFilter.and(dateToFilter);
             } else if (Action.RESUME.equals(action)) {
-                Predicate<JOrder> actionFilter = o -> o.asScala().isResumable();
+                Predicate<JOrder> actionFilter = o -> OrdersHelper.isResumable(o);
                 return actionFilter.and(dateToFilter);
             } else {
                 return dateToFilter;
