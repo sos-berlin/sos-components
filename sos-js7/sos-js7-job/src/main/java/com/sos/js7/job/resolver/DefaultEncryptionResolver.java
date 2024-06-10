@@ -55,7 +55,7 @@ public class DefaultEncryptionResolver extends AJobArgumentValueResolver {
             return pk;
         } catch (Throwable e) {
             String m = arg == null || arg.getValue() == null ? " missing" : ("=" + arg.getValue().toString());
-            throw new SOSKeyException("[argument " + ARG_NAME_ENCIPHERMENT_CERTIFICATE + m + "]" + e.toString(), e);
+            throw new SOSKeyException("[argument " + ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH + m + "]" + e.toString(), e);
         }
     }
 
