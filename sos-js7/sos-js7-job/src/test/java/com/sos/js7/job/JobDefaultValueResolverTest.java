@@ -66,7 +66,6 @@ public class JobDefaultValueResolverTest {
         args.put(DefaultEncryptionResolver.ARG_NAME_ENCIPHERMENT_CERTIFICATE, CertificateUtils.asPEMString(KeyUtil.getX509Certificate(
                 certificatePath)));
         args.put(DefaultEncryptionResolver.ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH, keyPath.toFile().getCanonicalPath());
-        args.put(DefaultEncryptionResolver.ARG_NAME_ENCIPHERMENT_FAIL_ON_ERROR, "false");
         args.put("my_arg", DefaultEncryptionResolver.getPrefix()
                 + "BBFzQJSWD8lVzwf02qkX81PmXGiSxDc9Uf2fs594jjRJLycsBnrYJaUBjjl9a5Fo4IZ6I17mFww6xdGxTj2eZHuKmwKy2+Txae+kvJxImd+ZUdL8Gn2UrUtHdjsS4cOD1n6CysJBckh1EVGecriZPeque/kd KFPflA0MAilZ1KYfPDSiGw== 2sO5Qtw07FD1X4JsQycDhQ==");
 
@@ -78,14 +77,13 @@ public class JobDefaultValueResolverTest {
 
     @Ignore
     @Test
+    // will fail because there is intentionally no support for private keys with password
     public void testEncryptionECPWResolver() throws Exception {
         Path keyPath = ENCRYPTION_RESOURCES_DIR.resolve("ec_test_pw.key");// agent.key
 
         Map<String, Object> args = new HashMap<>();
         args.put("log_all_arguments", Boolean.valueOf(true));
         args.put(DefaultEncryptionResolver.ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH, keyPath.toFile().getCanonicalPath());
-        args.put(DefaultEncryptionResolver.ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PASSWORD, "jobscheduler");
-        args.put(DefaultEncryptionResolver.ARG_NAME_ENCIPHERMENT_FAIL_ON_ERROR, "false");
         args.put("my_arg", DefaultEncryptionResolver.getPrefix()
                 + "BBFzQJSWD8lVzwf02qkX81PmXGiSxDc9Uf2fs594jjRJLycsBnrYJaUBjjl9a5Fo4IZ6I17mFww6xdGxTj2eZHuKmwKy2+Txae+kvJxImd+ZUdL8Gn2UrUtHdjsS4cOD1n6CysJBckh1EVGecriZPeque/kd KFPflA0MAilZ1KYfPDSiGw== 2sO5Qtw07FD1X4JsQycDhQ==");
 

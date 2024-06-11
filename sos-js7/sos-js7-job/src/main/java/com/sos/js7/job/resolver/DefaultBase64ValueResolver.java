@@ -20,6 +20,7 @@ public class DefaultBase64ValueResolver extends AJobArgumentValueResolver {
             throws Exception {
         for (JobArgument<?> arg : toResolve) {
             debugArgument(logger, arg, CLASS_NAME);
+            // Throw exception if any argument cannot be resolved
             // try {
             arg.applyValue(SOSBase64.decode(getValueWithoutPrefix(arg, getPrefix())));
             // arg.setDisplayMode(DisplayMode.UNKNOWN);
