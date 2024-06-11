@@ -1,6 +1,7 @@
 
 package com.sos.joc.model.inventory.search;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -91,6 +92,12 @@ public class ResponseBaseSearchItem {
     @JsonProperty("name")
     public String getName() {
         return name;
+    }
+    
+    
+    @JsonIgnore
+    public String getLowerCaseName() {
+        return name == null ? "" : name.toLowerCase();
     }
 
     /**
