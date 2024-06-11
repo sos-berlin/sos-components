@@ -360,15 +360,29 @@ public class OrderTags {
         return result.stream().collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
-    public static List<String> getMainOrderIdsByTags(String controllerId, Set<String> oTags) throws SOSHibernateException {
+    public static List<String> getMainOrderIdsByTags(String controllerId, Set<String> oTags) {
         if (oTags != null && !oTags.isEmpty()) {
             SOSHibernateSession connection = null;
             try {
                 connection = Globals.createSosHibernateStatelessConnection("getOrderTags");
+                return getMainOrderIdsByTags(controllerId, oTags, connection);
+            } finally {
+                Globals.disconnect(connection);
+            }
+        }
+        return Collections.emptyList();
+    }
+    
+    public static List<String> getMainOrderIdsByTags(String controllerId, Set<String> oTags, SOSHibernateSession connection) {
+        if (connection == null) {
+            return getMainOrderIdsByTags(controllerId, oTags);
+        }
+        if (oTags != null && !oTags.isEmpty()) {
+            try {
                 StringBuilder hql = new StringBuilder("select orderId from ").append(DBLayer.DBITEM_HISTORY_ORDER_TAGS);
                 List<String> cause = new ArrayList<>(2);
                 if (controllerId != null && !controllerId.isBlank()) {
-                    cause.add("controllerId=:controllerId"); 
+                    cause.add("controllerId=:controllerId");
                 }
                 cause.add("tagName in (:tagNames)");
                 hql.append(cause.stream().collect(Collectors.joining(" and ", " where ", "")));
@@ -376,7 +390,7 @@ public class OrderTags {
 
                 Query<String> query = connection.createQuery(hql.toString());
                 if (controllerId != null && !controllerId.isBlank()) {
-                query.setParameter("controllerId", controllerId);
+                    query.setParameter("controllerId", controllerId);
                 }
                 query.setParameterList("tagNames", oTags);
                 List<String> result = connection.getResultList(query);
@@ -384,8 +398,10 @@ public class OrderTags {
                     return Collections.emptyList();
                 }
                 return result;
-            } finally {
-                Globals.disconnect(connection);
+            } catch (SOSHibernateInvalidSessionException ex) {
+                throw new DBConnectionRefusedException(ex);
+            } catch (Exception ex) {
+                throw new DBInvalidDataException(ex);
             }
         }
         return Collections.emptyList();

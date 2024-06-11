@@ -11,9 +11,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import jakarta.ws.rs.Path;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +39,7 @@ import com.sos.joc.model.workflow.search.InstructionStateText;
 import com.sos.joc.workflows.resource.IWorkflowsResource;
 import com.sos.schema.JsonValidator;
 
+import jakarta.ws.rs.Path;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.workflow.position.JPosition;
 
@@ -92,10 +90,15 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
     public static List<Workflow> getWorkflows(WorkflowsFilter workflowsFilter, DeployedConfigurationDBLayer dbLayer, JControllerState currentstate,
             Set<Folder> permittedFolders, JocError jocError) {
         boolean compact = workflowsFilter.getCompact() == Boolean.TRUE;
-        List<DeployedContent> contents = WorkflowsHelper.getDeployedContents(workflowsFilter, dbLayer, currentstate, permittedFolders);
-        Stream<DeployedContent> contentsStream = WorkflowsHelper.getDeployedContentsStream(workflowsFilter, dbLayer, contents, permittedFolders);
-        
         String controllerId = workflowsFilter.getControllerId();
+        
+        List<DeployedContent> contents = WorkflowsHelper.getDeployedContents(workflowsFilter, dbLayer, currentstate, permittedFolders).collect(
+                Collectors.toList());
+
+        Map<String, List<FileOrderSource>> fileOrderSources = (compact) ? null : WorkflowsHelper.workflowToFileOrderSources(currentstate,
+                controllerId, contents.stream().filter(DeployedContent::isCurrentVersion).map(DeployedContent::getPath).map(JocInventory::pathToName)
+                        .collect(Collectors.toSet()), dbLayer);
+        
         // TODO should be permantly stored and updated by events
         //Set<String> workflowNamesWithAddOrders = dbLayer.getAddOrderWorkflows(controllerId);
         Set<String> workflowNamesWithAddOrders = WorkflowRefs.getWorkflowNamesWithAddOrders(controllerId);
@@ -106,10 +109,8 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
         boolean withSkippedInstructionStateFilter = workflowsFilter.getInstructionStates().contains(InstructionStateText.SKIPPED);
         boolean withStoppedInstructionStateFilter = workflowsFilter.getInstructionStates().contains(InstructionStateText.STOPPED);
 
-        Map<String, List<FileOrderSource>> fileOrderSources = (compact) ? null : WorkflowsHelper.workflowToFileOrderSources(currentstate,
-                controllerId, contents.stream().filter(DeployedContent::isCurrentVersion).map(DeployedContent::getPath).map(JocInventory::pathToName)
-                        .collect(Collectors.toSet()), dbLayer);
-        return contentsStream.map(w -> {
+        return WorkflowsHelper.getDeployedContentsStream(workflowsFilter, dbLayer, currentstate, contents,
+                permittedFolders).map(w -> {
             try {
                 if (w.getContent() == null || w.getContent().isEmpty()) {
                     throw new DBMissingDataException("doesn't exist");

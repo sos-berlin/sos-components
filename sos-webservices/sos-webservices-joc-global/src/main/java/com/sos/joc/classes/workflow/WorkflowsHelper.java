@@ -66,6 +66,7 @@ import com.sos.joc.classes.common.SyncStateHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.LockToLockDemandsConverter;
 import com.sos.joc.classes.inventory.NoticeToNoticesConverter;
+import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.DeployedConfigurationFilter;
@@ -313,9 +314,9 @@ public class WorkflowsHelper {
         SOSHibernateSession connection = null;
         try {
             connection = Globals.createSosHibernateStatelessConnection("getWorkflowIdsFromFolder");
-            List<DeployedContent> contents = WorkflowsHelper.getDeployedContents(workflowsFilter, new DeployedConfigurationDBLayer(connection),
+            Stream<DeployedContent> contents = WorkflowsHelper.getDeployedContents(workflowsFilter, new DeployedConfigurationDBLayer(connection),
                     currentstate, permittedFolders);
-            return contents.parallelStream().map(w -> currentstate.repo().idToCheckedWorkflow(JWorkflowId.of(w.getName(), w.getCommitId()))).filter(
+            return contents.parallel().map(w -> currentstate.repo().idToCheckedWorkflow(JWorkflowId.of(w.getName(), w.getCommitId()))).filter(
                     Either::isRight).map(Either::get).map(JWorkflow::id);
         } finally {
             Globals.disconnect(connection);
@@ -336,28 +337,47 @@ public class WorkflowsHelper {
                 .toSet());
     }
 
-    public static List<DeployedContent> getDeployedContents(WorkflowsFilter workflowsFilter, DeployedConfigurationDBLayer dbLayer,
+    public static Stream<DeployedContent> getDeployedContents(WorkflowsFilter workflowsFilter, DeployedConfigurationDBLayer dbLayer,
             JControllerState currentstate, Set<Folder> permittedFolders) {
 
         List<DeployedContent> contents = getPermanentDeployedContent(workflowsFilter, dbLayer, permittedFolders);
         if (currentstate != null) {
-            contents.addAll(getOlderWorkflows(workflowsFilter, currentstate, dbLayer, permittedFolders));
+            Set<String> workflowNames = contents.stream().map(DeployedContent::getName).collect(Collectors.toSet());
+            //contents.addAll(getOlderWorkflows(workflowsFilter, workflowNames, currentstate, dbLayer, permittedFolders));
+            return Stream.concat(contents.stream(), getOlderWorkflows(workflowsFilter, workflowNames, currentstate, dbLayer, permittedFolders));
         }
-        List<WorkflowId> workflowIds = workflowsFilter.getWorkflowIds();
-        if (workflowIds != null && !workflowIds.isEmpty()) {
-            workflowsFilter.setFolders(null);
-            workflowsFilter.setRegex(null);
-            workflowsFilter.setStates(null);
-            workflowsFilter.setWorkflowTags(null);
-        }
-
-        return contents;
+        return contents.stream();
     }
 
+    public static Set<WorkflowId> getTaggedWorkflowNames(WorkflowsFilter workflowsFilter, SOSHibernateSession session,
+            JControllerState currentstate) {
+        return getTaggedWorkflowNames(workflowsFilter.getControllerId(), workflowsFilter.getOrderTags(), session, currentstate);
+    }
+    
+    public static Set<WorkflowId> getTaggedWorkflowNames(String controllerId, Set<String> orderTags, SOSHibernateSession session,
+            JControllerState currentstate) {
+        if (orderTags != null && currentstate != null) {
+            return getTaggedJWorkflowIds(controllerId, orderTags, session, currentstate).map(JOrder::workflowId).map(w -> new WorkflowId(w.path()
+                    .string(), w.versionId().string())).collect(Collectors.toSet());
+        }
+        return Collections.emptySet();
+    }
+    
+    public static Stream<JOrder> getTaggedJWorkflowIds(String controllerId, Set<String> orderTags, SOSHibernateSession session,
+            JControllerState currentstate) {
+        Stream<JOrder> taggedWorkflowNames = Stream.empty();
+        if (orderTags != null && currentstate != null) {
+            List<String> taggedOIds = OrderTags.getMainOrderIdsByTags(controllerId, orderTags, session);
+            taggedWorkflowNames = currentstate.ordersBy(o -> taggedOIds.contains(OrdersHelper.getOrderIdMainPart(o.id().string())));
+        }
+        return taggedWorkflowNames;
+    }
+    
     public static Stream<DeployedContent> getDeployedContentsStream(WorkflowsFilter workflowsFilter, DeployedConfigurationDBLayer dbLayer,
-            List<DeployedContent> contents, Set<Folder> permittedFolders) {
+            JControllerState currentstate, List<DeployedContent> contents, Set<Folder> permittedFolders) {
 
         Stream<DeployedContent> contentsStream = contents.parallelStream().distinct();
+        
         boolean withoutFilter = (workflowsFilter.getFolders() == null || workflowsFilter.getFolders().isEmpty()) && (workflowsFilter
                 .getWorkflowIds() == null || workflowsFilter.getWorkflowIds().isEmpty());
         if (withoutFilter) {
@@ -397,6 +417,11 @@ public class WorkflowsHelper {
                     Pattern.CASE_INSENSITIVE).asPredicate();
             contentsStream = contentsStream.filter(w -> pred.test(w.getContent()));
         }
+        
+        if (workflowsFilter.getOrderTags() != null && !workflowsFilter.getOrderTags().isEmpty()) {
+            Set<WorkflowId> taggedWorkflowNames = WorkflowsHelper.getTaggedWorkflowNames(workflowsFilter, dbLayer.getSession(), currentstate);
+            contentsStream = contentsStream.filter(w -> taggedWorkflowNames.contains(w.getWorkflowId()));
+        }
 
         return contentsStream;
     }
@@ -409,18 +434,20 @@ public class WorkflowsHelper {
         dbFilter.setTags(workflowsFilter.getWorkflowTags());
 
         List<WorkflowId> workflowIds = workflowsFilter.getWorkflowIds();
+        Stream<WorkflowId> workflowIdsStream = Stream.empty();
         if (workflowIds != null && !workflowIds.isEmpty()) {
             workflowsFilter.setFolders(null);
             workflowsFilter.setRegex(null);
             workflowsFilter.setWorkflowTags(null);
+            workflowIdsStream = workflowIds.stream().peek(w -> w.setPath(JocInventory.pathToName(w.getPath()))).distinct();
         }
         boolean withFolderFilter = workflowsFilter.getFolders() != null && !workflowsFilter.getFolders().isEmpty();
         List<DeployedContent> contents = null;
 
         if (workflowIds != null && !workflowIds.isEmpty()) {
-            ConcurrentMap<Boolean, Set<WorkflowId>> workflowMap = workflowIds.stream().parallel().filter(w -> JOCResourceImpl.canAdd(w.getPath(),
-                    permittedFolders)).collect(Collectors.groupingByConcurrent(w -> w.getVersionId() != null && !w.getVersionId().isEmpty(),
-                            Collectors.toSet()));
+            ConcurrentMap<Boolean, Set<WorkflowId>> workflowMap = workflowIdsStream.parallel().filter(w -> JOCResourceImpl.canAdd(WorkflowPaths
+                    .getPath(w.getPath()), permittedFolders)).collect(Collectors.groupingByConcurrent(w -> w.getVersionId() != null && !w
+                            .getVersionId().isEmpty(), Collectors.toSet()));
             if (workflowMap.containsKey(true)) {  // with versionId
                 dbFilter.setWorkflowIds(workflowMap.get(true));
                 contents = dbLayer.getDeployedInventoryWithCommitIds(dbFilter);
@@ -470,9 +497,9 @@ public class WorkflowsHelper {
         return contents;
     }
 
-    private static List<DeployedContent> getOlderWorkflows(WorkflowsFilter workflowsFilter, JControllerState currentState,
+    private static Stream<DeployedContent> getOlderWorkflows(WorkflowsFilter workflowsFilter, Set<String> workflowNames, JControllerState currentState,
             DeployedConfigurationDBLayer dbLayer, Set<Folder> permittedFolders) {
-
+        
         List<WorkflowId> workflowIds = workflowsFilter.getWorkflowIds();
         List<DeployedContent> contents = null;
         boolean withFolderFilter = workflowsFilter.getFolders() != null && !workflowsFilter.getFolders().isEmpty();
@@ -484,9 +511,9 @@ public class WorkflowsHelper {
             // no folder permissions
         } else {
 
-            List<WorkflowId> wIds = oldWorkflowIds(currentState).collect(Collectors.toList());
+            List<WorkflowId> wIds = oldWorkflowIds(currentState).filter(wId -> workflowNames.contains(wId.getPath())).collect(Collectors.toList());
             if (wIds == null || wIds.isEmpty()) {
-                return Collections.emptyList();
+                return Stream.empty();
             }
             // List<String> jsons = oldJWorkflowIds(currentState).map(wId ->
             // currentState.repo().idToCheckedWorkflow(wId)).filter(Either::isRight).map(Either::get).map(JWorkflow::toJson).collect(Collectors.toList());
@@ -514,7 +541,7 @@ public class WorkflowsHelper {
         }
 
         if (contents == null) {
-            return Collections.emptyList();
+            return Stream.empty();
         }
 
         Stream<DeployedContent> stream = contents.stream().peek(i -> i.setPath(WorkflowPaths.getPath(i.getName())));
@@ -522,7 +549,7 @@ public class WorkflowsHelper {
             stream = stream.filter(i -> JOCResourceImpl.canAdd(i.getPath(), permittedFolders));
         }
         
-        return stream.collect(Collectors.toList());
+        return stream;
     }
 
     private static void setInitialDeps(WorkflowDeps w, Set<String> expectedNoticeBoards, Set<String> postNoticeBoards,
@@ -1465,6 +1492,12 @@ public class WorkflowsHelper {
                 return true;
             };
         }
+        
+        Predicate<JOrder> orderTagsFilter = o -> true;
+        List<String> taggedOIds = OrderTags.getMainOrderIdsByTags(workflowsFilter.getControllerId(), workflowsFilter.getOrderTags());
+        if (workflowsFilter.getOrderTags() != null && !workflowsFilter.getOrderTags().isEmpty()) {
+            orderTagsFilter = o -> taggedOIds.contains(OrdersHelper.getOrderIdMainPart(o.id().string()));
+        }
 
         Set<VersionedItemId<WorkflowPath>> workflows2 = workflowsFilter.getWorkflowIds().parallelStream().filter(w -> JOCResourceImpl.canAdd(
                 WorkflowPaths.getPath(w), permittedFolders)).map(w -> {
@@ -1495,9 +1528,9 @@ public class WorkflowsHelper {
         Set<OrderId> blockedButWaitingForAdmissionOrderIds = blockedButWaitingForAdmissionOrders.keySet();
 
         Stream<JOrder> cycledOrderStream = currentstate.ordersBy(JOrderPredicates.and(workflowFilter, cycledOrderFilter)).parallel().filter(
-                dateToFilter);
+                dateToFilter).filter(orderTagsFilter);
         Stream<JOrder> notCycledOrderStream = currentstate.ordersBy(JOrderPredicates.and(workflowFilter, notCycledOrderFilter)).parallel().filter(
-                dateToFilter);
+                dateToFilter).filter(orderTagsFilter);
         Comparator<JOrder> comp = Comparator.comparing(o -> o.id().string());
         Collection<TreeSet<JOrder>> cycledOrderColl = cycledOrderStream.filter(o -> !blockedButWaitingForAdmissionOrderIds.contains(o.id())).collect(
                 Collectors.groupingBy(o -> OrdersHelper.getCyclicOrderIdMainPart(o.id().string()), Collectors.toCollection(() -> new TreeSet<>(

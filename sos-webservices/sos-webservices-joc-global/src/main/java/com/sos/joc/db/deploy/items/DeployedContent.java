@@ -5,6 +5,7 @@ import java.util.Date;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.Globals;
 
 public class DeployedContent {
@@ -105,6 +106,10 @@ public class DeployedContent {
     
     public Boolean isCurrentVersion() {
         return isCurrentVersion;
+    }
+    
+    public WorkflowId getWorkflowId() {
+        return new WorkflowId(name, commitId);
     }
     
     @Override

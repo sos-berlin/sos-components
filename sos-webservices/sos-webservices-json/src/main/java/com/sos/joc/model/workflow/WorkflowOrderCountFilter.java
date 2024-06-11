@@ -1,10 +1,13 @@
 
 package com.sos.joc.model.workflow;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -19,7 +22,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "dateTo",
-    "timeZone"
+    "timeZone",
+    "orderTags"
 })
 public class WorkflowOrderCountFilter
     extends WorkflowIdsFilter
@@ -41,6 +45,15 @@ public class WorkflowOrderCountFilter
     @JsonProperty("timeZone")
     @JsonPropertyDescription("see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones")
     private String timeZone;
+    /**
+     * tags
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("orderTags")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<String> orderTags = new LinkedHashSet<String>();
 
     /**
      * string for dateFrom and dateTo as search filter
@@ -82,14 +95,36 @@ public class WorkflowOrderCountFilter
         this.timeZone = timeZone;
     }
 
+    /**
+     * tags
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("orderTags")
+    public Set<String> getOrderTags() {
+        return orderTags;
+    }
+
+    /**
+     * tags
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("orderTags")
+    public void setOrderTags(Set<String> orderTags) {
+        this.orderTags = orderTags;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("dateTo", dateTo).append("timeZone", timeZone).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("dateTo", dateTo).append("timeZone", timeZone).append("orderTags", orderTags).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(dateTo).append(timeZone).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(dateTo).append(timeZone).append(orderTags).toHashCode();
     }
 
     @Override
@@ -101,7 +136,7 @@ public class WorkflowOrderCountFilter
             return false;
         }
         WorkflowOrderCountFilter rhs = ((WorkflowOrderCountFilter) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(dateTo, rhs.dateTo).append(timeZone, rhs.timeZone).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(dateTo, rhs.dateTo).append(timeZone, rhs.timeZone).append(orderTags, rhs.orderTags).isEquals();
     }
 
 }
