@@ -436,11 +436,10 @@ public class QuickSearchStore {
 
             session = Globals.createSosHibernateStatelessConnection("TagSearch");
             Comparator<ResponseBaseSearchItem> comp = Comparator.comparingInt(ResponseBaseSearchItem::getOrdering);
-
+            
             if (type != null) {
                 DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
                 List<InventoryTagItem> items = dbLayer.getTagSearch(in.getControllerId(), Collections.singleton(type.intValue()), in.getSearch());
-
                 if (items != null) {
                     Predicate<InventoryTagItem> isPermitted = item -> folderPermissions.isPermittedForFolder(item.getFolder());
                     return items.stream().filter(isPermitted).peek(item -> item.setFolder(null)).distinct().sorted(comp).collect(Collectors.toList());
@@ -449,8 +448,8 @@ public class QuickSearchStore {
                 }
 
             } else if (nonConfigurationType != null && nonConfigurationType.equals("ORDER")) {
-                return OrderTags.getTagSearch(in.getControllerId(), in.getSearch(), session).stream().distinct().sorted(comp).collect(Collectors
-                        .toList());
+                return OrderTags.getTagSearch(in.getControllerId(), in.getSearch(), session).stream().distinct().sorted(comp.thenComparing(
+                        ResponseBaseSearchItem::getLowerCaseName)).collect(Collectors.toList());
             }
             return Collections.emptyList();
         } finally {

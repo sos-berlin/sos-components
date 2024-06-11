@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSDate;
+import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
@@ -63,7 +64,8 @@ public class DBLayerDailyPlanSubmissions extends DBLayer {
         Long countSubmitted = getCountSubmittedOrders(where);
         int result = 0;
         if (countSubmitted.equals(0L)) {
-            result = deleteOrderVariabless(where);
+            deleteOrderTags(controllerId, where);
+            result = deleteOrderVariables(where);
             result += deleteOrders(where);
             result += deleteSubmissions(where);
         } else {
@@ -83,8 +85,21 @@ public class DBLayerDailyPlanSubmissions extends DBLayer {
         Query<Long> query = getSession().createQuery(hql.toString());
         return getSession().getSingleResult(where.bindParams(query));
     }
+    
+    private void deleteOrderTags(String controllerId, SubmissionsDeleteWhere where) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select orderId from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
+        hql.append("where controllerId=:controllerId ");
+        hql.append("and submitted=false ");
+        hql.append("and submissionHistoryId in (");
+        hql.append("select id from ").append(DBLayer.DBITEM_DPL_SUBMISSIONS).append(" ").append(where.getHql());
+        hql.append(")");
 
-    private int deleteOrderVariabless(SubmissionsDeleteWhere where) throws SOSHibernateException {
+        Query<String> query = getSession().createQuery(hql.toString());
+        where.bindParams(query);
+        OrderTags.deleteTags(controllerId, getSession().getResultList(query), getSession());
+    }
+
+    private int deleteOrderVariables(SubmissionsDeleteWhere where) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_DPL_ORDER_VARIABLES).append(" ");
         hql.append("where orderId in (");
         hql.append("select orderId from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
@@ -96,7 +111,7 @@ public class DBLayerDailyPlanSubmissions extends DBLayer {
         hql.append(") ");
 
         Query<DBItemDailyPlanVariable> query = getSession().createQuery(hql.toString());
-        return tryDelete(where.bindParams(query), "deleteOrderVariabless");
+        return tryDelete(where.bindParams(query), "deleteOrderVariables");
     }
 
     private int deleteOrders(SubmissionsDeleteWhere where) throws SOSHibernateException {
