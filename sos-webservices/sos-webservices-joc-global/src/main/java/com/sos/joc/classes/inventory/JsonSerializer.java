@@ -200,7 +200,7 @@ public class JsonSerializer {
                 j.getAdditionalProperties().forEach((key, job) -> {
                     job.setFailOnErrWritten(defaultToNull(job.getFailOnErrWritten(), Boolean.FALSE));
                     //job.setProcessLimit(defaultToNull(job.getProcessLimit(), 1));
-                    job.setDefaultArguments(emptyEnvToNullAndQuoteStrings(job.getDefaultArguments()));
+                    job.setDefaultArguments(emptyEnvToNull(job.getDefaultArguments()));
                     emptyStringCollectionsToNull(job.getJobResourcePaths());
                     emptyExecutableToNull(job.getExecutable(), job.getReturnCodeMeaning());
                     job.setReturnCodeMeaning(null);
@@ -226,7 +226,7 @@ public class JsonSerializer {
                     job.setWarnOnErrWritten(defaultToNull(job.getWarnOnErrWritten(), Boolean.FALSE));
                     job.setWithSubagentClusterIdExpr(defaultToNull(job.getWithSubagentClusterIdExpr(), Boolean.FALSE));
                     job.setParallelism(defaultToNull(job.getParallelism(), 1));
-                    job.setDefaultArguments(emptyEnvToNullAndQuoteStrings(job.getDefaultArguments()));
+                    job.setDefaultArguments(emptyEnvToNull(job.getDefaultArguments()));
                     emptyStringCollectionsToNull(job.getJobResourceNames());
                     emptyExecutableToNull(job.getExecutable(), job.getReturnCodeMeaning());
                     job.setReturnCodeMeaning(null);
@@ -247,7 +247,7 @@ public class JsonSerializer {
             jt.setFailOnErrWritten(defaultToNull(jt.getFailOnErrWritten(), Boolean.FALSE));
             jt.setWarnOnErrWritten(defaultToNull(jt.getWarnOnErrWritten(), Boolean.FALSE));
             jt.setParallelism(defaultToNull(jt.getParallelism(), 1));
-            jt.setDefaultArguments(emptyEnvToNullAndQuoteStrings(jt.getDefaultArguments()));
+            jt.setDefaultArguments(emptyEnvToNull(jt.getDefaultArguments()));
             emptyStringCollectionsToNull(jt.getJobResourceNames());
             emptyExecutableToNull(jt.getExecutable(), null);
             //jt.setGraceTimeout(defaultToNull(jt.getGraceTimeout(), 15));
@@ -474,19 +474,6 @@ public class JsonSerializer {
         }
     }
     
-    
-    // only temporary to convert Variables to Environment
-    private static Environment emptyEnvToNullAndQuoteStrings(Environment env) {
-        if (env != null) {
-            if (env.getAdditionalProperties().isEmpty()) {
-                return null;
-            } else {
-                env.getAdditionalProperties().replaceAll((k, v) -> quoteString(v));
-            }
-        }
-        return env;
-    }
-    
     public static String quoteString(String str) {
         str = handleEmptyExpression(str);
         if (str == null) {
@@ -550,7 +537,7 @@ public class JsonSerializer {
                     break;
                 case EXECUTE_NAMED:
                     NamedJob nj = inst.cast();
-                    nj.setDefaultArguments(emptyEnvToNullAndQuoteStrings(nj.getDefaultArguments()));
+                    nj.setDefaultArguments(emptyEnvToNull(nj.getDefaultArguments()));
                     if (jobs != null && jobs.getAdditionalProperties() != null) {
                         Job job = jobs.getAdditionalProperties().get(nj.getJobName());
                         if (job != null) {
@@ -713,7 +700,7 @@ public class JsonSerializer {
                     break;
                 case EXECUTE_NAMED:
                     com.sos.sign.model.instruction.NamedJob nj = inst.cast();
-                    nj.setDefaultArguments(emptyEnvToNullAndQuoteStrings(nj.getDefaultArguments()));
+                    nj.setDefaultArguments(emptyEnvToNull(nj.getDefaultArguments()));
                     break;
                 case FORK:
                     com.sos.sign.model.instruction.ForkJoin fj = inst.cast();
