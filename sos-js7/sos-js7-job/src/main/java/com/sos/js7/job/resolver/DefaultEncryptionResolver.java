@@ -30,7 +30,9 @@ public class DefaultEncryptionResolver extends AJobArgumentValueResolver {
             throws Exception {
 
         PrivateKey privKey = getPrivateKey(allArguments);
-        validate(allArguments.get(ARG_NAME_ENCIPHERMENT_CERTIFICATE), privKey);
+        if (!validate(allArguments.get(ARG_NAME_ENCIPHERMENT_CERTIFICATE), privKey)) {
+            throw new SOSKeyException("Private key and certificate do not match");
+        }
 
         for (JobArgument<?> arg : toResolve) {
             debugArgument(logger, arg, CLASS_NAME);
@@ -77,11 +79,12 @@ public class DefaultEncryptionResolver extends AJobArgumentValueResolver {
     }
 
     // TODO: validate PK against certificate
-    private static void validate(JobArgument<?> argCertificate, PrivateKey privKey) throws Exception {
+    private static boolean validate(JobArgument<?> argCertificate, PrivateKey privKey) throws Exception {
         if (argCertificate == null || argCertificate.getValue() == null) {
-            return;
+            return true;
         }
-        // X509Certificate cert = KeyUtil.getX509Certificate(argCertificate.getValue().toString());
+        // return KeyUtil.pubKeyFromCertMatchPrivKey(privKey, KeyUtil.getCertificate(argCertificate.getValue().toString()));
+        return true;
     }
 
 }

@@ -11,7 +11,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateFactoryBuildException;
 
 public class SOSHibernateEncryptionTest {
 
-    private static final Path DIR_RESOURCES = Paths.get("src/test/resources/encryption");
+    private static final Path DIR_RESOURCES = Paths.get("../../sos-commons/sos-commons-encryption/src/test/resources/encryption");
 
     @Ignore
     @Test
