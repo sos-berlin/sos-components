@@ -419,6 +419,9 @@ public class DeployedConfigurationDBLayer {
                 hql.append(" left join ").append(DBLayer.DBITEM_INV_TAGS).append(" t on t.id=tg.tagId ");
             }
             hql.append(getWhereForDepConfiguration(filter));
+            if (filter.getTags() != null && !filter.getTags().isEmpty()) {
+                hql.append(" group by c.path, c.name, c.title, c.content, c.commitId, c.created ");
+            }
             Query<DeployedContent> query = createQuery(hql.toString(), filter);
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -439,6 +442,9 @@ public class DeployedConfigurationDBLayer {
                 hql.append(" left join ").append(DBLayer.DBITEM_INV_TAGS).append(" t on t.id=tg.tagId ");
             }
             hql.append(getWhereForDepHistory(filter));
+            if (filter.getTags() != null && !filter.getTags().isEmpty()) {
+                hql.append(" group by c.path, c.name, c.title, c.invContent, c.commitId, c.deploymentDate ");
+            }
             Query<DeployedContent> query = createQuery(hql.toString(), filter);
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -458,6 +464,9 @@ public class DeployedConfigurationDBLayer {
                 hql.append(" left join ").append(DBLayer.DBITEM_INV_TAGS).append(" t on t.id=tg.tagId ");
             }
             hql.append(getWhereForDepConfiguration(filter));
+            if (filter.getTags() != null && !filter.getTags().isEmpty()) {
+                hql.append(" group by c.inventoryConfigurationId, c.name, c.type ");
+            }
             Query<Deployed> query = createQuery(hql.toString(), filter);
             List<Deployed> result = session.getResultList(query);
             if (result == null || result.isEmpty()) {
