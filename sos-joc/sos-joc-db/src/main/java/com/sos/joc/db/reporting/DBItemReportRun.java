@@ -5,6 +5,8 @@ import java.util.Date;
 import org.hibernate.annotations.Proxy;
 
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.inventory.model.report.ReportOrder;
+import com.sos.inventory.model.report.TemplateId;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.model.reporting.ReportRunStateText;
@@ -132,6 +134,15 @@ public class DBItemReportRun extends DBItem {
     public Integer getTemplateId() {
         return templateId;
     }
+    
+    @Transient
+    public TemplateId getTemplateIdAsEnum() {
+        try {
+            return TemplateId.fromValue(templateId);
+        } catch (Exception e) {
+            return null;
+        }
+    }
 
     public void setTemplateId(Integer val) {
         templateId = val;
@@ -220,6 +231,15 @@ public class DBItemReportRun extends DBItem {
 
     public Integer getSort() {
         return sort;
+    }
+    
+    @Transient
+    public ReportOrder getSortAsEnum() {
+        try {
+            return ReportOrder.fromValue(state);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public void setSort(Integer sort) {

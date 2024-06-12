@@ -11,16 +11,21 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSDate;
 import com.sos.inventory.model.report.Frequency;
-import com.sos.inventory.model.report.TemplateId;
+import com.sos.inventory.model.report.ReportPeriod;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.db.reporting.DBItemReportRun;
 import com.sos.joc.db.reporting.ReportingDBLayer;
+import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.reporting.ReportRunState;
@@ -49,6 +54,9 @@ public class RunHistoryImpl extends JOCResourceImpl implements IRunHistoryResour
         }
     });
     
+    private static final String monthFromToFormat = "yyyy-MM";
+    private static final Logger LOGGER = LoggerFactory.getLogger(RunHistoryImpl.class);
+    
     @Override
     public JOCDefaultResponse show(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
@@ -68,6 +76,7 @@ public class RunHistoryImpl extends JOCResourceImpl implements IRunHistoryResour
             ReportingDBLayer dbLayer = new ReportingDBLayer(session);
             RunItems entity = new RunItems();
             final Map<Long, Long> numOfReports = dbLayer.getNumReports(null);
+            final JocError jocError = getJocError();
             
             Function<DBItemReportRun, RunItem> mapToRunItem = dbItem -> {
                 try {
@@ -78,20 +87,26 @@ public class RunHistoryImpl extends JOCResourceImpl implements IRunHistoryResour
                     item.setRunId(dbItem.getId());
                     item.setPath(dbItem.getPath());
                     item.setTitle(dbItem.getTitle());
-                    item.setMonthFrom(SOSDate.format(dbItem.getDateFrom(), "yyyy-MM"));
-                    item.setMonthTo(SOSDate.format(dbItem.getDateTo(), "yyyy-MM"));
-                    item.setFrequencies(Arrays.asList(dbItem.getFrequencies().split(",")).stream().map(Integer::valueOf).sorted().map(
-                            Frequency::fromValue).filter(Objects::nonNull).collect(Collectors.toSet()));
+                    item.setMonthFrom(getMonth(dbItem.getDateFrom()));
+                    item.setMonthTo(getMonth(dbItem.getDateTo()));
+                    item.setFrequencies(getSortedFrequencies(dbItem));
                     item.setHits(dbItem.getHits());
-                    item.setTemplateName(TemplateId.fromValue(dbItem.getTemplateId()));
+                    item.setTemplateName(dbItem.getTemplateIdAsEnum());
                     item.setModified(dbItem.getModified());
                     item.setErrorText(dbItem.getErrorText());
                     item.setState(getState(dbItem.getStateAsEnum()));
                     item.setNumOfReports(numOfReports.getOrDefault(dbItem.getId(), 0L));
+                    item.setControllerId(dbItem.getControllerId());
+                    item.setSort(dbItem.getSortAsEnum());
+                    item.setPeriod(getPeriod(dbItem));
                     item.setVersion(null);
                     return item;
                 } catch (Exception e) {
-                    // TODO: error handling
+                    if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
+                        LOGGER.info(jocError.printMetaInfo());
+                        jocError.clearMetaInfo();
+                    }
+                    LOGGER.error(String.format("[runId=%s] %s", dbItem.getId(), e.toString()));
                     return null;
                 }
             };
@@ -116,6 +131,22 @@ public class RunHistoryImpl extends JOCResourceImpl implements IRunHistoryResour
         state.set_text(dbState);
         state.setSeverity(states.get(dbState));
         return state;
+    }
+    
+    private static ReportPeriod getPeriod(DBItemReportRun dbItem) {
+        ReportPeriod rp = new ReportPeriod();
+        rp.setLength(dbItem.getPeriodLength());
+        rp.setStep(dbItem.getPeriodStep());
+        return rp;
+    }
+    
+    private static String getMonth(Date monthFromTo) throws SOSInvalidDataException {
+        return SOSDate.format(monthFromTo, monthFromToFormat);
+    }
+    
+    private static Set<Frequency> getSortedFrequencies(DBItemReportRun dbItem) {
+        return Arrays.asList(dbItem.getFrequencies().split(",")).stream().map(Integer::valueOf).sorted().map(Frequency::fromValue).filter(
+                Objects::nonNull).collect(Collectors.toSet());
     }
 
 }
