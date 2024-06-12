@@ -14,14 +14,14 @@ import com.sos.commons.sign.keys.certificate.CertificateUtils;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.js7.job.helper.TestJob;
 import com.sos.js7.job.helper.TestJobArguments;
-import com.sos.js7.job.resolver.DefaultBase64ValueResolver;
-import com.sos.js7.job.resolver.DefaultEncryptionResolver;
+import com.sos.js7.job.resolver.StandardBase64Resolver;
+import com.sos.js7.job.resolver.StandardEncryptionResolver;
 
 import js7.data_for_java.order.JOutcome;
 
-public class JobDefaultValueResolverTest {
+public class StandardResolverTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JobDefaultValueResolverTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(StandardResolverTest.class);
 
     private static final Path ENCRYPTION_RESOURCES_DIR = Paths.get("../../sos-commons/sos-commons-encryption/src/test/resources/encryption");
 
@@ -29,8 +29,8 @@ public class JobDefaultValueResolverTest {
     @Test
     public void testBase64Resolver() throws Exception {
         Map<String, Object> args = new HashMap<>();
-        args.put("test", DefaultBase64ValueResolver.getPrefix() + "xxx");
-        args.put("path", DefaultBase64ValueResolver.getPrefix() + "yyy");
+        args.put("test", StandardBase64Resolver.getPrefix() + "xxx");
+        args.put("path", StandardBase64Resolver.getPrefix() + "yyy");
 
         UnitTestJobHelper<TestJobArguments> h = new UnitTestJobHelper<>(new TestJob());
         JOutcome.Completed result = h.processOrder(args);
@@ -45,8 +45,8 @@ public class JobDefaultValueResolverTest {
 
         Map<String, Object> args = new HashMap<>();
         args.put("log_all_arguments", Boolean.valueOf(true));
-        args.put(DefaultEncryptionResolver.ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH, keyPath.toFile().getCanonicalPath());
-        args.put("my_arg", DefaultEncryptionResolver.getPrefix()
+        args.put(StandardEncryptionResolver.ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH, keyPath.toFile().getCanonicalPath());
+        args.put("my_arg", StandardEncryptionResolver.getPrefix()
                 + "BBFzQJSWD8lVzwf02qkX81PmXGiSxDc9Uf2fs594jjRJLycsBnrYJaUBjjl9a5Fo4IZ6I17mFww6xdGxTj2eZHuKmwKy2+Txae+kvJxImd+ZUdL8Gn2UrUtHdjsS4cOD1n6CysJBckh1EVGecriZPeque/kd KFPflA0MAilZ1KYfPDSiGw== 2sO5Qtw07FD1X4JsQycDhQ==");
 
         UnitTestJobHelper<TestJobArguments> h = new UnitTestJobHelper<>(new TestJob());
@@ -63,10 +63,10 @@ public class JobDefaultValueResolverTest {
 
         Map<String, Object> args = new HashMap<>();
         args.put("log_all_arguments", Boolean.valueOf(true));
-        args.put(DefaultEncryptionResolver.ARG_NAME_ENCIPHERMENT_CERTIFICATE, CertificateUtils.asPEMString(KeyUtil.getX509Certificate(
+        args.put(StandardEncryptionResolver.ARG_NAME_ENCIPHERMENT_CERTIFICATE, CertificateUtils.asPEMString(KeyUtil.getX509Certificate(
                 certificatePath)));
-        args.put(DefaultEncryptionResolver.ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH, keyPath.toFile().getCanonicalPath());
-        args.put("my_arg", DefaultEncryptionResolver.getPrefix()
+        args.put(StandardEncryptionResolver.ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH, keyPath.toFile().getCanonicalPath());
+        args.put("my_arg", StandardEncryptionResolver.getPrefix()
                 + "BBFzQJSWD8lVzwf02qkX81PmXGiSxDc9Uf2fs594jjRJLycsBnrYJaUBjjl9a5Fo4IZ6I17mFww6xdGxTj2eZHuKmwKy2+Txae+kvJxImd+ZUdL8Gn2UrUtHdjsS4cOD1n6CysJBckh1EVGecriZPeque/kd KFPflA0MAilZ1KYfPDSiGw== 2sO5Qtw07FD1X4JsQycDhQ==");
 
         UnitTestJobHelper<TestJobArguments> h = new UnitTestJobHelper<>(new TestJob());
@@ -83,8 +83,8 @@ public class JobDefaultValueResolverTest {
 
         Map<String, Object> args = new HashMap<>();
         args.put("log_all_arguments", Boolean.valueOf(true));
-        args.put(DefaultEncryptionResolver.ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH, keyPath.toFile().getCanonicalPath());
-        args.put("my_arg", DefaultEncryptionResolver.getPrefix()
+        args.put(StandardEncryptionResolver.ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH, keyPath.toFile().getCanonicalPath());
+        args.put("my_arg", StandardEncryptionResolver.getPrefix()
                 + "BBFzQJSWD8lVzwf02qkX81PmXGiSxDc9Uf2fs594jjRJLycsBnrYJaUBjjl9a5Fo4IZ6I17mFww6xdGxTj2eZHuKmwKy2+Txae+kvJxImd+ZUdL8Gn2UrUtHdjsS4cOD1n6CysJBckh1EVGecriZPeque/kd KFPflA0MAilZ1KYfPDSiGw== 2sO5Qtw07FD1X4JsQycDhQ==");
 
         UnitTestJobHelper<TestJobArguments> h = new UnitTestJobHelper<>(new TestJob());

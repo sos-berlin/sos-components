@@ -1,17 +1,26 @@
 package com.sos.commons.util;
 
+import java.io.File;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class SOSReflection {
@@ -143,6 +152,42 @@ public class SOSReflection {
             }
         }
         return true;
+    }
+
+    public static List<Path> getJarsFromClassPath(String specificDirectory) {
+        String[] arr = System.getProperty("java.class.path").split(File.pathSeparator);
+        // .../patches/*
+        return Stream.of(arr).filter(f -> f.endsWith(".jar")).map(Paths::get).filter(path -> {
+            File file = path.toFile();
+            return file.isFile() && file.getParentFile().getName().equals(specificDirectory);
+        }).collect(Collectors.toList());
+    }
+
+    public static List<Class<?>> findClassesInJarFile(Path filePath, Class<?> targetInterface) throws Exception {
+        final File file = filePath.toFile();
+        List<Class<?>> r = new ArrayList<>();
+        try (JarFile jarFile = new JarFile(file)) {
+            Enumeration<JarEntry> entries = jarFile.entries();
+            URL[] urls = { new URL("jar:file:" + file.getAbsolutePath() + "!/") };
+            URLClassLoader classLoader = URLClassLoader.newInstance(urls);
+
+            while (entries.hasMoreElements()) {
+                JarEntry entry = entries.nextElement();
+                if (entry.getName().endsWith(".class")) {
+                    String className = entry.getName().replace("/", ".").replace(".class", "");
+                    try {
+                        Class<?> clazz = classLoader.loadClass(className);
+                        if (targetInterface.isAssignableFrom(clazz) && !clazz.isInterface() && !java.lang.reflect.Modifier.isAbstract(clazz
+                                .getModifiers())) {
+                            r.add(clazz);
+                        }
+                    } catch (NoClassDefFoundError | ClassNotFoundException e) {
+                        // System.err.println("Error loading class " + className + " from " + file.getName() + ": " + e.getMessage());
+                    }
+                }
+            }
+        }
+        return r;
     }
 
     public static boolean isArray(Class<?> cls) {

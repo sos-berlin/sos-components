@@ -13,12 +13,12 @@ import com.sos.exception.SOSKeyException;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.OrderProcessStepLogger;
 
-public class DefaultEncryptionResolver extends AJobArgumentValueResolver {
+public class StandardEncryptionResolver extends AJobArgumentValueResolver {
 
     public static final String ARG_NAME_ENCIPHERMENT_CERTIFICATE = "encipherment_certificate";
     public static final String ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH = "encipherment_private_key_path";
 
-    private static final String CLASS_NAME = DefaultEncryptionResolver.class.getSimpleName();
+    private static final String CLASS_NAME = StandardEncryptionResolver.class.getSimpleName();
 
     public static String getPrefix() {
         return EncryptionUtils.ENCRYPTION_IDENTIFIER;
@@ -37,7 +37,6 @@ public class DefaultEncryptionResolver extends AJobArgumentValueResolver {
             // Throw exception if any argument cannot be resolved
             arg.applyValue(Decrypt.decrypt(EncryptedValue.getInstance(arg.getName(), arg.getValue().toString()), privKey));
             arg.setDisplayMode(DisplayMode.MASKED);
-
         }
     }
 

@@ -52,6 +52,7 @@ public class JobHelper {
     public static final String ENV_NAME_AGENT_HOME = "JS7_AGENT_HOME";
     public static final String ENV_NAME_AGENT_CONFIG_DIR = "JS7_AGENT_CONFIG_DIR";
     public static final String ENV_NAME_AGENT_WORK_DIR = "JS7_AGENT_WORK_DIR";
+    public static final String ENV_NAME_AGENT_LIB_DIR = "JS7_AGENT_LIBDIR";
 
     public static Path getAgentHome() {
         return getPath(System.getenv(ENV_NAME_AGENT_HOME));
@@ -63,6 +64,10 @@ public class JobHelper {
 
     public static Path getAgentWorkDir() {
         return getPath(System.getenv(ENV_NAME_AGENT_WORK_DIR));
+    }
+
+    public static Path getAgentLibDir() {
+        return getPath(System.getenv(ENV_NAME_AGENT_LIB_DIR));
     }
 
     public static Path getAgentPrivateConfFile() {

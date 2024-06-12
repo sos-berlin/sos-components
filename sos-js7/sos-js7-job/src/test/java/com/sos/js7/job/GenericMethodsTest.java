@@ -1,8 +1,11 @@
 package com.sos.js7.job;
 
+import java.io.File;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.Ignore;
@@ -10,6 +13,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
 import com.sos.js7.job.exception.JobArgumentException;
@@ -17,10 +21,44 @@ import com.sos.js7.job.helper.TestJob;
 import com.sos.js7.job.helper.TestJobArguments;
 import com.sos.js7.job.helper.TestJobSuperClass;
 import com.sos.js7.job.helper.TestJobWithoutJobArgumentsClass;
+import com.sos.js7.job.resolver.IJobArgumentValueResolver;
+import com.sos.js7.job.resolver.JobArgumentValueResolverCache;
+import com.sos.js7.job.resolver.StandardBase64Resolver;
 
 public class GenericMethodsTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GenericMethodsTest.class);
+
+    @Ignore
+    @Test
+    public void testClassLoader() throws Exception {
+        LOGGER.info("[getResolverPrefixes]" + JobArgumentValueResolverCache.getResolverPrefixes());
+
+        boolean showAll = false;
+        if (showAll) {
+            String classPath = System.getProperty("java.class.path");
+            String[] classPathElements = classPath.split(File.pathSeparator);
+            LOGGER.info("------------ ALL");
+            for (String element : classPathElements) {
+                LOGGER.info(" " + element);
+            }
+        }
+
+        List<Path> jars = SOSReflection.getJarsFromClassPath("user_lib");
+        LOGGER.info("------------ SPECIFIC JARS");
+        for (Path j : jars) {
+            LOGGER.info(" " + j);
+
+            List<Class<?>> classes = SOSReflection.findClassesInJarFile(j, IJobArgumentValueResolver.class);
+            LOGGER.info("--------------- classes=" + classes.size());
+            for (Class<?> c : classes) {
+                LOGGER.info("                       " + c);
+            }
+
+        }
+
+        LOGGER.info("ClassByPrefix=" + JobArgumentValueResolverCache.getResolverClassName(StandardBase64Resolver.getPrefix()));
+    }
 
     @Ignore
     @Test

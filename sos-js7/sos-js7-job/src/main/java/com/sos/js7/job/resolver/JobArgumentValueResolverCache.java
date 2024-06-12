@@ -1,58 +1,108 @@
 package com.sos.js7.job.resolver;
 
 import java.lang.reflect.Method;
+import java.nio.file.Path;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSPath;
+import com.sos.commons.util.SOSReflection;
 import com.sos.js7.job.JobArgument;
+import com.sos.js7.job.JobHelper;
 import com.sos.js7.job.OrderProcessStepLogger;
 
 public class JobArgumentValueResolverCache {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JobArgumentValueResolverCache.class);
 
-    private static final Map<String, String> PREFIX_CACHE = new ConcurrentHashMap<>();
-    private static final Map<String, Method> METHOD_CACHE = new ConcurrentHashMap<>();
+    // ConcurrentHashMap is not required because of the static block
+    private static Map<String, Method> METHOD_CACHE = new LinkedHashMap<>();
 
-    private static final String DEFAULT_RESOLVER_BASE64 = DefaultBase64ValueResolver.class.getName();
-    private static final String DEFAULT_RESOLVER_ENCRYPTION = DefaultEncryptionResolver.class.getName();
+    private static final String CUSTOM_RESOLVERS_DIR = "user_lib";
 
     static {
+        LOGGER.info("[temp output]start...");
         try {
-            cacheResolverMethods(DEFAULT_RESOLVER_BASE64);
-            cacheResolverMethods(DEFAULT_RESOLVER_ENCRYPTION);
-        } catch (Exception e) {
+            cacheStandardResolvers();
+            cacheCustomResolvers();
+        } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         }
+        LOGGER.info("[temp output]end");
     }
 
-    private static void cacheResolverMethods(String className) throws Exception {
-        Class<?> resolverClass = Class.forName(className);
-        if (!IJobArgumentValueResolver.class.isAssignableFrom(resolverClass)) {
-            throw new IllegalArgumentException(className + " does not implement " + IJobArgumentValueResolver.class.getName() + " interface");
+    private static void cacheStandardResolvers() throws Exception {
+        cacheResolver(StandardBase64Resolver.class);
+        cacheResolver(StandardEncryptionResolver.class);
+    }
+
+    // Performance load/check from user_lib
+    // -- 122 jars (copy of 3rd-party) ~ 16-20s
+    // -- 3 jars ~ 0,15s
+    private static void cacheCustomResolvers() {
+        List<Path> jars = getCustomJars();
+        if (jars == null) {
+            return;
         }
+        for (Path jar : jars) {
+            try {
+                List<Class<?>> classes = SOSReflection.findClassesInJarFile(jar, IJobArgumentValueResolver.class);
+                for (Class<?> clazz : classes) {
+                    try {
+                        cacheResolver(clazz);
+                    } catch (Throwable e) {
+                        LOGGER.error("[" + jar + "][" + clazz + "]" + e.toString(), e);
+                    }
+                }
+            } catch (Throwable e) {
+                LOGGER.error("[" + jar + "]" + e.toString(), e);
+            }
+        }
+    }
+
+    private static List<Path> getCustomJars() {
+        // List<Path> jars = SOSReflection.getJarsFromClassPath(CUSTOM_RESOLVERS_DIR);
+        Path dir = JobHelper.getAgentLibDir().resolve(CUSTOM_RESOLVERS_DIR);
+        try {
+            return SOSPath.getFileList(dir, ".*\\.jar$", java.util.regex.Pattern.CASE_INSENSITIVE);
+        } catch (Throwable e) {
+            LOGGER.error("[" + dir + "]" + e.toString(), e);
+        }
+        return null;
+    }
+
+    private static void cacheResolver(Class<?> clazz) throws Exception {
+        // This check is not required – standard resolvers implement the interface, custom – already checked…
+        // checkAssignableFrom(clazz);
 
         // public static String getPrefix()
-        Method getPrefixMethod = resolverClass.getMethod("getPrefix");
+        Method getPrefixMethod = clazz.getMethod("getPrefix");
         if (!getPrefixMethod.getReturnType().equals(String.class)) {
-            throw new IllegalArgumentException(className + " does not have a valid 'public static String getPrefix()' method");
+            throw new IllegalArgumentException(clazz + " does not have a valid 'public static String getPrefix()' method");
         }
 
-        // public static void resolve(List<JobArgument<String> toResolve,OrderProcessStepLogger logger,Map<String,Object> allArguments)
-        Method resolveMethod = resolverClass.getMethod("resolve", List.class, OrderProcessStepLogger.class, Map.class);
+        // public static void resolve(List<JobArgument<String> toResolve,OrderProcessStepLogger logger,Map<String,JobArgument<?> allArguments)
+        Method resolveMethod = clazz.getMethod("resolve", List.class, OrderProcessStepLogger.class, Map.class);
 
         String prefix = (String) getPrefixMethod.invoke(null);
-        PREFIX_CACHE.put(prefix, className);
         METHOD_CACHE.put(prefix, resolveMethod);
+
+        // if (LOGGER.isDebugEnabled()) {
+        // LOGGER.debug("[cached][" + prefix + "]" + clazz.getName());
+        // }
+        LOGGER.info("[cached][" + prefix + "]" + clazz.getName());
     }
 
-    public static void addResolver(String resolverClassName) throws Exception {
-        cacheResolverMethods(resolverClassName);
+    @SuppressWarnings("unused")
+    private static void checkAssignableFrom(Class<?> clazz) throws Exception {
+        if (!IJobArgumentValueResolver.class.isAssignableFrom(clazz)) {
+            throw new IllegalArgumentException(clazz + " does not implement " + IJobArgumentValueResolver.class.getName() + " interface");
+        }
     }
 
     public static Method getResolveMethod(String prefix) {
@@ -60,7 +110,11 @@ public class JobArgumentValueResolverCache {
     }
 
     public static String getResolverClassName(String prefix) {
-        return PREFIX_CACHE.get(prefix);
+        Method m = getResolveMethod(prefix);
+        if (m == null) {
+            return "unknown";
+        }
+        return m.getDeclaringClass().getName();
     }
 
     public static List<String> getResolverPrefixes() {
