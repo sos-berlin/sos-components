@@ -4,6 +4,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -14,11 +16,17 @@ import com.sos.inventory.model.jobresource.JobResource;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.Validator;
+import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.encipherment.ImportCertificateRequestFilter;
 import com.sos.joc.model.encipherment.StoreCertificateRequestFilter;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.publish.Config;
+import com.sos.joc.model.publish.Configuration;
+import com.sos.joc.model.publish.DeployFilter;
+import com.sos.joc.model.publish.DeployablesValidFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
 
 public class EnciphermentUtils {
@@ -51,8 +59,11 @@ public class EnciphermentUtils {
             JobResource existingJobResource = Globals.objectMapper.readValue(dbExistingJobResource.getContent(),
                     JobResource.class);
             Environment args = existingJobResource.getArguments();
-            args.getAdditionalProperties().put(EnciphermentUtils.ARG_NAME_ENCIPHERMENT_CERTIFICATE, certificate);
-            args.getAdditionalProperties().put(EnciphermentUtils.ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH, privateKeyPath);
+            if (args == null) {
+                args = new Environment();
+            }
+            args.setAdditionalProperty(EnciphermentUtils.ARG_NAME_ENCIPHERMENT_CERTIFICATE, certificate);
+            args.setAdditionalProperty(EnciphermentUtils.ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH, privateKeyPath);
             existingJobResource.setArguments(args);
             existingJobResource.setVersion(Globals.getStrippedInventoryVersion());
             dbExistingJobResource.setContent(Globals.objectMapper.writeValueAsString(existingJobResource));
@@ -66,10 +77,10 @@ public class EnciphermentUtils {
         } else {
             DBItemInventoryConfiguration newDBJobResource = new DBItemInventoryConfiguration();
             JobResource newJobResource = new JobResource();
-            newJobResource.getArguments().getAdditionalProperties().
-                put(EnciphermentUtils.ARG_NAME_ENCIPHERMENT_CERTIFICATE, certificate);
-            newJobResource.getArguments().getAdditionalProperties().
-                put(EnciphermentUtils.ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH, privateKeyPath);
+            Environment args = new Environment();
+            args.setAdditionalProperty(EnciphermentUtils.ARG_NAME_ENCIPHERMENT_CERTIFICATE, certificate);
+            args.setAdditionalProperty(EnciphermentUtils.ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH, privateKeyPath);
+            newJobResource.setArguments(args);
             newJobResource.setVersion(Globals.getStrippedInventoryVersion());
             newDBJobResource.setName(certAlias);
             newDBJobResource.setFolder(jobResourceFolder);
@@ -86,7 +97,7 @@ public class EnciphermentUtils {
             newDBJobResource.setCreated(now);
             newDBJobResource.setModified(now);
             try {
-                Validator.validate(ConfigurationType.JOBRESOURCE, Globals.objectMapper.writeValueAsBytes(newJobResource));
+                Validator.validate(ConfigurationType.JOBRESOURCE, newJobResource);
                 newDBJobResource.setValid(true);
             } catch (Exception e) {
                 newDBJobResource.setValid(false);
@@ -98,6 +109,21 @@ public class EnciphermentUtils {
         JocInventory.postEvent(jobResourceFolder);
         JocInventory.postFolderEvent(jobResourceFolder);
         return jr;
+    }
+    
+    public static byte[] createDeployFilter(List<String> controllerIds, String jobResourcePath, AuditParams audit) throws JsonProcessingException {
+        DeployFilter deployFilter = new DeployFilter();
+        deployFilter.setControllerIds(controllerIds);
+        deployFilter.setAuditLog(audit);
+        DeployablesValidFilter toStore = new DeployablesValidFilter();
+        Config jobResourceConfig = new Config();
+        Configuration jobResourceDraft = new Configuration();
+        jobResourceDraft.setPath(jobResourcePath);
+        jobResourceDraft.setObjectType(ConfigurationType.JOBRESOURCE);
+        jobResourceConfig.setConfiguration(jobResourceDraft);
+        toStore.getDraftConfigurations().add(jobResourceConfig);
+        deployFilter.setStore(toStore);
+        return Globals.objectMapper.writeValueAsBytes(deployFilter);
     }
     
 }

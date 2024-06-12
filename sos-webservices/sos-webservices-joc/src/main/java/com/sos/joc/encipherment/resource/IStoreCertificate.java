@@ -13,5 +13,5 @@ public interface IStoreCertificate {
     @POST
     @Path("store")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postStoreCertificate(@HeaderParam("X-Access-Token") String xAccessToken, byte[] storeCertificateFilter) throws Exception;
+    public JOCDefaultResponse postStoreCertificate(@HeaderParam("X-Access-Token") String xAccessToken, byte[] storeCertificateFilter);
 }

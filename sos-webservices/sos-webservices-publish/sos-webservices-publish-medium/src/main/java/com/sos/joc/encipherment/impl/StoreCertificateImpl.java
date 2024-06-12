@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -44,7 +45,7 @@ public class StoreCertificateImpl extends JOCResourceImpl implements IStoreCerti
     private static final Logger LOGGER = LoggerFactory.getLogger(StoreCertificateImpl.class);
 
     @Override
-    public JOCDefaultResponse postStoreCertificate(String xAccessToken, byte[] storeCertificateFilter) throws Exception {
+    public JOCDefaultResponse postStoreCertificate(String xAccessToken, byte[] storeCertificateFilter) {
         SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL, storeCertificateFilter, xAccessToken);
@@ -60,8 +61,8 @@ public class StoreCertificateImpl extends JOCResourceImpl implements IStoreCerti
             DBLayerKeys dbLayer = new DBLayerKeys(hibernateSession);
             dbLayer.storeEnciphermentCertificate(filter.getCertAlias(), filter.getCertificate(), filter.getPrivateKeyPath());
             // create or Update JobResource 
-            final DBItemInventoryConfiguration generatedJobResource = EnciphermentUtils
-                    .createRelatedJobResource(hibernateSession, filter, auditLog.getId());
+            final DBItemInventoryConfiguration generatedJobResource = EnciphermentUtils.createRelatedJobResource(hibernateSession, filter, auditLog
+                    .getId());
             // Deploy the JobResource to all controllers
             new Thread(() -> {
                 byte[] deployFilter = createDeployFilter(xAccessToken, generatedJobResource, filter.getAuditLog());
@@ -88,26 +89,15 @@ public class StoreCertificateImpl extends JOCResourceImpl implements IStoreCerti
         }
     }
     
-    private byte[] createDeployFilter (String xAccessToken, DBItemInventoryConfiguration jobResource, AuditParams audit) {
+    private byte[] createDeployFilter(String xAccessToken, DBItemInventoryConfiguration jobResource, AuditParams audit) {
         try {
-            DeployFilter deployFilter = new DeployFilter();
-            Set<String> allowedControllerIds = Collections.emptySet();
-            allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream()
+            List<String> allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream()
                     .filter(availableController -> getControllerPermissions(availableController, xAccessToken)
-                            .getDeployments().getDeploy()).collect(Collectors.toSet());
-            deployFilter.setControllerIds(new ArrayList<String>(allowedControllerIds));
-            deployFilter.setAuditLog(audit);
-            DeployablesValidFilter toStore = new DeployablesValidFilter();
-            deployFilter.setStore(toStore);
-            Config jobResourceConfig = new Config();
-            Configuration jobResourceDraft = new Configuration();
-            jobResourceDraft.setPath(jobResource.getPath());
-            jobResourceDraft.setObjectType(ConfigurationType.JOBRESOURCE);
-            jobResourceConfig.setConfiguration(jobResourceDraft);
-            toStore.getDraftConfigurations().add(jobResourceConfig);
-            return Globals.objectMapper.writeValueAsBytes(deployFilter);
+                            .getDeployments().getDeploy()).collect(Collectors.toList());
+            // TODO allowedControllerIds.isEmpty -> no permissions
+            return EnciphermentUtils.createDeployFilter(allowedControllerIds, jobResource.getPath(), audit);
         } catch (JsonProcessingException e) {
-            LOGGER.warn("error creating DeployFilter to deploy newly generated JobResource.");
+            LOGGER.warn("error creating DeployFilter to deploy newly generated JobResource.", e);
             return null;
         }
     }

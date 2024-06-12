@@ -26,5 +26,5 @@ public interface IImportCertificate {
             @FormDataParam("jobResourceFolder") String jobResourceFolder,
             @FormDataParam("timeSpent") String timeSpent,
             @FormDataParam("ticketLink") String ticketLink,
-            @FormDataParam("comment") String comment) throws Exception;
+            @FormDataParam("comment") String comment);
 }

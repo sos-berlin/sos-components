@@ -29,8 +29,8 @@ public class ImportCertificateImpl extends JOCResourceImpl implements IImportCer
     private static final String API_CALL = "./encipherment/certificate/import";
 
     @Override
-    public JOCDefaultResponse postImportCertificate(String xAccessToken, FormDataBodyPart body, String certAlias, String privateKeyPath, String jobResourceFolder, String timeSpent, String ticketLink, String comment)
-            throws Exception {
+    public JOCDefaultResponse postImportCertificate(String xAccessToken, FormDataBodyPart body, String certAlias, String privateKeyPath,
+            String jobResourceFolder, String timeSpent, String ticketLink, String comment) {
         AuditParams auditLog = new AuditParams();
         auditLog.setComment(comment);
         auditLog.setTicketLink(ticketLink);

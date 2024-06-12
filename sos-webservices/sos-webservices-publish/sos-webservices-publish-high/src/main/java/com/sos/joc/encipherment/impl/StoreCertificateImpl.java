@@ -25,7 +25,7 @@ public class StoreCertificateImpl extends JOCResourceImpl implements IStoreCerti
     private static final String API_CALL = "./encipherment/certificate/store";
 
     @Override
-    public JOCDefaultResponse postStoreCertificate(String xAccessToken, byte[] storeCertificateFilter) throws Exception {
+    public JOCDefaultResponse postStoreCertificate(String xAccessToken, byte[] storeCertificateFilter) {
         SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL, storeCertificateFilter, xAccessToken);
