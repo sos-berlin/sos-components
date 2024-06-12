@@ -1,22 +1,21 @@
 package com.sos.joc.encipherment.util;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.jobresource.JobResource;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.classes.inventory.Validator;
-import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.model.audit.AuditParams;
@@ -36,36 +35,35 @@ public class EnciphermentUtils {
 
     public static DBItemInventoryConfiguration createRelatedJobResource(SOSHibernateSession hibernateSession, ImportCertificateRequestFilter filter,
             String certificate, Long auditLogId)
-                    throws SOSHibernateException, JsonMappingException, JsonProcessingException {
+                    throws SOSHibernateException, IOException {
         return createRelatedJobResource(hibernateSession, filter.getCertAlias(), certificate, filter.getPrivateKeyPath(),
                 filter.getJobResourceFolder(), auditLogId);
     }
     
     public static DBItemInventoryConfiguration createRelatedJobResource(SOSHibernateSession hibernateSession, StoreCertificateRequestFilter filter,
-            Long auditLogId) throws SOSHibernateException, JsonMappingException, JsonProcessingException {
+            Long auditLogId) throws SOSHibernateException, IOException {
         return createRelatedJobResource(hibernateSession, filter.getCertAlias(), filter.getCertificate(), 
                 filter.getPrivateKeyPath(), filter.getJobResourceFolder(), auditLogId);
     }
 
     public static DBItemInventoryConfiguration createRelatedJobResource(SOSHibernateSession hibernateSession, String certAlias, String certificate,
             String privateKeyPath, String jobResourceFolder, Long auditLogId)
-                    throws SOSHibernateException, JsonMappingException, JsonProcessingException {
+                    throws SOSHibernateException, IOException {
         DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
         DBItemInventoryConfiguration dbExistingJobResource = dbLayer.getInventoryConfigurationByNameAndType(certAlias,
                 ConfigurationType.JOBRESOURCE.intValue());
         Path path = null;
         DBItemInventoryConfiguration jr = null;
         if (dbExistingJobResource != null) {
-            JobResource existingJobResource = Globals.objectMapper.readValue(dbExistingJobResource.getContent(),
-                    JobResource.class);
+            JobResource existingJobResource = (JobResource) JocInventory.content2IJSObject(dbExistingJobResource.getContent(),
+                    ConfigurationType.JOBRESOURCE);
             Environment args = existingJobResource.getArguments();
             if (args == null) {
                 args = new Environment();
             }
-            args.setAdditionalProperty(EnciphermentUtils.ARG_NAME_ENCIPHERMENT_CERTIFICATE, certificate);
-            args.setAdditionalProperty(EnciphermentUtils.ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH, privateKeyPath);
+            args.setAdditionalProperty(EnciphermentUtils.ARG_NAME_ENCIPHERMENT_CERTIFICATE, JsonConverter.quoteString(certificate));
+            args.setAdditionalProperty(EnciphermentUtils.ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH, JsonConverter.quoteString(privateKeyPath));
             existingJobResource.setArguments(args);
-            existingJobResource.setVersion(Globals.getStrippedInventoryVersion());
             dbExistingJobResource.setContent(Globals.objectMapper.writeValueAsString(existingJobResource));
             dbExistingJobResource.setFolder(jobResourceFolder);
             dbExistingJobResource.setPath(dbExistingJobResource.getFolder().concat("/").concat(certAlias));
@@ -78,8 +76,8 @@ public class EnciphermentUtils {
             DBItemInventoryConfiguration newDBJobResource = new DBItemInventoryConfiguration();
             JobResource newJobResource = new JobResource();
             Environment args = new Environment();
-            args.setAdditionalProperty(EnciphermentUtils.ARG_NAME_ENCIPHERMENT_CERTIFICATE, certificate);
-            args.setAdditionalProperty(EnciphermentUtils.ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH, privateKeyPath);
+            args.setAdditionalProperty(EnciphermentUtils.ARG_NAME_ENCIPHERMENT_CERTIFICATE, JsonConverter.quoteString(certificate));
+            args.setAdditionalProperty(EnciphermentUtils.ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH, JsonConverter.quoteString(privateKeyPath));
             newJobResource.setArguments(args);
             newJobResource.setVersion(Globals.getStrippedInventoryVersion());
             newDBJobResource.setName(certAlias);
