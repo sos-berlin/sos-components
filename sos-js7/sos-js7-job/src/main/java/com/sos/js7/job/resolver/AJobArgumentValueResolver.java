@@ -5,7 +5,7 @@ import com.sos.js7.job.OrderProcessStepLogger;
 
 /** The two public static methods required to implement are:<br/>
  * - 1) public static String getPrefix()<br/>
- * - 2) public static void resolve(JobArgument&lt;String&gt; toResolve, OrderProcessStepLogger logger, Map&lt;String,JobArgument&lt;?&gt;&gt; allArguments)<br/>
+ * - 2) public static void resolve(JobArgument&lt;?&gt; toResolve, OrderProcessStepLogger logger, Map&lt;String,JobArgument&lt;?&gt;&gt; allArguments)<br/>
  */
 public abstract class AJobArgumentValueResolver implements IJobArgumentValueResolver {
 
