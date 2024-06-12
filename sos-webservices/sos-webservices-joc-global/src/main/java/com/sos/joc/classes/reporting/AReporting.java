@@ -73,6 +73,7 @@ public abstract class AReporting {
     
     private static Collection<CSVColumns> getOrdersColumns() {
         Collection<CSVColumns> es = EnumSet.allOf(CSVColumns.class);
+        //es.removeAll(EnumSet.of(CSVColumns.POSITION, CSVColumns.JOB_NAME, CSVColumns.CRITICALITY, CSVColumns.AGENT_ID, CSVColumns.AGENT_NAME));
         es.removeAll(EnumSet.of(CSVColumns.POSITION, CSVColumns.JOB_NAME, CSVColumns.CRITICALITY, CSVColumns.AGENT_ID));
         return es;
     }

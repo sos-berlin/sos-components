@@ -15,7 +15,7 @@ public enum CSVColumns {
     JOB_NAME("jobName", null), //only order steps
     CRITICALITY("criticality", null), //only order steps
     AGENT_ID("agentId", null), //only order steps
-    AGENT_NAME("agentName", "''"), //only order steps, nullable
+    //AGENT_NAME("agentName", "''"), //only order steps, nullable
     START_TIME("startTime", null),
     PLANNED_TIME("startTimeScheduled", "''"), //only orders, nullable
     END_TIME("endTime", "''"),//nullable
