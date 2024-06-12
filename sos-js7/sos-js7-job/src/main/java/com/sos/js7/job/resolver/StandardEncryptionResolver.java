@@ -13,7 +13,7 @@ import com.sos.exception.SOSKeyException;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.OrderProcessStepLogger;
 
-public class StandardEncryptionResolver extends AJobArgumentValueResolver {
+public class StandardEncryptionResolver extends JobArgumentValueResolver {
 
     public static final String ARG_NAME_ENCIPHERMENT_CERTIFICATE = "encipherment_certificate";
     public static final String ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH = "encipherment_private_key_path";
@@ -24,7 +24,7 @@ public class StandardEncryptionResolver extends AJobArgumentValueResolver {
         return EncryptionUtils.ENCRYPTION_IDENTIFIER;
     }
 
-    public static void resolve(List<JobArgument<?>> toResolve, OrderProcessStepLogger logger, Map<String, JobArgument<?>> allArguments)
+    public static void resolve(OrderProcessStepLogger logger, List<JobArgument<?>> argumentsToResolve, Map<String, JobArgument<?>> allArguments)
             throws Exception {
 
         PrivateKey privKey = getPrivateKey(allArguments);
@@ -32,7 +32,7 @@ public class StandardEncryptionResolver extends AJobArgumentValueResolver {
             throw new SOSKeyException("Private key and certificate do not match");
         }
 
-        for (JobArgument<?> arg : toResolve) {
+        for (JobArgument<?> arg : argumentsToResolve) {
             debugArgument(logger, arg, CLASS_NAME);
             // Throw exception if any argument cannot be resolved
             arg.applyValue(Decrypt.decrypt(EncryptedValue.getInstance(arg.getName(), arg.getValue().toString()), privKey));

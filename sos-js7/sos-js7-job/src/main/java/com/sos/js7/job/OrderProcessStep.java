@@ -461,7 +461,7 @@ public class OrderProcessStep<A extends JobArguments> {
 
             for (Map.Entry<String, List<JobArgument<?>>> entry : groupedArguments.entrySet()) {
                 try {
-                    JobArgumentValueResolverCache.resolve(entry.getKey(), entry.getValue(), logger, allArguments);
+                    JobArgumentValueResolverCache.resolve(entry.getKey(), logger, entry.getValue(), allArguments);
                 } catch (Throwable e) {
                     Throwable ex = e.getCause() == null ? e : e.getCause();
                     throw new JobArgumentException(String.format("[%s]%s", JobArgumentValueResolverCache.getResolverClassName(entry.getKey()), ex

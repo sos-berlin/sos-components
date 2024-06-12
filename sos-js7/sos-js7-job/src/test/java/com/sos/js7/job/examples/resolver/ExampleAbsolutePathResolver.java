@@ -7,10 +7,10 @@ import java.util.Map;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.OrderProcessStepLogger;
-import com.sos.js7.job.resolver.AJobArgumentValueResolver;
+import com.sos.js7.job.resolver.JobArgumentValueResolver;
 
 /** Resolves values with the prefix <i>apath:</i> into an absolute path */
-public class ExampleAbsolutePathResolver extends AJobArgumentValueResolver {
+public class ExampleAbsolutePathResolver extends JobArgumentValueResolver {
 
     private static final String CLASS_NAME = ExampleAbsolutePathResolver.class.getSimpleName();
     /** true - default - throw exception if any argument cannot be resolved <br/>
@@ -24,9 +24,9 @@ public class ExampleAbsolutePathResolver extends AJobArgumentValueResolver {
         return "apath:";
     }
 
-    public static void resolve(List<JobArgument<?>> toResolve, OrderProcessStepLogger logger, Map<String, JobArgument<?>> allArguments)
+    public static void resolve(OrderProcessStepLogger logger, List<JobArgument<?>> argumentsToResolve, Map<String, JobArgument<?>> allArguments)
             throws Exception {
-        for (JobArgument<?> arg : toResolve) {
+        for (JobArgument<?> arg : argumentsToResolve) {
             debugArgument(logger, arg, CLASS_NAME);
 
             try {

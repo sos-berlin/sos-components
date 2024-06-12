@@ -6,10 +6,10 @@ import java.util.Map;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.OrderProcessStepLogger;
-import com.sos.js7.job.resolver.AJobArgumentValueResolver;
+import com.sos.js7.job.resolver.JobArgumentValueResolver;
 
 /** Resolves values with the prefix <i>upper:</i> in uppercase */
-public class ExampleUpperCaseResolver extends AJobArgumentValueResolver {
+public class ExampleUpperCaseResolver extends JobArgumentValueResolver {
 
     private static final String CLASS_NAME = ExampleUpperCaseResolver.class.getSimpleName();
 
@@ -17,9 +17,9 @@ public class ExampleUpperCaseResolver extends AJobArgumentValueResolver {
         return "upper:";
     }
 
-    public static void resolve(List<JobArgument<?>> toResolve, OrderProcessStepLogger logger, Map<String, JobArgument<?>> allArguments)
+    public static void resolve(OrderProcessStepLogger logger, List<JobArgument<?>> argumentsToResolve, Map<String, JobArgument<?>> allArguments)
             throws Exception {
-        for (JobArgument<?> arg : toResolve) {
+        for (JobArgument<?> arg : argumentsToResolve) {
             debugArgument(logger, arg, CLASS_NAME);
 
             arg.applyValue(getValueWithoutPrefix(arg, getPrefix()).toUpperCase());

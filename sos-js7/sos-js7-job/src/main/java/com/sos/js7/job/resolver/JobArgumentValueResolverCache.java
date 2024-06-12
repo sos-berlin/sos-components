@@ -86,8 +86,9 @@ public class JobArgumentValueResolverCache {
             throw new IllegalArgumentException(clazz + " does not have a valid 'public static String getPrefix()' method");
         }
 
-        // public static void resolve(List<JobArgument<String> toResolve,OrderProcessStepLogger logger,Map<String,JobArgument<?> allArguments)
-        Method resolveMethod = clazz.getMethod("resolve", List.class, OrderProcessStepLogger.class, Map.class);
+        // public static void resolve(OrderProcessStepLogger logger, List<JobArgument<?>> argumentsToResolve, Map<String, JobArgument<?> allArguments) throws
+        // Exception
+        Method resolveMethod = clazz.getMethod("resolve", OrderProcessStepLogger.class, List.class, Map.class);
 
         String prefix = (String) getPrefixMethod.invoke(null);
         METHOD_CACHE.put(prefix, resolveMethod);
@@ -121,9 +122,9 @@ public class JobArgumentValueResolverCache {
         return METHOD_CACHE.entrySet().stream().map(e -> e.getKey()).collect(Collectors.toList());
     }
 
-    public static void resolve(String prefix, List<JobArgument<?>> toResolve, OrderProcessStepLogger logger, Map<String, JobArgument<?>> allArguments)
-            throws Exception {
-        METHOD_CACHE.get(prefix).invoke(null, toResolve, logger, allArguments);
+    public static void resolve(String prefix, OrderProcessStepLogger logger, List<JobArgument<?>> argumentsToResolve,
+            Map<String, JobArgument<?>> allArguments) throws Exception {
+        METHOD_CACHE.get(prefix).invoke(null, logger, argumentsToResolve, allArguments);
     }
 
 }
