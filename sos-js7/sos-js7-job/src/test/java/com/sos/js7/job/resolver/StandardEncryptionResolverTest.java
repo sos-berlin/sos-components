@@ -1,4 +1,4 @@
-package com.sos.js7.job;
+package com.sos.js7.job.resolver;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -12,34 +12,19 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.sign.keys.certificate.CertificateUtils;
 import com.sos.commons.sign.keys.key.KeyUtil;
+import com.sos.js7.job.UnitTestJobHelper;
 import com.sos.js7.job.helper.TestJob;
 import com.sos.js7.job.helper.TestJobArguments;
-import com.sos.js7.job.resolver.StandardBase64Resolver;
-import com.sos.js7.job.resolver.StandardEncryptionResolver;
 
 import js7.data_for_java.order.JOutcome;
 
-public class StandardResolverTest {
+public class StandardEncryptionResolverTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(StandardResolverTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(StandardEncryptionResolverTest.class);
 
-    private static final String BASE64_PATH_VAL = "dGVzdC50eHQ="; // test.txt
     private static final Path ENCRYPTION_RESOURCES_DIR = Paths.get("../../sos-commons/sos-commons-encryption/src/test/resources/encryption");
 
-    @Ignore
-    @Test
-    public void testBase64Resolver() throws Exception {
-        Map<String, Object> args = new HashMap<>();
-        args.put("test", StandardBase64Resolver.getPrefix() + BASE64_PATH_VAL);
-        args.put("path", StandardBase64Resolver.getPrefix() + BASE64_PATH_VAL);
-        args.put("log_all_arguments", Boolean.valueOf(true));
-
-        UnitTestJobHelper<TestJobArguments> h = new UnitTestJobHelper<>(new TestJob());
-        JOutcome.Completed result = h.processOrder(args);
-        LOGGER.info("###############################################");
-        LOGGER.info(String.format("[RESULT]%s", result));
-    }
-
+   
     @Ignore
     @Test
     public void testEncryptionECResolver() throws Exception {

@@ -1,7 +1,9 @@
 package com.sos.js7.job.resolver;
 
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.lang.reflect.Method;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -11,12 +13,20 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSReflection;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.JobHelper;
 import com.sos.js7.job.OrderProcessStepLogger;
 
+/** Current loading behavior - Search for CUSTOM_RESOLVERS_JAR_NAME_PATTERN files in a folder:<br/>
+ * - 122 jars (copy of 3rd-party) ~ 70ms<br/>
+ * - 10 jars ~ 70ms<br/>
+ * - 3 jars ~ 70ms<br/>
+ * Old loading behavior - Search in all .jar files in a folder:<br/>
+ * - 122 jars (copy of 3rd-party) ~ 16-20s<br/>
+ * - 10 jars ~ 200ms<br/>
+ * - 3 jars ~ 12ms<br/>
+ */
 public class JobArgumentValueResolverCache {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JobArgumentValueResolverCache.class);
@@ -25,6 +35,7 @@ public class JobArgumentValueResolverCache {
     private static Map<String, Method> METHOD_CACHE = new LinkedHashMap<>();
 
     private static final String CUSTOM_RESOLVERS_DIR = "user_lib";
+    private static final String CUSTOM_RESOLVERS_JAR_NAME_PATTERN = "(?i)^jobapi-register-.*\\.jar$";
 
     static {
         LOGGER.info("start...");
@@ -47,17 +58,21 @@ public class JobArgumentValueResolverCache {
         cacheResolver(StandardEncryptionResolver.class);
     }
 
-    // Performance load/check from user_lib
-    // -- 122 jars (copy of 3rd-party) ~ 16-20s
-    // -- 10 jars ~ 100ms
-    // -- 3 jars ~ 12ms
     private static void cacheCustomResolvers() {
-        List<Path> jars = getCustomJars();
-        if (jars == null) {
+        Path dir = JobHelper.getAgentLibDir();
+        if (dir == null) {
             return;
         }
-        for (Path jar : jars) {
-            try {
+        dir = dir.resolve(CUSTOM_RESOLVERS_DIR);
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, new DirectoryStream.Filter<Path>() {
+
+            @Override
+            public boolean accept(Path entry) throws IOException {
+                String fileName = entry.getFileName().toString();
+                return fileName.matches(CUSTOM_RESOLVERS_JAR_NAME_PATTERN);
+            }
+        })) {
+            for (Path jar : stream) {
                 List<Class<?>> classes = SOSReflection.findClassesInJarFile(jar, IJobArgumentValueResolver.class);
                 for (Class<?> clazz : classes) {
                     try {
@@ -66,23 +81,10 @@ public class JobArgumentValueResolverCache {
                         LOGGER.error("[" + jar + "][" + clazz + "]" + e.toString(), e);
                     }
                 }
-            } catch (Throwable e) {
-                LOGGER.error("[" + jar + "]" + e.toString(), e);
             }
-        }
-    }
-
-    private static List<Path> getCustomJars() {
-        // List<Path> jars = SOSReflection.getJarsFromClassPath(CUSTOM_RESOLVERS_DIR);
-        Path dir = JobHelper.getAgentLibDir().resolve(CUSTOM_RESOLVERS_DIR);
-        try {
-            return SOSPath.getFileList(dir, ".*\\.jar$", java.util.regex.Pattern.CASE_INSENSITIVE);
-        } catch (FileNotFoundException e) {
-            LOGGER.error("[" + dir + "]" + e.getMessage());
         } catch (Throwable e) {
-            LOGGER.error("[" + dir + "]" + e.toString(), e);
+            LOGGER.error("[" + dir.toAbsolutePath() + "]" + e.toString(), e);
         }
-        return null;
     }
 
     private static void cacheResolver(Class<?> clazz) throws Exception {
