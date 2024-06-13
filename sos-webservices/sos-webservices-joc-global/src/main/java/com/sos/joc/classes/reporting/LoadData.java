@@ -80,12 +80,7 @@ public class LoadData extends AReporting {
                 
                 while (month.isBefore(toMonth)) {
                     if (!writeCSVFile(jobsReporting, month, dbLayer, emptyMonths, existingMonths)) {
-                        
-                        atomicRename(jobsReporting, month);
-                        if (!writeCSVFile(ordersReporting, month, dbLayer, emptyMonths, existingMonths)) {
-                            
-                            atomicRename(ordersReporting, month);
-                        }
+                        writeCSVFile(ordersReporting, month, dbLayer, emptyMonths, existingMonths);
                     }
                     month = month.plusMonths(1);
                 }
@@ -108,36 +103,50 @@ public class LoadData extends AReporting {
     
     private static boolean writeCSVFile(ReportingLoader loader, LocalDateTime month, JobHistoryDBLayer dbLayer, List<String> emptyMonths,
             List<String> existingMonths) throws IOException {
-        boolean skipped = true;
+        String _month = month.format(yearMonthFormatter);
+        Path monthFile = getMonthFile(loader, _month);
+        if (Files.notExists(monthFile)) {
+            return writeCSVFile(loader, month, monthFile, dbLayer, emptyMonths, existingMonths);
+        } else {
+            existingMonths.add(_month);
+        }
+        return true;
+    }
+    
+    private synchronized static boolean writeCSVFile(ReportingLoader loader, LocalDateTime month, Path monthFile, JobHistoryDBLayer dbLayer,
+            List<String> emptyMonths, List<String> existingMonths) throws IOException {
+        
+        String _month = month.format(yearMonthFormatter);
+        
+        // check "exists" again because the result could be change in between after synchronizing this function 
+        if (Files.exists(monthFile)) {
+            existingMonths.add(_month);
+            return true;
+        }
+        
+        Path tmpMonthFile = getTmpMonthFile(loader, _month);
+        Files.deleteIfExists(tmpMonthFile);
         ScrollableResults<String> result = null;
+        
         try {
-            String _month = month.format(yearMonthFormatter);
-            Path monthFile = getMonthFile(loader, _month);
-            Path tmpMonthFile = getTmpMonthFile(loader, _month);
-            Files.deleteIfExists(tmpMonthFile);
-            if (Files.notExists(monthFile)) {
-                result = dbLayer.getCSV(loader, month);
-                if (result != null) {
-                    if (result.next()) {
-                        try (OutputStream output = Files.newOutputStream(tmpMonthFile)) {
-                            output.write(loader.getHeadline());
-                            output.write(getCsvBytes(result.get()));
-                            while (result.next()) {
-                                output.write(getCsvBytes(result.get()));
-                            }
-                            output.flush();
-                            LOGGER.info("[Reporting][loading] Write " + loader.getType().name().toLowerCase() + " data for " + month + " ("
-                                    + monthFile.toString() + ")");
-                            skipped = false;
-                        }
-                    } else {
-                        emptyMonths.add(_month);
+            result = dbLayer.getCSV(loader, month);
+            if (result != null && result.next()) {
+                try (OutputStream output = Files.newOutputStream(tmpMonthFile)) {
+                    output.write(loader.getHeadline());
+                    output.write(getCsvBytes(result.get()));
+                    while (result.next()) {
+                        output.write(getCsvBytes(result.get()));
                     }
-                } else {
-                    emptyMonths.add(_month);
+                    output.flush();
+                    
+                    atomicRename(loader, _month);
+                    LOGGER.info("[Reporting][loading] Write " + loader.getType().name().toLowerCase() + " data for " + _month + " (" + monthFile
+                            .toString() + ")");
+                    
+                    return false;
                 }
             } else {
-                existingMonths.add(_month);
+                emptyMonths.add(_month);
             }
         } finally {
             if (result != null) {
@@ -145,12 +154,7 @@ public class LoadData extends AReporting {
                 result = null;
             }
         }
-        return skipped;
-    }
-    
-    private static void atomicRename(ReportingLoader loader, LocalDateTime month) throws IOException {
-        String _month = month.format(yearMonthFormatter);
-        atomicRename(loader, _month);
+        return true;
     }
     
     private synchronized static void atomicRename(ReportingLoader loader, String month) throws IOException {
