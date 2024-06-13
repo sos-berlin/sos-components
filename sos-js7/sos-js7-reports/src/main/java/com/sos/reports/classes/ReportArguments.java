@@ -45,7 +45,11 @@ public class ReportArguments {
     }
 
     public void setMonthFrom(String inMonthFrom) {
+        LocalDate oldestMonthFrom = LocalDate.parse("2020-01-01");
         this.monthFrom = LocalDate.parse(inMonthFrom + "-01");
+        if (this.monthFrom.isBefore(oldestMonthFrom)) {
+            this.monthFrom = oldestMonthFrom;
+        }
     }
 
     public void setMonthTo(String inMonthTo) {

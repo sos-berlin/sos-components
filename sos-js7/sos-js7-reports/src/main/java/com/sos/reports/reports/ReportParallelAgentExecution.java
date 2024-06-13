@@ -1,6 +1,7 @@
 package com.sos.reports.reports;
 
 import java.io.IOException;
+import java.time.Period;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -31,25 +32,32 @@ public class ReportParallelAgentExecution implements IReport {
 
     Map<String, List<ReportPeriod>> agents = new HashMap<String, List<ReportPeriod>>();
 
-    public void count(ReportRecord orderRecord) {
-        List<ReportPeriod> periods = agents.get(orderRecord.getAgentId());
-        if (periods == null) {
-            periods = new ArrayList<ReportPeriod>();
-            agents.put(orderRecord.getAgentId(), periods);
-        }
-
+    private ReportPeriod createPeriod(ReportRecord jobRecord) {
         ReportPeriod reportPeriod = new ReportPeriod();
         reportPeriod.setCount(1L);
-        reportPeriod.setFrom(orderRecord.getStartTime());
-        if (orderRecord.getEndTime() == null) {
-            reportPeriod.setTo(orderRecord.getModified());
+        reportPeriod.setFrom(jobRecord.getStartTime());
+        if (jobRecord.getEndTime() == null) {
+            reportPeriod.setTo(jobRecord.getModified());
         } else {
-            reportPeriod.setTo(orderRecord.getEndTime());
+            reportPeriod.setTo(jobRecord.getEndTime());
         }
 
         if (reportPeriod.getTo() == null) {
             reportPeriod.setTo(reportPeriod.getFrom());
         }
+        return reportPeriod;
+    }
+
+    public void count(ReportRecord jobRecord) {
+        List<ReportPeriod> periods = agents.get(jobRecord.getAgentId());
+        List<ReportPeriod> newPeriods = new <ReportPeriod> ArrayList();
+
+        if (periods == null) {
+            periods = new ArrayList<ReportPeriod>();
+            agents.put(jobRecord.getAgentId(), periods);
+        }
+
+        ReportPeriod reportPeriod = createPeriod(jobRecord);
 
         for (ReportPeriod period : periods) {
             if ((reportPeriod.getFrom().isAfter(period.getFrom()) && reportPeriod.getFrom().isBefore(period.getTo())) || (reportPeriod.getTo()
@@ -57,10 +65,28 @@ public class ReportParallelAgentExecution implements IReport {
                             && reportPeriod.getTo().isAfter(period.getTo()))) {
                 reportPeriod.addCount();
             }
+
+            if ((reportPeriod.getTo().isAfter(period.getFrom()) && reportPeriod.getTo().isBefore(period.getTo()))) {
+                ReportPeriod r1 = createPeriod(jobRecord);
+                r1.setFrom(reportPeriod.getFrom());
+                r1.setTo(period.getFrom());
+                newPeriods.add(r1);
+                reportPeriod.setFrom(period.getFrom());
+            }
+            if ((reportPeriod.getFrom().isBefore(period.getTo()) && reportPeriod.getFrom().isAfter(period.getTo()))) {
+                ReportPeriod r1 = createPeriod(jobRecord);
+                r1.setFrom(period.getTo());
+                r1.setTo(reportPeriod.getTo());
+                newPeriods.add(r1);
+                reportPeriod.setTo(period.getTo());
+            }
+
         }
+
+        periods.addAll(newPeriods);
         periods.add(reportPeriod);
-        removeOldPeriods(reportPeriod, orderRecord.getAgentId());
-        agents.put(orderRecord.getAgentId(), periods);
+        removeOldPeriods(reportPeriod, jobRecord.getAgentId());
+        agents.put(jobRecord.getAgentId(), periods);
     }
 
     public ReportResult putHits() {
