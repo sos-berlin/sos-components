@@ -38,6 +38,7 @@ import com.sos.js7.job.ValueSource.ValueSourceType;
 import com.sos.js7.job.exception.JobArgumentException;
 import com.sos.js7.job.exception.JobException;
 import com.sos.js7.job.exception.JobRequiredArgumentMissingException;
+import com.sos.js7.job.resolver.JobArgumentValueResolverCache;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
@@ -51,6 +52,10 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
     private static final String OPERATION_CANCEL_KILL = "cancel/kill";
 
     private JobEnvironment<A> jobEnvironment;
+
+    static {
+        JobArgumentValueResolverCache.initialize();
+    }
 
     public Job() {
         this((JobContext) null);

@@ -1,5 +1,6 @@
 package com.sos.js7.job.resolver;
 
+import java.io.FileNotFoundException;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
@@ -26,14 +27,19 @@ public class JobArgumentValueResolverCache {
     private static final String CUSTOM_RESOLVERS_DIR = "user_lib";
 
     static {
-        LOGGER.info("[temp output]start...");
+        LOGGER.info("start...");
         try {
             cacheStandardResolvers();
             cacheCustomResolvers();
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         }
-        LOGGER.info("[temp output]end");
+        LOGGER.info("end");
+    }
+
+    // Static method to ensure the class is loaded
+    public static void initialize() {
+        // This method is intentionally empty
     }
 
     private static void cacheStandardResolvers() throws Exception {
@@ -43,7 +49,8 @@ public class JobArgumentValueResolverCache {
 
     // Performance load/check from user_lib
     // -- 122 jars (copy of 3rd-party) ~ 16-20s
-    // -- 3 jars ~ 0,15s
+    // -- 10 jars ~ 100ms
+    // -- 3 jars ~ 12ms
     private static void cacheCustomResolvers() {
         List<Path> jars = getCustomJars();
         if (jars == null) {
@@ -70,6 +77,8 @@ public class JobArgumentValueResolverCache {
         Path dir = JobHelper.getAgentLibDir().resolve(CUSTOM_RESOLVERS_DIR);
         try {
             return SOSPath.getFileList(dir, ".*\\.jar$", java.util.regex.Pattern.CASE_INSENSITIVE);
+        } catch (FileNotFoundException e) {
+            LOGGER.error("[" + dir + "]" + e.getMessage());
         } catch (Throwable e) {
             LOGGER.error("[" + dir + "]" + e.toString(), e);
         }

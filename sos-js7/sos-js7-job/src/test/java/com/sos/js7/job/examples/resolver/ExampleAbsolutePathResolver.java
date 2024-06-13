@@ -12,22 +12,43 @@ import com.sos.js7.job.resolver.JobArgumentValueResolver;
 /** Resolves values with the prefix <i>apath:</i> into an absolute path */
 public class ExampleAbsolutePathResolver extends JobArgumentValueResolver {
 
-    private static final String CLASS_NAME = ExampleAbsolutePathResolver.class.getSimpleName();
-    /** true - default - throw exception if any argument cannot be resolved <br/>
-     * false - in case of exceptions<br/>
-     * - the argument value is not resolved<br/>
-     * - the exception reason is set for the argument and is visible in the job output<br/>
+    /** Identifier used for logging purposes. */
+    private static final String IDENTIFIER = ExampleAbsolutePathResolver.class.getSimpleName();
+
+    /** Determines the behavior when an argument cannot be resolved.
+     * <ul>
+     * <li><strong>true</strong> (default): Throws an exception if any argument cannot be resolved.</li>
+     * <li><strong>false</strong>: In case of exceptions:
+     * <ul>
+     * <li>The argument value is not resolved.</li>
+     * <li>The reason for the exception is set for the argument and is visible in the job output.</li>
+     * </ul>
+     * </li>
+     * </ul>
      */
     private static final String ARG_NAME_FAIL_ON_RESOLVER_ERROR = "fail_on_resolver_error";
 
+    /** Required method to implement.<br/>
+     * Returns the prefix that this resolver is responsible for. */
     public static String getPrefix() {
         return "apath:";
     }
 
+    /** Required method to implement.<br/>
+     * Resolves the values of the given arguments by converting them into an absolute path.<br/>
+     * <br/>
+     * See explanation of debugArgument, DisplayMode, etc., provided with the example in the
+     * <i>com.sos.js7.job.examples.resolver.ExampleUpperCaseResolver.resolve(...)</i> method.
+     * 
+     * @param logger Logger for logging to the job log output.
+     * @param argumentsToResolve List of arguments to be resolved.
+     * @param allArguments Map of all available arguments.
+     * @throws Exception if an error occurs during resolution. */
     public static void resolve(OrderProcessStepLogger logger, List<JobArgument<?>> argumentsToResolve, Map<String, JobArgument<?>> allArguments)
             throws Exception {
+
         for (JobArgument<?> arg : argumentsToResolve) {
-            debugArgument(logger, arg, CLASS_NAME);
+            debugArgument(logger, IDENTIFIER, arg);
 
             try {
                 arg.applyValue(Paths.get(getValueWithoutPrefix(arg, getPrefix())).toAbsolutePath().toString());

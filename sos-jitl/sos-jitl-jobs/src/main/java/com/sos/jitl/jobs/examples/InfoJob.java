@@ -148,6 +148,11 @@ public class InfoJob extends Job<InfoJobArguments> {
         showMapArgument(step, args.getMapObjectValues());
         showMapArgument(step, args.getMapWildcardValues());
 
+        if (args.getPathArgument().getValue() != null) {
+            step.getLogger().info("----------PATH ARGUMENT -----------------");
+            showSingleArgument(step, args.getPathArgument());
+        }
+
         step.getLogger().info("----------RETURN-----------------");
         if (args.getRedefineShowEnv().getValue() || !args.getReturnVariables().isEmpty()) {
             if (args.getRedefineShowEnv().getValue()) {
@@ -182,6 +187,13 @@ public class InfoJob extends Job<InfoJobArguments> {
             step.getLogger().info("[SUCCESS][java][step outcome]%s", outcome);
             // step.getLogger().info("[SUCCESS]");
             // return step.success();
+        }
+    }
+
+    private void showSingleArgument(OrderProcessStep<InfoJobArguments> step, JobArgument<?> a) {
+        step.getLogger().info(a.getName() + "=" + a.getValue());
+        if (a.getValue() != null) {
+            step.getLogger().info("  " + a.getValue().getClass());
         }
     }
 

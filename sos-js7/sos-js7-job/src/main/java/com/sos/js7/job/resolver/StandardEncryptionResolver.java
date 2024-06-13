@@ -18,7 +18,7 @@ public class StandardEncryptionResolver extends JobArgumentValueResolver {
     public static final String ARG_NAME_ENCIPHERMENT_CERTIFICATE = "encipherment_certificate";
     public static final String ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH = "encipherment_private_key_path";
 
-    private static final String CLASS_NAME = StandardEncryptionResolver.class.getSimpleName();
+    private static final String IDENTIFIER = StandardEncryptionResolver.class.getSimpleName();
 
     public static String getPrefix() {
         return EncryptionUtils.ENCRYPTION_IDENTIFIER;
@@ -33,7 +33,7 @@ public class StandardEncryptionResolver extends JobArgumentValueResolver {
         }
 
         for (JobArgument<?> arg : argumentsToResolve) {
-            debugArgument(logger, arg, CLASS_NAME);
+            debugArgument(logger, IDENTIFIER, arg);
             // Throw exception if any argument cannot be resolved
             arg.applyValue(Decrypt.decrypt(EncryptedValue.getInstance(arg.getName(), arg.getValue().toString()), privKey));
             arg.setDisplayMode(DisplayMode.MASKED);

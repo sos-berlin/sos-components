@@ -23,6 +23,7 @@ public class InfoJobArguments extends JobArguments {
     private JobArgument<Boolean> showEnv = new JobArgument<>("show_env", false, false);
     private JobArgument<Boolean> redefineShowEnv = new JobArgument<>("redefine_show_env", false, false);
     private JobArgument<String> stringArgument = new JobArgument<>("string_argument", false);
+    private JobArgument<Path> pathArgument = new JobArgument<>("path_argument", false);
     private JobArgument<String> returnVariables = new JobArgument<>("return_variables", false);
     private JobArgument<String> password = new JobArgument<>("password", false, DisplayMode.MASKED);
     private JobArgument<String> shellCommand = new JobArgument<>("shell_command", false);
@@ -129,6 +130,10 @@ public class InfoJobArguments extends JobArguments {
 
     public JobArgument<String> getStringArgument() {
         return stringArgument;
+    }
+
+    public JobArgument<Path> getPathArgument() {
+        return pathArgument;
     }
 
     public JobArgument<String> getReturnVariables() {

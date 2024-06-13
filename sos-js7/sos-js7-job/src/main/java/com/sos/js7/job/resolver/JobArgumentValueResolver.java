@@ -10,12 +10,25 @@ import com.sos.js7.job.OrderProcessStepLogger;
  */
 public abstract class JobArgumentValueResolver implements IJobArgumentValueResolver {
 
-    public static void debugArgument(OrderProcessStepLogger logger, JobArgument<?> arg, String className) {
+    /** Creates standardized debug output, e.g.:<br/>
+     * [DEBUG][&lt;resolverIdentifier&gt;][resolve][argument]name=&lt;argument name&gt;,value=&lt;argument value before resolving&gt;<br />
+     * 
+     * @apiNote: When the argument is not declared in a JobArgument class, the value will be displayed as &lt;hidden&gt;
+     * @param logger Logger for logging to the job log output.
+     * @param resolverIdentifier The resolver identifier.
+     * @param arg JobArgument to be debugged. */
+    public static void debugArgument(OrderProcessStepLogger logger, String resolverIdentifier, JobArgument<?> arg) {
         if (logger.isDebugEnabled()) {
-            logger.debug("[" + className + "][resolve][argument]name=" + arg.getName() + ",value=" + arg.getValue());
+            logger.debug("[" + resolverIdentifier + "][resolve][argument]name=" + arg.getName() + ",value=" + arg.getDisplayValue());
         }
     }
 
+    /** Removes the specified prefix from the value of the given JobArgument.
+     * 
+     * @param arg The JobArgument whose value's prefix needs to be removed.
+     * @param prefix The prefix to be removed from the argument's value.
+     * @return The value of the argument without the specified prefix.
+     * @throws Exception if an error occurs while processing the argument's value. */
     public static String getValueWithoutPrefix(JobArgument<?> arg, String prefix) throws Exception {
         return arg.getValue().toString().substring(prefix.length());
     }

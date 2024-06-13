@@ -18,7 +18,6 @@ public class JobEnvironment<A extends JobArguments> {
     private A declaredArguments;
     private Map<String, Object> allArguments;
 
-    // TODO custom resolvers
     @SuppressWarnings("unchecked")
     protected JobEnvironment(JobContext jc) {
         if (jc == null) {

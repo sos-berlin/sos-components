@@ -9,7 +9,7 @@ import com.sos.js7.job.OrderProcessStepLogger;
 
 public class StandardBase64Resolver extends JobArgumentValueResolver {
 
-    private static final String CLASS_NAME = StandardBase64Resolver.class.getSimpleName();
+    private static final String IDENTIFIER = StandardBase64Resolver.class.getSimpleName();
 
     public static String getPrefix() {
         return "base64:";
@@ -18,7 +18,7 @@ public class StandardBase64Resolver extends JobArgumentValueResolver {
     public static void resolve(OrderProcessStepLogger logger, List<JobArgument<?>> argumentsToResolve, Map<String, JobArgument<?>> allArguments)
             throws Exception {
         for (JobArgument<?> arg : argumentsToResolve) {
-            debugArgument(logger, arg, CLASS_NAME);
+            debugArgument(logger, IDENTIFIER, arg);
             // Throw exception if any argument cannot be resolved
             arg.applyValue(SOSBase64.decode(getValueWithoutPrefix(arg, getPrefix())));
         }

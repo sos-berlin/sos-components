@@ -23,14 +23,16 @@ public class StandardResolverTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StandardResolverTest.class);
 
+    private static final String BASE64_PATH_VAL = "dGVzdC50eHQ="; // test.txt
     private static final Path ENCRYPTION_RESOURCES_DIR = Paths.get("../../sos-commons/sos-commons-encryption/src/test/resources/encryption");
 
     @Ignore
     @Test
     public void testBase64Resolver() throws Exception {
         Map<String, Object> args = new HashMap<>();
-        args.put("test", StandardBase64Resolver.getPrefix() + "xxx");
-        args.put("path", StandardBase64Resolver.getPrefix() + "yyy");
+        args.put("test", StandardBase64Resolver.getPrefix() + BASE64_PATH_VAL);
+        args.put("path", StandardBase64Resolver.getPrefix() + BASE64_PATH_VAL);
+        args.put("log_all_arguments", Boolean.valueOf(true));
 
         UnitTestJobHelper<TestJobArguments> h = new UnitTestJobHelper<>(new TestJob());
         JOutcome.Completed result = h.processOrder(args);
