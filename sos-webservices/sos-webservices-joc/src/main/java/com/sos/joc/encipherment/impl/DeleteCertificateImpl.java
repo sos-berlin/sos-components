@@ -34,10 +34,12 @@ public class DeleteCertificateImpl extends JOCResourceImpl implements IDeleteCer
             hibernateSession.setAutoCommit(false);
             DBLayerKeys dbLayer = new DBLayerKeys(hibernateSession);
             DBItemEncCertificate dbCert = dbLayer.getEnciphermentCertificate(filter.getCertAlias());
-            Globals.beginTransaction(hibernateSession);
-            dbLayer.removeAllEnciphermentCertificateMappingsByAgent(dbCert.getAlias());
-            hibernateSession.delete(dbCert);
-            Globals.commit(hibernateSession);
+            if (dbCert != null) {
+                Globals.beginTransaction(hibernateSession);
+                dbLayer.removeAllEnciphermentCertificateMappingsByAgent(dbCert.getAlias());
+                hibernateSession.delete(dbCert);
+                Globals.commit(hibernateSession);
+            }
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             Globals.rollback(hibernateSession);
