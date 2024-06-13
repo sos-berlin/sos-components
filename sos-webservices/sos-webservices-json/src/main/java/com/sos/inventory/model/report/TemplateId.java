@@ -16,7 +16,9 @@ public enum TemplateId {
     WORKFLOWS_LONGEST_EXECUTION_TIMES(7, true, "Top ${hits} workflows with the longest execution time", "ReportLongestOrderExecution"),
     JOBS_LONGEST_EXECUTION_TIMES(8, true, "Top ${hits} jobs with the longest execution time", "ReportLongestJobExecution"),
     PERIODS_MOST_ORDER_EXECUTIONS(9, true, "Top ${hits} periods during which mostly workflows executed", "ReportParallelWorkflowExecutions"),
-    PERIODS_MOST_JOB_EXECUTIONS(10, true, "Top ${hits} periods during which mostly jobs executed", "ReportParallelJobExecutions");
+    PERIODS_MOST_JOB_EXECUTIONS(10, true, "Top ${hits} periods during which mostly jobs executed", "ReportParallelJobExecutions"),
+    JOBS_SUCCESSFUL_EXECUTIONS(11, true, "Top ${hits} jobs with ${sort} number of successful executions", "ReportSuccessfulJobs"),
+    WORKFLOWS_SUCCESSFUL_EXECUTIONS(12, true, "Top ${hits} workflows with ${sort} number of successful executions", "ReportSuccessfulWorkflows");
     
     private final Boolean supported;
     private final Integer intValue;
