@@ -15,6 +15,6 @@
   	<property name="hibernate.connection.provider_class">org.hibernate.hikaricp.internal.HikariCPConnectionProvider</property>
   	<property name="hibernate.hikari.maximumPoolSize">10</property>
   	<property name="hibernate.hikari.leakDetectionThreshold">30000</property>
-  	<property name="hibernate.sos.decryption_key">src/test/resources/ec_test.key</property>
+  	<property name="hibernate.sos.decryption_key">src/test/resources/encryption/ec_test.key</property>
  </session-factory>
 </hibernate-configuration>

@@ -1,5 +1,6 @@
 package com.sos.jitl.jobs.db.oracle;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,12 +21,14 @@ public class PLSQLJobTest {
 
     @Ignore
     @Test
-    public void test() throws Exception {
+    public void testEncryption() throws Exception {
+        Path resourcesDir = Paths.get("src/test/resources/encryption");
+
         Map<String, Object> args = new HashMap<>();
-        args.put("hibernate_configuration_file", Paths.get("src/test/resources/sp.hibernate.cfg.xml"));
+        args.put("hibernate_configuration_file", resourcesDir.resolve("hibernate.cfg.xml"));
         args.put("command", "select 1 from dual");
         args.put("resultset_as", ResultSetAs.XML);
-        args.put("result_file", Paths.get("src/test/resources/plsqljob_export.xml"));
+        args.put("result_file", resourcesDir.resolve("plsqljob_export.xml"));
 
         // args.put("credential_store_file", "db.kdbx");
         // args.put("credential_store_key_file", "db.kdbx.key");
