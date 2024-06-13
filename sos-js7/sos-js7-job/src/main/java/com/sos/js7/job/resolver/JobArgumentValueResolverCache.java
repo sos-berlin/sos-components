@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -82,6 +83,8 @@ public class JobArgumentValueResolverCache {
                     }
                 }
             }
+        } catch (NoSuchFileException e) {
+            LOGGER.warn("[" + dir.toAbsolutePath() + "]" + e.toString());
         } catch (Throwable e) {
             LOGGER.error("[" + dir.toAbsolutePath() + "]" + e.toString(), e);
         }
