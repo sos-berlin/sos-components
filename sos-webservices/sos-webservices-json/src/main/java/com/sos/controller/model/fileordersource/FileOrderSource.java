@@ -2,14 +2,16 @@
 package com.sos.controller.model.fileordersource;
 
 import java.util.Date;
+
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.controller.model.common.SyncState;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
@@ -22,7 +24,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "path",
     "versionDate",
-    "state"
+    "state",
+    "valid"
 })
 public class FileOrderSource
     extends com.sos.inventory.model.fileordersource.FileOrderSource
@@ -54,6 +57,8 @@ public class FileOrderSource
      */
     @JsonProperty("state")
     private SyncState state;
+    @JsonProperty("valid")
+    private Boolean valid;
 
     /**
      * No args constructor for use in serialization
@@ -64,23 +69,26 @@ public class FileOrderSource
 
     /**
      * 
-     * @param documentationPath
-     * @param path
-     * @param delay
+     * @param directoryExpr
      * @param pattern
      * @param agentName
      * @param timeZone
      * @param workflowName
-     * @param state
      * @param title
      * @param versionDate
      * @param directory
+     * @param valid
+     * @param path
+     * @param delay
+     * @param state
+     * @param documentationName
      */
-    public FileOrderSource(String path, Date versionDate, SyncState state, String workflowName, String agentName, String directoryExpr, String directory, String pattern, String timeZone, Long delay, String title, String documentationPath) {
-        super(workflowName, agentName, directoryExpr, directory, pattern, timeZone, delay, title, documentationPath);
+    public FileOrderSource(String path, Date versionDate, SyncState state, Boolean valid, String workflowName, String agentName, String directoryExpr, String directory, String pattern, String timeZone, Long delay, String title, String documentationName) {
+        super(workflowName, agentName, directoryExpr, directory, pattern, timeZone, delay, title, documentationName);
         this.path = path;
         this.versionDate = versionDate;
         this.state = state;
+        this.valid = valid;
     }
 
     /**
@@ -149,14 +157,24 @@ public class FileOrderSource
         this.state = state;
     }
 
+    @JsonProperty("valid")
+    public Boolean getValid() {
+        return valid;
+    }
+
+    @JsonProperty("valid")
+    public void setValid(Boolean valid) {
+        this.valid = valid;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("versionDate", versionDate).append("state", state).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("versionDate", versionDate).append("state", state).append("valid", valid).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(path).append(state).append(versionDate).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(valid).append(path).append(state).append(versionDate).toHashCode();
     }
 
     @Override
@@ -168,7 +186,7 @@ public class FileOrderSource
             return false;
         }
         FileOrderSource rhs = ((FileOrderSource) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(path, rhs.path).append(state, rhs.state).append(versionDate, rhs.versionDate).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(valid, rhs.valid).append(path, rhs.path).append(state, rhs.state).append(versionDate, rhs.versionDate).isEquals();
     }
 
 }
