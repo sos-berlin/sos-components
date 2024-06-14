@@ -102,7 +102,7 @@ public class WorkflowDeps
      * @param numOfSkippedInstructions
      */
     public WorkflowDeps(BoardWorkflows consumeNoticeBoards, BoardWorkflows expectedNoticeBoards, BoardWorkflows postNoticeBoards, List<WorkflowId> addOrderToWorkflows, List<WorkflowId> addOrderFromWorkflows, String path, Boolean isCurrentVersion, Date versionDate, SyncState state, Boolean suspended, List<FileOrderSource> fileOrderSources, Set<String> forkListVariables, Boolean hasExpectedNoticeBoards, Boolean hasPostNoticeBoards, Boolean hasConsumeNoticeBoards, Boolean hasAddOrderDependencies, Integer numOfStoppedInstructions, Integer numOfSkippedInstructions, String version, String versionId, String timeZone, String title, String documentationName, Requirements orderPreparation, List<String> jobResourceNames, List<Instruction> instructions, Jobs jobs) {
-        super(path, isCurrentVersion, versionDate, state, suspended, fileOrderSources, forkListVariables, hasExpectedNoticeBoards, hasPostNoticeBoards, hasConsumeNoticeBoards, hasAddOrderDependencies, numOfStoppedInstructions, numOfSkippedInstructions, version, versionId, timeZone, title, documentationName, orderPreparation, jobResourceNames, instructions, jobs);
+        super(path, isCurrentVersion, versionDate, state, suspended, fileOrderSources, forkListVariables, hasExpectedNoticeBoards, hasPostNoticeBoards, hasConsumeNoticeBoards, hasAddOrderDependencies, numOfStoppedInstructions, numOfSkippedInstructions, null, version, versionId, timeZone, title, documentationName, orderPreparation, jobResourceNames, instructions, jobs);
         this.consumeNoticeBoards = consumeNoticeBoards;
         this.expectedNoticeBoards = expectedNoticeBoards;
         this.postNoticeBoards = postNoticeBoards;
