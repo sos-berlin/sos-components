@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.fileordersource.FileOrderSource;
 import com.sos.controller.model.workflow.Workflow;
-import com.sos.inventory.model.schedule.Schedule;
+import com.sos.controller.model.schedule.Schedule;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -73,6 +73,7 @@ public class ReferenceResourceImpl extends JOCResourceImpl implements IReference
                                 try {
                                     FileOrderSource fos = JocInventory.convertFileOrderSource(dbItem.getContent(), FileOrderSource.class);
                                     fos.setPath(dbItem.getPath());
+                                    fos.setValid(dbItem.getValid());
                                     // reduce information
                                     fos.setDocumentationName(null);
                                     fos.setDelay(null);
@@ -96,6 +97,7 @@ public class ReferenceResourceImpl extends JOCResourceImpl implements IReference
                                 try {
                                     Schedule s = (Schedule) JocInventory.content2IJSObject(dbItem.getContent(), ConfigurationType.SCHEDULE);
                                     s.setPath(dbItem.getPath());
+                                    s.setValid(dbItem.getValid());
                                     // reduce information
                                     s.setDocumentationName(null);
                                     s.setOrderParameterisations(null);
@@ -118,6 +120,7 @@ public class ReferenceResourceImpl extends JOCResourceImpl implements IReference
                                 try {
                                     Workflow w = new Workflow(); //WorkflowConverter.convertInventoryWorkflow(dbItem.getContent(), Workflow.class);
                                     w.setPath(dbItem.getPath());
+                                    w.setValid(dbItem.getValid());
                                     // reduce information
                                     w.setDocumentationName(null);
                                     w.setInstructions(null);
