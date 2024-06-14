@@ -20,8 +20,8 @@ import com.sos.reports.reports.ReportLongestOrderExecution;
 import com.sos.reports.reports.ReportParallelAgentExecution;
 import com.sos.reports.reports.ReportParallelJobExecutions;
 import com.sos.reports.reports.ReportParallelWorkflowExecutions;
-import com.sos.reports.reports.ReportSuccessfullJobs;
-import com.sos.reports.reports.ReportSuccessfullWorkflows;
+import com.sos.reports.reports.ReportSuccessfulJobs;
+import com.sos.reports.reports.ReportSuccessfulWorkflows;
 
 public class ReportGeneratorExecuter {
 
@@ -82,12 +82,12 @@ public class ReportGeneratorExecuter {
             report = new ReportParallelJobExecutions();
             break;
         case "10":
-        case "reportsuccessfullworkflows":
-            report = new ReportSuccessfullWorkflows();
+        case "reportsuccessfulworkflows":
+            report = new ReportSuccessfulWorkflows();
             break;
         case "11":
-        case "reportsuccessfulljobs":
-            report = new ReportSuccessfullJobs();
+        case "reportsuccessfuljobs":
+            report = new ReportSuccessfulJobs();
             break;
         default:
             throw new SOSException("Not yet implemented: " + reportArguments.reportId);

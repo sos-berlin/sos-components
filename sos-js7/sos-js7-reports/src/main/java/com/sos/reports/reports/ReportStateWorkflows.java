@@ -26,16 +26,18 @@ import com.sos.reports.classes.ReportArguments;
 import com.sos.reports.classes.ReportHelper;
 import com.sos.reports.classes.ReportRecord;
 
-public class ReportSuccessfullWorkflows implements IReport {
+public abstract class ReportStateWorkflows implements IReport {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ReportSuccessfullWorkflows.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ReportStateWorkflows.class);
     private ReportArguments reportArguments;
 
-    Map<String, ReportResultData> successfullWorkflows = new HashMap<String, ReportResultData>();
+    public abstract boolean getCondition(ReportRecord jobRecord);
+
+    Map<String, ReportResultData> mapOfWorkflows = new HashMap<String, ReportResultData>();
 
     public void count(ReportRecord orderRecord) {
-        if (!orderRecord.getError()) {
-            ReportResultData reportResultData = successfullWorkflows.get(orderRecord.getWorkflowName());
+        if (this.getCondition(orderRecord)) {
+            ReportResultData reportResultData = mapOfWorkflows.get(orderRecord.getWorkflowName());
             if (reportResultData == null) {
                 reportResultData = new ReportResultData();
                 reportResultData.setData(new ArrayList<ReportResultDataItem>());
@@ -65,22 +67,21 @@ public class ReportSuccessfullWorkflows implements IReport {
             reportResultDataItem.setWorkflowName(orderRecord.getWorkflowName());
 
             reportResultData.getData().add(reportResultDataItem);
-            successfullWorkflows.put(orderRecord.getWorkflowName(), reportResultData);
+            mapOfWorkflows.put(orderRecord.getWorkflowName(), reportResultData);
         }
     }
 
     public ReportResult putHits() {
         Comparator<ReportResultData> byCount = (obj1, obj2) -> obj1.getCount().compareTo(obj2.getCount());
 
-        LinkedHashMap<String, ReportResultData> successfullWorkflowsResult = null;
+        LinkedHashMap<String, ReportResultData> workflowsResult = null;
         if (this.reportArguments.sort.equals(ReportOrder.HIGHEST)) {
-            successfullWorkflowsResult = successfullWorkflows.entrySet().stream().sorted(Map.Entry.<String, ReportResultData> comparingByValue(
-                    byCount).reversed()).limit(reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1,
+            workflowsResult = mapOfWorkflows.entrySet().stream().sorted(Map.Entry.<String, ReportResultData> comparingByValue(byCount).reversed())
+                    .limit(reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1,
                             LinkedHashMap::new));
         } else {
-            successfullWorkflowsResult = successfullWorkflows.entrySet().stream().sorted(Map.Entry.<String, ReportResultData> comparingByValue(
-                    byCount)).limit(reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1,
-                            LinkedHashMap::new));
+            workflowsResult = mapOfWorkflows.entrySet().stream().sorted(Map.Entry.<String, ReportResultData> comparingByValue(byCount)).limit(
+                    reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
         }
 
         ReportResult reportResult = new ReportResult();
@@ -88,7 +89,7 @@ public class ReportSuccessfullWorkflows implements IReport {
         reportResult.setData(new ArrayList<ReportResultData>());
         reportResult.setType(getType().name());
 
-        for (Entry<String, ReportResultData> entry : successfullWorkflowsResult.entrySet()) {
+        for (Entry<String, ReportResultData> entry : workflowsResult.entrySet()) {
             LOGGER.debug("-----New Entry -----------------------");
             LOGGER.debug(entry.getKey() + ":" + entry.getValue().getCount());
             reportResult.getData().add(entry.getValue());
@@ -118,7 +119,7 @@ public class ReportSuccessfullWorkflows implements IReport {
     }
 
     public void reset() {
-        successfullWorkflows.clear();
+        mapOfWorkflows.clear();
     }
 
     @Override

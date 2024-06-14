@@ -26,16 +26,17 @@ import com.sos.reports.classes.ReportArguments;
 import com.sos.reports.classes.ReportHelper;
 import com.sos.reports.classes.ReportRecord;
 
-public class ReportSuccessfullJobs implements IReport {
+public abstract class ReportStateJobs implements IReport {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ReportSuccessfullJobs.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ReportStateJobs.class);
     private ReportArguments reportArguments;
+    public abstract boolean getCondition(ReportRecord jobRecord);
 
-    Map<String, ReportResultData> successfullJobs = new HashMap<String, ReportResultData>();
+    Map<String, ReportResultData> listOfJobs = new HashMap<String, ReportResultData>();
 
     public void count(ReportRecord jobRecord) {
-        if (!jobRecord.getError()) {
-            ReportResultData reportResultData = successfullJobs.get(jobRecord.getJobNameWithWorkflowName());
+        if (this.getCondition(jobRecord)) {
+            ReportResultData reportResultData = listOfJobs.get(jobRecord.getJobNameWithWorkflowName());
             if (reportResultData == null) {
                 reportResultData = new ReportResultData();
                 reportResultData.setData(new ArrayList<ReportResultDataItem>());
@@ -61,19 +62,19 @@ public class ReportSuccessfullJobs implements IReport {
             }
 
             reportResultData.getData().add(reportResultDataItem);
-            successfullJobs.put(jobRecord.getJobNameWithWorkflowName(), reportResultData);
+            listOfJobs.put(jobRecord.getJobNameWithWorkflowName(), reportResultData);
         }
     }
 
     public ReportResult putHits() {
         Comparator<ReportResultData> byCount = (obj1, obj2) -> obj1.getCount().compareTo(obj2.getCount());
 
-        LinkedHashMap<String, ReportResultData> successfullJobsResult = null;
+        LinkedHashMap<String, ReportResultData> jobsResult = null;
         if (this.reportArguments.sort.equals(ReportOrder.HIGHEST)) {
-            successfullJobsResult = successfullJobs.entrySet().stream().sorted(Map.Entry.<String, ReportResultData> comparingByValue(byCount).reversed()).limit(
+            jobsResult = listOfJobs.entrySet().stream().sorted(Map.Entry.<String, ReportResultData> comparingByValue(byCount).reversed()).limit(
                     reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
         } else {
-            successfullJobsResult = successfullJobs.entrySet().stream().sorted(Map.Entry.<String, ReportResultData> comparingByValue(byCount)).limit(
+            jobsResult = listOfJobs.entrySet().stream().sorted(Map.Entry.<String, ReportResultData> comparingByValue(byCount)).limit(
                     reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
         }
 
@@ -82,7 +83,7 @@ public class ReportSuccessfullJobs implements IReport {
         reportResult.setData(new ArrayList<ReportResultData>());
         reportResult.setType(getType().name());
 
-        for (Entry<String, ReportResultData> entry : successfullJobsResult.entrySet()) {
+        for (Entry<String, ReportResultData> entry : jobsResult.entrySet()) {
             LOGGER.debug("-----New Entry -----------------------");
             LOGGER.debug(entry.getKey() + ":" + entry.getValue().getCount());
             reportResult.getData().add(entry.getValue());
@@ -110,7 +111,7 @@ public class ReportSuccessfullJobs implements IReport {
     }
 
     public void reset() {
-        successfullJobs.clear();
+        listOfJobs.clear();
     }
 
     @Override
