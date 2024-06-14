@@ -65,6 +65,7 @@ public class JobArgumentValueResolverCache {
             return;
         }
         dir = dir.resolve(CUSTOM_RESOLVERS_DIR);
+        LOGGER.info("[check custom resolvers dir]" + dir);
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, new DirectoryStream.Filter<Path>() {
 
             @Override
