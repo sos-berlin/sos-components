@@ -80,18 +80,20 @@ public class CSVFileReader {
                         orderRecord.setModified(record.getOrDefault(COL_MODIFIED, ""));
                         orderRecord.setOrderState(record.getOrDefault(COL_ORDER_STATE, "0"));
                         orderRecord.setState(record.getOrDefault(COL_STATE, "0"));
+                        if (orderRecord.getStartTime() != null) {
 
-                        if (reportArguments.reportFrequency.endOfInterval(orderRecord.getStartTime().toLocalDate())) {
-                            LOGGER.debug("Interval end reached:" + reportArguments.reportFrequency.getFrom() + " to "
-                                    + reportArguments.reportFrequency.getTo());
+                            if (reportArguments.reportFrequency.endOfInterval(orderRecord.getStartTime().toLocalDate())) {
+                                LOGGER.debug("Interval end reached:" + reportArguments.reportFrequency.getFrom() + " to "
+                                        + reportArguments.reportFrequency.getTo());
 
-                            report.putHits();
-                            report.reset();
-                            reportArguments.reportFrequency.nextPeriod();
-                            LOGGER.debug("new frequency interval:" + reportArguments.reportFrequency.getFrom() + " to "
-                                    + reportArguments.reportFrequency.getTo());
+                                report.putHits();
+                                report.reset();
+                                reportArguments.reportFrequency.nextPeriod();
+                                LOGGER.debug("new frequency interval:" + reportArguments.reportFrequency.getFrom() + " to "
+                                        + reportArguments.reportFrequency.getTo());
+                            }
+                            report.count(orderRecord);
                         }
-                        report.count(orderRecord);
                     }
                 }
                 report.putHits();
@@ -155,19 +157,21 @@ public class CSVFileReader {
                         jobRecord.setCreated(record.getOrDefault(COL_CREATED, ""));
                         jobRecord.setModified(record.getOrDefault(COL_MODIFIED, ""));
                         jobRecord.setState(record.getOrDefault(COL_STATE, "0"));
+                        if (jobRecord.getStartTime() != null) {
 
-                        if (reportArguments.reportFrequency.endOfInterval(jobRecord.getStartTime().toLocalDate())) {
+                            if (reportArguments.reportFrequency.endOfInterval(jobRecord.getStartTime().toLocalDate())) {
 
-                            LOGGER.debug("Interval end reached:" + reportArguments.reportFrequency.getFrom() + " to "
-                                    + reportArguments.reportFrequency.getTo());
+                                LOGGER.debug("Interval end reached:" + reportArguments.reportFrequency.getFrom() + " to "
+                                        + reportArguments.reportFrequency.getTo());
 
-                            report.putHits();
-                            report.reset();
-                            reportArguments.reportFrequency.nextPeriod();
-                            LOGGER.debug("new frequency interval:" + reportArguments.reportFrequency.getFrom() + " to "
-                                    + reportArguments.reportFrequency.getTo());
+                                report.putHits();
+                                report.reset();
+                                reportArguments.reportFrequency.nextPeriod();
+                                LOGGER.debug("new frequency interval:" + reportArguments.reportFrequency.getFrom() + " to "
+                                        + reportArguments.reportFrequency.getTo());
+                            }
+                            report.count(jobRecord);
                         }
-                        report.count(jobRecord);
                     }
                 }
                 report.putHits();
