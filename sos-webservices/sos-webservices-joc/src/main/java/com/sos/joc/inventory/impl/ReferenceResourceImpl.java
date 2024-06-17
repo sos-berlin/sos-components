@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -95,7 +96,7 @@ public class ReferenceResourceImpl extends JOCResourceImpl implements IReference
                         if (schedules != null) {
                             entity.setSchedules(schedules.stream().map(dbItem -> {
                                 try {
-                                    Schedule s = (Schedule) JocInventory.content2IJSObject(dbItem.getContent(), ConfigurationType.SCHEDULE);
+                                    Schedule s = (Schedule) JocInventory.convertSchedule(dbItem.getContent(), Schedule.class);
                                     s.setPath(dbItem.getPath());
                                     s.setValid(dbItem.getValid());
                                     // reduce information

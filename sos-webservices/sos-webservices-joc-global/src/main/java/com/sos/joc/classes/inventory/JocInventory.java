@@ -316,11 +316,7 @@ public class JocInventory {
             return jt;
             
         case SCHEDULE:
-            // JOC-1255 workflowName -> workflowNames
-            Schedule s = setWorkflowNames(Globals.objectMapper.readValue(content, Schedule.class));
-            s.setWorkflowName(null);
-            s.setVersion(Globals.getStrippedInventoryVersion());
-            return s;
+            return convertSchedule(content, Schedule.class);
             
         case FILEORDERSOURCE:
             return convertFileOrderSource(content, FileOrderSource.class);
@@ -347,6 +343,14 @@ public class JocInventory {
         }
         fos.setVersion(Globals.getStrippedInventoryVersion());
         return fos;
+    }
+    
+    public static <T extends Schedule> T convertSchedule(String content, Class<T> clazz) throws JsonMappingException, JsonProcessingException {
+        // JOC-1255 workflowName -> workflowNames
+        T s = setWorkflowNames(Globals.objectMapper.readValue(content, clazz));
+        s.setWorkflowName(null);
+        s.setVersion(Globals.getStrippedInventoryVersion());
+        return s;
     }
 
     public static void makeParentDirs(InventoryDBLayer dbLayer, Path parentFolder, Long auditLogId, ConfigurationType folderType) throws SOSHibernateException {
@@ -1395,7 +1399,7 @@ public class JocInventory {
                         "$1-" + suffixPrefix.getSuffix());
     }
 
-    public static Schedule setWorkflowNames(Schedule schedule) {
+    public static <T extends Schedule> T setWorkflowNames(T schedule) {
         if (schedule != null) {
             if (JocInventory.SCHEDULE_CONSIDER_WORKFLOW_NAME) {
                 List<String> wn = new ArrayList<>();
