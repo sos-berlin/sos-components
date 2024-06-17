@@ -440,23 +440,31 @@ public class DBLayerKeys {
         return results;
     }
 
-    public List<DBItemEncAgentCertificate> getEnciphermentCertificateMappingsByAgents(List<String> agentIds) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_ENC_AGENT_CERTIFICATES).append(" where ");
-        hql.append(" agentId in :agentIds");
+    public List<DBItemEncAgentCertificate> getEnciphermentCertificateMappingsByAgents(Collection<String> agentIds) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_ENC_AGENT_CERTIFICATES);
+        if (agentIds != null && !agentIds.isEmpty()) {
+            hql.append(" where agentId in (:agentIds)");
+        }
         Query<DBItemEncAgentCertificate> query = session.createQuery(hql.toString());
-        query.setParameterList("agentIds", agentIds);
+        if (agentIds != null && !agentIds.isEmpty()) {
+            query.setParameterList("agentIds", agentIds);
+        }
         List<DBItemEncAgentCertificate> results = session.getResultList(query);
-        if(results == null) {
+        if (results == null) {
             results = Collections.emptyList();
         }
         return results;
     }
 
-    public List<DBItemEncAgentCertificate> getEnciphermentCertificateMappingsByCertAliases(List<String> certAliases) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_ENC_AGENT_CERTIFICATES).append(" where ");
-        hql.append(" certAlias in :certAliases");
+    public List<DBItemEncAgentCertificate> getEnciphermentCertificateMappingsByCertAliases(Collection<String> certAliases) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_ENC_AGENT_CERTIFICATES);
+        if (certAliases != null && !certAliases.isEmpty()) {
+            hql.append(" where certAlias in (:certAliases)");
+        }
         Query<DBItemEncAgentCertificate> query = session.createQuery(hql.toString());
-        query.setParameterList("certAlias", certAliases);
+        if (certAliases != null && !certAliases.isEmpty()) {
+            query.setParameterList("certAlias", certAliases);
+        }
         List<DBItemEncAgentCertificate> results = session.getResultList(query);
         if(results == null) {
             results = Collections.emptyList();
