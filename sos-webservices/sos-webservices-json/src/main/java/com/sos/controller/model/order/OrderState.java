@@ -1,6 +1,7 @@
 
 package com.sos.controller.model.order;
 
+import java.util.Date;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -22,6 +23,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "TYPE",
     "expected",
     "cycleState",
+    "until",
     "subagentId"
 })
 public class OrderState {
@@ -44,6 +46,14 @@ public class OrderState {
     @JsonProperty("cycleState")
     @JsonPropertyDescription("set if state == BetweenCycles or processing inside a cycle")
     private OrderCycleState cycleState;
+    /**
+     * set if state == DelayedAfterError
+     * 
+     */
+    @JsonProperty("until")
+    @JsonPropertyDescription("set if state == DelayedAfterError")
+    private Date until = null;
+    
     @JsonProperty("subagentId")
     private String subagentId;
 
@@ -60,12 +70,14 @@ public class OrderState {
      * @param subagentId
      * @param tYPE
      * @param cycleState
+     * @param until
      */
-    public OrderState(String tYPE, List<ExpectedNotice> expected, OrderCycleState cycleState, String subagentId) {
+    public OrderState(String tYPE, List<ExpectedNotice> expected, OrderCycleState cycleState, Date until, String subagentId) {
         super();
         this.tYPE = tYPE;
         this.expected = expected;
         this.cycleState = cycleState;
+        this.until = until;
         this.subagentId = subagentId;
     }
 
@@ -118,6 +130,24 @@ public class OrderState {
     public void setCycleState(OrderCycleState cycleState) {
         this.cycleState = cycleState;
     }
+    
+    /**
+     * set if state == DelayedAfterError
+     * 
+     */
+    @JsonProperty("until")
+    public Date getUntil() {
+        return until;
+    }
+
+    /**
+     * set if state == DelayedAfterError
+     * 
+     */
+    @JsonProperty("until")
+    public void setUntil(Date until) {
+        this.until = until;
+    }
 
     @JsonProperty("subagentId")
     public String getSubagentId() {
@@ -131,12 +161,12 @@ public class OrderState {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("expected", expected).append("cycleState", cycleState).append("subagentId", subagentId).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("expected", expected).append("cycleState", cycleState).append("until", until).append("subagentId", subagentId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(subagentId).append(tYPE).append(cycleState).append(expected).toHashCode();
+        return new HashCodeBuilder().append(subagentId).append(tYPE).append(cycleState).append(until).append(expected).toHashCode();
     }
 
     @Override
@@ -148,7 +178,7 @@ public class OrderState {
             return false;
         }
         OrderState rhs = ((OrderState) other);
-        return new EqualsBuilder().append(subagentId, rhs.subagentId).append(tYPE, rhs.tYPE).append(cycleState, rhs.cycleState).append(expected, rhs.expected).isEquals();
+        return new EqualsBuilder().append(subagentId, rhs.subagentId).append(tYPE, rhs.tYPE).append(cycleState, rhs.cycleState).append(until, rhs.until).append(expected, rhs.expected).isEquals();
     }
 
 }
