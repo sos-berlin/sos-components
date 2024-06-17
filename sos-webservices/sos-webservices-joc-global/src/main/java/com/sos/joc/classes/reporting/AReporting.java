@@ -133,10 +133,10 @@ public abstract class AReporting {
         return null;
     }
     
-    protected static LocalDateTime getLocalDateToOrNowIfNull(final String monthTo) { //yyyy-MM[-dd]
+    protected static LocalDateTime getLocalDateToOrLastMonthIfNull(final String monthTo) { //yyyy-MM[-dd]
         if (monthTo == null) {
             LocalDate now = LocalDate.now();
-            return LocalDate.of(now.getYear(), now.getMonth(), 1).atStartOfDay().plusMonths(1).minusSeconds(1);
+            return LocalDate.of(now.getYear(), now.getMonth(), 1).atStartOfDay().minusSeconds(1);
         }
         return getLocalDateFrom(monthTo).plusMonths(1).minusSeconds(1);
     }

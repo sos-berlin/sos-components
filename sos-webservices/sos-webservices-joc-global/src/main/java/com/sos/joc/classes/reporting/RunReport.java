@@ -54,7 +54,7 @@ public class RunReport extends AReporting {
 
         in.setMonthFrom(relativeDateToSpecificDateFrom(in.getMonthFrom()));
         in.setMonthTo(relativeDateToSpecificDateTo(in.getMonthTo()));
-
+        
         if (in.getMonthFrom() != null) { // automatically load report data before run report
 
             return LoadData.writeCSVFiles(in.getMonthFrom(), in.getMonthTo()).thenApply(e -> e.isLeft() ? e : _run(in));
@@ -261,6 +261,13 @@ public class RunReport extends AReporting {
     }
 
     private static DBItemReportRun getRunDBItem(final Report in, final ReportRunStateText state, final Date now) {
+        
+        LocalDateTime lDateFrom = getLocalDateFrom(in.getMonthFrom());
+        LocalDateTime lDateTo = getLocalDateToOrLastMonthIfNull(in.getMonthTo());
+        if (in.getMonthTo() != null && lDateFrom.isAfter(lDateTo)) {
+            throw new JocBadRequestException("'monthFrom' has to be older than 'monthTo' in report configuration '" + in.getPath() + "'");
+        }
+        
         DBItemReportRun dbItem = new DBItemReportRun();
         dbItem.setId(null);
         dbItem.setPath(in.getPath());
@@ -279,8 +286,8 @@ public class RunReport extends AReporting {
         dbItem.setPeriodLength(period.getLength());
         dbItem.setPeriodStep(period.getStep());
 
-        dbItem.setDateFrom(getDate(getLocalDateFrom(in.getMonthFrom())));
-        dbItem.setDateTo(getDate(getLocalDateToOrNowIfNull(in.getMonthTo())));
+        dbItem.setDateFrom(getDate(lDateFrom));
+        dbItem.setDateTo(getDate(lDateTo));
         dbItem.setState(state.intValue());
         dbItem.setControllerId(in.getControllerId());
         dbItem.setModified(now);
