@@ -36,5 +36,19 @@ public class ProxiesEdit {
     public static synchronized void update(String controllerId) throws DBMissingDataException, ControllerConnectionRefusedException {
         Proxies.getInstance().updateProxies(controllerId);
     }
+    
+    public static synchronized void restart(List<DBItemInventoryJSInstance> controllerDbInstances, ProxyUser account, boolean force)
+            throws DBMissingDataException, ControllerConnectionRefusedException {
+        Proxies.getInstance().restartProxies(controllerDbInstances, account, force);
+    }
+    
+    public static synchronized void forcedRestartForJOC(List<DBItemInventoryJSInstance> controllerDbInstances)
+            throws DBMissingDataException, ControllerConnectionRefusedException {
+        Proxies.getInstance().restartProxies(controllerDbInstances, ProxyUser.JOC, true);
+    }
+    
+    public static synchronized void forcedRestartForJOC() throws DBMissingDataException, ControllerConnectionRefusedException {
+        Proxies.getControllerDbInstances().values().forEach(ProxiesEdit::forcedRestartForJOC);
+    }
 
 }

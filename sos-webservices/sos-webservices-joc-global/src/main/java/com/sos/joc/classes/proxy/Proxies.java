@@ -216,6 +216,23 @@ public class Proxies {
         }
     }
     
+    protected void restartProxies(final List<DBItemInventoryJSInstance> controllerDbInstances, ProxyUser account, boolean force)
+            throws DBMissingDataException, ControllerConnectionRefusedException {
+        if (controllerDbInstances != null && !controllerDbInstances.isEmpty()) {
+            String controllerId = controllerDbInstances.get(0).getControllerId();
+            boolean isNew = !this.controllerDbInstances.containsKey(controllerId);
+            this.controllerDbInstances.put(controllerId, controllerDbInstances);
+            ProxyCredentials newCredentials = ProxyCredentialsBuilder.withDbInstancesOfCluster(controllerDbInstances).withAccount(account).build();
+            if (isNew) {
+                throw new DBMissingDataException(String.format("unknown controller '%s'", controllerId));
+            } else {
+                if ((account == ProxyUser.JOC && restart(newCredentials, force)) || (account == ProxyUser.HISTORY && reloadApi(newCredentials))) {
+                    EventBus.getInstance().post(new ProxyRestarted(account.name(), controllerId));
+                }
+            }
+        }
+    }
+    
     protected void updateProxies(final String controllerId) throws DBMissingDataException, ControllerConnectionRefusedException {
         if (controllerDbInstances != null && !controllerDbInstances.isEmpty()) {
             List<DBItemInventoryJSInstance> dbInstances = controllerDbInstances.get(controllerId);
