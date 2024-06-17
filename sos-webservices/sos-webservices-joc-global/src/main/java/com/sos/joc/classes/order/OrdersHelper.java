@@ -481,6 +481,21 @@ public class OrdersHelper {
         o.setCycleState(oItem.getState().getCycleState());
         o.setExpectedNotices(getStillExpectedNotices(jOrder.id(), oItem, controllerState));
         int positionsSize = o.getPosition().size();
+        if ("DelayedAfterError".equals(oItem.getState().getTYPE())) {
+            OrderCycleState ocs = new OrderCycleState();
+            ocs.setNext(oItem.getState().getUntil());
+            if (positionsSize > 2) {
+                try {
+                    String lastPosition = (String) origPos.toList().get(positionsSize - 2);
+                    if (lastPosition.startsWith("try+")) {
+                        ocs.setIndex(Integer.valueOf(lastPosition.substring(4)));
+                    }
+                } catch (Exception e) {
+                    //
+                }
+            }
+            o.setCycleState(ocs);
+        }
         if ("Processing".equals(oItem.getState().getTYPE())) {
             Option<SubagentId> subAgentId = ((Order.Processing) jOrder.asScala().state()).subagentId();
             if (subAgentId.nonEmpty()) {
