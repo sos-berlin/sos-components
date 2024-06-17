@@ -10,6 +10,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.cluster.JocClusterService;
+import com.sos.joc.classes.proxy.ProxiesEdit;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
@@ -48,8 +49,10 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
             ClusterRestart in = Globals.objectMapper.readValue(filterBytes, ClusterRestart.class);
             JOCDefaultResponse response = initPermissions("", getJocPermissions(accessToken).getCluster().getManage());
             if (response == null) {
-                if (in.getType().equals(ClusterServices.cluster)) {
+                if (in.getType().equals(ClusterServices.cluster)) { // all services
                     processAnswer(JocClusterService.getInstance().restart(StartupMode.manual_restart));
+                    // proxy restart in addition
+                    ProxiesEdit.forcedRestartForJOC();
                 } else {
                     processAnswer(JocClusterService.getInstance().restartService(in, StartupMode.manual_restart));
                 }
