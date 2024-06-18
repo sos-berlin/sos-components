@@ -1,5 +1,6 @@
 package com.sos.joc.classes.reporting;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -171,8 +172,8 @@ public class RunReport extends AReporting {
         StringBuilder s = new StringBuilder().append("\"").append(Paths.get(System.getProperty("java.home"), "bin", "java").toString()).append("\" ")
                 .append(commandLineOptions)
                 // .append(" -cp lib/ext/joc/*").append(File.pathSeparator).append("webapps/joc/WEB-INF/lib/* ")
-                .append(" -cp \"webapps/joc/WEB-INF/lib/*\" ").append(className).append(" -i reporting/data").append(" -r ").append(in
-                        .getTemplateName().getJavaClass());
+                .append(" -cp \"resources/joc").append(File.pathSeparator).append("webapps/joc/WEB-INF/lib/*\" ").append(className).append(
+                        " -i reporting/data").append(" -r ").append(in.getTemplateName().getJavaClass());
         if (in.getMonthFrom() != null) {
             s.append(" -s ").append(in.getMonthFrom());
         }
