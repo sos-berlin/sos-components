@@ -326,8 +326,16 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         return reportJavaOptions;
     }
     
-    public ConfigurationEntry getNumOfTagsDisplayedAsOrderId() {
-        return numOfTagsDisplayedAsOrderId;
+//    public ConfigurationEntry getNumOfTagsDisplayedAsOrderId() {
+//        return numOfTagsDisplayedAsOrderId;
+//    }
+    
+    public Integer getNumOfTagsDisplayedAsOrderId() {
+        try {
+            return Integer.parseInt(numOfTagsDisplayedAsOrderId.getValue());
+        } catch (Exception e) {
+            return 0; // default
+        }
     }
     
 }

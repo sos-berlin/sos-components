@@ -53,6 +53,7 @@ public class PropertiesImpl extends JOCResourceImpl implements IPropertiesResour
             entity.setDisplayFoldersInViews(jocSettings.getDisplayFoldersInViews());
             entity.setAllowEmptyArguments(ClusterSettings.getAllowEmptyArguments(jocSettings));
             entity.setAllowUndeclaredVariables(jocSettings.getAllowUndeclaredVariables());
+            entity.setNumOfTagsDisplayedAsOrderId(jocSettings.getNumOfTagsDisplayedAsOrderId());
             
             ConfigurationGlobalsUser userSettings = Globals.getConfigurationGlobalsUser();
             entity.setWelcomeDoNotRemindMe(ClusterSettings.getWelcomeDoNotRemindMe(userSettings));

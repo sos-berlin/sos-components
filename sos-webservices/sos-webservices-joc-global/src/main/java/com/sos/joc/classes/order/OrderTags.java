@@ -444,13 +444,8 @@ public class OrderTags {
     }
     
     private static Integer getNumOfTagsDisplayedAsOrderId() {
-        try {
-            ConfigurationGlobalsJoc jocSettings = Globals.getConfigurationGlobalsJoc();
-            ConfigurationEntry numOfTagsDisplayedAsOrderId = jocSettings.getNumOfTagsDisplayedAsOrderId();
-            return Integer.parseInt(numOfTagsDisplayedAsOrderId.getValue());
-        } catch (NumberFormatException e) {
-            return 0;
-        }
+        ConfigurationGlobalsJoc jocSettings = Globals.getConfigurationGlobalsJoc();
+        return jocSettings.getNumOfTagsDisplayedAsOrderId();
     }
     
     private static boolean withTagsDisplayedAsOrderId() {
