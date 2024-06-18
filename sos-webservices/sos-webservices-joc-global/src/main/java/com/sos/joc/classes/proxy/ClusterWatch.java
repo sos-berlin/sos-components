@@ -105,7 +105,7 @@ public class ClusterWatch {
                     } else {
                         LOGGER.info("[ClusterWatch] no Controller cluster registered.");
                     }
-                    controllerDbInstances.forEach((controllerId, dbItems) -> Proxies.getInstance().updateProxies(dbItems));
+                    controllerDbInstances.forEach((controllerId, dbItems) -> ProxiesEdit.update(dbItems, true));
 
                     Proxies.getControllerDbInstances().keySet().stream().filter(c -> !controllerDbInstances.containsKey(c)).forEach(c -> Proxies
                             .getInstance().removeProxies(c));
