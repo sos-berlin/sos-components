@@ -189,7 +189,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     // TODO check if endPos not before startPos
                     JFreshOrder o = OrdersHelper.mapToFreshOrder(order, zoneId, startPos, endPoss, jBrachPath, forceJobAdmission);
                     auditLogDetails.add(new AuditLogDetail(WorkflowPaths.getPath(workflowName), o.id().string(), controllerId));
-                    if (order.getTags() != null) {
+                    if (order.getTags() != null && !order.getTags().isEmpty()) {
                         orderTags.put(OrdersHelper.getOrderIdMainPart(o.id().string()), order.getTags());
                     }
                     either = Either.right(o);
@@ -209,8 +209,10 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                         Function.identity()));
                 proxy.api().addOrders(Flux.fromIterable(freshOrders.values())).thenAccept(either -> {
                     if (either.isRight()) {
-                        OrdersHelper.storeTags(controllerId, orderTags).thenAccept(either2 -> ProblemHelper.postExceptionEventIfExist(either2,
-                                accessToken, getJocError(), addOrders.getControllerId()));
+                        if (!orderTags.isEmpty()) {
+                            OrdersHelper.storeTags(controllerId, orderTags).thenAccept(either2 -> ProblemHelper.postExceptionEventIfExist(either2,
+                                    accessToken, getJocError(), addOrders.getControllerId()));
+                        }
                         OrdersHelper.storeAuditLogDetails(auditLogDetails, dbAuditLog.getId()).thenAccept(either2 -> ProblemHelper
                                 .postExceptionEventIfExist(either2, accessToken, getJocError(), addOrders.getControllerId()));
                     } else {
