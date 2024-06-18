@@ -27,6 +27,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "count",
     "period",
     "startTime",
+    "endTime",
     "duration",
     "data"
 })
@@ -81,6 +82,15 @@ public class ReportResultData {
     @JsonProperty("startTime")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date startTime;
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("endTime")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
+    private Date endTime;
     /**
      * non negative long
      * <p>
@@ -225,6 +235,28 @@ public class ReportResultData {
     }
 
     /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("endTime")
+    public Date getEndTime() {
+        return endTime;
+    }
+
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("endTime")
+    public void setEndTime(Date endTime) {
+        this.endTime = endTime;
+    }
+
+    /**
      * non negative long
      * <p>
      * 
@@ -258,12 +290,12 @@ public class ReportResultData {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentName", agentName).append("jobName", jobName).append("workflowName", workflowName).append("count", count).append("period", period).append("startTime", startTime).append("duration", duration).append("data", data).toString();
+        return new ToStringBuilder(this).append("agentName", agentName).append("jobName", jobName).append("workflowName", workflowName).append("count", count).append("period", period).append("startTime", startTime).append("endTime", endTime).append("duration", duration).append("data", data).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobName).append(duration).append(period).append(data).append(count).append(agentName).append(workflowName).append(startTime).toHashCode();
+        return new HashCodeBuilder().append(jobName).append(duration).append(period).append(data).append(count).append(agentName).append(workflowName).append(startTime).append(endTime).toHashCode();
     }
 
     @Override
@@ -275,7 +307,7 @@ public class ReportResultData {
             return false;
         }
         ReportResultData rhs = ((ReportResultData) other);
-        return new EqualsBuilder().append(jobName, rhs.jobName).append(duration, rhs.duration).append(period, rhs.period).append(data, rhs.data).append(count, rhs.count).append(agentName, rhs.agentName).append(workflowName, rhs.workflowName).append(startTime, rhs.startTime).isEquals();
+        return new EqualsBuilder().append(jobName, rhs.jobName).append(duration, rhs.duration).append(period, rhs.period).append(data, rhs.data).append(count, rhs.count).append(agentName, rhs.agentName).append(workflowName, rhs.workflowName).append(startTime, rhs.startTime).append(endTime, rhs.endTime).isEquals();
     }
 
 }

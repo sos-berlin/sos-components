@@ -44,9 +44,9 @@ public class ReportLongestJobExecution implements IReport {
     }
 
     public void count(ReportRecord jobRecord) {
-        if (jobRecord.getError()) {
+        if (!jobRecord.getError()) {
 
-            if (jobRecord.getEndTime() != null) {
+            if (jobRecord.getEndTime() != null && jobRecord.getStartTime().isBefore(jobRecord.getEndTime())) {
                 ReportResultData reportResultData = longestExecutionWorkflows.get(jobRecord.getWorkflowName());
                 if (reportResultData == null) {
                     reportResultData = new ReportResultData();
@@ -55,8 +55,10 @@ public class ReportLongestJobExecution implements IReport {
                 Duration d = Duration.between(jobRecord.getStartTime(), jobRecord.getEndTime());
                 reportResultData.setDuration(d.toSeconds());
 
-                Instant instant = jobRecord.getStartTime().toInstant(ZoneOffset.UTC);
-                reportResultData.setStartTime(Date.from(instant));
+                Instant instantStart = jobRecord.getStartTime().toInstant(ZoneOffset.UTC);
+                Instant instantEnd = jobRecord.getEndTime().toInstant(ZoneOffset.UTC);
+                reportResultData.setStartTime(Date.from(instantStart));
+                reportResultData.setEndTime(Date.from(instantEnd));
 
                 reportResultData.setWorkflowName(jobRecord.getWorkflowName());
                 reportResultData.setJobName(jobRecord.getJobName());

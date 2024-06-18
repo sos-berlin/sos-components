@@ -44,19 +44,22 @@ public class ReportLongestOrderExecution implements IReport {
     }
 
     public void count(ReportRecord orderRecord) {
-        if (orderRecord.getError()) {
+        if (!orderRecord.getError()) {
 
-            if (orderRecord.getEndTime() != null) {
+            if (orderRecord.getEndTime() != null && orderRecord.getStartTime().isBefore(orderRecord.getEndTime())) {
                 ReportResultData reportResultData = longestExecutionWorkflows.get(orderRecord.getWorkflowName());
                 if (reportResultData == null) {
                     reportResultData = new ReportResultData();
                 }
 
+    
                 Duration d = Duration.between(orderRecord.getStartTime(), orderRecord.getEndTime());
                 reportResultData.setDuration(d.toSeconds());
 
-                Instant instant = orderRecord.getStartTime().toInstant(ZoneOffset.UTC);
-                reportResultData.setStartTime(Date.from(instant));
+                Instant instantStart = orderRecord.getStartTime().toInstant(ZoneOffset.UTC);
+                Instant instantEnd = orderRecord.getEndTime().toInstant(ZoneOffset.UTC);
+                reportResultData.setStartTime(Date.from(instantStart));
+                reportResultData.setEndTime(Date.from(instantEnd));
 
                 reportResultData.setWorkflowName(orderRecord.getWorkflowName());
                 longestExecutionWorkflows.put(orderRecord.getWorkflowName(), reportResultData);

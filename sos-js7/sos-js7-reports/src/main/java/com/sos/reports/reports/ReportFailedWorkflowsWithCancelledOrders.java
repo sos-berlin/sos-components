@@ -4,7 +4,7 @@ import com.sos.joc.model.order.OrderStateText;
 import com.sos.reports.classes.IReport;
 import com.sos.reports.classes.ReportRecord;
 
-public class ReportFailedWorkflowsWithCancelledOrders extends ReportStateJobs implements IReport {
+public class ReportFailedWorkflowsWithCancelledOrders extends ReportStateWorkflows implements IReport {
 
     @Override
     public boolean getCondition(ReportRecord orderRecord) {
