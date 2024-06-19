@@ -1,9 +1,5 @@
 package com.sos.commons.util.common;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
 public class SOSArgumentHelper {
 
     public static final String LIST_VALUE_DELIMITER = ";";
@@ -39,13 +35,6 @@ public class SOSArgumentHelper {
         case NONE:
             return DisplayMode.NONE.getValue();
         case UNMASKED:
-            if (value instanceof List) {
-                List<?> l = (List<?>) value;
-                String s = (String) l.stream().filter(Objects::nonNull).map(e -> {
-                    return e.toString();
-                }).collect(Collectors.joining(LIST_VALUE_DELIMITER));
-                return truncatingIfNeeded(s);
-            }
             return truncatingIfNeeded(value.toString());
         case MASKED:
             return DisplayMode.MASKED.getValue();

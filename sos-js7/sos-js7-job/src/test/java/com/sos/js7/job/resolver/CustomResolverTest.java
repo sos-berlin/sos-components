@@ -88,6 +88,7 @@ public class CustomResolverTest {
         l.add(new HashMap<>(Collections.singletonMap("counter", "base64:Y291bnRlcg==")));
         // l.add(new HashMap<>(Collections.singletonMap("bad", "base64:bad_value")));
         l.add(new HashMap<>(Collections.singletonMap("username", "base64:Y291bnRlcg==")));
+        l.add(new HashMap<>(Collections.singletonMap("y", "base64:yyyy")));
         return l;
     }
 
