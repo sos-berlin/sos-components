@@ -114,7 +114,7 @@ public class ReportGeneratorExecuter {
         this.start();
         long stopTime = System.currentTimeMillis();
         long elapsedTime = stopTime - startTime;
-        LOGGER.info("Reading file Orders: " + elapsedTime);
+        LOGGER.info("Generating Report: " + elapsedTime + " ms elapsed time");
         return 0;
 
     }

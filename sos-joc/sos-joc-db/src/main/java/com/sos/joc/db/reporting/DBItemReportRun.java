@@ -236,7 +236,7 @@ public class DBItemReportRun extends DBItem {
     @Transient
     public ReportOrder getSortAsEnum() {
         try {
-            return ReportOrder.fromValue(state);
+            return ReportOrder.fromValue(sort);
         } catch (Exception e) {
             return null;
         }

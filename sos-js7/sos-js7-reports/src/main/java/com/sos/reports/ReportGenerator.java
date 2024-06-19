@@ -234,6 +234,7 @@ public class ReportGenerator {
                     reportArguments.checkRequired();
                     exitCode = reportGeneratorExecuter.execute(reportArguments);
                 } catch (IOException | SOSRequiredArgumentMissingException e) {
+                    LOGGER.error(e.getMessage());
                     e.printStackTrace(System.err);
                     System.exit(1);
                 }
