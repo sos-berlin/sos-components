@@ -171,9 +171,8 @@ public class RunReport extends AReporting {
     private static String getCommonScript(final Report in, String commandLineOptions) {
         StringBuilder s = new StringBuilder().append("\"").append(Paths.get(System.getProperty("java.home"), "bin", "java").toString()).append("\" ")
                 .append(commandLineOptions)
-                // .append(" -cp lib/ext/joc/*").append(File.pathSeparator).append("webapps/joc/WEB-INF/lib/* ")
-                .append(" -cp \"resources/joc").append(File.pathSeparator).append("webapps/joc/WEB-INF/lib/*\" ").append(className).append(
-                        " -i reporting/data").append(" -r ").append(in.getTemplateName().getJavaClass());
+                .append(" -cp \"../resources/joc").append(File.pathSeparator).append("../webapps/joc/WEB-INF/lib/*\" ").append(className).append(
+                        " -i data").append(" -r ").append(in.getTemplateName().getJavaClass());
         if (in.getMonthFrom() != null) {
             s.append(" -s ").append(in.getMonthFrom());
         }
@@ -204,14 +203,14 @@ public class RunReport extends AReporting {
         Path tempDir = null;
         try {
             tempDir = createTempDirectory();
-            // workingDir (jetty_base) is working directory
-            Path relativizeTempDir = workingDir.relativize(tempDir);
+            // reportingDir (jetty_base/reporting) is working directory
+            Path relativizeTempDir = reportingDir.relativize(tempDir);
             StringBuilder s = new StringBuilder(commonScript);
             s.append(" -p ").append(f.strValue());
             s.append(" -o ").append(relativizeTempDir.toString().replace('\\', '/'));
             String script = s.toString();
             LOGGER.info("[Reporting][run] " + script);
-            SOSCommandResult cResult = JOCSOSShell.executeCommand(script, workingDir);
+            SOSCommandResult cResult = JOCSOSShell.executeCommand(script, reportingDir);
 
             if (cResult.hasError()) {
                 if (cResult.getException() != null) {

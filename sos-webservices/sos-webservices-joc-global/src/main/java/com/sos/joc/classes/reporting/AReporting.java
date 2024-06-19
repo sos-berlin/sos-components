@@ -31,8 +31,8 @@ public abstract class AReporting {
     }
     
     protected static final DateTimeFormatter yearMonthFormatter = DateTimeFormatter.ofPattern("yyyy-MM");
-    protected static final Path workingDir = Paths.get("").toAbsolutePath(); // jetty_base
-    protected static final Path reportingDir = workingDir.resolve("reporting").toAbsolutePath();
+    //protected static final Path workingDir = Paths.get("").toAbsolutePath(); // jetty_base
+    protected static final Path reportingDir = Paths.get("reporting").toAbsolutePath();
     protected static final Path dataDir = reportingDir.resolve("data");
     protected static final Path tmpDir = reportingDir.resolve("tmp");
     protected static final String templateFilePrefix = "template_";
