@@ -5,7 +5,9 @@ import java.util.Map;
 
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 import com.sos.js7.job.JobArgument;
+import com.sos.js7.job.JobArgumentValueIterator;
 import com.sos.js7.job.OrderProcessStepLogger;
+import com.sos.js7.job.exception.JobArgumentException;
 import com.sos.js7.job.resolver.JobArgumentValueResolver;
 
 /** Resolves values with the prefix <i>upper:</i> in uppercase */
@@ -30,12 +32,21 @@ public class ExampleUpperCaseResolver extends JobArgumentValueResolver {
     public static void resolve(OrderProcessStepLogger logger, List<JobArgument<?>> argumentsToResolve, Map<String, JobArgument<?>> allArguments)
             throws Exception {
         for (JobArgument<?> arg : argumentsToResolve) {
-            // Creates standardized debug output, e.g.: [DEBUG][<IDENTIFIER>][resolve][argument]name=<argument name>,value=<argument value before resolving>
+            // Creates standardized debug output, e.g.:
+            // [DEBUG][<IDENTIFIER>][resolve][argument][name=<argument name>,...]value=<argument value before resolving>
             // - Note: When the argument is not declared in a JobArgument class, the value will be displayed as <hidden>
             debugArgument(logger, IDENTIFIER, arg);
 
-            // Strip prefix and convert value to uppercase
-            arg.applyValue(getValueWithoutPrefix(arg, getPrefix()).toUpperCase());
+            // Use iterator to process all argument types (String,List,Map, ...)
+            JobArgumentValueIterator iterator = arg.newValueIterator(getPrefix());
+            while (iterator.hasNext()) {
+                try {
+                    // Set converted value
+                    iterator.set(iterator.nextWithoutPrefix().toUpperCase());
+                } catch (Throwable e) {
+                    throw new JobArgumentException(iterator, e);
+                }
+            }
 
             // Set argument display mode:
             // - Note: When the argument is not declared in a JobArgument class, the value will be displayed as <hidden>
@@ -46,4 +57,5 @@ public class ExampleUpperCaseResolver extends JobArgumentValueResolver {
             // arg.setDisplayMode(DisplayMode.MASKED);
         }
     }
+
 }

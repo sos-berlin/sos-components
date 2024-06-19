@@ -24,7 +24,6 @@ public class StandardEncryptionResolverTest {
 
     private static final Path ENCRYPTION_RESOURCES_DIR = Paths.get("../../sos-commons/sos-commons-encryption/src/test/resources/encryption");
 
-   
     @Ignore
     @Test
     public void testEncryptionECResolver() throws Exception {

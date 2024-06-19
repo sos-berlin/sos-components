@@ -1,13 +1,18 @@
 package com.sos.js7.job;
 
 import java.io.File;
+import java.lang.reflect.ParameterizedType;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
+import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.common.SOSArgument;
 import com.sos.commons.util.common.SOSArgumentHelper;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
@@ -23,6 +28,7 @@ import com.sos.js7.job.ValueSource.ValueSourceType;
  * - java.nio.file.Path<br/>
  * - java.io.File<br/>
  * - java.util.List&lt;T&gt; (T - see supported types above, returns an ArrayList&lt;T&gt;)<br/>
+ * - java.util.List&lt;Map&lt;String,Object&gt;&gt; (support for the JOC/AGENT List type with the Singleton Map as list value)<br/>
  * - java.util.Set&lt;T&gt; (T - see supported types above, returns a HashSet&lt;T&gt;)<br/>
  * - java.util.Map&lt;String,T&gt; (T - see supported types above, returns a LinkedHashMap&lt;String,T&gt;)<br/>
  */
@@ -30,6 +36,14 @@ public class JobArgument<T> extends SOSArgument<T> {
 
     public enum Type {
         DECLARED, UNDECLARED;
+    }
+
+    public enum ArgumentType {
+        SET, MAP, LIST, FLAT
+    }
+
+    public enum ArgumentFlatType {
+        STRING, BOOLEAN, INTEGER, LONG, BIGDECIMAL, ENUM, URI, CHARSET, PATH, FILE, OBJECT, LIST_VALUE_SINGLTON_MAP
     }
 
     // TODO: currently only ALL in use
@@ -41,8 +55,14 @@ public class JobArgument<T> extends SOSArgument<T> {
     private ValueSource valueSource;
     private NotAcceptedValue notAcceptedValue;
     private Type type;
+    private ArgumentType argumentType;
+    private ArgumentFlatType argumentFlatType;
     private Scope scope;
     private java.lang.reflect.Type clazzType;
+
+    public JobArgument(String name) {
+        this(name, false, null, DisplayMode.UNMASKED, null, Scope.ALL);
+    }
 
     public JobArgument(String name, boolean required) {
         this(name, required, null, DisplayMode.UNMASKED, null, Scope.ALL);
@@ -98,13 +118,13 @@ public class JobArgument<T> extends SOSArgument<T> {
     }
 
     /* internal usage - undeclared Arguments */
-    protected JobArgument(String name, T value, ValueSource valueSource) {
+    protected JobArgument(String name, T value, ValueSource valueSource) throws Exception {
         this(name, false, null, DisplayMode.UNKNOWN, null, Scope.ALL);
         setValue(value);
         this.type = Type.UNDECLARED;
         this.valueSource = valueSource;
         if (value != null) {
-            this.clazzType = value.getClass();
+            setClazzType(value.getClass());
         }
     }
 
@@ -134,14 +154,14 @@ public class JobArgument<T> extends SOSArgument<T> {
     }
 
     /* internal usage - e.g. Provider Arguments */
-    protected JobArgument(SOSArgument<T> arg, java.lang.reflect.Type clazzType) {
+    protected JobArgument(SOSArgument<T> arg, java.lang.reflect.Type clazzType) throws Exception {
         super(arg);
         setValue(arg.getValue());
         this.type = Type.DECLARED;
         this.scope = Scope.ALL;
         this.valueSource = new ValueSource(ValueSourceType.JAVA);
         this.nameAliases = null;
-        this.clazzType = clazzType;
+        setClazzType(clazzType);
     }
 
     protected void setValueSource(ValueSource val) {
@@ -152,6 +172,198 @@ public class JobArgument<T> extends SOSArgument<T> {
         setValue((T) null);
         this.valueSource = new ValueSource(ValueSourceType.JAVA);
         setIsDirty(false);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected boolean hasValueStartsWith(String prefix) {
+        if (getValue() == null) {
+            return false;
+        }
+        if (isFlat()) {
+            return getValue().toString().startsWith(prefix);
+        }
+        if (isMap()) {
+            return ((Map<String, ?>) getValue()).entrySet().parallelStream().anyMatch(e -> e.getValue().toString().startsWith(prefix));
+        } else if (isCollection()) {
+            return ((Collection<?>) getValue()).parallelStream().anyMatch(e -> {
+                if (e instanceof Map) {// SingletonMap key-value Map
+                    return ((Map<String, ?>) e).entrySet().stream().anyMatch(m -> m.getValue().toString().startsWith(prefix));
+                } else {
+                    return e.toString().startsWith(prefix);
+                }
+            });
+        }
+        return getValue().toString().startsWith(prefix);
+    }
+
+    public boolean isFlat() {
+        return ArgumentType.FLAT.equals(argumentType);
+    }
+
+    public boolean isMap() {
+        // return clazzType != null && SOSReflection.isMap(clazzType);
+        return ArgumentType.MAP.equals(argumentType);
+    }
+
+    public boolean isList() {
+        // return clazzType != null && SOSReflection.isList(clazzType);
+        return ArgumentType.LIST.equals(argumentType);
+    }
+
+    public boolean isSet() {
+        // return clazzType != null && SOSReflection.isSet(clazzType);
+        return ArgumentType.SET.equals(argumentType);
+    }
+
+    public boolean isCollection() {
+        // return clazzType != null && SOSReflection.isCollection(clazzType);
+        return isList() || isSet();
+    }
+
+    @SuppressWarnings("unchecked")
+    protected void applyValue(Object val) {
+        super.setValue((T) val);
+    }
+
+    @SuppressWarnings("unchecked")
+    public void applyValue(String val) throws Exception {
+        super.setValue((T) convertFlatValue(this, val));
+    }
+
+    protected boolean isScopeAll() {
+        return scope != null && scope.equals(Scope.ALL);
+    }
+
+    protected boolean isScopeOrderPreparation() {
+        return scope != null && scope.equals(Scope.ORDER_PREPARATION);
+    }
+
+    protected void setClazzType(java.lang.reflect.Type val) throws Exception {
+        clazzType = val;
+        try {
+            setArgumentTypes(clazzType);
+        } catch (Throwable e) {
+        }
+        if (argumentType == null) {
+            argumentType = ArgumentType.FLAT;
+        }
+        if (argumentFlatType == null) {
+            argumentFlatType = ArgumentFlatType.OBJECT;
+        }
+    }
+
+    public JobArgumentValueIterator newValueIterator() {
+        return newValueIterator(null);
+    }
+
+    public JobArgumentValueIterator newValueIterator(String prefix) {
+        return new JobArgumentValueIterator(this, prefix);
+    }
+
+    private void setArgumentTypes(java.lang.reflect.Type type) throws Exception {
+        if (type == null || type.equals(String.class)) {
+            argumentFlatType = ArgumentFlatType.STRING;
+        } else if (type.equals(Boolean.class)) {
+            argumentFlatType = ArgumentFlatType.BOOLEAN;
+        } else if (type.equals(Integer.class)) {
+            argumentFlatType = ArgumentFlatType.INTEGER;
+        } else if (type.equals(Long.class)) {
+            argumentFlatType = ArgumentFlatType.LONG;
+        } else if (type.equals(BigDecimal.class)) {
+            argumentFlatType = ArgumentFlatType.BIGDECIMAL;
+        } else if (type.equals(Path.class)) {
+            argumentFlatType = ArgumentFlatType.PATH;
+        } else if (type.equals(File.class)) {
+            argumentFlatType = ArgumentFlatType.FILE;
+        } else if (type.equals(URI.class)) {
+            argumentFlatType = ArgumentFlatType.URI;
+        } else if (type.equals(Charset.class)) {
+            argumentFlatType = ArgumentFlatType.CHARSET;
+        } else if (SOSReflection.isEnum(type)) {
+            argumentFlatType = ArgumentFlatType.ENUM;
+        } else if (SOSReflection.isList(type)) {
+            argumentType = ArgumentType.LIST;
+            argumentFlatType = null;
+            if (getValue() != null) {// undeclared arguments with values
+                Object o = ((List<?>) getValue()).get(0);
+                if (o != null && o instanceof Map) {
+                    argumentFlatType = ArgumentFlatType.LIST_VALUE_SINGLTON_MAP;
+                }
+            }
+            if (argumentFlatType == null) {
+                setArgumentTypes(getSubType(type, 0));
+            }
+        } else if (SOSReflection.isSet(type)) {
+            argumentType = ArgumentType.SET;
+            setArgumentTypes(getSubType(type, 0));
+        } else if (SOSReflection.isMap(type)) {
+            if (isList()) { // declared arguments without value - ArgumentType.LIST is already set
+                argumentFlatType = ArgumentFlatType.LIST_VALUE_SINGLTON_MAP;
+            } else {
+                argumentType = ArgumentType.MAP;
+                setArgumentTypes(getSubType(type, 1));
+            }
+        } else {
+            argumentFlatType = ArgumentFlatType.OBJECT;
+        }
+    }
+
+    protected static <V> Object convertFlatValue(JobArgument<V> arg, Object value) throws Exception {
+        switch (arg.getArgumentFlatType()) {
+        case STRING:
+            break;
+        case BOOLEAN:
+            return Boolean.valueOf(value.toString());
+        case INTEGER:
+            return Integer.valueOf(value.toString());
+        case LONG:
+            return Long.valueOf(value.toString());
+        case BIGDECIMAL:
+            return new BigDecimal(value.toString());
+        case PATH:
+            return Paths.get(value.toString());
+        case FILE:
+            return new File(value.toString());
+        case URI:
+            return URI.create(value.toString());
+        case CHARSET:
+            return Charset.forName(value.toString());
+        case ENUM:
+            try {
+                java.lang.reflect.Type t = arg.isFlat() ? arg.getClazzType() : arg.getSubType(arg.getClazzType(), 0);
+                Object v = SOSReflection.enumIgnoreCaseValueOf(t.getTypeName(), value.toString());
+                if (v == null) {
+                    arg.setNotAcceptedValue(value, null);
+                    arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
+                    return arg.getDefaultValue();
+                } else {
+                    return v;
+                }
+            } catch (ClassNotFoundException e) {
+                arg.setNotAcceptedValue(value, e);
+                arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
+                return arg.getDefaultValue();
+            }
+        case LIST_VALUE_SINGLTON_MAP:
+        case OBJECT:
+            break;
+        }
+        return value;
+    }
+
+    private java.lang.reflect.Type getSubType(java.lang.reflect.Type type, int paramIndex) {
+        if (type == null) {
+            return null;
+        }
+        if (type instanceof ParameterizedType) {
+            try {
+                return ((ParameterizedType) type).getActualTypeArguments()[paramIndex];
+            } catch (Throwable e) {
+                return Object.class;
+            }
+        } else {
+            return Object.class;
+        }
     }
 
     public ValueSource getValueSource() {
@@ -170,6 +382,38 @@ public class JobArgument<T> extends SOSArgument<T> {
         return nameAliases;
     }
 
+    public java.lang.reflect.Type getClazzType() {
+        return clazzType;
+    }
+
+    public ArgumentType getArgumentType() {
+        return argumentType;
+    }
+
+    public ArgumentFlatType getArgumentFlatType() {
+        return argumentFlatType;
+    }
+
+    public void setNotAcceptedValue(JobArgumentValueIterator iterator, Throwable exception) {
+        setNotAcceptedValue(iterator.current(), exception);
+    }
+
+    public void setNotAcceptedValue(Object value, Throwable exception) {
+        if (notAcceptedValue == null) {
+            notAcceptedValue = new NotAcceptedValue(value, exception);
+        } else {
+            notAcceptedValue.getValues().add(value);
+        }
+    }
+
+    protected NotAcceptedValue getNotAcceptedValue() {
+        return notAcceptedValue;
+    }
+
+    protected void resetNotAcceptedValue() {
+        notAcceptedValue = null;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder(getName());
@@ -185,8 +429,14 @@ public class JobArgument<T> extends SOSArgument<T> {
             sb.append(" required=true");
         }
         sb.append(" modified=").append(isDirty());
+        if (argumentType != null) {
+            sb.append(" argumentType=").append(argumentType);
+        }
+        if (argumentFlatType != null) {
+            sb.append(" argumentFlatType=").append(argumentFlatType);
+        }
         if (clazzType != null) {
-            sb.append(" type=").append(clazzType.getTypeName());
+            sb.append(" ").append(clazzType.getTypeName());
         }
         // if (scope != null) {
         // sb.append(" scope=").append(scope.name());
@@ -205,89 +455,21 @@ public class JobArgument<T> extends SOSArgument<T> {
         return sb.toString();
     }
 
-    @SuppressWarnings("unchecked")
-    protected void setValue(String val) {
-        super.setValue((T) val);
-    }
-
-    @SuppressWarnings("unchecked")
-    public void applyValue(String val) {
-        if (clazzType == null || clazzType.equals(String.class)) {
-            setValue(val);
-            return;
-        }
-        try {
-            if (clazzType.equals(Integer.class)) {
-                super.setValue((T) Integer.valueOf(val));
-            } else if (clazzType.equals(Long.class)) {
-                super.setValue((T) Long.valueOf(val));
-            } else if (clazzType.equals(BigDecimal.class)) {
-                if (val.contains(".") || val.contains(",")) {
-                    super.setValue((T) BigDecimal.valueOf(Double.valueOf(val)));
-                } else {
-                    super.setValue((T) BigDecimal.valueOf(Long.valueOf(val)));
-                }
-            } else if (clazzType.equals(Path.class)) {
-                super.setValue((T) Paths.get(val));
-            } else if (clazzType.equals(File.class)) {
-                super.setValue((T) new File(val));
-            } else if (clazzType.equals(URI.class)) {
-                super.setValue((T) URI.create(val));
-            } else if (clazzType.equals(Charset.class)) {
-                super.setValue((T) Charset.forName(val));
-            } else if (clazzType.equals(Boolean.class)) {
-                super.setValue((T) Boolean.valueOf(val));
-            } else {
-                setValue(val);
-            }
-        } catch (Throwable e) {
-            reset();
-            setNotAcceptedValue(val, e);
-        }
-    }
-
-    protected boolean isScopeAll() {
-        return scope != null && scope.equals(Scope.ALL);
-    }
-
-    protected boolean isScopeOrderPreparation() {
-        return scope != null && scope.equals(Scope.ORDER_PREPARATION);
-    }
-
-    public void setNotAcceptedValue(Object value, Throwable exception) {
-        notAcceptedValue = new NotAcceptedValue(value, exception);
-    }
-
-    protected NotAcceptedValue getNotAcceptedValue() {
-        return notAcceptedValue;
-    }
-
-    protected void resetNotAcceptedValue() {
-        notAcceptedValue = null;
-    }
-
-    protected void setClazzType(java.lang.reflect.Type val) {
-        clazzType = val;
-    }
-
-    protected java.lang.reflect.Type getClazzType() {
-        return clazzType;
-    }
-
     protected class NotAcceptedValue {
 
-        private final Object value;
+        private final List<Object> values;
         private final Throwable exception;
         private ValueSource source;// where is problem occurred - job, order etc
         private ValueSource usedValueSource;// which value will be used: java, ...
 
         private NotAcceptedValue(Object value, Throwable exception) {
-            this.value = value;
+            this.values = new ArrayList<>();
+            this.values.add(value);
             this.exception = exception;
         }
 
-        protected Object getValue() {
-            return this.value;
+        protected List<Object> getValues() {
+            return this.values;
         }
 
         protected void setSource(ValueSource val) {
@@ -311,7 +493,7 @@ public class JobArgument<T> extends SOSArgument<T> {
         }
 
         protected String getDisplayValue() {
-            return SOSArgumentHelper.getDisplayValue(this.value, getDisplayMode());
+            return SOSArgumentHelper.getDisplayValue(this.values, getDisplayMode());
         }
     }
 }

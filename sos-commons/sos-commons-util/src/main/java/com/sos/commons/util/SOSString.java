@@ -224,4 +224,25 @@ public class SOSString {
         }
         return Stream.of(val.split(delimiter)).map(String::trim).collect(Collectors.toList());
     }
+
+    public static String removePrefix(Object val, String prefix) {
+        if (val == null) {
+            return null;
+        }
+        String v = (val instanceof String) ? (String) val : val.toString();
+        if (prefix == null) {
+            return v;
+        }
+        int prefixLength = prefix.length();
+        int valLength = v.length();
+        if (prefixLength > valLength) {
+            return v;
+        }
+        for (int i = 0; i < prefixLength; i++) {
+            if (v.charAt(i) != prefix.charAt(i)) {
+                return v;
+            }
+        }
+        return v.substring(prefixLength);
+    }
 }

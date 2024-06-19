@@ -32,7 +32,7 @@ public class UnitTestJobHelper<A extends JobArguments> {
     }
 
     public void onStart(Map<String, Object> args) throws Exception {
-        job.getJobEnvironment().setDeclaredArguments(toArgs(args, null).instance);
+        job.getJobEnvironment().setDeclaredArguments(toArgs(null, args, null).instance);
         SOSReflection.setDeclaredFieldValue(job.getJobEnvironment(), "allArguments", args);
 
         job.onStart();
@@ -54,7 +54,7 @@ public class UnitTestJobHelper<A extends JobArguments> {
         final OrderProcessStep<A> step = newOrderProcessStep(args);
         return CompletableFuture.supplyAsync(() -> {
             try {
-                ArgumentsResult r = toArgs(args, job.onCreateJobArguments(null, step));
+                ArgumentsResult r = toArgs(step, args, job.onCreateJobArguments(null, step));
                 step.init(r.instance, r.undeclared);
 
                 step.checkAndLogParameterization(null, null);
@@ -92,19 +92,19 @@ public class UnitTestJobHelper<A extends JobArguments> {
 
                 AJ aj = job.onCreateJobArguments(exceptions, step);
                 aj = job.getJobArgumensClass().getDeclaredConstructor().newInstance();
-                aj = job.setDeclaredJobArguments(exceptions, null, args, null, null, aj);
+                aj = job.setDeclaredJobArguments(exceptions, step, args, null, null, aj);
                 return aj;
             }
         };
         return step;
     }
 
-    private ArgumentsResult toArgs(Map<String, Object> args, A instance) throws Exception {
+    private ArgumentsResult toArgs(OrderProcessStep<A> step, Map<String, Object> args, A instance) throws Exception {
         instance = instance == null ? job.getJobArgumensClass().getDeclaredConstructor().newInstance() : instance;
         Set<String> declared = getDeclaredJobArgumentNames(instance);
 
         List<JobArgumentException> exceptions = new ArrayList<JobArgumentException>();
-        instance = job.setDeclaredJobArguments(exceptions, null, args, null, null, instance);
+        instance = job.setDeclaredJobArguments(exceptions, step, args, null, null, instance);
 
         ArgumentsResult r = new ArgumentsResult();
         r.instance = instance;

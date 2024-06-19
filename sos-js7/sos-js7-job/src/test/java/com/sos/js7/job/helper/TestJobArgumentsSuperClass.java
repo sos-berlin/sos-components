@@ -3,6 +3,7 @@ package com.sos.js7.job.helper;
 import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments.AuthMethod;
@@ -14,6 +15,8 @@ public class TestJobArgumentsSuperClass extends JobArguments {
     private JobArgument<String> testSuperClass = new JobArgument<String>("test_super_class", false);
 
     private JobArgument<List<String>> list = new JobArgument<>("list", false);
+    // corresponds to the JOC/AGENT List type with the Singleton Map as list value
+    private JobArgument<List<Map<String, Object>>> listSingletonMap = new JobArgument<>("list_singleton_map", false);
     private JobArgument<LinkedList<String>> linkedList = new JobArgument<>("linked_list", false);
     private JobArgument<List<AuthMethod>> authMethods = new JobArgument<>("auth_methods", false);
     private JobArgument<String> test = new JobArgument<>("test", false);
@@ -26,6 +29,10 @@ public class TestJobArgumentsSuperClass extends JobArguments {
 
     public JobArgument<List<String>> getList() {
         return list;
+    }
+
+    public JobArgument<List<Map<String, Object>>> getListSingletonMap() {
+        return listSingletonMap;
     }
 
     public JobArgument<LinkedList<String>> getLinkedList() {

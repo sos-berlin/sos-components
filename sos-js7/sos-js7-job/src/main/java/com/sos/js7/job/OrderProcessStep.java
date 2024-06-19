@@ -77,6 +77,7 @@ public class OrderProcessStep<A extends JobArguments> {
     private Map<String, Object> unitTestUndeclaredArguments;
     private Map<String, Object> cancelableResources;
     private Set<String> orderPreparationParameterNames;
+    private List<String> resolverPrefixes;
 
     private String controllerId;
     private String orderId;
@@ -95,6 +96,7 @@ public class OrderProcessStep<A extends JobArguments> {
         this.logger = new OrderProcessStepLogger(internalStep);
         this.threadName = Thread.currentThread().getName();
         this.outcome = new OrderProcessStepOutcome();
+        this.resolverPrefixes = JobArgumentValueResolverCache.getResolverPrefixes();
     }
 
     private OrderProcessStep(JobEnvironment<A> jobEnvironment, OrderProcessStep<?> step) {
@@ -103,6 +105,7 @@ public class OrderProcessStep<A extends JobArguments> {
         this.logger = step.logger;
         this.threadName = step.threadName;
         this.outcome = step.outcome;
+        this.resolverPrefixes = step.resolverPrefixes;
     }
 
     /** Execute another job<br />
@@ -361,7 +364,11 @@ public class OrderProcessStep<A extends JobArguments> {
                 if (!allArguments.containsKey(e.getKey())) {
                     ValueSource vs = new ValueSource(ValueSourceType.LAST_SUCCEEDED_OUTCOME);
                     vs.setSource(e.getValue().getSource());
-                    allArguments.put(e.getKey(), new JobArgument<>(e.getKey(), e.getValue().getValue(), vs));
+                    try {
+                        allArguments.put(e.getKey(), new JobArgument<>(e.getKey(), e.getValue().getValue(), vs));
+                    } catch (Throwable ex) {
+                        getLogger().error("[LastSucceededOutcomes][" + e.getKey() + "]" + ex.toString());
+                    }
                 }
             });
         }
@@ -371,7 +378,11 @@ public class OrderProcessStep<A extends JobArguments> {
             if (o != null && o.size() > 0) {
                 o.entrySet().stream().forEach(e -> {
                     if (!allArguments.containsKey(e.getKey())) {
-                        allArguments.put(e.getKey(), new JobArgument<>(e.getKey(), e.getValue(), new ValueSource(ValueSourceType.ORDER)));
+                        try {
+                            allArguments.put(e.getKey(), new JobArgument<>(e.getKey(), e.getValue(), new ValueSource(ValueSourceType.ORDER)));
+                        } catch (Throwable ex) {
+                            getLogger().error("[OrderVariables][" + e.getKey() + "]" + ex.toString());
+                        }
                     }
                 });
             }
@@ -382,7 +393,11 @@ public class OrderProcessStep<A extends JobArguments> {
             if (j != null && j.size() > 0) {
                 j.entrySet().stream().forEach(e -> {
                     if (!allArguments.containsKey(e.getKey())) {
-                        allArguments.put(e.getKey(), new JobArgument<>(e.getKey(), e.getValue(), new ValueSource(ValueSourceType.JOB)));
+                        try {
+                            allArguments.put(e.getKey(), new JobArgument<>(e.getKey(), e.getValue(), new ValueSource(ValueSourceType.JOB)));
+                        } catch (Throwable ex) {
+                            getLogger().error("[JobArgument][" + e.getKey() + "]" + ex.toString());
+                        }
                     }
                 });
             }
@@ -396,11 +411,15 @@ public class OrderProcessStep<A extends JobArguments> {
                 JobArgument<?> aja = allArguments.get(name);
                 // if (!allArguments.containsKey(e.getKey())) {
                 if (aja == null || aja.getValue() == null) {// workaround js: job resource changed and declaredArgumens defined
-                    ValueSource vs = new ValueSource(ValueSourceType.JOB_RESOURCE);
-                    vs.setSource(dv.getSource());
-                    JobArgument<?> ja = new JobArgument<>(name, dv.getValue(), vs);
-                    allArguments.put(name, ja);
-                    // allArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue().getValue(), vs));
+                    try {
+                        ValueSource vs = new ValueSource(ValueSourceType.JOB_RESOURCE);
+                        vs.setSource(dv.getSource());
+                        JobArgument<?> ja = new JobArgument<>(name, dv.getValue(), vs);
+                        allArguments.put(name, ja);
+                        // allArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue().getValue(), vs));
+                    } catch (Throwable ex) {
+                        getLogger().error("[JobResources][" + dv.getSource() + "][" + e.getKey() + "]" + ex.toString());
+                    }
                 }
             });
         }
@@ -408,8 +427,12 @@ public class OrderProcessStep<A extends JobArguments> {
         // Preference 5 - JobContext.jobArguments()
         jobEnvironment.getAllArgumentsAsNameValueMap().entrySet().stream().forEach(e -> {
             if (!allArguments.containsKey(e.getKey())) {
-                ValueSource vs = new ValueSource(ValueSourceType.JOB_ARGUMENT);
-                allArguments.put(e.getKey(), new JobArgument<>(e.getKey(), e.getValue(), vs));
+                try {
+                    ValueSource vs = new ValueSource(ValueSourceType.JOB_ARGUMENT);
+                    allArguments.put(e.getKey(), new JobArgument<>(e.getKey(), e.getValue(), vs));
+                } catch (Throwable ex) {
+                    getLogger().error("[JobEnvironment.JobArgument][" + e.getKey() + "]" + ex.toString());
+                }
             }
         });
 
@@ -433,7 +456,11 @@ public class OrderProcessStep<A extends JobArguments> {
         if (unitTestUndeclaredArguments != null) {
             unitTestUndeclaredArguments.entrySet().stream().forEach(e -> {
                 if (!allArguments.containsKey(e.getKey())) {
-                    allArguments.put(e.getKey(), new JobArgument<>(e.getKey(), e.getValue(), new ValueSource(ValueSourceType.JOB_ARGUMENT)));
+                    try {
+                        allArguments.put(e.getKey(), new JobArgument<>(e.getKey(), e.getValue(), new ValueSource(ValueSourceType.JOB_ARGUMENT)));
+                    } catch (Throwable ex) {
+                        getLogger().error("[unitTestUndeclaredArguments][" + e.getKey() + "]" + ex.toString(), e);
+                    }
                 }
             });
         }
@@ -441,24 +468,12 @@ public class OrderProcessStep<A extends JobArguments> {
         resolveArgumentValues();
     }
 
-    /** IJobArgumentValueResolver */
     private void resolveArgumentValues() throws Exception {
         if (allArguments != null) {
-            List<String> prefixes = JobArgumentValueResolverCache.getResolverPrefixes();
-            Map<String, List<JobArgument<?>>> groupedArguments = allArguments.values().stream().peek(arg -> {
-                if (arg.getValue() == null && arg.getNotAcceptedValue() != null && arg.getNotAcceptedValue().getValue() != null) {
-                    String v = (String) arg.getNotAcceptedValue().getValue();
-                    for (String p : prefixes) {
-                        if (v.startsWith(p)) {
-                            arg.setValue(v);
-                            arg.resetNotAcceptedValue();
-                        }
-                    }
-                }
-            }).flatMap(arg -> prefixes.stream().filter(prefix -> arg.getValue() != null && arg.getValue().toString().startsWith(
-                    prefix)).<Map.Entry<String, JobArgument<?>>> map(prefix -> new AbstractMap.SimpleEntry<>(prefix, arg))).collect(Collectors
-                            .groupingBy(Map.Entry::getKey, Collectors.mapping(Map.Entry::getValue, Collectors.toList())));
-
+            Map<String, List<JobArgument<?>>> groupedArguments = allArguments.values().parallelStream().flatMap(arg -> getResolverPrefixes()
+                    .parallelStream().filter(prefix -> arg.hasValueStartsWith(prefix)).<Map.Entry<String, JobArgument<?>>> map(
+                            prefix -> new AbstractMap.SimpleEntry<>(prefix, arg))).collect(Collectors.groupingBy(Map.Entry::getKey, Collectors
+                                    .mapping(Map.Entry::getValue, Collectors.toList())));
             for (Map.Entry<String, List<JobArgument<?>>> entry : groupedArguments.entrySet()) {
                 try {
                     JobArgumentValueResolverCache.resolve(entry.getKey(), logger, entry.getValue(), allArguments);
@@ -1073,6 +1088,13 @@ public class OrderProcessStep<A extends JobArguments> {
 
     protected boolean hasExecuteJobArguments() {
         return executeJobBean != null && executeJobBean.arguments != null && executeJobBean.arguments.size() > 0;
+    }
+
+    protected List<String> getResolverPrefixes() {
+        if (resolverPrefixes == null) {
+            resolverPrefixes = new ArrayList<>();
+        }
+        return resolverPrefixes;
     }
 
     public OrderProcessStepOutcome getOutcome() {

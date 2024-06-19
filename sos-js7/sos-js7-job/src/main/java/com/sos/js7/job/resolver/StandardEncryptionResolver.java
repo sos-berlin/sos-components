@@ -11,7 +11,9 @@ import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 import com.sos.exception.SOSKeyException;
 import com.sos.js7.job.JobArgument;
+import com.sos.js7.job.JobArgumentValueIterator;
 import com.sos.js7.job.OrderProcessStepLogger;
+import com.sos.js7.job.exception.JobArgumentException;
 
 public class StandardEncryptionResolver extends JobArgumentValueResolver {
 
@@ -24,6 +26,7 @@ public class StandardEncryptionResolver extends JobArgumentValueResolver {
         return EncryptionUtils.ENCRYPTION_IDENTIFIER;
     }
 
+    /** @apiNote Throw exception if any argument cannot be resolved */
     public static void resolve(OrderProcessStepLogger logger, List<JobArgument<?>> argumentsToResolve, Map<String, JobArgument<?>> allArguments)
             throws Exception {
 
@@ -34,8 +37,15 @@ public class StandardEncryptionResolver extends JobArgumentValueResolver {
 
         for (JobArgument<?> arg : argumentsToResolve) {
             debugArgument(logger, IDENTIFIER, arg);
-            // Throw exception if any argument cannot be resolved
-            arg.applyValue(Decrypt.decrypt(EncryptedValue.getInstance(arg.getName(), arg.getValue().toString()), privKey));
+
+            JobArgumentValueIterator iterator = arg.newValueIterator(getPrefix());
+            while (iterator.hasNext()) {
+                try {
+                    iterator.set(Decrypt.decrypt(EncryptedValue.getInstance(arg.getName(), iterator.nextWithoutPrefix()), privKey));
+                } catch (Throwable e) {
+                    throw new JobArgumentException(iterator, e);
+                }
+            }
             arg.setDisplayMode(DisplayMode.MASKED);
         }
     }

@@ -19,18 +19,9 @@ public abstract class JobArgumentValueResolver implements IJobArgumentValueResol
      * @param arg JobArgument to be debugged. */
     public static void debugArgument(OrderProcessStepLogger logger, String resolverIdentifier, JobArgument<?> arg) {
         if (logger.isDebugEnabled()) {
-            logger.debug("[" + resolverIdentifier + "][resolve][argument]name=" + arg.getName() + ",value=" + arg.getDisplayValue());
+            logger.debug("[" + resolverIdentifier + "][resolve][argument][name=" + arg.getName() + ",clazzType=" + arg.getClazzType()
+                    + ",argumentType=" + arg.getArgumentType() + ",argumentFlatType=" + arg.getArgumentFlatType() + "]value=" + arg
+                            .getDisplayValue());
         }
     }
-
-    /** Removes the specified prefix from the value of the given JobArgument.
-     * 
-     * @param arg The JobArgument whose value's prefix needs to be removed.
-     * @param prefix The prefix to be removed from the argument's value.
-     * @return The value of the argument without the specified prefix.
-     * @throws Exception if an error occurs while processing the argument's value. */
-    public static String getValueWithoutPrefix(JobArgument<?> arg, String prefix) throws Exception {
-        return arg.getValue().toString().substring(prefix.length());
-    }
-
 }

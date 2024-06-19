@@ -2,7 +2,6 @@ package com.sos.jitl.jobs.examples;
 
 import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.junit.Ignore;
@@ -18,16 +17,18 @@ public class InfoJobTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InfoJobTest.class);
 
-    private static final String BASE64_PATH_VAL = "dGVzdC50eHQ="; //test.txt
-    
+    private static final String BASE64_PATH_VAL = "dGVzdC50eHQ="; // test.txt
+
     @Ignore
     @Test
-    public void testJob() throws Exception {
+    public void testJobMapValues() throws Exception {
 
         Map<String, Object> args = new HashMap<>();
-        args.put("map_path_values", getMapPaths());
         args.put("map_string_values", getMapStrings());
-        args.put("path_argument", "base64:"+BASE64_PATH_VAL);
+        args.put("map_path_values", getMapPaths());
+        args.put("map_object_values", getMapObjects());
+        args.put("map_wildcard_values", getMapObjects());
+        // args.put("path_argument", "base64:" + BASE64_PATH_VAL);
 
         // for unit tests only
         UnitTestJobHelper<InfoJobArguments> h = new UnitTestJobHelper<>(new InfoJob(null));
@@ -38,16 +39,24 @@ public class InfoJobTest {
     }
 
     private Map<String, String> getMapStrings() {
-        Map<String, String> m = new LinkedHashMap<>();
+        Map<String, String> m = new HashMap<>();
         m.put("p1", "x");
-        m.put("p2", "base64:"+BASE64_PATH_VAL);
+        m.put("p2", "base64:" + BASE64_PATH_VAL);
         return m;
     }
 
     private Map<String, Object> getMapPaths() {
-        Map<String, Object> m = new LinkedHashMap<>();
+        Map<String, Object> m = new HashMap<>();
+        m.put("p2", "base64:" + BASE64_PATH_VAL);
         m.put("p1", Paths.get("x"));
-        m.put("p1", "upper:xyz");
         return m;
     }
+
+    private Map<String, Object> getMapObjects() {
+        Map<String, Object> m = new HashMap<>();
+        m.put("p2", "base64:" + BASE64_PATH_VAL);
+        m.put("p1", Paths.get("x"));
+        return m;
+    }
+
 }

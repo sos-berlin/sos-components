@@ -1,12 +1,15 @@
 package com.sos.js7.job.examples.resolver;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 import com.sos.js7.job.JobArgument;
+import com.sos.js7.job.JobArgumentValueIterator;
 import com.sos.js7.job.OrderProcessStepLogger;
+import com.sos.js7.job.exception.JobArgumentException;
 import com.sos.js7.job.resolver.JobArgumentValueResolver;
 
 /** Resolves values with the prefix <i>apath:</i> into an absolute path */
@@ -50,17 +53,24 @@ public class ExampleAbsolutePathResolver extends JobArgumentValueResolver {
         for (JobArgument<?> arg : argumentsToResolve) {
             debugArgument(logger, IDENTIFIER, arg);
 
+            // Use iterator to process all argument types (String,List,Map, ...)
+            JobArgumentValueIterator iterator = arg.newValueIterator(getPrefix());
             try {
-                arg.applyValue(Paths.get(getValueWithoutPrefix(arg, getPrefix())).toAbsolutePath().toString());
+                while (iterator.hasNext()) {
+                    Path path = Paths.get(iterator.nextWithoutPrefix()).toAbsolutePath();
+                    iterator.set(path);
+                }
+
                 arg.setDisplayMode(DisplayMode.UNMASKED);
                 // arg.setDisplayMode(DisplayMode.MASKED);
             } catch (Throwable e) {
                 if (failOnResolverError(allArguments)) {
-                    throw e;
+                    throw new JobArgumentException(iterator, e);
                 }
-                arg.setNotAcceptedValue(arg.getValue(), e);
+                arg.setNotAcceptedValue(iterator, e);
             }
         }
+
     }
 
     private static boolean failOnResolverError(Map<String, JobArgument<?>> allArguments) {

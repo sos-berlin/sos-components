@@ -100,7 +100,7 @@ public class InfoJob extends Job<InfoJobArguments> {
         Map<String, JobArgument<?>> allcmap = step.getAllArguments();
         allcmap.entrySet().stream().forEach(e -> {
             step.getLogger().info("[java][%s][%s=%s]%s", e.getValue().getType(), e.getKey(), e.getValue().getDisplayValue(), SOSString.toString(e
-                    .getValue()));
+                    .getValue(), true));
         });
 
         if (args.getShowEnv().getValue()) {
