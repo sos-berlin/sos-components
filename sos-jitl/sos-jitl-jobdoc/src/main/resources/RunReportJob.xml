@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="js7_job_documentation_v1.1.xsl"?>
+<description xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+             xmlns:xi="http://www.w3.org/2001/XInclude"
+             xmlns:xhtml="http://www.w3.org/1999/xhtml"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
+    <job name="RunReportJob"
+         title="Generate Reports"
+         category="JITL">
+        <script language="java"
+                java_class="com.sos.jitl.jobs.runreports.RunReportJob"
+                resource="1"/>
+    </job>
+    <configuration>
+        <params id="job_parameter">
+            <param name="report_paths"
+                   required="false">
+                <note>
+                    <title>List of reports to be generated</title>
+                    <p>
+                       A list of report paths. The items are seperated by semicolon. All reports that are in the list will be generated. Entries for reports that do not exist are ignored.
+                       When a report is listed twice, it will generated once
+                    </p>
+ 
+                </note>
+            </param>
+            <param name="report_folders"
+                   required="false">
+                <note>
+                    <title>List of folders with reports to be generated</title>
+                    <p>
+                       A list of folders that contain folder names. The items are seperated by semicolon. All reports found in the given folders will be generated.
+                       If a report is listed more than once, it is generated once. E.g .when a report is found in the list of report_paths and in a folder.
+                       A folder is processed recursively if the name ends with /*.
+                    </p>
+                </note>
+            </param>
+          
+        </params>
+        <params id="return_parameter">
+            
+          
+        </params>
+    </configuration>
+    <documentation>
+        <note>
+            <title>What is the purpose of this job?</title>
+            <p>
+                The job generate reports that are defined in the report section of the configuration view.
+            </p>
+        </note>
+    </documentation>
+</description>

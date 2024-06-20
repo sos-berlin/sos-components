@@ -110,11 +110,15 @@ public class ReportGeneratorExecuter {
         this.reportArguments = reportArguments;
 
         long startTime = System.currentTimeMillis();
+        LOGGER.info("Start generation of report " + reportArguments.reportId);
+        LOGGER.info("Frequency: " + reportArguments.reportFrequency.getFrequency().value());
+        LOGGER.info("Month-From: " + reportArguments.monthFrom);
+        LOGGER.info("Month-To: " + reportArguments.monthTo);
 
         this.start();
         long stopTime = System.currentTimeMillis();
         long elapsedTime = stopTime - startTime;
-        LOGGER.info("Generating Report: " + elapsedTime + " ms elapsed time");
+        LOGGER.info("Generation of report " + reportArguments.reportId + " ready: " + elapsedTime + " ms elapsed time");
         return 0;
 
     }
