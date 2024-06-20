@@ -2,6 +2,7 @@
 package com.sos.controller.model.fileordersource;
 
 import java.util.Date;
+import java.util.Set;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -83,8 +84,8 @@ public class FileOrderSource
      * @param state
      * @param documentationName
      */
-    public FileOrderSource(String path, Date versionDate, SyncState state, Boolean valid, String workflowName, String agentName, String directoryExpr, String directory, String pattern, String timeZone, Long delay, String title, String documentationName) {
-        super(workflowName, agentName, directoryExpr, directory, pattern, timeZone, delay, title, documentationName);
+    public FileOrderSource(String path, Date versionDate, SyncState state, Boolean valid, String workflowName, String agentName, String directoryExpr, String directory, String pattern, String timeZone, Long delay, String title, String documentationName, Set<String> tags) {
+        super(workflowName, agentName, directoryExpr, directory, pattern, timeZone, delay, title, documentationName, tags);
         this.path = path;
         this.versionDate = versionDate;
         this.state = state;
