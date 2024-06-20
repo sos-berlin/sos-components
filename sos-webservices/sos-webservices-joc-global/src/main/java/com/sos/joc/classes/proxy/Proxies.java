@@ -2,6 +2,7 @@ package com.sos.joc.classes.proxy;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -544,8 +545,9 @@ public class Proxies {
                     }
                     List<JSubagentItem> subRefs = subs.stream().map(s -> JSubagentItem.of(SubagentId.of(s.getSubAgentId()), AgentPath.of(s
                             .getAgentId()), Uri.of(s.getUri()), s.getDisabled())).collect(Collectors.toList());
-                    Set<SubagentId> directors = subs.stream().filter(s -> s.getIsDirector() > SubagentDirectorType.NO_DIRECTOR.intValue()).sorted()
-                            .map(s -> SubagentId.of(s.getSubAgentId())).collect(Collectors.toSet());
+                    List<SubagentId> directors = subs.stream().filter(s -> s.getIsDirector() > SubagentDirectorType.NO_DIRECTOR.intValue()).sorted(
+                            Comparator.comparingInt(DBItemInventorySubAgentInstance::getIsDirector)).map(
+                                    DBItemInventorySubAgentInstance::getSubAgentId).map(SubagentId::of).collect(Collectors.toList());
                     result.put(JAgentRef.of(agentPath, directors, processLimit), subRefs);
                 }
                 return result;

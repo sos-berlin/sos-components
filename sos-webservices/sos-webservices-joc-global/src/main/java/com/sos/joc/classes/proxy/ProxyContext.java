@@ -205,11 +205,15 @@ public class ProxyContext {
         proxyFuture.thenAcceptAsync(p -> {
             SOSHibernateSession sosHibernateSession = null;
             try {
-                sosHibernateSession = Globals.createSosHibernateStatelessConnection("GetAgents");
-                InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(sosHibernateSession);
                 JControllerState currentState = p.currentState();
+                DailyPlanCalendar.getInstance().updateDailyPlanCalendar(p.api(), currentState, toString());
+                
                 Map<AgentPath, JAgentRef> controllerKnownAgents = currentState.pathToAgentRef();
                 Map<SubagentId, JSubagentItem> controllerKnownSubagents = currentState.idToSubagentItem();
+                
+                sosHibernateSession = Globals.createSosHibernateStatelessConnection("GetAgents");
+                InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(sosHibernateSession);
+                
                 Map<JAgentRef, List<JSubagentItem>> agents = Proxies.getUnknownAgents(credentials.getControllerId(), dbLayer, controllerKnownAgents,
                         controllerKnownSubagents, false);
                 if (!agents.isEmpty()) {
@@ -243,9 +247,8 @@ public class ProxyContext {
                         }
                     });
                 }
-                DailyPlanCalendar.getInstance().updateDailyPlanCalendar(p.api(), currentState, toString());
             } catch (Exception e) {
-                LOGGER.error(e.toString());
+                LOGGER.error("", e);
             } finally {
                 Globals.disconnect(sosHibernateSession);
             }
