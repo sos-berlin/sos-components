@@ -21,12 +21,16 @@ import js7.data_for_java.order.JOutcome;
 
 /** Performance Tests:<br/>
  * - see com.sos.js7.job.generator.resolver.ResolverGenerator<br/>
- * - Test of 1000 resolvers - registration by agent ~600ms<br/>
- * -- 300 arguments (only some of them have o prefix)<br/>
- * --- running with DEBUG level and EmptyJob <= 1s<br/>
- * -- 1000 arguments (all arguments use different prefixes) - see com.sos.js7.job.generator.json.JsonGenerator<br/>
+ * - Test of 1000 resolvers:<br/>
+ * -- Registration by agent: ~600ms<br/>
+ * -- 300 arguments (arguments from the JobResources and only some of them have o prefix)<br/>
+ * --- running with DEBUG level and EmptyJob (ScriptEngine) <= 1s<br/>
+ * -- 1000 arguments (all arguments from a JobResource and use different 1000 prefixes) - see com.sos.js7.job.generator.json.JsonGenerator<br/>
  * --- running with DEBUG level and EmptyJob ~ 2s<br/>
- * --- executed with INFO level and EmptyJob (ScriptEngine) <= 1s */
+ * --- executed with INFO level and EmptyJob (ScriptEngine) <= 1s<br/>
+ * -- 100 order preparation maps, 10 parameters pro map (10 prefixes used per iteration) - see com.sos.js7.job.generator.json.JsonGenerator<br/>
+ * --- executed with INFO level and EmptyJob (Java) = 1s<br/>
+ */
 public class CustomResolverTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CustomResolverTest.class);
