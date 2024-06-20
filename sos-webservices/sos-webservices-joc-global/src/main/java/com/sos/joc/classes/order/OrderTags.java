@@ -90,8 +90,8 @@ public class OrderTags {
 
                 fos = dbLayer.getDeployedInventory(controllerId, DeployType.FILEORDERSOURCE.intValue(), orderWatchName);
             }
-            if (fos != null) {
-                FileOrderSource fos2 = JocInventory.convertFileOrderSource(orderWatchName, FileOrderSource.class);
+            if (fos != null && fos.getContent().contains("\"tags\"")) {
+                FileOrderSource fos2 = JocInventory.convertFileOrderSource(fos.getContent(), FileOrderSource.class);
                 if (fos2.getTags() != null && !fos2.getTags().isEmpty()) {
                     deleteTagsOfOrder(controllerId, orderId, connection); // if eventbus.post comes twice
                     addTagsOfOrder(controllerId, OrdersHelper.getOrderIdMainPart(orderId), fos2.getTags(), connection, Date.from(Instant.now()));
