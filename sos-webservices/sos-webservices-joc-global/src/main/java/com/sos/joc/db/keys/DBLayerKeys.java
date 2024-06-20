@@ -416,9 +416,9 @@ public class DBLayerKeys {
     }
 
     public void removeEnciphermentCertificateMapping(String certAlias, String agentId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_ENC_AGENT_CERTIFICATES).append(" where ");
-        hql.append(" certAlias = :certAlias");
-        hql.append(" agentId = :agentId");
+        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_ENC_AGENT_CERTIFICATES);
+        hql.append(" where certAlias = :certAlias");
+        hql.append(" and agentId = :agentId");
         Query<DBItemEncAgentCertificate> query = session.createQuery(hql.toString());
         query.setParameter("certAlias", certAlias);
         query.setParameter("agentId", agentId);
