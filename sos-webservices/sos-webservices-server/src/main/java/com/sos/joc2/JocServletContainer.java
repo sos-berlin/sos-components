@@ -11,12 +11,16 @@ import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.classes.JocCertificate;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.agent.AgentHelper;
+import com.sos.joc.classes.cluster.JocClusterService;
+import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.proxy.ClusterWatch;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.classes.quicksearch.QuickSearchStore;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.classes.workflow.WorkflowRefs;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
+import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.db.cluster.CheckInstance;
 import com.sos.joc.exceptions.JocConfigurationException;
 
@@ -27,6 +31,8 @@ public class JocServletContainer extends ServletContainer {
     private static final Logger LOGGER = LoggerFactory.getLogger(JocServletContainer.class);
 
     private static final long serialVersionUID = 1L;
+    
+    private static final boolean withClusterService = true;
 
     public JocServletContainer() {
         super();
@@ -66,7 +72,10 @@ public class JocServletContainer extends ServletContainer {
         JOCJsonCommand.urlMapper = MapUrls.getUrlMapperByUser();
         AgentHelper.testMode = true;
         ClusterWatch.init(MapUrls.getUrlMapperByUser());
-      //JocClusterService.getInstance().start(StartupMode.automatic, true);
+        OrderTags.getInstance();
+        if (withClusterService) {
+            JocClusterService.getInstance().start(StartupMode.automatic, true);
+        }
     }
 
     @Override
@@ -74,8 +83,10 @@ public class JocServletContainer extends ServletContainer {
         LOGGER.debug("----> destroy on close JOC");
 
         // 1 - stop cluster
-        //JocClusterService.getInstance().stop(StartupMode.automatic, true);
-        //JocClusterServiceLogger.clearAllLoggers();
+        if (withClusterService) {
+            JocClusterService.getInstance().stop(StartupMode.automatic, true);
+            JocClusterServiceLogger.clearAllLoggers();
+        }
         // 2 - close proxies
         QuickSearchStore.close(); //insert
         Proxies.closeAll();
