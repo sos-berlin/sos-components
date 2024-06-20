@@ -24,6 +24,8 @@ import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocHistoryConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.service.JocClusterServiceLogger;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.order.AddOrderEvent;
 import com.sos.joc.history.controller.exception.HistoryFatalException;
 import com.sos.joc.history.controller.exception.HistoryProcessingDatabaseConnectException;
 import com.sos.joc.history.controller.exception.HistoryProcessingException;
@@ -726,7 +728,15 @@ public class HistoryControllerHandler {
                 event = new FatEventOrderPromptAnswered(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
                         .getPosition());
                 break;
-
+                
+            case OrderAdded:
+                order = entry.getCheckedOrder();
+                // if order added by fileOrderSource or addOrder-instruction
+                if (order.getOrderId().matches("#\\d{4}-\\d{2}-\\d{2}#[DF].*")) {
+                    EventBus.getInstance().post(new AddOrderEvent(getControllerId(), order.getOrderId(), order.getJOrder().toJson()));
+                }
+                break;
+                
             default:
                 event = new FatEventWithProblem(entry, null, new Exception("unknown type=" + entry.getEventType()));
                 break;
