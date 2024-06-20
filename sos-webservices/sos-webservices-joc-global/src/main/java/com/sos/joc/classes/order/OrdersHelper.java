@@ -337,7 +337,7 @@ public class OrdersHelper {
     public static boolean isResumable(JOrder order) {
         Order<Order.State> o = order.asScala();
         //return o.isResumable();
-        return o.isSuspended() || isFailed(o) || isSuspending(o.mark());
+        return o.isSuspended() || isFailed(o);// || isSuspending(o.mark());
     }
     
     private static boolean isTerminated(Order<Order.State> o) {
