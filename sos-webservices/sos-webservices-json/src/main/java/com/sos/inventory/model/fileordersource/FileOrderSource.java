@@ -1,11 +1,13 @@
 
 package com.sos.inventory.model.fileordersource;
 
+import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.sos.inventory.model.common.IInventoryObject;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.model.common.IConfigurationObject;
@@ -33,7 +35,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "timeZone",
     "delay",
     "title",
-    "documentationName"
+    "documentationName",
+    "tags"
 })
 public class FileOrderSource implements IInventoryObject, IConfigurationObject, IDeployObject
 {
@@ -54,7 +57,7 @@ public class FileOrderSource implements IInventoryObject, IConfigurationObject, 
      */
     @JsonProperty("version")
     @JsonPropertyDescription("inventory repository version")
-    private String version = "1.1.0";
+    private String version = "1.7.1";
     @JsonProperty("workflowName")
     @JsonAlias({
         "workflowPath"
@@ -110,6 +113,9 @@ public class FileOrderSource implements IInventoryObject, IConfigurationObject, 
      */
     @JsonProperty("documentationName")
     private String documentationName;
+    @JsonProperty("tags")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<String> tags = null;
 
     /**
      * No args constructor for use in serialization
@@ -130,8 +136,9 @@ public class FileOrderSource implements IInventoryObject, IConfigurationObject, 
      * 
      * @param title
      * @param directory
+     * @param tags
      */
-    public FileOrderSource(String workflowName, String agentName, String directoryExpr, String directory, String pattern, String timeZone, Long delay, String title, String documentationName) {
+    public FileOrderSource(String workflowName, String agentName, String directoryExpr, String directory, String pattern, String timeZone, Long delay, String title, String documentationName, Set<String> tags) {
         super();
         this.workflowName = workflowName;
         this.agentName = agentName;
@@ -142,6 +149,7 @@ public class FileOrderSource implements IInventoryObject, IConfigurationObject, 
         this.delay = delay;
         this.title = title;
         this.documentationName = documentationName;
+        this.tags = tags;
     }
 
     /**
@@ -327,14 +335,24 @@ public class FileOrderSource implements IInventoryObject, IConfigurationObject, 
         this.documentationName = documentationName;
     }
 
+    @JsonProperty("tags")
+    public Set<String> getTags() {
+        return tags;
+    }
+
+    @JsonProperty("tags")
+    public void setTags(Set<String> tags) {
+        this.tags = tags;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("version", version).append("workflowName", workflowName).append("agentName", agentName).append("directoryExpr", directoryExpr).append("directory", directory).append("pattern", pattern).append("timeZone", timeZone).append("delay", delay).append("title", title).append("documentationName", documentationName).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("version", version).append("workflowName", workflowName).append("agentName", agentName).append("directoryExpr", directoryExpr).append("directory", directory).append("pattern", pattern).append("timeZone", timeZone).append("delay", delay).append("title", title).append("documentationName", documentationName).append("tags", tags).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(directoryExpr).append(delay).append(pattern).append(agentName).append(timeZone).append(workflowName).append(documentationName).append(tYPE).append(title).append(version).append(directory).toHashCode();
+        return new HashCodeBuilder().append(directoryExpr).append(pattern).append(agentName).append(timeZone).append(workflowName).append(tYPE).append(title).append(directory).append(tags).append(delay).append(documentationName).toHashCode();
     }
 
     @Override
@@ -346,7 +364,7 @@ public class FileOrderSource implements IInventoryObject, IConfigurationObject, 
             return false;
         }
         FileOrderSource rhs = ((FileOrderSource) other);
-        return new EqualsBuilder().append(directoryExpr, rhs.directoryExpr).append(delay, rhs.delay).append(pattern, rhs.pattern).append(agentName, rhs.agentName).append(timeZone, rhs.timeZone).append(workflowName, rhs.workflowName).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(title, rhs.title).append(version, rhs.version).append(directory, rhs.directory).isEquals();
+        return new EqualsBuilder().append(directoryExpr, rhs.directoryExpr).append(pattern, rhs.pattern).append(agentName, rhs.agentName).append(timeZone, rhs.timeZone).append(workflowName, rhs.workflowName).append(tYPE, rhs.tYPE).append(title, rhs.title).append(directory, rhs.directory).append(tags, rhs.tags).append(delay, rhs.delay).append(documentationName, rhs.documentationName).isEquals();
     }
 
 }

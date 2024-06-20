@@ -9,24 +9,35 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.hibernate.query.Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.commons.util.SOSString;
+import com.sos.inventory.model.deploy.DeployType;
+import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.workflow.WorkflowRefs;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
-import com.sos.joc.cluster.configuration.globals.common.ConfigurationEntry;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.common.SearchStringHelper;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanVariable;
+import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
+import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.db.history.DBItemHistoryOrderTag;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.annotation.Subscribe;
+import com.sos.joc.event.bean.order.AddOrderEvent;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.inventory.search.ResponseBaseSearchItem;
@@ -38,39 +49,73 @@ import js7.data_for_java.order.JOrder;
 
 public class OrderTags {
 
-//    private static OrderTags instance;
-//    private static final Logger LOGGER = LoggerFactory.getLogger(OrderTags.class);
+    private static OrderTags instance;
+    private static final Logger LOGGER = LoggerFactory.getLogger(OrderTags.class);
 
-//    private OrderTags() {
-////        EventBus.getInstance().register(this);
-//    }
-//
-//    public static OrderTags getInstance() {
-//        if (instance == null) {
-//            instance = new OrderTags();
-//        }
-//        return instance;
-//    }
+    private OrderTags() {
+        EventBus.getInstance().register(this);
+    }
 
-//    @Subscribe({ OrderTagsEvent.class })
-//    public void addTag(OrderTagsEvent evt) {
-//        //orderTags.putIfAbsent(evt.getControllerId(), new ConcurrentHashMap<>());
-//        SOSHibernateSession connection = null;
-//        try {
-//            Date now = Date.from(Instant.now());
-//            connection = Globals.createSosHibernateStatelessConnection("storeOrderTags");
-//            // TODO check if tags of order already exists
-//            addTagsOfOrder(evt, connection, now);
-//        } finally {
-//            Globals.disconnect(connection);
-//        }
-//    }
+    public static OrderTags getInstance() {
+        if (instance == null) {
+            instance = new OrderTags();
+        }
+        return instance;
+    }
+
+    @Subscribe({ AddOrderEvent.class })
+    public void addTagsToOrderbyFileOrderSourceOrAddOrderInstruction(AddOrderEvent evt) {
+        String orderIdModifier = evt.getOrderId().substring(12, 13);
+        if (orderIdModifier.equals("D")) {
+            addTagsToOrderbyAddOrderInstruction(evt.getControllerId(), evt.getOrderId(), JOrder.fromJson(evt.getOrderJson()).getOrNull());
+        } else if (orderIdModifier.equals("F")) {
+            addTagsToOrderbyFileOrderSource(evt.getControllerId(), evt.getOrderId());
+        }
+    }
     
+    private void addTagsToOrderbyFileOrderSource(String controllerId, String orderId) {
+        String orderWatchName = orderId.substring(OrdersHelper.mainOrderIdLength).replaceFirst("([^:]+):.*", "$1");
+        // TODO it would be nice to know if fileOrderSource has tags before further processing
+        SOSHibernateSession connection = null;
+        try {
+            DeployedContent fos = null;
+            Optional<DeployedContent> fosOpt = WorkflowRefs.getFileOrderSources(controllerId).stream().filter(f -> orderWatchName.equals(f.getName()))
+                    .findAny();
+            if (fosOpt.isPresent()) {
+                fos = fosOpt.get();
+            }
+            if (fos == null) {
+                connection = Globals.createSosHibernateStatelessConnection("storeFileOrderTags");
+                DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
+
+                fos = dbLayer.getDeployedInventory(controllerId, DeployType.FILEORDERSOURCE.intValue(), orderWatchName);
+            }
+            if (fos != null && fos.getContent().contains("\"tags\"")) {
+                FileOrderSource fos2 = JocInventory.convertFileOrderSource(fos.getContent(), FileOrderSource.class);
+                if (fos2.getTags() != null && !fos2.getTags().isEmpty()) {
+                    deleteTagsOfOrder(controllerId, orderId, connection); // if eventbus.post comes twice
+                    addTagsOfOrder(controllerId, OrdersHelper.getOrderIdMainPart(orderId), fos2.getTags(), connection, Date.from(Instant.now()));
+                }
+            }
+
+        } catch (Exception e) {
+            LOGGER.error("[storeFileOrderTags][" + orderId + "]:", e);
+        } finally {
+            Globals.disconnect(connection);
+        }
+    }
+
+    private void addTagsToOrderbyAddOrderInstruction(String controllerId, String orderId, JOrder jOrder) {
+        // TODO Auto-generated method stub
+        if (jOrder != null) {
+            //
+        }
+    }
+
     public static Either<Exception, Void> addTags(String controllerId, Map<String, Set<String>> oTags) {
         if (controllerId != null && oTags != null && !oTags.isEmpty()) {
             SOSHibernateSession connection = null;
             try {
-                //orderTags.putIfAbsent(controllerId, new ConcurrentHashMap<>());
                 Date now = Date.from(Instant.now());
                 // delete/insert
                 connection = Globals.createSosHibernateStatelessConnection("storeOrderTags");
@@ -114,21 +159,18 @@ public class OrderTags {
 //    }
     
     private static void addTagsOfOrder(String controllerId, String orderId, Set<String> tags, SOSHibernateSession connection, Date now) {
-        //if (!orderTags.get(controllerId).containsKey(orderId)) {
-            //orderTags.get(controllerId).put(orderId, tags);
-            int i = 0;
-            for (String tag : tags) {
-                try {
-                    connection.save(new DBItemHistoryOrderTag(controllerId, orderId, tag, ++i, now));
-                } catch (SOSHibernateInvalidSessionException ex) {
-                    throw new DBConnectionRefusedException(ex);
-                } catch (Exception ex) {
-                    throw new DBInvalidDataException(ex);
-                }
+        int i = 0;
+        for (String tag : tags) {
+            try {
+                connection.save(new DBItemHistoryOrderTag(controllerId, orderId, tag, ++i, now));
+            } catch (SOSHibernateInvalidSessionException ex) {
+                throw new DBConnectionRefusedException(ex);
+            } catch (Exception ex) {
+                throw new DBInvalidDataException(ex);
             }
-        //}
+        }
     }
-    
+
     public static void deleteTags(String controllerId, List<String> orderIds, SOSHibernateSession connection) throws SOSHibernateException {
         if (controllerId != null && orderIds != null && !orderIds.isEmpty()) {
 
@@ -147,10 +189,6 @@ public class OrderTags {
                 query.setParameterList("orderIds", orderIds.stream().map(OrdersHelper::getOrderIdMainPart).collect(Collectors.toSet()));
                 query.setParameter("controllerId", controllerId);
                 connection.executeUpdate(query);
-
-                // if (!SOSString.isEmpty(controllerId) && orderTags.containsKey(controllerId)) {
-                // orderIds.forEach(o -> orderTags.get(controllerId).remove(o));
-                // }
             }
         }
     }
@@ -158,8 +196,6 @@ public class OrderTags {
     public static void deleteTagsOfOrder(String controllerId, String orderId, SOSHibernateSession connection) {
         if (controllerId != null && orderId != null) {
             orderId = OrdersHelper.getOrderIdMainPart(orderId);
-//            orderTags.putIfAbsent(controllerId, new ConcurrentHashMap<>());
-//            orderTags.get(controllerId).remove(orderId);
             try {
                 StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_HISTORY_ORDER_TAGS);
                 hql.append(" where controllerId=:controllerId");

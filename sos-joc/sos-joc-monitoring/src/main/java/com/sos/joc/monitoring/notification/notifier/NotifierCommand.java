@@ -1,5 +1,7 @@
 package com.sos.joc.monitoring.notification.notifier;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,10 +29,15 @@ public class NotifierCommand extends ANotifier {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NotifierCommand.class);
 
+    private static final Path COMMAND_EXECUTER_WORKING_DIR;
     private static final SOSTimeout TIMEOUT = new SOSTimeout(5, TimeUnit.MINUTES);
     private static final String VAR_COMMAND = PREFIX_COMMON_VAR + "_COMMAND";
 
     private final MonitorCommand monitor;
+
+    static {
+        COMMAND_EXECUTER_WORKING_DIR = getWorkingDir();
+    }
 
     public NotifierCommand(int nr, MonitorCommand monitor) {
         super.setNr(nr);
@@ -51,7 +58,7 @@ public class NotifierCommand extends ANotifier {
         String cmd = resolve(monitor.getCommand(), false);
         LOGGER.info(getInfo4execute(true, mo, mos, type, cmd));
 
-        SOSCommandResult commandResult = JOCSOSShell.executeCommand(cmd, TIMEOUT, getEnvVariables(cmd));
+        SOSCommandResult commandResult = JOCSOSShell.executeCommand(cmd, TIMEOUT, getEnvVariables(cmd), COMMAND_EXECUTER_WORKING_DIR);
         NotifyResult result = new NotifyResult(commandResult.getCommand(), getSendInfo());
         if (commandResult.hasError()) {
             StringBuilder info = new StringBuilder();
@@ -74,7 +81,7 @@ public class NotifierCommand extends ANotifier {
         String cmd = resolveSystemVars(monitor.getCommand(), false);
         LOGGER.info(getInfo4execute(true, event, type, cmd));
 
-        SOSCommandResult commandResult = JOCSOSShell.executeCommand(cmd, TIMEOUT, getEnvVariables(cmd));
+        SOSCommandResult commandResult = JOCSOSShell.executeCommand(cmd, TIMEOUT, getEnvVariables(cmd), COMMAND_EXECUTER_WORKING_DIR);
         NotifyResult result = new NotifyResult(commandResult.getCommand(), getSendInfo());
         if (commandResult.hasError()) {
             StringBuilder info = new StringBuilder();
@@ -151,6 +158,15 @@ public class NotifierCommand extends ANotifier {
     private String escape4Unix(String s) {
         return s.replaceAll("\"", "\\\\\"").replaceAll("<", "\\\\<").replaceAll(">", "\\\\>").replaceAll("%", "\\\\%").replaceAll("&", "\\\\&")
                 .replaceAll(";", "\\\\;").replaceAll("'", "\\\\'");
+    }
+
+    private static Path getWorkingDir() {
+        try {
+            return Paths.get(System.getProperty("java.io.tmpdir"));
+        } catch (Throwable e) {
+            LOGGER.error("[getWorkingDir]" + e.toString(), e);
+            return null;
+        }
     }
 
 }

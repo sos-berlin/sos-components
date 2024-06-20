@@ -1,0 +1,38 @@
+package com.sos.js7.job.examples.resolver.generated;
+
+import java.util.List;
+import java.util.Map;
+
+import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
+import com.sos.js7.job.JobArgument;
+import com.sos.js7.job.JobArgumentValueIterator;
+import com.sos.js7.job.OrderProcessStepLogger;
+import com.sos.js7.job.exception.JobArgumentException;
+import com.sos.js7.job.resolver.JobArgumentValueResolver;
+
+public class $CLASSNAME$ extends JobArgumentValueResolver {
+
+    private static final String IDENTIFIER = $CLASSNAME$.class.getSimpleName();
+
+    public static String getPrefix() {
+        return "$PREFIX$";
+    }
+
+    public static void resolve(OrderProcessStepLogger logger, List<JobArgument<?>> argumentsToResolve, Map<String, JobArgument<?>> allArguments)
+            throws Exception {
+        for (JobArgument<?> arg : argumentsToResolve) {
+            debugArgument(logger, IDENTIFIER, arg);
+
+            JobArgumentValueIterator iterator = arg.newValueIterator(getPrefix());
+            while (iterator.hasNext()) {
+                try {
+                    iterator.set(iterator.nextWithoutPrefix().toUpperCase()+"($CLASSNAME$-$PREFIX$)");
+                } catch (Throwable e) {
+                    throw new JobArgumentException(iterator, e);
+                }
+            }
+            arg.setDisplayMode(DisplayMode.UNMASKED);
+        }
+    }
+
+}

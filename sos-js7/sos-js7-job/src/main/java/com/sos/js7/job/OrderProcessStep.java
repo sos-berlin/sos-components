@@ -310,19 +310,19 @@ public class OrderProcessStep<A extends JobArguments> {
     }
 
     private String getDisplayValue(String name) {
-        JobArgument<?> ar = getDeclaredArgument(name);
+        JobArgument<?> ar = allArguments.get(name);
         if (ar == null) {
             return DisplayMode.UNKNOWN.getValue();
         }
         return ar.getDisplayValue();
     }
 
-    private String getDisplayValue(String name, Object value) {
-        JobArgument<?> ar = getDeclaredArgument(name);
+    private String getDisplayValue(String name, Object originalValue) {
+        JobArgument<?> ar = allArguments.get(name);
         if (ar == null) {
             return DisplayMode.UNKNOWN.getValue();
         }
-        return SOSArgumentHelper.getDisplayValue(value, ar.getDisplayMode());
+        return SOSArgumentHelper.getDisplayValue(originalValue, ar.getDisplayMode());
     }
 
     private void setAllArguments() throws Exception {

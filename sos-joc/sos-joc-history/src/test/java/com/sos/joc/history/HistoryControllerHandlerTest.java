@@ -565,6 +565,9 @@ public class HistoryControllerHandlerTest {
                 event = new FatEventOrderPromptAnswered(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
                         .getPosition());
                 break;
+                
+            case OrderAdded:
+                break;
 
             default:
                 event = new FatEventWithProblem(entry, null, new Exception("unknown type=" + entry.getEventType()));

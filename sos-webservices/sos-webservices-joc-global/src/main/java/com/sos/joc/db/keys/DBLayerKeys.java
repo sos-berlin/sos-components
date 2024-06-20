@@ -416,13 +416,7 @@ public class DBLayerKeys {
     }
 
     public void removeEnciphermentCertificateMapping(String certAlias, String agentId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_ENC_AGENT_CERTIFICATES).append(" where ");
-        hql.append(" certAlias = :certAlias");
-        hql.append(" agentId = :agentId");
-        Query<DBItemEncAgentCertificate> query = session.createQuery(hql.toString());
-        query.setParameter("certAlias", certAlias);
-        query.setParameter("agentId", agentId);
-        DBItemEncAgentCertificate result = session.getSingleResult(query);
+        DBItemEncAgentCertificate result = getDBItemEncAgentCertificate(certAlias, agentId);
         if (result != null) {
             session.delete(result);
         }
@@ -483,13 +477,7 @@ public class DBLayerKeys {
     }
     
     public void addEnciphermentCertificateMapping(String certAlias, String agentId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_ENC_AGENT_CERTIFICATES).append(" where ");
-        hql.append(" certAlias = :certAlias and ");
-        hql.append(" agentId = :agentId");
-        Query<DBItemEncAgentCertificate> query = session.createQuery(hql.toString());
-        query.setParameter("certAlias", certAlias);
-        query.setParameter("agentId", agentId);
-        DBItemEncAgentCertificate result = session.getSingleResult(query);
+        DBItemEncAgentCertificate result = getDBItemEncAgentCertificate(certAlias, agentId);
         if(result == null) {
             DBItemEncAgentCertificate newItem = new DBItemEncAgentCertificate();
             newItem.setAgentId(agentId);
@@ -498,5 +486,15 @@ public class DBLayerKeys {
         } else {
             LOGGER.warn("a certificate mapping for this certificate and agent already exists.");
         }
+    }
+    
+    private DBItemEncAgentCertificate getDBItemEncAgentCertificate(String certAlias, String agentId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_ENC_AGENT_CERTIFICATES).append(" where ");
+        hql.append(" certAlias = :certAlias and ");
+        hql.append(" agentId = :agentId");
+        Query<DBItemEncAgentCertificate> query = session.createQuery(hql.toString());
+        query.setParameter("certAlias", certAlias);
+        query.setParameter("agentId", agentId);
+        return session.getSingleResult(query);
     }
 }

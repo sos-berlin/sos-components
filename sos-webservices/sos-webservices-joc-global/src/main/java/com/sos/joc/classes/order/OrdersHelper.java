@@ -337,7 +337,7 @@ public class OrdersHelper {
     public static boolean isResumable(JOrder order) {
         Order<Order.State> o = order.asScala();
         //return o.isResumable();
-        return o.isSuspended() || isFailed(o) || isSuspending(o.mark());
+        return o.isSuspended() || isFailed(o);// || isSuspending(o.mark());
     }
     
     private static boolean isTerminated(Order<Order.State> o) {
@@ -348,12 +348,12 @@ public class OrdersHelper {
         return OrderStateText.FAILED.equals(getGroupedState(o.state().getClass()));
     }
     
-    private static boolean isSuspending(Option<js7.data.order.OrderMark> opt) {
-        if (opt.nonEmpty()) {
-            return (opt.get() instanceof Suspending);
-        }
-        return false;
-    }
+//    private static boolean isSuspending(Option<js7.data.order.OrderMark> opt) {
+//        if (opt.nonEmpty()) {
+//            return (opt.get() instanceof Suspending);
+//        }
+//        return false;
+//    }
     
     public static boolean isNotFailed(JOrder order) {
         return !OrderStateText.FAILED.equals(getGroupedState(order.asScala().state().getClass()));
@@ -497,6 +497,9 @@ public class OrdersHelper {
                 }
             }
             o.setRetryState(rs);
+            if (outcomes != null && outcomes.size() > 1) { // ignore last outcome from catch instruction; always succeeded
+                o.setLastOutcome(outcomes.get(outcomes.size() - 2).getOutcome());
+            }
         }
         if ("Processing".equals(oItem.getState().getTYPE())) {
             Option<SubagentId> subAgentId = ((Order.Processing) jOrder.asScala().state()).subagentId();
