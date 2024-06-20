@@ -39,8 +39,8 @@ public class JOCSOSShell {
         return SOSShell.executeCommand(script, getCharset(charset), null, env, null);
     }
 
-    public static SOSCommandResult executeCommand(String script, SOSTimeout timeout, SOSEnv env) {
-        return SOSShell.executeCommand(script, getGlobalsJocCharset(), timeout, env, null);
+    public static SOSCommandResult executeCommand(String script, SOSTimeout timeout, SOSEnv env, Path workingDirectory) {
+        return SOSShell.executeCommand(script, getGlobalsJocCharset(), timeout, env, workingDirectory);
     }
 
     private static Charset getCharset(Charset charset) {
