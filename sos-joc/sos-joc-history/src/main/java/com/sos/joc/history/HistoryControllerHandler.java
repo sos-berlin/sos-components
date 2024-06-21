@@ -24,8 +24,6 @@ import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocHistoryConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.service.JocClusterServiceLogger;
-import com.sos.joc.event.EventBus;
-import com.sos.joc.event.bean.order.AddOrderEvent;
 import com.sos.joc.history.controller.exception.HistoryFatalException;
 import com.sos.joc.history.controller.exception.HistoryProcessingDatabaseConnectException;
 import com.sos.joc.history.controller.exception.HistoryProcessingException;
