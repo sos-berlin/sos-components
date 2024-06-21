@@ -2,11 +2,13 @@
 package com.sos.inventory.model.instruction;
 
 import java.util.List;
+import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.sos.inventory.model.common.Variables;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -27,7 +29,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "startPosition",
     "endPositions",
     "blockPosition",
-    "forceJobAdmission"
+    "forceJobAdmission",
+    "tags"
 })
 public class AddOrder
     extends Instruction
@@ -62,6 +65,9 @@ public class AddOrder
     private Object blockPosition;
     @JsonProperty("forceJobAdmission")
     private Boolean forceJobAdmission = false;
+    @JsonProperty("tags")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<String> tags = null;
 
     /**
      * No args constructor for use in serialization
@@ -72,15 +78,17 @@ public class AddOrder
 
     /**
      * 
-     * @param endPositions
      * @param blockPosition
-     * @param forceJobAdmission
      * @param workflowName
-     * @param arguments
+     * 
      * @param remainWhenTerminated
      * @param startPosition
+     * @param tags
+     * @param endPositions
+     * @param forceJobAdmission
+     * @param arguments
      */
-    public AddOrder(String workflowName, Variables arguments, Boolean remainWhenTerminated, Object startPosition, List<Object> endPositions, Object blockPosition, Boolean forceJobAdmission) {
+    public AddOrder(String workflowName, Variables arguments, Boolean remainWhenTerminated, Object startPosition, List<Object> endPositions, Object blockPosition, Boolean forceJobAdmission, Set<String> tags) {
         super();
         this.workflowName = workflowName;
         this.arguments = arguments;
@@ -89,6 +97,7 @@ public class AddOrder
         this.endPositions = endPositions;
         this.blockPosition = blockPosition;
         this.forceJobAdmission = forceJobAdmission;
+        this.tags = tags;
     }
 
     /**
@@ -199,14 +208,24 @@ public class AddOrder
         this.forceJobAdmission = forceJobAdmission;
     }
 
+    @JsonProperty("tags")
+    public Set<String> getTags() {
+        return tags;
+    }
+
+    @JsonProperty("tags")
+    public void setTags(Set<String> tags) {
+        this.tags = tags;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("workflowName", workflowName).append("arguments", arguments).append("remainWhenTerminated", remainWhenTerminated).append("startPosition", startPosition).append("endPositions", endPositions).append("blockPosition", blockPosition).append("forceJobAdmission", forceJobAdmission).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("workflowName", workflowName).append("arguments", arguments).append("remainWhenTerminated", remainWhenTerminated).append("startPosition", startPosition).append("endPositions", endPositions).append("blockPosition", blockPosition).append("forceJobAdmission", forceJobAdmission).append("tags", tags).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(endPositions).append(blockPosition).append(forceJobAdmission).append(workflowName).append(arguments).append(remainWhenTerminated).append(startPosition).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(endPositions).append(blockPosition).append(forceJobAdmission).append(workflowName).append(arguments).append(remainWhenTerminated).append(startPosition).append(tags).toHashCode();
     }
 
     @Override
@@ -218,7 +237,7 @@ public class AddOrder
             return false;
         }
         AddOrder rhs = ((AddOrder) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(endPositions, rhs.endPositions).append(blockPosition, rhs.blockPosition).append(forceJobAdmission, rhs.forceJobAdmission).append(workflowName, rhs.workflowName).append(arguments, rhs.arguments).append(remainWhenTerminated, rhs.remainWhenTerminated).append(startPosition, rhs.startPosition).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(endPositions, rhs.endPositions).append(blockPosition, rhs.blockPosition).append(forceJobAdmission, rhs.forceJobAdmission).append(workflowName, rhs.workflowName).append(arguments, rhs.arguments).append(remainWhenTerminated, rhs.remainWhenTerminated).append(startPosition, rhs.startPosition).append(tags, rhs.tags).isEquals();
     }
 
 }
