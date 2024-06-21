@@ -7,14 +7,14 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 import reactor.core.publisher.Sinks.One;
 
-public class EventFluxStopper {
+public class FluxStopper {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(EventFluxStopper.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FluxStopper.class);
 
     private final One<Boolean> sinks;
     private final Mono<Boolean> mono;
 
-    public EventFluxStopper() {
+    public FluxStopper() {
         // sinks = Sinks.many().multicast().directBestEffort();
         sinks = Sinks.one();
         mono = sinks.asMono();

@@ -7,6 +7,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalLong;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -17,7 +19,6 @@ import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSPath;
-import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
@@ -28,7 +29,8 @@ import com.sos.joc.history.controller.exception.HistoryFatalException;
 import com.sos.joc.history.controller.exception.HistoryProcessingDatabaseConnectException;
 import com.sos.joc.history.controller.exception.HistoryProcessingException;
 import com.sos.joc.history.controller.model.HistoryModel;
-import com.sos.joc.history.controller.proxy.EventFluxStopper;
+import com.sos.joc.history.controller.proxy.FluxEventHandler;
+import com.sos.joc.history.controller.proxy.FluxStopper;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.AgentInfo;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryAgentCouplingFailed;
@@ -113,7 +115,9 @@ import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.data.controller.JEventAndControllerState;
 import js7.proxy.javaapi.eventbus.JStandardEventBus;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.core.publisher.SignalType;
+import reactor.core.scheduler.Schedulers;
 
 public class HistoryControllerHandler {
 
@@ -127,7 +131,7 @@ public class HistoryControllerHandler {
     private final String serviceIdentifier;
 
     private JControllerApi api;
-    private EventFluxStopper stopper = null;
+    private FluxStopper stopper = null;
     private final Object lockObject = new Object();
     private JocHistoryConfiguration config;
     private HistoryModel model;
@@ -310,20 +314,18 @@ public class HistoryControllerHandler {
     }
 
     private synchronized AtomicLong process(AtomicLong eventId) throws Exception {
-
-        stopper = new EventFluxStopper();
-
+        stopper = new FluxStopper();
         try (JStandardEventBus<ProxyEvent> eventBus = new JStandardEventBus<>(ProxyEvent.class)) {
             Flux<JEventAndControllerState<Event>> flux = api.eventFlux(eventBus, OptionalLong.of(eventId.get()));
-            flux = flux.filter(e -> HistoryEventType.fromValue(e.stampedEvent().value().event().getClass().getSimpleName()) != null);
+            flux = flux.flatMap(e -> processAllEvents(e).thenReturn(e));
 
-            // flux = flux.doOnNext(this::fluxDoOnNext);
+            flux = flux.filter(e -> HistoryEventType.fromValue(e.stampedEvent().value().event().getClass().getSimpleName()) != null);
             flux = flux.doOnError(this::fluxDoOnError);
             flux = flux.doOnComplete(this::fluxDoOnComplete);
             flux = flux.doOnCancel(this::fluxDoOnCancel);
             flux = flux.doFinally(this::fluxDoFinally);
             // TODO test flux.publishOn
-            // flux = flux.publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool()));
+            flux = flux.publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool()));
 
             flux.takeUntilOther(stopper.stopped()).map(this::map2fat).filter(e -> e.getEventId() != null).bufferTimeout(config
                     .getBufferTimeoutMaxSize(), Duration.ofSeconds(config.getBufferTimeoutMaxTime())).toIterable().forEach(list -> {
@@ -759,11 +761,19 @@ public class HistoryControllerHandler {
         }
     }
 
-    @SuppressWarnings("unused")
-    private void fluxDoOnNext(JEventAndControllerState<Event> state) {
-        // releaseEvents(model.getStoredEventId());
-        JocClusterServiceLogger.setLogger(serviceIdentifier);
-        LOGGER.info(String.format("[%s][fluxDoOnNext]%s", controllerId, SOSString.toString(state)));
+    private Mono<Void> processAllEvents(JEventAndControllerState<Event> event) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        CompletableFuture.runAsync(() -> {
+            JocClusterServiceLogger.setLogger(serviceIdentifier);
+            try {
+                FluxEventHandler.processEvent(event, controllerId);
+                future.complete(null);
+            } catch (Throwable e) {
+                LOGGER.warn("[processAllEvents]" + e.toString(), e);
+                future.completeExceptionally(e);
+            }
+        });
+        return Mono.fromFuture(future);
     }
 
     private void fluxDoOnCancel() {

@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.OptionalLong;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -18,7 +20,8 @@ import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.cluster.configuration.JocHistoryConfiguration;
-import com.sos.joc.history.controller.proxy.EventFluxStopper;
+import com.sos.joc.history.controller.proxy.FluxEventHandler;
+import com.sos.joc.history.controller.proxy.FluxStopper;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.AgentInfo;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryAgentCouplingFailed;
@@ -100,7 +103,9 @@ import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.data.controller.JEventAndControllerState;
 import js7.proxy.javaapi.eventbus.JStandardEventBus;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.core.publisher.SignalType;
+import reactor.core.scheduler.Schedulers;
 
 public class HistoryControllerHandlerTest {
 
@@ -110,10 +115,10 @@ public class HistoryControllerHandlerTest {
     private static final String CONTROLLER_ID = "js7.x";
     private static final int MAX_EXECUTION_TIME = 30; // seconds
     private static final int SIMULATE_LONG_EXECUTION_INTERVAL = 0; // seconds
-    private static final Long START_EVENT_ID = 1718875156673000L;
+    private static final Long START_EVENT_ID = 0L;
 
     private JocHistoryConfiguration config = new JocHistoryConfiguration();
-    private EventFluxStopper stopper;
+    private FluxStopper stopper;
     private AtomicBoolean closed;
 
     @Ignore
@@ -122,7 +127,7 @@ public class HistoryControllerHandlerTest {
         JProxyTestClass proxy = new JProxyTestClass();
         JControllerApi api = null;
 
-        stopper = new EventFluxStopper();
+        stopper = new FluxStopper();
         closed = new AtomicBoolean();
         try {
             api = proxy.getControllerApi(ProxyUser.HISTORY, CONTROLLER_URI_PRIMARY);
@@ -150,20 +155,19 @@ public class HistoryControllerHandlerTest {
         try (JStandardEventBus<ProxyEvent> eventBus = new JStandardEventBus<>(ProxyEvent.class)) {
             LOGGER.info("[flux][START]");
             Flux<JEventAndControllerState<Event>> flux = api.eventFlux(eventBus, OptionalLong.of(eventId));
-
             // flux = flux.doOnNext(e -> LOGGER.info(e.stampedEvent().value().event().getClass().getSimpleName()));
-            // flux = flux.doOnNext(e -> LOGGER.info(SOSString.toString(e)));
+            // flux = flux.doOnNext(this::fluxDoOnNext);
+            flux = flux.flatMap(e -> processAllEvents(e).thenReturn(e));
 
             flux = flux.filter(e -> HistoryEventType.fromValue(e.stampedEvent().value().event().getClass().getSimpleName()) != null);
 
-            // flux = flux.doOnNext(this::fluxDoOnNext);
             flux = flux.doOnError(this::fluxDoOnError);
             flux = flux.doOnComplete(this::fluxDoOnComplete);
             flux = flux.doOnCancel(this::fluxDoOnCancel);
             flux = flux.doFinally(this::fluxDoFinally);
             flux = flux.onErrorStop();
             // TODO test flux.publishOn
-            // flux = flux.publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool()));
+            flux = flux.publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool()));
 
             flux.takeUntilOther(stopper.stopped()).map(this::map2fat).filter(e -> e.getEventId() != null).bufferTimeout(1000, Duration.ofSeconds(1))
                     .toIterable().forEach(list -> {
@@ -621,6 +625,20 @@ public class HistoryControllerHandlerTest {
             }
         };
         thread.start();
+    }
+
+    private Mono<Void> processAllEvents(JEventAndControllerState<Event> event) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        CompletableFuture.runAsync(() -> {
+            try {
+                FluxEventHandler.processEvent(event, CONTROLLER_ID);
+                future.complete(null);
+            } catch (Throwable e) {
+                LOGGER.warn("[processAllEvents]" + e.toString(), e);
+                future.completeExceptionally(e);
+            }
+        });
+        return Mono.fromFuture(future);
     }
 
     private void fluxDoOnCancel() {
