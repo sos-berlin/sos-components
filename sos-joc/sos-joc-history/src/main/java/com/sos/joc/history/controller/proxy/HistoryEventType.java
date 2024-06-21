@@ -9,7 +9,6 @@ import js7.data.agent.AgentRefStateEvent.AgentShutDown$;
 import js7.data.cluster.ClusterEvent.ClusterCoupled;
 import js7.data.controller.ControllerEvent.ControllerReady;
 import js7.data.controller.ControllerEvent.ControllerShutDown$;
-import js7.data.order.OrderEvent.OrderAdded;
 import js7.data.order.OrderEvent.OrderAttached;
 import js7.data.order.OrderEvent.OrderBroken;
 import js7.data.order.OrderEvent.OrderCancelled$;
@@ -63,8 +62,6 @@ public enum HistoryEventType {
     AgentCouplingFailed(AgentCouplingFailed.class.getSimpleName()),
 
     AgentShutDown(AgentShutDown$.class.getSimpleName()),
-
-    OrderAdded(OrderAdded.class.getSimpleName()),
 
     OrderStarted(OrderStarted$.class.getSimpleName()),
 

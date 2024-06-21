@@ -728,15 +728,7 @@ public class HistoryControllerHandler {
                 event = new FatEventOrderPromptAnswered(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
                         .getPosition());
                 break;
-                
-            case OrderAdded:
-                order = entry.getCheckedOrder();
-                // if order added by fileOrderSource or addOrder-instruction
-                if (order.getOrderId().matches("#\\d{4}-\\d{2}-\\d{2}#[DF].*")) {
-                    EventBus.getInstance().post(new AddOrderEvent(getControllerId(), order.getOrderId(), order.getJOrder().toJson()));
-                }
-                break;
-                
+
             default:
                 event = new FatEventWithProblem(entry, null, new Exception("unknown type=" + entry.getEventType()));
                 break;

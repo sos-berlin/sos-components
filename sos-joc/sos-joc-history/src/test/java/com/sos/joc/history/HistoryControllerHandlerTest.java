@@ -110,7 +110,7 @@ public class HistoryControllerHandlerTest {
     private static final String CONTROLLER_ID = "js7.x";
     private static final int MAX_EXECUTION_TIME = 30; // seconds
     private static final int SIMULATE_LONG_EXECUTION_INTERVAL = 0; // seconds
-    private static final Long START_EVENT_ID = 0L;
+    private static final Long START_EVENT_ID = 1718875156673000L;
 
     private JocHistoryConfiguration config = new JocHistoryConfiguration();
     private EventFluxStopper stopper;
@@ -564,9 +564,6 @@ public class HistoryControllerHandlerTest {
                 order = entry.getCheckedOrder();
                 event = new FatEventOrderPromptAnswered(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
                         .getPosition());
-                break;
-                
-            case OrderAdded:
                 break;
 
             default:
