@@ -38,6 +38,7 @@ public class Decrypt {
   private static String iv;
   private static String encryptedKey;
   private static String encryptedValue;
+  private static String encryptedInput;
   private static String encryptedFile;
   private static String outFile;
   private static String keyPwd;
@@ -80,13 +81,7 @@ public class Decrypt {
           } else if (args[i].startsWith(ENCRYPTED_KEY + "=")) {
             encryptedKey = split[1];
           } else if (args[i].startsWith(IN + "=")) {
-            encryptedValue = split[1];
-            if(encryptedValue.contains(" ")) {
-              String[] splittedValues = encryptedValue.split(" ");
-              encryptedKey = splittedValues[0];
-              iv = splittedValues[1];
-              encryptedValue = splittedValues[2];
-            }
+            encryptedInput = split[1];
           } else if (args[i].startsWith(IN_FILE + "=")) {
             encryptedFile = split[1];
           } else if (args[i].startsWith(OUT_FILE + "=")) {
@@ -105,6 +100,19 @@ public class Decrypt {
           }
         }
         String decryptedValue = null;
+        if(encryptedInput != null && encryptedInput.contains(" ")) {
+          if(outFile != null) {
+            String[] splittedValues = encryptedInput.split(" ");
+            encryptedKey = splittedValues[0];
+            iv = splittedValues[1];
+            encryptedFile = splittedValues[2];
+          } else {
+            String[] splittedValues = encryptedInput.split(" ");
+            encryptedKey = splittedValues[0];
+            iv = splittedValues[1];
+            encryptedValue = splittedValues[2];
+          }
+        }
         if(keyPath == null || encryptedKey == null || iv == null || (encryptedValue == null && encryptedFile == null)) {
           if(keyPath == null) {
             if(encryptedKey == null && iv == null) {
