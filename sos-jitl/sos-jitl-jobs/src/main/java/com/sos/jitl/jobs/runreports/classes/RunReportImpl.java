@@ -47,16 +47,24 @@ public class RunReportImpl {
             reportPaths.addAll(args.getReportPaths().getValue());
 
             List<Folder> folders = new ArrayList<Folder>();
-            for (String inFolder : args.getReportFolders().getValue()) {
+
+            if (args.getReportFolders().getValue().size() == 0 && args.getReportPaths().getValue().size() == 0) {
                 Folder folder = new Folder();
-                boolean recursive = false;
-                if (inFolder.endsWith("/*")) {
-                    recursive = true;
-                    inFolder = inFolder.substring(0, inFolder.length() - 2);
-                }
-                folder.setFolder(inFolder);
-                folder.setRecursive(recursive);
+                folder.setFolder("/");
+                folder.setRecursive(true);
                 folders.add(folder);
+            } else {
+                for (String inFolder : args.getReportFolders().getValue()) {
+                    Folder folder = new Folder();
+                    boolean recursive = false;
+                    if (inFolder.endsWith("/*")) {
+                        recursive = true;
+                        inFolder = inFolder.substring(0, inFolder.length() - 2);
+                    }
+                    folder.setFolder(inFolder);
+                    folder.setRecursive(recursive);
+                    folders.add(folder);
+                }
             }
 
             if (folders.size() > 0) {
