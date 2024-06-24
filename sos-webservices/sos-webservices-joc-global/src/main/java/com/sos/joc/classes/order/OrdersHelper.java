@@ -1333,15 +1333,17 @@ public class OrdersHelper {
 
     public static JFreshOrder mapToFreshOrder(AddOrder order, ZoneId zoneId, Optional<JPositionOrLabel> startPos, Set<JPositionOrLabel> endPoss,
             JBranchPath blockPosition, boolean forceJobAdmission) {
+        Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(order.getScheduledFor(), order.getTimeZone());
+        return mapToFreshOrder(order, scheduledFor, zoneId, startPos, endPoss, blockPosition, forceJobAdmission);
+    }
+
+    public static JFreshOrder mapToFreshOrder(AddOrder order, Optional<Instant> scheduledFor, ZoneId zoneId, Optional<JPositionOrLabel> startPos,
+            Set<JPositionOrLabel> endPoss, JBranchPath blockPosition, boolean forceJobAdmission) {
         if (zoneId == null) {
             zoneId = getDailyPlanTimeZone();
         }
         ZonedDateTime zonedNow = ZonedDateTime.of(LocalDateTime.now(zoneId), ZoneId.systemDefault());
         String orderId = String.format("#%s#T%s-%s", datetimeFormatter.format(zonedNow), getUniqueOrderId(zonedNow), order.getOrderName());
-        Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(order.getScheduledFor(), order.getTimeZone());
-        // if (!scheduledFor.isPresent()) {
-        // scheduledFor = Optional.of(Instant.now());
-        // }
         return mapToFreshOrder(OrderId.of(orderId), WorkflowPath.of(JocInventory.pathToName(order.getWorkflowPath())),
                 variablesToScalaValuedArguments(order.getArguments()), scheduledFor, startPos, endPoss, blockPosition, forceJobAdmission);
     }
@@ -1426,8 +1428,8 @@ public class OrdersHelper {
         return variables;
     }
     
-    public static CompletableFuture<Either<Exception, Void>> storeTags(String controllerId, Map<String, Set<String>> orderTags) {
-        return CompletableFuture.supplyAsync(() -> OrderTags.addTags(controllerId, orderTags));
+    public static CompletableFuture<Either<Exception, Void>> storeTags(String controllerId, Map<OrderV, Set<String>> orderTags) {
+        return CompletableFuture.supplyAsync(() -> OrderTags.addAdhocOrderTags(controllerId, orderTags));
     }
     
     public static CompletableFuture<Either<Exception, Void>> updateTags(String controllerId, Map<OrderId, JFreshOrder> freshOrders) {

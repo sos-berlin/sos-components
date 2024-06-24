@@ -29,6 +29,7 @@ import com.sos.joc.classes.common.FolderPath;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.common.SearchStringHelper;
+import com.sos.joc.db.deploy.items.AddOrderTags;
 import com.sos.joc.db.deploy.items.Deployed;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.db.deploy.items.NumOfDeployment;
@@ -696,6 +697,34 @@ public class DeployedConfigurationDBLayer {
                 }).filter(Objects::nonNull).flatMap(List::stream).collect(Collectors.toSet());
             }
             return Collections.emptySet();
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public Map<String, String> getAddOrderTags(String controllerId) throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            StringBuilder hql = new StringBuilder("select dc.name as name, ");
+            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.instructions", "$.addOrderTags")).append(" as addOrderTags from ");
+            hql.append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" dc left join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
+            hql.append("on dc.inventoryConfigurationId=sw.inventoryConfigurationId ");
+            hql.append("where dc.type=:type ");
+            hql.append("and dc.controllerId=:controllerId ");
+            hql.append("and sw.deployed=1 ");
+            hql.append("and ");
+            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.instructions", "$.addOrderTags")).append(" is not null");
+
+            Query<AddOrderTags> query = session.createQuery(hql.toString(), AddOrderTags.class);
+            query.setParameter("type", DeployType.WORKFLOW.intValue());
+            query.setParameter("controllerId", controllerId);
+            List<AddOrderTags> result = session.getResultList(query);
+            if (result != null) {
+                return result.stream().filter(aoTags -> aoTags.getAddOrderTags() != null).collect(Collectors.toMap(AddOrderTags::getName,
+                        AddOrderTags::getAddOrderTags));
+            }
+            return Collections.emptyMap();
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {

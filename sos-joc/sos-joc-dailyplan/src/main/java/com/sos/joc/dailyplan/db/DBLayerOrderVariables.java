@@ -96,9 +96,9 @@ public class DBLayerOrderVariables extends DBLayer {
         return update(controllerId, oldOrderId, newOrderId, false);
     }
     
-    public DBItemDailyPlanVariable copy(String controllerId, String oldOrderId, String newOrderId, boolean isCyclic) throws SOSHibernateException {
+    public DBItemDailyPlanVariable copy(String controllerId, String oldOrderId, String newOrderId, Date plannedStart, boolean isCyclic) throws SOSHibernateException {
         
-        OrderTags.copyTagsOfOrder(controllerId, oldOrderId, newOrderId, getSession());
+        OrderTags.copyTagsOfOrder(controllerId, oldOrderId, newOrderId, plannedStart, getSession());
         
         DBItemDailyPlanVariable vars = getOrderVariable(controllerId, oldOrderId, isCyclic);
         if (vars != null) {
@@ -115,7 +115,7 @@ public class DBLayerOrderVariables extends DBLayer {
         return null;
     }
 
-    public DBItemDailyPlanVariable copy(String controllerId, String oldOrderId, String newOrderId) throws SOSHibernateException {
-        return copy(controllerId, oldOrderId, newOrderId, false);
+    public DBItemDailyPlanVariable copy(String controllerId, String oldOrderId, String newOrderId, Date plannedStart) throws SOSHibernateException {
+        return copy(controllerId, oldOrderId, newOrderId, plannedStart, false);
     }
 }

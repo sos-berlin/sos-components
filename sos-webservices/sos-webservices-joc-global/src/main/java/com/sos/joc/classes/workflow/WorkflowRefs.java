@@ -2,6 +2,7 @@ package com.sos.joc.classes.workflow;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -28,6 +29,8 @@ public class WorkflowRefs {
     private static final Logger LOGGER = LoggerFactory.getLogger(WorkflowRefs.class);
     private volatile ConcurrentMap<String, List<DeployedContent>> fileOrderSources = new ConcurrentHashMap<>();
     private volatile ConcurrentMap<String, Set<String>> workflowNamesWithAddOrders = new ConcurrentHashMap<>();
+    // controllerId, workflowName, addOrderInsruction-Index, orderTags
+    private volatile ConcurrentMap<String, Map<String, String>> addOrderTags = new ConcurrentHashMap<>();
 
     private WorkflowRefs() {
         EventBus.getInstance().register(this);
@@ -48,6 +51,7 @@ public class WorkflowRefs {
                 session = Globals.createSosHibernateStatelessConnection(WorkflowRefs.class.getSimpleName());
                 DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
                 updateWorkflowNamesWithAddOrders(evt.getControllerId(), dbLayer);
+                updateAddOrderTags(evt.getControllerId(), dbLayer);
             } catch (Exception e) {
                 LOGGER.error("", e);
             } finally {
@@ -76,6 +80,15 @@ public class WorkflowRefs {
         workflowNamesWithAddOrders.put(controllerId, dbLayer.getAddOrderWorkflows(controllerId));
     }
     
+    // only for test
+    public static void _updateAddOrderTags(String controllerId, DeployedConfigurationDBLayer dbLayer) {
+        WorkflowRefs.getInstance().updateAddOrderTags(controllerId, dbLayer);
+    }
+    
+    private void updateAddOrderTags(String controllerId, DeployedConfigurationDBLayer dbLayer) {
+        addOrderTags.put(controllerId, dbLayer.getAddOrderTags(controllerId));
+    }
+    
     private void updateFileOrderSources(String controllerId, DeployedConfigurationDBLayer dbLayer) {
         DeployedConfigurationFilter filter = new DeployedConfigurationFilter();
         filter.setControllerId(controllerId);
@@ -95,6 +108,7 @@ public class WorkflowRefs {
             DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
             Proxies.getControllerDbInstances().keySet().forEach(controllerId -> {
                 updateWorkflowNamesWithAddOrders(controllerId, dbLayer);
+                updateAddOrderTags(controllerId, dbLayer);
                 updateFileOrderSources(controllerId, dbLayer);
             });
         } catch (Exception e) {
@@ -110,6 +124,14 @@ public class WorkflowRefs {
     
     public static Set<String> getWorkflowNamesWithAddOrders(String controllerId) {
         return WorkflowRefs.getInstance().workflowNamesWithAddOrders.getOrDefault(controllerId, Collections.emptySet());
+    }
+    
+    public static Map<String, String> getAddOrderTags(String controllerId) {
+        return WorkflowRefs.getInstance().addOrderTags.getOrDefault(controllerId, Collections.emptyMap());
+    }
+
+    public static String getAddOrderTags(String controllerId, String workflowName) {
+        return getAddOrderTags(controllerId).get(workflowName);
     }
 
 }

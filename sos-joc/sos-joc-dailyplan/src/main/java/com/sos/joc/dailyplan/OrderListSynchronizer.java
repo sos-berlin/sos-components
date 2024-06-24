@@ -246,7 +246,7 @@ public class OrderListSynchronizer {
             session.setAutoCommit(false);
             Globals.beginTransaction(session);
             ZoneId zoneId = ZoneId.of(settings.getTimeZone());
-            Map<String, Set<String>> orderTags = new HashMap<>();
+            Map<DBItemDailyPlanOrder, Set<String>> orderTags = new HashMap<>();
 
             Map<MainCyclicOrderKey, List<PlannedOrder>> cyclics = new TreeMap<MainCyclicOrderKey, List<PlannedOrder>>();
             for (PlannedOrder plannedOrder : plannedOrders.values()) {
@@ -258,7 +258,7 @@ public class OrderListSynchronizer {
                         item = dbLayer.store(plannedOrder, OrdersHelper.getUniqueOrderId(zoneId), 0, 0);
                         
                         if (plannedOrder.hasTags()) {
-                            orderTags.put(OrdersHelper.getOrderIdMainPart(item.getOrderId()), plannedOrder.getTags());
+                            orderTags.put(item, plannedOrder.getTags());
                         }
 
                         plannedOrder.setStoredInDb(true);
@@ -295,8 +295,8 @@ public class OrderListSynchronizer {
                         plannedOrder.setAverageDuration(durations.get(plannedOrder.getWorkflowPath()));
                         item = dbLayer.store(plannedOrder, id, nr, size);
 
-                        if (plannedOrder.hasTags()) {
-                            orderTags.put(OrdersHelper.getOrderIdMainPart(item.getOrderId()), plannedOrder.getTags());
+                        if (nr == size && plannedOrder.hasTags()) { // only last cyclic order is used for tags
+                            orderTags.put(item, plannedOrder.getTags());
                         }
                         
                         nr = nr + 1;
@@ -313,7 +313,7 @@ public class OrderListSynchronizer {
                 }
             }
             
-            OrderTags.addTags(controllerId, orderTags);
+            OrderTags.addDailyPlanOrderTags(controllerId, orderTags);
 
             if (!counter.hasStored() && submission != null && submission.getId() != null) {
                 Long count = dbLayer.getCountOrdersBySubmissionId(controllerId, submission.getId());

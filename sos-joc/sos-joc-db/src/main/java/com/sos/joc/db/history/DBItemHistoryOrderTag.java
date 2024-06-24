@@ -58,14 +58,6 @@ public class DBItemHistoryOrderTag extends DBItem {
         setCreated(created);
         setOrdering(ordering);
     }
-    
-    public DBItemHistoryOrderTag(String controllerId, String orderId, String tagName, Integer ordering) {
-        setId(null);
-        setControllerId(controllerId);
-        setOrderId(orderId);
-        setTagName(tagName);
-        setOrdering(ordering);
-    }
 
     public Long getId() {
         return id;

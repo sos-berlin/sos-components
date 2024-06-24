@@ -24,6 +24,7 @@ import com.sos.inventory.model.workflow.Requirements;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.inventory.JocInventory;
@@ -46,6 +47,7 @@ import com.sos.joc.model.order.AddOrder;
 import com.sos.joc.model.order.AddOrders;
 import com.sos.joc.model.order.BlockPosition;
 import com.sos.joc.model.order.OrderIds;
+import com.sos.joc.model.order.OrderV;
 import com.sos.joc.orders.resource.IOrdersResourceAdd;
 import com.sos.schema.JsonValidator;
 
@@ -141,7 +143,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             final String defaultOrderName = SOSCheckJavaVariableName.makeStringRuleConform(getAccount());
             final boolean allowEmptyArguments = ClusterSettings.getAllowEmptyArguments(Globals.getConfigurationGlobalsJoc());
             List<AuditLogDetail> auditLogDetails = new ArrayList<>();
-            Map<String, Set<String>> orderTags = new HashMap<>();
+            Map<OrderV, Set<String>> orderTags = new HashMap<>();
 
             Function<AddOrder, Either<Err419, JFreshOrder>> mapper = order -> {
                 Either<Err419, JFreshOrder> either = null;
@@ -187,10 +189,16 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     }
                     
                     // TODO check if endPos not before startPos
-                    JFreshOrder o = OrdersHelper.mapToFreshOrder(order, zoneId, startPos, endPoss, jBrachPath, forceJobAdmission);
+                    Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(order.getScheduledFor(), order.getTimeZone());
+                    JFreshOrder o = OrdersHelper.mapToFreshOrder(order, scheduledFor, zoneId, startPos, endPoss, jBrachPath, forceJobAdmission);
                     auditLogDetails.add(new AuditLogDetail(WorkflowPaths.getPath(workflowName), o.id().string(), controllerId));
+                    
                     if (order.getTags() != null && !order.getTags().isEmpty()) {
-                        orderTags.put(OrdersHelper.getOrderIdMainPart(o.id().string()), order.getTags());
+                        order.getTags().forEach(tag -> SOSCheckJavaVariableName.test("tags", tag));
+                        OrderV orderV = new OrderV();
+                        orderV.setOrderId(o.id().string());
+                        orderV.setScheduledFor(scheduledFor.orElse(Instant.now()).toEpochMilli());
+                        orderTags.put(orderV, order.getTags());
                     }
                     either = Either.right(o);
                 } catch (Exception ex) {

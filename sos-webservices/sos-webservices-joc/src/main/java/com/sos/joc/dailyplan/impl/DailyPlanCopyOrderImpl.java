@@ -446,10 +446,10 @@ public class DailyPlanCopyOrderImpl extends JOCOrderResourceImpl implements IDai
                     // update variables
                     if (item.isCyclic()) {
                         if (item.isLastOfCyclic()) {
-                            ovDbLayer.copy(item.getControllerId(), oldOrderId, newOrderId, true);
+                            ovDbLayer.copy(item.getControllerId(), oldOrderId, newOrderId, item.getPlannedStart(), true);
                         }
                     } else {
-                        ovDbLayer.copy(item.getControllerId(), oldOrderId, newOrderId);
+                        ovDbLayer.copy(item.getControllerId(), oldOrderId, newOrderId, item.getPlannedStart());
                     }
                     
                     DBItemDailyPlanOrder copiedItem = new DBItemDailyPlanOrder();

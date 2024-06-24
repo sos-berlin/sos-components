@@ -343,6 +343,7 @@ public class WorkflowConverter {
         private Set<String> expectNotices;
         private Set<String> consumeNotices;
         private Set<String> addOrders;
+        private Map<String, Set<String>> addOrderTags;
         private Map<String, Integer> locks;
 
         private List<String> jobArgNames;
@@ -360,6 +361,7 @@ public class WorkflowConverter {
             expectNotices = new HashSet<String>();
             consumeNotices = new HashSet<String>();
             addOrders = new HashSet<String>();
+            addOrderTags = new HashMap<>();
 
             jobArgNames = new ArrayList<String>();
             jobArgValues = new ArrayList<String>();
@@ -390,7 +392,10 @@ public class WorkflowConverter {
             jsonAddStringValues(builder, "noticeBoardNames", getNoticeBoardNames());
             jsonAddStringValues(builder, "addOrders", addOrders);
             if (locks.size() > 0) {
-                builder.add("locks", getJsonObject(locks));
+                builder.add("locks", getJsonObjectOfIntegers(locks));
+            }
+            if (addOrderTags.size() > 0) {
+                builder.add("addOrderTags", getJsonObjectOfStringArray(addOrderTags));
             }
             mainInfo = builder.build();
         }
@@ -444,6 +449,10 @@ public class WorkflowConverter {
 
         public Set<String> getAddOrders() {
             return addOrders;
+        }
+
+        public Map<String, Set<String>> getAddOrderTags() {
+            return addOrderTags;
         }
 
         public List<String> getJobArgNames() {
@@ -559,9 +568,16 @@ public class WorkflowConverter {
             }
             List<WorkflowInstruction<AddOrder>> aOrders = searcher.getAddOrderInstructions();
             if (aOrders != null) {
+                int i = 0;
                 for (WorkflowInstruction<AddOrder> aOrder : aOrders) {
-                    if (!SOSString.isEmpty(aOrder.getInstruction().getWorkflowName())) {
-                        addOrders.add(aOrder.getInstruction().getWorkflowName());
+                    AddOrder inst = aOrder.getInstruction();
+                    if (!SOSString.isEmpty(inst.getWorkflowName())) {
+                        addOrders.add(inst.getWorkflowName());
+                        if (inst.getTags() != null && !inst.getTags().isEmpty()) {
+                            String index = i < 10 ? "0" + i : "" + i;
+                            addOrderTags.put(index, inst.getTags());
+                        }
+                        i++;
                     }
                 }
             }
@@ -593,11 +609,11 @@ public class WorkflowConverter {
 
     private static JsonArrayBuilder getJsonArray(Collection<String> list) {
         JsonArrayBuilder b = Json.createArrayBuilder();
-        for (String n : list) {
+        list.forEach(n -> {
             if (n != null) {
                 b.add(n);
             }
-        }
+        });
         return b;
     }
 
@@ -613,9 +629,15 @@ public class WorkflowConverter {
         return b;
     }
 
-    private static JsonObjectBuilder getJsonObject(Map<String, Integer> map) {
+    private static JsonObjectBuilder getJsonObjectOfIntegers(Map<String, Integer> map) {
         JsonObjectBuilder b = Json.createObjectBuilder();
         map.forEach((k, v) -> b.add(k, v));
+        return b;
+    }
+    
+    private static JsonObjectBuilder getJsonObjectOfStringArray(Map<String, Set<String>> map) {
+        JsonObjectBuilder b = Json.createObjectBuilder();
+        map.forEach((k, v) -> b.add(k, getJsonArray(v)));
         return b;
     }
 }

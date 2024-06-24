@@ -229,6 +229,9 @@ public class Validator {
                             throw new JocConfigurationException("$.pattern: " + e.getMessage());
                         }
                     }
+                    if (fileOrderSource.getTags() != null) {
+                        fileOrderSource.getTags().forEach(tag -> testJavaNameRules("$.tags", "tags", tag));
+                    }
                 } else if (ConfigurationType.JOBTEMPLATE.equals(type)) {
                     JobTemplate jobTemplate = (JobTemplate) config;
                     validateJobTemplateJob(jobTemplate, dbLayer.getScriptNames());
@@ -328,6 +331,9 @@ public class Validator {
                     } catch (PatternSyntaxException e) {
                         throw new JocConfigurationException("$.pattern: " + e.getMessage());
                     }
+                }
+                if (fileOrderSource.getTags() != null) {
+                    fileOrderSource.getTags().forEach(tag -> testJavaNameRules("$.tags", "tags", tag));
                 }
             } else if (ConfigurationType.JOBTEMPLATE.equals(type)) {
                 JobTemplate jobTemplate = (JobTemplate) config;
@@ -910,6 +916,9 @@ public class Validator {
                             checkAddOrderPositions(op, availableBlockPositions, ao.getWorkflowName(), labelMap, "$." + instPosition);
                         }
                     }
+                    if (ao.getTags() != null) {
+                        ao.getTags().forEach(tag -> testJavaNameRules("$." + instPosition, "tags", tag));
+                    }
                     break;
                 case CONSUME_NOTICES:
                     ConsumeNotices cns = inst.cast();
@@ -1185,6 +1194,9 @@ public class Validator {
                             Map<String, List<Object>> labelMap = WorkflowsHelper.getLabelToPositionsMap(workflowOfAddOrder, true);
                             checkAddOrderPositions(op, availableBlockPositions, ao.getWorkflowName(), labelMap, "$." + instPosition);
                         }
+                    }
+                    if (ao.getTags() != null) {
+                        ao.getTags().forEach(tag -> testJavaNameRules("$." + instPosition, "tags", tag));
                     }
                     break;
                 case CONSUME_NOTICES:
@@ -1525,6 +1537,8 @@ public class Validator {
                 variableSets.stream().map(OrderParameterisation::getPositions).filter(Objects::nonNull).filter(hasPositionSetting).forEach(
                         p -> checkAddOrderPositions(p, availableBlockPositions, workflowName, labelMap, position + ".positions."));
             }
+            variableSets.stream().map(OrderParameterisation::getTags).filter(Objects::nonNull).flatMap(Set::stream).forEach(tag -> testJavaNameRules(
+                    position + ": ", "tags", tag));
         } else {
             try {
                 OrdersHelper.checkArguments(new Variables(), orderPreparation, allowEmptyArguments);

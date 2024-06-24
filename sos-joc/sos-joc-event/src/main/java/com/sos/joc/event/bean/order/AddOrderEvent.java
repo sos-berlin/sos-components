@@ -1,9 +1,8 @@
 package com.sos.joc.event.bean.order;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.sos.joc.event.bean.JOCEvent;
 
-public class AddOrderEvent extends JOCEvent {
+public class AddOrderEvent extends OrderEvent {
     
     /**
      * No args constructor for use in serialization
@@ -12,24 +11,13 @@ public class AddOrderEvent extends JOCEvent {
     public AddOrderEvent() {
     }
 
-    public AddOrderEvent(String controllerId, String orderId, String orderJson) {
-        super("AddOrderEvent", controllerId, null);
-        putVariable("orderId", orderId);
-        putVariable("orderJson", orderJson);
-    }
-    
-    public AddOrderEvent(String controllerId, String orderId) {
-        super("AddOrderEvent", controllerId, null);
-        putVariable("orderId", orderId);
+    public AddOrderEvent(String controllerId, String orderId, String workflowName) {
+        super("AddOrderEvent", controllerId, orderId);
+        putVariable("workflowName", workflowName);
     }
     
     @JsonIgnore
-    public String getOrderId() {
-        return (String) getVariables().get("orderId");
-    }
-    
-    @JsonIgnore
-    public String getOrderJson() {
-        return (String) getVariables().get("orderJson");
+    public String getWorkflowName() {
+        return (String) getVariables().get("workflowName");
     }
 }
