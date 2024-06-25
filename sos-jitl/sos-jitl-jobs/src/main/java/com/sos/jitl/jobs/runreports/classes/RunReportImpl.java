@@ -44,26 +44,31 @@ public class RunReportImpl {
                     logger.debug("Add report from reportPaths: " + report);
                 }
             }
-            reportPaths.addAll(args.getReportPaths().getValue());
+            if (args.getReportPaths().getValue() != null) {
+                reportPaths.addAll(args.getReportPaths().getValue());
+            }
 
             List<Folder> folders = new ArrayList<Folder>();
 
-            if (args.getReportFolders().getValue().size() == 0 && args.getReportPaths().getValue().size() == 0) {
+            if ((args.getReportFolders().getValue() == null || args.getReportFolders().getValue().size() == 0) && (args.getReportPaths()
+                    .getValue() == null || args.getReportPaths().getValue().size() == 0)) {
                 Folder folder = new Folder();
                 folder.setFolder("/");
                 folder.setRecursive(true);
                 folders.add(folder);
             } else {
-                for (String inFolder : args.getReportFolders().getValue()) {
-                    Folder folder = new Folder();
-                    boolean recursive = false;
-                    if (inFolder.endsWith("/*")) {
-                        recursive = true;
-                        inFolder = inFolder.substring(0, inFolder.length() - 2);
+                if (args.getReportFolders().getValue() != null) {
+                    for (String inFolder : args.getReportFolders().getValue()) {
+                        Folder folder = new Folder();
+                        boolean recursive = false;
+                        if (inFolder.endsWith("/*")) {
+                            recursive = true;
+                            inFolder = inFolder.substring(0, inFolder.length() - 2);
+                        }
+                        folder.setFolder(inFolder);
+                        folder.setRecursive(recursive);
+                        folders.add(folder);
                     }
-                    folder.setFolder(inFolder);
-                    folder.setRecursive(recursive);
-                    folders.add(folder);
                 }
             }
 
