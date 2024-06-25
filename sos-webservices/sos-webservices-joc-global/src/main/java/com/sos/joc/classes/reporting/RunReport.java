@@ -25,7 +25,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.inventory.model.report.Frequency;
 import com.sos.inventory.model.report.ReportPeriod;
@@ -142,9 +141,10 @@ public class RunReport extends AReporting {
 
         DBItemReport reportDBItem = new DBItemReport();
         reportDBItem.setDateFrom(runDbItem.getDateFrom());
-        reportDBItem.setDateTo(runDbItem.getDateTo());
 
         try {
+            insertRun(runDbItem);
+
             String commonScript = getCommonScript(in, getCommandLineOptions());
             // TODO SOSTimeout timeout = new SOSTimeout(10, TimeUnit.Hours);
             for (Frequency f : in.getFrequencies()) {
@@ -160,8 +160,8 @@ public class RunReport extends AReporting {
             }
 
             runDbItem.setReportCount(dbItems.size());
-            insertRun(in,runDbItem);
             insert(in, runDbItem, dbItems);
+            updateRun(runDbItem);
             EventBus.getInstance().post(new ReportsUpdated());
             return Either.right(null);
         } catch (Exception e) {
@@ -300,6 +300,7 @@ public class RunReport extends AReporting {
         dbItem.setDateTo(getDate(lDateTo));
         dbItem.setState(state.intValue());
         dbItem.setControllerId(in.getControllerId());
+        dbItem.setReportCount(0);
         dbItem.setModified(now);
         dbItem.setCreated(now);
         return dbItem;
@@ -353,20 +354,27 @@ public class RunReport extends AReporting {
         return null;
     }
 
-    private static void insertRun(final Report in,final DBItemReportRun runDbItem) throws Exception {
+    private static void insertRun(final DBItemReportRun runDbItem) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection("StoreReportRun");
-            runDbItem.setSort(in.getSort().intValue());
-            ReportPeriod period = in.getPeriod();
-            if (period == null) {
-                period = new ReportPeriod();
-            }
-            runDbItem.setPeriodLength(period.getLength());
-            runDbItem.setPeriodStep(period.getStep());
-            runDbItem.setState(ReportRunStateText.SUCCESSFUL.intValue());
+
             runDbItem.setModified(Date.from(Instant.now()));
             session.save(runDbItem);
+            EventBus.getInstance().post(new ReportRunsUpdated());
+        } finally {
+            Globals.disconnect(session);
+        }
+    }
+    
+    private static void updateRun(final DBItemReportRun runDbItem) throws Exception {
+        SOSHibernateSession session = null;
+        try {
+            session = Globals.createSosHibernateStatelessConnection("StoreReportRun");
+
+            runDbItem.setState(ReportRunStateText.SUCCESSFUL.intValue());
+            runDbItem.setModified(Date.from(Instant.now()));
+            session.update(runDbItem);
             EventBus.getInstance().post(new ReportRunsUpdated());
         } finally {
             Globals.disconnect(session);
@@ -394,8 +402,6 @@ public class RunReport extends AReporting {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection("ReportExists");
-            session.setAutoCommit(false);
-            Globals.beginTransaction(session);
 
             ReportingDBLayer dbLayer = new ReportingDBLayer(session);
 
@@ -405,9 +411,6 @@ public class RunReport extends AReporting {
             DBItemReport oldItem = dbLayer.getReport(constraintHash);
             return (oldItem != null);
 
-        } catch (Exception e) {
-            Globals.rollback(session);
-            throw e;
         } finally {
             Globals.disconnect(session);
         }
