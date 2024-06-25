@@ -266,4 +266,22 @@ public class EncryptionTest {
 
     LOGGER.trace("************************  Test encryption with EC key finished  *********************************");
   }
+
+  @Ignore
+  @Test
+  public void runEncryptMainClass() {
+    String[] encryptArgs = new String[] { "--cert=C:/sp/testing/JITL-740/myX509.crt", "--infile=C:/sp/testing/JITL-740/unencrypted.txt",
+        "--outfile=C:/sp/testing/JITL-740/encrypted.txt"};
+    Encrypt.main(encryptArgs);
+  }
+
+  @Ignore
+  @Test
+  public void runDecryptMainClass() {
+    String[] decryptArgs = new String[] { "--key=C:/sp/testing/JITL-740/myECprivate.key",
+        "--in=BHAh71N+7gSFVqZmvA2ZbjBQzfoqh8rk1b2M4GSJeIdgBCLjorom8gBsS2JX+V+kGfIJcXkjBAgA0+O/axzraxtiera6/EuGbWVc1K4Vj2hH+nEV7QaGJLhHlQRKkEvt+poDwE0= XpR54jlJfN1W2Es7nUSzuA== C:\\sp\\testing\\JITL-740\\encrypted.txt",
+        "--infile=C:/sp/testing/JITL-740/encrypted.txt", "--outfile=C:/sp/testing/JITL-740/decrypted.txt"};
+    Decrypt.main(decryptArgs);
+  }
+
 }
