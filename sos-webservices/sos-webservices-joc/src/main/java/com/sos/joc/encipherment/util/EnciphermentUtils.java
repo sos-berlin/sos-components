@@ -66,11 +66,11 @@ public class EnciphermentUtils {
             existingJobResource.setArguments(args);
             dbExistingJobResource.setContent(Globals.objectMapper.writeValueAsString(existingJobResource));
             dbExistingJobResource.setFolder(jobResourceFolder);
-            dbExistingJobResource.setPath(dbExistingJobResource.getFolder().concat("/").concat(certAlias));
+            path = Paths.get(dbExistingJobResource.getFolder(), certAlias);
+            dbExistingJobResource.setPath(path.toString().replace('\\', '/'));
             dbExistingJobResource.setAuditLogId(auditLogId);
             dbExistingJobResource.setModified(Date.from(Instant.now()));
             hibernateSession.update(dbExistingJobResource);
-            path = Paths.get(dbExistingJobResource.getPath());
             jr = dbExistingJobResource;
         } else {
             DBItemInventoryConfiguration newDBJobResource = new DBItemInventoryConfiguration();
@@ -82,8 +82,13 @@ public class EnciphermentUtils {
             newJobResource.setVersion(Globals.getStrippedInventoryVersion());
             newDBJobResource.setName(certAlias);
             newDBJobResource.setFolder(jobResourceFolder);
-            newDBJobResource.setPath(jobResourceFolder.concat("/").concat(certAlias));
-            path = Paths.get(newDBJobResource.getPath());
+            path = Paths.get(jobResourceFolder, certAlias);
+            newDBJobResource.setPath(path.toString().replace('\\', '/'));
+            if("/".equals(jobResourceFolder)) {
+                newDBJobResource.setPath(jobResourceFolder.concat(certAlias));
+            } else {
+                newDBJobResource.setPath(jobResourceFolder.concat("/").concat(certAlias));
+            }
             Date now = Date.from(Instant.now());
             newDBJobResource.setType(ConfigurationType.JOBRESOURCE);
             newDBJobResource.setContent(Globals.objectMapper.writeValueAsString(newJobResource));
