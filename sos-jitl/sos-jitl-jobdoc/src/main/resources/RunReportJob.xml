@@ -21,6 +21,7 @@
                     <p>
                        A list of report paths. The items are seperated by semicolon. All reports that are in the list will be generated. Entries for reports that do not exist are ignored.
                        When a report is listed twice, it will generated once
+                       When report_paths is empty and remport_folders is empty all reports will be generated.
                     </p>
  
                 </note>
@@ -33,6 +34,7 @@
                        A list of folders that contain folder names. The items are seperated by semicolon. All reports found in the given folders will be generated.
                        If a report is listed more than once, it is generated once. E.g .when a report is found in the list of report_paths and in a folder.
                        A folder is processed recursively if the name ends with /*.
+                       When report_paths is empty and remport_folders is empty all reports will be generated.
                     </p>
                 </note>
             </param>

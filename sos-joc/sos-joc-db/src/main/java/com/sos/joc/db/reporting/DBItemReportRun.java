@@ -63,6 +63,9 @@ public class DBItemReportRun extends DBItem {
     @Column(name = "[HITS]", nullable = false)
     private Integer hits;
 
+    @Column(name = "[REPORT_COUNT]", nullable = false)
+    private Integer reportCount;
+
     @Column(name = "[MONTH_FROM]", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date dateFrom;
@@ -134,7 +137,7 @@ public class DBItemReportRun extends DBItem {
     public Integer getTemplateId() {
         return templateId;
     }
-    
+
     @Transient
     public TemplateId getTemplateIdAsEnum() {
         try {
@@ -232,7 +235,7 @@ public class DBItemReportRun extends DBItem {
     public Integer getSort() {
         return sort;
     }
-    
+
     @Transient
     public ReportOrder getSortAsEnum() {
         try {
@@ -260,6 +263,14 @@ public class DBItemReportRun extends DBItem {
 
     public void setPeriodStep(Integer periodStep) {
         this.periodStep = periodStep;
+    }
+
+    public Integer getReportCount() {
+        return reportCount;
+    }
+
+    public void setReportCount(Integer reportCount) {
+        this.reportCount = reportCount;
     }
 
     @Transient

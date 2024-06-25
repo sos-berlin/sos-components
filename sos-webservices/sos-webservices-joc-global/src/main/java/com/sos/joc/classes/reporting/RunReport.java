@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.inventory.model.report.Frequency;
 import com.sos.inventory.model.report.ReportPeriod;
@@ -55,7 +56,7 @@ public class RunReport extends AReporting {
 
         in.setMonthFrom(relativeDateToSpecificDateFrom(in.getMonthFrom()));
         in.setMonthTo(relativeDateToSpecificDateTo(in.getMonthTo()));
-        
+
         if (in.getMonthFrom() != null) { // automatically load report data before run report
 
             return LoadData.writeCSVFiles(in.getMonthFrom(), in.getMonthTo()).thenApply(e -> e.isLeft() ? e : _run(in));
@@ -137,19 +138,29 @@ public class RunReport extends AReporting {
         Set<Path> tempDirs = new HashSet<>();
         List<DBItemReport> dbItems = new ArrayList<>();
         DBItemReportRun runDbItem = null;
+        runDbItem = getRunDBItem(in);
+
+        DBItemReport reportDBItem = new DBItemReport();
+        reportDBItem.setDateFrom(runDbItem.getDateFrom());
+        reportDBItem.setDateTo(runDbItem.getDateTo());
 
         try {
-            runDbItem = getRunDBItem(in);
-            insertRun(runDbItem);
             String commonScript = getCommonScript(in, getCommandLineOptions());
             // TODO SOSTimeout timeout = new SOSTimeout(10, TimeUnit.Hours);
             for (Frequency f : in.getFrequencies()) {
-                Path tempDir = runPerFrequency(f, commonScript);
-                tempDirs.add(tempDir);
-                dbItems.addAll(Files.list(tempDir).filter(file -> file.getFileName().toString().startsWith(reportFilePrefix)).map(
-                        file -> getHistoryDBItem(file, f)).collect(Collectors.toList()));
+
+                reportDBItem.setFrequency(f.intValue());
+                boolean reportExists = reportExists(reportDBItem, in);
+                if (!reportExists) {
+                    Path tempDir = runPerFrequency(f, commonScript);
+                    tempDirs.add(tempDir);
+                    dbItems.addAll(Files.list(tempDir).filter(file -> file.getFileName().toString().startsWith(reportFilePrefix)).map(
+                            file -> getHistoryDBItem(file, f)).collect(Collectors.toList()));
+                }
             }
 
+            runDbItem.setReportCount(dbItems.size());
+            insertRun(in,runDbItem);
             insert(in, runDbItem, dbItems);
             EventBus.getInstance().post(new ReportsUpdated());
             return Either.right(null);
@@ -170,9 +181,8 @@ public class RunReport extends AReporting {
 
     private static String getCommonScript(final Report in, String commandLineOptions) {
         StringBuilder s = new StringBuilder().append("\"").append(Paths.get(System.getProperty("java.home"), "bin", "java").toString()).append("\" ")
-                .append(commandLineOptions)
-                .append(" -cp \"../resources/joc").append(File.pathSeparator).append("../webapps/joc/WEB-INF/lib/*\" ").append(className).append(
-                        " -i data").append(" -r ").append(in.getTemplateName().getJavaClass());
+                .append(commandLineOptions).append(" -cp \"../resources/joc").append(File.pathSeparator).append("../webapps/joc/WEB-INF/lib/*\" ")
+                .append(className).append(" -i data").append(" -r ").append(in.getTemplateName().getJavaClass());
         if (in.getMonthFrom() != null) {
             s.append(" -s ").append(in.getMonthFrom());
         }
@@ -261,13 +271,13 @@ public class RunReport extends AReporting {
     }
 
     private static DBItemReportRun getRunDBItem(final Report in, final ReportRunStateText state, final Date now) {
-        
+
         LocalDateTime lDateFrom = getLocalDateFrom(in.getMonthFrom());
         LocalDateTime lDateTo = getLocalDateToOrLastMonthIfNull(in.getMonthTo());
         if (in.getMonthTo() != null && lDateFrom.isAfter(lDateTo)) {
             throw new JocBadRequestException("'monthFrom' has to be older than 'monthTo' in report configuration '" + in.getPath() + "'");
         }
-        
+
         DBItemReportRun dbItem = new DBItemReportRun();
         dbItem.setId(null);
         dbItem.setPath(in.getPath());
@@ -343,10 +353,19 @@ public class RunReport extends AReporting {
         return null;
     }
 
-    private static void insertRun(final DBItemReportRun runDbItem) throws Exception {
+    private static void insertRun(final Report in,final DBItemReportRun runDbItem) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection("StoreReportRun");
+            runDbItem.setSort(in.getSort().intValue());
+            ReportPeriod period = in.getPeriod();
+            if (period == null) {
+                period = new ReportPeriod();
+            }
+            runDbItem.setPeriodLength(period.getLength());
+            runDbItem.setPeriodStep(period.getStep());
+            runDbItem.setState(ReportRunStateText.SUCCESSFUL.intValue());
+            runDbItem.setModified(Date.from(Instant.now()));
             session.save(runDbItem);
             EventBus.getInstance().post(new ReportRunsUpdated());
         } finally {
@@ -368,6 +387,29 @@ public class RunReport extends AReporting {
             } finally {
                 Globals.disconnect(session);
             }
+        }
+    }
+
+    private static boolean reportExists(DBItemReport dbItemReport, final Report in) throws Exception {
+        SOSHibernateSession session = null;
+        try {
+            session = Globals.createSosHibernateStatelessConnection("ReportExists");
+            session.setAutoCommit(false);
+            Globals.beginTransaction(session);
+
+            ReportingDBLayer dbLayer = new ReportingDBLayer(session);
+
+            String constraintHash = dbItemReport.hashConstraint(in.getTemplateName().intValue(), in.getHits(), in.getControllerId(), in.getSort()
+                    .intValue(), in.getPeriod().getLength(), in.getPeriod().getStep());
+
+            DBItemReport oldItem = dbLayer.getReport(constraintHash);
+            return (oldItem != null);
+
+        } catch (Exception e) {
+            Globals.rollback(session);
+            throw e;
+        } finally {
+            Globals.disconnect(session);
         }
     }
 
@@ -403,17 +445,6 @@ public class RunReport extends AReporting {
                 }
 
             }
-
-            runDbItem.setSort(in.getSort().intValue());
-            ReportPeriod period = in.getPeriod();
-            if (period == null) {
-                period = new ReportPeriod();
-            }
-            runDbItem.setPeriodLength(period.getLength());
-            runDbItem.setPeriodStep(period.getStep());
-            runDbItem.setState(ReportRunStateText.SUCCESSFUL.intValue());
-            runDbItem.setModified(now);
-            session.update(runDbItem);
 
             Globals.commit(session);
         } catch (Exception e) {

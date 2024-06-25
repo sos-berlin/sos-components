@@ -38,25 +38,24 @@ import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
 
-
 @Path(WebservicePaths.REPORTING)
 public class RunHistoryImpl extends JOCResourceImpl implements IRunHistoryResource {
-    
+
     private static final Map<ReportRunStateText, Integer> states = Collections.unmodifiableMap(new HashMap<ReportRunStateText, Integer>() {
 
         private static final long serialVersionUID = 1L;
 
         {
-            put(ReportRunStateText.SUCCESSFUL, 6); //darkblue
-            put(ReportRunStateText.IN_PROGRESS, 3); //lightblue
-            put(ReportRunStateText.FAILED, 2); //red
+            put(ReportRunStateText.SUCCESSFUL, 6); // darkblue
+            put(ReportRunStateText.IN_PROGRESS, 3); // lightblue
+            put(ReportRunStateText.FAILED, 2); // red
             put(ReportRunStateText.UNKNOWN, 2);
         }
     });
-    
+
     private static final String monthFromToFormat = "yyyy-MM";
     private static final Logger LOGGER = LoggerFactory.getLogger(RunHistoryImpl.class);
-    
+
     @Override
     public JOCDefaultResponse show(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
@@ -64,20 +63,19 @@ public class RunHistoryImpl extends JOCResourceImpl implements IRunHistoryResour
             initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, RunHistoryFilter.class);
             RunHistoryFilter in = Globals.objectMapper.readValue(filterBytes, RunHistoryFilter.class);
-            
+
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getReports().getView());
             if (response != null) {
                 return response;
             }
-            
+
             final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-            
+
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             ReportingDBLayer dbLayer = new ReportingDBLayer(session);
             RunItems entity = new RunItems();
-            final Map<Long, Long> numOfReports = dbLayer.getNumReports(null);
             final JocError jocError = getJocError();
-            
+
             Function<DBItemReportRun, RunItem> mapToRunItem = dbItem -> {
                 try {
                     if (!folderIsPermitted(dbItem.getFolder(), permittedFolders)) {
@@ -91,11 +89,11 @@ public class RunHistoryImpl extends JOCResourceImpl implements IRunHistoryResour
                     item.setMonthTo(getMonth(dbItem.getDateTo()));
                     item.setFrequencies(getSortedFrequencies(dbItem));
                     item.setHits(dbItem.getHits());
+                    item.setNumOfReports(Long.valueOf(dbItem.getReportCount()));
                     item.setTemplateName(dbItem.getTemplateIdAsEnum());
                     item.setModified(dbItem.getModified());
                     item.setErrorText(dbItem.getErrorText());
                     item.setState(getState(dbItem.getStateAsEnum()));
-                    item.setNumOfReports(numOfReports.getOrDefault(dbItem.getId(), 0L));
                     item.setControllerId(dbItem.getControllerId());
                     item.setSort(dbItem.getSortAsEnum());
                     item.setPeriod(getPeriod(dbItem));
@@ -110,11 +108,11 @@ public class RunHistoryImpl extends JOCResourceImpl implements IRunHistoryResour
                     return null;
                 }
             };
-            
+
             entity.setRuns(dbLayer.getRuns(in.getReportPaths(), in.getTemplateNames(), in.getStates()).stream().map(mapToRunItem).filter(
                     Objects::nonNull).collect(Collectors.toList()));
             entity.setDeliveryDate(Date.from(Instant.now()));
-            
+
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -125,25 +123,25 @@ public class RunHistoryImpl extends JOCResourceImpl implements IRunHistoryResour
             Globals.disconnect(session);
         }
     }
-    
+
     private static ReportRunState getState(ReportRunStateText dbState) {
         ReportRunState state = new ReportRunState();
         state.set_text(dbState);
         state.setSeverity(states.get(dbState));
         return state;
     }
-    
+
     private static ReportPeriod getPeriod(DBItemReportRun dbItem) {
         ReportPeriod rp = new ReportPeriod();
         rp.setLength(dbItem.getPeriodLength());
         rp.setStep(dbItem.getPeriodStep());
         return rp;
     }
-    
+
     private static String getMonth(Date monthFromTo) throws SOSInvalidDataException {
         return SOSDate.format(monthFromTo, monthFromToFormat);
     }
-    
+
     private static Set<Frequency> getSortedFrequencies(DBItemReportRun dbItem) {
         return Arrays.asList(dbItem.getFrequencies().split(",")).stream().map(Integer::valueOf).sorted().map(Frequency::fromValue).filter(
                 Objects::nonNull).collect(Collectors.toSet());

@@ -143,44 +143,7 @@ public class ReportingDBLayer extends DBLayer {
         }
     }
     
-    public Map<Long, Long> getNumReports(Collection<Long> runIds) throws DBConnectionRefusedException, DBInvalidDataException {
-        try {
-            StringBuilder hql = new StringBuilder();
-            hql.append("select runId, count(id) as num from ").append(DBLayer.DBITEM_REPORTS);
-            
-            if (runIds != null && !runIds.isEmpty()) {
-                if (runIds.size() == 1) {
-                    hql.append(" where runId =:runId");
-                } else {
-                    hql.append(" where runId in (:runIds)");
-                }
-            }
-            
-            hql.append(" group by runId");
-            
-            Query<Object[]> query = getSession().createQuery(hql.toString());
-            
-            if (runIds != null && !runIds.isEmpty()) {
-                if (runIds.size() == 1) {
-                    query.setParameter("runId", runIds.iterator().next());
-                } else {
-                    query.setParameterList("runIds", runIds);
-                }
-            }
-            
-            List<Object[]> result = getSession().getResultList(query);
-            if (result == null) {
-                return Collections.emptyMap();
-            }
-            return result.stream().collect(Collectors.toMap(item -> (Long) item[0], item -> (Long) item[1]));
-            
-        } catch (SOSHibernateInvalidSessionException ex) {
-            throw new DBConnectionRefusedException(ex);
-        } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
-        }
-    }
-    
+ 
     public List<DBItemReportRun> getAllRuns() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
