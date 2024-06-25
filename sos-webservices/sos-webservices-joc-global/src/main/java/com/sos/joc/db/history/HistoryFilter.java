@@ -3,11 +3,14 @@ package com.sos.joc.db.history;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.inventory.model.job.JobCriticality;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.HistoryStateText;
@@ -58,6 +61,7 @@ public class HistoryFilter {
     private String orderId;
     private String workflowPath;
     private String workflowName;
+    private Collection<List<String>> workflowNames;
     
     private boolean hasPermission = true;
     private boolean taskFromHistoryIdAndNode = false;
@@ -321,6 +325,20 @@ public class HistoryFilter {
 
     public void setWorkflowName(String workflowName) {
         this.workflowName = workflowName == null ? null : workflowName.trim();
+    }
+    
+    public Collection<List<String>> getWorkflowNames() {
+        return workflowNames;
+    }
+
+    public void setWorkflowNames(Collection<String> workflowNames) {
+        if (workflowNames != null) {
+            AtomicInteger counter = new AtomicInteger();
+            this.workflowNames = workflowNames.stream().distinct().collect(Collectors.groupingBy(it -> counter.getAndIncrement()
+                    / SOSHibernate.LIMIT_IN_CLAUSE)).values();
+        } else {
+            this.workflowNames = null;
+        }
     }
 
     public boolean hasPermission() {

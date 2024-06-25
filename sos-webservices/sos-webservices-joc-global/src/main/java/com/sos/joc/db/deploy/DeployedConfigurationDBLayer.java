@@ -151,12 +151,20 @@ public class DeployedConfigurationDBLayer {
         return session.getResultList(query);
     }
     
-    public List<String> getDeployedWorkflowPathsByTags(String controllerId, Collection<String> tags)
+    public List<String> getDeployedWorkflowNamesByTags(String controllerId, Collection<String> tags) throws SOSHibernateException {
+        return getDeployedWorkflowPathsOrNamesByTags(controllerId, "name", tags);
+    }
+    
+    public List<String> getDeployedWorkflowPathsByTags(String controllerId, Collection<String> tags) throws SOSHibernateException {
+        return getDeployedWorkflowPathsOrNamesByTags(controllerId, "path", tags);
+    }
+    
+    private List<String> getDeployedWorkflowPathsOrNamesByTags(String controllerId, String field, Collection<String> tags)
             throws SOSHibernateException {
         if (tags == null || tags.isEmpty()) {
             return Collections.emptyList();
         }
-        StringBuilder hql = new StringBuilder("select c.path from ");
+        StringBuilder hql = new StringBuilder("select c.").append(field).append(" from ");
         hql.append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" c ");
         hql.append("left join ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg ");
         hql.append("on c.inventoryConfigurationId=tg.cid ");
@@ -173,7 +181,7 @@ public class DeployedConfigurationDBLayer {
         if (!whereClause.isEmpty()) {
             hql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
         }
-        hql.append(" group by c.path");
+        hql.append(" group by c.").append(field);
 
         Query<String> query = session.createQuery(hql.toString());
         query.setParameter("type", DeployType.WORKFLOW.intValue());

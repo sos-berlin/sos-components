@@ -7,10 +7,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
 
 import org.hibernate.ScrollableResults;
@@ -23,7 +20,6 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.reporting.CSVColumns;
 import com.sos.joc.db.history.HistoryFilter;
-import com.sos.joc.db.history.JobHistoryDBLayer;
 import com.sos.joc.db.history.items.CSVItem;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocNotImplementedException;
@@ -104,19 +100,19 @@ public class OrderStepsImpl extends JOCResourceImpl implements IOrderStepsResour
             return result;
         }
         
-        private ScrollableResults<CSVItem> getResult(HistoryFilter filter, Stream<String> columns, List<TaskIdOfOrder> historyIds) {
-            JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(session, filter);
-            if (filter.hasPermission()) {
-                if (filter.getTaskFromHistoryIdAndNode()) {
-                    return dbLayer.getCSVJobsFromHistoryIdAndPosition(columns, historyIds.stream().filter(Objects::nonNull).filter(t -> t
-                            .getHistoryId() != null).collect(Collectors.groupingBy(TaskIdOfOrder::getHistoryId, Collectors.mapping(
-                                    TaskIdOfOrder::getPosition, Collectors.toSet()))));
-                } else {
-                    return dbLayer.getCSVJobs(columns);
-                }
-            }
-            return null;
-        }
+//        private ScrollableResults<CSVItem> getResult(HistoryFilter filter, Stream<String> columns, List<TaskIdOfOrder> historyIds) {
+//            JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(session, filter);
+//            if (filter.hasPermission()) {
+//                if (filter.getTaskFromHistoryIdAndNode()) {
+//                    return dbLayer.getCSVJobsFromHistoryIdAndPosition(columns, historyIds.stream().filter(Objects::nonNull).filter(t -> t
+//                            .getHistoryId() != null).collect(Collectors.groupingBy(TaskIdOfOrder::getHistoryId, Collectors.mapping(
+//                                    TaskIdOfOrder::getPosition, Collectors.toSet()))));
+//                } else {
+//                    return dbLayer.getCSVJobs(columns);
+//                }
+//            }
+//            return null;
+//        }
         
     }
     

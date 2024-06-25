@@ -27,6 +27,7 @@ import com.sos.joc.classes.history.HistoryMapper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.workflow.WorkflowPaths;
+import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.HistoryFilter;
 import com.sos.joc.db.history.JobHistoryDBLayer;
@@ -146,6 +147,15 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                     dbFilter.setOrderId(in.getOrderId());
                     dbFilter.setWorkflowPath(in.getWorkflowPath());
                     dbFilter.setWorkflowName(in.getWorkflowName());
+                    
+                    if (in.getWorkflowTags() != null && !in.getWorkflowTags().isEmpty()) {
+                        session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+                        //InventoryTagDBLayer workflowTagLayer = new InventoryTagDBLayer(session);
+//                        dbFilter.setWorkflowNames(workflowTagLayer.getWorkflowNamesHavingTags(in.getWorkflowTags().stream().collect(Collectors
+//                                .toList())));
+                        DeployedConfigurationDBLayer workflowTagLayer = new DeployedConfigurationDBLayer(session);
+                        dbFilter.setWorkflowNames(workflowTagLayer.getDeployedWorkflowNamesByTags(controllerId, in.getWorkflowTags()));
+                    }
                 }
             }
 
@@ -154,8 +164,10 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                     in.setLimit(WebserviceConstants.HISTORY_RESULTSET_LIMIT);
                 }
                 dbFilter.setLimit(in.getLimit());
-
-                session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+                
+                if (session == null) {
+                    session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+                }
                 JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(session, dbFilter);
                 ScrollableResults<DBItemHistoryOrder> sr = null;
 
