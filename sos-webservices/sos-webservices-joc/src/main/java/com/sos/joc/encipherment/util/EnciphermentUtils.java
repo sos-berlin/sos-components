@@ -84,11 +84,6 @@ public class EnciphermentUtils {
             newDBJobResource.setFolder(jobResourceFolder);
             path = Paths.get(jobResourceFolder, certAlias);
             newDBJobResource.setPath(path.toString().replace('\\', '/'));
-            if("/".equals(jobResourceFolder)) {
-                newDBJobResource.setPath(jobResourceFolder.concat(certAlias));
-            } else {
-                newDBJobResource.setPath(jobResourceFolder.concat("/").concat(certAlias));
-            }
             Date now = Date.from(Instant.now());
             newDBJobResource.setType(ConfigurationType.JOBRESOURCE);
             newDBJobResource.setContent(Globals.objectMapper.writeValueAsString(newJobResource));
