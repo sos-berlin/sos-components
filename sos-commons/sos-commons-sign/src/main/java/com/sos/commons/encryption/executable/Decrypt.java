@@ -105,7 +105,9 @@ public class Decrypt {
             String[] splittedValues = encryptedInput.split(" ");
             encryptedKey = splittedValues[0];
             iv = splittedValues[1];
-            encryptedFile = splittedValues[2];
+            if(encryptedFile == null) {
+              encryptedFile = splittedValues[2];
+            }
           } else {
             String[] splittedValues = encryptedInput.split(" ");
             encryptedKey = splittedValues[0];
