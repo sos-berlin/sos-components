@@ -66,7 +66,7 @@ public class EnciphermentUtils {
             existingJobResource.setArguments(args);
             dbExistingJobResource.setContent(Globals.objectMapper.writeValueAsString(existingJobResource));
             dbExistingJobResource.setFolder(jobResourceFolder);
-            path = Paths.get(dbExistingJobResource.getFolder(), certAlias);
+            path = Paths.get(dbExistingJobResource.getFolder()).resolve(certAlias);
             dbExistingJobResource.setPath(path.toString().replace('\\', '/'));
             dbExistingJobResource.setAuditLogId(auditLogId);
             dbExistingJobResource.setModified(Date.from(Instant.now()));
@@ -82,7 +82,7 @@ public class EnciphermentUtils {
             newJobResource.setVersion(Globals.getStrippedInventoryVersion());
             newDBJobResource.setName(certAlias);
             newDBJobResource.setFolder(jobResourceFolder);
-            path = Paths.get(jobResourceFolder, certAlias);
+            path = Paths.get(jobResourceFolder).resolve(certAlias);
             newDBJobResource.setPath(path.toString().replace('\\', '/'));
             Date now = Date.from(Instant.now());
             newDBJobResource.setType(ConfigurationType.JOBRESOURCE);
