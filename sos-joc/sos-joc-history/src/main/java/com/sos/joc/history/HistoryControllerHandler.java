@@ -318,11 +318,12 @@ public class HistoryControllerHandler {
             // Scheduler sequentialScheduler = Schedulers.newSingle("sequential-scheduler");
             Flux<JEventAndControllerState<Event>> flux = api.eventFlux(eventBus, OptionalLong.of(eventId.get()));
             flux = flux.flatMap(e -> processAllEvents(e).thenReturn(e));// parallel execution
-            flux = flux.filter(e -> HistoryEventType.fromValue(e.stampedEvent().value().event().getClass().getSimpleName()) != null);
             // flux = flux.publishOn(Schedulers.immediate()); // execute/block in the main thread
             // flux = flux.publishOn(sequentialScheduler); // execute not in the main thread but new single thread
             // flux = flux.publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool())); // parallel execution
             flux = flux.publishOn(Schedulers.single()); // execute not in the main thread but in global single thread (managed by reactor/system)
+            // after publishOn call, so that the original order of events is preserved
+            flux = flux.filter(e -> HistoryEventType.fromValue(e.stampedEvent().value().event().getClass().getSimpleName()) != null);
             flux = flux.doOnError(this::fluxDoOnError);
             flux = flux.doOnComplete(this::fluxDoOnComplete);
             flux = flux.doOnCancel(this::fluxDoOnCancel);
