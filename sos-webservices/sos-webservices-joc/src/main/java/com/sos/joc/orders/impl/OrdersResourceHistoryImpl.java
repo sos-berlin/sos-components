@@ -25,6 +25,7 @@ import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.history.HistoryMapper;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
@@ -155,6 +156,13 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
 //                                .toList())));
                         DeployedConfigurationDBLayer workflowTagLayer = new DeployedConfigurationDBLayer(session);
                         dbFilter.setWorkflowNames(workflowTagLayer.getDeployedWorkflowNamesByTags(controllerId, in.getWorkflowTags()));
+                    }
+                    
+                    if (in.getOrderTags() != null && !in.getOrderTags().isEmpty()) {
+                        if (session == null) {
+                            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+                        }
+                        dbFilter.setMainOrderIds(OrderTags.getMainOrderIdsByTags(in.getControllerId(), in.getOrderTags(), session));
                     }
                 }
             }

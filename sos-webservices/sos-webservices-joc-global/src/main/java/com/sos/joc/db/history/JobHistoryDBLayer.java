@@ -27,6 +27,7 @@ import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
+import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.reporting.ReportingLoader;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.history.common.HistorySeverity;
@@ -580,6 +581,14 @@ public class JobHistoryDBLayer {
                     }
                     clauses.add(clause);
                 }
+                if (filter.getMainOrderIds() != null && !filter.getMainOrderIds().isEmpty()) {
+                    clause = IntStream.range(0, filter.getMainOrderIds().size()).mapToObj(i -> "substring(" + alias + "orderId, 1, "
+                            + OrdersHelper.mainOrderIdLength + ") in (:mainOrderIds" + i + ")").collect(Collectors.joining(" or "));
+                    if (filter.getMainOrderIds().size() > 1) {
+                        clause = "(" + clause + ")";
+                    }
+                    clauses.add(clause);
+                }
                 
             }
         }
@@ -674,6 +683,12 @@ public class JobHistoryDBLayer {
             AtomicInteger counter = new AtomicInteger();
             for (List<String> chunk : filter.getWorkflowNames()) {
                 query.setParameterList("workflowNames" + counter.getAndIncrement(), chunk);
+            };
+        }
+        if (filter.getMainOrderIds() != null && !filter.getMainOrderIds().isEmpty()) {
+            AtomicInteger counter = new AtomicInteger();
+            for (List<String> chunk : filter.getMainOrderIds()) {
+                query.setParameterList("mainOrderIds" + counter.getAndIncrement(), chunk);
             };
         }
         return query;

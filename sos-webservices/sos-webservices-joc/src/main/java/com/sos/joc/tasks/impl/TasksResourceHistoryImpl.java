@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -25,8 +26,10 @@ import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.history.HistoryMapper;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.workflow.WorkflowPaths;
+import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.db.history.HistoryFilter;
 import com.sos.joc.db.history.JobHistoryDBLayer;
@@ -98,7 +101,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
             }
             
             Set<Folder> permittedFolders = addPermittedFolder(in.getFolders());
-            HistoryFilter dbFilter = getFilter(in, allowedControllers, permittedFolders);
+            HistoryFilter dbFilter = getFilter(in, allowedControllers, permittedFolders, session);
 
             if (dbFilter.hasPermission()) {
 
@@ -107,7 +110,9 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                 }
                 dbFilter.setLimit(in.getLimit());
 
-                session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+                if (session == null) {
+                    session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+                }
                 JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(session, dbFilter);
 
                 ScrollableResults<DBItemHistoryOrderStep> sr = null;
@@ -200,7 +205,8 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                 start, afterSelect), firstEntryDuration));
     }
     
-    public static HistoryFilter getFilter(JobsFilter in, Set<String> allowedControllers, Set<Folder> permittedFolders) {
+    public static HistoryFilter getFilter(JobsFilter in, Set<String> allowedControllers, Set<Folder> permittedFolders, SOSHibernateSession session)
+            throws SOSHibernateException {
         boolean withFolderFilter = in.getFolders() != null && !in.getFolders().isEmpty();
 
         HistoryFilter dbFilter = new HistoryFilter();
@@ -258,6 +264,21 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                     dbFilter.setJobName(in.getJobName());
                     dbFilter.setWorkflowPath(in.getWorkflowPath());
                     dbFilter.setWorkflowName(in.getWorkflowName());
+                    
+                    if (in.getWorkflowTags() != null && !in.getWorkflowTags().isEmpty()) {
+                        if (session == null) {
+                            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+                        }
+                        DeployedConfigurationDBLayer workflowTagLayer = new DeployedConfigurationDBLayer(session);
+                        dbFilter.setWorkflowNames(workflowTagLayer.getDeployedWorkflowNamesByTags(in.getControllerId(), in.getWorkflowTags()));
+                    }
+                    
+                    if (in.getOrderTags() != null && !in.getOrderTags().isEmpty()) {
+                        if (session == null) {
+                            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+                        }
+                        dbFilter.setMainOrderIds(OrderTags.getMainOrderIdsByTags(in.getControllerId(), in.getOrderTags(), session));
+                    }
                 }
             }
         }

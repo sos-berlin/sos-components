@@ -2,6 +2,7 @@ package com.sos.joc.classes.order;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -301,7 +303,7 @@ public class OrderTags {
 
             int size = orderIds.size();
             if (size > SOSHibernate.LIMIT_IN_CLAUSE) {
-                for (int i = 0; i < orderIds.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                for (int i = 0; i < size; i += SOSHibernate.LIMIT_IN_CLAUSE) {
                     deleteTags(controllerId, SOSHibernate.getInClausePartition(i, orderIds), connection);
                 }
             } else {
@@ -472,7 +474,7 @@ public class OrderTags {
         int size = orderIds.size();
         if (size > SOSHibernate.LIMIT_IN_CLAUSE) {
             Map<String, Set<String>> r = new HashMap<>();
-            for (int i = 0; i < orderIds.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+            for (int i = 0; i < size; i += SOSHibernate.LIMIT_IN_CLAUSE) {
                 r.putAll(getTagsByOrderIds(controllerId, SOSHibernate.getInClausePartition(i, orderIds), connection));
             }
             return r;
@@ -533,35 +535,65 @@ public class OrderTags {
         return Collections.emptyList();
     }
     
+    public static List<String> getMainOrderIdsByTags(String controllerId, List<String> oTags) {
+        if (oTags != null && !oTags.isEmpty()) {
+            SOSHibernateSession connection = null;
+            try {
+                connection = Globals.createSosHibernateStatelessConnection("getOrderTags");
+                return getMainOrderIdsByTags(controllerId, oTags, connection);
+            } finally {
+                Globals.disconnect(connection);
+            }
+        }
+        return Collections.emptyList();
+    }
+    
     public static List<String> getMainOrderIdsByTags(String controllerId, Set<String> oTags, SOSHibernateSession connection) {
+        if (connection == null) {
+            return getMainOrderIdsByTags(controllerId, oTags);
+        } else {
+            List<String> _oTags = oTags == null ? null : oTags.stream().collect(Collectors.toList());
+            return getMainOrderIdsByTags(controllerId, _oTags, connection);
+        }
+    }
+    
+    public static List<String> getMainOrderIdsByTags(String controllerId, List<String> oTags, SOSHibernateSession connection) {
         if (connection == null) {
             return getMainOrderIdsByTags(controllerId, oTags);
         }
         if (oTags != null && !oTags.isEmpty()) {
-            try {
-                StringBuilder hql = new StringBuilder("select orderId from ").append(DBLayer.DBITEM_HISTORY_ORDER_TAGS);
-                List<String> cause = new ArrayList<>(2);
-                if (controllerId != null && !controllerId.isBlank()) {
-                    cause.add("controllerId=:controllerId");
+            int size = oTags.size();
+            if (size > SOSHibernate.LIMIT_IN_CLAUSE) {
+                List<String> r = new ArrayList<>();
+                for (int i = 0; i < size; i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                    r.addAll(getMainOrderIdsByTags(controllerId, SOSHibernate.getInClausePartition(i, oTags), connection));
                 }
-                cause.add("tagName in (:tagNames)");
-                hql.append(cause.stream().collect(Collectors.joining(" and ", " where ", "")));
-                hql.append(" group by orderId");
+            } else {
+                try {
+                    StringBuilder hql = new StringBuilder("select orderId from ").append(DBLayer.DBITEM_HISTORY_ORDER_TAGS);
+                    List<String> cause = new ArrayList<>(2);
+                    if (controllerId != null && !controllerId.isBlank()) {
+                        cause.add("controllerId=:controllerId");
+                    }
+                    cause.add("tagName in (:tagNames)");
+                    hql.append(cause.stream().collect(Collectors.joining(" and ", " where ", "")));
+                    hql.append(" group by orderId");
 
-                Query<String> query = connection.createQuery(hql.toString());
-                if (controllerId != null && !controllerId.isBlank()) {
-                    query.setParameter("controllerId", controllerId);
+                    Query<String> query = connection.createQuery(hql.toString());
+                    if (controllerId != null && !controllerId.isBlank()) {
+                        query.setParameter("controllerId", controllerId);
+                    }
+                    query.setParameterList("tagNames", oTags);
+                    List<String> result = connection.getResultList(query);
+                    if (result == null) {
+                        return Collections.emptyList();
+                    }
+                    return result;
+                } catch (SOSHibernateInvalidSessionException ex) {
+                    throw new DBConnectionRefusedException(ex);
+                } catch (Exception ex) {
+                    throw new DBInvalidDataException(ex);
                 }
-                query.setParameterList("tagNames", oTags);
-                List<String> result = connection.getResultList(query);
-                if (result == null) {
-                    return Collections.emptyList();
-                }
-                return result;
-            } catch (SOSHibernateInvalidSessionException ex) {
-                throw new DBConnectionRefusedException(ex);
-            } catch (Exception ex) {
-                throw new DBInvalidDataException(ex);
             }
         }
         return Collections.emptyList();
@@ -610,6 +642,14 @@ public class OrderTags {
     
     private static boolean withTagsDisplayedAsOrderId() {
         return getNumOfTagsDisplayedAsOrderId() != 0;
+    }
+    
+    private static <T> Collection<List<T>> getChunkedCollection(Collection<T> coll) {
+        if (coll != null) {
+            AtomicInteger counter = new AtomicInteger();
+            return coll.stream().distinct().collect(Collectors.groupingBy(it -> counter.getAndIncrement() / SOSHibernate.LIMIT_IN_CLAUSE)).values();
+        }
+        return null;
     }
     
 //    public void updateMap(String controllerId, String orderId, Set<String> tags) {

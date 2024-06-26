@@ -62,6 +62,7 @@ public class HistoryFilter {
     private String workflowPath;
     private String workflowName;
     private Collection<List<String>> workflowNames;
+    private Collection<List<String>> mainOrderIds;
     
     private boolean hasPermission = true;
     private boolean taskFromHistoryIdAndNode = false;
@@ -338,6 +339,20 @@ public class HistoryFilter {
                     / SOSHibernate.LIMIT_IN_CLAUSE)).values();
         } else {
             this.workflowNames = null;
+        }
+    }
+    
+    public Collection<List<String>> getMainOrderIds() {
+        return mainOrderIds;
+    }
+
+    public void setMainOrderIds(Collection<String> mainOrderIds) {
+        if (mainOrderIds != null) {
+            AtomicInteger counter = new AtomicInteger();
+            this.mainOrderIds = mainOrderIds.stream().distinct().collect(Collectors.groupingBy(it -> counter.getAndIncrement()
+                    / SOSHibernate.LIMIT_IN_CLAUSE)).values();
+        } else {
+            this.mainOrderIds = null;
         }
     }
 
