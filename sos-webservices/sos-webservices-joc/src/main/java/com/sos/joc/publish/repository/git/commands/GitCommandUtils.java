@@ -1192,10 +1192,16 @@ public class GitCommandUtils {
             throws JsonMappingException, JsonProcessingException, SOSHibernateException {
         GitCredentialsList credList = GitCommandUtils.getCredentialsList(account, dbLayer);
 //        String remoteUri = GitCommandUtils.getActiveRemoteUri(localRepo, workingDir, credList, StandardCharsets.UTF_8);
-        for (GitCredentials creds : credList.getCredentials()) {
+        if (credList != null) {
+          for (GitCredentials creds : credList.getCredentials()) {
             if(newRepoRemoteUrl.contains(creds.getGitServer())) {
                 return creds;
             }
+          }
+        } else {
+          throw new JocGitException(
+              String.format("no credentials found for account - %1$s -. Configure the credentials in Profile -> GitManagement of the account.",
+                  account)); 
         }
         return null;
     }
