@@ -116,6 +116,7 @@ import js7.proxy.javaapi.eventbus.JStandardEventBus;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.SignalType;
+import reactor.core.scheduler.Schedulers;
 
 public class HistoryControllerHandler {
 
@@ -314,16 +315,18 @@ public class HistoryControllerHandler {
     private synchronized AtomicLong process(AtomicLong eventId) throws Exception {
         stopper = new FluxStopper();
         try (JStandardEventBus<ProxyEvent> eventBus = new JStandardEventBus<>(ProxyEvent.class)) {
+            // Scheduler sequentialScheduler = Schedulers.newSingle("sequential-scheduler");
             Flux<JEventAndControllerState<Event>> flux = api.eventFlux(eventBus, OptionalLong.of(eventId.get()));
-            flux = flux.flatMap(e -> processAllEvents(e).thenReturn(e));
-
+            flux = flux.flatMap(e -> processAllEvents(e).thenReturn(e));// parallel execution
+            // flux = flux.publishOn(Schedulers.immediate()); // execute/block in the main thread
+            // flux = flux.publishOn(sequentialScheduler); // execute not in the main thread but new single thread
+            // flux = flux.publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool())); // parallel execution
+            flux = flux.publishOn(Schedulers.single()); // execute not in the main thread but in global single thread (managed by reactor/system)
             flux = flux.filter(e -> HistoryEventType.fromValue(e.stampedEvent().value().event().getClass().getSimpleName()) != null);
             flux = flux.doOnError(this::fluxDoOnError);
             flux = flux.doOnComplete(this::fluxDoOnComplete);
             flux = flux.doOnCancel(this::fluxDoOnCancel);
             flux = flux.doFinally(this::fluxDoFinally);
-            // TODO test flux.publishOn
-            // flux = flux.publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool()));
 
             flux.takeUntilOther(stopper.stopped()).map(this::map2fat).filter(e -> e.getEventId() != null).bufferTimeout(config
                     .getBufferTimeoutMaxSize(), Duration.ofSeconds(config.getBufferTimeoutMaxTime())).toIterable().forEach(list -> {
