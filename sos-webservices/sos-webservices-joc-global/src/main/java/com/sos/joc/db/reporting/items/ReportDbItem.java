@@ -26,6 +26,9 @@ public class ReportDbItem extends ReportItem {
     }
     
     public void setFrequency(Number frequency) {
+        if (frequency == null) {
+            super.setFrequency((Frequency) null);
+        }
         try {
             super.setFrequency(Frequency.fromValue(frequency.intValue()));
         } catch (IllegalArgumentException e) {
@@ -34,6 +37,9 @@ public class ReportDbItem extends ReportItem {
     }
 
     public void setSort(Number sort) {
+        if (sort == null) {
+            super.setSort((ReportOrder) null);
+        }
         try {
             super.setSort(ReportOrder.fromValue(sort.intValue()));
         } catch (IllegalArgumentException e) {
@@ -42,14 +48,21 @@ public class ReportDbItem extends ReportItem {
     }
     
     public void setPeriodLength(Number periodLength) {
-        super.setPeriodLength(periodLength.intValue());
+        if (periodLength != null) {
+            super.setPeriodLength(periodLength.intValue());
+        }
     }
     
     public void setPeriodStep(Number periodStep) {
-        super.setPeriodStep(periodStep.intValue());
+        if (periodStep != null) {
+            super.setPeriodStep(periodStep.intValue());
+        }
     }
     
     public void setTemplateName(Number templateId) {
+        if (templateId == null) {
+            super.setTemplateName((TemplateId) null);
+        }
         try {
             super.setTemplateName(TemplateId.fromValue(templateId.intValue()));
         } catch (IllegalArgumentException e) {
@@ -58,18 +71,22 @@ public class ReportDbItem extends ReportItem {
     }
     
     public void setDateFrom(Date dateFrom) {
-        try {
-            super.setDateFrom(SOSDate.getDateAsString(dateFrom));
-        } catch (SOSInvalidDataException e) {
-            //
+        if (dateFrom != null) {
+            try {
+                super.setDateFrom(SOSDate.getDateAsString(dateFrom));
+            } catch (SOSInvalidDataException e) {
+                //
+            }
         }
     }
     
     public void setDateTo(Date dateTo) {
-        try {
-            super.setDateTo(SOSDate.getDateAsString(dateTo));
-        } catch (SOSInvalidDataException e) {
-            //
+        if (dateTo != null) {
+            try {
+                super.setDateTo(SOSDate.getDateAsString(dateTo));
+            } catch (SOSInvalidDataException e) {
+                //
+            }
         }
     }
     

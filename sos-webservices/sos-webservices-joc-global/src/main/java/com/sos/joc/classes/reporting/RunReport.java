@@ -161,7 +161,6 @@ public class RunReport extends AReporting {
 
             runDbItem.setReportCount(dbItems.size());
             insert(in, runDbItem, dbItems);
-            updateRun(runDbItem);
             EventBus.getInstance().post(new ReportsUpdated());
             return Either.right(null);
         } catch (Exception e) {
@@ -367,18 +366,10 @@ public class RunReport extends AReporting {
         }
     }
     
-    private static void updateRun(final DBItemReportRun runDbItem) throws Exception {
-        SOSHibernateSession session = null;
-        try {
-            session = Globals.createSosHibernateStatelessConnection("StoreReportRun");
-
-            runDbItem.setState(ReportRunStateText.SUCCESSFUL.intValue());
-            runDbItem.setModified(Date.from(Instant.now()));
-            session.update(runDbItem);
-            EventBus.getInstance().post(new ReportRunsUpdated());
-        } finally {
-            Globals.disconnect(session);
-        }
+    private static void updateRun(final DBItemReportRun runDbItem, Date now, SOSHibernateSession session) throws Exception {
+        runDbItem.setState(ReportRunStateText.SUCCESSFUL.intValue());
+        runDbItem.setModified(now);
+        session.update(runDbItem);
     }
 
     private static void updateFailedRun(final DBItemReportRun runDbItem, Exception e) {
@@ -448,6 +439,8 @@ public class RunReport extends AReporting {
                 }
 
             }
+            
+            updateRun(runDbItem, now, session);
 
             Globals.commit(session);
         } catch (Exception e) {
