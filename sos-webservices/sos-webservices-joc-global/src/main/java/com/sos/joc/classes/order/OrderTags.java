@@ -2,6 +2,7 @@ package com.sos.joc.classes.order;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -447,9 +448,29 @@ public class OrderTags {
         return getTagsByOrderIds(forced, controllerId, jOrders.map(JOrder::id).map(OrderId::string), connection);
     }
     
+    public static Set<String> getTagsByOrderId(String controllerId, String orderId, SOSHibernateSession connection)
+            throws SOSHibernateException {
+        return getTagsByOrderId(false, controllerId, orderId, connection);
+    }
+    
     public static Map<String, Set<String>> getTagsByOrderIds(String controllerId, Stream<String> orderIds, SOSHibernateSession connection)
             throws SOSHibernateException {
         return getTagsByOrderIds(false, controllerId, orderIds, connection);
+    }
+    
+    public static Set<String> getTagsByOrderId(boolean forced, String controllerId, String orderId, SOSHibernateSession connection)
+            throws SOSHibernateException {
+        if (orderId == null) {
+            return Collections.emptySet();
+        }
+        if (controllerId == null) {
+            return Collections.emptySet();
+        }
+        if (!forced && !withTagsDisplayedAsOrderId()) {
+            return Collections.emptySet();
+        }
+        String mainOrderId = OrdersHelper.getOrderIdMainPart(orderId);
+        return getTagsByOrderIds(controllerId, Arrays.asList(mainOrderId), connection).getOrDefault(mainOrderId, Collections.emptySet());
     }
     
     public static Map<String, Set<String>> getTagsByOrderIds(boolean forced, String controllerId, Stream<String> orderIds, SOSHibernateSession connection)
@@ -484,12 +505,27 @@ public class OrderTags {
             }
             connection = Globals.createSosHibernateStatelessConnection(OrderTags.class.getSimpleName());
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER_TAGS);
-            hql.append(" where controllerId=:controllerId");
-            hql.append(" and orderId in (:orderIds)").append(" order by ordering");
+            List<String> clauses = new ArrayList<>(2);
+            if (!controllerId.isBlank()) {
+                clauses.add("controllerId=:controllerId");
+            }
+            if (orderIds.size() == 1) {
+                clauses.add("orderId=:orderId");
+            } else {
+                clauses.add("orderId in (:orderIds)");
+            }
+            clauses.stream().collect(Collectors.joining(" and ", " where ", ""));
+            hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", ""))).append(" order by ordering");
 
             Query<DBItemHistoryOrderTag> query = connection.createQuery(hql);
-            query.setParameter("controllerId", controllerId);
-            query.setParameterList("orderIds", orderIds);
+            if (!controllerId.isBlank()) {
+                query.setParameter("controllerId", controllerId);
+            }
+            if (orderIds.size() == 1) {
+                query.setParameter("orderId", orderIds.get(0));
+            } else {
+                query.setParameterList("orderIds", orderIds);
+            }
             List<DBItemHistoryOrderTag> result = connection.getResultList(query);
             if (result == null) {
                 return Collections.emptyMap();
