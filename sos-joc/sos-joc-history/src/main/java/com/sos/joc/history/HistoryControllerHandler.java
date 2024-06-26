@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.OptionalLong;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -117,7 +116,6 @@ import js7.proxy.javaapi.eventbus.JStandardEventBus;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.SignalType;
-import reactor.core.scheduler.Schedulers;
 
 public class HistoryControllerHandler {
 
