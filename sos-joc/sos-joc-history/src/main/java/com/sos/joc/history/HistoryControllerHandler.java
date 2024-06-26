@@ -325,7 +325,7 @@ public class HistoryControllerHandler {
             flux = flux.doOnCancel(this::fluxDoOnCancel);
             flux = flux.doFinally(this::fluxDoFinally);
             // TODO test flux.publishOn
-            flux = flux.publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool()));
+            // flux = flux.publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool()));
 
             flux.takeUntilOther(stopper.stopped()).map(this::map2fat).filter(e -> e.getEventId() != null).bufferTimeout(config
                     .getBufferTimeoutMaxSize(), Duration.ofSeconds(config.getBufferTimeoutMaxTime())).toIterable().forEach(list -> {
