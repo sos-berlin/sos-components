@@ -82,6 +82,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
                 return state;
             }
 
+            TaskDateTime notStartedOrdersLogsDatetime = logsDatetime;
             // Cleanup Logs
             if (logsDatetime.getDatetime() != null) {
                 String logPrefix = String.format("[%s][logs][%s][%s]", getIdentifier(), logsDatetime.getAge().getConfigured(), logsDatetime
@@ -96,6 +97,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
 
             // Cleanup Orders/Steps/States
             if (orderDatetime.getDatetime() != null && (state == null || state.equals(JocServiceTaskAnswerState.COMPLETED))) {
+                notStartedOrdersLogsDatetime = orderDatetime;
                 String logPrefix = String.format("[%s][orders][%s][%s]", getIdentifier(), orderDatetime.getAge().getConfigured(), orderDatetime
                         .getZonedDatetime());
 
@@ -106,6 +108,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
                 LOGGER.info(String.format("[%s][orders][%s]skip", getIdentifier(), orderDatetime.getAge().getConfigured()));
             }
 
+            deleteNotStartedOrdersLogs(notStartedOrdersLogsDatetime);
             deleteNotReferencedLogs(state);
 
             return state;
@@ -222,6 +225,28 @@ public class CleanupTaskHistory extends CleanupTaskModel {
             }
             break;
         }
+        Query<Long> query = getDbLayer().getSession().createQuery(hql.toString());
+        query.setParameter("startTime", startTime);
+        Long r = getDbLayer().getSession().getSingleValue(query);
+
+        if (r == null || r.intValue() == 0) {
+            r = 0L;
+            LOGGER.info(String.format("[%s][%s %s][%s %s][%s]found=%s", getIdentifier(), getScope(scope), getRange(range), ageInfo, getDateTime(
+                    startTime), table, r));
+        } else {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(String.format("[%s][%s %s][%s %s][%s]found=%s", getIdentifier(), getScope(scope), getRange(range), ageInfo, getDateTime(
+                        startTime), table, r));
+            }
+        }
+        return r;
+    }
+
+    private Long getOrderLogsMaxMainParentId(Scope scope, Range range, Date startTime, String ageInfo) throws SOSHibernateException {
+        String table = DBLayer.TABLE_HISTORY_LOGS;
+        StringBuilder hql = new StringBuilder("select max(historyOrderMainParentId) from ").append(DBLayer.DBITEM_HISTORY_LOGS).append(" ");
+        hql.append("where created < :startTime ");
+
         Query<Long> query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameter("startTime", startTime);
         Long r = getDbLayer().getSession().getSingleValue(query);
@@ -521,11 +546,11 @@ public class CleanupTaskHistory extends CleanupTaskModel {
             return;
         }
         Path dir = Paths.get(logDirTmpOrders).toAbsolutePath();
+        String method = "deleteNotStartedOrdersLogs";
+        String info = new StringBuilder().append(datetime.getAge().getConfigured()).append(" ").append(getDateTime(datetime.getDatetime()))
+                .toString();
+        LOGGER.info(String.format("[%s][%s][%s]%s", getIdentifier(), method, info, dir));
         if (Files.exists(dir)) {
-            String method = "deleteNotStartedOrdersLogs";
-            String info = new StringBuilder().append(datetime.getAge().getConfigured()).append(" ").append(getDateTime(datetime.getDatetime()))
-                    .toString();
-            LOGGER.info(String.format("[%s][%s][%s]%s", getIdentifier(), method, info, dir));
             try {
                 if (SOSPath.isDirectoryEmpty(dir)) {
                     LOGGER.info(String.format("[%s][%s][%s][skip]directory is empty", getIdentifier(), method, info));
@@ -551,6 +576,8 @@ public class CleanupTaskHistory extends CleanupTaskModel {
             } catch (Throwable e) {
                 LOGGER.warn(String.format("[%s][%s][%s]%s", getIdentifier(), method, info, e.toString()), e);
             }
+        } else {
+            LOGGER.info(String.format("[%s][%s][%s][skip]directory not found", getIdentifier(), method, info));
         }
     }
 
@@ -563,10 +590,9 @@ public class CleanupTaskHistory extends CleanupTaskModel {
             return;
         }
         Path dir = Paths.get(logDir).toAbsolutePath();
+        String method = "deleteNotReferencedLogs";
+        LOGGER.info(String.format("[%s][%s]%s", getIdentifier(), method, dir));
         if (Files.exists(dir)) {
-            String method = "deleteNotReferencedLogs";
-            LOGGER.info(String.format("[%s][%s]%s", getIdentifier(), method, dir));
-
             try {
                 if (SOSPath.isDirectoryEmpty(dir)) {
                     LOGGER.info(String.format("[%s][%s][skip]directory is empty", getIdentifier(), method));
@@ -602,20 +628,28 @@ public class CleanupTaskHistory extends CleanupTaskModel {
             } catch (Throwable e) {
                 LOGGER.warn(String.format("[%s][%s]%s", getIdentifier(), method, e.toString()), e);
             }
+        } else {
+            LOGGER.info(String.format("[%s][%s][skip]directory not found", getIdentifier(), method));
         }
     }
 
     private JocServiceTaskAnswerState cleanupLogs(Scope scope, Range range, TaskDateTime datetime) throws Exception {
-        deleteNotStartedOrdersLogs(datetime);
+        setQuotedColumns();
 
         String ageInfo = datetime.getAge().getConfigured();
         Date startTime = datetime.getDatetime();
 
         tryOpenSession();
 
+        // based on the order start time
         Long maxMainParentId = getOrderMaxMainParentId(scope, range, startTime, ageInfo);
-        if (maxMainParentId == null || maxMainParentId == 0) {
-            return JocServiceTaskAnswerState.COMPLETED;
+        if (maxMainParentId == null || maxMainParentId.intValue() == 0) {
+            // not found in orders history - possibly due to setting of order history (already deleted)
+            // check based on the order logs created
+            maxMainParentId = getOrderLogsMaxMainParentId(scope, range, startTime, ageInfo);
+            if (maxMainParentId == null || maxMainParentId.intValue() == 0) {
+                return JocServiceTaskAnswerState.COMPLETED;
+            }
         }
 
         StringBuilder log = new StringBuilder("[").append(getIdentifier()).append("][");
