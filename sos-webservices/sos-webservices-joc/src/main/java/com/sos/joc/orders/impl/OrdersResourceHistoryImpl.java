@@ -150,7 +150,9 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                     dbFilter.setWorkflowName(in.getWorkflowName());
                     
                     if (in.getWorkflowTags() != null && !in.getWorkflowTags().isEmpty()) {
-                        session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+                        if (session == null) {
+                            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+                        }
                         //InventoryTagDBLayer workflowTagLayer = new InventoryTagDBLayer(session);
 //                        dbFilter.setWorkflowNames(workflowTagLayer.getWorkflowNamesHavingTags(in.getWorkflowTags().stream().collect(Collectors
 //                                .toList())));
@@ -162,7 +164,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                         if (session == null) {
                             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
                         }
-                        dbFilter.setMainOrderIds(OrderTags.getMainOrderIdsByTags(in.getControllerId(), in.getOrderTags(), session));
+                        dbFilter.setMainOrderIds(OrderTags.getMainOrderIdsByTags(controllerId, in.getOrderTags(), session));
                     }
                 }
             }
@@ -198,6 +200,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                         if (!folderPermissionsAreChecked && !canAdd(item, permittedFolders, checkedFolders)) {
                             continue;
                         }
+                        //Set<String> tags = OrderTags.getTagsByOrderId(controllerId, item.getOrderId(), session);
                         history.add(HistoryMapper.map2OrderHistoryItem(item));
                     }
                     logProfiler(profiler, i, profilerStart, profilerAfterSelect, profilerFirstEntry);
