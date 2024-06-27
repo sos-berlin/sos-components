@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
@@ -21,6 +22,7 @@ import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -310,7 +312,7 @@ public class FrequencyResolver {
                                 .keySet()));
                     }
                     if (this.includes != null) {
-                        addDatesRestrictions(this.dateFrom, this.dateTo, dateFromOrig);
+                        addDatesAndHolidaysRestrictions(this.dateFrom, this.dateTo, dateFromOrig);
                         if (isDebugEnabled) {
                             LOGGER.debug(String.format("[%s][restrictions][after][addDatesRestrictions]datesWithoutRestrictions=%s", method,
                                     datesWithoutRestrictions.keySet()));
@@ -1856,8 +1858,18 @@ public class FrequencyResolver {
         return copy;
     }
 
-    private void addDatesRestrictions(Calendar dateFrom, Calendar dateTo, Calendar dateFromOrig) throws SOSInvalidDataException {
-        if (includes.getDates() != null && !includes.getDates().isEmpty()) {
+    private void addDatesAndHolidaysRestrictions(Calendar dateFrom, Calendar dateTo, Calendar dateFromOrig) throws SOSInvalidDataException {
+        Stream<String> datesStream = Stream.empty();
+        if (includes.getDates() != null) {
+            datesStream = includes.getDates().stream().filter(Objects::nonNull);
+        }
+        if (includes.getHolidays() != null) {
+            datesStream = Stream.concat(datesStream, includes.getHolidays().stream().map(Holidays::getDates).filter(Objects::nonNull).flatMap(
+                    List::stream));
+        }
+        Set<String> dates = datesStream.collect(Collectors.toSet());
+        
+        if (!dates.isEmpty()) {
             for (Entry<String, Calendar> date : this.dates.entrySet()) {
                 if (date == null || date.getValue() == null) {
                     continue;
@@ -1872,7 +1884,7 @@ public class FrequencyResolver {
                 if (curDate.before(dateFromOrig)) {
                     continue;
                 }
-                if (includes.getDates().contains(date.getKey())) {
+                if (dates.contains(date.getKey())) {
                     restrictions.add(date.getKey());
                 }
             }
