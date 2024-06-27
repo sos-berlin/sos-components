@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -71,6 +72,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.agent.AgentHelper;
 import com.sos.joc.classes.common.StringSizeSanitizer;
 import com.sos.joc.classes.order.OrdersHelper;
+import com.sos.joc.classes.reporting.RunReport;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.common.HistoryConstants;
@@ -261,10 +263,7 @@ public class Validator {
                 validateExpression("$.endOfLife: ", board.getEndOfLife());
             }
         } else if (ConfigurationType.REPORT.equals(type)) {
-            Report report = (Report) config;
-            if (!report.getTemplateName().isSupported()) {
-                throw new JocConfigurationException(String.format( "Template '%s' is not longer supported", report.getTemplateName().value()));
-            }
+            validateReport((Report) config);
         }
     }
     
@@ -342,10 +341,24 @@ public class Validator {
                 validateJobResourceRefs(jobTemplate.getJobResourceNames(), invObjNames.getOrDefault(ConfigurationType.JOBRESOURCE, Collections
                         .emptySet()));
             } else if (ConfigurationType.REPORT.equals(type)) {
-                Report report = (Report) config;
-                if (!report.getTemplateName().isSupported()) {
-                    throw new JocConfigurationException(String.format( "Template '%s' is not longer supported", report.getTemplateName().value()));
+                validateReport((Report) config);
+            }
+        }
+    }
+    
+    private static void validateReport(Report report) {
+        if (!report.getTemplateName().isSupported()) {
+            throw new JocConfigurationException(String.format( "Template '%s' is not longer supported", report.getTemplateName().value()));
+        }
+        if (report.getMonthTo() != null) {
+            try {
+                LocalDate mTo = RunReport.relativeDateToSpecificLocalDate(report.getMonthTo(), true);
+                LocalDate mFrom = RunReport.relativeDateToSpecificLocalDate(report.getMonthFrom(), false);
+                if (mTo != null && mFrom.isAfter(mTo)) {
+                    throw new JocConfigurationException("$.monthFrom has to be older than $.monthTo");
                 }
+            } catch (IllegalArgumentException e) {
+                throw new JocConfigurationException("$." + e.getMessage());
             }
         }
     }

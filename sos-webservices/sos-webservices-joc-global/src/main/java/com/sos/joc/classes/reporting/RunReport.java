@@ -76,18 +76,35 @@ public class RunReport extends AReporting {
     }
 
     private static String relativeDateToSpecificDate(String month, boolean to) {
+        LocalDate ld = relativeDateToSpecificLocalDate(month, to);
+        if (ld != null) {
+            String leadingMonthZero = ld.getMonthValue() < 10 ? "0" : "";
+            return ld.getYear() + "-" + leadingMonthZero + ld.getMonthValue();
+        }
+        return null;
+    }
+    
+    // public because used in Validator
+    public static LocalDate relativeDateToSpecificLocalDate(String month, boolean to) {
         // TODO for unit y -> always 01-yyyy
         // for unit q -> always 01-yyyy, 04-yyyy, 07-yyyy or 10-yyyy
         if (month == null) {
-            return null;
+            if (to) {
+                return null;
+            } else {
+                throw new IllegalArgumentException("monthFrom is missing but required");
+            }
         }
         if (month.matches("[+-]*\\d+\\s*[mMQqyY]")) { // month is relative
             Matcher m = Pattern.compile("[+-]*(\\d+)\\s*([mMQqyY])").matcher(month);
+            LocalDate ld = null;
             if (m.find()) {
-                LocalDate ld = null;
                 switch (m.group(2).toLowerCase()) { // unit
                 case "m":
                     ld = LocalDate.now().withDayOfMonth(1).minusMonths(Long.valueOf(m.group(1)).longValue());
+                    if (to) {
+                        ld = ld.plusMonths(1).minusDays(1);
+                    }
                     break;
                 case "q":
                     ld = LocalDate.now().withDayOfMonth(1);
@@ -125,12 +142,13 @@ public class RunReport extends AReporting {
                     }
                     break;
                 }
-
-                String leadingMonthZero = ld.getMonthValue() < 10 ? "0" : "";
-                return ld.getYear() + "-" + leadingMonthZero + ld.getMonthValue();
             }
+            return ld;
+        } else if (month.matches("\\d{4}-(0[1-9]|1[0-2])")) {
+            return LocalDate.of(Integer.valueOf(month.substring(0,4)), Integer.valueOf(month.substring(5)), 1);
+        } else {
+            throw new IllegalArgumentException("month" + (to ? "To" : "From") + " has to be in the form yyyy-mm or [0-9]+[mqy]");
         }
-        return month;
     }
 
     private static Either<Exception, Void> _run(final Report in) {
