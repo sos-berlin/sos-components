@@ -210,7 +210,7 @@ public class Decrypt {
     System.out.printf("  %-29s | %s%n", KEY_PWD + "=<password>", "passphrase for the private key.");
     System.out.printf("  %-29s | %s%n", IV + "=<initialization-vector>", "base64 encoded initialization vector (returned by encryption).");
     System.out.printf("  %-29s | %s%n", ENCRYPTED_KEY + "=<key>", "base64 encoded encrypted symmetric key (returned by encryption).");
-    System.out.printf("  %-29s | %s%n", IN + "=<encrypted-secret>", "encrypted secret to decrypt (returned by encryption).");
+    System.out.printf("  %-29s | %s%n", IN + "=<encryption-result>", "result of previous encryption or encrypted secret.");
     System.out.printf("  %-29s | %s%n", IN_FILE + "=<path-to-file>", "path to encrypted input file.");
     System.out.printf("  %-29s | %s%n", OUT_FILE + "=<path-to-file>", "path to decrypted output file.");
     System.out.println();
