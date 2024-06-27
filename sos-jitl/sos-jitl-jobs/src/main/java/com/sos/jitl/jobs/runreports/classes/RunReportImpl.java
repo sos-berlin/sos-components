@@ -61,6 +61,8 @@ public class RunReportImpl {
                     for (String inFolder : args.getReportFolders().getValue()) {
                         Folder folder = new Folder();
                         boolean recursive = false;
+                        logger.debug("Add reports /*: ");
+
                         if (inFolder.endsWith("/*")) {
                             recursive = true;
                             inFolder = inFolder.substring(0, inFolder.length() - 2);

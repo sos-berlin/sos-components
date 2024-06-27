@@ -27,7 +27,7 @@ public class ReportingDBLayer extends DBLayer {
     public ReportingDBLayer(SOSHibernateSession session) {
         super(session);
     }
-    
+
     public List<ReportDbItem> getGeneratedReports(Collection<Long> runIds, boolean compact, Collection<String> reportPaths,
             Collection<TemplateId> templateNames, Date dateFrom, Date dateTo) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
@@ -48,14 +48,14 @@ public class ReportingDBLayer extends DBLayer {
             hql.append(",rh.created as created");
             hql.append(",rh.modified as modified");
             if (!compact) {
-                hql.append(",rh.content as content"); 
+                hql.append(",rh.content as content");
             }
             hql.append(" from ").append(DBLayer.DBITEM_REPORTS).append(" rh ");
             hql.append("left join ").append(DBLayer.DBITEM_REPORT_RUN).append(" rr ");
             hql.append("on rh.runId=rr.id");
-            
+
             List<String> clause = new ArrayList<>(4);
-            
+
             if (runIds != null && !runIds.isEmpty()) {
                 if (runIds.size() == 1) {
                     clause.add("rr.id =:runId");
@@ -77,19 +77,24 @@ public class ReportingDBLayer extends DBLayer {
                     clause.add("rr.templateId in (:templateIds)");
                 }
             }
-            if (dateFrom != null) {
-                clause.add("rh.dateFrom >= :dateFrom");
+            if (dateFrom != null && dateTo != null) {
+                clause.add("(rh.dateFrom >= :dateFrom and rh.dateFrom < :dateTo or rh.dateTo >= :dateFrom and rh.dateTo < :dateTo)");
+            } else {
+                if (dateFrom != null) {
+                    clause.add("rh.dateFrom >= :dateFrom");
+                }
+
+                if (dateTo != null) {
+                    clause.add("rh.dateTo < :dateTo");
+                }
             }
-            if (dateTo != null) {
-                clause.add("rh.dateTo < :dateTo");
-            }
-            
+ 
             if (!clause.isEmpty()) {
                 hql.append(clause.stream().collect(Collectors.joining(" and ", " where ", "")));
             }
-            
+
             Query<ReportDbItem> query = getSession().createQuery(hql.toString(), ReportDbItem.class);
-            
+
             if (runIds != null && !runIds.isEmpty()) {
                 if (runIds.size() == 1) {
                     query.setParameter("runId", runIds.iterator().next());
@@ -117,20 +122,20 @@ public class ReportingDBLayer extends DBLayer {
             if (dateTo != null) {
                 query.setParameter("dateTo", dateTo);
             }
-            
+
             List<ReportDbItem> result = getSession().getResultList(query);
             if (result == null) {
                 return Collections.emptyList();
             }
             return result;
-            
+
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public void delete(Long id) {
         try {
             DBItemReport item = getSession().get(DBItemReport.class, id);
@@ -141,8 +146,7 @@ public class ReportingDBLayer extends DBLayer {
             throw new DBInvalidDataException(e);
         }
     }
-    
- 
+
     public List<DBItemReportRun> getAllRuns() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
@@ -153,14 +157,14 @@ public class ReportingDBLayer extends DBLayer {
                 return Collections.emptyList();
             }
             return result;
-            
+
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public List<DBItemReportRun> getRuns(Collection<String> reportNames, Collection<TemplateId> templateNames, Collection<ReportRunStateText> states)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
@@ -170,12 +174,12 @@ public class ReportingDBLayer extends DBLayer {
             if (reportNames != null && !reportNames.isEmpty()) {
                 clause.add("name in (:reportNames)");
             } else {
-               if (templateNames != null && !templateNames.isEmpty()) {
-                   clause.add("templateId in (:templateIds)");
-               }
-               if (states != null && !states.isEmpty()) {
-                   clause.add("state in (:states)");
-               } 
+                if (templateNames != null && !templateNames.isEmpty()) {
+                    clause.add("templateId in (:templateIds)");
+                }
+                if (states != null && !states.isEmpty()) {
+                    clause.add("state in (:states)");
+                }
             }
             if (!clause.isEmpty()) {
                 sql.append(clause.stream().collect(Collectors.joining(" and ", " where ", "")));
@@ -184,26 +188,26 @@ public class ReportingDBLayer extends DBLayer {
             if (reportNames != null && !reportNames.isEmpty()) {
                 query.setParameterList("reportNames", reportNames.stream().map(JocInventory::pathToName).collect(Collectors.toSet()));
             } else {
-               if (templateNames != null && !templateNames.isEmpty()) {
-                   query.setParameterList("templateIds", templateNames.stream().map(TemplateId::intValue).collect(Collectors.toList()));
-               }
-               if (states != null && !states.isEmpty()) {
-                   query.setParameterList("states", states.stream().map(ReportRunStateText::intValue).collect(Collectors.toList()));
-               } 
+                if (templateNames != null && !templateNames.isEmpty()) {
+                    query.setParameterList("templateIds", templateNames.stream().map(TemplateId::intValue).collect(Collectors.toList()));
+                }
+                if (states != null && !states.isEmpty()) {
+                    query.setParameterList("states", states.stream().map(ReportRunStateText::intValue).collect(Collectors.toList()));
+                }
             }
             List<DBItemReportRun> result = getSession().getResultList(query);
             if (result == null) {
                 return Collections.emptyList();
             }
             return result;
-            
+
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public DBItemReport getReport(String constraint) {
         try {
             StringBuilder sql = new StringBuilder();
@@ -211,7 +215,7 @@ public class ReportingDBLayer extends DBLayer {
             Query<DBItemReport> query = getSession().createQuery(sql.toString());
             query.setParameter("constraintHash", constraint);
             return getSession().getSingleResult(query);
-            
+
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
