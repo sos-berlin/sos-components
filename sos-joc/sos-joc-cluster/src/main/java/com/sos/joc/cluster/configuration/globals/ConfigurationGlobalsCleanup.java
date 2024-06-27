@@ -29,7 +29,7 @@ public class ConfigurationGlobalsCleanup extends AConfigurationSection {
             GlobalSettingsSectionValueType.DURATION);
     private ConfigurationEntry deploymentHistoryVersions = new ConfigurationEntry("deployment_history_versions", "10",
             GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
-    private ConfigurationEntry reportingAge = new ConfigurationEntry("reporting_age", "90d", GlobalSettingsSectionValueType.DURATION);
+    private ConfigurationEntry reportingAge = new ConfigurationEntry("reporting_age", "1y", GlobalSettingsSectionValueType.DURATION);
 
     public ConfigurationGlobalsCleanup() {
         int index = -1;

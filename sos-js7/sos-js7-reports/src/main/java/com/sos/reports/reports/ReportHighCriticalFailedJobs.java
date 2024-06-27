@@ -7,7 +7,7 @@ public class ReportHighCriticalFailedJobs extends ReportStateJobs implements IRe
 
     @Override
     public boolean getCondition(ReportRecord jobRecord) {
-        return (jobRecord.getError() && jobRecord.getCriticality() > 0);
+        return (jobRecord.getError() && jobRecord.getCriticality() ==  1);
     }
 
 }

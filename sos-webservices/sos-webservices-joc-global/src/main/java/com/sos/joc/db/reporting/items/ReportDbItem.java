@@ -11,65 +11,59 @@ import com.sos.inventory.model.report.TemplateId;
 import com.sos.joc.model.reporting.ReportItem;
 
 public class ReportDbItem extends ReportItem {
-    
+
     @JsonIgnore
     private String content;
-    
+
     @JsonIgnore
     public String getContent() {
         return content;
     }
-    
+
     @JsonIgnore
     public void setContent(String content) {
         this.content = content;
     }
-    
+
     public void setFrequency(Number frequency) {
-        if (frequency == null) {
-            super.setFrequency((Frequency) null);
-        }
+
         try {
             super.setFrequency(Frequency.fromValue(frequency.intValue()));
-        } catch (IllegalArgumentException e) {
+        } catch (Exception e) {
             super.setFrequency((Frequency) null);
         }
     }
 
     public void setSort(Number sort) {
-        if (sort == null) {
-            super.setSort((ReportOrder) null);
-        }
+
         try {
             super.setSort(ReportOrder.fromValue(sort.intValue()));
-        } catch (IllegalArgumentException e) {
+        } catch (Exception e) {
             super.setSort((ReportOrder) null);
         }
     }
-    
+
     public void setPeriodLength(Number periodLength) {
         if (periodLength != null) {
             super.setPeriodLength(periodLength.intValue());
         }
     }
-    
+
     public void setPeriodStep(Number periodStep) {
         if (periodStep != null) {
             super.setPeriodStep(periodStep.intValue());
         }
     }
-    
+
     public void setTemplateName(Number templateId) {
-        if (templateId == null) {
-            super.setTemplateName((TemplateId) null);
-        }
+
         try {
             super.setTemplateName(TemplateId.fromValue(templateId.intValue()));
-        } catch (IllegalArgumentException e) {
+        } catch (Exception e) {
             super.setTemplateName((TemplateId) null);
         }
     }
-    
+
     public void setDateFrom(Date dateFrom) {
         if (dateFrom != null) {
             try {
@@ -79,7 +73,7 @@ public class ReportDbItem extends ReportItem {
             }
         }
     }
-    
+
     public void setDateTo(Date dateTo) {
         if (dateTo != null) {
             try {
@@ -89,5 +83,5 @@ public class ReportDbItem extends ReportItem {
             }
         }
     }
-    
+
 }
