@@ -98,7 +98,7 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     private ConfigurationEntry reportJavaOptions = new ConfigurationEntry("report_java_options", "", GlobalSettingsSectionValueType.STRING);
 
     //order tags instead orderId
-    private ConfigurationEntry numOfTagsDisplayedAsOrderId = new ConfigurationEntry("num_of_tags_displayed_as_order_id", "10",
+    private ConfigurationEntry numOfTagsDisplayedAsOrderId = new ConfigurationEntry("num_of_tags_displayed_as_order_id", "0",
             GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
 
     private Charset encodingCharset = null;
