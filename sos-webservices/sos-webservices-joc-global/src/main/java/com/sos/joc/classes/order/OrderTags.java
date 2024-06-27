@@ -637,9 +637,10 @@ public class OrderTags {
 
     public static List<ResponseBaseSearchItem> getTagSearch(String controllerId, String search, SOSHibernateSession session)
             throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select tagName as name, min(ordering) as ordering from ");
+        //StringBuilder hql = new StringBuilder("select tagName as name, min(ordering) as ordering from ");
+        StringBuilder hql = new StringBuilder("select tagName as name from ");
         hql.append(DBLayer.DBITEM_HISTORY_ORDER_TAGS);
-        List<String> whereClause = new ArrayList<>();
+        List<String> whereClause = new ArrayList<>(2);
         if (SOSString.isEmpty(controllerId)) {
             controllerId = null;
         } else {

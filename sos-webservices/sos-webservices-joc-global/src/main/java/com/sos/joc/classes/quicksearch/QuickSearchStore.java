@@ -11,6 +11,7 @@ import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -435,12 +436,13 @@ public class QuickSearchStore {
             }
 
             session = Globals.createSosHibernateStatelessConnection("TagSearch");
-            Comparator<ResponseBaseSearchItem> comp = Comparator.comparingInt(ResponseBaseSearchItem::getOrdering);
+//            Comparator<ResponseBaseSearchItem> comp = Comparator.comparingInt(ResponseBaseSearchItem::getOrdering);
             
             if (type != null) {
                 DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
                 List<InventoryTagItem> items = dbLayer.getTagSearch(in.getControllerId(), Collections.singleton(type.intValue()), in.getSearch());
                 if (items != null) {
+                    Comparator<ResponseBaseSearchItem> comp = Comparator.comparingInt(ResponseBaseSearchItem::getOrdering);
                     Predicate<InventoryTagItem> isPermitted = item -> folderPermissions.isPermittedForFolder(item.getFolder());
                     return items.stream().filter(isPermitted).peek(item -> item.setFolder(null)).distinct().sorted(comp).collect(Collectors.toList());
                 } else {
@@ -448,8 +450,11 @@ public class QuickSearchStore {
                 }
 
             } else if (nonConfigurationType != null && nonConfigurationType.equals("ORDER")) {
-                return OrderTags.getTagSearch(in.getControllerId(), in.getSearch(), session).stream().distinct().sorted(comp.thenComparing(
-                        ResponseBaseSearchItem::getLowerCaseName)).collect(Collectors.toList());
+//                return OrderTags.getTagSearch(in.getControllerId(), in.getSearch(), session).stream().distinct().sorted(comp.thenComparing(
+//                        ResponseBaseSearchItem::getLowerCaseName)).collect(Collectors.toList());
+                AtomicInteger ordering = new AtomicInteger(1);
+                return OrderTags.getTagSearch(in.getControllerId(), in.getSearch(), session).stream().distinct().sorted(Comparator.comparing(
+                        ResponseBaseSearchItem::getLowerCaseName)).peek(item -> item.setOrdering(ordering.getAndIncrement())).collect(Collectors.toList());
             }
             return Collections.emptyList();
         } finally {
