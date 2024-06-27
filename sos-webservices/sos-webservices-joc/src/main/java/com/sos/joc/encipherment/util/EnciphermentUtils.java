@@ -61,9 +61,16 @@ public class EnciphermentUtils {
             if (args == null) {
                 args = new Environment();
             }
-            args.setAdditionalProperty(EnciphermentUtils.ARG_NAME_ENCIPHERMENT_CERTIFICATE, JsonConverter.quoteString(certificate));
-            args.setAdditionalProperty(EnciphermentUtils.ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH, JsonConverter.quoteString(privateKeyPath));
+            args.setAdditionalProperty(ARG_NAME_ENCIPHERMENT_CERTIFICATE, JsonConverter.quoteString(certificate));
+            args.setAdditionalProperty(ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH, JsonConverter.quoteString(privateKeyPath));
             existingJobResource.setArguments(args);
+            Environment env = existingJobResource.getEnv();
+            if(env == null) {
+                env = new Environment();
+            }
+            env.setAdditionalProperty(ARG_NAME_ENCIPHERMENT_CERTIFICATE.toUpperCase(), "$".concat(ARG_NAME_ENCIPHERMENT_CERTIFICATE));
+            env.setAdditionalProperty(ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH.toUpperCase(), "$".concat(ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH));
+            existingJobResource.setEnv(env);
             dbExistingJobResource.setContent(Globals.objectMapper.writeValueAsString(existingJobResource));
             dbExistingJobResource.setFolder(jobResourceFolder);
             path = Paths.get(dbExistingJobResource.getFolder()).resolve(certAlias);
@@ -79,6 +86,10 @@ public class EnciphermentUtils {
             args.setAdditionalProperty(EnciphermentUtils.ARG_NAME_ENCIPHERMENT_CERTIFICATE, JsonConverter.quoteString(certificate));
             args.setAdditionalProperty(EnciphermentUtils.ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH, JsonConverter.quoteString(privateKeyPath));
             newJobResource.setArguments(args);
+            Environment env = new Environment();
+            env.setAdditionalProperty(ARG_NAME_ENCIPHERMENT_CERTIFICATE.toUpperCase(),"$".concat(ARG_NAME_ENCIPHERMENT_CERTIFICATE));
+            env.setAdditionalProperty(ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH.toUpperCase(), "$".concat(ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH));
+            newJobResource.setEnv(env);
             newJobResource.setVersion(Globals.getStrippedInventoryVersion());
             newDBJobResource.setName(certAlias);
             newDBJobResource.setFolder(jobResourceFolder);
