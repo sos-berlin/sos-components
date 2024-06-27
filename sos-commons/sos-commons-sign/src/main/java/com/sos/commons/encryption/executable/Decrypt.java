@@ -176,6 +176,9 @@ public class Decrypt {
         }
         if(keyPath != null && iv != null && encryptedKey != null && (encryptedValue != null || encryptedFile != null)) {
           if (encryptedValue != null) {
+              if(encryptedValue.startsWith(EncryptionUtils.ENCRYPTION_IDENTIFIER)) {
+                  encryptedValue = encryptedValue.substring(EncryptionUtils.ENCRYPTION_IDENTIFIER.length());
+              }
             decryptedValue = decrypt(privKey, iv, encryptedKey, encryptedValue);
           } else if (encryptedFile != null){
             if(outFile == null) {
