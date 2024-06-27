@@ -7,7 +7,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalLong;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -315,22 +315,44 @@ public class HistoryControllerHandler {
     private synchronized AtomicLong process(AtomicLong eventId) throws Exception {
         stopper = new FluxStopper();
         try (JStandardEventBus<ProxyEvent> eventBus = new JStandardEventBus<>(ProxyEvent.class)) {
-            // Scheduler sequentialScheduler = Schedulers.newSingle("sequential-scheduler");
+            // Original Flux
             Flux<JEventAndControllerState<Event>> flux = api.eventFlux(eventBus, OptionalLong.of(eventId.get()));
-            flux = flux.flatMap(e -> processAllEvents(e).thenReturn(e));// parallel execution
-            // flux = flux.publishOn(Schedulers.immediate()); // execute/block in the main thread
-            // flux = flux.publishOn(sequentialScheduler); // execute not in the main thread but new single thread
-            // flux = flux.publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool())); // parallel execution
-            flux = flux.publishOn(Schedulers.single()); // execute not in the main thread but in global single thread (managed by reactor/system)
-            // after publishOn call, so that the original order of events is preserved
-            flux = flux.filter(e -> HistoryEventType.fromValue(e.stampedEvent().value().event().getClass().getSimpleName()) != null);
+            // Step 1 - Process all events in parallel, but use flatMapSequential to ensure that the original events order is maintained
+            flux = flux.flatMapSequential(e -> Mono.fromRunnable(() -> {
+                // process all events in parallel before filtering
+                JocClusterServiceLogger.setLogger(serviceIdentifier);
+                if (!closed.get()) {
+                    try {
+                        FluxEventHandler.processEvent(e, controllerId);
+                    } catch (Throwable e1) {
+                        LOGGER.info("[FluxEventHandler.processEvent]" + e.toString(), e);
+                    }
+                }
+            }).thenReturn(e).filter(event -> {
+                // Step 2 - filter events (in parallel) for history processing
+                try {
+                    return HistoryEventType.fromValue(event.stampedEvent().value().event().getClass().getSimpleName()) != null;
+                } catch (Throwable ex) {
+                    JocClusterServiceLogger.setLogger(serviceIdentifier);
+                    LOGGER.info("[process][error filtering event]" + ex.toString(), ex);
+                    return false;
+                }
+            }).subscribeOn(Schedulers.fromExecutor(ForkJoinPool.commonPool())));
+
+            // Step 3 - Publish events to another scheduler? currently problem by stop flux - thread IllegalMonitorStateException(NPE)
+            // flux = flux.publishOn(Schedulers.single());
+
+            // Error handling and completion
             flux = flux.doOnError(this::fluxDoOnError);
             flux = flux.doOnComplete(this::fluxDoOnComplete);
             flux = flux.doOnCancel(this::fluxDoOnCancel);
             flux = flux.doFinally(this::fluxDoFinally);
 
+            // Step 4 - Take events until stopper signals and process them in batches
             flux.takeUntilOther(stopper.stopped()).map(this::map2fat).filter(e -> e.getEventId() != null).bufferTimeout(config
                     .getBufferTimeoutMaxSize(), Duration.ofSeconds(config.getBufferTimeoutMaxTime())).toIterable().forEach(list -> {
+                        JocClusterServiceLogger.setLogger(serviceIdentifier);
+
                         boolean run = true;
                         int errorCounter = 0;
                         long errorStartMs = 0;
@@ -763,21 +785,6 @@ public class HistoryControllerHandler {
         }
     }
 
-    private Mono<Void> processAllEvents(JEventAndControllerState<Event> event) {
-        CompletableFuture<Void> future = new CompletableFuture<>();
-        CompletableFuture.runAsync(() -> {
-            JocClusterServiceLogger.setLogger(serviceIdentifier);
-            try {
-                FluxEventHandler.processEvent(event, controllerId);
-                future.complete(null);
-            } catch (Throwable e) {
-                LOGGER.warn("[processAllEvents]" + e.toString(), e);
-                future.completeExceptionally(e);
-            }
-        });
-        return Mono.fromFuture(future);
-    }
-
     private void fluxDoOnCancel() {
         JocClusterServiceLogger.setLogger(serviceIdentifier);
         LOGGER.debug(String.format("[%s][fluxDoOnCancel]", controllerId));
@@ -878,7 +885,7 @@ public class HistoryControllerHandler {
                 stopper.stop();
             }
         } catch (Throwable e) {
-            LOGGER.warn("[stopFlux]" + e.toString(), e);
+            LOGGER.warn("[stopFlux][stopper]" + e.toString(), e);
         }
     }
 
