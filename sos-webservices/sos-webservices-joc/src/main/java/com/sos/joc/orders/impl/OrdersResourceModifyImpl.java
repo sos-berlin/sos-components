@@ -656,7 +656,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             postProblem(suspendibleOrders, controllerId, withPostProblem, "suspendible");
             return suspendibleOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
         case CONTINUE:
-            Map<Boolean, Set<JOrder>> continuableOrders = orderStream.collect(Collectors.groupingBy(o -> o.asScala().isGoCommandable(),
+            Map<Boolean, Set<JOrder>> continuableOrders = orderStream.collect(Collectors.groupingBy(OrdersHelper::isContinuable,
                     Collectors.toSet()));
             postProblem(continuableOrders, controllerId, withPostProblem, "continuable");
             return continuableOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());

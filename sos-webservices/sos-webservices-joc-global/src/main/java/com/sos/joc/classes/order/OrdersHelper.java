@@ -340,6 +340,11 @@ public class OrdersHelper {
         return o.isSuspended() || isFailed(o);// || isSuspending(o.mark());
     }
     
+    public static boolean isContinuable(JOrder order) {
+        Order<Order.State> o = order.asScala();
+        return o.isGoCommandable() && !o.isSuspended();
+    }
+    
     private static boolean isTerminated(Order<Order.State> o) {
         return ((o.state() instanceof Order.Finished$) || (o.state() instanceof Order.Cancelled$));
     }
@@ -591,7 +596,7 @@ public class OrdersHelper {
         // only label of a job instruction is available
         orderPositionToLabel(jOrder, controllerState).ifPresent(l -> o.setLabel(l));
         // completed order
-        if (jOrder.asScala().isGoCommandable()) {
+        if (isContinuable(jOrder)) {
             o.setIsContinuable(true);
         }
 //        if (controllerState != null) {
