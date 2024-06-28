@@ -3,6 +3,7 @@ package com.sos.reports.reports;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -37,7 +38,7 @@ public class ReportParallelJobExecutions implements IReport {
 
     Map<String, ReportResultData> periods = new HashMap<String, ReportResultData>();
 
-    private void removeOldPeriods(ReportPeriod reportPeriod) {
+    private void removeOldPeriods(LocalDateTime startTime) {
         if (periods.size() > MAX_PERIODS_IN_LIST) {
             Comparator<ReportResultData> byCount = (obj1, obj2) -> obj1.getCount().compareTo(obj2.getCount());
 
@@ -51,8 +52,7 @@ public class ReportParallelJobExecutions implements IReport {
                         reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
             }
 
-            periods.entrySet().removeIf(p -> p.getValue().getEndTime().toInstant().atZone(ZoneId.of(UTC)).toLocalDateTime().isBefore(reportPeriod
-                    .getFrom()));
+            periods.clear();
             periods.putAll(jobsInPeriodResult);
 
         }
@@ -95,7 +95,7 @@ public class ReportParallelJobExecutions implements IReport {
 
         reportResultData.getData().add(reportResultDataItem);
         periods.put(periodKey, reportResultData);
-        removeOldPeriods(reportPeriod);
+        removeOldPeriods(jobRecord.getStartTime());
 
     }
 
