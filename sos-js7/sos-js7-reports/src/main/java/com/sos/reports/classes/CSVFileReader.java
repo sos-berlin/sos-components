@@ -97,6 +97,7 @@ public class CSVFileReader {
                     }
                 }
                 report.putHits();
+
             } else {
                 LOGGER.debug("File:" + path.getFileName() + " not found in " + path.getParent());
             }
@@ -107,6 +108,7 @@ public class CSVFileReader {
                 reportArguments.reportFrequency.nextPeriod();
             }
         }
+
     }
 
     public void readJobs(IReport report, ReportArguments reportArguments) throws IOException {

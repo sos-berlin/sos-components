@@ -3,6 +3,8 @@ package com.sos.reports.reports;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -30,9 +32,31 @@ import com.sos.reports.classes.ReportRecord;
 public class ReportParallelWorkflowExecutions implements IReport {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ReportParallelWorkflowExecutions.class);
+    private static final String UTC = "UTC";
+    private static final int MAX_PERIODS_IN_LIST = 10000;
     private ReportArguments reportArguments;
 
     Map<String, ReportResultData> periods = new HashMap<String, ReportResultData>();
+
+    private void removeOldPeriods() {
+        if (periods.size() > MAX_PERIODS_IN_LIST) {
+            Comparator<ReportResultData> byCount = (obj1, obj2) -> obj1.getCount().compareTo(obj2.getCount());
+
+            LinkedHashMap<String, ReportResultData> workflowsInPeriodResult = null;
+            if (this.reportArguments.sort.equals(ReportOrder.HIGHEST)) {
+                workflowsInPeriodResult = periods.entrySet().stream().sorted(Map.Entry.<String, ReportResultData> comparingByValue(byCount)
+                        .reversed()).limit(reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1,
+                                LinkedHashMap::new));
+            } else {
+                workflowsInPeriodResult = periods.entrySet().stream().sorted(Map.Entry.<String, ReportResultData> comparingByValue(byCount)).limit(
+                        reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+            }
+
+            periods.clear();
+            periods.putAll(workflowsInPeriodResult);
+
+        }
+    }
 
     private void count(ReportRecord orderRecord, ReportPeriod reportPeriod) {
 
@@ -47,6 +71,8 @@ public class ReportParallelWorkflowExecutions implements IReport {
         } else {
             reportResultData.setCount(reportResultData.getCount() + 1);
         }
+        reportResultData.setEndTime(java.util.Date.from(reportPeriod.getTo().atZone(ZoneId.of(UTC)).toInstant()));
+
         ReportResultDataItem reportResultDataItem = new ReportResultDataItem();
 
         if (orderRecord.getEndTime() != null) {
@@ -69,10 +95,11 @@ public class ReportParallelWorkflowExecutions implements IReport {
 
         reportResultData.getData().add(reportResultDataItem);
         periods.put(periodKey, reportResultData);
-
     }
 
     public void count(ReportRecord orderRecord) {
+
+        removeOldPeriods();
 
         ReportPeriod reportPeriod = new ReportPeriod();
         reportPeriod.setPeriodLength(reportArguments.periodLength);

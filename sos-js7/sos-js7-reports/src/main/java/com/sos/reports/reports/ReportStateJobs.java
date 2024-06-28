@@ -35,6 +35,7 @@ public abstract class ReportStateJobs implements IReport {
     Map<String, ReportResultData> listOfJobs = new HashMap<String, ReportResultData>();
 
     public void count(ReportRecord jobRecord) {
+        
         if (this.getCondition(jobRecord)) {
             ReportResultData reportResultData = listOfJobs.get(jobRecord.getJobNameWithWorkflowName());
             if (reportResultData == null) {
@@ -63,6 +64,7 @@ public abstract class ReportStateJobs implements IReport {
 
             reportResultData.getData().add(reportResultDataItem);
             listOfJobs.put(jobRecord.getJobNameWithWorkflowName(), reportResultData);
+
         }
     }
 
