@@ -23,7 +23,6 @@ import com.sos.joc.log4j2.NotificationAppender;
 import com.sos.joc.monitoring.MonitorService;
 import com.sos.joc.monitoring.configuration.objects.workflow.Workflow;
 import com.sos.joc.monitoring.configuration.objects.workflow.WorkflowJob;
-import com.sos.joc.monitoring.configuration.objects.workflow.WorkflowJob.CriticalityType;
 import com.sos.joc.monitoring.db.DBLayerMonitoring;
 import com.sos.monitoring.notification.NotificationType;
 import com.sos.monitoring.notification.OrderNotificationRange;
@@ -340,15 +339,15 @@ public abstract class AConfiguration {
                             for (WorkflowJob j : w.getJobs()) {
                                 if (j.getName().equals(AElement.ASTERISK) || jobName.matches(j.getName())) {
                                     if (j.getLabel().equals(AElement.ASTERISK) || (jobLabel != null && jobLabel.matches(j.getLabel()))) {
-                                        if (j.getCriticality().equals(CriticalityType.ALL) || j.getCriticality().equals(WorkflowJob.getCriticality(
-                                                criticality))) {
+                                        if (j.criticalityMatches(criticality)) {
                                             if (j.getReturnCodeFrom() == -1 || (returnCode != null && returnCode >= j.getReturnCodeFrom())) {
                                                 if (j.getReturnCodeTo() == -1 || returnCode <= j.getReturnCodeTo()) {
                                                     if (isDebugEnabled) {
                                                         LOGGER.debug(String.format(
                                                                 "%s[%s][found][%s][job match][configured][workflow path=%s controller_id=%s][job]name=%s, label=%s, criticality=%s, return_code_from=%s, return_code_to=%s",
                                                                 LOG_FIND_END, range, toString(n), w.getPath(), w.getControllerId(), j.getName(), j
-                                                                        .getLabel(), j.getCriticality(), j.getReturnCodeFrom(), j.getReturnCodeTo()));
+                                                                        .getLabel(), j.getCriticalitiesNames(), j.getReturnCodeFrom(), j
+                                                                                .getReturnCodeTo()));
                                                     }
                                                     result.add(n);
                                                     break x;
@@ -362,7 +361,8 @@ public abstract class AConfiguration {
                                             }
                                         } else if (isDebugEnabled) {
                                             LOGGER.debug(String.format("%s[%s][skip][%s][criticality not match]current=%s, configured=%s",
-                                                    LOG_FIND_END, range, toString(n), WorkflowJob.getCriticality(criticality), j.getCriticality()));
+                                                    LOG_FIND_END, range, toString(n), WorkflowJob.getCriticalityName(criticality), j
+                                                            .getCriticalitiesNames()));
                                         }
                                     } else if (isDebugEnabled) {
                                         LOGGER.debug(String.format("%s[%s][skip][%s][jobLabel not match]current=%s, configured=%s", LOG_FIND_END,
