@@ -1,7 +1,6 @@
 package com.sos.reports.reports;
 
 import java.io.IOException;
-import java.time.Period;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -50,7 +49,7 @@ public class ReportParallelAgentExecution implements IReport {
 
     public void count(ReportRecord jobRecord) {
         List<ReportPeriod> periods = agents.get(jobRecord.getAgentId());
-        List<ReportPeriod> newPeriods = new <ReportPeriod> ArrayList();
+        List<ReportPeriod> newPeriods = new ArrayList<ReportPeriod>();
 
         if (periods == null) {
             periods = new ArrayList<ReportPeriod>();

@@ -3,6 +3,7 @@ package com.sos.reports.reports;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -30,9 +31,32 @@ import com.sos.reports.classes.ReportRecord;
 public class ReportParallelJobExecutions implements IReport {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ReportParallelWorkflowExecutions.class);
+    private static final String UTC = "UTC";
+    private static final int MAX_PERIODS_IN_LIST = 10000;
     private ReportArguments reportArguments;
 
     Map<String, ReportResultData> periods = new HashMap<String, ReportResultData>();
+
+    private void removeOldPeriods(ReportPeriod reportPeriod) {
+        if (periods.size() > MAX_PERIODS_IN_LIST) {
+            Comparator<ReportResultData> byCount = (obj1, obj2) -> obj1.getCount().compareTo(obj2.getCount());
+
+            LinkedHashMap<String, ReportResultData> jobsInPeriodResult = null;
+            if (this.reportArguments.sort.equals(ReportOrder.HIGHEST)) {
+                jobsInPeriodResult = periods.entrySet().stream().sorted(Map.Entry.<String, ReportResultData> comparingByValue(byCount).reversed())
+                        .limit(reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1,
+                                LinkedHashMap::new));
+            } else {
+                jobsInPeriodResult = periods.entrySet().stream().sorted(Map.Entry.<String, ReportResultData> comparingByValue(byCount)).limit(
+                        reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+            }
+
+            periods.entrySet().removeIf(p -> p.getValue().getEndTime().toInstant().atZone(ZoneId.of(UTC)).toLocalDateTime().isBefore(reportPeriod
+                    .getFrom()));
+            periods.putAll(jobsInPeriodResult);
+
+        }
+    }
 
     private void count(ReportRecord jobRecord, ReportPeriod reportPeriod) {
 
@@ -47,6 +71,9 @@ public class ReportParallelJobExecutions implements IReport {
         } else {
             reportResultData.setCount(reportResultData.getCount() + 1);
         }
+
+        reportResultData.setEndTime(java.util.Date.from(reportPeriod.getTo().atZone(ZoneId.of(UTC)).toInstant()));
+
         ReportResultDataItem reportResultDataItem = new ReportResultDataItem();
 
         if (jobRecord.getEndTime() != null) {
@@ -68,6 +95,7 @@ public class ReportParallelJobExecutions implements IReport {
 
         reportResultData.getData().add(reportResultDataItem);
         periods.put(periodKey, reportResultData);
+        removeOldPeriods(reportPeriod);
 
     }
 

@@ -27,6 +27,8 @@ public class ReportArguments {
     public Integer hits = 10;
     public String logDir;
     public ReportOrder sort;
+    public boolean skip=false;
+    public String skipMessage="";
 
     public void setInputDirectory(String inputDirectory) {
         if (!inputDirectory.endsWith("/")) {

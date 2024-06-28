@@ -21,13 +21,13 @@ public class ReportGeneratorTestMain {
      @Test
     public void test() throws Exception {
 
-        String report = "ReportSuccessfulJobs";
-        String hits = "8";
+        String report = "reportparallelworkflowexecutions";
+        String hits = "10";
         String inputDirectory = "C:/Program Files/sos-berlin.com/js7/joc/jetty_base/reporting/data";
         String outputDirectory = "c:/tmp";
-        String frequency = "monthly";
+        String frequency = "every3years";
         String monthFrom = "2021-01";
-        String monthTo = "2021-12";
+        String monthTo = "";
        // String controller = "controller";
         String sort = "HIGHEST";
         

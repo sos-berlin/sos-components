@@ -60,6 +60,7 @@ public class ReportGenerator {
         s.append("  -f | --sort=<highest|lowest> | optional: To show the highest or lowest values. Default=highest").append(System.lineSeparator());
         s.append("  -n | --hits=<hits> | optional: Define the hits of report;default=10").append(System.lineSeparator());
         s.append("  -d | --logDir=<directory> | optional: Specify the log directory").append(System.lineSeparator());
+        s.append("  -k | --skip | optional: If set the report generation will be skipped").append(System.lineSeparator());
         System.out.println(s);
     }
 
@@ -98,6 +99,7 @@ public class ReportGenerator {
                 double2SingleOpt.put("--sort", "-f");
                 double2SingleOpt.put("--hits", "-n");
                 double2SingleOpt.put("--logDir", "-d");
+                double2SingleOpt.put("--skip", "-k");
 
                 for (int i = 0; i < args.length; i++) {
                     switch (args[i].charAt(0)) {
@@ -136,6 +138,11 @@ public class ReportGenerator {
                     String paramName = arg.getKey();
                     String paramValue = arg.getValue();
                     switch (paramName) {
+                    case "-k":
+                    case "--skip":
+                        reportArguments.skip = true;
+                        reportArguments.skipMessage = paramValue;
+                        break;
                     case "-r":
                     case "--report":
                         if (paramValue != null && !paramValue.isEmpty()) {

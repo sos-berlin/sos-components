@@ -11,6 +11,7 @@ import com.sos.commons.exception.SOSException;
 import com.sos.reports.classes.CSVFileReader;
 import com.sos.reports.classes.IReport;
 import com.sos.reports.classes.ReportArguments;
+import com.sos.reports.classes.ReportHelper;
 import com.sos.reports.reports.ReportFailedJobs;
 import com.sos.reports.reports.ReportFailedWorkflows;
 import com.sos.reports.reports.ReportFailedWorkflowsWithCancelledOrders;
@@ -104,6 +105,7 @@ public class ReportGeneratorExecuter {
         default:
             throw new SOSException("Unknown report type: " + report.getType());
         }
+
     }
 
     public int execute(ReportArguments reportArguments) throws IOException, SOSException {
@@ -115,7 +117,11 @@ public class ReportGeneratorExecuter {
         LOGGER.info("Month-From: " + reportArguments.monthFrom);
         LOGGER.info("Month-To: " + reportArguments.monthTo);
 
-        this.start();
+        if (reportArguments.skip) {
+            LOGGER.info("... execution is skipped." + reportArguments.skipMessage);
+        } else {
+            this.start();
+        }
         long stopTime = System.currentTimeMillis();
         long elapsedTime = stopTime - startTime;
         LOGGER.info("Generation of report " + reportArguments.reportId + " ready: " + elapsedTime + " ms elapsed time");
