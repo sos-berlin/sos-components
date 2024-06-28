@@ -56,6 +56,7 @@ import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.commons.sign.keys.sign.SignObject;
 import com.sos.commons.sign.keys.verify.VerifySignature;
+import com.sos.exception.SOSKeyException;
 import com.sos.joc.model.sign.JocKeyAlgorithm;
 import com.sos.joc.model.sign.JocKeyPair;
 
@@ -1294,6 +1295,23 @@ public class KeyTests {
         Files.write(Paths.get("./target/sp_invalid-4days-ago.crt"), Base64.getEncoder().encode(certInvalidFourDaysAgo.getEncoded()));
         Files.write(Paths.get("./target/sp_valid-4Days-ahead.crt"), Base64.getEncoder().encode(certValidFourDaysAhead.getEncoded()));
         Files.write(Paths.get("./target/sp_valid-in2Days-4Days-ahead.crt"), Base64.getEncoder().encode(certNotYetValidFourDaysAhead.getEncoded()));
+    }
+    
+    @Test
+    public void test32CheckDataPositive () throws SOSKeyException, IOException {
+      LOGGER.trace("***********  Test 32: check date if it is really a certificate or key  *************************");
+      String certificate = new String(Files.readAllBytes(Paths.get(X509_CERTIFICATE_PATH)), StandardCharsets.UTF_8);
+      String privateKey = new String(Files.readAllBytes(Paths.get(X509_PRIVATEKEY_PATH)), StandardCharsets.UTF_8);
+      KeyUtil.isInputCertOrPublicKey(certificate);
+      KeyUtil.isInputPrivateKey(privateKey);
+    }
+    
+    @Test(expected = SOSKeyException.class)
+    public void test33CheckDataNegative () throws SOSKeyException, IOException {
+      LOGGER.trace("***********  Test 33: check date if it is really a certificate or key  *************************");
+      String wrongValue = "Hello World";
+      KeyUtil.isInputCertOrPublicKey(wrongValue);
+      KeyUtil.isInputPrivateKey(wrongValue);
     }
     
     @SuppressWarnings("unused")

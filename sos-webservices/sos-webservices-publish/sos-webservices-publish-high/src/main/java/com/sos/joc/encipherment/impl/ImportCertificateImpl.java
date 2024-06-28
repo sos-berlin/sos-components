@@ -7,6 +7,7 @@ import java.util.Date;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -27,6 +28,7 @@ import com.sos.schema.JsonValidator;
 public class ImportCertificateImpl extends JOCResourceImpl implements IImportCertificate {
 
     private static final String API_CALL = "./encipherment/certificate/import";
+    private static final Logger LOGGER = LoggerFactory.getLogger(ImportCertificateImpl.class);
 
     @Override
     public JOCDefaultResponse postImportCertificate(String xAccessToken, FormDataBodyPart body, String certAlias, String privateKeyPath,
@@ -61,6 +63,8 @@ public class ImportCertificateImpl extends JOCResourceImpl implements IImportCer
             
             stream = body.getEntityAs(InputStream.class);
             String certificateFromFile = PublishUtils.readFileContent(stream);
+            // simple check if filter.getCertificate() really is a certificate or public key
+            KeyUtil.isInputCertOrPublicKey(certificateFromFile);
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerKeys dbLayer = new DBLayerKeys(hibernateSession);
             dbLayer.storeEnciphermentCertificate(filter.getCertAlias(), certificateFromFile, filter.getPrivateKeyPath());
@@ -80,7 +84,6 @@ public class ImportCertificateImpl extends JOCResourceImpl implements IImportCer
         } finally {
             Globals.disconnect(hibernateSession);
         }
-        // TODO and Deploy the JobResource to all controllers
     }
 
 }

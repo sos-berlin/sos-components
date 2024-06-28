@@ -54,7 +54,7 @@ public class StandardEncryptionResolver extends JobArgumentValueResolver {
         JobArgument<?> arg = allArguments.get(ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH);
         try {
             // Intentionally no support for private keys with password
-            PrivateKey pk = KeyUtil.getPrivateKey(arg == null || arg.getValue() == null ? null : arg.getValue().toString(), null);
+            PrivateKey pk = KeyUtil.getPrivateKey(arg == null || arg.getValue() == null ? null : arg.getValue().toString());
             arg.setDisplayMode(DisplayMode.UNMASKED);
             return pk;
         } catch (Throwable e) {

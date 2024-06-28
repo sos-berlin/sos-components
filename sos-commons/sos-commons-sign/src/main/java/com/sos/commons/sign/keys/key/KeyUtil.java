@@ -46,6 +46,8 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -1335,19 +1337,21 @@ public abstract class KeyUtil {
   
   public static PrivateKey getPrivateKey (Path privateKeyPath, String privateKeySecret) throws SOSKeyException {
       if(privateKeyPath == null) {
-          throw new SOSKeyException("the provided path to the private key file is null!");
+        throw new SOSKeyException("the provided path to the private key file is null!");
       }
+
       PrivateKey privKey = null;
       try {
-          if (privateKeyPath != null) {
-              if (privateKeySecret != null && !privateKeySecret.isEmpty()) {
-                  privKey = getPrivateEncryptedKey(Files.readString(privateKeyPath), privateKeySecret);
-              } else {
-                  privKey = getPrivateKeyFromString(Files.readString(privateKeyPath));
-              }
+        if (privateKeyPath != null) {
+          KeyUtil.isInputPrivateKey(Files.readString(privateKeyPath));
+          if (privateKeySecret != null && !privateKeySecret.isEmpty()) {
+              privKey = getPrivateEncryptedKey(Files.readString(privateKeyPath), privateKeySecret);
+          } else {
+              privKey = getPrivateKeyFromString(Files.readString(privateKeyPath));
           }
+        }
       } catch (Throwable e) {
-          throw new SOSKeyException(e.toString(), e);
+        throw new SOSKeyException(e.toString(), e);
       }
       return privKey;
   }
@@ -1384,6 +1388,30 @@ public abstract class KeyUtil {
           throw new SOSKeyException(e.toString(), e);
       }
       return privKey;
+  }
+  
+  public static void isInputCertOrPublicKey(String cert) throws SOSKeyException {
+    Pattern pattern = Pattern.compile("-----BEGIN (CERTIFICATE|.*PUBLIC KEY)-----(.*)-----END \\1-----", Pattern.DOTALL);
+    Matcher matcher = pattern.matcher(cert);
+    if(matcher.find()) {
+      if(matcher.find()) {
+        throw new SOSKeyException("Certificate or key bundles are not allowed, only a single certificate or public key is required.");
+      }
+    } else {
+      throw new SOSKeyException("The value is neither a X509 certificate nor a public key.");
+    }
+  }
+  
+  public static void isInputPrivateKey(String key) throws SOSKeyException {
+    Pattern pattern = Pattern.compile("-----BEGIN (.*PRIVATE KEY)-----(.*)-----END \\1-----", Pattern.DOTALL);
+    Matcher matcher = pattern.matcher(key);
+    if(matcher.find()) {
+      if(matcher.find()) {
+        throw new SOSKeyException("Key bundles are not allowed, only a single private key are required.");
+      }
+    } else {
+      throw new SOSKeyException("The value is not a private key.");
+    }
   }
   
 }

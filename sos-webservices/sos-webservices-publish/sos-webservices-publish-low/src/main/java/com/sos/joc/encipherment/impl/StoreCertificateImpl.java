@@ -1,11 +1,8 @@
 package com.sos.joc.encipherment.impl;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -13,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -28,11 +26,6 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.encipherment.StoreCertificateRequestFilter;
-import com.sos.joc.model.inventory.common.ConfigurationType;
-import com.sos.joc.model.publish.Config;
-import com.sos.joc.model.publish.Configuration;
-import com.sos.joc.model.publish.DeployFilter;
-import com.sos.joc.model.publish.DeployablesValidFilter;
 import com.sos.joc.publish.impl.DeployImpl;
 import com.sos.schema.JsonValidator;
 
@@ -55,6 +48,9 @@ public class StoreCertificateImpl extends JOCResourceImpl implements IStoreCerti
                 return jocDefaultResponse;
             }
             DBItemJocAuditLog auditLog = storeAuditLog(filter.getAuditLog(), CategoryType.CERTIFICATES);
+            
+            // simple check if filter.getCertificate() really is a certificate or public key
+            KeyUtil.isInputCertOrPublicKey(filter.getCertificate());
 
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerKeys dbLayer = new DBLayerKeys(hibernateSession);
@@ -63,7 +59,6 @@ public class StoreCertificateImpl extends JOCResourceImpl implements IStoreCerti
             final DBItemInventoryConfiguration generatedJobResource = EnciphermentUtils.createRelatedJobResource(hibernateSession, filter,
                     auditLog.getId());
             // Deploy the JobResource to all controllers
-            // What should happen if JobResource is invalid?
             new Thread(() -> {
                 byte[] deployFilter = createDeployFilter(xAccessToken, generatedJobResource, filter.getAuditLog());
                 if (deployFilter != null) {

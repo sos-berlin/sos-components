@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -48,6 +49,9 @@ public class StoreCertificateImpl extends JOCResourceImpl implements IStoreCerti
                 return jocDefaultResponse;
             }
             DBItemJocAuditLog auditLog = storeAuditLog(filter.getAuditLog(), CategoryType.CERTIFICATES);
+            
+            // simple check if filter.getCertificate() really is a certificate or public key
+            KeyUtil.isInputCertOrPublicKey(filter.getCertificate());
 
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerKeys dbLayer = new DBLayerKeys(hibernateSession);
@@ -75,10 +79,8 @@ public class StoreCertificateImpl extends JOCResourceImpl implements IStoreCerti
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
             Globals.disconnect(hibernateSession);
-            // TODO Deploy the JobResource to all controllers
-            IDeploy deploy = new DeployImpl();
-            deploy.postDeploy(xAccessToken, storeCertificateFilter);
         }
+        
     }
     
     private byte[] createDeployFilter(String xAccessToken, DBItemInventoryConfiguration jobResource, AuditParams audit) {
@@ -94,5 +96,4 @@ public class StoreCertificateImpl extends JOCResourceImpl implements IStoreCerti
         }
     }
     
-
 }

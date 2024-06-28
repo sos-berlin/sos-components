@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.Date;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -23,6 +24,7 @@ import com.sos.schema.JsonValidator;
 public class StoreCertificateImpl extends JOCResourceImpl implements IStoreCertificate {
 
     private static final String API_CALL = "./encipherment/certificate/store";
+    private static final Logger LOGGER = LoggerFactory.getLogger(StoreCertificateImpl.class);
 
     @Override
     public JOCDefaultResponse postStoreCertificate(String xAccessToken, byte[] storeCertificateFilter) {
@@ -36,6 +38,9 @@ public class StoreCertificateImpl extends JOCResourceImpl implements IStoreCerti
                 return jocDefaultResponse;
             }
             DBItemJocAuditLog auditLog = storeAuditLog(filter.getAuditLog(), CategoryType.CERTIFICATES);
+            
+            // simple check if filter.getCertificate() really is a certificate or public key
+            KeyUtil.isInputCertOrPublicKey(filter.getCertificate());
 
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerKeys dbLayer = new DBLayerKeys(hibernateSession);
