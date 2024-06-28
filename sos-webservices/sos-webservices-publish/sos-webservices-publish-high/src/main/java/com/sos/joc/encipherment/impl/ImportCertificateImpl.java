@@ -28,7 +28,7 @@ import com.sos.schema.JsonValidator;
 public class ImportCertificateImpl extends JOCResourceImpl implements IImportCertificate {
 
     private static final String API_CALL = "./encipherment/certificate/import";
-    private static final Logger LOGGER = LoggerFactory.getLogger(ImportCertificateImpl.class);
+    //private static final Logger LOGGER = LoggerFactory.getLogger(ImportCertificateImpl.class);
 
     @Override
     public JOCDefaultResponse postImportCertificate(String xAccessToken, FormDataBodyPart body, String certAlias, String privateKeyPath,

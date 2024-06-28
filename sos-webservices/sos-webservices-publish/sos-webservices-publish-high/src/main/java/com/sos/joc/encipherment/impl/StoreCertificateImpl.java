@@ -24,7 +24,7 @@ import com.sos.schema.JsonValidator;
 public class StoreCertificateImpl extends JOCResourceImpl implements IStoreCertificate {
 
     private static final String API_CALL = "./encipherment/certificate/store";
-    private static final Logger LOGGER = LoggerFactory.getLogger(StoreCertificateImpl.class);
+    //private static final Logger LOGGER = LoggerFactory.getLogger(StoreCertificateImpl.class);
 
     @Override
     public JOCDefaultResponse postStoreCertificate(String xAccessToken, byte[] storeCertificateFilter) {
