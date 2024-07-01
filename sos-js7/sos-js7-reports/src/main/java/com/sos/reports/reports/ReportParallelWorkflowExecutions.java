@@ -33,26 +33,32 @@ public class ReportParallelWorkflowExecutions implements IReport {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ReportParallelWorkflowExecutions.class);
     private static final String UTC = "UTC";
-    private static final int MAX_PERIODS_IN_LIST = 10000;
+    private static final int MAX_PERIODS_IN_LIST = 5000;
     private ReportArguments reportArguments;
 
     Map<String, ReportResultData> periods = new HashMap<String, ReportResultData>();
 
-    private void removeOldPeriods() {
+    private LinkedHashMap<String, ReportResultData> getSortetPeriods() {
+        Comparator<ReportResultData> byCount = (obj1, obj2) -> obj1.getCount().compareTo(obj2.getCount());
+
+        LinkedHashMap<String, ReportResultData> workflowsInPeriodResult = null;
+        if (reportArguments.sort.equals(ReportOrder.HIGHEST)) {
+            workflowsInPeriodResult = periods.entrySet().stream().sorted(Map.Entry.<String, ReportResultData> comparingByValue(byCount).reversed())
+                    .limit(reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1,
+                            LinkedHashMap::new));
+        } else {
+            workflowsInPeriodResult = periods.entrySet().stream().sorted(Map.Entry.<String, ReportResultData> comparingByValue(byCount)).limit(
+                    reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+        }
+        return workflowsInPeriodResult;
+    }
+
+    private void removeOldPeriods(LocalDateTime startTime) {
         if (periods.size() > MAX_PERIODS_IN_LIST) {
-            Comparator<ReportResultData> byCount = (obj1, obj2) -> obj1.getCount().compareTo(obj2.getCount());
 
-            LinkedHashMap<String, ReportResultData> workflowsInPeriodResult = null;
-            if (this.reportArguments.sort.equals(ReportOrder.HIGHEST)) {
-                workflowsInPeriodResult = periods.entrySet().stream().sorted(Map.Entry.<String, ReportResultData> comparingByValue(byCount)
-                        .reversed()).limit(reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1,
-                                LinkedHashMap::new));
-            } else {
-                workflowsInPeriodResult = periods.entrySet().stream().sorted(Map.Entry.<String, ReportResultData> comparingByValue(byCount)).limit(
-                        reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
-            }
+            LinkedHashMap<String, ReportResultData> workflowsInPeriodResult = getSortetPeriods();
 
-            periods.clear();
+            periods.entrySet().removeIf(p -> p.getValue().getEndTime().toInstant().atZone(ZoneId.of(UTC)).toLocalDateTime().isBefore(startTime));
             periods.putAll(workflowsInPeriodResult);
 
         }
@@ -99,7 +105,7 @@ public class ReportParallelWorkflowExecutions implements IReport {
 
     public void count(ReportRecord orderRecord) {
 
-        removeOldPeriods();
+        removeOldPeriods(orderRecord.getStartTime());
 
         ReportPeriod reportPeriod = new ReportPeriod();
         reportPeriod.setPeriodLength(reportArguments.periodLength);
@@ -118,17 +124,7 @@ public class ReportParallelWorkflowExecutions implements IReport {
     }
 
     public ReportResult putHits() {
-        Comparator<ReportResultData> byCount = (obj1, obj2) -> obj1.getCount().compareTo(obj2.getCount());
-
-        LinkedHashMap<String, ReportResultData> workflowsInPeriodResult = null;
-        if (this.reportArguments.sort.equals(ReportOrder.HIGHEST)) {
-            workflowsInPeriodResult = periods.entrySet().stream().sorted(Map.Entry.<String, ReportResultData> comparingByValue(byCount).reversed())
-                    .limit(reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1,
-                            LinkedHashMap::new));
-        } else {
-            workflowsInPeriodResult = periods.entrySet().stream().sorted(Map.Entry.<String, ReportResultData> comparingByValue(byCount)).limit(
-                    reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
-        }
+        LinkedHashMap<String, ReportResultData> workflowsInPeriodResult = getSortetPeriods();
 
         ReportResult reportResult = new ReportResult();
 

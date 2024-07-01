@@ -33,26 +33,32 @@ public class ReportParallelJobExecutions implements IReport {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ReportParallelWorkflowExecutions.class);
     private static final String UTC = "UTC";
-    private static final int MAX_PERIODS_IN_LIST = 10000;
+    private static final int MAX_PERIODS_IN_LIST = 5000;
     private ReportArguments reportArguments;
 
     Map<String, ReportResultData> periods = new HashMap<String, ReportResultData>();
 
+    private LinkedHashMap<String, ReportResultData> getSortetPeriods() {
+        Comparator<ReportResultData> byCount = (obj1, obj2) -> obj1.getCount().compareTo(obj2.getCount());
+
+        LinkedHashMap<String, ReportResultData> jobsInPeriodResult = null;
+        if (reportArguments.sort.equals(ReportOrder.HIGHEST)) {
+            jobsInPeriodResult = periods.entrySet().stream().sorted(Map.Entry.<String, ReportResultData> comparingByValue(byCount).reversed())
+                    .limit(reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1,
+                            LinkedHashMap::new));
+        } else {
+            jobsInPeriodResult = periods.entrySet().stream().sorted(Map.Entry.<String, ReportResultData> comparingByValue(byCount)).limit(
+                    reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+        }
+        return jobsInPeriodResult;
+    }
+    
     private void removeOldPeriods(LocalDateTime startTime) {
         if (periods.size() > MAX_PERIODS_IN_LIST) {
-            Comparator<ReportResultData> byCount = (obj1, obj2) -> obj1.getCount().compareTo(obj2.getCount());
+ 
+            LinkedHashMap<String, ReportResultData> jobsInPeriodResult = getSortetPeriods();
 
-            LinkedHashMap<String, ReportResultData> jobsInPeriodResult = null;
-            if (this.reportArguments.sort.equals(ReportOrder.HIGHEST)) {
-                jobsInPeriodResult = periods.entrySet().stream().sorted(Map.Entry.<String, ReportResultData> comparingByValue(byCount).reversed())
-                        .limit(reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1,
-                                LinkedHashMap::new));
-            } else {
-                jobsInPeriodResult = periods.entrySet().stream().sorted(Map.Entry.<String, ReportResultData> comparingByValue(byCount)).limit(
-                        reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
-            }
-
-            periods.clear();
+            periods.entrySet().removeIf(p -> p.getValue().getEndTime().toInstant().atZone(ZoneId.of(UTC)).toLocalDateTime().isBefore(startTime));
             periods.putAll(jobsInPeriodResult);
 
         }
@@ -95,11 +101,12 @@ public class ReportParallelJobExecutions implements IReport {
 
         reportResultData.getData().add(reportResultDataItem);
         periods.put(periodKey, reportResultData);
-        removeOldPeriods(jobRecord.getStartTime());
 
     }
 
     public void count(ReportRecord jobRecord) {
+
+        removeOldPeriods(jobRecord.getStartTime());
 
         ReportPeriod reportPeriod = new ReportPeriod();
         reportPeriod.setPeriodLength(reportArguments.periodLength);
@@ -119,16 +126,7 @@ public class ReportParallelJobExecutions implements IReport {
     }
 
     public ReportResult putHits() {
-        Comparator<ReportResultData> byCount = (obj1, obj2) -> obj1.getCount().compareTo(obj2.getCount());
-
-        LinkedHashMap<String, ReportResultData> jobsInPeriodResult = null;
-        if (this.reportArguments.sort.equals(ReportOrder.HIGHEST)) {
-            jobsInPeriodResult = periods.entrySet().stream().sorted(Map.Entry.<String, ReportResultData> comparingByValue(byCount).reversed()).limit(
-                    reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
-        } else {
-            jobsInPeriodResult = periods.entrySet().stream().sorted(Map.Entry.<String, ReportResultData> comparingByValue(byCount)).limit(
-                    reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
-        }
+        LinkedHashMap<String, ReportResultData> jobsInPeriodResult = getSortetPeriods();
 
         ReportResult reportResult = new ReportResult();
 
