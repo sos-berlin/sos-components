@@ -88,7 +88,7 @@ public class RunReport extends AReporting {
     public static LocalDate relativeDateToSpecificLocalDate(String month, boolean to) {
         // TODO for unit y -> always 01-yyyy
         // for unit q -> always 01-yyyy, 04-yyyy, 07-yyyy or 10-yyyy
-        if (month == null) {
+        if (month == null || month.isEmpty()) {
             if (to) {
                 return null;
             } else {
