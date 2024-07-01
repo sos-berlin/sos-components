@@ -91,7 +91,7 @@ import js7.data.item.VersionedItemId;
 import js7.data.item.VersionedItemPath;
 import js7.data.lock.LockPath;
 import js7.data.order.OrderEvent;
-import js7.data.order.OrderEvent.OrderAdded;
+import js7.data.order.OrderEvent.OrderAddedX;
 import js7.data.order.OrderEvent.OrderBroken;
 import js7.data.order.OrderEvent.OrderCancellationMarked;
 import js7.data.order.OrderEvent.OrderDeleted$;
@@ -102,6 +102,7 @@ import js7.data.order.OrderEvent.OrderLocksAcquired;
 import js7.data.order.OrderEvent.OrderLocksQueued;
 import js7.data.order.OrderEvent.OrderLocksReleased;
 import js7.data.order.OrderEvent.OrderNoticeEvent;
+import js7.data.order.OrderEvent.OrderOrderAdded;
 import js7.data.order.OrderEvent.OrderProcessed;
 import js7.data.order.OrderEvent.OrderProcessingKilled$;
 import js7.data.order.OrderEvent.OrderProcessingStarted;
@@ -139,7 +140,7 @@ public class EventService {
     // OrderFinished, OrderCancelled, OrderDeleted$ extends OrderTerminated
     private static List<Class<? extends Event>> eventsOfController = Arrays.asList(ControllerEvent.class, ClusterEvent.class,
             AgentRefStateEvent.class, OrderStarted$.class, OrderProcessingKilled$.class, OrderFailed.class, OrderFailedInFork.class,
-            OrderRetrying.class, OrderBroken.class, OrderTerminated.class, OrderAdded.class, OrderProcessed.class, OrderSuspended$.class,
+            OrderRetrying.class, OrderBroken.class, OrderTerminated.class, OrderAddedX.class, OrderProcessed.class, OrderSuspended$.class,
             OrderSuspensionMarked.class, OrderResumed.class, OrderResumptionMarked.class, OrderCancellationMarked.class, OrderPrompted.class,
             OrderPromptAnswered.class, OrderProcessingStarted.class, OrderDeleted$.class, OrderStopped$.class, VersionedItemAddedOrChanged.class,
             UnsignedSimpleItemEvent.class, UnsignedItemEvent.class, ItemDeleted.class, ItemAttached.class, BoardEvent.class, OrderLocksAcquired.class,
@@ -519,7 +520,7 @@ public class EventService {
             }
             
             if (evt instanceof OrderEvent) {
-                final OrderId orderId = (OrderId) key;
+                final OrderId orderId = (evt instanceof OrderOrderAdded) ? ((OrderOrderAdded) evt).orderId() : (OrderId) key;
                 String mainOrderId = orderId.string().substring(0, OrdersHelper.mainOrderIdLength);
                 JOrder optOrder = currentState.idToOrder().get(orderId);
                 if (optOrder != null) {

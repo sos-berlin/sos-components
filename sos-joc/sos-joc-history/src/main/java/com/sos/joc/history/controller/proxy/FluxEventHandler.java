@@ -1,9 +1,5 @@
 package com.sos.joc.history.controller.proxy;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.sos.commons.util.SOSString;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.order.AddOrderEvent;
 import com.sos.joc.event.bean.order.TerminateOrderEvent;
@@ -18,13 +14,9 @@ import js7.proxy.javaapi.data.controller.JEventAndControllerState;
 
 public class FluxEventHandler {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(FluxEventHandler.class);
-    
     public static void processEvent(JEventAndControllerState<Event> eventAndState, String controllerId) throws Exception {
         Event event = eventAndState.stampedEvent().value().event();
-        if ((event instanceof OrderAdded) || (event instanceof OrderOrderAdded)) {
-            LOGGER.info("Order event received: " + SOSString.toString(event));
-            LOGGER.info("OrderId received: " + SOSString.toString(eventAndState.stampedEvent().value().key()));
+        if (event instanceof OrderAdded) {
             OrderId oid = (OrderId) eventAndState.stampedEvent().value().key();
             boolean isChildOrder = oid.string().contains("|");
             if (!isChildOrder) {
@@ -32,6 +24,13 @@ public class FluxEventHandler {
                 if (jOrder != null) {
                     EventBus.getInstance().post(new AddOrderEvent(controllerId, oid.string(), jOrder.workflowId().path().string()));
                 }
+            }
+        } else if (event instanceof OrderOrderAdded) {
+            OrderOrderAdded oa = (OrderOrderAdded) event;
+            OrderId oid = oa.orderId();
+            boolean isChildOrder = oid.string().contains("|");
+            if (!isChildOrder) {
+                EventBus.getInstance().post(new AddOrderEvent(controllerId, oid.string(), oa.workflowId().path().string()));
             }
         } else if (event instanceof OrderTerminated) { // cancelled or finished
             OrderId oid = (OrderId) eventAndState.stampedEvent().value().key();
