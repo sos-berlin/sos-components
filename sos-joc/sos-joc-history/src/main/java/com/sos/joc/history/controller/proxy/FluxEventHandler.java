@@ -1,11 +1,16 @@
 package com.sos.joc.history.controller.proxy;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.sos.commons.util.SOSString;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.order.AddOrderEvent;
 import com.sos.joc.event.bean.order.TerminateOrderEvent;
 
 import js7.data.event.Event;
 import js7.data.order.OrderEvent.OrderAdded;
+import js7.data.order.OrderEvent.OrderOrderAdded;
 import js7.data.order.OrderEvent.OrderTerminated;
 import js7.data.order.OrderId;
 import js7.data_for_java.order.JOrder;
@@ -13,9 +18,13 @@ import js7.proxy.javaapi.data.controller.JEventAndControllerState;
 
 public class FluxEventHandler {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(FluxEventHandler.class);
+    
     public static void processEvent(JEventAndControllerState<Event> eventAndState, String controllerId) throws Exception {
         Event event = eventAndState.stampedEvent().value().event();
-        if (event instanceof OrderAdded) {
+        if ((event instanceof OrderAdded) || (event instanceof OrderOrderAdded)) {
+            LOGGER.info("Order event received: " + SOSString.toString(event));
+            LOGGER.info("OrderId received: " + SOSString.toString(eventAndState.stampedEvent().value().key()));
             OrderId oid = (OrderId) eventAndState.stampedEvent().value().key();
             boolean isChildOrder = oid.string().contains("|");
             if (!isChildOrder) {
