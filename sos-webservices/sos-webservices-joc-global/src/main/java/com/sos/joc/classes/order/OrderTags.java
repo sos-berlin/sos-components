@@ -78,6 +78,8 @@ public class OrderTags {
     
     @Subscribe({ HistoryOrderStarted.class })
     public void addHistoryIdToTags(HistoryOrderStarted evt) {
+        LOGGER.info("HistoryOrderStarted event received: " + evt.getOrderId());
+        LOGGER.info(SOSString.toString(evt));
         if (!evt.getOrderId().contains("|")) { // not child order
             addHistoryIdToTags(evt.getControllerId(), evt.getOrderId(), (AHistoryBean) evt.getPayload());
         }
@@ -406,7 +408,7 @@ public class OrderTags {
     }
     
     public static Either<Exception, Void> updateHistoryIdOfOrder(String controllerId, String orderId, Long historyId) {
-
+        LOGGER.info("Update Order tags from HistoryOrderStarted event: orderId '" + orderId + "' -> historyId " + historyId);
         if (historyId != null && historyId > 0L && controllerId != null && orderId != null) {
             SOSHibernateSession connection = null;
             try {
