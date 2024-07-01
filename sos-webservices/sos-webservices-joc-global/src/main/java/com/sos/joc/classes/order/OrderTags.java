@@ -78,8 +78,6 @@ public class OrderTags {
     
     @Subscribe({ HistoryOrderStarted.class })
     public void addHistoryIdToTags(HistoryOrderStarted evt) {
-        LOGGER.info("HistoryOrderStarted event received: " + evt.getOrderId());
-        LOGGER.info(SOSString.toString(evt));
         if (!evt.getOrderId().contains("|")) { // not child order
             addHistoryIdToTags(evt.getControllerId(), evt.getOrderId(), (AHistoryBean) evt.getPayload());
         }
@@ -89,6 +87,7 @@ public class OrderTags {
     public void addTagsToOrderbyFileOrderSourceOrAddOrderInstruction(AddOrderEvent evt) {
         boolean isChildOrder = evt.getOrderId().contains("|");
         if (!isChildOrder) {
+            LOGGER.info("AddOrderEvent received: " + SOSString.toString(evt));
             addTagsToOrderbyFileOrderSourceOrAddOrderInstruction(evt.getControllerId(), evt.getOrderId(), evt.getWorkflowName());
         }
     }
@@ -104,6 +103,7 @@ public class OrderTags {
     // public for test
     public void addTagsToOrderbyFileOrderSourceOrAddOrderInstruction(String controllerId, String orderId, String workflowName) {
         String orderIdModifier = orderId.substring(12, 13);
+        LOGGER.info("orderIdModifier: " + orderIdModifier);
         if (orderIdModifier.equals("D")) {
             addTagsToOrderbyAddOrderInstruction(controllerId, orderId);
         } else if (orderIdModifier.equals("F")) {
@@ -209,7 +209,6 @@ public class OrderTags {
     }
 
     private synchronized void addTagsToOrderbyAddOrderInstruction(String controllerId, String orderId) {
-        LOGGER.info("OrderAdded event received: " + orderId);
         SOSHibernateSession connection = null;
         try {
             String orderIdPattern = orderId.substring(OrdersHelper.mainOrderIdLength, OrdersHelper.mainOrderIdLength + 19);
@@ -437,7 +436,7 @@ public class OrderTags {
 
         Query<Integer> query = connection.createQuery(hql);
         query.setParameter("historyId", historyId);
-        query.setParameter("oldOrderId", orderId);
+        query.setParameter("orderId", orderId);
         query.setParameter("controllerId", controllerId);
         return connection.executeUpdate(query);
     }
