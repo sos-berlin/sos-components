@@ -174,6 +174,8 @@ public class RunReport extends AReporting {
                     tempDirs.add(tempDir);
                     dbItems.addAll(Files.list(tempDir).filter(file -> file.getFileName().toString().startsWith(reportFilePrefix)).map(
                             file -> getHistoryDBItem(file, f)).collect(Collectors.toList()));
+                } else {
+                    skippedRun(f, commonScript);
                 }
             }
 
@@ -252,6 +254,17 @@ public class RunReport extends AReporting {
         } catch (Exception e) {
             deleteTmpDir(tempDir);
             throw e;
+        }
+    }
+    
+    private static void skippedRun(Frequency f, String commonScript) {
+        try {
+            StringBuilder s = new StringBuilder(commonScript);
+            s.append(" -p ").append(f.strValue());
+            s.append(" -k ").append("\"\"");
+            JOCSOSShell.executeCommand(s.toString(), reportingDir);
+        } catch (Exception e) {
+            //
         }
     }
 
