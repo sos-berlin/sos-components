@@ -295,7 +295,7 @@ public class OrderListSynchronizer {
                         plannedOrder.setAverageDuration(durations.get(plannedOrder.getWorkflowPath()));
                         item = dbLayer.store(plannedOrder, id, nr, size);
 
-                        if (nr == size && plannedOrder.hasTags()) { // only last cyclic order is used for tags
+                        if (plannedOrder.hasTags()) {
                             orderTags.put(item, plannedOrder.getTags());
                         }
                         

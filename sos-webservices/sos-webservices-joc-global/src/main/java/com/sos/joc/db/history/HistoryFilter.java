@@ -4,8 +4,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.LongSummaryStatistics;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -18,7 +18,7 @@ import com.sos.joc.model.order.OrderStateText;
 
 public class HistoryFilter {
     
-    private Set<Long> historyIds;
+    private Collection<List<Long>> historyIds;
     private Date executedFrom;
     private Date executedTo;
     private Date stateFrom;
@@ -63,11 +63,15 @@ public class HistoryFilter {
     private String workflowName;
     private Collection<List<String>> workflowNames;
     private Collection<List<String>> mainOrderIds;
+    private Collection<List<Long>> nonExclusiveHistoryIds;
+    private LongSummaryStatistics nonExclusiveHistoryIdsStats;
+    
     
     private boolean hasPermission = true;
     private boolean taskFromHistoryIdAndNode = false;
     private boolean folderPermissionsAreChecked = false;
 
+    
     public void setLimit(Integer limit) {
         this.limit = limit;
     }
@@ -246,14 +250,36 @@ public class HistoryFilter {
 
     public void setHistoryIds(Collection<Long> historyIds) {
         if (historyIds != null) {
-            this.historyIds = historyIds.stream().filter(Objects::nonNull).collect(Collectors.toSet()); 
+            AtomicInteger counter = new AtomicInteger();
+            this.historyIds = historyIds.stream().distinct().collect(Collectors.groupingBy(it -> counter.getAndIncrement()
+                    / SOSHibernate.LIMIT_IN_CLAUSE)).values();
         } else {
             this.historyIds = null;
         }
     }
 
-    public Set<Long> getHistoryIds() {
+    public Collection<List<Long>> getHistoryIds() {
         return historyIds;
+    }
+    
+    public void setNonExclusiveHistoryIds(Collection<Long> historyIds) {
+        if (historyIds != null) {
+            AtomicInteger counter = new AtomicInteger();
+            this.nonExclusiveHistoryIds = historyIds.stream().distinct().collect(Collectors.groupingBy(it -> counter.getAndIncrement()
+                    / SOSHibernate.LIMIT_IN_CLAUSE)).values();
+            this.nonExclusiveHistoryIdsStats = historyIds.stream().collect(Collectors.summarizingLong(i -> i));
+        } else {
+            this.nonExclusiveHistoryIds = null;
+            this.nonExclusiveHistoryIdsStats = null;
+        }
+    }
+
+    public Collection<List<Long>> getNonExclusiveHistoryIds() {
+        return nonExclusiveHistoryIds;
+    }
+    
+    public LongSummaryStatistics getNonExclusiveHistoryIdsStats() {
+        return nonExclusiveHistoryIdsStats;
     }
     
     public Map<String, Set<String>> getOrders() {

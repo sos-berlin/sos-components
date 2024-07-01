@@ -234,7 +234,7 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
             for (DBItemDailyPlanWithHistory item : orders) {
                 PlannedOrderItem p = createPlanItem(item);
                 p.setControllerId(controllerId);
-                p.setTags(orderTags.get(OrdersHelper.getOrderIdMainPart(p.getOrderId())));
+                p.setTags(orderTags.get(OrdersHelper.getParentOrderId(p.getOrderId())));
 
                 if ((p.getStartMode().equals(DBLayerDailyPlannedOrders.START_MODE_CYCLIC) && !in.getExpandCycleOrders())) {
                     result.add(getCyclicPlannedOrder(dbLayer, plannedStartFrom, plannedStartTo, p, getCyclicDetails));

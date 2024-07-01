@@ -26,6 +26,7 @@ import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.history.HistoryMapper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.order.OrderTags;
+import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
@@ -102,6 +103,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
             boolean hasPermission = true;
             Set<Folder> permittedFolders = addPermittedFolder(in.getFolders());
             boolean folderPermissionsAreChecked = false;
+            boolean withOrderTags = in.getOrderTags() != null && !in.getOrderTags().isEmpty();
 
             HistoryFilter dbFilter = new HistoryFilter();
             dbFilter.setControllerIds(allowedControllers);
@@ -160,11 +162,11 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                         dbFilter.setWorkflowNames(workflowTagLayer.getDeployedWorkflowNamesByTags(controllerId, in.getWorkflowTags()));
                     }
                     
-                    if (in.getOrderTags() != null && !in.getOrderTags().isEmpty()) {
+                    if (withOrderTags) {
                         if (session == null) {
                             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
                         }
-                        dbFilter.setMainOrderIds(OrderTags.getMainOrderIdsByTags(controllerId, in.getOrderTags(), session));
+                        dbFilter.setNonExclusiveHistoryIds(OrderTags.getHistoryIdsByTags(controllerId, in.getOrderTags(), session));
                     }
                 }
             }
@@ -175,44 +177,63 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                 }
                 dbFilter.setLimit(in.getLimit());
                 
-                if (session == null) {
-                    session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+                boolean resultIsEmpty = false;
+                if (withOrderTags && (dbFilter.getNonExclusiveHistoryIds() == null || dbFilter.getNonExclusiveHistoryIds().isEmpty())) {
+                    resultIsEmpty = true;
                 }
-                JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(session, dbFilter);
-                ScrollableResults<DBItemHistoryOrder> sr = null;
-
-                try {
-                    boolean profiler = false;
-                    Instant profilerStart = Instant.now();
-                    sr = dbLayer.getMainOrders();
-                    Instant profilerAfterSelect = Instant.now();
-                    Instant profilerFirstEntry = null;
-
-                    int i = 0;
-                    Map<String, Boolean> checkedFolders = new HashMap<>();
-                    while (sr.next()) {
-                        i++;
-
-                        DBItemHistoryOrder item = sr.get();
-                        if (profiler && i == 1) {
-                            profilerFirstEntry = Instant.now();
-                        }
-                        if (!folderPermissionsAreChecked && !canAdd(item, permittedFolders, checkedFolders)) {
-                            continue;
-                        }
-                        //Set<String> tags = OrderTags.getTagsByOrderId(controllerId, item.getOrderId(), session);
-                        history.add(HistoryMapper.map2OrderHistoryItem(item));
+                
+                if (!resultIsEmpty) {
+                    if (session == null) {
+                        session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
                     }
-                    logProfiler(profiler, i, profilerStart, profilerAfterSelect, profilerFirstEntry);
-                } catch (Exception e) {
-                    throw e;
-                } finally {
-                    if (sr != null) {
-                        sr.close();
+                    JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(session, dbFilter);
+                    ScrollableResults<DBItemHistoryOrder> sr = null;
+                    List<Long> historyIdsForOrderTagging = new ArrayList<>();
+                    boolean withTagsDisplayedAsOrderId = OrderTags.withTagsDisplayedAsOrderId();
+
+                    try {
+                        boolean profiler = false;
+                        Instant profilerStart = Instant.now();
+                        sr = dbLayer.getMainOrders();
+                        Instant profilerAfterSelect = Instant.now();
+                        Instant profilerFirstEntry = null;
+
+                        int i = 0;
+                        Map<String, Boolean> checkedFolders = new HashMap<>();
+                        while (sr.next()) {
+                            i++;
+
+                            DBItemHistoryOrder item = sr.get();
+                            if (profiler && i == 1) {
+                                profilerFirstEntry = Instant.now();
+                            }
+                            if (!folderPermissionsAreChecked && !canAdd(item, permittedFolders, checkedFolders)) {
+                                continue;
+                            }
+                            if (withTagsDisplayedAsOrderId) {
+                                historyIdsForOrderTagging.add(item.getId());
+                            }
+                            history.add(HistoryMapper.map2OrderHistoryItem(item));
+                        }
+                        logProfiler(profiler, i, profilerStart, profilerAfterSelect, profilerFirstEntry);
+                    } catch (Exception e) {
+                        throw e;
+                    } finally {
+                        if (sr != null) {
+                            sr.close();
+                        }
+                    }
+                    
+                    if (!historyIdsForOrderTagging.isEmpty()) {
+                        Map<String, Set<String>> orderTags = OrderTags.getTagsByHistoryIds(controllerId, historyIdsForOrderTagging, session);
+                        if (!orderTags.isEmpty()) {
+                            history = history.stream().peek(item -> item.setTags(orderTags.get(OrdersHelper.getParentOrderId(item.getOrderId()))))
+                                    .collect(Collectors.toList());
+                        }
                     }
                 }
             }
-
+            
             answer.setDeliveryDate(new Date());
             answer.setHistory(history);
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));

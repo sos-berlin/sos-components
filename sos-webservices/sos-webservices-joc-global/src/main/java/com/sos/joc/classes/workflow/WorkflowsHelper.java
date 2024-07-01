@@ -368,7 +368,7 @@ public class WorkflowsHelper {
         Stream<JOrder> taggedWorkflowNames = Stream.empty();
         if (orderTags != null && currentstate != null) {
             List<String> taggedOIds = OrderTags.getMainOrderIdsByTags(controllerId, orderTags, session);
-            taggedWorkflowNames = currentstate.ordersBy(o -> taggedOIds.contains(OrdersHelper.getOrderIdMainPart(o.id().string())));
+            taggedWorkflowNames = currentstate.ordersBy(o -> taggedOIds.contains(o.id().string()));
         }
         return taggedWorkflowNames;
     }
@@ -1496,7 +1496,7 @@ public class WorkflowsHelper {
         Predicate<JOrder> orderTagsFilter = o -> true;
         List<String> taggedOIds = OrderTags.getMainOrderIdsByTags(workflowsFilter.getControllerId(), workflowsFilter.getOrderTags());
         if (workflowsFilter.getOrderTags() != null && !workflowsFilter.getOrderTags().isEmpty()) {
-            orderTagsFilter = o -> taggedOIds.contains(OrdersHelper.getOrderIdMainPart(o.id().string()));
+            orderTagsFilter = o -> taggedOIds.contains(OrdersHelper.getParentOrderId(o.id().string()));
         }
 
         Set<VersionedItemId<WorkflowPath>> workflows2 = workflowsFilter.getWorkflowIds().parallelStream().filter(w -> JOCResourceImpl.canAdd(

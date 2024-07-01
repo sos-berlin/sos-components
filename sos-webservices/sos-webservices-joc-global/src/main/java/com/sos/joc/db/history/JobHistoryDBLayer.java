@@ -17,8 +17,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import jakarta.persistence.TemporalType;
-
 import org.hibernate.ScrollableResults;
 import org.hibernate.query.Query;
 
@@ -27,7 +25,6 @@ import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
-import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.reporting.ReportingLoader;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.history.common.HistorySeverity;
@@ -39,6 +36,8 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.HistoryStateText;
 import com.sos.joc.model.order.OrderStateText;
+
+import jakarta.persistence.TemporalType;
 
 public class JobHistoryDBLayer {
 
@@ -367,11 +366,11 @@ public class JobHistoryDBLayer {
     }
 
     private String getOrdersWhere() {
-        return getWhere("", true);
+        return getWhere("", "id", true);
     }
 
     private String getOrderStepsWhere() {
-        return getWhere("", false);
+        return getWhere("", "historyOrderId", false);
     }
     
 //    private String getOrdersWhere(String tableAlias) {
@@ -382,7 +381,7 @@ public class JobHistoryDBLayer {
 //        return getWhere(tableAlias, false);
 //    }
 
-    private String getWhere(String tableAlias, boolean orderLogs) {
+    private String getWhere(String tableAlias, String historyOrderColumnName,  boolean orderLogs) {
         String clause = "";
         String alias = (tableAlias != null && !tableAlias.isBlank()) ? tableAlias + "." : "";
         
@@ -409,9 +408,14 @@ public class JobHistoryDBLayer {
             // where += and + " state > " + OrderStateText.PENDING.intValue();
             // and = " and";
         }
-
+        
         if (filter.getHistoryIds() != null && !filter.getHistoryIds().isEmpty()) {
-            clauses.add(alias + "id in (:historyIds)");
+            clause = IntStream.range(0, filter.getHistoryIds().size()).mapToObj(i -> alias + "id in (:historyIds" + i + ")")
+                    .collect(Collectors.joining(" or "));
+            if (filter.getHistoryIds().size() > 1) {
+                clause = "(" + clause + ")";
+            }
+            clauses.add(clause);
         } else {
             if (filter.getExecutedFrom() == null && filter.getExecutedTo() == null) {
                 filter.setExecutedFrom(new Date(0)); // set to 1970 to use startTime index
@@ -573,6 +577,18 @@ public class JobHistoryDBLayer {
                         clauses.add(alias + "jobName = :jobName");
                     }
                 }
+                if (filter.getNonExclusiveHistoryIds() != null && !filter.getNonExclusiveHistoryIds().isEmpty()) {
+                    if (filter.getNonExclusiveHistoryIdsStats() != null) {
+                        clauses.add(alias + historyOrderColumnName + " <= " + filter.getNonExclusiveHistoryIdsStats().getMax());
+                        clauses.add(alias + historyOrderColumnName + " >= " + filter.getNonExclusiveHistoryIdsStats().getMin());
+                    }
+                    clause = IntStream.range(0, filter.getNonExclusiveHistoryIds().size()).mapToObj(i -> alias + historyOrderColumnName
+                            + " in (:hoIds" + i + ")").collect(Collectors.joining(" or "));
+                    if (filter.getNonExclusiveHistoryIds().size() > 1) {
+                        clause = "(" + clause + ")";
+                    }
+                    clauses.add(clause);
+                }
                 if (filter.getWorkflowNames() != null && !filter.getWorkflowNames().isEmpty()) {
                     clause = IntStream.range(0, filter.getWorkflowNames().size()).mapToObj(i -> alias + "workflowName in (:workflowNames" + i + ")")
                             .collect(Collectors.joining(" or "));
@@ -582,8 +598,8 @@ public class JobHistoryDBLayer {
                     clauses.add(clause);
                 }
                 if (filter.getMainOrderIds() != null && !filter.getMainOrderIds().isEmpty()) {
-                    clause = IntStream.range(0, filter.getMainOrderIds().size()).mapToObj(i -> "substring(" + alias + "orderId, 1, "
-                            + OrdersHelper.mainOrderIdLength + ") in (:mainOrderIds" + i + ")").collect(Collectors.joining(" or "));
+                    clause = IntStream.range(0, filter.getMainOrderIds().size()).mapToObj(i -> alias + "orderId in (:mainOrderIds" + i + ")").collect(
+                            Collectors.joining(" or "));
                     if (filter.getMainOrderIds().size() > 1) {
                         clause = "(" + clause + ")";
                     }
@@ -622,7 +638,16 @@ public class JobHistoryDBLayer {
             query.setParameterList("agentIds", filter.getAgentIds());
         }
         if (filter.getHistoryIds() != null && !filter.getHistoryIds().isEmpty()) {
-            query.setParameterList("historyIds", filter.getHistoryIds());
+            AtomicInteger counter = new AtomicInteger();
+            for (List<Long> chunk : filter.getHistoryIds()) {
+                query.setParameterList("historyIds" + counter.getAndIncrement(), chunk);
+            };
+        }
+        if (filter.getNonExclusiveHistoryIds() != null && !filter.getNonExclusiveHistoryIds().isEmpty()) {
+            AtomicInteger counter = new AtomicInteger();
+            for (List<Long> chunk : filter.getNonExclusiveHistoryIds()) {
+                query.setParameterList("hoIds" + counter.getAndIncrement(), chunk);
+            };
         }
         if (filter.getExecutedFrom() != null) {
             query.setParameter("startTimeFrom", filter.getExecutedFrom(), TemporalType.TIMESTAMP);

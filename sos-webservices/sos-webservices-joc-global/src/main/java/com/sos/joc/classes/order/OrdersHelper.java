@@ -603,7 +603,7 @@ public class OrdersHelper {
 //            o.setTags(OrderTags.getTags(controllerState.asScala().controllerId().string(), o.getOrderId()));
 //        }
         if (orderTags != null && !orderTags.isEmpty()) {
-            o.setTags(orderTags.get(OrdersHelper.getOrderIdMainPart(o.getOrderId())));
+            o.setTags(orderTags.get(getParentOrderId(o.getOrderId())));
         }
         return o;
     }
@@ -1520,6 +1520,14 @@ public class OrdersHelper {
     // alias
     public static String getOrderIdMainPart(String orderId) {
         return getCyclicOrderIdMainPart(orderId);
+    }
+    
+    public static String getParentOrderId(String orderId) {
+        int pipePosition = orderId.indexOf("|");
+        if (pipePosition > -1) {
+            return orderId.substring(0, pipePosition);
+        }
+        return orderId;
     }
 
     public static String getDateFromOrderId(String orderId) {

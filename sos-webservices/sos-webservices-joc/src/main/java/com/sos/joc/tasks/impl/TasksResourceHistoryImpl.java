@@ -27,6 +27,7 @@ import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.history.HistoryMapper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.order.OrderTags;
+import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
@@ -109,53 +110,75 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                     in.setLimit(WebserviceConstants.HISTORY_RESULTSET_LIMIT);
                 }
                 dbFilter.setLimit(in.getLimit());
-
-                if (session == null) {
-                    session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+                
+                boolean resultIsEmpty = false;
+                if (in.getOrderTags() != null && !in.getOrderTags().isEmpty() && (dbFilter.getNonExclusiveHistoryIds() == null || dbFilter
+                        .getNonExclusiveHistoryIds().isEmpty())) {
+                    resultIsEmpty = true;
                 }
-                JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(session, dbFilter);
 
-                ScrollableResults<DBItemHistoryOrderStep> sr = null;
-                try {
-                    boolean profiler = false;
-                    Instant profilerStart = Instant.now();
-                    if (dbFilter.getTaskFromHistoryIdAndNode()) {
-                        sr = dbLayer.getJobsFromHistoryIdAndPosition(in.getHistoryIds().stream().filter(Objects::nonNull).filter(t -> t
-                                .getHistoryId() != null).collect(Collectors.groupingBy(TaskIdOfOrder::getHistoryId, Collectors.mapping(
-                                        TaskIdOfOrder::getPosition, Collectors.toSet()))));
-                    } else {
-                        sr = dbLayer.getJobs();
+                if (!resultIsEmpty) {
+                    if (session == null) {
+                        session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
                     }
-                    Instant profilerAfterSelect = Instant.now();
+                    JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(session, dbFilter);
 
-                    if (sr != null) {
-                        Instant profilerFirstEntry = null;
-                        int i = 0;
-                        Map<String, Boolean> checkedControllers = new HashMap<>();
-                        boolean isControllerIdEmpty = (in.getControllerId() == null || in.getControllerId().isEmpty());
-                        Map<String, Boolean> checkedFolders = new HashMap<>();
-                        while (sr.next()) {
-                            i++;
-
-                            DBItemHistoryOrderStep item = sr.get();
-                            if (profiler && i == 1) {
-                                profilerFirstEntry = Instant.now();
-                            }
-                            if (isControllerIdEmpty && !getControllerPermissions(item, accessToken, checkedControllers)) {
-                                continue;
-                            }
-                            if (!dbFilter.isFolderPermissionsAreChecked() && !canAdd(item, permittedFolders, checkedFolders)) {
-                                continue;
-                            }
-                            history.add(HistoryMapper.map2TaskHistoryItem(item));
+                    ScrollableResults<DBItemHistoryOrderStep> sr = null;
+                    try {
+                        boolean profiler = false;
+                        Instant profilerStart = Instant.now();
+                        if (dbFilter.getTaskFromHistoryIdAndNode()) {
+                            sr = dbLayer.getJobsFromHistoryIdAndPosition(in.getHistoryIds().stream().filter(Objects::nonNull).filter(t -> t
+                                    .getHistoryId() != null).collect(Collectors.groupingBy(TaskIdOfOrder::getHistoryId, Collectors.mapping(
+                                            TaskIdOfOrder::getPosition, Collectors.toSet()))));
+                        } else {
+                            sr = dbLayer.getJobs();
                         }
-                        logProfiler(profiler, i, profilerStart, profilerAfterSelect, profilerFirstEntry);
-                    }
-                } catch (Exception e) {
-                    throw e;
-                } finally {
-                    if (sr != null) {
-                        sr.close();
+                        Instant profilerAfterSelect = Instant.now();
+
+                        if (sr != null) {
+                            Instant profilerFirstEntry = null;
+                            int i = 0;
+                            Map<String, Boolean> checkedControllers = new HashMap<>();
+                            boolean isControllerIdEmpty = (in.getControllerId() == null || in.getControllerId().isEmpty());
+                            Map<String, Boolean> checkedFolders = new HashMap<>();
+                            List<Long> historyIdsForOrderTagging = new ArrayList<>();
+                            boolean withTagsDisplayedAsOrderId = OrderTags.withTagsDisplayedAsOrderId();
+
+                            while (sr.next()) {
+                                i++;
+
+                                DBItemHistoryOrderStep item = sr.get();
+                                if (profiler && i == 1) {
+                                    profilerFirstEntry = Instant.now();
+                                }
+                                if (isControllerIdEmpty && !getControllerPermissions(item, accessToken, checkedControllers)) {
+                                    continue;
+                                }
+                                if (!dbFilter.isFolderPermissionsAreChecked() && !canAdd(item, permittedFolders, checkedFolders)) {
+                                    continue;
+                                }
+                                if (withTagsDisplayedAsOrderId) {
+                                    historyIdsForOrderTagging.add(item.getHistoryOrderId());
+                                }
+                                history.add(HistoryMapper.map2TaskHistoryItem(item));
+                            }
+                            logProfiler(profiler, i, profilerStart, profilerAfterSelect, profilerFirstEntry);
+
+                            if (!historyIdsForOrderTagging.isEmpty()) {
+                                Map<String, Set<String>> orderTags = OrderTags.getTagsByHistoryIds(controllerId, historyIdsForOrderTagging, session);
+                                if (!orderTags.isEmpty()) {
+                                    history = history.stream().peek(item -> item.setTags(orderTags.get(OrdersHelper.getParentOrderId(item
+                                            .getOrderId())))).collect(Collectors.toList());
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        throw e;
+                    } finally {
+                        if (sr != null) {
+                            sr.close();
+                        }
                     }
                 }
             }
@@ -277,7 +300,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                         if (session == null) {
                             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
                         }
-                        dbFilter.setMainOrderIds(OrderTags.getMainOrderIdsByTags(in.getControllerId(), in.getOrderTags(), session));
+                        dbFilter.setNonExclusiveHistoryIds(OrderTags.getHistoryIdsByTags(in.getControllerId(), in.getOrderTags(), session));
                     }
                 }
             }

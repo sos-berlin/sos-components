@@ -67,7 +67,7 @@ public class DBLayerOrderVariables extends DBLayer {
     }
     
     public int update(String controllerId, String oldOrderId, String newOrderId, boolean isCyclic) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("update  ").append(DBLayer.DBITEM_DPL_ORDER_VARIABLES).append(" ");
+        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_DPL_ORDER_VARIABLES).append(" ");
         hql.append("set orderId=:newOrderId ");
         hql.append("where controllerId=:controllerId ");
         hql.append("and orderId ");
@@ -87,7 +87,7 @@ public class DBLayerOrderVariables extends DBLayer {
         query.setParameter("controllerId", controllerId);
         int i = getSession().executeUpdate(query);
         
-        OrderTags.updateTagsOfOrder(controllerId, oldOrderId, newOrderId, getSession());
+        OrderTags.updateOrderIdOfOrder(controllerId, oldOrderId, newOrderId, getSession());
         
         return i;
     }
@@ -96,10 +96,9 @@ public class DBLayerOrderVariables extends DBLayer {
         return update(controllerId, oldOrderId, newOrderId, false);
     }
     
-    public DBItemDailyPlanVariable copy(String controllerId, String oldOrderId, String newOrderId, Date plannedStart, boolean isCyclic) throws SOSHibernateException {
-        
-        OrderTags.copyTagsOfOrder(controllerId, oldOrderId, newOrderId, plannedStart, getSession());
-        
+    public DBItemDailyPlanVariable copy(String controllerId, String oldOrderId, String newOrderId, boolean isCyclic)
+            throws SOSHibernateException {
+
         DBItemDailyPlanVariable vars = getOrderVariable(controllerId, oldOrderId, isCyclic);
         if (vars != null) {
             DBItemDailyPlanVariable copiedVars = new DBItemDailyPlanVariable();
@@ -113,9 +112,5 @@ public class DBLayerOrderVariables extends DBLayer {
             return copiedVars;
         }
         return null;
-    }
-
-    public DBItemDailyPlanVariable copy(String controllerId, String oldOrderId, String newOrderId, Date plannedStart) throws SOSHibernateException {
-        return copy(controllerId, oldOrderId, newOrderId, plannedStart, false);
     }
 }
