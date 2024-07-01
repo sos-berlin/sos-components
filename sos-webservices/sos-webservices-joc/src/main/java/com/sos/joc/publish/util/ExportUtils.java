@@ -20,13 +20,12 @@ import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import jakarta.ws.rs.core.StreamingOutput;
-
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
@@ -36,6 +35,7 @@ import com.sos.joc.classes.inventory.JsonSerializer;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
+import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -52,6 +52,9 @@ import com.sos.joc.model.publish.ControllerObject;
 import com.sos.joc.model.publish.DeployablesValidFilter;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.folder.ExportFolderFilter;
+import com.sos.joc.model.tag.ExportedTagItem;
+import com.sos.joc.model.tag.ExportedTagItems;
+import com.sos.joc.model.tag.ExportedTags;
 import com.sos.joc.publish.common.ConfigurationObjectFileExtension;
 import com.sos.joc.publish.common.ControllerObjectFileExtension;
 import com.sos.joc.publish.db.DBLayerDeploy;
@@ -64,10 +67,14 @@ import com.sos.sign.model.jobresource.JobResource;
 import com.sos.sign.model.lock.Lock;
 import com.sos.sign.model.workflow.Workflow;
 
+import jakarta.ws.rs.core.StreamingOutput;
+
 public class ExportUtils {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(ExportUtils.class);
     private static final String AGENT_FILE_EXTENSION = ".agent.json";
+    private static final String TAGS_ENTRY_NAME = "workflow.tags.json";
+
     
     public static Set<ControllerObject> getFolderControllerObjectsForSigning(ExportFolderFilter filter, String account, DBLayerDeploy dbLayer,
             String commitId) throws SOSHibernateException {
@@ -331,6 +338,7 @@ public class ExportUtils {
     public static StreamingOutput writeZipFileForSigning(Set<ControllerObject> deployables,
             Set<UpdateableWorkflowJobAgentName> updateableAgentNames, Set<UpdateableFileOrderSourceAgentName> updateableFOSAgentNames,
             String commitId, String controllerId, DBLayerDeploy dbLayer, Version jocVersion, Version apiVersion, Version inventoryVersion) {
+        ExportedTags tags = getTagsToExportFromControllerObjects(deployables, dbLayer.getSession());
         StreamingOutput streamingOutput = new StreamingOutput() {
 
             @Override
@@ -396,6 +404,11 @@ public class ExportUtils {
                             zipOut.write(contentBytes);
                             zipOut.closeEntry();
                         }
+                        ZipEntry entry = new ZipEntry(TAGS_ENTRY_NAME);
+                        zipOut.putNextEntry(entry);
+                        contentBytes = Globals.prettyPrintObjectMapper.writeValueAsBytes(tags);
+                        zipOut.write(contentBytes);
+                        zipOut.closeEntry();
                     }
                     JocMetaInfo jocMetaInfo = createJocMetaInfo(jocVersion, apiVersion, inventoryVersion);
                     if (!ImportUtils.isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
@@ -426,6 +439,7 @@ public class ExportUtils {
 
     public static StreamingOutput writeZipFileShallow(Set<ConfigurationObject> deployables, DBLayerDeploy dbLayer, Version jocVersion,
             Version apiVersion, Version inventoryVersion, boolean relativePath, List<String> startPaths) {
+        ExportedTags tags = getTagsToExportFromConfigurationObjects(deployables, dbLayer.getSession());
         StreamingOutput streamingOutput = new StreamingOutput() {
 
             @Override
@@ -500,6 +514,12 @@ public class ExportUtils {
                             }
                         }
                     }
+                    ZipEntry tagEntry = new ZipEntry(TAGS_ENTRY_NAME);
+                    zipOut.putNextEntry(tagEntry);
+                    byte[] contentBytes = Globals.prettyPrintObjectMapper.writeValueAsBytes(tags);
+                    zipOut.write(contentBytes);
+                    zipOut.closeEntry();
+
                     JocMetaInfo jocMetaInfo = createJocMetaInfo(jocVersion, apiVersion, inventoryVersion);
                     if (!ImportUtils.isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
                         String zipEntryName = ImportUtils.JOC_META_INFO_FILENAME;
@@ -525,6 +545,7 @@ public class ExportUtils {
     public static StreamingOutput writeTarGzipFileForSigning(Set<ControllerObject> deployables,
             Set<UpdateableWorkflowJobAgentName> updateableAgentNames, Set<UpdateableFileOrderSourceAgentName> updateableFOSAgentNames,
             String commitId, String controllerId, DBLayerDeploy dbLayer, Version jocVersion, Version apiVersion, Version inventoryVersion) {
+        ExportedTags tags = getTagsToExportFromControllerObjects(deployables, dbLayer.getSession());
         StreamingOutput streamingOutput = new StreamingOutput() {
 
             @Override
@@ -593,6 +614,12 @@ public class ExportUtils {
                             tarOut.closeArchiveEntry();
                         }
                     }
+                    TarArchiveEntry tagEntry = new TarArchiveEntry(TAGS_ENTRY_NAME);
+                    contentBytes = Globals.prettyPrintObjectMapper.writeValueAsBytes(tags);
+                    tagEntry.setSize(contentBytes.length);
+                    tarOut.putArchiveEntry(tagEntry);
+                    tarOut.write(contentBytes);
+                    tarOut.closeArchiveEntry();
                     JocMetaInfo jocMetaInfo = createJocMetaInfo(jocVersion, apiVersion, inventoryVersion);
                     if (!ImportUtils.isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
                         String zipEntryName = ImportUtils.JOC_META_INFO_FILENAME;
@@ -641,6 +668,7 @@ public class ExportUtils {
 
     public static StreamingOutput writeTarGzipFileShallow(Set<ConfigurationObject> configurations, DBLayerDeploy dbLayer, Version jocVersion,
             Version apiVersion, Version inventoryVersion, boolean relativePath, List<String> startPaths) throws Exception {
+        ExportedTags tags = getTagsToExportFromConfigurationObjects(configurations, dbLayer.getSession());
         StreamingOutput streamingOutput = new StreamingOutput() {
 
             @Override
@@ -723,6 +751,12 @@ public class ExportUtils {
                             }
                         }
                     }
+                    TarArchiveEntry tagEntry = new TarArchiveEntry(TAGS_ENTRY_NAME);
+                    byte[] contentBytes = Globals.prettyPrintObjectMapper.writeValueAsBytes(tags);
+                    tagEntry.setSize(contentBytes.length);
+                    tarOut.putArchiveEntry(tagEntry);
+                    tarOut.write(contentBytes);
+                    tarOut.closeArchiveEntry();
                      JocMetaInfo jocMetaInfo = createJocMetaInfo(jocVersion, apiVersion, inventoryVersion);
                     if (!ImportUtils.isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
                         String zipEntryName = ImportUtils.JOC_META_INFO_FILENAME;
@@ -872,4 +906,55 @@ public class ExportUtils {
         return streamingOutput;
     }
     
+    private static ExportedTags getTagsToExportFromControllerObjects(Set<ControllerObject> deployables, SOSHibernateSession session) {
+      ExportedTags tagsToExport = new ExportedTags();
+      InventoryTagDBLayer tagDbLayer = new InventoryTagDBLayer(session);
+      for(ControllerObject deployable : deployables) {
+        List<String> tags = null;
+        if(deployable.getPath().contains("/")) {
+          tags = tagDbLayer.getTags(Paths.get(deployable.getPath()).getFileName().toString(), deployable.getObjectType().intValue());
+        } else {
+          tags = tagDbLayer.getTags(deployable.getPath(), deployable.getObjectType().intValue());
+        }
+        
+        tags.stream().forEach(tag -> {
+          ExportedTagItem tagItem = new ExportedTagItem();
+          tagItem.setName(tag);
+          ExportedTagItems references = new ExportedTagItems();
+          references.setName(deployable.getPath());
+          references.setType(ConfigurationType.fromValue(deployable.getObjectType().intValue()).value());
+          tagItem.getUsedBy().add(references);
+          tagsToExport.getTags().add(tagItem);
+        });
+      }
+      return tagsToExport;
+    }
+
+    private static ExportedTags getTagsToExportFromConfigurationObjects(Set<ConfigurationObject> deployables, SOSHibernateSession session) {
+      ExportedTags tagsToExport = new ExportedTags();
+      InventoryTagDBLayer tagDbLayer = new InventoryTagDBLayer(session);
+      for(ConfigurationObject deployable : deployables) {
+        List<String> tags = null;
+        if(deployable.getPath().contains("/")) {
+          tags = tagDbLayer.getTags(Paths.get(deployable.getPath()).getFileName().toString(), deployable.getObjectType().intValue());
+        } else {
+          tags = tagDbLayer.getTags(deployable.getPath(), deployable.getObjectType().intValue());
+        }
+        tags.stream().forEach(tag -> {
+          ExportedTagItem tagItem = new ExportedTagItem();
+          tagItem.setName(tag);
+          ExportedTagItems references = new ExportedTagItems();
+          if(deployable.getPath().contains("/")) {
+            references.setName(Paths.get(deployable.getPath()).getFileName().toString());
+          } else {
+            references.setName(deployable.getPath());
+          }
+          references.setType(ConfigurationType.fromValue(deployable.getObjectType().intValue()).value());
+          tagItem.getUsedBy().add(references);
+          tagsToExport.getTags().add(tagItem);
+        });
+      }
+      return tagsToExport;
+    }
+
 }
