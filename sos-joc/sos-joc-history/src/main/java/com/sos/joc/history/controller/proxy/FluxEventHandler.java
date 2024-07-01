@@ -9,7 +9,6 @@ import js7.data.order.OrderEvent.OrderAdded;
 import js7.data.order.OrderEvent.OrderOrderAdded;
 import js7.data.order.OrderEvent.OrderTerminated;
 import js7.data.order.OrderId;
-import js7.data_for_java.order.JOrder;
 import js7.proxy.javaapi.data.controller.JEventAndControllerState;
 
 public class FluxEventHandler {
@@ -20,10 +19,8 @@ public class FluxEventHandler {
             OrderId oid = (OrderId) eventAndState.stampedEvent().value().key();
             boolean isChildOrder = oid.string().contains("|");
             if (!isChildOrder) {
-                JOrder jOrder = eventAndState.state().idToOrder().get(oid);
-                if (jOrder != null) {
-                    EventBus.getInstance().post(new AddOrderEvent(controllerId, oid.string(), jOrder.workflowId().path().string()));
-                }
+                OrderAdded oa = (OrderAdded) event;
+                EventBus.getInstance().post(new AddOrderEvent(controllerId, oid.string(), oa.workflowId().path().string()));
             }
         } else if (event instanceof OrderOrderAdded) {
             OrderOrderAdded oa = (OrderOrderAdded) event;
