@@ -291,6 +291,15 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                         if (either.isRight()) {
                             OrdersHelper.storeAuditLogDetailsFromJOrders(jOrders, dbAuditLog.getId(), controllerId).thenAccept(
                                     either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
+                            
+                            if (Action.SUSPEND.equals(action)) {
+                                Set<JOrder> jOrdersInRetry = jOrders.stream().filter(jO -> (jO.asScala().state() instanceof Order.DelayedAfterError))
+                                        .collect(Collectors.toSet());
+                                if (!jOrdersInRetry.isEmpty()) {
+                                    letRun(controllerId, jOrdersInRetry).thenAccept(either3 -> ProblemHelper.postProblemEventIfExist(either3,
+                                            getAccessToken(), getJocError(), controllerId));
+                                }
+                            }
                         }
                     });
         } else {
@@ -742,13 +751,17 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     JControllerCommand::apply).collect(Collectors.toList()))).thenApply(OrdersResourceModifyImpl::castEither);
 
         case CONTINUE:
-            Function<JOrder, JControllerCommand> toContinueCommand = o -> JControllerCommand.goOrder(o.id(), JPosition.apply(o.asScala().position()));
-            return ControllerApi.of(controllerId).executeCommand(JControllerCommand.batch(jOrders.stream().map(toContinueCommand).collect(Collectors
-                    .toList()))).thenApply(OrdersResourceModifyImpl::castEither);
+            return letRun(controllerId, jOrders);
 
         default: // case REMOVE_WHEN_TERMINATED
             return ControllerApi.of(controllerId).deleteOrdersWhenTerminated(oIdsStream.collect(Collectors.toSet()));
         }
+    }
+    
+    private static CompletableFuture<Either<Problem, Void>> letRun(String controllerId, Set<JOrder> jOrders) {
+        Function<JOrder, JControllerCommand> toContinueCommand = o -> JControllerCommand.goOrder(o.id(), JPosition.apply(o.asScala().position()));
+        return ControllerApi.of(controllerId).executeCommand(JControllerCommand.batch(jOrders.stream().map(toContinueCommand).collect(Collectors
+                .toList()))).thenApply(OrdersResourceModifyImpl::castEither);
     }
     
     private static Either<Problem, Void> castEither(Either<Problem, ControllerCommand.Response> either) {
