@@ -88,6 +88,7 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesConsume
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesConsumptionStarted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesExpected;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesRead;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderOrderAdded;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderPromptAnswered;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderPrompted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderResumed;
@@ -520,6 +521,9 @@ public class HistoryModel {
                         break;
                     case OrderCyclingPrepared:
                         orderLog(dbLayer, (FatEventOrderCyclingPrepared) entry, EventType.OrderCyclingPrepared);
+                        break;
+                    case OrderOrderAdded:
+                        orderLogOrderAdded(dbLayer, (FatEventOrderOrderAdded) entry, EventType.OrderOrderAdded);
                         break;
                     case EventWithProblem:
                         try {
@@ -1436,6 +1440,24 @@ public class HistoryModel {
         storeLog2File(le);
     }
 
+    private void orderLogOrderAdded(DBLayerHistory dbLayer, FatEventOrderOrderAdded eo, EventType eventType) throws Exception {
+        checkControllerTimezone(dbLayer);
+
+        CachedOrder co = cacheHandler.getOrderByCurrentOrderId(dbLayer, eo.getOrderId(), eo.getEventId());
+        if (eo.getOrderAddedInfo() != null) {
+            CachedWorkflow cw = cacheHandler.getWorkflow(dbLayer, eo.getOrderAddedInfo().getWorkflowPath(), eo.getOrderAddedInfo()
+                    .getWorkflowVersionId());
+            if (cw != null) {
+                eo.getOrderAddedInfo().setWorkflowFullPath(cw.getPath());
+            } else {
+                eo.getOrderAddedInfo().setWorkflowFullPath(eo.getOrderAddedInfo().getWorkflowPath());
+            }
+        }
+        LogEntry le = new LogEntry(OrderLogEntryLogLevel.MAIN, eventType, eo.getEventDatetime(), null);
+        le.onOrderBase(co, eo.getPosition(), eo);
+        storeLog2File(le);
+    }
+
     private void orderLogAttached(DBLayerHistory dbLayer, FatEventOrderAttached eo, EventType eventType) throws Exception {
         checkControllerTimezone(dbLayer);
 
@@ -2225,6 +2247,12 @@ public class HistoryModel {
             }
         } else if (le.getQuestion() != null) {
             ole.setQuestion(le.getQuestion());
+        } else if (le.getOrderOrderAdded() != null && le.getOrderOrderAdded().getOrderAddedInfo() != null) {
+            com.sos.joc.model.history.order.added.OrderAdded oa = new com.sos.joc.model.history.order.added.OrderAdded();
+            oa.setWorkflowPath(le.getOrderOrderAdded().getOrderAddedInfo().getWorkflowFullPath());
+            oa.setOrderId(le.getOrderOrderAdded().getOrderAddedInfo().getOrderId());
+            oa.setArguments(HistoryUtil.toVariables(le.getOrderOrderAdded().getOrderAddedInfo().getArguments()));
+            ole.setOrderAdded(oa);
         }
         return ole;
     }

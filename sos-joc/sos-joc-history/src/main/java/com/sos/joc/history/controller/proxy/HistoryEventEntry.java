@@ -51,6 +51,7 @@ import js7.data.order.OrderEvent.OrderLocksQueued;
 import js7.data.order.OrderEvent.OrderLocksReleased;
 import js7.data.order.OrderEvent.OrderNoticePosted;
 import js7.data.order.OrderEvent.OrderNoticesConsumptionStarted;
+import js7.data.order.OrderEvent.OrderOrderAdded;
 import js7.data.order.OrderEvent.OrderOutcomeAdded;
 import js7.data.order.OrderId;
 import js7.data.order.OrderOutcome;
@@ -103,6 +104,7 @@ public class HistoryEventEntry {
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryEventEntry.class);
 
     private static final String NAMED_NAME_RETURN_CODE = "returnCode";
+    private static final String UNKNOWN = "unknown";
 
     private final JEventAndControllerState<Event> eventAndState;
     private final KeyedEvent<Event> keyedEvent;
@@ -434,7 +436,7 @@ public class HistoryEventEntry {
                 JOrderEvent ev = getJOrderEvent();
                 if (ev instanceof JOrderFailed) {
                     outcomeInfo = getOutcomeInfo(((JOrderFailed) getJOrderEvent()).outcome());
-                } 
+                }
                 if (outcomeInfo != null) {
                     Instruction i = getCurrentPositionInstruction();
                     if (i != null && i instanceof Fail) {
@@ -571,6 +573,14 @@ public class HistoryEventEntry {
                 l = jl.asScala();
             }
             return new OrderLock(l.path().string(), l.limit(), count == null ? null : OptionConverters.toJava(count), orderIds, queuedOrderIds);
+        }
+
+        public OrderAddedInfo getOrderAddedInfo() {
+            try {
+                return new OrderAddedInfo((OrderOrderAdded) event);
+            } catch (Throwable e) {
+                return null;
+            }
         }
 
         public class OrderStartedInfo {
@@ -1022,7 +1032,66 @@ public class HistoryEventEntry {
                 }
             }
         }
+    }
 
+    public class OrderAddedInfo {
+
+        private String orderId;
+        private String workflowPath;
+        private String workflowFullPath;
+        private String workflowVersionId;
+        private Map<String, Value> arguments;
+
+        public OrderAddedInfo(OrderOrderAdded o) {
+            try {
+                this.orderId = o.orderId().string();
+            } catch (Throwable e) {
+                this.orderId = UNKNOWN;
+                LOGGER.info("[OrderAddedInfo][orderId is set to=" + UNKNOWN + "][exception]" + e.toString(), e);
+            }
+            try {
+                this.workflowPath = o.workflowId().path().string();
+            } catch (Throwable e) {
+                this.workflowPath = UNKNOWN;
+                LOGGER.info("[OrderAddedInfo][workflowPath is set to=" + UNKNOWN + "][exception]" + e.toString(), e);
+            }
+            try {
+                this.workflowVersionId = o.workflowId().versionId().string();
+            } catch (Throwable e) {
+                this.workflowVersionId = UNKNOWN;
+                LOGGER.info("[OrderAddedInfo][workflowVersionId is set to=" + UNKNOWN + "][exception]" + e.toString(), e);
+            }
+            try {
+                this.arguments = JavaConverters.asJava(o.arguments());
+            } catch (Throwable e) {
+                this.arguments = null;
+                LOGGER.info("[OrderAddedInfo][arguments is set to null][exception]" + e.toString(), e);
+            }
+        }
+
+        public String getOrderId() {
+            return orderId;
+        }
+
+        public String getWorkflowPath() {
+            return workflowPath;
+        }
+
+        public String getWorkflowFullPath() {
+            return workflowFullPath;
+        }
+
+        public void setWorkflowFullPath(String val) {
+            workflowFullPath = val;
+        }
+
+        public String getWorkflowVersionId() {
+            return workflowVersionId;
+        }
+
+        public Map<String, Value> getArguments() {
+            return arguments;
+        }
     }
 
     public class HistoryClusterCoupled {
@@ -1154,14 +1223,14 @@ public class HistoryEventEntry {
                 // if (ar.uri().isPresent()) {// single agent
                 // uri = ar.uri().get().string();
                 // } else {// agent cluster
-                //Optional<SubagentId> director = ar.director();// ar.directors();
+                // Optional<SubagentId> director = ar.director();// ar.directors();
                 if (!ar.directors().isEmpty()) {
                     Map<SubagentId, JSubagentItem> map = eventAndState.state().idToSubagentItem();
-//                    SubagentId directorId = ar.directors().get(0);
-//                    JSubagentItem sar = map.get(directorId);
-//                    if (sar != null) {
-//                        uri = sar.uri().string();
-//                    }
+                    // SubagentId directorId = ar.directors().get(0);
+                    // JSubagentItem sar = map.get(directorId);
+                    // if (sar != null) {
+                    // uri = sar.uri().string();
+                    // }
                     // if (map != null) {
                     // map.entrySet().stream().forEach(e -> {
                     // // subAgents.put(e.getKey().string(), e.getValue().uri().string());
@@ -1170,14 +1239,14 @@ public class HistoryEventEntry {
                     // }
                     // });
                     // }
-                    
+
                     ar.directors().stream().map(sa -> map.get(sa)).filter(Objects::nonNull).findFirst().map(JSubagentItem::uri).map(Uri::string)
-                        .ifPresent(s -> uri = s);
+                            .ifPresent(s -> uri = s);
                 }
                 // }
             }
             if (uri == null) {
-                uri = "unknown";
+                uri = UNKNOWN;
             }
         }
 

@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.OptionalLong;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -20,7 +19,7 @@ import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.cluster.configuration.JocHistoryConfiguration;
-import com.sos.joc.history.controller.proxy.FluxEventHandler;
+import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.history.controller.proxy.FluxStopper;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.AgentInfo;
@@ -63,6 +62,7 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesConsume
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesConsumptionStarted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesExpected;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesRead;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderOrderAdded;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderOutcomeAdded;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderPromptAnswered;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderPrompted;
@@ -120,6 +120,7 @@ public class HistoryControllerHandlerTest {
     private JocHistoryConfiguration config = new JocHistoryConfiguration();
     private FluxStopper stopper;
     private AtomicBoolean closed;
+    private String serviceIdentifier = "history";
 
     @Ignore
     @Test
@@ -154,20 +155,43 @@ public class HistoryControllerHandlerTest {
     private synchronized Long process(JControllerApi api, Long eventId) throws Exception {
         try (JStandardEventBus<ProxyEvent> eventBus = new JStandardEventBus<>(ProxyEvent.class)) {
             LOGGER.info("[flux][START]");
+            // Original Flux
             Flux<JEventAndControllerState<Event>> flux = api.eventFlux(eventBus, OptionalLong.of(eventId));
-            // flux = flux.doOnNext(e -> LOGGER.info(e.stampedEvent().value().event().getClass().getSimpleName()));
-            // flux = flux.doOnNext(this::fluxDoOnNext);
-            flux = flux.flatMap(e -> processAllEvents(e).thenReturn(e));
+            // Step 1 - Process all events in parallel, but use flatMapSequential to ensure that the original events order is maintained
+            flux = flux.flatMapSequential(e -> Mono.fromRunnable(() -> {
+                // process all events in parallel before filtering
+                JocClusterServiceLogger.setLogger(serviceIdentifier);
+                if (!closed.get()) {
+                    try {
+                        if (!"OrderStdoutWritten".equals(e.stampedEvent().value().event().getClass().getSimpleName())) {
+                            // LOGGER.info("[FluxEventHandler.processEvent]" + SOSString.toString(e.stampedEvent().value().event()));
+                        }
+                        // LOGGER.info("[FluxEventHandler.processEvent]" + e.stampedEvent().value().event().getClass().getSimpleName());
+                        // FluxEventHandler.processEvent(e, controllerId);
+                    } catch (Throwable e1) {
+                        LOGGER.info("[FluxEventHandler.processEvent]" + e.toString(), e);
+                    }
+                }
+            }).thenReturn(e).filter(event -> {
+                // Step 2 - filter events (in parallel) for history processing
+                try {
+                    return HistoryEventType.fromValue(event.stampedEvent().value().event().getClass().getSimpleName()) != null;
+                } catch (Throwable ex) {
+                    JocClusterServiceLogger.setLogger(serviceIdentifier);
+                    LOGGER.info("[process][error filtering event]" + ex.toString(), ex);
+                    return false;
+                }
+            }).subscribeOn(Schedulers.fromExecutor(ForkJoinPool.commonPool())));
 
-            flux = flux.filter(e -> HistoryEventType.fromValue(e.stampedEvent().value().event().getClass().getSimpleName()) != null);
+            // Step 3 - Publish events to another scheduler? currently problem by stop flux - thread IllegalMonitorStateException(NPE)
+            // flux = flux.publishOn(Schedulers.single());
+            // flux = flux.publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool()));
 
+            // Error handling and completion
             flux = flux.doOnError(this::fluxDoOnError);
             flux = flux.doOnComplete(this::fluxDoOnComplete);
             flux = flux.doOnCancel(this::fluxDoOnCancel);
             flux = flux.doFinally(this::fluxDoFinally);
-            flux = flux.onErrorStop();
-            // TODO test flux.publishOn
-            flux = flux.publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool()));
 
             flux.takeUntilOther(stopper.stopped()).map(this::map2fat).filter(e -> e.getEventId() != null).bufferTimeout(1000, Duration.ofSeconds(1))
                     .toIterable().forEach(list -> {
@@ -570,6 +594,12 @@ public class HistoryControllerHandlerTest {
                         .getPosition());
                 break;
 
+            case OrderOrderAdded:
+                order = entry.getCheckedOrder();
+                event = new FatEventOrderOrderAdded(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
+                        .getPosition(), order.getOrderAddedInfo());
+                break;
+
             default:
                 event = new FatEventWithProblem(entry, null, new Exception("unknown type=" + entry.getEventType()));
                 break;
@@ -625,20 +655,6 @@ public class HistoryControllerHandlerTest {
             }
         };
         thread.start();
-    }
-
-    private Mono<Void> processAllEvents(JEventAndControllerState<Event> event) {
-        CompletableFuture<Void> future = new CompletableFuture<>();
-        CompletableFuture.runAsync(() -> {
-            try {
-                FluxEventHandler.processEvent(event, CONTROLLER_ID);
-                future.complete(null);
-            } catch (Throwable e) {
-                LOGGER.warn("[processAllEvents]" + e.toString(), e);
-                future.completeExceptionally(e);
-            }
-        });
-        return Mono.fromFuture(future);
     }
 
     private void fluxDoOnCancel() {

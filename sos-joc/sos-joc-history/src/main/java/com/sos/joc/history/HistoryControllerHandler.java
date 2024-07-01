@@ -71,6 +71,7 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesConsume
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesConsumptionStarted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesExpected;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderNoticesRead;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderOrderAdded;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderOutcomeAdded;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderPromptAnswered;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderPrompted;
@@ -751,6 +752,12 @@ public class HistoryControllerHandler {
                 order = entry.getCheckedOrder();
                 event = new FatEventOrderPromptAnswered(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
                         .getPosition());
+                break;
+
+            case OrderOrderAdded:
+                order = entry.getCheckedOrder();
+                event = new FatEventOrderOrderAdded(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
+                        .getPosition(), order.getOrderAddedInfo());
                 break;
 
             default:

@@ -16,6 +16,7 @@ import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderCaught;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderCaught.FatEventOrderCaughtCause;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderCyclingPrepared;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderMoved;
+import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderOrderAdded;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderPrompted;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderRetrying;
 import com.sos.joc.history.controller.proxy.fatevent.FatForkedChild;
@@ -60,6 +61,7 @@ public class LogEntry {
     private FatEventOrderMoved orderMoved;
     private FatEventOrderAttached orderAttached;
     private FatEventOrderCyclingPrepared orderCyclingPrepared;
+    private FatEventOrderOrderAdded orderOrderAdded;
     private FatInstruction instruction;
     private Variables arguments;
     private String question;
@@ -92,6 +94,9 @@ public class LogEntry {
             break;
         case OrderCyclingPrepared:
             orderCyclingPrepared = (FatEventOrderCyclingPrepared) eo;
+            break;
+        case OrderOrderAdded:
+            orderOrderAdded = (FatEventOrderOrderAdded) eo;
             break;
         default:
             break;
@@ -429,6 +434,10 @@ public class LogEntry {
 
     public FatEventOrderCyclingPrepared getOrderCyclingPrepared() {
         return orderCyclingPrepared;
+    }
+
+    public FatEventOrderOrderAdded getOrderOrderAdded() {
+        return orderOrderAdded;
     }
 
     public void setArguments(Variables val) {

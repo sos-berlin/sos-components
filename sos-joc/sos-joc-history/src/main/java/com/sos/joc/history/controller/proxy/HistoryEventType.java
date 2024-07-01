@@ -27,6 +27,7 @@ import js7.data.order.OrderEvent.OrderNoticesConsumed;
 import js7.data.order.OrderEvent.OrderNoticesConsumptionStarted;
 import js7.data.order.OrderEvent.OrderNoticesExpected;
 import js7.data.order.OrderEvent.OrderNoticesRead$;
+import js7.data.order.OrderEvent.OrderOrderAdded;
 import js7.data.order.OrderEvent.OrderOutcomeAdded;
 import js7.data.order.OrderEvent.OrderProcessed;
 import js7.data.order.OrderEvent.OrderProcessingStarted;
@@ -120,6 +121,8 @@ public enum HistoryEventType {
     OrderPromptAnswered(OrderPromptAnswered.class.getSimpleName()),
 
     OrderCyclingPrepared(OrderCyclingPrepared.class.getSimpleName()),
+
+    OrderOrderAdded(OrderOrderAdded.class.getSimpleName()),
 
     OrderStepStarted(OrderProcessingStarted.class.getSimpleName()),
 
