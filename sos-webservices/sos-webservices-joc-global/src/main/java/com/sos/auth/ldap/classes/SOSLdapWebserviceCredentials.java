@@ -131,10 +131,6 @@ public class SOSLdapWebserviceCredentials {
         return sosLdapLoginUserName;
     }
 
-    public Boolean getHostnameVerification() {
-        return hostnameVerification;
-    }
-
     public Boolean getUseStartTls() {
         return useStartTls;
     }
@@ -294,7 +290,11 @@ public class SOSLdapWebserviceCredentials {
     }
 
     public boolean isHostnameVerification() {
-        return hostnameVerification;
+        if (hostnameVerification == null) {
+            return false;
+        } else {
+            return hostnameVerification;
+        }
     }
 
     public String getGroupSearchBaseNotNull() {
