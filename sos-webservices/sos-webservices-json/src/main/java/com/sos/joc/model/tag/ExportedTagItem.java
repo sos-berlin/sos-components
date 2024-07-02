@@ -20,6 +20,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "name",
+    "ordering",
     "usedBy"
 })
 public class ExportedTagItem {
@@ -33,6 +34,14 @@ public class ExportedTagItem {
      */
     @JsonProperty("name")
     private String name;
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("ordering")
+    private Integer ordering;
     @JsonProperty("usedBy")
     private List<ExportedTagItems> usedBy = new ArrayList<ExportedTagItems>();
 
@@ -60,6 +69,28 @@ public class ExportedTagItem {
         this.name = name;
     }
 
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("ordering")
+    public Integer getOrdering() {
+        return ordering;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("ordering")
+    public void setOrdering(Integer ordering) {
+        this.ordering = ordering;
+    }
+
     @JsonProperty("usedBy")
     public List<ExportedTagItems> getUsedBy() {
         return usedBy;
@@ -72,12 +103,12 @@ public class ExportedTagItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("name", name).append("usedBy", usedBy).toString();
+        return new ToStringBuilder(this).append("name", name).append("ordering", ordering).append("usedBy", usedBy).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(name).append(usedBy).toHashCode();
+        return new HashCodeBuilder().append(name).append(ordering).append(usedBy).toHashCode();
     }
 
     @Override
@@ -89,7 +120,7 @@ public class ExportedTagItem {
             return false;
         }
         ExportedTagItem rhs = ((ExportedTagItem) other);
-        return new EqualsBuilder().append(name, rhs.name).append(usedBy, rhs.usedBy).isEquals();
+        return new EqualsBuilder().append(name, rhs.name).append(ordering, rhs.ordering).append(usedBy, rhs.usedBy).isEquals();
     }
 
 }

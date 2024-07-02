@@ -50,6 +50,7 @@ import com.sos.joc.model.joc.JocMetaInfo;
 import com.sos.joc.model.publish.ArchiveFormat;
 import com.sos.joc.model.publish.ImportFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
+import com.sos.joc.publish.mapper.ArchiveValues;
 import com.sos.joc.publish.mapper.UpdateableConfigurationObject;
 import com.sos.joc.publish.resource.IImportResource;
 import com.sos.joc.publish.util.ImportUtils;
@@ -120,13 +121,17 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             
             String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
             stream = body.getEntityAs(InputStream.class);
+            ArchiveValues values = null;
             Set<ConfigurationObject> configurations = new HashSet<ConfigurationObject>();
             JocMetaInfo jocMetaInfo = new JocMetaInfo();
             // process uploaded archive
             if (ArchiveFormat.ZIP.equals(filter.getFormat())) {
-                configurations = ImportUtils.readZipFileContent(stream, jocMetaInfo);
+                values = ImportUtils.readZipFileContent(stream, jocMetaInfo);
+                configurations = values.getConfigurations();
+                
             } else if (ArchiveFormat.TAR_GZ.equals(filter.getFormat())) {
-                configurations = ImportUtils.readTarGzipFileContent(stream, jocMetaInfo);
+                values = ImportUtils.readTarGzipFileContent(stream, jocMetaInfo);
+                configurations = values.getConfigurations();
             } else {
             	throw new JocUnsupportedFileTypeException(
             	        String.format("The file %1$s to be uploaded must have one of the formats zip or tar.gz!", uploadFileName)); 
@@ -277,6 +282,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                     .forEach(JocInventory::postFolderEvent);
                 }
             });
+            ImportUtils.importTags(storedConfigurations, values.getTags(), hibernateSession);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
