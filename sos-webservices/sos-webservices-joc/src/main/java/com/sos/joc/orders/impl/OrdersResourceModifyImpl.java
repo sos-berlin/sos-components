@@ -17,6 +17,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -296,6 +297,11 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                                 Set<JOrder> jOrdersInRetry = jOrders.stream().filter(jO -> (jO.asScala().state() instanceof Order.DelayedAfterError))
                                         .collect(Collectors.toSet());
                                 if (!jOrdersInRetry.isEmpty()) {
+                                    try {
+                                        TimeUnit.SECONDS.sleep(3);
+                                    } catch (InterruptedException e) {
+                                        //
+                                    }
                                     letRun(controllerId, jOrdersInRetry).thenAccept(either3 -> ProblemHelper.postProblemEventIfExist(either3,
                                             getAccessToken(), getJocError(), controllerId));
                                 }
