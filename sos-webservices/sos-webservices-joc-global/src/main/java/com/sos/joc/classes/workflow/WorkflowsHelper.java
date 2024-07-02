@@ -1541,6 +1541,20 @@ public class WorkflowsHelper {
             }
         });
     }
+    
+    public static CompletableFuture<Either<Exception, Void>> storeAuditLogDetailsFromWorkflowPaths(Collection<WorkflowPath> workflowPaths,
+            Long dbAuditLogId, String controllerId) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                Stream<AuditLogDetail> details = workflowPaths.stream().filter(w -> !w.isEmpty()).map(WorkflowPath::string).map(
+                        WorkflowPaths::getPath).map(s -> new AuditLogDetail(s, ObjectType.WORKFLOW.intValue(), controllerId));
+                JocAuditLog.storeAuditLogDetails(details, dbAuditLogId);
+                return Either.right(null);
+            } catch (Exception e) {
+                return Either.left(e);
+            }
+        });
+    }
 
     public static Set<String> getSkippedLabels(JControllerState currentstate, String workflowName, boolean compact) {
         return getSkippedLabels(currentstate, WorkflowPath.of(workflowName), compact);

@@ -15,5 +15,10 @@ public interface INoticesModify {
     @Path("delete")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse deleteNotices(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    
+    @POST
+    @Path("post")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse postNotices(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 
 }
