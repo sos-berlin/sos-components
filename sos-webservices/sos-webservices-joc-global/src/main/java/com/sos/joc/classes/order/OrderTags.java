@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -79,6 +78,7 @@ public class OrderTags {
     @Subscribe({ HistoryOrderStarted.class })
     public void addHistoryIdToTags(HistoryOrderStarted evt) {
         if (!evt.getOrderId().contains("|")) { // not child order
+            LOGGER.trace("HistoryOrderStarted received: " + SOSString.toString(evt));
             addHistoryIdToTags(evt.getControllerId(), evt.getOrderId(), (AHistoryBean) evt.getPayload());
         }
     }
@@ -87,7 +87,7 @@ public class OrderTags {
     public void addTagsToOrderbyFileOrderSourceOrAddOrderInstruction(AddOrderEvent evt) {
         boolean isChildOrder = evt.getOrderId().contains("|");
         if (!isChildOrder) {
-            LOGGER.info("AddOrderEvent received: " + SOSString.toString(evt));
+            LOGGER.trace("AddOrderEvent received: " + SOSString.toString(evt));
             addTagsToOrderbyFileOrderSourceOrAddOrderInstruction(evt.getControllerId(), evt.getOrderId(), evt.getWorkflowName());
         }
     }
@@ -103,7 +103,6 @@ public class OrderTags {
     // public for test
     public void addTagsToOrderbyFileOrderSourceOrAddOrderInstruction(String controllerId, String orderId, String workflowName) {
         String orderIdModifier = orderId.substring(12, 13);
-        LOGGER.info("orderIdModifier: " + orderIdModifier);
         if (orderIdModifier.equals("D")) {
             addTagsToOrderbyAddOrderInstruction(controllerId, orderId);
         } else if (orderIdModifier.equals("F")) {
@@ -214,15 +213,10 @@ public class OrderTags {
             String orderIdPattern = orderId.substring(OrdersHelper.mainOrderIdLength, OrdersHelper.mainOrderIdLength + 19);
             String addOrderIndex = orderId.substring(OrdersHelper.mainOrderIdLength - 3, OrdersHelper.mainOrderIdLength - 1);
             connection = Globals.createSosHibernateStatelessConnection("storeAddOrderTags");
-            LOGGER.info("Looking for tags in INV_ADD_ORDER_TAGS." + orderIdPattern);
             DBItemInventoryAddOrderTag dbItem = connection.get(DBItemInventoryAddOrderTag.class, Long.valueOf(orderIdPattern));
             if (dbItem != null) {
-                LOGGER.info("All possible tags for " + orderId + ": " + dbItem.getOrderTags());
                 Map<String, Set<String>> allTags = Globals.objectMapper.readValue(dbItem.getOrderTags(), typeRefAddOrderTags);
-                LOGGER.info("All possible tags for " + orderId + ": " + allTags.toString());
-                LOGGER.info("Looking for tags on position" + addOrderIndex.toString());
                 Set<String> orderTags = allTags.getOrDefault(addOrderIndex, Collections.emptySet());
-                LOGGER.info("Tags for " + orderId + ": " + orderTags.toString());
                 if (!orderTags.isEmpty()) {
                     connection.setAutoCommit(false);
                     Globals.beginTransaction(connection);
@@ -230,8 +224,6 @@ public class OrderTags {
                     addTagsOfOrder(controllerId, orderId, orderTags, connection, Date.from(Instant.now()));
                     Globals.commit(connection);
                 }
-            } else {
-                LOGGER.info("Couldn't find tags for" + orderId);
             }
         } catch (Exception e) {
             Globals.rollback(connection);
@@ -407,7 +399,6 @@ public class OrderTags {
     }
     
     public static Either<Exception, Void> updateHistoryIdOfOrder(String controllerId, String orderId, Long historyId) {
-        LOGGER.info("Update Order tags from HistoryOrderStarted event: orderId '" + orderId + "' -> historyId " + historyId);
         if (historyId != null && historyId > 0L && controllerId != null && orderId != null) {
             SOSHibernateSession connection = null;
             try {
@@ -554,47 +545,40 @@ public class OrderTags {
         if (orderIds == null || orderIds.isEmpty()) {
             return Collections.emptyMap();
         }
-        int size = orderIds.size();
-        if (size > SOSHibernate.LIMIT_IN_CLAUSE) {
-            Map<String, Set<String>> r = new HashMap<>();
-            for (int i = 0; i < size; i += SOSHibernate.LIMIT_IN_CLAUSE) {
-                r.putAll(getTagsByOrderIds(controllerId, SOSHibernate.getInClausePartition(i, orderIds), connection));
-            }
-            return r;
-        } else {
-            if (controllerId == null) {
-                return Collections.emptyMap();
-            }
-            connection = Globals.createSosHibernateStatelessConnection(OrderTags.class.getSimpleName());
-            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER_TAGS);
-            List<String> clauses = new ArrayList<>(2);
-            if (!controllerId.isBlank()) {
-                clauses.add("controllerId=:controllerId");
-            }
-            if (orderIds.size() == 1) {
-                clauses.add("orderId=:orderId");
-            } else {
-                clauses.add("orderId in (:orderIds)");
-            }
-            clauses.stream().collect(Collectors.joining(" and ", " where ", ""));
-            hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", ""))).append(" order by ordering");
 
-            Query<DBItemHistoryOrderTag> query = connection.createQuery(hql);
-            if (!controllerId.isBlank()) {
-                query.setParameter("controllerId", controllerId);
-            }
-            if (orderIds.size() == 1) {
-                query.setParameter("orderId", orderIds.get(0));
-            } else {
-                query.setParameterList("orderIds", orderIds);
-            }
-            List<DBItemHistoryOrderTag> result = connection.getResultList(query);
-            if (result == null) {
-                return Collections.emptyMap();
-            }
-            return result.stream().collect(Collectors.groupingBy(DBItemHistoryOrderTag::getOrderId, Collectors.mapping(DBItemHistoryOrderTag::getTagName,
-                    Collectors.toCollection(LinkedHashSet::new))));
+        if (controllerId == null) {
+            return Collections.emptyMap();
         }
+
+        Collection<List<String>> chunkedOrderIds = getChunkedCollection(orderIds);
+
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER_TAGS);
+        List<String> clauses = new ArrayList<>(2);
+        if (!controllerId.isBlank()) {
+            clauses.add("controllerId=:controllerId");
+        }
+        String clause = IntStream.range(0, chunkedOrderIds.size()).mapToObj(i -> "orderId in (:orderIds" + i + ")").collect(Collectors.joining(
+                " or "));
+        if (chunkedOrderIds.size() > 1) {
+            clause = "(" + clause + ")";
+        }
+        clauses.add(clause);
+        hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", ""))).append(" order by ordering");
+
+        Query<DBItemHistoryOrderTag> query = connection.createQuery(hql);
+        if (!controllerId.isBlank()) {
+            query.setParameter("controllerId", controllerId);
+        }
+        AtomicInteger counter = new AtomicInteger();
+        for (List<String> chunk : chunkedOrderIds) {
+            query.setParameterList("orderIds" + counter.getAndIncrement(), chunk);
+        }
+        List<DBItemHistoryOrderTag> result = connection.getResultList(query);
+        if (result == null) {
+            return Collections.emptyMap();
+        }
+        return result.stream().collect(Collectors.groupingBy(DBItemHistoryOrderTag::getOrderId, Collectors.mapping(DBItemHistoryOrderTag::getTagName,
+                Collectors.toCollection(LinkedHashSet::new))));
     }
     
     public static Map<String, Set<String>> getTagsByHistoryIds(String controllerId, List<Long> historyIds, SOSHibernateSession connection)
@@ -877,41 +861,5 @@ public class OrderTags {
         }
         return null;
     }
-    
-//    public void updateMap(String controllerId, String orderId, Set<String> tags) {
-//        orderTags.putIfAbsent(controllerId, new ConcurrentHashMap<>());
-//        orderTags.get(controllerId).put(orderId, tags);
-//    }
-
-//    public static void init() {
-//        SOSHibernateSession connection = null;
-//        try {
-//            connection = Globals.createSosHibernateStatelessConnection(OrderTags.class.getSimpleName());
-//            OrderTags.getInstance()._init(connection);
-//        } finally {
-//            Globals.disconnect(connection);
-//        }
-//    }
-    
-//    private boolean orderHasTags(String controllerId, String orderId) {
-//        orderTags.putIfAbsent(controllerId, new ConcurrentHashMap<>());
-//        return orderTags.get(controllerId).containsKey(orderId);
-//    }
-
-//    private void _init(SOSHibernateSession connection) {
-//        LOGGER.info("... init order tags");
-//        try {
-//            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER_TAGS).append(" order by ordering");
-//            Query<DBItemHistoryOrderTag> query = connection.createQuery(hql.toString());
-//            List<DBItemHistoryOrderTag> result = connection.getResultList(query);
-//            if (result != null) {
-//                orderTags = result.stream().collect(Collectors.groupingByConcurrent(DBItemHistoryOrderTag::getControllerId, Collectors
-//                        .groupingByConcurrent(DBItemHistoryOrderTag::getOrderId, Collectors.mapping(DBItemHistoryOrderTag::getTagName, Collectors
-//                                .toCollection(LinkedHashSet::new)))));
-//            }
-//        } catch (SOSHibernateException e) {
-//            LOGGER.warn(e.toString());
-//        }
-//    }
 
 }

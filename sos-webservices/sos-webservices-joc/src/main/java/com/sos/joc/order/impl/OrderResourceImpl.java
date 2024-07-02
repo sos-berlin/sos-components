@@ -60,7 +60,7 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
             JOrder jOrder = currentState.idToOrder().get(OrderId.of(orderFilter.getOrderId()));
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
-            Map<String, Set<String>> orderTags = OrderTags.getTags(accessToken, Collections.singletonList(jOrder), connection);
+            Map<String, Set<String>> orderTags = OrderTags.getTags(orderFilter.getControllerId(), Collections.singletonList(jOrder), connection);
 
             if (jOrder != null) {
                 Map<List<Object>, String> positionToLabelsMap = getPositionToLabelsMap(orderFilter.getControllerId(), jOrder.workflowId());
