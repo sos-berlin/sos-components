@@ -87,7 +87,6 @@ import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrderPredicates;
 import js7.data_for_java.workflow.JWorkflowId;
 import js7.data_for_java.workflow.position.JPosition;
-import js7.proxy.javaapi.JControllerApi;
 import scala.Function1;
 import scala.collection.JavaConverters;
 
@@ -705,15 +704,16 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             }
 
         case ANSWER_PROMPT:
-            // No bulk operation in API
-            JControllerApi api = ControllerApi.of(controllerId);
-            oIdsStream.map(oId -> JControllerCommand.apply(new ControllerCommand.AnswerOrderPrompt(oId))).forEach(command -> api.executeCommand(
-                    command).thenAccept(either -> ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId)));
-            return CompletableFuture.supplyAsync(() -> Either.right(null));
+            return ControllerApi.of(controllerId).executeCommand(JControllerCommand.batch(oIdsStream.map(ControllerCommand.AnswerOrderPrompt::new)
+                    .map(JControllerCommand::apply).collect(Collectors.toList()))).thenApply(OrdersResourceModifyImpl::castEither);
 
         default: // case REMOVE_WHEN_TERMINATED
             return ControllerApi.of(controllerId).deleteOrdersWhenTerminated(oIdsStream.collect(Collectors.toSet()));
         }
+    }
+    
+    private static Either<Problem, Void> castEither(Either<Problem, ControllerCommand.Response> either) {
+        return either.isRight() ? Either.right(null) : Either.left(either.getLeft());
     }
     
     private Stream<OrderId> getChildren(JControllerState currentState, Set<JOrder> jOrders) {

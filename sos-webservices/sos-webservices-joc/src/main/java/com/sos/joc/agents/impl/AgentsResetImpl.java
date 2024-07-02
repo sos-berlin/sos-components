@@ -3,6 +3,8 @@ package com.sos.joc.agents.impl;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
@@ -48,11 +50,19 @@ public class AgentsResetImpl extends JOCResourceImpl implements IAgentsReset {
 
             JControllerApi api = ControllerApi.of(controllerId);
             storeAuditLog(agentParameter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
-            getResetCommands(agentParameter.getAgentIds(), agentParameter.getForce() == Boolean.TRUE).forEach(c -> {
-                LOGGER.debug("Reset Agent: " + c.toJson());
-                api.executeCommand(c).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(),
-                        controllerId));
-            });
+//            getResetCommands(agentParameter.getAgentIds(), agentParameter.getForce() == Boolean.TRUE).forEach(c -> {
+//                LOGGER.debug("Reset Agent: " + c.toJson());
+//                api.executeCommand(c).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(),
+//                        controllerId));
+//            });
+            
+            List<JControllerCommand> commands = getResetCommands(agentParameter.getAgentIds(), agentParameter.getForce() == Boolean.TRUE)
+                    .collect(Collectors.toList());
+            if (LOGGER.isDebugEnabled()) {
+                commands.forEach(c -> LOGGER.debug("Reset Agent: " + c.toJson()));
+            }
+            api.executeCommand(JControllerCommand.batch(commands)).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(),
+                    getJocError(), controllerId));
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
