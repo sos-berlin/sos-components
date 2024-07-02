@@ -113,6 +113,7 @@ public class JsonValidator {
             put("BoardsFilter", "board/boardsFilter-schema.json");
             put("ModifyNotice", "board/modifyNotice-schema.json");
             put("ModifyNotices", "board/modifyNotices-schema.json");
+            put("PostNotices", "board/postNotices-schema.json");
 
             put("WorkflowFilter", "workflow/workflowFilter-schema.json");
             put("WorkflowPathFilter", "workflow/workflowPathFilter-schema.json");
