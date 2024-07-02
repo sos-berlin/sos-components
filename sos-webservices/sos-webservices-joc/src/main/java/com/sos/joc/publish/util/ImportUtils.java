@@ -55,6 +55,8 @@ import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.DBItemInventoryTag;
+import com.sos.joc.db.inventory.DBItemInventoryTagging;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
@@ -90,9 +92,12 @@ import com.sos.joc.model.joc.JocMetaInfo;
 import com.sos.joc.model.publish.ControllerObject;
 import com.sos.joc.model.sign.Signature;
 import com.sos.joc.model.sign.SignaturePath;
+import com.sos.joc.model.tag.ExportedTagItems;
+import com.sos.joc.model.tag.ExportedTags;
 import com.sos.joc.publish.common.ConfigurationObjectFileExtension;
 import com.sos.joc.publish.common.ControllerObjectFileExtension;
 import com.sos.joc.publish.db.DBLayerDeploy;
+import com.sos.joc.publish.mapper.ArchiveValues;
 import com.sos.joc.publish.mapper.UpdateableConfigurationObject;
 import com.sos.sign.model.board.Board;
 import com.sos.sign.model.fileordersource.FileOrderSource;
@@ -601,9 +606,11 @@ public class ImportUtils {
         return objectsWithSignature;
     }
 
-    public static Set<ConfigurationObject> readZipFileContent(InputStream inputStream, JocMetaInfo jocMetaInfo) throws DBConnectionRefusedException,
+    public static ArchiveValues readZipFileContent(InputStream inputStream, JocMetaInfo jocMetaInfo) throws DBConnectionRefusedException,
             DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException, JocConfigurationException,
             DBOpenSessionException {
+        ArchiveValues values = new ArchiveValues(); 
+        ExportedTags tagsFromArchive = null;
         Set<ConfigurationObject> objects = new HashSet<ConfigurationObject>();
         ZipInputStream zipStream = null;
         try {
@@ -641,6 +648,9 @@ public class ImportUtils {
                         jocMetaInfo.setApiVersion(fromFile.getApiVersion());
                     }
                 }
+                if(entryName.equals(ExportUtils.TAGS_ENTRY_NAME)) {
+                  tagsFromArchive = Globals.prettyPrintObjectMapper.readValue(outBuffer.toString(), ExportedTags.class);
+                }
                 ConfigurationObject fromArchive = createConfigurationObjectFromArchiveFileEntry(outBuffer, entryName);
                 if (fromArchive != null) {
                     objects.add(fromArchive);
@@ -654,7 +664,9 @@ public class ImportUtils {
                 }
             }
         }
-        return objects;
+        values.setConfigurations(objects);
+        values.setTags(tagsFromArchive);
+        return values;
     }
 
     public static Map<ControllerObject, SignaturePath> readTarGzipFileContentWithSignatures(InputStream inputStream, JocMetaInfo jocMetaInfo)
@@ -736,12 +748,14 @@ public class ImportUtils {
         return objectsWithSignature;
     }
 
-    public static Set<ConfigurationObject> readTarGzipFileContent(InputStream inputStream, JocMetaInfo jocMetaInfo)
+    public static ArchiveValues readTarGzipFileContent(InputStream inputStream, JocMetaInfo jocMetaInfo)
             throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException,
             JocConfigurationException, DBOpenSessionException {
         Set<ConfigurationObject> objects = new HashSet<ConfigurationObject>();
         GZIPInputStream gzipInputStream = null;
         TarArchiveInputStream tarArchiveInputStream = null;
+        ArchiveValues values = new ArchiveValues(); 
+        ExportedTags tagsFromArchive = null;
         try {
             gzipInputStream = new GZIPInputStream(inputStream);
             tarArchiveInputStream = new TarArchiveInputStream(gzipInputStream);
@@ -777,6 +791,9 @@ public class ImportUtils {
                         jocMetaInfo.setApiVersion(fromFile.getApiVersion());
                     }
                 }
+                if(entryName.equals(ExportUtils.TAGS_ENTRY_NAME)) {
+                  tagsFromArchive = Globals.prettyPrintObjectMapper.readValue(outBuffer.toString(), ExportedTags.class);
+                }
                 ConfigurationObject fromArchive = createConfigurationObjectFromArchiveFileEntry(outBuffer, entryName);
                 if (fromArchive != null) {
                     objects.add(fromArchive);
@@ -793,7 +810,9 @@ public class ImportUtils {
             } catch (Exception e) {
             }
         }
-        return objects;
+        values.setConfigurations(objects);
+        values.setTags(tagsFromArchive);
+        return values;
     }
 
     private static ConfigurationObject createConfigurationObjectFromArchiveFileEntry(ByteArrayOutputStream outBuffer, String entryName)
@@ -1471,5 +1490,69 @@ public class ImportUtils {
         } catch (Exception e) {
             return false;
         }
+    }
+    
+    public static void importTags(List<DBItemInventoryConfiguration> cfgs, ExportedTags tagsFromArchive, SOSHibernateSession session) {
+      InventoryTagDBLayer dbLayer = new InventoryTagDBLayer(session);
+      List<DBItemInventoryTag> alreadyExistingTags = new ArrayList<DBItemInventoryTag>();
+      List<DBItemInventoryTag> newTags = new ArrayList<DBItemInventoryTag>();
+      if(tagsFromArchive != null) {
+        if(!tagsFromArchive.getTags().isEmpty()) {
+          tagsFromArchive.getTags().stream().forEach(item -> {
+            final DBItemInventoryTag tag = dbLayer.getTag(item.getName());
+            List<ExportedTagItems> taggingItems = item.getUsedBy();
+            if(tag != null) {
+              tag.setModified(Date.from(Instant.now()));
+              alreadyExistingTags.add(tag);
+              List<DBItemInventoryTagging> existingTaggings = dbLayer.getTaggingsByTagId(tag.getId());
+              List<DBItemInventoryTagging> newTaggings = dbLayer.getTaggingsByTagId(tag.getId());
+              taggingItems.stream().forEach(tagging -> {
+                List<DBItemInventoryTagging> taggingsByNameType = dbLayer.getTaggings(tagging.getName(), ConfigurationType.fromValue(tagging.getType()).intValue());
+                existingTaggings.addAll(taggingsByNameType.stream().filter(tagItem -> tagItem.getTagId().equals(tag.getId())).collect(Collectors.toList()));
+                taggingItems.stream().forEach(used -> {
+                  DBItemInventoryTagging newTagging = new DBItemInventoryTagging();
+                  DBItemInventoryConfiguration config = cfgs.stream().filter(cfg -> cfg.getName().equals(used.getName()) && cfg.getType().equals(ConfigurationType.fromValue(used.getType()).intValue())).findAny().orElse(null);
+                  if(config != null) {
+                    newTagging.setCid(config.getId());
+                  }
+                  newTagging.setName(used.getName());
+                  newTagging.setType(ConfigurationType.fromValue(used.getType()).intValue());
+                  newTagging.setTagId(tag.getId());
+                  newTaggings.add(newTagging);
+                });
+              });
+            } else {
+              List<DBItemInventoryTagging> newTaggings = new ArrayList<DBItemInventoryTagging>();
+              DBItemInventoryTag newTag = new DBItemInventoryTag();
+              newTag.setName(item.getName());
+              newTag.setOrdering(item.getOrdering());
+              newTag.setModified(Date.from(Instant.now()));
+              newTags.add(newTag);
+              try {
+                session.save(newTag);
+              } catch (SOSHibernateException e) {
+                throw new JocSosHibernateException(e);
+              }
+              taggingItems.stream().forEach(used -> {
+                DBItemInventoryTagging newTagging = new DBItemInventoryTagging();
+                DBItemInventoryConfiguration config = cfgs.stream().filter(cfg -> cfg.getName().equals(used.getName()) && cfg.getType().equals(ConfigurationType.fromValue(used.getType()).intValue())).findAny().orElse(null);
+                if(config != null) {
+                  newTagging.setCid(config.getId());
+                }
+                newTagging.setName(used.getName());
+                newTagging.setType(ConfigurationType.fromValue(used.getType()).intValue());
+                newTagging.setTagId(newTag.getId());
+                try {
+                  session.save(newTagging);
+                } catch (SOSHibernateException e) {
+                  throw new JocSosHibernateException(e);
+                }
+                newTaggings.add(newTagging);
+              });
+              
+            }
+          });
+        }
+      }
     }
 }

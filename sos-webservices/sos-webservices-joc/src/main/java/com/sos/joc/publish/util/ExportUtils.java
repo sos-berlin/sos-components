@@ -35,6 +35,7 @@ import com.sos.joc.classes.inventory.JsonSerializer;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
+import com.sos.joc.db.inventory.DBItemInventoryTag;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
@@ -73,7 +74,7 @@ public class ExportUtils {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(ExportUtils.class);
     private static final String AGENT_FILE_EXTENSION = ".agent.json";
-    private static final String TAGS_ENTRY_NAME = "workflow.tags.json";
+    public static final String TAGS_ENTRY_NAME = "workflow.tags.json";
 
     
     public static Set<ControllerObject> getFolderControllerObjectsForSigning(ExportFolderFilter filter, String account, DBLayerDeploy dbLayer,
@@ -910,16 +911,17 @@ public class ExportUtils {
       ExportedTags tagsToExport = new ExportedTags();
       InventoryTagDBLayer tagDbLayer = new InventoryTagDBLayer(session);
       for(ControllerObject deployable : deployables) {
-        List<String> tags = null;
+        List<DBItemInventoryTag> tags = null;
         if(deployable.getPath().contains("/")) {
-          tags = tagDbLayer.getTags(Paths.get(deployable.getPath()).getFileName().toString(), deployable.getObjectType().intValue());
+          tags = tagDbLayer.getTagDBItems(Paths.get(deployable.getPath()).getFileName().toString(), deployable.getObjectType().intValue());
         } else {
-          tags = tagDbLayer.getTags(deployable.getPath(), deployable.getObjectType().intValue());
+          tags = tagDbLayer.getTagDBItems(deployable.getPath(), deployable.getObjectType().intValue());
         }
         
         tags.stream().forEach(tag -> {
           ExportedTagItem tagItem = new ExportedTagItem();
-          tagItem.setName(tag);
+          tagItem.setName(tag.getName());
+          tagItem.setOrdering(tag.getOrdering());
           ExportedTagItems references = new ExportedTagItems();
           references.setName(deployable.getPath());
           references.setType(ConfigurationType.fromValue(deployable.getObjectType().intValue()).value());
@@ -934,15 +936,16 @@ public class ExportUtils {
       ExportedTags tagsToExport = new ExportedTags();
       InventoryTagDBLayer tagDbLayer = new InventoryTagDBLayer(session);
       for(ConfigurationObject deployable : deployables) {
-        List<String> tags = null;
+        List<DBItemInventoryTag> tags = null;
         if(deployable.getPath().contains("/")) {
-          tags = tagDbLayer.getTags(Paths.get(deployable.getPath()).getFileName().toString(), deployable.getObjectType().intValue());
+          tags = tagDbLayer.getTagDBItems(Paths.get(deployable.getPath()).getFileName().toString(), deployable.getObjectType().intValue());
         } else {
-          tags = tagDbLayer.getTags(deployable.getPath(), deployable.getObjectType().intValue());
+          tags = tagDbLayer.getTagDBItems(deployable.getPath(), deployable.getObjectType().intValue());
         }
         tags.stream().forEach(tag -> {
           ExportedTagItem tagItem = new ExportedTagItem();
-          tagItem.setName(tag);
+          tagItem.setName(tag.getName());
+          tagItem.setOrdering(tag.getOrdering());
           ExportedTagItems references = new ExportedTagItems();
           if(deployable.getPath().contains("/")) {
             references.setName(Paths.get(deployable.getPath()).getFileName().toString());
