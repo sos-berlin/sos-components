@@ -39,7 +39,7 @@ public class RunReportImpl {
             accessToken = apiResponse.getAccessToken();
             RunReportsWebserviceExecuter runReportsWebserviceExecuter = new RunReportsWebserviceExecuter(logger, apiExecutor);
             Set<String> reportPaths = new HashSet<String>();
-            if (logger.isDebugEnabled()) {
+            if (logger.isDebugEnabled() && args.getReportPaths() != null) {
                 for (String report : args.getReportPaths().getValue()) {
                     logger.debug("Add report from reportPaths: " + report);
                 }
