@@ -267,7 +267,11 @@ public class HistoryFilter {
             AtomicInteger counter = new AtomicInteger();
             this.nonExclusiveHistoryIds = historyIds.stream().distinct().collect(Collectors.groupingBy(it -> counter.getAndIncrement()
                     / SOSHibernate.LIMIT_IN_CLAUSE)).values();
-            this.nonExclusiveHistoryIdsStats = historyIds.stream().collect(Collectors.summarizingLong(i -> i));
+            if (historyIds.size() > 10) {
+                this.nonExclusiveHistoryIdsStats = historyIds.stream().collect(Collectors.summarizingLong(i -> i));
+            } else {
+                this.nonExclusiveHistoryIdsStats = null;
+            }
         } else {
             this.nonExclusiveHistoryIds = null;
             this.nonExclusiveHistoryIdsStats = null;
