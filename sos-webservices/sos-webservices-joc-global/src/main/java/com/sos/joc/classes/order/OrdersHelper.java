@@ -918,11 +918,11 @@ public class OrdersHelper {
         if (listVariables.isEmpty() && !listParams.isEmpty()) {
             Set<String> listKeys = listParams.keySet();
             if (listKeys.size() == 1) {
-                throw new JocMissingRequiredParameterException("Variable '" + listKeys.iterator().next() + "' of the list variable '" + listKey
-                        + "' isn't declared in the workflow");
+                throw new JocMissingRequiredParameterException("Key '" + listKeys.iterator().next() + "' of the list variable '" + listKey
+                        + "' is missing but declared in the workflow");
             }
-            throw new JocMissingRequiredParameterException("Variables '" + listKeys.toString() + "' of the list variable '" + listKey
-                    + "' aren't declared in the workflow");
+            throw new JocMissingRequiredParameterException("Keys '" + listKeys.toString() + "' of the list variable '" + listKey
+                    + "' are missing but declared in the workflow");
         }
         listVariables.forEach(listVariable -> checkObjectArgumentOfList(listVariable, listParams, listKey, allowEmptyValues, allowDollarInValue));
         return listVariables;
@@ -935,11 +935,11 @@ public class OrdersHelper {
         if (mapVariable.isEmpty() && !listParams.isEmpty()) {
             Set<String> listKeys = listParams.keySet();
             if (listKeys.size() == 1) {
-                throw new JocMissingRequiredParameterException("Variable '" + listKeys.iterator().next() + "' of the map variable '" + listKey
-                        + "' isn't declared in the workflow");
+                throw new JocMissingRequiredParameterException("Key '" + listKeys.iterator().next() + "' of the map variable '" + listKey
+                        + "' is missing but declared in the workflow");
             }
-            throw new JocMissingRequiredParameterException("Variables '" + listKeys.toString() + "' of the map variable '" + listKey
-                    + "' aren't declared in the workflow");
+            throw new JocMissingRequiredParameterException("Keys '" + listKeys.toString() + "' of the map variable '" + listKey
+                    + "' are missing but declared in the workflow");
         }
         checkObjectArgument(mapVariable, listParams, listKey, allowEmptyValues, allowDollarInValue);
         return mapVariable;
@@ -961,10 +961,19 @@ public class OrdersHelper {
         Set<String> listKeys = mapVariable.keySet().stream().filter(arg -> !listParams.containsKey(arg)).collect(Collectors.toSet());
         if (!listKeys.isEmpty()) {
             if (listKeys.size() == 1) {
-                throw new JocMissingRequiredParameterException(String.format("Variable '%s' of the %s variable '%s' isn't declared in the workflow",
+                throw new JocMissingRequiredParameterException(String.format("Key '%s' of the %s variable '%s' isn't declared in the workflow",
                         listKeys.iterator().next(), listOrMap, listKey));
             }
-            throw new JocMissingRequiredParameterException(String.format("Variables '%s' of the %s variable '%s' aren't declared in the workflow",
+            throw new JocMissingRequiredParameterException(String.format("Keys '%s' of the %s variable '%s' aren't declared in the workflow",
+                    listKeys.toString(), listOrMap, listKey));
+        }
+        listKeys = listParams.keySet().stream().filter(key -> !mapVariable.containsKey(key)).collect(Collectors.toSet());
+        if (!listKeys.isEmpty()) {
+            if (listKeys.size() == 1) {
+                throw new JocMissingRequiredParameterException(String.format("Key '%s' of the %s variable '%s' is missing but declared in the workflow",
+                        listKeys.iterator().next(), listOrMap, listKey));
+            }
+            throw new JocMissingRequiredParameterException(String.format("Keys '%s' of the %s variable '%s' are missing but declared in the workflow",
                     listKeys.toString(), listOrMap, listKey));
         }
         for (Map.Entry<String, ListParameter> p : listParams.entrySet()) {
@@ -977,7 +986,7 @@ public class OrdersHelper {
 
             if (curListArg == null) { // TODO later only if it is nullable
                 if (p.getValue().getDefault() == null) { // required? TODO later only if it is nullable
-                    throw new JocMissingRequiredParameterException(String.format("Variable '%s' of the %s variable '%s' is missing but required", p
+                    throw new JocMissingRequiredParameterException(String.format("Key '%s' of the %s variable '%s' is missing but required", p
                             .getKey(), listOrMap, listKey));
                 } else {
                     mapVariable.put(p.getKey(), p.getValue().getDefault());
@@ -988,7 +997,7 @@ public class OrdersHelper {
             if (p.getValue().getType().equals(ListParameterType.String) && !allowEmptyValues) {
                 if ((curListArg instanceof String) && ((String) curListArg).isEmpty()) {
                     if (p.getValue().getDefault() == null) { // required? TODO later only if it is nullable
-                        throw new JocMissingRequiredParameterException(String.format("Variable '%s' of the %s variable '%s' is missing but required",
+                        throw new JocMissingRequiredParameterException(String.format("Key '%s' of the %s variable '%s' is missing but required",
                                 p.getKey(), listOrMap, listKey));
                     } else {
                         mapVariable.put(p.getKey(), p.getValue().getDefault());
@@ -1008,12 +1017,12 @@ public class OrdersHelper {
                 } else {
                     String strListArg = (String) curListArg;
                     if (!allowEmptyValues && strListArg.isEmpty()) {
-                        throw new JocMissingRequiredParameterException(String.format("Variable '%s' of the %s variable '%s' is empty but required", p
+                        throw new JocMissingRequiredParameterException(String.format("Key '%s' of the %s variable '%s' is empty but required", p
                                 .getKey(), listOrMap, listKey));
                     }
 
                     try {
-                        StringSizeSanitizer.test(String.format("variable '%s' of the %s variable '%s'", p.getKey(), listOrMap, listKey), strListArg);
+                        StringSizeSanitizer.test(String.format("Key '%s' of the %s variable '%s'", p.getKey(), listOrMap, listKey), strListArg);
                     } catch (IllegalArgumentException e1) {
                         throw new JocConfigurationException(e1.getMessage());
                     }
@@ -1029,7 +1038,7 @@ public class OrdersHelper {
                             mapVariable.put(p.getKey(), Boolean.FALSE);
                         } else if (allowDollarInValue && strArg.contains("$")) {
                             // only relevant for addOrder instruction
-                            Validator.validateExpression(String.format("Variable '%s' of the %s variable '%s': ", p.getKey(), listOrMap, listKey),
+                            Validator.validateExpression(String.format("Key '%s' of the %s variable '%s': ", p.getKey(), listOrMap, listKey),
                                     strArg);
                         } else {
                             invalid = true;
@@ -1046,7 +1055,7 @@ public class OrdersHelper {
                     String strArg = (String) curListArg;
                     if (allowDollarInValue && strArg.contains("$")) {
                         // only relevant for addOrder instruction
-                        Validator.validateExpression(String.format("Variable '%s' of the %s variable '%s': ", p.getKey(), listOrMap, listKey), strArg);
+                        Validator.validateExpression(String.format("Key '%s' of the %s variable '%s': ", p.getKey(), listOrMap, listKey), strArg);
                     } else {
                         try {
                             BigDecimal number = new BigDecimal(strArg);
@@ -1059,7 +1068,7 @@ public class OrdersHelper {
                 break;
             }
             if (invalid) {
-                throw new JocConfigurationException(String.format("Variable '%s' of %s variable '%s': Wrong data type %s (%s is expected).", p
+                throw new JocConfigurationException(String.format("Key '%s' of %s variable '%s': Wrong data type %s (%s is expected).", p
                         .getKey(), listOrMap, listKey, curListArg.getClass().getSimpleName(), p.getValue().getType().value()));
             }
         }
