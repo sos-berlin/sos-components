@@ -238,6 +238,8 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                                                         configuration, account, auditLogId, filter.getOverwrite(), agentNames));
                                             }
                                         }
+                                    } else {
+                                      storedConfigurations.add(existingConfiguration);
                                     }
                                 }
                             }
