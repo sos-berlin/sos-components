@@ -345,6 +345,14 @@ public class OrdersHelper {
         return o.isGoCommandable() && !o.isSuspended();
     }
     
+    public static boolean isContinuableAfterSuspending(JOrder order) {
+        Order<Order.State> o = order.asScala();
+        if (o.state() instanceof Order.Fresh$ && o.maybeDelayedUntil().isDefined()) {
+           return false; 
+        }
+        return o.isGoCommandable() && !o.isSuspended();
+    }
+    
     private static boolean isTerminated(Order<Order.State> o) {
         return ((o.state() instanceof Order.Finished$) || (o.state() instanceof Order.Cancelled$));
     }
@@ -1577,8 +1585,7 @@ public class OrdersHelper {
         if (obstaclesE.isRight()) {
             Set<JOrderObstacle> obstacles = obstaclesE.get();
             for (JOrderObstacle obstacle : obstacles) {
-                if (obstacle instanceof JOrderObstacle.WaitingForOtherTime || obstacle instanceof JOrderObstacle.WaitingForTime
-                        || obstacle instanceof JOrderObstacle.WaitingForCommand$) {
+                if (obstacle instanceof JOrderObstacle.WaitingForOtherTime || obstacle instanceof JOrderObstacle.WaitingForCommand$) {
                     continue;
                 }
                 return Optional.ofNullable(mapObstacle(obstacle));

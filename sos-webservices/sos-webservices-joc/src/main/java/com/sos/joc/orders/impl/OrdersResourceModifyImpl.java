@@ -294,8 +294,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                                     either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
                             
                             if (Action.SUSPEND.equals(action)) {
-                                Set<JOrder> jOrdersInRetry = jOrders.stream().filter(jO -> (jO.asScala().state() instanceof Order.DelayedAfterError))
-                                        .collect(Collectors.toSet());
+                                Set<JOrder> jOrdersInRetry = jOrders.stream().filter(OrdersHelper::isContinuableAfterSuspending).collect(Collectors
+                                        .toSet());
                                 if (!jOrdersInRetry.isEmpty()) {
                                     try {
                                         TimeUnit.SECONDS.sleep(3);
@@ -656,7 +656,6 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         switch (action) {
         case RESUME:
             Map<Boolean, Set<JOrder>> resumableOrders = orderStream.collect(Collectors.groupingBy(OrdersHelper::isResumable,
-
                     Collectors.toSet()));
             postProblem(resumableOrders, controllerId, withPostProblem, "resumable");
             return resumableOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
