@@ -281,7 +281,9 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                     .forEach(JocInventory::postFolderEvent);
                 }
             });
-            ImportUtils.importTags(storedConfigurations, values.getTags(), hibernateSession);
+            if(values.getTags() != null) {
+              ImportUtils.importTags(storedConfigurations, values.getTags(), hibernateSession);
+            }
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

@@ -327,7 +327,7 @@ public class ImportUtils {
                 alreadyExist.setContent(Globals.objectMapper.writeValueAsString(config.getConfiguration()));
                 alreadyExist.setModified(Date.from(Instant.now()));
                 JocInventory.updateConfiguration(new InventoryDBLayer(dbLayer.getSession()), alreadyExist);
-                dbLayer.getSession().update(alreadyExist);
+//                dbLayer.getSession().update(alreadyExist);
             } catch (JsonProcessingException e) {
                 LOGGER.error(e.getMessage(),e);
             } catch (SOSHibernateException e) {
@@ -1494,7 +1494,6 @@ public class ImportUtils {
     
     public static void importTags(List<DBItemInventoryConfiguration> cfgs, ExportedTags tagsFromArchive, SOSHibernateSession session) {
       InventoryTagDBLayer dbLayer = new InventoryTagDBLayer(session);
-      List<DBItemInventoryTag> alreadyExistingTags = new ArrayList<DBItemInventoryTag>();
       List<DBItemInventoryTag> newTags = new ArrayList<DBItemInventoryTag>();
       if(tagsFromArchive != null) {
         if(!tagsFromArchive.getTags().isEmpty()) {
@@ -1503,26 +1502,32 @@ public class ImportUtils {
             List<ExportedTagItems> taggingItems = item.getUsedBy();
             if(tag != null) {
               tag.setModified(Date.from(Instant.now()));
-              alreadyExistingTags.add(tag);
+              try {
+                session.update(tag);
+              } catch (SOSHibernateException e) {
+                throw new JocSosHibernateException(e);
+              }
               List<DBItemInventoryTagging> existingTaggings = dbLayer.getTaggingsByTagId(tag.getId());
-              List<DBItemInventoryTagging> newTaggings = dbLayer.getTaggingsByTagId(tag.getId());
               taggingItems.stream().forEach(tagging -> {
                 List<DBItemInventoryTagging> taggingsByNameType = dbLayer.getTaggings(tagging.getName(), ConfigurationType.fromValue(tagging.getType()).intValue());
                 existingTaggings.addAll(taggingsByNameType.stream().filter(tagItem -> tagItem.getTagId().equals(tag.getId())).collect(Collectors.toList()));
                 taggingItems.stream().forEach(used -> {
-                  DBItemInventoryTagging newTagging = new DBItemInventoryTagging();
                   DBItemInventoryConfiguration config = cfgs.stream().filter(cfg -> cfg.getName().equals(used.getName()) && cfg.getType().equals(ConfigurationType.fromValue(used.getType()).intValue())).findAny().orElse(null);
                   if(config != null) {
-                    newTagging.setCid(config.getId());
+                    DBItemInventoryTagging exTagging = existingTaggings.stream().filter(cfgTagging -> cfgTagging.getName().equals(config.getName()) && cfgTagging.getType().equals(config.getType())).findAny().orElse(null);
+                    if(exTagging != null) {
+                      exTagging.setTagId(tag.getId());
+                      exTagging.setModified(Date.from(Instant.now()));
+                      try {
+                        session.update(exTagging);
+                      } catch (SOSHibernateException e) {
+                        throw new JocSosHibernateException(e);
+                      }
+                    }
                   }
-                  newTagging.setName(used.getName());
-                  newTagging.setType(ConfigurationType.fromValue(used.getType()).intValue());
-                  newTagging.setTagId(tag.getId());
-                  newTaggings.add(newTagging);
                 });
               });
             } else {
-              List<DBItemInventoryTagging> newTaggings = new ArrayList<DBItemInventoryTagging>();
               DBItemInventoryTag newTag = new DBItemInventoryTag();
               newTag.setName(item.getName());
               newTag.setOrdering(item.getOrdering());
@@ -1547,7 +1552,6 @@ public class ImportUtils {
                 } catch (SOSHibernateException e) {
                   throw new JocSosHibernateException(e);
                 }
-                newTaggings.add(newTagging);
               });
               
             }
