@@ -95,7 +95,7 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     private ConfigurationEntry allowUndeclaredVariables = new ConfigurationEntry("allow_undeclared_variables", "false", GlobalSettingsSectionValueType.BOOLEAN);
 
     //reporting: java options
-    private ConfigurationEntry reportJavaOptions = new ConfigurationEntry("report_java_options", "", GlobalSettingsSectionValueType.STRING);
+    private ConfigurationEntry reportJavaOptions = new ConfigurationEntry("report_java_options", "-Xmx64M", GlobalSettingsSectionValueType.STRING);
 
     //order tags instead orderId
     private ConfigurationEntry numOfTagsDisplayedAsOrderId = new ConfigurationEntry("num_of_tags_displayed_as_order_id", "0",
