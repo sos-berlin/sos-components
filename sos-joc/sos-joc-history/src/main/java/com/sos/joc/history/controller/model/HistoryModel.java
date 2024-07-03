@@ -676,6 +676,7 @@ public class HistoryModel {
         }
     }
 
+    /** used by the monitoring interface for warning notifications */
     private void postEventTaskLogFirstStderr(Long eventId, CachedOrder co, CachedOrderStep cos, CachedWorkflowJob job) {
         if (co != null && cos != null && cos.getFirstChunkStdError() != null) {
             HistoryOrderStepBean hosb = cos.convert(EventType.OrderStderrWritten, eventId, controllerConfiguration.getCurrent().getId(), co
@@ -689,6 +690,8 @@ public class HistoryModel {
         }
     }
 
+    @SuppressWarnings("unused")
+    // unused because of JOC-1821
     private void postEventTaskLog(LogEntry entry, String content, boolean newLine) {
         try {
             EventBus.getInstance().post(new HistoryOrderTaskLog(entry.getEventType().value(), entry.getHistoryOrderId(), entry
@@ -698,6 +701,7 @@ public class HistoryModel {
         }
     }
 
+    // TODO analogous to JOC-1821 - running order log - read a specific order file instead of using the event interface(all orders)
     private void postEventOrderLog(LogEntry entry, OrderLogEntry orderEntry) {
         try {
             EventBus.getInstance().post(new HistoryOrderLog(entry.getEventType().value(), entry.getHistoryOrderId(), orderEntry));
@@ -2340,7 +2344,7 @@ public class HistoryModel {
             content.append(le.getInfo());
 
             contentAsString = content.toString();
-            postEventTaskLog(le, contentAsString, newLine);
+            // postEventTaskLog(le, contentAsString, newLine);
             break;
         case OrderProcessed:
             // order log
@@ -2366,7 +2370,7 @@ public class HistoryModel {
             content.append(le.getInfo());
 
             contentAsString = content.toString();
-            postEventTaskLog(le, contentAsString, newLine);
+            // postEventTaskLog(le, contentAsString, newLine);
             break;
 
         case OrderStdoutWritten:
@@ -2418,7 +2422,7 @@ public class HistoryModel {
                 content.append(stdout);
                 contentAsString = content.toString();
                 if (postEvent) {
-                    postEventTaskLog(le, contentAsString, newLine);
+                    // postEventTaskLog(le, contentAsString, newLine);
                 }
             }
             break;

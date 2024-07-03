@@ -24,21 +24,21 @@ import com.sos.joc.event.bean.history.HistoryOrderTaskLogArrived;
 import com.sos.joc.model.job.RunningTaskLog;
 
 public class RunningTaskLogs {
-    
+
     private static final Logger LOGGER = LoggerFactory.getLogger(RunningTaskLogs.class);
     private final static long cleanupPeriodInMillis = TimeUnit.MINUTES.toMillis(2);
     private static RunningTaskLogs runningTaskLogs;
     private volatile ConcurrentMap<Long, CopyOnWriteArraySet<RunningTaskLog>> events = new ConcurrentHashMap<>();
     private volatile Set<Long> completeLogs = new CopyOnWriteArraySet<>();
     private volatile Set<Long> registeredTaskIds = new CopyOnWriteArraySet<>();
-    
+
     public enum Mode {
         COMPLETE, TRUE, FALSE, BROKEN;
     }
-    
+
     private RunningTaskLogs() {
         EventBus.getInstance().register(this);
-        
+
         new Timer().scheduleAtFixedRate(new TimerTask() {
 
             @Override
@@ -65,21 +65,21 @@ public class RunningTaskLogs {
         }
         return runningTaskLogs;
     }
-    
+
     public synchronized void subscribe(Long taskId) {
-        LOGGER.debug("taskId '" + taskId + "' is observed for log events" );
+        LOGGER.debug("taskId '" + taskId + "' is observed for log events");
         registeredTaskIds.add(taskId);
     }
-    
+
     public synchronized void unsubscribe(Long taskId) {
         registeredTaskIds.remove(taskId);
-        LOGGER.debug("taskId '" + taskId + "' is no longer observed for log events" );
+        LOGGER.debug("taskId '" + taskId + "' is no longer observed for log events");
     }
-    
+
     public Mode hasEvents(Long eventId, Long taskId) {
         if (events.containsKey(taskId)) {
             if (completeLogs.contains(taskId)) {
-               return Mode.COMPLETE; 
+                return Mode.COMPLETE;
             } else if (events.get(taskId).stream().parallel().anyMatch(r -> eventId < r.getEventId())) {
                 return Mode.TRUE;
             } else {
@@ -92,7 +92,7 @@ public class RunningTaskLogs {
             return Mode.FALSE;
         }
     }
-    
+
     public RunningTaskLog getRunningTaskLog(RunningTaskLog r) {
         SortedSet<Long> evtIds = new TreeSet<>(Comparator.comparing(Long::longValue));
         StringBuilder log = new StringBuilder();
@@ -112,11 +112,11 @@ public class RunningTaskLogs {
         }
         return r;
     }
-    
+
     @Subscribe({ HistoryOrderTaskLog.class })
     public void createHistoryTaskEvent(HistoryOrderTaskLog evt) {
         if (isRegistered(evt.getHistoryOrderStepId())) {
-            //LOGGER.debug("log event for taskId '" + evt.getHistoryOrderStepId() + "' arrived" );
+            // LOGGER.debug("log event for taskId '" + evt.getHistoryOrderStepId() + "' arrived" );
             RunningTaskLog r = new RunningTaskLog();
             r.setEventId(evt.getEventId());
             r.setComplete(EventType.OrderProcessed.value().equals(evt.getKey()));
@@ -129,20 +129,24 @@ public class RunningTaskLogs {
             }
         }
     }
-    
-    private boolean isRegistered(Long taskId) {
+
+    public boolean isRegistered(Long taskId) {
         return registeredTaskIds.contains(taskId);
     }
 
+    public Set<Long> getRegisteredTaskIds() {
+        return registeredTaskIds;
+    }
+
     private synchronized void addEvent(RunningTaskLog event) {
-        //LOGGER.debug("try to add log event for taskId '" + event.getTaskId() + "'" );
+        // LOGGER.debug("try to add log event for taskId '" + event.getTaskId() + "'" );
         events.putIfAbsent(event.getTaskId(), new CopyOnWriteArraySet<RunningTaskLog>());
         if (events.get(event.getTaskId()).add(event)) {
             EventBus.getInstance().post(new HistoryOrderTaskLogArrived(event.getTaskId(), event.getComplete()));
-            //LOGGER.debug("log event for taskId '" + event.getTaskId() + "' published" );
+            // LOGGER.debug("log event for taskId '" + event.getTaskId() + "' published" );
         }
     }
-    
+
     private synchronized void addCompleteness(Long taskId) {
         completeLogs.add(taskId);
     }
