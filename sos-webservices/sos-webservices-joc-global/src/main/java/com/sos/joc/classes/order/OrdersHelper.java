@@ -1485,8 +1485,7 @@ public class OrdersHelper {
         if (obstaclesE.isRight()) {
             Set<JOrderObstacle> obstacles = obstaclesE.get();
             for (JOrderObstacle obstacle : obstacles) {
-                if (obstacle instanceof JOrderObstacle.WaitingForOtherTime || obstacle instanceof JOrderObstacle.WaitingForTime
-                        || obstacle instanceof JOrderObstacle.WaitingForCommand$) {
+                if (obstacle instanceof JOrderObstacle.WaitingForOtherTime || obstacle instanceof JOrderObstacle.WaitingForCommand$) {
                     continue;
                 }
                 return Optional.ofNullable(mapObstacle(obstacle));
