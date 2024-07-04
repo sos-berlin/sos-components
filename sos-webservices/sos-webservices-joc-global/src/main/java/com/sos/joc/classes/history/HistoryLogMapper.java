@@ -11,6 +11,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.common.Variables;
 import com.sos.joc.model.history.order.OrderLogEntry;
 import com.sos.joc.model.history.order.OrderLogEntryInstruction;
+import com.sos.joc.model.history.order.added.OrderAdded;
 import com.sos.joc.model.history.order.notice.BaseNotice;
 
 public class HistoryLogMapper {
@@ -23,7 +24,6 @@ public class HistoryLogMapper {
             return "";
         }
         List<String> info = new ArrayList<String>();
-
         if (!SOSString.isEmpty(entry.getOrderId())) {
             info.add("id=" + entry.getOrderId());
         }
@@ -68,10 +68,11 @@ public class HistoryLogMapper {
             info.add(getStopped(entry));
         } else if (entry.getResumed() != null) {
             info.add(toString(entry.getResumed(), false));
+        } else if (entry.getOrderAdded() != null) {
+            info.add(getOrderAdded(entry.getOrderAdded()));
         }
-        List<String> l = info.stream().filter(e -> !SOSString.isEmpty(e)).collect(Collectors.toList());
-        return String.format("%s [%-8s [%-15s %s", entry.getControllerDatetime(), entry.getLogLevel() + "]", entry.getLogEvent().value() + "]", String
-                .join(", ", l));
+        String s = info.stream().filter(e -> !SOSString.isEmpty(e)).collect(Collectors.joining(", "));
+        return String.format("%s [%-8s [%-15s %s", entry.getControllerDatetime(), entry.getLogLevel() + "]", entry.getLogEvent().value() + "]", s);
     }
 
     private static String getError(OrderLogEntry entry) {
@@ -225,6 +226,28 @@ public class HistoryLogMapper {
             sb.append(")");
         } catch (Throwable e) {
             LOGGER.warn(String.format("[getStopped]%s", e.toString()), e);
+        }
+        return sb.toString();
+    }
+
+    private static String getOrderAdded(OrderAdded entry) {
+        StringBuilder sb = new StringBuilder();
+        try {
+            List<String> info = new ArrayList<String>();
+            if (!SOSString.isEmpty(entry.getOrderId())) {
+                info.add("id=" + entry.getOrderId());
+            }
+            if (!SOSString.isEmpty(entry.getWorkflowPath())) {
+                info.add("workflow=" + entry.getWorkflowPath());
+            }
+            if (entry.getArguments() != null && entry.getArguments().getAdditionalProperties().size() > 0) {
+                info.add("arguments(" + toString(entry.getArguments()) + ")");
+            }
+            sb.append("OrderAdded(");
+            sb.append(String.join(", ", info));
+            sb.append(")");
+        } catch (Throwable e) {
+            LOGGER.warn(String.format("[getOrderAdded]%s", e.toString()), e);
         }
         return sb.toString();
     }
