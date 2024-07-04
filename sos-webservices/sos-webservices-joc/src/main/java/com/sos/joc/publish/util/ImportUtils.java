@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -17,9 +18,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -1495,6 +1498,7 @@ public class ImportUtils {
     public static void importTags(List<DBItemInventoryConfiguration> cfgs, ExportedTags tagsFromArchive, SOSHibernateSession session) {
       InventoryTagDBLayer dbLayer = new InventoryTagDBLayer(session);
       List<DBItemInventoryTag> newTags = new ArrayList<DBItemInventoryTag>();
+      List<DBItemInventoryTag> storedTags = new ArrayList<DBItemInventoryTag>();
       if(tagsFromArchive != null) {
         if(!tagsFromArchive.getTags().isEmpty()) {
           tagsFromArchive.getTags().stream().forEach(item -> {
@@ -1507,6 +1511,7 @@ public class ImportUtils {
               } catch (SOSHibernateException e) {
                 throw new JocSosHibernateException(e);
               }
+              storedTags.add(tag);
               List<DBItemInventoryTagging> existingTaggings = dbLayer.getTaggingsByTagId(tag.getId());
               taggingItems.stream().forEach(tagging -> {
                 List<DBItemInventoryTagging> taggingsByNameType = dbLayer.getTaggings(tagging.getName(), ConfigurationType.fromValue(tagging.getType()).intValue());
@@ -1538,6 +1543,7 @@ public class ImportUtils {
               } catch (SOSHibernateException e) {
                 throw new JocSosHibernateException(e);
               }
+              storedTags.add(newTag);
               taggingItems.stream().forEach(used -> {
                 DBItemInventoryTagging newTagging = new DBItemInventoryTagging();
                 DBItemInventoryConfiguration config = cfgs.stream().filter(cfg -> cfg.getName().equals(used.getName()) && cfg.getType().equals(ConfigurationType.fromValue(used.getType()).intValue())).findAny().orElse(null);
@@ -1556,6 +1562,24 @@ public class ImportUtils {
               
             }
           });
+        }
+        if(storedTags != null) {
+          AtomicInteger ordering = new AtomicInteger(1);
+          List<DBItemInventoryTag> allDbTags = dbLayer.getAllTags();
+          Set<DBItemInventoryTag> items = 
+//              new HashSet<DBItemInventoryTag>(storedTags);
+          // get all Tags from db and merge them to update ordering for all tags
+          Stream.concat(allDbTags.stream(), storedTags.stream()).collect(Collectors.toSet());
+          //for each item from import file json -> DBItemInventoryTag -> items.add()
+          items.stream()
+              .sorted(Comparator.comparing(DBItemInventoryTag::getOrdering).thenComparing(DBItemInventoryTag::getName))
+              .peek(item -> item.setOrdering(ordering.getAndIncrement())).forEach(tag -> {
+                  try {
+                    session.update(tag);
+                  } catch (SOSHibernateException e) {
+                    throw new JocSosHibernateException(e);
+                  }
+              });
         }
       }
     }
