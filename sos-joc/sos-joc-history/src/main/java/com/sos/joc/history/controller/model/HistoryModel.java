@@ -695,7 +695,7 @@ public class HistoryModel {
     private void postEventTaskLog(LogEntry entry, String content, boolean newLine) {
         try {
             EventBus.getInstance().post(new HistoryOrderTaskLog(entry.getEventType().value(), entry.getHistoryOrderId(), entry
-                    .getHistoryOrderStepId(), content, newLine));
+                    .getHistoryOrderStepId(), content, null));
         } catch (Throwable e) {
             LOGGER.warn("[postEventTaskLog]" + e, e);
         }
@@ -704,7 +704,7 @@ public class HistoryModel {
     // TODO analogous to JOC-1821 - running order log - read a specific order file instead of using the event interface(all orders)
     private void postEventOrderLog(LogEntry entry, OrderLogEntry orderEntry) {
         try {
-            EventBus.getInstance().post(new HistoryOrderLog(entry.getEventType().value(), entry.getHistoryOrderId(), orderEntry));
+            EventBus.getInstance().post(new HistoryOrderLog(entry.getEventType().value(), entry.getHistoryOrderId(), orderEntry, null));
         } catch (Throwable e) {
             LOGGER.warn("[postEventOrderLog]" + e, e);
         }

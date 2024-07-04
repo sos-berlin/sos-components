@@ -30,7 +30,7 @@ import com.sos.joc.model.order.RunningOrderLogEvent;
 import com.sos.joc.model.order.RunningOrderLogEvents;
 
 public class RunningOrderLogs {
-    
+
     private static final Logger LOGGER = LoggerFactory.getLogger(RunningOrderLogs.class);
     private static final long cleanupPeriodInMillis = TimeUnit.MINUTES.toMillis(2);
     protected static final EnumSet<EventType> completeTypes = EnumSet.of(EventType.OrderBroken, EventType.OrderCancelled, EventType.OrderFinished);
@@ -38,14 +38,14 @@ public class RunningOrderLogs {
     private volatile ConcurrentMap<Long, CopyOnWriteArraySet<RunningOrderLogEvent>> events = new ConcurrentHashMap<>();
     private volatile Set<Long> completeLogs = new CopyOnWriteArraySet<>();
     private volatile Set<Long> registeredHistoryIds = new CopyOnWriteArraySet<>();
-    
+
     public enum Mode {
         COMPLETE, TRUE, FALSE, BROKEN;
     }
-    
+
     private RunningOrderLogs() {
         EventBus.getInstance().register(this);
-        
+
         new Timer().scheduleAtFixedRate(new TimerTask() {
 
             @Override
@@ -69,24 +69,24 @@ public class RunningOrderLogs {
     public static synchronized RunningOrderLogs getInstance() {
         if (runningOrderLogs == null) {
             runningOrderLogs = new RunningOrderLogs();
-        } 
+        }
         return runningOrderLogs;
     }
-    
+
     public synchronized void subscribe(Long historyId) {
-        LOGGER.debug("historyId '" + historyId + "' is observed for log events" );
+        LOGGER.debug("historyId '" + historyId + "' is observed for log events");
         registeredHistoryIds.add(historyId);
     }
-    
+
     public synchronized void unsubscribe(Long historyId) {
         registeredHistoryIds.remove(historyId);
-        LOGGER.debug("historyId '" + historyId + "' is no longer observed for log events" );
+        LOGGER.debug("historyId '" + historyId + "' is no longer observed for log events");
     }
-    
+
     public Mode hasEvents(Long eventId, Long historyId) {
         if (events.containsKey(historyId)) {
             if (completeLogs.contains(historyId)) {
-               return Mode.COMPLETE; 
+                return Mode.COMPLETE;
             } else if (events.get(historyId).stream().parallel().anyMatch(r -> eventId < r.getEventId())) {
                 return Mode.TRUE;
             } else {
@@ -99,7 +99,7 @@ public class RunningOrderLogs {
             return Mode.FALSE;
         }
     }
-    
+
     public RunningOrderLogEvents getRunningOrderLog(RunningOrderLogEvents r) {
         SortedSet<Long> evtIds = new TreeSet<>(Comparator.comparing(Long::longValue));
         List<OrderLogEntry> logEvents = new ArrayList<>();
@@ -119,18 +119,18 @@ public class RunningOrderLogs {
         }
         return r;
     }
-    
+
     @Subscribe({ HistoryOrderLog.class })
     public void createHistoryOrderEvent(HistoryOrderLog evt) {
         if (isRegistered(evt.getHistoryOrderId())) {
-            LOGGER.debug("log event for historyId '" + evt.getHistoryOrderId() + "' arrived" );
+            LOGGER.debug("log event for historyId '" + evt.getHistoryOrderId() + "' arrived");
             try {
                 RunningOrderLogEvent r = new RunningOrderLogEvent();
                 r.setHistoryId(evt.getHistoryOrderId());
                 r.setEventId(evt.getEventId());
                 r.setComplete(completeTypes.contains(EventType.fromValue(evt.getKey())));
                 r.setLogEvent((OrderLogEntry) evt.getOrderLogEntry());
-                addEvent(r);
+                addEvent(evt.getSessionIdentifier(), r);
                 if (r.getComplete()) {
                     addCompleteness(r.getHistoryId());
                     unsubscribe(r.getHistoryId());
@@ -140,20 +140,20 @@ public class RunningOrderLogs {
             }
         }
     }
-    
+
     private boolean isRegistered(Long historyId) {
         return registeredHistoryIds.contains(historyId);
     }
 
-    private synchronized void addEvent(RunningOrderLogEvent event) {
-        LOGGER.debug("try to add log event for historyId '" + event.getHistoryId() + "'" );
+    private synchronized void addEvent(String sessionIdentifier, RunningOrderLogEvent event) {
+        LOGGER.debug("try to add log event for historyId '" + event.getHistoryId() + "'");
         events.putIfAbsent(event.getHistoryId(), new CopyOnWriteArraySet<RunningOrderLogEvent>());
         if (events.get(event.getHistoryId()).add(event)) {
-            EventBus.getInstance().post(new HistoryOrderLogArrived(event.getHistoryId(), event.getComplete()));
-            LOGGER.debug("log event for historyId '" + event.getHistoryId() + "' published" );
+            EventBus.getInstance().post(new HistoryOrderLogArrived(event.getHistoryId(), event.getComplete(), sessionIdentifier));
+            LOGGER.debug("log event for historyId '" + event.getHistoryId() + "' published");
         }
     }
-    
+
     private synchronized void addCompleteness(Long historyId) {
         completeLogs.add(historyId);
     }

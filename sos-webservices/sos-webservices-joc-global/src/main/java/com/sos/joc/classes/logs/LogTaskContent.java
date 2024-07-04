@@ -18,8 +18,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -50,38 +49,49 @@ import jakarta.ws.rs.core.StreamingOutput;
 public class LogTaskContent {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LogTaskContent.class);
-    private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("uuuu-MM-dd' 'HH:mm:ss.SSSZ");
+
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("uuuu-MM-dd' 'HH:mm:ss.SSSZ");
     private static final long RUNNING_LOG_SLEEP_TIMEOUT = 1; // seconds
     private static final int RUNNING_LOG_BYTEBUFFER_ALLOCATE_SIZE = 64 * 1024;
     private static final int RUNNING_LOG_MAX_ITERATIONS = 100_000;
 
-    // private String controllerId;
-    private Long historyId;
-    private Long orderMainParentId;
-    private Long orderId;
-    private String jobName;
-    private String workflow;
+    // 1 running log thread per sessionIdentifier
+    private static final ConcurrentHashMap<String, Thread> runningLogThreads = new ConcurrentHashMap<>();
+
+    private final SOSAuthFolderPermissions folderPermissions;
+    private final Long historyId;
+    private final String sessionIdentifier;
+    private final Long maxLogSize;// 10 * 1024 * 1024L; // 10MB
+    private final Object lockObject = new Object();
+
     private Long unCompressedLength = null;
     private Long eventId = null;
-    private boolean complete = false;
-    private SOSAuthFolderPermissions folderPermissions = null;
-    private Long maxLogSize = 10 * 1024 * 1024L; // 10MB
+    private Long orderMainParentId;
+    private Long orderId;
 
-    public LogTaskContent(TaskFilter taskFilter, SOSAuthFolderPermissions folderPermissions) {
+    private String jobName;
+    private String workflow;
+    private volatile boolean complete = false;
+
+    public LogTaskContent(TaskFilter taskFilter, SOSAuthFolderPermissions folderPermissions, String sessionIdentifier) {
         this.historyId = taskFilter.getTaskId();
-        this.folderPermissions = folderPermissions;
-        this.maxLogSize = Globals.getConfigurationGlobalsJoc().getMaxDisplaySizeInBytes();
-        // this.controllerId = taskFilter.getControllerId();
-    }
-
-    public LogTaskContent(Long taskId, SOSAuthFolderPermissions folderPermissions) {
-        this.historyId = taskId;
+        this.sessionIdentifier = sessionIdentifier;
         this.folderPermissions = folderPermissions;
         this.maxLogSize = Globals.getConfigurationGlobalsJoc().getMaxDisplaySizeInBytes();
     }
 
-    public LogTaskContent(Long taskId) {
+    public LogTaskContent(Long taskId, SOSAuthFolderPermissions folderPermissions, String sessionIdentifier) {
         this.historyId = taskId;
+        this.sessionIdentifier = sessionIdentifier;
+        this.folderPermissions = folderPermissions;
+        this.maxLogSize = Globals.getConfigurationGlobalsJoc().getMaxDisplaySizeInBytes();
+
+    }
+
+    public LogTaskContent(Long taskId, String sessionIdentifier) {
+        this.historyId = taskId;
+        this.sessionIdentifier = sessionIdentifier;
+        this.folderPermissions = null;
         this.maxLogSize = Globals.getConfigurationGlobalsJoc().getMaxDisplaySizeInBytes();
     }
 
@@ -104,10 +114,6 @@ public class LogTaskContent {
 
     public Long getUnCompressedLength() {
         return unCompressedLength;
-    }
-
-    public boolean isComplete() {
-        return complete;
     }
 
     public String getDownloadFilename() throws UnsupportedEncodingException {
@@ -169,7 +175,6 @@ public class LogTaskContent {
                 }
             };
         }
-
         compressedLog = null;
         return out;
     }
@@ -178,11 +183,12 @@ public class LogTaskContent {
         if (!forDownload && complete && unCompressedLength > maxLogSize) {
             return getTooBigMessageInputStream("");
         }
+
+        setComplete();
         try {
             Path tasklog = Paths.get("logs", "history", orderMainParentId.toString(), orderId.toString() + "_" + historyId + ".log");
             if (Files.exists(tasklog)) {
                 eventId = Instant.now().toEpochMilli();
-                complete = false;
                 unCompressedLength = Files.size(tasklog);
                 if (forDownload) {
                     return Files.newInputStream(tasklog);
@@ -191,11 +197,11 @@ public class LogTaskContent {
                         return getTooBigMessageInputStream(" snapshot");
                     }
                 }
-
-                RunningTaskLogs.getInstance().subscribe(historyId);
                 runningTaskLogMonitor(tasklog);
-                // sent empty to avoid line order issue
-                return new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8));
+                // sent empty to avoid line ordering issues
+                // should be removed because produced a new empty line - a space because the Task History GUI API does not call the "running API" if the
+                // response is empty
+                return new ByteArrayInputStream(" ".getBytes(StandardCharsets.UTF_8));
             }
         } catch (IOException e) {
             LOGGER.warn(e.toString());
@@ -207,31 +213,37 @@ public class LogTaskContent {
             s += " [INFO] Standby JOC Cockpit instance has no access to the snapshot log\r\n";
         }
         unCompressedLength = s.length() * 1L;
-        complete = true;
         return new ByteArrayInputStream(s.getBytes(StandardCharsets.UTF_8));
     }
 
     // TODO - UTC is used ...
     private String getLogLineNow() {
-        return ZonedDateTime.now().format(formatter);
+        return ZonedDateTime.now().format(FORMATTER);
     }
 
     // TODO - stop monitoring if the log window is closed - JavaScript window unload -> calls new web service
     // TODO - sleepAlways - true behavior?
     // TODO - sendEvent - RUNNING_LOG_BYTEBUFFER_ALLOCATE_SIZE best value ?
     // DONE - sendEvent - check if the monitoring not trigger for this HistoryOrderTaskLog events
+    // DONE - sendEvent - open/close running log multiple times
+    // DONE - sendEvent - open/close running log multiple sessions
+    // DONE - if the same taskId is opened in two/multiple users sessions - the logs from other sessions are added to log because of HistoryOrderTaskLog
     private void runningTaskLogMonitor(Path taskLog) {
+        RunningTaskLogs.getInstance().unsubscribe(sessionIdentifier, historyId);
+
+        complete = false;
+        RunningTaskLogs.getInstance().subscribe(sessionIdentifier, historyId);
+
         final String logPrefix = "[runningTaskLogMonitor][" + taskLog + "]";
         boolean sleepAlways = true; // to remove - sleep only if no new content provided(bytesRead == -1) all after each iteration...
-        CompletableFuture.runAsync(() -> {
+        Thread workerThread = new Thread(() -> {
             // AsynchronousFileChannel for read - do not block the log file as it will be deleted by the history service
             try (AsynchronousFileChannel fileChannel = AsynchronousFileChannel.open(taskLog, StandardOpenOption.READ)) {
 
                 ByteBuffer buffer = ByteBuffer.allocate(RUNNING_LOG_BYTEBUFFER_ALLOCATE_SIZE);
                 long position = 0;
                 int currentIteration = 0;
-                // while (true) {
-                r: while (historyId != null && !complete && RunningTaskLogs.getInstance().isRegistered(historyId)) {
+                r: while (!isComplete()) {
                     currentIteration++;
                     // to avoid endless loop
                     if (currentIteration > RUNNING_LOG_MAX_ITERATIONS) {
@@ -253,7 +265,7 @@ public class LogTaskContent {
                                 String content = getTooBigMessage(" snapshot");
                                 unCompressedLength += content.getBytes().length;
                                 EventBus.getInstance().post(new HistoryOrderTaskLog(EventType.OrderStdoutWritten.value(), orderId, historyId, content,
-                                        false));
+                                        sessionIdentifier));
                             } catch (Throwable e) {
                                 LOGGER.warn(logPrefix + "[EventBus.getInstance().post]" + e, e);
                             }
@@ -268,7 +280,7 @@ public class LogTaskContent {
                             String content = new String(bytes, Charsets.UTF_8);
                             try {
                                 EventBus.getInstance().post(new HistoryOrderTaskLog(EventType.OrderStdoutWritten.value(), orderId, historyId, content,
-                                        false));
+                                        sessionIdentifier));
                             } catch (Throwable e) {
                                 LOGGER.warn(logPrefix + "[EventBus.getInstance().post]" + e, e);
                             }
@@ -284,29 +296,70 @@ public class LogTaskContent {
                         }
                     }
                 }
+            } catch (InterruptedException e) {
             } catch (Throwable e) {
                 LOGGER.info(logPrefix + e.toString(), e);
             } finally {
-                complete = true;
-                RunningTaskLogs.getInstance().unsubscribe(historyId);
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug(logPrefix + "[END]RegisteredTaskIds=" + RunningTaskLogs.getInstance().getRegisteredTaskIds());
+                try {
+                    EventBus.getInstance().post(new HistoryOrderTaskLog(EventType.OrderProcessed.value(), orderId, historyId, " ",
+                            sessionIdentifier));
+                } catch (Throwable e) {
+                    LOGGER.warn(logPrefix + "[EventBus.getInstance().post]" + e, e);
                 }
+                setComplete();
             }
         });
+        try {
+            Thread previousWorkerThread = runningLogThreads.put(sessionIdentifier, workerThread);
+            if (previousWorkerThread != null) {
+                previousWorkerThread.interrupt();
+            }
+        } catch (Throwable e) {
+        }
+        workerThread.start();
     }
 
     private boolean continueRunningLogMonitorAfterSleep(Path logFile) {
         try {
-            TimeUnit.SECONDS.sleep(RUNNING_LOG_SLEEP_TIMEOUT);
+            // TimeUnit.SECONDS.sleep(RUNNING_LOG_SLEEP_TIMEOUT);
+            waitFor(RUNNING_LOG_SLEEP_TIMEOUT);
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+            try {
+                Thread.currentThread().interrupt();
+            } catch (Throwable ex) {
+            }
             return false;
         }
         if (!Files.exists(logFile)) {
             return false;
         }
         return true;
+    }
+
+    private void waitFor(long seconds) throws InterruptedException {
+        if (!isComplete() && seconds > 0) {
+            synchronized (lockObject) {
+                lockObject.wait(seconds * 1_000);
+            }
+        }
+    }
+
+    private void setComplete() {
+        complete = true;
+        synchronized (lockObject) {
+            lockObject.notifyAll();
+        }
+        try {
+            Thread previousWorkerThread = runningLogThreads.remove(sessionIdentifier);
+            if (previousWorkerThread != null) {
+                previousWorkerThread.interrupt();
+            }
+        } catch (Throwable e) {
+        }
+    }
+
+    public boolean isComplete() {
+        return complete;
     }
 
     private String getTooBigMessage(String kindOfLog) {
@@ -330,7 +383,7 @@ public class LogTaskContent {
         sb.append("\r\n");
 
         unCompressedLength = sb.length() * 1L;
-        complete = true;
+        setComplete();
         return sb.toString();
     }
 
@@ -396,7 +449,7 @@ public class LogTaskContent {
                     throw new DBMissingDataException(String.format("Couldn't find the log of the job %s (task id:%d)", jobName, historyId));
                 } else {
                     unCompressedLength = historyDBItem.getFileSizeUncomressed();
-                    complete = true;
+                    setComplete();
                     if (!forDownload && unCompressedLength > maxLogSize) {
                         return null;
                     }

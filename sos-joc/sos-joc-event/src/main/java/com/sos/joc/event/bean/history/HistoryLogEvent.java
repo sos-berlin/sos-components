@@ -7,16 +7,12 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "TYPE", visible = true)
-@JsonSubTypes({ 
-    @JsonSubTypes.Type(HistoryOrderTaskLog.class),
-    @JsonSubTypes.Type(HistoryOrderLog.class),
-    @JsonSubTypes.Type(HistoryOrderTaskLogArrived.class),
-    @JsonSubTypes.Type(HistoryOrderLogArrived.class)
-})
+@JsonSubTypes({ @JsonSubTypes.Type(HistoryOrderTaskLog.class), @JsonSubTypes.Type(HistoryOrderLog.class),
+        @JsonSubTypes.Type(HistoryOrderTaskLogArrived.class), @JsonSubTypes.Type(HistoryOrderLogArrived.class) })
 
 public abstract class HistoryLogEvent extends HistoryEvent {
 
-    public HistoryLogEvent(String key, Long historyOrderId, Long historyOrderStepId, String content, boolean newline) {
+    public HistoryLogEvent(String key, Long historyOrderId, Long historyOrderStepId, String content, String sessionIdentifier) {
         super(key, null, null);
         if (historyOrderId == null) {
             putVariable("historyOrderId", 0L);
@@ -28,14 +24,13 @@ public abstract class HistoryLogEvent extends HistoryEvent {
         } else {
             putVariable("historyOrderStepId", historyOrderStepId);
         }
-        if (newline) {
-            putVariable("content", content + "\r\n");
-        } else {
-            putVariable("content", content);
+        putVariable("content", content);
+        if (sessionIdentifier != null) {
+            putVariable("sessionIdentifier", sessionIdentifier);
         }
     }
-    
-    public HistoryLogEvent(String key, Long historyOrderId, Object content) {
+
+    public HistoryLogEvent(String key, Long historyOrderId, Object content, String sessionIdentifier) {
         super(key, null, null);
         if (historyOrderId == null) {
             putVariable("historyOrderId", 0L);
@@ -44,8 +39,11 @@ public abstract class HistoryLogEvent extends HistoryEvent {
         }
         putVariable("historyOrderStepId", 0L);
         putVariable("orderLogEntry", content);
+        if (sessionIdentifier != null) {
+            putVariable("sessionIdentifier", sessionIdentifier);
+        }
     }
-    
+
     @JsonIgnore
     public Long getHistoryOrderId() {
         return (Long) getVariables().get("historyOrderId");
@@ -55,14 +53,20 @@ public abstract class HistoryLogEvent extends HistoryEvent {
     public long getHistoryOrderStepId() {
         return ((Long) getVariables().get("historyOrderStepId")).longValue();
     }
-    
+
     @JsonIgnore
     public String getContent() {
         return (String) getVariables().get("content");
     }
-    
+
     @JsonIgnore
     public Object getOrderLogEntry() {
         return getVariables().get("orderLogEntry");
+    }
+
+    @JsonIgnore
+    public String getSessionIdentifier() {
+        Object v = getVariables().get("sessionIdentifier");
+        return v == null ? null : (String) v;
     }
 }

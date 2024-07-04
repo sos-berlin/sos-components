@@ -54,8 +54,8 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            
-            LogOrderContent logOrderContent = new LogOrderContent(orderHistoryFilter.getHistoryId(), folderPermissions);
+
+            LogOrderContent logOrderContent = new LogOrderContent(orderHistoryFilter.getHistoryId(), folderPermissions, accessToken);
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(logOrderContent.getOrderLog()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -92,7 +92,7 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
                 return jocDefaultResponse;
             }
 
-            LogOrderContent logOrderContent = new LogOrderContent(orderHistoryFilter.getHistoryId(), folderPermissions);
+            LogOrderContent logOrderContent = new LogOrderContent(orderHistoryFilter.getHistoryId(), folderPermissions, accessToken);
             return JOCDefaultResponse.responseOctetStreamDownloadStatus200(logOrderContent.getStreamOutput(), logOrderContent.getDownloadFilename(),
                     logOrderContent.getUnCompressedLength());
         } catch (JocException e) {
@@ -109,19 +109,21 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
             initLogging(API_CALL_RUNNING, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrderRunningLogFilter.class);
             RunningOrderLogEvents orderLog = Globals.objectMapper.readValue(filterBytes, RunningOrderLogEvents.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(orderLog.getControllerId(), getControllerPermissions(orderLog
-                    .getControllerId(), accessToken).getOrders().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(orderLog.getControllerId(), getControllerPermissions(orderLog.getControllerId(),
+                    accessToken).getOrders().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            
+
             historyId = orderLog.getHistoryId();
             orderLog.setComplete(false);
             orderLog.setLogEvents(Collections.emptyList());
-            
+
             RunningOrderLogs r = RunningOrderLogs.getInstance();
             RunningOrderLogs.Mode mode = r.hasEvents(orderLog.getEventId(), historyId);
-            LOGGER.debug("historyId '" + historyId + "' has log events: " + mode.name());
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("historyId '" + historyId + "' has log events: " + mode.name());
+            }
             switch (mode) {
             case TRUE:
                 try {
@@ -135,7 +137,10 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
                 EventBus.getInstance().register(this);
                 condition = lock.newCondition();
                 waitingForEvents(TimeUnit.MINUTES.toMillis(1));
-                LOGGER.debug("historyId '" + historyId + "' end of waiting events: event received? " + eventArrived.get() + ", complete? " + complete.get());
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("historyId '" + historyId + "' end of waiting events: event received? " + eventArrived.get() + ", complete? "
+                            + complete.get());
+                }
                 if (eventArrived.get()) {
                     if (!complete.get()) {
                         try {
@@ -150,9 +155,8 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
                 orderLog.setComplete(true); // to avoid endless calls
                 break;
             }
-            
+
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(orderLog));
-            
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -162,22 +166,26 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
             EventBus.getInstance().unRegister(this);
         }
     }
-    
+
     @Subscribe({ HistoryOrderLogArrived.class })
     public void createHistoryOrderEvent(HistoryOrderLogArrived evt) {
-        LOGGER.debug("orderlog event received with historyId '" + evt.getHistoryOrderId() + "', expected historyId '" + historyId + "'");
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("orderlog event received with historyId '" + evt.getHistoryOrderId() + "', expected historyId '" + historyId + "'");
+        }
         if (historyId != null && historyId.longValue() == evt.getHistoryOrderId()) {
             eventArrived.set(true);
             complete.set(evt.getComplete() == Boolean.TRUE);
             signalEvent();
         }
     }
-    
+
     private void waitingForEvents(long maxDelay) {
         try {
             if (condition != null && lock.tryLock(200L, TimeUnit.MILLISECONDS)) { // with timeout
                 try {
-                    LOGGER.debug("waitingForEvents: await " + condition.hashCode());
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("waitingForEvents: await " + condition.hashCode());
+                    }
                     condition.await(maxDelay, TimeUnit.MILLISECONDS);
                 } catch (InterruptedException e1) {
                 } finally {
@@ -191,13 +199,15 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
         } catch (InterruptedException e) {
         }
     }
-    
+
     private synchronized void signalEvent() {
         try {
             LOGGER.debug("signalEvent: " + (condition != null));
             if (condition != null && lock.tryLock(2L, TimeUnit.SECONDS)) { // with timeout
                 try {
-                    LOGGER.debug("signalEvent: signalAll" + condition.hashCode());
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("signalEvent: signalAll" + condition.hashCode());
+                    }
                     condition.signalAll();
                 } finally {
                     try {
@@ -207,7 +217,7 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
                     }
                 }
             } else {
-                LOGGER.warn("signalEvent failed"); 
+                LOGGER.warn("signalEvent failed");
             }
         } catch (InterruptedException e) {
             LOGGER.warn("signalEvent: " + e.toString());

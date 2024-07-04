@@ -9,7 +9,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import javax.json.Json;
 import javax.json.JsonObjectBuilder;
-import jakarta.ws.rs.Path;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +27,8 @@ import com.sos.joc.model.job.RunningTaskLogFilter;
 import com.sos.joc.model.job.TaskFilter;
 import com.sos.joc.task.resource.ITaskLogResource;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("task")
 public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogResource {
@@ -54,19 +55,22 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
             JsonValidator.validateFailFast(filterBytes, RunningTaskLogFilter.class);
             RunningTaskLog taskLog = Globals.objectMapper.readValue(filterBytes, RunningTaskLog.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(taskLog.getControllerId(), getControllerPermissions(taskLog
-                    .getControllerId(), accessToken).getOrders().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(taskLog.getControllerId(), getControllerPermissions(taskLog.getControllerId(),
+                    accessToken).getOrders().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            
+
             taskId = taskLog.getTaskId();
             taskLog.setComplete(false);
             taskLog.setLog(null);
-            
+
             RunningTaskLogs r = RunningTaskLogs.getInstance();
-            RunningTaskLogs.Mode mode = r.hasEvents(taskLog.getEventId(), taskId);
-            LOGGER.debug("taskId '" + taskId + "' has tasklogs: " + mode.name());
+            RunningTaskLogs.Mode mode = r.hasEvents(accessToken, taskLog.getEventId(), taskId);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("taskId '" + taskId + "' has tasklogs: " + mode.name());
+            }
+
             switch (mode) {
             case TRUE:
                 try {
@@ -74,13 +78,16 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
                 } catch (InterruptedException e1) {
                 }
             case COMPLETE:
-                taskLog = r.getRunningTaskLog(taskLog);
+                taskLog = r.getRunningTaskLog(accessToken, taskLog);
                 break;
             case FALSE:
                 EventBus.getInstance().register(this);
                 condition = lock.newCondition();
                 waitingForEvents(TimeUnit.MINUTES.toMillis(1));
-                LOGGER.debug("taskId '" + taskId + "' end of waiting events: event received? " + eventArrived.get() + ", complete? " + complete.get());
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("taskId '" + taskId + "' end of waiting events: event received? " + eventArrived.get() + ", complete? " + complete
+                            .get());
+                }
                 if (eventArrived.get()) {
                     if (!complete.get()) {
                         try {
@@ -88,16 +95,15 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
                         } catch (InterruptedException e1) {
                         }
                     }
-                    taskLog = r.getRunningTaskLog(taskLog);
+                    taskLog = r.getRunningTaskLog(accessToken, taskLog);
                 }
                 break;
             case BROKEN:
                 taskLog.setComplete(true); // to avoid endless calls
                 break;
             }
-            
-            return JOCDefaultResponse.responseStatus200(taskLog);
 
+            return JOCDefaultResponse.responseStatus200(taskLog);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -107,22 +113,22 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
             EventBus.getInstance().unRegister(this);
         }
     }
-    
+
     @Subscribe({ HistoryOrderTaskLogArrived.class })
     public void createHistoryTaskEvent(HistoryOrderTaskLogArrived evt) {
-        //LOGGER.debug("tasklog event received with taskId '" + evt.getHistoryOrderStepId() + "', expected taskId '" + taskId + "'");
+        // LOGGER.debug("tasklog event received with taskId '" + evt.getHistoryOrderStepId() + "', expected taskId '" + taskId + "'");
         if (taskId != null && taskId.longValue() == evt.getHistoryOrderStepId()) {
             eventArrived.set(true);
             complete.set(evt.getComplete() == Boolean.TRUE);
             signalEvent();
         }
     }
-    
+
     private void waitingForEvents(long maxDelay) {
         try {
             if (condition != null && lock.tryLock(200L, TimeUnit.MILLISECONDS)) { // with timeout
                 try {
-                    //LOGGER.debug("waitingForEvents: await " + condition.hashCode());
+                    // LOGGER.debug("waitingForEvents: await " + condition.hashCode());
                     condition.await(maxDelay, TimeUnit.MILLISECONDS);
                 } catch (InterruptedException e1) {
                 } finally {
@@ -136,13 +142,13 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
         } catch (InterruptedException e) {
         }
     }
-    
+
     private synchronized void signalEvent() {
         try {
-            //LOGGER.debug("signalEvent: " + (condition != null));
+            // LOGGER.debug("signalEvent: " + (condition != null));
             if (condition != null && lock.tryLock(2L, TimeUnit.SECONDS)) { // with timeout
                 try {
-                    //LOGGER.debug("signalEvent: signalAll" + condition.hashCode());
+                    // LOGGER.debug("signalEvent: signalAll" + condition.hashCode());
                     condition.signalAll();
                 } finally {
                     try {
@@ -152,7 +158,7 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
                     }
                 }
             } else {
-                LOGGER.warn("signalEvent failed"); 
+                LOGGER.warn("signalEvent failed");
             }
         } catch (InterruptedException e) {
             LOGGER.warn("signalEvent: " + e.toString());
@@ -192,15 +198,14 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
                 return jocDefaultResponse;
             }
 
-            LogTaskContent logTaskContent = new LogTaskContent(taskFilter, folderPermissions);
+            LogTaskContent logTaskContent = new LogTaskContent(taskFilter, folderPermissions, accessToken);
             switch (apiCall) {
             case API_CALL_LOG:
                 return JOCDefaultResponse.responsePlainStatus200(logTaskContent.getStreamOutput(false), logTaskContent.getHeaders());
             default:  // API_CALL_DOWNLOAD:
-                return JOCDefaultResponse.responseOctetStreamDownloadStatus200(logTaskContent.getStreamOutput(true), logTaskContent.getDownloadFilename(),
-                        logTaskContent.getUnCompressedLength());
+                return JOCDefaultResponse.responseOctetStreamDownloadStatus200(logTaskContent.getStreamOutput(true), logTaskContent
+                        .getDownloadFilename(), logTaskContent.getUnCompressedLength());
             }
-
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);

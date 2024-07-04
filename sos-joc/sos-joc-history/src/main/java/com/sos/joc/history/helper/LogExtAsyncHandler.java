@@ -213,7 +213,7 @@ public class LogExtAsyncHandler {
     private void processTaskLog(LogExt l) {
         Path t = conf.getLogExtDir().resolve(getTaskLogName(l));
         if (l.isDeserialized()) {
-            LogTaskContent lc = new LogTaskContent(l.getTaskHistoryId(), folderPermissions);
+            LogTaskContent lc = new LogTaskContent(l.getTaskHistoryId(), folderPermissions, null);
             try {
                 lc.toFile(t);
             } catch (Throwable e) {
@@ -273,7 +273,7 @@ public class LogExtAsyncHandler {
     private void handleOrderLog(LogExt l) {
         Path t = conf.getLogExtDir().resolve(getOrderLogName(l, LogExt.Type.order));
         try {
-            LogOrderContent lc = new LogOrderContent(l.getOrderHistoryId(), folderPermissions);
+            LogOrderContent lc = new LogOrderContent(l.getOrderHistoryId(), folderPermissions, null);
             lc.toFile(t);
         } catch (Throwable e) {
             LOGGER.warn(String.format("[handleOrderLog][%s]%s", t, e.toString()), e);

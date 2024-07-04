@@ -54,14 +54,16 @@ public class LogOrderContent {
     private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("uuuu-MM-dd' 'HH:mm:ss.SSSZ");
     private static byte[] newlineBytes = { '\r', '\n' };
     private static String newlineString = "\r\n";
-    private Long historyId;
+    private final Long historyId;
+    private final String accessToken;
     private Long mainParentHistoryId;
     private String orderId;
     private Long unCompressedLength = null;
     private final SOSAuthFolderPermissions folderPermissions;
 
-    public LogOrderContent(Long historyId, SOSAuthFolderPermissions folderPermissions) {
+    public LogOrderContent(Long historyId, SOSAuthFolderPermissions folderPermissions, String accessToken) {
         this.historyId = historyId;
+        this.accessToken = accessToken;
         this.folderPermissions = folderPermissions;
     }
 
@@ -240,7 +242,7 @@ public class LogOrderContent {
                             }
                             if (i.getLogEvent() == EventType.OrderProcessingStarted) {
                                 // read tasklog
-                                LogTaskContent logTaskContent = new LogTaskContent(i.getTaskId());
+                                LogTaskContent logTaskContent = new LogTaskContent(i.getTaskId(), accessToken);
                                 inStream = logTaskContent.getLogStream();
                                 if (inStream != null) {
                                     output.write(newlineBytes);
@@ -289,7 +291,7 @@ public class LogOrderContent {
 
                     if (i.getLogEvent() == EventType.OrderProcessingStarted) {
                         // read tasklog
-                        LogTaskContent tl = new LogTaskContent(i.getTaskId());
+                        LogTaskContent tl = new LogTaskContent(i.getTaskId(), accessToken);
                         InputStream is = tl.getLogStream();
                         if (is != null) {
                             is.transferTo(out);
