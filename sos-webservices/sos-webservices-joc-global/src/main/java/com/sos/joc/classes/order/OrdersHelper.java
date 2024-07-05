@@ -336,7 +336,25 @@ public class OrdersHelper {
     
     public static boolean isResumable(JOrder order) {
         Order<Order.State> o = order.asScala();
-        //return o.isResumable();
+//        LOGGER.info("isResumable? " + o.isResumable());
+        if (isCancellingOrResuming(o.mark()) || isSuspending(o.mark())) {
+            return false;
+        }
+        if (isDisrupted(o)) {
+            return false;
+        }
+        return o.isSuspended() || isFailed(o);// || isSuspending(o.mark());
+    }
+    
+    private static boolean isResumable(JOrder order, boolean disrupted) {
+        if (disrupted) {
+            return false;
+        }
+        Order<Order.State> o = order.asScala();
+//        LOGGER.info("isResumable? " + o.isResumable());
+        if (isCancellingOrResuming(o.mark()) || isSuspending(o.mark())) {
+            return false;
+        }
         return o.isSuspended() || isFailed(o);// || isSuspending(o.mark());
     }
     
@@ -361,12 +379,27 @@ public class OrdersHelper {
         return OrderStateText.FAILED.equals(getGroupedState(o.state().getClass()));
     }
     
-//    private static boolean isSuspending(Option<js7.data.order.OrderMark> opt) {
-//        if (opt.nonEmpty()) {
-//            return (opt.get() instanceof Suspending);
-//        }
-//        return false;
-//    }
+    private static boolean isSuspending(Option<js7.data.order.OrderMark> opt) {
+        if (opt.nonEmpty()) {
+            return (opt.get() instanceof Suspending);
+        }
+        return false;
+    }
+    
+    private static boolean isCancellingOrResuming(Option<js7.data.order.OrderMark> opt) {
+        if (opt.nonEmpty()) {
+            return (opt.get() instanceof Cancelling) || (opt.get() instanceof Resuming);
+        }
+        return false;
+    }
+    
+    private static boolean isDisrupted(Order<Order.State> o) {
+        List<js7.data.order.HistoricOutcome> outcomes = JavaConverters.asJava(o.historicOutcomes().toList());
+        if (outcomes != null && !outcomes.isEmpty()) {
+            return outcomes.get(outcomes.size() - 1).outcome().show().startsWith("Disrupted");
+        }
+        return false;
+    }
     
     public static boolean isNotFailed(JOrder order) {
         return !OrderStateText.FAILED.equals(getGroupedState(order.asScala().state().getClass()));
@@ -468,10 +501,15 @@ public class OrdersHelper {
         o.setOrderId(oItem.getId());
         o.setHasChildOrders(null);
         boolean isChildOrder = oItem.getId().contains("|");
-
+//        List<js7.data.order.HistoricOutcome> hhh = JavaConverters.asJava(jOrder.asScala().historicOutcomes().toList());
+//        if (hhh != null && !hhh.isEmpty()) {
+//            boolean isDisrupted = hhh.get(hhh.size() - 1).outcome().show().contains("Disrupted");
+//        }
+        boolean isDisrupted = false;
         List<HistoricOutcome> outcomes = oItem.getHistoricOutcomes();
         if (outcomes != null && !outcomes.isEmpty()) {
             o.setLastOutcome(outcomes.get(outcomes.size() - 1).getOutcome());
+            isDisrupted = o.getLastOutcome().getTYPE().equals("Disrupted");
             if (compact != Boolean.TRUE) {
                 o.setHistoricOutcome(outcomes);
             }
@@ -590,7 +628,7 @@ public class OrdersHelper {
         o.setMarked(getMark(jOrder.asScala().mark()));
         // o.setIsCancelable(jOrder.asScala().isCancelable() ? true : null);
         o.setIsSuspendible(isSuspendible(jOrder) ? true : null);
-        o.setIsResumable(isResumable(jOrder) ? true : null);
+        o.setIsResumable(isResumable(jOrder, isDisrupted) ? true : null);
         o.setScheduledFor(scheduledFor);
         o.setScheduledNever(JobSchedulerDate.NEVER_MILLIS.equals(scheduledFor));
         if (scheduledFor == null && surveyDateMillis != null && OrderStateText.SCHEDULED.equals(o.getState().get_text())) {
