@@ -43,8 +43,32 @@ public class SOSHibernateSessionTest {
         }
     }
 
+    @Ignore
+    @Test
+    public void testNativeQuery() throws Exception {
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+
+        SOSHibernateFactory factory = null;
+        SOSHibernateSession session = null;
+        try {
+            factory = createFactory();
+
+            session = factory.openStatelessSession("test");
+            String sv = session.getSingleValueNativeQueryAsString("select max(ID) from HISTORY_ORDERS");
+            Long lv = session.getSingleValueNativeQuery("select max(ID) from HISTORY_ORDERS", Long.class);
+            LOGGER.info(String.format("[STRING]%s", sv));
+            LOGGER.info(String.format("[LONG]%s", lv));
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            if (factory != null) {
+                factory.close(session);
+            }
+        }
+    }
+
     protected static SOSHibernateFactory createFactory() throws Exception {
-        SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/hibernate.cfg.h2.xml"));
+        SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/hibernate.cfg.mysql.xml"));
         factory.build();
 
         LOGGER.info("DBMS=" + factory.getDbms() + ", DIALECT=" + factory.getDialect());

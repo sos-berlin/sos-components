@@ -764,8 +764,8 @@ public class SOSHibernateSession implements Serializable {
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateLockAcquisitionException, SOSHibernateQueryException,
      *             SOSHibernateQueryNonUniqueResultException */
-    public <T> String getSingleValueNativeQueryAsString(String sql, Class<T> returnType) throws SOSHibernateException {
-        T result = getSingleValueNativeQuery(sql, returnType);
+    public String getSingleValueNativeQueryAsString(String sql) throws SOSHibernateException {
+        Object result = getSingleValueNativeQuery(sql, String.class);
         if (result != null) {
             return result + "";
         }
