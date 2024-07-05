@@ -27,7 +27,6 @@ import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.history.HistoryMapper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.order.OrderTags;
-import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
@@ -142,8 +141,8 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                             Map<String, Boolean> checkedControllers = new HashMap<>();
                             boolean isControllerIdEmpty = (in.getControllerId() == null || in.getControllerId().isEmpty());
                             Map<String, Boolean> checkedFolders = new HashMap<>();
-                            List<Long> historyIdsForOrderTagging = new ArrayList<>();
-                            boolean withTagsDisplayedAsOrderId = OrderTags.withTagsDisplayedAsOrderId();
+//                            List<Long> historyIdsForOrderTagging = new ArrayList<>(); //obsolete -> orderIds are not displayed in Task History
+//                            boolean withTagsDisplayedAsOrderId = OrderTags.withTagsDisplayedAsOrderId();
 
                             while (sr.next()) {
                                 i++;
@@ -158,20 +157,20 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                                 if (!dbFilter.isFolderPermissionsAreChecked() && !canAdd(item, permittedFolders, checkedFolders)) {
                                     continue;
                                 }
-                                if (withTagsDisplayedAsOrderId) {
-                                    historyIdsForOrderTagging.add(item.getHistoryOrderId());
-                                }
+//                                if (withTagsDisplayedAsOrderId) {
+//                                    historyIdsForOrderTagging.add(item.getHistoryOrderId());
+//                                }
                                 history.add(HistoryMapper.map2TaskHistoryItem(item));
                             }
                             logProfiler(profiler, i, profilerStart, profilerAfterSelect, profilerFirstEntry);
 
-                            if (!historyIdsForOrderTagging.isEmpty()) {
-                                Map<String, Set<String>> orderTags = OrderTags.getTagsByHistoryIds(controllerId, historyIdsForOrderTagging, session);
-                                if (!orderTags.isEmpty()) {
-                                    history = history.stream().peek(item -> item.setTags(orderTags.get(OrdersHelper.getParentOrderId(item
-                                            .getOrderId())))).collect(Collectors.toList());
-                                }
-                            }
+//                            if (!historyIdsForOrderTagging.isEmpty()) {
+//                                Map<String, Set<String>> orderTags = OrderTags.getTagsByHistoryIds(controllerId, historyIdsForOrderTagging, session);
+//                                if (!orderTags.isEmpty()) {
+//                                    history = history.stream().peek(item -> item.setTags(orderTags.get(OrdersHelper.getParentOrderId(item
+//                                            .getOrderId())))).collect(Collectors.toList());
+//                                }
+//                            }
                         }
                     } catch (Exception e) {
                         throw e;
