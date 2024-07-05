@@ -1,6 +1,7 @@
 package com.sos.joc.classes.logs;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -53,6 +54,7 @@ public class LogTaskContent {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("uuuu-MM-dd' 'HH:mm:ss.SSSZ");
     private static final long RUNNING_LOG_SLEEP_TIMEOUT = 1; // seconds
     private static final int RUNNING_LOG_BYTEBUFFER_ALLOCATE_SIZE = 64 * 1024;
+    private static final int RUNNING_LOG_READ_GZIP_BUFFER_SIZE = 1024;
     private static final int RUNNING_LOG_MAX_ITERATIONS = 100_000;
 
     // 1 running log thread per sessionIdentifier
@@ -127,7 +129,7 @@ public class LogTaskContent {
             throw new JocMissingRequiredParameterException("undefined 'taskId'");
         }
         StreamingOutput out = null;
-        byte[] compressedLog = getLogFromDb(forDownload);
+        byte[] compressedLog = getLogFromDb(forDownload, null);
         if (compressedLog != null) {
             final InputStream inStream = new ByteArrayInputStream(compressedLog);
             out = new StreamingOutput() {
@@ -201,7 +203,7 @@ public class LogTaskContent {
                 // sent empty to avoid line ordering issues
                 // should be removed because produced a new empty line - a space because the Task History GUI API does not call the "running API" if the
                 // response is empty
-                return new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8));
+                return new ByteArrayInputStream(" ".getBytes(StandardCharsets.UTF_8));
             }
         } catch (IOException e) {
             LOGGER.warn(e.toString());
@@ -235,13 +237,14 @@ public class LogTaskContent {
         RunningTaskLogs.getInstance().subscribe(sessionIdentifier, historyId);
 
         final String logPrefix = "[runningTaskLogMonitor][" + taskLog + "]";
-        boolean sleepAlways = true; // to remove - sleep only if no new content provided(bytesRead == -1) all after each iteration...
+        boolean sleepAlways = false; // to remove - sleep only if no new content provided(bytesRead == -1) all after each iteration...
         Thread workerThread = new Thread(() -> {
             // AsynchronousFileChannel for read - do not block the log file as it will be deleted by the history service
+            long position = 0;
+            boolean isInterupped = false;
             try (AsynchronousFileChannel fileChannel = AsynchronousFileChannel.open(taskLog, StandardOpenOption.READ)) {
 
                 ByteBuffer buffer = ByteBuffer.allocate(RUNNING_LOG_BYTEBUFFER_ALLOCATE_SIZE);
-                long position = 0;
                 int currentIteration = 0;
                 r: while (!isComplete()) {
                     currentIteration++;
@@ -288,7 +291,6 @@ public class LogTaskContent {
                             LOGGER.info(logPrefix + e.toString(), e);
                             break r;
                         }
-
                     }
                     if (sleepAlways) {
                         if (!continueRunningLogMonitorAfterSleep(taskLog)) {
@@ -297,16 +299,32 @@ public class LogTaskContent {
                     }
                 }
             } catch (InterruptedException e) {
+                isInterupped = true;
             } catch (Throwable e) {
                 LOGGER.info(logPrefix + e.toString(), e);
             } finally {
+                setComplete();
+
+                String content = null;
+                if (!isInterupped && !Files.exists(taskLog)) {
+                    try {
+                        byte[] compressedLog = getLogFromDb(false, Long.valueOf(position));
+                        if (compressedLog != null) {
+                            content = decompressAfterPosition(compressedLog, position);
+                        }
+                    } catch (Throwable e) {
+                        LOGGER.info("[decompressAfterPosition]" + e.toString(), e);
+                    }
+                }
+
                 try {
-                    EventBus.getInstance().post(new HistoryOrderTaskLog(EventType.OrderProcessed.value(), orderId, historyId, " ",
+                    content = content == null ? "" : content;
+                    EventBus.getInstance().post(new HistoryOrderTaskLog(EventType.OrderProcessed.value(), orderId, historyId, content,
                             sessionIdentifier));
                 } catch (Throwable e) {
                     LOGGER.warn(logPrefix + "[EventBus.getInstance().post]" + e, e);
                 }
-                setComplete();
+
             }
         });
         try {
@@ -319,18 +337,49 @@ public class LogTaskContent {
         workerThread.start();
     }
 
+    private String decompressAfterPosition(byte[] compressedData, long startPosition) {
+        try {
+            try (ByteArrayInputStream bis = new ByteArrayInputStream(compressedData); GZIPInputStream gzipIn = new GZIPInputStream(bis);
+                    ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+                byte[] buffer = new byte[RUNNING_LOG_READ_GZIP_BUFFER_SIZE];
+                int len;
+                long totalBytesRead = 0;
+                boolean started = false;
+
+                while ((len = gzipIn.read(buffer)) > 0) {
+                    totalBytesRead += len;
+                    if (!started && totalBytesRead > startPosition) {
+                        int writeOffset = (int) (startPosition - (totalBytesRead - len));
+                        bos.write(buffer, writeOffset, len - writeOffset);
+                        started = true;
+                    } else if (started) {
+                        bos.write(buffer, 0, len);
+                    }
+                }
+                byte[] r = bos.toByteArray();
+                return r == null || r.length == 0 ? null : new String(r, StandardCharsets.UTF_8);
+            }
+        } catch (Throwable e) {
+            LOGGER.info("[taskId=" + historyId + "][position=" + startPosition + "][decompressAfterPosition]" + e.toString(), e);
+            return null;
+        }
+    }
+
     private boolean continueRunningLogMonitorAfterSleep(Path logFile) {
+        if (!Files.exists(logFile)) {
+            return false;
+        }
         try {
             // TimeUnit.SECONDS.sleep(RUNNING_LOG_SLEEP_TIMEOUT);
             waitFor(RUNNING_LOG_SLEEP_TIMEOUT);
+            if (!Files.exists(logFile)) {
+                return false;
+            }
         } catch (InterruptedException e) {
             try {
                 Thread.currentThread().interrupt();
             } catch (Throwable ex) {
             }
-            return false;
-        }
-        if (!Files.exists(logFile)) {
             return false;
         }
         return true;
@@ -394,7 +443,7 @@ public class LogTaskContent {
     public InputStream getLogStream() throws JocConfigurationException, DBOpenSessionException, SOSHibernateException, DBMissingDataException,
             IOException {
         if (historyId != null) {
-            byte[] compressedLog = getLogFromDb(true);
+            byte[] compressedLog = getLogFromDb(true, null);
             if (compressedLog != null) {
                 return new GZIPInputStream(new ByteArrayInputStream(compressedLog));
             } else {
@@ -420,44 +469,52 @@ public class LogTaskContent {
         }
     }
 
-    private byte[] getLogFromDb(boolean forDownload) throws JocConfigurationException, DBOpenSessionException, SOSHibernateException,
+    private byte[] getLogFromDb(boolean forDownload, Long position) throws JocConfigurationException, DBOpenSessionException, SOSHibernateException,
             DBMissingDataException {
-        SOSHibernateSession connection = null;
+        SOSHibernateSession session = null;
         try {
-            connection = Globals.createSosHibernateStatelessConnection("./task/log");
-            DBItemHistoryOrderStep historyOrderStepItem = connection.get(DBItemHistoryOrderStep.class, historyId);
-            if (historyOrderStepItem == null) {
+            session = Globals.createSosHibernateStatelessConnection("./task/log");
+            DBItemHistoryOrderStep step = session.get(DBItemHistoryOrderStep.class, historyId);
+            if (step == null) {
                 throw new DBMissingDataException(String.format("Couldn't find the Task (Id:%d)", historyId));
             }
-            if (folderPermissions != null && !folderPermissions.isPermittedForFolder(historyOrderStepItem.getWorkflowFolder())) {
-                throw new JocFolderPermissionsException("folder access denied: " + historyOrderStepItem.getWorkflowFolder());
+            if (folderPermissions != null && !folderPermissions.isPermittedForFolder(step.getWorkflowFolder())) {
+                throw new JocFolderPermissionsException("folder access denied: " + step.getWorkflowFolder());
             }
-            orderId = historyOrderStepItem.getHistoryOrderId();
-            orderMainParentId = historyOrderStepItem.getHistoryOrderMainParentId();
-            jobName = historyOrderStepItem.getJobName();
-            workflow = historyOrderStepItem.getWorkflowPath();
-            if (historyOrderStepItem.getLogId() == 0L) {
-                if (historyOrderStepItem.getEndTime() == null) {
+            orderId = step.getHistoryOrderId();
+            orderMainParentId = step.getHistoryOrderMainParentId();
+            jobName = step.getJobName();
+            workflow = step.getWorkflowPath();
+            if (step.getLogId() == 0L) {
+                if (step.getEndTime() == null) {
                     // Task is running
                     return null;
                 } else {
                     throw new DBMissingDataException(String.format("Couldn't find the log of the job %s (task id:%d)", jobName, historyId));
                 }
             } else {
-                DBItemHistoryLog historyDBItem = connection.get(DBItemHistoryLog.class, historyOrderStepItem.getLogId());
-                if (historyDBItem == null) {
+                DBItemHistoryLog log = session.get(DBItemHistoryLog.class, step.getLogId());
+                if (log == null) {
                     throw new DBMissingDataException(String.format("Couldn't find the log of the job %s (task id:%d)", jobName, historyId));
                 } else {
-                    unCompressedLength = historyDBItem.getFileSizeUncomressed();
-                    setComplete();
-                    if (!forDownload && unCompressedLength > maxLogSize) {
-                        return null;
+                    unCompressedLength = log.getFileSizeUncomressed();
+                    if (!isComplete()) {
+                        setComplete();
                     }
-                    return historyDBItem.getFileContent();
+                    if (!forDownload) {
+                        if (unCompressedLength > maxLogSize) {
+                            return null;
+                        }
+                        // API (e.g. running logs) has already read up to position
+                        if (position != null && position >= unCompressedLength) {
+                            return null;
+                        }
+                    }
+                    return log.getFileContent();
                 }
             }
         } finally {
-            Globals.disconnect(connection);
+            Globals.disconnect(session);
         }
     }
 

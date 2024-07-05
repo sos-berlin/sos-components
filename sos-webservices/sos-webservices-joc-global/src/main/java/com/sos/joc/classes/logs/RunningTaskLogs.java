@@ -50,6 +50,7 @@ public class RunningTaskLogs {
 
             @Override
             public void run() {
+
                 Long eventId = Instant.now().toEpochMilli() - CLEANUP_PERIOD;
                 Set<String> toDelete = new HashSet<>();
                 events.forEach((taskIdAndSessionIdentifier, logs) -> {
@@ -117,15 +118,9 @@ public class RunningTaskLogs {
             l.remove(taskId);
             return l.isEmpty() ? null : l;
         });
-        cleanupEvents(sessionIdentifier, taskId);
-
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("taskId '" + taskId + "' is no longer observed for log events of this session");
         }
-    }
-
-    private void cleanupEvents(String sessionIdentifier, Long taskId) {
-        events.remove(getEventKey(sessionIdentifier, taskId));
     }
 
     public Mode hasEvents(String sessionIdentifier, Long eventId, Long taskId) {

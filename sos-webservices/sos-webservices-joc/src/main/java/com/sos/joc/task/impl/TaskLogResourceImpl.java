@@ -102,7 +102,6 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
                 taskLog.setComplete(true); // to avoid endless calls
                 break;
             }
-
             return JOCDefaultResponse.responseStatus200(taskLog);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -135,7 +134,7 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
                     try {
                         lock.unlock();
                     } catch (IllegalMonitorStateException e) {
-                        LOGGER.warn("IllegalMonitorStateException at unlock lock after await");
+                        LOGGER.info("IllegalMonitorStateException at unlock lock after await");
                     }
                 }
             }
@@ -154,14 +153,14 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
                     try {
                         lock.unlock();
                     } catch (IllegalMonitorStateException e) {
-                        LOGGER.warn("IllegalMonitorStateException at unlock lock after signal");
+                        LOGGER.info("IllegalMonitorStateException at unlock lock after signal");
                     }
                 }
             } else {
-                LOGGER.warn("signalEvent failed");
+                LOGGER.info("signalEvent failed");
             }
         } catch (InterruptedException e) {
-            LOGGER.warn("signalEvent: " + e.toString());
+            LOGGER.info("signalEvent: " + e.toString());
         }
     }
 
