@@ -91,9 +91,9 @@ public class ApiExecutor {
     private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD = "js7.api-server.password";
     private static final String PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PK_PATH = "js7.api-server.privatekey.path";
     private static final List<String> DO_NOT_LOG_KEY = Arrays.asList(new String[] { PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD,
-        PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_CS_PWD, PRIVATE_CONF_JS7_PARAM_KEYSTORE_STOREPWD, PRIVATE_CONF_JS7_PARAM_KEYSTORE_KEYPWD,
-        PRIVATE_CONF_JS7_PARAM_KEYSTORE_ALIAS, PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY, PRIVATE_CONF_JS7_PARAM_TRUSTORES_SUB_STOREPWD,
-        PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PK_PATH });
+            PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_CS_PWD, PRIVATE_CONF_JS7_PARAM_KEYSTORE_STOREPWD, PRIVATE_CONF_JS7_PARAM_KEYSTORE_KEYPWD,
+            PRIVATE_CONF_JS7_PARAM_KEYSTORE_ALIAS, PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY, PRIVATE_CONF_JS7_PARAM_TRUSTORES_SUB_STOREPWD,
+            PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PK_PATH });
     private static final String DO_NOT_LOG_VAL = PRIVATE_CONF_JS7_PARAM_TRUSTORES_SUB_STOREPWD;
 
     private SOSRestApiClient client;
@@ -367,6 +367,37 @@ public class ApiExecutor {
         }
     }
 
+    private String getPrivateKeyPath() {
+        try {
+            return config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PK_PATH);
+        } catch (ConfigException e) {
+            logError("no private key path found in private.conf.");
+        }
+        return "";
+    }
+
+    private String getDcryptedValue(String in, String privateKeyPath, String propertyName) {
+        if (in != null && in.startsWith(EncryptionUtils.ENCRYPTION_IDENTIFIER)) {
+            String encryptedIn = in;
+            if (encryptedIn.startsWith(EncryptionUtils.ENCRYPTION_IDENTIFIER + "//")) {
+                encryptedIn = encryptedIn.substring((EncryptionUtils.ENCRYPTION_IDENTIFIER + "//").length());
+            } else {
+                encryptedIn = encryptedIn.substring((EncryptionUtils.ENCRYPTION_IDENTIFIER).length());
+            }
+
+            if (privateKeyPath == null) {
+                privateKeyPath = getPrivateKeyPath();
+            }
+
+            try {
+                in = decryptValue(encryptedIn, propertyName, privateKeyPath);
+            } catch (SOSKeyException | SOSMissingDataException | SOSEncryptionException e) {
+                logError("error occurred decrypting ".concat(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD).concat(" !"), e);
+            }
+        }
+        return in;
+    }
+
     private void setBasicAuthorizationIfExists(Config config) throws SOSKeePassDatabaseException, SOSMissingDataException {
         String csFile = null;
         String csKeyFile = null;
@@ -413,47 +444,10 @@ public class ApiExecutor {
                 } catch (ConfigException e) {
                     logDebug("no (user-)password found in private.conf.");
                 }
+                
                 String privateKeyPath = null;
-                if (username != null && username.startsWith(EncryptionUtils.ENCRYPTION_IDENTIFIER)) {
-                    String encryptedUsername = username;
-                    if (encryptedUsername.startsWith(EncryptionUtils.ENCRYPTION_IDENTIFIER + "//")) {
-                        encryptedUsername = encryptedUsername.substring((EncryptionUtils.ENCRYPTION_IDENTIFIER + "//").length());
-                    } else {
-                        encryptedUsername = encryptedUsername.substring((EncryptionUtils.ENCRYPTION_IDENTIFIER).length());
-                    }
-                    if(privateKeyPath == null) {
-                        try {
-                            privateKeyPath = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PK_PATH);
-                            try {
-                                username = decryptValue(encryptedUsername, "username", privateKeyPath);
-                            } catch (SOSKeyException | SOSMissingDataException | SOSEncryptionException e) {
-                                logError("error occurred decrypting ".concat(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_USERNAME).concat(" !"), e);
-                            }
-                        } catch (ConfigException e) {
-                            logError("no private key path found in private.conf.");
-                        }
-                    }
-                }
-                if (pwd != null && pwd.startsWith(EncryptionUtils.ENCRYPTION_IDENTIFIER)) {
-                    String encryptedPwd = pwd;
-                    if (encryptedPwd.startsWith(EncryptionUtils.ENCRYPTION_IDENTIFIER + "//")) {
-                        encryptedPwd = encryptedPwd.substring((EncryptionUtils.ENCRYPTION_IDENTIFIER + "//").length());
-                    } else {
-                        encryptedPwd = encryptedPwd.substring((EncryptionUtils.ENCRYPTION_IDENTIFIER).length());
-                    }
-                    if(privateKeyPath == null) {
-                        try {
-                            privateKeyPath = config.getString(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PK_PATH);
-                            try {
-                                username = decryptValue(encryptedPwd, "password", privateKeyPath);
-                            } catch (SOSKeyException | SOSMissingDataException | SOSEncryptionException e) {
-                                logError("error occurred decrypting ".concat(PRIVATE_CONF_JS7_PARAM_HTTP_BASIC_AUTH_PWD).concat(" !"), e);
-                            }
-                        } catch (ConfigException e) {
-                            logError("no private key path found in private.conf.");
-                        }
-                    }
-                }
+                username = getDcryptedValue(username, privateKeyPath, "username");
+                pwd = getDcryptedValue(pwd, privateKeyPath, "password");
             }
 
         }
@@ -600,16 +594,16 @@ public class ApiExecutor {
     }
 
     private void logError(String log) {
-        logError(log ,null);
+        logError(log, null);
     }
 
     private void logError(String log, Throwable t) {
         if (jobLogger != null) {
-                if(t != null) {
-                    jobLogger.error(log, t);
-                } else {
-                    jobLogger.error(log);
-                }
+            if (t != null) {
+                jobLogger.error(log, t);
+            } else {
+                jobLogger.error(log);
+            }
         } else {
             LOGGER.error(log);
         }
@@ -631,7 +625,7 @@ public class ApiExecutor {
         }
         return config;
     }
-    
+
     private String decryptValue(String encryptedValue, String propertyName, String privateKeyPath) throws SOSKeyException, SOSMissingDataException,
             SOSEncryptionException {
         return decryptValue(encryptedValue, propertyName, Paths.get(privateKeyPath));
