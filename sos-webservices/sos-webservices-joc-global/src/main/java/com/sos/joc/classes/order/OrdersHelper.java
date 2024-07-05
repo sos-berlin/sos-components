@@ -924,7 +924,8 @@ public class OrdersHelper {
             throw new JocMissingRequiredParameterException("Keys '" + listKeys.toString() + "' of the list variable '" + listKey
                     + "' are missing but declared in the workflow");
         }
-        listVariables.forEach(listVariable -> checkObjectArgumentOfList(listVariable, listParams, listKey, allowEmptyValues, allowDollarInValue));
+        AtomicInteger index = new AtomicInteger();
+        listVariables.forEach(listVariable -> checkObjectArgumentOfList(listVariable, listParams, listKey, allowEmptyValues, allowDollarInValue, index.getAndIncrement()));
         return listVariables;
     }
     
@@ -946,8 +947,8 @@ public class OrdersHelper {
     }
     
     private static Map<String, Object> checkObjectArgumentOfList(Map<String, Object> mapVariable, Map<String, ListParameter> listParams, String listKey,
-            boolean allowEmptyValues, boolean allowDollarInValue) {
-        return checkObjectArgument(mapVariable, listParams, listKey, allowEmptyValues, allowDollarInValue, "list");
+            boolean allowEmptyValues, boolean allowDollarInValue, int index) {
+        return checkObjectArgument(mapVariable, listParams, listKey, allowEmptyValues, allowDollarInValue, "list[" + index + "]");
     }
     
     private static Map<String, Object> checkObjectArgument(Map<String, Object> mapVariable, Map<String, ListParameter> listParams, String listKey,
