@@ -311,7 +311,7 @@ public class JobArgument<T> extends SOSArgument<T> {
     protected static <V> Object convertFlatValue(JobArgument<V> arg, Object value) throws Exception {
         switch (arg.getArgumentFlatType()) {
         case STRING:
-            break;
+            return value.toString();
         case BOOLEAN:
             return Boolean.valueOf(value.toString());
         case INTEGER:
