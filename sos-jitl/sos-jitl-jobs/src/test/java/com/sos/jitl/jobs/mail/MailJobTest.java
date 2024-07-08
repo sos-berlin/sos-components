@@ -28,11 +28,13 @@ public class MailJobTest {
     public void testMailJob() throws Exception {
 
         Map<String, Object> args = new HashMap<>();
-        args.put("mail.smtp.host", "localhost");
-        args.put("mail.smtp.port", "25");
+        args.put("mail.smtp.host", "mail.localhost");
+        args.put("mail.smtp.port", 25);
+        args.put("mail.smtp.connectiontimeout", 5000);
+        args.put("mail.smtp.starttls.enable", false);
         args.put("subject", "My Mail Subject");
         args.put("body", "My Mail Body");
-        args.put("to", "JS7@localhost");
+        args.put("to", "admin@localhost.com");
         args.put("from", "JS7@localhost");
 
         // args.put("credential_store_file", "db.kdbx");
