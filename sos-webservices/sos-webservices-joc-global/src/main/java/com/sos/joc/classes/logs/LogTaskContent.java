@@ -53,8 +53,8 @@ public class LogTaskContent {
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("uuuu-MM-dd' 'HH:mm:ss.SSSZ");
     private static final long RUNNING_LOG_SLEEP_TIMEOUT = 1; // seconds
-    private static final int RUNNING_LOG_BYTEBUFFER_ALLOCATE_SIZE = 64 * 1024;
-    private static final int RUNNING_LOG_READ_GZIP_BUFFER_SIZE = 1024;
+    private static final int RUNNING_LOG_READ_FILE_BYTEBUFFER_ALLOCATE_SIZE = 64 * 1024;
+    private static final int RUNNING_LOG_READ_GZIP_BUFFER_SIZE = 4 * 1024;
     private static final int RUNNING_LOG_MAX_ITERATIONS = 100_000;
 
     // 1 running log thread per sessionIdentifier
@@ -244,7 +244,7 @@ public class LogTaskContent {
             boolean isInterupped = false;
             try (AsynchronousFileChannel fileChannel = AsynchronousFileChannel.open(taskLog, StandardOpenOption.READ)) {
 
-                ByteBuffer buffer = ByteBuffer.allocate(RUNNING_LOG_BYTEBUFFER_ALLOCATE_SIZE);
+                ByteBuffer buffer = ByteBuffer.allocate(RUNNING_LOG_READ_FILE_BYTEBUFFER_ALLOCATE_SIZE);
                 int currentIteration = 0;
                 r: while (!isComplete()) {
                     currentIteration++;
