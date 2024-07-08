@@ -74,25 +74,28 @@ public class PLSQLJob extends Job<PLSQLJobArguments> {
             } else {
                 p.put(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD, "");
             }
-
-            CredentialStoreArguments csArgs = step.getIncludedArguments(CredentialStoreArguments.class);
-            if (csArgs != null) {
-                if (!SOSString.isEmpty(csArgs.getFile().getValue())) {
-                    p.put(SOSHibernate.HIBERNATE_SOS_PROPERTY_CREDENTIAL_STORE_FILE, csArgs.getFile().getValue());
-                }
-                if (!SOSString.isEmpty(csArgs.getKeyFile().getValue())) {
-                    p.put(SOSHibernate.HIBERNATE_SOS_PROPERTY_CREDENTIAL_STORE_KEY_FILE, csArgs.getKeyFile().getValue());
-                }
-                if (!SOSString.isEmpty(csArgs.getPassword().getValue())) {
-                    p.put(SOSHibernate.HIBERNATE_SOS_PROPERTY_CREDENTIAL_STORE_PASSWORD, csArgs.getPassword().getValue());
-                }
-                if (!SOSString.isEmpty(csArgs.getEntryPath().getValue())) {
-                    p.put(SOSHibernate.HIBERNATE_SOS_PROPERTY_CREDENTIAL_STORE_ENTRY_PATH, csArgs.getEntryPath().getValue());
-                }
-            }
-
             f = new SOSHibernateFactory();
             f.getConfigurationProperties().putAll(p);
+        }
+
+        CredentialStoreArguments csArgs = step.getIncludedArguments(CredentialStoreArguments.class);
+        if (csArgs != null) {
+            Properties p = new Properties();
+            if (!SOSString.isEmpty(csArgs.getFile().getValue())) {
+                p.put(SOSHibernate.HIBERNATE_SOS_PROPERTY_CREDENTIAL_STORE_FILE, csArgs.getFile().getValue());
+            }
+            if (!SOSString.isEmpty(csArgs.getKeyFile().getValue())) {
+                p.put(SOSHibernate.HIBERNATE_SOS_PROPERTY_CREDENTIAL_STORE_KEY_FILE, csArgs.getKeyFile().getValue());
+            }
+            if (!SOSString.isEmpty(csArgs.getPassword().getValue())) {
+                p.put(SOSHibernate.HIBERNATE_SOS_PROPERTY_CREDENTIAL_STORE_PASSWORD, csArgs.getPassword().getValue());
+            }
+            if (!SOSString.isEmpty(csArgs.getEntryPath().getValue())) {
+                p.put(SOSHibernate.HIBERNATE_SOS_PROPERTY_CREDENTIAL_STORE_ENTRY_PATH, csArgs.getEntryPath().getValue());
+            }
+            if (p.size() > 0) {
+                f.getConfigurationProperties().putAll(p);
+            }
         }
 
         f.build();
