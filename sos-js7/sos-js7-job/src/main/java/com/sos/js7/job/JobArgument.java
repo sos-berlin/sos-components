@@ -309,6 +309,9 @@ public class JobArgument<T> extends SOSArgument<T> {
     }
 
     protected static <V> Object convertFlatValue(JobArgument<V> arg, Object value) throws Exception {
+        if (value == null) {
+            return (V) null;
+        }
         switch (arg.getArgumentFlatType()) {
         case STRING:
             return value.toString();
