@@ -8,6 +8,8 @@ import java.nio.file.Paths;
 import java.util.stream.Stream;
 
 import com.sos.commons.credentialstore.CredentialStoreArguments;
+import com.sos.commons.hibernate.SOSHibernate;
+import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.JobArguments;
@@ -29,8 +31,8 @@ public class PLSQLJobArguments extends JobArguments {
     private JobArgument<String> dbUrl = new JobArgument<String>("db_url", false);
     private JobArgument<String> dbUser = new JobArgument<String>("db_user", false);
 
-    private JobArgument<String> dbDialect = new JobArgument<String>("db_dialect", false, "org.hibernate.dialect.Oracle12cDialect");
-    private JobArgument<String> dbDriverClass = new JobArgument<String>("db_jdbc_driverclass", false, "oracle.jdbc.OracleDriver");
+    private JobArgument<String> dbDialect = new JobArgument<String>("db_dialect", false, SOSHibernate.DEFAULT_DIALECT_ORACLE);
+    private JobArgument<String> dbDriverClass = new JobArgument<String>("db_jdbc_driverclass", false, "oracle.jdbc.driver.OracleDriver");
 
     // CSV/XML/JSON export
     private JobArgument<ResultSetAs> resultSetAs = new JobArgument<ResultSetAs>("resultset_as", false);
@@ -89,7 +91,7 @@ public class PLSQLJobArguments extends JobArguments {
     }
 
     public boolean useHibernateFile() {
-        return ((dbUrl.getValue() == null) || dbUrl.getValue().isEmpty()) && ((dbUser.getValue() == null) || dbUser.getValue().isEmpty());
+        return SOSString.isEmpty(dbUrl.getValue()) && SOSString.isEmpty(dbUser.getValue());
     }
 
     public String getCommandScriptFile() {
@@ -156,19 +158,19 @@ public class PLSQLJobArguments extends JobArguments {
         }
 
     }
-    
+
     public JobArgument<String> getDbDialect() {
         return dbDialect;
     }
-    
+
     public void setDbDialect(JobArgument<String> dbDialect) {
         this.dbDialect = dbDialect;
     }
-    
+
     public JobArgument<String> getDbDriverClass() {
         return dbDriverClass;
     }
-    
+
     public void setDbDriverClass(JobArgument<String> dbDriverClass) {
         this.dbDriverClass = dbDriverClass;
     }

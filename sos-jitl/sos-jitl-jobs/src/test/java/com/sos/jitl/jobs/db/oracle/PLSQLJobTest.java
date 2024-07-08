@@ -41,4 +41,46 @@ public class PLSQLJobTest {
         LOGGER.info(String.format("[RESULT]%s", result));
     }
 
+    @Ignore
+    @Test
+    public void testPlain() throws Exception {
+        Path resourcesDir = Paths.get("src/test/resources");
+
+        Map<String, Object> args = new HashMap<>();
+        args.put("db_url", "jdbc:oracle:thin:@localhost:1521:XE");
+        args.put("db_user", "scheduler");
+        args.put("db_password", "scheduler");
+
+        args.put("command", "select 1 from dual");
+        args.put("resultset_as", ResultSetAs.XML);
+        args.put("result_file", resourcesDir.resolve("plsqljob_export.xml"));
+
+        UnitTestJobHelper<PLSQLJobArguments> h = new UnitTestJobHelper<>(new PLSQLJob(null));
+        JOutcome.Completed result = h.processOrder(args);
+        LOGGER.info("###############################################");
+        LOGGER.info(String.format("[RESULT]%s", result));
+    }
+
+    @Ignore
+    @Test
+    public void testCredentialStore() throws Exception {
+        Path resourcesDir = Paths.get("src/test/resources");
+
+        Map<String, Object> args = new HashMap<>();
+        args.put("db_url", "cs://xyz");
+        args.put("db_user", "scheduler");
+        args.put("db_password", "scheduler");
+
+        args.put("credential_store_file", "db.kdbx");
+        args.put("credential_store_key_file", "db.kdbx.key");
+
+        args.put("command", "select 1 from dual");
+        args.put("resultset_as", ResultSetAs.XML);
+        args.put("result_file", resourcesDir.resolve("plsqljob_export.xml"));
+
+        UnitTestJobHelper<PLSQLJobArguments> h = new UnitTestJobHelper<>(new PLSQLJob(null));
+        JOutcome.Completed result = h.processOrder(args);
+        LOGGER.info("###############################################");
+        LOGGER.info(String.format("[RESULT]%s", result));
+    }
 }
