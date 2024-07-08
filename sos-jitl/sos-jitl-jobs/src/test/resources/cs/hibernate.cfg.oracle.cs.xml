@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<hibernate-configuration>
+	<session-factory>
+		<property name="hibernate.connection.driver_class">oracle.jdbc.driver.OracleDriver</property>
+		<property name="hibernate.dialect">org.hibernate.dialect.Oracle10gDialect</property>
+		<property name="hibernate.connection.url">jdbc:oracle:thin:@localhost:1521:XE</property>
+		<property name="jakarta.persistence.jdbc.user">cs://server/Oracle/localhost@user</property>
+		<property name="jakarta.persistence.jdbc.password">cs://server/Oracle/localhost@password
+		</property>
+
+
+		<property name="hibernate.sos.show_configuration_properties">true</property>
+		<property name="hibernate.show_sql">true</property>
+		<property name="hibernate.format_sql">true</property>
+		<property name="hibernate.temp.use_jdbc_metadata_defaults">false</property>
+		<property name="javax.persistence.validation.mode">none</property>
+
+	</session-factory>
+</hibernate-configuration>

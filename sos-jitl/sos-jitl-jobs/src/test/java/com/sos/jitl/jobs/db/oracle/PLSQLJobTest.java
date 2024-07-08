@@ -30,11 +30,6 @@ public class PLSQLJobTest {
         args.put("resultset_as", ResultSetAs.XML);
         args.put("result_file", resourcesDir.resolve("plsqljob_export.xml"));
 
-        // args.put("credential_store_file", "db.kdbx");
-        // args.put("credential_store_key_file", "db.kdbx.key");
-        // args.put("credential_store_password", "...secret...");
-        // args.put("credential_store_entry_path", "/sos/my_path");
-
         UnitTestJobHelper<PLSQLJobArguments> h = new UnitTestJobHelper<>(new PLSQLJob(null));
         JOutcome.Completed result = h.processOrder(args);
         LOGGER.info("###############################################");
@@ -63,16 +58,39 @@ public class PLSQLJobTest {
 
     @Ignore
     @Test
-    public void testCredentialStore() throws Exception {
-        Path resourcesDir = Paths.get("src/test/resources");
+    public void testCredentialStoreDbParams() throws Exception {
+        Path resourcesDir = Paths.get("src/test/resources/cs");
 
         Map<String, Object> args = new HashMap<>();
-        args.put("db_url", "cs://xyz");
+        args.put("db_url", "cs://server/Oracle/localhost@url");
         args.put("db_user", "scheduler");
         args.put("db_password", "scheduler");
 
-        args.put("credential_store_file", "db.kdbx");
-        args.put("credential_store_key_file", "db.kdbx.key");
+        args.put("credential_store_file", resourcesDir.resolve("kdbx-p-f.kdbx"));
+        args.put("credential_store_key_file", resourcesDir.resolve("kdbx-p-f.key"));
+        args.put("credential_store_password", "test");
+
+        args.put("command", "select 1 from dual");
+        args.put("resultset_as", ResultSetAs.XML);
+        args.put("result_file", resourcesDir.resolve("plsqljob_export.xml"));
+
+        UnitTestJobHelper<PLSQLJobArguments> h = new UnitTestJobHelper<>(new PLSQLJob(null));
+        JOutcome.Completed result = h.processOrder(args);
+        LOGGER.info("###############################################");
+        LOGGER.info(String.format("[RESULT]%s", result));
+    }
+
+    @Ignore
+    @Test
+    public void testCredentialStoreHibernate() throws Exception {
+        Path resourcesDir = Paths.get("src/test/resources/cs");
+
+        Map<String, Object> args = new HashMap<>();
+        args.put("hibernate_configuration_file", resourcesDir.resolve("hibernate.cfg.oracle.cs.xml"));
+
+        args.put("credential_store_file", resourcesDir.resolve("kdbx-p-f.kdbx"));
+        args.put("credential_store_key_file", resourcesDir.resolve("kdbx-p-f.key"));
+        args.put("credential_store_password", "test");
 
         args.put("command", "select 1 from dual");
         args.put("resultset_as", ResultSetAs.XML);
