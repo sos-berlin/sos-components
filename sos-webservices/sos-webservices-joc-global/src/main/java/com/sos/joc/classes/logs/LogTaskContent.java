@@ -203,7 +203,7 @@ public class LogTaskContent {
                 // sent empty to avoid line ordering issues
                 // should be removed because produced a new empty line - a space because the Task History GUI API does not call the "running API" if the
                 // response is empty
-                return new ByteArrayInputStream(" ".getBytes(StandardCharsets.UTF_8));
+                return new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8));
             }
         } catch (IOException e) {
             LOGGER.warn(e.toString());
