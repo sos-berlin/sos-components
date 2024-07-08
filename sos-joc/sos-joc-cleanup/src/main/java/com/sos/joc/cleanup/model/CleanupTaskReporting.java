@@ -22,7 +22,6 @@ public class CleanupTaskReporting extends CleanupTaskModel {
     private int totalReportRuns = 0;
 
     private String columnQuotedId;
-    private String columnQuotedCreated;
     private String columnQuotedModified;
 
     public CleanupTaskReporting(JocClusterHibernateFactory factory, int batchSize, String identifier) {
@@ -96,7 +95,6 @@ public class CleanupTaskReporting extends CleanupTaskModel {
     private void setQuotedColumns() {
         Dialect d = getFactory().getDialect();
         columnQuotedId = SOSHibernate.quoteColumn(d, "ID");
-        columnQuotedCreated = SOSHibernate.quoteColumn(d, "CREATED");
         columnQuotedModified = SOSHibernate.quoteColumn(d, "MODIFIED");
     }
 }

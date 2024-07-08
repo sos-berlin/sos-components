@@ -48,6 +48,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
     private long totalOrderStates = 0;
     private long totalOrderSteps = 0;
     private long totalOrderLogs = 0;
+    private long totalOrderTags = 0;
 
     private String columnQuotedId;
     private String columnQuotedHoMainParentId;
@@ -66,13 +67,13 @@ public class CleanupTaskHistory extends CleanupTaskModel {
 
             tryOpenSession();
 
-            // Cleanup Logs and Orders/Steps/States
+            // Cleanup Logs and Orders/Steps/States/Tags
             if (orderDatetime.getAge().getConfigured().equals(logsDatetime.getAge().getConfigured())) {
                 String logPrefix = String.format("[%s][orders,logs][%s][%s]", getIdentifier(), orderDatetime.getAge().getConfigured(), orderDatetime
                         .getZonedDatetime());
                 LOGGER.info(logPrefix + "start cleanup");
 
-                // Cleanup DB Logs and Orders/Steps/States
+                // Cleanup DB Logs and Orders/Steps/States/Tags
                 state = cleanupOrders(orderDatetime, true);
                 deleteNotStartedOrdersLogs(orderDatetime);
                 deleteNotReferencedLogs(state);
@@ -95,7 +96,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
                 LOGGER.info(String.format("[%s][logs][%s]skip", getIdentifier(), logsDatetime.getAge().getConfigured()));
             }
 
-            // Cleanup Orders/Steps/States
+            // Cleanup Orders/Steps/States/Tags
             if (orderDatetime.getDatetime() != null && (state == null || state.equals(JocServiceTaskAnswerState.COMPLETED))) {
                 notStartedOrdersLogsDatetime = orderDatetime;
                 String logPrefix = String.format("[%s][orders][%s][%s]", getIdentifier(), orderDatetime.getAge().getConfigured(), orderDatetime
@@ -157,6 +158,11 @@ public class CleanupTaskHistory extends CleanupTaskModel {
             getDbLayer().beginTransaction();
             deleteControllersAndAgents(startTime, ageInfo);
             getDbLayer().commit();
+
+            boolean completed = cleanupOrderTags(startTime);
+            if (!completed && isStopped()) {
+                return JocServiceTaskAnswerState.UNCOMPLETED;
+            }
         }
 
         boolean runm = true;
@@ -347,6 +353,35 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         return r;
     }
 
+    private boolean cleanupOrderTags(Date startTime) throws SOSHibernateException {
+        CleanupPartialResult r = deleteOrderTags(startTime);
+        totalOrderTags += r.getDeletedTotal();
+        return JocServiceTaskAnswerState.COMPLETED.equals(r.getState());
+    }
+
+    private CleanupPartialResult deleteOrderTags(Date date) throws SOSHibernateException {
+        CleanupPartialResult r = new CleanupPartialResult(DBLayer.TABLE_HISTORY_ORDER_TAGS);
+        r.addParameter("date", date);
+
+        String column = SOSHibernate.quoteColumn(getFactory().getDialect(), "START_TIME");
+        StringBuilder sql = new StringBuilder("delete ");
+        sql.append(getLimitTop());
+        sql.append("from ").append(DBLayer.TABLE_HISTORY_ORDER_TAGS).append(" ");
+        if (isPGSQL()) {
+            sql.append("where ").append(columnQuotedId).append(" in (");
+            sql.append("select ").append(columnQuotedId).append(" from ").append(DBLayer.TABLE_HISTORY_ORDER_TAGS).append(" ");
+            sql.append("where ").append(column).append(" < :date ");
+            sql.append("limit ").append(getBatchSize());
+            sql.append(")");
+        } else {
+            sql.append("where ").append(column).append(" < :date ");
+            sql.append(getLimitWhere());
+        }
+
+        r.run(this, sql);
+        return r;
+    }
+
     private boolean cleanupOrders(Scope scope, Range range, Date startTime, String ageInfo, boolean deleteLogs, Long maxMainParentId)
             throws SOSHibernateException {
         StringBuilder log = new StringBuilder("[").append(getIdentifier()).append("][");
@@ -381,10 +416,15 @@ public class CleanupTaskHistory extends CleanupTaskModel {
             }
         }
 
-        if (range.equals(Range.ALL)) {
+        if (Range.ALL.equals(range)) {
             r = deleteOrders(maxMainParentId);
             totalOrders += r.getDeletedTotal();
             log.append(getDeleted(DBLayer.TABLE_HISTORY_ORDERS, r.getDeletedTotal(), totalOrders));
+
+            // order tags cleanup already performed - complete the order summary log line with this information
+            if (Scope.MAIN.equals(scope)) {
+                log.append(getDeleted(DBLayer.TABLE_HISTORY_ORDER_TAGS, totalOrderTags, totalOrderTags));
+            }
         }
 
         LOGGER.info(log.toString());

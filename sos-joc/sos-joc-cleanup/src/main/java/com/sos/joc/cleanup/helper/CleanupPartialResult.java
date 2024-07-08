@@ -64,14 +64,16 @@ public class CleanupPartialResult {
             if (getDeletedLast() == 0) {
                 state = JocServiceTaskAnswerState.COMPLETED;
                 if (deletedTotal > 0) {
-                    LOGGER.info(logPrefix + task.getDeleted(table, lastRunsDeleted, getDeletedTotal()).toString());
+                    int r = runCounter + 1;
+                    LOGGER.info(logPrefix + "[run=" + r + "]" + task.getDeleted(table, lastRunsDeleted, getDeletedTotal()).toString());
                 }
                 return;
             }
 
             lastRunsDeleted += getDeletedLast();
             if (runCounter % LOG_AFTER_N_RUNS == 0) {
-                LOGGER.info(logPrefix + task.getDeleted(table, lastRunsDeleted, getDeletedTotal()).toString());
+                int r = runCounter + 1;
+                LOGGER.info(logPrefix + "[run=" + r + "]" + task.getDeleted(table, lastRunsDeleted, getDeletedTotal()).toString());
                 lastRunsDeleted = 0;
             }
             runCounter++;
