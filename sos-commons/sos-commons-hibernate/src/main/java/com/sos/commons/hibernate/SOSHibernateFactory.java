@@ -334,7 +334,8 @@ public class SOSHibernateFactory implements Serializable {
                 }
                 configuration.configure(cf.toUri().toURL());
             } else {
-                configuration.configure();
+                // 6.5.x throws an exception - can't locate hibernate.cfg.xml
+                // configuration.configure();
             }
             if (LOGGER.isDebugEnabled()) {
                 String method = SOSHibernate.getMethodName(logIdentifier, "configure");

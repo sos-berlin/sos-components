@@ -1,6 +1,7 @@
 package com.sos.commons.hibernate;
 
 import java.lang.reflect.Field;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -59,7 +60,7 @@ import jakarta.persistence.Parameter;
 public class SOSHibernate {
 
     protected static final String DEFAULT_DIALECT_MYSQL = MySQLDialect.class.getName();
-    protected static final String DEFAULT_DIALECT_ORACLE = OracleDialect.class.getName();
+    public static final String DEFAULT_DIALECT_ORACLE = OracleDialect.class.getName();
     protected static final String DEFAULT_DIALECT_PGSQL = PostgreSQLDialect.class.getName();
     protected static final String DEFAULT_DIALECT_MSSQL = SQLServerDialect.class.getName();
     protected static final String DEFAULT_DIALECT_H2 = H2Dialect.class.getName();
@@ -154,6 +155,8 @@ public class SOSHibernate {
         while (e != null) {
             if (e instanceof ConstraintViolationException) {
                 return (ConstraintViolationException) e;
+            } else if (e instanceof SQLIntegrityConstraintViolationException) {
+                return (SQLIntegrityConstraintViolationException) e;
             }
             e = e.getCause();
         }
