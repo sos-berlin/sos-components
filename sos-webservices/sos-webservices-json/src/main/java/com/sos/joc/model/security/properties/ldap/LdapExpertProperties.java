@@ -21,6 +21,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "iamLdapReadTimeout",
     "iamLdapConnectTimeout",
     "iamLdapUserDnTemplate",
+    "iamLdapSysemUserDnTemplate",
     "iamLdapSearchBase",
     "iamLdapGroupSearchBase",
     "iamLdapGroupNameAttribute",
@@ -71,6 +72,14 @@ public class LdapExpertProperties {
      */
     @JsonProperty("iamLdapUserDnTemplate")
     private String iamLdapUserDnTemplate;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("iamLdapSysemUserDnTemplate")
+    private String iamLdapSysemUserDnTemplate;
     /**
      * string without < and >
      * <p>
@@ -198,6 +207,7 @@ public class LdapExpertProperties {
      * @param iamLdapConnectTimeout
      * @param iamLdapGroupSearchBase
      * @param iamLdapTruststorePassword
+     * @param iamLdapSysemUserDnTemplate
      * @param iamLdapUseStartTls
      * @param iamLdapSecurityProtocol
      * @param iamLdapGroupSearchFilter
@@ -209,12 +219,13 @@ public class LdapExpertProperties {
      * @param iamLdapUserSearchFilter
      * @param iamLdapUserDnTemplate
      */
-    public LdapExpertProperties(String iamLdapServerUrl, Integer iamLdapReadTimeout, Integer iamLdapConnectTimeout, String iamLdapUserDnTemplate, String iamLdapSearchBase, String iamLdapGroupSearchBase, String iamLdapGroupNameAttribute, String iamLdapUserNameAttribute, String iamLdapUserSearchFilter, String iamLdapGroupSearchFilter, Boolean iamLdapUseStartTls, String iamLdapTruststorePath, String iamLdapTruststorePassword, String iamLdapTruststoreType, Boolean iamLdapHostNameVerification, String iamLdapSecurityProtocol, String iamLdapSystemUser, String iamLdapSystemPassword, LdapGroupRolesMapping iamLdapGroupRolesMap) {
+    public LdapExpertProperties(String iamLdapServerUrl, Integer iamLdapReadTimeout, Integer iamLdapConnectTimeout, String iamLdapUserDnTemplate, String iamLdapSysemUserDnTemplate, String iamLdapSearchBase, String iamLdapGroupSearchBase, String iamLdapGroupNameAttribute, String iamLdapUserNameAttribute, String iamLdapUserSearchFilter, String iamLdapGroupSearchFilter, Boolean iamLdapUseStartTls, String iamLdapTruststorePath, String iamLdapTruststorePassword, String iamLdapTruststoreType, Boolean iamLdapHostNameVerification, String iamLdapSecurityProtocol, String iamLdapSystemUser, String iamLdapSystemPassword, LdapGroupRolesMapping iamLdapGroupRolesMap) {
         super();
         this.iamLdapServerUrl = iamLdapServerUrl;
         this.iamLdapReadTimeout = iamLdapReadTimeout;
         this.iamLdapConnectTimeout = iamLdapConnectTimeout;
         this.iamLdapUserDnTemplate = iamLdapUserDnTemplate;
+        this.iamLdapSysemUserDnTemplate = iamLdapSysemUserDnTemplate;
         this.iamLdapSearchBase = iamLdapSearchBase;
         this.iamLdapGroupSearchBase = iamLdapGroupSearchBase;
         this.iamLdapGroupNameAttribute = iamLdapGroupNameAttribute;
@@ -318,6 +329,28 @@ public class LdapExpertProperties {
     @JsonProperty("iamLdapUserDnTemplate")
     public void setIamLdapUserDnTemplate(String iamLdapUserDnTemplate) {
         this.iamLdapUserDnTemplate = iamLdapUserDnTemplate;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("iamLdapSysemUserDnTemplate")
+    public String getIamLdapSysemUserDnTemplate() {
+        return iamLdapSysemUserDnTemplate;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("iamLdapSysemUserDnTemplate")
+    public void setIamLdapSysemUserDnTemplate(String iamLdapSysemUserDnTemplate) {
+        this.iamLdapSysemUserDnTemplate = iamLdapSysemUserDnTemplate;
     }
 
     /**
@@ -628,12 +661,12 @@ public class LdapExpertProperties {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("iamLdapServerUrl", iamLdapServerUrl).append("iamLdapReadTimeout", iamLdapReadTimeout).append("iamLdapConnectTimeout", iamLdapConnectTimeout).append("iamLdapUserDnTemplate", iamLdapUserDnTemplate).append("iamLdapSearchBase", iamLdapSearchBase).append("iamLdapGroupSearchBase", iamLdapGroupSearchBase).append("iamLdapGroupNameAttribute", iamLdapGroupNameAttribute).append("iamLdapUserNameAttribute", iamLdapUserNameAttribute).append("iamLdapUserSearchFilter", iamLdapUserSearchFilter).append("iamLdapGroupSearchFilter", iamLdapGroupSearchFilter).append("iamLdapUseStartTls", iamLdapUseStartTls).append("iamLdapTruststorePath", iamLdapTruststorePath).append("iamLdapTruststorePassword", iamLdapTruststorePassword).append("iamLdapTruststoreType", iamLdapTruststoreType).append("iamLdapHostNameVerification", iamLdapHostNameVerification).append("iamLdapSecurityProtocol", iamLdapSecurityProtocol).append("iamLdapSystemUser", iamLdapSystemUser).append("iamLdapSystemPassword", iamLdapSystemPassword).append("iamLdapGroupRolesMap", iamLdapGroupRolesMap).toString();
+        return new ToStringBuilder(this).append("iamLdapServerUrl", iamLdapServerUrl).append("iamLdapReadTimeout", iamLdapReadTimeout).append("iamLdapConnectTimeout", iamLdapConnectTimeout).append("iamLdapUserDnTemplate", iamLdapUserDnTemplate).append("iamLdapSysemUserDnTemplate", iamLdapSysemUserDnTemplate).append("iamLdapSearchBase", iamLdapSearchBase).append("iamLdapGroupSearchBase", iamLdapGroupSearchBase).append("iamLdapGroupNameAttribute", iamLdapGroupNameAttribute).append("iamLdapUserNameAttribute", iamLdapUserNameAttribute).append("iamLdapUserSearchFilter", iamLdapUserSearchFilter).append("iamLdapGroupSearchFilter", iamLdapGroupSearchFilter).append("iamLdapUseStartTls", iamLdapUseStartTls).append("iamLdapTruststorePath", iamLdapTruststorePath).append("iamLdapTruststorePassword", iamLdapTruststorePassword).append("iamLdapTruststoreType", iamLdapTruststoreType).append("iamLdapHostNameVerification", iamLdapHostNameVerification).append("iamLdapSecurityProtocol", iamLdapSecurityProtocol).append("iamLdapSystemUser", iamLdapSystemUser).append("iamLdapSystemPassword", iamLdapSystemPassword).append("iamLdapGroupRolesMap", iamLdapGroupRolesMap).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(iamLdapGroupRolesMap).append(iamLdapGroupNameAttribute).append(iamLdapSearchBase).append(iamLdapHostNameVerification).append(iamLdapTruststoreType).append(iamLdapSystemPassword).append(iamLdapConnectTimeout).append(iamLdapGroupSearchBase).append(iamLdapTruststorePassword).append(iamLdapUseStartTls).append(iamLdapSecurityProtocol).append(iamLdapGroupSearchFilter).append(iamLdapSystemUser).append(iamLdapServerUrl).append(iamLdapReadTimeout).append(iamLdapUserNameAttribute).append(iamLdapTruststorePath).append(iamLdapUserSearchFilter).append(iamLdapUserDnTemplate).toHashCode();
+        return new HashCodeBuilder().append(iamLdapGroupRolesMap).append(iamLdapGroupNameAttribute).append(iamLdapSearchBase).append(iamLdapHostNameVerification).append(iamLdapTruststoreType).append(iamLdapSystemPassword).append(iamLdapConnectTimeout).append(iamLdapGroupSearchBase).append(iamLdapTruststorePassword).append(iamLdapSysemUserDnTemplate).append(iamLdapUseStartTls).append(iamLdapSecurityProtocol).append(iamLdapGroupSearchFilter).append(iamLdapSystemUser).append(iamLdapServerUrl).append(iamLdapReadTimeout).append(iamLdapUserNameAttribute).append(iamLdapTruststorePath).append(iamLdapUserSearchFilter).append(iamLdapUserDnTemplate).toHashCode();
     }
 
     @Override
@@ -645,7 +678,7 @@ public class LdapExpertProperties {
             return false;
         }
         LdapExpertProperties rhs = ((LdapExpertProperties) other);
-        return new EqualsBuilder().append(iamLdapGroupRolesMap, rhs.iamLdapGroupRolesMap).append(iamLdapGroupNameAttribute, rhs.iamLdapGroupNameAttribute).append(iamLdapSearchBase, rhs.iamLdapSearchBase).append(iamLdapHostNameVerification, rhs.iamLdapHostNameVerification).append(iamLdapTruststoreType, rhs.iamLdapTruststoreType).append(iamLdapSystemPassword, rhs.iamLdapSystemPassword).append(iamLdapConnectTimeout, rhs.iamLdapConnectTimeout).append(iamLdapGroupSearchBase, rhs.iamLdapGroupSearchBase).append(iamLdapTruststorePassword, rhs.iamLdapTruststorePassword).append(iamLdapUseStartTls, rhs.iamLdapUseStartTls).append(iamLdapSecurityProtocol, rhs.iamLdapSecurityProtocol).append(iamLdapGroupSearchFilter, rhs.iamLdapGroupSearchFilter).append(iamLdapSystemUser, rhs.iamLdapSystemUser).append(iamLdapServerUrl, rhs.iamLdapServerUrl).append(iamLdapReadTimeout, rhs.iamLdapReadTimeout).append(iamLdapUserNameAttribute, rhs.iamLdapUserNameAttribute).append(iamLdapTruststorePath, rhs.iamLdapTruststorePath).append(iamLdapUserSearchFilter, rhs.iamLdapUserSearchFilter).append(iamLdapUserDnTemplate, rhs.iamLdapUserDnTemplate).isEquals();
+        return new EqualsBuilder().append(iamLdapGroupRolesMap, rhs.iamLdapGroupRolesMap).append(iamLdapGroupNameAttribute, rhs.iamLdapGroupNameAttribute).append(iamLdapSearchBase, rhs.iamLdapSearchBase).append(iamLdapHostNameVerification, rhs.iamLdapHostNameVerification).append(iamLdapTruststoreType, rhs.iamLdapTruststoreType).append(iamLdapSystemPassword, rhs.iamLdapSystemPassword).append(iamLdapConnectTimeout, rhs.iamLdapConnectTimeout).append(iamLdapGroupSearchBase, rhs.iamLdapGroupSearchBase).append(iamLdapTruststorePassword, rhs.iamLdapTruststorePassword).append(iamLdapSysemUserDnTemplate, rhs.iamLdapSysemUserDnTemplate).append(iamLdapUseStartTls, rhs.iamLdapUseStartTls).append(iamLdapSecurityProtocol, rhs.iamLdapSecurityProtocol).append(iamLdapGroupSearchFilter, rhs.iamLdapGroupSearchFilter).append(iamLdapSystemUser, rhs.iamLdapSystemUser).append(iamLdapServerUrl, rhs.iamLdapServerUrl).append(iamLdapReadTimeout, rhs.iamLdapReadTimeout).append(iamLdapUserNameAttribute, rhs.iamLdapUserNameAttribute).append(iamLdapTruststorePath, rhs.iamLdapTruststorePath).append(iamLdapUserSearchFilter, rhs.iamLdapUserSearchFilter).append(iamLdapUserDnTemplate, rhs.iamLdapUserDnTemplate).isEquals();
     }
 
 }

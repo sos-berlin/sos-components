@@ -97,7 +97,7 @@ public class SOSLdapHandler {
             ldapContext = new InitialLdapContext(env, null);// Authentication
 
             if (sosLdapWebserviceCredentials.getSystemUser() != null && !sosLdapWebserviceCredentials.getSystemUser().isEmpty()) {
-                env.put(Context.SECURITY_PRINCIPAL, sosLdapWebserviceCredentials.getSystemUserDn());
+                env.put(Context.SECURITY_PRINCIPAL, sosLdapWebserviceCredentials.getSystemUserSecurityPrincipal());
                 env.put(Context.SECURITY_CREDENTIALS, sosLdapWebserviceCredentials.getSystemPassword());
                 LOGGER.debug("Create ldap context for system user");
                 ldapContext = new InitialLdapContext(env, null);

@@ -40,6 +40,7 @@ public class SOSLdapWebserviceCredentials {
     private Integer connectTimeout;
 
     private String userDnTemplate;
+    private String systemUserDnTemplate;
     private String searchBase;
     private String groupSearchBase;
     private String groupSearchFilter;
@@ -77,6 +78,16 @@ public class SOSLdapWebserviceCredentials {
         }
         return securityPrincipal;
     }
+    
+    public String getSystemUserSecurityPrincipal() {
+        String securityPrincipal = "";
+        if (systemUserDnTemplate != null && !systemUserDnTemplate.isEmpty()) {
+            securityPrincipal = systemUserDnTemplate.replaceAll("\\{0\\}", systemUser);
+        } else {
+            securityPrincipal = userDnTemplate.replaceAll("\\{0\\}", systemUser);
+        }
+        return securityPrincipal;
+    }    
 
     public String getUserDnTemplate() {
         return userDnTemplate;
@@ -196,6 +207,9 @@ public class SOSLdapWebserviceCredentials {
 
                 if (userDnTemplate == null || userDnTemplate.isEmpty()) {
                     userDnTemplate = getProperty(properties.getLdap().getExpert().getIamLdapUserDnTemplate(), DEFAULT_USER_DN_TEMPLATE);
+                }
+                if (systemUserDnTemplate == null || systemUserDnTemplate.isEmpty()) {
+                    systemUserDnTemplate = getProperty(properties.getLdap().getExpert().getIamLdapSysemUserDnTemplate(), "");
                 }
                 if (systemUser == null || systemUser.isEmpty()) {
                     systemUser = getProperty(properties.getLdap().getExpert().getIamLdapSystemUser(), "");
@@ -331,11 +345,7 @@ public class SOSLdapWebserviceCredentials {
         }
         return this.ldapServerUrl;
     }
-
-    public String getSystemUserDn() {
-        return userDnTemplate.replaceAll("\\{0\\}", systemUser);
-    }
-
+ 
     public String getSystemUser() {
         return systemUser;
     }
