@@ -1,0 +1,4 @@
+2024-05-07 15:25:02 jdbc[4]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Tabelle "INV_CONFIGURATIONS" nicht gefunden
+Table "INV_CONFIGURATIONS" not found; SQL statement:
+update INV_CONFIGURATIONS set CONTENT='{"workflowNames":["name1","name2","name3"],"workflowName":"myWorkflowName"}' format JSON where ID=6 [42102-200]

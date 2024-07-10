@@ -323,6 +323,7 @@ public class SOSHibernateFactory implements Serializable {
         }
     }
 
+    // TODO method name - if configuration.configure is not called ...
     private void configure() throws SOSHibernateConfigurationException {
         try {
             addSQLFunctions();
@@ -332,6 +333,7 @@ public class SOSHibernateFactory implements Serializable {
                 if (!Files.exists(cf)) {
                     throw new SOSHibernateConfigurationException(String.format("hibernate config file not found: %s", cf.toString()));
                 }
+                // TODO check if really needed
                 configuration.configure(cf.toUri().toURL());
             } else {
                 // 6.5.x throws an exception - can't locate hibernate.cfg.xml
@@ -344,7 +346,6 @@ public class SOSHibernateFactory implements Serializable {
                 } else {
                     LOGGER.debug(String.format("%s configure connection without the hibernate file", method));
                 }
-
             }
             mapConfigurationProperties();
             setDbms(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT));

@@ -21,7 +21,9 @@
 	<Loggers>
 		<Root level="trace">
 			<AppenderRef ref="console" />
+			<!-- 
 			<AppenderRef ref="fileLogger" />
+			-->
 		</Root>
 		<Logger name="org.hibernate" level="warn" />
 		<Logger name="org.hibernate.SQL" level="debug" />
@@ -29,6 +31,6 @@
 		<Logger name="org.hibernate.orm.deprecation" level="warn" />
 		<Logger name="com.mchange.v2" level="fatal" />
 		<logger name="com.zaxxer.hikari" level="debug" />
-		<Logger name="com.sos" level="debug" />
+		<Logger name="com.sos" level="trace" />
 	</Loggers>
 </Configuration>
