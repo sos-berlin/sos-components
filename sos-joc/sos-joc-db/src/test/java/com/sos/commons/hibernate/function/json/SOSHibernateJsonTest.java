@@ -1,5 +1,7 @@
 package com.sos.commons.hibernate.function.json;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.List;
 
 import org.hibernate.query.Query;
@@ -13,6 +15,8 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SOSHibernateTest;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue.ReturnType;
 import com.sos.commons.hibernate.function.regex.SOSHibernateRegexp;
+import com.sos.commons.hibernate.type.SOSHibernateJsonType;
+import com.sos.commons.util.SOSReflection;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 
@@ -20,10 +24,73 @@ public class SOSHibernateJsonTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSHibernateJsonTest.class);
 
-    private static final int SEARCH_CONFIG_TYPE = 7;// order
+    private static final int SEARCH_CONFIG_TYPE = 1;// order
 
-    private static final String SEARCH_WORKFLOW_PATH = "/my_workflow";
+    private static final String SEARCH_WORKFLOW_PATH = "/test_shell";
     private static final String SEARCH_CALENDAR_PATH_REGEXP = "my_calendar";
+
+    @Ignore
+    @Test
+    public void testChangeFinalStatic() throws Exception {
+        List<Field> l = SOSReflection.getAllDeclaredFields(SOSHibernateJsonTest.class);
+        for (Field f : l) {
+            LOGGER.info(f.getName());
+            if (f.getName().equals("SEARCH_WORKFLOW_PATH")) {
+                f.setAccessible(true);
+
+                Field modifiersField = Field.class.getDeclaredField("modifiers");
+                modifiersField.setAccessible(true);
+                modifiersField.setInt(f, f.getModifiers() & ~Modifier.FINAL);
+
+                f.set(null, "xyz");
+            }
+        }
+        LOGGER.info(SEARCH_WORKFLOW_PATH);
+    }
+
+    @Ignore
+    @Test
+    public void testSelectConfigurations() throws Exception {
+        SOSHibernateFactory factory = null;
+        SOSHibernateSession session = null;
+        try {
+            factory = SOSHibernateTest.createFactory();
+            session = factory.openStatelessSession();
+
+            StringBuilder hql = new StringBuilder("from " + DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
+
+            Query<DBItemInventoryConfiguration> query = session.createQuery(hql.toString());
+
+            List<DBItemInventoryConfiguration> result = session.getResultList(query);
+            LOGGER.info("---- FOUND: " + result.size());
+            session.beginTransaction();
+            for (DBItemInventoryConfiguration c : result) {
+                c.setContent(c.getContent());
+                LOGGER.info(c.getType() + "=" + c.getJsonContent());
+                session.update(c);
+            }
+            session.commit();
+
+            hql = new StringBuilder("from " + DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
+            hql.append("where type=:type ");
+            hql.append("and ");
+            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.timeZone")).append("=:timeZone");
+
+            query = session.createQuery(hql.toString());
+            query.setParameter("type", 1);
+            query.setParameter("timeZone", "Europe/Berlin");
+
+            result = session.getResultList(query);
+            LOGGER.info("---- FOUND: " + result.size());
+
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            if (factory != null) {
+                factory.close(session);
+            }
+        }
+    }
 
     // search in INV_CONFIGURATIONS for order objects which contains the workflowPath json property equals the given search workflow
     // ReturnType.SCALAR - return type is a single value

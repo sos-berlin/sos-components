@@ -1,0 +1,29 @@
+2024-05-15 09:16:38 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Tabelle "INV_TAGS" nicht gefunden
+Table "INV_TAGS" not found; SQL statement:
+insert into INV_TAGS ("MODIFIED","NAME","ORDERING") values (?,?,?) [42102-200]
+2024-05-15 09:35:45 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax Fehler in SQL Befehl "REATE[*] TABLE IF NOT EXISTS INV_TAGS (
+""ID""                    INT  UNSIGNED NOT NULL AUTO_INCREMENT,
+""NAME""                  VARCHAR(255)  NOT NULL,
+""ORDERING""              INT           NOT NULL DEFAULT 0,
+""MODIFIED""              DATETIME      NOT NULL,
+CONSTRAINT UNIQUE_IT_N UNIQUE (""NAME""),
+PRIMARY KEY (""ID"")
+) ENGINE=INNODB"; erwartet "ROLLBACK, REVOKE, RUNSCRIPT, RELEASE, REPLACE"
+Syntax error in SQL statement "REATE[*] TABLE IF NOT EXISTS INV_TAGS (
+""ID""                    INT  UNSIGNED NOT NULL AUTO_INCREMENT,
+""NAME""                  VARCHAR(255)  NOT NULL,
+""ORDERING""              INT           NOT NULL DEFAULT 0,
+""MODIFIED""              DATETIME      NOT NULL,
+CONSTRAINT UNIQUE_IT_N UNIQUE (""NAME""),
+PRIMARY KEY (""ID"")
+) ENGINE=INNODB"; expected "ROLLBACK, REVOKE, RUNSCRIPT, RELEASE, REPLACE"; SQL statement:
+REATE TABLE IF NOT EXISTS INV_TAGS (
+"ID"                    INT  UNSIGNED NOT NULL AUTO_INCREMENT,
+"NAME"                  VARCHAR(255)  NOT NULL,
+"ORDERING"              INT           NOT NULL DEFAULT 0,
+"MODIFIED"              DATETIME      NOT NULL,
+CONSTRAINT UNIQUE_IT_N UNIQUE ("NAME"),
+PRIMARY KEY ("ID")
+) ENGINE=InnoDB [42001-200]
