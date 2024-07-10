@@ -43,6 +43,7 @@ public class RunningTaskLogs {
         COMPLETE, TRUE, FALSE, BROKEN;
     }
 
+    // TODO: Remove/optimize timer functionality? - it is only required for the time after running logs, not for the entire lifetime of the JOC Cockpit
     private RunningTaskLogs() {
         EventBus.getInstance().register(this);
 
@@ -50,7 +51,9 @@ public class RunningTaskLogs {
 
             @Override
             public void run() {
-
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("[RunningTaskLogs][cleanup][before]events=" + events.size() + ",completeLogs=" + completeLogs.size());
+                }
                 Long eventId = Instant.now().toEpochMilli() - CLEANUP_PERIOD;
                 Set<String> toDelete = new HashSet<>();
                 events.forEach((taskIdAndSessionIdentifier, logs) -> {
@@ -70,6 +73,9 @@ public class RunningTaskLogs {
                     if (entry.getValue().size() == 0) {
                         iter.remove();
                     }
+                }
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.info("[RunningTaskLogs][cleanup][after]events=" + events.size() + ",completeLogs=" + completeLogs.size());
                 }
             }
 

@@ -226,8 +226,8 @@ public class LogTaskContent {
     // TODO - stop monitoring if the log window is closed - JavaScript window unload -> calls new web service
     // TODO - sleepAlways - true behavior?
     // TODO - sendEvent - RUNNING_LOG_BYTEBUFFER_ALLOCATE_SIZE best value ?
+    // TODO - sendEvent - open/close running log multiple times
     // DONE - sendEvent - check if the monitoring not trigger for this HistoryOrderTaskLog events
-    // DONE - sendEvent - open/close running log multiple times
     // DONE - sendEvent - open/close running log multiple sessions
     // DONE - if the same taskId is opened in two/multiple users sessions - the logs from other sessions are added to log because of HistoryOrderTaskLog
     private void runningTaskLogMonitor(Path taskLog) {
@@ -237,7 +237,7 @@ public class LogTaskContent {
         RunningTaskLogs.getInstance().subscribe(sessionIdentifier, historyId);
 
         final String logPrefix = "[runningTaskLogMonitor][" + taskLog + "]";
-        boolean sleepAlways = false; // to remove - sleep only if no new content provided(bytesRead == -1) all after each iteration...
+        // boolean sleepAlways = false; // to remove - sleep only if no new content provided(bytesRead == -1) all after each iteration...
         Thread workerThread = new Thread(() -> {
             // AsynchronousFileChannel for read - do not block the log file as it will be deleted by the history service
             long position = 0;
@@ -256,10 +256,8 @@ public class LogTaskContent {
                     buffer.clear();
                     int bytesRead = fileChannel.read(buffer, position).get();
                     if (bytesRead == -1) {// wait 1 second if no new content
-                        if (!sleepAlways) {
-                            if (!continueRunningLogMonitorAfterSleep(taskLog)) {
-                                break r;
-                            }
+                        if (!continueRunningLogMonitorAfterSleep(taskLog)) {
+                            break r;
                         }
                     } else {
                         unCompressedLength = position;
@@ -292,11 +290,6 @@ public class LogTaskContent {
                             break r;
                         }
                     }
-                    if (sleepAlways) {
-                        if (!continueRunningLogMonitorAfterSleep(taskLog)) {
-                            break r;
-                        }
-                    }
                 }
             } catch (InterruptedException e) {
                 isInterupped = true;
@@ -324,7 +317,6 @@ public class LogTaskContent {
                 } catch (Throwable e) {
                     LOGGER.warn(logPrefix + "[EventBus.getInstance().post]" + e, e);
                 }
-
             }
         });
         try {
