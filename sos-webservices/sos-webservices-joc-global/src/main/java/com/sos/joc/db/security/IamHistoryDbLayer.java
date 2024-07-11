@@ -8,11 +8,13 @@ import java.util.Map.Entry;
 
 import org.hibernate.query.Query;
 
+import com.sos.auth.classes.SOSAuthCurrentAccount;
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.db.authentication.DBItemIamHistory;
 import com.sos.joc.db.authentication.DBItemIamHistoryDetails;
+import com.sos.joc.db.authentication.DBItemIamIdentityService;
 
 public class IamHistoryDbLayer {
 
@@ -33,6 +35,9 @@ public class IamHistoryDbLayer {
         }
         if (filter.getLoginSuccess() != null) {
             query.setParameter("loginSuccess", filter.getLoginSuccess());
+        }
+        if (filter.getIdentityServiceId() != null) {
+            query.setParameter("identityServiceId", filter.getIdentityServiceId());
         }
         if (filter.getAccountName() != null && !filter.getAccountName().isEmpty()) {
             query.setParameter("accountName", filter.getAccountName());
@@ -63,6 +68,11 @@ public class IamHistoryDbLayer {
         }
         if (filter.getLoginSuccess() != null) {
             where += and + " loginSuccess = :loginSuccess";
+            and = " and ";
+        }
+
+        if (filter.getIdentityServiceId() != null) {
+            where += and + " identityServiceId = :identityServiceId";
             and = " and ";
         }
 
@@ -100,23 +110,29 @@ public class IamHistoryDbLayer {
         return getIamAccountList(filter, limit);
     }
 
-    public void addLoginAttempt(String accountName, Map<String, String> authenticationResult, boolean loginSuccess) throws SOSHibernateException {
+    public void addLoginAttempt(SOSAuthCurrentAccount account, Map<String, String> authenticationResult, boolean loginSuccess) throws SOSHibernateException {
 
+        String accountName = account.getAccountname();
         if (accountName == null || accountName.isEmpty()) {
             accountName = SOSAuthHelper.NONE;
         }
+        
+       
         DBItemIamHistory dbItemIamHistory = new DBItemIamHistory();
         dbItemIamHistory.setAccountName(accountName);
         dbItemIamHistory.setLoginDate(new Date());
         dbItemIamHistory.setLoginSuccess(loginSuccess);
+        dbItemIamHistory.setIdentityServiceId(account.getIdentityService().getIdentityServiceId());
         if (loginSuccess) {
             IamHistoryFilter filter = new IamHistoryFilter();
             filter.setAccountName(accountName);
+            filter.setIdentityServiceId(account.getIdentityService().getIdentityServiceId());
             filter.setLoginSuccess(true);
             List<DBItemIamHistory> l = getIamAccountList(filter, 1);
             if (l.size() > 0) {
                 dbItemIamHistory = l.get(0);
                 dbItemIamHistory.setLoginDate(new Date());
+                
                 sosHibernateSession.update(dbItemIamHistory);
             } else {
                 sosHibernateSession.save(dbItemIamHistory);
