@@ -756,7 +756,7 @@ public class SOSServicePermissionIam {
                 }
 
                 if (currentAccount.getCurrentSubject() != null && currentAccount.getCurrentSubject().getListOfAccountPermissions() != null) {
-                    iamHistoryDbLayer.addLoginAttempt(currentAccount.getAccountname(), authenticationResult, true);
+                    iamHistoryDbLayer.addLoginAttempt(currentAccount, authenticationResult, true);
                     currentAccount.getCurrentSubject().getListOfAccountPermissions().addAll(setOfAccountPermissions);
                     SecurityConfiguration securityConfigurationEntry = sosPermissionMerger.mergePermissions();
                     SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(currentAccount);
@@ -764,7 +764,7 @@ public class SOSServicePermissionIam {
                             securityConfigurationEntry);
                     currentAccount.setSosPermissionJocCockpitControllers(sosPermissionJocCockpitControllers);
                 } else {
-                    iamHistoryDbLayer.addLoginAttempt(currentAccount.getAccountname(), authenticationResult, false);
+                    iamHistoryDbLayer.addLoginAttempt(currentAccount, authenticationResult, false);
                 }
                 Globals.disconnect(sosHibernateSession);
 
