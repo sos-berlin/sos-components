@@ -8,6 +8,7 @@ public class IamHistoryFilter extends SOSHibernateFilter {
 
     private Long id;
     private String accountName;
+    private Long identityServiceId;
     private Boolean loginSuccess;
     private String dateFrom;
     private String dateTo;
@@ -63,6 +64,16 @@ public class IamHistoryFilter extends SOSHibernateFilter {
 
     public Boolean getLoginSuccess() {
         return loginSuccess;
+    }
+
+    
+    public Long getIdentityServiceId() {
+        return identityServiceId;
+    }
+
+    
+    public void setIdentityServiceId(Long identityServiceId) {
+        this.identityServiceId = identityServiceId;
     }
 
 }

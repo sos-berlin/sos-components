@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
@@ -31,11 +29,14 @@ import com.sos.joc.db.security.IamHistoryDbLayer;
 import com.sos.joc.db.security.IamHistoryFilter;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.JocSecurityLevel;
+import com.sos.joc.model.configuration.Profile;
 import com.sos.joc.model.configuration.Profiles;
 import com.sos.joc.model.profile.ProfilesFilter;
 import com.sos.joc.model.security.identityservice.IdentityServiceFilter;
 import com.sos.joc.profiles.resource.IJocProfilesResource;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("profiles")
 public class JocProfilesResourceImpl extends JOCResourceImpl implements IJocProfilesResource {
@@ -158,6 +159,14 @@ public class JocProfilesResourceImpl extends JOCResourceImpl implements IJocProf
             IamHistoryDbLayer iamHistoryDbLayer = new IamHistoryDbLayer(sosHibernateSession);
             IamHistoryFilter iamHistoryFilter = new IamHistoryFilter();
             iamHistoryFilter.setLoginSuccess(true);
+            DBItemIamIdentityService dbItemIamIdentityService = null;
+            if (identityServiceFilter.getIdentityServiceName() != null && !identityServiceFilter.getIdentityServiceName().isEmpty()) {
+                dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, identityServiceFilter.getIdentityServiceName());
+                if (dbItemIamIdentityService != null) {
+                    iamHistoryFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
+                }
+            }
+
             List<DBItemIamHistory> listOfLastLogins = iamHistoryDbLayer.getIamAccountList(iamHistoryFilter, 0);
             Map<String, Date> lastLogin = new HashMap<String, Date>();
             for (DBItemIamHistory dbItemIamHistory : listOfLastLogins) {
@@ -172,14 +181,22 @@ public class JocProfilesResourceImpl extends JOCResourceImpl implements IJocProf
             }
 
             if (identityServiceFilter.getIdentityServiceName() != null && !identityServiceFilter.getIdentityServiceName().isEmpty()) {
-                DBItemIamIdentityService dbItemIamIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, identityServiceFilter
-                        .getIdentityServiceName());
                 IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
                 IamAccountFilter filter = new IamAccountFilter();
                 filter.setIdentityServiceId(dbItemIamIdentityService.getId());
                 List<DBItemIamAccount> listOfAccounts = iamAccountDBLayer.getIamAccountList(filter, 0);
                 resultProfiles.setProfiles(uniqueProfiles.stream().filter(account -> listOfAccounts.stream().anyMatch(profile -> account.getAccount()
                         .equals(profile.getAccountName()))).collect(Collectors.toList()));
+
+                List<Profile> profilesFromLogin = uniqueProfiles.stream().filter(account -> listOfLastLogins.stream().anyMatch(profile -> account
+                        .getAccount().equals(profile.getAccountName()))).collect(Collectors.toList());
+
+                for (com.sos.joc.model.configuration.Profile p : profilesFromLogin) {
+                    if (!resultProfiles.getProfiles().contains(p)) {
+                        resultProfiles.getProfiles().add(p);
+                    }
+                }
+
             } else {
                 resultProfiles.getProfiles().addAll(uniqueProfiles);
             }

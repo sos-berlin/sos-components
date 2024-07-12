@@ -29,6 +29,10 @@ public class DBItemIamHistory {
 
     @Column(name = "[ACCOUNT_NAME]", nullable = false)
     private String accountName;
+    
+    @Column(name = "[IDENTITY_SERVICE_ID]", nullable = false)
+    private Long identityServiceId;
+
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[LOGIN_DATE]", nullable = false)
@@ -72,6 +76,16 @@ public class DBItemIamHistory {
 
     public void setAccountName(String accountName) {
         this.accountName = accountName;
+    }
+
+    
+    public Long getIdentityServiceId() {
+        return identityServiceId;
+    }
+
+    
+    public void setIdentityServiceId(Long identityServiceId) {
+        this.identityServiceId = identityServiceId;
     }
 
 }
