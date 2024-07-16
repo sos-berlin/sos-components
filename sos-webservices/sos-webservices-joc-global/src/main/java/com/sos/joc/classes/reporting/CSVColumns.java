@@ -15,7 +15,6 @@ public enum CSVColumns {
     JOB_NAME("jobName", null), //only order steps
     CRITICALITY("criticality", null), //only order steps
     AGENT_ID("agentId", null), //only order steps
-    //AGENT_NAME("agentName", "''"), //only order steps, nullable
     START_TIME("startTime", null),
     PLANNED_TIME("startTimeScheduled", "''"), //only orders, nullable
     END_TIME("endTime", "''"),//nullable
@@ -24,7 +23,7 @@ public enum CSVColumns {
     MODIFIED("modified", null),
     ORDER_STATE("state", null), //only orders
     STATE("severity", null);
-    
+
     private final String dbColumn;
     private final String defaultValue;
 
@@ -41,10 +40,21 @@ public enum CSVColumns {
     public String dbColumn() {
         return this.dbColumn;
     }
-    
+
     public String hqlValue(Dbms dbms) {
         if (Dbms.MYSQL.equals(dbms) && defaultValue != null) {
             return "coalesce(" + dbColumn + ", " + defaultValue + ")";
+        }
+        if (dbColumn.matches("startTime|startTimeScheduled|endTime|created|modified")) {
+            if (Dbms.MYSQL.equals(dbms)) {
+                return "DATE_FORMAT(" + dbColumn + ", '%Y-%m-%d %H:%i:%s')";
+            } else {
+                if (Dbms.MSSQL.equals(dbms)) {
+                    return "CONVERT(varchar," + dbColumn + ",120)";
+                } else {
+                    return "TO_CHAR(" + dbColumn + ",'yyyy-mm-dd HH:mi:ss')";
+                }
+            }
         }
         return dbColumn;
     }
