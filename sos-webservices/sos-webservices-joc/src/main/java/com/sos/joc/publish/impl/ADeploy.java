@@ -294,7 +294,7 @@ public abstract class ADeploy extends JOCResourceImpl {
                         updateableAgentNamesFileOrderSources, dbAuditlog.getId());
                 // call updateRepo command via ControllerApi for given controller
                 StoreDeployments.callUpdateItemsFor(dbLayer, signedItemsSpec, renamedOriginalHistoryEntries, account, commitId, controllerId,
-                        getAccessToken(), getJocError(), apiCall, deployFilter.getAddOrdersDateFrom());
+                        getAccessToken(), getJocError(), apiCall, deployFilter.getAddOrdersDateFrom(), deployFilter.getIncludeLate());
             }
         }
         // Delete from all known controllers
@@ -327,7 +327,7 @@ public abstract class ADeploy extends JOCResourceImpl {
                 itemsFromFolderToDeletePerController.put(controllerId, itemsToDelete);
                 // store history entries for delete operation optimistically
                 invConfigurationsToDelete.addAll(DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
-                                DeleteDeployments.storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitIdForDeleteFromFolder, account ,dbAuditlog.getId())));
+                                DeleteDeployments.storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitIdForDeleteFromFolder, account, dbAuditlog.getId())));
                 //audit = new DeployAudit(deployFilter.getAuditLog(), null, commitId, "delete", account);
             }
         }

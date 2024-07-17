@@ -71,6 +71,7 @@ import com.sos.joc.exceptions.JocReleaseException;
 import com.sos.joc.inventory.resource.IReleaseResource;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
+import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
 import com.sos.joc.model.dailyplan.generate.GenerateRequest;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFilter;
@@ -160,7 +161,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             auditLogObjectsLogging.log();
             Globals.beginTransaction(session);
             Map<String, List<String>> schedulePathsWithWorkflowNames = getSchedulePathsWithWorkflowNames(in, dbLayer);
-            cancelAndRecreateOrders(in.getAddOrdersDateFrom(), schedulePathsWithWorkflowNames,  accessToken);
+            cancelAndRecreateOrders(in, schedulePathsWithWorkflowNames,  accessToken);
             Globals.commit(session);
             return Collections.emptyList();
         } catch (Throwable e) {
@@ -625,19 +626,23 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         return schedulePathsWithWorkflowNames;
     }
     
-    private void cancelAndRecreateOrders (String addOrdersDateFrom, Map<String, List<String>> schedulePathsWithWorkflowNames, String xAccessToken) {
-        if(addOrdersDateFrom != null && !addOrdersDateFrom.isEmpty()) {
+    private void cancelAndRecreateOrders (ReleaseFilter filter, Map<String, List<String>> schedulePathsWithWorkflowNames, String xAccessToken) {
+        if(filter.getAddOrdersDateFrom() != null && !filter.getAddOrdersDateFrom().isEmpty()) {
             DailyPlanCancelOrderImpl cancelOrderImpl = new DailyPlanCancelOrderImpl();
             DailyPlanDeleteOrdersImpl deleteOrdersImpl = new DailyPlanDeleteOrdersImpl();
             DailyPlanOrdersGenerateImpl ordersGenerate = new DailyPlanOrdersGenerateImpl();
             DailyPlanOrderFilterDef orderFilter = new DailyPlanOrderFilterDef();
-            if("now".equals(addOrdersDateFrom.toLowerCase())) {
+            if("now".equals(filter.getAddOrdersDateFrom().toLowerCase())) {
                 SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd");
                 orderFilter.setDailyPlanDateFrom(sdf.format(Date.from(Instant.now())));
             } else {
-                orderFilter.setDailyPlanDateFrom(addOrdersDateFrom);
+                orderFilter.setDailyPlanDateFrom(filter.getAddOrdersDateFrom());
             }
             orderFilter.setSchedulePaths(new ArrayList<String>(schedulePathsWithWorkflowNames.keySet()));
+            if(filter.getIncludeLate()) {
+                orderFilter.setLate(true);
+                orderFilter.setStates(getOrderStatesForFilter());
+            }
             if(orderFilter.getSchedulePaths() != null && !orderFilter.getSchedulePaths().isEmpty()) {
                 try {
                     Map<String, List<DBItemDailyPlanOrder>> ordersPerController = 
@@ -696,14 +701,14 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                                     List<GenerateRequest> requests = schedules.entrySet().stream().filter(entry -> entry.getKey() != null)
                                         .map(entry -> {
                                             try {
-                                                return ordersGenerate.getGenerateRequestsForReleaseDeploy(
-                                                        addOrdersDateFrom, null, entry.getValue(), controllerId, entry.getKey(), allowedDailyPlanDates);
+                                                return ordersGenerate.getGenerateRequestsForReleaseDeploy(filter.getAddOrdersDateFrom(), null, 
+                                                                entry.getValue(), controllerId, entry.getKey(), allowedDailyPlanDates);
                                             } catch(Exception ex) {
                                                 return null;
                                             }
                                         }).filter(Objects::nonNull).flatMap(List::stream).collect(Collectors.toList());
                                     if (!requests.isEmpty()) {
-                                        successful = ordersGenerate.generateOrders(requests, xAccessToken, false);
+                                        successful = ordersGenerate.generateOrders(requests, xAccessToken, false, filter.getIncludeLate());
                                     }
                                     if (!successful) {
                                         LOGGER.warn("generate orders failed due to missing permission.");
@@ -786,4 +791,10 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         }
     }
     
+    private static List<DailyPlanOrderStateText> getOrderStatesForFilter() {
+        List<DailyPlanOrderStateText> states = new ArrayList<DailyPlanOrderStateText>();
+        states.add(DailyPlanOrderStateText.PLANNED);
+        states.add(DailyPlanOrderStateText.SUBMITTED);
+        return states;
+    }
 }
