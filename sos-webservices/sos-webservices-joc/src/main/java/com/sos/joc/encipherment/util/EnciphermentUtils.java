@@ -62,14 +62,18 @@ public class EnciphermentUtils {
                 args = new Environment();
             }
             args.setAdditionalProperty(ARG_NAME_ENCIPHERMENT_CERTIFICATE, JsonConverter.quoteString(certificate));
-            args.setAdditionalProperty(ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH, JsonConverter.quoteString(privateKeyPath));
+            if(privateKeyPath != null && !privateKeyPath.isEmpty()) {
+              args.setAdditionalProperty(ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH, JsonConverter.quoteString(privateKeyPath));
+            }
             existingJobResource.setArguments(args);
             Environment env = existingJobResource.getEnv();
             if(env == null) {
                 env = new Environment();
             }
             env.setAdditionalProperty(ARG_NAME_ENCIPHERMENT_CERTIFICATE.toUpperCase(), "$".concat(ARG_NAME_ENCIPHERMENT_CERTIFICATE));
-            env.setAdditionalProperty(ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH.toUpperCase(), "$".concat(ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH));
+            if(privateKeyPath != null && !privateKeyPath.isEmpty()) {
+              env.setAdditionalProperty(ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH.toUpperCase(), "$".concat(ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH));
+            }
             existingJobResource.setEnv(env);
             dbExistingJobResource.setContent(Globals.objectMapper.writeValueAsString(existingJobResource));
             dbExistingJobResource.setFolder(jobResourceFolder);
