@@ -100,6 +100,13 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
     }
 
     public boolean generateOrders(GenerateRequest in, String accessToken, boolean withAudit) throws SOSInvalidDataException, SOSHibernateException,
+    IOException, DBMissingDataException, DBConnectionRefusedException, DBInvalidDataException, JocConfigurationException,
+    DBOpenSessionException, ControllerConnectionResetException, ControllerConnectionRefusedException, SOSMissingDataException, ParseException,
+    ExecutionException {
+        return generateOrders(in, accessToken, withAudit, false);
+    }
+
+    public boolean generateOrders(GenerateRequest in, String accessToken, boolean withAudit, boolean includeLate) throws SOSInvalidDataException, SOSHibernateException,
             IOException, DBMissingDataException, DBConnectionRefusedException, DBInvalidDataException, JocConfigurationException,
             DBOpenSessionException, ControllerConnectionResetException, ControllerConnectionRefusedException, SOSMissingDataException, ParseException,
             ExecutionException {
@@ -171,7 +178,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
                 workflowSingles, permittedFolders, checkedFolders, onlyPlanOrderAutomatically);
 
         Map<PlannedOrderKey, PlannedOrder> generatedOrders = runner.generateDailyPlan(StartupMode.manual, controllerId, dailyPlanSchedules, in
-                .getDailyPlanDate(), in.getWithSubmit(), getJocError(), accessToken);
+                .getDailyPlanDate(), in.getWithSubmit(), getJocError(), accessToken, includeLate);
         JocClusterServiceLogger.clearAllLoggers();
 
         if (withAudit) {
@@ -278,9 +285,17 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             DBConnectionRefusedException, DBInvalidDataException, JocConfigurationException, DBOpenSessionException,
             ControllerConnectionResetException, ControllerConnectionRefusedException, SOSInvalidDataException, SOSHibernateException,
             SOSMissingDataException, IOException, ParseException, ExecutionException {
+        
+        return generateOrders(requests, accessToken, withAudit, false);
+    }
+
+    public boolean generateOrders(List<GenerateRequest> requests, String accessToken, boolean withAudit, boolean includeLate)
+            throws DBMissingDataException, DBConnectionRefusedException, DBInvalidDataException, JocConfigurationException, 
+            DBOpenSessionException, ControllerConnectionResetException, ControllerConnectionRefusedException, SOSInvalidDataException,
+            SOSHibernateException, SOSMissingDataException, IOException, ParseException, ExecutionException {
         boolean successful = true;
         for (GenerateRequest req : requests) {
-            if (!generateOrders(req, accessToken, withAudit)) {
+            if (!generateOrders(req, accessToken, withAudit, includeLate)) {
                 successful = false;
             }
         }

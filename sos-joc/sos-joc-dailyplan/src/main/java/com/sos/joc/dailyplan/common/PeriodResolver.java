@@ -61,6 +61,11 @@ public class PeriodResolver {
     }
 
     public Map<Long, Period> getStartTimes(String frequencyResolverDate, String dailyPlanDate, String timeZone) throws ParseException {
+        return getStartTimes(frequencyResolverDate, dailyPlanDate, timeZone, false);
+    }
+
+    
+    public Map<Long, Period> getStartTimes(String frequencyResolverDate, String dailyPlanDate, String timeZone, boolean includeLate) throws ParseException {
         Map<Long, Period> startTimes = new HashMap<>();
 
         if (frequencyResolverDates.contains(frequencyResolverDate)) {
@@ -82,6 +87,9 @@ public class PeriodResolver {
                 // LOGGER.debug(String.format(" [getStartTimes][dailyPlanDate=%s][frequencyResolverDate=%s]scheduledFor=%s", dailyPlanDate,
                 // frequencyResolverDate, SOSDate.tryGetDateTimeAsString(scheduledFor.get())));
                 // }
+                startTimes.put(result.startUTC.getTime(), periodEntry.getValue());
+            } else if(!result.isInDailyPlanPeriod && includeLate) {
+                // else for recreation of late orders
                 startTimes.put(result.startUTC.getTime(), periodEntry.getValue());
             }
         }

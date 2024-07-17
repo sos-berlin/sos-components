@@ -24,6 +24,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "store",
     "delete",
     "addOrdersDateFrom",
+    "includeLate",
     "auditLog"
 })
 public class DeployFilter {
@@ -54,6 +55,8 @@ public class DeployFilter {
      */
     @JsonProperty("addOrdersDateFrom")
     private String addOrdersDateFrom;
+    @JsonProperty("includeLate")
+    private Boolean includeLate = false;
     /**
      * auditParams
      * <p>
@@ -139,6 +142,16 @@ public class DeployFilter {
         this.addOrdersDateFrom = addOrdersDateFrom;
     }
 
+    @JsonProperty("includeLate")
+    public Boolean getIncludeLate() {
+        return includeLate;
+    }
+
+    @JsonProperty("includeLate")
+    public void setIncludeLate(Boolean includeLate) {
+        this.includeLate = includeLate;
+    }
+
     /**
      * auditParams
      * <p>
@@ -163,12 +176,12 @@ public class DeployFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerIds", controllerIds).append("store", store).append("delete", delete).append("addOrdersDateFrom", addOrdersDateFrom).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerIds", controllerIds).append("store", store).append("delete", delete).append("addOrdersDateFrom", addOrdersDateFrom).append("includeLate", includeLate).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(store).append(auditLog).append(delete).append(controllerIds).append(addOrdersDateFrom).toHashCode();
+        return new HashCodeBuilder().append(auditLog).append(controllerIds).append(addOrdersDateFrom).append(store).append(includeLate).append(delete).toHashCode();
     }
 
     @Override
@@ -180,7 +193,7 @@ public class DeployFilter {
             return false;
         }
         DeployFilter rhs = ((DeployFilter) other);
-        return new EqualsBuilder().append(store, rhs.store).append(auditLog, rhs.auditLog).append(delete, rhs.delete).append(controllerIds, rhs.controllerIds).append(addOrdersDateFrom, rhs.addOrdersDateFrom).isEquals();
+        return new EqualsBuilder().append(auditLog, rhs.auditLog).append(controllerIds, rhs.controllerIds).append(addOrdersDateFrom, rhs.addOrdersDateFrom).append(store, rhs.store).append(includeLate, rhs.includeLate).append(delete, rhs.delete).isEquals();
     }
 
 }

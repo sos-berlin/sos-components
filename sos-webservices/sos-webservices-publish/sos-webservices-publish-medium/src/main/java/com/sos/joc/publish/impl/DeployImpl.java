@@ -319,7 +319,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                             updateableAgentNamesFileOrderSources, dbAuditlog.getId());
                     // call updateRepo command via ControllerApi for given controller
                     StoreDeployments.callUpdateItemsFor(dbLayer, signedItemsSpec, renamedOriginalHistoryEntries, account, commitId, controllerId,
-                            getAccessToken(), getJocError(), API_CALL, deployFilter.getAddOrdersDateFrom());
+                            getAccessToken(), getJocError(), API_CALL, deployFilter.getAddOrdersDateFrom(), deployFilter.getIncludeLate());
                 }
             }
             // Delete from all known controllers
