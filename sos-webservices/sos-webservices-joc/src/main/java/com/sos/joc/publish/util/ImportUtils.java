@@ -209,7 +209,7 @@ public class ImportUtils {
                         try {
                             String json = Globals.objectMapper.writeValueAsString(configurationWithReference.getConfiguration());
                             json = json.replaceAll("(\"workflowName\"\\s*:\\s*\")" + updateableItem.getOldName() + "\"", "$1" + updateableItem.getNewName() + "\"");
-                            configurationWithReference.setConfiguration(Globals.objectMapper.readValue(json, Workflow.class));
+                            ((WorkflowEdit)configurationWithReference).setConfiguration(Globals.objectMapper.readValue(json, Workflow.class));
                         } catch (IOException e) {
                             throw new JocImportException(e);
                         }
