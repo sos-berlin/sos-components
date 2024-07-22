@@ -26,7 +26,8 @@ import com.sos.controller.model.common.SyncState;
     "path",
     "versionDate",
     "state",
-    "valid"
+    "valid",
+    "deployed"
 })
 public class FileOrderSource
     extends com.sos.inventory.model.fileordersource.FileOrderSource
@@ -60,6 +61,8 @@ public class FileOrderSource
     private SyncState state;
     @JsonProperty("valid")
     private Boolean valid;
+    @JsonProperty("deployed")
+    private Boolean deployed;
 
     /**
      * No args constructor for use in serialization
@@ -79,17 +82,19 @@ public class FileOrderSource
      * @param versionDate
      * @param directory
      * @param valid
+     * @param deployed
      * @param path
      * @param delay
      * @param state
      * @param documentationName
      */
-    public FileOrderSource(String path, Date versionDate, SyncState state, Boolean valid, String workflowName, String agentName, String directoryExpr, String directory, String pattern, String timeZone, Long delay, String title, String documentationName, Set<String> tags) {
+    public FileOrderSource(String path, Date versionDate, SyncState state, Boolean valid, Boolean deployed, String workflowName, String agentName, String directoryExpr, String directory, String pattern, String timeZone, Long delay, String title, String documentationName, Set<String> tags) {
         super(workflowName, agentName, directoryExpr, directory, pattern, timeZone, delay, title, documentationName, tags);
         this.path = path;
         this.versionDate = versionDate;
         this.state = state;
         this.valid = valid;
+        this.deployed = deployed;
     }
 
     /**
@@ -167,15 +172,25 @@ public class FileOrderSource
     public void setValid(Boolean valid) {
         this.valid = valid;
     }
+    
+    @JsonProperty("deployed")
+    public Boolean getDeployed() {
+        return deployed;
+    }
+
+    @JsonProperty("deployed")
+    public void setDeployed(Boolean deployed) {
+        this.deployed = deployed;
+    }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("versionDate", versionDate).append("state", state).append("valid", valid).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("versionDate", versionDate).append("state", state).append("valid", valid).append("deployed", deployed).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(valid).append(path).append(state).append(versionDate).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(valid).append(deployed).append(path).append(state).append(versionDate).toHashCode();
     }
 
     @Override
@@ -187,7 +202,7 @@ public class FileOrderSource
             return false;
         }
         FileOrderSource rhs = ((FileOrderSource) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(valid, rhs.valid).append(path, rhs.path).append(state, rhs.state).append(versionDate, rhs.versionDate).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(valid, rhs.valid).append(deployed, rhs.deployed).append(path, rhs.path).append(state, rhs.state).append(versionDate, rhs.versionDate).isEquals();
     }
 
 }

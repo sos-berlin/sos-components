@@ -5,13 +5,12 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.fileordersource.FileOrderSource;
-import com.sos.controller.model.workflow.Workflow;
 import com.sos.controller.model.schedule.Schedule;
+import com.sos.controller.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -32,6 +31,8 @@ import jakarta.ws.rs.Path;
 public class ReferenceResourceImpl extends JOCResourceImpl implements IReferenceResource {
 
     // private static final Logger LOGGER = LoggerFactory.getLogger(ValidateResourceImpl.class);
+    private static final List<ConfigurationType> supportedConfigurationTypes = Arrays.asList(ConfigurationType.WORKFLOW,
+            ConfigurationType.NOTICEBOARD);
 
     @Override
     public JOCDefaultResponse post(final String accessToken, String objectType, final byte[] inBytes) {
@@ -53,19 +54,20 @@ public class ReferenceResourceImpl extends JOCResourceImpl implements IReference
                     objectType = ConfigurationType.WORKINGDAYSCALENDAR.value();
                 }
                 ConfigurationType type = ConfigurationType.fromValue(objectType.toUpperCase());
-                if (ConfigurationType.FOLDER.equals(type)) {
+                if (!supportedConfigurationTypes.contains(type)) { // TODO later support other references
                     throw new JocBadRequestException("Unsupported objectType:" + objectType);
                 }
-                if (!ConfigurationType.WORKFLOW.equals(type)) { // TODO later support other references
-                    throw new JocBadRequestException("Unsupported objectType:" + objectType);
-                }
+                
+                session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+                InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+                
+                entity.setIsRenamed(dbLayer.isRenamed(name, type));
+                
                 switch (type) {
                 case WORKFLOW:
                     if (in.getObjectTypes() == null || in.getObjectTypes().isEmpty()) {
                         in.setObjectTypes(Arrays.asList(ConfigurationType.FILEORDERSOURCE, ConfigurationType.SCHEDULE, ConfigurationType.WORKFLOW));
                     }
-                    session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
-                    InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
                     if (in.getObjectTypes().contains(ConfigurationType.FILEORDERSOURCE)) {
                         List<DBItemInventoryConfiguration> fileOrderSources = dbLayer.getUsedFileOrderSourcesByWorkflowName(name);
@@ -75,6 +77,7 @@ public class ReferenceResourceImpl extends JOCResourceImpl implements IReference
                                     FileOrderSource fos = JocInventory.convertFileOrderSource(dbItem.getContent(), FileOrderSource.class);
                                     fos.setPath(dbItem.getPath());
                                     fos.setValid(dbItem.getValid());
+                                    fos.setDeployed(dbItem.getDeployed());
                                     // reduce information
                                     fos.setDocumentationName(null);
                                     fos.setDelay(null);
@@ -99,6 +102,7 @@ public class ReferenceResourceImpl extends JOCResourceImpl implements IReference
                                     Schedule s = (Schedule) JocInventory.convertSchedule(dbItem.getContent(), Schedule.class);
                                     s.setPath(dbItem.getPath());
                                     s.setValid(dbItem.getValid());
+                                    s.setReleased(dbItem.getReleased());
                                     // reduce information
                                     s.setDocumentationName(null);
                                     s.setOrderParameterisations(null);
@@ -115,34 +119,13 @@ public class ReferenceResourceImpl extends JOCResourceImpl implements IReference
                         }
                     }
                     if (in.getObjectTypes().contains(ConfigurationType.WORKFLOW)) {
-                        List<DBItemInventoryConfiguration> workflows = dbLayer.getAddOrderWorkflowsByWorkflowName(name);
-                        if (workflows != null) {
-                            entity.setWorkflows(workflows.stream().map(dbItem -> {
-                                try {
-                                    Workflow w = new Workflow(); //WorkflowConverter.convertInventoryWorkflow(dbItem.getContent(), Workflow.class);
-                                    w.setPath(dbItem.getPath());
-                                    w.setValid(dbItem.getValid());
-                                    // reduce information
-                                    w.setDocumentationName(null);
-                                    w.setInstructions(null);
-                                    w.setJobs(null);
-                                    w.setOrderPreparation(null);
-                                    w.setState(null);
-                                    w.setTimeZone(null);
-                                    w.setTitle(null);
-                                    w.setVersion(null);
-                                    w.setVersionDate(null);
-                                    w.setIsCurrentVersion(null);
-                                    w.setSuspended(null);
-//                                    Workflow w = new Workflow();
-//                                    w.setPath(dbItem.getPath());
-                                    return w;
-                                } catch (Exception e) {
-                                    return null;
-                                }
-                            }).filter(Objects::nonNull).collect(Collectors.toList()));
-                        }
+                        entity.setWorkflows(getWorkflows(dbLayer.getAddOrderWorkflowsByWorkflowName(name)));
                     }
+                    break;
+                case NOTICEBOARD:
+                    entity.setWorkflows(getWorkflows(dbLayer.getUsedWorkflowsByBoardName(name)));
+                    entity.setFileOrderSources(null);
+                    entity.setSchedules(null);
                     break;
                 default:
                     break;
@@ -162,5 +145,36 @@ public class ReferenceResourceImpl extends JOCResourceImpl implements IReference
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
+    }
+    
+    private List<Workflow> getWorkflows(List<DBItemInventoryConfiguration> workflows) {
+        if (workflows == null) {
+            return null;
+        }
+        return workflows.stream().map(dbItem -> {
+            try {
+                Workflow w = new Workflow(); //WorkflowConverter.convertInventoryWorkflow(dbItem.getContent(), Workflow.class);
+                w.setPath(dbItem.getPath());
+                w.setValid(dbItem.getValid());
+                w.setDeployed(dbItem.getDeployed());
+                // reduce information
+                w.setDocumentationName(null);
+                w.setInstructions(null);
+                w.setJobs(null);
+                w.setOrderPreparation(null);
+                w.setState(null);
+                w.setTimeZone(null);
+                w.setTitle(null);
+                w.setVersion(null);
+                w.setVersionDate(null);
+                w.setIsCurrentVersion(null);
+                w.setSuspended(null);
+//                Workflow w = new Workflow();
+//                w.setPath(dbItem.getPath());
+                return w;
+            } catch (Exception e) {
+                return null;
+            }
+        }).filter(Objects::nonNull).collect(Collectors.toList());
     }
 }

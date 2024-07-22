@@ -25,6 +25,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "deliveryDate",
+    "isRenamed",
     "workflows",
     "fileOrderSources",
     "schedules"
@@ -41,6 +42,8 @@ public class ResponseItems {
     @JsonProperty("deliveryDate")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deliveryDate;
+    @JsonProperty("isRenamed")
+    private Boolean isRenamed;
     @JsonProperty("workflows")
     private List<Workflow> workflows = new ArrayList<Workflow>();
     @JsonProperty("fileOrderSources")
@@ -70,6 +73,16 @@ public class ResponseItems {
     @JsonProperty("deliveryDate")
     public void setDeliveryDate(Date deliveryDate) {
         this.deliveryDate = deliveryDate;
+    }
+
+    @JsonProperty("isRenamed")
+    public Boolean getIsRenamed() {
+        return isRenamed;
+    }
+
+    @JsonProperty("isRenamed")
+    public void setIsRenamed(Boolean isRenamed) {
+        this.isRenamed = isRenamed;
     }
 
     @JsonProperty("workflows")
@@ -104,12 +117,12 @@ public class ResponseItems {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("workflows", workflows).append("fileOrderSources", fileOrderSources).append("schedules", schedules).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("isRenamed", isRenamed).append("workflows", workflows).append("fileOrderSources", fileOrderSources).append("schedules", schedules).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(fileOrderSources).append(workflows).append(deliveryDate).append(schedules).toHashCode();
+        return new HashCodeBuilder().append(isRenamed).append(fileOrderSources).append(workflows).append(deliveryDate).append(schedules).toHashCode();
     }
 
     @Override
@@ -121,7 +134,7 @@ public class ResponseItems {
             return false;
         }
         ResponseItems rhs = ((ResponseItems) other);
-        return new EqualsBuilder().append(fileOrderSources, rhs.fileOrderSources).append(workflows, rhs.workflows).append(deliveryDate, rhs.deliveryDate).append(schedules, rhs.schedules).isEquals();
+        return new EqualsBuilder().append(isRenamed, rhs.isRenamed).append(fileOrderSources, rhs.fileOrderSources).append(workflows, rhs.workflows).append(deliveryDate, rhs.deliveryDate).append(schedules, rhs.schedules).isEquals();
     }
 
 }

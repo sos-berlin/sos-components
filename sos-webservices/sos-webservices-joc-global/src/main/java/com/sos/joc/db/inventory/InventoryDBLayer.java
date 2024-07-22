@@ -2096,4 +2096,23 @@ public class InventoryDBLayer extends DBLayer {
             return true;
         }
     }
+    
+    public boolean isRenamed(String name, ConfigurationType type) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select c.name from ");
+        if (JocInventory.isDeployable(type)) {
+            hql.append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" c ");
+            hql.append("left join ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
+            hql.append("on ic.id=c.inventoryConfigurationId ");
+        } else {
+            hql.append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" c ");
+            hql.append("left join ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
+            hql.append("on ic.id=c.cid ");
+        }
+        hql.append("where ic.name=:name and ic.type=:type");
+        Query<String> query = getSession().createQuery(hql.toString());
+        query.setParameter("name", name);
+        query.setParameter("type", type.intValue());
+        String deployedReleaseName = getSession().getSingleResult(query);
+        return deployedReleaseName != null && !deployedReleaseName.equals(name);
+    }
 }
