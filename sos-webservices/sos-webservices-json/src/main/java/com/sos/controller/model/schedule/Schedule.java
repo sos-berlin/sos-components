@@ -18,7 +18,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "valid"
+    "valid",
+    "released"
 })
 public class Schedule
     extends com.sos.inventory.model.schedule.Schedule
@@ -26,6 +27,8 @@ public class Schedule
 
     @JsonProperty("valid")
     private Boolean valid;
+    @JsonProperty("released")
+    private Boolean released;
 
     /**
      * No args constructor for use in serialization
@@ -43,15 +46,25 @@ public class Schedule
     public void setValid(Boolean valid) {
         this.valid = valid;
     }
+    
+    @JsonProperty("released")
+    public Boolean getReleased() {
+        return released;
+    }
+
+    @JsonProperty("released")
+    public void setReleased(Boolean released) {
+        this.released = released;
+    }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("valid", valid).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("valid", valid).append("released", released).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(valid).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(valid).append(released).toHashCode();
     }
 
     @Override
@@ -63,7 +76,7 @@ public class Schedule
             return false;
         }
         Schedule rhs = ((Schedule) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(valid, rhs.valid).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(valid, rhs.valid).append(released, rhs.released).isEquals();
     }
 
 }
