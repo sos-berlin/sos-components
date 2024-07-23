@@ -262,6 +262,25 @@ public class Conditions {
         return result;
     }
 
+    @SuppressWarnings("unchecked")
+    public static List<Operator> getOROperators(List<Object> conditions) {
+        if (conditions == null || conditions.size() == 0) {
+            return Collections.emptyList();
+        }
+        List<Operator> result = new ArrayList<>();
+        for (Object o : conditions) {
+            if (o instanceof Operator) {
+                Operator op = (Operator) o;
+                if (op.equals(Operator.OR)) {
+                    result.add(op);
+                }
+            } else if (o instanceof List) {
+                result.addAll(getOROperators((List<Object>) o));
+            }
+        }
+        return result;
+    }
+
     // TODO recursive
     public static Condition find(List<Object> conditions, String conditionKey) {
         if (conditions == null) {
@@ -269,6 +288,20 @@ public class Conditions {
         }
         return conditions.stream().filter(c -> c instanceof Condition).map(c -> (Condition) c).filter(c -> c.getKey().equals(conditionKey)).findAny()
                 .orElse(null);
+    }
+
+    // TODO recursive
+    public static List<Object> addIfNotContains(List<Object> conditions, Condition condition) {
+        if (conditions == null) {
+            conditions = new ArrayList<>();
+            conditions.add(condition);
+        } else {
+            Condition c = find(conditions, condition.getKey());
+            if (c == null) {
+                conditions.add(condition);
+            }
+        }
+        return conditions;
     }
 
     // TODO recursive
@@ -283,6 +316,33 @@ public class Conditions {
 
         int i = conditions.indexOf(c);
         if (i > -1) {
+            int next = i + 1;
+            int nextIndex = -1;
+            if (conditions.size() > next) {
+                Object op = conditions.get(next);
+                if (op != null && op instanceof Operator) {
+                    nextIndex = i;
+                }
+            }
+            conditions.remove(i);
+            if (nextIndex > -1) {
+                conditions.remove(nextIndex);
+            }
+        }
+        return conditions;
+    }
+
+    @SuppressWarnings("unused")
+    private static List<Object> removeDeprecated(List<Object> conditions, Condition condition) {
+        if (conditions == null) {
+            return conditions;
+        }
+        Condition c = find(conditions, condition.getKey());
+        if (c == null) {
+            return conditions;
+        }
+        int i = conditions.indexOf(c);
+        if (i > -1) {
             List<Object> toRemove = new ArrayList<>();
             toRemove.add(c);
             int next = i + 1;
@@ -292,9 +352,9 @@ public class Conditions {
                     toRemove.add(op);
                 }
             }
+            // removeAll removes really all equals elements - e.g. all AND, or All duplicates
             conditions.removeAll(toRemove);
         }
         return conditions;
     }
-
 }

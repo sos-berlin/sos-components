@@ -1,25 +1,31 @@
 package com.sos.js7.converter.autosys.common.v12.job.attr.condition;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 
-public class Condition {
+public class Condition implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     public enum ConditionType {
-        DONE, FAILURE, NOTRUNNING, SUCCESS, TERMINATED, EXITCODE, GLOBAL_VARIABLE, SOS_UNKNOWN
+        DONE, FAILURE, NOTRUNNING, SUCCESS, TERMINATED, EXITCODE, VARIABLE, SOS_UNKNOWN
     }
 
     private enum MapKeys {
         NAME, LOOKBACK, EXTERNAL
     }
 
+    private final String originalValue;
     private final ConditionType type;
     private final String name;
     private String value;
     private final String lookBack;
     private final String externalInstance;
+
+    private String jobName;
 
     /** <br/>
      * v(app.varA) = "X"<br/>
@@ -30,6 +36,7 @@ public class Condition {
     public Condition(String val) throws Exception {
         try {
             String v = val.trim();
+            this.originalValue = v;
             int i = val.indexOf("(");
 
             // app.varA
@@ -39,42 +46,50 @@ public class Condition {
             resultMap = getLookBack(resultMap, innerVal, val);
             resultMap = getExternalInstance(resultMap, val);
 
-            this.type = getType(v.substring(0, i).toLowerCase(), val);
+            // this.type = getType(v.substring(0, i).toLowerCase(), val);
             this.name = resultMap.get(MapKeys.NAME);
             this.value = getValue(v);
             this.lookBack = resultMap.get(MapKeys.LOOKBACK);
             this.externalInstance = resultMap.get(MapKeys.EXTERNAL);
+            this.type = getType(v.substring(0, i).toLowerCase(), val);
         } catch (Throwable e) {
             throw new Exception(String.format("[%s]%s", val, e.toString()), e);
         }
     }
 
     private ConditionType getType(String t, String original) {
+        jobName = null;
+
         ConditionType type = ConditionType.SOS_UNKNOWN;
         switch (t) {
         case "d":
         case "done":
             type = ConditionType.DONE;
+            jobName = name;
             break;
         case "f":
         case "failure":
             type = ConditionType.FAILURE;
+            jobName = name;
             break;
         case "s":
         case "success":
             type = ConditionType.SUCCESS;
+            jobName = name;
             break;
         case "v":
         case "value":
-            type = ConditionType.GLOBAL_VARIABLE;
+            type = ConditionType.VARIABLE;
             break;
         case "n":
         case "notrunning":
             type = ConditionType.NOTRUNNING;
+            jobName = name;
             break;
         case "t":
         case "terminated":
             type = ConditionType.TERMINATED;
+            jobName = name;
             break;
         default:
             break;
@@ -100,6 +115,10 @@ public class Condition {
             map.put(MapKeys.EXTERNAL, arr[1].trim());
         }
         return map;
+    }
+
+    public String getOriginalValue() {
+        return originalValue;
     }
 
     private String getValue(String val) {
@@ -128,7 +147,8 @@ public class Condition {
     }
 
     public String getKey() {
-        StringBuilder sb = new StringBuilder(name);
+        StringBuilder sb = new StringBuilder(type.name());
+        sb.append("-").append(name);
         if (externalInstance != null) {
             sb.append("-").append(externalInstance);
         }
@@ -141,8 +161,21 @@ public class Condition {
         return sb.toString();
     }
 
+    public String getJobName() {
+        return jobName;
+    }
+
     @Override
     public String toString() {
+        StringBuilder sb = new StringBuilder(type.name());
+        sb.append(" ").append(getInfo());
+        if (jobName != null) {
+            // sb.append("(jobName=").append(jobName).append(")");
+        }
+        return sb.toString();
+    }
+
+    public String getInfo() {
         StringBuilder sb = new StringBuilder(name);
         if (externalInstance != null) {
             sb.append("^").append(externalInstance);
@@ -154,6 +187,19 @@ public class Condition {
             sb.append("=").append(value);
         }
         return sb.toString();
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other != null && other instanceof Condition) {
+            return getKey().equals(((Condition) other).getKey());
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return getKey().hashCode();
     }
 
 }

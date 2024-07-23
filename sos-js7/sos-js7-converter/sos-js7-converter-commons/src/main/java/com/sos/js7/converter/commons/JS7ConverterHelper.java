@@ -477,7 +477,14 @@ public class JS7ConverterHelper {
         if (path == null) {
             return null;
         }
-        return "/" + StringUtils.strip(path.trim().replace('\\', '/'), "/").concat("/");
+        return normalizePath(path).concat("/");
+    }
+
+    public static String normalizePath(String path) {
+        if (path == null) {
+            return null;
+        }
+        return "/" + StringUtils.strip(path.trim().replace('\\', '/'), "/");
     }
 
     public static String normalizedPathPart(String val) {

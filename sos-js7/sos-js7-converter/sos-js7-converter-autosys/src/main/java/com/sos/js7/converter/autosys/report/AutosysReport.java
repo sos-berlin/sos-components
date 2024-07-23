@@ -7,15 +7,22 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob.ConverterJobType;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonMachineJob;
 import com.sos.js7.converter.autosys.common.v12.job.JobBOX;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Condition;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Conditions.Operator;
+import com.sos.js7.converter.autosys.output.js7.Autosys2JS7Converter;
 import com.sos.js7.converter.commons.report.ConverterReport;
 
+// TODO to remove - use ConditionAnalyzer instead
 public class AutosysReport {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AutosysReport.class);
 
     public static void analyze(List<ACommonJob> standaloneJobs, List<ACommonJob> boxJobs) {
         ConditionAnalyzerResult ar = analyzeStandalone(standaloneJobs);
@@ -24,11 +31,13 @@ public class AutosysReport {
     }
 
     private static ConditionAnalyzerResult analyzeStandalone(List<ACommonJob> jobs) {
+
         // CONDITIONS
         List<ACommonJob> jobsWithConditions = jobs.stream().filter(j -> j.getCondition().getCondition().getValue() != null && j.getCondition()
                 .getCondition().getValue().size() > 0).collect(Collectors.toList());
 
         ConditionAnalyzerResult analyzerResult = new AutosysReport().new ConditionAnalyzerResult();
+
         if (jobsWithConditions.size() > 0) {
             for (ACommonJob j : jobsWithConditions) {
                 analyzeJobConditions(j, analyzerResult);
@@ -74,20 +83,20 @@ public class AutosysReport {
 
             // mapByBoxName
             int counterByBoxName = 0;
-            if (mapByBoxName.containsKey(boxJob.getInsertJob().getValue())) {
-                counterByBoxName = mapByBoxName.get(boxJob.getInsertJob().getValue());
+            if (mapByBoxName.containsKey(boxJob.getName())) {
+                counterByBoxName = mapByBoxName.get(boxJob.getName());
             }
             counterByBoxName++;
-            mapByBoxName.put(boxJob.getInsertJob().getValue(), counterByBoxName);
+            mapByBoxName.put(boxJob.getName(), counterByBoxName);
 
             // mapByChildAgents
             Set<String> set = boxJob.getJobs().stream().filter(e -> e instanceof ACommonMachineJob).map(e -> ((ACommonMachineJob) e).getMachine()
                     .getValue()).distinct().collect(Collectors.toSet());
-            mapByChildAgents.put(boxJob.getInsertJob().getValue(), set);
+            mapByChildAgents.put(boxJob.getName(), set);
 
             // mapByChildType
             List<String> l = boxJob.getJobs().stream().map(e -> e.getConverterJobType().name()).collect(Collectors.toList());
-            mapByChildType.put(boxJob.getInsertJob().getValue(), l);
+            mapByChildType.put(boxJob.getName(), l);
 
             // conditions
             List<ACommonJob> jobsWithConditions = boxJob.getJobs().stream().filter(j -> j.getCondition().getCondition().getValue() != null && j
@@ -117,7 +126,7 @@ public class AutosysReport {
                 }
             }
 
-            String name = String.format("BOX JOB=%s", boxJob.getInsertJob().getValue());
+            String name = String.format("BOX JOB=%s", boxJob.getName());
             String value = String.format("%s condition, Child jobs: size=%s, with condition=%s, with runtime=%s", (boxJobConditions == null
                     ? " Without" : "With"), size, jobsWithConditions.size(), childrenWithDateConditions.size());
             ConverterReport.INSTANCE.addAnalyzerRecord(name, value);
@@ -127,8 +136,8 @@ public class AutosysReport {
 
             counterChildrenWithDateConditions += childrenWithDateConditions.size();
             for (ACommonJob j : childrenWithDateConditions) {
-                ConverterReport.INSTANCE.addAnalyzerRecord("   " + j.getConverterJobType() + " " + j.getInsertJob().getValue(), String.format(
-                        "[runtime]%s", j.getRunTime().toString()));
+                ConverterReport.INSTANCE.addAnalyzerRecord("   " + j.getConverterJobType() + " " + j.getName(), String.format("[runtime]%s", j
+                        .getRunTime().toString()));
             }
 
             if (boxJobConditions != null) {
@@ -161,10 +170,11 @@ public class AutosysReport {
             ConverterReport.INSTANCE.addSummaryRecord("        Box/Agents", mapByChildAgents(mapByChildAgents));
         }
         if (mapByChildType.size() > 0) {
-            //ConverterReport.INSTANCE.addSummaryRecord("Job type/Box", mapByChildType(mapByChildType));
+            // ConverterReport.INSTANCE.addSummaryRecord("Job type/Box", mapByChildType(mapByChildType));
         }
         if (mapByChildSize.size() > 0) {
-            ConverterReport.INSTANCE.addSummaryRecord("        Box/Number of Jobs", "TOTAL Jobs=" + counterChildren + "(" + intIntmap2String(mapByChildSize) + ")");
+            ConverterReport.INSTANCE.addSummaryRecord("        Box/Number of Jobs", "TOTAL Jobs=" + counterChildren + "(" + intIntmap2String(
+                    mapByChildSize) + ")");
         }
         mapByBoxName.entrySet().forEach(e -> {
             if (e.getValue() > 1) {
@@ -223,21 +233,25 @@ public class AutosysReport {
     private static void analyzeJobConditions(ACommonJob j, ConditionAnalyzerResult analyzerResult) {
         List<Object> c = j.getCondition().getCondition().getValue();
         for (Object o : c) {
-            String name = j.getConverterJobType() + " " + j.getInsertJob().getValue();
+            String name = j.getConverterJobType() + " " + j.getName();
             if (o instanceof Condition) {
                 Condition cn = (Condition) o;
                 switch (cn.getType()) {
-                case GLOBAL_VARIABLE:
-                    analyzerResult.global++;
+                case VARIABLE:
+                    analyzerResult.variable++;
                     break;
                 case SUCCESS:
                     analyzerResult.success++;
                     break;
                 case FAILURE:
                     analyzerResult.failed++;
+                    ConverterReport.INSTANCE.addAnalyzerRecord("    " + name, String.format("[condition][TYPE=%s]%s", cn.getType(), j.getCondition()
+                            .getOriginalCondition()));
                     break;
                 case DONE:
                     analyzerResult.done++;
+                    ConverterReport.INSTANCE.addAnalyzerRecord("    " + name, String.format("[condition][TYPE=%s]%s", cn.getType(), j.getCondition()
+                            .getOriginalCondition()));
                     break;
                 case NOTRUNNING:
                     analyzerResult.notrunning++;
@@ -332,7 +346,7 @@ public class AutosysReport {
 
     private class ConditionAnalyzerResult {
 
-        private int global = 0;
+        private int variable = 0;
         private int success = 0;
         private int failed = 0;
         private int done = 0;
@@ -352,8 +366,8 @@ public class AutosysReport {
         @Override
         public String toString() {
             List<String> l = new ArrayList<>();
-            if (global > 0) {
-                l.add("GLOBAL VARIABLES=" + global);
+            if (variable > 0) {
+                l.add("VARIABLE=" + variable);
             }
             if (success > 0) {
                 l.add("SUCCESS=" + success);
@@ -394,7 +408,7 @@ public class AutosysReport {
 
         // TODO reflection
         private boolean hasValues() {
-            return global > 0 || success > 0 || failed > 0 || done > 0 || notrunning > 0 || terminated > 0 || exitcode > 0 || unknown > 0
+            return variable > 0 || success > 0 || failed > 0 || done > 0 || notrunning > 0 || terminated > 0 || exitcode > 0 || unknown > 0
                     || lookBack > 0 || external > 0 || orOperator > 0 || group > 0;
         }
     }

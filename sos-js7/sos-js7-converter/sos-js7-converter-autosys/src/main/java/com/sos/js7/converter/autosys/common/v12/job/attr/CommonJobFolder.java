@@ -4,6 +4,31 @@ import com.sos.commons.util.common.SOSArgument;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 import com.sos.js7.converter.commons.annotation.ArgumentSetter;
 
+/** Hierarchy:<br/>
+ * - application -> n sub applications -> group -> job<br />
+ * -- n sub applications <- defined in the job name separated by .<br/>
+ * - Examples:<br/>
+ * --1)<br/>
+ * --- insert_job: test.my_job<br/>
+ * --- application: test<br/>
+ * --- group: my_group<br/>
+ * ---- Hierarchy: test-> my_group -> my_job <br/>
+ * --2)<br/>
+ * --- insert_job: test.subtest.my_job<br/>
+ * --- application: test<br/>
+ * --- group: my_group<br/>
+ * ---- Hierarchy: test-> subtest-> my_group -> my_job <br/>
+ * --3)<br/>
+ * --- insert_job: test.subtest1.subtest2.my_job<br/>
+ * --- application: test<br/>
+ * --- group: my_group<br/>
+ * ---- Hierarchy: test-> subtest1-> subtest2-> my_group -> my_job <br/>
+ * --4)<br/>
+ * --- insert_job: test.subtest1.subtest2.my_job<br/>
+ * --- application: my_app.my_subapp<br/>
+ * --- group: my_group<br/>
+ * ---- Hierarchy: my_app->my_subapp->test-> subtest1-> subtest2-> my_group -> my_job <br/>
+ */
 public class CommonJobFolder extends AJobAttributes {
 
     private static final String ATTR_APPLICATION = "application";

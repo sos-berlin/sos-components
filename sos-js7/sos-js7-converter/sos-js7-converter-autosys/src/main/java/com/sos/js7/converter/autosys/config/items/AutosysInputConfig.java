@@ -9,7 +9,7 @@ public class AutosysInputConfig extends AConfigItem {
     private static final String CONFIG_KEY = "autosys.input";
 
     private boolean cleanup = true;
-    private boolean exportFolders = false;
+    private boolean splitConfiguration = false;
 
     private final AutosysDiagramConfig diagramConfig;
 
@@ -30,8 +30,8 @@ public class AutosysInputConfig extends AConfigItem {
         case "cleanup":
             withCleanup(Boolean.parseBoolean(val));
             break;
-        case "exportFolders":
-            withExportFolders(Boolean.parseBoolean(val));
+        case "splitConfiguration":
+            withSplitConfiguration(Boolean.parseBoolean(val));
             break;
         }
     }
@@ -46,8 +46,8 @@ public class AutosysInputConfig extends AConfigItem {
         return this;
     }
 
-    public AutosysInputConfig withExportFolders(boolean val) {
-        this.exportFolders = val;
+    public AutosysInputConfig withSplitConfiguration(boolean val) {
+        this.splitConfiguration = val;
         return this;
     }
 
@@ -55,8 +55,8 @@ public class AutosysInputConfig extends AConfigItem {
         return cleanup;
     }
 
-    public boolean getExportFolders() {
-        return exportFolders;
+    public boolean getSplitConfiguration() {
+        return splitConfiguration;
     }
 
     public AutosysDiagramConfig getDiagramConfig() {

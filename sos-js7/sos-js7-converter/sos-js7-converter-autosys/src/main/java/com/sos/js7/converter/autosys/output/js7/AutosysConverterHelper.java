@@ -19,13 +19,15 @@ public class AutosysConverterHelper {
     }
 
     public static Path getMainOutputPath(Path outputDirectory, ACommonJob j, boolean withFolderName, String prefix) {
-        Path p = outputDirectory;
-        String app = getApplication(j);
-        if (!SOSString.isEmpty(app)) {
-            p = p.resolve(app);
+        if (j == null) {
+            return outputDirectory;
         }
+        Path p = outputDirectory.resolve(j.getJobFullPathFromJILDefinition().getParent());
         String pr = SOSString.isEmpty(prefix) ? "" : prefix;
-        return withFolderName ? p.resolve(pr + j.getInsertJob().getValue()) : p;
+
+        // j.getJobBaseName returns name after lastIndex of .
+        // return withFolderName ? p.resolve(pr + j.getJobBaseName()) : p;
+        return withFolderName ? p.resolve(pr + j.getName()) : p;
     }
 
     public static String getApplication(ACommonJob j) {

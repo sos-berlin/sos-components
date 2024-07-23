@@ -128,9 +128,7 @@ public class CommonJobMonitoring extends AJobAttributes {
 
     @Override
     public String toString() {
-        return toString(svcdeskDesc,svcdeskImp,svcdeskPri,svcdeskSev,serviceDesk);
+        return toString(svcdeskDesc, svcdeskImp, svcdeskPri, svcdeskSev, serviceDesk);
     }
-    
-    
 
 }

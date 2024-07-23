@@ -1,6 +1,7 @@
 package com.sos.js7.converter.autosys.common.v12.job;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,6 +13,8 @@ import com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobFolder;
 import com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobMonitoring;
 import com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobNotification;
 import com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobRunTime;
+import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Condition;
+import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Conditions;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 import com.sos.js7.converter.commons.annotation.ArgumentInclude;
 import com.sos.js7.converter.commons.annotation.ArgumentSetter;
@@ -252,6 +255,9 @@ public abstract class ACommonJob {
      */
     private SOSArgument<Integer> termRunTime = new SOSArgument<>(ATTR_TERM_RUN_TIME, false);
 
+    // --------------------calculated properties
+    private Path jobFullPathFromJILDefinition;
+
     public ACommonJob(Path source, ConverterJobType type) {
         this.source = source;
         this.converterJobType = type;
@@ -309,17 +315,125 @@ public abstract class ACommonJob {
         return runTime;
     }
 
-    public SOSArgument<String> getInsertJob() {
+    public SOSArgument<String> getInsertJobX() {
         return insertJob;
     }
 
-    public String getFullName() {
-        StringBuilder sb = new StringBuilder();
-        // if (folder != null && !SOSString.isEmpty(folder.getApplication().getValue())) {
-        // sb.append(folder.getApplication().getValue()).append("/");
-        // }
-        sb.append(insertJob.getValue());
-        return sb.toString();
+    public boolean isNameEquals(String otherName) {
+        String name = getName();
+        if (name == null || otherName == null) {
+            return false;
+        }
+        return name.equals(otherName);
+    }
+
+    public boolean isNameEquals(Condition c) {
+        if (c == null) {
+            return false;
+        }
+        return isNameEquals(c.getJobName());
+    }
+
+    public boolean isNameEquals(ACommonJob j) {
+        if (j == null) {
+            return false;
+        }
+        return isNameEquals(j.getName());
+    }
+
+    public boolean isBoxNameEquals(String name) {
+        if (getBox() == null || getBox().getBoxName().getValue() == null) {
+            return false;
+        }
+        return getBox().getBoxName().getValue().equals(name);
+    }
+
+    public String getBaseName() {
+        String name = getName();
+        if (name == null) {
+            return null;
+        }
+        int i = name.lastIndexOf(".");
+        return i > -1 ? name.substring(i + 1) : name;
+    }
+
+    public String getName() {
+        if (insertJob == null || insertJob.getValue() == null) {
+            return null;
+        }
+        return insertJob.getValue();
+    }
+
+    public String getJobParentAsJILDefinition() {
+        String jobName = getName();
+        if (jobName == null) {
+            return null;
+        }
+        int i = jobName.lastIndexOf(".");
+        return i > -1 ? jobName.substring(0, i) : null;
+    }
+
+    // see com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobFolder
+    public Path getJobFullPathFromJILDefinition() {
+        if (jobFullPathFromJILDefinition != null) {
+            return jobFullPathFromJILDefinition;
+        }
+
+        Path path = Paths.get("");
+        if (folder != null) {
+            String jobParent = getJobParentAsJILDefinition();
+            if (!SOSString.isEmpty(folder.getApplication().getValue())) {
+                String[] parts = folder.getApplication().getValue().split("\\.");
+                for (int i = 0; i < parts.length; i++) {
+                    String part = parts[i];
+                    path = path.resolve(part);
+                    if (jobParent != null) {
+                        if (jobParent.contains(".")) {
+                            if (jobParent.startsWith(part + ".")) {
+                                jobParent = jobParent.substring(0, (part + ".").length());
+                                if (jobParent.length() == 0) {
+                                    jobParent = null;
+                                }
+                            }
+                        } else {
+                            if (jobParent.equals(part)) {
+                                jobParent = null;
+                            }
+                        }
+
+                    }
+                }
+            }
+
+            List<String> addedParts = new ArrayList<>();
+            if (!SOSString.isEmpty(jobParent)) {
+                String[] parts = jobParent.split("\\.");
+                for (String part : parts) {
+                    path = path.resolve(part);
+                    addedParts.add(part);
+                }
+            }
+
+            if (!SOSString.isEmpty(folder.getGroup().getValue())) {
+                String[] parts = folder.getGroup().getValue().split("\\.");
+                for (int i = 0; i < parts.length; i++) {
+                    String part = parts[i];
+                    if (addedParts.size() > i && addedParts.get(i).equals(part)) {
+                        continue;
+                    } else {
+                        path = path.resolve(part);
+                    }
+                }
+            }
+            path = path.resolve(getBaseName());
+        } else {
+            String[] parts = insertJob.getValue().split("\\.");
+            for (String part : parts) {
+                path = path.resolve(part);
+            }
+        }
+        jobFullPathFromJILDefinition = path;
+        return jobFullPathFromJILDefinition;
     }
 
     @ArgumentSetter(name = ATTR_INSERT_JOB)
@@ -456,4 +570,23 @@ public abstract class ACommonJob {
     public boolean hasCondition() {
         return condition != null && !SOSString.isEmpty(condition.getOriginalCondition());
     }
+
+    public List<Condition> conditionsAsList() {
+        if (condition == null) {
+            return null;
+        }
+        return Conditions.getConditions(condition.getCondition().getValue());
+    }
+
+    public boolean hasORConditions() {
+        if (!hasCondition()) {
+            return false;
+        }
+        return Conditions.getOROperators(condition.getCondition().getValue()).size() > 0;
+    }
+
+    public boolean isStandalone() {
+        return !ConverterJobType.BOX.equals(converterJobType) && (getBox() == null || getBox().getBoxName().getValue() == null);
+    }
+
 }

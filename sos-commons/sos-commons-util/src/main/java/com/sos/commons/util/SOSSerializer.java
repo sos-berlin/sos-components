@@ -72,4 +72,13 @@ public class SOSSerializer<T extends Serializable> {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    public T clone(T o) throws Exception {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream out = new ObjectOutputStream(bos); ByteArrayInputStream bis =
+                new ByteArrayInputStream(bos.toByteArray()); ObjectInputStream in = new ObjectInputStream(bis)) {
+            out.writeObject(o);
+            return (T) in.readObject();
+        }
+    }
+
 }

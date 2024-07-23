@@ -175,6 +175,7 @@ public class SOSXML {
     }
 
     public static String nodeToString(Node node, boolean omitXmlDeclaration, int indentAmount) throws Exception {
+        removeWhitespaceNodes(node);
         StringWriter sw = new StringWriter();
         Transformer t = TransformerFactory.newInstance().newTransformer();
         t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, omitXmlDeclaration ? "yes" : "no");
@@ -186,6 +187,19 @@ public class SOSXML {
         }
         t.transform(new DOMSource(node), new StreamResult(sw));
         return sw.toString().trim();
+    }
+
+    public static void removeWhitespaceNodes(Node node) {
+        NodeList children = node.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            Node child = children.item(i);
+            if (child.getNodeType() == Node.TEXT_NODE && child.getNodeValue().trim().isEmpty()) {
+                node.removeChild(child);
+                i--;
+            } else if (child.hasChildNodes()) {
+                removeWhitespaceNodes(child);
+            }
+        }
     }
 
     public class SOSXMLXPath {

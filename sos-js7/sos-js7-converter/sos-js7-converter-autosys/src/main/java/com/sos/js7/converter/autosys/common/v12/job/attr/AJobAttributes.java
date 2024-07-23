@@ -6,8 +6,10 @@ import java.util.List;
 import com.sos.commons.util.common.SOSArgument;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 
+//not serializable because of SOSArgument
 public abstract class AJobAttributes {
 
+  
     private static final String LIST_VALUE_DELIMITER = ",";
 
     public static List<String> stringListValue(String val) {

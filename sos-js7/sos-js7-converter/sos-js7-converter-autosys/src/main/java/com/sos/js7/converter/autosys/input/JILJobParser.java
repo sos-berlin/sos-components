@@ -2,9 +2,11 @@ package com.sos.js7.converter.autosys.input;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -16,6 +18,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
 import com.sos.commons.xml.SOSXML.SOSXMLXPath;
@@ -24,6 +27,7 @@ import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob.ConverterJobType;
 import com.sos.js7.converter.autosys.common.v12.job.JobBOX;
 import com.sos.js7.converter.autosys.config.AutosysConverterConfig;
+import com.sos.js7.converter.autosys.input.DirectoryParser.DirectoryParserResult;
 import com.sos.js7.converter.autosys.report.AutosysReport;
 import com.sos.js7.converter.commons.report.ParserReport;
 
@@ -31,24 +35,33 @@ public class JILJobParser extends AFileParser {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JILJobParser.class);
 
+    private static final String NEW_LINE = "\r\n";
+
     public JILJobParser(AutosysConverterConfig config, Path reportDir) {
         super(FileType.JIL, config, reportDir);
     }
 
     @Override
-    public List<ACommonJob> parse(Path file) {
+    public FileParserResult parse(DirectoryParserResult r, Path file, boolean createBoxJobsCopy) {
+
+        XMLWriter xmlWriter = new XMLWriter(file);
+        xmlWriter.write("<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>");
+        xmlWriter.write("<ArrayOfJIL>");
+
         List<ACommonJob> jobs = new ArrayList<>();
+        List<JobBOX> boxJobsCopy = new ArrayList<>();
         try {
+            BoxJobsHandler boxHandler = new BoxJobsHandler();
+            // copy for diagramm because of remove conditions
+            BoxJobsHandler boxHandlerCopy = new BoxJobsHandler();
 
-            Map<String, JobBOX> boxJobs = new HashMap<>();
-            Map<String, List<ACommonJob>> boxChildJobs = new HashMap<>();
-            Map<String, Integer> jobBoxDuplicates = new HashMap<>();
-            Map<String, Integer> jobBoxChildDuplicates = new HashMap<>();
-            int counterBoxJobs = 0;
+            int counterTotalJobs = 0;
+            int counterMainBoxJobs = 0;
+            int counterChildrenBoxJobs = 0;
 
+            LinkedHashMap<String, String> m = null;
             try (BufferedReader br = new BufferedReader(new FileReader(file.toFile()))) {
                 String line;
-                Properties p = null;
                 while ((line = br.readLine()) != null) {
                     if (SOSString.isEmpty(line)) {
                         continue;
@@ -59,22 +72,22 @@ public class JILJobParser extends AFileParser {
                     }
 
                     if (l.startsWith("insert_job")) {
-                        if (p != null) {
-                            if (p.size() > 0) {
-                                ACommonJob job = getJobParser().parse(file, p);
-                                if (ConverterJobType.BOX.equals(job.getConverterJobType())) {
-                                    String jobName = job.getInsertJob().getValue();
-                                    if (boxJobs.containsKey(jobName)) {
-                                        Integer count = jobBoxDuplicates.get(jobName);
-                                        if (count == null) {
-                                            count = 0;
-                                        }
-                                        count++;
-                                        jobBoxDuplicates.put(jobName, count);
-                                    }
-                                    counterBoxJobs++;
+                        if (m != null) {
+                            if (m.size() > 0) {
+                                counterTotalJobs++;
 
-                                    boxJobs.put(jobName, (JobBOX) job);
+                                xmlWriter.write(m);
+
+                                ACommonJob job = getJobParser().parse(file, toProperties(m));
+                                ACommonJob jobCopy = createBoxJobsCopy ? getJobParser().parse(file, toProperties(m)) : null;
+                                if (ConverterJobType.BOX.equals(job.getConverterJobType())) {
+                                    boxHandler.addMain(job);
+                                    counterMainBoxJobs++;
+
+                                    if (jobCopy != null) {
+                                        boxHandlerCopy.addMain(jobCopy);
+                                    }
+
                                     continue;
                                 }
 
@@ -82,75 +95,77 @@ public class JILJobParser extends AFileParser {
                                 if (boxName == null) {
                                     jobs.add(job);
                                 } else {
-                                    List<ACommonJob> boxChildren = boxChildJobs.get(boxName);
-                                    if (boxChildren == null) {
-                                        boxChildren = new ArrayList<>();
-                                    } else {
-                                        List<ACommonJob> lj = boxChildren.stream().filter(e -> e.getInsertJob().getValue().equals(job.getInsertJob()
-                                                .getValue())).collect(Collectors.toList());
-                                        if (lj != null && lj.size() > 0) {
-                                            jobBoxChildDuplicates.put(job.getInsertJob().getValue(), lj.size());
-                                        }
-                                    }
+                                    boxHandler.addChild(boxName, job);
 
-                                    boxChildren.add(job);
-                                    boxChildJobs.put(boxName, boxChildren);
+                                    // BoxJob copy for diagramm
+                                    if (jobCopy != null) {
+                                        boxHandlerCopy.addChild(boxName, jobCopy);
+                                    }
                                 }
                             }
                         }
-                        p = createProperties(l);
+                        m = createProperties(l);
                     } else {
-                        toProperty(p, l);
+                        toProperty(m, l);
                     }
                 }
             }
 
-            ParserReport.INSTANCE.addSummaryRecord("TOTAL STANDALONE JOBS", jobs.size());
-            ParserReport.INSTANCE.addSummaryRecord("TOTAL BOX JOBS FOUND", counterBoxJobs);
-            if (jobBoxDuplicates.size() > 0) {
-                ParserReport.INSTANCE.addSummaryRecord(" BOX JOBS DUPLICATES", "TOTAL=" + jobBoxDuplicates.size() + "(" + AutosysReport
-                        .strIntMap2String(jobBoxDuplicates) + ")");
+            if (m != null && m.size() > 0) {
+                xmlWriter.write(m);
             }
-            if (jobBoxChildDuplicates.size() > 0) {
-                ParserReport.INSTANCE.addSummaryRecord(" BOX CHILD JOBS DUPLICATES", "TOTAL=" + jobBoxChildDuplicates.size() + "(" + AutosysReport
-                        .strIntMap2String(jobBoxChildDuplicates) + ")");
+
+            ParserReport.INSTANCE.addSummaryRecord("TOTAL JOBS", counterTotalJobs);
+            ParserReport.INSTANCE.addSummaryRecord("TOTAL STANDALONE JOBS", jobs.size());
+            ParserReport.INSTANCE.addSummaryRecord("TOTAL BOX (excluding child jobs)", counterMainBoxJobs);
+            if (boxHandler.getMainJobsDuplicates().size() > 0) {
+                ParserReport.INSTANCE.addSummaryRecord(" BOX JOBS DUPLICATES", "TOTAL=" + boxHandler.getMainJobsDuplicates().size() + "("
+                        + AutosysReport.strIntMap2String(boxHandler.getMainJobsDuplicates()) + ")");
+            }
+            if (boxHandler.getChildrenJobsDuplicates().size() > 0) {
+                ParserReport.INSTANCE.addSummaryRecord(" BOX CHILD JOBS DUPLICATES", "TOTAL=" + boxHandler.getChildrenJobsDuplicates().size() + "("
+                        + AutosysReport.strIntMap2String(boxHandler.getChildrenJobsDuplicates()) + ")");
             }
 
             List<String> boxJobsWithoutChildren = new ArrayList<>();
-            for (Map.Entry<String, JobBOX> e : boxJobs.entrySet()) {
-                JobBOX bj = e.getValue();
-
-                List<ACommonJob> children = boxChildJobs.get(e.getKey());
-                if (children == null) {
+            for (Map.Entry<String, JobBOX> e : boxHandler.getMainJobs().entrySet()) {
+                jobs.add(e.getValue());
+                int size = e.getValue().getJobs().size();
+                counterChildrenBoxJobs += size;
+                if (size == 0) {
                     boxJobsWithoutChildren.add(e.getKey());
-                } else {
-                    bj.setJobs(children);
-                    jobs.add(bj);
-
-                    boxChildJobs.remove(e.getKey());
                 }
+
+                if (createBoxJobsCopy) {
+                    JobBOX bjc = boxHandlerCopy.getMainJobs().get(e.getKey());
+                    boxJobsCopy.add(bjc);
+                }
+
             }
-            if (boxJobs.size() != counterBoxJobs) {
-                ParserReport.INSTANCE.addSummaryRecord("TOTAL BOX JOBS TO CONVERT", boxJobs.size());
+            if (boxHandler.getMainJobs().size() != counterMainBoxJobs) {
+                ParserReport.INSTANCE.addSummaryRecord("TOTAL BOX JOBS TO CONVERT", boxHandler.getMainJobs().size());
             }
             if (boxJobsWithoutChildren.size() > 0) {
                 ParserReport.INSTANCE.addSummaryRecord("TOTAL BOX JOBS WITHOUT CHILD JOBS", boxJobsWithoutChildren.size() + "(" + String.join(",",
                         boxJobsWithoutChildren) + ")");
-                ParserReport.INSTANCE.addSummaryRecord("TOTAL BOX JOBS TO CONVERT", boxJobs.size() - boxJobsWithoutChildren.size());
+                ParserReport.INSTANCE.addSummaryRecord("TOTAL BOX JOBS TO CONVERT", boxHandler.getMainJobs().size() - boxJobsWithoutChildren.size());
             }
-            if (boxChildJobs.size() > 0) {
-                ParserReport.INSTANCE.addSummaryRecord("TOTAL USED BOX_NAME WITHOUT MAIN BOX", boxChildJobs.size());
+            if (counterChildrenBoxJobs > 0) {
+                ParserReport.INSTANCE.addSummaryRecord("TOTAL USED BOX_NAME WITHOUT MAIN BOX", counterChildrenBoxJobs);
             }
 
         } catch (Throwable e) {
             LOGGER.error(String.format("[%s]%s", file, e.toString()), e);
             ParserReport.INSTANCE.addErrorRecord(file, null, e);
+        } finally {
+            xmlWriter.write("</ArrayOfJIL>");
         }
-        return jobs;
+
+        return new FileParserResult(jobs, boxJobsCopy);
     }
 
-    private Properties createProperties(String line) throws Exception {
-        Properties p = new Properties();
+    private LinkedHashMap<String, String> createProperties(String line) throws Exception {
+        LinkedHashMap<String, String> p = new LinkedHashMap<>();
 
         // insert_job: PRD_SysAlarm job_type: CMD
         String[] arr = line.split("\\:");
@@ -164,7 +179,7 @@ public class JILJobParser extends AFileParser {
         return p;
     }
 
-    private void toProperty(Properties p, String line) throws Exception {
+    private void toProperty(LinkedHashMap<String, String> p, String line) throws Exception {
         if (p != null) {
             // not split(:) because the value can have : (if a path value)
             int pos = line.indexOf(":");
@@ -174,6 +189,17 @@ public class JILJobParser extends AFileParser {
                 throw new Exception("[not parsable][line][: pos=" + pos + "]" + line);
             }
         }
+    }
+
+    private Properties toProperties(LinkedHashMap<String, String> m) throws Exception {
+        if (m == null) {
+            return null;
+        }
+        Properties p = new Properties();
+        m.entrySet().forEach(e -> {
+            p.put(e.getKey(), e.getValue());
+        });
+        return p;
     }
 
     // @Override
@@ -196,7 +222,7 @@ public class JILJobParser extends AFileParser {
                     if (p.size() > 0) {
                         ACommonJob job = getJobParser().parse(file, p);
                         if (ConverterJobType.BOX.equals(job.getConverterJobType())) {
-                            String jobName = job.getInsertJob().getValue();
+                            String jobName = job.getName();
                             if (boxJobs.containsKey(jobName)) {
                                 Integer count = jobBoxDuplicates.get(jobName);
                                 if (count == null) {
@@ -219,10 +245,9 @@ public class JILJobParser extends AFileParser {
                             if (boxChildren == null) {
                                 boxChildren = new ArrayList<>();
                             } else {
-                                List<ACommonJob> l = boxChildren.stream().filter(e -> e.getInsertJob().getValue().equals(job.getInsertJob()
-                                        .getValue())).collect(Collectors.toList());
+                                List<ACommonJob> l = boxChildren.stream().filter(e -> e.isNameEquals(job)).collect(Collectors.toList());
                                 if (l != null && l.size() > 0) {
-                                    jobBoxChildDuplicates.put(job.getInsertJob().getValue(), l.size());
+                                    jobBoxChildDuplicates.put(job.getName(), l.size());
                                 }
                             }
 
@@ -284,6 +309,42 @@ public class JILJobParser extends AFileParser {
             p.put(n.getNodeName(), SOSXML.getTrimmedValue(n));
         }
         return p;
+    }
+
+    private class XMLWriter {
+
+        private final Path xmlFile;
+
+        private XMLWriter(Path jilFile) {
+            Path parent = jilFile.getParent().resolve("xml");
+            this.xmlFile = parent.resolve(jilFile.getFileName() + ".xml");
+            try {
+                SOSPath.deleteIfExists(parent);
+                Files.createDirectory(parent);
+            } catch (Exception e) {
+                LOGGER.error("[SOSPath.deleteIfExists][" + parent + "]" + e.toString(), e);
+            }
+            LOGGER.info("[xmlFile]" + xmlFile);
+        }
+
+        private void write(String content) {
+            try {
+                SOSPath.append(xmlFile, content, NEW_LINE);
+            } catch (Throwable e) {
+                LOGGER.error("[write][" + xmlFile + "][" + content + "]" + e.toString(), e);
+            }
+        }
+
+        private void write(LinkedHashMap<String, String> properties) {
+            write("<JIL>");
+
+            properties.entrySet().forEach(e -> {
+                String key = e.getKey();
+                write("    <" + key + "><![CDATA[" + e.getValue() + "]]></" + key + ">");
+            });
+
+            write("</JIL>");
+        }
     }
 
 }

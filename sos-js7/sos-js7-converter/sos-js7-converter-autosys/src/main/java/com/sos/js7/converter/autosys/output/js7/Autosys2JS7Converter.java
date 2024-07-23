@@ -63,6 +63,7 @@ import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Condition;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Condition.ConditionType;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Conditions;
 import com.sos.js7.converter.autosys.config.AutosysConverterConfig;
+import com.sos.js7.converter.autosys.config.items.AutosysDiagramConfig;
 import com.sos.js7.converter.autosys.input.AFileParser;
 import com.sos.js7.converter.autosys.input.DirectoryParser;
 import com.sos.js7.converter.autosys.input.DirectoryParser.DirectoryParserResult;
@@ -77,7 +78,6 @@ import com.sos.js7.converter.commons.agent.JS7AgentConverter.JS7AgentConvertType
 import com.sos.js7.converter.commons.agent.JS7AgentHelper;
 import com.sos.js7.converter.commons.config.JS7ConverterConfig;
 import com.sos.js7.converter.commons.config.JS7ConverterConfig.Platform;
-import com.sos.js7.converter.commons.config.items.DiagramConfig;
 import com.sos.js7.converter.commons.config.items.SubFolderConfig;
 import com.sos.js7.converter.commons.config.json.JS7Agent;
 import com.sos.js7.converter.commons.output.OutputWriter;
@@ -120,7 +120,8 @@ public class Autosys2JS7Converter {
 
         // 2 - Parse Autosys files
         LOGGER.info(String.format("[%s][JIL][parse][start]...", method));
-        DirectoryParserResult pr = DirectoryParser.parse(CONFIG.getParserConfig(), parser, input);
+        DirectoryParserResult pr = DirectoryParser.parse(CONFIG.getParserConfig(), parser, input, CONFIG.getAutosys().getInputConfig()
+                .getDiagramConfig().getGenerate());
         LOGGER.info(String.format("[%s][JIL][parse][end]%s", method, SOSDate.getDuration(appStart, Instant.now())));
         // 2.1 - Parser Reports
         ConverterReportWriter.writeParserReport("JIL", reportDir.resolve("parser_summary.csv"), reportDir.resolve("parser_errors.csv"), reportDir
@@ -134,6 +135,8 @@ public class Autosys2JS7Converter {
         JS7ConverterResult result = cr.getResult();
         LOGGER.info(String.format("[%s][JS7][convert][end]%s", method, SOSDate.getDuration(start, Instant.now())));
         // 3.1 - Converter Reports
+        AutosysReport.analyze(cr.getStandaloneJobs(), cr.getBoxJobs());
+
         ConverterReportWriter.writeConverterReport(reportDir.resolve("converter_errors.csv"), reportDir.resolve("converter_warnings.csv"), reportDir
                 .resolve("converter_analyzer.csv"));
 
@@ -145,7 +148,6 @@ public class Autosys2JS7Converter {
             OutputWriter.write(outputDir, result.getWorkflows());
             ConverterReport.INSTANCE.addSummaryRecord("Workflows", result.getWorkflows().getItems().size());
         }
-        AutosysReport.analyze(cr.getStandaloneJobs(), cr.getBoxJobs());
 
         if (CONFIG.getGenerateConfig().getAgents()) {
             LOGGER.info(String.format("[%s][JS7][write][Agents]...", method));
@@ -208,11 +210,14 @@ public class Autosys2JS7Converter {
     private static ConverterResult convert(Path reportDir, DirectoryParserResult pr) {
         String method = "convert";
 
-        DiagramConfig diagramConfig = CONFIG.getAutosys().getInputConfig().getDiagramConfig();
+        AutosysDiagramConfig diagramConfig = CONFIG.getAutosys().getInputConfig().getDiagramConfig();
 
         AutosysAnalyzer a = new AutosysAnalyzer();
-        a.analyze(pr, diagramConfig, reportDir, false);
-
+        try {
+            a.analyzeAndCreateDiagramm(pr, diagramConfig, reportDir, false);
+        } catch (Throwable e) {
+            LOGGER.error("[analyzeAndCreateDiagramm]" + e.toString(), e);
+        }
         Autosys2JS7Converter c = new Autosys2JS7Converter();
         JS7ConverterResult result = new JS7ConverterResult();
         result.getApplications().addAll(pr.getJobs().stream().map(e -> e.getFolder().getApplication().getValue()).filter(Objects::nonNull).distinct()
@@ -241,10 +246,9 @@ public class Autosys2JS7Converter {
                 boxJobs.addAll(value);
                 break;
             default:
-                LOGGER.info(String.format("[%s][%s jobs=%]not implemented yet", method, key, size));
+                LOGGER.info(String.format("[%s][%s jobs=%s]not implemented yet", method, key, size));
                 for (ACommonJob j : value) {
-                    ConverterReport.INSTANCE.addAnalyzerRecord(j.getSource(), j.getInsertJob().getValue(), j.getJobType().getValue()
-                            + ":not implemented yet");
+                    ConverterReport.INSTANCE.addAnalyzerRecord(j.getSource(), j.getName(), j.getJobType().getValue() + ":not implemented yet");
                 }
                 break;
             }
@@ -309,7 +313,7 @@ public class Autosys2JS7Converter {
             }
             if (eo == null) {
                 LOGGER.error(String.format("[%s][%s]workflow not found", method, jobName));
-                ConverterReport.INSTANCE.addErrorRecord("[postProcessing][postNotice][success][workflow not found]" + jobName);
+                // ConverterReport.INSTANCE.addErrorRecord("[postProcessing][postNotice][success][workflow not found]" + jobName);
             } else {
                 Workflow w = (Workflow) eo.getObject();
                 w.getInstructions().add(new PostNotices(Collections.singletonList(jobName + "-success")));
@@ -414,8 +418,7 @@ public class Autosys2JS7Converter {
 
         // WORKFLOW
         WorkflowResult wr = new WorkflowResult();
-        wr.setName(normalizeName(result, jilJob, jilJob.getInsertJob().getValue()));
-
+        wr.setName(normalizeName(result, jilJob, jilJob.getName()));
         Workflow w = new Workflow();
         w.setTitle(jilJob.getDescription().getValue());
         w.setTimeZone(jilJob.getRunTime().getTimezone().getValue() == null ? CONFIG.getWorkflowConfig().getDefaultTimeZone() : jilJob.getRunTime()
@@ -423,7 +426,7 @@ public class Autosys2JS7Converter {
 
         Jobs jobs = new Jobs();
         for (ACommonJob j : jilJob.getJobs()) {
-            String jn = normalizeName(result, j, j.getInsertJob().getValue());
+            String jn = normalizeName(result, j, j.getName());
             if (j instanceof JobCMD) {
                 jobs.setAdditionalProperty(jn, getJob(result, (JobCMD) j));
             } else {
@@ -440,23 +443,23 @@ public class Autosys2JS7Converter {
 
         if (size == 1) {
             ACommonJob jJob = jilJob.getJobs().get(0);
-            in.add(getNamedJobInstruction(normalizeName(result, jJob, jJob.getInsertJob().getValue())));
+            in.add(getNamedJobInstruction(normalizeName(result, jJob, jJob.getName())));
         } else {
-            List<ACommonJob> children = removeBoxJobConditionsFromChildren(jilJob);
+            List<ACommonJob> children = removeBoxJobMainConditionsFromChildren(jilJob);
             List<ACommonJob> childrenCopy = new ArrayList<>(children);
             List<ACommonJob> firstFork = getFirstForkChildren(jilJob, childrenCopy);
             List<ACommonJob> added = new ArrayList<>();
             // childrenCopy after getFirstForkChildren is without firstFork jobs and contains job dependent of the firstFork jobs
             if (firstFork.size() < 2) {
                 ACommonJob child = firstFork.get(0);
-                String cn = normalizeName(result, child, child.getInsertJob().getValue());
+                String cn = normalizeName(result, child, child.getName());
                 in.add(getNamedJobInstruction(cn));
                 added.add(child);
 
                 while (child != null) {
                     List<ACommonJob> js = findBoxJobChildSuccessor(jilJob, child, childrenCopy, added);
                     if (js.size() == 1) {
-                        cn = normalizeName(result, js.get(0), js.get(0).getInsertJob().getValue());
+                        cn = normalizeName(result, js.get(0), js.get(0).getName());
                         in.add(getNamedJobInstruction(cn));
 
                         child = js.get(0);
@@ -476,7 +479,7 @@ public class Autosys2JS7Converter {
             // TODO
             if (childrenCopy.size() > 0) {
                 ACommonJob child = childrenCopy.get(0);
-                String cn = normalizeName(result, child, child.getInsertJob().getValue());
+                String cn = normalizeName(result, child, child.getName());
                 in.add(getNamedJobInstruction(cn));
                 added.add(child);
                 childrenCopy.remove(child);
@@ -484,7 +487,7 @@ public class Autosys2JS7Converter {
                 while (child != null) {
                     List<ACommonJob> js = findBoxJobChildSuccessor(jilJob, child, childrenCopy, added);
                     if (js.size() == 1) {
-                        cn = normalizeName(result, js.get(0), js.get(0).getInsertJob().getValue());
+                        cn = normalizeName(result, js.get(0), js.get(0).getName());
                         in.add(getNamedJobInstruction(cn));
 
                         child = js.get(0);
@@ -545,7 +548,7 @@ public class Autosys2JS7Converter {
 
                 Path p = Paths.get(j.getWatchFile().getValue());
 
-                String name = JS7ConverterHelper.getJS7ObjectName(j.getInsertJob().getValue());
+                String name = JS7ConverterHelper.getJS7ObjectName(j.getName());
                 FileOrderSource fos = new FileOrderSource();
                 fos.setWorkflowName(wr.getName());
                 fos.setAgentName(js7Agent.getJS7AgentName());
@@ -570,14 +573,14 @@ public class Autosys2JS7Converter {
         added.addAll(children);
         for (ACommonJob child : children) {
             List<Instruction> bwIn = new ArrayList<>();
-            String cn = normalizeName(result, child, child.getInsertJob().getValue());
+            String cn = normalizeName(result, child, child.getName());
             bwIn.add(getNamedJobInstruction(cn));
 
             ACommonJob child2 = child;
             while (child2 != null) {
                 List<ACommonJob> js = findBoxJobChildSuccessor(jilJob, child2, childrenCopy, added);
                 if (js.size() == 1) {
-                    cn = normalizeName(result, js.get(0), js.get(0).getInsertJob().getValue());
+                    cn = normalizeName(result, js.get(0), js.get(0).getName());
                     bwIn.add(getNamedJobInstruction(cn));
 
                     child2 = js.get(0);
@@ -615,9 +618,9 @@ public class Autosys2JS7Converter {
         LOGGER.info("    added=" + added);
         for (ACommonJob j : children) {
             List<Condition> jConditions = getOnlyBoxJobsConditions(boxJob, j);
-            LOGGER.info("[findBoxJobChildSuccessor][child " + j.getInsertJob().getValue() + "]child conditions=" + jConditions + "=" + Conditions
-                    .getConditions(j.getCondition().getCondition().getValue()));
-            boolean found = jConditions.stream().filter(c -> c.getName().equals(currentChild.getInsertJob().getValue())).count() > 0;
+            LOGGER.info("[findBoxJobChildSuccessor][child " + j.getName() + "]child conditions=" + jConditions + "=" + Conditions.getConditions(j
+                    .getCondition().getCondition().getValue()));
+            boolean found = jConditions.stream().filter(c -> currentChild.isNameEquals(c)).count() > 0;
             if (found) {
                 if (jConditions.size() == 1) {// only parent job
                     // TODO remove only box jobs conditions
@@ -625,11 +628,9 @@ public class Autosys2JS7Converter {
                     result.add(j);
                 } else {
 
-                    long count = jConditions.stream().filter(c -> children.stream().filter(jj -> jj.getInsertJob().getValue().equals(c.getName()))
-                            .count() > 0).count();
+                    long count = jConditions.stream().filter(c -> children.stream().filter(jj -> jj.isNameEquals(c)).count() > 0).count();
                     if (count == 0) {
-                        count = jConditions.stream().filter(c -> added.stream().filter(jj -> jj.getInsertJob().getValue().equals(c.getName()))
-                                .count() > 0).count();
+                        count = jConditions.stream().filter(c -> added.stream().filter(jj -> jj.isNameEquals(c)).count() > 0).count();
                         if (count == 0) {
                             // TODO remove only box jobs conditions
                             j.getCondition().getCondition().getValue().clear();
@@ -649,15 +650,15 @@ public class Autosys2JS7Converter {
         if (currentChild == null) {
             return new ArrayList<>();
         }
-        List<ConditionType> excludedTypes = Arrays.asList(ConditionType.GLOBAL_VARIABLE, ConditionType.NOTRUNNING, ConditionType.TERMINATED,
+        List<ConditionType> excludedTypes = Arrays.asList(ConditionType.VARIABLE, ConditionType.NOTRUNNING, ConditionType.TERMINATED,
                 ConditionType.EXITCODE);
         List<Condition> conditions = Conditions.getConditions(currentChild.getCondition().getCondition().getValue());
         return conditions.stream().filter(c -> !excludedTypes.contains(c.getType())).filter(x -> {
-            return boxJob.getJobs().stream().filter(cj -> cj.getInsertJob().getValue().equals(x.getName())).count() > 0;
+            return boxJob.getJobs().stream().filter(cj -> cj.isNameEquals(x)).count() > 0;
         }).collect(Collectors.toList());
     }
 
-    private static List<ACommonJob> removeBoxJobConditionsFromChildren(JobBOX jilJob) {
+    public static List<ACommonJob> removeBoxJobMainConditionsFromChildren(JobBOX jilJob) {
         List<Object> mainConditions = jilJob.getCondition().getCondition().getValue();
         if (mainConditions != null && mainConditions.size() > 0) {
             List<ACommonJob> l = new ArrayList<ACommonJob>();
@@ -692,7 +693,7 @@ public class Autosys2JS7Converter {
             List<Condition> conditions = Conditions.getConditions(j.getCondition().getCondition().getValue());
             long count = 0;
             for (Condition c : conditions) {
-                if (c.getType().equals(ConditionType.GLOBAL_VARIABLE)) {
+                if (c.getType().equals(ConditionType.VARIABLE)) {
                     continue;
                 }
                 // TODO - remove if supported
@@ -700,10 +701,10 @@ public class Autosys2JS7Converter {
                         ConditionType.EXITCODE)) {
                     continue;
                 }
-                count += boxJob.getJobs().stream().filter(cj -> cj.getInsertJob().getValue().equals(c.getName())).count();
+                count += boxJob.getJobs().stream().filter(cj -> cj.isNameEquals(c)).count();
             }
             if (count == 0) {
-                LOGGER.info("getBoxJobChildrenConditions ADD=" + j.getInsertJob().getValue());
+                LOGGER.info("getBoxJobChildrenConditions ADD=" + j.getName());
                 withNotThisBoxConditions.add(j);
             }
         }
@@ -724,7 +725,7 @@ public class Autosys2JS7Converter {
             List<Condition> conditions = Conditions.getConditions(j.getCondition().getCondition().getValue());
             long count = 0;
             for (Condition c : conditions) {
-                if (c.getType().equals(ConditionType.GLOBAL_VARIABLE)) {
+                if (c.getType().equals(ConditionType.VARIABLE)) {
                     continue;
                 }
                 // TODO - remove if supported
@@ -732,10 +733,10 @@ public class Autosys2JS7Converter {
                         ConditionType.EXITCODE)) {
                     continue;
                 }
-                count += boxJob.getJobs().stream().filter(cj -> cj.getInsertJob().getValue().equals(c.getName())).count();
+                count += boxJob.getJobs().stream().filter(cj -> cj.isNameEquals(c)).count();
             }
             if (count == 0) {
-                LOGGER.info("[getFirstForkChildren][add][notThisBoxCondition]" + j.getInsertJob().getValue());
+                LOGGER.info("[getFirstForkChildren][add][notThisBoxCondition]" + j.getName());
                 withNotThisBoxConditions.add(j);
             }
         }
@@ -746,6 +747,9 @@ public class Autosys2JS7Converter {
     }
 
     private void convertStandalone(JS7ConverterResult result, JobCMD jilJob) {
+
+        LOGGER.info("[convertStandalone]baseName=" + jilJob.getBaseName() + ",fullPath=" + jilJob.getJobFullPathFromJILDefinition());
+
         WorkflowResult wr = convertStandaloneWorkflow(result, jilJob);
         convertSchedule(result, jilJob, wr);
     }
@@ -758,7 +762,7 @@ public class Autosys2JS7Converter {
                 .getTimezone().getValue());
 
         WorkflowResult wr = new WorkflowResult();
-        wr.setName(normalizeName(result, jilJob, jilJob.getInsertJob().getValue()));
+        wr.setName(normalizeName(result, jilJob, jilJob.getName()));
         wr.setPath(getWorkflowPath(jilJob, wr.getName()));
 
         Jobs js = new Jobs();
@@ -788,8 +792,8 @@ public class Autosys2JS7Converter {
     private void convertSchedule(JS7ConverterResult result, ACommonJob jilJob, WorkflowResult wr) {
         String calendarName = getCalendarName(result, CONFIG, jilJob);
         if (calendarName == null) {
-            ConverterReport.INSTANCE.addWarningRecord(null, jilJob.getInsertJob().getValue(), "[convertSchedule][job without " + jilJob.getRunTime()
-                    .getRunCalendar().getName() + "][missing callendar]scheduleConfig.forced- or defaultWorkingDayCalendarName is not configured");
+            ConverterReport.INSTANCE.addWarningRecord(null, jilJob.getName(), "[convertSchedule][job without " + jilJob.getRunTime().getRunCalendar()
+                    .getName() + "][missing callendar]scheduleConfig.forced- or defaultWorkingDayCalendarName is not configured");
             return;
         }
 
@@ -1128,7 +1132,7 @@ public class Autosys2JS7Converter {
 
     private String getScriptBegin(String command, boolean isUnix) {
         if (isUnix) {
-            if (!command.toString().startsWith("#!/")) {
+            if (command != null && !command.toString().startsWith("#!/")) {
                 StringBuilder sb = new StringBuilder();
                 if (!SOSString.isEmpty(CONFIG.getJobConfig().getUnixDefaultShebang())) {
                     sb.append(CONFIG.getJobConfig().getUnixDefaultShebang());
@@ -1198,7 +1202,7 @@ public class Autosys2JS7Converter {
                     }
                 }
                 break;
-            case GLOBAL_VARIABLE:
+            case VARIABLE:
                 for (Condition c : e.getValue()) {
                     String nn = normalizeName(result, c);
                     String boardName = nn;
@@ -1282,7 +1286,7 @@ public class Autosys2JS7Converter {
             }
             sb.append("[job application can't be extracted because unknown]").append(name);
             LOGGER.warn(sb.toString());
-            ConverterReport.INSTANCE.addErrorRecord(sb.toString());
+            // ConverterReport.INSTANCE.addErrorRecord(sb.toString());
         }
         return name;
     }

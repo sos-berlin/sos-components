@@ -245,4 +245,31 @@ public class SOSString {
         }
         return v.substring(prefixLength);
     }
+
+    public static List<String> splitByLength(String input, int maxLength) {
+        return splitByLength(input, maxLength, " ");
+    }
+
+    public static List<String> splitByLength(String input, int maxLength, String splitter) {
+        List<String> result = new ArrayList<>();
+        int length = input.length();
+        int lastBreak = 0;
+
+        while (lastBreak < length) {
+            int nextBreak = lastBreak + maxLength;
+            if (nextBreak >= length) {
+                result.add(input.substring(lastBreak));
+                break;
+            }
+            int lastSpace = input.lastIndexOf(splitter, nextBreak);
+            if (lastSpace > lastBreak) {
+                result.add(input.substring(lastBreak, lastSpace));
+                lastBreak = lastSpace + 1;
+            } else {
+                result.add(input.substring(lastBreak, nextBreak));
+                lastBreak = nextBreak;
+            }
+        }
+        return result;
+    }
 }

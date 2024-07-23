@@ -27,7 +27,7 @@ public class DirectoryParserTest {
 
         AutosysConverterConfig config = new AutosysConverterConfig();
         Instant start = Instant.now();
-        DirectoryParserResult r = DirectoryParser.parse(config.getParserConfig(), new XMLJobParser(config, reportDir), inputDir);
+        DirectoryParserResult r = DirectoryParser.parse(config.getParserConfig(), new XMLJobParser(config, reportDir), inputDir, false);
         LOGGER.info("[parse][duration]" + SOSDate.getDuration(start, Instant.now()));
 
         log(r);
@@ -41,7 +41,7 @@ public class DirectoryParserTest {
 
         AutosysConverterConfig config = new AutosysConverterConfig();
         Instant start = Instant.now();
-        DirectoryParserResult r = DirectoryParser.parse(config.getParserConfig(), new JILJobParser(config, reportDir), inputDir);
+        DirectoryParserResult r = DirectoryParser.parse(config.getParserConfig(), new JILJobParser(config, reportDir), inputDir, false);
         LOGGER.info("[parse][duration]" + SOSDate.getDuration(start, Instant.now()));
 
         log(r);
@@ -50,7 +50,7 @@ public class DirectoryParserTest {
     private void log(DirectoryParserResult r) {
         LOGGER.info(String.format("[JOBS]%s", r.getJobs().size()));
         for (ACommonJob job : r.getJobs()) {
-            LOGGER.info(job.getInsertJob().getValue() + "=" + SOSString.toString(job));
+            LOGGER.info(job.getName() + "=" + SOSString.toString(job));
         }
         LOGGER.info(String.format("[JOBS]%s", r.getJobs().size()));
     }

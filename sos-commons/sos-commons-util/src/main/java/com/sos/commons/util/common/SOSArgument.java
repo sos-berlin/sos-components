@@ -8,6 +8,7 @@ import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 /** SOSArgument&lt;T&gt; supported types(&lt;T&gt;):<br/>
  * - generally: all data types are supported <br/>
  * - usage in JITL: see com.sos.commons.job.JobArgument supported types <br/>
+ * - does not implement the Serializable interface because T may not be serializable - e.g. sun.nio.fs.WindowsPath<br/>
  */
 public class SOSArgument<T> {
 

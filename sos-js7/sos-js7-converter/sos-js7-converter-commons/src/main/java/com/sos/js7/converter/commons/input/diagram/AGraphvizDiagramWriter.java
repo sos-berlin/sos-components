@@ -186,4 +186,5 @@ public abstract class AGraphvizDiagramWriter {
         }
         return "'" + val.replaceAll("'", "''") + "'";
     }
+
 }
