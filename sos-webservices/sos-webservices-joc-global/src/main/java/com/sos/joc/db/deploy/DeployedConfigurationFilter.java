@@ -1,10 +1,13 @@
 package com.sos.joc.db.deploy;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.model.common.Folder;
 
@@ -15,7 +18,7 @@ public class DeployedConfigurationFilter {
     private Set<Folder> folders;
     private Set<String> names;
     private Set<WorkflowId> workflowIds;
-    private Set<String> tags;
+    private Collection<List<String>> tags;
 
     
     public String getControllerId() {
@@ -88,23 +91,25 @@ public class DeployedConfigurationFilter {
         }
     }
     
-    public void setTags(Set<String> tags) {
-        this.tags = tags;
+    public void setTags(Collection<String> tags) {
+        if (tags != null) {
+            setTags(tags.stream());
+        } else {
+            this.tags = null;
+        }
     }
 
-    public Set<String> getTags() {
+    public Collection<List<String>> getTags() {
         return tags;
-    }
-    
-    public void setTags(Collection<String> tags) {
-        if (tags != null && !tags.isEmpty()) {
-            this.tags = tags.stream().collect(Collectors.toSet());
-        }
     }
     
     public void setTags(Stream<String> tags) {
         if (tags != null) {
-            this.tags = tags.collect(Collectors.toSet());
+            AtomicInteger counter = new AtomicInteger();
+            this.tags = tags.distinct().collect(Collectors.groupingBy(it -> counter.getAndIncrement()
+                    / SOSHibernate.LIMIT_IN_CLAUSE)).values();
+        } else {
+            this.tags = null;
         }
     }
 }
