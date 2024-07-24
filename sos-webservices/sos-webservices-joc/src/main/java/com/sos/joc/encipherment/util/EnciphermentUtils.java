@@ -75,12 +75,18 @@ public class EnciphermentUtils {
               env.setAdditionalProperty(ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH.toUpperCase(), "$".concat(ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH));
             }
             existingJobResource.setEnv(env);
-            dbExistingJobResource.setContent(Globals.objectMapper.writeValueAsString(existingJobResource));
+            dbExistingJobResource.setContent(JocInventory.toString(existingJobResource));
             dbExistingJobResource.setFolder(jobResourceFolder);
             path = Paths.get(dbExistingJobResource.getFolder()).resolve(certAlias);
             dbExistingJobResource.setPath(path.toString().replace('\\', '/'));
             dbExistingJobResource.setAuditLogId(auditLogId);
             dbExistingJobResource.setModified(Date.from(Instant.now()));
+            try {
+              Validator.validate(ConfigurationType.JOBRESOURCE, existingJobResource);
+              dbExistingJobResource.setValid(true);
+          } catch (Exception e) {
+            dbExistingJobResource.setValid(false);
+          }
             hibernateSession.update(dbExistingJobResource);
             jr = dbExistingJobResource;
         } else {
@@ -105,7 +111,7 @@ public class EnciphermentUtils {
             newDBJobResource.setPath(path.toString().replace('\\', '/'));
             Date now = Date.from(Instant.now());
             newDBJobResource.setType(ConfigurationType.JOBRESOURCE);
-            newDBJobResource.setContent(Globals.objectMapper.writeValueAsString(newJobResource));
+            newDBJobResource.setContent(JocInventory.toString(newJobResource));
             newDBJobResource.setAuditLogId(auditLogId);
             newDBJobResource.setDeleted(false);
             newDBJobResource.setDeployed(false);
