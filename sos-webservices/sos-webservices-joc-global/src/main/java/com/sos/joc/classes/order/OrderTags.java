@@ -31,6 +31,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.workflow.WorkflowRefs;
 import com.sos.joc.cluster.bean.history.AHistoryBean;
@@ -663,12 +664,12 @@ public class OrderTags {
         return Collections.emptyList();
     }
     
-    public static List<Long> getHistoryIdsByTags(String controllerId, Set<String> oTags) {
+    public static List<Long> getHistoryIdsByTags(String controllerId, Set<String> oTags, Integer limit) {
         if (oTags != null && !oTags.isEmpty()) {
             SOSHibernateSession connection = null;
             try {
                 connection = Globals.createSosHibernateStatelessConnection("getOrderTags");
-                return getHistoryIdsByTags(controllerId, oTags, connection);
+                return getHistoryIdsByTags(controllerId, oTags, limit, connection);
             } finally {
                 Globals.disconnect(connection);
             }
@@ -689,12 +690,12 @@ public class OrderTags {
         return Collections.emptyList();
     }
     
-    public static List<Long> getHistoryIdsByTags(String controllerId, List<String> oTags) {
+    public static List<Long> getHistoryIdsByTags(String controllerId, List<String> oTags, Integer limit) {
         if (oTags != null && !oTags.isEmpty()) {
             SOSHibernateSession connection = null;
             try {
                 connection = Globals.createSosHibernateStatelessConnection("getOrderTags");
-                return getHistoryIdsByTags(controllerId, oTags, connection);
+                return getHistoryIdsByTags(controllerId, oTags, limit, connection);
             } finally {
                 Globals.disconnect(connection);
             }
@@ -711,12 +712,12 @@ public class OrderTags {
         }
     }
     
-    public static List<Long> getHistoryIdsByTags(String controllerId, Set<String> oTags, SOSHibernateSession connection) {
+    public static List<Long> getHistoryIdsByTags(String controllerId, Set<String> oTags, Integer limit, SOSHibernateSession connection) {
         if (connection == null) {
-            return getHistoryIdsByTags(controllerId, oTags);
+            return getHistoryIdsByTags(controllerId, oTags, limit);
         } else {
             List<String> _oTags = oTags == null ? null : oTags.stream().collect(Collectors.toList());
-            return getHistoryIdsByTags(controllerId, _oTags, connection);
+            return getHistoryIdsByTags(controllerId, _oTags, limit, connection);
         }
     }
     
@@ -762,9 +763,13 @@ public class OrderTags {
         return Collections.emptyList();
     }
     
-    public static List<Long> getHistoryIdsByTags(String controllerId, List<String> oTags, SOSHibernateSession connection) {
+    public static List<Long> getHistoryIdsByTags(String controllerId, List<String> oTags, Integer limit, SOSHibernateSession connection) {
         if (connection == null) {
-            return getHistoryIdsByTags(controllerId, oTags);
+            return getHistoryIdsByTags(controllerId, oTags, limit);
+        }
+        
+        if (limit == null || limit > WebserviceConstants.HISTORY_RESULTSET_LIMIT) {
+            limit = WebserviceConstants.HISTORY_RESULTSET_LIMIT;
         }
 
         if (oTags != null && !oTags.isEmpty()) {
@@ -784,9 +789,10 @@ public class OrderTags {
                 }
                 clauses.add(clause);
                 hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
-                hql.append(" group by historyId");
+                hql.append(" group by historyId order by historyId desc");
 
                 Query<Long> query = connection.createQuery(hql.toString());
+                query.setMaxResults(limit);
                 if (controllerId != null && !controllerId.isBlank()) {
                     query.setParameter("controllerId", controllerId);
                 }

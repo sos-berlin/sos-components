@@ -708,13 +708,13 @@ public class JobHistoryDBLayer {
             AtomicInteger counter = new AtomicInteger();
             for (List<String> chunk : filter.getWorkflowNames()) {
                 query.setParameterList("workflowNames" + counter.getAndIncrement(), chunk);
-            };
+            }
         }
         if (filter.getMainOrderIds() != null && !filter.getMainOrderIds().isEmpty()) {
             AtomicInteger counter = new AtomicInteger();
             for (List<String> chunk : filter.getMainOrderIds()) {
                 query.setParameterList("mainOrderIds" + counter.getAndIncrement(), chunk);
-            };
+            }
         }
         return query;
     }
