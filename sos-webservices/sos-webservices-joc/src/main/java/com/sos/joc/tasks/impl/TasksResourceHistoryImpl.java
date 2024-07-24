@@ -100,14 +100,15 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                 return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
             }
             
+            if (in.getLimit() == null) {
+                in.setLimit(WebserviceConstants.HISTORY_RESULTSET_LIMIT);
+            }
+            
             Set<Folder> permittedFolders = addPermittedFolder(in.getFolders());
             HistoryFilter dbFilter = getFilter(in, allowedControllers, permittedFolders, session);
 
             if (dbFilter.hasPermission()) {
 
-                if (in.getLimit() == null) {
-                    in.setLimit(WebserviceConstants.HISTORY_RESULTSET_LIMIT);
-                }
                 dbFilter.setLimit(in.getLimit());
                 
                 boolean resultIsEmpty = false;
@@ -299,7 +300,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                         if (session == null) {
                             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
                         }
-                        dbFilter.setNonExclusiveHistoryIds(OrderTags.getHistoryIdsByTags(in.getControllerId(), in.getOrderTags(), session));
+                        dbFilter.setNonExclusiveHistoryIds(OrderTags.getHistoryIdsByTags(in.getControllerId(), in.getOrderTags(), in.getLimit(), session));
                     }
                 }
             }

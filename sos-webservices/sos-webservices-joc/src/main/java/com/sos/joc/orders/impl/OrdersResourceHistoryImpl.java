@@ -104,6 +104,10 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
             Set<Folder> permittedFolders = addPermittedFolder(in.getFolders());
             boolean folderPermissionsAreChecked = false;
             boolean withOrderTags = in.getOrderTags() != null && !in.getOrderTags().isEmpty();
+            
+            if (in.getLimit() == null) {
+                in.setLimit(WebserviceConstants.HISTORY_RESULTSET_LIMIT);
+            }
 
             HistoryFilter dbFilter = new HistoryFilter();
             dbFilter.setControllerIds(allowedControllers);
@@ -166,15 +170,13 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                         if (session == null) {
                             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
                         }
-                        dbFilter.setNonExclusiveHistoryIds(OrderTags.getHistoryIdsByTags(controllerId, in.getOrderTags(), session));
+                        dbFilter.setNonExclusiveHistoryIds(OrderTags.getHistoryIdsByTags(controllerId, in.getOrderTags(), in.getLimit(), session));
                     }
                 }
             }
 
             if (hasPermission) {
-                if (in.getLimit() == null) {
-                    in.setLimit(WebserviceConstants.HISTORY_RESULTSET_LIMIT);
-                }
+                
                 dbFilter.setLimit(in.getLimit());
                 
                 boolean resultIsEmpty = false;

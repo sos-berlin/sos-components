@@ -9,7 +9,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.hibernate.query.Query;
 
@@ -427,11 +429,14 @@ public class DeployedConfigurationDBLayer {
                 hql.append(" left join ").append(DBLayer.DBITEM_INV_TAGS).append(" t on t.id=tg.tagId ");
             }
             hql.append(getWhereForDepConfiguration(filter));
-            if (filter.getTags() != null && !filter.getTags().isEmpty()) {
-                hql.append(" group by c.path, c.name, c.title, c.content, c.commitId, c.created ");
-            }
             Query<DeployedContent> query = createQuery(hql.toString(), filter);
-            return session.getResultList(query);
+            List<DeployedContent> result = session.getResultList(query);
+            if (result == null) {
+                return Collections.emptyList();
+            } else if (filter.getTags() != null && !filter.getTags().isEmpty()) {
+                return result.stream().distinct().collect(Collectors.toList());
+            }
+            return result;
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -450,11 +455,14 @@ public class DeployedConfigurationDBLayer {
                 hql.append(" left join ").append(DBLayer.DBITEM_INV_TAGS).append(" t on t.id=tg.tagId ");
             }
             hql.append(getWhereForDepHistory(filter));
-            if (filter.getTags() != null && !filter.getTags().isEmpty()) {
-                hql.append(" group by c.path, c.name, c.title, c.invContent, c.commitId, c.deploymentDate ");
-            }
             Query<DeployedContent> query = createQuery(hql.toString(), filter);
-            return session.getResultList(query);
+            List<DeployedContent> result = session.getResultList(query);
+            if (result == null) {
+                return Collections.emptyList();
+            } else if (filter.getTags() != null && !filter.getTags().isEmpty()) {
+                return result.stream().distinct().collect(Collectors.toList());
+            }
+            return result;
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -883,11 +891,12 @@ public class DeployedConfigurationDBLayer {
         }
         
         if (filter.getTags() != null && !filter.getTags().isEmpty()) {
-            if (filter.getTags().size() == 1) {
-                clauses.add("t.name = :tag");
-            } else {
-                clauses.add("t.name in (:tags)");
+            String clause = IntStream.range(0, filter.getTags().size()).mapToObj(i -> "t.name in (:tags" + i + ")").collect(Collectors.joining(
+                    " or "));
+            if (filter.getTags().size() > 1) {
+                clause = "(" + clause + ")";
             }
+            clauses.add(clause);
         }
 
         if (withOperationAndState) {
@@ -930,10 +939,9 @@ public class DeployedConfigurationDBLayer {
             }
         }
         if (filter.getTags() != null && !filter.getTags().isEmpty()) {
-            if (filter.getTags().size() == 1) {
-                query.setParameter("tag", filter.getTags().iterator().next());
-            } else {
-                query.setParameterList("tags", filter.getTags());
+            AtomicInteger counter = new AtomicInteger();
+            for (List<String> chunk : filter.getTags()) {
+                query.setParameterList("tags" + counter.getAndIncrement(), chunk);
             }
         }
         return query;
