@@ -286,6 +286,7 @@ public class JsonSerializer {
     
     private static Environment emptyEnvToNull(Environment env) {
         if (env != null) {
+            env.getAdditionalProperties().values().removeIf(v -> v == null);
             if (env.getAdditionalProperties().isEmpty()) {
                 return null;
             } else {
@@ -306,8 +307,11 @@ public class JsonSerializer {
     }
     
     private static Variables emptyVarsToNull(Variables vars) {
-        if (vars != null && vars.getAdditionalProperties().isEmpty()) {
-            return null;
+        if (vars != null) {
+            vars.getAdditionalProperties().values().removeIf(v -> v == null);
+            if (vars.getAdditionalProperties().isEmpty()) {
+                return null;
+            }
         }
         return vars;
     }
