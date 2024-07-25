@@ -50,7 +50,7 @@ public enum CSVColumns {
                 return "DATE_FORMAT(" + dbColumn + ", '%Y-%m-%d %H:%i:%s')";
             } else {
                 if (Dbms.MSSQL.equals(dbms)) {
-                    return "CONVERT(varchar," + dbColumn + ",120)";
+                    return "CONVERT(varchar(20)," + dbColumn + ",120)";
                 } else {
                     return "TO_CHAR(" + dbColumn + ",'yyyy-mm-dd HH:mi:ss')";
                 }
