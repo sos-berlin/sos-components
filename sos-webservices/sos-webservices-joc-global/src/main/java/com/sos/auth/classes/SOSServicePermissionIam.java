@@ -446,7 +446,7 @@ public class SOSServicePermissionIam {
             case LDAP:
             case LDAP_JOC:
                 sosLogin = new SOSLdapLogin();
-                LOGGER.debug("Login with idendity service ldap");
+                LOGGER.debug("Login with identity service ldap");
                 break;
             case VAULT:
             case VAULT_JOC:
@@ -461,7 +461,7 @@ public class SOSServicePermissionIam {
                 break;
             case JOC:
                 sosLogin = new SOSInternAuthLogin();
-                LOGGER.debug("Login with idendity service sosintern");
+                LOGGER.debug("Login with identity service sosintern");
                 break;
             case CERTIFICATE:
                 sosLogin = new SOSCertificateAuthLogin();
