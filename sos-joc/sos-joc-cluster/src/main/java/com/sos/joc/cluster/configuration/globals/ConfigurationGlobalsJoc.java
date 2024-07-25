@@ -100,6 +100,10 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     //order tags instead orderId
     private ConfigurationEntry numOfTagsDisplayedAsOrderId = new ConfigurationEntry("num_of_tags_displayed_as_order_id", "0",
             GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
+    
+    //udp server
+    private ConfigurationEntry updPort = new ConfigurationEntry("upd_server_port", "4514", GlobalSettingsSectionValueType.STRING);
+
 
     private Charset encodingCharset = null;
     private boolean encodingCharsetReaded = false;
@@ -335,6 +339,14 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
             return Integer.parseInt(numOfTagsDisplayedAsOrderId.getValue());
         } catch (Exception e) {
             return 0; // default
+        }
+    }
+    
+    public Integer getUDPPort() {
+        try {
+            return Integer.parseInt(updPort.getValue());
+        } catch (Exception e) {
+            return Integer.parseInt(updPort.getDefault());
         }
     }
     
