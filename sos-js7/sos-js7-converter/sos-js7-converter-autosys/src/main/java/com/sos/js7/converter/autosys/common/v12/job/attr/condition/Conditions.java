@@ -281,6 +281,18 @@ public class Conditions {
         return result;
     }
 
+    public static boolean containsGroups(List<Object> conditions) {
+        if (conditions == null || conditions.size() == 0) {
+            return false;
+        }
+        for (Object o : conditions) {
+            if (o instanceof List) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // TODO recursive
     public static Condition find(List<Object> conditions, String conditionKey) {
         if (conditions == null) {

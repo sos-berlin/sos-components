@@ -48,7 +48,7 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
 
     private Path outputPath;
     private String content;
-    private String appAndFolder;
+    private String boxName;
 
     private enum ConditionType {
         IN, OUT
@@ -93,6 +93,7 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
      * @return
      * @throws Exception */
     private boolean createDiagram(JobBOX box) throws Exception {
+        this.boxName = box.getName();
         if (prepareContent(box)) {
             this.outputPath = AutosysConverterHelper.getMainOutputPath(outputDirectory, box, true);
 
@@ -199,8 +200,11 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
         return true;
     }
 
-    private boolean prepareContent(List<ACommonJob> jobs) {
+    private boolean prepareContent(List<ACommonJob> jobs) throws Exception {
         StringBuilder c = getFolderContent(jobs);
+
+        // jobs = analyzer.getConditionAnalyzer().handleStandaloneJobsConditions(jobs);
+
         for (ACommonJob j : jobs) {
             c = c.append(getJobContent(1, j, true));
         }
@@ -245,7 +249,6 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
             folderType = "Standalone";
             app = AutosysConverterHelper.getApplication(standaloneJob);
             group = AutosysConverterHelper.getGroup(standaloneJob);
-            appAndFolder = AutosysAnalyzer.getAppAndFolder(app, standaloneJob);
             description = standaloneJob.getDescription().getValue();
             name = standaloneJob.getName();
             fullName = standaloneJob.getJobFullPathFromJILDefinition().toString();
@@ -254,7 +257,6 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
             folderType = "BOX";
             app = AutosysConverterHelper.getApplication(box);
             group = AutosysConverterHelper.getGroup(box);
-            appAndFolder = AutosysAnalyzer.getAppAndFolder(app, box);
             description = box.getDescription().getValue();
             name = box.getName();
             fullName = box.getJobFullPathFromJILDefinition().toString();
@@ -473,7 +475,7 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
                 });
             }
         } catch (Throwable e) {
-            throw new RuntimeException(String.format("[%s][%s]%s", appAndFolder, job.getName(), e.toString()), e);
+            throw new RuntimeException(String.format("[%s]%s", job.getName(), e.toString()), e);
         }
         return sb;
     }
@@ -509,7 +511,22 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
             return "Standalone " + j.getJobType().getValue() + " job";
         }
         // BOX
-        return j.getJobType().getValue();
+        StringBuilder sb = new StringBuilder();
+        sb.append(j.getJobType().getValue());
+        if (j instanceof JobBOX) {
+            if (j.isNameEquals(this.boxName)) {
+                sb.append(" <b>").append(j.getName()).append("</b>");
+            }
+        } else {
+            String bn = j.getBox().getBoxName().getValue();
+            sb.append(" box_name=");
+            if (j.isBoxNameEquals(this.boxName)) {
+                sb.append("<b>").append(bn).append("</b>");
+            } else {
+                sb.append(bn);
+            }
+        }
+        return sb.toString();
     }
 
     private String getJobInfo(Condition c) {
@@ -574,10 +591,10 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
                     l.append("  <tr>");
                     l.append("<td align=\"left\" valign=\"top\">&nbsp;&nbsp;&nbsp;");
                     boolean isCurrentJob = false;
-                    if (currentJob.isNameEquals(j) || currentJob.isBoxNameEquals(j)) {
-                        l.append("<b>");
-                        isCurrentJob = true;
-                    }
+                    // if (currentJob.isNameEquals(j) || currentJob.isBoxNameEquals(j)) {
+                    // l.append("<b>");
+                    // isCurrentJob = true;
+                    // }
                     l.append(j);
                     if (isCurrentJob) {
                         l.append("</b>");

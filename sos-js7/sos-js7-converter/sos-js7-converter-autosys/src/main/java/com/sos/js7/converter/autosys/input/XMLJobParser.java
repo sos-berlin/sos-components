@@ -24,6 +24,7 @@ import com.sos.js7.converter.autosys.common.v12.job.JobBOX;
 import com.sos.js7.converter.autosys.config.AutosysConverterConfig;
 import com.sos.js7.converter.autosys.input.DirectoryParser.DirectoryParserResult;
 import com.sos.js7.converter.autosys.input.analyzer.AutosysAnalyzer;
+import com.sos.js7.converter.autosys.output.js7.Autosys2JS7Converter;
 import com.sos.js7.converter.autosys.output.js7.AutosysConverterHelper;
 import com.sos.js7.converter.autosys.report.AutosysReport;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
@@ -55,7 +56,7 @@ public class XMLJobParser extends AFileParser {
             if (splitConfiguration) {
                 LOGGER.info(String.format("    with splitConfiguration...", inputFile.getFileName()));
             }
-            Path duplicateJobs = getReportDir().resolve("duplicate_jobs.txt");
+            Path duplicateJobs = getReportDir().resolve(Autosys2JS7Converter.REPORT_FILE_NAME_JOBS_DUPLICATES);
 
             Document doc = SOSXML.parse(inputFile);
 
@@ -78,7 +79,7 @@ public class XMLJobParser extends AFileParser {
                     if (p.size() > 0) {
 
                         ACommonJob job = getJobParser().parse(inputFile, p);
-                        //LOGGER.info("XXXX=" + job.getName());
+                        // LOGGER.info("XXXX=" + job.getName());
 
                         if (r.getJobNames().contains(job.getName())) {
                             SOSPath.appendLine(duplicateJobs, "[" + inputFile + "][<insert_job>]" + job.getName());

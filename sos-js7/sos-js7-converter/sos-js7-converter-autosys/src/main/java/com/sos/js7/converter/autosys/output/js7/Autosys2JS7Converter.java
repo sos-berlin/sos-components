@@ -98,6 +98,19 @@ public class Autosys2JS7Converter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Autosys2JS7Converter.class);
 
+    public static final String REPORT_FILE_NAME_BOX_CHILDREN_JOBS_RECURSION = "Report-BOX[children_jobs]recursion.txt";
+    public static final String REPORT_FILE_NAME_BOX_CONDITION_REFERS_TO_CHILDREN_JOBS = "Report-BOX[condition]refers_to_children_jobs.txt";
+    public static final String REPORT_FILE_NAME_BOX_CONDITION_REFERS_TO_BOX_ITSELF = "Report-BOX[condition]refers_to_box_itself.txt";
+    public static final String REPORT_FILE_NAME_JOBS_WITH_OR_CONDITIONS = "Report-Conditions[OR].txt";
+    public static final String REPORT_FILE_NAME_JOBS_WITH_GROUP_CONDITIONS = "Report-Conditions[Groups].txt";
+    public static final String REPORT_FILE_NAME_CONDITIONS_BY_TYPE = "Report-Conditions[by_type].txt";
+    public static final String REPORT_FILE_NAME_JOBS_DUPLICATES = "Report-Jobs[duplicates].txt";
+    public static final String REPORT_FILE_NAME_JOBS_BY_TYPE = "Report-Jobs[by_type].txt";
+
+    public static final String REPORT_DELIMETER_LINE =
+            "--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
+    public static final String REPORT_DETAILS_LINE = "---- DETAILS " + REPORT_DELIMETER_LINE;
+
     public static AutosysConverterConfig CONFIG = new AutosysConverterConfig();
 
     private Map<String, JS7Agent> machine2js7Agent = new HashMap<>();

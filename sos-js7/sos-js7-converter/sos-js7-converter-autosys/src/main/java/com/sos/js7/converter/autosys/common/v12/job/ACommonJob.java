@@ -320,11 +320,11 @@ public abstract class ACommonJob {
     }
 
     public boolean isNameEquals(String otherName) {
-        String name = getName();
-        if (name == null || otherName == null) {
+        if (otherName == null) {
             return false;
         }
-        return name.equals(otherName);
+        String name = getName();
+        return name != null && name.equals(otherName);
     }
 
     public boolean isNameEquals(Condition c) {
@@ -341,11 +341,14 @@ public abstract class ACommonJob {
         return isNameEquals(j.getName());
     }
 
-    public boolean isBoxNameEquals(String name) {
+    public boolean isBoxNameEquals(String otherBoxName) {
+        if (otherBoxName == null) {
+            return false;
+        }
         if (getBox() == null || getBox().getBoxName().getValue() == null) {
             return false;
         }
-        return getBox().getBoxName().getValue().equals(name);
+        return getBox().getBoxName().getValue().equals(otherBoxName);
     }
 
     public String getBaseName() {
@@ -587,6 +590,19 @@ public abstract class ACommonJob {
 
     public boolean isStandalone() {
         return !ConverterJobType.BOX.equals(converterJobType) && (getBox() == null || getBox().getBoxName().getValue() == null);
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other != null && other instanceof ACommonJob) {
+            return isNameEquals((ACommonJob) other);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return getName().hashCode();
     }
 
 }

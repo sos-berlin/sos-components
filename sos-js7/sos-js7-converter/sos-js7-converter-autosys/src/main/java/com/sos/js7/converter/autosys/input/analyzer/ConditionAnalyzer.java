@@ -21,14 +21,11 @@ import com.sos.js7.converter.autosys.common.v12.job.JobBOX;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Condition;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Condition.ConditionType;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Conditions;
+import com.sos.js7.converter.autosys.output.js7.Autosys2JS7Converter;
 
 public class ConditionAnalyzer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConditionAnalyzer.class);
-
-    private static final String REPORT_FILE_NAME_BOX_CONDITION_REFERS_TO_CHILDREN_JOBS = "BOX[condition]refers_to_children_jobs.txt";
-    private static final String REPORT_FILE_NAME_BOX_CONDITION_REFERS_TO_BOX_ITSELF = "BOX[condition]refers_to_box_itself.txt";
-    private static final String REPORT_FILE_NAME_JOBS_WITH_OR_CONDITIONS = "jobs_with_or_conditions.txt";
 
     private final Path reportDir;
 
@@ -37,7 +34,7 @@ public class ConditionAnalyzer {
     // key - job full name
     private Map<String, OutConditionHolder> allOutConditions;
     // key - condition type, value - condition key
-    private Map<ConditionType, Set<String>> allConditionsByType;
+    private Map<ConditionType, Set<Condition>> allConditionsByType;
     // key - job name, value - entire original condition as text
     private Map<String, String> jobsWithORConditions;
 
@@ -176,18 +173,37 @@ public class ConditionAnalyzer {
             if (j.hasORConditions()) {
                 jobsWithORConditions.put(j.getName(), j.getCondition().getOriginalCondition());
 
-                try {
-                    Path report = reportDir.resolve(REPORT_FILE_NAME_JOBS_WITH_OR_CONDITIONS);
-                    SOSPath.appendLine(report, j.getName() + " - " + j.getCondition().getOriginalCondition());
-                } catch (Exception e) {
-                    LOGGER.error("[jobsWithORConditions]" + e.toString(), e);
-                }
+                Path report = getReportFile(Autosys2JS7Converter.REPORT_FILE_NAME_JOBS_WITH_OR_CONDITIONS);
+                writeReportLine(report, j.getName() + " - " + j.getCondition().getOriginalCondition());
+            }
+            if (Conditions.containsGroups(j.getCondition().getCondition().getValue())) {
+                Path report = getReportFile(Autosys2JS7Converter.REPORT_FILE_NAME_JOBS_WITH_GROUP_CONDITIONS);
+                writeReportLine(report, j.getName() + " - " + j.getCondition().getOriginalCondition());
+
             }
         }
     }
 
+    private Path getReportFile(String fileName) {
+        if (reportDir == null) {
+            return null;
+        }
+        return reportDir.resolve(fileName);
+    }
+
+    private void writeReportLine(Path file, String content) {
+        if (file == null) {
+            return;
+        }
+        try {
+            SOSPath.appendLine(file, content);
+        } catch (Exception e) {
+            LOGGER.error("[writeReportLine][" + file + "]" + e.toString(), e);
+        }
+    }
+
     private void conditionsByType(Condition c) {
-        Set<String> s = null;
+        Set<Condition> s = null;
 
         ConditionType condKey = c.getType();
         if (allConditionsByType.containsKey(condKey)) {
@@ -195,8 +211,8 @@ public class ConditionAnalyzer {
         } else {
             s = new HashSet<>();
         }
-        if (!s.contains(c.getKey())) {
-            s.add(c.getKey());
+        if (!s.contains(c)) {
+            s.add(c);
             allConditionsByType.put(condKey, s);
         }
     }
@@ -267,34 +283,37 @@ public class ConditionAnalyzer {
                 }
             }
             if (toRemoveConditionsRefersToChildrenJobs.size() > 0) {
-                Path report = reportDir.resolve(REPORT_FILE_NAME_BOX_CONDITION_REFERS_TO_CHILDREN_JOBS);
-                SOSPath.appendLine(report, boxJob.getName() + " - " + boxJob.getCondition().getOriginalCondition());
+                Path report = getReportFile(Autosys2JS7Converter.REPORT_FILE_NAME_BOX_CONDITION_REFERS_TO_CHILDREN_JOBS);
+                writeReportLine(report, "BOX " + boxJob.getName());
+                String msg = String.format("%-20s%-4s%s", "condition", ":", boxJob.getCondition().getOriginalCondition());
+                writeReportLine(report, "    " + msg);
+                msg = String.format("%-20s%-4s%s", "children jobs parts", ":", "");
+                writeReportLine(report, "    " + msg);
 
                 List<Object> boxJobConditions = boxJob.getCondition().getCondition().getValue();
                 toRemoveConditionsRefersToChildrenJobs.entrySet().stream().forEach(e -> {
-                    try {
-                        SOSPath.appendLine(report, "  " + e.getValue());
-                    } catch (Exception e1) {
-                        LOGGER.error("[toRemoveConditionsRefersToChildrenJobs][" + report + "][" + e.getValue() + "]" + e.toString(), e);
-                    }
+                    writeReportLine(report, "                            " + e.getValue().getOriginalValue());
                     Conditions.remove(boxJobConditions, e.getValue());
                 });
                 mainConditions = boxJob.conditionsAsList();
+
+                writeReportLine(report, Autosys2JS7Converter.REPORT_DELIMETER_LINE);
             }
             if (toRemoveConditionsRefersToBoxItself.size() > 0) {
-                Path report = reportDir.resolve(REPORT_FILE_NAME_BOX_CONDITION_REFERS_TO_BOX_ITSELF);
-                SOSPath.appendLine(report, boxJob.getName() + " - " + boxJob.getCondition().getOriginalCondition());
+                Path report = getReportFile(Autosys2JS7Converter.REPORT_FILE_NAME_BOX_CONDITION_REFERS_TO_BOX_ITSELF);
+                writeReportLine(report, "BOX " + boxJob.getName());
+                String msg = String.format("%-20s%-4s%s", "condition", ":", boxJob.getCondition().getOriginalCondition());
+                writeReportLine(report, "    " + msg);
 
                 List<Object> boxJobConditions = boxJob.getCondition().getCondition().getValue();
                 toRemoveConditionsRefersToBoxItself.entrySet().stream().forEach(e -> {
-                    try {
-                        SOSPath.appendLine(report, "  " + e.getValue());
-                    } catch (Exception e1) {
-                        LOGGER.error("[toRemoveConditionsRefersToBoxItself][" + report + "][" + e.getValue() + "]" + e.toString(), e);
-                    }
+                    String msg2 = String.format("%-20s%-4s%s", "box itself part", ":", e.getValue().getOriginalValue());
+                    writeReportLine(report, "    " + msg2);
                     Conditions.remove(boxJobConditions, e.getValue());
                 });
                 mainConditions = boxJob.conditionsAsList();
+
+                writeReportLine(report, Autosys2JS7Converter.REPORT_DELIMETER_LINE);
             }
             if (toRemoveConditionsDuplicates.size() > 0) {
                 List<Object> boxJobConditions = boxJob.getCondition().getCondition().getValue();
@@ -397,6 +416,7 @@ public class ConditionAnalyzer {
         // Step 3
         // - Remove the main conditions from the children jobs
         List<ACommonJob> l = new ArrayList<ACommonJob>();
+        Set<String> reportBOXNames = new HashSet<>();
         for (ACommonJob j : boxJob.getJobs()) {
             if (doLog) {
                 LOGGER.info("-----------------------------------------------");
@@ -441,7 +461,30 @@ public class ConditionAnalyzer {
                         LOGGER.info("  [removeDuplicates][" + j.getName() + "][condition]" + c);
                     }
 
-                    boolean used = isAlreadyUsed(boxJob, j, ljc, c);
+                    boolean used = false;
+                    try {
+                        used = isAlreadyUsed(boxJob, j, ljc, c);
+                    } catch (StackOverflowError e) {
+                        used = false;
+
+                        LOGGER.warn("[handleJobBoxConditions][BOX=" + boxJob.getName() + "][recursion detected][" + j.getName() + "]" + c
+                                .getOriginalValue());
+
+                        Path report = getReportFile(Autosys2JS7Converter.REPORT_FILE_NAME_BOX_CHILDREN_JOBS_RECURSION);
+                        String bn = "BOX " + boxJob.getName();
+                        if (reportBOXNames.contains(bn)) {
+                            bn = "";
+                        } else {
+                            // if (reportBOXNames.size() > 0) {
+                            writeReportLine(report, Autosys2JS7Converter.REPORT_DELIMETER_LINE);
+                            // }
+                            reportBOXNames.add(bn);
+                        }
+                        String msg = String.format("%-50s %-5s %-50s %-50s", bn, ":", j.getName(), c.getOriginalValue());
+                        writeReportLine(report, msg);
+
+                        // throw e;
+                    }
                     if (used) {
                         Conditions.remove(j.getCondition().getCondition().getValue(), c);
                     }
@@ -449,6 +492,7 @@ public class ConditionAnalyzer {
                     if (doLog) {
                         LOGGER.info("    used=" + used + "============" + c.getKey());
                     }
+
                 }
             }
             if (doLog) {
@@ -487,6 +531,82 @@ public class ConditionAnalyzer {
                 }
             }
         }
+
+        return false;
+    }
+
+    public List<ACommonJob> handleStandaloneJobsConditions(List<ACommonJob> allJobs) throws Exception {
+        boolean doLog = false;
+
+        List<ACommonJob> l = new ArrayList<ACommonJob>();
+        for (ACommonJob j : allJobs) {
+            if (doLog) {
+                LOGGER.info("-----------------------------------------------");
+            }
+
+            // END
+
+            // ADDITIONAL ---------------- remove duplicates IN from children
+            List<Condition> ljc = j.conditionsAsList();
+            if (doLog) {
+                LOGGER.info("[removeDuplicates][before][job=" + j.getName() + "][allConditions]" + ljc);
+            }
+
+            if (ljc.size() > 1) {
+                for (Condition c : ljc) {
+                    if (doLog) {
+                        LOGGER.info("  [removeDuplicates][" + j.getName() + "][condition]" + c);
+                    }
+
+                    boolean used = false;
+                    try {
+                        used = isAlreadyUsed(allJobs, j, ljc, c);
+                    } catch (StackOverflowError e) {
+                        used = false;
+
+                        LOGGER.warn("[handleStandaloneJobsConditions][recursion detected][" + j.getName() + "]" + c.getOriginalValue());
+
+                        // throw e;
+                    }
+                    if (used) {
+                        Conditions.remove(j.getCondition().getCondition().getValue(), c);
+                    }
+
+                    if (doLog) {
+                        LOGGER.info("    used=" + used + "============" + c.getKey());
+                    }
+
+                }
+            }
+            if (doLog) {
+                LOGGER.info("[removeDuplicates][after][job=" + j.getName() + "][allConditions]" + j.conditionsAsList());
+            }
+            l.add(j);
+        }
+        return l;
+    }
+
+    private boolean isAlreadyUsed(List<ACommonJob> allJobs, ACommonJob childrenJob, List<Condition> allJobConditions, Condition conditionToCheck) {
+        List<Condition> otherJobConditions = allJobConditions.stream().filter(c -> c.getJobName() != null && !c.equals(conditionToCheck)).collect(
+                Collectors.toList());
+
+        for (Condition oc : otherJobConditions) {
+            ACommonJob job = allJobs.stream().filter(j -> !j.isNameEquals(childrenJob) && j.isNameEquals(oc)).findFirst().orElse(null);
+            if (job != null) {
+                List<Condition> cl = job.conditionsAsList();
+                for (Condition c : cl) {
+                    // variables and job conditions
+                    if (c.equals(conditionToCheck)) {
+                        return true;
+                    }
+                    boolean used = isAlreadyUsed(allJobs, childrenJob, cl, conditionToCheck);
+                    if (used) {
+                        return true;
+                    }
+                }
+            }
+        }
+
         return false;
     }
 
@@ -518,7 +638,7 @@ public class ConditionAnalyzer {
         return h.jobNames.contains(j.getName());
     }
 
-    public Map<ConditionType, Set<String>> getAllConditionsByType() {
+    public Map<ConditionType, Set<Condition>> getAllConditionsByType() {
         return allConditionsByType;
     }
 
