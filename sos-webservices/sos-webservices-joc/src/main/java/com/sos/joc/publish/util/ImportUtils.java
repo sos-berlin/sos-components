@@ -1499,13 +1499,14 @@ public class ImportUtils {
       InventoryTagDBLayer dbLayer = new InventoryTagDBLayer(session);
       List<DBItemInventoryTag> newTags = new ArrayList<DBItemInventoryTag>();
       List<DBItemInventoryTag> storedTags = new ArrayList<DBItemInventoryTag>();
+      Date now = Date.from(Instant.now());
       if(tagsFromArchive != null) {
         if(!tagsFromArchive.getTags().isEmpty()) {
           tagsFromArchive.getTags().stream().forEach(item -> {
             final DBItemInventoryTag tag = dbLayer.getTag(item.getName());
             List<ExportedTagItems> taggingItems = item.getUsedBy();
             if(tag != null) {
-              tag.setModified(Date.from(Instant.now()));
+              tag.setModified(now);
               try {
                 session.update(tag);
               } catch (SOSHibernateException e) {
@@ -1522,7 +1523,7 @@ public class ImportUtils {
                     DBItemInventoryTagging exTagging = existingTaggings.stream().filter(cfgTagging -> cfgTagging.getName().equals(config.getName()) && cfgTagging.getType().equals(config.getType())).findAny().orElse(null);
                     if(exTagging != null) {
                       exTagging.setTagId(tag.getId());
-                      exTagging.setModified(Date.from(Instant.now()));
+                      exTagging.setModified(now);
                       try {
                         session.update(exTagging);
                       } catch (SOSHibernateException e) {
@@ -1536,7 +1537,7 @@ public class ImportUtils {
               DBItemInventoryTag newTag = new DBItemInventoryTag();
               newTag.setName(item.getName());
               newTag.setOrdering(item.getOrdering());
-              newTag.setModified(Date.from(Instant.now()));
+              newTag.setModified(now);
               newTags.add(newTag);
               try {
                 session.save(newTag);
@@ -1553,6 +1554,7 @@ public class ImportUtils {
                 newTagging.setName(used.getName());
                 newTagging.setType(ConfigurationType.fromValue(used.getType()).intValue());
                 newTagging.setTagId(newTag.getId());
+                newTagging.setModified(now);
                 try {
                   session.save(newTagging);
                 } catch (SOSHibernateException e) {
