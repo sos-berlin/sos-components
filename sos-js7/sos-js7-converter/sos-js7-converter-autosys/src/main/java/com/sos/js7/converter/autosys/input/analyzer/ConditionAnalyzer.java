@@ -43,6 +43,10 @@ public class ConditionAnalyzer {
 
     public ConditionAnalyzer(Path reportDir) {
         this.reportDir = reportDir;
+        init();
+    }
+
+    public void init() {
         allInConditions = new TreeMap<>();
         allOutConditions = new TreeMap<>();
         allConditionsByType = new TreeMap<>();
@@ -50,7 +54,7 @@ public class ConditionAnalyzer {
 
     public void analyze(List<ACommonJob> jobs) {
         for (ACommonJob j : jobs) {
-            if (j instanceof JobBOX) {
+            if (j.isBox()) {
                 mapIn(j);
                 List<ACommonJob> boxJobs = ((JobBOX) j).getJobs();
                 for (ACommonJob bj : boxJobs) {
@@ -61,7 +65,7 @@ public class ConditionAnalyzer {
             }
         }
         for (ACommonJob j : jobs) {
-            if (j instanceof JobBOX) {
+            if (j.isBox()) {
                 mapOut(j);
                 List<ACommonJob> boxJobs = ((JobBOX) j).getJobs();
                 for (ACommonJob bj : boxJobs) {

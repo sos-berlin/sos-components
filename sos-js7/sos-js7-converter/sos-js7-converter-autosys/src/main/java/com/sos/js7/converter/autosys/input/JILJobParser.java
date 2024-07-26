@@ -42,18 +42,15 @@ public class JILJobParser extends AFileParser {
     }
 
     @Override
-    public FileParserResult parse(DirectoryParserResult r, Path file, boolean createBoxJobsCopy) {
+    public FileParserResult parse(DirectoryParserResult r, Path file) {
 
         XMLWriter xmlWriter = new XMLWriter(file);
         xmlWriter.write("<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>");
         xmlWriter.write("<ArrayOfJIL>");
 
         List<ACommonJob> jobs = new ArrayList<>();
-        List<JobBOX> boxJobsCopy = new ArrayList<>();
         try {
             BoxJobsHandler boxHandler = new BoxJobsHandler();
-            // copy for diagramm because of remove conditions
-            BoxJobsHandler boxHandlerCopy = new BoxJobsHandler();
 
             int counterTotalJobs = 0;
             int counterMainBoxJobs = 0;
@@ -79,15 +76,9 @@ public class JILJobParser extends AFileParser {
                                 xmlWriter.write(m);
 
                                 ACommonJob job = getJobParser().parse(file, toProperties(m));
-                                ACommonJob jobCopy = createBoxJobsCopy ? getJobParser().parse(file, toProperties(m)) : null;
                                 if (ConverterJobType.BOX.equals(job.getConverterJobType())) {
                                     boxHandler.addMain(job);
                                     counterMainBoxJobs++;
-
-                                    if (jobCopy != null) {
-                                        boxHandlerCopy.addMain(jobCopy);
-                                    }
-
                                     continue;
                                 }
 
@@ -96,11 +87,6 @@ public class JILJobParser extends AFileParser {
                                     jobs.add(job);
                                 } else {
                                     boxHandler.addChild(boxName, job);
-
-                                    // BoxJob copy for diagramm
-                                    if (jobCopy != null) {
-                                        boxHandlerCopy.addChild(boxName, jobCopy);
-                                    }
                                 }
                             }
                         }
@@ -135,12 +121,6 @@ public class JILJobParser extends AFileParser {
                 if (size == 0) {
                     boxJobsWithoutChildren.add(e.getKey());
                 }
-
-                if (createBoxJobsCopy) {
-                    JobBOX bjc = boxHandlerCopy.getMainJobs().get(e.getKey());
-                    boxJobsCopy.add(bjc);
-                }
-
             }
             if (boxHandler.getMainJobs().size() != counterMainBoxJobs) {
                 ParserReport.INSTANCE.addSummaryRecord("TOTAL BOX JOBS TO CONVERT", boxHandler.getMainJobs().size());
@@ -161,7 +141,7 @@ public class JILJobParser extends AFileParser {
             xmlWriter.write("</ArrayOfJIL>");
         }
 
-        return new FileParserResult(jobs, boxJobsCopy);
+        return new FileParserResult(jobs);
     }
 
     private LinkedHashMap<String, String> createProperties(String line) throws Exception {
