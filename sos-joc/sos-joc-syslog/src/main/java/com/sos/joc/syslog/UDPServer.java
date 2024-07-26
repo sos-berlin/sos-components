@@ -16,7 +16,7 @@ public class UDPServer implements Runnable {
     private static final int BUFFER_SIZE = 1024;
     private static UDPServer instance = null;
     
-    private DatagramSocket ds = null;
+    private DatagramSocket socket = null;
     private Thread thread = null;
     private boolean running = false;
     private String host = null;
@@ -54,8 +54,7 @@ public class UDPServer implements Runnable {
         UDPServer instance = UDPServer.getInstance();
         
         if (instance.thread == null) {
-            Thread thread = new Thread(instance);
-            thread.setName(UDPServer.class.getSimpleName());
+            Thread thread = new Thread(instance, UDPServer.class.getSimpleName());
             
             instance.thread = thread;
             thread.start();
@@ -75,20 +74,20 @@ public class UDPServer implements Runnable {
     
     private void stop() {
         this.running = false;
-        this.sleep();
+        this.sleep(1);
         
-        if (this.ds != null && !this.ds.isClosed()) {
-            this.ds.close();
-            this.sleep();
+        if (this.socket != null && !this.socket.isClosed()) {
+            this.socket.close();
+            this.sleep(1);
             //System.out.print(" Thread alive? " + this.thread.isAlive());
             this.thread = null;
         }
         
     }
     
-    private void sleep() {
+    private void sleep(int seconds) {
         try {
-            TimeUnit.SECONDS.sleep(1);
+            TimeUnit.SECONDS.sleep(seconds);
         } catch (InterruptedException e) {
             //
         }
@@ -109,7 +108,7 @@ public class UDPServer implements Runnable {
     
     public void run() {
         try {
-            this.ds = createDatagramSocket();
+            this.socket = createDatagramSocket();
             this.running = true;
             
         } catch (SocketException se) {
@@ -125,7 +124,7 @@ public class UDPServer implements Runnable {
             try {
                 DatagramPacket dp = new DatagramPacket(receiveData, receiveData.length);
                 
-                this.ds.receive(dp);
+                this.socket.receive(dp);
                 new EventHandler(dp.getData(), dp.getLength());
                 //System.out.println(dp.getAddress().getHostName());
 
