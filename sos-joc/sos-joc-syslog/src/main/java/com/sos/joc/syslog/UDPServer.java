@@ -51,13 +51,19 @@ public class UDPServer implements Runnable {
     }
     
     public synchronized static final void start() {
-        UDPServer instance = UDPServer.getInstance();
-        
-        if (instance.thread == null) {
-            Thread thread = new Thread(instance, UDPServer.class.getSimpleName());
-            
-            instance.thread = thread;
-            thread.start();
+        UDPServer.start((Integer) null);
+    }
+    
+    public synchronized static final void start(Integer port) {
+        UDPServer instance = UDPServer.getInstance(port);
+        startThread(instance);
+    }
+    
+    public synchronized static final void start(ConfigurationGlobalsJoc conf) {
+        if (conf != null) {
+            UDPServer.start(conf.getUDPPort());
+        } else {
+            UDPServer.start();
         }
     }
 
@@ -67,9 +73,24 @@ public class UDPServer implements Runnable {
         instance = null;
     }
     
+    private static final void startThread(UDPServer instance) {
+        if (instance.thread == null) {
+            Thread thread = new Thread(instance, UDPServer.class.getSimpleName());
+            
+            instance.thread = thread;
+            thread.start();
+        }
+    }
+    
     private void setPort() {
         ConfigurationGlobalsJoc jocSettings = Globals.getConfigurationGlobalsJoc();
-        this.port = jocSettings.getUDPPort();
+        if (jocSettings != null) {
+            this.port = jocSettings.getUDPPort();
+        }
+    }
+    
+    public static int getPort() {
+        return UDPServer.instance != null ? UDPServer.instance.port : 0;
     }
     
     private void stop() {
@@ -83,6 +104,7 @@ public class UDPServer implements Runnable {
             this.thread = null;
         }
         
+        System.out.println("UDPServer is stopped");
     }
     
     private void sleep(int seconds) {
@@ -110,6 +132,7 @@ public class UDPServer implements Runnable {
         try {
             this.socket = createDatagramSocket();
             this.running = true;
+            System.out.println("UDPServer is started");
             
         } catch (SocketException se) {
             se.printStackTrace(System.err);

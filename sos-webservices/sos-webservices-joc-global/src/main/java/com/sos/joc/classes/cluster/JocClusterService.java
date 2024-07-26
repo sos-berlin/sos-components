@@ -283,6 +283,7 @@ public class JocClusterService {
                             if (joc != null) {
                                 cluster.getActiveMemberHandler().updateService(StartupMode.settings_changed, ClusterServices.history.name(), joc);
                                 cluster.getActiveMemberHandler().updateService(StartupMode.settings_changed, ClusterServices.monitor.name(), joc);
+                                cluster.getActiveMemberHandler().updateService(StartupMode.settings_changed, ClusterServices.syslog.name(), joc);
                             }
                         }
                     }
@@ -346,6 +347,10 @@ public class JocClusterService {
             break;
         case monitor:
             answer = cluster.getActiveMemberHandler().restartService(mode, ClusterServices.monitor.name(), null);
+            break;
+        case syslog:
+            answer = cluster.getActiveMemberHandler().restartService(mode, ClusterServices.syslog.name(), Globals.configurationGlobals
+                    .getConfigurationSection(DefaultSections.joc));
             break;
         default:
             answer = JocCluster.getErrorAnswer(new Exception(String.format("%s restart not yet supported for %s", mode, r.getType())));
