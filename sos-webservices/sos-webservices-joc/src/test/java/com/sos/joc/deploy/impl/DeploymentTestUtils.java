@@ -108,6 +108,9 @@ import com.sos.joc.model.publish.repository.ResponseFolderItem;
 import com.sos.joc.model.publish.repository.UpdateFromFilter;
 import com.sos.joc.model.settings.StoreSettingsFilter;
 import com.sos.joc.model.sign.Signature;
+import com.sos.joc.model.tag.ExportedTagItem;
+import com.sos.joc.model.tag.ExportedTagItems;
+import com.sos.joc.model.tag.ExportedTags;
 import com.sos.joc.publish.repository.util.RepositoryUtil;
 import com.sos.sign.model.instruction.ForkJoin;
 import com.sos.sign.model.instruction.IfElse;
@@ -1961,6 +1964,28 @@ public class DeploymentTestUtils {
         jocClusterDescriptor.setMembers(jocMembers);
         jocs.add(jocClusterDescriptor);
         return jocs;
+    }
+
+    public static ExportedTags createExportedTags() {
+      ExportedTags tags = new ExportedTags();
+      ExportedTagItem tagItemFirst = new ExportedTagItem();
+      tagItemFirst.setName("MyFirstTag");
+      ExportedTagItem tagItemSecond = new ExportedTagItem();
+      tagItemSecond.setName("MySecondTag");
+
+      ExportedTagItems usedByFirst = new ExportedTagItems();
+      usedByFirst.setName("myWorkflow1");
+      usedByFirst.setType(ConfigurationType.WORKFLOW.value());
+      ExportedTagItems usedBySecond = new ExportedTagItems();
+      usedBySecond.setName("myWorkflow2");
+      usedBySecond.setType(ConfigurationType.WORKFLOW.value());
+      
+      tagItemFirst.getUsedBy().add(usedByFirst);
+      tagItemSecond.getUsedBy().add(usedByFirst);
+      tagItemSecond.getUsedBy().add(usedBySecond);
+      tags.getTags().add(tagItemFirst);
+      tags.getTags().add(tagItemSecond);
+      return tags;
     }
 
 }
