@@ -54,6 +54,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.classes.inventory.JsonSerializer;
 import com.sos.joc.classes.inventory.Validator;
+import com.sos.joc.classes.inventory.WorkflowConverter;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
@@ -194,7 +195,7 @@ public class ImportUtils {
                         try {
                             String json = Globals.objectMapper.writeValueAsString(configurationWithReference.getConfiguration());
                             json = json.replaceAll("(\"lockName\"\\s*:\\s*\")" + updateableItem.getOldName() + "\"", "$1" + updateableItem.getNewName() + "\"");
-                            ((WorkflowEdit)configurationWithReference).setConfiguration(Globals.objectMapper.readValue(json, Workflow.class));
+                            ((WorkflowEdit)configurationWithReference).setConfiguration(WorkflowConverter.convertInventoryWorkflow(json));
                         } catch (IOException e) {
                             throw new JocImportException(e);
                         }
@@ -209,7 +210,7 @@ public class ImportUtils {
                         try {
                             String json = Globals.objectMapper.writeValueAsString(configurationWithReference.getConfiguration());
                             json = json.replaceAll("(\"workflowName\"\\s*:\\s*\")" + updateableItem.getOldName() + "\"", "$1" + updateableItem.getNewName() + "\"");
-                            configurationWithReference.setConfiguration(Globals.objectMapper.readValue(json, Workflow.class));
+                            ((WorkflowEdit)configurationWithReference).setConfiguration(WorkflowConverter.convertInventoryWorkflow(json));
                         } catch (IOException e) {
                             throw new JocImportException(e);
                         }
@@ -252,7 +253,7 @@ public class ImportUtils {
                             String json = Globals.objectMapper.writeValueAsString(configurationWithReference.getConfiguration());
                             json = json.replaceAll(JsonConverter.scriptIncludeComments + JsonConverter.scriptInclude + "[ \t]+" + updateableItem
                                     .getOldName() + "(\\s*)", "$1" + JsonConverter.scriptInclude + " " + updateableItem.getNewName() + "$2");
-                            configurationWithReference.setConfiguration(Globals.objectMapper.readValue(json, Workflow.class));
+                            ((WorkflowEdit)configurationWithReference).setConfiguration(WorkflowConverter.convertInventoryWorkflow(json));
                         } catch (Exception e) {
                             throw new JocImportException(e);
                         }
@@ -300,7 +301,7 @@ public class ImportUtils {
                             String json = Globals.objectMapper.writeValueAsString(configurationWithReference.getConfiguration());
                             json = json.replaceAll(JsonConverter.scriptIncludeComments + JsonConverter.scriptInclude + "[ \t]+" + updateableItem
                                     .getOldName() + "(\\s*)", "$1" + JsonConverter.scriptInclude + " " + updateableItem.getNewName() + "$2");
-                            configurationWithReference.setConfiguration(Globals.objectMapper.readValue(json, JobTemplate.class));
+                            ((JobEdit)configurationWithReference).setConfiguration(Globals.objectMapper.readValue(json, JobTemplate.class));
                         } catch (Exception e) {
                             throw new JocImportException(e);
                         }
@@ -330,7 +331,6 @@ public class ImportUtils {
                 alreadyExist.setContent(Globals.objectMapper.writeValueAsString(config.getConfiguration()));
                 alreadyExist.setModified(Date.from(Instant.now()));
                 JocInventory.updateConfiguration(new InventoryDBLayer(dbLayer.getSession()), alreadyExist);
-//                dbLayer.getSession().update(alreadyExist);
             } catch (JsonProcessingException e) {
                 LOGGER.error(e.getMessage(),e);
             } catch (SOSHibernateException e) {
@@ -1499,13 +1499,14 @@ public class ImportUtils {
       InventoryTagDBLayer dbLayer = new InventoryTagDBLayer(session);
       List<DBItemInventoryTag> newTags = new ArrayList<DBItemInventoryTag>();
       List<DBItemInventoryTag> storedTags = new ArrayList<DBItemInventoryTag>();
+      Date now = Date.from(Instant.now());
       if(tagsFromArchive != null) {
         if(!tagsFromArchive.getTags().isEmpty()) {
           tagsFromArchive.getTags().stream().forEach(item -> {
             final DBItemInventoryTag tag = dbLayer.getTag(item.getName());
             List<ExportedTagItems> taggingItems = item.getUsedBy();
             if(tag != null) {
-              tag.setModified(Date.from(Instant.now()));
+              tag.setModified(now);
               try {
                 session.update(tag);
               } catch (SOSHibernateException e) {
@@ -1522,7 +1523,7 @@ public class ImportUtils {
                     DBItemInventoryTagging exTagging = existingTaggings.stream().filter(cfgTagging -> cfgTagging.getName().equals(config.getName()) && cfgTagging.getType().equals(config.getType())).findAny().orElse(null);
                     if(exTagging != null) {
                       exTagging.setTagId(tag.getId());
-                      exTagging.setModified(Date.from(Instant.now()));
+                      exTagging.setModified(now);
                       try {
                         session.update(exTagging);
                       } catch (SOSHibernateException e) {
@@ -1536,7 +1537,7 @@ public class ImportUtils {
               DBItemInventoryTag newTag = new DBItemInventoryTag();
               newTag.setName(item.getName());
               newTag.setOrdering(item.getOrdering());
-              newTag.setModified(Date.from(Instant.now()));
+              newTag.setModified(now);
               newTags.add(newTag);
               try {
                 session.save(newTag);
@@ -1553,6 +1554,7 @@ public class ImportUtils {
                 newTagging.setName(used.getName());
                 newTagging.setType(ConfigurationType.fromValue(used.getType()).intValue());
                 newTagging.setTagId(newTag.getId());
+                newTagging.setModified(now);
                 try {
                   session.save(newTagging);
                 } catch (SOSHibernateException e) {
