@@ -65,4 +65,8 @@ public class JobBOX extends ACommonJob {
         return jobs;
     }
 
+    public boolean hasBoxSuccessOrBoxFailure() {
+        return boxSuccess.getValue() != null || boxFailure.getValue() != null;
+    }
+
 }

@@ -9,9 +9,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgument;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
@@ -31,13 +28,14 @@ import com.sos.js7.converter.commons.input.diagram.AGraphvizDiagramWriter;
 
 public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AutosysGraphvizDiagramWriter.class);
+    public enum Range {
+        original, optimizeDependencies
+    }
 
     private final AutosysDiagramConfig config;
     private final AutosysAnalyzer analyzer;
-    private final String range;
+    private final Range range;
     private final Path outputDirectory;
-    private final boolean optimizeBoxDependencies;
 
     // private final JobBOX folder;
     // private final StringBuilder standalone;
@@ -54,28 +52,26 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
         IN, OUT
     }
 
-    public static void createDiagram(AutosysDiagramConfig config, AutosysAnalyzer analyzer, String range, Path outputDirectory, JobBOX box,
-            boolean optimizeBoxDependencies) throws Exception {
-        new AutosysGraphvizDiagramWriter(config, analyzer, range, outputDirectory, optimizeBoxDependencies).createDiagram(box);
-    }
-
-    public static void createDiagram(AutosysDiagramConfig config, AutosysAnalyzer analyzer, String range, Path outputDirectory, List<ACommonJob> jobs)
+    public static void createDiagram(AutosysDiagramConfig config, AutosysAnalyzer analyzer, Range range, Path outputDirectory, JobBOX box)
             throws Exception {
-        new AutosysGraphvizDiagramWriter(config, analyzer, range, outputDirectory, false).createDiagram(jobs);
+        new AutosysGraphvizDiagramWriter(config, analyzer, range, outputDirectory).createDiagram(box);
     }
 
-    public static void createDiagram(AutosysDiagramConfig config, AutosysAnalyzer analyzer, String range, Path outputDirectory,
+    public static void createDiagram(AutosysDiagramConfig config, AutosysAnalyzer analyzer, Range range, Path outputDirectory, List<ACommonJob> jobs)
+            throws Exception {
+        new AutosysGraphvizDiagramWriter(config, analyzer, range, outputDirectory).createDiagram(jobs);
+    }
+
+    public static void createDiagram(AutosysDiagramConfig config, AutosysAnalyzer analyzer, Range range, Path outputDirectory,
             ACommonJob standaloneJob) throws Exception {
-        new AutosysGraphvizDiagramWriter(config, analyzer, range, outputDirectory, false).createDiagram(standaloneJob);
+        new AutosysGraphvizDiagramWriter(config, analyzer, range, outputDirectory).createDiagram(standaloneJob);
     }
 
-    private AutosysGraphvizDiagramWriter(AutosysDiagramConfig config, AutosysAnalyzer analyzer, String range, Path outputDirectory,
-            boolean optimizeBoxDependencies) {
+    private AutosysGraphvizDiagramWriter(AutosysDiagramConfig config, AutosysAnalyzer analyzer, Range range, Path outputDirectory) {
         this.config = config;
         this.analyzer = analyzer;
         this.range = range;
         this.outputDirectory = outputDirectory;
-        this.optimizeBoxDependencies = optimizeBoxDependencies;
         this.duplicates = new HashMap<>();
 
         initConditions();
@@ -96,13 +92,12 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
         this.boxName = box.getName();
         if (prepareContent(box)) {
             this.outputPath = AutosysConverterHelper.getMainOutputPath(outputDirectory, box, true);
-
-            String add = "";
-            if (optimizeBoxDependencies) {
-                add = ", optimizeBoxDependencies=" + optimizeBoxDependencies;
-                outputPath = outputPath.getParent().resolve(outputPath.getFileName() + "[optimizeBoxDependencies]");
+            if (Range.optimizeDependencies.equals(this.range)) {
+                outputPath = outputPath.getParent().resolve(outputPath.getFileName() + "[" + range.name() + "]");
             }
-            return createDiagram(config, range + add, outputPath, box.getName());
+            // LOGGER.info("[createDiagram][" + range + "][BOX]" + outputPath);
+
+            return createDiagram(config, range.name(), outputPath, box.getName());
         }
         return false;
     }
@@ -131,7 +126,12 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
             if (prepareContent(entry.getValue())) {
                 String name = "_all";
                 this.outputPath = AutosysConverterHelper.getMainOutputPath(outputDirectory.resolve(entry.getKey()).resolve(name), null, true);
-                createDiagram(config, range, outputPath, name);
+                if (Range.optimizeDependencies.equals(this.range)) {
+                    outputPath = outputPath.getParent().resolve(outputPath.getFileName() + "[" + range.name() + "]");
+                }
+                // LOGGER.info("[createDiagram][" + range + "][standaloneJobs]" + outputPath);
+
+                createDiagram(config, range.name(), outputPath, name);
             }
         }
         return jobsPerParent.size() > 0;
@@ -145,10 +145,9 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
     private boolean createDiagram(ACommonJob standaloneJob) throws Exception {
         if (prepareContent(standaloneJob)) {
             this.outputPath = AutosysConverterHelper.getMainOutputPath(outputDirectory, standaloneJob, true, "[ST]");
+            // LOGGER.info("[createDiagram][" + range + "][standaloneJob]" + outputPath);
 
-            LOGGER.info("[createDiagram][standaloneJob]" + outputPath);
-
-            return createDiagram(config, range, outputPath, standaloneJob.getName());
+            return createDiagram(config, range.name(), outputPath, standaloneJob.getName());
         }
         return false;
     }
@@ -168,7 +167,7 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
         sb.append(t);
 
         List<ACommonJob> children = box.getJobs();
-        if (optimizeBoxDependencies) {
+        if (Range.optimizeDependencies.equals(this.range)) {
             children = analyzer.getConditionAnalyzer().handleJobBoxConditions(box);
         }
 
@@ -203,7 +202,9 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
     private boolean prepareContent(List<ACommonJob> jobs) throws Exception {
         StringBuilder c = getFolderContent(jobs);
 
-        // jobs = analyzer.getConditionAnalyzer().handleStandaloneJobsConditions(jobs);
+        if (Range.optimizeDependencies.equals(this.range)) {
+            jobs = analyzer.getConditionAnalyzer().handleStandaloneJobsConditions(jobs);
+        }
 
         for (ACommonJob j : jobs) {
             c = c.append(getJobContent(1, j, true));
@@ -513,7 +514,7 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
         // BOX
         StringBuilder sb = new StringBuilder();
         sb.append(j.getJobType().getValue());
-        if (j instanceof JobBOX) {
+        if (j.isBox()) {
             if (j.isNameEquals(this.boxName)) {
                 sb.append(" <b>").append(j.getName()).append("</b>");
             }

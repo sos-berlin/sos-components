@@ -6,7 +6,7 @@ public class AutosysDiagramConfig extends DiagramConfig {
 
     private static final String CONFIG_KEY = "autosys.input.diagram";
 
-    private boolean optimizeBoxDependencies = false;
+    private boolean optimizeDependencies = false;
 
     public AutosysDiagramConfig() {
         super(CONFIG_KEY);
@@ -16,18 +16,18 @@ public class AutosysDiagramConfig extends DiagramConfig {
     protected void parse(String key, String val) {
         super.parse(key, val);
         switch (key) {
-        case "optimizeBoxDependencies":
-            withOptimizeBoxDependencies(Boolean.parseBoolean(val));
+        case "optimizeDependencies":
+            withOptimizeDependencies(Boolean.parseBoolean(val));
             break;
         }
     }
 
-    public AutosysDiagramConfig withOptimizeBoxDependencies(boolean val) {
-        this.optimizeBoxDependencies = val;
+    public AutosysDiagramConfig withOptimizeDependencies(boolean val) {
+        this.optimizeDependencies = val;
         return this;
     }
 
-    public boolean optimizeBoxDependencies() {
-        return optimizeBoxDependencies;
+    public boolean optimizeDependencies() {
+        return optimizeDependencies;
     }
 }

@@ -1,6 +1,7 @@
 package com.sos.js7.converter.autosys.output.js7;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
@@ -17,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSDate;
+import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.workflow.Workflow;
 import com.sos.inventory.model.board.Board;
@@ -63,10 +65,11 @@ import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Condition;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Condition.ConditionType;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Conditions;
 import com.sos.js7.converter.autosys.config.AutosysConverterConfig;
-import com.sos.js7.converter.autosys.config.items.AutosysDiagramConfig;
 import com.sos.js7.converter.autosys.input.AFileParser;
 import com.sos.js7.converter.autosys.input.DirectoryParser;
 import com.sos.js7.converter.autosys.input.DirectoryParser.DirectoryParserResult;
+import com.sos.js7.converter.autosys.input.JILJobParser;
+import com.sos.js7.converter.autosys.input.XMLJobParser;
 import com.sos.js7.converter.autosys.input.analyzer.AutosysAnalyzer;
 import com.sos.js7.converter.autosys.report.AutosysReport;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
@@ -101,11 +104,14 @@ public class Autosys2JS7Converter {
     public static final String REPORT_FILE_NAME_BOX_CHILDREN_JOBS_RECURSION = "Report-BOX[children_jobs]recursion.txt";
     public static final String REPORT_FILE_NAME_BOX_CONDITION_REFERS_TO_CHILDREN_JOBS = "Report-BOX[condition]refers_to_children_jobs.txt";
     public static final String REPORT_FILE_NAME_BOX_CONDITION_REFERS_TO_BOX_ITSELF = "Report-BOX[condition]refers_to_box_itself.txt";
+    public static final String REPORT_FILE_NAME_BOX_CONDITIONS_SUCCESS_FAILURE = "Report-BOX[conditions]box_success,box_failure.txt";
+
     public static final String REPORT_FILE_NAME_JOBS_WITH_OR_CONDITIONS = "Report-Conditions[OR].txt";
     public static final String REPORT_FILE_NAME_JOBS_WITH_GROUP_CONDITIONS = "Report-Conditions[Groups].txt";
     public static final String REPORT_FILE_NAME_CONDITIONS_BY_TYPE = "Report-Conditions[by_type].txt";
     public static final String REPORT_FILE_NAME_JOBS_DUPLICATES = "Report-Jobs[duplicates].txt";
     public static final String REPORT_FILE_NAME_JOBS_BY_TYPE = "Report-Jobs[by_type].txt";
+    public static final String REPORT_FILE_NAME_JOBS_BY_APPLICATION_GROUP = "Report-Jobs[by_application,group].txt";
 
     public static final String REPORT_DELIMETER_LINE =
             "--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
@@ -116,7 +122,24 @@ public class Autosys2JS7Converter {
     private Map<String, JS7Agent> machine2js7Agent = new HashMap<>();
     private Map<String, String> defaultAutosysJS7Calendars = new HashMap<>();
 
-    public static void convert(AFileParser parser, Path input, Path outputDir, Path reportDir) throws IOException {
+    public static DirectoryParserResult parseInput(Path input, Path reportDir, boolean isXMLParser) {
+        AFileParser parser = isXMLParser ? new XMLJobParser(Autosys2JS7Converter.CONFIG, reportDir) : new JILJobParser(Autosys2JS7Converter.CONFIG,
+                reportDir);
+        return DirectoryParser.parse(CONFIG.getParserConfig(), parser, input);
+    }
+
+    private static boolean isXMLInputFiles(Path input) throws IOException {
+        boolean r = false;
+        if (Files.isDirectory(input)) {
+            List<Path> l = SOSPath.getFileList(input, ".*\\.xml$", java.util.regex.Pattern.CASE_INSENSITIVE);
+            r = l != null && l.size() > 0;
+        } else {
+            r = input.getFileName().toString().toLowerCase().endsWith("xml");
+        }
+        return r;
+    }
+
+    public static void convert(Path input, Path outputDir, Path reportDir) throws Exception {
 
         String method = "convert";
 
@@ -124,36 +147,43 @@ public class Autosys2JS7Converter {
         Instant appStart = Instant.now();
         LOGGER.info(String.format("[%s][start]...", method));
 
+        boolean isXMLInputFiles = isXMLInputFiles(input);
+
         OutputWriter.prepareDirectory(outputDir);
         OutputWriter.prepareDirectory(reportDir);
 
-        // 1 - Config Report
+        // 1 - Parse Autosys files
+        LOGGER.info(String.format("[%s][parse][start]...", method));
+        DirectoryParserResult pr = parseInput(input, reportDir, isXMLInputFiles);
+
+        // 2- Analyze and create Diagram
+        AutosysAnalyzer analyzer = new AutosysAnalyzer();
+        pr = analyzer.analyzeAndCreateDiagram(pr, input, reportDir);
+
+        LOGGER.info(String.format("[%s][parse][end]%s", method, SOSDate.getDuration(appStart, Instant.now())));
+
+        // 3 - Config Report - after 2 because the reporting files maybe deleted by analyzer.analyzeAndCreateDiagram
         ConverterReportWriter.writeConfigReport(reportDir.resolve("config_errors.csv"), reportDir.resolve("config_warnings.csv"), reportDir.resolve(
                 "config_analyzer.csv"));
 
-        // 2 - Parse Autosys files
-        LOGGER.info(String.format("[%s][JIL][parse][start]...", method));
-        DirectoryParserResult pr = DirectoryParser.parse(CONFIG.getParserConfig(), parser, input, CONFIG.getAutosys().getInputConfig()
-                .getDiagramConfig().getGenerate());
-        LOGGER.info(String.format("[%s][JIL][parse][end]%s", method, SOSDate.getDuration(appStart, Instant.now())));
-        // 2.1 - Parser Reports
-        ConverterReportWriter.writeParserReport("JIL", reportDir.resolve("parser_summary.csv"), reportDir.resolve("parser_errors.csv"), reportDir
+        // 4 - Parser Reports
+        ConverterReportWriter.writeParserReport("Autosys", reportDir.resolve("parser_summary.csv"), reportDir.resolve("parser_errors.csv"), reportDir
                 .resolve("parser_warnings.csv"), reportDir.resolve("parser_analyzer.csv"));
 
-        // 3 - Convert to JS7
+        // 5 - Convert to JS7
         Instant start = Instant.now();
         LOGGER.info(String.format("[%s][JS7][convert][start]...", method));
 
         ConverterResult cr = convert(reportDir, pr);
         JS7ConverterResult result = cr.getResult();
         LOGGER.info(String.format("[%s][JS7][convert][end]%s", method, SOSDate.getDuration(start, Instant.now())));
-        // 3.1 - Converter Reports
+        // 5.1 - Converter Reports
         AutosysReport.analyze(cr.getStandaloneJobs(), cr.getBoxJobs());
 
         ConverterReportWriter.writeConverterReport(reportDir.resolve("converter_errors.csv"), reportDir.resolve("converter_warnings.csv"), reportDir
                 .resolve("converter_analyzer.csv"));
 
-        // 4 - Write JS7 files
+        // 6 - Write JS7 files
         start = Instant.now();
         LOGGER.info(String.format("[%s][JS7][write][start]...", method));
         if (CONFIG.getGenerateConfig().getWorkflows()) {
@@ -187,7 +217,7 @@ public class Autosys2JS7Converter {
         // TODO all with write(...
         write(outputDir, "FileOrderSources", result.getFileOrderSources(), true, null);
 
-        // 4.1 - Summary Report
+        // 6.1 - Summary Report
         ConverterReportWriter.writeSummaryReport(reportDir.resolve("converter_summary.csv"));
 
         LOGGER.info(String.format("[%s][[JS7]write][end]%s", method, SOSDate.getDuration(start, Instant.now())));
@@ -223,14 +253,6 @@ public class Autosys2JS7Converter {
     private static ConverterResult convert(Path reportDir, DirectoryParserResult pr) {
         String method = "convert";
 
-        AutosysDiagramConfig diagramConfig = CONFIG.getAutosys().getInputConfig().getDiagramConfig();
-
-        AutosysAnalyzer a = new AutosysAnalyzer();
-        try {
-            a.analyzeAndCreateDiagramm(pr, diagramConfig, reportDir, false);
-        } catch (Throwable e) {
-            LOGGER.error("[analyzeAndCreateDiagramm]" + e.toString(), e);
-        }
         Autosys2JS7Converter c = new Autosys2JS7Converter();
         JS7ConverterResult result = new JS7ConverterResult();
         result.getApplications().addAll(pr.getJobs().stream().map(e -> e.getFolder().getApplication().getValue()).filter(Objects::nonNull).distinct()

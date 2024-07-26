@@ -43,13 +43,12 @@ public class XMLJobParser extends AFileParser {
     }
 
     @Override
-    public FileParserResult parse(DirectoryParserResult r, Path inputFile, boolean createBoxJobsCopy) {
+    public FileParserResult parse(DirectoryParserResult r, Path inputFile) {
         List<ACommonJob> jobs = new ArrayList<>();
-        List<JobBOX> boxJobsCopy = new ArrayList<>();
 
         try {
             boolean splitConfiguration = doSplitConfiguration();
-            Path exportMainDir = AutosysAnalyzer.getExportFoldersMainDir(getReportDir(), false);
+            Path exportMainDir = AutosysAnalyzer.getExportFoldersMainDir(getReportDir());
             // if (!Files.exists(exportMainDir)) {
             // exportMainDir.toFile().mkdirs();
             // }
@@ -61,8 +60,6 @@ public class XMLJobParser extends AFileParser {
             Document doc = SOSXML.parse(inputFile);
 
             BoxJobsHandler boxHandler = new BoxJobsHandler();
-            // copy for diagramm because of remove conditions
-            BoxJobsHandler boxHandlerCopy = new BoxJobsHandler();
 
             int counterTotalJobs = 0;
             int counterMainBoxJobs = 0;
@@ -77,9 +74,7 @@ public class XMLJobParser extends AFileParser {
 
                     Properties p = toProperties(xpath, n);
                     if (p.size() > 0) {
-
                         ACommonJob job = getJobParser().parse(inputFile, p);
-                        // LOGGER.info("XXXX=" + job.getName());
 
                         if (r.getJobNames().contains(job.getName())) {
                             SOSPath.appendLine(duplicateJobs, "[" + inputFile + "][<insert_job>]" + job.getName());
@@ -89,16 +84,12 @@ public class XMLJobParser extends AFileParser {
                         }
 
                         counterTotalJobs++;
-                        ACommonJob jobCopy = createBoxJobsCopy ? getJobParser().parse(inputFile, p) : null;
                         if (ConverterJobType.BOX.equals(job.getConverterJobType())) {
                             boxHandler.addMain(job);
                             counterMainBoxJobs++;
 
-                            if (jobCopy != null) {
-                                boxHandlerCopy.addMain(jobCopy);
-                            }
                             if (splitConfiguration) {
-                                exportConfiguration(inputFile, exportMainDir, elRoot, (Element) n, job, null);
+                                exportConfiguration(inputFile, exportMainDir, elRoot, (Element) n, job);
                             }
 
                             continue;
@@ -107,17 +98,11 @@ public class XMLJobParser extends AFileParser {
                         String boxName = job.getBox().getBoxName().getValue();
                         if (boxName == null) {
                             if (splitConfiguration) {
-                                exportConfiguration(inputFile, exportMainDir, elRoot, (Element) n, job, null);
+                                exportConfiguration(inputFile, exportMainDir, elRoot, (Element) n, job);
                             }
-
                             jobs.add(job);
                         } else {
                             boxHandler.addChild(boxName, job);
-
-                            // BoxJob copy for diagramm
-                            if (jobCopy != null) {
-                                boxHandlerCopy.addChild(boxName, jobCopy);
-                            }
                         }
                     }
                 }
@@ -142,12 +127,6 @@ public class XMLJobParser extends AFileParser {
                 if (size == 0) {
                     boxJobsWithoutChildren.add(e.getKey());
                 }
-
-                if (createBoxJobsCopy) {
-                    JobBOX bjc = boxHandlerCopy.getMainJobs().get(e.getKey());
-                    boxJobsCopy.add(bjc);
-                }
-
             }
             if (boxHandler.getMainJobs().size() != counterMainBoxJobs) {
                 ParserReport.INSTANCE.addSummaryRecord("TOTAL BOX JOBS TO CONVERT", boxHandler.getMainJobs().size());
@@ -165,21 +144,18 @@ public class XMLJobParser extends AFileParser {
             LOGGER.error(String.format("[%s]%s", inputFile, e.toString()), e);
             ParserReport.INSTANCE.addErrorRecord(inputFile, null, e);
         }
-        return new FileParserResult(jobs, boxJobsCopy);
+        return new FileParserResult(jobs);
     }
 
-    private Node exportConfiguration(Path inputFile, Path exportMainDir, Element elRoot, Element el, ACommonJob job, AutosysAnalyzer analyzer) {
-        boolean afterCleanup = analyzer != null;
-
-        boolean isBox = job instanceof JobBOX;
-
+    private void exportConfiguration(Path inputFile, Path exportMainDir, Element elRoot, Element el, ACommonJob job) {
         Path parent = AutosysConverterHelper.getMainOutputPath(exportMainDir, job, false);
         if (!Files.exists(parent)) {
             parent.toFile().mkdirs();
         }
 
         try {
-            Document newDoc = createDocument(inputFile, afterCleanup);
+            Document newDoc = createDocument(inputFile);
+            boolean isBox = job.isBox();
             if (isBox) {
                 newDoc.getDocumentElement().appendChild(newDoc.importNode(el, true));
                 NodeList nl = SOSXML.newXPath().selectNodes(elRoot, "//" + ELEMENT_JIL_NAME + "[box_name='" + job.getName() + "']");
@@ -192,11 +168,6 @@ public class XMLJobParser extends AFileParser {
                 newDoc.getDocumentElement().appendChild(newDoc.importNode(el, true));
             }
 
-            boolean modified = false;
-            if (afterCleanup) {
-                // modified = modifyFolderAfterCleanup(analyzer, doc, folderClone);
-            }
-
             String name = job.getName();
             if (!isBox) {
                 name = "[ST]" + name;
@@ -204,20 +175,14 @@ public class XMLJobParser extends AFileParser {
             Path outputFile = parent.resolve(name + ".xml");
             exportXML(outputFile, newDoc);
 
-            if (modified) {
-                SOSPath.append(exportMainDir.resolve("report_modified_folders.txt"), JS7ConverterHelper.getRelativePath(exportMainDir, outputFile),
-                        JS7ConverterHelper.JS7_NEW_LINE);
-            }
-            return null;
         } catch (Throwable e) {
             LOGGER.error(String.format("[%s]%s", inputFile, e.toString()), e);
         }
-        return null;
     }
 
-    private Document createDocument(Path inputFile, boolean afterCleanup) throws Exception {
+    private Document createDocument(Path inputFile) throws Exception {
         Document d = SOSXML.getDocumentBuilder().newDocument();
-        d.appendChild(d.createComment(JS7ConverterHelper.getJS7ConverterComment(inputFile, afterCleanup).toString()));
+        d.appendChild(d.createComment(JS7ConverterHelper.getJS7ConverterComment(inputFile, false).toString()));
         d.appendChild(d.createElement(ELEMENT_ROOT_NAME));
         return d;
     }

@@ -30,7 +30,7 @@ public abstract class AFileParser {
         this.reportDir = reportDir;
     }
 
-    public abstract FileParserResult parse(DirectoryParserResult r,Path file, boolean createBoxJobsCopy);
+    public abstract FileParserResult parse(DirectoryParserResult r, Path file);
 
     public FileType getFileType() {
         return fileType;

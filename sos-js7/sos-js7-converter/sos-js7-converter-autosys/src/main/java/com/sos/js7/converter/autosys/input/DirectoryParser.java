@@ -14,7 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
-import com.sos.js7.converter.autosys.common.v12.job.JobBOX;
+import com.sos.js7.converter.autosys.input.AFileParser.FileType;
 import com.sos.js7.converter.commons.config.items.ParserConfig;
 import com.sos.js7.converter.commons.report.ParserReport;
 
@@ -22,8 +22,8 @@ public class DirectoryParser {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DirectoryParser.class);
 
-    public static DirectoryParserResult parse(ParserConfig config, AFileParser parser, Path input, boolean createBoxJobsCopy) {
-        DirectoryParserResult r = new DirectoryParser().new DirectoryParserResult();
+    public static DirectoryParserResult parse(ParserConfig config, AFileParser parser, Path input) {
+        DirectoryParserResult r = new DirectoryParser().new DirectoryParserResult(parser.getFileType());
 
         String method = "parse";
         if (Files.exists(input)) {
@@ -35,13 +35,13 @@ public class DirectoryParser {
                             File f = p.toFile();
                             if (f.isFile()) {
                                 r.addCountFiles();
-                                r.addJobs(parser.parse(r, p, createBoxJobsCopy));
+                                r.addJobs(parser.parse(r, p));
                             }
                         }
                     }
                 } else {
                     r.addCountFiles();
-                    r.addJobs(parser.parse(r, input, createBoxJobsCopy));
+                    r.addJobs(parser.parse(r, input));
                 }
                 LOGGER.info(String.format("[%s][total files=%s, main jobs=%s]", method, r.getCountFiles(), r.getJobs().size()));
             } catch (Throwable e) {
@@ -56,10 +56,15 @@ public class DirectoryParser {
 
     public class DirectoryParserResult {
 
+        private final FileType parserType;
+
         private Set<String> jobNames = new HashSet<>();
         private List<ACommonJob> jobs = new ArrayList<>();
-        private List<JobBOX> boxJobsCopy = new ArrayList<>();
         private int countFiles = 0;
+
+        private DirectoryParserResult(FileType parserType) {
+            this.parserType = parserType;
+        }
 
         protected void addCountFiles() {
             countFiles++;
@@ -67,7 +72,6 @@ public class DirectoryParser {
 
         protected void addJobs(FileParserResult r) {
             jobs.addAll(r.getAllJobs());
-            boxJobsCopy.addAll(r.getBoxJobsCopy());
         }
 
         public Set<String> getJobNames() {
@@ -78,12 +82,18 @@ public class DirectoryParser {
             return jobs;
         }
 
-        public List<JobBOX> getBoxJobsCopy() {
-            return boxJobsCopy;
-        }
-
         public int getCountFiles() {
             return countFiles;
+        }
+
+        public boolean isXMLParser() {
+            return FileType.XML.equals(parserType);
+        }
+
+        public void reset() {
+            jobNames = new HashSet<>();
+            jobs = new ArrayList<>();
+            countFiles = 0;
         }
     }
 }
