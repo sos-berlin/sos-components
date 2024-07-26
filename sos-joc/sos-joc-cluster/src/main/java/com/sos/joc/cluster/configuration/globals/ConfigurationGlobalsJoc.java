@@ -102,7 +102,7 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
             GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
     
     //udp server
-    private ConfigurationEntry updPort = new ConfigurationEntry("upd_server_port", "4514", GlobalSettingsSectionValueType.STRING);
+    private ConfigurationEntry updPort = new ConfigurationEntry("upd_server_port", "4514", GlobalSettingsSectionValueType.POSITIVEINTEGER);
 
 
     private Charset encodingCharset = null;
