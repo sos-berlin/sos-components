@@ -15,13 +15,14 @@ import com.sos.joc.cluster.configuration.controller.ControllerConfiguration.Acti
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.cluster.service.active.AJocActiveMemberService;
+import com.sos.joc.model.cluster.common.ClusterServices;
 
 public class SyslogService extends AJocActiveMemberService {
 
     private AtomicBoolean closed = new AtomicBoolean(false);
 
     public SyslogService(JocConfiguration jocConf, ThreadGroup clusterThreadGroup) {
-        super(jocConf, clusterThreadGroup, "Syslog");
+        super(jocConf, clusterThreadGroup, ClusterServices.syslog.name());
     }
 
     @Override
