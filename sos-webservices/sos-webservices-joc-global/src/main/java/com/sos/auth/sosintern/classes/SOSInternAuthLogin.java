@@ -35,7 +35,7 @@ public class SOSInternAuthLogin implements ISOSLogin {
 
             boolean disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), currentAccount.getAccountname());
             if (!disabled) {
-                sosInternAuthAccessToken = sosInternAuthHandler.login(currentAccount,sosInternAuthWebserviceCredentials, pwd);
+                sosInternAuthAccessToken = sosInternAuthHandler.login(currentAccount, sosInternAuthWebserviceCredentials, pwd);
             }
 
             sosInternAuthSubject = new SOSInternAuthSubject();
@@ -73,6 +73,7 @@ public class SOSInternAuthLogin implements ISOSLogin {
         return msg;
     }
 
+    @Override
     public void setMsg(String msg) {
         LOGGER.debug("sosLogin: setMsg=" + msg);
         this.msg = msg;
