@@ -11,6 +11,8 @@ public interface ISOSLogin {
 
     public String getMsg();
 
+    public void setMsg(String msg);
+
     public ISOSAuthSubject getCurrentSubject();
 
     public void setIdentityService(SOSIdentityService sosIdentityService);

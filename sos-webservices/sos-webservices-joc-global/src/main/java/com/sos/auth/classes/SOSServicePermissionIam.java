@@ -26,6 +26,7 @@ import com.sos.auth.openid.classes.SOSOpenIdLogin;
 import com.sos.auth.openid.classes.SOSOpenIdWebserviceCredentials;
 import com.sos.auth.sosintern.classes.SOSInternAuthLogin;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JocCockpitProperties;
@@ -447,7 +448,7 @@ public class SOSServicePermissionIam {
             case LDAP:
             case LDAP_JOC:
                 sosLogin = new SOSLdapLogin();
-                LOGGER.debug("Login with idendity service ldap");
+                LOGGER.debug("Login with identity service ldap");
                 break;
             case KEYCLOAK:
             case KEYCLOAK_JOC:
@@ -456,7 +457,7 @@ public class SOSServicePermissionIam {
                 break;
             case JOC:
                 sosLogin = new SOSInternAuthLogin();
-                LOGGER.debug("Login with idendity service sosintern");
+                LOGGER.debug("Login with identity service sosintern");
                 break;
             case CERTIFICATE:
                 sosLogin = new SOSCertificateAuthLogin();
@@ -531,15 +532,23 @@ public class SOSServicePermissionIam {
             boolean authorization = true;
             if (currentAccount.getCurrentSubject() != null && currentAccount.getCurrentSubject().getListOfAccountPermissions() != null) {
                 if (currentAccount.getCurrentSubject().getListOfAccountPermissions().size() == 0) {
+                    if (currentAccount.getRoles().size() == 0) {
+                        sosLogin.setMsg("login denied: no role assignment found");
+                        currentAccount.setCurrentSubject(null);
+                    } else {
+                        if (currentAccount.getCurrentSubject().getListOfAccountPermissions().size() == 0) {
+                            sosLogin.setMsg("login denied: no permission assignment found");
+                            currentAccount.setCurrentSubject(null);
+                        }
+                    }
                     authorization = false;
                 }
             }
 
             if (authorization) {
                 Globals.jocWebserviceDataContainer.getCurrentAccountsList().addAccount(currentAccount);
+                resetTimeOut(currentAccount);
             }
-
-            resetTimeOut(currentAccount);
 
             if (Globals.sosCockpitProperties == null) {
                 Globals.sosCockpitProperties = new JocCockpitProperties();
@@ -792,18 +801,6 @@ public class SOSServicePermissionIam {
 
                 }
                 IamHistoryDbLayer iamHistoryDbLayer = new IamHistoryDbLayer(sosHibernateSession);
-
-                if (currentAccount.getCurrentSubject() != null && currentAccount.getCurrentSubject().getListOfAccountPermissions() != null) {
-                    if (currentAccount.getRoles().size() == 0) {
-                        msg = "login denied: no role assignment found";
-                        currentAccount.setCurrentSubject(null);
-                    } else {
-                        if (currentAccount.getCurrentSubject().getListOfAccountPermissions().size() == 0) {
-                            msg = "login denied: no permission assignment found";
-                            currentAccount.setCurrentSubject(null);
-                        }
-                    }
-                }
 
                 if (currentAccount.getCurrentSubject() != null && currentAccount.getCurrentSubject().getListOfAccountPermissions() != null) {
                     iamHistoryDbLayer.addLoginAttempt(currentAccount.getAccountname(), authenticationResult, true);

@@ -17,8 +17,10 @@ public class SOSSessionHandler {
 
     private void initSession() throws SessionNotExistException {
         if (sosSession == null) {
-            sosSession = sosCurrentUser.getCurrentSubject().getSession();
-            sosSession.touch();
+            if (sosCurrentUser.getCurrentSubject() != null) {
+                sosSession = sosCurrentUser.getCurrentSubject().getSession();
+                sosSession.touch();
+            }
         }
         if (sosSession == null) {
             throw new SessionNotExistException();
