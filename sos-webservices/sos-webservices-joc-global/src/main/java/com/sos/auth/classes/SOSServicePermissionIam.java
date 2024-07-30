@@ -531,15 +531,23 @@ public class SOSServicePermissionIam {
             boolean authorization = true;
             if (currentAccount.getCurrentSubject() != null && currentAccount.getCurrentSubject().getListOfAccountPermissions() != null) {
                 if (currentAccount.getCurrentSubject().getListOfAccountPermissions().size() == 0) {
+                    if (currentAccount.getRoles().size() == 0) {
+                        sosLogin.setMsg("login denied: no role assignment found");
+                        currentAccount.setCurrentSubject(null);
+                    } else {
+                        if (currentAccount.getCurrentSubject().getListOfAccountPermissions().size() == 0) {
+                            sosLogin.setMsg("login denied: no permission assignment found");
+                            currentAccount.setCurrentSubject(null);
+                        }
+                    }
                     authorization = false;
                 }
             }
 
             if (authorization) {
                 Globals.jocWebserviceDataContainer.getCurrentAccountsList().addAccount(currentAccount);
+                resetTimeOut(currentAccount);
             }
-
-            resetTimeOut(currentAccount);
 
             if (Globals.sosCockpitProperties == null) {
                 Globals.sosCockpitProperties = new JocCockpitProperties();
@@ -792,18 +800,6 @@ public class SOSServicePermissionIam {
 
                 }
                 IamHistoryDbLayer iamHistoryDbLayer = new IamHistoryDbLayer(sosHibernateSession);
-
-                if (currentAccount.getCurrentSubject() != null && currentAccount.getCurrentSubject().getListOfAccountPermissions() != null) {
-                    if (currentAccount.getRoles().size() == 0) {
-                        msg = "login denied: no role assignment found";
-                        currentAccount.setCurrentSubject(null);
-                    } else {
-                        if (currentAccount.getCurrentSubject().getListOfAccountPermissions().size() == 0) {
-                            msg = "login denied: no permission assignment found";
-                            currentAccount.setCurrentSubject(null);
-                        }
-                    }
-                }
 
                 if (currentAccount.getCurrentSubject() != null && currentAccount.getCurrentSubject().getListOfAccountPermissions() != null) {
                     iamHistoryDbLayer.addLoginAttempt(currentAccount, authenticationResult, true);

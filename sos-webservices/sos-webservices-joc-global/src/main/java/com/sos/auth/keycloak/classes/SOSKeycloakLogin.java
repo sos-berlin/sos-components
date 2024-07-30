@@ -43,10 +43,10 @@ public class SOSKeycloakLogin implements ISOSLogin {
             SOSKeycloakWebserviceCredentials webserviceCredentials = new SOSKeycloakWebserviceCredentials();
             webserviceCredentials.setValuesFromProfile(identityService);
 
-            if (Files.exists(Paths.get(webserviceCredentials.getTruststorePath()))){
-            truststore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
-                    webserviceCredentials.getTruststorePassword());
-            }else {
+            if (Files.exists(Paths.get(webserviceCredentials.getTruststorePath()))) {
+                truststore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
+                        webserviceCredentials.getTruststorePassword());
+            } else {
                 LOGGER.warn("Truststore file " + webserviceCredentials.getTruststorePath() + " not existing");
             }
             truststore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials.getTrustStoreType(),
@@ -54,7 +54,7 @@ public class SOSKeycloakLogin implements ISOSLogin {
 
             webserviceCredentials.setAccount(currentAccount.getAccountname());
             SOSKeycloakHandler sosKeycloakHandler = new SOSKeycloakHandler(webserviceCredentials, truststore);
- 
+
             SOSKeycloakAccountAccessToken sosKeycloakAccountAccessToken = null;
 
             boolean disabled;
@@ -62,7 +62,7 @@ public class SOSKeycloakLogin implements ISOSLogin {
             disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), currentAccount.getAccountname());
 
             if (!disabled && (identityService.isSingleFactor())) {
-                sosKeycloakAccountAccessToken = sosKeycloakHandler.login(identityService.getIdentyServiceType(),pwd);
+                sosKeycloakAccountAccessToken = sosKeycloakHandler.login(identityService.getIdentyServiceType(), pwd);
             }
 
             sosKeycloakSubject = new SOSKeycloakSubject(currentAccount.getAccountname(), identityService);
@@ -128,10 +128,6 @@ public class SOSKeycloakLogin implements ISOSLogin {
         return msg;
     }
 
-    public void setMsg(String msg) {
-        LOGGER.debug("sosLogin: setMsg=" + msg);
-        this.msg = msg;
-    }
 
     @Override
     public ISOSAuthSubject getCurrentSubject() {
@@ -141,6 +137,12 @@ public class SOSKeycloakLogin implements ISOSLogin {
     @Override
     public void setIdentityService(SOSIdentityService sosIdentityService) {
         identityService = sosIdentityService;
+    }
+
+    @Override
+    public void setMsg(String msg) {
+        LOGGER.debug("sosLogin: setMsg=" + msg);
+        this.msg = msg;
     }
 
 }
