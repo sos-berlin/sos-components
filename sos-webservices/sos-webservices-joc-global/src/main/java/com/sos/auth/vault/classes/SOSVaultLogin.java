@@ -122,6 +122,7 @@ public class SOSVaultLogin implements ISOSLogin {
         return msg;
     }
 
+    @Override
     public void setMsg(String msg) {
         LOGGER.debug("sosLogin: setMsg=" + msg);
         this.msg = msg;
