@@ -167,7 +167,7 @@
 		</dependency>
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
-			<artifactId>sos-joc-syslog</artifactId>
+			<artifactId>sos-joc-logmanagement</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		

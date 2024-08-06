@@ -513,7 +513,7 @@ public class JsonValidator {
     }
 
     // protected for testing
-    protected static JsonSchema getSchema(URI schemaUri, boolean failFast, boolean strict) {
+    public static JsonSchema getSchema(URI schemaUri, boolean failFast, boolean strict) {
         SchemaValidatorsConfig config = new SchemaValidatorsConfig();
         config.setTypeLoose(true);
         if (failFast) {
@@ -542,6 +542,27 @@ public class JsonValidator {
     private static void validate(byte[] json, URI schemaUri, boolean failFast, boolean strict, boolean onlyFirstError) throws IOException,
             SOSJsonSchemaException {
         JsonSchema schema = getSchema(schemaUri, failFast, strict);
+        Set<ValidationMessage> errors;
+        try {
+            errors = schema.validate(MAPPER.readTree(json));
+            if (errors != null && !errors.isEmpty()) {
+                if (onlyFirstError) {
+                    throw new SOSJsonSchemaException(errors.iterator().next().toString());
+                } else {
+                    throw new SOSJsonSchemaException(errors.stream().map(ValidationMessage::toString).collect(Collectors.joining(" or ")));
+                }
+            }
+        } catch (JsonParseException e) {
+            throw e;
+        } catch (JsonMappingException | JsonSchemaException e) {
+            if (e.getCause() == null || e.getCause().getClass().isInstance(e)) {
+                throw new SOSJsonSchemaException(e.getMessage());
+            }
+            LOGGER.warn("JSON Validation impossible: " + e.toString());
+        }
+    }
+
+    public static void validate(byte[] json, JsonSchema schema, boolean onlyFirstError) throws IOException, SOSJsonSchemaException {
         Set<ValidationMessage> errors;
         try {
             errors = schema.validate(MAPPER.readTree(json));

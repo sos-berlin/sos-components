@@ -13,7 +13,7 @@ public enum ClusterServices {
     dailyplan("dailyplan"),
     cleanup("cleanup"),
     monitor("monitor"),
-    syslog("syslog");
+    lognotification("lognotification");
     private final String value;
     private final static Map<String, ClusterServices> CONSTANTS = new HashMap<String, ClusterServices>();
 

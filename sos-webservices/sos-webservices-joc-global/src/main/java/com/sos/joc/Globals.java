@@ -31,6 +31,7 @@ import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSec
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsDailyPlan;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsGit;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsLogNotification;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsUser;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.exceptions.DBOpenSessionException;
@@ -492,6 +493,11 @@ public class Globals {
     public static ConfigurationGlobalsGit getConfigurationGlobalsGit() {
         return configurationGlobals == null ? new ConfigurationGlobalsGit() : (ConfigurationGlobalsGit) configurationGlobals.getConfigurationSection(
                 DefaultSections.git);
+    }
+    
+    public static ConfigurationGlobalsLogNotification getConfigurationGlobalsLogNotification() {
+        return configurationGlobals == null ? new ConfigurationGlobalsLogNotification() : (ConfigurationGlobalsLogNotification) configurationGlobals
+                .getConfigurationSection(DefaultSections.lognotification);
     }
 
     // -1: current version is older, 0: current version is equal, 1: current version

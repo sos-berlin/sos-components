@@ -88,6 +88,9 @@ public class SystemNotifierModel {
         String jocId = Globals.getJocId();
         Date dateTime = truncateMillis(event.getEpochMillis());
         String exception = SOSClassUtil.getStackTrace(event.getThrown());
+        if (exception == null) {
+            exception = event.getStacktrace();
+        }
         SystemNotifierResult result = new SystemNotifierResult(DBLayerMonitoring.createSystemNotification(notification, jocId, event, dateTime,
                 exception));
 

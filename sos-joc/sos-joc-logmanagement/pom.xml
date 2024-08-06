@@ -9,7 +9,7 @@
 		<version>2.7.2-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>sos-joc-syslog</artifactId>
+	<artifactId>sos-joc-logmanagement</artifactId>
 
 	<dependencies>
 		<!-- SOS Dependencies -->

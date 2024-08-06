@@ -1,4 +1,4 @@
-package com.sos.joc.syslog;
+package com.sos.joc.logmanagement;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -12,28 +12,31 @@ import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration.Action;
-import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsLogNotification;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.cluster.service.active.AJocActiveMemberService;
 import com.sos.joc.model.cluster.common.ClusterServices;
 
-public class SyslogService extends AJocActiveMemberService {
+public class LogNotificationService extends AJocActiveMemberService {
 
+    private static final String IDENTIFIER = ClusterServices.lognotification.name();
     private AtomicBoolean closed = new AtomicBoolean(false);
+    private UDPServer udpServer;
 
-    public SyslogService(JocConfiguration jocConf, ThreadGroup clusterThreadGroup) {
-        super(jocConf, clusterThreadGroup, ClusterServices.syslog.name());
+    public LogNotificationService(JocConfiguration jocConf, ThreadGroup clusterThreadGroup) {
+        super(jocConf, clusterThreadGroup, IDENTIFIER);
     }
 
     @Override
     public JocClusterAnswer start(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration) {
         try {
             closed.set(false);
-            if (configuration != null && configuration instanceof ConfigurationGlobalsJoc) {
-                UDPServer.start((ConfigurationGlobalsJoc) configuration);
+            if (configuration != null && configuration instanceof ConfigurationGlobalsLogNotification) {
+                udpServer = new UDPServer((ConfigurationGlobalsLogNotification) configuration);
             } else {
-                UDPServer.start();
+                udpServer = new UDPServer();
             }
+            udpServer.start();
             return JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);
         } catch (Exception e) {
             return JocCluster.getErrorAnswer(e);
@@ -42,7 +45,7 @@ public class SyslogService extends AJocActiveMemberService {
 
     @Override
     public JocClusterAnswer stop(StartupMode mode) {
-        UDPServer.shutdown();
+        udpServer.stop();
         closed.set(true);
         return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
     }
@@ -61,13 +64,14 @@ public class SyslogService extends AJocActiveMemberService {
     public void update(StartupMode mode, AConfigurationSection configuration) {
         // port is changed -> 
         if (!closed.get()) {
-            if (configuration != null && configuration instanceof ConfigurationGlobalsJoc) {
+            if (configuration != null && configuration instanceof ConfigurationGlobalsLogNotification) {
 
-                ConfigurationGlobalsJoc joc = (ConfigurationGlobalsJoc) configuration;
-                Integer newPort = joc.getUDPPort();
-                if (UDPServer.getPort() != newPort) {
-                    UDPServer.shutdown();
-                    UDPServer.start(newPort);
+                ConfigurationGlobalsLogNotification settings = (ConfigurationGlobalsLogNotification) configuration;
+                Integer newPort = settings.getPort();
+                if (udpServer.getPort() != newPort) {
+                    udpServer.stop();
+                    udpServer = new UDPServer(settings);
+                    udpServer.start();
                 }
             }
         }

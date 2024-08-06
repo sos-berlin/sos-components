@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+	<Properties>
+		<Property name="InstanceId">${sys:jocId}</Property>
+	</Properties>
+	<Appenders>
+		<Syslog name="RFC5424" format="RFC5424" host="localhost" port="4245"
+            protocol="UDP" ignoreExceptions="true">
+            <PatternLayout charset="UTF-8" pattern="&lt;134&gt;1 %d{yyyy-MM-dd'T'HH:mm:ss.SSS}{Etc/UTC}Z ${hostName} Controller {
+&quot;instanceId&quot;:&quot;${InstanceId}&quot;,
+&quot;thread&quot;:&quot;%t&quot;,
+&quot;level&quot;:&quot;%p&quot;,
+&quot;logger&quot;:&quot;%c{1}&quot;,
+&quot;message&quot;:&quot;%enc{%m}{JSON}&quot;,
+&quot;thrown&quot;:&quot;%enc{%throwable{10}}{JSON}&quot;}"/>
+  		</Syslog>
+  		<Syslog name="standardSyslog" format="RFC5424" host="localhost" port="4245" charset="UTF-8"
+            protocol="UDP" ignoreExceptions="true" facility="LOCAL0" appName="JOC" mdcId="42">
+            <LoggerFields>
+            	<KeyValuePair key="instanceId" value="${InstanceId}"/>
+            	<KeyValuePair key="thread" value="%t"/>
+            	<KeyValuePair key="level" value="%p"/>
+            	<KeyValuePair key="logger" value="%c{1}"/>
+            	<KeyValuePair key="thrown" value="%throwable{10}"/>
+            </LoggerFields>
+        </Syslog>
+  		<Socket name="udpSocket" host="localhost" port="4245" protocol="UDP">
+  			<PatternLayout charset="UTF-8" pattern="{
+&quot;timestamp&quot;:&quot;%d{yyyy-MM-dd'T'HH:mm:ss.SSS}{Etc/UTC}Z&quot;,
+&quot;host&quot;:&quot;${hostName}&quot;,
+&quot;product&quot;:&quot;Controller&quot;,
+&quot;controllerId&quot;:&quot;${ClusterMemberId}&quot;,
+&quot;thread&quot;:&quot;%t&quot;,
+&quot;level&quot;:&quot;%p&quot;,
+&quot;logger&quot;:&quot;%c&quot;,
+&quot;message&quot;:&quot;%enc{%m}{JSON}&quot;,
+&quot;thrown&quot;:&quot;%enc{%throwable{10}}{JSON}&quot;
+}"
+  			/>
+  		</Socket>
+  		<Socket name="standardUdpSocket" host="localhost" port="4245" protocol="UDP">
+  		    <JsonLayout compact="true" stacktraceAsString="true" charset="UTF-8" properties="true">
+            	<KeyValuePair key="instanceId" value="${InstanceId}"/>
+            	<KeyValuePair key="hostName" value="${hostName}"/>
+            </JsonLayout>
+  		</Socket>
+  		<Failover name="Failover" primary="RFC5424" ignoreExceptions="true" retryIntervalSeconds="60">
+      		<Failovers>
+        		<AppenderRef ref="udpSocket"/>
+      		</Failovers>
+    	</Failover>
+    	
+    	<Console name="JOCLogNotificationAppender" target="SYSTEM_OUT">
+			<PatternLayout pattern="%d{ISO8601} %-5p - %m%throwable%n" />
+		</Console>
+	</Appenders>
+
+	<Loggers>
+		<Root level="info">
+			<AppenderRef ref="RFC5424"/>
+		</Root>
+		
+		<Logger name="JOCLogNotification" additivity="false" level="DEBUG">
+			<AppenderRef ref="JOCLogNotificationAppender"/>
+		</Logger>
+	</Loggers>
+</Configuration>

@@ -4,6 +4,7 @@ import java.util.Map;
 
 import com.sos.commons.util.SOSString;
 import com.sos.joc.event.bean.monitoring.NotificationLogEvent;
+import com.sos.joc.event.bean.monitoring.SystemNotificationLogEvent;
 import com.sos.monitoring.notification.NotificationType;
 import com.sos.monitoring.notification.SystemNotificationCategory;
 
@@ -38,6 +39,7 @@ public class SystemMonitoringEvent {
     private final String caller;
     private final String message;
     private final Throwable thrown;
+    private final String stacktrace;
 
     private SystemNotificationCategory category;
     private String source;
@@ -52,7 +54,20 @@ public class SystemMonitoringEvent {
         caller = evt.getMarkerName();
         message = getMessage(evt);
         thrown = evt.getThrown();
+        stacktrace = null;
         setCategoryAndSource();
+    }
+    
+    public SystemMonitoringEvent(SystemNotificationLogEvent evt) {
+        type = getType(evt.getLevel());
+        epochMillis = evt.getInstant().toEpochMilli();
+        loggerName = evt.getLoggerName();
+        message = getMessage(evt);
+        stacktrace = evt.getStacktrace();
+        thrown = null;
+        source = evt.getSource();
+        category = SystemNotificationCategory.fromValue(evt.getProduct());
+        caller = source;
     }
     
     private String getMessage(NotificationLogEvent evt) {
@@ -61,6 +76,16 @@ public class SystemMonitoringEvent {
         }
         if (evt.getThrown() != null) {
             return evt.getThrown().toString();
+        }
+        return null;
+    }
+    
+    private String getMessage(SystemNotificationLogEvent evt) {
+        if (evt.getMessage() != null) {
+            return evt.getMessage();
+        }
+        if (evt.getStacktrace() != null) {
+            return evt.getStacktrace().split("\r?\n", 2)[0];
         }
         return null;
     }
@@ -234,6 +259,10 @@ public class SystemMonitoringEvent {
 
     public Throwable getThrown() {
         return thrown;
+    }
+    
+    public String getStacktrace() {
+        return stacktrace;
     }
 
     @Override

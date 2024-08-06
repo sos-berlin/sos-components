@@ -35,6 +35,7 @@ import com.sos.joc.event.bean.monitoring.MonitoringEvent;
 import com.sos.joc.event.bean.monitoring.NotificationConfigurationReleased;
 import com.sos.joc.event.bean.monitoring.NotificationConfigurationRemoved;
 import com.sos.joc.event.bean.monitoring.NotificationLogEvent;
+import com.sos.joc.event.bean.monitoring.SystemNotificationLogEvent;
 import com.sos.joc.monitoring.MonitorService;
 import com.sos.joc.monitoring.SystemMonitorService;
 import com.sos.joc.monitoring.bean.SystemMonitoringEvent;
@@ -77,6 +78,13 @@ public class SystemMonitoringModel {
 
     @Subscribe({ NotificationLogEvent.class })
     public void handleNotificationLogEvent(NotificationLogEvent evt) {
+        if (Configuration.INSTANCE.getSystemNotification() != null) {
+            allEvents.add(new SystemMonitoringEvent(evt));
+        }
+    }
+    
+    @Subscribe({ SystemNotificationLogEvent.class })
+    public void handleNotificationLogEvent(SystemNotificationLogEvent evt) {
         if (Configuration.INSTANCE.getSystemNotification() != null) {
             allEvents.add(new SystemMonitoringEvent(evt));
         }
