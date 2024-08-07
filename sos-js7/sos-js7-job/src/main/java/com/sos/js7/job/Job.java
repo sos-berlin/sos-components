@@ -21,7 +21,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.hibernate.SOSHibernateFactory;
+import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgumentHelper;
 import com.sos.commons.vfs.ssh.SSHProvider;
@@ -204,29 +204,53 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         jobStep.cancelExecuteJobs();
 
         if (jobStep.getCancelableResources() != null) {
-            cancelHibernateFactory(jobStep, jobName);
+            cancelHibernate(jobStep, jobName);
             cancelSSHProvider(jobStep, jobName);
             // cancelSQLConnection(jobStep, jobName);
         }
     }
 
-    private void cancelHibernateFactory(OrderProcessStep<A> jobStep, String jobName) {
+    private void cancelHibernate(OrderProcessStep<A> jobStep, String jobName) {
         try {
-            Object o = jobStep.getCancelableResources().get(OrderProcessStep.CANCELABLE_RESOURCE_NAME_HIBERNATE_FACTORY);
+            Object o = jobStep.getCancelableResources().get(OrderProcessStep.CANCELABLE_RESOURCE_NAME_HIBERNATE);
             if (o != null) {
-                // SOSHibernateSession s = (SOSHibernateSession) o;
-                // jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "]close session ...");
-                // s.rollback(); s.close() <- does not work because blocked
-
-                // TODO restore factory if initialized onStart ? ...
-                SOSHibernateFactory f = (SOSHibernateFactory) o;
-                if (f != null) {
-                    jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "]close hibernate factory ...");
-                    f.close();
+                SOSHibernateSession s = (SOSHibernateSession) o;
+                boolean doRollback = false;
+                if (s.getCurrentStatement() != null) {
+                    jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "][hibernate]cancel statement ...");
+                    try {
+                        s.getCurrentStatement().cancel();
+                    } catch (Throwable ex) {
+                        jobStep.getLogger().warn("[" + OPERATION_CANCEL_KILL + "][hibernate][cancel statement]" + ex.toString(), ex);
+                    }
+                    doRollback = true;
                 }
+                Connection conn = s.getConnection();
+                // Rollback if the current statement is canceled.
+                // Otherwise, rollback execution waits until the current statement completes.
+                if (doRollback) {
+                    try {
+                        jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "][hibernate]connection rollback ...");
+                        conn.rollback();
+                    } catch (Throwable ex) {
+                        jobStep.getLogger().warn("[" + OPERATION_CANCEL_KILL + "][hibernate][connection rollback]" + ex.toString(), ex);
+                    }
+                } else {
+                    jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL
+                            + "][hibernate][connection rollback][skip]because the current statement is no more active");
+                }
+                try {
+                    conn.abort(Runnable::run);
+                } catch (Throwable ex) {
+                    jobStep.getLogger().warn("[" + OPERATION_CANCEL_KILL + "][hibernate][connection abort]" + ex.toString(), ex);
+                }
+                // close session and factory
+                jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "][hibernate]close...");
+                s.getFactory().close(s);
+                jobStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "][hibernate]completed");
             }
         } catch (Throwable e) {
-            jobStep.getLogger().error(String.format("[%s][job name=%s][cancelHibernateFactory]%s", OPERATION_CANCEL_KILL, jobName, e.toString()), e);
+            jobStep.getLogger().error(String.format("[%s][job name=%s][cancelHibernate]%s", OPERATION_CANCEL_KILL, jobName, e.toString()), e);
         }
     }
 
