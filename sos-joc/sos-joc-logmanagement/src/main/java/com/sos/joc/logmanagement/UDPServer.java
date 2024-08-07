@@ -107,6 +107,7 @@ public class UDPServer implements Runnable {
     
     protected void stop() {
         this.running = false;
+        JocClusterServiceLogger.setLogger(ClusterServices.lognotification.name());
         
         this.sleep(1);
         
@@ -172,10 +173,10 @@ public class UDPServer implements Runnable {
     }
     
     private static void doIt(Stream<EventHandler> eventStream) {
-//        eventStream.map(EventHandler::mapToLogEvent).filter(Objects::nonNull).distinct().map(EventHandler::mapLogEventToSystemNotificationLogEvent)
-//                .forEach(evt -> EventBus.getInstance().post(evt));
         eventStream.map(EventHandler::mapToLogEvent).filter(Objects::nonNull).distinct().map(EventHandler::mapLogEventToSystemNotificationLogEvent)
-                .forEach(evt -> LOGGER.info(evt.toString()));
+                .forEach(evt -> EventBus.getInstance().post(evt));
+//        eventStream.map(EventHandler::mapToLogEvent).filter(Objects::nonNull).distinct().map(EventHandler::mapLogEventToSystemNotificationLogEvent)
+//                .forEach(evt -> LOGGER.info(evt.toString()));
     }
     
     public void run() {
@@ -214,7 +215,7 @@ public class UDPServer implements Runnable {
                     logEvents.add(new EventHandler(dp));
                 } else {
                     LOGGER.debug(NOT_NOTIFY_LOGGER, "Received message from " + dp.getAddress().getHostName()
-                            + " but notification is not yet available");
+                            + " but system notification is not configured");
                 }
 
             } catch (SocketException se) {
