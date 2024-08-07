@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory;
+import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.db.common.Export2CSV;
@@ -34,15 +35,18 @@ public class PLSQLJob extends Job<PLSQLJobArguments> {
         step.getDeclaredArguments().checkRequired();
 
         SOSHibernateFactory factory = null;
+        SOSHibernateSession session = null;
+        
         try {
             factory = getHibernateFactory(step);
-            process(step, factory.openStatelessSession(PLSQLJob.class.getSimpleName()).getConnection());
+            session = factory.openStatelessSession(PLSQLJob.class.getSimpleName());
+            process(step, session.getConnection());
         } catch (Throwable e) {
             throw e;
         } finally {
             if (factory != null) {
                 try {
-                    factory.close();
+                    factory.close(session);
                 } catch (Throwable e) {
                 }
             }
@@ -74,6 +78,10 @@ public class PLSQLJob extends Job<PLSQLJobArguments> {
             } else {
                 p.put(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD, "");
             }
+            // set hikariCP as the default connection pool
+            p.put("hibernate.connection.provider_class", "org.hibernate.hikaricp.internal.HikariCPConnectionProvider");
+            // TODO: set poolsize to 1 for this job
+            p.put("hibernate.hikari.maximumPoolSize", "1");
             f = new SOSHibernateFactory();
             f.getConfigurationProperties().putAll(p);
         }
@@ -99,6 +107,7 @@ public class PLSQLJob extends Job<PLSQLJobArguments> {
         }
 
         f.build();
+        step.addCancelableResource(f);
         return f;
     }
 
