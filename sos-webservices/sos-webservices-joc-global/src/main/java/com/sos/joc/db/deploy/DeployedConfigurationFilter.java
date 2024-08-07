@@ -91,7 +91,7 @@ public class DeployedConfigurationFilter {
         }
     }
     
-    public void setTags(Collection<String> tags) {
+    public void setTags(Set<String> tags) {
         if (tags != null) {
             setTags(tags.stream());
         } else {
