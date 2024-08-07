@@ -32,7 +32,7 @@ public class JocClusterConfiguration {
     private static final String ACTIVE_MEMBER_SERVICE_DAILYPLAN = "com.sos.joc.dailyplan.DailyPlanService";
     private static final String ACTIVE_MEMBER_SERVICE_HISTORY = "com.sos.joc.history.HistoryService";
     private static final String ACTIVE_MEMBER_SERVICE_MONITOR = "com.sos.joc.monitoring.HistoryMonitorService";
-    private static final String ACTIVE_MEMBER_SERVICE_SYSLOG = "com.sos.joc.syslog.SyslogService";
+    private static final String ACTIVE_MEMBER_SERVICE_LOGNOTIFICATION = "com.sos.joc.logmanagement.LogNotificationService";
 
     private static final String EMBEDDED_SERVICE_MONITOR = "com.sos.joc.monitoring.SystemMonitorService";
 
@@ -83,7 +83,7 @@ public class JocClusterConfiguration {
         addActiveMemberService(ACTIVE_MEMBER_SERVICE_DAILYPLAN);
         addActiveMemberService(ACTIVE_MEMBER_SERVICE_CLEANUP);
         addActiveMemberService(ACTIVE_MEMBER_SERVICE_MONITOR);
-        addActiveMemberService(ACTIVE_MEMBER_SERVICE_SYSLOG);
+        addActiveMemberService(ACTIVE_MEMBER_SERVICE_LOGNOTIFICATION);
     }
 
     private void registerEmbeddedServices() {
