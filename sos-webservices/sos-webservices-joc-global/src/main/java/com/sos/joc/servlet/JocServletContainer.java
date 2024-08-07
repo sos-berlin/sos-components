@@ -59,6 +59,8 @@ public class JocServletContainer extends ServletContainer {
         LOGGER.debug("----> init on starting JOC");
         super.init();
         cleanupOldLogFiles(0);
+        
+        Globals.setSystemProperties();
 
         Globals.sosCockpitProperties = new JocCockpitProperties();
         Globals.readUnmodifiables();

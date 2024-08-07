@@ -529,5 +529,13 @@ public class Globals {
             return 1;
         }
     }
+    
+    public static void setSystemProperties() {
+        System.setProperty("log4j2.contextSelector", "org.apache.logging.log4j.core.async.AsyncLoggerContextSelector");
+        // Use less CPU when idling than default "Timeout":
+        System.setProperty("log4j2.asyncLoggerWaitStrategy", "Block");
+        // Because AsyncLoggerContextSelector flushes:
+        System.setProperty("js7.log4j.immediateFlush", "false");
+    }
 
 }
