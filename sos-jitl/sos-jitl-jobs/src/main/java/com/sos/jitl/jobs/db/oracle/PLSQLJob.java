@@ -3,20 +3,18 @@ package com.sos.jitl.jobs.db.oracle;
 import java.nio.file.Files;
 import java.sql.CallableStatement;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.hibernate.cfg.Configuration;
-
 import com.sos.commons.credentialstore.CredentialStoreArguments;
-import com.sos.commons.credentialstore.CredentialStoreArguments.CredentialStoreResolver;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory;
+import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
+import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.db.common.Export2CSV;
 import com.sos.jitl.jobs.db.common.Export2JSON;
 import com.sos.jitl.jobs.db.common.Export2XML;
@@ -35,18 +33,22 @@ public class PLSQLJob extends Job<PLSQLJobArguments> {
     @Override
     public void processOrder(OrderProcessStep<PLSQLJobArguments> step) throws Exception {
         step.getDeclaredArguments().checkRequired();
-        
+
         SOSHibernateFactory factory = null;
+        SOSHibernateSession session = null;
+        
         try {
             factory = getHibernateFactory(step);
-            process(step, factory.openStatelessSession(PLSQLJob.class.getSimpleName()).getConnection());
+            session = factory.openStatelessSession(PLSQLJob.class.getSimpleName());
+            process(step, session.getConnection());
         } catch (Throwable e) {
             throw e;
         } finally {
             if (factory != null) {
                 try {
-                    factory.close();
-                } catch (Throwable e) {}
+                    factory.close(session);
+                } catch (Throwable e) {
+                }
             }
         }
     }
@@ -62,24 +64,49 @@ public class PLSQLJob extends Job<PLSQLJobArguments> {
         } else {
             Properties p = new Properties();
             // required
-            p.put(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, args.getDbDialect());
-            p.put(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_DRIVERCLASS, args.getDbDriverClass());
-            p.put(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL, args.getDbUrl());
+            p.put(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, args.getDbDialect().getValue());
+            p.put(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_DRIVERCLASS, args.getDbDriverClass().getValue());
+            p.put(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL, args.getDbUrl().getValue());
             // optional
-            if(args.getDbUser() != null && !args.getDbUser().isEmpty()) {
-                p.put(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME, args.getDbUser());
+            if (!SOSString.isEmpty(args.getDbUser().getValue())) {
+                p.put(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME, args.getDbUser().getValue());
             } else {
                 p.put(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME, "");
             }
-            if (args.getDbPassword() != null && ! args.getDbPassword().isEmpty()) {
-                p.put(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD, args.getDbPassword());
+            if (!SOSString.isEmpty(args.getDbPassword().getValue())) {
+                p.put(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD, args.getDbPassword().getValue());
             } else {
                 p.put(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD, "");
             }
+            // set hikariCP as the default connection pool
+            p.put("hibernate.connection.provider_class", "org.hibernate.hikaricp.internal.HikariCPConnectionProvider");
+            // TODO: set poolsize to 1 for this job
+            p.put("hibernate.hikari.maximumPoolSize", "1");
             f = new SOSHibernateFactory();
             f.getConfigurationProperties().putAll(p);
         }
+        CredentialStoreArguments csArgs = step.getIncludedArguments(CredentialStoreArguments.class);
+        if (csArgs != null) {
+            Properties p = new Properties();
+            if (!SOSString.isEmpty(csArgs.getFile().getValue())) {
+                p.put(SOSHibernate.HIBERNATE_SOS_PROPERTY_CREDENTIAL_STORE_FILE, csArgs.getFile().getValue());
+            }
+            if (!SOSString.isEmpty(csArgs.getKeyFile().getValue())) {
+                p.put(SOSHibernate.HIBERNATE_SOS_PROPERTY_CREDENTIAL_STORE_KEY_FILE, csArgs.getKeyFile().getValue());
+            }
+            if (!SOSString.isEmpty(csArgs.getPassword().getValue())) {
+                p.put(SOSHibernate.HIBERNATE_SOS_PROPERTY_CREDENTIAL_STORE_PASSWORD, csArgs.getPassword().getValue());
+            }
+            if (!SOSString.isEmpty(csArgs.getEntryPath().getValue())) {
+                p.put(SOSHibernate.HIBERNATE_SOS_PROPERTY_CREDENTIAL_STORE_ENTRY_PATH, csArgs.getEntryPath().getValue());
+            }
+            if (p.size() > 0) {
+                f.getConfigurationProperties().putAll(p);
+            }
+        }
+
         f.build();
+        step.addCancelableResource(f);
         return f;
     }
 
