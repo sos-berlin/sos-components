@@ -13,8 +13,10 @@ import org.slf4j.MarkerFactory;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.WebserviceConstants;
+import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.event.bean.monitoring.SystemNotificationLogEvent;
 import com.sos.joc.logmanagement.exception.SOSUnexpectedMessageException;
+import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.joc.model.log.Level;
 import com.sos.joc.model.log.LogEvent;
 import com.sos.schema.JsonValidator;
@@ -42,7 +44,56 @@ public class EventHandler {
         copyData(message, length);
     }
     
-    public SystemNotificationLogEvent mapToSystemNotificationLogEvent() {
+//    public SystemNotificationLogEvent mapToSystemNotificationLogEvent() {
+//        JocClusterServiceLogger.setLogger(ClusterServices.lognotification.name());
+//        String message = newString();
+//        LOGGER.debug(NOT_NOTIFY_LOGGER, "Received message from " + inetAddress.getHostName() + ": " + message);
+//        try {
+//            String[] messageParts = message.split("\\s+\\{", 2);
+//
+//            if (messageParts.length == 2) {
+//                String logMessage = getLogMessage(getHeaderInfoAsJSON(messageParts[0]), messageParts[1]);
+//                LogEvent evt;
+//                
+//                if (UDPServer.schema != null) {
+//                    try {
+//                        JsonValidator.validate(logMessage.getBytes(StandardCharsets.UTF_8), UDPServer.schema, true);
+//                    } catch (Exception e) {
+//                        throw new SOSUnexpectedMessageException(e);
+//                    }
+//                }
+//                try {
+//                    logMessage = sanitize(logMessage);
+//                    evt = Globals.objectMapper.readValue(logMessage, LogEvent.class);
+//                } catch (Exception e) {
+//                    throw new SOSUnexpectedMessageException(e);
+//                }
+//                if (!evt.getLevel().isMoreSpecificThan(expectedMinLogLevel)) {
+//                    throw new SOSUnexpectedMessageException("Only warnings and errors are expected"); 
+//                }
+//                //addHeaderInfo(messageParts[0], evt);
+//                setIds(evt);
+//                
+//                SystemNotificationLogEvent notificationEvt = new SystemNotificationLogEvent(evt.getHost(), evt.getProduct().value(), evt
+//                        .getClusterId(), evt.getInstanceId(), evt.getLevel().value(), evt.getTimestamp().toInstant(), evt.getLogger(), evt
+//                                .getMessage(), evt.getThrown());
+//                LOGGER.debug(NOT_NOTIFY_LOGGER, "Notification event: " + notificationEvt.toString());
+//
+//                return notificationEvt;
+//            } else {
+//                throw new SOSUnexpectedMessageException("Couldn't find message body in JSON format");
+//            }
+//
+//        } catch (SOSUnexpectedMessageException e) {
+//            LOGGER.error(NOT_NOTIFY_LOGGER, e.toString() + ":\n" + message);
+//        } catch (Exception e) {
+//            LOGGER.error(MARKER, "", e);
+//        }
+//        return null;
+//    }
+    
+    public LogEvent mapToLogEvent() {
+        JocClusterServiceLogger.setLogger(ClusterServices.lognotification.name());
         String message = newString();
         LOGGER.debug(NOT_NOTIFY_LOGGER, "Received message from " + inetAddress.getHostName() + ": " + message);
         try {
@@ -70,13 +121,7 @@ public class EventHandler {
                 }
                 //addHeaderInfo(messageParts[0], evt);
                 setIds(evt);
-                
-                SystemNotificationLogEvent notificationEvt = new SystemNotificationLogEvent(evt.getHost(), evt.getProduct().value(), evt
-                        .getClusterId(), evt.getInstanceId(), evt.getLevel().value(), evt.getTimestamp().toInstant(), evt.getLogger(), evt
-                                .getMessage(), evt.getThrown());
-                LOGGER.debug(NOT_NOTIFY_LOGGER, "Notification event: " + notificationEvt.toString());
-
-                return notificationEvt;
+                return evt;
             } else {
                 throw new SOSUnexpectedMessageException("Couldn't find message body in JSON format");
             }
@@ -87,6 +132,17 @@ public class EventHandler {
             LOGGER.error(MARKER, "", e);
         }
         return null;
+    }
+    
+    public static SystemNotificationLogEvent mapLogEventToSystemNotificationLogEvent(LogEvent evt) {
+        SystemNotificationLogEvent notificationEvt = new SystemNotificationLogEvent(evt.getHost(), evt.getProduct().value(), evt
+                .getClusterId(), evt.getInstanceId(), evt.getLevel().value(), evt.getTimestamp().toInstant(), evt.getLogger(), evt
+                        .getMessage(), evt.getThrown());
+        if (LOGGER.isDebugEnabled()) {
+            JocClusterServiceLogger.setLogger(ClusterServices.lognotification.name());
+            LOGGER.debug(NOT_NOTIFY_LOGGER, "Notification event: " + notificationEvt.toString());
+        }
+        return notificationEvt;
     }
     
     private String getLogMessage(String firstMessagePart, String secondMessagePart) {

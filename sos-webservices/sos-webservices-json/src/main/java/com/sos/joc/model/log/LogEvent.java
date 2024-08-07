@@ -275,7 +275,7 @@ public class LogEvent {
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(product).append(instanceId).append(role).append(level).append(logger).append(host).append(clusterId).append(thread).append(message).append(thrown).append(timestamp).toHashCode();
+        return new HashCodeBuilder().append(product).append(instanceId).append(role).append(logger).append(host).append(clusterId).append(message).append(thrown).toHashCode();
     }
 
     @Override
@@ -287,7 +287,7 @@ public class LogEvent {
             return false;
         }
         LogEvent rhs = ((LogEvent) other);
-        return new EqualsBuilder().append(product, rhs.product).append(instanceId, rhs.instanceId).append(role, rhs.role).append(level, rhs.level).append(logger, rhs.logger).append(host, rhs.host).append(clusterId, rhs.clusterId).append(thread, rhs.thread).append(message, rhs.message).append(thrown, rhs.thrown).append(timestamp, rhs.timestamp).isEquals();
+        return new EqualsBuilder().append(product, rhs.product).append(instanceId, rhs.instanceId).append(role, rhs.role).append(logger, rhs.logger).append(host, rhs.host).append(clusterId, rhs.clusterId).append(message, rhs.message).append(thrown, rhs.thrown).isEquals();
     }
 
 }

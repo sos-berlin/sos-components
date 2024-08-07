@@ -65,7 +65,9 @@ public class UDPServer implements Runnable {
     
     protected final void start() {
         if (!this.isActive) {
-            LOGGER.info(NOT_NOTIFY_LOGGER, "UDPServer start is skipped because of the log management settings");
+            JocClusterServiceLogger.setLogger(ClusterServices.cluster.name());
+            LOGGER.info(NOT_NOTIFY_LOGGER, "[skipped] The start of Log Management service is skipped due to the settings");
+            JocClusterServiceLogger.removeLogger(ClusterServices.cluster.name());
         } else {
             forceStart();
         }
@@ -120,7 +122,9 @@ public class UDPServer implements Runnable {
         }
         
         execFinalLogEvents();
-        LOGGER.info(NOT_NOTIFY_LOGGER, "UDPServer is stopped");
+        if (this.isActive) {
+            LOGGER.info(NOT_NOTIFY_LOGGER, "UDPServer is stopped");
+        }
         JocClusterServiceLogger.removeLogger(ClusterServices.lognotification.name());
     }
     
@@ -151,7 +155,7 @@ public class UDPServer implements Runnable {
                 this.running = false;
                 this.logEvents.clear();
                 LOGGER.warn(MARKER, "UDP server received more than " + maxMessagesPerSecond
-                        + " messages per second. It will be stopped according the settings.");
+                        + " messages per second. It will be stopped due to the settings.");
                 this.stop();
             } else {
                 final Stream<EventHandler> eventStream = this.logEvents.stream();
@@ -168,9 +172,10 @@ public class UDPServer implements Runnable {
     }
     
     private static void doIt(Stream<EventHandler> eventStream) {
-        JocClusterServiceLogger.setLogger(ClusterServices.lognotification.name());
-        eventStream.map(EventHandler::mapToSystemNotificationLogEvent).filter(Objects::nonNull).forEach(evt -> EventBus.getInstance().post(evt));
-        //eventStream.map(EventHandler::mapToSystemNotificationLogEvent).filter(Objects::nonNull).forEach(evt -> LOGGER.info(evt.toString()));
+//        eventStream.map(EventHandler::mapToLogEvent).filter(Objects::nonNull).distinct().map(EventHandler::mapLogEventToSystemNotificationLogEvent)
+//                .forEach(evt -> EventBus.getInstance().post(evt));
+        eventStream.map(EventHandler::mapToLogEvent).filter(Objects::nonNull).distinct().map(EventHandler::mapLogEventToSystemNotificationLogEvent)
+                .forEach(evt -> LOGGER.info(evt.toString()));
     }
     
     public void run() {
@@ -179,7 +184,7 @@ public class UDPServer implements Runnable {
             this.socket = createDatagramSocket();
             
             this.running = true;
-            LOGGER.info(NOT_NOTIFY_LOGGER, "UDPServer is started");
+            LOGGER.info(NOT_NOTIFY_LOGGER, "UDPServer is started on port " + this.port);
             
             this.timer.schedule(new TimerTask() {
 
@@ -207,6 +212,9 @@ public class UDPServer implements Runnable {
                 
                 if (NotificationAppender.doNotify) {
                     logEvents.add(new EventHandler(dp));
+                } else {
+                    LOGGER.debug(NOT_NOTIFY_LOGGER, "Received message from " + dp.getAddress().getHostName()
+                            + " but notification is not yet available");
                 }
 
             } catch (SocketException se) {
