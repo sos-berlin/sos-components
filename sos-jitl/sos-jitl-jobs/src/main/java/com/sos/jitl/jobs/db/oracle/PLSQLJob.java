@@ -36,11 +36,12 @@ public class PLSQLJob extends Job<PLSQLJobArguments> {
 
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
-        
+
         try {
             factory = getHibernateFactory(step);
             session = factory.openStatelessSession(PLSQLJob.class.getSimpleName());
-            process(step, session.getConnection());
+            step.addCancelableResource(session);
+            process(step, session);
         } catch (Throwable e) {
             throw e;
         } finally {
@@ -107,11 +108,10 @@ public class PLSQLJob extends Job<PLSQLJobArguments> {
         }
 
         f.build();
-        step.addCancelableResource(f);
         return f;
     }
 
-    private void process(OrderProcessStep<PLSQLJobArguments> step, final Connection connection) throws Exception {
+    private void process(OrderProcessStep<PLSQLJobArguments> step, final SOSHibernateSession session) throws Exception {
 
         PLSQLJobArguments args = step.getDeclaredArguments();
         String plsql = "";
@@ -130,10 +130,12 @@ public class PLSQLJob extends Job<PLSQLJobArguments> {
         DbmsOutput out = null;
         CallableStatement cs = null;
         try {
+            Connection connection = session.getConnection();
             out = new DbmsOutput(connection);
             out.enable(1000000);
 
             cs = connection.prepareCall(plsql);
+            session.setCurrentStatement(cs);
             cs.execute();
 
             String output = out.getOutput();
@@ -194,6 +196,7 @@ public class PLSQLJob extends Job<PLSQLJobArguments> {
                 cs.close();
                 cs = null;
             }
+            session.resetCurrentStatement();
         }
     }
 

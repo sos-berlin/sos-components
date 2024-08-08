@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.exception.ISOSRequiredArgumentMissingException;
-import com.sos.commons.hibernate.SOSHibernateFactory;
+import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.ASOSArguments;
 import com.sos.commons.util.common.SOSArgument;
@@ -50,7 +50,7 @@ import scala.collection.JavaConverters;
 
 public class OrderProcessStep<A extends JobArguments> {
 
-    protected static final String CANCELABLE_RESOURCE_NAME_HIBERNATE_FACTORY = "hibernate_factory";
+    protected static final String CANCELABLE_RESOURCE_NAME_HIBERNATE = "hibernate";
     protected static final String CANCELABLE_RESOURCE_NAME_SSH_PROVIDER = "ssh_provider";
     protected static final String CANCELABLE_RESOURCE_NAME_SQL_CONNECTION = "sql_connection";
 
@@ -230,8 +230,8 @@ public class OrderProcessStep<A extends JobArguments> {
         return threadName;
     }
 
-    public void addCancelableResource(SOSHibernateFactory factory) {
-        addCancelableResource(CANCELABLE_RESOURCE_NAME_HIBERNATE_FACTORY, factory);
+    public void addCancelableResource(SOSHibernateSession session) {
+        addCancelableResource(CANCELABLE_RESOURCE_NAME_HIBERNATE, session);
     }
 
     public void addCancelableResource(SSHProvider provider) {
