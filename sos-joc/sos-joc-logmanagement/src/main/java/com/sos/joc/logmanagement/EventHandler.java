@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
+import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.cluster.service.JocClusterServiceLogger;
@@ -168,7 +169,7 @@ public class EventHandler {
     private String sanitize(String s) {
         // < and > will be replaced by 〈〉 to avoid injection via html and svg
         // delete all 4byte chars (otherwise we need utf8mb4 for MySQL)
-        return s.replaceAll("[^\\u0000-\\uFFFF]", "").replace('<', leftAngleBracket).replace('>', rightAngleBracket);
+        return SOSString.remove4ByteCharacters(s.replace('<', leftAngleBracket).replace('>', rightAngleBracket));
     }
     
     private void setIds(LogEvent evt) {
