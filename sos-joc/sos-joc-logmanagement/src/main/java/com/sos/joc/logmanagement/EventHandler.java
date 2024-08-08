@@ -136,9 +136,9 @@ public class EventHandler {
     }
     
     public static SystemNotificationLogEvent mapLogEventToSystemNotificationLogEvent(LogEvent evt) {
-        SystemNotificationLogEvent notificationEvt = new SystemNotificationLogEvent(evt.getHost(), evt.getProduct().value(), evt
-                .getClusterId(), evt.getInstanceId(), evt.getLevel().value(), evt.getTimestamp().toInstant(), evt.getLogger(), evt
-                        .getMessage(), evt.getThrown());
+        SystemNotificationLogEvent notificationEvt = new SystemNotificationLogEvent(evt.getHost(), evt.getProduct().value(), evt.getClusterId(), evt
+                .getInstanceId(), evt.getRole(), evt.getLevel().value(), evt.getTimestamp().toInstant(), evt.getLogger(), evt.getMessage(), evt
+                        .getThrown());
         if (LOGGER.isDebugEnabled()) {
             JocClusterServiceLogger.setLogger(ClusterServices.lognotification.name());
             LOGGER.debug(NOT_NOTIFY_LOGGER, "Notification event: " + notificationEvt.toString());
@@ -168,8 +168,7 @@ public class EventHandler {
     
     private String sanitize(String s) {
         // < and > will be replaced by 〈〉 to avoid injection via html and svg
-        // delete all 4byte chars (otherwise we need utf8mb4 for MySQL)
-        return SOSString.remove4ByteCharacters(s.replace('<', leftAngleBracket).replace('>', rightAngleBracket));
+        return s.replace('<', leftAngleBracket).replace('>', rightAngleBracket);
     }
     
     private void setIds(LogEvent evt) {

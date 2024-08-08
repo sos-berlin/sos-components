@@ -23,6 +23,7 @@ public class SystemMonitoringEvent {
     private static final String SOURCE_DAILYPLAN = "DailyPlan";
     private static final String SOURCE_INVENTORY = "Inventory";
     private static final String SOURCE_JOC_CLUSTER = "JOCCockpitCluster";
+    private static final String SOURCE_LOG_NOTIFICATION = "LogNotification";
 
     private static final String KEY_DATABASE_WARNING = (SOURCE_DATABASE + "_" + NotificationType.WARNING.name()).toLowerCase();
     private static final String KEY_DATABASE_ERROR = (SOURCE_DATABASE + "_" + NotificationType.ERROR.name()).toLowerCase();
@@ -61,13 +62,13 @@ public class SystemMonitoringEvent {
     public SystemMonitoringEvent(SystemNotificationLogEvent evt) {
         type = getType(evt.getLevel());
         epochMillis = evt.getInstant().toEpochMilli();
-        loggerName = evt.getLoggerName();
+        loggerName = evt.getNotifier();
         message = getMessage(evt);
         stacktrace = evt.getStacktrace();
         thrown = null;
-        source = evt.getSource();
+        source = SOURCE_LOG_NOTIFICATION; //evt.getSource();
         category = SystemNotificationCategory.fromValue(evt.getProduct());
-        caller = source;
+        caller = loggerName;
     }
     
     private String getMessage(NotificationLogEvent evt) {
@@ -81,11 +82,12 @@ public class SystemMonitoringEvent {
     }
     
     private String getMessage(SystemNotificationLogEvent evt) {
+        String hostMessagePrefix = evt.getHost() == null ? "" : evt.getHost() + ": ";
         if (evt.getMessage() != null) {
-            return evt.getMessage();
+            return hostMessagePrefix+ evt.getMessage();
         }
         if (evt.getStacktrace() != null) {
-            return evt.getStacktrace().split("\r?\n", 2)[0];
+            return hostMessagePrefix + evt.getStacktrace().split("\r?\n", 2)[0];
         }
         return null;
     }

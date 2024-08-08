@@ -39,7 +39,8 @@ public class UDPServer implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger("JOCLogNotification");
     private static final Marker MARKER = MarkerFactory.getMarker("JOCLogNotification");
     private static final Marker NOT_NOTIFY_LOGGER = MarkerFactory.getMarker(WebserviceConstants.NOT_NOTIFY_LOGGER.getName());
-    //private static UDPServer instance = null;
+    private static final int timerPeriod = 5; //seconds
+    private final static String threadNamePrefix = "Thread-LogService-";
     
     private DatagramSocket socket = null;
     private Thread thread = null;
@@ -49,11 +50,8 @@ public class UDPServer implements Runnable {
     private boolean isActive = ConfigurationGlobalsLogNotification.getDefaultIsActive();
     private int maxMessagesPerSecond = ConfigurationGlobalsLogNotification.getDefaultMaxMessagesPerSecond();
     private volatile CopyOnWriteArrayList<EventHandler> logEvents = new CopyOnWriteArrayList<>();
-    private final static String threadNamePrefix = "Thread-LogService-";
     private AtomicInteger threadNameSuffix = new AtomicInteger(0);
     private Timer timer = new Timer();
-//    private JocClusterHibernateFactory factory;
-//    private Path hibernateConfigFile;
     
     protected UDPServer() {
         setConfiguration();
@@ -152,7 +150,7 @@ public class UDPServer implements Runnable {
     
     private void execLogEventsThreaded() {
         if (this.logEvents.size() > 0) {
-            if (this.logEvents.size() > maxMessagesPerSecond) {
+            if (this.logEvents.size() > maxMessagesPerSecond * timerPeriod) {
                 this.running = false;
                 this.logEvents.clear();
                 LOGGER.warn(MARKER, "UDP server received more than " + maxMessagesPerSecond
@@ -198,7 +196,7 @@ public class UDPServer implements Runnable {
                     execLogEventsThreaded();
                 }
 
-            }, TimeUnit.SECONDS.toMillis(1), TimeUnit.SECONDS.toMillis(1));
+            }, TimeUnit.SECONDS.toMillis(timerPeriod), TimeUnit.SECONDS.toMillis(timerPeriod));
             
         } catch (Exception e) {
             LOGGER.error(MARKER, "", e);

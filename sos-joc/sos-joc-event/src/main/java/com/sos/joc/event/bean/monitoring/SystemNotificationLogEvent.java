@@ -13,13 +13,14 @@ public class SystemNotificationLogEvent extends MonitoringEvent {
      * instanceId: switch(product) { case CONTROLLER: Primary or Backup, case AGENT: subagentId }
      * For standalone Agent: agentId == subagentId
      */
-    public SystemNotificationLogEvent(String host, String product, String clusterId, String instanceId, String level, Instant instant, String loggerName,
-            String message, String stacktrace) {
+    public SystemNotificationLogEvent(String host, String product, String clusterId, String instanceId, String role, String level, Instant instant,
+            String loggerName, String message, String stacktrace) {
         super(SystemNotificationLogEvent.class.getSimpleName(), null, null);
         putVariable("host", host);
         putVariable("product", product);
         putVariable("clusterId", clusterId);
         putVariable("instanceId", instanceId);
+        putVariable("role", role);
         putVariable("level", level);
         putVariable("instant", instant);
         putVariable("loggerName", loggerName);
@@ -40,6 +41,11 @@ public class SystemNotificationLogEvent extends MonitoringEvent {
     @JsonIgnore
     public Instant getInstant() {
         return (Instant) getVariables().get("instant");
+    }
+
+    @JsonIgnore
+    public String getRole() {
+        return (String) getVariables().get("role");
     }
 
     @JsonIgnore
@@ -73,43 +79,51 @@ public class SystemNotificationLogEvent extends MonitoringEvent {
     }
     
     @JsonIgnore
-    public String getSource() {
+    public String getNotifier() {
         String product = getProduct();
         String instanceId = getInstanceId();
         String clusterId = getClusterId();
+        String role = getRole();
         if ("AGENT".equals(product)) {
-            // clusterId: agentId
+            // clusterId: agentId ; not yet supported
             // instanceId: subagentId
+            // role: Primary or Backup
             if (instanceId == null || instanceId.isBlank()) {
-                return getHost();
+                return "";
             } else {
-                if (clusterId != null && !clusterId.isBlank() && !clusterId.equals(instanceId)) {
-                    return clusterId + "/" + instanceId;
-                } else {
+//                if (clusterId != null && !clusterId.isBlank() && !clusterId.equals(instanceId)) {
+//                    return instanceId + " (" + clusterId + ")";
+//                } else {
+//                    return instanceId;
+//                }
+                if (role == null || role.isBlank()) {
                     return instanceId;
+                } else {
+                    return instanceId + "(" + role + ")";
                 }
             }
         } else if ("CONTROLLER".equals(product)) {
             // clusterId: controllerId
-            // instanceId: Primary or Backup
+            // instanceId (or role): Primary or Backup
             if (clusterId == null || clusterId.isBlank()) {
-                return getHost();
+                return "";
             } else {
                 if (instanceId == null || instanceId.isBlank()) { // only with host if controller is cluster
-                    return clusterId + "(" + getHost() + ")";
+                    return clusterId;
                 } else {
                     return clusterId + "(" + instanceId + ")";
                 }
             }
         }
-        return getHost();
+        return "";
     }
 
     @JsonIgnore
     public String toString() {
         String stacktrace = getStacktrace() != null ? getStacktrace() : "";
         String message = getMessage() != null ? getMessage() : "";
-        return String.format("host:%s, product:%s, clusterId:%s, instanceId:%s, level:%s, timestamp:%s, logger:%s, message:%s, thrown:%s", getHost(),
-                getProduct(), getClusterId(), getInstanceId(), getLevel(), getInstant().toString(), getLoggerName(), message, stacktrace);
+        return String.format("host:%s, product:%s, clusterId:%s, instanceId:%s, role:%s, level:%s, timestamp:%s, logger:%s, message:%s, thrown:%s",
+                getHost(), getProduct(), getClusterId(), getInstanceId(), getRole(), getLevel(), getInstant().toString(), getLoggerName(), message,
+                stacktrace);
     }
 }
