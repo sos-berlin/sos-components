@@ -186,6 +186,9 @@ public class UDPServer implements Runnable {
             
             this.running = true;
             LOGGER.info(NOT_NOTIFY_LOGGER, "UDPServer is started on port " + this.port);
+            if (!NotificationAppender.doNotify) {
+                LOGGER.info(NOT_NOTIFY_LOGGER, "System notification is currently not yet activated. Received messages won't be processed.");
+            }
             
             this.timer.schedule(new TimerTask() {
 
@@ -215,7 +218,7 @@ public class UDPServer implements Runnable {
                     logEvents.add(new EventHandler(dp));
                 } else {
                     LOGGER.debug(NOT_NOTIFY_LOGGER, "Received message from " + dp.getAddress().getHostName()
-                            + " but system notification is not configured");
+                            + " but the system notification is not activated");
                 }
 
             } catch (SocketException se) {
