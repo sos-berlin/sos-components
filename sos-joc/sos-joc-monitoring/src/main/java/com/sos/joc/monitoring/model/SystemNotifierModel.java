@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSClassUtil;
+import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterThreadFactory;
@@ -131,24 +132,39 @@ public class SystemNotifierModel {
         MonitorService.setLogger();
 
         DBLayerMonitoring dbLayer = new DBLayerMonitoring(IDENTIFIER);
+        List<String> errorDetails = new ArrayList<>();
         try {
             dbLayer.setSession(Globals.createSosHibernateStatelessConnection(IDENTIFIER));
             dbLayer.beginTransaction();
 
             for (SystemNotifierResult r : toStore) {
-                r.getNotification().setHasMonitors(r.getMonitors().size() > 0);
-                dbLayer.getSession().save(r.getNotification());
+                try {
+                    r.getNotification().setHasMonitors(r.getMonitors().size() > 0);
+                    dbLayer.getSession().save(r.getNotification());
+                } catch (Throwable e) {
+                    errorDetails.add(String.format("[%s][DB][error][SystemNotifierResult]%s", IDENTIFIER, SOSString.toString(r)));
+                    throw e;
+                }
                 Long id = r.getNotification().getId();
 
                 for (DBItemNotificationMonitor m : r.getMonitors()) {
-                    m.setNotificationId(id);
-                    dbLayer.getSession().save(m);
+                    try {
+                        m.setNotificationId(id);
+                        dbLayer.getSession().save(m);
+                    } catch (Throwable e) {
+                        errorDetails.add(String.format("[%s][DB][error][SystemNotifierResult]%s", IDENTIFIER, SOSString.toString(r)));
+                        errorDetails.add(String.format("[%s][DB][error][DBItemNotificationMonitor]%s", IDENTIFIER, SOSString.toString(m)));
+                        throw e;
+                    }
                 }
             }
 
             dbLayer.commit();
         } catch (Throwable e) {
             LOGGER.info(String.format("[%s][DB][error]%s", IDENTIFIER, e.toString()));
+            for (String d : errorDetails) {
+                LOGGER.info(d);
+            }
             dbLayer.rollback();
         } finally {
             dbLayer.close();
