@@ -22,6 +22,7 @@ import com.sos.js7.converter.autosys.common.v12.job.JobFT;
 import com.sos.js7.converter.autosys.common.v12.job.JobFW;
 import com.sos.js7.converter.autosys.common.v12.job.JobNotSupported;
 import com.sos.js7.converter.autosys.common.v12.job.JobOMTF;
+import com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobCondition;
 import com.sos.js7.converter.commons.annotation.ArgumentInclude;
 import com.sos.js7.converter.commons.annotation.ArgumentSetter;
 import com.sos.js7.converter.commons.report.ParserReport;
@@ -119,6 +120,10 @@ public class JobParser {
     }
 
     private ACommonJob set(Properties p, ACommonJob job) throws IllegalArgumentException {
+        if (p.get(CommonJobCondition.ATTR_CONDITION) == null) {
+            p.put(CommonJobCondition.ATTR_CONDITION, "");
+        }
+
         List<Method> jobMethods = JOB_METHODS.get(job.getConverterJobType());
         p.forEach((name, value) -> {
             boolean found = false;
@@ -156,9 +161,9 @@ public class JobParser {
                         m.invoke(job, value);
                     } else {
                         // e.g. job.getFolder().setApplication(...)
-                        
-                        //LOGGER.info("includeGetMethod="+includeGetMethod+", value="+value);
-                        
+
+                        // LOGGER.info("includeGetMethod="+includeGetMethod+", value="+value);
+
                         Method im = job.getClass().getMethod(includeGetMethod);
                         m.invoke(im.invoke(job), value);
                     }

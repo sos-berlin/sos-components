@@ -19,6 +19,9 @@ public abstract class AFileParser {
         JIL, XML
     }
 
+    public static final String EXPORT_FILE_PREFIX_BOX = "[BOX]";
+    public static final String EXPORT_FILE_PREFIX_STANDALONE = "[ST]";
+
     private final FileType fileType;
     private final JobParser jobParser = new JobParser();
     private final AutosysConverterConfig config;
@@ -74,13 +77,16 @@ public abstract class AFileParser {
             }
             if (m.getJobs() == null) {
                 m.setJobs(new ArrayList<>());
+                m.getJobs().add(job);
             } else {
                 List<ACommonJob> l = m.getJobs().stream().filter(e -> e.isNameEquals(job)).collect(Collectors.toList());
                 if (l != null && l.size() > 0) {
                     childrenJobsDuplicates.put(job.getName(), l.size());
+                } else {
+                    m.getJobs().add(job);
                 }
             }
-            m.getJobs().add(job);
+
         }
 
         public Map<String, JobBOX> getMainJobs() {

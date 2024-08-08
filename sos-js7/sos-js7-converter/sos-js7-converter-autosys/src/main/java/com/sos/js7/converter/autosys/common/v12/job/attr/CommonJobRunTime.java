@@ -197,7 +197,16 @@ public class CommonJobRunTime extends AJobAttributes {
 
     public boolean exists() {
         return timezone.getValue() != null || runWindow.getValue() != null || runCalendar.getValue() != null || daysOfWeek.getValue() != null
-                || startTimes.getValue() != null || startMins.getValue() != null;
+                || (startTimes.getValue() != null && startTimes.getValue().size() > 0) || (startMins.getValue() != null && startMins.getValue()
+                        .size() > 0);
+    }
+
+    public boolean isSingleStarts() {
+        return startTimes.getValue() != null;
+    }
+
+    public boolean isCyclic() {
+        return startMins.getValue() != null && startMins.getValue().size() > 0;
     }
 
     @Override

@@ -2,7 +2,6 @@ package com.sos.js7.converter.autosys.common.v12.job.attr;
 
 import java.util.List;
 
-import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgument;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Conditions;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
@@ -10,7 +9,7 @@ import com.sos.js7.converter.commons.annotation.ArgumentSetter;
 
 public class CommonJobCondition extends AJobAttributes {
 
-    private static final String ATTR_CONDITION = "condition";
+    public static final String ATTR_CONDITION = "condition";
 
     /** condition - Define Starting Conditions for a Job Contents<br/>
      * This attribute is optional for all job types.<br/>
@@ -31,7 +30,7 @@ public class CommonJobCondition extends AJobAttributes {
     public void setCondition(String val) throws Exception {
         String v = JS7ConverterHelper.stringValue(val);
         originalCondition = val;
-        condition.setValue(SOSString.isEmpty(v) ? null : Conditions.parse(v));
+        condition.setValue(Conditions.parse(v));
     }
 
     public String getOriginalCondition() {

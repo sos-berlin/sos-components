@@ -451,7 +451,8 @@ public abstract class ACommonJob {
     }
 
     public boolean hasCondition() {
-        return condition != null && !SOSString.isEmpty(condition.getOriginalCondition());
+        List<Condition> l = conditionsAsList();
+        return l != null && l.size() > 0;
     }
 
     public List<Condition> conditionsAsList() {
@@ -461,11 +462,25 @@ public abstract class ACommonJob {
         return Conditions.getConditions(condition.getCondition().getValue());
     }
 
+    public boolean hasJobConditions() {
+        if (!hasCondition()) {
+            return false;
+        }
+        return conditionsAsList().stream().filter(c -> c.getJobName() != null).count() > 0;
+    }
+
     public boolean hasORConditions() {
         if (!hasCondition()) {
             return false;
         }
         return Conditions.getOROperators(condition.getCondition().getValue()).size() > 0;
+    }
+
+    public boolean hasLookBackConditions() {
+        if (!hasCondition()) {
+            return false;
+        }
+        return Conditions.getConditionsWithLookBack(condition.getCondition().getValue()).size() > 0;
     }
 
     public boolean isNameEquals(String otherName) {
@@ -606,6 +621,13 @@ public abstract class ACommonJob {
         }
         jobFullPathFromJILDefinition = path;
         return jobFullPathFromJILDefinition;
+    }
+
+    public String getApplication() {
+        if (folder == null || folder.getApplication().getValue() == null) {
+            return null;
+        }
+        return folder.getApplication().getValue();
     }
 
     @Override
