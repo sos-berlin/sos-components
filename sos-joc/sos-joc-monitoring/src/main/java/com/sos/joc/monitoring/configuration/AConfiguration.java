@@ -137,7 +137,7 @@ public abstract class AConfiguration {
 
     private String getSystemNotificationInfo() {
         if (systemNotification == null) {
-            return "";
+            return "[not configured]";
         }
         return systemNotification.getTypesAsString();
     }
