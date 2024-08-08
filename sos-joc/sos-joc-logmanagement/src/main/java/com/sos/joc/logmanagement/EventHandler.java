@@ -166,8 +166,9 @@ public class EventHandler {
     }
     
     private String sanitize(String s) {
-        // < and > will be replaced by 〈〉
-        return s.replace('<', leftAngleBracket).replace('>', rightAngleBracket);
+        // < and > will be replaced by 〈〉 to avoid injection via html and svg
+        // delete all 4byte chars (otherwise we need utf8mb4 for MySQL)
+        return s.replaceAll("[^\\u0000-\\uFFFF]", "").replace('<', leftAngleBracket).replace('>', rightAngleBracket);
     }
     
     private void setIds(LogEvent evt) {
