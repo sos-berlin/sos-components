@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
@@ -146,6 +147,10 @@ public class SystemNotifierModel {
                     throw e;
                 }
                 Long id = r.getNotification().getId();
+
+                if (!r.getNotification().getHasMonitors()) {
+                    LOGGER.info(String.format("[%s]%s", IDENTIFIER, SOSHibernate.toString(r.getNotification())));
+                }
 
                 for (DBItemNotificationMonitor m : r.getMonitors()) {
                     try {

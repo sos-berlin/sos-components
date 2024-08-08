@@ -293,4 +293,27 @@ public class SOSString {
         }
         return val.trim();
     }
+
+    public static String remove4ByteCharacters(String val) {
+        if (isEmpty(val)) {
+            return val;
+        }
+        StringBuilder result = new StringBuilder();
+        int length = val.length();
+        for (int i = 0; i < length; i++) {
+            char ch = val.charAt(i);
+            if (Character.isHighSurrogate(ch)) {
+                if (i + 1 < length && Character.isLowSurrogate(val.charAt(i + 1))) {
+                    i++;
+                } else {
+                    result.append(ch);
+                }
+            } else if (Character.isLowSurrogate(ch)) {
+                result.append(ch);
+            } else {
+                result.append(ch);
+            }
+        }
+        return result.toString();
+    }
 }
