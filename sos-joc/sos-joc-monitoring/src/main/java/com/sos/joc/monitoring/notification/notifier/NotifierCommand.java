@@ -11,7 +11,6 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.SOSEnv;
 import com.sos.commons.util.common.SOSTimeout;
@@ -122,9 +121,9 @@ public class NotifierCommand extends ANotifier {
             getSystemVars().entrySet().forEach(e -> {
                 String val = e.getValue();
                 if (e.getKey().endsWith("MESSAGE") || e.getKey().endsWith("EXCEPTION")) {
-                    val = escape(val);
+                    val = SOSEnv.escapeValue(val);
                 }
-                map.put(PREFIX_ENV_VAR + "_" + e.getKey(), nl2sp(val));
+                map.put(PREFIX_ENV_VAR + "_" + e.getKey(), SOSEnv.newLine2Space(val));
             });
         }
 
@@ -134,30 +133,13 @@ public class NotifierCommand extends ANotifier {
                 // if (!e.getKey().endsWith("_PARAMETERS")) {
                 String val = e.getValue();
                 if (e.getKey().endsWith("ERROR_TEXT") || e.getKey().endsWith("WARN_TEXT")) {// TITLE? ....
-                    val = escape(val);
+                    val = SOSEnv.escapeValue(val);
                 }
-                map.put(PREFIX_ENV_VAR + "_" + e.getKey(), nl2sp(val));
+                map.put(PREFIX_ENV_VAR + "_" + e.getKey(), SOSEnv.newLine2Space(val));
                 // }
             });
         }
         return new SOSEnv(map);
-    }
-
-    private String nl2sp(String value) {
-        return value.replaceAll("\\r\\n|\\r|\\n", " ");
-    }
-
-    private String escape(String val) {
-        return SOSShell.IS_WINDOWS ? escape4Windows(val) : escape4Unix(val);
-    }
-
-    private String escape4Windows(String s) {
-        return s.replaceAll("<", "^<").replaceAll(">", "^>").replaceAll("%", "^%").replaceAll("&", "^&");
-    }
-
-    private String escape4Unix(String s) {
-        return s.replaceAll("\"", "\\\\\"").replaceAll("<", "\\\\<").replaceAll(">", "\\\\>").replaceAll("%", "\\\\%").replaceAll("&", "\\\\&")
-                .replaceAll(";", "\\\\;").replaceAll("'", "\\\\'");
     }
 
     private static Path getWorkingDir() {

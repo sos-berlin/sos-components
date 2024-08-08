@@ -2,6 +2,9 @@ package com.sos.commons.util.common;
 
 import java.util.Map;
 
+import com.sos.commons.util.SOSShell;
+import com.sos.commons.util.SOSString;
+
 public class SOSEnv {
 
     private Map<String, String> localEnvs;
@@ -36,4 +39,78 @@ public class SOSEnv {
         globalEnvs = val;
     }
 
+    public static String newLine2Space(String value) {
+        return value.replaceAll("\\r\\n|\\r|\\n", " ");
+    }
+
+    public static String escapeValue(String val) {
+        return escapeValue(val, SOSShell.IS_WINDOWS);
+    }
+
+    /** The entire escaped value should be an original string: without interpretation/replacement by the shell */
+    public static String escapeValue(String val, boolean isWindows) {
+        if (SOSString.isEmpty(val)) {
+            return val;
+        }
+        val = SOSString.remove4ByteCharacters(val).trim();
+        return isWindows ? escapeValue4Windows(val) : escapeValue4Unix(val);
+    }
+
+    /** The entire escaped value should be an original string: without interpretation/replacement by the shell
+     *
+     * Escape with ^ to prevent the shell from interpreting value:<br/>
+     * < <br/>
+     * > <br/>
+     * & <br/>
+     * % <br/>
+     * ^ <br/>
+     * | <br/>
+     * " <br/>
+     * ' <br/>
+     * ! <br/>
+     * ( <br/>
+     * ) <br/>
+     * [ <br/>
+     * ] <br/>
+     * 
+     * @param val
+     * @return escaped value */
+    private static String escapeValue4Windows(String val) {
+        // return s.replaceAll("<", "^<").replaceAll(">", "^>").replaceAll("%", "^%").replaceAll("&", "^&");
+        return val.replaceAll("([<>&%^|\"'!()\\[\\]])", "^$1");
+    }
+
+    /** The entire value should be an original string: without interpretation/replacement by the shell
+     * 
+     * Escape with \ to prevent the shell from interpreting value:<br/>
+     * \ <br/>
+     * " <br/>
+     * < <br/>
+     * > <br/>
+     * & <br/>
+     * % <br/>
+     * ' <br/>
+     * ; <br/>
+     * ` <br/>
+     * $ <br/>
+     * ( <br/>
+     * ) <br/>
+     * { <br/>
+     * } <br/>
+     * [ <br/>
+     * ] <br/>
+     * | <br/>
+     * ^ <br/>
+     * # <br/>
+     * ~ <br/>
+     * ? <br/>
+     * * <br/>
+     * 
+     * @param val
+     * @return escaped value */
+    private static String escapeValue4Unix(String val) {
+        // return s.replaceAll("\"", "\\\\\"").replaceAll("<", "\\\\<").replaceAll(">", "\\\\>").replaceAll("%", "\\\\%").replaceAll("&", "\\\\&")
+        // .replaceAll(";", "\\\\;").replaceAll("'", "\\\\'");
+        return val.replaceAll("([\"<>&%';`$(){}\\[\\]|^#~?*])", "\\\\$1");
+    }
 }
