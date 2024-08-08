@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +35,7 @@ public class Conditions {
             LOGGER.trace(String.format("[%s][%s][start]...", method, val));
         }
         if (SOSString.isEmpty(val)) {
-            return null;
+            return new ArrayList<>();
         }
         boolean groupBegin = false;
         boolean groupEnd = false;
@@ -281,6 +282,14 @@ public class Conditions {
         return result;
     }
 
+    public static List<Condition> getConditionsWithInstanceTag(List<Object> conditions) {
+        return getConditions(conditions).stream().filter(c -> c.getInstanceTag() != null).collect(Collectors.toList());
+    }
+
+    public static List<Condition> getConditionsWithLookBack(List<Object> conditions) {
+        return getConditions(conditions).stream().filter(c -> c.getLookBack() != null).collect(Collectors.toList());
+    }
+
     public static boolean containsGroups(List<Object> conditions) {
         if (conditions == null || conditions.size() == 0) {
             return false;
@@ -304,15 +313,18 @@ public class Conditions {
 
     // TODO recursive
     public static List<Object> addIfNotContains(List<Object> conditions, Condition condition) {
-        if (conditions == null) {
-            conditions = new ArrayList<>();
-            conditions.add(condition);
-        } else {
-            Condition c = find(conditions, condition.getKey());
-            if (c == null) {
-                conditions.add(condition);
+        // if (conditions == null) {
+        // conditions = new ArrayList<>();
+        // conditions.add(condition);
+        // } else {
+        Condition c = find(conditions, condition.getKey());
+        if (c == null) {
+            if (conditions.size() > 0) {
+                conditions.add(Operator.AND);
             }
+            conditions.add(condition);
         }
+        // }
         return conditions;
     }
 
@@ -340,6 +352,19 @@ public class Conditions {
             if (nextIndex > -1) {
                 conditions.remove(nextIndex);
             }
+        }
+        return removeLastConditionIfOperator(conditions);
+    }
+
+    private static List<Object> removeLastConditionIfOperator(List<Object> conditions) {
+        int size = conditions.size();
+        if (size == 0) {
+            return conditions;
+        }
+        Object o = conditions.get(size - 1);
+        if (o instanceof Operator) {
+            conditions.remove(size - 1);
+            conditions = removeLastConditionIfOperator(conditions);
         }
         return conditions;
     }

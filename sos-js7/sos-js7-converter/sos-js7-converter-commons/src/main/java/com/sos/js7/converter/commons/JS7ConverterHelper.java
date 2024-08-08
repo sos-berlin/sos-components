@@ -57,6 +57,9 @@ public class JS7ConverterHelper {
 
     public final static String JS7_NEW_LINE = "\n";
 
+    public static final String JS7_NOTICE_AND = "&&";
+    public static final String JS7_NOTICE_OR = "||";
+
     private final static Set<Character> QUOTED_CHARS = new HashSet<>(Arrays.asList('\"', '$', '\n'));
 
     private final static Pattern NUMERIC_PATTERN = Pattern.compile("-?\\d+(\\.\\d+)?");
@@ -272,8 +275,9 @@ public class JS7ConverterHelper {
             return null;
         }
         try {
-            return Stream.of(time.trim().split(":")).filter(t -> t.length() == 2).map(t -> toTimePart(Integer.parseInt(t.trim()))).collect(Collectors
-                    .joining(":"));
+            // return Stream.of(time.trim().split(":")).filter(t -> t.length() == 2).map(t -> toTimePart(Integer.parseInt(t.trim()))).collect(Collectors
+            // .joining(":"));
+            return Stream.of(time.trim().split(":")).map(t -> toTimePart(Integer.parseInt(t.trim()))).collect(Collectors.joining(":"));
         } catch (Throwable e) {
             String msg = String.format("[normalizeTime][time=%s]%s", time, e.toString());
             LOGGER.error(msg);

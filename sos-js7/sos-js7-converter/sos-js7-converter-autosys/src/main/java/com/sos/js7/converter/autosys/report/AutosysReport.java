@@ -298,10 +298,10 @@ public class AutosysReport {
                     }
                 }
 
-                if (cn.getExternalInstance() != null) {
-                    analyzerResult.external++;
-                    ConverterReport.INSTANCE.addAnalyzerRecord("    " + name, String.format("[condition][with external=%s]%s", cn
-                            .getExternalInstance(), j.getCondition().getOriginalCondition()));
+                if (cn.getInstanceTag() != null) {
+                    analyzerResult.instanceTag++;
+                    ConverterReport.INSTANCE.addAnalyzerRecord("    " + name, String.format("[condition][with instanceTag=%s]%s", cn.getInstanceTag(),
+                            j.getCondition().getOriginalCondition()));
                 }
 
             } else if (o instanceof Operator) {
@@ -355,7 +355,7 @@ public class AutosysReport {
         private int exitcode = 0;
         private int unknown = 0;
 
-        private int external = 0;
+        private int instanceTag = 0;
         private int orOperator = 0;
         private int group = 0;
         private int lookBack = 0;
@@ -394,8 +394,8 @@ public class AutosysReport {
             if (lookBack > 0) {
                 l.add("LOOKBACK=" + lookBack);
             }
-            if (external > 0) {
-                l.add("EXTERNAL=" + external);
+            if (instanceTag > 0) {
+                l.add("INSTANCE TAG=" + instanceTag);
             }
             if (orOperator > 0) {
                 l.add("OR OPERATOR=" + orOperator);
@@ -409,7 +409,7 @@ public class AutosysReport {
         // TODO reflection
         private boolean hasValues() {
             return variable > 0 || success > 0 || failed > 0 || done > 0 || notrunning > 0 || terminated > 0 || exitcode > 0 || unknown > 0
-                    || lookBack > 0 || external > 0 || orOperator > 0 || group > 0;
+                    || lookBack > 0 || instanceTag > 0 || orOperator > 0 || group > 0;
         }
     }
 

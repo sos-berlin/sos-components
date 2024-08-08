@@ -272,4 +272,25 @@ public class SOSString {
         }
         return result;
     }
+
+    public static String trim(String input, String... trimChars) {
+        if (isEmpty(input) || trimChars.length == 0) {
+            return input;
+        }
+        // String regex = "^[" + trimChars + "]+|[" + trimChars + "]+$";
+        // input = input.replaceAll(regex, "");
+        String val = input.trim();
+        for (String trim : trimChars) {
+            if (SOSString.isEmpty(trim)) {
+                continue;
+            }
+            while (val.startsWith(trim)) {
+                val = val.substring(trim.length()).trim();
+            }
+            while (val.endsWith(trim)) {
+                val = val.substring(0, val.length() - trim.length()).trim();
+            }
+        }
+        return val.trim();
+    }
 }

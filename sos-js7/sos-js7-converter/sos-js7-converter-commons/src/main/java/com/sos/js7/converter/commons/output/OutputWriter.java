@@ -36,7 +36,7 @@ public class OutputWriter {
             if (parent != null && !Files.exists(parent)) {
                 Files.createDirectories(parent);
             }
-            LOGGER.trace(String.format("[%s]file=%s", method, outputPath));
+            //LOGGER.info(String.format("[%s]file=%s", method, outputPath));
             OM.writeValue(SOSPath.toFile(outputPath), item.getObject());
         }
         // LOGGER.info(String.format("[%s][directory=%s][end]", method, directory));

@@ -21,8 +21,9 @@ import com.sos.js7.converter.autosys.common.v12.job.JobFW;
 import com.sos.js7.converter.autosys.common.v12.job.JobOMTF;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Condition;
 import com.sos.js7.converter.autosys.config.items.AutosysDiagramConfig;
+import com.sos.js7.converter.autosys.input.AFileParser;
 import com.sos.js7.converter.autosys.input.analyzer.AutosysAnalyzer;
-import com.sos.js7.converter.autosys.output.js7.AutosysConverterHelper;
+import com.sos.js7.converter.autosys.output.js7.helper.PathResolver;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 import com.sos.js7.converter.commons.input.diagram.AGraphvizDiagramWriter;
 
@@ -45,6 +46,7 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
     private Map<String, List<ACommonJob>> duplicates;
 
     private Path outputPath;
+    private String folder;
     private String content;
     private String boxName;
 
@@ -91,7 +93,7 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
     private boolean createDiagram(JobBOX box) throws Exception {
         this.boxName = box.getName();
         if (prepareContent(box)) {
-            this.outputPath = AutosysConverterHelper.getMainOutputPath(outputDirectory, box, true);
+            this.outputPath = PathResolver.getJILMainOutputPath(outputDirectory, box, true, AFileParser.EXPORT_FILE_PREFIX_BOX);
             if (Range.optimizeDependencies.equals(this.range)) {
                 outputPath = outputPath.getParent().resolve(outputPath.getFileName() + "[" + range.name() + "]");
             }
@@ -124,8 +126,8 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
         for (Map.Entry<Path, List<ACommonJob>> entry : jobsPerParent.entrySet()) {
             initConditions();
             if (prepareContent(entry.getValue())) {
-                String name = "_all";
-                this.outputPath = AutosysConverterHelper.getMainOutputPath(outputDirectory.resolve(entry.getKey()).resolve(name), null, true);
+                String name = AFileParser.EXPORT_FILE_PREFIX_STANDALONE + "_all";
+                this.outputPath = PathResolver.getJILMainOutputPath(outputDirectory.resolve(entry.getKey()).resolve(name), null, true);
                 if (Range.optimizeDependencies.equals(this.range)) {
                     outputPath = outputPath.getParent().resolve(outputPath.getFileName() + "[" + range.name() + "]");
                 }
@@ -144,7 +146,7 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
      * @throws Exception */
     private boolean createDiagram(ACommonJob standaloneJob) throws Exception {
         if (prepareContent(standaloneJob)) {
-            this.outputPath = AutosysConverterHelper.getMainOutputPath(outputDirectory, standaloneJob, true, "[ST]");
+            this.outputPath = PathResolver.getJILMainOutputPath(outputDirectory, standaloneJob, true, AFileParser.EXPORT_FILE_PREFIX_STANDALONE);
             // LOGGER.info("[createDiagram][" + range + "][standaloneJob]" + outputPath);
 
             return createDiagram(config, range.name(), outputPath, standaloneJob.getName());
@@ -158,15 +160,16 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
     }
 
     private boolean prepareContent(JobBOX box) throws Exception {
-        if (box.getJobs() == null || box.getJobs().size() == 0) {
-            content = "";
-            return true;
-        }
         StringBuilder t = getFolderContent(box);
         StringBuilder sb = new StringBuilder();
         sb.append(t);
 
         List<ACommonJob> children = box.getJobs();
+        if (children == null || children.size() == 0) {
+            content = sb.toString();
+            return true;
+        }
+
         if (Range.optimizeDependencies.equals(this.range)) {
             children = analyzer.getConditionAnalyzer().handleJobBoxConditions(box);
         }
@@ -248,18 +251,25 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
 
         if (box == null) {
             folderType = "Standalone";
-            app = AutosysConverterHelper.getApplication(standaloneJob);
-            group = AutosysConverterHelper.getGroup(standaloneJob);
+            app = getJILApplication(standaloneJob);
+            group = getJILGroup(standaloneJob);
             description = standaloneJob.getDescription().getValue();
             name = standaloneJob.getName();
-            fullName = standaloneJob.getJobFullPathFromJILDefinition().toString();
+
+            this.folder = PathResolver.getJILJobParentPathNormalized(standaloneJob);
+            if (onlyFolderInfo) {
+                fullName = standaloneJob.getJobFullPathFromJILDefinition().getParent().toString();
+            } else {
+                fullName = standaloneJob.getJobFullPathFromJILDefinition().toString();
+            }
             condition = "";
         } else {
             folderType = "BOX";
-            app = AutosysConverterHelper.getApplication(box);
-            group = AutosysConverterHelper.getGroup(box);
+            app = getJILApplication(box);
+            group = getJILGroup(box);
             description = box.getDescription().getValue();
             name = box.getName();
+            this.folder = PathResolver.getJILJobParentPathNormalized(box);
             fullName = box.getJobFullPathFromJILDefinition().toString();
             condition = box.getCondition().getOriginalCondition();
         }
@@ -377,7 +387,7 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
                 }
                 writeJobCommonRows(tableBox, box, FONT_SIZE_GRAPH);
 
-                Map<Condition, Set<String>> m = analyzer.getConditionAnalyzer().getInConditionJobs(box);
+                Map<Condition, Set<String>> m = analyzer.getConditionAnalyzer().getINConditionJobs(box);
                 if (m.size() > 0) {
                     int sum = 0;
                     for (Map.Entry<Condition, Set<String>> entry : m.entrySet()) {
@@ -458,7 +468,7 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
                 }
             }
 
-            Map<Condition, Set<String>> out = analyzer.getConditionAnalyzer().getJobOutConditionsByConditionType(job);
+            Map<Condition, Set<String>> out = analyzer.getConditionAnalyzer().getJobOUTConditionsByConditionType(job);
             if (out != null) {
                 out.entrySet().stream().forEach(e -> {
                     Condition c = e.getKey();
@@ -548,20 +558,39 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
         return sb.toString();
     }
 
+    private String getConditionJobParentPath(String jobName) {
+        String p = PathResolver.getJILJobParentPathNormalized(analyzer.getAllJobs().get(jobName));
+        if (SOSString.isEmpty(p)) {
+            p = "&nbsp;";
+        } else {
+            if (p.equals(this.folder)) {
+                p = "<b>" + p + "/</b>";
+            } else {
+                p = p + "/";
+            }
+        }
+        return p;
+    }
+
     private StringBuilder getConditionLabel(ACommonJob currentJob, ConditionHelper h, Condition c, Set<String> external, String externalHeader) {
         StringBuilder l = new StringBuilder();
         l.append(getTableBegin());
         l.append("  <tr>");
-        l.append("<td align=\"center\" valign=\"top\" colspan=\"2\">");
+        l.append("<td align=\"center\" valign=\"top\" colspan=\"3\">");
 
         if (external != null) {
             l.append("<b>");
         }
-        l.append(c.getType()).append("&nbsp;&nbsp;").append("<b>").append(c.getInfo()).append("</b>");
+        l.append(getConditionJobParentPath(c.getJobName()));
+        l.append(c.getType());
+        l.append("&nbsp;&nbsp;");
+        l.append("<b>").append(c.getInfo()).append("</b>");
         boolean isIn = false;
         switch (h.type) {
         case IN:
             l.append(getJobInfo(c));
+            // !!!! - check
+            // l.append(" ").append(getJobParentPath(c));
             isIn = true;
             break;
         default:
@@ -574,11 +603,11 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
         l.append("</tr>").append(NEW_LINE);
 
         if (isIn) {
-            Set<String> cj = analyzer.getConditionAnalyzer().getInConditionJobs(c);
+            Set<String> cj = analyzer.getConditionAnalyzer().getINConditionJobs(c);
             if (cj != null) {
-                l.append("  <tr><td colspan=\"2\">&nbsp;</td></tr>");
+                l.append("  <tr><td colspan=\"3\">&nbsp;</td></tr>");
                 l.append("  <tr>");
-                l.append("<td align=\"left\" valign=\"top\" colspan=\"2\">");
+                l.append("<td align=\"left\" valign=\"top\" colspan=\"3\">");
                 l.append("IN Condition for " + cj.size() + " job(s):");
                 l.append("  </td>");
                 l.append("  </tr>");
@@ -586,31 +615,23 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
                 int i = 1;
                 x: for (String j : cj) {
                     if (i > 5) {
-                        l.append("<tr><td colspan=\"2\" align=\"left\">...</td></tr>");
+                        l.append("<tr><td colspan=\"3\" align=\"left\">...</td></tr>");
                         break x;
                     }
+
                     l.append("  <tr>");
-                    l.append("<td align=\"left\" valign=\"top\">&nbsp;&nbsp;&nbsp;");
-                    boolean isCurrentJob = false;
-                    // if (currentJob.isNameEquals(j) || currentJob.isBoxNameEquals(j)) {
-                    // l.append("<b>");
-                    // isCurrentJob = true;
-                    // }
-                    l.append(j);
-                    if (isCurrentJob) {
-                        l.append("</b>");
-                    }
-                    l.append("</td>");
-                    l.append("<td align=\"left\" valign=\"top\">").append(getJobInfo(j)).append("</td>");
+                    l.append("<td align=\"left\" valign=\"top\">").append(getConditionJobParentPath(j)).append("</td>");
+                    l.append("<td align=\"left\" valign=\"top\">").append(j).append("</td>");
+                    l.append("<td align=\"left\" valign=\"top\">").append("&nbsp;").append(getJobInfo(j)).append("</td>");
                     l.append("  </tr>");
                     i++;
                 }
             }
         } else {// OUT
             if (h.jobs != null) {
-                l.append("  <tr><td colspan=\"2\">&nbsp;</td></tr>");
+                l.append("  <tr><td colspan=\"3\">&nbsp;</td></tr>");
                 l.append("  <tr>");
-                l.append("<td align=\"left\" valign=\"top\" colspan=\"2\">");
+                l.append("<td align=\"left\" valign=\"top\" colspan=\"3\">");
                 // l.append("Job Out Condition for " + h.jobs.size() + " job(s):");
                 l.append("IN Condition for " + h.jobs.size() + " job(s):");
                 l.append("  </td>");
@@ -618,7 +639,8 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
 
                 for (String j : h.jobs) {
                     l.append("  <tr>");
-                    l.append("<td align=\"left\" valign=\"top\">&nbsp;&nbsp;&nbsp;").append(j).append("</td>");
+                    l.append("<td align=\"left\" valign=\"top\">").append(getConditionJobParentPath(j)).append("</td>");
+                    l.append("<td align=\"left\" valign=\"top\">").append("&nbsp;").append(j).append("</td>");
                     l.append("<td align=\"left\" valign=\"top\">").append(getJobInfo(j)).append("</td>");
                     l.append("  </tr>");
                 }
@@ -652,7 +674,7 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
     }
 
     private String getTableBegin() {
-        return "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\">";
+        return "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">";
     }
 
     private StringBuilder getEdgeProperties(Condition c) {
@@ -715,8 +737,8 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
         }
 
         if (!isStandalone) {
-            String app = AutosysConverterHelper.getApplication(job);
-            String group = AutosysConverterHelper.getGroup(job);
+            String app = getJILApplication(job);
+            String group = getJILGroup(job);
             // TODO only if different to folder/box - display red colored
             if (!SOSString.isEmpty(app)) {
                 sb.append("  <tr>");
@@ -865,6 +887,20 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
             this.type = type;
             this.jobs = jobs;
         }
+    }
+
+    private static String getJILApplication(ACommonJob j) {
+        if (j != null && j.getFolder() != null && !SOSString.isEmpty(j.getFolder().getApplication().getValue())) {
+            return j.getFolder().getApplication().getValue();
+        }
+        return "";
+    }
+
+    private static String getJILGroup(ACommonJob j) {
+        if (j != null && j.getFolder() != null && !SOSString.isEmpty(j.getFolder().getGroup().getValue())) {
+            return j.getFolder().getGroup().getValue();
+        }
+        return "";
     }
 
 }

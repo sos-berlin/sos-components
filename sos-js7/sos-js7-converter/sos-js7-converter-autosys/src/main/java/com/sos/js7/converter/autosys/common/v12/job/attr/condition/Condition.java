@@ -15,15 +15,17 @@ public class Condition implements Serializable {
     }
 
     private enum MapKeys {
-        NAME, LOOKBACK, EXTERNAL
+        NAME, LOOKBACK, INSTANCETAG
     }
 
     private final String originalValue;
     private final ConditionType type;
     private final String name;
     private String value;
+    // f(jobA^PROD,24) -> 24
     private final String lookBack;
-    private final String externalInstance;
+    // f(jobA^PROD,24) -> ^PROD
+    private final String instanceTag;
 
     private String jobName;
 
@@ -50,7 +52,7 @@ public class Condition implements Serializable {
             this.name = resultMap.get(MapKeys.NAME);
             this.value = getValue(v);
             this.lookBack = resultMap.get(MapKeys.LOOKBACK);
-            this.externalInstance = resultMap.get(MapKeys.EXTERNAL);
+            this.instanceTag = resultMap.get(MapKeys.INSTANCETAG);
             this.type = getType(v.substring(0, i).toLowerCase(), val);
         } catch (Throwable e) {
             throw new Exception(String.format("[%s]%s", val, e.toString()), e);
@@ -112,7 +114,7 @@ public class Condition implements Serializable {
         String[] arr = map.get(MapKeys.NAME).split("\\^");
         if (arr.length == 2) {
             map.put(MapKeys.NAME, arr[0].trim());
-            map.put(MapKeys.EXTERNAL, arr[1].trim());
+            map.put(MapKeys.INSTANCETAG, arr[1].trim());
         }
         return map;
     }
@@ -142,15 +144,15 @@ public class Condition implements Serializable {
         return lookBack;
     }
 
-    public String getExternalInstance() {
-        return externalInstance;
+    public String getInstanceTag() {
+        return instanceTag;
     }
 
     public String getKey() {
         StringBuilder sb = new StringBuilder(type.name());
         sb.append("-").append(name);
-        if (externalInstance != null) {
-            sb.append("-").append(externalInstance);
+        if (instanceTag != null) {
+            sb.append("-").append(instanceTag);
         }
         if (lookBack != null) {
             sb.append("-").append(lookBack.replaceAll(":", ""));
@@ -177,8 +179,8 @@ public class Condition implements Serializable {
 
     public String getInfo() {
         StringBuilder sb = new StringBuilder(name);
-        if (externalInstance != null) {
-            sb.append("^").append(externalInstance);
+        if (instanceTag != null) {
+            sb.append("^").append(instanceTag);
         }
         if (lookBack != null) {
             sb.append("(").append(lookBack).append(")");

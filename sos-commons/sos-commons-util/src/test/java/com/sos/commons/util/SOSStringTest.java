@@ -84,4 +84,12 @@ public class SOSStringTest {
         LOGGER.info(String.format("[MAP][OBJECTS]%s", SOSString.toString(mapObjectsSample)));
     }
 
+    @Ignore
+    @Test
+    public void testTrim() throws Exception {
+        String input = " && 'XYZ'";
+        String result = SOSString.trim(input, "&&", "||");
+        LOGGER.info(String.format("[result]%s", result));
+    }
+
 }
