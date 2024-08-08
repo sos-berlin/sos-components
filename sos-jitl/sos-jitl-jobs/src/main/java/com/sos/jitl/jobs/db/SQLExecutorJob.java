@@ -35,9 +35,8 @@ public class SQLExecutorJob extends Job<SQLExecutorJobArguments> {
             factory = new SOSHibernateFactory(step.getDeclaredArguments().getHibernateFile().getValue());
             factory.setIdentifier(SQLExecutorJob.class.getSimpleName());
             factory.build();
-            step.addCancelableResource(factory);
-
             session = factory.openStatelessSession();
+            step.addCancelableResource(session);
             process(step, session);
             step.getLogger().info("result: " + step.getOutcome().getVariables());
         } catch (Throwable e) {

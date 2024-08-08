@@ -72,6 +72,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
         Statement stmt = null;
         try {
             stmt = getConnection().createStatement();
+            session.setCurrentStatement(stmt);
             for (String sql : sqls) {
                 if (isDebugEnabled) {
                     LOGGER.debug(String.format("%s[%s]", method, sql));
@@ -91,6 +92,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
                 } catch (Throwable e) {
                 }
             }
+            session.resetCurrentStatement();
         }
         return result;
     }
@@ -111,6 +113,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
         Statement stmt = null;
         try {
             stmt = getConnection().createStatement();
+            session.setCurrentStatement(stmt);
             for (String sql : sqls) {
                 if (isDebugEnabled) {
                     LOGGER.debug(String.format("%s[addBatch][%s]", method, sql));
@@ -131,6 +134,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
                 } catch (Throwable e) {
                 }
             }
+            session.resetCurrentStatement();
         }
         return result;
     }
@@ -147,6 +151,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
             Connection conn = getConnection();
             Map<String, Integer> columnsMeta = getColumnsMeta(conn, tableName);
             stmt = conn.prepareStatement(sql);
+            session.setCurrentStatement(stmt);
             int i = 0;
             for (Collection<SOSBatchObject> row : rows) {
                 i++;
@@ -174,6 +179,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
                 } catch (Throwable e) {
                 }
             }
+            session.resetCurrentStatement();
         }
         return result;
     }
@@ -223,6 +229,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
         ResultSet rs = null;
         try {
             stmt = getConnection().createStatement();
+            session.setCurrentStatement(stmt);
             rs = stmt.executeQuery(sql);
         } catch (SQLException e) {
             throw new SOSHibernateSQLExecutorException(e, sql);
@@ -239,6 +246,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
                 } catch (Throwable e) {
                 }
             }
+            session.resetCurrentStatement();
         }
     }
 
@@ -263,6 +271,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
         String command = null;
         try {
             stmt = getConnection().createStatement();
+            session.setCurrentStatement(stmt);
             List<String> commands = getStatements(content);
             for (int i = 0; i < commands.size(); i++) {
                 command = commands.get(i);
@@ -296,6 +305,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
                 } catch (Throwable e) {
                 }
             }
+            session.resetCurrentStatement();
         }
     }
 
@@ -307,6 +317,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
         Statement stmt = null;
         try {
             stmt = getConnection().createStatement();
+            session.setCurrentStatement(stmt);
             for (String sql : sqls) {
                 if (isDebugEnabled) {
                     LOGGER.debug(String.format("%s[%s]", method, sql));
@@ -326,6 +337,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
                 } catch (Throwable e) {
                 }
             }
+            session.resetCurrentStatement();
         }
         return result;
     }
@@ -339,6 +351,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
         CallableStatement stmt = null;
         try {
             stmt = getConnection().prepareCall(sql);
+            session.setCurrentStatement(stmt);
             result = stmt.executeUpdate();
         } catch (SQLException e) {
             throw new SOSHibernateSQLExecutorException(e, sql);
@@ -349,6 +362,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
                 } catch (Throwable e) {
                 }
             }
+            session.resetCurrentStatement();
         }
         return result;
     }
@@ -366,6 +380,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
                 throw new SOSHibernateSQLExecutorException("missing sql");
             }
             stmt = getConnection().createStatement();
+            session.setCurrentStatement(stmt);
             rs = stmt.executeQuery(sql);
             if (rs.next()) {
                 result = rs.getBytes(1);
@@ -390,7 +405,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
                     //
                 }
             }
-
+            session.resetCurrentStatement();
         }
         return result;
     }
@@ -413,6 +428,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
                 throw new SOSHibernateSQLExecutorException("path is null");
             }
             stmt = getConnection().createStatement();
+            session.setCurrentStatement(stmt);
             rs = stmt.executeQuery(sql);
             int len = 0;
             if (rs.next()) {
@@ -466,6 +482,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
                     //
                 }
             }
+            session.resetCurrentStatement();
         }
         return result;
     }
@@ -484,6 +501,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
                 throw new SOSHibernateSQLExecutorException("missing sql");
             }
             stmt = getConnection().createStatement();
+            session.setCurrentStatement(stmt);
             try {
                 rs = stmt.executeQuery(sql);
             } catch (SQLException e) {
@@ -531,6 +549,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
                     //
                 }
             }
+            session.resetCurrentStatement();
         }
         return result.toString();
     }
@@ -553,6 +572,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
                 throw new SOSHibernateSQLExecutorException("path is null");
             }
             stmt = getConnection().createStatement();
+            session.setCurrentStatement(stmt);
             try {
                 rs = stmt.executeQuery(sql);
             } catch (SQLException e) {
@@ -614,6 +634,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
                     //
                 }
             }
+            session.resetCurrentStatement();
         }
         return result;
     }
@@ -637,9 +658,12 @@ public class SOSHibernateSQLExecutor implements Serializable {
         }
         try {
             Statement stmt = getConnection().createStatement();
+            session.setCurrentStatement(stmt);
             return stmt.executeQuery(sql);
         } catch (SQLException e) {
             throw new SOSHibernateSQLExecutorException(e, sql);
+        } finally {
+            session.resetCurrentStatement();
         }
     }
 
@@ -796,6 +820,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
                 }
             }
             pstmt = getConnection().prepareStatement(sql.toString());
+            session.setCurrentStatement(pstmt);
             pstmt.setBinaryStream(1, inputStream, dataLength);
             pstmt.executeUpdate();
         } catch (SQLException e) {
@@ -815,6 +840,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
                     //
                 }
             }
+            session.resetCurrentStatement();
         }
     }
 
@@ -900,6 +926,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
                 }
             }
             pstmt = getConnection().prepareStatement(sql.toString());
+            session.setCurrentStatement(pstmt);
             pstmt.setCharacterStream(1, reader, dataLength);
             pstmt.executeUpdate();
         } catch (SQLException e) {
@@ -918,6 +945,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
                 } catch (Throwable e) {
                 }
             }
+            session.resetCurrentStatement();
         }
     }
 

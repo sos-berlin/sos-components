@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientConnectionException;
+import java.sql.Statement;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -71,6 +72,7 @@ public class SOSHibernateSession implements Serializable {
     private boolean isStatelessSession = false;
     private boolean isTransactionOpened = false;
     private SOSHibernateSQLExecutor sqlExecutor;
+    private Statement currentStatement;
 
     /** use factory.openSession(), factory.openStatelessSession() or factory.getCurrentSession() */
     protected SOSHibernateSession(SOSHibernateFactory hibernateFactory) {
@@ -1334,4 +1336,17 @@ public class SOSHibernateSession implements Serializable {
     public Date getCurrentUTCDateTime() throws SOSHibernateException {
         return (Date) getSingleResultNativeQuery(factory.getCurrentUTCTimestampSelectString());
     }
+
+    public void setCurrentStatement(Statement val) {
+        currentStatement = val;
+    }
+
+    public void resetCurrentStatement() {
+        currentStatement = null;
+    }
+
+    public Statement getCurrentStatement() {
+        return currentStatement;
+    }
+
 }
