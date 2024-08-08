@@ -230,6 +230,7 @@ public class DBItemSystemNotification extends DBItem {
         if (SOSString.isEmpty(val)) {
             return null;
         }
+        val = SOSString.remove4ByteCharacters(val).trim();
         return normalizeValue(val, MonitoringConstants.MAX_LEN_SYSTEM_NOTIFICATION_EXCEPTION, MonitoringConstants.MAX_LEN_DEFAULT_SUFFIX);
     }
 }
