@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.util.SOSClassUtil;
-import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterThreadFactory;
@@ -143,7 +142,8 @@ public class SystemNotifierModel {
                     r.getNotification().setHasMonitors(r.getMonitors().size() > 0);
                     dbLayer.getSession().save(r.getNotification());
                 } catch (Throwable e) {
-                    errorDetails.add(String.format("[%s][DB][error][SystemNotifierResult]%s", IDENTIFIER, SOSString.toString(r)));
+                    errorDetails.add(String.format("[%s][DB][error][save system_notification]%s", IDENTIFIER, SOSHibernate.toString(r
+                            .getNotification())));
                     throw e;
                 }
                 Long id = r.getNotification().getId();
@@ -157,8 +157,8 @@ public class SystemNotifierModel {
                         m.setNotificationId(id);
                         dbLayer.getSession().save(m);
                     } catch (Throwable e) {
-                        errorDetails.add(String.format("[%s][DB][error][SystemNotifierResult]%s", IDENTIFIER, SOSString.toString(r)));
-                        errorDetails.add(String.format("[%s][DB][error][DBItemNotificationMonitor]%s", IDENTIFIER, SOSString.toString(m)));
+                        errorDetails.add(String.format("[%s][DB][error][save system_notification monitor=%s]%s", IDENTIFIER, m.getName(), SOSHibernate
+                                .toString(m)));
                         throw e;
                     }
                 }

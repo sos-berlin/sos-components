@@ -6,6 +6,7 @@ import org.hibernate.annotations.Proxy;
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.common.HistoryConstants;
@@ -123,7 +124,12 @@ public class DBItemNotificationMonitor extends DBItem {
     }
 
     public void setMessage(String val) {
-        message = normalizeValue(val, MonitoringConstants.MAX_LEN_MESSAGE);
+        if (val == null) {
+            message = DBLayer.DEFAULT_KEY;
+        } else {
+            val = SOSString.remove4ByteCharacters(val).trim();
+            message = normalizeValue(val, MonitoringConstants.MAX_LEN_MESSAGE);
+        }
     }
 
     public void setError(boolean val) {
@@ -135,7 +141,12 @@ public class DBItemNotificationMonitor extends DBItem {
     }
 
     public void setErrorText(String val) {
-        errorText = normalizeErrorText(val);
+        if (val == null) {
+            errorText = null;
+        } else {
+            val = SOSString.remove4ByteCharacters(val).trim();
+            errorText = normalizeErrorText(val);
+        }
     }
 
     public String getErrorText() {
