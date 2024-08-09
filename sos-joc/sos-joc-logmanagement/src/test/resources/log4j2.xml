@@ -4,8 +4,8 @@
 		<Property name="InstanceId">${sys:jocId}</Property>
 	</Properties>
 	<Appenders>
-		<Syslog name="RFC5424" format="RFC5424" host="localhost" port="4245"
-            protocol="UDP" ignoreExceptions="true">
+		<Syslog name="RFC5424" format="RFC5424" host="localhost" port="4245" protocol="UDP" ignoreExceptions="true">
+            <ThresholdFilter level="WARN"/>
             <PatternLayout charset="UTF-8" pattern="&lt;134&gt;1 %d{yyyy-MM-dd'T'HH:mm:ss.SSS}{Etc/UTC}Z ${hostName} Controller {
 &quot;instanceId&quot;:&quot;${InstanceId}&quot;,
 &quot;thread&quot;:&quot;%t&quot;,
@@ -56,8 +56,8 @@
 	</Appenders>
 
 	<Loggers>
-		<Root level="info">
-			<AppenderRef ref="RFC5424"/>
+		<Root level="INFO">
+			<AppenderRef ref="RFC5424" level="WARN"/>
 		</Root>
 		
 		<Logger name="JOCLogNotification" additivity="false" level="DEBUG">

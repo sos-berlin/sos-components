@@ -448,13 +448,18 @@ public class EventService {
     @Subscribe({ MonitoringGuiEvent.class })
     public void createEvent(MonitoringGuiEvent evt) {
         try {
+            String source = evt.getSource();
             EventMonitoring eventM = new EventMonitoring();
             Long evtId = evt.getEventId() / 1000;
             eventM.setEventId(evtId);
             eventM.setLevel(getNotificationType(evt.getLevel()));
-            eventM.setSource(evt.getSource());
+            if ("LogNotification".equalsIgnoreCase(source)) {
+                eventM.setSource(evt.getRequest());
+            } else {
+                eventM.setSource(evt.getSource());
+                eventM.setRequest(evt.getRequest());
+            }
             eventM.setCategory(evt.getCategory());
-            eventM.setRequest(evt.getRequest());
             eventM.setTimestamp(evt.getDate());
             if (evt.getDate() == null) {
                 eventM.setTimestamp(Date.from(Instant.ofEpochSecond(evtId)));

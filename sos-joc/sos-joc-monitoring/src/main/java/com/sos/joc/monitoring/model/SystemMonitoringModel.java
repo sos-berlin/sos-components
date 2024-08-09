@@ -58,6 +58,10 @@ public class SystemMonitoringModel {
     private static final Map<String, Set<String>> SKIPPED_WARN_NOTIFIERS_BY_MESSAGE_START = Stream.of(new AbstractMap.SimpleEntry<>(
             "js7.proxy.ControllerApi", new HashSet<>(Arrays.asList("akka.stream.scaladsl.TcpIdleTimeoutException")))).collect(Collectors.toMap(
                     Map.Entry::getKey, Map.Entry::getValue));
+    
+    private static final Map<String, Set<String>> SKIPPED_ERROR_NOTIFIERS_BY_MESSAGE_START = Stream.of(new AbstractMap.SimpleEntry<>(
+            "js7.proxy.JournaledProxy", new HashSet<>(Arrays.asList("UnknownEventId:")))).collect(Collectors.toMap(
+                    Map.Entry::getKey, Map.Entry::getValue));
 
     // ms
     private static final long MAX_ADDED_TIME = 2 * 60 * 1_000; // 2m
@@ -235,6 +239,18 @@ public class SystemMonitoringModel {
             return false;
         }
         switch (evt.getType()) {
+        case ERROR:
+            if (SKIPPED_ERROR_NOTIFIERS_BY_MESSAGE_START.containsKey(evt.getLoggerName()) && !SOSString.isEmpty(evt.getMessage())) {
+                long c = SKIPPED_ERROR_NOTIFIERS_BY_MESSAGE_START.get(evt.getLoggerName()).stream().filter(m -> evt.getMessage().trim().startsWith(m))
+                        .count();
+                if (c > 0) {
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[handleEvents][skip][skip this error of %s]%s", evt.getLoggerName(), evt.toString()));
+                    }
+                    return false;
+                }
+            }
+            break;
         case WARNING:
             if (SKIPPED_WARN_NOTIFIERS.contains(evt.getLoggerName())) {
                 if (isDebugEnabled) {

@@ -108,7 +108,8 @@ public class SystemNotificationLogEvent extends MonitoringEvent {
             if (clusterId == null || clusterId.isBlank()) {
                 return "";
             } else {
-                if (instanceId == null || instanceId.isBlank()) { // only with host if controller is cluster
+                // only "Backup" is added because standalone Controller is "Primary" too. That's confusing.
+                if (instanceId == null || instanceId.isBlank() || "Primary".equalsIgnoreCase(instanceId)) {
                     return clusterId;
                 } else {
                     return clusterId + "(" + instanceId + ")";

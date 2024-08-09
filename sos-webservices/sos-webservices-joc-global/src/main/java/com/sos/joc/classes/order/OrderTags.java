@@ -603,7 +603,6 @@ public class OrderTags {
                 clause = "(" + clause + ")";
             }
             clauses.add(clause);
-            clauses.stream().collect(Collectors.joining(" and ", " where ", ""));
             hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", ""))).append(" order by ordering");
 
             Query<DBItemHistoryOrderTag> query = connection.createQuery(hql.toString());

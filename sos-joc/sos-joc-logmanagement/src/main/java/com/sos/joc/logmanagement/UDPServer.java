@@ -36,10 +36,10 @@ public class UDPServer implements Runnable {
     private static final URI validationUri = URI.create("classpath:/raml/api/schemas/logManagement/logEvent-schema.json");
     
     private static final int BUFFER_SIZE = 8192;
-    private static final Logger LOGGER = LoggerFactory.getLogger("JOCLogNotification");
+    private static final Logger LOGGER = LoggerFactory.getLogger(UDPServer.class);
     private static final Marker MARKER = MarkerFactory.getMarker("JOCLogNotification");
-    private static final Marker NOT_NOTIFY_LOGGER = MarkerFactory.getMarker(WebserviceConstants.NOT_NOTIFY_LOGGER.getName());
-    private static final int timerPeriod = 5; //seconds
+    private static final Marker NOT_NOTIFY_LOGGER = WebserviceConstants.NOT_NOTIFY_LOGGER;
+    private static final int timerPeriod = 10; //seconds
     private final static String threadNamePrefix = "Thread-LogService-";
     
     private DatagramSocket socket = null;
@@ -174,7 +174,7 @@ public class UDPServer implements Runnable {
         eventStream.map(EventHandler::mapToLogEvent).filter(Objects::nonNull).distinct().map(EventHandler::mapLogEventToSystemNotificationLogEvent)
                 .forEach(evt -> EventBus.getInstance().post(evt));
 //        eventStream.map(EventHandler::mapToLogEvent).filter(Objects::nonNull).distinct().map(EventHandler::mapLogEventToSystemNotificationLogEvent)
-//                .forEach(evt -> LOGGER.info(evt.toString()));
+//                .forEach(evt -> LOGGER.info(evt.toString()));  //for tests
     }
     
     public void run() {
