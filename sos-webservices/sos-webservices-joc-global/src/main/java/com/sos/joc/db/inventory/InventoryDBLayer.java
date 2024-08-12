@@ -2037,7 +2037,16 @@ public class InventoryDBLayer extends DBLayer {
         Query<String> query = getSession().createQuery(hql.toString());
         query.setParameter("name", name);
         query.setParameter("type", type.intValue());
-        String deployedReleaseName = getSession().getSingleResult(query);
-        return deployedReleaseName != null && !deployedReleaseName.equals(name);
+        if (JocInventory.isDeployable(type)) {
+            List<String> deployedNames = getSession().getResultList(query);
+            if (deployedNames == null || deployedNames.isEmpty()) {
+                return false;
+            } else {
+                return deployedNames.stream().anyMatch(n -> !n.equals(name));
+            }
+        } else {
+            String releaseName = getSession().getSingleResult(query);
+            return releaseName != null && !releaseName.equals(name);
+        }
     }
 }
