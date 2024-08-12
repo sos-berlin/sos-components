@@ -99,7 +99,7 @@ public class ReferenceResourceImpl extends JOCResourceImpl implements IReference
                         if (schedules != null) {
                             entity.setSchedules(schedules.stream().map(dbItem -> {
                                 try {
-                                    Schedule s = (Schedule) JocInventory.content2IJSObject(dbItem.getContent(), ConfigurationType.SCHEDULE);
+                                    Schedule s = (Schedule) JocInventory.convertSchedule(dbItem.getContent(), Schedule.class);
                                     s.setPath(dbItem.getPath());
                                     s.setValid(dbItem.getValid());
                                     s.setReleased(dbItem.getReleased());
