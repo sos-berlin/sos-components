@@ -143,23 +143,28 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             Map<ControllerObject, DBItemDepSignatures> importedObjects = new HashMap<ControllerObject, DBItemDepSignatures>();
             String controllerId = filter.getControllerId();
             String commitId = null;
+            ControllerObject foundWorkflow = null;
             if (objectsWithSignature != null && !objectsWithSignature.isEmpty()) {
-                ControllerObject config = objectsWithSignature.keySet().iterator().next();
-                switch (config.getObjectType()) {
-                case WORKFLOW:
-                    commitId = getCommitId(config);
-                    break;
-                case LOCK:
-                    break;
-                case NOTICEBOARD:
-                    break;
-                case JOBCLASS:
-                    break;
-                default:
-                    commitId = getCommitId(config);
+                for(ControllerObject config : objectsWithSignature.keySet()) {
+                    switch (config.getObjectType()) {
+                    case WORKFLOW:
+                        commitId = getCommitId(config);
+                        foundWorkflow = config;
+                        break;
+                    default:
+                        break; // commitId = getCommitId(config);
+                    }
+                    if(commitId != null) {
+                        break;
+                    }
+                }
+                if(foundWorkflow != null && commitId == null) {
+                    LOGGER.warn(String.format("Could not determine versionId of configuration from archive with path %1$s.", foundWorkflow.getPath()));
                 }
             }
-            checkCommitId(dbLayer, commitId, controllerId);
+            if(foundWorkflow != null) {
+                checkCommitId(dbLayer, commitId, controllerId);
+            }
             Set<java.nio.file.Path> folders = new HashSet<java.nio.file.Path>();
             folders = objectsWithSignature.keySet().stream().map(config -> config.getPath()).map(path -> Paths.get(path).getParent()).collect(
                     Collectors.toSet());
@@ -270,7 +275,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             JsonObject json = jsonReader.readObject();
             commitId = json.getString("versionId", "");
         } catch(Exception e) {
-            LOGGER.warn(String.format("Could not determine versionId of configuration from archive with path %1$s.", config.getPath()));
+//            LOGGER.warn(String.format("Could not determine versionId of configuration from archive with path %1$s.", config.getPath()));
         } finally {
             jsonReader.close();
         }
@@ -323,7 +328,8 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
         case SOSKeyConstants.PGP_ALGORITHM_NAME:
             UpdateItemUtils.updateItemsAddOrDeletePGPFromImport(commitIdForUpdate, importedObjects, toDeleteForRename, controllerId)
                 .thenAccept(either -> 
-                    StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(),getJocError(), API_CALL, null));
+                    StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(),getJocError(),
+                                    API_CALL, null, false));
             break;
         case SOSKeyConstants.RSA_ALGORITHM_NAME:
             cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
@@ -333,14 +339,14 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                         filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm() : SOSKeyConstants.RSA_SIGNER_ALGORITHM,
                         keyPair.getCertificate()).thenAccept(either -> 
                             StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(),
-                                    API_CALL, null));
+                                    API_CALL, null, false));
             } else {
                 signerDN = cert.getSubjectDN().getName();
                 UpdateItemUtils.updateItemsAddOrDeleteX509SignerDNFromImport(commitIdForUpdate, importedObjects, toDeleteForRename, controllerId,
                         filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm() : SOSKeyConstants.RSA_SIGNER_ALGORITHM,
                         signerDN).thenAccept(either -> 
                             StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(),
-                                    API_CALL, null));
+                                    API_CALL, null, false));
             }
             break;
         case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
@@ -351,14 +357,14 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                         filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm() : SOSKeyConstants.ECDSA_SIGNER_ALGORITHM,
                         keyPair.getCertificate()).thenAccept(either -> 
                             StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(),
-                                    API_CALL, null));
+                                    API_CALL, null, false));
             } else {
                 signerDN = cert.getSubjectDN().getName();
                 UpdateItemUtils.updateItemsAddOrDeleteX509SignerDNFromImport(commitIdForUpdate, importedObjects, toDeleteForRename, controllerId,
                         filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm() : SOSKeyConstants.ECDSA_SIGNER_ALGORITHM,
                         signerDN).thenAccept(either -> 
                             StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(),
-                                    API_CALL, null));
+                                    API_CALL, null, false));
             }
             break;
         }
