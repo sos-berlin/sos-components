@@ -10,6 +10,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.inventory.model.calendar.CalendarType;
 import com.sos.inventory.model.common.IInventoryObject;
+import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.jobtemplate.JobTemplate;
 import com.sos.inventory.model.lock.Lock;
 import com.sos.inventory.model.schedule.OrderParameterisation;
@@ -222,9 +223,13 @@ public abstract class AStoreConfiguration extends JOCResourceImpl {
         return item;
     }
 
-    private void addFileVariableIfAssignedInFileOrderSource(IConfigurationObject config, String name, InventoryDBLayer dbLayer) {
+    private static void addFileVariableIfAssignedInFileOrderSource(IConfigurationObject config, String name, InventoryDBLayer dbLayer) {
         try {
-            if (dbLayer.getNumOfUsedFileOrderSourcesByWorkflowName(name) > 0) {
+            List<DBItemInventoryConfiguration> foss = dbLayer.getUsedFileOrderSourcesByWorkflowName(name);
+            if (foss == null) {
+                foss = Collections.emptyList();
+            }
+            if (foss.size() > 0) {
                 Workflow workflow = (Workflow) config;
                 Requirements r = workflow.getOrderPreparation();
                 if (r == null) {
@@ -237,9 +242,25 @@ public abstract class AStoreConfiguration extends JOCResourceImpl {
                     r.getParameters().setAdditionalProperty("file", new Parameter(ParameterType.String, null, null, null, null, null, null));
                 }
             }
+            updateInvalidFileOrderSourcesIfBecomeValid(foss, dbLayer);
+            
         } catch (Exception e) {
             //
         }
+    }
+    
+    private static void updateInvalidFileOrderSourcesIfBecomeValid(List<DBItemInventoryConfiguration> foss, InventoryDBLayer dbLayer) {
+        Predicate<DBItemInventoryConfiguration> isValid = DBItemInventoryConfiguration::getValid;
+        foss.stream().filter(isValid.negate()).forEach(i -> {
+            try {
+                FileOrderSource fos = JocInventory.convertFileOrderSource(i.getContent(), FileOrderSource.class);
+                Validator.validateFileOrderSourceDirAndPattern(fos);
+                i.setValid(true);
+                JocInventory.updateConfiguration(dbLayer, i);
+            } catch (Exception e) {
+                //
+            }
+        });
     }
 
     private void validate(DBItemInventoryConfiguration item, ConfigurationObject in, InventoryDBLayer dbLayer) {

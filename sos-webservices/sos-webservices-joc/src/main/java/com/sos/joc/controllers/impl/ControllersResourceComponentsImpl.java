@@ -122,7 +122,13 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
             if (operatingSystems != null) {
                 osMap = operatingSystems.stream().collect(Collectors.toMap(DBItemInventoryOperatingSystem::getId, Function.identity()));
             }
-            long nowSeconds = Instant.now().getEpochSecond();
+            Instant now = Instant.now();
+            long nowSeconds = now.getEpochSecond();
+            try {
+                nowSeconds = connection.getCurrentUTCDateTime().toInstant().getEpochSecond();
+            } catch (SOSHibernateException e1) {
+                nowSeconds = now.getEpochSecond();
+            }
             // TODO version should be in database
             for (DBItemJocInstance instance : instances) {
                 Cockpit cockpit = new Cockpit();
