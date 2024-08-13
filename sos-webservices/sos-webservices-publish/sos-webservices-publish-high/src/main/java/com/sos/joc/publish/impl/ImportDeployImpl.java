@@ -329,7 +329,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             UpdateItemUtils.updateItemsAddOrDeletePGPFromImport(commitIdForUpdate, importedObjects, toDeleteForRename, controllerId)
                 .thenAccept(either -> 
                     StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(),getJocError(),
-                                    API_CALL, null));
+                                    API_CALL, null, false));
             break;
         case SOSKeyConstants.RSA_ALGORITHM_NAME:
             cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
@@ -339,14 +339,14 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                         filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm() : SOSKeyConstants.RSA_SIGNER_ALGORITHM,
                         keyPair.getCertificate()).thenAccept(either -> 
                             StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(),
-                                    API_CALL, null));
+                                    API_CALL, null, false));
             } else {
                 signerDN = cert.getSubjectDN().getName();
                 UpdateItemUtils.updateItemsAddOrDeleteX509SignerDNFromImport(commitIdForUpdate, importedObjects, toDeleteForRename, controllerId,
                         filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm() : SOSKeyConstants.RSA_SIGNER_ALGORITHM,
                         signerDN).thenAccept(either -> 
                             StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(),
-                                    API_CALL, null));
+                                    API_CALL, null, false));
             }
             break;
         case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
@@ -357,14 +357,14 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                         filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm() : SOSKeyConstants.ECDSA_SIGNER_ALGORITHM,
                         keyPair.getCertificate()).thenAccept(either -> 
                             StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(),
-                                    API_CALL, null));
+                                    API_CALL, null, false));
             } else {
                 signerDN = cert.getSubjectDN().getName();
                 UpdateItemUtils.updateItemsAddOrDeleteX509SignerDNFromImport(commitIdForUpdate, importedObjects, toDeleteForRename, controllerId,
                         filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm() : SOSKeyConstants.ECDSA_SIGNER_ALGORITHM,
                         signerDN).thenAccept(either -> 
                             StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(),
-                                    API_CALL, null));
+                                    API_CALL, null, false));
             }
             break;
         }
