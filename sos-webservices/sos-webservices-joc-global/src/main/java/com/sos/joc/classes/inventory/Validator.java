@@ -218,16 +218,7 @@ public class Validator {
                     String json = validateWorkflowRef(fileOrderSource.getWorkflowName(), dbLayer, position);
                     Workflow w = Globals.objectMapper.readValue(json, Workflow.class);
                     validateFileVariable(w.getOrderPreparation(), fileOrderSource.getWorkflowName(), position);
-                    if (fileOrderSource.getDirectoryExpr() != null) {
-                        validateExpression("$.directoryExpr: ", fileOrderSource.getDirectoryExpr());
-                    }
-                    if (fileOrderSource.getPattern() != null) {
-                        try {
-                            Pattern.compile(fileOrderSource.getPattern());
-                        } catch (PatternSyntaxException e) {
-                            throw new JocConfigurationException("$.pattern: " + e.getMessage());
-                        }
-                    }
+                    validateFileOrderSourceDirAndPattern(fileOrderSource);
                 } else if (ConfigurationType.JOBTEMPLATE.equals(type)) {
                     JobTemplate jobTemplate = (JobTemplate) config;
                     validateJobTemplateJob(jobTemplate, dbLayer.getScriptNames());
@@ -313,16 +304,7 @@ public class Validator {
                 String json = validateWorkflowRef(fileOrderSource.getWorkflowName(), workflowJsonsByName, position);
                 Workflow w = Globals.objectMapper.readValue(json, Workflow.class);
                 validateFileVariable(w.getOrderPreparation(), fileOrderSource.getWorkflowName(), position);
-                if (fileOrderSource.getDirectoryExpr() != null) {
-                    validateExpression("$.directoryExpr: ", fileOrderSource.getDirectoryExpr());
-                }
-                if (fileOrderSource.getPattern() != null) {
-                    try {
-                        Pattern.compile(fileOrderSource.getPattern());
-                    } catch (PatternSyntaxException e) {
-                        throw new JocConfigurationException("$.pattern: " + e.getMessage());
-                    }
-                }
+                validateFileOrderSourceDirAndPattern(fileOrderSource);
             } else if (ConfigurationType.JOBTEMPLATE.equals(type)) {
                 JobTemplate jobTemplate = (JobTemplate) config;
                 validateJobTemplateJob(jobTemplate, invObjNames.getOrDefault(ConfigurationType.INCLUDESCRIPT, Collections.emptySet()));
@@ -382,6 +364,19 @@ public class Validator {
                 .getAdditionalProperties().containsKey("file")) {
             throw new JocConfigurationException(String.format("%s: the 'file' variable is missing in the referenced workflow '%s'", position,
                     workflowName));
+        }
+    }
+    
+    public static void validateFileOrderSourceDirAndPattern(FileOrderSource fileOrderSource) throws JocConfigurationException {
+        if (fileOrderSource.getDirectoryExpr() != null) {
+            validateExpression("$.directoryExpr: ", fileOrderSource.getDirectoryExpr());
+        }
+        if (fileOrderSource.getPattern() != null) {
+            try {
+                Pattern.compile(fileOrderSource.getPattern());
+            } catch (PatternSyntaxException e) {
+                throw new JocConfigurationException("$.pattern: " + e.getMessage());
+            }
         }
     }
 
