@@ -170,7 +170,8 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                         if (session == null) {
                             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
                         }
-                        dbFilter.setNonExclusiveHistoryIds(OrderTags.getHistoryIdsByTags(controllerId, in.getOrderTags(), in.getLimit(), session));
+                        dbFilter.setNonExclusiveHistoryIds(OrderTags.getHistoryIdsByTags(controllerId, in.getOrderTags(), in.getLimit(), dbFilter
+                                .getExecutedFrom(), dbFilter.getExecutedTo(), session));
                     }
                 }
             }
