@@ -211,6 +211,7 @@ public abstract class PublishUtils {
             String controllerId, SOSHibernateSession session) throws JocMissingKeyException, JsonParseException, JsonMappingException,
             SOSHibernateException, IOException, PGPException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException,
             SignatureException, CertificateException {
+        // TODO: determine Signature algorithm from Certificate Object
         Map<DBItemDeploymentHistory, DBItemDepSignatures> signedDrafts = new HashMap<>();
         if (keyPair.getPrivateKey() == null || keyPair.getPrivateKey().isEmpty()) {
             throw new JocMissingKeyException(

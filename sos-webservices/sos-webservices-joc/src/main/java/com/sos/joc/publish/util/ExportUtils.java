@@ -411,7 +411,7 @@ public class ExportUtils {
                         zipOut.write(contentBytes);
                         zipOut.closeEntry();
                     }
-                    JocMetaInfo jocMetaInfo = createJocMetaInfo(jocVersion, apiVersion, inventoryVersion);
+                    JocMetaInfo jocMetaInfo = createJocMetaInfo(jocVersion, apiVersion, inventoryVersion, commitId);
                     if (!ImportUtils.isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
                         String zipEntryName = ImportUtils.JOC_META_INFO_FILENAME;
                         ZipEntry entry = new ZipEntry(zipEntryName);
@@ -520,8 +520,7 @@ public class ExportUtils {
                     byte[] contentBytes = Globals.prettyPrintObjectMapper.writeValueAsBytes(tags);
                     zipOut.write(contentBytes);
                     zipOut.closeEntry();
-
-                    JocMetaInfo jocMetaInfo = createJocMetaInfo(jocVersion, apiVersion, inventoryVersion);
+                    JocMetaInfo jocMetaInfo = createJocMetaInfo(jocVersion, apiVersion, inventoryVersion, null);
                     if (!ImportUtils.isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
                         String zipEntryName = ImportUtils.JOC_META_INFO_FILENAME;
                         ZipEntry entry = new ZipEntry(zipEntryName);
@@ -621,7 +620,7 @@ public class ExportUtils {
                     tarOut.putArchiveEntry(tagEntry);
                     tarOut.write(contentBytes);
                     tarOut.closeArchiveEntry();
-                    JocMetaInfo jocMetaInfo = createJocMetaInfo(jocVersion, apiVersion, inventoryVersion);
+                    JocMetaInfo jocMetaInfo = createJocMetaInfo(jocVersion, apiVersion, inventoryVersion, commitId);
                     if (!ImportUtils.isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
                         String zipEntryName = ImportUtils.JOC_META_INFO_FILENAME;
                         TarArchiveEntry entry = new TarArchiveEntry(zipEntryName);
@@ -742,7 +741,6 @@ public class ExportUtils {
                                 } else {
                                     zipEntryName = deployable.getPath().substring(1).concat(extension);
                                 }
-                                
                                 TarArchiveEntry entry = new TarArchiveEntry(zipEntryName);
                                 byte[] contentBytes = content.getBytes();
                                 entry.setSize(contentBytes.length);
@@ -758,7 +756,7 @@ public class ExportUtils {
                     tarOut.putArchiveEntry(tagEntry);
                     tarOut.write(contentBytes);
                     tarOut.closeArchiveEntry();
-                     JocMetaInfo jocMetaInfo = createJocMetaInfo(jocVersion, apiVersion, inventoryVersion);
+                    JocMetaInfo jocMetaInfo = createJocMetaInfo(jocVersion, apiVersion, inventoryVersion, null);
                     if (!ImportUtils.isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
                         String zipEntryName = ImportUtils.JOC_META_INFO_FILENAME;
                         TarArchiveEntry entry = new TarArchiveEntry(zipEntryName);
@@ -799,7 +797,7 @@ public class ExportUtils {
         return streamingOutput;
     }
 
-    private static JocMetaInfo createJocMetaInfo(Version jocVersion, Version apiVersion, Version inventoryVersion) {
+    private static JocMetaInfo createJocMetaInfo(Version jocVersion, Version apiVersion, Version inventoryVersion, String commitId) {
         JocMetaInfo jocMetaInfo = new JocMetaInfo();
         if (jocVersion != null) {
             jocMetaInfo.setJocVersion(jocVersion.getVersion());
@@ -809,6 +807,9 @@ public class ExportUtils {
         }
         if (apiVersion != null) {
             jocMetaInfo.setApiVersion(apiVersion.getVersion());
+        }
+        if(commitId != null) {
+            jocMetaInfo.setVersionId(commitId);
         }
         return jocMetaInfo;
     }
