@@ -130,11 +130,13 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 throw new JocUnsupportedFileTypeException(String.format("The file %1$s to be uploaded must have one of the formats .zip or .tar.gz!",
                         uploadFileName));
             }
+            String commitId = null;
             if (!ImportUtils.isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
                 // TODO: process transformation rules
                 LOGGER.info(String.format("Imported from JS7 JOC Cockpit version: %1$s", jocMetaInfo.getJocVersion()));
                 LOGGER.info(String.format("  with inventory schema version: %1$s", jocMetaInfo.getInventorySchemaVersion()));
                 LOGGER.info(String.format("  and API schema version: %1$s", jocMetaInfo.getApiVersion()));
+                commitId = jocMetaInfo.getVersionId();
             }
             // process signature verification and save or update objects
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
@@ -142,27 +144,28 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             List<DBItemInventoryCertificate> caCertificates = dbLayer.getCaCertificates();
             Map<ControllerObject, DBItemDepSignatures> importedObjects = new HashMap<ControllerObject, DBItemDepSignatures>();
             String controllerId = filter.getControllerId();
-            String commitId = null;
-            ControllerObject foundWorkflow = null;
+            boolean foundWorkflow = false;
             if (objectsWithSignature != null && !objectsWithSignature.isEmpty()) {
-                for(ControllerObject config : objectsWithSignature.keySet()) {
-                    switch (config.getObjectType()) {
-                    case WORKFLOW:
-                        commitId = getCommitId(config);
-                        foundWorkflow = config;
-                        break;
-                    default:
-                        break; // commitId = getCommitId(config);
+                if (commitId == null) {
+                    for (ControllerObject config : objectsWithSignature.keySet()) {
+                        switch (config.getObjectType()) {
+                            case WORKFLOW:
+                                commitId = getCommitId(config);
+                                foundWorkflow = true;
+                                break;
+                            default:
+                                break;
+                        }
+                        if (commitId != null) {
+                            break;
+                        }
+                    } 
+                    if(foundWorkflow && commitId == null) {
+                        throw new JocDeployException("Could not determine versionId from archive.");
                     }
-                    if(commitId != null) {
-                        break;
-                    }
-                }
-                if(foundWorkflow != null && commitId == null) {
-                    LOGGER.warn(String.format("Could not determine versionId of configuration from archive with path %1$s.", foundWorkflow.getPath()));
                 }
             }
-            if(foundWorkflow != null) {
+            if(commitId != null) {
                 checkCommitId(dbLayer, commitId, controllerId);
             }
             Set<java.nio.file.Path> folders = new HashSet<java.nio.file.Path>();
