@@ -19,7 +19,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "jocVersion",
     "inventorySchemaVersion",
-    "apiVersion"
+    "apiVersion",
+    "versionId"
 })
 public class JocMetaInfo {
 
@@ -29,6 +30,8 @@ public class JocMetaInfo {
     private String inventorySchemaVersion;
     @JsonProperty("apiVersion")
     private String apiVersion;
+    @JsonProperty("versionId")
+    private String versionId;
 
     @JsonProperty("jocVersion")
     public String getJocVersion() {
@@ -60,14 +63,24 @@ public class JocMetaInfo {
         this.apiVersion = apiVersion;
     }
 
+    @JsonProperty("versionId")
+    public String getVersionId() {
+        return versionId;
+    }
+
+    @JsonProperty("versionId")
+    public void setVersionId(String versionId) {
+        this.versionId = versionId;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jocVersion", jocVersion).append("inventorySchemaVersion", inventorySchemaVersion).append("apiVersion", apiVersion).toString();
+        return new ToStringBuilder(this).append("jocVersion", jocVersion).append("inventorySchemaVersion", inventorySchemaVersion).append("apiVersion", apiVersion).append("versionId", versionId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(inventorySchemaVersion).append(apiVersion).append(jocVersion).toHashCode();
+        return new HashCodeBuilder().append(versionId).append(inventorySchemaVersion).append(apiVersion).append(jocVersion).toHashCode();
     }
 
     @Override
@@ -79,7 +92,7 @@ public class JocMetaInfo {
             return false;
         }
         JocMetaInfo rhs = ((JocMetaInfo) other);
-        return new EqualsBuilder().append(inventorySchemaVersion, rhs.inventorySchemaVersion).append(apiVersion, rhs.apiVersion).append(jocVersion, rhs.jocVersion).isEquals();
+        return new EqualsBuilder().append(versionId, rhs.versionId).append(inventorySchemaVersion, rhs.inventorySchemaVersion).append(apiVersion, rhs.apiVersion).append(jocVersion, rhs.jocVersion).isEquals();
     }
 
 }

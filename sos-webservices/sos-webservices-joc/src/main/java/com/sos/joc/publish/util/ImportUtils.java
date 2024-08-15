@@ -1137,7 +1137,7 @@ public class ImportUtils {
     public static boolean isJocMetaInfoNullOrEmpty(JocMetaInfo jocMetaInfo) {
         if (jocMetaInfo == null || ((jocMetaInfo.getJocVersion() == null || jocMetaInfo.getJocVersion().isEmpty()) && (jocMetaInfo
                 .getInventorySchemaVersion() == null || jocMetaInfo.getInventorySchemaVersion().isEmpty()) && (jocMetaInfo.getApiVersion() == null
-                        || jocMetaInfo.getApiVersion().isEmpty()))) {
+                        || jocMetaInfo.getApiVersion().isEmpty() && (jocMetaInfo.getVersionId() == null || jocMetaInfo.getVersionId().isEmpty())))) {
             return true;
         } else {
             return false;
