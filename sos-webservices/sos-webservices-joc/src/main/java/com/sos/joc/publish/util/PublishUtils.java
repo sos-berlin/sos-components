@@ -1678,6 +1678,10 @@ public abstract class PublishUtils {
         }
         return false;
     }
+    
+    public static boolean checkCertificateIsSelfIssued(X509Certificate cert) {
+        return cert.getIssuerDN().equals(cert.getSubjectDN());
+    }
 
     public static JFileWatch getJFileWatch(FileOrderSource fileOrderSource) throws JocDeployException {
         Long delay = fileOrderSource.getDelay() == null ? 2L : fileOrderSource.getDelay();

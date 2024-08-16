@@ -324,7 +324,8 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                     controllerId, countWorkflows, countLocks, countFileOrderSources, countJobResources, countBoards));
             JocInventory.handleWorkflowSearch(dbLayer.getSession(), deployedObjects, false);
         }
-        boolean verified = false;
+//        boolean verified = false;
+        boolean selfIssued = false;
         String signerDN = null;
         X509Certificate cert = null;
         switch (keyPair.getKeyAlgorithm()) {
@@ -336,8 +337,10 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             break;
         case SOSKeyConstants.RSA_ALGORITHM_NAME:
             cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
-            verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
-            if (verified) {
+            selfIssued = PublishUtils.checkCertificateIsSelfIssued(cert);
+//            verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
+//            if (verified) {
+            if (!selfIssued) {
                 UpdateItemUtils.updateItemsAddOrDeleteX509CertificateFromImport(commitIdForUpdate, importedObjects, toDeleteForRename, controllerId, 
                         filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm() : SOSKeyConstants.RSA_SIGNER_ALGORITHM,
                         keyPair.getCertificate()).thenAccept(either -> 
@@ -354,8 +357,10 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             break;
         case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
             cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
-            verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
-            if (verified) {
+            selfIssued = PublishUtils.checkCertificateIsSelfIssued(cert);
+//          verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
+//          if (verified) {
+          if (!selfIssued) {
                 UpdateItemUtils.updateItemsAddOrDeleteX509CertificateFromImport(commitIdForUpdate, importedObjects, toDeleteForRename, controllerId,
                         filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm() : SOSKeyConstants.ECDSA_SIGNER_ALGORITHM,
                         keyPair.getCertificate()).thenAccept(either -> 

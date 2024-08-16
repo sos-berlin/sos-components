@@ -262,7 +262,8 @@ public class StoreDeployments {
             DeleteDeployments.storeNewDepHistoryEntries(dbLayer, renamedToDelete, commitId, null, account, signedItemsSpec.getAuditlogId());
             
             List<DBItemInventoryCertificate> caCertificates = dbLayer.getCaCertificates();
-            boolean verified = false;
+//            boolean verified = false;
+            boolean selfIssued = false;
             String signerDN = null;
             X509Certificate cert = null;
             // call updateItems command via ControllerApi for the given controller
@@ -277,8 +278,10 @@ public class StoreDeployments {
                     cert = KeyUtil.getX509Certificate(signedItemsSpec.getKeyPair().getCertificate());
                 }
                 if (cert != null) {
-                    verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
-                    if (verified) {
+                    selfIssued = PublishUtils.checkCertificateIsSelfIssued(cert);
+//                  verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
+//                  if (verified) {
+                  if (!selfIssued) {
                         UpdateItemUtils.updateItemsAddOrDeleteX509Certificate(commitId, signedItemsSpec.getVerifiedDeployables(), renamedToDelete,
                                 controllerId, SOSKeyConstants.RSA_SIGNER_ALGORITHM, signedItemsSpec.getKeyPair().getCertificate())
                             .thenAccept(either -> 
@@ -298,8 +301,10 @@ public class StoreDeployments {
             case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
                 cert = KeyUtil.getX509Certificate(signedItemsSpec.getKeyPair().getCertificate());
                 if (cert != null) {
-                    verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
-                    if (verified) {
+                    selfIssued = PublishUtils.checkCertificateIsSelfIssued(cert);
+//                  verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
+//                  if (verified) {
+                    if (!selfIssued) {
                         UpdateItemUtils.updateItemsAddOrDeleteX509Certificate(commitId, signedItemsSpec.getVerifiedDeployables(), renamedToDelete,
                                 controllerId, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signedItemsSpec.getKeyPair().getCertificate())
                             .thenAccept(either -> 
