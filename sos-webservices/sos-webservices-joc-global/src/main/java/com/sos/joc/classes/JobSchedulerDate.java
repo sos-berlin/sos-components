@@ -132,7 +132,7 @@ public class JobSchedulerDate {
     }
     
     private static Optional<Instant> getScheduledForWithNowInUTC(String scheduledFor, String userTimezone) throws JocBadRequestException {
-        if (!scheduledFor.matches("now|now\\s*\\+\\s*(\\d+|\\d{2}:\\d{2}(:\\d{2})?)")) {
+        if (!scheduledFor.matches("now|now\\s*\\+\\s*(\\d+|\\d+:\\d{2}(:\\d{2})?)")) {
             throw new JocBadRequestException(String.format(
                     "formats 'now', 'now + HH:mm:[ss]', 'now + SECONDS' or 'YYYY-MM-DD[T]HH:mm:[ss]' expected for \"scheduledFor\": %1$s",
                     scheduledFor));
