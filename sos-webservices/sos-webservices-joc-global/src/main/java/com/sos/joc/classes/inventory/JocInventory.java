@@ -54,6 +54,7 @@ import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
+import com.sos.joc.classes.dependencies.DependencyResolver;
 import com.sos.joc.classes.inventory.search.WorkflowConverter;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
@@ -888,6 +889,7 @@ public class JocInventory {
 
         handleWorkflowSearch(dbLayer, item, config);
         handleReleasedJobTemplate(dbLayer, item, config);
+        DependencyResolver.updateDependencies(dbLayer.getSession(), item);
     }
 
     public static void insertConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration item) throws SOSHibernateException,
@@ -899,6 +901,7 @@ public class JocInventory {
             throws SOSHibernateException, JsonParseException, JsonMappingException, JsonProcessingException, IOException {
         dbLayer.getSession().save(item);
         handleWorkflowSearch(dbLayer, item, config);
+        DependencyResolver.updateDependencies(dbLayer.getSession(), item);
     }
 
     public static void insertOrUpdateConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration item) throws SOSHibernateException,
@@ -910,25 +913,9 @@ public class JocInventory {
             throws SOSHibernateException, JsonParseException, JsonMappingException, JsonProcessingException, IOException {
         DBItemInventoryConfiguration alreadyExists = dbLayer.getConfiguration(item.getPath(), item.getType());
         if (alreadyExists != null) {
-            item.setId(alreadyExists.getId());
-            alreadyExists.setAuditLogId(item.getAuditLogId());
-            alreadyExists.setContent(item.getContent());
-            alreadyExists.setCreated(item.getCreated());
-            alreadyExists.setDeleted(item.getDeleted());
-            alreadyExists.setDeployed(item.getDeployed());
-            alreadyExists.setFolder(item.getFolder());
-            alreadyExists.setName(item.getName());
-            alreadyExists.setPath(item.getPath());
-            alreadyExists.setReleased(item.getReleased());
-            alreadyExists.setTitle(item.getTitle());
-            alreadyExists.setType(item.getType());
-            alreadyExists.setValid(item.getValid());
-            alreadyExists.setModified(Date.from(Instant.now()));
-            dbLayer.getSession().update(alreadyExists);
-            handleWorkflowSearch(dbLayer, alreadyExists, config);
+            updateConfiguration(dbLayer, item, config);
         } else {
-            dbLayer.getSession().save(item);
-            handleWorkflowSearch(dbLayer, item, config);
+            insertConfiguration(dbLayer, item, config);
         }
     }
 

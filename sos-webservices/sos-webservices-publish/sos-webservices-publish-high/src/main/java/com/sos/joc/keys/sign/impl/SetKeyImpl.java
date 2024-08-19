@@ -49,6 +49,11 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
             if (PublishUtils.jocKeyPairNotEmpty(keyPair)) {
                 if (KeyUtil.isKeyPairValid(keyPair)) {
                     hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+                    /* TODO: check certificate validity
+                     * do the check only if a CA certificate is present
+                     * 
+                     * */
+                    
                     if (keyPair.getPublicKey() != null && !keyPair.getPublicKey().isEmpty()) {
                         PublishUtils.storeKey(keyPair, hibernateSession, account, JocSecurityLevel.HIGH);
                         reason = String.format("new Public Key stored for profile - %1$s -", account);
@@ -64,9 +69,6 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
             } else {
               throw new JocMissingRequiredParameterException("No key was provided");
             }
-//            DeployAudit audit = new DeployAudit(setKeyFilter.getAuditLog(), reason);
-//            logAuditMessage(audit);
-//            storeAuditLogEntry(audit);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

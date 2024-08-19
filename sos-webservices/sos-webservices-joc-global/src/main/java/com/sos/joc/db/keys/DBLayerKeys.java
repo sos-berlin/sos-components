@@ -293,7 +293,6 @@ public class DBLayerKeys {
                 certificate.setCa(true);
                 certificate.setKeyAlgorithm(JocKeyAlgorithm.valueOf(keyPair.getKeyAlgorithm()).value());
                 certificate.setKeyType(JocKeyType.CA.value());
-                certificate.setPem(keyPair.getCertificate());
                 certificate.setAccount(account);
                 certificate.setSecLvl(secLvl);
                 session.update(certificate);

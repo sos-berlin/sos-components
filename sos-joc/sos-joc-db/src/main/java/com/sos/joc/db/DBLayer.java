@@ -46,6 +46,7 @@ import com.sos.joc.db.inventory.DBItemInventoryAgentName;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
+import com.sos.joc.db.inventory.DBItemInventoryDependency;
 import com.sos.joc.db.inventory.DBItemInventoryFavorite;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
@@ -263,6 +264,9 @@ public class DBLayer implements Serializable {
 
     public static final String DBITEM_INV_RELEASED_SCHEDULE2CALENDARS = DBItemInventoryReleasedSchedule2Calendar.class.getSimpleName();
     public static final String VIEW_INV_RELEASED_SCHEDULE2CALENDARS = "INV_REL_SCHEDULE2CALENDARS";
+
+    public static final String DBITEM_INV_DEPENDENCIES = DBItemInventoryDependency.class.getSimpleName();
+    public static final String TABLE_INV_DEPENDENCIES = "INV_DEPENDENCIES";
 
     /** Search (helper) tables */
     public static final String DBITEM_SEARCH_WORKFLOWS = DBItemSearchWorkflow.class.getSimpleName();
@@ -521,6 +525,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemSearchWorkflow2DeploymentHistory.class);
         cl.add(DBItemDocumentation.class);
         cl.add(DBItemDocumentationImage.class);
+        cl.add(DBItemInventoryDependency.class);
 
         cl.add(DBItemJocConfiguration.class);
         cl.add(DBItemJocInstance.class);

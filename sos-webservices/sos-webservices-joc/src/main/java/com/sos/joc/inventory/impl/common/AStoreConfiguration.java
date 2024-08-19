@@ -52,6 +52,7 @@ public abstract class AStoreConfiguration extends JOCResourceImpl {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(request);
+            session.setAutoCommit(false);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
             session.beginTransaction();

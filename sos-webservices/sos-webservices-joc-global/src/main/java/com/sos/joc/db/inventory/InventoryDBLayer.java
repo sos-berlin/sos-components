@@ -33,6 +33,7 @@ import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue.ReturnType;
 import com.sos.commons.hibernate.function.regex.SOSHibernateRegexp;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.deploy.DeployType;
+import com.sos.joc.classes.dependencies.items.ReferencedDbItem;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.db.DBItem;
@@ -46,6 +47,7 @@ import com.sos.joc.db.search.DBItemSearchWorkflow;
 import com.sos.joc.db.search.DBItemSearchWorkflow2DeploymentHistory;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.DeploymentState;
@@ -2124,4 +2126,69 @@ public class InventoryDBLayer extends DBLayer {
             return releaseName != null && !releaseName.equals(name);
         }
     }
+    
+    public List<DBItemInventoryDependency> getDependencies (DBItemInventoryConfiguration item) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_INV_DEPENDENCIES);
+        hql.append(" where invId = :invId");
+        Query<DBItemInventoryDependency> query = getSession().createQuery(hql.toString());
+        query.setParameter("invId", item.getId());
+        List<DBItemInventoryDependency> results = query.getResultList();
+        if(results != null) {
+            return results;
+        } else {
+            return Collections.emptyList();
+        }
+    }
+    
+    public void deleteDependencies (DBItemInventoryConfiguration item) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_DEPENDENCIES);
+        hql.append(" where invId = :invId");
+        Query<DBItemInventoryDependency> query = getSession().createQuery(hql.toString());
+        query.setParameter("invId", item.getId());
+        getSession().executeUpdate(query);
+    }
+    
+    public void insertOrReplaceDependencies (DBItemInventoryConfiguration item, Collection<DBItemInventoryDependency> dependencies)
+            throws SOSHibernateException {
+        if(dependencies != null) {
+            deleteDependencies(item);
+            if(dependencies != null && !dependencies.isEmpty()) {
+                dependencies.forEach(dependency -> {
+                    try {
+                        getSession().save(dependency);
+                    } catch (SOSHibernateException e) {
+                        throw new JocSosHibernateException(e);
+                    }
+                });
+            }
+        }
+    }
+    
+    public List<DBItemInventoryConfiguration> getDependenciesByReferences(Collection<Long> referencesByIds) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where id in (:invDepId)");
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameterList("invDepId", referencesByIds);
+        List<DBItemInventoryConfiguration> results = query.getResultList();
+        if(results != null) {
+            return results;
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
+    public List<DBItemInventoryConfiguration> getConfigurations(Collection<Long> ids) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where id in (:ids)");
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameterList("invDepId", ids);
+        List<DBItemInventoryConfiguration> results = query.getResultList();
+        if(results != null) {
+            return results;
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
+
 }
