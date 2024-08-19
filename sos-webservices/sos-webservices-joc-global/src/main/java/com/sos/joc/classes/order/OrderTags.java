@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -34,7 +35,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.workflow.WorkflowRefs;
-import com.sos.joc.cluster.bean.history.AHistoryBean;
+import com.sos.joc.cluster.bean.history.HistoryOrderBean;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.common.SearchStringHelper;
@@ -55,6 +56,7 @@ import com.sos.joc.model.inventory.search.ResponseBaseSearchItem;
 import com.sos.joc.model.order.OrderV;
 
 import io.vavr.control.Either;
+import jakarta.persistence.TemporalType;
 import js7.data.order.OrderId;
 import js7.data_for_java.order.JFreshOrder;
 import js7.data_for_java.order.JOrder;
@@ -80,7 +82,7 @@ public class OrderTags {
     public void addHistoryIdToTags(HistoryOrderStarted evt) {
         if (!evt.getOrderId().contains("|")) { // not child order
             LOGGER.trace("HistoryOrderStarted received: " + SOSString.toString(evt));
-            addHistoryIdToTags(evt.getControllerId(), evt.getOrderId(), (AHistoryBean) evt.getPayload());
+            addHistoryIdToTags(evt.getControllerId(), evt.getOrderId(), (HistoryOrderBean) evt.getPayload());
         }
     }
 
@@ -134,9 +136,9 @@ public class OrderTags {
         }
     }
     
-    private void addHistoryIdToTags(String controllerId, String orderId, AHistoryBean payload) {
+    private void addHistoryIdToTags(String controllerId, String orderId, HistoryOrderBean payload) {
         if (payload != null) {
-            updateHistoryIdOfOrder(controllerId, orderId, payload.getHistoryId());
+            updateHistoryIdOfOrder(controllerId, orderId, payload.getHistoryId(), payload.getStartTime());
         }
     }
 
@@ -399,14 +401,14 @@ public class OrderTags {
         return connection.executeUpdate(query);
     }
     
-    public static Either<Exception, Void> updateHistoryIdOfOrder(String controllerId, String orderId, Long historyId) {
+    public static Either<Exception, Void> updateHistoryIdOfOrder(String controllerId, String orderId, Long historyId, Date startTime) {
         if (historyId != null && historyId > 0L && controllerId != null && orderId != null) {
             SOSHibernateSession connection = null;
             try {
                 connection = Globals.createSosHibernateStatelessConnection("updateOrderTags");
                 connection.setAutoCommit(false);
                 Globals.beginTransaction(connection);
-                updateHistoryIdOfOrder(controllerId, orderId, historyId, connection);
+                updateHistoryIdOfOrder(controllerId, orderId, historyId, startTime, connection);
                 Globals.commit(connection);
                 return Either.right(null);
             } catch (Exception e) {
@@ -419,15 +421,21 @@ public class OrderTags {
         return Either.right(null);
     }
     
-    private static int updateHistoryIdOfOrder(String controllerId, String orderId, Long historyId, SOSHibernateSession connection)
+    private static int updateHistoryIdOfOrder(String controllerId, String orderId, Long historyId, Date startTime, SOSHibernateSession connection)
             throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_HISTORY_ORDER_TAGS);
         hql.append(" set historyId=:historyId");
+        if (startTime != null) {
+            hql.append(", startTime=:startTime"); 
+        }
         hql.append(" where controllerId=:controllerId");
         hql.append(" and orderId=:orderId");
 
         Query<Integer> query = connection.createQuery(hql);
         query.setParameter("historyId", historyId);
+        if (startTime != null) {
+            query.setParameter("startTime", startTime);
+        }
         query.setParameter("orderId", orderId);
         query.setParameter("controllerId", controllerId);
         return connection.executeUpdate(query);
@@ -603,7 +611,6 @@ public class OrderTags {
                 clause = "(" + clause + ")";
             }
             clauses.add(clause);
-            clauses.stream().collect(Collectors.joining(" and ", " where ", ""));
             hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", ""))).append(" order by ordering");
 
             Query<DBItemHistoryOrderTag> query = connection.createQuery(hql.toString());
@@ -664,12 +671,12 @@ public class OrderTags {
         return Collections.emptyList();
     }
     
-    public static List<Long> getHistoryIdsByTags(String controllerId, Set<String> oTags, Integer limit) {
+    public static List<Long> getHistoryIdsByTags(String controllerId, Set<String> oTags, Integer limit, Date startFrom, Date startTo) {
         if (oTags != null && !oTags.isEmpty()) {
             SOSHibernateSession connection = null;
             try {
                 connection = Globals.createSosHibernateStatelessConnection("getOrderTags");
-                return getHistoryIdsByTags(controllerId, oTags, limit, connection);
+                return getHistoryIdsByTags(controllerId, oTags, limit, startFrom, startTo, connection);
             } finally {
                 Globals.disconnect(connection);
             }
@@ -690,34 +697,12 @@ public class OrderTags {
         return Collections.emptyList();
     }
     
-    public static List<Long> getHistoryIdsByTags(String controllerId, List<String> oTags, Integer limit) {
-        if (oTags != null && !oTags.isEmpty()) {
-            SOSHibernateSession connection = null;
-            try {
-                connection = Globals.createSosHibernateStatelessConnection("getOrderTags");
-                return getHistoryIdsByTags(controllerId, oTags, limit, connection);
-            } finally {
-                Globals.disconnect(connection);
-            }
-        }
-        return Collections.emptyList();
-    }
-    
     public static List<String> getMainOrderIdsByTags(String controllerId, Set<String> oTags, SOSHibernateSession connection) {
         if (connection == null) {
             return getMainOrderIdsByTags(controllerId, oTags);
         } else {
             List<String> _oTags = oTags == null ? null : oTags.stream().collect(Collectors.toList());
             return getMainOrderIdsByTags(controllerId, _oTags, connection);
-        }
-    }
-    
-    public static List<Long> getHistoryIdsByTags(String controllerId, Set<String> oTags, Integer limit, SOSHibernateSession connection) {
-        if (connection == null) {
-            return getHistoryIdsByTags(controllerId, oTags, limit);
-        } else {
-            List<String> _oTags = oTags == null ? null : oTags.stream().collect(Collectors.toList());
-            return getHistoryIdsByTags(controllerId, _oTags, limit, connection);
         }
     }
     
@@ -763,9 +748,10 @@ public class OrderTags {
         return Collections.emptyList();
     }
     
-    public static List<Long> getHistoryIdsByTags(String controllerId, List<String> oTags, Integer limit, SOSHibernateSession connection) {
+    public static List<Long> getHistoryIdsByTags(String controllerId, Set<String> oTags, Integer limit, Date startFrom, Date startTo,
+            SOSHibernateSession connection) {
         if (connection == null) {
-            return getHistoryIdsByTags(controllerId, oTags, limit);
+            return getHistoryIdsByTags(controllerId, oTags, limit, startFrom, startTo);
         }
         
         if (limit == null || limit > WebserviceConstants.HISTORY_RESULTSET_LIMIT) {
@@ -773,42 +759,99 @@ public class OrderTags {
         }
 
         if (oTags != null && !oTags.isEmpty()) {
-            Collection<List<String>> chunkedOTags = getChunkedCollection(oTags);
+            
+            if (oTags.size() > 5000) { // TODO 5000? maybe a different number?
+                
+                try {
+                    StringBuilder hql = new StringBuilder("select historyId, tagName from ").append(DBLayer.DBITEM_HISTORY_ORDER_TAGS);
+                    List<String> clauses = new ArrayList<>(4);
+                    if (controllerId != null && !controllerId.isBlank()) {
+                        clauses.add("controllerId=:controllerId");
+                    }
+                    clauses.add("historyId != 0");
+                    if (startFrom != null) {
+                        clauses.add("startTime >= :startTimeFrom");
+                    }
+                    if (startTo != null) {
+                        clauses.add("startTime < :startTimeTo");
+                    }
+                    hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
+                    
+                    Query<Object[]> query = connection.createQuery(hql.toString());
+                    if (controllerId != null && !controllerId.isBlank()) {
+                        query.setParameter("controllerId", controllerId);
+                    }
+                    if (startFrom != null) {
+                        query.setParameter("startTimeFrom", startFrom, TemporalType.TIMESTAMP);
+                    }
+                    if (startTo != null) {
+                        query.setParameter("startTimeTo", startTo, TemporalType.TIMESTAMP);
+                    }
+                    List<Object[]> result = connection.getResultList(query);
+                    if (result == null) {
+                        return Collections.emptyList();
+                    }
+                    Map<String, List<Long>> m = result.stream().collect(Collectors.groupingBy(item -> (String) item[1], Collectors.mapping(
+                            item -> (Long) item[0], Collectors.toList())));
+                    m.keySet().retainAll(oTags);
+                    return m.values().stream().flatMap(List::stream).distinct().sorted(Comparator.reverseOrder()).limit(limit).collect(Collectors
+                            .toList());
+                } catch (SOSHibernateInvalidSessionException ex) {
+                    throw new DBConnectionRefusedException(ex);
+                } catch (Exception ex) {
+                    throw new DBInvalidDataException(ex);
+                }
+                
+            } else {
+                Collection<List<String>> chunkedOTags = getChunkedCollection(oTags);
 
-            try {
-                StringBuilder hql = new StringBuilder("select historyId from ").append(DBLayer.DBITEM_HISTORY_ORDER_TAGS);
-                List<String> clauses = new ArrayList<>(3);
-                if (controllerId != null && !controllerId.isBlank()) {
-                    clauses.add("controllerId=:controllerId");
-                }
-                clauses.add("historyId != 0");
-                String clause = IntStream.range(0, chunkedOTags.size()).mapToObj(i -> "tagName in (:tagNames" + i + ")").collect(Collectors.joining(
-                        " or "));
-                if (chunkedOTags.size() > 1) {
-                    clause = "(" + clause + ")";
-                }
-                clauses.add(clause);
-                hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
-                hql.append(" group by historyId order by historyId desc");
+                try {
+                    StringBuilder hql = new StringBuilder("select historyId from ").append(DBLayer.DBITEM_HISTORY_ORDER_TAGS);
+                    List<String> clauses = new ArrayList<>(5);
+                    if (controllerId != null && !controllerId.isBlank()) {
+                        clauses.add("controllerId=:controllerId");
+                    }
+                    clauses.add("historyId != 0");
+                    if (startFrom != null) {
+                        clauses.add("startTime >= :startTimeFrom");
+                    }
+                    if (startTo != null) {
+                        clauses.add("startTime < :startTimeTo");
+                    }
+                    String clause = IntStream.range(0, chunkedOTags.size()).mapToObj(i -> "tagName in (:tagNames" + i + ")").collect(Collectors
+                            .joining(" or "));
+                    if (chunkedOTags.size() > 1) {
+                        clause = "(" + clause + ")";
+                    }
+                    clauses.add(clause);
+                    hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
+                    hql.append(" group by historyId order by historyId desc");
 
-                Query<Long> query = connection.createQuery(hql.toString());
-                query.setMaxResults(limit);
-                if (controllerId != null && !controllerId.isBlank()) {
-                    query.setParameter("controllerId", controllerId);
+                    Query<Long> query = connection.createQuery(hql.toString());
+                    query.setMaxResults(limit);
+                    if (controllerId != null && !controllerId.isBlank()) {
+                        query.setParameter("controllerId", controllerId);
+                    }
+                    if (startFrom != null) {
+                        query.setParameter("startTimeFrom", startFrom, TemporalType.TIMESTAMP);
+                    }
+                    if (startTo != null) {
+                        query.setParameter("startTimeTo", startTo, TemporalType.TIMESTAMP);
+                    }
+                    AtomicInteger counter = new AtomicInteger();
+                    for (List<String> chunk : chunkedOTags) {
+                        query.setParameterList("tagNames" + counter.getAndIncrement(), chunk);
+                    }
+                    List<Long> result = connection.getResultList(query);
+                    if (result == null) {
+                        return Collections.emptyList();
+                    }
+                    return result;
+                } catch (SOSHibernateInvalidSessionException ex) {
+                    throw new DBConnectionRefusedException(ex);
+                } catch (Exception ex) {
+                    throw new DBInvalidDataException(ex);
                 }
-                AtomicInteger counter = new AtomicInteger();
-                for (List<String> chunk : chunkedOTags) {
-                    query.setParameterList("tagNames" + counter.getAndIncrement(), chunk);
-                }
-                List<Long> result = connection.getResultList(query);
-                if (result == null) {
-                    return Collections.emptyList();
-                }
-                return result;
-            } catch (SOSHibernateInvalidSessionException ex) {
-                throw new DBConnectionRefusedException(ex);
-            } catch (Exception ex) {
-                throw new DBInvalidDataException(ex);
             }
         }
         return Collections.emptyList();
