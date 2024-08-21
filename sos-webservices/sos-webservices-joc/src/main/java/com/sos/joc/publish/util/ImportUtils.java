@@ -561,6 +561,7 @@ public class ImportUtils {
                         jocMetaInfo.setJocVersion(fromFile.getJocVersion());
                         jocMetaInfo.setInventorySchemaVersion(fromFile.getInventorySchemaVersion());
                         jocMetaInfo.setApiVersion(fromFile.getApiVersion());
+                        jocMetaInfo.setVersionId(fromFile.getVersionId());
                     }
                 }
                 // process deployables only
@@ -639,6 +640,7 @@ public class ImportUtils {
                         jocMetaInfo.setJocVersion(fromFile.getJocVersion());
                         jocMetaInfo.setInventorySchemaVersion(fromFile.getInventorySchemaVersion());
                         jocMetaInfo.setApiVersion(fromFile.getApiVersion());
+                        jocMetaInfo.setVersionId(fromFile.getVersionId());
                     }
                 }
                 ConfigurationObject fromArchive = createConfigurationObjectFromArchiveFileEntry(outBuffer, entryName);
@@ -693,6 +695,7 @@ public class ImportUtils {
                         jocMetaInfo.setJocVersion(fromFile.getJocVersion());
                         jocMetaInfo.setInventorySchemaVersion(fromFile.getInventorySchemaVersion());
                         jocMetaInfo.setApiVersion(fromFile.getApiVersion());
+                        jocMetaInfo.setVersionId(fromFile.getVersionId());
                     }
                 }
                 // process deployables only
@@ -775,6 +778,7 @@ public class ImportUtils {
                         jocMetaInfo.setJocVersion(fromFile.getJocVersion());
                         jocMetaInfo.setInventorySchemaVersion(fromFile.getInventorySchemaVersion());
                         jocMetaInfo.setApiVersion(fromFile.getApiVersion());
+                        jocMetaInfo.setVersionId(fromFile.getVersionId());
                     }
                 }
                 ConfigurationObject fromArchive = createConfigurationObjectFromArchiveFileEntry(outBuffer, entryName);
