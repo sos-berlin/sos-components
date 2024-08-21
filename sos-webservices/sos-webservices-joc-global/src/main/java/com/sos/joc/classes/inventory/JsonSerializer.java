@@ -207,6 +207,7 @@ public class JsonSerializer {
                     job.setSigkillDelay(defaultToNull(job.getSigkillDelay(), 15));
                     job.setAdmissionTimeScheme(emptyAdmissionTimeSchemeToNull(job.getAdmissionTimeScheme()));
                     job.setSkipIfNoAdmissionStartForOrderDay(defaultToNull(job.getSkipIfNoAdmissionStartForOrderDay(), Boolean.FALSE));
+                    job.setIsNotRestartable(defaultToNull(job.getIsNotRestartable(), Boolean.FALSE));
                     if (job.getSubagentSelectionIdExpr() != null && !job.getSubagentSelectionIdExpr().isEmpty()) {
                         job.setSubagentSelectionId(null); 
                     }
@@ -233,6 +234,7 @@ public class JsonSerializer {
                     //job.setGraceTimeout(defaultToNull(job.getGraceTimeout(), 15));
                     job.setAdmissionTimeScheme(emptyAdmissionTimeSchemeToNull(job.getAdmissionTimeScheme()));
                     job.setSkipIfNoAdmissionForOrderDay(defaultToNull(job.getSkipIfNoAdmissionForOrderDay(), Boolean.FALSE));
+                    job.setIsNotRestartable(defaultToNull(job.getIsNotRestartable(), Boolean.FALSE));
                     if (job.getSubagentClusterIdExpr() != null && !job.getSubagentClusterIdExpr().isEmpty()) {
                         job.setSubagentClusterId(null); 
                     }
@@ -252,6 +254,7 @@ public class JsonSerializer {
             emptyExecutableToNull(jt.getExecutable(), null);
             //jt.setGraceTimeout(defaultToNull(jt.getGraceTimeout(), 15));
             jt.setAdmissionTimeScheme(emptyAdmissionTimeSchemeToNull(jt.getAdmissionTimeScheme()));
+            jt.setIsNotRestartable(defaultToNull(jt.getIsNotRestartable(), Boolean.FALSE));
             jt.setSkipIfNoAdmissionForOrderDay(defaultToNull(jt.getSkipIfNoAdmissionForOrderDay(), Boolean.FALSE));
             jt.setHash(null);
         }

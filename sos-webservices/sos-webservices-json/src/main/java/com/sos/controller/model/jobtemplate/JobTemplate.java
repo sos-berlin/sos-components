@@ -84,10 +84,11 @@ public class JobTemplate
      * @param hasRequiredArguments
      * @param documentationName
      * @param hash
+     * @param isNotRestartable
      * @param warnOnErrWritten
      */
-    public JobTemplate(String name, String path, Boolean hasRequiredArguments, String version, Executable executable, AdmissionTimeScheme admissionTimeScheme, Boolean skipIfNoAdmissionForOrderDay, Integer parallelism, Integer timeout, Integer graceTimeout, Boolean failOnErrWritten, Boolean warnOnErrWritten, Parameters arguments, Environment defaultArguments, List<String> jobResourceNames, String title, String description, String documentationName, JobCriticality criticality, String warnIfShorter, String warnIfLonger, JobNotification notification, String hash) {
-        super(version, executable, admissionTimeScheme, skipIfNoAdmissionForOrderDay, parallelism, timeout, graceTimeout, failOnErrWritten, warnOnErrWritten, arguments, defaultArguments, jobResourceNames, title, description, documentationName, criticality, warnIfShorter, warnIfLonger, notification, hash);
+    public JobTemplate(String name, String path, Boolean hasRequiredArguments, String version, Executable executable, AdmissionTimeScheme admissionTimeScheme, Boolean skipIfNoAdmissionForOrderDay, Integer parallelism, Integer timeout, Integer graceTimeout, Boolean failOnErrWritten, Boolean warnOnErrWritten, Parameters arguments, Environment defaultArguments, List<String> jobResourceNames, String title, String description, String documentationName, JobCriticality criticality, String warnIfShorter, String warnIfLonger, JobNotification notification, String hash, Boolean isNotRestartable) {
+        super(version, executable, admissionTimeScheme, skipIfNoAdmissionForOrderDay, parallelism, timeout, graceTimeout, failOnErrWritten, warnOnErrWritten, arguments, defaultArguments, jobResourceNames, title, description, documentationName, criticality, warnIfShorter, warnIfLonger, notification, hash, isNotRestartable);
         this.name = name;
         this.path = path;
         this.hasRequiredArguments = hasRequiredArguments;

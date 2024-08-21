@@ -295,6 +295,11 @@ public class JobTemplatesPropagate {
         }
         j.setWarnIfShorter(jt.getWarnIfShorter());
         
+        if (isNotEqual(j.getIsNotRestartable(), jt.getIsNotRestartable())) {
+            actions.getChanges().add("isNotRestartable");
+        }
+        j.setIsNotRestartable(jt.getIsNotRestartable());
+        
         setExecutable(jReport, j, jt, arguments);
     }
     

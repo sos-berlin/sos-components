@@ -77,6 +77,10 @@
       "items": {
         "$ref": "../../../inventory/schemas/common/string255-schema.json"
       }
+    },
+    "isNotRestartable": {
+      "description": "default -> false",
+      "type": "boolean"
     }
   },
   "additionalProperties": false

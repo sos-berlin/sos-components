@@ -45,6 +45,9 @@ public class JobTemplateHelper {
         t.setWarnIfLonger(j.getWarnIfLonger());
         t.setWarnIfShorter(j.getWarnIfShorter());
         t.setWarnOnErrWritten(j.getWarnOnErrWritten());
+        if (j.getIsNotRestartable() != Boolean.TRUE) {
+            t.setIsNotRestartable(null);
+        }
 
         t.setHash(JS7ConverterHelper.getJS7JobTemplateHash(t));
         return t;

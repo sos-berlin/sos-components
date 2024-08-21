@@ -34,7 +34,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "sigkillDelay",
     "failOnErrWritten",
     "defaultArguments",
-    "jobResourcePaths"
+    "jobResourcePaths",
+    "isNotRestartable"
 })
 public class Job {
 
@@ -127,6 +128,13 @@ public class Job {
         "jobResourceNames"
     })
     private List<String> jobResourcePaths = null;
+    /**
+     * default -> false
+     * 
+     */
+    @JsonProperty("isNotRestartable")
+    @JsonPropertyDescription("default -> false")
+    private Boolean isNotRestartable;
 
     /**
      * No args constructor for use in serialization
@@ -150,8 +158,9 @@ public class Job {
      * @param defaultArguments
      * @param jobResourcePaths
      * @param skipIfNoAdmissionStartForOrderDay
+     * @param isNotRestartable
      */
-    public Job(String agentPath, String subagentSelectionId, String subagentSelectionIdExpr, Executable executable, AdmissionTimeScheme admissionTimeScheme, Boolean skipIfNoAdmissionStartForOrderDay, JobReturnCode returnCodeMeaning, Integer processLimit, Integer timeout, Integer sigkillDelay, Boolean failOnErrWritten, Environment defaultArguments, List<String> jobResourcePaths) {
+    public Job(String agentPath, String subagentSelectionId, String subagentSelectionIdExpr, Executable executable, AdmissionTimeScheme admissionTimeScheme, Boolean skipIfNoAdmissionStartForOrderDay, JobReturnCode returnCodeMeaning, Integer processLimit, Integer timeout, Integer sigkillDelay, Boolean failOnErrWritten, Environment defaultArguments, List<String> jobResourcePaths, Boolean isNotRestartable) {
         super();
         this.agentPath = agentPath;
         this.subagentSelectionId = subagentSelectionId;
@@ -166,6 +175,7 @@ public class Job {
         this.failOnErrWritten = failOnErrWritten;
         this.defaultArguments = defaultArguments;
         this.jobResourcePaths = jobResourcePaths;
+        this.isNotRestartable = isNotRestartable;
     }
 
     /**
@@ -374,14 +384,32 @@ public class Job {
         this.jobResourcePaths = jobResourcePaths;
     }
 
+    /**
+     * default -> false
+     * 
+     */
+    @JsonProperty("isNotRestartable")
+    public Boolean getIsNotRestartable() {
+        return isNotRestartable;
+    }
+
+    /**
+     * default -> false
+     * 
+     */
+    @JsonProperty("isNotRestartable")
+    public void setIsNotRestartable(Boolean isNotRestartable) {
+        this.isNotRestartable = isNotRestartable;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentPath", agentPath).append("subagentSelectionId", subagentSelectionId).append("subagentSelectionIdExpr", subagentSelectionIdExpr).append("executable", executable).append("admissionTimeScheme", admissionTimeScheme).append("skipIfNoAdmissionStartForOrderDay", skipIfNoAdmissionStartForOrderDay).append("returnCodeMeaning", returnCodeMeaning).append("processLimit", processLimit).append("timeout", timeout).append("sigkillDelay", sigkillDelay).append("failOnErrWritten", failOnErrWritten).append("defaultArguments", defaultArguments).append("jobResourcePaths", jobResourcePaths).toString();
+        return new ToStringBuilder(this).append("agentPath", agentPath).append("subagentSelectionId", subagentSelectionId).append("subagentSelectionIdExpr", subagentSelectionIdExpr).append("executable", executable).append("admissionTimeScheme", admissionTimeScheme).append("skipIfNoAdmissionStartForOrderDay", skipIfNoAdmissionStartForOrderDay).append("returnCodeMeaning", returnCodeMeaning).append("processLimit", processLimit).append("timeout", timeout).append("sigkillDelay", sigkillDelay).append("failOnErrWritten", failOnErrWritten).append("defaultArguments", defaultArguments).append("jobResourcePaths", jobResourcePaths).append("isNotRestartable", isNotRestartable).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(subagentSelectionId).append(sigkillDelay).append(failOnErrWritten).append(executable).append(timeout).append(admissionTimeScheme).append(agentPath).append(subagentSelectionIdExpr).append(returnCodeMeaning).append(processLimit).append(defaultArguments).append(jobResourcePaths).append(skipIfNoAdmissionStartForOrderDay).toHashCode();
+        return new HashCodeBuilder().append(subagentSelectionId).append(sigkillDelay).append(failOnErrWritten).append(executable).append(timeout).append(admissionTimeScheme).append(agentPath).append(subagentSelectionIdExpr).append(returnCodeMeaning).append(processLimit).append(defaultArguments).append(jobResourcePaths).append(skipIfNoAdmissionStartForOrderDay).append(isNotRestartable).toHashCode();
     }
 
     @Override
@@ -393,7 +421,7 @@ public class Job {
             return false;
         }
         Job rhs = ((Job) other);
-        return new EqualsBuilder().append(subagentSelectionId, rhs.subagentSelectionId).append(sigkillDelay, rhs.sigkillDelay).append(failOnErrWritten, rhs.failOnErrWritten).append(executable, rhs.executable).append(timeout, rhs.timeout).append(admissionTimeScheme, rhs.admissionTimeScheme).append(agentPath, rhs.agentPath).append(subagentSelectionIdExpr, rhs.subagentSelectionIdExpr).append(returnCodeMeaning, rhs.returnCodeMeaning).append(processLimit, rhs.processLimit).append(defaultArguments, rhs.defaultArguments).append(jobResourcePaths, rhs.jobResourcePaths).append(skipIfNoAdmissionStartForOrderDay, rhs.skipIfNoAdmissionStartForOrderDay).isEquals();
+        return new EqualsBuilder().append(subagentSelectionId, rhs.subagentSelectionId).append(sigkillDelay, rhs.sigkillDelay).append(failOnErrWritten, rhs.failOnErrWritten).append(executable, rhs.executable).append(timeout, rhs.timeout).append(admissionTimeScheme, rhs.admissionTimeScheme).append(agentPath, rhs.agentPath).append(subagentSelectionIdExpr, rhs.subagentSelectionIdExpr).append(returnCodeMeaning, rhs.returnCodeMeaning).append(processLimit, rhs.processLimit).append(defaultArguments, rhs.defaultArguments).append(jobResourcePaths, rhs.jobResourcePaths).append(skipIfNoAdmissionStartForOrderDay, rhs.skipIfNoAdmissionStartForOrderDay).append(isNotRestartable, rhs.isNotRestartable).isEquals();
     }
 
 }
