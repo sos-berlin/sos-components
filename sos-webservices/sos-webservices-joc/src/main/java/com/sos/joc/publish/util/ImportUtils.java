@@ -569,6 +569,7 @@ public class ImportUtils {
                         jocMetaInfo.setJocVersion(fromFile.getJocVersion());
                         jocMetaInfo.setInventorySchemaVersion(fromFile.getInventorySchemaVersion());
                         jocMetaInfo.setApiVersion(fromFile.getApiVersion());
+                        jocMetaInfo.setVersionId(fromFile.getVersionId());
                     }
                 }
                 // process deployables only
@@ -649,6 +650,7 @@ public class ImportUtils {
                         jocMetaInfo.setJocVersion(fromFile.getJocVersion());
                         jocMetaInfo.setInventorySchemaVersion(fromFile.getInventorySchemaVersion());
                         jocMetaInfo.setApiVersion(fromFile.getApiVersion());
+                        jocMetaInfo.setVersionId(fromFile.getVersionId());
                     }
                 }
                 if(entryName.equals(ExportUtils.TAGS_ENTRY_NAME)) {
@@ -708,6 +710,7 @@ public class ImportUtils {
                         jocMetaInfo.setJocVersion(fromFile.getJocVersion());
                         jocMetaInfo.setInventorySchemaVersion(fromFile.getInventorySchemaVersion());
                         jocMetaInfo.setApiVersion(fromFile.getApiVersion());
+                        jocMetaInfo.setVersionId(fromFile.getVersionId());
                     }
                 }
                 // process deployables only
@@ -792,6 +795,7 @@ public class ImportUtils {
                         jocMetaInfo.setJocVersion(fromFile.getJocVersion());
                         jocMetaInfo.setInventorySchemaVersion(fromFile.getInventorySchemaVersion());
                         jocMetaInfo.setApiVersion(fromFile.getApiVersion());
+                        jocMetaInfo.setVersionId(fromFile.getVersionId());
                     }
                 }
                 if(entryName.equals(ExportUtils.TAGS_ENTRY_NAME)) {
