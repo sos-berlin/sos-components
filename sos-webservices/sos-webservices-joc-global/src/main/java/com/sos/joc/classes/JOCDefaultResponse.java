@@ -40,7 +40,9 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
             + "      div.message {color:#666;font-size:12pt;font-weight:normal;text-align:left;margin:4px 10px;}%n" + "  </style>%n" + "</head>%n"
             + "<body>%n" + "  <div class=\"frame\">%n" + "    <div class=\"innerframe\">%n" + "      <div class=\"code\">&#x26a0; %1$s<div>%n"
             + "      <div class=\"message\">%2$s</div>%n" + "    </div>%n" + "  </div>%n" + "</body>%n" + "</html>%n";
-
+    private static final String REASON_PHRASE_420 = "Invalid Request";
+    private static final String REASON_PHRASE_440 = "Login Timeout";
+    
     private JOCDefaultResponse(Response delegate) {
         super(delegate);
     }
@@ -131,7 +133,8 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
         } else {
             errorOutput = e.getClass().getSimpleName() + ": " + e.getMessage();
         }
-        Response.ResponseBuilder responseBuilder = Response.status(440).header("Content-Type", mediaType).cacheControl(setNoCaching());
+        Response.ResponseBuilder responseBuilder = Response.status(440, REASON_PHRASE_440).header("Content-Type", mediaType).cacheControl(
+                setNoCaching());
         LOGGER.info(errorOutput);
         if (mediaType.contains(MediaType.TEXT_HTML)) {
             String entityStr = String.format(ERROR_HTML, "JOC-440", StringEscapeUtils.escapeHtml4(errorOutput));
@@ -216,7 +219,8 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
     }
 
     public static JOCDefaultResponse responseStatus420(Err420 entity, String mediaType) {
-        Response.ResponseBuilder responseBuilder = Response.status(420).header("Content-Type", mediaType).cacheControl(setNoCaching());
+        Response.ResponseBuilder responseBuilder = Response.status(420, REASON_PHRASE_420).header("Content-Type", mediaType).cacheControl(
+                setNoCaching());
         if (mediaType.contains(MediaType.TEXT_HTML)) {
             String entityStr = String.format(ERROR_HTML, entity.getError().getCode(), StringEscapeUtils.escapeHtml4(entity.getError().getMessage()));
             responseBuilder.entity(entityStr);
@@ -236,15 +240,15 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
 
     public static JOCDefaultResponse responseHTMLStatus420(String entity) {
         entity = String.format(ERROR_HTML, "JOC-420", StringEscapeUtils.escapeHtml4(entity));
-        Response.ResponseBuilder responseBuilder = Response.status(420).header("Content-Type", MediaType.TEXT_HTML + "; charset=UTF-8").cacheControl(
-                setNoCaching());
+        Response.ResponseBuilder responseBuilder = Response.status(420, REASON_PHRASE_420).header("Content-Type", MediaType.TEXT_HTML
+                + "; charset=UTF-8").cacheControl(setNoCaching());
         responseBuilder.entity(entity);
         return new JOCDefaultResponse(responseBuilder.build());
     }
 
     public static JOCDefaultResponse responsePlainStatus420(String entity) {
-        Response.ResponseBuilder responseBuilder = Response.status(420).header("Content-Type", MediaType.TEXT_PLAIN + "; charset=UTF-8").cacheControl(
-                setNoCaching());
+        Response.ResponseBuilder responseBuilder = Response.status(420, REASON_PHRASE_420).header("Content-Type", MediaType.TEXT_PLAIN
+                + "; charset=UTF-8").cacheControl(setNoCaching());
         responseBuilder.entity(entity);
         return new JOCDefaultResponse(responseBuilder.build());
     }
@@ -276,8 +280,8 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
     }
 
     public static JOCDefaultResponse responseStatus434(Err420 entity) {
-        Response.ResponseBuilder responseBuilder = Response.status(434).header("Content-Type", MediaType.APPLICATION_JSON).cacheControl(
-                setNoCaching());
+        Response.ResponseBuilder responseBuilder = Response.status(434, REASON_PHRASE_420).header("Content-Type", MediaType.APPLICATION_JSON)
+                .cacheControl(setNoCaching());
         responseBuilder.entity(entity);
         return new JOCDefaultResponse(responseBuilder.build());
     }
@@ -286,15 +290,15 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
         Errs errors = new Errs();
         errors.setErrors(listOfErrors);
 
-        Response.ResponseBuilder responseBuilder = Response.status(419).header("Content-Type", MediaType.APPLICATION_JSON).cacheControl(
-                setNoCaching());
+        Response.ResponseBuilder responseBuilder = Response.status(419, REASON_PHRASE_420).header("Content-Type", MediaType.APPLICATION_JSON)
+                .cacheControl(setNoCaching());
         responseBuilder.entity(errors);
         return new JOCDefaultResponse(responseBuilder.build());
     }
 
     public static JOCDefaultResponse responseStatus419(Object entity) {
-        Response.ResponseBuilder responseBuilder = Response.status(419).header("Content-Type", MediaType.APPLICATION_JSON).cacheControl(
-                setNoCaching());
+        Response.ResponseBuilder responseBuilder = Response.status(419, REASON_PHRASE_420).header("Content-Type", MediaType.APPLICATION_JSON)
+                .cacheControl(setNoCaching());
         responseBuilder.entity(entity);
         return new JOCDefaultResponse(responseBuilder.build());
     }
@@ -332,30 +336,6 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
 
     public static JOCDefaultResponse responseStatus403(SOSAuthCurrentAccountAnswer entity) {
         return responseStatus403(entity, MediaType.APPLICATION_JSON);
-    }
-
-    public static JOCDefaultResponse responseStatus440(SOSAuthCurrentAccountAnswer entity, String mediaType) {
-        Response.ResponseBuilder responseBuilder = Response.status(440).header("Content-Type", mediaType).cacheControl(setNoCaching());
-        if (entity.getApiCall() == null) {
-            LOGGER.error(entity.getMessage());
-        } else {
-            LOGGER.error(MarkerFactory.getMarker(entity.getApiCall()), entity.getMessage());
-        }
-        if (mediaType.contains(MediaType.TEXT_HTML)) {
-            String entityStr = String.format(ERROR_HTML, "JOC-440", StringEscapeUtils.escapeHtml4(entity.getMessage()));
-            responseBuilder.entity(entityStr);
-        } else {
-            responseBuilder.entity(entity);
-        }
-        return new JOCDefaultResponse(responseBuilder.build());
-    }
-
-    public static JOCDefaultResponse responseStatus440(SOSAuthCurrentAccountAnswer entity) {
-        return responseStatus440(entity, MediaType.APPLICATION_JSON);
-    }
-
-    public static JOCDefaultResponse responseHTMLStatus440(SOSAuthCurrentAccountAnswer entity) {
-        return responseStatus440(entity, MediaType.TEXT_HTML + "; charset=UTF-8");
     }
 
     public static SOSAuthCurrentAccountAnswer getError401Schema(JobSchedulerUser sosJobschedulerUser, String apiCall) {
