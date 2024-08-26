@@ -2141,12 +2141,22 @@ public class InventoryDBLayer extends DBLayer {
     }
     
     public void deleteDependencies (DBItemInventoryConfiguration item) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_DEPENDENCIES);
+        boolean autoCommitChanged = false;
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_DEPENDENCIES);
         hql.append(" where invId = :invId");
         Query<DBItemInventoryDependency> query = getSession().createQuery(hql.toString());
         query.setParameter("invId", item.getId());
-        getSession().executeUpdate(query);
-    }
+        List<DBItemInventoryDependency> resultsFound = getSession().getResultList(query);
+        if(resultsFound != null) {
+            resultsFound.stream().forEach(found -> {
+                try {
+                    getSession().delete(found);
+                } catch (SOSHibernateException e) {
+                    throw new JocSosHibernateException(e);
+                }
+            });
+        }
+    } 
     
     public void insertOrReplaceDependencies (DBItemInventoryConfiguration item, Collection<DBItemInventoryDependency> dependencies)
             throws SOSHibernateException {
