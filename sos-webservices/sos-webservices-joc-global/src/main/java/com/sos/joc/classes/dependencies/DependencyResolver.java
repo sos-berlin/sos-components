@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.controller.model.jobtemplate.JobTemplate;
 import com.sos.joc.classes.dependencies.items.ReferencedDbItem;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
@@ -48,10 +49,12 @@ public class DependencyResolver {
                 dbItem = results.get(0); 
             }
         }
-        return resolve(session, dbItem);
+        ReferencedDbItem resolvedItem = resolveReferencedBy(session, dbItem);
+        
+        return resolvedItem;
     }
 
-    public static ReferencedDbItem resolve(SOSHibernateSession session, DBItemInventoryConfiguration inventoryDbItem) throws SOSHibernateException {
+    public static ReferencedDbItem resolveReferencedBy(SOSHibernateSession session, DBItemInventoryConfiguration inventoryDbItem) throws SOSHibernateException {
         ReferencedDbItem cfg = new ReferencedDbItem(inventoryDbItem);
         cfg.setReferencedItem(inventoryDbItem);
         InventoryDBLayer dbLayer = new InventoryDBLayer(session);
@@ -112,6 +115,50 @@ public class DependencyResolver {
         return cfg;
     }
     
+    public static void resolveReferences (DBItemInventoryConfiguration item) {
+        String json = item.getContent();
+        switch (item.getTypeAsEnum()) {
+        // determine references in configurations json
+        case WORKFLOW:
+            //Lock
+            if(json.contains("lockName")) {
+                
+            }
+            //JobResource
+            if(json.contains("jobResourceNames")) {
+                
+            }
+            //NoticeBoards
+            if(json.contains("noticeBoardNames")) {
+                
+            }
+            //Workflow
+            if(json.contains("workflowName")) {
+                
+            }
+            // ScriptIncludes
+            if(json.contains("##!include")) {
+                
+            }
+            break;
+        case SCHEDULE:
+            // Workflow
+            
+            break;
+        case JOBTEMPLATE:
+            
+            break;
+        case FILEORDERSOURCE:
+            // Workflow
+            break;
+        case JOBRESOURCE:
+            
+            break;
+        default:
+            break;
+        }
+    }
+    
     public static void updateDependencies(SOSHibernateSession session, DBItemInventoryConfiguration inventoryDbItem)
             throws SOSHibernateException {
         boolean ownTransaction = false;
@@ -145,7 +192,7 @@ public class DependencyResolver {
 
     public static void insertOrRenewDependencies(SOSHibernateSession session, DBItemInventoryConfiguration inventoryDbItem)
             throws SOSHibernateException {
-        ReferencedDbItem references = resolve(session, inventoryDbItem);
+        ReferencedDbItem references = resolveReferencedBy(session, inventoryDbItem);
         InventoryDBLayer layer = new InventoryDBLayer(session);
         // store new dependencies
         layer.insertOrReplaceDependencies(references.getReferencedItem(), convert(references));
@@ -165,9 +212,14 @@ public class DependencyResolver {
 
     public static List<DBItemInventoryDependency> getStoredDependencies(SOSHibernateSession session, ReferencedDbItem references)
             throws SOSHibernateException {
+        return getStoredDependencies(session, references.getReferencedItem());
+    }
+
+    public static List<DBItemInventoryDependency> getStoredDependencies(SOSHibernateSession session, DBItemInventoryConfiguration inventoryObject)
+            throws SOSHibernateException {
         List<DBItemInventoryDependency> dependencies = new ArrayList<DBItemInventoryDependency>();
         InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-        dependencies = dbLayer.getDependencies(references.getReferencedItem());
+        dependencies = dbLayer.getDependencies(inventoryObject);
         return dependencies;
     }
 
@@ -175,9 +227,9 @@ public class DependencyResolver {
         return reference.getReferencedBy().stream().map(item -> {
             DBItemInventoryDependency dependency = new DBItemInventoryDependency();
             dependency.setInvId(reference.getReferencedItem().getId());
-            dependency.setDependencyType(reference.getReferencedItem().getTypeAsEnum());
+            dependency.setDependencyType(item.getTypeAsEnum());
             dependency.setInvDependencyId(item.getId());
-            dependency.setPublished(false);
+            dependency.setPublished(item.getDeployed() || item.getReleased());
             return dependency;
         }).collect(Collectors.toList());
     }
@@ -191,6 +243,7 @@ public class DependencyResolver {
             DBItemInventoryConfiguration newItem = dbLayer.getConfiguration(dependency.getInvDependencyId());
             newDbItem.getReferencedBy().add(newItem);
         }
+//        newDbItem.getReferencedItem().resolveOwnDependencies
         return newDbItem;
     }
 }

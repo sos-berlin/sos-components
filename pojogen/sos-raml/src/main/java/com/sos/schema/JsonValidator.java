@@ -250,6 +250,7 @@ public class JsonValidator {
             put("com.sos.joc.model.publish.repository.DeleteFromFilter", "publish/repository/deleteFromRepositoryFilter-schema.json");
             put("com.sos.joc.model.publish.repository.ReadFromFilter", "publish/repository/readFromRepositoryFilter-schema.json");
             put("com.sos.joc.model.publish.repository.UpdateFromFilter", "publish/repository/updateFromRepositoryFilter-schema.json");
+            put("com.sos.joc.model.inventory.dependencies.GetDependenciesRequest", "inventory/dependencies/dependency-request-schema.json");
             
             // encipherment
             put("AgentAssignmentRequestFilter", "encipherment/agentAssignmentRequestFilter-schema.json");

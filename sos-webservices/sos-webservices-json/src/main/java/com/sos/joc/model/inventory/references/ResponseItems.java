@@ -8,8 +8,13 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.controller.model.board.Board;
 import com.sos.controller.model.fileordersource.FileOrderSource;
+import com.sos.controller.model.jobresource.JobResource;
+import com.sos.controller.model.jobtemplate.JobTemplate;
+import com.sos.controller.model.lock.Lock;
 import com.sos.controller.model.workflow.Workflow;
+import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.schedule.Schedule;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -28,7 +33,12 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "isRenamed",
     "workflows",
     "fileOrderSources",
-    "schedules"
+    "boards",
+    "locks",
+    "jobResources",
+    "jobTemplates",
+    "schedules",
+    "calendars"
 })
 public class ResponseItems {
 
@@ -48,8 +58,18 @@ public class ResponseItems {
     private List<Workflow> workflows = new ArrayList<Workflow>();
     @JsonProperty("fileOrderSources")
     private List<FileOrderSource> fileOrderSources = new ArrayList<FileOrderSource>();
+    @JsonProperty("boards")
+    private List<Board> boards = new ArrayList<Board>();
+    @JsonProperty("locks")
+    private List<Lock> locks = new ArrayList<Lock>();
+    @JsonProperty("jobResources")
+    private List<JobResource> jobResources = new ArrayList<JobResource>();
+    @JsonProperty("jobTemplates")
+    private List<JobTemplate> jobTemplates = new ArrayList<JobTemplate>();
     @JsonProperty("schedules")
     private List<Schedule> schedules = new ArrayList<Schedule>();
+    @JsonProperty("calendars")
+    private List<Calendar> calendars = new ArrayList<Calendar>();
 
     /**
      * timestamp
@@ -105,6 +125,46 @@ public class ResponseItems {
         this.fileOrderSources = fileOrderSources;
     }
 
+    @JsonProperty("boards")
+    public List<Board> getBoards() {
+        return boards;
+    }
+
+    @JsonProperty("boards")
+    public void setBoards(List<Board> boards) {
+        this.boards = boards;
+    }
+
+    @JsonProperty("locks")
+    public List<Lock> getLocks() {
+        return locks;
+    }
+
+    @JsonProperty("locks")
+    public void setLocks(List<Lock> locks) {
+        this.locks = locks;
+    }
+
+    @JsonProperty("jobResources")
+    public List<JobResource> getJobResources() {
+        return jobResources;
+    }
+
+    @JsonProperty("jobResources")
+    public void setJobResources(List<JobResource> jobResources) {
+        this.jobResources = jobResources;
+    }
+
+    @JsonProperty("jobTemplates")
+    public List<JobTemplate> getJobTemplates() {
+        return jobTemplates;
+    }
+
+    @JsonProperty("jobTemplates")
+    public void setJobTemplates(List<JobTemplate> jobTemplates) {
+        this.jobTemplates = jobTemplates;
+    }
+
     @JsonProperty("schedules")
     public List<Schedule> getSchedules() {
         return schedules;
@@ -115,14 +175,24 @@ public class ResponseItems {
         this.schedules = schedules;
     }
 
+    @JsonProperty("calendars")
+    public List<Calendar> getCalendars() {
+        return calendars;
+    }
+
+    @JsonProperty("calendars")
+    public void setCalendars(List<Calendar> calendars) {
+        this.calendars = calendars;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("isRenamed", isRenamed).append("workflows", workflows).append("fileOrderSources", fileOrderSources).append("schedules", schedules).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("isRenamed", isRenamed).append("workflows", workflows).append("fileOrderSources", fileOrderSources).append("boards", boards).append("locks", locks).append("jobResources", jobResources).append("jobTemplates", jobTemplates).append("schedules", schedules).append("calendars", calendars).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(isRenamed).append(fileOrderSources).append(workflows).append(deliveryDate).append(schedules).toHashCode();
+        return new HashCodeBuilder().append(isRenamed).append(fileOrderSources).append(calendars).append(schedules).append(boards).append(jobTemplates).append(workflows).append(deliveryDate).append(jobResources).append(locks).toHashCode();
     }
 
     @Override
@@ -134,7 +204,7 @@ public class ResponseItems {
             return false;
         }
         ResponseItems rhs = ((ResponseItems) other);
-        return new EqualsBuilder().append(isRenamed, rhs.isRenamed).append(fileOrderSources, rhs.fileOrderSources).append(workflows, rhs.workflows).append(deliveryDate, rhs.deliveryDate).append(schedules, rhs.schedules).isEquals();
+        return new EqualsBuilder().append(isRenamed, rhs.isRenamed).append(fileOrderSources, rhs.fileOrderSources).append(calendars, rhs.calendars).append(schedules, rhs.schedules).append(boards, rhs.boards).append(jobTemplates, rhs.jobTemplates).append(workflows, rhs.workflows).append(deliveryDate, rhs.deliveryDate).append(jobResources, rhs.jobResources).append(locks, rhs.locks).isEquals();
     }
 
 }

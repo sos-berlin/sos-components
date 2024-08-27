@@ -309,20 +309,23 @@ public class JocInventory {
         switch (type) {
         case WORKFLOW:
             return com.sos.joc.classes.inventory.WorkflowConverter.convertInventoryWorkflow(content);
-            
         case JOBTEMPLATE:
-            JobTemplate jt = (JobTemplate) Globals.objectMapper.readValue(content, JobTemplate.class);
-            com.sos.joc.classes.inventory.WorkflowConverter.addInternalExecutableType(jt.getExecutable());
-            jt.setVersion(Globals.getStrippedInventoryVersion());
-            return jt;
-            
+            return convertJobTemplate(content, JobTemplate.class);
         case SCHEDULE:
             return convertSchedule(content, Schedule.class);
-            
         case FILEORDERSOURCE:
             return convertFileOrderSource(content, FileOrderSource.class);
-            
+        case JOBRESOURCE:
+            return convertDefault(content, JobResource.class);
+        case LOCK:
+            return convertDefault(content, Lock.class);
+        case NOTICEBOARD:
+            return convertDefault(content, Board.class);
+        case WORKINGDAYSCALENDAR:
+        case NONWORKINGDAYSCALENDAR:
+            return convertDefault(content, Calendar.class);
         default:
+//            return convertDefault(content, (Class) CLASS_MAPPING.get(type));
             IConfigurationObject obj = (IConfigurationObject) Globals.objectMapper.readValue(content, CLASS_MAPPING.get(type));
             ((IInventoryObject) obj).setVersion(Globals.getStrippedInventoryVersion());
             return obj;
@@ -354,6 +357,20 @@ public class JocInventory {
         return s;
     }
 
+    public static <T extends JobTemplate> T convertJobTemplate(String content, Class<T> clazz) throws JsonMappingException, JsonProcessingException {
+        // JOC-1255 workflowName -> workflowNames
+        T jt = Globals.objectMapper.readValue(content, clazz);
+        com.sos.joc.classes.inventory.WorkflowConverter.addInternalExecutableType(jt.getExecutable());
+        jt.setVersion(Globals.getStrippedInventoryVersion());
+        return jt;
+    }
+
+    public static <T extends IConfigurationObject> T convertDefault(String content, Class<T> clazz) throws JsonMappingException, JsonProcessingException {
+        T obj = Globals.objectMapper.readValue(content, clazz);
+        ((IInventoryObject) obj).setVersion(Globals.getStrippedInventoryVersion());
+        return obj;
+    }
+    
     public static void makeParentDirs(InventoryDBLayer dbLayer, Path parentFolder, Long auditLogId, ConfigurationType folderType) throws SOSHibernateException {
         if (parentFolder != null) {
             String newFolder = parentFolder.toString().replace('\\', '/');
