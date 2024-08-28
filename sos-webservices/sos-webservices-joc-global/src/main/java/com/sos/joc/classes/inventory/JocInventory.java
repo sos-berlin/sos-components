@@ -63,6 +63,7 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.search.DBItemSearchWorkflow;
 import com.sos.joc.event.EventBus;
@@ -82,7 +83,10 @@ import com.sos.joc.model.SuffixPrefix;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.IConfigurationObject;
+import com.sos.joc.model.inventory.ConfigurationObject;
+import com.sos.joc.model.inventory.IsReferencedBy;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.inventory.common.ItemStateEnum;
 import com.sos.joc.model.inventory.common.RequestFilter;
 import com.sos.joc.model.inventory.folder.Folder;
 
@@ -369,6 +373,93 @@ public class JocInventory {
         T obj = Globals.objectMapper.readValue(content, clazz);
         ((IInventoryObject) obj).setVersion(Globals.getStrippedInventoryVersion());
         return obj;
+    }
+    
+    public static ConfigurationObject convert(DBItemInventoryConfiguration dbItem, SOSHibernateSession session)
+            throws SOSHibernateException, JsonParseException, JsonMappingException, IOException {
+        InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+        ConfigurationObject cfg = new ConfigurationObject();
+        ConfigurationType type = dbItem.getTypeAsEnum();
+        cfg.setId(dbItem.getId());
+        cfg.setDeliveryDate(Date.from(Instant.now()));
+        cfg.setPath(dbItem.getPath());
+        cfg.setObjectType(type);
+        cfg.setValid(dbItem.getValid());
+        cfg.setDeleted(dbItem.getDeleted());
+        cfg.setState(ItemStateEnum.NO_CONFIGURATION_EXIST);
+        cfg.setConfigurationDate(dbItem.getModified());
+        cfg.setDeployed(dbItem.getDeployed());
+        cfg.setReleased(dbItem.getReleased());
+        cfg.setDeployments(null);
+        cfg.setHasDeployments(false);
+        cfg.setHasReleases(false);
+        cfg.setIsReferencedBy(null);
+        if (dbItem.getDeployed()) {
+            DBItemDeploymentHistory lastDeployment = dbLayer.getLatestActiveDepHistoryItem(dbItem.getId());
+            if (lastDeployment != null) {
+                dbItem.setContent(lastDeployment.getInvContent());
+            } else {
+                throw new DBMissingDataException(
+                        String.format("Couldn't find deployed configuration: %1$s:%2$s ", type.value().toLowerCase(), dbItem.getPath()));
+            }
+        }
+        cfg.setConfiguration(JocInventory.content2IJSObject(dbItem.getContent(), dbItem.getType()));
+        if (JocInventory.isDeployable(type)) {
+            cfg.setReleased(false);
+            InventoryDeploymentItem lastDeployment = dbLayer.getLastDeploymentHistory(dbItem.getId());
+            cfg.setHasDeployments(lastDeployment != null);
+            if (dbItem.getDeployed()) {
+                if (cfg.getConfiguration() != null) {
+                    cfg.setState(ItemStateEnum.DRAFT_NOT_EXIST);
+                }
+            } else {
+                if (cfg.getConfiguration() != null) {
+                    if (lastDeployment == null) {
+                        cfg.setState(ItemStateEnum.DEPLOYMENT_NOT_EXIST);
+                    } else {
+                        if (lastDeployment.getDeploymentDate().after(dbItem.getModified())) {
+                            cfg.setState(ItemStateEnum.DEPLOYMENT_IS_NEWER);
+                        } else {
+                            cfg.setState(ItemStateEnum.DRAFT_IS_NEWER);
+                        }
+                    }
+                } 
+            }
+            // JOC-1498 - IsReferencedBy
+            if (ConfigurationType.WORKFLOW.equals(type)) {
+                IsReferencedBy isRef = new IsReferencedBy();
+                isRef.setAdditionalProperty("fileOrderSources", dbLayer.getNumOfUsedFileOrderSourcesByWorkflowName(dbItem.getName()).intValue());
+                isRef.setAdditionalProperty("schedules", dbLayer.getNumOfUsedSchedulesByWorkflowName(dbItem.getName()).intValue());
+                isRef.setAdditionalProperty("workflows", dbLayer.getNumOfAddOrderWorkflowsByWorkflowName(dbItem.getName()).intValue());
+                cfg.setIsReferencedBy(isRef);
+            }
+        } else if (JocInventory.isReleasable(type)) {
+            cfg.setDeployed(false);
+            List<Date> releasedModifieds = dbLayer.getReleasedItemPropertyByConfigurationId(dbItem.getId(), "modified");
+            Date releasedLastModified = null;
+            if (releasedModifieds != null && !releasedModifieds.isEmpty()) {
+                releasedLastModified = releasedModifieds.get(0);
+                cfg.setHasReleases(true);
+            }
+            if (dbItem.getReleased()) {
+                if (cfg.getConfiguration() != null) {
+                    cfg.setState(ItemStateEnum.DRAFT_NOT_EXIST);
+                }
+            } else {
+                if (cfg.getConfiguration() != null) {
+                    if (releasedLastModified == null) {
+                        cfg.setState(ItemStateEnum.RELEASE_NOT_EXIST);
+                    } else {
+                        if (releasedLastModified.after(dbItem.getModified())) {
+                            cfg.setState(ItemStateEnum.RELEASE_IS_NEWER);
+                        } else {
+                            cfg.setState(ItemStateEnum.DRAFT_IS_NEWER);
+                        }
+                    }
+                }
+            }
+        }
+        return cfg;
     }
     
     public static void makeParentDirs(InventoryDBLayer dbLayer, Path parentFolder, Long auditLogId, ConfigurationType folderType) throws SOSHibernateException {

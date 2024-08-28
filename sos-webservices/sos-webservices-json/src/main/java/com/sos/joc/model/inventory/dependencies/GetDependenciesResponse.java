@@ -28,7 +28,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "references",
     "referencedBy"
 })
-public class GetDepenenciesResponse {
+public class GetDependenciesResponse {
 
     /**
      * timestamp
@@ -158,10 +158,10 @@ public class GetDepenenciesResponse {
         if (other == this) {
             return true;
         }
-        if ((other instanceof GetDepenenciesResponse) == false) {
+        if ((other instanceof GetDependenciesResponse) == false) {
             return false;
         }
-        GetDepenenciesResponse rhs = ((GetDepenenciesResponse) other);
+        GetDependenciesResponse rhs = ((GetDependenciesResponse) other);
         return new EqualsBuilder().append(name, rhs.name).append(referencedBy, rhs.referencedBy).append(deliveryDate, rhs.deliveryDate).append(type, rhs.type).append(references, rhs.references).isEquals();
     }
 

@@ -38,6 +38,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.items.FolderItem;
 import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
@@ -2200,5 +2201,15 @@ public class InventoryDBLayer extends DBLayer {
         }
     }
 
+    public DBItemDeploymentHistory getLatestActiveDepHistoryItem(Long configurationId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
+        hql.append(" where id = (select max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY);
+        hql.append(" where inventoryConfigurationId = :cid");
+        hql.append(" and state = 0");
+        hql.append(" and operation = 0").append(")");
+        Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
+        query.setParameter("cid", configurationId);
+        return getSession().getSingleResult(query);
+    }
 
 }

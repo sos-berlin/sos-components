@@ -4,8 +4,11 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.controller.model.board.Board;
@@ -28,10 +31,12 @@ import com.sos.joc.db.inventory.DBItemInventoryDependency;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.inventory.dependencies.resource.IGetDependencies;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.dependencies.GetDependenciesRequest;
+import com.sos.joc.model.inventory.dependencies.GetDependenciesResponse;
 import com.sos.joc.model.inventory.references.ResponseItems;
 import com.sos.schema.JsonValidator;
 
@@ -53,11 +58,16 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
             hibernateSession = Globals.createSosHibernateStatelessConnection(xAccessToken);
             InventoryDBLayer dblayer = new InventoryDBLayer(hibernateSession);
             DBItemInventoryConfiguration inventoryDbItem = dblayer.getConfigurationByName(filter.getName(), ConfigurationType.fromValue(filter.getType()).intValue()).get(0);
-            ResponseItems references = getResponseItems(
-                    DependencyResolver.convert(hibernateSession, 
-                            DependencyResolver.getStoredDependencies(hibernateSession, inventoryDbItem)), hibernateSession);
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsString(references)
-                    .replaceAll(",\\s*\"TYPE\"\\s*:\\s*\"[^\"]*\"|\\s*\"TYPE\"\\s*:\\s*\"[^\"]*\"\\s*,", ""));
+//            ResponseItems references = getResponseItems(
+//                    DependencyResolver.convert(hibernateSession, 
+//                            DependencyResolver.getStoredDependencies(hibernateSession, inventoryDbItem)), hibernateSession);
+//            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsString(references)
+//                    .replaceAll(",\\s*\"TYPE\"\\s*:\\s*\"[^\"]*\"|\\s*\"TYPE\"\\s*:\\s*\"[^\"]*\"\\s*,", ""));
+            
+            ReferencedDbItem reference = DependencyResolver.convert(hibernateSession, 
+                    DependencyResolver.getStoredDependencies(hibernateSession, inventoryDbItem));
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsString(getResponse(reference, hibernateSession))
+                    /*.replaceAll(",\\s*\"TYPE\"\\s*:\\s*\"[^\"]*\"|\\s*\"TYPE\"\\s*:\\s*\"[^\"]*\"\\s*,", "")*/);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -110,5 +120,50 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
         dependencyItems.setDeliveryDate(Date.from(Instant.now()));
         return dependencyItems;
     }
+    
+    private GetDependenciesResponse getResponse(ReferencedDbItem referencedDbItem, SOSHibernateSession session) {
+        GetDependenciesResponse response = new GetDependenciesResponse();
+        response.setName(referencedDbItem.getName());
+        response.setType(referencedDbItem.getType().value());
+        response.setReferencedBy(referencedDbItem.getReferencedBy().stream()
+                .map(item -> {
+                    try {
+                        return JocInventory.convert(item, session);
+                    } catch (SOSHibernateException e) {
+                        throw new JocSosHibernateException(e);
+                    } catch (IOException e) {
+                        throw new JocException(e);
+                    }
+                }).collect(Collectors.toList()));
 
+//        response.setReferencedBy(referencedDbItem.getReferencedBy().stream().map(item -> {
+//            try {
+//                switch(item.getTypeAsEnum()) {
+//                case WORKFLOW:
+//                    return WorkflowConverter.convertInventoryWorkflow(item.getContent(), Workflow.class);
+//                case FILEORDERSOURCE:
+//                    return JocInventory.convertFileOrderSource(item.getContent(), FileOrderSource.class);
+//                case JOBTEMPLATE:
+//                    return JocInventory.convertJobTemplate(item.getContent(), JobTemplate.class);
+//                case JOBRESOURCE:
+//                    return JocInventory.convertDefault(item.getContent(), JobResource.class);
+//                case NOTICEBOARD:
+//                    return JocInventory.convertDefault(item.getContent(), Board.class);
+//                case LOCK:
+//                    return JocInventory.convertDefault(item.getContent(), Lock.class);
+//                case SCHEDULE:
+//                    return JocInventory.convertSchedule(item.getContent(), Schedule.class);
+//                case WORKINGDAYSCALENDAR:
+//                case NONWORKINGDAYSCALENDAR:
+//                    return JocInventory.convertDefault(item.getContent(), Calendar.class);
+//                default:
+//                    return null;
+//                }
+//            } catch (IOException e) {
+//                throw new JocConfigurationException(e);
+//            }
+//        }).filter(Objects::nonNull).collect(Collectors.toList()));
+        
+        return response;
+    }
 }

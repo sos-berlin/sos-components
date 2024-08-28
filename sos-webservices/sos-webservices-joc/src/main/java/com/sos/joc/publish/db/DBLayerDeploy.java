@@ -1417,14 +1417,16 @@ public class DBLayerDeploy {
     }
 
     public DBItemDeploymentHistory getLatestActiveDepHistoryItem(Long configurationId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-        hql.append(" where id = (select max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY);
-        hql.append(" where inventoryConfigurationId = :cid");
-        hql.append(" and state = 0");
-        hql.append(" and operation = 0").append(")");
-        Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
-        query.setParameter("cid", configurationId);
-        return session.getSingleResult(query);
+        InventoryDBLayer inventoryDbLayer = new InventoryDBLayer(session);
+        return inventoryDbLayer.getLatestActiveDepHistoryItem(configurationId);
+//        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
+//        hql.append(" where id = (select max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY);
+//        hql.append(" where inventoryConfigurationId = :cid");
+//        hql.append(" and state = 0");
+//        hql.append(" and operation = 0").append(")");
+//        Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
+//        query.setParameter("cid", configurationId);
+//        return session.getSingleResult(query);
     }
 
     public DBItemDeploymentHistory getLatestActiveDepHistoryItem(DBItemInventoryConfiguration invConfig) throws SOSHibernateException {
