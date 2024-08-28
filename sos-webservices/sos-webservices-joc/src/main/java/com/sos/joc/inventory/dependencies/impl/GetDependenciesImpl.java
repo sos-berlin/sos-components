@@ -53,11 +53,11 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
             hibernateSession = Globals.createSosHibernateStatelessConnection(xAccessToken);
             InventoryDBLayer dblayer = new InventoryDBLayer(hibernateSession);
             DBItemInventoryConfiguration inventoryDbItem = dblayer.getConfigurationByName(filter.getName(), ConfigurationType.fromValue(filter.getType()).intValue()).get(0);
-            
-            return JOCDefaultResponse.responseStatus200(
-                    getResponseItems(
-                            DependencyResolver.convert(hibernateSession, 
-                                    DependencyResolver.getStoredDependencies(hibernateSession, inventoryDbItem)), hibernateSession));
+            ResponseItems references = getResponseItems(
+                    DependencyResolver.convert(hibernateSession, 
+                            DependencyResolver.getStoredDependencies(hibernateSession, inventoryDbItem)), hibernateSession);
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsString(references)
+                    .replaceAll(",\\s*\"TYPE\"\\s*:\\s*\"[^\"]*\"|\\s*\"TYPE\"\\s*:\\s*\"[^\"]*\"\\s*,", ""));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
