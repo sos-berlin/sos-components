@@ -228,7 +228,7 @@ public class SOSAuthHelper {
                 ClientCertificateHandler clientCertHandler = new ClientCertificateHandler(request);
                 clientCertCN = clientCertHandler.getClientCN();
                 if (clientCertHandler.getClientCertificate() == null) {
-                    LOGGER.warn("Certificate is null");
+                    LOGGER.debug("Certificate is null");
                 } else {
                     LOGGER.debug("Now:" + now);
                     if (clientCertHandler.getClientCertificate().getNotAfter() == null) {
