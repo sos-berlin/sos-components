@@ -12,9 +12,6 @@ import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.JsonString;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -31,11 +28,9 @@ public class DependencyResolver {
 
 
     /*
-     * This class contains utility methods to determine, read and write related configuration objects
+     * This class contains utility methods to determine, read and write related configuration objects for a given configuration
      * 
      * */
-    
-    private static Logger LOGGER = LoggerFactory.getLogger(DependencyResolver.class);
     
     public static final String INSTRUCTION_LOCKS_SEARCH = "lockIds";
     public static final String INSTRUCTION_BOARDS_SEARCH = "noticeBoardNames";
@@ -317,7 +312,6 @@ public class DependencyResolver {
         if(dependencies != null && !dependencies.isEmpty()) {
             newDbItem = new ReferencedDbItem(dbLayer.getConfiguration(dependencies.get(0).getInvId()));
             for(DBItemInventoryDependency dependency : dependencies) {
-                // TODO: conversion
                 DBItemInventoryConfiguration newItem = dbLayer.getConfiguration(dependency.getInvDependencyId());
                 newDbItem.getReferencedBy().add(newItem);
             }

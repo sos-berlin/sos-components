@@ -8,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.inventory.ConfigurationObject;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -23,10 +22,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "deliveryDate",
-    "name",
-    "type",
-    "references",
-    "referencedBy"
+    "dependencies"
 })
 public class GetDependenciesResponse {
 
@@ -45,19 +41,8 @@ public class GetDependenciesResponse {
      * (Required)
      * 
      */
-    @JsonProperty("name")
-    private String name;
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("type")
-    private String type;
-    @JsonProperty("references")
-    private List<ConfigurationObject> references = new ArrayList<ConfigurationObject>();
-    @JsonProperty("referencedBy")
-    private List<ConfigurationObject> referencedBy = new ArrayList<ConfigurationObject>();
+    @JsonProperty("dependencies")
+    private List<ResponseItem> dependencies = new ArrayList<ResponseItem>();
 
     /**
      * timestamp
@@ -88,9 +73,9 @@ public class GetDependenciesResponse {
      * (Required)
      * 
      */
-    @JsonProperty("name")
-    public String getName() {
-        return name;
+    @JsonProperty("dependencies")
+    public List<ResponseItem> getDependencies() {
+        return dependencies;
     }
 
     /**
@@ -98,59 +83,19 @@ public class GetDependenciesResponse {
      * (Required)
      * 
      */
-    @JsonProperty("name")
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("type")
-    public String getType() {
-        return type;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("type")
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    @JsonProperty("references")
-    public List<ConfigurationObject> getReferences() {
-        return references;
-    }
-
-    @JsonProperty("references")
-    public void setReferences(List<ConfigurationObject> references) {
-        this.references = references;
-    }
-
-    @JsonProperty("referencedBy")
-    public List<ConfigurationObject> getReferencedBy() {
-        return referencedBy;
-    }
-
-    @JsonProperty("referencedBy")
-    public void setReferencedBy(List<ConfigurationObject> referencedBy) {
-        this.referencedBy = referencedBy;
+    @JsonProperty("dependencies")
+    public void setDependencies(List<ResponseItem> dependencies) {
+        this.dependencies = dependencies;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("name", name).append("type", type).append("references", references).append("referencedBy", referencedBy).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("dependencies", dependencies).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(name).append(referencedBy).append(deliveryDate).append(type).append(references).toHashCode();
+        return new HashCodeBuilder().append(deliveryDate).append(dependencies).toHashCode();
     }
 
     @Override
@@ -162,7 +107,7 @@ public class GetDependenciesResponse {
             return false;
         }
         GetDependenciesResponse rhs = ((GetDependenciesResponse) other);
-        return new EqualsBuilder().append(name, rhs.name).append(referencedBy, rhs.referencedBy).append(deliveryDate, rhs.deliveryDate).append(type, rhs.type).append(references, rhs.references).isEquals();
+        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(dependencies, rhs.dependencies).isEquals();
     }
 
 }

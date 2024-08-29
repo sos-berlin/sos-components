@@ -1,6 +1,10 @@
 package com.sos.joc.inventory.dependencies.impl;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -19,6 +23,8 @@ import com.sos.joc.inventory.dependencies.resource.IGetDependencies;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.dependencies.GetDependenciesRequest;
 import com.sos.joc.model.inventory.dependencies.GetDependenciesResponse;
+import com.sos.joc.model.inventory.dependencies.RequestItem;
+import com.sos.joc.model.inventory.dependencies.ResponseItem;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
@@ -38,10 +44,16 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
             GetDependenciesRequest filter = Globals.objectMapper.readValue(dependencyFilter, GetDependenciesRequest.class);
             hibernateSession = Globals.createSosHibernateStatelessConnection(xAccessToken);
             InventoryDBLayer dblayer = new InventoryDBLayer(hibernateSession);
-            DBItemInventoryConfiguration inventoryDbItem = dblayer.getConfigurationByName(filter.getName(), ConfigurationType.fromValue(filter.getType()).intValue()).get(0);
-            ReferencedDbItem reference = DependencyResolver.convert(hibernateSession, inventoryDbItem,
-                    DependencyResolver.getStoredDependencies(hibernateSession, inventoryDbItem));
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsString(getResponse(reference, hibernateSession)));
+            List<ReferencedDbItem> items = new ArrayList<ReferencedDbItem>();
+            for(RequestItem item : filter.getConfigurations()) {
+                DBItemInventoryConfiguration inventoryDbItem = dblayer.getConfigurationByName(item.getName(), ConfigurationType.fromValue(item.getType()).intValue()).get(0);
+                ReferencedDbItem reference = DependencyResolver.convert(hibernateSession, inventoryDbItem,
+                        DependencyResolver.getStoredDependencies(hibernateSession, inventoryDbItem));
+                if(reference != null) {
+                    items.add(reference);
+                }
+            }
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsString(getResponse(items, hibernateSession)));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -52,30 +64,36 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
         }
     }
     
-    private GetDependenciesResponse getResponse(ReferencedDbItem referencedDbItem, SOSHibernateSession session) {
-        GetDependenciesResponse response = new GetDependenciesResponse();
-        response.setName(referencedDbItem.getName());
-        response.setType(referencedDbItem.getType().value());
-        response.setReferencedBy(referencedDbItem.getReferencedBy().stream()
-                .map(item -> {
-                    try {
-                        return JocInventory.convert(item, session);
-                    } catch (SOSHibernateException e) {
-                        throw new JocSosHibernateException(e);
-                    } catch (IOException e) {
-                        throw new JocException(e);
-                    }
-                }).collect(Collectors.toList()));
-        response.setReferences(referencedDbItem.getReferences().stream().map(item -> {
-                    try {
-                        return JocInventory.convert(item, session);
-                    } catch (SOSHibernateException e) {
-                        throw new JocSosHibernateException(e);
-                    } catch (IOException e) {
-                        throw new JocException(e);
-                    }
-                }).collect(Collectors.toList()));
-        return response;
+    private GetDependenciesResponse getResponse(List<ReferencedDbItem> items, SOSHibernateSession session) {
+        
+        GetDependenciesResponse dependenciesResponse = new GetDependenciesResponse();
+        dependenciesResponse.setDeliveryDate(Date.from(Instant.now()));
+        for(ReferencedDbItem referencedDbItem : items) {
+            ResponseItem response = new ResponseItem();
+            response.setName(referencedDbItem.getName());
+            response.setType(referencedDbItem.getType().value());
+            response.setReferencedBy(referencedDbItem.getReferencedBy().stream()
+                    .map(item -> {
+                        try {
+                            return JocInventory.convert(item, session);
+                        } catch (SOSHibernateException e) {
+                            throw new JocSosHibernateException(e);
+                        } catch (IOException e) {
+                            throw new JocException(e);
+                        }
+                    }).collect(Collectors.toList()));
+            response.setReferences(referencedDbItem.getReferences().stream().map(item -> {
+                        try {
+                            return JocInventory.convert(item, session);
+                        } catch (SOSHibernateException e) {
+                            throw new JocSosHibernateException(e);
+                        } catch (IOException e) {
+                            throw new JocException(e);
+                        }
+                    }).collect(Collectors.toList()));
+            dependenciesResponse.getDependencies().add(response);
+        }
+        return dependenciesResponse;
     }
 
 //    private ResponseItems getResponseItems (ReferencedDbItem referencedDbItem, SOSHibernateSession session) throws SOSHibernateException {

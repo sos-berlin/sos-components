@@ -1,6 +1,8 @@
 
 package com.sos.joc.model.inventory.dependencies;
 
+import java.util.ArrayList;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -17,8 +19,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "name",
-    "type"
+    "configurations"
 })
 public class GetDependenciesRequest {
 
@@ -27,24 +28,17 @@ public class GetDependenciesRequest {
      * (Required)
      * 
      */
-    @JsonProperty("name")
-    private String name;
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("type")
-    private String type;
+    @JsonProperty("configurations")
+    private List<RequestItem> configurations = new ArrayList<RequestItem>();
 
     /**
      * 
      * (Required)
      * 
      */
-    @JsonProperty("name")
-    public String getName() {
-        return name;
+    @JsonProperty("configurations")
+    public List<RequestItem> getConfigurations() {
+        return configurations;
     }
 
     /**
@@ -52,39 +46,19 @@ public class GetDependenciesRequest {
      * (Required)
      * 
      */
-    @JsonProperty("name")
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("type")
-    public String getType() {
-        return type;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("type")
-    public void setType(String type) {
-        this.type = type;
+    @JsonProperty("configurations")
+    public void setConfigurations(List<RequestItem> configurations) {
+        this.configurations = configurations;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("name", name).append("type", type).toString();
+        return new ToStringBuilder(this).append("configurations", configurations).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(name).append(type).toHashCode();
+        return new HashCodeBuilder().append(configurations).toHashCode();
     }
 
     @Override
@@ -96,7 +70,7 @@ public class GetDependenciesRequest {
             return false;
         }
         GetDependenciesRequest rhs = ((GetDependenciesRequest) other);
-        return new EqualsBuilder().append(name, rhs.name).append(type, rhs.type).isEquals();
+        return new EqualsBuilder().append(configurations, rhs.configurations).isEquals();
     }
 
 }
