@@ -380,7 +380,7 @@ public class JocInventory {
         InventoryDBLayer dbLayer = new InventoryDBLayer(session);
         ConfigurationObject cfg = new ConfigurationObject();
         ConfigurationType type = dbItem.getTypeAsEnum();
-        cfg.setId(dbItem.getId());
+        cfg.setId(null);
         cfg.setDeliveryDate(Date.from(Instant.now()));
         cfg.setPath(dbItem.getPath());
         cfg.setObjectType(type);
