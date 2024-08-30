@@ -32,8 +32,10 @@ public class EventHandler {
     private static final Marker MARKER = MarkerFactory.getMarker("JOCLogNotification");
     private static final Marker NOT_NOTIFY_LOGGER = WebserviceConstants.NOT_NOTIFY_LOGGER;
     private static final Level expectedMinLogLevel = Level.WARN;
-    private static final char rightAngleBracket = '〉'; //https://www.compart.com/de/unicode/U+3009
-    private static final char leftAngleBracket = '〈'; //https://www.compart.com/de/unicode/U+3008
+//    private static final char rightAngleBracket = '\u3009'; //'〉' https://www.compart.com/de/unicode/U+3009
+//    private static final char leftAngleBracket = '\u3008'; //'〈' https://www.compart.com/de/unicode/U+3008
+    private static final char rightAngleBracket = '\u02C3'; //https://www.compart.com/de/unicode/U+02C3
+    private static final char leftAngleBracket = '\u02C2'; //https://www.compart.com/de/unicode/U+02C2
     
     protected EventHandler(DatagramPacket dp) {
         copyData(dp.getData(), dp.getLength());
@@ -113,8 +115,8 @@ public class EventHandler {
     }
     
     private String sanitize(String s) {
-        // < and > will be replaced by 〈〉 to avoid injection via html and svg
-        return s.replace('<', leftAngleBracket).replace('>', rightAngleBracket);
+        // < and > will be replaced to avoid injection via html and svg
+        return s.replace('\u003C', leftAngleBracket).replace('\u003E', rightAngleBracket);
     }
     
     private void setIds(LogEvent evt) {
