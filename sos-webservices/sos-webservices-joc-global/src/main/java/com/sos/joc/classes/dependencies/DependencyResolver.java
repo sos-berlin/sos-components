@@ -17,10 +17,12 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.classes.dependencies.items.ReferencedDbItem;
+import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryDependency;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.search.DBItemSearchWorkflow;
+import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 
@@ -38,6 +40,7 @@ public class DependencyResolver {
     public static final String WORKFLOWNAME_SEARCH = "workflowName";
     public static final String WORKFLOWNAMES_SEARCH = "workflowNames";
     public static final String JOBRESOURCENAMES_SEARCH = "jobResourceNames";
+    public static final String LOCKNAME_SEARCH = "lockName";
     
     public static ReferencedDbItem resolve(SOSHibernateSession session, ConfigurationObject inventoryObject)
             throws SOSHibernateException, JsonMappingException, JsonProcessingException {
@@ -124,67 +127,121 @@ public class DependencyResolver {
         InventoryDBLayer dbLayer = new InventoryDBLayer(session);
         String json = item.getReferencedItem().getContent();
         List<DBItemInventoryConfiguration> results = null;
+        JsonObject instructions = null;
         switch (item.getReferencedItem().getTypeAsEnum()) {
         // determine references in configurations json
         case WORKFLOW:
             DBItemSearchWorkflow wfSearch = dbLayer.getSearchWorkflow(item.getId(), null);
-            JsonObject instructions = jsonObjectFromString(wfSearch.getInstructions());
+            if(wfSearch != null) {
+                instructions = jsonObjectFromString(wfSearch.getInstructions());
+            }
             JsonObject workflow = jsonObjectFromString(json);
             //Lock
-            List<String> lockIds = getValuesFromInstructions(instructions, INSTRUCTION_LOCKS_SEARCH);
-            for(String lockId : lockIds) {
-                if(lockId.contains("\"")) {
-                    lockId = lockId.replaceAll("\"","");
-                }
-                results = dbLayer.getConfigurationByName(lockId, ConfigurationType.LOCK.intValue());
-                if(!results.isEmpty()) {
-                    item.getReferences().add(results.get(0));
-                }
-            }
-            //JobResource
-            List<String> wfInstructionJobResourceNames = getValuesFromInstructions(instructions, JOBRESOURCENAMES_SEARCH);
-            for(String jobResourceName : wfInstructionJobResourceNames) {
-                if(jobResourceName.contains("\"")) {
-                    jobResourceName = jobResourceName.replaceAll("\"","");
-                }
-                results = dbLayer.getConfigurationByName(jobResourceName, ConfigurationType.JOBRESOURCE.intValue());
-                if(!results.isEmpty()) {
-                    item.getReferences().add(results.get(0));
-                }
-            }
-            List<String> wfJobResourceNames = new ArrayList<String>(); 
-            getValuesRecursively("", workflow, INSTRUCTION_ADDORDERS_SEARCH, wfJobResourceNames);
-            if(!wfJobResourceNames.isEmpty()) {
-                for (String jobResource : wfJobResourceNames) {
-                    if(jobResource.contains("\"")) {
-                        jobResource = jobResource.replaceAll("\"","");
+            if(instructions != null) {
+                List<String> lockIds = getValuesFromInstructions(instructions, INSTRUCTION_LOCKS_SEARCH);
+                for(String lockId : lockIds) {
+                    if(lockId.contains("\"")) {
+                        lockId = lockId.replaceAll("\"","");
                     }
-                    results = dbLayer.getConfigurationByName(jobResource, ConfigurationType.JOBRESOURCE.intValue());
+                    results = dbLayer.getConfigurationByName(lockId, ConfigurationType.LOCK.intValue());
                     if(!results.isEmpty()) {
                         item.getReferences().add(results.get(0));
                     }
                 }
+            } else {
+                List<String> wfLockNames = new ArrayList<String>(); 
+                getValuesRecursively("", workflow, LOCKNAME_SEARCH, wfLockNames);
+                if(!wfLockNames.isEmpty()) {
+                    for (String lock : wfLockNames) {
+                        if(lock.contains("\"")) {
+                            lock = lock.replaceAll("\"","");
+                        }
+                        results = dbLayer.getConfigurationByName(lock, ConfigurationType.LOCK.intValue());
+                        if(!results.isEmpty()) {
+                            item.getReferences().add(results.get(0));
+                        }
+                    }
+                }
+            }
+            //JobResource
+            if(instructions != null) {
+                List<String> wfInstructionJobResourceNames = getValuesFromInstructions(instructions, JOBRESOURCENAMES_SEARCH);
+                for(String jobResourceName : wfInstructionJobResourceNames) {
+                    if(jobResourceName.contains("\"")) {
+                        jobResourceName = jobResourceName.replaceAll("\"","");
+                    }
+                    results = dbLayer.getConfigurationByName(jobResourceName, ConfigurationType.JOBRESOURCE.intValue());
+                    if(!results.isEmpty()) {
+                        item.getReferences().add(results.get(0));
+                    }
+                }
+            } else {
+                List<String> wfJobResourceNames = new ArrayList<String>(); 
+                getValuesRecursively("", workflow, INSTRUCTION_ADDORDERS_SEARCH, wfJobResourceNames);
+                if(!wfJobResourceNames.isEmpty()) {
+                    for (String jobResource : wfJobResourceNames) {
+                        if(jobResource.contains("\"")) {
+                            jobResource = jobResource.replaceAll("\"","");
+                        }
+                        results = dbLayer.getConfigurationByName(jobResource, ConfigurationType.JOBRESOURCE.intValue());
+                        if(!results.isEmpty()) {
+                            item.getReferences().add(results.get(0));
+                        }
+                    }
+                }
             }
             //NoticeBoards
-            List<String> boardNames = getValuesFromInstructions(instructions, INSTRUCTION_BOARDS_SEARCH);
-            for(String boardName : boardNames) {
-                if(boardName.contains("\"")) {
-                    boardName = boardName.replaceAll("\"","");
+            if(instructions != null) {
+                List<String> boardNames = getValuesFromInstructions(instructions, INSTRUCTION_BOARDS_SEARCH);
+                for(String boardName : boardNames) {
+                    if(boardName.contains("\"")) {
+                        boardName = boardName.replaceAll("\"","");
+                    }
+                    results = dbLayer.getConfigurationByName(boardName, ConfigurationType.NOTICEBOARD.intValue());
+                    if(!results.isEmpty()) {
+                        item.getReferences().add(results.get(0));
+                    }
                 }
-                results = dbLayer.getConfigurationByName(boardName, ConfigurationType.NOTICEBOARD.intValue());
-                if(!results.isEmpty()) {
-                    item.getReferences().add(results.get(0));
+            } else {
+                List<String> wfBoardNames = new ArrayList<String>(); 
+                getValuesRecursively("", workflow, INSTRUCTION_BOARDS_SEARCH, wfBoardNames);
+                if(!wfBoardNames.isEmpty()) {
+                    for (String board : wfBoardNames) {
+                        if(board.contains("\"")) {
+                            board = board.replaceAll("\"","");
+                        }
+                        results = dbLayer.getConfigurationByName(board, ConfigurationType.NOTICEBOARD.intValue());
+                        if(!results.isEmpty()) {
+                            item.getReferences().add(results.get(0));
+                        }
+                    }
                 }
             }
             //Workflow
-            List<String> wfInstructionWorkflowNames = getValuesFromInstructions(instructions, INSTRUCTION_ADDORDERS_SEARCH);
-            for(String workflowName : wfInstructionWorkflowNames) {
-                if(workflowName.contains("\"")) {
-                    workflowName = workflowName.replaceAll("\"","");
+            if(instructions != null) {
+                List<String> wfInstructionWorkflowNames = getValuesFromInstructions(instructions, INSTRUCTION_ADDORDERS_SEARCH);
+                for(String workflowName : wfInstructionWorkflowNames) {
+                    if(workflowName.contains("\"")) {
+                        workflowName = workflowName.replaceAll("\"","");
+                    }
+                    results = dbLayer.getConfigurationByName(workflowName, ConfigurationType.WORKFLOW.intValue());
+                    if(!results.isEmpty()) {
+                        item.getReferences().add(results.get(0));
+                    }
                 }
-                results = dbLayer.getConfigurationByName(workflowName, ConfigurationType.WORKFLOW.intValue());
-                if(!results.isEmpty()) {
-                    item.getReferences().add(results.get(0));
+            } else {
+                List<String> wfWorkflowNames = new ArrayList<String>(); 
+                getValuesRecursively("", workflow, WORKFLOWNAME_SEARCH, wfWorkflowNames);
+                if(!wfWorkflowNames.isEmpty()) {
+                    for (String wf : wfWorkflowNames) {
+                        if(wf.contains("\"")) {
+                            wf = wf.replaceAll("\"","");
+                        }
+                        results = dbLayer.getConfigurationByName(wf, ConfigurationType.WORKFLOW.intValue());
+                        if(!results.isEmpty()) {
+                            item.getReferences().add(results.get(0));
+                        }
+                    }
                 }
             }
             // ScriptIncludes
@@ -249,7 +306,7 @@ public class DependencyResolver {
     }
     
     public static void updateDependencies(SOSHibernateSession session, DBItemInventoryConfiguration inventoryDbItem)
-            throws SOSHibernateException {
+            throws SOSHibernateException, JsonMappingException, JsonProcessingException {
         boolean ownTransaction = false;
         if (!session.isAutoCommit() && !session.isTransactionOpened()) {
             session.beginTransaction();
@@ -262,11 +319,12 @@ public class DependencyResolver {
     }
     
     public static void insertOrRenewDependencies(SOSHibernateSession session, DBItemInventoryConfiguration inventoryDbItem)
-            throws SOSHibernateException {
+            throws SOSHibernateException, JsonMappingException, JsonProcessingException {
         ReferencedDbItem references = resolveReferencedBy(session, inventoryDbItem);
+        resolveReferences(references, session);
         InventoryDBLayer layer = new InventoryDBLayer(session);
         // store new dependencies
-        layer.insertOrReplaceDependencies(references.getReferencedItem(), convert(references));
+        layer.insertOrReplaceDependencies(references.getReferencedItem(), convert(references, session));
     }
 
     public static ReferencedDbItem getReferencedDbItems(SOSHibernateSession session, DBItemInventoryConfiguration item,
@@ -294,13 +352,23 @@ public class DependencyResolver {
         return dependencies;
     }
 
-    public static List<DBItemInventoryDependency> convert(ReferencedDbItem reference) {
+    public static List<DBItemInventoryDependency> convert(ReferencedDbItem reference, SOSHibernateSession session) {
         return reference.getReferencedBy().stream().map(item -> {
             DBItemInventoryDependency dependency = new DBItemInventoryDependency();
             dependency.setInvId(reference.getReferencedItem().getId());
             dependency.setDependencyType(item.getTypeAsEnum());
             dependency.setInvDependencyId(item.getId());
             dependency.setPublished(item.getDeployed() || item.getReleased());
+            if(item.getDeployed()) {
+                InventoryDBLayer dblayer = new InventoryDBLayer(session);
+                try {
+                    DBItemDeploymentHistory latestDeployed =  dblayer.getLatestActiveDepHistoryItem(reference.getReferencedItem().getId());
+                    dependency.setDepDependencyId(latestDeployed.getId());
+                    dependency.setControllerId(latestDeployed.getControllerId());
+                } catch (SOSHibernateException e) {
+                    throw new JocSosHibernateException(e);
+                }
+            }
             return dependency;
         }).collect(Collectors.toList());
     }
