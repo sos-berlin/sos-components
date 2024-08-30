@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -39,6 +40,7 @@ import com.sos.joc.db.deploy.DeployedConfigurationFilter;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.BulkError;
+import com.sos.joc.exceptions.JocAccessDeniedException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Err419;
@@ -132,8 +134,8 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             }
 
             final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-            Predicate<AddOrder> permissions = order -> canAdd(WorkflowPaths.getPath(JocInventory.pathToName(order.getWorkflowPath())),
-                    permittedFolders);
+//            final Predicate<AddOrder> permissions = order -> canAdd(WorkflowPaths.getPath(JocInventory.pathToName(order.getWorkflowPath())),
+//                    permittedFolders);
 
             final JControllerProxy proxy = Proxy.of(controllerId);
             final JControllerState currentState = proxy.currentState();
@@ -143,6 +145,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             final String defaultOrderName = SOSCheckJavaVariableName.makeStringRuleConform(getAccount());
             final boolean allowEmptyArguments = ClusterSettings.getAllowEmptyArguments(Globals.getConfigurationGlobalsJoc());
             List<AuditLogDetail> auditLogDetails = new ArrayList<>();
+            Consumer<AddOrder> workflowNameToPath = o -> o.setWorkflowPath(WorkflowPaths.getPath(JocInventory.pathToName(o.getWorkflowPath())));
             Map<OrderV, Set<String>> orderTags = new HashMap<>();
 
             Function<AddOrder, Either<Err419, JFreshOrder>> mapper = order -> {
@@ -156,6 +159,9 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     String workflowName = JocInventory.pathToName(order.getWorkflowPath());
                     Either<Problem, JWorkflow> e = currentState.repo().pathToCheckedWorkflow(WorkflowPath.of(workflowName));
                     ProblemHelper.throwProblemIfExist(e);
+                    if (canAdd(order.getWorkflowPath(), permittedFolders)) {
+                        throw new JocAccessDeniedException("Missing folder permissions for workflow: " + order.getWorkflowPath());
+                    }
 //                    Workflow workflow = Globals.objectMapper.readValue(e.get().toJson(), Workflow.class);
 //                    order.setArguments(OrdersHelper.checkArguments(order.getArguments(), JsonConverter.signOrderPreparationToInvOrderPreparation(
 //                            workflow.getOrderPreparation()), allowEmptyArguments));
@@ -208,9 +214,9 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             };
             
 
-            Map<Boolean, Set<Either<Err419, JFreshOrder>>> result = addOrders.getOrders().stream().filter(permissions).map(mapper).collect(
+            Map<Boolean, Set<Either<Err419, JFreshOrder>>> result = addOrders.getOrders().stream().peek(workflowNameToPath).map(mapper).collect(
                     Collectors.groupingBy(Either::isRight, Collectors.toSet()));
-            
+
             OrderIds entity = new OrderIds();
             if (result.containsKey(true) && !result.get(true).isEmpty()) {
                 final Map<OrderId, JFreshOrder> freshOrders = result.get(true).stream().map(Either::get).collect(Collectors.toMap(JFreshOrder::id,
