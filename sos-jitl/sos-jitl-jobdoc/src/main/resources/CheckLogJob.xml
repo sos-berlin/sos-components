@@ -26,7 +26,7 @@
                 </note>
             </param>
             <param name="label"
-                   required="When job is empty">
+                   required="When job is occurs more than one time">
                 <note>
                     <title>The label of the job whose log is to be analysed</title>
                     <p>
@@ -41,6 +41,57 @@
                     <p>
 						The regular expression is applied to the log.
                     </p>
+                    <p>
+Exampe 1: get lines with errors						
+pattern = ".*error.*"
+log = "One line with error" + "\r\n" + "Line without the word" + "\r\n" + "And one line with error in the middle";
+
+==> Result: 
+js7CheckLogMatches: One line with error|And one line with error in the middle
+js7CheckLogMatchedGroups:
+js7CheckLogMatchCount: 2
+js7CheckLogGroupCount: 0
+js7CheckLogGroupsMatchesCount:0
+
+Exampe 2: get event ids with event###						
+pattern = "event:\\d{3}";
+log = "The first line with event:1234" + "\r\n" + "Line without event" + "\r\n"
+                + "And one line with event:456 and event:555 in the middle";
+
+==> Result:
+js7CheckLogMatches: event:123|event:456|event:555
+js7CheckLogMatchedGroups:
+js7CheckLogMatchCount: 3
+js7CheckLogGroupCount: 0
+js7CheckLogGroupsMatchesCount:0
+
+
+Exampe 3: Get all dates						
+pattern = "\\d{1,2}.\\d{1,2}.\\d{4}";
+log = "1.2.2002: erste Zeile" + "\r\n" +  "04.0.1888: Zweite Zeile"  + "\r\n" +  "22.11.2001: Dritte Zeile";
+ 
+==> Result:
+checkLogMatchedGroups:
+js7CheckLogMatches: 1.1.2021|22.05.1996|1.04.1888
+js7CheckLogMatchedGroups:
+js7CheckLogMatchCount: 3
+js7CheckLogGroupCount: 0
+js7CheckLogGroupsMatchesCount:0
+
+
+Example 4:
+pattern = "(\\d{1,2}.\\d{1,2}.\\d{4}).(.*)$";
+log = "1.2.2002: erste Zeile" + "\r\n" +  "04.0.1888: Zweite Zeile"  + "\r\n" +  "22.11.2001: Dritte Zeile";
+ 
+==> Result:
+js7CheckLogMatches: 1.2.2002: erste Zeile|04.0.1888: Zweite Zeile|22.11.2001: Dritte Zeile
+js7CheckLogMatchedGroups: 1.2.2002|04.0.1888|22.11.2001
+js7CheckLogMatchCount: 3
+js7CheckLogGroupCount: 0
+js7CheckLogGroupsMatchesCount:6
+
+
+  					</p>
                 </note>
             </param>
             <param name="separator"
@@ -58,8 +109,11 @@
                 <note>
                     <title>Handling the log as one or multiple lines</title>
                     <p>
-Enables multiline mode in general, the ^ and $ meta characters matches the start and 
-end of the given input with the specified characters irrespective of the number of lines in it.                    
+Enables multiline mode. 
+In multiline mode the expressions ^ and $ matchjust after or just before, respectively, a line terminator or the end of the input sequence. 
+By default these expressions only match at the beginning and the end of the entire input sequence. 
+Multiline mode can also be enabled via the embedded flagexpression (?m). 
+              
 </p>
                 </note>
             </param>
@@ -84,6 +138,7 @@ only '\n' is used as a line terminator and ‘\r’ is treated as a literal char
                 </note>
             </param>
         </params>
+        
         <params id="return_parameter">
             <param name="js7CheckLogMatchedGroups"
                    required="false">
@@ -98,10 +153,10 @@ The return variable holds values per group separated by the character specified 
 </p>
                 </note>
             </param>
-            <param name="Matches separated by the separator sign"
+            <param name="js7CheckLogMatches"
                    required="false">
                 <note>
-                    <title>List of Agent IDs</title>
+                    <title>Matches separated by the separator sign</title>
                     <p>
 A string value holding the matching characters of the task log.
 An empty value is returned if the pattern doesn't not match
@@ -115,6 +170,26 @@ The return variable holds values per match separated by the character specified 
                     <title>Count of matches</title>
                     <p>
 The count of matches
+                    </p>
+                </note>
+            </param>
+            <param name="js7CheckLogGroupsMatchesCount"
+                   required="false">
+                <note>
+                    <title>Count of matches</title>
+                    <p>
+The count of matched groups. Depends on value for the parameter "multiline". 
+multiline=false -- matched groups when the log is regarded as one line.
+multiline=true -- Sum of matched groups for each line. 
+                    </p>
+                </note>
+            </param>
+            <param name="js7CheckLogGroupCount"
+                   required="false">
+                <note>
+                    <title>Count of matches</title>
+                    <p>
+The number of groups in the pattern.
                     </p>
                 </note>
             </param>
