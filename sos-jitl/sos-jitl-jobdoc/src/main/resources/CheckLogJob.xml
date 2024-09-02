@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="js7_job_documentation_v1.1.xsl"?>
+<description xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+             xmlns:xi="http://www.w3.org/2001/XInclude"
+             xmlns:xhtml="http://www.w3.org/1999/xhtml"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
+    <job name="CheckLogJob"
+         title="Check task logs with regular expression "
+         category="JITL">
+        <script language="java"
+                java_class="com.sos.jitl.jobs.checklog.classes.CheckLogJob"
+                resource="1"/>
+    </job>
+    <configuration>
+        <params id="job_parameter">
+             
+            <param name="job"
+                   required="true">
+                <note>
+                    <title>The job in the current workflow whose log is to be analysed</title>
+                    <p>
+                       When the job occurs more than one time in the workflow, the parameter "label" must be specified.
+                    </p>
+                    
+                </note>
+            </param>
+            <param name="label"
+                   required="When job is empty">
+                <note>
+                    <title>The label of the job whose log is to be analysed</title>
+                    <p>
+                       When the job occurs more than one time in the workflow, the parameter "label" must be specified to unique identify the job whose log is to be analysed.
+                    </p>
+                </note>
+            </param>
+            <param name="pattern"
+                   required="false">
+                <note>
+                    <title>The regular expression to be used to examine the log</title>
+                    <p>
+						The regular expression is applied to the log.
+                    </p>
+                </note>
+            </param>
+            <param name="separator"
+                   required="false">
+                <note>
+                    <title>To separate the matched values</title>
+                    <p>
+                        Executing the regular expression on the log can result in several matches. The matches are returned in the variable js7CheckLogMatches or js7CheckLogMatchedGroups  
+                        and separated from each other with ‘separator’.                    
+                    </p>
+                </note>
+            </param>
+            <param name="multiline"
+                   required="false">
+                <note>
+                    <title>Handling the log as one or multiple lines</title>
+                    <p>
+Enables multiline mode in general, the ^ and $ meta characters matches the start and 
+end of the given input with the specified characters irrespective of the number of lines in it.                    
+</p>
+                </note>
+            </param>
+            <param name="case_insensitive"
+                   required="false">
+                <note>
+                    <title>Handling of upper/lowercase</title>
+                    <p>
+Enables case-insensitive matching. By default, case-insensitive matching assumes that only characters in the US-ASCII charset are being matched. Unicode-aware case-insensitive matching can be enabled by specifying the UNICODE_CASE flag in conjunction with this flag. 
+Case-insensitive matching can also be enabled via the embedded flag expression (?i). 
+Specifying this flag may impose a slight performance penalty.                    
+</p>
+                </note>
+            </param>
+            <param name="unix_lines"
+                   required="false">
+                <note>
+                    <title>List of Agent IDs</title>
+                    <p>
+This flag enables Unix lines mode. In the Unix lines mode, 
+only '\n' is used as a line terminator and ‘\r’ is treated as a literal character.                    </p>
+                </note>
+            </param>
+        </params>
+        <params id="return_parameter">
+            <param name="js7CheckLogMatchedGroups"
+                   required="false">
+                <note>
+                    <title>Matching groups separated by the separator sign</title>
+                    <p>
+A string value holding the matching groups of the task log.
+An empty value is returned if the pattern doesn't not match
+In case of a pattern specifying capturing groups, the matching characters are provided for each group. 
+The return variable holds values per group separated by the character specified from the separator argument.                     
+
+</p>
+                </note>
+            </param>
+            <param name="Matches separated by the separator sign"
+                   required="false">
+                <note>
+                    <title>List of Agent IDs</title>
+                    <p>
+A string value holding the matching characters of the task log.
+An empty value is returned if the pattern doesn't not match
+The return variable holds values per match separated by the character specified from the separator argument.                     
+                    </p>
+                </note>
+            </param>
+            <param name="js7CheckLogMatchCount"
+                   required="false">
+                <note>
+                    <title>Count of matches</title>
+                    <p>
+The count of matches
+                    </p>
+                </note>
+            </param>
+            
+        </params>
+    </configuration>
+    <documentation>
+        <note>
+            <title>What is the purpose of this job?</title>
+            <p>
+-Users would like to analyze log output of previously executed jobs.
+-Analysis includes to identify warnings and errors.
+-Analysis includes to identify output for decision-making about next steps in a workflow.            
+</p>
+        </note>
+         
+    </documentation>
+</description>
