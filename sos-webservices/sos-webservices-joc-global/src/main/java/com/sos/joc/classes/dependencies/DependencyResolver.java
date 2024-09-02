@@ -41,7 +41,7 @@ public class DependencyResolver {
     public static final String WORKFLOWNAMES_SEARCH = "workflowNames";
     public static final String JOBRESOURCENAMES_SEARCH = "jobResourceNames";
     public static final String LOCKNAME_SEARCH = "lockName";
-    
+
     public static ReferencedDbItem resolve(SOSHibernateSession session, ConfigurationObject inventoryObject)
             throws SOSHibernateException, JsonMappingException, JsonProcessingException {
         return resolve(session, inventoryObject.getName(), inventoryObject.getObjectType());

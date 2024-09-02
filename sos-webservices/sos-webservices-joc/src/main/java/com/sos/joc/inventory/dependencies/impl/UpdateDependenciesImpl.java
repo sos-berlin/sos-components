@@ -6,22 +6,19 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.dependencies.DependencyResolver;
-import com.sos.joc.classes.dependencies.items.ReferencedDbItem;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.inventory.dependencies.resource.IUpdateDependencies;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-import com.sos.joc.model.inventory.dependencies.GetDependenciesRequest;
-import com.sos.joc.model.inventory.dependencies.RequestItem;
-import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
 
@@ -60,6 +57,9 @@ public class UpdateDependenciesImpl extends JOCResourceImpl implements IUpdateDe
                     DependencyResolver.updateDependencies(session, item);
                 } catch (SOSHibernateException e) {
                     throw new JocSosHibernateException(e);
+                } catch (JsonProcessingException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
                 }
             });
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
