@@ -1,6 +1,8 @@
 package com.sos.js7.converter.commons.config.items;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -23,7 +25,7 @@ public abstract class AConfigItem {
             "unixNewLine");
 
     private final String configKey;
-    private Path propertiesFile;
+    private Path configFile;
 
     protected AConfigItem(String configKey) {
         this.configKey = configKey;
@@ -38,8 +40,8 @@ public abstract class AConfigItem {
     }
 
     // TODO optimize
-    public AConfigItem parse(Properties properties, Path propertiesFile) {
-        this.propertiesFile = propertiesFile;
+    public AConfigItem parse(Properties properties, Path configFile) {
+        this.configFile = configFile;
         Set<Object> toRemove = new HashSet<>();
         properties.entrySet().stream().filter(e -> e.getKey().toString().startsWith(configKey + ".")).forEach(e -> {
             String key = e.getKey().toString().trim();
@@ -49,7 +51,7 @@ public abstract class AConfigItem {
             } catch (Throwable t) {
                 String msg = getErrorMessage(key, val);
                 LOGGER.error(msg + "[error]" + t.getMessage());
-                ConfigReport.INSTANCE.addErrorRecord(propertiesFile, msg, t);
+                ConfigReport.INSTANCE.addErrorRecord(configFile, msg, t);
             } finally {
                 toRemove.add(e.getKey());
             }
@@ -62,8 +64,21 @@ public abstract class AConfigItem {
         return String.format("[cannot parse config][%s=%s]", name, value);
     }
 
-    public Path getPropertiesFile() {
-        return propertiesFile;
+    public Path getConfigFile() {
+        return configFile;
+    }
+
+    public Path getValueFile(String val) throws Exception {
+        Path f = Paths.get(val);
+        if (!f.isAbsolute()) {
+            if (configFile != null && configFile.getParent() != null) {
+                f = configFile.getParent().resolve(val);
+            }
+        }
+        if (!Files.exists(f)) {
+            throw new Exception("[" + configKey + "][" + f.toAbsolutePath() + "]file not found");
+        }
+        return f;
     }
 
     @Override

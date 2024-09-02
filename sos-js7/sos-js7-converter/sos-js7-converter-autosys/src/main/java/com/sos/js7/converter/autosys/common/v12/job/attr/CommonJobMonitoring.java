@@ -6,11 +6,25 @@ import com.sos.js7.converter.commons.annotation.ArgumentSetter;
 
 public class CommonJobMonitoring extends AJobAttributes {
 
+    private static final String ATTR_SVCDESK_ATTR = "svcdesk_attr";
     private static final String ATTR_SVCDESK_DESC = "svcdesk_desc";
     private static final String ATTR_SVCDESK_IMP = "svcdesk_imp";
     private static final String ATTR_SVCDESK_PRI = "svcdesk_pri";
+
     private static final String ATTR_SVCDESK_SEV = "svcdesk_sev";
     private static final String ATTR_SERVICE_DESC = "service_desk";
+
+    /** svcdesk_attr - defines Service Desk request attributes and values to set in the Service Desk request generated<br/>
+     * when you have set the service_desk attribute to y or 1 and the job you are defining completes with a FAILURE status.<br/>
+     * This attribute is optional for all job types.<br/>
+     * 
+     * Format: svcdesk_desc: value<br/>
+     * value - Specifies a description to include in the CA Service Desk request generated when the job fails.<br/>
+     * Limits:Up to 255 alphanumeric characters<br/>
+     * <br/>
+     * JS7 - 0% - to be discussed in context with monitoring<br/>
+     */
+    private SOSArgument<String> svcdeskAttr = new SOSArgument<>(ATTR_SVCDESK_ATTR, false);
 
     /** svcdesk_desc - Define the Message to Include in the CA Service Desk Request<br/>
      * This attribute is optional for all job types.<br/>
@@ -21,7 +35,7 @@ public class CommonJobMonitoring extends AJobAttributes {
      * <br/>
      * JS7 - 0% - to be discussed in context with monitoring<br/>
      */
-    private SOSArgument<Integer> svcdeskDesc = new SOSArgument<>(ATTR_SVCDESK_DESC, false);
+    private SOSArgument<String> svcdeskDesc = new SOSArgument<>(ATTR_SVCDESK_DESC, false);
 
     /** svcdesk_imp - Specify the Impact Level of the Service Desk Request<br/>
      * This attribute is optional for all job types.<br/>
@@ -76,13 +90,22 @@ public class CommonJobMonitoring extends AJobAttributes {
      */
     private SOSArgument<Boolean> serviceDesk = new SOSArgument<>(ATTR_SERVICE_DESC, false);
 
-    public SOSArgument<Integer> getSvcdeskDesc() {
+    public SOSArgument<String> getSvcdeskAttr() {
+        return svcdeskAttr;
+    }
+
+    @ArgumentSetter(name = ATTR_SVCDESK_ATTR)
+    public void setSvcdeskAttr(String val) {
+        svcdeskAttr.setValue(val);
+    }
+
+    public SOSArgument<String> getSvcdeskDesc() {
         return svcdeskDesc;
     }
 
     @ArgumentSetter(name = ATTR_SVCDESK_DESC)
     public void setSvcdeskDesc(String val) {
-        svcdeskDesc.setValue(JS7ConverterHelper.integerValue(val));
+        svcdeskDesc.setValue(val);
     }
 
     public SOSArgument<Integer> getSvcdeskImp() {
@@ -122,13 +145,13 @@ public class CommonJobMonitoring extends AJobAttributes {
     }
 
     public boolean exists() {
-        return svcdeskDesc.getValue() != null || svcdeskImp.getValue() != null || svcdeskPri.getValue() != null || svcdeskSev.getValue() != null
-                || serviceDesk.getValue() != null;
+        return svcdeskAttr.getValue() != null || svcdeskDesc.getValue() != null || svcdeskImp.getValue() != null || svcdeskPri.getValue() != null
+                || svcdeskSev.getValue() != null || serviceDesk.getValue() != null;
     }
 
     @Override
     public String toString() {
-        return toString(svcdeskDesc, svcdeskImp, svcdeskPri, svcdeskSev, serviceDesk);
+        return toString(svcdeskAttr, svcdeskDesc, svcdeskImp, svcdeskPri, svcdeskSev, serviceDesk);
     }
 
 }

@@ -606,7 +606,7 @@ public class JS7ConverterHelper {
 
     private static Board createNoticeBoard(String boardTitle) {
         Board b = new Board();
-        b.setTitle(boardTitle);
+        b.setTitle(getJS7InventoryObjectTitle(boardTitle));
         b.setEndOfLife("$js7EpochMilli + 1 * 24 * 60 * 60 * 1000");
         b.setExpectOrderToNoticeId("replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2})#.*$', '$1')");
         b.setPostOrderToNoticeId("replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2})#.*$', '$1')");
@@ -673,7 +673,7 @@ public class JS7ConverterHelper {
     public static JS7ConverterResult convertLocks2RootFolder(JS7ConverterResult result, Map<String, Integer> locks) {
         for (Map.Entry<String, Integer> e : locks.entrySet()) {
             Lock l = new Lock();
-            l.setTitle(e.getKey());
+            l.setTitle(JS7ConverterHelper.getJS7InventoryObjectTitle(e.getKey()));
             l.setLimit(e.getValue());
             result.add(Paths.get(e.getKey() + ".lock.json"), l);
         }
@@ -690,6 +690,7 @@ public class JS7ConverterHelper {
 
     public static com.sos.inventory.model.calendar.Calendar createDefaultWorkingDaysCalendar() {
         com.sos.inventory.model.calendar.Calendar c = new com.sos.inventory.model.calendar.Calendar();
+        // c.setTitle(JS7ConverterHelper.getJS7InventoryObjectTitle("xxx"));
         c.setType(CalendarType.WORKINGDAYSCALENDAR);
 
         Frequencies fr = new Frequencies();
@@ -721,6 +722,28 @@ public class JS7ConverterHelper {
             }
         }
         return s;
+    }
+
+    /** All titles: Workflow, Scheduler, etc
+     * 
+     * @param val
+     * @return */
+    public static String getJS7InventoryObjectTitle(String val) {
+        if (SOSString.isEmpty(val)) {
+            return val;
+        }
+        String v = replaceTitleCharacters(val);
+        int maxLen = 255;
+        int len = v.length();
+        if (len > maxLen) {
+            return v.substring(0, maxLen);
+        }
+        return v;
+    }
+
+    // replace <> with <>(look the same but not the same)
+    private static String replaceTitleCharacters(String val) {
+        return val.replace('\u003C', '\u02C2').replace('\u003E', '\u02C3');
     }
 
     private static boolean isNumeric(String val) {

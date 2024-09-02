@@ -784,7 +784,7 @@ public class JS12JS7Converter {
 
         // WORKFLOW
         Workflow w = new Workflow();
-        w.setTitle(js1Job.getTitle());
+        w.setTitle(JS7ConverterHelper.getJS7InventoryObjectTitle(js1Job.getTitle()));
         w.setTimeZone(CONFIG.getWorkflowConfig().getDefaultTimeZone());
 
         Jobs js = new Jobs();
@@ -1287,7 +1287,7 @@ public class JS12JS7Converter {
         }
 
         Job j = new Job();
-        j.setTitle(job.getTitle());
+        j.setTitle(JS7ConverterHelper.getJS7InventoryObjectTitle(job.getTitle()));
         j = JS7ConverterHelper.setFromConfig(CONFIG, j);
 
         jh.setJS7Agent(getAgent(job.getProcessClass(), jobChainAgent, job, null));
@@ -1594,7 +1594,7 @@ public class JS12JS7Converter {
             ca.setAgentId(agent.getAgentId());
             ca.setAgentName(agent.getAgentName());
             ca.setAgentNameAliases(agent.getAgentNameAliases());
-            ca.setTitle(agent.getTitle());
+            ca.setTitle(JS7ConverterHelper.getJS7InventoryObjectTitle(agent.getTitle()));
             ca.setUrl(subagents.size() > 0 ? subagents.get(0).getUrl() : agent.getUrl());
 
             ca.setSubagents(subagents);
@@ -2003,8 +2003,8 @@ public class JS12JS7Converter {
     }
 
     private void setMockLevel(ExecutableJava ej) {
-        if (CONFIG.getMockConfig().getJitlJobsMockLevel() != null) {
-            String mockLevel = CONFIG.getMockConfig().getJitlJobsMockLevel().toUpperCase();
+        if (CONFIG.getMockConfig().getForcedJitlJobsMockLevel() != null) {
+            String mockLevel = CONFIG.getMockConfig().getForcedJitlJobsMockLevel().toUpperCase();
             if (mockLevel.equals("INFO") || mockLevel.equals("ERROR")) {// see com.sos.jitl.jobs.common.JobArguments
                 Environment env = ej.getArguments();
                 if (env == null) {
@@ -2020,7 +2020,7 @@ public class JS12JS7Converter {
         StringBuilder scriptHeader = new StringBuilder();
         StringBuilder scriptCommand = new StringBuilder();
         String commentBegin = "#";
-        boolean isMock = CONFIG.getMockConfig().hasScript();
+        boolean isMock = CONFIG.getMockConfig().hasForcedScript();
         boolean isUnix = jh.getJS7Agent().getPlatform().equalsIgnoreCase(Platform.UNIX.name());
         ShellJobHelper shellJob = jh.getShellJob();
         boolean isPowershell = false;
@@ -2029,15 +2029,15 @@ public class JS12JS7Converter {
             isUnix = false; // JS1 script=powershell only for Windows
         }
 
-        String newLine = isUnix ? CONFIG.getJobConfig().getUnixNewLine() : CONFIG.getJobConfig().getWindowsNewLine();
+        String newLine = isUnix ? CONFIG.getJobConfig().getForcedUnixNewLine() : CONFIG.getJobConfig().getForcedWindowsNewLine();
         setJobArguments(jh, jcjh);
 
         boolean checkUnixFirstLine = false;
         if (isUnix) {
             commentBegin = "#";
             if (isPowershell) {// not reachable because only for windows ...
-                if (!SOSString.isEmpty(CONFIG.getJobConfig().getUnixPowershellShebang())) {
-                    scriptHeader.append(CONFIG.getJobConfig().getUnixPowershellShebang());
+                if (!SOSString.isEmpty(CONFIG.getJobConfig().getForcedUnixPowershellShebang())) {
+                    scriptHeader.append(CONFIG.getJobConfig().getForcedUnixPowershellShebang());
                     scriptHeader.append(newLine);
                     scriptHeader.append(newLine);
                 }
@@ -2050,8 +2050,8 @@ public class JS12JS7Converter {
             commentBegin = "REM";
             if (isPowershell) {
                 commentBegin = "#";
-                if (!SOSString.isEmpty(CONFIG.getJobConfig().getWindowsPowershellShebang())) {
-                    scriptHeader.append(CONFIG.getJobConfig().getWindowsPowershellShebang());
+                if (!SOSString.isEmpty(CONFIG.getJobConfig().getForcedWindowsPowershellShebang())) {
+                    scriptHeader.append(CONFIG.getJobConfig().getForcedWindowsPowershellShebang());
                     scriptHeader.append(newLine);
                     scriptHeader.append(newLine);
                 }
@@ -2103,7 +2103,7 @@ public class JS12JS7Converter {
 
         String command = null;
         if (isMock) {
-            command = isUnix ? CONFIG.getMockConfig().getUnixScript() : CONFIG.getMockConfig().getWindowsScript();
+            command = isUnix ? CONFIG.getMockConfig().getForcedUnixScript() : CONFIG.getMockConfig().getForcedWindowsScript();
         } else {
             command = scriptCommand.toString();
         }
@@ -2113,8 +2113,8 @@ public class JS12JS7Converter {
             // scriptHeader.append(CONFIG.getJobConfig().getScriptNewLine());
             if (!command.startsWith("#!/")) {
                 StringBuilder sb = new StringBuilder();
-                if (!SOSString.isEmpty(CONFIG.getJobConfig().getUnixDefaultShebang())) {
-                    sb.append(CONFIG.getJobConfig().getUnixDefaultShebang());
+                if (!SOSString.isEmpty(CONFIG.getJobConfig().getDefaultUnixShebang())) {
+                    sb.append(CONFIG.getJobConfig().getDefaultUnixShebang());
                     sb.append(newLine);
                 }
                 sb.append(scriptHeader);
@@ -2649,7 +2649,7 @@ public class JS12JS7Converter {
         }
 
         Workflow w = new Workflow();
-        w.setTitle(jobChain.getTitle());
+        w.setTitle(JS7ConverterHelper.getJS7InventoryObjectTitle(jobChain.getTitle()));
         w.setTimeZone(CONFIG.getWorkflowConfig().getDefaultTimeZone());
         w = setWorkflowOrderPreparationOrResources(w, jobChain, usedStates, fileOrderSources);
 
@@ -2995,7 +2995,7 @@ public class JS12JS7Converter {
                     RunTimeHelper rth = convertRunTimeForSchedule("ORDER", o.getRunTime(), workflowPath, workflowName, add);
                     if (rth != null && rth.getSchedule() != null) {
                         Schedule s = rth.getSchedule();
-                        s.setTitle(o.getTitle());
+                        s.setTitle(JS7ConverterHelper.getJS7InventoryObjectTitle(o.getTitle()));
 
                         if (l.size() > 0) {
                             s.setOrderParameterisations(l);

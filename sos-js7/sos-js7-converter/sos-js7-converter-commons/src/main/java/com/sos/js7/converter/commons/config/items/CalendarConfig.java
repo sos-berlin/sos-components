@@ -19,8 +19,8 @@ public class CalendarConfig extends AConfigItem {
 
     @Override
     protected void parse(String key, String val) {
-        switch (key) {
-        case "forcedFolder":
+        switch (key.toLowerCase()) {
+        case "forced.folder":
             withForcedFolder(val);
             break;
         }

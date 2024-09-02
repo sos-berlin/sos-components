@@ -2,7 +2,9 @@ package com.sos.js7.converter.autosys.common.v12.job.attr;
 
 import java.util.List;
 
+import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgument;
+import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Conditions;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 import com.sos.js7.converter.commons.annotation.ArgumentSetter;
@@ -30,7 +32,23 @@ public class CommonJobCondition extends AJobAttributes {
     public void setCondition(String val) throws Exception {
         String v = JS7ConverterHelper.stringValue(val);
         originalCondition = val;
-        condition.setValue(Conditions.parse(v));
+        if (SOSString.isEmpty(v)) {
+            condition.setValue(null);
+        } else {
+            String[] arr = v.split(ACommonJob.LIST_VALUE_DELIMITER);
+            if (arr.length == 1) {
+                condition.setValue(Conditions.parse(v));
+            } else {
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < arr.length; i++) {
+                    if (i > 0) {
+                        sb.append(" & ");
+                    }
+                    sb.append("(").append(arr[i].trim()).append(")");
+                }
+                condition.setValue(Conditions.parse(sb.toString()));
+            }
+        }
     }
 
     public String getOriginalCondition() {

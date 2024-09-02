@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
+import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
 import com.sos.js7.converter.autosys.config.AutosysConverterConfig;
 import com.sos.js7.converter.autosys.input.DirectoryParser.DirectoryParserResult;
 import com.sos.js7.converter.commons.report.ParserReport;
@@ -24,6 +26,7 @@ public class JILJobParser extends AFileParser {
 
     public static int COUNTER_INSERT_JOB = 0;
     public static Map<String, Map<Path, Integer>> INSERT_JOBS = new TreeMap<>();
+    public static Map<String, Map<String, List<String>>> MULTIPLE_ATTRIBUTES = new TreeMap<>();
 
     private static final String NEW_LINE = "\r\n";
     private static final String PROPERTY_NAME_INSERT_JOB = "insert_job";
@@ -34,6 +37,7 @@ public class JILJobParser extends AFileParser {
         super(FileType.JIL, config, reportDir);
         COUNTER_INSERT_JOB = 0;
         INSERT_JOBS = new TreeMap<>();
+        MULTIPLE_ATTRIBUTES = new TreeMap<>();
     }
 
     public void writeXMLStart(Path parent, String name) {
@@ -78,7 +82,7 @@ public class JILJobParser extends AFileParser {
                         }
                         m = createProperties(l);
 
-                        // ----------------------------
+                        // - REPORT ---------------------------
                         Map<Path, Integer> ijt = INSERT_JOBS.get(m.get(PROPERTY_NAME_INSERT_JOB));
                         if (ijt == null) {
                             ijt = new HashMap<>();
@@ -90,7 +94,7 @@ public class JILJobParser extends AFileParser {
                         ijc++;
                         ijt.put(file, ijc);
                         INSERT_JOBS.put(m.get(PROPERTY_NAME_INSERT_JOB), ijt);
-                        // -----------------------------
+                        // - REPORT ---------------------------
 
                     } else {
                         toProperty(m, l);
@@ -128,10 +132,37 @@ public class JILJobParser extends AFileParser {
 
     private void toProperty(LinkedHashMap<String, String> p, String line) throws Exception {
         if (p != null) {
+            String lineTrimmed = line.trim();
+            if (lineTrimmed.startsWith(";") || lineTrimmed.startsWith("#")) {
+                return;
+            }
             // not split(:) because the value can have : (if a path value)
             int pos = line.indexOf(":");
             if (pos > 0) {
-                p.put(line.substring(0, pos).trim(), line.substring(pos + 1).trim());
+                String name = line.substring(0, pos).trim();
+                String value = line.substring(pos + 1).trim();
+
+                String v = p.get(name);
+                if (v != null) {
+                    // - REPORT ---------------------------
+                    String jn = p.get(PROPERTY_NAME_INSERT_JOB);
+                    Map<String, List<String>> m = MULTIPLE_ATTRIBUTES.get(jn);
+                    if (m == null) {
+                        m = new LinkedHashMap<>();
+                    }
+                    List<String> l = m.get(name);
+                    if (l == null) {
+                        l = new ArrayList<>();
+                        l.add(v);
+                    }
+                    l.add(value);
+                    m.put(name, l);
+                    MULTIPLE_ATTRIBUTES.put(jn, m);
+                    // - REPORT ---------------------------
+
+                    value = v + ACommonJob.LIST_VALUE_DELIMITER + value;
+                }
+                p.put(name, value);
             } else {
                 throw new Exception("[not parsable][line][: pos=" + pos + "]" + line);
             }

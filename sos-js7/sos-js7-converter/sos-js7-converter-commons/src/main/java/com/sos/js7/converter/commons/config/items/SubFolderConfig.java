@@ -18,7 +18,7 @@ public class SubFolderConfig extends AConfigItem {
 
     @Override
     protected void parse(String key, String val) {
-        switch (key) {
+        switch (key.toLowerCase()) {
         case "mappings":
             withMappings(val);
             break;

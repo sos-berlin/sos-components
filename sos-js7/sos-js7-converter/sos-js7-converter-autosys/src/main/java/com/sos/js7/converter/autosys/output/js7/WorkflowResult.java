@@ -10,6 +10,7 @@ public class WorkflowResult {
     private Path path;
     private String name;
     private String timezone;
+    private boolean isAutosysTimezone;
     private Set<String> postNotices = new HashSet<>();
 
     public WorkflowResult() {
@@ -23,8 +24,9 @@ public class WorkflowResult {
         name = val;
     }
 
-    public void setTimezone(String val) {
+    public void setTimezone(String val, boolean isAutosysTimezone) {
         timezone = val;
+        this.isAutosysTimezone = isAutosysTimezone;
     }
 
     public Path getPath() {
@@ -37,6 +39,10 @@ public class WorkflowResult {
 
     public String getTimezone() {
         return timezone;
+    }
+
+    public boolean isAutosysTimezone() {
+        return isAutosysTimezone;
     }
 
     public void addPostNotice(String val) {

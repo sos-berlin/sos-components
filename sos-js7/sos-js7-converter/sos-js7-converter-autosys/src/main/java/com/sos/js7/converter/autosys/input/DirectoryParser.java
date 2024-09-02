@@ -8,12 +8,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSPath;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
 import com.sos.js7.converter.autosys.input.AFileParser.FileType;
 import com.sos.js7.converter.autosys.output.js7.helper.Report;
@@ -32,7 +34,9 @@ public class DirectoryParser {
             try {
                 JILJobParser jilParser = (parser instanceof JILJobParser) ? (JILJobParser) parser : null;
                 Path parent = null;
+                boolean inputIsDirectory = false;
                 if (Files.isDirectory(input)) {
+                    inputIsDirectory = true;
                     if (jilParser != null) {
                         parent = input.getParent();
                         jilParser.writeXMLStart(parent, input.getFileName().toString());
@@ -71,6 +75,7 @@ public class DirectoryParser {
                     jilParser.writeXMLEnd();
 
                     Report.writeJILParserDuplicatesReport(parent);
+                    Report.writeJILParserMultipleAttributes(parent);
 
                     int totalDuplicates = 0;
                     for (Map.Entry<String, Map<Path, Integer>> e : JILJobParser.INSERT_JOBS.entrySet()) {
@@ -93,8 +98,15 @@ public class DirectoryParser {
                     JILJobParser.INSERT_JOBS.clear();
 
                     LOGGER.info("[parse][" + jilParser.getXMLFile() + "]start...");
-                    r = DirectoryParser.parse(config, new XMLJobParser(jilParser.getConfig(), jilParser.getReportDir()), jilParser.getXMLFile());
+                    XMLJobParser xmlParser = new XMLJobParser(jilParser.getConfig(), jilParser.getReportDir());
+                    r = DirectoryParser.parse(config, xmlParser, jilParser.getXMLFile());
                     LOGGER.info("[parse][" + jilParser.getXMLFile() + "]end");
+
+                    if (xmlParser.getSplitConfigurationMainDir() != null) {
+                        if (inputIsDirectory) {
+                            copyJILFiles2SplitConfigurationFolders(input, xmlParser.getSplitConfigurationMainDir());
+                        }
+                    }
                 }
 
                 LOGGER.info(String.format("[%s][total files=%s, main jobs=%s]", method, r.getCountFiles(), r.getJobs().size()));
@@ -106,6 +118,25 @@ public class DirectoryParser {
             LOGGER.info(String.format("[%s][not found]%s", method, input));
         }
         return r;
+    }
+
+    private static void copyJILFiles2SplitConfigurationFolders(Path inputDirWithJILFiles, Path splitConfigurationMainDir) throws Exception {
+        String method = "copyJILFiles2SplitConfigurationFolders";
+        List<Path> fl = SOSPath.getFolderList(splitConfigurationMainDir);
+        LOGGER.info(String.format("[%s][total][application]%s", method, fl.size()));
+        for (Path folder : fl) {
+            String application = folder.getFileName().toString();
+            LOGGER.info(String.format("[%s][application=%s]search for %s file ...", method, application, application + ".jil"));
+            List<Path> jilFiles = SOSPath.getFileList(inputDirWithJILFiles, application + "\\.jil", Pattern.CASE_INSENSITIVE, true);
+            LOGGER.info(String.format("    %s file(s) found", jilFiles.size()));
+            for (Path jilFile : jilFiles) {
+                Path jilFileCopy = folder.resolve(jilFile.getParent().getFileName() + "_" + jilFile.getFileName());
+                LOGGER.info("    copy as " + jilFileCopy.getFileName());
+                SOSPath.deleteIfExists(jilFileCopy);
+                SOSPath.copyFile(jilFile, jilFileCopy);
+            }
+        }
+
     }
 
     public class DirectoryParserResult {

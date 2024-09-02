@@ -12,8 +12,8 @@ public class WorkflowConfig extends AConfigItem {
 
     @Override
     protected void parse(String key, String val) {
-        switch (key) {
-        case "defaultTimeZone":
+        switch (key.toLowerCase()) {
+        case "default.timezone":
             withDefaultTimeZone(val);
             break;
         }

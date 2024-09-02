@@ -4,9 +4,9 @@ public class MockConfig extends AConfigItem {
 
     private static final String CONFIG_KEY = "mockConfig";
 
-    private String windowsScript;
-    private String unixScript;
-    private String jitlJobsMockLevel; // see com.sos.jitl.jobs.common.JobArguments
+    private String forcedWindowsScript;
+    private String forcedUnixScript;
+    private String forcedJitlJobsMockLevel; // see com.sos.jitl.jobs.common.JobArguments
 
     public MockConfig() {
         super(CONFIG_KEY);
@@ -14,55 +14,55 @@ public class MockConfig extends AConfigItem {
 
     @Override
     protected void parse(String key, String val) {
-        switch (key) {
+        switch (key.toLowerCase()) {
         // SHELL
-        case "shell.windowsScript":
-            withWindowsScript(val);
+        case "forced.shell.windowsscript":
+            withForcedWindowsScript(val);
             break;
-        case "shell.unixScript":
-            withUnixScript(val);
+        case "forced.shell.unixscript":
+            withForcedUnixScript(val);
             break;
         // JITL
-        case "jitl.mockLevel":
-            withJitlJobsMockLevel(val);
+        case "forced.jitl.mocklevel":
+            withForcedJitlJobsMockLevel(val);
             break;
         }
     }
 
     @Override
     public boolean isEmpty() {
-        return !hasScript() && jitlJobsMockLevel == null;
+        return !hasForcedScript() && forcedJitlJobsMockLevel == null;
     }
 
-    public MockConfig withWindowsScript(String val) {
-        this.windowsScript = val;
+    public MockConfig withForcedWindowsScript(String val) {
+        this.forcedWindowsScript = val;
         return this;
     }
 
-    public MockConfig withUnixScript(String val) {
-        this.unixScript = val;
+    public MockConfig withForcedUnixScript(String val) {
+        this.forcedUnixScript = val;
         return this;
     }
 
-    public MockConfig withJitlJobsMockLevel(String val) {
-        this.jitlJobsMockLevel = val;
+    public MockConfig withForcedJitlJobsMockLevel(String val) {
+        this.forcedJitlJobsMockLevel = val;
         return this;
     }
 
-    public String getWindowsScript() {
-        return windowsScript;
+    public String getForcedWindowsScript() {
+        return forcedWindowsScript;
     }
 
-    public String getUnixScript() {
-        return unixScript;
+    public String getForcedUnixScript() {
+        return forcedUnixScript;
     }
 
-    public String getJitlJobsMockLevel() {
-        return jitlJobsMockLevel;
+    public String getForcedJitlJobsMockLevel() {
+        return forcedJitlJobsMockLevel;
     }
 
-    public boolean hasScript() {
-        return windowsScript != null || unixScript != null;
+    public boolean hasForcedScript() {
+        return forcedWindowsScript != null || forcedUnixScript != null;
     }
 
 }

@@ -38,8 +38,6 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
     private final Range range;
     private final Path outputDirectory;
 
-    // private final JobBOX folder;
-    // private final StringBuilder standalone;
     private StringBuilder edges;
     private Set<String> allEdges;
     private Map<String, ConditionHelper> conditions;
@@ -170,9 +168,9 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
             return true;
         }
 
-        if (Range.optimizeDependencies.equals(this.range)) {
-            children = analyzer.getConditionAnalyzer().handleJobBoxConditions(box);
-        }
+        // if (Range.optimizeDependencies.equals(this.range)) {
+        // children = analyzer.getConditionAnalyzer().handleBOXConditions(analyzer, box);
+        // }
 
         Map<String, ACommonJob> allJobs = new HashMap<>();
         for (ACommonJob job : children) {
@@ -389,31 +387,39 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
 
                 Map<Condition, Set<String>> m = analyzer.getConditionAnalyzer().getINConditionJobs(box);
                 if (m.size() > 0) {
+                    String boxConditionBgColor = "#B8D8FD";
+                    String emptyRowBoxCondition = "<tr><td align=\"left\" colspan=\"4\" bgcolor=\"" + boxConditionBgColor + "\">&nbsp;</td></tr>";
+
                     int sum = 0;
                     for (Map.Entry<Condition, Set<String>> entry : m.entrySet()) {
                         sum += entry.getValue().size();
                     }
 
                     tableBox.append(emptyRow);
-                    tableBox.append(emptyRow);
+                    tableBox.append(emptyRowBoxCondition);
 
                     tableBox.append("  <tr>");
-                    tableBox.append("<td align=\"left\" colspan=\"4\"><b>");
-                    tableBox.append(getWithFont("Used by " + sum + " job(s) as IN condition:"));
+                    tableBox.append("<td align=\"left\" colspan=\"4\" bgcolor=\"").append(boxConditionBgColor).append("\"><b>");
+                    tableBox.append(getWithFont("&nbsp;Used by " + sum + " job(s) as IN condition:"));
                     tableBox.append("</b></td>");
                     tableBox.append("</tr>");
+
                     for (Map.Entry<Condition, Set<String>> entry : m.entrySet()) {
                         tableBox.append("  <tr>");
-                        tableBox.append("<td align=\"left\" colspan=\"4\"><b>");
+                        tableBox.append("<td align=\"left\" colspan=\"4\" bgcolor=\"").append(boxConditionBgColor).append("\">&nbsp;<b>");
                         tableBox.append(getWithFont(entry.getKey().getOriginalValue()));
                         tableBox.append("</b></td>");
                         tableBox.append("</tr>");
 
                         for (String jn : entry.getValue()) {
                             tableBox.append("  <tr>");
-                            tableBox.append("<td align=\"left\">&nbsp;</td>");
-                            tableBox.append("<td align=\"left\" colspan=\"2\">").append(getWithFont(jn)).append("</td>");
-                            tableBox.append("<td align=\"left\">").append(getWithFont(getJobInfo(jn))).append("</td>");
+                            tableBox.append("<td align=\"left\" bgcolor=\"").append(boxConditionBgColor).append("\">&nbsp;</td>");
+                            tableBox.append("<td align=\"left\" colspan=\"2\" bgcolor=\"").append(boxConditionBgColor).append("\">");
+                            tableBox.append(getWithFont(jn));
+                            tableBox.append("</td>");
+                            tableBox.append("<td align=\"left\" bgcolor=\"").append(boxConditionBgColor).append("\">");
+                            tableBox.append(getWithFont(getJobInfo(jn)));
+                            tableBox.append("</td>");
                             tableBox.append("</tr>");
                         }
                     }
@@ -496,17 +502,39 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
         if (h != null) {
             return false;
         }
-        // LOGGER.info("addCondition=" + c.getKey());
 
         h = new ConditionHelper(type, jobs);
         // DIAMOND COND
-        Set<String> external = null;// analyzer.getExternalAppAndFoldersOfOutAddCondition(c, appAndFolder);
-        StringBuilder l = getConditionLabel(currentJob, h, c, external, "OUTCOND from: ");
+        StringBuilder l = getConditionLabel(currentJob, h, c);
+
+        String fillColor = "#FFFF99"; // yellow
+        switch (c.getType()) {
+        case DONE:
+            break;
+        case EXITCODE:
+            break;
+        case FAILURE:
+            fillColor = "#FA8072"; // salmon (red)
+            break;
+        case NOTRUNNING:
+            fillColor = "#CACACA"; // gray
+            break;
+        case SOS_UNKNOWN:
+            break;
+        case SUCCESS:
+            break;
+        case TERMINATED:
+            break;
+        case VARIABLE:
+            break;
+        default:
+            break;
+        }
 
         StringBuilder s = new StringBuilder();
         s.append(quote(c.getKey())).append(" [");
         s.append("label=<").append(toHtml(l.toString())).append(">");
-        s.append(",fillcolor=\"#FFFF99\"");
+        s.append(",fillcolor=\"").append(fillColor).append("\"");
         s.append(",style=\"rounded,filled\"");
         s.append(",fontsize=").append(FONT_SIZE_CONDITION);
         s.append(",shape=\"diamond\"");
@@ -572,15 +600,12 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
         return p;
     }
 
-    private StringBuilder getConditionLabel(ACommonJob currentJob, ConditionHelper h, Condition c, Set<String> external, String externalHeader) {
+    private StringBuilder getConditionLabel(ACommonJob currentJob, ConditionHelper h, Condition c) {
         StringBuilder l = new StringBuilder();
         l.append(getTableBegin());
         l.append("  <tr>");
         l.append("<td align=\"center\" valign=\"top\" colspan=\"3\">");
 
-        if (external != null) {
-            l.append("<b>");
-        }
         l.append(getConditionJobParentPath(c.getJobName()));
         l.append(c.getType());
         l.append("&nbsp;&nbsp;");
@@ -595,9 +620,6 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
             break;
         default:
             break;
-        }
-        if (external != null) {
-            l.append("</b>");
         }
         l.append("</td>");
         l.append("</tr>").append(NEW_LINE);
@@ -645,20 +667,6 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
                     l.append("  </tr>");
                 }
             }
-        }
-
-        if (external != null) {
-            if (h != null) {
-                // h.external = true;
-            }
-            // l = l + HTML_NEW_LINE + "(OUTCOND from:" + String.join(",", external) + ")";
-            // l.append(HTML_NEW_LINE);
-            l.append("  <tr>");
-            l.append("<td align=\"left\" valign=\"top\">").append(externalHeader).append("</td>");
-            l.append("<td align=\"left\">");
-            l.append(String.join(HTML_NEW_LINE_ALIGN_LEFT, external));
-            l.append("</td>");
-            l.append("</tr>").append(NEW_LINE);
         }
         l.append("</table>");
         return l;
@@ -736,30 +744,55 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
             }
         }
 
-        if (!isStandalone) {
-            String app = getJILApplication(job);
-            String group = getJILGroup(job);
-            // TODO only if different to folder/box - display red colored
-            if (!SOSString.isEmpty(app)) {
-                sb.append("  <tr>");
-                sb.append("<td align=\"left\">Application").append("</td>");
-                sb.append("<td align=\"left\" colspan=\"3\">").append(app).append("</td>");
-                sb.append("</tr>").append(NEW_LINE);
-            }
-            if (!SOSString.isEmpty(group)) {
-                sb.append("  <tr>");
-                sb.append("<td align=\"left\">Group").append("</td>");
-                sb.append("<td align=\"left\" colspan=\"3\">").append(group).append("</td>");
-                sb.append("</tr>").append(NEW_LINE);
-            }
+        String app = getJILApplication(job);
+        String group = getJILGroup(job);
+        // TODO only if different to folder/box - display red colored
+        if (!SOSString.isEmpty(app)) {
+            sb.append("  <tr>");
+            sb.append("<td align=\"left\">Application").append("</td>");
+            sb.append("<td align=\"left\" colspan=\"3\">").append(app).append("</td>");
+            sb.append("</tr>").append(NEW_LINE);
+        }
+        if (!SOSString.isEmpty(group)) {
+            sb.append("  <tr>");
+            sb.append("<td align=\"left\">Group").append("</td>");
+            sb.append("<td align=\"left\" colspan=\"3\">").append(group).append("</td>");
+            sb.append("</tr>").append(NEW_LINE);
+        }
+        if (job.getBoxName() != null) {
+            sb.append("  <tr>");
+            sb.append("<td align=\"left\">box_name</td>");
+            sb.append("<td align=\"left\" colspan=\"3\">").append(job.getBoxName()).append("</td>");
+            sb.append("</tr>").append(NEW_LINE);
+        }
+        if (job.getBox().isBoxTerminator()) {
+            sb.append("  <tr>");
+            sb.append("<td align=\"left\">").append(job.getBox().getBoxTerminator().getName()).append("</td>");
+            sb.append("<td align=\"left\" colspan=\"3\">").append(job.getBox().getBoxTerminator().getValue()).append("</td>");
+            sb.append("</tr>").append(NEW_LINE);
         }
 
         sb.append("  <tr>");
         sb.append("<td align=\"left\">").append(job.getJobType().getName()).append("</td>");
         sb.append("<td align=\"left\" colspan=\"3\"><b>").append(job.getJobType().getValue()).append("</b></td>");
         sb.append("</tr>").append(NEW_LINE);
+
         sb.append("  <tr><td align=\"left\" colspan=\"4\">&nbsp;</td></tr>").append(NEW_LINE);
 
+        if (job.hasResources()) {
+            String jr = job.getResources().getValue().stream().map(r -> r.getOriginal()).collect(Collectors.joining(","));
+
+            sb.append("  <tr>");
+            sb.append("<td align=\"left\">").append(job.getResources().getName()).append("</td>");
+            sb.append("<td align=\"left\" colspan=\"3\">").append(jr).append("</td>");
+            sb.append("</tr>").append(NEW_LINE);
+
+            sb.append("  <tr><td align=\"left\" colspan=\"4\">&nbsp;</td></tr>").append(NEW_LINE);
+        }
+
+        if (job.isInteractive()) {
+            writeJobRow(sb, job.getInteractive().getName(), job.getInteractive().getValue() + "", null);
+        }
         if (job.hasCondition()) {
             writeJobRow(sb, job.getCondition().getCondition().getName(), job.getCondition().getOriginalCondition(), null);
         }
@@ -772,6 +805,7 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
         switch (job.getConverterJobType()) {
         case BOX:
             JobBOX b = (JobBOX) job;
+            writeJobRow(sb, b.getPriority());
             writeJobRow(sb, b.getBoxSuccess());
             writeJobRow(sb, b.getBoxFailure());
             break;
@@ -825,6 +859,8 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
     }
 
     private void writeJobCommonRows(StringBuilder sb, ACommonJob job, Integer fontSize) {
+        // writeJobRow(sb, job.getInteractive(), fontSize); <- is already set ...
+        writeJobRow(sb, job.getJobTerminator(), fontSize);
         writeJobRow(sb, job.getOwner(), fontSize);
         writeJobRow(sb, job.getPermission(), fontSize);
         writeJobRow(sb, job.getAutoDelete(), fontSize);

@@ -25,14 +25,14 @@ public class DiagramConfig extends AConfigItem {
 
     @Override
     protected void parse(String key, String val) {
-        switch (key) {
+        switch (key.toLowerCase()) {
         case "generate":
             withGenerate(Boolean.parseBoolean(val));
             break;
-        case "excludeStandalone":
+        case "excludestandalone":
             withExcludeStandalone(Boolean.parseBoolean(val));
             break;
-        case "outputFormat":
+        case "outputformat":
             withOutputFormat(val);
             break;
         case "size":
@@ -41,7 +41,7 @@ public class DiagramConfig extends AConfigItem {
         case "graphviz.executable":
             withGraphvizExecutable(val);
             break;
-        case "graphviz.cleanupDotFiles":
+        case "graphviz.cleanupdotfiles":
             withGraphvizCleanupDotFiles(Boolean.parseBoolean(val));
             break;
         }

@@ -26,7 +26,7 @@ public class GenerateConfig extends AConfigItem {
 
     @Override
     protected void parse(String propertyName, String val) {
-        switch (propertyName) {
+        switch (propertyName.toLowerCase()) {
         case PROPERTY_NAME_WORKFLOWS:
             withWorkflows(Boolean.parseBoolean(val));
             break;

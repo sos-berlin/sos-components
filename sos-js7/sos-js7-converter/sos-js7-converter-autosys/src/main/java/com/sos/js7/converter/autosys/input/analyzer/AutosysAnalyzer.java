@@ -39,9 +39,6 @@ public class AutosysAnalyzer {
         conditionAnalyzer = new ConditionAnalyzer(reportDir);
         allJobs = new LinkedHashMap<>();
         analyzerDir = getAnalyzerDir(reportDir);
-        if (!Files.exists(analyzerDir)) {
-            analyzerDir.toAbsolutePath().toFile().mkdirs();
-        }
     }
 
     public DirectoryParserResult analyzeAndCreateDiagram(DirectoryParserResult pr, Path input, Path reportDir) throws Exception {
@@ -111,7 +108,7 @@ public class AutosysAnalyzer {
             return resultChanged;
         }
 
-        Path outputDir = getExportFoldersMainDir(analyzerDir);
+        Path outputDir = getMainDirDiagram(analyzerDir);
         Map<ConverterJobType, List<ACommonJob>> jobsPerType = pr.getJobs().stream().collect(Collectors.groupingBy(ACommonJob::getConverterJobType,
                 Collectors.toList()));
 
@@ -143,6 +140,11 @@ public class AutosysAnalyzer {
             switch (key) {
             case BOX:
                 int b = 0;
+
+                if (Range.optimizeDependencies.equals(range)) {
+                    conditionAnalyzer.handleBOXConditions(this, entry.getValue());
+                }
+
                 for (ACommonJob j : value) {
                     b++;
                     AutosysGraphvizDiagramWriter.createDiagram(diagramConfig, this, range, outputDir, (JobBOX) j);
@@ -180,8 +182,20 @@ public class AutosysAnalyzer {
         LOGGER.info(String.format("[" + method + "][" + range + "]end"));
     }
 
-    public static Path getExportFoldersMainDir(Path analyzerDir) {
-        return analyzerDir.resolve("export");
+    public static Path getMainDirDiagram(Path analyzerDir) {
+        Path p = analyzerDir.resolve("diagram");
+        if (!Files.exists(p)) {
+            p.toAbsolutePath().toFile().mkdirs();
+        }
+        return p;
+    }
+
+    public static Path getMainDirSplitConfiguration(Path analyzerDir) {
+        Path p = analyzerDir.resolve("config");
+        if (!Files.exists(p)) {
+            p.toAbsolutePath().toFile().mkdirs();
+        }
+        return p;
     }
 
     public static Path getAnalyzerDir(Path reportDir) {

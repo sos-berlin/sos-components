@@ -24,11 +24,11 @@ public class ParserConfig extends AConfigItem {
 
     @Override
     protected void parse(String key, String val) {
-        switch (key) {
-        case "excludedDirectoryNames":
+        switch (key.toLowerCase()) {
+        case "excludeddirectorynames":
             withExcludedDirectoryNames(val);
             break;
-        case "excludedDirectoryPaths":
+        case "excludeddirectorypaths":
             withExcludedDirectoryPaths(val);
             break;
         }

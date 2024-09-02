@@ -292,8 +292,16 @@ public class SOSPath {
         }
     }
 
+    public static List<Path> getFolderList(final String folder) throws IOException {
+        return getFolderStream(folder).collect(Collectors.toList());
+    }
+
     public static List<Path> getFolderList(final String folder, final String regexp, final int flag) throws IOException {
         return getFolderStream(folder, regexp, flag).collect(Collectors.toList());
+    }
+
+    public static List<Path> getFolderList(final Path folder) throws IOException {
+        return getFolderStream(folder).collect(Collectors.toList());
     }
 
     public static List<Path> getFolderList(final Path folder, final String regexp, final int flag) throws IOException {

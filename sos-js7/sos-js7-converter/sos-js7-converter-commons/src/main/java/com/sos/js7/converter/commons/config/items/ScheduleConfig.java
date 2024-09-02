@@ -19,29 +19,29 @@ public class ScheduleConfig extends AConfigItem {
 
     @Override
     protected void parse(String key, String val) {
-        switch (key) {
+        switch (key.toLowerCase()) {
         // FORCED
-        case "forcedWorkingDayCalendarName":
+        case "forced.workingdaycalendarname":
             withForcedWorkingDayCalendarName(val);
             break;
-        case "forcedNonWorkingDayCalendarName":
+        case "forced.nonworkingdaycalendarname":
             withForcedNonWorkingDayCalendarName(val);
             break;
         // DEFAULT
-        case "defaultWorkingDayCalendarName":
+        case "default.workingdaycalendarname":
             withDefaultWorkingDayCalendarName(val);
             break;
-        case "defaultNonWorkingDayCalendarName":
+        case "default.nonworkingdaycalendarname":
             withDefaultNonWorkingDayCalendarName(val);
             break;
-        case "defaultTimeZone":
+        case "default.timezone":
             withDefaultTimeZone(val);
             break;
         // PLAN/SUBMIT Orders
-        case "planOrders":
+        case "forced.planorders":
             withPlanOrders(Boolean.parseBoolean(val));
             break;
-        case "submitOrders":
+        case "forced.submitorders":
             withSubmitOrders(Boolean.parseBoolean(val));
             break;
         }

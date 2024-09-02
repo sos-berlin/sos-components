@@ -12,6 +12,7 @@ public class CommonJobRunTime extends AJobAttributes {
 
     private static final String ATTR_TIMEZONE = "timezone";
     private static final String ATTR_RUN_CALENDAR = "run_calendar";
+    private static final String ATTR_EXCLUDE_CALENDAR = "exclude_calendar";
     private static final String ATTR_RUN_WINDOW = "run_window";
     private static final String ATTR_DAYS_OF_WEEK = "days_of_week";
     private static final String ATTR_START_TIMES = "start_times";
@@ -45,6 +46,18 @@ public class CommonJobRunTime extends AJobAttributes {
      * JS7 - 100% - Calendar & Schedules<br/>
      */
     private SOSArgument<String> runCalendar = new SOSArgument<>(ATTR_RUN_CALENDAR, false);
+
+    /** exclude_calendar - Define Days to Exclude a Job from Running<br/>
+     * The exclude_calendar attribute identifies a custom calendar to use to determine the days of the week on which to exclude the job you are defining from
+     * running.<br/>
+     * You can use a standard calendar or an extended calendar as the exclude_calendar.<br/>
+     * 
+     * Format: exclude_calendar: calendar_name<br/>
+     * Limits: Up to 64 alphanumeric characters<br/>
+     * 
+     * * JS7 - 100% - Calendar & Schedules (NONWORKING)<br/>
+     */
+    private SOSArgument<String> excludeCalendar = new SOSArgument<>(ATTR_EXCLUDE_CALENDAR, false);
 
     /** run_window - Define an Interval for a Job to Start<br/>
      * This attribute is optional for all job types.<br/>
@@ -150,6 +163,15 @@ public class CommonJobRunTime extends AJobAttributes {
         runCalendar.setValue(JS7ConverterHelper.stringValue(val));
     }
 
+    public SOSArgument<String> getExcludeCalendar() {
+        return excludeCalendar;
+    }
+
+    @ArgumentSetter(name = ATTR_EXCLUDE_CALENDAR)
+    public void setExcludeCalendar(String val) {
+        excludeCalendar.setValue(JS7ConverterHelper.stringValue(val));
+    }
+
     public SOSArgument<RunWindow> getRunWindow() {
         return runWindow;
     }
@@ -196,9 +218,9 @@ public class CommonJobRunTime extends AJobAttributes {
     }
 
     public boolean exists() {
-        return timezone.getValue() != null || runWindow.getValue() != null || runCalendar.getValue() != null || daysOfWeek.getValue() != null
-                || (startTimes.getValue() != null && startTimes.getValue().size() > 0) || (startMins.getValue() != null && startMins.getValue()
-                        .size() > 0);
+        return timezone.getValue() != null || runWindow.getValue() != null || runCalendar.getValue() != null || excludeCalendar.getValue() != null
+                || daysOfWeek.getValue() != null || (startTimes.getValue() != null && startTimes.getValue().size() > 0) || (startMins
+                        .getValue() != null && startMins.getValue().size() > 0);
     }
 
     public boolean isSingleStarts() {
@@ -211,7 +233,7 @@ public class CommonJobRunTime extends AJobAttributes {
 
     @Override
     public String toString() {
-        return toString(timezone, runWindow, runCalendar, daysOfWeek, startTimes, startMins);
+        return toString(timezone, runWindow, runCalendar, excludeCalendar, daysOfWeek, startTimes, startMins);
     }
 
     public class RunWindow {

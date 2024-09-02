@@ -11,6 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
+import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
+import com.sos.js7.converter.autosys.common.v12.job.JobBOX;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Condition.ConditionType;
 
 public class Conditions {
@@ -328,12 +330,38 @@ public class Conditions {
         return conditions;
     }
 
+    public static void removeFromChildrenJobs(JobBOX box, List<Condition> toRemove) {
+        if (toRemove == null || toRemove.size() == 0) {
+            return;
+        }
+        for (ACommonJob j : box.getJobs()) {
+            remove(j, toRemove);
+        }
+    }
+
+    private static void remove(ACommonJob j, List<Condition> toRemove) {
+        if (!j.hasCondition() || toRemove == null || toRemove.size() == 0) {
+            return;
+        }
+        for (Condition c : toRemove) {
+            remove(j, c);
+        }
+    }
+
+    public static void remove(ACommonJob j, Condition toRemove) {
+        if (!j.hasCondition() || toRemove == null) {
+            return;
+        }
+        List<Object> l = remove(j.getCondition().getCondition().getValue(), toRemove);
+        j.getCondition().getCondition().setValue(l);
+    }
+
     // TODO recursive
-    public static List<Object> remove(List<Object> conditions, Condition condition) {
+    public static List<Object> remove(List<Object> conditions, Condition toRemove) {
         if (conditions == null) {
             return conditions;
         }
-        Condition c = find(conditions, condition.getKey());
+        Condition c = find(conditions, toRemove.getKey());
         if (c == null) {
             return conditions;
         }

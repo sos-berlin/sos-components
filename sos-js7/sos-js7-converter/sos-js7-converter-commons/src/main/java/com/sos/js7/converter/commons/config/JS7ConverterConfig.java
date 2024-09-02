@@ -10,6 +10,7 @@ import com.sos.js7.converter.commons.config.items.AgentConfig;
 import com.sos.js7.converter.commons.config.items.CalendarConfig;
 import com.sos.js7.converter.commons.config.items.GenerateConfig;
 import com.sos.js7.converter.commons.config.items.JobConfig;
+import com.sos.js7.converter.commons.config.items.LockConfig;
 import com.sos.js7.converter.commons.config.items.MockConfig;
 import com.sos.js7.converter.commons.config.items.ParserConfig;
 import com.sos.js7.converter.commons.config.items.ScheduleConfig;
@@ -30,6 +31,7 @@ public class JS7ConverterConfig {
     private final MockConfig mockConfig;
     private final CalendarConfig calendarConfig;
     private final ScheduleConfig scheduleConfig;
+    private final LockConfig lockConfig;
     private final SubFolderConfig subFolderConfig;
 
     public JS7ConverterConfig() {
@@ -41,6 +43,7 @@ public class JS7ConverterConfig {
         mockConfig = new MockConfig();
         calendarConfig = new CalendarConfig();
         scheduleConfig = new ScheduleConfig();
+        lockConfig = new LockConfig();
         subFolderConfig = new SubFolderConfig();
     }
 
@@ -66,6 +69,8 @@ public class JS7ConverterConfig {
                 calendarConfig.parse(p);
                 // SCHEDULE
                 scheduleConfig.parse(p);
+                // LOCK
+                lockConfig.parse(p);
                 // SUBFOLDER - TODO autosys only
                 subFolderConfig.parse(p);
 
@@ -110,6 +115,10 @@ public class JS7ConverterConfig {
         return scheduleConfig;
     }
 
+    public LockConfig getLockConfig() {
+        return lockConfig;
+    }
+
     public SubFolderConfig getSubFolderConfig() {
         return subFolderConfig;
     }
@@ -136,6 +145,9 @@ public class JS7ConverterConfig {
         }
         if (!scheduleConfig.isEmpty()) {
             sb.append(",").append(scheduleConfig.toString());
+        }
+        if (!lockConfig.isEmpty()) {
+            sb.append(",").append(lockConfig.toString());
         }
         if (!subFolderConfig.isEmpty()) {
             sb.append(",").append(subFolderConfig.toString());

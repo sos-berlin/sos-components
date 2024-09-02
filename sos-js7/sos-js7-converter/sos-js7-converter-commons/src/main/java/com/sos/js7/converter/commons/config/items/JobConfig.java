@@ -1,5 +1,12 @@
 package com.sos.js7.converter.commons.config.items;
 
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import com.sos.commons.util.SOSString;
+import com.sos.js7.converter.commons.JS7ConverterHelper;
+
 public class JobConfig extends AConfigItem {
 
     private static final String CONFIG_KEY = "jobConfig";
@@ -11,15 +18,21 @@ public class JobConfig extends AConfigItem {
     private Boolean forcedWarnOnErrWritten;
     private Boolean forcedV1Compatible;
 
-    private String unixDefaultShebang = "#!/bin/bash";
-    private String unixNewLine = "\n";
-    private String unixPowershellShebang = "#!/usr/bin/env pwsh";
-    private String windowsNewLine = "\n"; // "\r\n";
-    private String windowsPowershellShebang = "@@findstr/v \"^@@f.*&\" \"%~f0\"|pwsh.exe -&goto:eof";
+    private String defaultUnixShebang = "#!/bin/bash";
+    private String forcedUnixNewLine = "\n";
+    private String forcedUnixPowershellShebang = "#!/usr/bin/env pwsh";
+    private String forcedUnixCommandPrefix;
+
+    private String forcedWindowsNewLine = "\n"; // "\r\n";
+    private String forcedWindowsPowershellShebang = "@@findstr/v \"^@@f.*&\" \"%~f0\"|pwsh.exe -&goto:eof";
+    private String forcedWindowsCommandPrefix;
 
     private String notificationMailDefaultTo;
     private String notificationMailDefaultCc;
     private String notificationMailDefaultBcc;
+
+    private Integer forcedRetryMaxTries;
+    private List<Integer> forcedRetryDelays;
 
     public JobConfig() {
         super(CONFIG_KEY);
@@ -27,53 +40,66 @@ public class JobConfig extends AConfigItem {
 
     @Override
     protected void parse(String key, String val) {
-        switch (key) {
+        switch (key.toLowerCase()) {
         // FORCED
-        case "forcedGraceTimeout":
+        case "forced.gracetimeout":
             withForcedGraceTimeout(Integer.parseInt(val));
             break;
-        case "forcedParallelism":
+        case "forced.parallelism":
             withForcedParallelism(Integer.parseInt(val));
             break;
-        case "forcedFailOnErrWritten":
+        case "forced.failonerrwritten":
             withForcedFailOnErrWritten(Boolean.parseBoolean(val));
             break;
-        case "forcedWarnOnErrWritten":
+        case "forced.warnonerrwritten":
             withForcedWarnOnErrWritten(Boolean.parseBoolean(val));
             break;
-        case "forcedV1Compatible":
+        case "forced.v1compatible":
             withForcedV1Compatible(Boolean.parseBoolean(val));
             break;
         // JITL FORCED
-        case "jitl.forcedLogLevel":
+        case "forced.jitl.loglevel":
             withForcedJitlLogLevel(val);
             break;
         // SHELL UNIX
-        case "shell.unix.defaultShebang":
-            withUnixDefaultShebang(val);
+        case "default.shell.unix.shebang":
+            withDefaultUnixShebang(val);
             break;
-        case "shell.unix.newLine":
-            withUnixNewLine(val);
+        case "forced.shell.unix.newline":
+            withForcedUnixNewLine(val);
             break;
-        case "shell.unix.powershellShebang":
-            withUnixPowershellShebang(val);
+        case "forced.shell.unix.powershellshebang":
+            withForcedUnixPowershellShebang(val);
+            break;
+        case "forced.shell.unix.commandprefix":
+            withForcedUnixCommandPrefix(val);
             break;
         // SHELL WINDOWS
-        case "shell.windows.newLine":
-            withWindowsNewLine(val);
+        case "forced.shell.windows.newline":
+            withForcedWindowsNewLine(val);
             break;
-        case "shell.windows.powershellShebang":
-            withWindowsPowershellShebang(val);
+        case "forced.shell.windows.powershellshebang":
+            withForcedWindowsPowershellShebang(val);
+            break;
+        case "forced.shell.windows.commandprefix":
+            withForcedWindowsCommandPrefix(val);
             break;
         // NOTIFICATION
-        case "notification.mail.defaultTo":
+        case "default.notification.mail.to":
             withNotificationMailDefaultTo(val);
             break;
-        case "notification.mail.defaultCc":
+        case "default.notification.mail.cc":
             withNotificationMailDefaultCc(val);
             break;
-        case "notification.mail.defaultBcc":
+        case "default.notification.mail.bcc":
             withNotificationMailDefaultBcc(val);
+            break;
+        // RETRY
+        case "forced.retry.maxtries":
+            withForcedRetryMaxTries(val);
+            break;
+        case "forced.retry.delays":
+            withForcedRetryDelays(val);
             break;
         }
     }
@@ -114,28 +140,38 @@ public class JobConfig extends AConfigItem {
         return this;
     }
 
-    public JobConfig withUnixDefaultShebang(String val) {
-        this.unixDefaultShebang = val;
+    public JobConfig withDefaultUnixShebang(String val) {
+        this.defaultUnixShebang = val;
         return this;
     }
 
-    public JobConfig withUnixNewLine(String val) {
-        this.unixNewLine = val;
+    public JobConfig withForcedUnixNewLine(String val) {
+        this.forcedUnixNewLine = val;
         return this;
     }
 
-    public JobConfig withUnixPowershellShebang(String val) {
-        unixPowershellShebang = val;
+    public JobConfig withForcedUnixPowershellShebang(String val) {
+        forcedUnixPowershellShebang = val;
         return this;
     }
 
-    public JobConfig withWindowsNewLine(String val) {
-        this.windowsNewLine = val;
+    public JobConfig withForcedUnixCommandPrefix(String val) {
+        forcedUnixCommandPrefix = val;
         return this;
     }
 
-    public JobConfig withWindowsPowershellShebang(String val) {
-        windowsPowershellShebang = val;
+    public JobConfig withForcedWindowsNewLine(String val) {
+        this.forcedWindowsNewLine = val;
+        return this;
+    }
+
+    public JobConfig withForcedWindowsPowershellShebang(String val) {
+        forcedWindowsPowershellShebang = val;
+        return this;
+    }
+
+    public JobConfig withForcedWindowsCommandPrefix(String val) {
+        forcedWindowsCommandPrefix = val;
         return this;
     }
 
@@ -151,6 +187,21 @@ public class JobConfig extends AConfigItem {
 
     public JobConfig withNotificationMailDefaultBcc(String val) {
         this.notificationMailDefaultBcc = val;
+        return this;
+    }
+
+    public JobConfig withForcedRetryMaxTries(String val) {
+        this.forcedRetryMaxTries = JS7ConverterHelper.integerValue(val);
+        return this;
+    }
+
+    public JobConfig withForcedRetryDelays(String val) {
+        if (SOSString.isEmpty(val)) {
+            this.forcedRetryDelays = null;
+        } else {
+            this.forcedRetryDelays = Stream.of(val.trim().split(LIST_VALUE_DELIMITER)).filter(d -> !SOSString.isEmpty(d.trim())).map(d -> Integer
+                    .valueOf(d.trim())).collect(Collectors.toList());
+        }
         return this;
     }
 
@@ -182,24 +233,32 @@ public class JobConfig extends AConfigItem {
         return forcedV1Compatible != null && forcedV1Compatible;
     }
 
-    public String getUnixDefaultShebang() {
-        return unixDefaultShebang;
+    public String getDefaultUnixShebang() {
+        return defaultUnixShebang;
     }
 
-    public String getUnixNewLine() {
-        return unixNewLine;
+    public String getForcedUnixNewLine() {
+        return forcedUnixNewLine;
     }
 
-    public String getUnixPowershellShebang() {
-        return unixPowershellShebang;
+    public String getForcedUnixPowershellShebang() {
+        return forcedUnixPowershellShebang;
     }
 
-    public String getWindowsNewLine() {
-        return windowsNewLine;
+    public String getForcedUnixCommandPrefix() {
+        return forcedUnixCommandPrefix;
     }
 
-    public String getWindowsPowershellShebang() {
-        return windowsPowershellShebang;
+    public String getForcedWindowsNewLine() {
+        return forcedWindowsNewLine;
+    }
+
+    public String getForcedWindowsPowershellShebang() {
+        return forcedWindowsPowershellShebang;
+    }
+
+    public String getForcedWindowsCommandPrefix() {
+        return forcedWindowsCommandPrefix;
     }
 
     public String getNotificationMailDefaultTo() {
@@ -212,6 +271,14 @@ public class JobConfig extends AConfigItem {
 
     public String getNotificationMailDefaultBcc() {
         return notificationMailDefaultBcc;
+    }
+
+    public Integer getForcedRetryMaxTries() {
+        return forcedRetryMaxTries;
+    }
+
+    public List<Integer> getForcedRetryDelays() {
+        return forcedRetryDelays;
     }
 
 }

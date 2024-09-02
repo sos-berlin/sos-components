@@ -1,5 +1,7 @@
 package com.sos.js7.converter.autosys.output.js7.helper;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -9,6 +11,8 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -18,55 +22,86 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSPath;
+import com.sos.inventory.model.workflow.Workflow;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob.ConverterJobType;
 import com.sos.js7.converter.autosys.common.v12.job.JobBOX;
+import com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobResource;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Condition;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Condition.ConditionType;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Conditions;
-import com.sos.js7.converter.autosys.input.JILJobParser;
 import com.sos.js7.converter.autosys.input.DirectoryParser.DirectoryParserResult;
+import com.sos.js7.converter.autosys.input.JILJobParser;
 import com.sos.js7.converter.autosys.input.analyzer.AutosysAnalyzer;
 import com.sos.js7.converter.autosys.output.js7.AutosysConverterHelper;
+import com.sos.js7.converter.autosys.output.js7.helper.fork.BOXJobHelper;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
+import com.sos.js7.converter.commons.config.json.JS7Agent;
 
 public class Report {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Report.class);
 
-    // - File names
-    public static final String FILE_NAME_BOX_RUNTIME = "Report-BOX[Runtime].txt";
-    public static final String FILE_NAME_BOX_CHILDREN_JOBS_RECURSION = "Report-BOX[Children-Jobs]recursion.txt";
-    public static final String FILE_NAME_BOX_CHILDREN_JOBS_ZERO = "Report-BOX[Children-Jobs]0.txt";
-    public static final String FILE_NAME_BOX_CONDITION_USED_BY_OTHER_JOBS = "Report-BOX[Condition]used_by_other_jobs.txt";
-    public static final String FILE_NAME_BOX_CONDITION_REFERS_TO_CHILDREN_JOBS = "Report-BOX[Condition]refers_to_children_jobs.txt";
-    public static final String FILE_NAME_BOX_CONDITION_REFERS_TO_BOX_ITSELF = "Report-BOX[Condition]refers_to_box_itself.txt";
-    public static final String FILE_NAME_BOX_CONDITIONS_SUCCESS_FAILURE = "Report-BOX[Conditions]box_success,box_failure.txt";
+    private static final String FILE_NAME_AGENT_MAPPINFS_CONFIG = "agent_mappings.config";
 
-    public static final String FILE_NAME_CONDITIONS_BY_TYPE = "Report-Conditions[By-Type].txt";
-    public static final String FILE_NAME_CONDITIONS_WITH_OR = "Report-Conditions[OR].txt";
-    public static final String FILE_NAME_CONDITIONS_WITH_GROUP = "Report-Conditions[Groups].txt";
-    public static final String FILE_NAME_CONDITIONS_WITH_LOOKBACK = "Report-Conditions[LookBack].txt";
-    public static final String FILE_NAME_CONDITIONS_WITH_INSTANCE_TAG = "Report-Conditions[InstanceTag].txt";
-    public static final String FILE_NAME_CONDITIONS_JOBS_NOT_FOUND = "Report-Conditions[Jobs]not_found.txt";
+    // - JIL
+    private static final String FOLDER_NAME_JIL_PARSER_ATTRIBUTES = "report-attributes";
+    private static final String FILE_NAME_JIL_PARSER_DUPLICATES = "Report-JIL-Parser[Jobs]duplicates.txt";
+    private static final String FILE_NAME_JIL_PARSER_MULTIPLE_ATTRIBUTES = "Report-JIL-Parser[Jobs]multiple-attributes.txt";
+    private static Path FILE_JIL_PARSER_DUPLICATES;
+    private static Path FILE_JIL_PARSER_MULTIPLE_ATTRIBUTES;
 
-    public static final String FILE_NAME_JOBS_JIL_PARSER_DUPLICATES = "Report-Jobs-JIL-Parser[Duplicates].txt";
+    // - BOX
+    private static final String FILE_NAME_BOX_RUNTIME = "Report-BOX[Runtime].txt";
+    // different children jobs time zones as by the box
+    private static final String FILE_NAME_BOX_RUNTIME_TIMEZONE_CHILDREN_JOBS = "Report-BOX[Runtime][timezone]children_jobs.txt";
+    private static final String FILE_NAME_BOX_CHILDREN_JOBS_RECURSION = "Report-BOX[Children-Jobs]recursion.txt";
+    private static final String FILE_NAME_BOX_CHILDREN_JOBS_ZERO = "Report-BOX[Children-Jobs]0.txt";
+    private static final String FILE_NAME_BOX_CHILDREN_JOBS_BOX_TERMINATOR = "Report-BOX[Children-Jobs]box_terminator.txt";
+    private static final String FILE_NAME_BOX_CONDITION_USED_BY_OTHER_JOBS = "Report-BOX[Condition]used_by_other_jobs.txt";
+    private static final String FILE_NAME_BOX_CONDITION_REFERS_TO_CHILDREN_JOBS = "Report-BOX[Condition]refers_to_children_jobs.txt";
+    private static final String FILE_NAME_BOX_CONDITION_REFERS_TO_BOX_ITSELF = "Report-BOX[Condition]refers_to_box_itself.txt";
+    private static final String FILE_NAME_BOX_CONDITIONS_SUCCESS_FAILURE = "Report-BOX[Conditions]box_success,box_failure.txt";
+
+    // - Conditions
+    private static final String FILE_NAME_CONDITIONS_BY_TYPE = "Report-Conditions[By-Type].txt";
+    private static final String FILE_NAME_CONDITIONS_BY_TYPE_NOTRUNNING = "Report-Conditions[By-Type]notrunning.txt";
+    private static final String FILE_NAME_CONDITIONS_WITH_OR = "Report-Conditions[OR].txt";
+    private static final String FILE_NAME_CONDITIONS_WITH_GROUP = "Report-Conditions[Groups].txt";
+    private static final String FILE_NAME_CONDITIONS_WITH_LOOKBACK = "Report-Conditions[LookBack].txt";
+    private static final String FILE_NAME_CONDITIONS_WITH_INSTANCE_TAG = "Report-Conditions[InstanceTag].txt";
+    private static final String FILE_NAME_CONDITIONS_JOBS_NOT_FOUND = "Report-Conditions[Jobs]not_found.txt";
+
+    // - Jobs
     public static final String FILE_NAME_JOBS_DUPLICATES = "Report-Jobs[Duplicates].txt";
-    public static final String FILE_NAME_JOBS_BY_TYPE = "Report-Jobs[By-Type].txt";
-    public static final String FILE_NAME_JOBS_BY_APPLICATION_GROUP = "Report-Jobs[By-Application,Group].txt";
-    public static final String FILE_NAME_JOBS_ALL_BY_RUNTIME = "Report-Jobs[By-Runtime].txt";
+    private static final String FILE_NAME_JOBS_BY_TYPE = "Report-Jobs[By-Type].txt";
+    private static final String FILE_NAME_JOBS_BY_APPLICATION_GROUP = "Report-Jobs[By-Application,Group].txt";
+    private static final String FILE_NAME_JOBS_ALL_BY_RUNTIME = "Report-Jobs[By-Runtime].txt";
+    private static final String FILE_NAME_JOBS_ALL_BY_RUNTIME_RUN_WINDOW = "Report-Jobs[By-Runtime]run_window.txt";
+    private static final String FILE_NAME_JOBS_ALL_BY_RESOURCES = "Report-Jobs[By-Attribute]resources.txt";
+    private static final String FILE_NAME_JOBS_ALL_BY_NRETRYS = "Report-Jobs[By-Attribute]n_retrys.txt";
+    private static final String FILE_NAME_JOBS_ALL_BY_MAX_RUN_ALARM = "Report-Jobs[By-Attribute]max_run_alarm.txt";
+    private static final String FILE_NAME_JOBS_ALL_BY_MIN_RUN_ALARM = "Report-Jobs[By-Attribute]min_run_alarm.txt";
+    private static final String FILE_NAME_JOBS_ALL_BY_TERM_RUN_TIME = "Report-Jobs[By-Attribute]term_run_time.txt";
+    private static final String FILE_NAME_JOBS_ALL_BY_INTERACTIVE = "Report-Jobs[By-Attribute]interactive.txt";
+    private static final String FILE_NAME_JOBS_ALL_BY_JOB_TERMINATOR = "Report-Jobs[By-Attribute]job_terminator.txt";
 
-    public static final String FILE_NAME_JS7_CONSUME_NOTICES = "Report-JS7[Consume-Notices].txt";
+    // - JS7 Notices
+    private static final String FILE_NAME_JS7_CONSUME_NOTICES = "Report-JS7[Consume-Notices].txt";
+
+    // - JS7 BOX Converted
+    private static final String FILE_NAME_JS7_BOX_ERROR = "Report-JS7[BOX]ERROR.txt";
+    private static final String FILE_NAME_JS7_BOX = "Report-JS7[BOX].txt";
 
     // - Help lines
-    public static final String LINE_DELIMETER =
+    private static final String LINE_DELIMETER =
             "--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
-    public static final String LINE_DETAILS = "---- DETAILS " + LINE_DELIMETER;
+    private static final String LINE_DETAILS = "---- DETAILS " + LINE_DELIMETER;
 
     // - Indent
-    public static final String INDENT_JOB_PARENT_PATH = "%-30s";
-    public static final String INDENT_JOB_NAME = "%-70s";
-    public static final String INDENT_JOB_PATH = INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME;
+    private static final String INDENT_JOB_PARENT_PATH = "%-30s";
+    private static final String INDENT_JOB_NAME = "%-70s";
+    private static final String INDENT_JOB_PATH = INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME;
 
     public static void writeParserReports(DirectoryParserResult pr, Path reportDir, AutosysAnalyzer analyzer) {
         writeJobReports(pr, reportDir, analyzer);
@@ -77,12 +112,130 @@ public class Report {
         writeSummaryJS7ConsumeNoticesReport(reportDir, analyzer);
     }
 
+    public static void writeJS7BOXReport(Path reportDir, JobBOX box, Workflow w) {
+
+        try {
+            Path f = reportDir.resolve(FILE_NAME_JS7_BOX_ERROR);
+            // SOSPath.deleteIfExists(f);
+
+            Path f2 = reportDir.resolve(FILE_NAME_JS7_BOX);
+            // SOSPath.deleteIfExists(f2);
+
+            int totalJobs = box.getJobs().size();
+            int wJobs = w.getJobs().getAdditionalProperties().size();
+
+            List<BOXJobHelper> l = ConverterBOXJobs.USED_JOBS_PER_BOX.get(box.getName());
+            if (totalJobs != wJobs) {
+                String msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", PathResolver.getJILJobParentPathNormalized(box), box
+                        .getName(), "Total BOX ChildrenJobs=" + totalJobs + ", Total WorkflowJobs=" + wJobs);
+                SOSPath.appendLine(f, msg);
+
+                List<ACommonJob> nestedBJ = box.getJobs().stream().filter(j -> j.isBox()).collect(Collectors.toList());
+                if (nestedBJ.size() > 0) {
+                    msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", "", "", "    nested BOX detected:");
+                    SOSPath.appendLine(f, msg);
+                    for (ACommonJob nj : nestedBJ) {
+                        msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", "", "", "        " + nj);
+                        SOSPath.appendLine(f, msg);
+                    }
+
+                }
+
+                // SOSPath.appendLine(f, LINE_DELIMETER);
+            }
+
+            String diffIndent = "%-10s";
+            String totalIndent = "%-15s";
+            if (l == null) {
+                String msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + diffIndent + totalIndent + "%s", PathResolver
+                        .getJILJobParentPathNormalized(box), box.getName(), "Diff=" + totalJobs, "(Total jobs=" + totalJobs + ",",
+                        "Execute.Named converted=0)");
+                SOSPath.appendLine(f, msg);
+                SOSPath.appendLine(f, LINE_DELIMETER);
+            } else {
+                int diff = totalJobs - l.size();
+                if (diff != 0) {
+                    String msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + diffIndent + totalIndent + "%s", PathResolver
+                            .getJILJobParentPathNormalized(box), box.getName(), "Diff=" + diff, "(Total jobs=" + totalJobs + ",",
+                            "Execute.Named converted=" + l.size() + ")");
+                    SOSPath.appendLine(f, msg);
+                    SOSPath.appendLine(f, LINE_DELIMETER);
+                } else {
+                    String msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", PathResolver.getJILJobParentPathNormalized(box), box
+                            .getName(), "Total jobs=" + totalJobs);
+                    SOSPath.appendLine(f2, msg);
+                    SOSPath.appendLine(f2, LINE_DELIMETER);
+                }
+            }
+
+        } catch (Throwable e) {
+            LOGGER.error("[writeJS7ErrorBOXReport][box=" + box + "]" + e, e);
+        }
+    }
+
+    public static void writeAgentMappingsConfig(Path reportDir, Map<String, JS7Agent> machine2js7Agent) {
+        if (reportDir == null) {
+            return;
+        }
+        try {
+            Path f = reportDir.resolve(FILE_NAME_AGENT_MAPPINFS_CONFIG);
+            SOSPath.deleteIfExists(f);
+
+            if (machine2js7Agent == null || machine2js7Agent.size() == 0) {
+                return;
+            }
+            Set<String> set = new TreeSet<>(machine2js7Agent.keySet());
+            int maxLength = set.stream().mapToInt(String::length).max().orElse(0);
+            maxLength += 5;
+            for (String m : set) {
+                String msg = String.format("%-" + maxLength + "s%s", m, "= ");
+                SOSPath.appendLine(f, msg);
+            }
+
+        } catch (Throwable e) {
+            LOGGER.error("[writeAgentMappingsConfig]" + e.toString(), e);
+        }
+    }
+
+    public static void writeAllAttributes(Path reportDir, Properties p, ACommonJob j) {
+        try {
+            Path d = reportDir.resolve(FOLDER_NAME_JIL_PARSER_ATTRIBUTES);
+            if (!Files.exists(d)) {
+                try {
+                    Files.createDirectory(d);
+                } catch (IOException e) {
+                    LOGGER.error("[" + d + "]" + e.toString(), e);
+                }
+            }
+
+            for (Entry<Object, Object> e : p.entrySet()) {
+                Path f = d.resolve(e.getKey() + ".txt");
+
+                SOSPath.appendLine(f, e.getKey() + "=" + e.getValue());
+                String msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", "", PathResolver
+                        .getJILJobParentPathNormalized(j), j.getName(), getDetails(j));
+                SOSPath.appendLine(f, msg);
+                SOSPath.appendLine(f, LINE_DELIMETER);
+            }
+
+        } catch (Throwable e) {
+            LOGGER.error("[writeAllAttributes]" + e.toString(), e);
+        }
+    }
+
     private static void writeConditionsReports(Path reportDir, AutosysAnalyzer analyzer) {
         try {
             writeSummaryConditionsReportByType(reportDir, analyzer);
         } catch (Throwable e) {
             LOGGER.error("[writeConditionsReportByType]" + e.toString(), e);
         }
+
+        try {
+            writeSummaryConditionsReportByTypeNotrunning(reportDir, analyzer);
+        } catch (Throwable e) {
+            LOGGER.error("[writeSummaryConditionsReportByTypeNotrunning]" + e.toString(), e);
+        }
+
         try {
             writeSummaryConditionsReportBoxSuccessFailure(reportDir, analyzer);
         } catch (Throwable e) {
@@ -301,6 +454,60 @@ public class Report {
         }
 
         try {
+            writeJobReportJobsAllByRuntimeRunWindow(pr, reportDir, analyzer);
+        } catch (Throwable e) {
+            LOGGER.error("[writeJobReportJobsAllByRuntimeRunWindow]" + e.toString(), e);
+        }
+
+        try {
+            writeJobReportJobsAllByResources(pr, reportDir, analyzer);
+        } catch (Throwable e) {
+            LOGGER.error("[writeJobReportJobsAllByResources]" + e.toString(), e);
+        }
+
+        try {
+            writeJobReportJobsAllByNRetrys(pr, reportDir, analyzer);
+        } catch (Throwable e) {
+            LOGGER.error("[writeJobReportJobsAllByNRetrys]" + e.toString(), e);
+        }
+
+        try {
+            writeJobReportJobsAllByMaxRunAlarm(pr, reportDir, analyzer);
+        } catch (Throwable e) {
+            LOGGER.error("[writeJobReportJobsAllByMaxRunAlarm]" + e.toString(), e);
+        }
+
+        try {
+            writeJobReportJobsAllByMinRunAlarm(pr, reportDir, analyzer);
+        } catch (Throwable e) {
+            LOGGER.error("[writeJobReportJobsAllByMinRunAlarm]" + e.toString(), e);
+        }
+
+        try {
+            writeJobReportJobsAllByTermRunTime(pr, reportDir, analyzer);
+        } catch (Throwable e) {
+            LOGGER.error("[writeJobReportJobsAllByTermRunTime]" + e.toString(), e);
+        }
+
+        try {
+            writeJobReportJobsAllByInteractive(pr, reportDir, analyzer);
+        } catch (Throwable e) {
+            LOGGER.error("[writeJobReportJobsAllByInteractive]" + e.toString(), e);
+        }
+
+        try {
+            writeJobReportJobsAllByInteractive(pr, reportDir, analyzer);
+        } catch (Throwable e) {
+            LOGGER.error("[writeJobReportJobsAllByInteractive]" + e.toString(), e);
+        }
+
+        try {
+            writeJobReportJobsByJobTerminator(pr, reportDir, analyzer);
+        } catch (Throwable e) {
+            LOGGER.error("[writeJobReportJobsByJobTerminator]" + e.toString(), e);
+        }
+
+        try {
             writeJobReportJobsBoxByRuntime(pr, reportDir, analyzer);
         } catch (Throwable e) {
             LOGGER.error("[writeJobReportJobsBoxByRuntime]" + e.toString(), e);
@@ -310,6 +517,12 @@ public class Report {
             writeJobReportJobsBoxChildrenZero(pr, reportDir, analyzer);
         } catch (Throwable e) {
             LOGGER.error("[writeJobReportJobsBoxChildrenZero]" + e.toString(), e);
+        }
+
+        try {
+            writeJobReportJobsBoxChildrenBoxTerminator(pr, reportDir, analyzer);
+        } catch (Throwable e) {
+            LOGGER.error("[writeJobReportJobsBoxChildrenBoxTerminator]" + e.toString(), e);
         }
     }
 
@@ -566,6 +779,296 @@ public class Report {
 
     }
 
+    private static void writeJobReportJobsAllByRuntimeRunWindow(DirectoryParserResult pr, Path reportDir, AutosysAnalyzer analyzer) throws Exception {
+        Path f = reportDir.resolve(FILE_NAME_JOBS_ALL_BY_RUNTIME_RUN_WINDOW);
+        SOSPath.deleteIfExists(f);
+
+        List<ACommonJob> jobs = analyzer.getAllJobs().values().stream().filter(j -> j.hasRunTime() && j.getRunTime().getRunWindow()
+                .getValue() != null).collect(Collectors.toList());
+
+        if (jobs.size() == 0) {
+            return;
+        }
+
+        Set<ACommonJob> runtimeSingleStarts = AutosysConverterHelper.newJobTreeSet();
+        Set<ACommonJob> runtimeCyclic = AutosysConverterHelper.newJobTreeSet();
+        Set<ACommonJob> runtimeUnknown = AutosysConverterHelper.newJobTreeSet();
+        for (ACommonJob j : jobs) {
+            if (j.getRunTime().isSingleStarts()) {
+                runtimeSingleStarts.add(j);
+            } else if (j.getRunTime().isCyclic()) {
+                runtimeCyclic.add(j);
+            } else {
+                runtimeUnknown.add(j);
+            }
+        }
+        SOSPath.appendLine(f, "Jobs by runtime run window:");
+        writeAllJobsRuntimeDetails(f, runtimeSingleStarts, "Single Starts");
+        writeAllJobsRuntimeDetails(f, runtimeCyclic, "Cyclic");
+        writeAllJobsRuntimeDetails(f, runtimeUnknown, "Runtime without start time");
+    }
+
+    private static void writeJobReportJobsAllByResources(DirectoryParserResult pr, Path reportDir, AutosysAnalyzer analyzer) throws Exception {
+        Path f = reportDir.resolve(FILE_NAME_JOBS_ALL_BY_RESOURCES);
+        SOSPath.deleteIfExists(f);
+
+        List<ACommonJob> jobs = analyzer.getAllJobs().values().stream().filter(j -> j.hasResources()).collect(Collectors.toList());
+        if (jobs.size() == 0) {
+            return;
+        }
+
+        Map<String, List<ACommonJob>> m = new TreeMap<>();
+        for (ACommonJob j : jobs) {
+            for (CommonJobResource r : j.getResources().getValue()) {
+                String key = r.getOriginal();
+                List<ACommonJob> l = m.get(key);
+                if (l == null) {
+                    l = new ArrayList<>();
+                }
+                l.add(j);
+                m.put(key, l);
+            }
+        }
+
+        SOSPath.appendLine(f, "Resources total: " + m.size() + "                                                    Used by jobs:");
+        m.entrySet().stream().forEach(e -> {
+            String msg = String.format(INDENT_JOB_NAME + "%s", e.getKey(), e.getValue().size());
+            try {
+                SOSPath.appendLine(f, "    " + msg);
+            } catch (Exception e1) {
+            }
+        });
+        SOSPath.appendLine(f, "");
+        SOSPath.appendLine(f, LINE_DETAILS);
+
+        m.entrySet().stream().forEach(e -> {
+            String msg = String.format(INDENT_JOB_NAME + "%s", e.getKey(), e.getValue().size());
+            try {
+                SOSPath.appendLine(f, msg);
+                for (ACommonJob j : e.getValue()) {
+                    msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", PathResolver.getJILJobParentPathNormalized(j), j.getName(),
+                            getDetails(j));
+                    SOSPath.appendLine(f, "    " + msg);
+                }
+                SOSPath.appendLine(f, LINE_DELIMETER);
+            } catch (Exception e1) {
+            }
+
+        });
+    }
+
+    private static void writeJobReportJobsAllByNRetrys(DirectoryParserResult pr, Path reportDir, AutosysAnalyzer analyzer) throws Exception {
+        Path f = reportDir.resolve(FILE_NAME_JOBS_ALL_BY_NRETRYS);
+        SOSPath.deleteIfExists(f);
+
+        List<ACommonJob> jobs = analyzer.getAllJobs().values().stream().filter(j -> j.getNRetrys().getValue() != null).collect(Collectors.toList());
+        if (jobs.size() == 0) {
+            return;
+        }
+
+        Map<Integer, List<ACommonJob>> m = new TreeMap<>();
+        for (ACommonJob j : jobs) {
+            Integer key = j.getNRetrys().getValue();
+
+            List<ACommonJob> l = m.get(key);
+            if (l == null) {
+                l = new ArrayList<>();
+            }
+            l.add(j);
+            m.put(key, l);
+        }
+
+        SOSPath.appendLine(f, "N_Retrys total: " + m.size() + "                                                    Used by jobs:");
+        m.entrySet().stream().forEach(e -> {
+            String msg = String.format(INDENT_JOB_NAME + "%s", e.getKey(), e.getValue().size());
+            try {
+                SOSPath.appendLine(f, "    " + msg);
+            } catch (Exception e1) {
+            }
+        });
+        SOSPath.appendLine(f, "");
+        SOSPath.appendLine(f, LINE_DETAILS);
+
+        m.entrySet().stream().forEach(e -> {
+            String msg = String.format(INDENT_JOB_NAME + "%s", e.getKey(), e.getValue().size());
+            try {
+                SOSPath.appendLine(f, msg);
+                for (ACommonJob j : e.getValue()) {
+                    msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", PathResolver.getJILJobParentPathNormalized(j), j.getName(),
+                            getDetails(j));
+                    SOSPath.appendLine(f, "    " + msg);
+                }
+                SOSPath.appendLine(f, LINE_DELIMETER);
+            } catch (Exception e1) {
+            }
+
+        });
+    }
+
+    private static void writeJobReportJobsAllByMaxRunAlarm(DirectoryParserResult pr, Path reportDir, AutosysAnalyzer analyzer) throws Exception {
+        Path f = reportDir.resolve(FILE_NAME_JOBS_ALL_BY_MAX_RUN_ALARM);
+        SOSPath.deleteIfExists(f);
+
+        List<ACommonJob> jobs = analyzer.getAllJobs().values().stream().filter(j -> j.getMaxRunAlarm().getValue() != null).collect(Collectors
+                .toList());
+        if (jobs.size() == 0) {
+            return;
+        }
+
+        Map<Integer, List<ACommonJob>> m = new TreeMap<>();
+        for (ACommonJob j : jobs) {
+            Integer key = j.getMaxRunAlarm().getValue();
+
+            List<ACommonJob> l = m.get(key);
+            if (l == null) {
+                l = new ArrayList<>();
+            }
+            l.add(j);
+            m.put(key, l);
+        }
+
+        SOSPath.appendLine(f, "Max Run Alarm total: " + m.size() + "                                                Used by jobs:");
+        m.entrySet().stream().forEach(e -> {
+            String msg = String.format(INDENT_JOB_NAME + "%s", e.getKey(), e.getValue().size());
+            try {
+                SOSPath.appendLine(f, "    " + msg);
+            } catch (Exception e1) {
+            }
+        });
+        SOSPath.appendLine(f, "");
+        SOSPath.appendLine(f, LINE_DETAILS);
+
+        m.entrySet().stream().forEach(e -> {
+            String msg = String.format(INDENT_JOB_NAME + "%s", e.getKey(), e.getValue().size());
+            try {
+                SOSPath.appendLine(f, msg);
+                for (ACommonJob j : e.getValue()) {
+                    msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", PathResolver.getJILJobParentPathNormalized(j), j.getName(),
+                            getDetails(j));
+                    SOSPath.appendLine(f, "    " + msg);
+                }
+                SOSPath.appendLine(f, LINE_DELIMETER);
+            } catch (Exception e1) {
+            }
+
+        });
+    }
+
+    private static void writeJobReportJobsAllByMinRunAlarm(DirectoryParserResult pr, Path reportDir, AutosysAnalyzer analyzer) throws Exception {
+        Path f = reportDir.resolve(FILE_NAME_JOBS_ALL_BY_MIN_RUN_ALARM);
+        SOSPath.deleteIfExists(f);
+
+        List<ACommonJob> jobs = analyzer.getAllJobs().values().stream().filter(j -> j.getMinRunAlarm().getValue() != null).collect(Collectors
+                .toList());
+        if (jobs.size() == 0) {
+            return;
+        }
+
+        Map<Integer, List<ACommonJob>> m = new TreeMap<>();
+        for (ACommonJob j : jobs) {
+            Integer key = j.getMinRunAlarm().getValue();
+
+            List<ACommonJob> l = m.get(key);
+            if (l == null) {
+                l = new ArrayList<>();
+            }
+            l.add(j);
+            m.put(key, l);
+        }
+
+        SOSPath.appendLine(f, "Min Run Alarm total: " + m.size() + "                                                Used by jobs:");
+        m.entrySet().stream().forEach(e -> {
+            String msg = String.format(INDENT_JOB_NAME + "%s", e.getKey(), e.getValue().size());
+            try {
+                SOSPath.appendLine(f, "    " + msg);
+            } catch (Exception e1) {
+            }
+        });
+        SOSPath.appendLine(f, "");
+        SOSPath.appendLine(f, LINE_DETAILS);
+
+        m.entrySet().stream().forEach(e -> {
+            String msg = String.format(INDENT_JOB_NAME + "%s", e.getKey(), e.getValue().size());
+            try {
+                SOSPath.appendLine(f, msg);
+                for (ACommonJob j : e.getValue()) {
+                    msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", PathResolver.getJILJobParentPathNormalized(j), j.getName(),
+                            getDetails(j));
+                    SOSPath.appendLine(f, "    " + msg);
+                }
+                SOSPath.appendLine(f, LINE_DELIMETER);
+            } catch (Exception e1) {
+            }
+
+        });
+    }
+
+    private static void writeJobReportJobsAllByTermRunTime(DirectoryParserResult pr, Path reportDir, AutosysAnalyzer analyzer) throws Exception {
+        Path f = reportDir.resolve(FILE_NAME_JOBS_ALL_BY_TERM_RUN_TIME);
+        SOSPath.deleteIfExists(f);
+
+        List<ACommonJob> jobs = analyzer.getAllJobs().values().stream().filter(j -> j.getTermRunTime().getValue() != null).collect(Collectors
+                .toList());
+        if (jobs.size() == 0) {
+            return;
+        }
+
+        Map<Integer, List<ACommonJob>> m = new TreeMap<>();
+        for (ACommonJob j : jobs) {
+            Integer key = j.getTermRunTime().getValue();
+
+            List<ACommonJob> l = m.get(key);
+            if (l == null) {
+                l = new ArrayList<>();
+            }
+            l.add(j);
+            m.put(key, l);
+        }
+
+        SOSPath.appendLine(f, "Term Run Time total: " + m.size() + "                                                Used by jobs:");
+        m.entrySet().stream().forEach(e -> {
+            String msg = String.format(INDENT_JOB_NAME + "%s", e.getKey(), e.getValue().size());
+            try {
+                SOSPath.appendLine(f, "    " + msg);
+            } catch (Exception e1) {
+            }
+        });
+        SOSPath.appendLine(f, "");
+        SOSPath.appendLine(f, LINE_DETAILS);
+
+        m.entrySet().stream().forEach(e -> {
+            String msg = String.format(INDENT_JOB_NAME + "%s", e.getKey(), e.getValue().size());
+            try {
+                SOSPath.appendLine(f, msg);
+                for (ACommonJob j : e.getValue()) {
+                    msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", PathResolver.getJILJobParentPathNormalized(j), j.getName(),
+                            getDetails(j));
+                    SOSPath.appendLine(f, "    " + msg);
+                }
+                SOSPath.appendLine(f, LINE_DELIMETER);
+            } catch (Exception e1) {
+            }
+
+        });
+    }
+
+    private static void writeJobReportJobsAllByInteractive(DirectoryParserResult pr, Path reportDir, AutosysAnalyzer analyzer) throws Exception {
+        Path f = reportDir.resolve(FILE_NAME_JOBS_ALL_BY_INTERACTIVE);
+        SOSPath.deleteIfExists(f);
+
+        List<ACommonJob> jobs = analyzer.getAllJobs().values().stream().filter(j -> j.isInteractive()).collect(Collectors.toList());
+        if (jobs.size() == 0) {
+            return;
+        }
+
+        for (ACommonJob j : jobs) {
+            String msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", PathResolver.getJILJobParentPathNormalized(j), j.getName(),
+                    getDetails(j));
+            SOSPath.appendLine(f, msg);
+            SOSPath.appendLine(f, LINE_DELIMETER);
+        }
+    }
+
     private static void mapJobsByType(Map<ConverterJobType, TreeSet<ACommonJob>> mapByType, Collection<ACommonJob> jobs) {
         for (ACommonJob job : jobs) {
             ConverterJobType key = job.getConverterJobType();
@@ -593,15 +1096,46 @@ public class Report {
         }
     }
 
+    public static void writeJobReportJobsBoxByRuntimeTimezoneChildrenJobs(Path reportDir, JobBOX box, Set<String> childrenTimezones) {
+        try {
+            Path f = reportDir.resolve(FILE_NAME_BOX_RUNTIME_TIMEZONE_CHILDREN_JOBS);
+            SOSPath.deleteIfExists(f);
+
+            String timezone = box.getRunTime().getTimezone().getValue();
+            int childrenTimezonesSize = childrenTimezones.size();
+            if (childrenTimezonesSize > 0) {
+                boolean report = false;
+                if (childrenTimezonesSize == 1) {
+                    String oneOfTheChildrenTimezone = childrenTimezones.iterator().next();
+                    if (timezone != null && !timezone.equalsIgnoreCase(oneOfTheChildrenTimezone)) {
+                        report = true;
+                    }
+                } else {
+                    report = true;
+                }
+                if (report) {
+                    List<ACommonJob> childrenWithRuntime = box.getJobs().stream().filter(e -> e.hasRunTime()).collect(Collectors.toList());
+                    String msg = String.format(INDENT_JOB_PATH + "%s", PathResolver.getJILJobParentPathNormalized(box), box.getName(),
+                            "Children(total=" + box.getJobs().size() + ", with runtime=" + childrenWithRuntime.size() + ")", "BOX runtime=" + box
+                                    .getRunTime());
+                    SOSPath.append(f, msg);
+                    for (ACommonJob cj : childrenWithRuntime) {
+                        msg = String.format("%-43s%-111s %s", "", cj.getName(), "JOB runtime=" + cj.getRunTime());
+                        SOSPath.appendLine(f, msg);
+                    }
+                    SOSPath.appendLine(f, LINE_DELIMETER);
+                }
+            }
+
+        } catch (Throwable e) {
+            LOGGER.error("[writeJobReportJobsBoxByRuntimeTimezoneChildrenJobs][box=" + box.getName() + "]" + e, e);
+        }
+    }
+
     private static void writeJobReportJobsBoxByRuntime(DirectoryParserResult pr, Path reportDir, AutosysAnalyzer analyzer) throws Exception {
         Path f = reportDir.resolve(FILE_NAME_BOX_RUNTIME);
-
         SOSPath.deleteIfExists(f);
 
-        // SOSPath.appendLine(f, "Jobs by type:");
-        SOSPath.appendLine(f, "BOX by runtime:      Total BOX    Without runtime    Single Starts    Cyclic    Runtime without start time");
-
-        String msg = "";
         int boxs = 0;
         Map<JobBOX, Long> runtimeWithOut = AutosysConverterHelper.newJobBoxTreeMap();
         Map<JobBOX, Long> runtimeSingleStarts = AutosysConverterHelper.newJobBoxTreeMap();
@@ -635,10 +1169,15 @@ public class Report {
 
             }
         }
+        if (boxs == 0) {
+            return;
+        }
 
-        SOSPath.appendLine(f, LINE_DELIMETER);
-        msg = String.format("%-18s %-14s %-18s %-15s %-10s %-10s", "", boxs, runtimeWithOut.size(), runtimeSingleStarts.size(), runtimeCyclic.size(),
-                runtimeUnknown.size());
+        // SOSPath.appendLine(f, "Jobs by type:");
+        SOSPath.appendLine(f, "BOX by runtime:      Total BOX    Without runtime    Single Starts    Cyclic    Runtime without start time");
+        // SOSPath.appendLine(f, LINE_DELIMETER);
+        String msg = String.format("%-18s %-14s %-18s %-15s %-10s %-10s", "", boxs, runtimeWithOut.size(), runtimeSingleStarts.size(), runtimeCyclic
+                .size(), runtimeUnknown.size());
         SOSPath.appendLine(f, "    " + msg);
 
         SOSPath.appendLine(f, LINE_DETAILS);
@@ -768,6 +1307,52 @@ public class Report {
         for (JobBOX j : notUsed) {
             msg = String.format(INDENT_JOB_PARENT_PATH + "%s", PathResolver.getJILJobParentPathNormalized(j), j.getName());
             SOSPath.appendLine(f, "    " + msg);
+        }
+    }
+
+    private static void writeJobReportJobsBoxChildrenBoxTerminator(DirectoryParserResult pr, Path reportDir, AutosysAnalyzer analyzer)
+            throws Exception {
+        Path f = reportDir.resolve(FILE_NAME_BOX_CHILDREN_JOBS_BOX_TERMINATOR);
+
+        SOSPath.deleteIfExists(f);
+
+        List<ACommonJob> boxTerminators = analyzer.getAllJobs().values().stream().filter(j -> j.isBoxChildJob() && j.getBox().isBoxTerminator())
+                .collect(Collectors.toList());
+
+        if (boxTerminators.size() == 0) {
+            return;
+        }
+
+        SOSPath.appendLine(f, "BOX terminator(Total=" + boxTerminators.size() + "):");
+        String msg = "";
+        for (ACommonJob j : boxTerminators) {
+            msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", PathResolver.getJILJobParentPathNormalized(j), j.getName(),
+                    getDetails(j));
+            SOSPath.appendLine(f, msg);
+            SOSPath.appendLine(f, LINE_DELIMETER);
+
+        }
+    }
+
+    private static void writeJobReportJobsByJobTerminator(DirectoryParserResult pr, Path reportDir, AutosysAnalyzer analyzer) throws Exception {
+        Path f = reportDir.resolve(FILE_NAME_JOBS_ALL_BY_JOB_TERMINATOR);
+
+        SOSPath.deleteIfExists(f);
+
+        List<ACommonJob> jobTerminators = analyzer.getAllJobs().values().stream().filter(j -> j.isJobTerminator()).collect(Collectors.toList());
+
+        if (jobTerminators.size() == 0) {
+            return;
+        }
+
+        SOSPath.appendLine(f, "JOB terminator(Total=" + jobTerminators.size() + "):");
+        String msg = "";
+        for (ACommonJob j : jobTerminators) {
+            msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", PathResolver.getJILJobParentPathNormalized(j), j.getName(),
+                    getDetails(j));
+            SOSPath.appendLine(f, msg);
+            SOSPath.appendLine(f, LINE_DELIMETER);
+
         }
     }
 
@@ -903,6 +1488,47 @@ public class Report {
                 }
             });
 
+            SOSPath.appendLine(f, LINE_DELIMETER);
+        }
+    }
+
+    private static void writeSummaryConditionsReportByTypeNotrunning(Path reportDir, AutosysAnalyzer analyzer) throws Exception {
+        Path f = reportDir.resolve(FILE_NAME_CONDITIONS_BY_TYPE_NOTRUNNING);
+
+        SOSPath.deleteIfExists(f);
+
+        Set<Condition> set = analyzer.getConditionAnalyzer().getAllConditionsByType().get(ConditionType.NOTRUNNING);
+        if (set == null || set.size() == 0) {
+            return;
+        }
+
+        SOSPath.appendLine(f, "Conditions by type NOTRUNNING: " + set.size());
+        SOSPath.appendLine(f, LINE_DETAILS);
+
+        String indentDetails = "%-15s";
+        String msg = "";
+        for (Condition c : set) {
+            SOSPath.appendLine(f, c.getOriginalValue());
+            Set<String> jobs = analyzer.getConditionAnalyzer().getINConditionJobs(c);
+            if (jobs != null && jobs.size() > 0) {
+                for (String jn : jobs) {
+                    ACommonJob j = analyzer.getAllJobs().get(jn);
+                    if (j == null) {
+                        msg = String.format(Report.INDENT_JOB_NAME + Report.INDENT_JOB_PARENT_PATH + "%s", "", "!!!NOT FOUND", jn);
+                        SOSPath.appendLine(f, msg);
+                    } else {
+
+                        List<Condition> nr = j.conditionsAsList().stream().filter(t -> t.getType().equals(ConditionType.NOTRUNNING)).collect(
+                                Collectors.toList());
+
+                        String p = PathResolver.getJILJobParentPathNormalized(j);
+                        String n = j.getName();
+                        msg = String.format(Report.INDENT_JOB_NAME + Report.INDENT_JOB_PARENT_PATH + Report.INDENT_JOB_NAME + indentDetails + "%s",
+                                "", p, n, getDetails(j), "NOTRUNNING=" + nr.size() + ",condition[" + j.getCondition().getOriginalCondition() + "]");
+                        SOSPath.appendLine(f, msg);
+                    }
+                }
+            }
             SOSPath.appendLine(f, LINE_DELIMETER);
         }
     }
@@ -1048,11 +1674,13 @@ public class Report {
 
     public static void writeJILParserDuplicatesReport(Path dir) {
         try {
+            FILE_JIL_PARSER_DUPLICATES = null;
             if (dir == null || JILJobParser.INSERT_JOBS == null || JILJobParser.INSERT_JOBS.size() == 0) {
                 return;
             }
-            Path f = dir.resolve(FILE_NAME_JOBS_JIL_PARSER_DUPLICATES);
+            Path f = dir.resolve(FILE_NAME_JIL_PARSER_DUPLICATES);
             SOSPath.deleteIfExists(f);
+            FILE_JIL_PARSER_DUPLICATES = f;
 
             int totalDuplicates = 0;
             Set<String> paths = new TreeSet<>();
@@ -1103,6 +1731,46 @@ public class Report {
 
         } catch (Throwable e) {
             LOGGER.error("writeJILParserDuplicatesReport" + e, e);
+        }
+    }
+
+    public static void writeJILParserMultipleAttributes(Path dir) {
+        try {
+            FILE_JIL_PARSER_MULTIPLE_ATTRIBUTES = null;
+            if (dir == null || JILJobParser.MULTIPLE_ATTRIBUTES == null || JILJobParser.MULTIPLE_ATTRIBUTES.size() == 0) {
+                return;
+            }
+            Path f = dir.resolve(FILE_NAME_JIL_PARSER_MULTIPLE_ATTRIBUTES);
+            SOSPath.deleteIfExists(f);
+
+            FILE_JIL_PARSER_MULTIPLE_ATTRIBUTES = f;
+            for (Map.Entry<String, Map<String, List<String>>> e : JILJobParser.MULTIPLE_ATTRIBUTES.entrySet()) {
+                SOSPath.appendLine(f, e.getKey());
+                for (Map.Entry<String, List<String>> v : e.getValue().entrySet()) {
+                    SOSPath.appendLine(f, "   [" + v.getKey() + "][hits=" + v.getValue().size() + "]" + v.getValue());
+                }
+                SOSPath.appendLine(f, LINE_DELIMETER);
+            }
+
+        } catch (Throwable e) {
+            LOGGER.error("writeJILParserMultipleAttributes" + e, e);
+        }
+    }
+
+    public static void moveJILReportFiles(Path reportDir) {
+        if (FILE_JIL_PARSER_DUPLICATES != null && Files.exists(FILE_JIL_PARSER_DUPLICATES)) {
+            try {
+                SOSPath.renameTo(FILE_JIL_PARSER_DUPLICATES, reportDir.resolve(FILE_JIL_PARSER_DUPLICATES.getFileName()));
+            } catch (IOException e) {
+                LOGGER.error("[moveJILReportFiles][" + FILE_JIL_PARSER_DUPLICATES + "]" + e, e);
+            }
+        }
+        if (FILE_JIL_PARSER_MULTIPLE_ATTRIBUTES != null && Files.exists(FILE_JIL_PARSER_MULTIPLE_ATTRIBUTES)) {
+            try {
+                SOSPath.renameTo(FILE_JIL_PARSER_MULTIPLE_ATTRIBUTES, reportDir.resolve(FILE_JIL_PARSER_MULTIPLE_ATTRIBUTES.getFileName()));
+            } catch (IOException e) {
+                LOGGER.error("[moveJILReportFiles][" + FILE_JIL_PARSER_MULTIPLE_ATTRIBUTES + "]" + e, e);
+            }
         }
     }
 }

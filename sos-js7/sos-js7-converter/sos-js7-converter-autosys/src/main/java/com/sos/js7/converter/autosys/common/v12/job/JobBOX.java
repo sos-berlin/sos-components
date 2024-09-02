@@ -12,6 +12,7 @@ public class JobBOX extends ACommonJob {
 
     private static final String ATTR_BOX_SUCCESS = "box_success";
     private static final String ATTR_BOX_FAILURE = "box_failure";
+    private static final String ATTR_PRIORITY = "priority";
 
     /** box_success - Define Criteria for Box Job Success<br/>
      * This attribute applies only to the BOX job type and is optional.<br/>
@@ -32,6 +33,16 @@ public class JobBOX extends ACommonJob {
      * JS7 - to be dropped?<br/>
      */
     private SOSArgument<String> boxFailure = new SOSArgument<>(ATTR_BOX_FAILURE, false);
+
+    /** !!! Description from ACommonMachineJob<bR/>
+     * priority - Define the Queue Priority of the Job<br/>
+     * This attribute is optional for all job types. This attribute does not apply to box jobs.<br/>
+     * 
+     * Format: priority: priority_level<br/>
+     * Example: priority: 0 <br/>
+     * JS7 - JS7 feature currently not available and is developed for iteration 3<br/>
+     */
+    private SOSArgument<Integer> priority = new SOSArgument<>(ATTR_PRIORITY, false);
 
     private List<ACommonJob> jobs = new ArrayList<>();
 
@@ -55,6 +66,15 @@ public class JobBOX extends ACommonJob {
     @ArgumentSetter(name = ATTR_BOX_FAILURE)
     public void setBoxFailure(String val) {
         boxFailure.setValue(JS7ConverterHelper.stringValue(val));
+    }
+
+    public SOSArgument<Integer> getPriority() {
+        return priority;
+    }
+
+    @ArgumentSetter(name = ATTR_PRIORITY)
+    public void setPriority(String val) {
+        priority.setValue(JS7ConverterHelper.integerValue(val));
     }
 
     public void setJobs(List<ACommonJob> val) {

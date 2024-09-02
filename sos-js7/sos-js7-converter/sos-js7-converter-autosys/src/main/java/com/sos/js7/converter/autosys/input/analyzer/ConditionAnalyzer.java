@@ -180,7 +180,7 @@ public class ConditionAnalyzer {
     }
 
     private void mapIN(ACommonJob j) {
-        // LOGGER.info("[mapIn]job=" + j.getInsertJob().getValue());
+        // LOGGER.info("[mapIn]job=" + j.getName());
         if (j.hasCondition()) {
             for (Condition c : j.conditionsAsList()) {
                 InConditionHolder ch = null;
@@ -227,6 +227,7 @@ public class ConditionAnalyzer {
         Map<String, Map<String, Condition>> jobOutConditions = new HashMap<>();
         allINConditions.entrySet().stream().filter(e -> e.getValue().condition.getJobName() != null).forEach(e -> {
             String condJobKey = e.getValue().condition.getJobName();
+
             if (jobKey.equals(condJobKey)) {
                 String condKey = e.getValue().condition.getKey();
 
@@ -242,6 +243,7 @@ public class ConditionAnalyzer {
                 }
             }
         });
+
         if (jobOutConditions.size() > 0) {
             OutConditionHolder ch = null;
             if (allOUTConditions.containsKey(jobKey)) {
@@ -378,15 +380,15 @@ public class ConditionAnalyzer {
     // -- ycrd.ycard_p_b_BreakageReport_box_new
     // -- icas.icas_p_dr_b_box_dn
 
-    public void handleJobBoxConditions(List<ACommonJob> boxJobs) throws Exception {
+    public void handleBOXConditions(AutosysAnalyzer analyzer, List<ACommonJob> boxJobs) throws Exception {
         for (ACommonJob j : boxJobs) {
             if (j.isBox()) {
-                handleJobBoxConditions((JobBOX) j);
+                handleBOXConditions(analyzer, (JobBOX) j);
             }
         }
     }
 
-    public List<ACommonJob> handleJobBoxConditions(JobBOX boxJob) throws Exception {
+    private List<ACommonJob> handleBOXConditions(AutosysAnalyzer analyzer, JobBOX boxJob) throws Exception {
         boolean doLog = false;
 
         List<Condition> mainConditions = boxJob.conditionsAsList();
@@ -408,6 +410,11 @@ public class ConditionAnalyzer {
                 if (doLog) {
                     LOGGER.info("         addIfNotContains=" + c);
                 }
+                if (jc == null) {
+                    jc = new ArrayList<>();
+                    j.getCondition().getCondition().setValue(jc);
+                }
+
                 jc = Conditions.addIfNotContains(jc, c);
             }
             if (doLog) {
@@ -487,6 +494,65 @@ public class ConditionAnalyzer {
             }
             if (doLog) {
                 LOGGER.info("[removeDuplicates][after][job=" + j.getName() + "][allConditions]" + j.conditionsAsList());
+            }
+            l.add(j);
+        }
+
+        // Step 4: remove success conditions of the box children jobs[e.g. s(my_box.job1)] if the box success[e.g. s(my_box.my_box)] is used
+        l.clear();
+
+        for (ACommonJob j : boxJob.getJobs()) {
+            List<Condition> ljc = j.conditionsAsList();
+            Map<String, List<ConditionHolder>> map = new HashMap<>();
+            for (Condition c : ljc) {
+                if (c.getJobName() == null) {
+                    continue;
+                }
+                if (!c.isSuccess()) {
+                    continue;
+                }
+                ACommonJob cj = analyzer.getAllJobs().get(c.getJobName());
+                if (cj != null && cj.getBoxName() != null) {
+                    String key = cj.getBoxName();
+                    List<ConditionHolder> ml = map.get(key);
+                    if (ml == null) {
+                        ml = new ArrayList<>();
+                    }
+                    ml.add(new ConditionHolder(cj, c));
+                    map.put(key, ml);
+                }
+            }
+            if (map.size() > 0) {
+                for (Map.Entry<String, List<ConditionHolder>> entry : map.entrySet()) {
+                    if (entry.getValue().size() > 1) {
+                        ConditionHolder b = entry.getValue().stream().filter(bj -> bj.job.isBox()).findFirst().orElse(null);
+                        if (b != null) {
+                            for (ConditionHolder ch : entry.getValue()) {
+                                if (b.job.getName().equals(ch.job.getName())) {
+                                    continue;
+                                }
+                                Conditions.remove(j, ch.condition);
+                                InConditionHolder ich = allINConditions.get(ch.condition.getKey());
+                                if (ich != null) {
+                                    ich.getJobNames().remove(j.getName());
+                                }
+                                OutConditionHolder och = allOUTConditions.get(ch.job.getName());
+                                if (och != null) {
+                                    if (doLog) {
+                                        LOGGER.info("OutConditionHolder=" + och);
+                                        LOGGER.info("    " + ch.condition.getKey());
+                                        LOGGER.info("    " + j.getName());
+                                    }
+                                    och.getJobConditions().remove(j.getName());
+
+                                    if (doLog) {
+                                        LOGGER.info("    " + och);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
             l.add(j);
         }
@@ -622,6 +688,17 @@ public class ConditionAnalyzer {
 
     public Map<String, InConditionHolder> getAllINConditions() {
         return allINConditions;
+    }
+
+    private class ConditionHolder {
+
+        private ACommonJob job;
+        private Condition condition;
+
+        private ConditionHolder(ACommonJob job, Condition condition) {
+            this.job = job;
+            this.condition = condition;
+        }
     }
 
     public class InConditionHolder {

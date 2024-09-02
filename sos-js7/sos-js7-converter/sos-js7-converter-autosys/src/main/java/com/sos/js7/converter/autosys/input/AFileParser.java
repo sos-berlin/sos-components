@@ -2,7 +2,7 @@ package com.sos.js7.converter.autosys.input;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -53,9 +53,9 @@ public abstract class AFileParser {
 
     public class BoxJobsHandler {
 
-        private Map<String, JobBOX> mainJobs = new HashMap<>();
-        private Map<String, Integer> mainJobsDuplicates = new HashMap<>();
-        private Map<String, Integer> childrenJobsDuplicates = new HashMap<>();
+        private Map<String, JobBOX> mainJobs = new LinkedHashMap<>();
+        private Map<String, Integer> mainJobsDuplicates = new LinkedHashMap<>();
+        private Map<String, Integer> childrenJobsDuplicates = new LinkedHashMap<>();
 
         public void addMain(ACommonJob job) {
             String jobName = job.getName();

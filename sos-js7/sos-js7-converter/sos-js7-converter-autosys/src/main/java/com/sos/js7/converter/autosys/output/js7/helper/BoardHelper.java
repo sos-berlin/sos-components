@@ -22,6 +22,7 @@ import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Conditions.Op
 import com.sos.js7.converter.autosys.input.analyzer.AutosysAnalyzer;
 import com.sos.js7.converter.autosys.input.analyzer.ConditionAnalyzer;
 import com.sos.js7.converter.autosys.input.analyzer.ConditionAnalyzer.OutConditionHolder;
+import com.sos.js7.converter.autosys.output.js7.Autosys2JS7Converter;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 
 public class BoardHelper {
@@ -31,8 +32,6 @@ public class BoardHelper {
     // without space at end
     private static final String JS7_AND = " " + JS7ConverterHelper.JS7_NOTICE_AND;
     private static final String JS7_OR = " " + JS7ConverterHelper.JS7_NOTICE_OR;
-
-    private static final boolean NOT_CREATE_NOTICES_IF_JOB_NOT_FOUND = true;
 
     public static final Map<Condition, Path> JS7_BOARDS = new HashMap<>();
     public static final Set<Condition> JS7_CONSUME_NOTICES = new HashSet<>();
@@ -44,11 +43,13 @@ public class BoardHelper {
 
     private static BoardExpectConsumHelper noticesAsString(AutosysAnalyzer analyzer, ACommonJob j) {
         if (j.hasCondition()) {
+            List<Condition> conditions = new ArrayList<>();
             StringBuilder expect = new StringBuilder();
             StringBuilder consume = new StringBuilder();
-            toJS7(analyzer, j.getCondition().getCondition().getValue(), expect, consume);
+            toJS7(analyzer, j, j.getCondition().getCondition().getValue(), conditions, expect, consume);
 
             BoardExpectConsumHelper h = new BoardExpectConsumHelper();
+            h.setConditions(conditions);
             h.setExpectNotices(getNotices(expect));
             h.setConsumeNotices(getNotices(consume));
 
@@ -111,12 +112,13 @@ public class BoardHelper {
             break;
         }
 
-        return sb.toString();
+        return JS7ConverterHelper.getJS7InventoryObjectTitle(sb.toString());
     }
 
     @SuppressWarnings("unchecked")
     // TODO
-    private static void toJS7(AutosysAnalyzer analyzer, List<Object> l, StringBuilder expect, StringBuilder consume) {
+    private static void toJS7(AutosysAnalyzer analyzer, ACommonJob currentJob, List<Object> l, List<Condition> conditions, StringBuilder expect,
+            StringBuilder consume) {
         for (Object o : l) {
             if (o instanceof Condition) {
                 Condition c = (Condition) o;
@@ -131,9 +133,14 @@ public class BoardHelper {
                     }
                 }
 
-                String name = getBoardName(analyzer, c);
+                String name = getBoardName(analyzer, currentJob, new Job2Condition(null, c));
                 if (name != null) {
                     if (isConsume) {
+                        // TODO currently only AND
+                        if (consume.length() > 0) {
+                            consume.append(JS7_AND).append(" ");
+                        }
+
                         consume.append(quote(name));
                         if (!JS7_CONSUME_NOTICES.contains(c)) {
                             JS7_CONSUME_NOTICES.add(c);
@@ -141,6 +148,7 @@ public class BoardHelper {
                     } else {
                         expect.append(quote(name));
                     }
+                    conditions.add(c);
                 }
             } else if (o instanceof Operator) {
                 String e = expect.toString();
@@ -160,30 +168,36 @@ public class BoardHelper {
                     expect.append(" ");
                 }
             } else if (o instanceof List) {
-                toJS7(analyzer, (List<Object>) o, expect, consume);
+                toJS7(analyzer, currentJob, (List<Object>) o, conditions, expect, consume);
             }
         }
     }
 
-    private static String getBoardName(AutosysAnalyzer analyzer, Condition c) {
+    private static String getBoardName(AutosysAnalyzer analyzer, ACommonJob currentJob, Job2Condition j2c) {
 
-        String js7Name = JS7ConverterHelper.getJS7ObjectName(c.getKey());
+        String js7Name = JS7ConverterHelper.getJS7ObjectName(j2c.getCondition().getKey());
 
-        Path boardPath = JS7_BOARDS.get(c);
-        if (boardPath == null) {
-            if (c.getJobName() == null) {
-                JS7_BOARDS.put(c, Paths.get(js7Name));
+        Path boardPath = JS7_BOARDS.get(j2c.getCondition());
+        if (boardPath == null || currentJob.isBoxChildJob()) {
+            if (j2c.getCondition().getJobName() == null) {
+                JS7_BOARDS.put(j2c.getCondition(), Paths.get(js7Name));
             } else {
-                ACommonJob j = analyzer.getAllJobs().get(c.getJobName());
+                ACommonJob j = analyzer.getAllJobs().get(j2c.getCondition().getJobName());
                 if (j == null) {
-                    if (NOT_CREATE_NOTICES_IF_JOB_NOT_FOUND) {
-                        LOGGER.info("IGNORED=" + c);
+                    if (Autosys2JS7Converter.NOT_CREATE_NOTICES_IF_JOB_NOT_FOUND) {
+                        LOGGER.info("IGNORED BECAUSE JOB NOT FOUND=" + j2c.getCondition());
                         js7Name = null;
                     } else {
-                        JS7_BOARDS.put(c, Paths.get(js7Name));
+                        JS7_BOARDS.put(j2c.getCondition(), Paths.get(js7Name));
                     }
                 } else {
-                    JS7_BOARDS.put(c, PathResolver.getJS7ParentPath(j, js7Name).resolve(js7Name));
+                    if (currentJob.isBoxChildJob() && currentJob.getBoxName().equals(j.getBoxName())) {
+                        if (j2c.getJob() == null || currentJob.getBoxName().equals(j2c.getJob().getBoxName())) {
+                            js7Name = null;
+                        }
+                    } else {
+                        JS7_BOARDS.put(j2c.getCondition(), PathResolver.getJS7ParentPath(j, js7Name).resolve(js7Name));
+                    }
                 }
             }
         }
@@ -195,7 +209,8 @@ public class BoardHelper {
         return "'" + val + "'";
     }
 
-    public static Map<ConditionType, Set<Condition>> getDistinctOutConditionsByType(ACommonJob j, ConditionAnalyzer a) {
+    @SuppressWarnings("unused")
+    private static Map<ConditionType, Set<Condition>> getDistinctOutConditionsByType(ACommonJob j, ConditionAnalyzer a) {
         Set<Condition> s = getDistinctOutConditions(j, a);
         if (s == null) {
             return null;
@@ -204,11 +219,13 @@ public class BoardHelper {
         return s.stream().collect(Collectors.groupingBy(Condition::getType, Collectors.toSet()));
     }
 
-    public static Set<Condition> getDistinctOutConditions(ACommonJob j, ConditionAnalyzer a) {
+    private static Set<Condition> getDistinctOutConditions(ACommonJob j, ConditionAnalyzer a) {
         OutConditionHolder h = a.getJobOUTConditions(j);
         if (h == null) {
             return null;
         }
+
+        LOGGER.info("D=" + h);
 
         Set<Condition> s = new HashSet<>();
         for (Map.Entry<String, Map<String, Condition>> me : h.getJobConditions().entrySet()) {
@@ -221,13 +238,13 @@ public class BoardHelper {
         return s;
     }
 
-    public static PostNotices newPostNotices(AutosysAnalyzer analyzer, Set<Condition> outContitions) {
+    public static PostNotices newPostNotices(AutosysAnalyzer analyzer, ACommonJob currentJob, Set<Job2Condition> outContitions) {
         if (outContitions == null || outContitions.size() == 0) {
             return null;
         }
         List<String> l = new ArrayList<>();
-        for (Condition c : outContitions) {
-            String n = getBoardName(analyzer, c);
+        for (Job2Condition c : outContitions) {
+            String n = getBoardName(analyzer, currentJob, c);
             if (n == null) {
                 continue;
             }
@@ -235,8 +252,10 @@ public class BoardHelper {
                 l.add(n);
             }
         }
-
-        return new PostNotices(l);
+        if (l.size() > 0) {
+            return new PostNotices(l);
+        }
+        return null;
     }
 
 }

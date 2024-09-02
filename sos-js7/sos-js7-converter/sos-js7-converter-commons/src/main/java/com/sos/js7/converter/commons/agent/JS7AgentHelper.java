@@ -9,6 +9,7 @@ import com.sos.joc.model.agent.ClusterAgent;
 import com.sos.joc.model.agent.SubAgent;
 import com.sos.joc.model.agent.SubAgentId;
 import com.sos.joc.model.agent.SubagentCluster;
+import com.sos.js7.converter.commons.JS7ConverterHelper;
 import com.sos.js7.converter.commons.config.json.JS7Agent;
 
 public class JS7AgentHelper {
@@ -35,6 +36,7 @@ public class JS7AgentHelper {
         }
         Agent a = new Agent();
         a.setAgentId(agent.getAgentId());
+        a.setTitle(JS7ConverterHelper.getJS7InventoryObjectTitle(agent.getTitle()));
         a.setAgentName(agent.getAgentName());
         a.setAgentNameAliases(agent.getAgentNameAliases());
         a.setControllerId(agent.getControllerId());
@@ -43,7 +45,6 @@ public class JS7AgentHelper {
         a.setHidden(agent.getHidden());
         a.setOrdering(agent.getOrdering());
         a.setSyncState(agent.getSyncState());
-        a.setTitle(agent.getTitle());
         a.setUrl(agent.getUrl());
         a.setVersion(agent.getVersion());
         return a;
@@ -56,6 +57,7 @@ public class JS7AgentHelper {
         }
         ClusterAgent a = new ClusterAgent();
         a.setAgentId(agent.getAgentId());
+        a.setTitle(JS7ConverterHelper.getJS7InventoryObjectTitle(agent.getTitle()));
         a.setAgentName(agent.getAgentName());
         a.setAgentNameAliases(agent.getAgentNameAliases());
         a.setControllerId(agent.getControllerId());
@@ -64,7 +66,6 @@ public class JS7AgentHelper {
         a.setHidden(agent.getHidden());
         a.setOrdering(agent.getOrdering());
         a.setSyncState(agent.getSyncState());
-        a.setTitle(agent.getTitle());
         a.setUrl(agent.getUrl());
         a.setVersion(agent.getVersion());
 
@@ -101,13 +102,13 @@ public class JS7AgentHelper {
     private static SubagentCluster copy(SubagentCluster cluster) {
         SubagentCluster a = new SubagentCluster();
         a.setAgentId(cluster.getAgentId());
+        a.setTitle(JS7ConverterHelper.getJS7InventoryObjectTitle(cluster.getTitle()));
         a.setControllerId(cluster.getControllerId());
         a.setDeployed(cluster.getDeployed());
         a.setOrdering(cluster.getOrdering());
         a.setSubagentClusterId(cluster.getSubagentClusterId());
         a.setSubagentIds(copySubAgentId(cluster.getSubagentIds()));
         a.setSyncState(cluster.getSyncState());
-        a.setTitle(cluster.getTitle());
         return a;
     }
 

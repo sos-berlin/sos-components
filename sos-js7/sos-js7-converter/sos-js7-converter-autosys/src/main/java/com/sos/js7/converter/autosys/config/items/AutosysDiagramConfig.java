@@ -15,8 +15,8 @@ public class AutosysDiagramConfig extends DiagramConfig {
     @Override
     protected void parse(String key, String val) {
         super.parse(key, val);
-        switch (key) {
-        case "optimizeDependencies":
+        switch (key.toLowerCase()) {
+        case "optimize.dependencies":
             withOptimizeDependencies(Boolean.parseBoolean(val));
             break;
         }

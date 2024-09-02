@@ -167,6 +167,10 @@ public class Condition implements Serializable {
         return jobName;
     }
 
+    public boolean isSuccess() {
+        return ConditionType.SUCCESS.equals(type);
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder(type.name());

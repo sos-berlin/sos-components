@@ -39,8 +39,13 @@ public class XMLJobParser extends AFileParser {
     private static final String ELEMENT_JIL_NAME = "JIL";
     private static final String XPATH_JIL_ALL = "//" + ELEMENT_JIL_NAME;
 
+    private Path splitConfigurationMainDir;
+
     public XMLJobParser(AutosysConverterConfig config, Path reportDir) {
         super(FileType.XML, config, reportDir);
+        if (doSplitConfiguration()) {
+            splitConfigurationMainDir = AutosysAnalyzer.getMainDirSplitConfiguration(AutosysAnalyzer.getAnalyzerDir(getReportDir()));
+        }
     }
 
     @Override
@@ -48,12 +53,10 @@ public class XMLJobParser extends AFileParser {
         List<ACommonJob> jobs = new ArrayList<>();
 
         try {
-            boolean splitConfiguration = doSplitConfiguration();
-            Path exportMainDir = AutosysAnalyzer.getExportFoldersMainDir(AutosysAnalyzer.getAnalyzerDir(getReportDir()));
             // if (!Files.exists(exportMainDir)) {
             // exportMainDir.toFile().mkdirs();
             // }
-            if (splitConfiguration) {
+            if (splitConfigurationMainDir != null) {
                 LOGGER.info(String.format("    with splitConfiguration...", inputFile.getFileName()));
             }
             Path duplicateJobs = getReportDir().resolve(Report.FILE_NAME_JOBS_DUPLICATES);
@@ -77,6 +80,8 @@ public class XMLJobParser extends AFileParser {
                     Properties p = toProperties(xpath, n);
                     if (p.size() > 0) {
                         ACommonJob job = getJobParser().parse(inputFile, p);
+
+                        Report.writeAllAttributes(getReportDir(), p, job);
 
                         if (r.getJobNames().contains(job.getName())) {
                             SOSPath.appendLine(duplicateJobs, "[" + inputFile + "][<insert_job>]" + job.getName());
@@ -103,10 +108,7 @@ public class XMLJobParser extends AFileParser {
                                 }
                             }
                             // -----------------------------------------------------------------
-
-                            if (splitConfiguration) {
-                                exportConfiguration(inputFile, exportMainDir, elRoot, (Element) n, job);
-                            }
+                            exportConfiguration(inputFile, elRoot, (Element) n, job);
 
                             continue;
                         }
@@ -117,9 +119,8 @@ public class XMLJobParser extends AFileParser {
                             if (l != null && l.size() > 0) {
 
                             } else {
-                                if (splitConfiguration) {
-                                    exportConfiguration(inputFile, exportMainDir, elRoot, (Element) n, job);
-                                }
+                                exportConfiguration(inputFile, elRoot, (Element) n, job);
+
                                 jobs.add(job);
                             }
                         } else {
@@ -173,8 +174,11 @@ public class XMLJobParser extends AFileParser {
         return new FileParserResult(jobs);
     }
 
-    private void exportConfiguration(Path inputFile, Path exportMainDir, Element elRoot, Element el, ACommonJob job) {
-        Path parent = PathResolver.getJILMainOutputPath(exportMainDir, job, false);
+    private void exportConfiguration(Path inputFile, Element elRoot, Element el, ACommonJob job) {
+        if (splitConfigurationMainDir == null) {
+            return;
+        }
+        Path parent = PathResolver.getJILMainOutputPath(splitConfigurationMainDir, job, false);
         if (!Files.exists(parent)) {
             parent.toFile().mkdirs();
         }
@@ -231,8 +235,11 @@ public class XMLJobParser extends AFileParser {
         return p;
     }
 
-    public boolean doSplitConfiguration() {
+    private boolean doSplitConfiguration() {
         return getReportDir() != null && getConfig().getAutosys().getInputConfig().getSplitConfiguration();
     }
 
+    public Path getSplitConfigurationMainDir() {
+        return splitConfigurationMainDir;
+    }
 }

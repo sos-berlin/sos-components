@@ -30,7 +30,7 @@ public class CommonJobBox extends AJobAttributes {
      * Format: box_terminator: {y|1}|{n|0}}<br/>
      * y - Instructs the scheduler to terminate the parent box when the job ends in FAILURE<br/>
      * n - Default. Does not terminate the parent box when the job ends in FAILURE.<br/>
-     * <br/>
+     * This attribute statement is valid only when you also specify the box_name attribute statement in the job definition. <br/>
      * JS7 - 75% - JS7 workflows ("boxes") to not terminate the parent workflow on failure.<br/>
      */
     private SOSArgument<Boolean> boxTerminator = new SOSArgument<>(ATTR_BOX_TERMINATOR, false);
@@ -51,6 +51,10 @@ public class CommonJobBox extends AJobAttributes {
     @ArgumentSetter(name = ATTR_BOX_TERMINATOR)
     public void setBoxTerminator(String val) {
         boxTerminator.setValue(JS7ConverterHelper.booleanValue(val, false));
+    }
+
+    public boolean isBoxTerminator() {
+        return boxName.getValue() != null && boxTerminator.getValue() != null && boxTerminator.getValue();
     }
 
 }

@@ -2,12 +2,12 @@ package com.sos.js7.converter.commons.config.items;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
@@ -30,17 +30,17 @@ public class AgentConfig extends AConfigItem {
 
     @Override
     protected void parse(String key, String val) throws Exception {
-        switch (key) {
-        case "forcedControllerId":
+        switch (key.toLowerCase()) {
+        case "forced.controllerid":
             withForcedControllerId(val);
             break;
-        case "defaultControllerId":
+        case "default.controllerid":
             withDefaultControllerId(val);
             break;
-        case "forcedAgent":
+        case "forced.agent":
             withForcedAgent(val);
             break;
-        case "defaultAgent":
+        case "default.agent":
             withDefaultAgent(val);
             break;
         case "mappings":
@@ -76,21 +76,34 @@ public class AgentConfig extends AConfigItem {
     }
 
     /** Agent mapping<br/>
-     * Example 1<br>
-     * - input map:<br/>
-     * agentConfig.mappings = my_agent_1={"agentId":"primaryAgent", "platform":"UNIX", "controllerId":"js7","url":"http://localhost:4445"}<br/>
+     * Examples<br>
+     * 1) agentConfig.mappings = my_agent_1={"agentId":"primaryAgent", "platform":"UNIX", "controllerId":"js7","url":"http://localhost:4445"}<br/>
+     * 2) agentConfig.mappings = agent_mappings.config<br/>
      **/
     public AgentConfig withMappings(String mappings) throws Exception {
         Map<String, JS7Agent> map = new HashMap<>();
+
         if (mappings != null) {
-            String[] arr = mappings.trim().split(LIST_VALUE_DELIMITER);
-            for (int i = 0; i < arr.length; i++) {
-                String[] marr = arr[i].split("=");
+            List<String> entries = null;
+            if (mappings.toLowerCase().endsWith(".config")) {
+                entries = Files.lines(getValueFile(mappings)).filter(line -> {
+                    String trimmedLine = line.trim();
+                    return !trimmedLine.isEmpty() && !trimmedLine.startsWith(";") && !trimmedLine.startsWith("#");
+                }).collect(Collectors.toList());
+            } else {
+                entries = Arrays.asList(mappings.trim().split(LIST_VALUE_DELIMITER));
+            }
+            for (String entry : entries) {
+                String[] marr = entry.split("=");
                 if (marr.length != 2) {
                     continue;
                 }
                 String key = marr[0].trim();
                 String val = marr[1].trim();
+                if (key.length() == 0 || val.length() == 0) {
+                    continue;
+                }
+
                 JS7Agent a = readAgentJson(val);
                 if (a != null) {
                     map.put(key, a);
@@ -106,16 +119,7 @@ public class AgentConfig extends AConfigItem {
         }
         String value = val;
         if (value.toLowerCase().endsWith(".json")) {
-            Path jsonFile = Paths.get(val);
-            if (!jsonFile.isAbsolute()) {
-                if (getPropertiesFile() != null && getPropertiesFile().getParent() != null) {
-                    jsonFile = getPropertiesFile().getParent().resolve(val);
-                }
-            }
-            if (!Files.exists(jsonFile)) {
-                throw new Exception("[" + jsonFile.toAbsolutePath() + "]file not found");
-            }
-            value = SOSPath.readFile(jsonFile, StandardCharsets.UTF_8);
+            value = SOSPath.readFile(getValueFile(val), StandardCharsets.UTF_8);
         }
         return JS7ConverterHelper.JSON_OM.readValue(value, JS7Agent.class);
     }
@@ -155,16 +159,16 @@ public class AgentConfig extends AConfigItem {
 
         List<String> l = new ArrayList<>();
         if (forcedControllerId != null) {
-            l.add("forcedControllerId=" + forcedControllerId);
+            l.add("forced.controllerId=" + forcedControllerId);
         }
         if (defaultControllerId != null) {
-            l.add("defaultControllerId=" + defaultControllerId);
+            l.add("default.controllerId=" + defaultControllerId);
         }
         if (forcedAgent != null) {
-            l.add("forcedAgent=" + SOSString.toString(forcedAgent));
+            l.add("forced.agent=" + SOSString.toString(forcedAgent));
         }
         if (defaultAgent != null) {
-            l.add("defaultAgent=" + SOSString.toString(defaultAgent));
+            l.add("default.agent=" + SOSString.toString(defaultAgent));
         }
         if (mappings != null) {
             l.add("mappings=" + mappings);

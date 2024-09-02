@@ -3,6 +3,8 @@ package com.sos.js7.converter.autosys.input;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.List;
+import java.util.regex.Pattern;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -10,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSDate;
+import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
 import com.sos.js7.converter.autosys.config.AutosysConverterConfig;
@@ -45,6 +48,30 @@ public class DirectoryParserTest {
         LOGGER.info("[parse][duration]" + SOSDate.getDuration(start, Instant.now()));
 
         log(r);
+    }
+
+    @Ignore
+    @Test
+    public void testCopyJILFiles2SplitConfigurationFolders() throws Exception {
+        Path splitConfigurationDir = Paths.get("autosys.input.original\\config");
+
+        Path inputDirWithJILFiles = Paths.get("JS7-Rollout");
+
+        List<Path> fl = SOSPath.getFolderList(splitConfigurationDir);
+        LOGGER.info("Total: " + fl.size());
+        for (Path folder : fl) {
+            String application = folder.getFileName().toString();
+            LOGGER.info(application);
+            // search for <application>.jil files
+            List<Path> jilFiles = SOSPath.getFileList(inputDirWithJILFiles, application + "\\.jil", Pattern.CASE_INSENSITIVE, true);
+            for (Path jilFile : jilFiles) {
+                Path jilFileCopy = folder.resolve(jilFile.getParent().getFileName() + "_" + jilFile.getFileName());
+                LOGGER.info("    " + jilFileCopy.getFileName());
+                SOSPath.deleteIfExists(jilFileCopy);
+                SOSPath.copyFile(jilFile, jilFileCopy);
+            }
+        }
+
     }
 
     private void log(DirectoryParserResult r) {

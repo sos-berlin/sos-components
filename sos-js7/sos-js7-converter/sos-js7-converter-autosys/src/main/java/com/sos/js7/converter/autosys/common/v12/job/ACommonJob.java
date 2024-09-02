@@ -5,6 +5,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgument;
 import com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobBox;
@@ -12,6 +15,7 @@ import com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobCondition;
 import com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobFolder;
 import com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobMonitoring;
 import com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobNotification;
+import com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobResource;
 import com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobRunTime;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Condition;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Conditions;
@@ -27,6 +31,8 @@ import com.sos.js7.converter.commons.annotation.ArgumentSetter;
  */
 public abstract class ACommonJob {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ACommonJob.class);
+
     /** <br/>
      * CMD -<br/>
      * BOX -<br/>
@@ -39,6 +45,8 @@ public abstract class ACommonJob {
     public enum ConverterJobType {
         CMD, BOX, FW, FT, OMTF, NOT_SUPPORTED
     }
+
+    public static final String LIST_VALUE_DELIMITER = ";";
 
     private static final String ATTR_INSERT_JOB = "insert_job";
     private static final String ATTR_JOB_TYPE = "job_type";
@@ -53,6 +61,9 @@ public abstract class ACommonJob {
     private static final String ATTR_MUST_COMPLETE_TIMES = "must_complete_times";
     private static final String ATTR_MUST_START_TIMES = "must_start_times";
     private static final String ATTR_TERM_RUN_TIME = "term_run_time";
+    private static final String ATTR_INTERACTIVE = "interactive";
+    private static final String ATTR_RESOURCES = "resources";
+    private static final String ATTR_JOB_TERMINATOR = "job_terminator";
 
     private final Path source;
 
@@ -255,6 +266,43 @@ public abstract class ACommonJob {
      */
     private SOSArgument<Integer> termRunTime = new SOSArgument<>(ATTR_TERM_RUN_TIME, false);
 
+    /** interactive - Specify Whether to Run a Command Job in Interactive Mode on Windows<br/>
+     * This attribute is optional for the Command (CMD) job type on Windows.<br/>
+     * This attribute is ignored for Command jobs that run on UNIX.<br/>
+     * 
+     * Interactive mode lets users view and interact with jobs that invoke Windows Terminal Services or user interface processes.<br/>
+     * For example, you can define a job to open a GUI application, such as Notepad, on the Windows desktop.<br/>
+     * 
+     * Format: interactive: y | n<br/>
+     * 
+     * Example: Run a Command Job in Interactive Mode on Windows<br/>
+     * This example opens the configuration text file (config.txt) in the Windows Desktop application named Notepad.<br/>
+     * insert_job: edit_file<br/>
+     * job_type: CMD<br/>
+     * machine: winagent<br/>
+     * description: "Edit/review a configuration file"<br/>
+     * command: notepad.exe "c:\run_info\config.txt"<br/>
+     * interactive: y<br/>
+     */
+    private SOSArgument<Boolean> interactive = new SOSArgument<>(ATTR_INTERACTIVE, false);
+
+    /** resourses - Define or Update Virtual Resource Dependencies in a Job<br/>
+     * The resources attribute defines or updates virtual resource dependencies in a job.<br/>
+     */
+    private SOSArgument<List<CommonJobResource>> resourses = new SOSArgument<>(ATTR_RESOURCES, false);
+
+    /** job_terminator - Kill a Job if Its Box Fails<br/>
+     * The job_terminator attribute specifies whether to use a KILLJOB event to terminate the job if its containing box job completes with a FAILURE or
+     * TERMINATED status.<br/>
+     * Use this attribute with the box_terminator attribute to control how nested jobs behave when a job fails.<br/>
+     * This attribute only applies to jobs that are in a box. This attribute is optional for the following job types: BOX, CMD,FW, ...<br/>
+     * 
+     * Format: job_terminator: {y|1}|{n|0}}<br/>
+     * y - Terminates the job if the containing box fails or terminates.<br/>
+     * n - Default. Does not terminate the job if the containing box fails or terminates.<br/>
+     */
+    private SOSArgument<Boolean> jobTerminator = new SOSArgument<>(ATTR_JOB_TERMINATOR, false);
+
     // --------------------calculated properties
     private Path jobFullPathFromJILDefinition;
 
@@ -428,6 +476,60 @@ public abstract class ACommonJob {
     @ArgumentSetter(name = ATTR_TERM_RUN_TIME)
     public void setTermRunTime(String val) {
         termRunTime.setValue(JS7ConverterHelper.integerValue(val));
+    }
+
+    public SOSArgument<Boolean> getInteractive() {
+        return interactive;
+    }
+
+    public boolean isInteractive() {
+        return interactive.getValue() != null && interactive.getValue();
+    }
+
+    @ArgumentSetter(name = ATTR_INTERACTIVE)
+    public void setInteractive(String val) {
+        interactive.setValue(JS7ConverterHelper.booleanValue(val, false));
+    }
+
+    @ArgumentSetter(name = ATTR_RESOURCES)
+    public void setResources(String val) {
+        if (SOSString.isEmpty(val)) {
+            resourses.setValue(null);
+        } else {
+            try {
+                String[] arr = val.split(LIST_VALUE_DELIMITER);
+                List<CommonJobResource> l = new ArrayList<>();
+                for (String r : arr) {
+                    l.add(new CommonJobResource(r));
+                }
+                resourses.setValue(l.size() == 0 ? null : l);
+            } catch (Throwable e) {
+                // TODO Report
+                LOGGER.error("[setResources=" + val + "]" + e, e);
+                resourses.setValue(null);
+            }
+        }
+    }
+
+    public SOSArgument<List<CommonJobResource>> getResources() {
+        return resourses;
+    }
+
+    public SOSArgument<Boolean> getJobTerminator() {
+        return jobTerminator;
+    }
+
+    @ArgumentSetter(name = ATTR_JOB_TERMINATOR)
+    public void setJobTerminator(String val) {
+        jobTerminator.setValue(JS7ConverterHelper.booleanValue(val, false));
+    }
+
+    public boolean hasResources() {
+        return resourses.getValue() != null && resourses.getValue().size() > 0;
+    }
+
+    public boolean isJobTerminator() {
+        return jobTerminator.getValue() != null && jobTerminator.getValue();
     }
 
     @Override
