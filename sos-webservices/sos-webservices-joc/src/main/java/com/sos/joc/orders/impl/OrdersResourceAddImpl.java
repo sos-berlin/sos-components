@@ -159,7 +159,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     String workflowName = JocInventory.pathToName(order.getWorkflowPath());
                     Either<Problem, JWorkflow> e = currentState.repo().pathToCheckedWorkflow(WorkflowPath.of(workflowName));
                     ProblemHelper.throwProblemIfExist(e);
-                    if (canAdd(order.getWorkflowPath(), permittedFolders)) {
+                    if (!canAdd(order.getWorkflowPath(), permittedFolders)) {
                         throw new JocAccessDeniedException("Missing folder permissions for workflow: " + order.getWorkflowPath());
                     }
 //                    Workflow workflow = Globals.objectMapper.readValue(e.get().toJson(), Workflow.class);
