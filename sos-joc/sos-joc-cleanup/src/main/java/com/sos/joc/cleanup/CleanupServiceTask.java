@@ -65,7 +65,6 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
     private List<ICleanupTask> cleanupTasks = null;
     private StartupMode startMode = StartupMode.unknown;
     private int batchSize;
-    private boolean forceCleanup;
 
     public CleanupServiceTask(CleanupServiceSchedule schedule) {
         this.schedule = schedule;
@@ -105,7 +104,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
                 LOGGER.warn(e.toString(), e);
             }
 
-            forceCleanup = cleanupSchedule.getService().getConfig().forceCleanup();
+            final boolean forceCleanup = cleanupSchedule.getService().getConfig().forceCleanup();
 
             List<Supplier<JocClusterAnswer>> tasks = new ArrayList<Supplier<JocClusterAnswer>>();
             // 1) service tasks
@@ -181,7 +180,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
             }
 
             // 2) manual tasks
-            List<ICleanupTask> manualTasks = getManualCleanupTasks(factory, batchSize);
+            List<ICleanupTask> manualTasks = getManualCleanupTasks(factory, batchSize, forceCleanup);
             LOGGER.info(String.format("[%s][run]found %s manual tasks", logIdentifier, manualTasks.size()));
             for (ICleanupTask manualTask : manualTasks) {
                 LOGGER.info("  [manual]" + manualTask.getIdentifier());
@@ -321,7 +320,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
         }
     }
 
-    private List<ICleanupTask> getManualCleanupTasks(JocClusterHibernateFactory factory, int batchSize) {
+    private List<ICleanupTask> getManualCleanupTasks(JocClusterHibernateFactory factory, int batchSize, boolean forceCleanup) {
         List<ICleanupTask> tasks = new ArrayList<ICleanupTask>();
         tasks.add(new CleanupTaskDeployment(factory, batchSize, MANUAL_TASK_IDENTIFIER_DEPLOYMENT, forceCleanup));
         tasks.add(new CleanupTaskAuditLog(factory, batchSize, MANUAL_TASK_IDENTIFIER_AUDITLOG, forceCleanup));
