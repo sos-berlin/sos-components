@@ -32,8 +32,9 @@
                     </p>
                 </note>
             </param>
+
             <param name="value"
-                   required="true">
+                   required="one of value or file">
                 <note>
                     <title>The value of the variable</title>
                     <p>
@@ -45,6 +46,25 @@
                                 <li>The Java date pattern will by replaced by the job for the current date and time value.</li>
                             </ul>> 
                 	</ul>>
+                    </p>
+                </note>
+            </param>
+            <param name="file"
+                   required="one of value or file">
+                <note>
+                    <title>The name of a file</title>
+                    <p>
+The content of the file will be used as value in the job resource. The content is stored with to_file().                        
+                    </p>
+                </note>
+            </param>
+            <param name="encrypt_cert"
+                   required="false">
+                <note>
+                    <title>Path to a file that holds the certificate</title>
+                    <p>
+Specifies the path to a file that holds the CA signed or self-signed X.509 certificate. Alternatively the path to a file holding the public key can be specified.
+When this value is set the parameter "value" will be store encrypted in the job resource.                         
                     </p>
                 </note>
             </param>

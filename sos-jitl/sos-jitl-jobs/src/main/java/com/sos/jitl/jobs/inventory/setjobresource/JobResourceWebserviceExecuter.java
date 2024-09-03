@@ -1,5 +1,16 @@
 package com.sos.jitl.jobs.inventory.setjobresource;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.security.spec.InvalidKeySpecException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -8,6 +19,12 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+
+import com.sos.commons.exception.SOSException;
+import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.jobresource.JobResource;
 import com.sos.joc.model.controller.ControllerIds;
@@ -173,6 +190,43 @@ public class JobResourceWebserviceExecuter {
         return value;
     }
 
+    private String encrypt(SetJobResourceJobArguments args, String input) throws CertificateException, NoSuchAlgorithmException,
+            InvalidKeySpecException, IOException, InvalidKeyException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException,
+            InvalidAlgorithmParameterException, SOSException {
+        X509Certificate cert = null;
+        PublicKey pubKey = null;
+        String encryptedValue = "";
+
+        String certPath = args.getEncryptCert();
+        String fileContent = new String(Files.readAllBytes(Paths.get(certPath)), StandardCharsets.UTF_8);
+        if (fileContent.contains("CERTIFICATE")) {
+            cert = KeyUtil.getX509Certificate(fileContent);
+        } else {
+            try {
+                pubKey = KeyUtil.getRSAPublicKeyFromString(fileContent);
+            } catch (Exception e) {
+                try {
+                    pubKey = KeyUtil.getECDSAPublicKeyFromString(fileContent);
+                } catch (Exception e1) {
+                    try {
+                        pubKey = KeyUtil.convertToRSAPublicKey(KeyUtil.stripFormatFromPublicKey(fileContent).getBytes());
+                    } catch (Exception e2) {
+                        pubKey = KeyUtil.getECPublicKeyFromString(KeyUtil.stripFormatFromPublicKey(fileContent).getBytes());
+                    }
+                }
+            }
+        }
+
+        if (input != null) {
+            if (cert != null) {
+                encryptedValue = com.sos.commons.encryption.executable.Encrypt.encrypt(cert, input);
+            } else {
+                encryptedValue = com.sos.commons.encryption.executable.Encrypt.encrypt(pubKey, input);
+            }
+        }
+        return encryptedValue;
+    }
+
     public void handleJobResource(RequestFilter requestFilter, SetJobResourceJobArguments args, String accessToken) throws Exception {
         ConfigurationObject configurationObject = this.getInventoryItem(requestFilter, accessToken);
         JobResource jobResource = (JobResource) configurationObject.getConfiguration();
@@ -182,7 +236,29 @@ public class JobResourceWebserviceExecuter {
         if (jobResource.getEnv() == null) {
             jobResource.setEnv(new Environment());
         }
-        String value = getValue(args.getValue(), args.getTimeZone());
+
+        String value = "";
+
+        if (args.getFile() != null && !args.getFile().isEmpty()) {
+            value = new String(Files.readAllBytes(Paths.get(args.getFile())), StandardCharsets.UTF_8);
+        } else {
+            value = getValue(args.getValue(), args.getTimeZone());
+        }
+
+        if (args.getEncryptCert() != null && !args.getEncryptCert().isEmpty()) {
+            value = this.encrypt(args, value);
+            value = "enc:" + value;
+        }
+                
+        if (args.getFile() != null && !args.getFile().isEmpty()) {
+            String extension = "";
+
+            int i = args.getFile().lastIndexOf('.');
+            if (i >= 0) {
+                extension = args.getFile().substring(i + 1);
+            }
+            value = "to_file('" + value + "','*." + extension + "')";
+        }
         jobResource.getArguments().getAdditionalProperties().put(args.getKey(), "\"" + value + "\"");
         if (args.getEnvironmentVariable() != null && !args.getEnvironmentVariable().isEmpty()) {
             jobResource.getEnv().getAdditionalProperties().put(args.getEnvironmentVariable(), "$" + args.getKey());
