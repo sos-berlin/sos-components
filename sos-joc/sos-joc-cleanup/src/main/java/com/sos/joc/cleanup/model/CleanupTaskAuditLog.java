@@ -22,8 +22,8 @@ public class CleanupTaskAuditLog extends CleanupTaskModel {
     private int totalAuditLogs = 0;
     private int totalAuditLogDetails = 0;
 
-    public CleanupTaskAuditLog(JocClusterHibernateFactory factory, int batchSize, String identifier) {
-        super(factory, batchSize, identifier);
+    public CleanupTaskAuditLog(JocClusterHibernateFactory factory, int batchSize, String identifier, boolean forceCleanup) {
+        super(factory, batchSize, identifier, forceCleanup);
     }
 
     @Override

@@ -32,7 +32,7 @@ public class CleanupTaskTest {
         JocClusterHibernateFactory factory = null;
         try {
             factory = createFactory();
-            CleanupTaskDeployment t = new CleanupTaskDeployment(factory, 1, "deployment");
+            CleanupTaskDeployment t = new CleanupTaskDeployment(factory, 1, "deployment", false);
 
             t.cleanupSearch();
 
@@ -54,7 +54,7 @@ public class CleanupTaskTest {
         CleanupTaskHistory t = null;
         try {
             factory = createFactory();
-            t = new CleanupTaskHistory(factory, null, 1000);
+            t = new CleanupTaskHistory(factory, null, 1000, false);
 
             Date d = SOSDate.add(new Date(), -9, ChronoUnit.DAYS);
 
@@ -82,7 +82,7 @@ public class CleanupTaskTest {
         CleanupTaskMonitoring t = null;
         try {
             factory = createFactory();
-            t = new CleanupTaskMonitoring(factory, null, 1000);
+            t = new CleanupTaskMonitoring(factory, null, 1000, false);
 
             Date d = SOSDate.add(new Date(), -2, ChronoUnit.DAYS);
 

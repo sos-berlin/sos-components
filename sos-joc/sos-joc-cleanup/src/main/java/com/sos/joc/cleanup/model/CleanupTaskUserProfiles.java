@@ -19,8 +19,8 @@ public class CleanupTaskUserProfiles extends CleanupTaskModel {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupTaskUserProfiles.class);
 
-    public CleanupTaskUserProfiles(JocClusterHibernateFactory factory, int batchSize, String identifier) {
-        super(factory, batchSize, identifier);
+    public CleanupTaskUserProfiles(JocClusterHibernateFactory factory, int batchSize, String identifier, boolean forceCleanup) {
+        super(factory, batchSize, identifier, forceCleanup);
     }
 
     @Override

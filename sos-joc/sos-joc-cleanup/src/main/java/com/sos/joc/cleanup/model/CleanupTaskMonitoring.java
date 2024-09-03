@@ -42,8 +42,8 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
     private String columnQuotedHoMainParentId;
     private String columnQuotedMainParentId;
 
-    public CleanupTaskMonitoring(JocClusterHibernateFactory factory, IJocActiveMemberService service, int batchSize) {
-        super(factory, service, batchSize);
+    public CleanupTaskMonitoring(JocClusterHibernateFactory factory, IJocActiveMemberService service, int batchSize, boolean forceCleanup) {
+        super(factory, service, batchSize, forceCleanup);
     }
 
     @Override

@@ -65,6 +65,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
     private List<ICleanupTask> cleanupTasks = null;
     private StartupMode startMode = StartupMode.unknown;
     private int batchSize;
+    private boolean forceCleanup;
 
     public CleanupServiceTask(CleanupServiceSchedule schedule) {
         this.schedule = schedule;
@@ -104,6 +105,8 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
                 LOGGER.warn(e.toString(), e);
             }
 
+            forceCleanup = cleanupSchedule.getService().getConfig().forceCleanup();
+
             List<Supplier<JocClusterAnswer>> tasks = new ArrayList<Supplier<JocClusterAnswer>>();
             // 1) service tasks
             for (IJocActiveMemberService service : services) {
@@ -131,7 +134,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
                             if (orderDatetime.getDatetime() == null && orderLogsDatetime.getDatetime() == null) {
                                 disabled = true;
                             } else {
-                                task = new CleanupTaskHistory(factory, service, batchSize);
+                                task = new CleanupTaskHistory(factory, service, batchSize, forceCleanup);
                                 datetimes.add(orderDatetime);
                                 datetimes.add(orderLogsDatetime);
 
@@ -142,7 +145,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
                             if (datetime.getDatetime() == null) {
                                 disabled = true;
                             } else {
-                                task = new CleanupTaskDailyPlan(factory, service, batchSize);
+                                task = new CleanupTaskDailyPlan(factory, service, batchSize, forceCleanup);
                                 datetimes.add(datetime);
                             }
                         } else if (service.getIdentifier().equals(ClusterServices.monitor.name())) {
@@ -153,7 +156,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
                             if (monitoringDatetime.getDatetime() == null && notificationDatetime.getDatetime() == null) {
                                 disabled = true;
                             } else {
-                                task = new CleanupTaskMonitoring(factory, service, batchSize);
+                                task = new CleanupTaskMonitoring(factory, service, batchSize, forceCleanup);
                                 datetimes.add(monitoringDatetime);
                                 datetimes.add(notificationDatetime);
                             }
@@ -320,12 +323,12 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
 
     private List<ICleanupTask> getManualCleanupTasks(JocClusterHibernateFactory factory, int batchSize) {
         List<ICleanupTask> tasks = new ArrayList<ICleanupTask>();
-        tasks.add(new CleanupTaskDeployment(factory, batchSize, MANUAL_TASK_IDENTIFIER_DEPLOYMENT));
-        tasks.add(new CleanupTaskAuditLog(factory, batchSize, MANUAL_TASK_IDENTIFIER_AUDITLOG));
-        tasks.add(new CleanupTaskYade(factory, batchSize, MANUAL_TASK_IDENTIFIER_YADE));
-        tasks.add(new CleanupTaskUserProfiles(factory, batchSize, MANUAL_TASK_IDENTIFIER_USER_PROFILES));
-        tasks.add(new CleanupTaskReporting(factory, batchSize, MANUAL_TASK_IDENTIFIER_REPORTING));
-        // tasks.add(new CleanupTaskGit(factory, batchSize, MANUAL_TASK_IDENTIFIER_GIT));
+        tasks.add(new CleanupTaskDeployment(factory, batchSize, MANUAL_TASK_IDENTIFIER_DEPLOYMENT, forceCleanup));
+        tasks.add(new CleanupTaskAuditLog(factory, batchSize, MANUAL_TASK_IDENTIFIER_AUDITLOG, forceCleanup));
+        tasks.add(new CleanupTaskYade(factory, batchSize, MANUAL_TASK_IDENTIFIER_YADE, forceCleanup));
+        tasks.add(new CleanupTaskUserProfiles(factory, batchSize, MANUAL_TASK_IDENTIFIER_USER_PROFILES, forceCleanup));
+        tasks.add(new CleanupTaskReporting(factory, batchSize, MANUAL_TASK_IDENTIFIER_REPORTING, forceCleanup));
+        // tasks.add(new CleanupTaskGit(factory, batchSize, MANUAL_TASK_IDENTIFIER_GIT, forceCleanup));
         return tasks;
     }
 

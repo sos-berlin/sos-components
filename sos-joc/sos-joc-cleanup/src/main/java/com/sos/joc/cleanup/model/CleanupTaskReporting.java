@@ -24,8 +24,8 @@ public class CleanupTaskReporting extends CleanupTaskModel {
     private String columnQuotedId;
     private String columnQuotedModified;
 
-    public CleanupTaskReporting(JocClusterHibernateFactory factory, int batchSize, String identifier) {
-        super(factory, batchSize, identifier);
+    public CleanupTaskReporting(JocClusterHibernateFactory factory, int batchSize, String identifier, boolean forceCleanup) {
+        super(factory, batchSize, identifier, forceCleanup);
     }
 
     @Override

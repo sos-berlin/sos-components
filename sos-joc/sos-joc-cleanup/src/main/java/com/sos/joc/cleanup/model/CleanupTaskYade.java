@@ -22,8 +22,8 @@ public class CleanupTaskYade extends CleanupTaskModel {
     private int totalFiles = 0;
     private int totalTransfers = 0;
 
-    public CleanupTaskYade(JocClusterHibernateFactory factory, int batchSize, String identifier) {
-        super(factory, batchSize, identifier);
+    public CleanupTaskYade(JocClusterHibernateFactory factory, int batchSize, String identifier, boolean forceCleanup) {
+        super(factory, batchSize, identifier, forceCleanup);
     }
 
     @Override

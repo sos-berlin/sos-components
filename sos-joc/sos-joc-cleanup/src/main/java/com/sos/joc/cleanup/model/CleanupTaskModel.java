@@ -41,6 +41,7 @@ public class CleanupTaskModel implements ICleanupTask {
     private final DBLayerCleanup dbLayer;
     private final IJocActiveMemberService service;
     private final int batchSize;
+    private final boolean forceCleanup;
     private final TaskType type;
     private final String identifier;
     private final Object lock = new Object();
@@ -49,18 +50,20 @@ public class CleanupTaskModel implements ICleanupTask {
     private AtomicBoolean stopped = new AtomicBoolean(false);
     private AtomicBoolean completed = new AtomicBoolean(false);
 
-    protected CleanupTaskModel(JocClusterHibernateFactory factory, int batchSize, String identifier) {
-        this(factory, null, batchSize, identifier);
+    protected CleanupTaskModel(JocClusterHibernateFactory factory, int batchSize, String identifier, boolean forceCleanup) {
+        this(factory, null, batchSize, identifier, forceCleanup);
     }
 
-    protected CleanupTaskModel(JocClusterHibernateFactory factory, IJocActiveMemberService service, int batchSize) {
-        this(factory, service, batchSize, null);
+    protected CleanupTaskModel(JocClusterHibernateFactory factory, IJocActiveMemberService service, int batchSize, boolean forceCleanup) {
+        this(factory, service, batchSize, null, forceCleanup);
     }
 
-    private CleanupTaskModel(JocClusterHibernateFactory factory, IJocActiveMemberService service, int batchSize, String identifier) {
+    private CleanupTaskModel(JocClusterHibernateFactory factory, IJocActiveMemberService service, int batchSize, String identifier,
+            boolean forceCleanup) {
         this.factory = factory;
         this.service = service;
         this.batchSize = batchSize;
+        this.forceCleanup = forceCleanup;
         if (this.service == null) {
             this.type = TaskType.MANUAL_TASK;
             this.identifier = identifier;
@@ -201,7 +204,7 @@ public class CleanupTaskModel implements ICleanupTask {
     }
 
     protected boolean askService() {
-        if (this.type.equals(TaskType.SERVICE_TASK)) {
+        if (!forceCleanup && this.type.equals(TaskType.SERVICE_TASK)) {
             JocServiceAnswer info = getService().getInfo();
             boolean rc = !info.isBusyState();
             if (!rc) {

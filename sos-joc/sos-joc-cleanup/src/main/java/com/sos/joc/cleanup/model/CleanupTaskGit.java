@@ -13,8 +13,8 @@ public class CleanupTaskGit extends CleanupTaskModel {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupTaskGit.class);
 
-    public CleanupTaskGit(JocClusterHibernateFactory factory, int batchSize, String identifier) {
-        super(factory, batchSize, identifier);
+    public CleanupTaskGit(JocClusterHibernateFactory factory, int batchSize, String identifier, boolean forceCleanup) {
+        super(factory, batchSize, identifier, forceCleanup);
     }
 
     /** Git cleanup is datetimes independent */

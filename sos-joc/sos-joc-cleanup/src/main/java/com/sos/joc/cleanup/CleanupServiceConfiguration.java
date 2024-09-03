@@ -42,6 +42,7 @@ public class CleanupServiceConfiguration {
     private int deploymentHistoryVersions;
     private int batchSize;
     private int maxPoolSize;
+    private boolean forceCleanup;
 
     private Path hibernateConfiguration;
 
@@ -98,6 +99,13 @@ public class CleanupServiceConfiguration {
             LOGGER.info(String.format("[configured %s=%s][skip]use MIN_MAX_POOL_SIZE=%s", configuration.getMaxPoolSize().getName(), configuration
                     .getMaxPoolSize().getValue(), MIN_MAX_POOL_SIZE));
             maxPoolSize = MIN_MAX_POOL_SIZE;
+        }
+
+        try {
+            forceCleanup = Boolean.parseBoolean(configuration.getForceCleanup().getValue());
+        } catch (Throwable e) {
+            LOGGER.error(String.format("[%s configured=%s]%s", configuration.getForceCleanup().getName(), configuration.getForceCleanup().getValue(),
+                    e.toString()), e);
         }
     }
 
@@ -161,6 +169,10 @@ public class CleanupServiceConfiguration {
         return maxPoolSize;
     }
 
+    public boolean forceCleanup() {
+        return forceCleanup;
+    }
+
     public void setHibernateConfiguration(Path val) {
         hibernateConfiguration = val;
     }
@@ -173,7 +185,8 @@ public class CleanupServiceConfiguration {
     public String toString() {
         StringBuilder sb = new StringBuilder("[");
         sb.append(getClass().getSimpleName());
-        sb.append(" batchSize=").append(batchSize);
+        sb.append(" forceCleanup=").append(forceCleanup);
+        sb.append(",batchSize=").append(batchSize);
         sb.append(",maxPoolSize=").append(maxPoolSize);
         sb.append(",zoneId=").append(zoneId);
         sb.append(",period=[");

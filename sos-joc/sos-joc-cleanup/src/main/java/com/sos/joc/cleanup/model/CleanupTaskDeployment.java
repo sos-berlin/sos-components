@@ -30,8 +30,8 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
     private int totalSearchWorkflows = 0;
     private int totalHistory = 0;
 
-    public CleanupTaskDeployment(JocClusterHibernateFactory factory, int batchSize, String identifier) {
-        super(factory, batchSize, identifier);
+    public CleanupTaskDeployment(JocClusterHibernateFactory factory, int batchSize, String identifier, boolean forceCleanup) {
+        super(factory, batchSize, identifier, forceCleanup);
     }
 
     @Override

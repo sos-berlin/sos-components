@@ -22,8 +22,8 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
     private int totalOrders = 0;
     private int totalSubmissions;
 
-    public CleanupTaskDailyPlan(JocClusterHibernateFactory factory, IJocActiveMemberService service, int batchSize) {
-        super(factory, service, batchSize);
+    public CleanupTaskDailyPlan(JocClusterHibernateFactory factory, IJocActiveMemberService service, int batchSize, boolean forceCleanup) {
+        super(factory, service, batchSize, forceCleanup);
     }
 
     @Override
