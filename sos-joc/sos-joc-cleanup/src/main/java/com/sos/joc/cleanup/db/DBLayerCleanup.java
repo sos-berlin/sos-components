@@ -23,6 +23,12 @@ public class DBLayerCleanup extends DBLayer {
         }
     }
 
+    public void terminate() {
+        if (getSession() != null) {
+            getSession().terminate();
+        }
+    }
+
     public DBItemJocVariable getVariable(String name) throws SOSHibernateException {
         String hql = String.format("select name,textValue from %s where name = :name", DBLayer.DBITEM_JOC_VARIABLES);
         Query<Object[]> query = getSession().createQuery(hql);

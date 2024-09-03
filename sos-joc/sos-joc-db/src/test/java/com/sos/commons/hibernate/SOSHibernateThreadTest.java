@@ -1,8 +1,9 @@
 package com.sos.commons.hibernate;
 
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-import org.hibernate.query.Query;
+import org.hibernate.query.NativeQuery;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -14,16 +15,21 @@ public class SOSHibernateThreadTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSHibernateThreadTest.class);
 
-    private static final int THREADS = 5;
-    private static final int WAIT_SECONDS = 40;
+    private static final ConcurrentHashMap.KeySetView<SOSHibernateSession, Boolean> SESSIONS = ConcurrentHashMap.newKeySet();
+
+    private static final int THREADS = 1;
+    private static final int MAIN_WAIT_SECONDS = 10;
+    private static final int DB_SLEEP_SECONDS = 59;
     // false - session.createNativeQuery, true - session.getSQLExecutor().execute
     private static final boolean USE_SQL_EXECUTER = false;
+    private static final boolean USE_SESSION_EXECUTE_UPDATE = true;
 
     private String statement = null;
 
     @Ignore
     @Test
     public void testCreateThreadsWithNewSession() throws Exception {
+        SESSIONS.clear();
         SOSHibernateFactory factory = null;
         try {
             factory = SOSHibernateTest.createFactory();
@@ -31,12 +37,15 @@ public class SOSHibernateThreadTest {
 
             for (int i = 1; i <= THREADS; i++) {
                 Boolean autoCommit = i % 2 == 0;
-                // autoCommit = null;
+                autoCommit = false;
                 Thread thread = createThreadWithNewSession(factory, autoCommit);
                 thread.start();
             }
 
-            TimeUnit.SECONDS.sleep(WAIT_SECONDS);
+            TimeUnit.SECONDS.sleep(MAIN_WAIT_SECONDS);
+            for (SOSHibernateSession s : SESSIONS) {
+                s.terminate();
+            }
 
         } catch (Exception e) {
             throw e;
@@ -50,19 +59,21 @@ public class SOSHibernateThreadTest {
     @Ignore
     @Test
     public void testCreateThreadsWithOneSession() throws Exception {
+        SESSIONS.clear();
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
         try {
             factory = SOSHibernateTest.createFactory();
             setStatement(factory);
             session = factory.openStatelessSession();
+            SESSIONS.add(session);
 
             for (int i = 1; i <= THREADS; i++) {
                 Thread thread = createThreadWithOneSession(session);
                 thread.start();
             }
 
-            TimeUnit.SECONDS.sleep(WAIT_SECONDS);
+            TimeUnit.SECONDS.sleep(MAIN_WAIT_SECONDS);
         } catch (Exception e) {
             throw e;
         } finally {
@@ -104,6 +115,7 @@ public class SOSHibernateThreadTest {
         SOSHibernateSession session = null;
         try {
             session = factory.openStatelessSession();
+            SESSIONS.add(session);
             if (autoCommit != null) {
                 session.setAutoCommit(autoCommit);
             }
@@ -113,18 +125,25 @@ public class SOSHibernateThreadTest {
         } finally {
             if (session != null) {
                 session.close();
+                SESSIONS.remove(session);
             }
         }
     }
 
     private void executeStatement(SOSHibernateSession session, String threadName) {
         try {
+            session.beginTransaction();
             if (USE_SQL_EXECUTER) {
                 session.getSQLExecutor().execute(statement);
             } else {
-                Query<?> query = session.createNativeQuery(statement);
-                LOGGER.info("[" + threadName + "][first]" + SOSHibernate.toString(session.getSingleResult(query)));
+                NativeQuery<?> query = session.createNativeQuery(statement);
+                if (USE_SESSION_EXECUTE_UPDATE) {
+                    LOGGER.info("[" + threadName + "][executeUpdate]" + SOSHibernate.toString(session.executeUpdate(query)));
+                } else {
+                    LOGGER.info("[" + threadName + "][getSingleResult]" + SOSHibernate.toString(session.getSingleResult(query)));
+                }
             }
+            session.commit();
         } catch (Exception e) {
             LOGGER.error(e.toString(), e);
         }
@@ -132,11 +151,14 @@ public class SOSHibernateThreadTest {
 
     private void setStatement(SOSHibernateFactory factory) {
         if (Dbms.MYSQL.equals(factory.getDbms())) {
-            statement = "select sleep(5)";
+            statement = "select sleep(" + DB_SLEEP_SECONDS + ")";
         } else if (Dbms.MSSQL.equals(factory.getDbms())) {
-            statement = "waitfor delay '00:00:05'; select 1";
+            statement = "waitfor delay '00:00:" + DB_SLEEP_SECONDS + "'; select 1";
+        } else if (Dbms.ORACLE.equals(factory.getDbms())) {
+            // statement = "BEGIN\r\n" + "dbms_lock.sleep(" + DB_SLEEP_SECONDS + ");\r\n" + "END;";
+            statement = "BEGIN dbms_lock.sleep(" + DB_SLEEP_SECONDS + "); END;";
         } else { // TODO
-            statement = "select 1";
+            statement = "SELECT pg_sleep(300)";
         }
     }
 

@@ -53,8 +53,8 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
     private static final String MANUAL_TASK_IDENTIFIER_GIT = "git";
 
     /** seconds */
-    private static final int MAX_AWAIT_TERMINATION_TIMEOUT = 3 * 60;
-    private static final int MAX_AWAIT_TERMINATION_TIMEOUT_ON_START_MODE_AUTOMATIC = 60;
+    private static final int MAX_AWAIT_TERMINATION_TIMEOUT = 30;// 3 * 60;
+    private static final int MAX_AWAIT_TERMINATION_TIMEOUT_ON_START_MODE_AUTOMATIC = 30;// 60;
     private static final int MAX_BATCH_SIZE_ORACLE = 1_000;
 
     private final CleanupServiceSchedule schedule;
@@ -286,11 +286,12 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
             LOGGER.info(String.format("[%s][%s][%s]start...", logIdentifier, task.getTypeName(), task.getIdentifier()));
             cleanupTasks.add(task);
             task.start(datetimes);
-            LOGGER.info(String.format("[%s][%s][%s][completed=%s]%s", logIdentifier, task.getTypeName(), task.getIdentifier(), task.isCompleted(),
-                    SOSString.toString(task.getState())));
+            LOGGER.info(String.format("[%s][%s][%s][start][completed=%s]cleanupState=%s", logIdentifier, task.getTypeName(), task.getIdentifier(),
+                    task.isCompleted(), SOSString.toString(task.getState())));
             task.stop(getMaxAwaitTimeout());
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("[%s][%s][%s]completed=%s", logIdentifier, task.getTypeName(), task.getIdentifier(), task.isCompleted()));
+                LOGGER.debug(String.format("[%s][%s][%s][stop]completed=%s", logIdentifier, task.getTypeName(), task.getIdentifier(), task
+                        .isCompleted()));
             }
         }
     }
@@ -349,9 +350,14 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
                         LOGGER.info(String.format("[%s][%s][%s][stop][completed=%s]already stopped", logIdentifier, cleanupTask.getTypeName(),
                                 cleanupTask.getIdentifier(), cleanupTask.isCompleted()));
                     } else {
-                        LOGGER.info(String.format("[%s][%s][%s][stop][completed=%s]start...", logIdentifier, cleanupTask.getTypeName(), cleanupTask
-                                .getIdentifier(), cleanupTask.isCompleted()));
-                        answer = cleanupTask.stop(timeout > 0 ? timeout : getMaxAwaitTimeout());
+                        int t = timeout > 0 ? timeout : getMaxAwaitTimeout();
+                        String tMsg = "";
+                        if (t > 0) {
+                            tMsg = "[max waiting timeout=" + t + "s]";
+                        }
+                        LOGGER.info(String.format("[%s][%s][%s][stop][completed=%s]%sstart...", logIdentifier, cleanupTask.getTypeName(), cleanupTask
+                                .getIdentifier(), cleanupTask.isCompleted(), tMsg));
+                        answer = cleanupTask.stop(t);
                         LOGGER.info(String.format("[%s][%s][%s][stop][completed=%s][end]%s", logIdentifier, cleanupTask.getTypeName(), cleanupTask
                                 .getIdentifier(), cleanupTask.isCompleted(), SOSString.toString(answer)));
                     }

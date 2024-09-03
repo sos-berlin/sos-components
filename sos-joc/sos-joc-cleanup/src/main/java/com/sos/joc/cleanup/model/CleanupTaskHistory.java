@@ -167,14 +167,15 @@ public class CleanupTaskHistory extends CleanupTaskModel {
 
         boolean runm = true;
         while (runm) {
+            if (isStopped()) {
+                return JocServiceTaskAnswerState.UNCOMPLETED;
+            }
+
             tryOpenSession();
 
             Long maxMainParentId = getOrderMaxMainParentId(scope, range, startTime, ageInfo);
             if (maxMainParentId == null || maxMainParentId.intValue() == 0) {
                 return JocServiceTaskAnswerState.COMPLETED;
-            }
-            if (isStopped()) {
-                return JocServiceTaskAnswerState.UNCOMPLETED;
             }
 
             boolean completed = cleanupOrders(scope, range, startTime, ageInfo, deleteLogs, maxMainParentId);

@@ -77,4 +77,8 @@ public class JocServiceAnswer {
         return lastActivityEnd;
     }
 
+    public boolean isBusyState() {
+        return JocServiceAnswerState.BUSY.equals(state);
+    }
+
 }

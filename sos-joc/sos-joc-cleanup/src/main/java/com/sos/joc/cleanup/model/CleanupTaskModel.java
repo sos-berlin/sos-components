@@ -17,7 +17,6 @@ import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
 import com.sos.joc.cleanup.db.DBLayerCleanup;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
-import com.sos.joc.cluster.bean.answer.JocServiceAnswer.JocServiceAnswerState;
 import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer;
 import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
 import com.sos.joc.cluster.service.active.IJocActiveMemberService;
@@ -119,6 +118,12 @@ public class CleanupTaskModel implements ICleanupTask {
         }
 
         waitForCompleting(maxTimeoutSeconds);
+
+        if (!completed.get()) {
+            if (dbLayer != null) {
+                dbLayer.terminate();
+            }
+        }
         return new JocServiceTaskAnswer(state);
     }
 
@@ -198,7 +203,7 @@ public class CleanupTaskModel implements ICleanupTask {
     protected boolean askService() {
         if (this.type.equals(TaskType.SERVICE_TASK)) {
             JocServiceAnswer info = getService().getInfo();
-            boolean rc = info.getState().equals(JocServiceAnswerState.RELAX);
+            boolean rc = !info.isBusyState();
             if (!rc) {
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug(String.format("[%s][ask service]%s", identifier, SOSString.toString(info)));

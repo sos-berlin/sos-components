@@ -57,9 +57,18 @@ public class CleanupPartialResult {
                 });
             }
 
-            task.getDbLayer().beginTransaction();
-            addDeletedLast(task.getDbLayer().getSession().executeUpdate(query));
-            task.getDbLayer().commit();
+            try {
+                task.getDbLayer().beginTransaction();
+                addDeletedLast(task.getDbLayer().getSession().executeUpdate(query));
+                task.getDbLayer().commit();
+            } catch (Throwable e) {
+                if (task.isStopped()) {
+                    LOGGER.info("[" + task.getIdentifier() + "][STOPPED]" + e);
+                    return;
+                } else {
+                    throw e;
+                }
+            }
 
             if (getDeletedLast() == 0) {
                 state = JocServiceTaskAnswerState.COMPLETED;

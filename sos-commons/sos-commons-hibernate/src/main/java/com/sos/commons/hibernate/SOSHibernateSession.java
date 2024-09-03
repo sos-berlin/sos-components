@@ -1,6 +1,7 @@
 package com.sos.commons.hibernate;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
@@ -22,6 +23,7 @@ import org.hibernate.SharedSessionContract;
 import org.hibernate.StaleStateException;
 import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.exception.LockAcquisitionException;
@@ -48,6 +50,8 @@ import com.sos.commons.hibernate.transform.SOSAliasToBeanResultTransformer;
 import com.sos.commons.hibernate.transform.SOSNativeQueryAliasToMapTransformer;
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSString;
+import com.zaxxer.hikari.pool.ProxyConnection;
+import com.zaxxer.hikari.util.FastList;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.NoResultException;
@@ -58,6 +62,10 @@ public class SOSHibernateSession implements Serializable {
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSHibernateSession.class);
     private static final Logger CONNECTION_POOL_LOGGER = LoggerFactory.getLogger("ConnectionPool");
     private static final long serialVersionUID = 1L;
+
+    /** TODO To use reflection – make sure/check this field is present in future Hibernate versions */
+    private static final String DECLARED_FIELD_HIBERNATE_JDBCCOORDINATOR_LASTQUERY = "lastQuery";
+    private static final String DECLARED_FIELD_HIKARY_PROXYCONNECTION_OPENSTATEMENTS = "openStatements";
 
     private final SOSHibernateFactory factory;
 
@@ -70,6 +78,7 @@ public class SOSHibernateSession implements Serializable {
     private boolean isGetCurrentSession = false;
     private boolean isStatelessSession = false;
     private boolean isTransactionOpened = false;
+    private boolean isTerminateInProgress = false;
     private SOSHibernateSQLExecutor sqlExecutor;
     private Statement currentStatement;
 
@@ -193,9 +202,149 @@ public class SOSHibernateSession implements Serializable {
         if (LOGGER.isTraceEnabled()) {
             LOGGER.trace(SOSHibernate.getMethodName(logIdentifier, "close"));
         }
+        if (isTerminateInProgress) {// terminated by another thread, no close because close is sent...
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(String.format("%sskip (termination is in process)", SOSHibernate.getMethodName(logIdentifier, "close")));
+            }
+            return;
+        }
         CONNECTION_POOL_LOGGER.debug("--------> RELEASE CONNECTION: " + getIdentifier() + " (" + SOSClassUtil.getMethodName(3) + ") --------");
         closeTransaction();
         closeSession();
+    }
+
+    /** If the last statement of a session is still running, the execution of this statement is aborted, rollback is executed and connection is closed<br/>
+     * The session is then closed.<br/>
+     * <br/>
+     * Note: Intended for cases where there is only 1 session/connection per factory, otherwise using this method may lead to unpredictable results<br/>
+     * <br/>
+     * MySQL<br/>
+     * - cancel statement - required<br/>
+     * - connection close - does not seem to be required (a Hibernate exception is logged when the connection is aborted(no exception if closed))<br/>
+     * MSSQL<br/>
+     * - cancel statement - required<br/>
+     * - connection close - does not seem to be required but is used - in both cases a Hibernate exception is thrown about the aborted query<br/>
+     * Oracle<br/>
+     * - cancel statement - required<br/>
+     * - connection close - does not seem to be required but is used - in both cases a Hibernate exception is thrown about the aborted query<br/>
+     */
+    @SuppressWarnings("unchecked")
+    public synchronized boolean terminate() {
+        boolean terminated = false;
+        try {
+            if (currentSession != null) {
+                String method = SOSHibernate.getMethodName(logIdentifier, "terminate");
+                try {
+                    isTerminateInProgress = false;
+
+                    // 1) SOSHibernate
+                    if (currentStatement != null) {
+                        isTerminateInProgress = true;
+                        try {
+                            currentStatement.cancel();
+                            LOGGER.info(method + "[currentStatement][cancel]executed");
+                        } catch (Throwable t) {
+                            LOGGER.info(method + "[currentStatement][cancel]" + t);
+                        }
+                    }
+
+                    // 2) Hibernate - only for select queries
+                    SharedSessionContractImplementor impl = (SharedSessionContractImplementor) currentSession;
+                    JdbcCoordinator jdbcCoordinator = impl.getJdbcCoordinator();
+                    try {
+                        // first try using reflection, because jdbcCoordinator.cancelLastQuery() does not check if the last statement has already been closed...
+                        Field lastQueryField = jdbcCoordinator.getClass().getDeclaredField(DECLARED_FIELD_HIBERNATE_JDBCCOORDINATOR_LASTQUERY);
+                        lastQueryField.setAccessible(true);
+                        Statement statement = (Statement) lastQueryField.get(jdbcCoordinator);
+                        if (statement != null && !statement.isClosed()) {
+                            isTerminateInProgress = true;
+                            try {
+                                statement.cancel();
+                                LOGGER.info(method + "[hibernate][JdbcCoordinator][statement][cancel]executed");
+                            } catch (Throwable t) {
+                                LOGGER.info(method + "[hibernate][JdbcCoordinator][statement][cancel]" + t);
+                            }
+                        }
+                    } catch (NoSuchFieldException | IllegalAccessException e) {
+                        try {
+                            jdbcCoordinator.cancelLastQuery();
+                            isTerminateInProgress = true;
+                            LOGGER.info(method + "[hibernate][JdbcCoordinator][cancelLastQuery]executed");
+                        } catch (Throwable ex) {// throws an exception if the statement has already been closed
+                            LOGGER.info(method + "[hibernate][JdbcCoordinator][cancelLastQuery]" + ex);
+                        }
+                    }
+
+                    // 3) HIKARI Proxy Connection
+                    if (!isTerminateInProgress) {
+                        ProxyConnection pc = (ProxyConnection) getConnection();
+                        try {
+                            Field os = ProxyConnection.class.getDeclaredField(DECLARED_FIELD_HIKARY_PROXYCONNECTION_OPENSTATEMENTS);
+                            os.setAccessible(true);
+                            FastList<Statement> l = (FastList<Statement>) os.get(pc);
+                            if (l != null && l.size() > 0) {
+                                isTerminateInProgress = true;
+                                for (Statement s : l) {
+                                    try {
+                                        if (!s.isClosed()) {
+                                            s.cancel();
+                                            LOGGER.info(method + "[hikari][ProxyConnection][statement][cancel]executed");
+                                        }
+                                    } catch (Throwable t) {
+                                        LOGGER.info(method + "[hikari][ProxyConnection][statement][cancel]" + t);
+                                    }
+                                }
+                            }
+                        } catch (NoSuchFieldException | IllegalAccessException e) {
+                            LOGGER.info(method + "[hikari][ProxyConnection][field=" + DECLARED_FIELD_HIKARY_PROXYCONNECTION_OPENSTATEMENTS + "]" + e);
+                        }
+                    }
+
+                    if (isTerminateInProgress) {
+                        // rollback if the current statement is canceled.
+                        // otherwise, rollback execution waits until the current statement completes.
+                        boolean useSessionRollback = true;
+                        if (useSessionRollback) {
+                            try {
+                                doRollback();
+                                LOGGER.info(method + "[session][rollback]executed");
+                            } catch (Throwable r) {
+                                LOGGER.info(method + "[session][rollback]" + r);
+                            }
+                        }
+                        Connection connection = getConnection();
+                        if (connection != null) {
+                            if (!useSessionRollback) {
+                                try {
+                                    connection.rollback();
+                                    LOGGER.info(method + "[connection][rollback]executed");
+                                } catch (Throwable r) {
+                                    LOGGER.info(method + "[connection][rollback]" + r);
+                                }
+                            }
+                            try {
+                                // connection.abort(Runnable::run);
+                                connection.close();
+                                LOGGER.info(method + "[connection][close]executed");
+                            } catch (Throwable ex) {
+                                LOGGER.info(method + "[connection][close]" + ex);
+                            }
+                        }
+                    }
+                } catch (Throwable e) {
+                    LOGGER.warn(String.format("%s%s", method, e.toString()), e);
+                } finally {
+                    terminated = isTerminateInProgress;
+                    isTerminateInProgress = false;
+                    close();
+                }
+            }
+        } catch (Throwable e) {
+            LOGGER.warn(String.format("%s%s", SOSHibernate.getMethodName(logIdentifier, "terminate"), e.toString()), e);
+        } finally {
+            isTerminateInProgress = false;
+        }
+        return terminated;
     }
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateLockAcquisitionException, SOSHibernateTransactionException */
@@ -208,6 +357,13 @@ public class SOSHibernateSession implements Serializable {
             }
             return;
         }
+        if (isTerminateInProgress) {// terminated by another thread, no commit because rollback is sent...
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("%sskip (termination is in process)", method));
+            }
+            return;
+        }
+
         LOGGER.debug(method);
         Transaction tr = getTransaction();
         if (tr == null) {
@@ -870,6 +1026,16 @@ public class SOSHibernateSession implements Serializable {
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateLockAcquisitionException, SOSHibernateTransactionException */
     public void rollback() throws SOSHibernateException {
+        if (isTerminateInProgress) {// terminated by another thread, no commit because rollback is sent...
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(String.format("%sskip (termination is in process)", SOSHibernate.getMethodName(logIdentifier, "rollback")));
+            }
+            return;
+        }
+        doRollback();
+    }
+
+    private void doRollback() throws SOSHibernateException {
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
         String method = isDebugEnabled ? SOSHibernate.getMethodName(logIdentifier, "rollback") : "";
         if (autoCommit) {
@@ -1037,12 +1203,16 @@ public class SOSHibernateSession implements Serializable {
     }
 
     private void closeSession() {
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(String.format("%s", SOSHibernate.getMethodName(logIdentifier, "closeSession")));
-        }
         try {
             if (currentSession != null) {
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug(String.format("%s", SOSHibernate.getMethodName(logIdentifier, "closeSession")));
+                }
                 currentSession.close();
+            } else {
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug(String.format("%s[skip]currentSession=null", SOSHibernate.getMethodName(logIdentifier, "closeSession")));
+                }
             }
         } catch (Throwable e) {
         }
