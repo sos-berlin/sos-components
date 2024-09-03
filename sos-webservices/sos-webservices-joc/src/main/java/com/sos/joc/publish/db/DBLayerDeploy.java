@@ -29,6 +29,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.DBSQLBatchPreparator;
 import com.sos.joc.db.DBSQLBatchPreparator.BatchPreparator;
@@ -1028,12 +1029,12 @@ public class DBLayerDeploy {
             query.setMaxResults(1);
             existingConfiguration = session.getSingleResult(query);
             boolean valid = false;
-//            try {
-//                Validator.validate(configuration.getObjectType(), configuration.getConfiguration(), new InventoryDBLayer(session), agentNames);
-//                valid = true;
-//            } catch (Throwable e) {
-//                valid = false;
-//            }
+            try {
+                Validator.validate(configuration.getObjectType(), configuration.getConfiguration(), new InventoryDBLayer(session), agentNames);
+                valid = true;
+            } catch (Throwable e) {
+                valid = false;
+            }
 //            // check if imported agentName is known. Has to be removed, when the Validator takes over the check!
 //            if (configuration.getObjectType().equals(ConfigurationType.WORKFLOW)) {
 //                Workflow workflow = (Workflow) configuration.getConfiguration();
@@ -1121,12 +1122,12 @@ public class DBLayerDeploy {
     public DBItemInventoryConfiguration saveNewInventoryConfiguration(ConfigurationObject configuration, String account, Long auditLogId,
             boolean overwrite, Set<String> agentNames) {
         boolean valid = false;
-//        try {
-//            Validator.validate(configuration.getObjectType(), configuration.getConfiguration(), new InventoryDBLayer(session), agentNames);
-//            valid = true;
-//        } catch (Exception e) {
-//            valid = false;
-//        }
+        try {
+            Validator.validate(configuration.getObjectType(), configuration.getConfiguration(), new InventoryDBLayer(session), agentNames);
+            valid = true;
+        } catch (Exception e) {
+            valid = false;
+        }
 //        // check if imported agentName is known. Has to be removed, when the Validator takes over the check!
 //        if (configuration.getObjectType().equals(ConfigurationType.WORKFLOW)) {
 //            Workflow workflow = (Workflow) configuration.getConfiguration();
