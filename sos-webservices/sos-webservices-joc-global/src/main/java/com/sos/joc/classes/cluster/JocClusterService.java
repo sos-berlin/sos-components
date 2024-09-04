@@ -334,7 +334,7 @@ public class JocClusterService {
 
         switch (r.getType()) {
         case cleanup:
-            answer = cluster.getActiveMemberHandler().restartService(mode, ClusterServices.cleanup.name(), Globals.configurationGlobals
+            answer = cluster.getActiveMemberHandler().forceServiceStart(mode, ClusterServices.cleanup.name(), Globals.configurationGlobals
                     .getConfigurationSection(DefaultSections.cleanup));
             break;
         default:
