@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="js7_job_documentation_v1.1.xsl"?>
+<description xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+             xmlns:xi="http://www.w3.org/2001/XInclude"
+             xmlns:xhtml="http://www.w3.org/1999/xhtml"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
+    <job name="EncryptJob"
+         title="Check task logs with regular expression "
+         category="JITL">
+        <script language="java"
+                java_class="com.sos.jitl.jobs.checklog.classes.EncryptJob"
+                resource="1"/>
+    </job>
+    <configuration>
+        <params id="job_parameter">
+             
+            <param name="in"
+                   required="one of in or infile">
+                <note>
+                    <title>Secret</title>
+                    <p>
+Specifies the input value that should be encrypted, typically a secret.
+One of the options 'in' or 'infile' has to be specified.                    
+</p>
+                    
+                </note>
+            </param>
+            <param name="infile"
+                   required="one of in or infile">
+                <note>
+                    <title>Filename</title>
+                    <p>
+Specifies the path to a file that should be encrypted.
+One of the options 'in' or 'infile' has to be specified.
+This option requires use of the 'outfile'  .                    
+</p>
+                </note>
+            </param>
+            <param name="outfile"
+                   required="when infile is specified">
+                <note>
+                    <title>Filename</title>
+                    <p>
+Specifies the path to the output file that will be created holding the encrypted content of the input file.
+The option is used if 'infile' is specified.
+                    </p>
+                     
+                </note>
+            </param>
+            <param name="encipherment_certificate"
+                   required="true">
+                <note>
+                    <title>The certificate</title>
+                    <p>
+The CA signed or self-signed X.509 certificate. Alternatively the public key can be specified.          
+This variable is normally provided via a job resource that is managed with the certificate management.                          
+                    </p>
+                </note>
+            </param>
+ 
+        </params>
+        
+        <params id="return_parameter">
+            <param name="js7EncryptedValue"
+                   required="false">
+                <note>
+                    <title>Encrypted Value</title>
+                    <p>
+The encrypted value. When infile is specified, the value is empty.                   
+
+</p>
+                </note>
+            </param>
+  
+        </params>
+    </configuration>
+    <documentation>
+        <note>
+            <title>What is the purpose of this job?</title>
+            <p>
+Jobs might require variables for parameterization that hold secrets. We find a number of requirements for management of such variables, see JS7 - How to encrypt and decrypt
+
+The preferred solution with JS7 is to use asymmetric keys, for details see JS7 - Encryption and Decryption.
+
+Encryption and decryption can be performed directly by related jobs.
+Encryption and decryption can be performed outside of JS7 products.
+This includes that JS7 products have no knowledge of secret keys involved that potentially could be compromised by logging, database persistence etc.
+For creation of Encryption Keys see JS7 - How to create X.509 Encryption Keys.</p>
+        </note>
+         
+    </documentation>
+</description>
