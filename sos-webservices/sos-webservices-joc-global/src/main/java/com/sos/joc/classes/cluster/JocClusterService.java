@@ -283,7 +283,7 @@ public class JocClusterService {
                             if (joc != null) {
                                 cluster.getActiveMemberHandler().updateService(StartupMode.settings_changed, ClusterServices.history.name(), joc);
                                 cluster.getActiveMemberHandler().updateService(StartupMode.settings_changed, ClusterServices.monitor.name(), joc);
-                                //cluster.getActiveMemberHandler().updateService(StartupMode.settings_changed, ClusterServices.lognotification.name(), joc);
+                                // cluster.getActiveMemberHandler().updateService(StartupMode.settings_changed, ClusterServices.lognotification.name(), joc);
                             }
                         }
                     }
@@ -320,6 +320,29 @@ public class JocClusterService {
         }
         cluster.getActiveMemberHandler().updateControllerInfos();
         cluster.getActiveMemberHandler().updateService(mode, ClusterServices.history.name(), controllerId, action);
+    }
+
+    public JocClusterAnswer forceServiceStart(ClusterRestart r, StartupMode mode) {
+        if (cluster == null) {
+            return JocCluster.getErrorAnswer(new Exception(String.format("cluster not started. %s start %s can't be performed.", mode, r.getType())));
+        }
+        if (!cluster.getActiveMemberHandler().isActive()) {
+            return JocCluster.getErrorAnswer(new Exception(String.format("cluster inactiv. %s start %s can't be performed.", mode, r.getType())));
+        }
+        JocClusterServiceLogger.setLogger();
+        JocClusterAnswer answer = null;
+
+        switch (r.getType()) {
+        case cleanup:
+            answer = cluster.getActiveMemberHandler().restartService(mode, ClusterServices.cleanup.name(), Globals.configurationGlobals
+                    .getConfigurationSection(DefaultSections.cleanup));
+            break;
+        default:
+            answer = JocCluster.getErrorAnswer(new Exception(String.format("%s start not yet supported for %s", mode, r.getType())));
+        }
+
+        JocClusterServiceLogger.removeLogger();
+        return answer;
     }
 
     public JocClusterAnswer restartService(ClusterRestart r, StartupMode mode) {
