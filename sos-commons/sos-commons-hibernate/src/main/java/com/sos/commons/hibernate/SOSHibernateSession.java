@@ -152,7 +152,7 @@ public class SOSHibernateSession implements Serializable {
         String method = isDebugEnabled ? SOSHibernate.getMethodName(logIdentifier, "beginTransaction") : "";
         if (autoCommit) {
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("%sskip (autoCommit is true)", method));
+                LOGGER.debug(String.format("%s[skip]autoCommit=true", method));
             }
             return;
         }
@@ -160,7 +160,7 @@ public class SOSHibernateSession implements Serializable {
             throw new SOSHibernateInvalidSessionException("currentSession is NULL");
         }
         if (isTransactionOpened) {
-            LOGGER.warn(String.format("%sskip (transaction is already opened)", method));
+            LOGGER.warn(String.format("%s[skip]transaction is already opened", method));
             return;
         }
         LOGGER.debug(method);
@@ -204,7 +204,7 @@ public class SOSHibernateSession implements Serializable {
         }
         if (isTerminateInProgress) {// terminated by another thread, no close because close is sent...
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("%sskip (termination is in process)", SOSHibernate.getMethodName(logIdentifier, "close")));
+                LOGGER.debug(String.format("%s[skip]termination is in process", SOSHibernate.getMethodName(logIdentifier, "close")));
             }
             return;
         }
@@ -353,13 +353,13 @@ public class SOSHibernateSession implements Serializable {
         String method = isDebugEnabled ? SOSHibernate.getMethodName(logIdentifier, "commit") : "";
         if (autoCommit) {
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("%sskip (autoCommit is true)", method));
+                LOGGER.debug(String.format("%s[skip]autoCommit=true", method));
             }
             return;
         }
         if (isTerminateInProgress) {// terminated by another thread, no commit because rollback is sent...
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("%sskip (termination is in process)", method));
+                LOGGER.debug(String.format("%s[skip]termination is in process", method));
             }
             return;
         }
@@ -1028,7 +1028,7 @@ public class SOSHibernateSession implements Serializable {
     public void rollback() throws SOSHibernateException {
         if (isTerminateInProgress) {// terminated by another thread, no commit because rollback is sent...
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("%sskip (termination is in process)", SOSHibernate.getMethodName(logIdentifier, "rollback")));
+                LOGGER.debug(String.format("%s[skip]termination is in process", SOSHibernate.getMethodName(logIdentifier, "rollback")));
             }
             return;
         }
@@ -1040,7 +1040,7 @@ public class SOSHibernateSession implements Serializable {
         String method = isDebugEnabled ? SOSHibernate.getMethodName(logIdentifier, "rollback") : "";
         if (autoCommit) {
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("%sskip (autoCommit is true)", method));
+                LOGGER.debug(String.format("%s[skip]autoCommit=true", method));
             }
             return;
         }

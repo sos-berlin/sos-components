@@ -5,16 +5,15 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
-import com.sos.joc.cluster.JocCluster;
-
 public class JocServiceAnswer {
 
     public enum JocServiceAnswerState {
         UNKNOWN, BUSY, RELAX
     }
 
+    private static final ZoneId ZONE_ID = ZoneId.of("Etc/UTC");
+
     private static long RELAX = 10;// seconds
-    private static boolean checkJocStartTime = true;
 
     private JocServiceAnswerState state;
     private ZonedDateTime lastActivityStart;
@@ -36,26 +35,18 @@ public class JocServiceAnswer {
             lastActivityStart = null;
             lastActivityEnd = null;
         } else {
-            lastActivityStart = ZonedDateTime.ofInstant(start, ZoneId.of("UTC"));
-            lastActivityEnd = ZonedDateTime.ofInstant(end, ZoneId.of("UTC"));
+            lastActivityStart = ZonedDateTime.ofInstant(start, ZONE_ID);
+            lastActivityEnd = ZonedDateTime.ofInstant(end, ZONE_ID);
             if (lastActivityStart.isAfter(lastActivityEnd)) {
                 state = JocServiceAnswerState.BUSY;
-                diff = -1; // work
+                diff = -1;
             } else {
-                ZonedDateTime now = ZonedDateTime.ofInstant(Instant.now(), ZoneId.of("UTC"));
+                ZonedDateTime now = ZonedDateTime.ofInstant(Instant.now(), ZONE_ID);
                 diff = Duration.between(now, lastActivityEnd).abs().getSeconds();
                 if (diff >= RELAX) {
                     state = JocServiceAnswerState.RELAX;
                 } else {
-                    if (checkJocStartTime && JocCluster.getJocStartTime() != null) {
-                        if (Duration.between(now, ZonedDateTime.ofInstant(JocCluster.getJocStartTime().toInstant(), ZoneId.of("UTC"))).abs()
-                                .getSeconds() < 70) {
-                            state = JocServiceAnswerState.RELAX;
-                            return;
-                        }
-                    }
                     state = JocServiceAnswerState.BUSY;
-                    checkJocStartTime = false;
                 }
             }
         }

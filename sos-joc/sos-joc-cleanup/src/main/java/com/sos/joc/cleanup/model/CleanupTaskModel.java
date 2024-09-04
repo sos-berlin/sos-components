@@ -3,6 +3,7 @@ package com.sos.joc.cleanup.model;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
@@ -29,6 +30,7 @@ public class CleanupTaskModel implements ICleanupTask {
         SERVICE_TASK, MANUAL_TASK
     }
 
+    /** seconds */
     protected static final int WAIT_INTERVAL_ON_BUSY = 15;
     protected static final int WAIT_INTERVAL_ON_ERROR = 30;
     /** days */
@@ -93,6 +95,7 @@ public class CleanupTaskModel implements ICleanupTask {
         while (run) {
             try {
                 if (isStopped()) {
+                    completed.set(true);
                     return;
                 }
                 if (askService()) {
@@ -123,9 +126,14 @@ public class CleanupTaskModel implements ICleanupTask {
         waitForCompleting(maxTimeoutSeconds);
 
         if (!completed.get()) {
-            if (dbLayer != null) {
+            if (dbLayer == null) {
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("[" + identifier + "][skip dbLayer.terminate()]dbLayer=null");
+                }
+            } else {
                 dbLayer.terminate();
             }
+            completed.set(true);
         }
         return new JocServiceTaskAnswer(state);
     }
@@ -206,13 +214,11 @@ public class CleanupTaskModel implements ICleanupTask {
     protected boolean askService() {
         if (!forceCleanup && this.type.equals(TaskType.SERVICE_TASK)) {
             JocServiceAnswer info = getService().getInfo();
-            boolean rc = !info.isBusyState();
-            if (!rc) {
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug(String.format("[%s][ask service]%s", identifier, SOSString.toString(info)));
-                }
+            boolean doCleanup = !info.isBusyState();
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(String.format("[%s][ask service][doCleanup=%s]%s", identifier, doCleanup, SOSString.toString(info)));
             }
-            return rc;
+            return doCleanup;
         }
         return true;
     }
@@ -220,7 +226,7 @@ public class CleanupTaskModel implements ICleanupTask {
     protected void waitFor(int interval) {
         if (!stopped.get() && interval > 0) {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("[wait]%ss ...", interval));
+                LOGGER.debug(String.format("[%s][wait]%ss ...", identifier, interval));
             }
             try {
                 synchronized (lock) {
@@ -229,10 +235,10 @@ public class CleanupTaskModel implements ICleanupTask {
             } catch (InterruptedException e) {
                 if (stopped.get()) {
                     if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("[wait]sleep interrupted due to task stop");
+                        LOGGER.debug("[" + identifier + "][wait]sleep interrupted due to task stop");
                     }
                 } else {
-                    LOGGER.warn(String.format("[wait]%s", e.toString()), e);
+                    LOGGER.warn(String.format("[%s][wait]%s", identifier, e.toString()), e);
                 }
             }
         }
@@ -244,7 +250,7 @@ public class CleanupTaskModel implements ICleanupTask {
             int counter = 0;
             while (run) {
                 try {
-                    Thread.sleep(WAIT_INTERVAL_ON_COMPLETING * 1_000);
+                    TimeUnit.SECONDS.sleep(WAIT_INTERVAL_ON_COMPLETING);
 
                     if (completed.get()) {
                         return;

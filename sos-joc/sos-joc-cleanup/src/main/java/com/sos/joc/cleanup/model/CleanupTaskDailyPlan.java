@@ -34,14 +34,15 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
 
             boolean run = true;
             while (run) {
+                if (isStopped()) {
+                    return JocServiceTaskAnswerState.UNCOMPLETED;
+                }
+
                 tryOpenSession();
 
                 List<Long> r = getSubmissionIds(datetime);
                 if (r == null || r.size() == 0) {
                     return JocServiceTaskAnswerState.COMPLETED;
-                }
-                if (isStopped()) {
-                    return JocServiceTaskAnswerState.UNCOMPLETED;
                 }
 
                 if (askService()) {
