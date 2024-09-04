@@ -141,6 +141,11 @@ public class CleanupService extends AJocActiveMemberService {
 
     }
 
+    @Override
+    public void runNow(StartupMode mode, AConfigurationSection configuration) {
+
+    }
+
     private void setConfig(ConfigurationGlobalsCleanup configuration) {
         config = new CleanupServiceConfiguration(configuration);
         config.setHibernateConfiguration(getJocConfig().getHibernateConfiguration());

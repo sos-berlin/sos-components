@@ -106,6 +106,11 @@ public class HistoryMonitorService extends AJocActiveMemberService {
         }
     }
 
+    @Override
+    public void runNow(StartupMode mode, AConfigurationSection configuration) {
+
+    }
+
     private void close(StartupMode mode) {
         if (history != null) {
             history.close(mode);

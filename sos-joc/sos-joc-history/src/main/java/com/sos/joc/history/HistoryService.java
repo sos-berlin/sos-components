@@ -218,6 +218,11 @@ public class HistoryService extends AJocActiveMemberService {
         updateHistoryConfiguration();
     }
 
+    @Override
+    public void runNow(StartupMode mode, AConfigurationSection configuration) {
+
+    }
+
     private void setConfig() {
         setLogger();
         try {

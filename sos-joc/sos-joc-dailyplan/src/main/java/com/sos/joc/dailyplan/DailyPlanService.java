@@ -109,6 +109,11 @@ public class DailyPlanService extends AJocActiveMemberService {
 
     }
 
+    @Override
+    public void runNow(StartupMode mode, AConfigurationSection configuration) {
+
+    }
+
     private void schedule(DailyPlanSettings settings) {
         if (timer != null) {
             timer.cancel();

@@ -28,4 +28,6 @@ public interface IJocActiveMemberService {
     public void update(StartupMode mode, List<ControllerConfiguration> controllers, String controllerId, Action action);
 
     public void update(StartupMode mode, AConfigurationSection configuration);
+
+    public void runNow(StartupMode mode, AConfigurationSection configuration);
 }

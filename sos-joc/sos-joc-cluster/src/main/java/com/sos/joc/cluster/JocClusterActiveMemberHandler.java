@@ -243,15 +243,17 @@ public class JocClusterActiveMemberHandler {
         if (!os.isPresent()) {
             return JocCluster.getErrorAnswer(new Exception(String.format("handler not found for %s", identifier)));
         }
+        JocClusterAnswer answer = new JocClusterAnswer(JocClusterAnswerState.STARTED);
 
         JocClusterServiceLogger.setLogger();
         LOGGER.info(String.format("[%s][runService][%s]start...", mode, identifier));
 
         IJocActiveMemberService s = os.get();
         JocServiceAnswer serviceAnswer = s.getInfo();
-        JocClusterAnswer answer = new JocClusterAnswer(JocClusterAnswerState.STARTED);
         if (serviceAnswer.isBusyState()) {
             answer.setState(JocClusterAnswerState.ALREADY_STARTED);
+        } else {
+
         }
 
         LOGGER.info(String.format("[%s][runService][%s][not implemented yet...]%s", mode, identifier, SOSString.toString(answer)));

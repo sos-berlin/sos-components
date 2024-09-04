@@ -57,4 +57,8 @@ public class ProxyService extends AJocActiveMemberService {
     public void update(StartupMode mode, AConfigurationSection configuration) {
     }
 
+    @Override
+    public void runNow(StartupMode mode, AConfigurationSection configuration) {
+
+    }
 }

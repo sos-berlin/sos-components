@@ -62,7 +62,7 @@ public class LogNotificationService extends AJocActiveMemberService {
 
     @Override
     public void update(StartupMode mode, AConfigurationSection configuration) {
-        // port is changed -> 
+        // port is changed ->
         if (!closed.get()) {
             if (configuration != null && configuration instanceof ConfigurationGlobalsLogNotification) {
 
@@ -77,4 +77,8 @@ public class LogNotificationService extends AJocActiveMemberService {
         }
     }
 
+    @Override
+    public void runNow(StartupMode mode, AConfigurationSection configuration) {
+
+    }
 }
