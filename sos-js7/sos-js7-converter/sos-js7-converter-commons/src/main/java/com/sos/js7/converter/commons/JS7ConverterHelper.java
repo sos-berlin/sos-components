@@ -684,9 +684,9 @@ public class JS7ConverterHelper {
         return val.stream().distinct().collect(Collectors.toList());
     }
 
-    public static PostNotices newPostNotices(List<String> val) {
-        return new PostNotices(removeDuplicates(val));
-    }
+    //public static PostNotices newPostNotices(List<String> val) {
+    //    return new PostNotices(removeDuplicates(val));
+    //}
 
     public static com.sos.inventory.model.calendar.Calendar createDefaultWorkingDaysCalendar() {
         com.sos.inventory.model.calendar.Calendar c = new com.sos.inventory.model.calendar.Calendar();

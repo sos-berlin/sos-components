@@ -204,10 +204,10 @@ public class ConverterBOXJobs {
                 }
             }
 
-            LOGGER.info("SSSSS[" + box.getName() + "][" + firstLevelChildren.size() + "]" + firstLevelChildren);
+            //LOGGER.info("SSSSS[" + box.getName() + "][" + firstLevelChildren.size() + "]" + firstLevelChildren);
             tryInstructions.addAll(getInstructions(box, box, firstLevelChildren, bin));
 
-            LOGGER.info("SSS2=" + BOXJobsHelper.CLOSING_BOX_JOB_HELPERS);
+            //LOGGER.info("SSS2=" + BOXJobsHelper.CLOSING_BOX_JOB_HELPERS);
 
         }
         // 1.3) Lock around Retry Instruction ???

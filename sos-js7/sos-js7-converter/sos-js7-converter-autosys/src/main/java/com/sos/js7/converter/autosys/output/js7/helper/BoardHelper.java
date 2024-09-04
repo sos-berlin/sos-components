@@ -194,6 +194,8 @@ public class BoardHelper {
                     if (currentJob.isBoxChildJob() && currentJob.getBoxName().equals(j.getBoxName())) {
                         if (j2c.getJob() == null || currentJob.getBoxName().equals(j2c.getJob().getBoxName())) {
                             js7Name = null;
+                        } else {
+                            JS7_BOARDS.put(j2c.getCondition(), PathResolver.getJS7ParentPath(j, js7Name).resolve(js7Name));
                         }
                     } else {
                         JS7_BOARDS.put(j2c.getCondition(), PathResolver.getJS7ParentPath(j, js7Name).resolve(js7Name));
@@ -201,7 +203,6 @@ public class BoardHelper {
                 }
             }
         }
-
         return js7Name;
     }
 
@@ -248,11 +249,13 @@ public class BoardHelper {
             if (n == null) {
                 continue;
             }
+
             if (!l.contains(n)) {
                 l.add(n);
             }
         }
         if (l.size() > 0) {
+            l.sort((e1, e2) -> e1.compareTo(e2));
             return new PostNotices(l);
         }
         return null;
