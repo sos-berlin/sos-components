@@ -13,7 +13,7 @@ public class SetJobResourceJobArguments extends JobArguments {
     private JobArgument<String> file = new JobArgument<String>("file", false);
     private JobArgument<String> timeZone = new JobArgument<String>("time_zone", false);
     private JobArgument<String> environmentVariable = new JobArgument<String>("environment_variable", false);
-    private JobArgument<String> encryptCert = new JobArgument<String>("encrypt_cert", false);
+    private JobArgument<String> enciphermentCertificate = new JobArgument<String>("encipherment_certificate", false);
 
     public SetJobResourceJobArguments() {
         super(new CredentialStoreArguments());
@@ -75,12 +75,12 @@ public class SetJobResourceJobArguments extends JobArguments {
         this.environmentVariable.setValue(environmentVariable);
     }
 
-    public String getEncryptCert() {
-        return encryptCert.getValue();
+    public String getEnciphermentCertificate() {
+        return enciphermentCertificate.getValue();
     }
 
-    public void setEncryptCert(String encryptCert) {
-        this.encryptCert.setValue(encryptCert);
+    public void setEnciphermentCertificate(String encryptCert) {
+        this.enciphermentCertificate.setValue(encryptCert);
     }
 
 }

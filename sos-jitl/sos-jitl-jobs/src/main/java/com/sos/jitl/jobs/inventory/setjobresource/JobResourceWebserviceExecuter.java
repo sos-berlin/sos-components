@@ -198,21 +198,20 @@ public class JobResourceWebserviceExecuter {
         PublicKey pubKey = null;
         String encryptedValue = "";
 
-        String certPath = args.getEncryptCert();
-        String fileContent = new String(Files.readAllBytes(Paths.get(certPath)), StandardCharsets.UTF_8);
-        if (fileContent.contains("CERTIFICATE")) {
-            cert = KeyUtil.getX509Certificate(fileContent);
+        String enciphermentCertificate = args.getEnciphermentCertificate();
+        if (enciphermentCertificate.contains("CERTIFICATE")) {
+            cert = KeyUtil.getX509Certificate(enciphermentCertificate);
         } else {
             try {
-                pubKey = KeyUtil.getRSAPublicKeyFromString(fileContent);
+                pubKey = KeyUtil.getRSAPublicKeyFromString(enciphermentCertificate);
             } catch (Exception e) {
                 try {
-                    pubKey = KeyUtil.getECDSAPublicKeyFromString(fileContent);
+                    pubKey = KeyUtil.getECDSAPublicKeyFromString(enciphermentCertificate);
                 } catch (Exception e1) {
                     try {
-                        pubKey = KeyUtil.convertToRSAPublicKey(KeyUtil.stripFormatFromPublicKey(fileContent).getBytes());
+                        pubKey = KeyUtil.convertToRSAPublicKey(KeyUtil.stripFormatFromPublicKey(enciphermentCertificate).getBytes());
                     } catch (Exception e2) {
-                        pubKey = KeyUtil.getECPublicKeyFromString(KeyUtil.stripFormatFromPublicKey(fileContent).getBytes());
+                        pubKey = KeyUtil.getECPublicKeyFromString(KeyUtil.stripFormatFromPublicKey(enciphermentCertificate).getBytes());
                     }
                 }
             }
@@ -246,7 +245,7 @@ public class JobResourceWebserviceExecuter {
             value = getValue(args.getValue(), args.getTimeZone());
         }
 
-        if (args.getEncryptCert() != null && !args.getEncryptCert().isEmpty()) {
+        if (args.getEnciphermentCertificate() != null && !args.getEnciphermentCertificate().isEmpty()) {
             value = this.encrypt(args, value);
             value = ENC_PREFIX + value;
         }
