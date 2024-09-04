@@ -5,6 +5,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -27,7 +33,7 @@ import jakarta.ws.rs.Path;
 public class UpdateDependenciesImpl extends JOCResourceImpl implements IUpdateDependencies {
 
     private static final String API_CALL = "./inventory/dependencies/update";
-    
+    private static final Logger LOGGER = LoggerFactory.getLogger(UpdateDependenciesImpl.class);
     private static final List<Integer> dependencyTypes = Collections.unmodifiableList(new ArrayList<Integer>() {
         private static final long serialVersionUID = 1L;
         {
@@ -51,17 +57,14 @@ public class UpdateDependenciesImpl extends JOCResourceImpl implements IUpdateDe
             final SOSHibernateSession session = Globals.createSosHibernateStatelessConnection(xAccessToken);
             hibernateSession = session;
             InventoryDBLayer dblayer = new InventoryDBLayer(hibernateSession);
-            List<DBItemInventoryConfiguration> allConfigs = dblayer.getConfigurationsByType(dependencyTypes);
-            allConfigs.stream().forEach(item -> {
-                try {
-                    DependencyResolver.updateDependencies(session, item);
-                } catch (SOSHibernateException e) {
-                    throw new JocSosHibernateException(e);
-                } catch (JsonProcessingException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-            });
+            List<DBItemInventoryConfiguration> allConfigs = dblayer.getConfigurationsByType(DependencyResolver.dependencyTypes);
+            Map<ConfigurationType, Map<String,DBItemInventoryConfiguration>> groupedItems = allConfigs.stream() .collect(
+                    Collectors.groupingBy(DBItemInventoryConfiguration::getTypeAsEnum, 
+                            Collectors.toMap(DBItemInventoryConfiguration::getName, Function.identity())));
+            DependencyResolver.dependencyTypes.forEach(ctype -> groupedItems.putIfAbsent(ConfigurationType.fromValue(ctype), Collections.emptyMap()));
+
+            DependencyResolver.updateDependencies(session, allConfigs);
+
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

@@ -33,7 +33,6 @@ import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue.ReturnType;
 import com.sos.commons.hibernate.function.regex.SOSHibernateRegexp;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.deploy.DeployType;
-import com.sos.joc.classes.dependencies.items.ReferencedDbItem;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.db.DBItem;
@@ -2142,7 +2141,6 @@ public class InventoryDBLayer extends DBLayer {
     }
     
     public void deleteDependencies (DBItemInventoryConfiguration item) throws SOSHibernateException {
-        boolean autoCommitChanged = false;
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_DEPENDENCIES);
         hql.append(" where invId = :invId");
         Query<DBItemInventoryDependency> query = getSession().createQuery(hql.toString());

@@ -2,8 +2,15 @@ package com.sos.joc.classes.dependencies;
 
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.json.Json;
@@ -12,10 +19,17 @@ import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.JsonString;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.controller.model.workflow.Workflow;
+import com.sos.inventory.model.job.Job;
+import com.sos.joc.Globals;
+import com.sos.joc.classes.dependencies.callables.ReferenceCallable;
 import com.sos.joc.classes.dependencies.items.ReferencedDbItem;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
@@ -23,7 +37,6 @@ import com.sos.joc.db.inventory.DBItemInventoryDependency;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.search.DBItemSearchWorkflow;
 import com.sos.joc.exceptions.JocSosHibernateException;
-import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 
 public class DependencyResolver {
@@ -34,6 +47,8 @@ public class DependencyResolver {
      * 
      * */
     
+    private static final Logger LOGGER = LoggerFactory.getLogger(DependencyResolver.class);
+    
     public static final String INSTRUCTION_LOCKS_SEARCH = "lockIds";
     public static final String INSTRUCTION_BOARDS_SEARCH = "noticeBoardNames";
     public static final String INSTRUCTION_ADDORDERS_SEARCH = "addOrders";
@@ -41,28 +56,50 @@ public class DependencyResolver {
     public static final String WORKFLOWNAMES_SEARCH = "workflowNames";
     public static final String JOBRESOURCENAMES_SEARCH = "jobResourceNames";
     public static final String LOCKNAME_SEARCH = "lockName";
+    public static final String CALENDARNAME_SEARCH = "calendarName";
+    public static final String JOBTEMPLATE_SEARCH = "jobTemplate";
 
-    public static ReferencedDbItem resolve(SOSHibernateSession session, ConfigurationObject inventoryObject)
-            throws SOSHibernateException, JsonMappingException, JsonProcessingException {
-        return resolve(session, inventoryObject.getName(), inventoryObject.getObjectType());
-    }
+    public static final List<Integer> dependencyTypes = Collections.unmodifiableList(new ArrayList<Integer>() {
+        private static final long serialVersionUID = 1L;
+        {
+            add(ConfigurationType.WORKFLOW.intValue());
+            add(ConfigurationType.FILEORDERSOURCE.intValue());
+            add(ConfigurationType.JOBRESOURCE.intValue());
+            add(ConfigurationType.JOBTEMPLATE.intValue());
+            add(ConfigurationType.LOCK.intValue());
+            add(ConfigurationType.NOTICEBOARD.intValue());
+            add(ConfigurationType.SCHEDULE.intValue());
+            add(ConfigurationType.WORKINGDAYSCALENDAR.intValue());
+            add(ConfigurationType.NONWORKINGDAYSCALENDAR.intValue());
+        }
+      });
 
+    
     public static ReferencedDbItem resolve(SOSHibernateSession session, String name, ConfigurationType type)
             throws SOSHibernateException, JsonMappingException, JsonProcessingException {
         DBItemInventoryConfiguration dbItem = null;
         InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+        List<DBItemInventoryConfiguration> allConfigs = dbLayer.getConfigurationsByType(DependencyResolver.dependencyTypes);
         if(!ConfigurationType.FOLDER.equals(type)) {
-            List<DBItemInventoryConfiguration> results = dbLayer.getConfigurationByName(name, type.intValue());
-            if(!results.isEmpty()) {
-                dbItem = results.get(0); 
+            Optional<DBItemInventoryConfiguration> optItem = allConfigs.stream()
+                    .filter(item -> item.getName().equals(name) && item.getTypeAsEnum().equals(type)).findFirst();
+            if(optItem.isPresent()) {
+                dbItem = optItem.get();
             }
         }
-        ReferencedDbItem resolvedItem = resolveReferencedBy(session, dbItem);
-        resolveReferences(resolvedItem, session);
+        Map<ConfigurationType, Map<String,DBItemInventoryConfiguration>> groupedItems = allConfigs.stream() .collect(
+                Collectors.groupingBy(DBItemInventoryConfiguration::getTypeAsEnum, 
+                        Collectors.toMap(DBItemInventoryConfiguration::getName, Function.identity())));
+        DependencyResolver.dependencyTypes.forEach(ctype -> groupedItems.putIfAbsent(ConfigurationType.fromValue(ctype), Collections.emptyMap()));
+
+        ReferencedDbItem resolvedItem = resolveReferencedBy(dbItem, groupedItems);
+        resolveReferences(resolvedItem, groupedItems);
         return resolvedItem;
     }
 
+    // with db access for dependency resolution of a single or few items ot to use with threading
     public static ReferencedDbItem resolveReferencedBy(SOSHibernateSession session, DBItemInventoryConfiguration inventoryDbItem) throws SOSHibernateException {
+        // this method is in use
         ReferencedDbItem cfg = new ReferencedDbItem(inventoryDbItem);
         cfg.setReferencedItem(inventoryDbItem);
         InventoryDBLayer dbLayer = new InventoryDBLayer(session);
@@ -123,7 +160,170 @@ public class DependencyResolver {
         return cfg;
     }
     
-    public static void resolveReferences (ReferencedDbItem item, SOSHibernateSession session) throws JsonMappingException, JsonProcessingException {
+    // with minimal db access for dependency resolution of a collection of items
+    public static ReferencedDbItem resolveReferencedBy(DBItemInventoryConfiguration inventoryDbItem, Map<ConfigurationType, Map<String,DBItemInventoryConfiguration>> groupedItems)
+            throws SOSHibernateException, JsonMappingException, JsonProcessingException {
+        // this method is currently not in use
+        ReferencedDbItem cfg = new ReferencedDbItem(inventoryDbItem);
+        cfg.setReferencedItem(inventoryDbItem);
+        switch(inventoryDbItem.getTypeAsEnum()) {
+        case LOCK:
+            resolveLockReferencedByWorkflow(cfg, groupedItems.get(ConfigurationType.WORKFLOW).values());
+            break;
+        case JOBRESOURCE:
+            resolveJobResourcesReferencedByWorkflow(cfg, groupedItems.get(ConfigurationType.WORKFLOW).values());
+            break;
+        case NOTICEBOARD:
+            resolveBoardReferencedByWorkflow(cfg, groupedItems.get(ConfigurationType.WORKFLOW).values());
+            break;
+        case WORKFLOW:
+            resolveWorkflowReferencedBy(cfg, groupedItems);
+            break;
+        case WORKINGDAYSCALENDAR:
+        case NONWORKINGDAYSCALENDAR:
+            resolveCalendarReferencedBySchedule(cfg, groupedItems.get(ConfigurationType.SCHEDULE).values());
+            break;
+        case JOBTEMPLATE:
+            resolveJobTemplateReferencedByWorkflow(cfg, groupedItems.get(ConfigurationType.WORKFLOW).values());
+            break;
+        default:
+            break;
+        }
+        return cfg;
+    }
+    
+    public static void resolveLockReferencedByWorkflow(ReferencedDbItem item, Collection<DBItemInventoryConfiguration> workflows) {
+        for(DBItemInventoryConfiguration cfg : workflows) {
+            String json = cfg.getContent();
+            JsonObject workflow = jsonObjectFromString(json);
+            //Lock
+            List<String> wfLockNames = new ArrayList<String>(); 
+            getValuesRecursively("", workflow, LOCKNAME_SEARCH, wfLockNames);
+            if(!wfLockNames.isEmpty()) {
+                for (String lock : wfLockNames) {
+                    if(lock.replaceAll("\"","").equals(item.getName())) {
+                        item.getReferencedBy().add(cfg);
+                    }
+                }
+            }
+        }
+    }
+    
+    public static void resolveJobResourcesReferencedByWorkflow(ReferencedDbItem item, Collection<DBItemInventoryConfiguration> cfgs) {
+        for(DBItemInventoryConfiguration cfg : cfgs) {
+            String json = cfg.getContent();
+            JsonObject workflow = jsonObjectFromString(json);
+            List<String> wfJobResourceNames = new ArrayList<String>(); 
+            getValuesRecursively("", workflow, INSTRUCTION_ADDORDERS_SEARCH, wfJobResourceNames);
+            if(!wfJobResourceNames.isEmpty()) {
+                for (String jobResource : wfJobResourceNames) {
+                    if(jobResource.replaceAll("\"","").equals(item.getName())) {
+                        item.getReferencedBy().add(cfg);
+                    }
+                }
+            }
+        }
+    }
+
+    public static void resolveBoardReferencedByWorkflow(ReferencedDbItem item, Collection<DBItemInventoryConfiguration> cfgs) {
+        for(DBItemInventoryConfiguration cfg : cfgs) {
+            String json = cfg.getContent();
+            JsonObject workflow = jsonObjectFromString(json);
+            List<String> wfBoardNames = new ArrayList<String>(); 
+            getValuesRecursively("", workflow, INSTRUCTION_BOARDS_SEARCH, wfBoardNames);
+            if(!wfBoardNames.isEmpty()) {
+                for (String board : wfBoardNames) {
+                    if(board.replaceAll("\"","").equals(item.getName())) {
+                        item.getReferencedBy().add(cfg);
+                    }
+                }
+            }
+        }
+    }
+
+    public static void resolveWorkflowReferencedBy(ReferencedDbItem item, Map<ConfigurationType, Map<String, DBItemInventoryConfiguration>> groupedItems) {
+        // resolve workflows (add order instructions)
+        for(DBItemInventoryConfiguration cfg : groupedItems.get(ConfigurationType.WORKFLOW).values()) {
+            String json = cfg.getContent();
+            JsonObject workflow = jsonObjectFromString(json);
+            List<String> wfWorkflowNames = new ArrayList<String>(); 
+            getValuesRecursively("", workflow, WORKFLOWNAME_SEARCH, wfWorkflowNames);
+            if(!wfWorkflowNames.isEmpty()) {
+                for (String wf : wfWorkflowNames) {
+                    if(wf.replaceAll("\"","").equals(item.getName())) {
+                        item.getReferencedBy().add(cfg);
+                    }
+                }
+            }
+        }
+        // file order sources
+        for(DBItemInventoryConfiguration fos : groupedItems.get(ConfigurationType.FILEORDERSOURCE).values()) {
+            String json = fos.getContent();
+            JsonObject fosItem = jsonObjectFromString(json);
+            List<String> fosWorkflows = new ArrayList<String>();
+            getValuesRecursively("", fosItem, WORKFLOWNAME_SEARCH, fosWorkflows);
+            if(!fosWorkflows.isEmpty()) {
+                for(String wf : fosWorkflows) {
+                    if(wf.replaceAll("\"","").equals(item.getName())) {
+                        item.getReferencedBy().add(fos);
+                    }
+                }
+            }
+            
+        }
+        // schedules
+        for(DBItemInventoryConfiguration schedule : groupedItems.get(ConfigurationType.SCHEDULE).values()) {
+            String json = schedule.getContent();
+            JsonObject scheduleItem = jsonObjectFromString(json);
+            List<String> scheduleWorkflows = new ArrayList<String>();
+            getValuesRecursively("", scheduleItem, WORKFLOWNAMES_SEARCH, scheduleWorkflows);
+            if(!scheduleWorkflows.isEmpty()) {
+                for(String wf : scheduleWorkflows) {
+                    if(wf.replaceAll("\"","").equals(item.getName())) {
+                        item.getReferencedBy().add(schedule);
+                    }
+                }
+            }
+        }
+    }
+
+    public static void resolveCalendarReferencedBySchedule(ReferencedDbItem item, Collection<DBItemInventoryConfiguration> cfgs) {
+        for(DBItemInventoryConfiguration schedule : cfgs) {
+            String json = schedule.getContent();
+            JsonObject scheduleItem = jsonObjectFromString(json);
+            List<String> wfCalendarNames = new ArrayList<String>(); 
+            getValuesRecursively("", scheduleItem, CALENDARNAME_SEARCH, wfCalendarNames);
+            if(!wfCalendarNames.isEmpty()) {
+                for (String cal : wfCalendarNames) {
+                    if(cal.replaceAll("\"","").equals(item.getName())) {
+                        item.getReferencedBy().add(schedule);
+                    }
+                }
+            }
+        }
+    }
+
+    public static void resolveJobTemplateReferencedByWorkflow(ReferencedDbItem item, Collection<DBItemInventoryConfiguration> cfgs)
+            throws JsonMappingException, JsonProcessingException {
+        for(DBItemInventoryConfiguration cfg : cfgs) {
+            Workflow workflow = Globals.objectMapper.readValue(cfg.getContent(), Workflow.class);
+            if(workflow.getJobs() != null) {
+                Map<String,Job> jobs = workflow.getJobs().getAdditionalProperties();
+                for(Job job : jobs.values()) {
+                    if(job.getJobTemplate() != null) {
+                        if(job.getJobTemplate().getName().equals(item.getName())) {
+                            item.getReferencedBy().add(cfg);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // with db access for dependency resolution of a single or few items or to use in with threading
+    public static void resolveReferences (ReferencedDbItem item, SOSHibernateSession session)
+            throws JsonMappingException, JsonProcessingException {
+        // this method is in use
         InventoryDBLayer dbLayer = new InventoryDBLayer(session);
         String json = item.getReferencedItem().getContent();
         List<DBItemInventoryConfiguration> results = null;
@@ -140,10 +340,7 @@ public class DependencyResolver {
             if(instructions != null) {
                 List<String> lockIds = getValuesFromInstructions(instructions, INSTRUCTION_LOCKS_SEARCH);
                 for(String lockId : lockIds) {
-                    if(lockId.contains("\"")) {
-                        lockId = lockId.replaceAll("\"","");
-                    }
-                    results = dbLayer.getConfigurationByName(lockId, ConfigurationType.LOCK.intValue());
+                    results = dbLayer.getConfigurationByName(lockId.replaceAll("\"",""), ConfigurationType.LOCK.intValue());
                     if(!results.isEmpty()) {
                         item.getReferences().add(results.get(0));
                     }
@@ -153,10 +350,7 @@ public class DependencyResolver {
                 getValuesRecursively("", workflow, LOCKNAME_SEARCH, wfLockNames);
                 if(!wfLockNames.isEmpty()) {
                     for (String lock : wfLockNames) {
-                        if(lock.contains("\"")) {
-                            lock = lock.replaceAll("\"","");
-                        }
-                        results = dbLayer.getConfigurationByName(lock, ConfigurationType.LOCK.intValue());
+                        results = dbLayer.getConfigurationByName(lock.replaceAll("\"",""), ConfigurationType.LOCK.intValue());
                         if(!results.isEmpty()) {
                             item.getReferences().add(results.get(0));
                         }
@@ -167,10 +361,7 @@ public class DependencyResolver {
             if(instructions != null) {
                 List<String> wfInstructionJobResourceNames = getValuesFromInstructions(instructions, JOBRESOURCENAMES_SEARCH);
                 for(String jobResourceName : wfInstructionJobResourceNames) {
-                    if(jobResourceName.contains("\"")) {
-                        jobResourceName = jobResourceName.replaceAll("\"","");
-                    }
-                    results = dbLayer.getConfigurationByName(jobResourceName, ConfigurationType.JOBRESOURCE.intValue());
+                    results = dbLayer.getConfigurationByName(jobResourceName.replaceAll("\"",""), ConfigurationType.JOBRESOURCE.intValue());
                     if(!results.isEmpty()) {
                         item.getReferences().add(results.get(0));
                     }
@@ -180,10 +371,7 @@ public class DependencyResolver {
                 getValuesRecursively("", workflow, INSTRUCTION_ADDORDERS_SEARCH, wfJobResourceNames);
                 if(!wfJobResourceNames.isEmpty()) {
                     for (String jobResource : wfJobResourceNames) {
-                        if(jobResource.contains("\"")) {
-                            jobResource = jobResource.replaceAll("\"","");
-                        }
-                        results = dbLayer.getConfigurationByName(jobResource, ConfigurationType.JOBRESOURCE.intValue());
+                        results = dbLayer.getConfigurationByName(jobResource.replaceAll("\"",""), ConfigurationType.JOBRESOURCE.intValue());
                         if(!results.isEmpty()) {
                             item.getReferences().add(results.get(0));
                         }
@@ -194,10 +382,7 @@ public class DependencyResolver {
             if(instructions != null) {
                 List<String> boardNames = getValuesFromInstructions(instructions, INSTRUCTION_BOARDS_SEARCH);
                 for(String boardName : boardNames) {
-                    if(boardName.contains("\"")) {
-                        boardName = boardName.replaceAll("\"","");
-                    }
-                    results = dbLayer.getConfigurationByName(boardName, ConfigurationType.NOTICEBOARD.intValue());
+                    results = dbLayer.getConfigurationByName(boardName.replaceAll("\"",""), ConfigurationType.NOTICEBOARD.intValue());
                     if(!results.isEmpty()) {
                         item.getReferences().add(results.get(0));
                     }
@@ -207,10 +392,7 @@ public class DependencyResolver {
                 getValuesRecursively("", workflow, INSTRUCTION_BOARDS_SEARCH, wfBoardNames);
                 if(!wfBoardNames.isEmpty()) {
                     for (String board : wfBoardNames) {
-                        if(board.contains("\"")) {
-                            board = board.replaceAll("\"","");
-                        }
-                        results = dbLayer.getConfigurationByName(board, ConfigurationType.NOTICEBOARD.intValue());
+                        results = dbLayer.getConfigurationByName(board.replaceAll("\"",""), ConfigurationType.NOTICEBOARD.intValue());
                         if(!results.isEmpty()) {
                             item.getReferences().add(results.get(0));
                         }
@@ -221,10 +403,7 @@ public class DependencyResolver {
             if(instructions != null) {
                 List<String> wfInstructionWorkflowNames = getValuesFromInstructions(instructions, INSTRUCTION_ADDORDERS_SEARCH);
                 for(String workflowName : wfInstructionWorkflowNames) {
-                    if(workflowName.contains("\"")) {
-                        workflowName = workflowName.replaceAll("\"","");
-                    }
-                    results = dbLayer.getConfigurationByName(workflowName, ConfigurationType.WORKFLOW.intValue());
+                    results = dbLayer.getConfigurationByName(workflowName.replaceAll("\"",""), ConfigurationType.WORKFLOW.intValue());
                     if(!results.isEmpty()) {
                         item.getReferences().add(results.get(0));
                     }
@@ -234,10 +413,7 @@ public class DependencyResolver {
                 getValuesRecursively("", workflow, WORKFLOWNAME_SEARCH, wfWorkflowNames);
                 if(!wfWorkflowNames.isEmpty()) {
                     for (String wf : wfWorkflowNames) {
-                        if(wf.contains("\"")) {
-                            wf = wf.replaceAll("\"","");
-                        }
-                        results = dbLayer.getConfigurationByName(wf, ConfigurationType.WORKFLOW.intValue());
+                        results = dbLayer.getConfigurationByName(wf.replaceAll("\"",""), ConfigurationType.WORKFLOW.intValue());
                         if(!results.isEmpty()) {
                             item.getReferences().add(results.get(0));
                         }
@@ -256,10 +432,7 @@ public class DependencyResolver {
             getValuesRecursively("", schedule, WORKFLOWNAMES_SEARCH, scheduleWorkflows);
             if(!scheduleWorkflows.isEmpty()) {
                 for(String wf : scheduleWorkflows) {
-                    if(wf.contains("\"")) {
-                        wf = wf.replaceAll("\"","");
-                    }
-                    results = dbLayer.getConfigurationByName(wf, ConfigurationType.WORKFLOW.intValue());
+                    results = dbLayer.getConfigurationByName(wf.replaceAll("\"",""), ConfigurationType.WORKFLOW.intValue());
                     if(!results.isEmpty()) {
                         item.getReferences().add(results.get(0));
                     }
@@ -273,10 +446,7 @@ public class DependencyResolver {
             getValuesRecursively("", jobTemplate, JOBRESOURCENAMES_SEARCH, jobTemplateJobResources);
             if(!jobTemplateJobResources.isEmpty()) {
                 for(String jobresource : jobTemplateJobResources) {
-                    if(jobresource.contains("\"")) {
-                        jobresource = jobresource.replaceAll("\"","");
-                    }
-                    results = dbLayer.getConfigurationByName(jobresource, ConfigurationType.JOBRESOURCE.intValue());
+                    results = dbLayer.getConfigurationByName(jobresource.replaceAll("\"",""), ConfigurationType.JOBRESOURCE.intValue());
                     if(!results.isEmpty()) {
                         item.getReferences().add(results.get(0));
                     }
@@ -290,10 +460,7 @@ public class DependencyResolver {
             getValuesRecursively("", fos, WORKFLOWNAME_SEARCH, fosWorkflows);
             if(!fosWorkflows.isEmpty()) {
                 for(String wf : fosWorkflows) {
-                    if(wf.contains("\"")) {
-                        wf = wf.replaceAll("\"","");
-                    }
-                    results = dbLayer.getConfigurationByName(wf, ConfigurationType.WORKFLOW.intValue());
+                    results = dbLayer.getConfigurationByName(wf.replaceAll("\"",""), ConfigurationType.WORKFLOW.intValue());
                     if(!results.isEmpty()) {
                         item.getReferences().add(results.get(0));
                     }
@@ -305,8 +472,123 @@ public class DependencyResolver {
         }
     }
     
+    // with no further db access for dependency resolution of a collection of items
+    public static ReferencedDbItem resolveReferences (ReferencedDbItem item, Map<ConfigurationType, Map<String,DBItemInventoryConfiguration>> groupedItems)
+            throws JsonMappingException, JsonProcessingException {
+        // this method is currently not in use
+        String json = item.getReferencedItem().getContent();
+        switch (item.getReferencedItem().getTypeAsEnum()) {
+        // determine references in configurations json
+        case WORKFLOW:
+            JsonObject workflow = jsonObjectFromString(json);
+            //Lock
+            List<String> wfLockNames = new ArrayList<String>(); 
+            getValuesRecursively("", workflow, LOCKNAME_SEARCH, wfLockNames);
+            if(!wfLockNames.isEmpty()) {
+                for (String lock : wfLockNames) {
+                    DBItemInventoryConfiguration lockItem = groupedItems.get(ConfigurationType.LOCK).get(lock);
+                    if(lockItem != null) {
+                        item.getReferences().add(lockItem);
+                    }
+                }
+            }
+            //JobResource
+            List<String> wfJobResourceNames = new ArrayList<String>(); 
+            getValuesRecursively("", workflow, JOBRESOURCENAMES_SEARCH, wfJobResourceNames);
+            if(!wfJobResourceNames.isEmpty()) {
+                for (String jobResource : wfJobResourceNames) {
+                    DBItemInventoryConfiguration jobResourceItem = groupedItems.get(ConfigurationType.JOBRESOURCE).get(jobResource);
+                    if(jobResourceItem != null) {
+                        item.getReferences().add(jobResourceItem);
+                    }
+                }
+            }
+            //NoticeBoards
+            List<String> wfBoardNames = new ArrayList<String>(); 
+            getValuesRecursively("", workflow, INSTRUCTION_BOARDS_SEARCH, wfBoardNames);
+            if(!wfBoardNames.isEmpty()) {
+                for (String board : wfBoardNames) {
+                    DBItemInventoryConfiguration boardItem = groupedItems.get(ConfigurationType.NOTICEBOARD).get(board);
+                    if(boardItem != null) {
+                        item.getReferences().add(boardItem);
+                    }
+                }
+            }
+            //Workflow
+            List<String> wfWorkflowNames = new ArrayList<String>(); 
+            getValuesRecursively("", workflow, WORKFLOWNAME_SEARCH, wfWorkflowNames);
+            if(!wfWorkflowNames.isEmpty()) {
+                for (String wf : wfWorkflowNames) {
+                    DBItemInventoryConfiguration workflowItem = groupedItems.get(ConfigurationType.WORKFLOW).get(wf);
+                    if(workflowItem != null) {
+                        item.getReferences().add(workflowItem);
+                    }
+                }
+            }
+            // ScriptIncludes
+            if(json.contains("##!include")) {
+                
+            }
+            break;
+        case SCHEDULE:
+            JsonObject schedule = jsonObjectFromString(json);
+            // Workflow
+            List<String> scheduleWorkflows = new ArrayList<String>();
+            getValuesRecursively("", schedule, WORKFLOWNAMES_SEARCH, scheduleWorkflows);
+            if(!scheduleWorkflows.isEmpty()) {
+                for(String wf : scheduleWorkflows) {
+                    DBItemInventoryConfiguration workflowItem = groupedItems.get(ConfigurationType.WORKFLOW).get(wf);
+                    if(workflowItem != null) {
+                        item.getReferences().add(workflowItem);
+                    }
+                }
+            }
+            break;
+        case JOBTEMPLATE:
+            // jobResource
+            JsonObject jobTemplate = jsonObjectFromString(json);
+            List<String> jobTemplateJobResources = new ArrayList<String>();
+            getValuesRecursively("", jobTemplate, JOBRESOURCENAMES_SEARCH, jobTemplateJobResources);
+            if(!jobTemplateJobResources.isEmpty()) {
+                for(String jobresource : jobTemplateJobResources) {
+                    DBItemInventoryConfiguration jobresourceItem = groupedItems.get(ConfigurationType.JOBRESOURCE).get(jobresource);
+                    if(jobresourceItem != null) {
+                        item.getReferences().add(jobresourceItem);
+                    }
+                }
+            }
+            break;
+        case FILEORDERSOURCE:
+            // Workflow
+            JsonObject fos = jsonObjectFromString(json);
+            List<String> fosWorkflows = new ArrayList<String>();
+            getValuesRecursively("", fos, WORKFLOWNAME_SEARCH, fosWorkflows);
+            if(!fosWorkflows.isEmpty()) {
+                for(String wf : fosWorkflows) {
+                    DBItemInventoryConfiguration workflowItem = groupedItems.get(ConfigurationType.WORKFLOW).get(wf);
+                    if(workflowItem != null) {
+                        item.getReferences().add(workflowItem);
+                    }
+                }
+            }
+            break;
+        default:
+            break;
+        }
+        return item;
+    }
+    
+    /**
+     * This method is used by JocInventory at each store operation
+     * @param session
+     * @param inventoryDbItem
+     * @throws SOSHibernateException
+     * @throws JsonMappingException
+     * @throws JsonProcessingException
+     */
     public static void updateDependencies(SOSHibernateSession session, DBItemInventoryConfiguration inventoryDbItem)
             throws SOSHibernateException, JsonMappingException, JsonProcessingException {
+        // this method is in use (JocInventory update and insert methods)
         boolean ownTransaction = false;
         if (!session.isAutoCommit() && !session.isTransactionOpened()) {
             session.beginTransaction();
@@ -318,8 +600,31 @@ public class DependencyResolver {
         }
     }
     
+    public static void updateDependencies(SOSHibernateSession session, List<DBItemInventoryConfiguration> allCfgs)
+            throws SOSHibernateException, JsonMappingException, JsonProcessingException, InterruptedException {
+        // this method is in use
+        boolean ownTransaction = false;
+        if (!session.isAutoCommit() && !session.isTransactionOpened()) {
+            session.beginTransaction();
+            ownTransaction = true;
+        }
+        insertOrRenewDependencies(session, allCfgs);
+        if(ownTransaction) {
+            session.commit();
+        }
+    }
+    
+    /**
+     * This method is used by the DependencyResolver as used in JocInventory at each store operation
+     * @param session
+     * @param inventoryDbItem
+     * @throws SOSHibernateException
+     * @throws JsonMappingException
+     * @throws JsonProcessingException
+     */
     public static void insertOrRenewDependencies(SOSHibernateSession session, DBItemInventoryConfiguration inventoryDbItem)
             throws SOSHibernateException, JsonMappingException, JsonProcessingException {
+        // this method is in use (JocInventory update and insert methods)
         ReferencedDbItem references = resolveReferencedBy(session, inventoryDbItem);
         resolveReferences(references, session);
         InventoryDBLayer layer = new InventoryDBLayer(session);
@@ -327,25 +632,69 @@ public class DependencyResolver {
         layer.insertOrReplaceDependencies(references.getReferencedItem(), convert(references, session));
     }
 
-    public static ReferencedDbItem getReferencedDbItems(SOSHibernateSession session, DBItemInventoryConfiguration item,
-            List<DBItemInventoryDependency> dependencies) throws SOSHibernateException {
-        ReferencedDbItem referencedItem = new ReferencedDbItem(item);
-        InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-        Map<Long, List<Long>> groupedDependencies = dependencies.stream()
-                .filter(dependency -> dependency.getInvId().equals(item.getId()))
-                .collect(Collectors.groupingBy(DBItemInventoryDependency::getInvId, 
-                        Collectors.mapping(DBItemInventoryDependency::getInvDependencyId, Collectors.toList())));
-        referencedItem.getReferencedBy().addAll(dbLayer.getConfigurations(groupedDependencies.get(item.getId())));
-        return referencedItem;
+    /**
+     * This method is used by the DependencyResolver as used in ./inventory/dependencies/update API for processing multiple objects 
+     *  with a minimum of db accesses 
+     *  
+     * @param session
+     * @param allCfgs
+     * @throws SOSHibernateException
+     * @throws JsonMappingException
+     * @throws JsonProcessingException
+     * @throws InterruptedException
+     */
+    public static void insertOrRenewDependencies(SOSHibernateSession session, List<DBItemInventoryConfiguration> allCfgs)
+            throws SOSHibernateException, JsonMappingException, JsonProcessingException, InterruptedException {
+        // this method is in use
+        Map<ConfigurationType, Map<String,DBItemInventoryConfiguration>> groupedItems = allCfgs.stream() .collect(
+                Collectors.groupingBy(DBItemInventoryConfiguration::getTypeAsEnum, 
+                        Collectors.toMap(DBItemInventoryConfiguration::getName, Function.identity())));
+        DependencyResolver.dependencyTypes.forEach(ctype -> groupedItems.putIfAbsent(ConfigurationType.fromValue(ctype), Collections.emptyMap()));
+        InventoryDBLayer layer = new InventoryDBLayer(session);
+
+        List<ReferenceCallable> callables = allCfgs.stream().map(item -> new ReferenceCallable(item, groupedItems)).collect(Collectors.toList());
+        if(!callables.isEmpty()) {
+            ExecutorService executorService = Executors.newFixedThreadPool(Math.min(callables.size(), 5));
+            for (Future<ReferencedDbItem> result : executorService.invokeAll(callables)) {
+                try {
+                    ReferencedDbItem item = result.get();
+                    // store new dependencies if direct or indirect references are present
+                    if(!(item.getReferencedBy().isEmpty() && item.getReferences().isEmpty())) {
+                        layer.insertOrReplaceDependencies(item.getReferencedItem(), convert(item, session));
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("", e);
+                }
+            }
+        }
     }
 
-    public static List<DBItemInventoryDependency> getStoredDependencies(SOSHibernateSession session, ReferencedDbItem references)
-            throws SOSHibernateException {
-        return getStoredDependencies(session, references.getReferencedItem());
-    }
 
+    /**
+     * This method is used by the DependencyResolver as used in ./inventory/dependencies/update API for processing multiple objects 
+     *  with a minimum of db accesses 
+     * @param session
+     * @param inventoryDbItem
+     * @param allCfgs
+     * @throws SOSHibernateException
+     * @throws JsonMappingException
+     * @throws JsonProcessingException
+     */
+    public static void insertOrRenewDependencies(SOSHibernateSession session, DBItemInventoryConfiguration inventoryDbItem,
+            Map<ConfigurationType, Map<String,DBItemInventoryConfiguration>> groupedItems)
+                    throws SOSHibernateException, JsonMappingException, JsonProcessingException {
+        // this method is currently not in use (method above with callables is currently used in the api)
+        ReferencedDbItem references = resolveReferencedBy(inventoryDbItem, groupedItems);
+        resolveReferences(references, groupedItems);
+        // store new dependencies
+        InventoryDBLayer layer = new InventoryDBLayer(session);
+        layer.insertOrReplaceDependencies(references.getReferencedItem(), convert(references, session));
+
+    }
+    
     public static List<DBItemInventoryDependency> getStoredDependencies(SOSHibernateSession session, DBItemInventoryConfiguration inventoryObject)
             throws SOSHibernateException {
+        // this method is in use
         List<DBItemInventoryDependency> dependencies = new ArrayList<DBItemInventoryDependency>();
         InventoryDBLayer dbLayer = new InventoryDBLayer(session);
         dependencies = dbLayer.getDependencies(inventoryObject);
@@ -353,6 +702,7 @@ public class DependencyResolver {
     }
 
     public static List<DBItemInventoryDependency> convert(ReferencedDbItem reference, SOSHibernateSession session) {
+        // this method is currently not in use
         return reference.getReferencedBy().stream().map(item -> {
             DBItemInventoryDependency dependency = new DBItemInventoryDependency();
             dependency.setInvId(reference.getReferencedItem().getId());
@@ -375,16 +725,16 @@ public class DependencyResolver {
     
     public static ReferencedDbItem convert(SOSHibernateSession session, DBItemInventoryConfiguration invCfg, List<DBItemInventoryDependency> dependencies)
             throws SOSHibernateException, JsonMappingException, JsonProcessingException {
+        // this method is in use
         InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-        ReferencedDbItem newDbItem = null;
+        ReferencedDbItem newDbItem = new ReferencedDbItem(invCfg);
         if(dependencies != null && !dependencies.isEmpty()) {
-            newDbItem = new ReferencedDbItem(dbLayer.getConfiguration(dependencies.get(0).getInvId()));
             for(DBItemInventoryDependency dependency : dependencies) {
-                DBItemInventoryConfiguration newItem = dbLayer.getConfiguration(dependency.getInvDependencyId());
-                newDbItem.getReferencedBy().add(newItem);
+                DBItemInventoryConfiguration cfg = dbLayer.getConfiguration(dependency.getInvId());
+                if(cfg != null) {
+                    newDbItem.getReferencedBy().add(cfg);
+                }
             }
-        } else {
-            newDbItem = new ReferencedDbItem(dbLayer.getConfiguration(invCfg.getId()));
         }
         resolveReferences(newDbItem, session);
         return newDbItem;
@@ -399,6 +749,8 @@ public class DependencyResolver {
     
     /**
      * This method processes a flat json structure as given from the INSTRUCTIONS column of the SEARCH_WORKFLOWS Table
+     *  (fast)
+     * 
      * @param jsonObj
      * @param searchKey
      * @return a List of string values found to the given search key
@@ -421,6 +773,7 @@ public class DependencyResolver {
      * This method processes the complex json structure from the CONTENT column of the INV_CONFIGURATIONS or the INV_CONTENT
      *  column from the DEP_HISTORY table.  As the method is called recursively it will not return any values. instead it will
      *  propagate the @param values List
+     *  (slow)
      *  
      * @param previousKey initial key as a starting point in the json structure, for full structure processing set initial key to ""
      * @param currentObject
@@ -450,7 +803,7 @@ public class DependencyResolver {
                     } else if (object instanceof JsonString) {
                         // assuming current array member is a string and next key is the search key, ends the recursion
                         if(nextKey.equals(searchKey)) {
-                            values.add(((JsonString)object).toString().replaceAll("\"", ""));
+                            values.add(((JsonString)object).getString());
                         }
                     }
                 }
