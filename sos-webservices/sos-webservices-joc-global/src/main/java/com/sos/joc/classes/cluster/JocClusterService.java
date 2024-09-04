@@ -322,7 +322,7 @@ public class JocClusterService {
         cluster.getActiveMemberHandler().updateService(mode, ClusterServices.history.name(), controllerId, action);
     }
 
-    public JocClusterAnswer forceServiceRun(ClusterRestart r, StartupMode mode) {
+    public JocClusterAnswer runService(ClusterRestart r, StartupMode mode) {
         if (cluster == null) {
             return JocCluster.getErrorAnswer(new Exception(String.format("cluster not started. %s run %s can't be performed.", mode, r.getType())));
         }
@@ -334,7 +334,7 @@ public class JocClusterService {
 
         switch (r.getType()) {
         case cleanup:
-            answer = cluster.getActiveMemberHandler().forceServiceRun(mode, ClusterServices.cleanup.name(), Globals.configurationGlobals
+            answer = cluster.getActiveMemberHandler().runService(mode, ClusterServices.cleanup.name(), Globals.configurationGlobals
                     .getConfigurationSection(DefaultSections.cleanup));
             break;
         default:

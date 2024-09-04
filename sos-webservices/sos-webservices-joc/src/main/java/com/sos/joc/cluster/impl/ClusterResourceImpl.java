@@ -33,25 +33,25 @@ import com.sos.schema.JsonValidator;
 public class ClusterResourceImpl extends JOCResourceImpl implements IClusterResource {
 
     public static final String API_PATH = "joc/cluster";
-    public static final String IMPL_PATH_FORCE_RUN = "force_run";
+    public static final String IMPL_PATH_RUN = "run";
     public static final String IMPL_PATH_RESTART = "restart";
     public static final String IMPL_PATH_SWITCH_MEMBER = "switch_member";
     public static final String IMPL_PATH_DELETE_MEMBER = "delete_member";
 
-    private static final String API_CALL_FORCE_RUN = String.format("./%s/%s", API_PATH, IMPL_PATH_FORCE_RUN);
+    private static final String API_CALL_RUN = String.format("./%s/%s", API_PATH, IMPL_PATH_RUN);
     private static final String API_CALL_RESTART = String.format("./%s/%s", API_PATH, IMPL_PATH_RESTART);
     private static final String API_CALL_SWITCH = String.format("./%s/%s", API_PATH, IMPL_PATH_SWITCH_MEMBER);
     private static final String API_CALL_DELETE = String.format("./%s/%s", API_PATH, IMPL_PATH_DELETE_MEMBER);
 
     @Override
-    public JOCDefaultResponse forceServiceRun(String accessToken, byte[] filterBytes) {
+    public JOCDefaultResponse runService(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL_FORCE_RUN, filterBytes, accessToken);
+            initLogging(API_CALL_RUN, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ClusterRestart.class);
             ClusterRestart in = Globals.objectMapper.readValue(filterBytes, ClusterRestart.class);
             JOCDefaultResponse response = initPermissions("", getJocPermissions(accessToken).getCluster().getManage());
             if (response == null) {
-                processAnswer(JocClusterService.getInstance().forceServiceRun(in, StartupMode.manual_restart));
+                processAnswer(JocClusterService.getInstance().runService(in, StartupMode.manual_restart));
                 response = JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
             }
             return response;
