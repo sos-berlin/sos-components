@@ -41,6 +41,7 @@ import com.sos.js7.job.jocapi.ApiResponse;
 
 public class JobResourceWebserviceExecuter {
 
+    private static final String ENC_PREFIX = "enc:";
     private ApiExecutor apiExecutor;
     private OrderProcessStepLogger logger;
 
@@ -247,9 +248,9 @@ public class JobResourceWebserviceExecuter {
 
         if (args.getEncryptCert() != null && !args.getEncryptCert().isEmpty()) {
             value = this.encrypt(args, value);
-            value = "enc:" + value;
+            value = ENC_PREFIX + value;
         }
-                
+
         if (args.getFile() != null && !args.getFile().isEmpty()) {
             String extension = "";
 
