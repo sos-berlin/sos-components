@@ -322,23 +322,23 @@ public class JocClusterService {
         cluster.getActiveMemberHandler().updateService(mode, ClusterServices.history.name(), controllerId, action);
     }
 
-    public JocClusterAnswer forceServiceStart(ClusterRestart r, StartupMode mode) {
+    public JocClusterAnswer forceServiceRun(ClusterRestart r, StartupMode mode) {
         if (cluster == null) {
-            return JocCluster.getErrorAnswer(new Exception(String.format("cluster not started. %s start %s can't be performed.", mode, r.getType())));
+            return JocCluster.getErrorAnswer(new Exception(String.format("cluster not started. %s run %s can't be performed.", mode, r.getType())));
         }
         if (!cluster.getActiveMemberHandler().isActive()) {
-            return JocCluster.getErrorAnswer(new Exception(String.format("cluster inactiv. %s start %s can't be performed.", mode, r.getType())));
+            return JocCluster.getErrorAnswer(new Exception(String.format("cluster inactiv. %s run %s can't be performed.", mode, r.getType())));
         }
         JocClusterServiceLogger.setLogger();
         JocClusterAnswer answer = null;
 
         switch (r.getType()) {
         case cleanup:
-            answer = cluster.getActiveMemberHandler().forceServiceStart(mode, ClusterServices.cleanup.name(), Globals.configurationGlobals
+            answer = cluster.getActiveMemberHandler().forceServiceRun(mode, ClusterServices.cleanup.name(), Globals.configurationGlobals
                     .getConfigurationSection(DefaultSections.cleanup));
             break;
         default:
-            answer = JocCluster.getErrorAnswer(new Exception(String.format("%s start not yet supported for %s", mode, r.getType())));
+            answer = JocCluster.getErrorAnswer(new Exception(String.format("%s run not yet supported for %s", mode, r.getType())));
         }
 
         JocClusterServiceLogger.removeLogger();

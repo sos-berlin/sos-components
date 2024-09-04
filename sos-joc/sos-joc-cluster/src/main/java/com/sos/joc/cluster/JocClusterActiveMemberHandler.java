@@ -238,14 +238,14 @@ public class JocClusterActiveMemberHandler {
         s.update(mode, configuration);
     }
 
-    public JocClusterAnswer forceServiceStart(StartupMode mode, String identifier, AConfigurationSection configuration) {
+    public JocClusterAnswer forceServiceRun(StartupMode mode, String identifier, AConfigurationSection configuration) {
         Optional<IJocActiveMemberService> os = services.stream().filter(h -> h.getIdentifier().equals(identifier)).findAny();
         if (!os.isPresent()) {
             return JocCluster.getErrorAnswer(new Exception(String.format("handler not found for %s", identifier)));
         }
 
         JocClusterServiceLogger.setLogger();
-        LOGGER.info(String.format("[%s][forceStart][%s]start...", mode, identifier));
+        LOGGER.info(String.format("[%s][forceServiceRun][%s]start...", mode, identifier));
 
         IJocActiveMemberService s = os.get();
         JocServiceAnswer serviceAnswer = s.getInfo();
@@ -254,7 +254,7 @@ public class JocClusterActiveMemberHandler {
             answer.setState(JocClusterAnswerState.ALREADY_STARTED);
         }
 
-        LOGGER.info(String.format("[%s][forceStart][%s][not implemented yet...]%s", mode, identifier, SOSString.toString(answer)));
+        LOGGER.info(String.format("[%s][forceServiceRun][%s][not implemented yet...]%s", mode, identifier, SOSString.toString(answer)));
         JocClusterServiceLogger.removeLogger();
         return answer;
     }
