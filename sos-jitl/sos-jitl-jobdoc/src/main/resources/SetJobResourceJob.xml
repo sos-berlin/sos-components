@@ -58,17 +58,17 @@ The content of the file will be used as value in the job resource. The content i
                     </p>
                 </note>
             </param>
-            <param name="encrypt_cert"
-                   required="false">
+            <param name="encipherment_certificate"
+                   required="true">
                 <note>
-                    <title>Path to a file that holds the certificate</title>
+                    <title>The certificate</title>
                     <p>
-Specifies the path to a file that holds the CA signed or self-signed X.509 certificate. Alternatively the path to a file holding the public key can be specified.
-When this value is set the parameter "value" will be store encrypted in the job resource.                         
+The CA signed or self-signed X.509 certificate. Alternatively the public key can be specified.          
+This variable is normally provided via a job resource that is managed with the certificate management.                          
                     </p>
                 </note>
             </param>
-            <param name="time_zone"
+          <param name="time_zone"
                    required="false">
                 <note>
                     <title>If a Java date pattern is specified then the date is calculated for the given time zone.</title>
