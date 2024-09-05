@@ -1,7 +1,7 @@
 package com.sos.jitl.jobs.inventory.setjobresource;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.InvalidAlgorithmParameterException;
@@ -191,7 +191,7 @@ public class JobResourceWebserviceExecuter {
         return value;
     }
 
-    private String encrypt(SetJobResourceJobArguments args, String input) throws CertificateException, NoSuchAlgorithmException,
+    private String encrypt(SetJobResourceJobArguments args, String input, File outFile) throws CertificateException, NoSuchAlgorithmException,
             InvalidKeySpecException, IOException, InvalidKeyException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException,
             InvalidAlgorithmParameterException, SOSException {
         X509Certificate cert = null;
@@ -217,14 +217,61 @@ public class JobResourceWebserviceExecuter {
             }
         }
 
-        if (input != null) {
+        if (args.getFile() != null && !args.getFile().isEmpty()) {
             if (cert != null) {
-                encryptedValue = com.sos.commons.encryption.executable.Encrypt.encrypt(cert, input);
+                encryptedValue = com.sos.commons.encryption.executable.Encrypt.encryptFile(cert, Paths.get(args.getFile()), outFile.toPath());
             } else {
-                encryptedValue = com.sos.commons.encryption.executable.Encrypt.encrypt(pubKey, input);
+                encryptedValue = com.sos.commons.encryption.executable.Encrypt.encryptFile(pubKey, Paths.get(args.getFile()), outFile.toPath());
+            }
+        } else {
+            if (input != null) {
+                if (cert != null) {
+                    encryptedValue = com.sos.commons.encryption.executable.Encrypt.encrypt(cert, input);
+                } else {
+                    encryptedValue = com.sos.commons.encryption.executable.Encrypt.encrypt(pubKey, input);
+                }
             }
         }
+
         return encryptedValue;
+    }
+
+    private String getEncryptedValue(SetJobResourceJobArguments args) throws Exception {
+
+        String value = "";
+        File outFile = null;
+
+        if (args.getEnciphermentCertificate() != null && !args.getEnciphermentCertificate().isEmpty()) {
+
+            value = this.encrypt(args, value, outFile);
+            value = ENC_PREFIX + value;
+
+        }
+
+        return value;
+
+    }
+
+    private String getEncryptedFileValue(SetJobResourceJobArguments args) throws Exception {
+
+        String value = "";
+        File outFile = null;
+
+        if (args.getEnciphermentCertificate() != null && !args.getEnciphermentCertificate().isEmpty()) {
+            outFile = Files.createTempFile("js7_setresource", ".tmp").toFile();
+            args.setEncodedFileReturn(this.encrypt(args, value, outFile));
+        }
+
+        String extension = "";
+
+        int i = args.getFile().lastIndexOf('.');
+        if (i >= 0) {
+            extension = args.getFile().substring(i + 1);
+        }
+
+        value = Files.readString(outFile.toPath());
+        value = "to_file('" + value + "','*." + extension + "')";
+        return value;
     }
 
     public void handleJobResource(RequestFilter requestFilter, SetJobResourceJobArguments args, String accessToken) throws Exception {
@@ -238,34 +285,24 @@ public class JobResourceWebserviceExecuter {
         }
 
         String value = "";
-
         if (args.getFile() != null && !args.getFile().isEmpty()) {
-            value = new String(Files.readAllBytes(Paths.get(args.getFile())), StandardCharsets.UTF_8);
-        } else {
-            value = getValue(args.getValue(), args.getTimeZone());
-        }
-
-        if (args.getEnciphermentCertificate() != null && !args.getEnciphermentCertificate().isEmpty()) {
-            value = this.encrypt(args, value);
-            value = ENC_PREFIX + value;
-        }
-
-        if (args.getFile() != null && !args.getFile().isEmpty()) {
-            String extension = "";
-
-            int i = args.getFile().lastIndexOf('.');
-            if (i >= 0) {
-                extension = args.getFile().substring(i + 1);
+            value = getEncryptedFileValue(args);
+            jobResource.getArguments().getAdditionalProperties().put("key_" + args.getKey(), "\"" + args.getEncodedFileReturn() + "\"");
+            if (args.getEnvironmentVariable() != null && !args.getEnvironmentVariable().isEmpty()) {
+                jobResource.getEnv().getAdditionalProperties().put(args.getEnvironmentVariable(), "$" + "key_" + args.getKey());
             }
-            value = "to_file('" + value + "','*." + extension + "')";
+        } else {
+            value = getEncryptedValue(args);
         }
         jobResource.getArguments().getAdditionalProperties().put(args.getKey(), "\"" + value + "\"");
         if (args.getEnvironmentVariable() != null && !args.getEnvironmentVariable().isEmpty()) {
             jobResource.getEnv().getAdditionalProperties().put(args.getEnvironmentVariable(), "$" + args.getKey());
         }
+
         configurationObject.setConfiguration(jobResource);
         configurationObject = this.setInventoryItem(configurationObject, accessToken);
         publishDeployableItem(configurationObject, args, accessToken);
+
     }
 
 }
