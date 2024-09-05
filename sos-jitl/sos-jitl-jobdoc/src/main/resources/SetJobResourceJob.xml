@@ -64,7 +64,14 @@ The content of the file will be used as value in the job resource. The content i
                     <title>The certificate</title>
                     <p>
 The CA signed or self-signed X.509 certificate. Alternatively the public key can be specified.          
-This variable is normally provided via a job resource that is managed with the certificate management.                          
+This variable is normally provided via a job resource that is managed with the certificate management.
+
+When this variable is set the value will be encrypted. The encrypted value will contain:
+
+encrypted symmetric key, initialization vector and the encrypted value.
+
+-The encrypted symmetric key is decrypted with the private key
+-The encrypted file is decrypted using the decrypted symmetric key and the initialisation vector.
                     </p>
                 </note>
             </param>
