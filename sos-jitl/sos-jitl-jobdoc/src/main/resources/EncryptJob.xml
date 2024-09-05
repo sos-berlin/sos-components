@@ -9,7 +9,7 @@
          title="Check task logs with regular expression "
          category="JITL">
         <script language="java"
-                java_class="com.sos.jitl.jobs.checklog.classes.EncryptJob"
+                java_class="com.sos.jitl.jobs.encrypt.EncryptJob"
                 resource="1"/>
     </job>
     <configuration>
