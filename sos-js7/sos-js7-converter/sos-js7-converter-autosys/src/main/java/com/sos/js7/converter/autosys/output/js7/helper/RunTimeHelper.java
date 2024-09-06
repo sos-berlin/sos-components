@@ -66,8 +66,9 @@ public class RunTimeHelper {
         calendar.setCalendarName(workingDayCalendar);
         calendar.setTimeZone(j.getRunTime().getTimezone().getValue() == null ? config.getScheduleConfig().getDefaultTimeZone() : j.getRunTime()
                 .getTimezone().getValue());
-        Frequencies includes = new Frequencies();
+        Frequencies includes = null;
         if (j.getRunTime().getDaysOfWeek().getValue() != null) {
+            includes = new Frequencies();
             WeekDays weekDays = new WeekDays();
             weekDays.setDays(JS7ConverterHelper.getDays(j.getRunTime().getDaysOfWeek().getValue().getDays()));
             includes.setWeekdays(Collections.singletonList(weekDays));
@@ -108,7 +109,7 @@ public class RunTimeHelper {
         calendar.setPeriods(periods);
 
         Schedule s = new Schedule();
-        //s.setTitle(JS7ConverterHelper.getJS7InventoryObjectTitle("xxxx"));
+        // s.setTitle(JS7ConverterHelper.getJS7InventoryObjectTitle("xxxx"));
         s.setWorkflowNames(Collections.singletonList(wr.getName()));
         s.setPlanOrderAutomatically(config.getScheduleConfig().planOrders());
         s.setSubmitOrderToControllerWhenPlanned(config.getScheduleConfig().submitOrders());
