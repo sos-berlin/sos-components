@@ -54,7 +54,17 @@
                 <note>
                     <title>The name of a file</title>
                     <p>
-The content of the file will be used as value in the job resource. The content is stored with to_file().                        
+The content of the file will be used as value in the job resource. The content is stored with to_file().
+Additionally the variable key_nameofkey where nameofkey is the value of the paramter key is stored with
+
+ encrypted symmetric key, initialization vector and path to encrypted file separated by space. The encrypted file is a temporary file created during the encryption. 
+
+They are needed for decoding:
+
+-The encrypted symmetric key is decrypted with the private key
+-The encrypted file is decrypted using the decrypted symmetric key and the initialisation vector.
+-The path to the file may be relevant in subsequent processing.       
+                        
                     </p>
                 </note>
             </param>

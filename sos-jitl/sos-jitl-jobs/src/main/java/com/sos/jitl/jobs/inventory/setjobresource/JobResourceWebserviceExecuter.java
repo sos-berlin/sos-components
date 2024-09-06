@@ -236,30 +236,24 @@ public class JobResourceWebserviceExecuter {
         return encryptedValue;
     }
 
-    private String getEncryptedValue(SetJobResourceJobArguments args) throws Exception {
-
-        String value = "";
+    private Encryption getEncryptedValue(SetJobResourceJobArguments args) throws Exception {
+        Encryption encryption = new Encryption();
         File outFile = null;
 
         if (args.getEnciphermentCertificate() != null && !args.getEnciphermentCertificate().isEmpty()) {
-
-            value = this.encrypt(args, value, outFile);
-            value = ENC_PREFIX + value;
-
+            encryption.setEncryptedValue(ENC_PREFIX + this.encrypt(args, args.getValue(), outFile));
         }
-
-        return value;
-
+        return encryption;
     }
 
-    private String getEncryptedFileValue(SetJobResourceJobArguments args) throws Exception {
+    private Encryption getEncryptedFileValue(SetJobResourceJobArguments args) throws Exception {
 
-        String value = "";
         File outFile = null;
+        Encryption encryption = new Encryption();
 
         if (args.getEnciphermentCertificate() != null && !args.getEnciphermentCertificate().isEmpty()) {
             outFile = Files.createTempFile("js7_setresource", ".tmp").toFile();
-            args.setEncodedFileReturn(this.encrypt(args, value, outFile));
+            encryption.setEncryptionKey(this.encrypt(args, args.getValue(), outFile));
         }
 
         String extension = "";
@@ -269,14 +263,14 @@ public class JobResourceWebserviceExecuter {
             extension = args.getFile().substring(i + 1);
         }
 
-        value = Files.readString(outFile.toPath());
-        value = "to_file('" + value + "','*." + extension + "')";
-        return value;
+        encryption.setEncryptedValue("to_file('" + Files.readString(outFile.toPath()) + "','*." + extension + "')");
+        return encryption;
     }
 
     public void handleJobResource(RequestFilter requestFilter, SetJobResourceJobArguments args, String accessToken) throws Exception {
         ConfigurationObject configurationObject = this.getInventoryItem(requestFilter, accessToken);
         JobResource jobResource = (JobResource) configurationObject.getConfiguration();
+        Encryption encryption = null;
         if (jobResource.getArguments() == null) {
             jobResource.setArguments(new Environment());
         }
@@ -284,17 +278,16 @@ public class JobResourceWebserviceExecuter {
             jobResource.setEnv(new Environment());
         }
 
-        String value = "";
         if (args.getFile() != null && !args.getFile().isEmpty()) {
-            value = getEncryptedFileValue(args);
-            jobResource.getArguments().getAdditionalProperties().put("key_" + args.getKey(), "\"" + args.getEncodedFileReturn() + "\"");
+            encryption = getEncryptedFileValue(args);
+            jobResource.getArguments().getAdditionalProperties().put("key_" + args.getKey(), "'" + encryption.getNormalizedEncryptionKey() + "'");
             if (args.getEnvironmentVariable() != null && !args.getEnvironmentVariable().isEmpty()) {
                 jobResource.getEnv().getAdditionalProperties().put(args.getEnvironmentVariable(), "$" + "key_" + args.getKey());
             }
         } else {
-            value = getEncryptedValue(args);
+            encryption = getEncryptedValue(args);
         }
-        jobResource.getArguments().getAdditionalProperties().put(args.getKey(), "\"" + value + "\"");
+        jobResource.getArguments().getAdditionalProperties().put(args.getKey(), "\"" + encryption.getNormalizedEncryptedValue() + "\"");
         if (args.getEnvironmentVariable() != null && !args.getEnvironmentVariable().isEmpty()) {
             jobResource.getEnv().getAdditionalProperties().put(args.getEnvironmentVariable(), "$" + args.getKey());
         }

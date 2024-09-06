@@ -14,8 +14,7 @@ public class SetJobResourceJobArguments extends JobArguments {
     private JobArgument<String> timeZone = new JobArgument<String>("time_zone", false);
     private JobArgument<String> environmentVariable = new JobArgument<String>("environment_variable", false);
     private JobArgument<String> enciphermentCertificate = new JobArgument<String>("encipherment_certificate", false);
-    private String encodedFileReturn;
-
+ 
     public SetJobResourceJobArguments() {
         super(new CredentialStoreArguments());
     }
@@ -84,14 +83,6 @@ public class SetJobResourceJobArguments extends JobArguments {
         this.enciphermentCertificate.setValue(encryptCert);
     }
 
-    
-    public String getEncodedFileReturn() {
-        return encodedFileReturn;
-    }
 
-    
-    public void setEncodedFileReturn(String encodedFileReturn) {
-        this.encodedFileReturn = encodedFileReturn;
-    }
 
 }
