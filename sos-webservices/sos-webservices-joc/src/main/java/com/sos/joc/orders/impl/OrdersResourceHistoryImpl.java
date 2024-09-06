@@ -237,7 +237,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                     if (!historyIdsForOrderTagging.isEmpty()) {
                         Map<String, Set<String>> orderTags = OrderTags.getTagsByHistoryIds(controllerId, historyIdsForOrderTagging, session);
                         if (!orderTags.isEmpty()) {
-                            history = history.stream().peek(item -> item.setOrderTags(orderTags.get(OrdersHelper.getParentOrderId(item.getOrderId()))))
+                            history = history.stream().peek(item -> item.setTags(orderTags.get(OrdersHelper.getParentOrderId(item.getOrderId()))))
                                     .collect(Collectors.toList());
                         }
                     }

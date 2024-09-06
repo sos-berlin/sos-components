@@ -28,7 +28,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "schedulePath",
     "orderId",
     "orderName",
-    "orderTags",
+    "tags",
     "cyclicOrder",
     "plannedStartTime",
     "expectedEndTime",
@@ -104,9 +104,9 @@ public class PlannedOrderItem {
      * 
      * 
      */
-    @JsonProperty("orderTags")
+    @JsonProperty("tags")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<String> orderTags = null;
+    private Set<String> tags = null;
     /**
      * Cyclic Order
      * <p>
@@ -350,9 +350,9 @@ public class PlannedOrderItem {
      * 
      * 
      */
-    @JsonProperty("orderTags")
-    public Set<String> getOrderTags() {
-        return orderTags;
+    @JsonProperty("tags")
+    public Set<String> getTags() {
+        return tags;
     }
 
     /**
@@ -361,9 +361,9 @@ public class PlannedOrderItem {
      * 
      * 
      */
-    @JsonProperty("orderTags")
-    public void setOrderTags(Set<String> orderTags) {
-        this.orderTags = orderTags;
+    @JsonProperty("tags")
+    public void setTags(Set<String> tags) {
+        this.tags = tags;
     }
 
     /**
@@ -634,12 +634,12 @@ public class PlannedOrderItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("surveyDate", surveyDate).append("workflowPath", workflowPath).append("schedulePath", schedulePath).append("orderId", orderId).append("orderName", orderName).append("orderTags", orderTags).append("cyclicOrder", cyclicOrder).append("plannedStartTime", plannedStartTime).append("expectedEndTime", expectedEndTime).append("startTime", startTime).append("endTime", endTime).append("historyId", historyId).append("node", node).append("exitCode", exitCode).append("error", error).append("startMode", startMode).append("period", period).append("late", late).append("submitted", submitted).append("state", state).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("surveyDate", surveyDate).append("workflowPath", workflowPath).append("schedulePath", schedulePath).append("orderId", orderId).append("orderName", orderName).append("tags", tags).append("cyclicOrder", cyclicOrder).append("plannedStartTime", plannedStartTime).append("expectedEndTime", expectedEndTime).append("startTime", startTime).append("endTime", endTime).append("historyId", historyId).append("node", node).append("exitCode", exitCode).append("error", error).append("startMode", startMode).append("period", period).append("late", late).append("submitted", submitted).append("state", state).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(period).append(controllerId).append(surveyDate).append(workflowPath).append(orderId).append(error).append(orderTags).append(node).append(submitted).append(plannedStartTime).append(late).append(historyId).append(startMode).append(exitCode).append(expectedEndTime).append(startTime).append(endTime).append(state).append(schedulePath).append(orderName).append(cyclicOrder).toHashCode();
+        return new HashCodeBuilder().append(period).append(controllerId).append(surveyDate).append(workflowPath).append(orderId).append(error).append(tags).append(node).append(submitted).append(plannedStartTime).append(late).append(historyId).append(startMode).append(exitCode).append(expectedEndTime).append(startTime).append(endTime).append(state).append(schedulePath).append(orderName).append(cyclicOrder).toHashCode();
     }
 
     @Override
@@ -651,7 +651,7 @@ public class PlannedOrderItem {
             return false;
         }
         PlannedOrderItem rhs = ((PlannedOrderItem) other);
-        return new EqualsBuilder().append(period, rhs.period).append(controllerId, rhs.controllerId).append(surveyDate, rhs.surveyDate).append(workflowPath, rhs.workflowPath).append(orderId, rhs.orderId).append(error, rhs.error).append(orderTags, rhs.orderTags).append(node, rhs.node).append(submitted, rhs.submitted).append(plannedStartTime, rhs.plannedStartTime).append(late, rhs.late).append(historyId, rhs.historyId).append(startMode, rhs.startMode).append(exitCode, rhs.exitCode).append(expectedEndTime, rhs.expectedEndTime).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(state, rhs.state).append(schedulePath, rhs.schedulePath).append(orderName, rhs.orderName).append(cyclicOrder, rhs.cyclicOrder).isEquals();
+        return new EqualsBuilder().append(period, rhs.period).append(controllerId, rhs.controllerId).append(surveyDate, rhs.surveyDate).append(workflowPath, rhs.workflowPath).append(orderId, rhs.orderId).append(error, rhs.error).append(tags, rhs.tags).append(node, rhs.node).append(submitted, rhs.submitted).append(plannedStartTime, rhs.plannedStartTime).append(late, rhs.late).append(historyId, rhs.historyId).append(startMode, rhs.startMode).append(exitCode, rhs.exitCode).append(expectedEndTime, rhs.expectedEndTime).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(state, rhs.state).append(schedulePath, rhs.schedulePath).append(orderName, rhs.orderName).append(cyclicOrder, rhs.cyclicOrder).isEquals();
     }
 
 }

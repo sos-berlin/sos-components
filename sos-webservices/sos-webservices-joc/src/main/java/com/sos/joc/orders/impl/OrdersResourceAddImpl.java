@@ -199,12 +199,12 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     JFreshOrder o = OrdersHelper.mapToFreshOrder(order, scheduledFor, zoneId, startPos, endPoss, jBrachPath, forceJobAdmission);
                     auditLogDetails.add(new AuditLogDetail(WorkflowPaths.getPath(workflowName), o.id().string(), controllerId));
                     
-                    if (order.getOrderTags() != null && !order.getOrderTags().isEmpty()) {
-                        order.getOrderTags().forEach(tag -> SOSCheckJavaVariableName.test("tags", tag));
+                    if (order.getTags() != null && !order.getTags().isEmpty()) {
+                        order.getTags().forEach(tag -> SOSCheckJavaVariableName.test("tags", tag));
                         OrderV orderV = new OrderV();
                         orderV.setOrderId(o.id().string());
                         orderV.setScheduledFor(scheduledFor.orElse(Instant.now()).toEpochMilli());
-                        orderTags.put(orderV, order.getOrderTags());
+                        orderTags.put(orderV, order.getTags());
                     }
                     either = Either.right(o);
                 } catch (Exception ex) {

@@ -35,7 +35,7 @@ public class HistoryMapper {
         history.setPosition(getWorkflowPosition(item));
         history.setSequence(getSequence(item));
         history.setArguments(getVariables(item.getStartVariables()));
-        history.setOrderTags(null);
+        history.setTags(null);
         return history;
     }
 
@@ -60,7 +60,7 @@ public class HistoryMapper {
         history.setSequence(item.getId() == null ? 0 : item.getId().intValue());
         history.setRetryCounter(item.getRetryCounter());
         history.setArguments(getVariables(item.getStartVariables()));
-        history.setOrderTags(null);
+        history.setTags(null);
         return history;
     }
 
