@@ -1885,7 +1885,7 @@ public class WorkflowsHelper {
     }
     
     public static boolean withWorkflowTagsDisplayed() {
-        return true;//getNumOfWorkflowTagsDisplayed() != 0;
+        return getNumOfWorkflowTagsDisplayed() != 0;
     }
 
     public static WorkflowTags getTagsPerWorkflow(SOSHibernateSession session, Collection<String> workflowNames) {
