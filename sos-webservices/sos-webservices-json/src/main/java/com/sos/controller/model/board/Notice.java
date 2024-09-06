@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.common.WorkflowTags;
 import com.sos.joc.model.order.OrderV;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -24,6 +25,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "id",
     "endOfLife",
     "expectingOrders",
+    "workflowTagsPerWorkflow",
     "state"
 })
 public class Notice {
@@ -50,6 +52,15 @@ public class Notice {
     @JsonProperty("expectingOrders")
     private List<OrderV> expectingOrders = null;
     /**
+     * workflow tags
+     * <p>
+     * a map of workflowName -> tags-array
+     * 
+     */
+    @JsonProperty("workflowTagsPerWorkflow")
+    @JsonPropertyDescription("a map of workflowName -> tags-array")
+    private WorkflowTags workflowTagsPerWorkflow;
+    /**
      * NoticeState
      * <p>
      * 
@@ -67,16 +78,18 @@ public class Notice {
 
     /**
      * 
+     * @param workflowTagsPerWorkflow
      * @param id
      * @param state
      * @param endOfLife
      * @param expectingOrders
      */
-    public Notice(String id, Date endOfLife, List<OrderV> expectingOrders, NoticeState state) {
+    public Notice(String id, Date endOfLife, List<OrderV> expectingOrders, WorkflowTags workflowTagsPerWorkflow, NoticeState state) {
         super();
         this.id = id;
         this.endOfLife = endOfLife;
         this.expectingOrders = expectingOrders;
+        this.workflowTagsPerWorkflow = workflowTagsPerWorkflow;
         this.state = state;
     }
 
@@ -139,6 +152,28 @@ public class Notice {
     }
 
     /**
+     * workflow tags
+     * <p>
+     * a map of workflowName -> tags-array
+     * 
+     */
+    @JsonProperty("workflowTagsPerWorkflow")
+    public WorkflowTags getWorkflowTagsPerWorkflow() {
+        return workflowTagsPerWorkflow;
+    }
+
+    /**
+     * workflow tags
+     * <p>
+     * a map of workflowName -> tags-array
+     * 
+     */
+    @JsonProperty("workflowTagsPerWorkflow")
+    public void setWorkflowTagsPerWorkflow(WorkflowTags workflowTagsPerWorkflow) {
+        this.workflowTagsPerWorkflow = workflowTagsPerWorkflow;
+    }
+
+    /**
      * NoticeState
      * <p>
      * 
@@ -162,12 +197,12 @@ public class Notice {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("endOfLife", endOfLife).append("expectingOrders", expectingOrders).append("state", state).toString();
+        return new ToStringBuilder(this).append("id", id).append("endOfLife", endOfLife).append("expectingOrders", expectingOrders).append("workflowTagsPerWorkflow", workflowTagsPerWorkflow).append("state", state).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(id).append(state).append(endOfLife).append(expectingOrders).toHashCode();
+        return new HashCodeBuilder().append(workflowTagsPerWorkflow).append(id).append(state).append(endOfLife).append(expectingOrders).toHashCode();
     }
 
     @Override
@@ -179,7 +214,7 @@ public class Notice {
             return false;
         }
         Notice rhs = ((Notice) other);
-        return new EqualsBuilder().append(id, rhs.id).append(state, rhs.state).append(endOfLife, rhs.endOfLife).append(expectingOrders, rhs.expectingOrders).isEquals();
+        return new EqualsBuilder().append(workflowTagsPerWorkflow, rhs.workflowTagsPerWorkflow).append(id, rhs.id).append(state, rhs.state).append(endOfLife, rhs.endOfLife).append(expectingOrders, rhs.expectingOrders).isEquals();
     }
 
 }

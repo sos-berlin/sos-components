@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.board.Board;
 import com.sos.controller.model.board.Notice;
 import com.sos.controller.model.board.NoticeState;
@@ -36,12 +37,14 @@ import com.sos.joc.classes.common.SyncStateHelper;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowPaths;
+import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.model.common.Folder;
 
 import js7.data.board.BoardPath;
 import js7.data.board.BoardState;
 import js7.data.order.Order;
+import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.board.JBoardState;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
@@ -80,7 +83,7 @@ public class BoardHelper {
     }
     
     public static Board getBoard(JControllerState controllerState, DeployedContent dc, ConcurrentMap<String, List<JOrder>> expectings,
-            Map<String, Set<String>> orderTags, Integer limit, ZoneId zoneId, long surveyDateMillis) throws Exception {
+            Map<String, Set<String>> orderTags, Integer limit, ZoneId zoneId, long surveyDateMillis, SOSHibernateSession session) throws Exception {
         SyncStateText stateText = SyncStateText.UNKNOWN;
         Board item = init(dc);
 
@@ -98,6 +101,7 @@ public class BoardHelper {
 
         ToLongFunction<JOrder> compareScheduleFor = OrdersHelper.getCompareScheduledFor(zoneId, surveyDateMillis);
         List<Notice> notices = new ArrayList<>();
+        boolean withWorkflowTagsDisplayed = WorkflowsHelper.withWorkflowTagsDisplayed();
 
         expectings.forEach((noticeId, jOrders) -> {
             Notice notice = new Notice();
@@ -123,6 +127,10 @@ public class BoardHelper {
             }
             notice.setState(getState(NoticeStateText.EXPECTED));
             notices.add(notice);
+            if (withWorkflowTagsDisplayed) {
+                notice.setWorkflowTagsPerWorkflow(WorkflowsHelper.getTagsPerWorkflow(session, jOrders.stream().map(JOrder::workflowId).map(
+                        JWorkflowId::path).map(WorkflowPath::string)));
+            }
         });
 
         if (jBoardState != null) {

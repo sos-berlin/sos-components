@@ -649,7 +649,7 @@ public class OrdersHelper {
 //            o.setTags(OrderTags.getTags(controllerState.asScala().controllerId().string(), o.getOrderId()));
 //        }
         if (orderTags != null && !orderTags.isEmpty()) {
-            o.setTags(orderTags.get(getParentOrderId(o.getOrderId())));
+            o.setOrderTags(orderTags.get(getParentOrderId(o.getOrderId())));
         }
         return o;
     }

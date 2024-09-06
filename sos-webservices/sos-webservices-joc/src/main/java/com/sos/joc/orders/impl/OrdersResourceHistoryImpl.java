@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -29,6 +30,7 @@ import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.workflow.WorkflowPaths;
+import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.HistoryFilter;
@@ -192,7 +194,9 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                     JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(session, dbFilter);
                     ScrollableResults<DBItemHistoryOrder> sr = null;
                     List<Long> historyIdsForOrderTagging = new ArrayList<>();
+                    Set<String> workflowNames = new HashSet<>();
                     boolean withTagsDisplayedAsOrderId = OrderTags.withTagsDisplayedAsOrderId();
+                    boolean withWorkflowTagsDisplayed = WorkflowsHelper.withWorkflowTagsDisplayed();
 
                     try {
                         boolean profiler = false;
@@ -216,6 +220,9 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                             if (withTagsDisplayedAsOrderId) {
                                 historyIdsForOrderTagging.add(item.getId());
                             }
+                            if (withWorkflowTagsDisplayed) {
+                                workflowNames.add(item.getWorkflowName());  
+                            }
                             history.add(HistoryMapper.map2OrderHistoryItem(item));
                         }
                         logProfiler(profiler, i, profilerStart, profilerAfterSelect, profilerFirstEntry);
@@ -230,9 +237,13 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                     if (!historyIdsForOrderTagging.isEmpty()) {
                         Map<String, Set<String>> orderTags = OrderTags.getTagsByHistoryIds(controllerId, historyIdsForOrderTagging, session);
                         if (!orderTags.isEmpty()) {
-                            history = history.stream().peek(item -> item.setTags(orderTags.get(OrdersHelper.getParentOrderId(item.getOrderId()))))
+                            history = history.stream().peek(item -> item.setOrderTags(orderTags.get(OrdersHelper.getParentOrderId(item.getOrderId()))))
                                     .collect(Collectors.toList());
                         }
+                    }
+                    
+                    if (withWorkflowTagsDisplayed) {
+                        answer.setWorkflowTagsPerWorkflow(WorkflowsHelper.getTagsPerWorkflow(session, workflowNames));
                     }
                 }
             }

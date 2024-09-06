@@ -3,9 +3,13 @@ package com.sos.joc.db.inventory;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.hibernate.query.Query;
 
@@ -20,17 +24,18 @@ import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.inventory.search.ResponseBaseSearchItem;
 
 public class InventoryTagDBLayer extends DBLayer {
 
     private static final long serialVersionUID = 1L;
-//    private Map<Long, List<DBItemInventoryTag>> map = Collections.emptyMap();
-//    private List<Long> tagIdsWithObjects = Collections.emptyList();
+    // private Map<Long, List<DBItemInventoryTag>> map = Collections.emptyMap();
+    // private List<Long> tagIdsWithObjects = Collections.emptyList();
 
     public InventoryTagDBLayer(SOSHibernateSession session) {
         super(session);
     }
-    
+
     public List<String> getAllTagNames() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
@@ -42,18 +47,18 @@ public class InventoryTagDBLayer extends DBLayer {
                 return Collections.emptyList();
             }
             return result;
-            
+
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public List<DBItemInventoryTag> getAllTags() throws DBConnectionRefusedException, DBInvalidDataException {
         return getTags((Set<String>) null);
     }
-    
+
     public List<DBItemInventoryTag> getTags(Set<String> tagNames) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
@@ -80,14 +85,14 @@ public class InventoryTagDBLayer extends DBLayer {
                 return Collections.emptyList();
             }
             return result;
-            
+
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public DBItemInventoryTag getTag(String tagName) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             if (tagName == null || tagName.isEmpty()) {
@@ -107,7 +112,7 @@ public class InventoryTagDBLayer extends DBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public Integer getMaxOrdering() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
@@ -118,14 +123,14 @@ public class InventoryTagDBLayer extends DBLayer {
                 return 0;
             }
             return result;
-            
+
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public Integer deleteTags(Set<String> tagNames) throws SOSHibernateException {
         if (tagNames == null || tagNames.isEmpty()) {
             return 0;
@@ -145,14 +150,14 @@ public class InventoryTagDBLayer extends DBLayer {
         }
         return getSession().executeUpdate(query);
     }
-    
+
     public Integer deleteTaggings(Set<String> tagNames) throws SOSHibernateException {
         if (tagNames == null || tagNames.isEmpty()) {
             return 0;
         }
         return deleteTaggingsByTagIds(getTags(tagNames).stream().map(DBItemInventoryTag::getId).collect(Collectors.toList()));
     }
-    
+
     private Integer deleteTaggingsByTagIds(List<Long> tagIds) throws SOSHibernateException {
         if (tagIds == null || tagIds.isEmpty()) {
             return 0;
@@ -180,7 +185,7 @@ public class InventoryTagDBLayer extends DBLayer {
             return getSession().executeUpdate(query);
         }
     }
-    
+
     public Integer deleteTaggingsByIds(List<Long> taggingIds) throws SOSHibernateException {
         if (taggingIds == null || taggingIds.isEmpty()) {
             return 0;
@@ -208,54 +213,53 @@ public class InventoryTagDBLayer extends DBLayer {
             return getSession().executeUpdate(query);
         }
     }
-    
-//    private List<Long> getTagIdsWithObjects() throws DBConnectionRefusedException, DBInvalidDataException {
-//        try {
-//            StringBuilder sql = new StringBuilder();
-//            sql.append("select tagId from ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" group by tagId");
-//            Query<Long> query = getSession().createQuery(sql.toString());
-//            
-//            List<Long> result = getSession().getResultList(query);
-//            if (result == null) {
-//                return Collections.emptyList();
-//            }
-//            return result;
-//            
-//        } catch (SOSHibernateInvalidSessionException ex) {
-//            throw new DBConnectionRefusedException(ex);
-//        } catch (Exception ex) {
-//            throw new DBInvalidDataException(ex);
-//        }
-//    }
-    
-//    public Tree getAllTagsTree(Set<Long> notPermittedTagIds) throws DBConnectionRefusedException, DBInvalidDataException {
-//        map = getAllTags().stream().collect(Collectors.groupingBy(DBItemInventoryTag::getTagId));
-//        if (notPermittedTagIds == null) {
-//            notPermittedTagIds = Collections.emptySet();
-//        }
-//        Tree tree = new Tree();
-//        tree.setPath("/");
-//        tree.setFolders(getTreeChildren("", 0L, notPermittedTagIds));
-//        return tree;
-//    }
-    
-//    private List<Tree> getTreeChildren(final String parentPath, final Long id, final Set<Long> notPermittedTagIds) {
-//        final List<DBItemInventoryTag> children = map.get(id);
-//        if (children == null) {
-//            return Collections.emptyList();
-//        }
-//        return children.stream().filter(tag -> !notPermittedTagIds.contains(tag.getId())).map(tag -> {
-//            Tree tree = new Tree();
-//            tree.setName(tag.getName());
-//            tree.setPath(parentPath + "/" + tag.getName());
-//            tree.setFolders(getTreeChildren(tree.getPath(), tag.getId(), notPermittedTagIds));
-//            return tree;
-//        }).collect(Collectors.toList());
-//    }
-    
-    
-    public List<InventoryTreeFolderItem> getConfigurationsByTag(String tagName, Collection<Integer> configTypes,
-            Boolean onlyValidObjects, boolean forTrash) throws SOSHibernateException {
+
+    // private List<Long> getTagIdsWithObjects() throws DBConnectionRefusedException, DBInvalidDataException {
+    // try {
+    // StringBuilder sql = new StringBuilder();
+    // sql.append("select tagId from ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" group by tagId");
+    // Query<Long> query = getSession().createQuery(sql.toString());
+    //
+    // List<Long> result = getSession().getResultList(query);
+    // if (result == null) {
+    // return Collections.emptyList();
+    // }
+    // return result;
+    //
+    // } catch (SOSHibernateInvalidSessionException ex) {
+    // throw new DBConnectionRefusedException(ex);
+    // } catch (Exception ex) {
+    // throw new DBInvalidDataException(ex);
+    // }
+    // }
+
+    // public Tree getAllTagsTree(Set<Long> notPermittedTagIds) throws DBConnectionRefusedException, DBInvalidDataException {
+    // map = getAllTags().stream().collect(Collectors.groupingBy(DBItemInventoryTag::getTagId));
+    // if (notPermittedTagIds == null) {
+    // notPermittedTagIds = Collections.emptySet();
+    // }
+    // Tree tree = new Tree();
+    // tree.setPath("/");
+    // tree.setFolders(getTreeChildren("", 0L, notPermittedTagIds));
+    // return tree;
+    // }
+
+    // private List<Tree> getTreeChildren(final String parentPath, final Long id, final Set<Long> notPermittedTagIds) {
+    // final List<DBItemInventoryTag> children = map.get(id);
+    // if (children == null) {
+    // return Collections.emptyList();
+    // }
+    // return children.stream().filter(tag -> !notPermittedTagIds.contains(tag.getId())).map(tag -> {
+    // Tree tree = new Tree();
+    // tree.setName(tag.getName());
+    // tree.setPath(parentPath + "/" + tag.getName());
+    // tree.setFolders(getTreeChildren(tree.getPath(), tag.getId(), notPermittedTagIds));
+    // return tree;
+    // }).collect(Collectors.toList());
+    // }
+
+    public List<InventoryTreeFolderItem> getConfigurationsByTag(String tagName, Collection<Integer> configTypes, Boolean onlyValidObjects,
+            boolean forTrash) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select ");
         hql.append("ic.id as id");
         hql.append(",ic.name as name");
@@ -289,7 +293,7 @@ public class InventoryTagDBLayer extends DBLayer {
         }
         hql.append("left join ").append(DBLayer.DBITEM_INV_TAGS).append(" t ");
         hql.append("on t.id=tg.tagId ");
-        
+
         List<String> where = new ArrayList<>();
         where.add("t.name=:tagName");
         if (onlyValidObjects == Boolean.TRUE) {
@@ -311,7 +315,7 @@ public class InventoryTagDBLayer extends DBLayer {
         }
         return getSession().getResultList(query);
     }
-    
+
     public List<InventoryTagItem> getTagsByFolders(Collection<Folder> folders, boolean onlyObjectsThatHaveTags) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select ");
         hql.append("ic.id as cId");
@@ -326,13 +330,13 @@ public class InventoryTagDBLayer extends DBLayer {
         hql.append("on ic.id=tg.cid ");
         hql.append("left join ").append(DBLayer.DBITEM_INV_TAGS).append(" t ");
         hql.append("on t.id=tg.tagId ");
-        
+
         List<String> where = new ArrayList<>();
         if (onlyObjectsThatHaveTags) {
             where.add("t.id is not null");
         }
         where.add("ic.type = :configType");
-        
+
         if (folders != null && !folders.isEmpty()) {
             String clause = folders.stream().distinct().map(folder -> {
                 if (folder.getRecursive()) {
@@ -346,17 +350,17 @@ public class InventoryTagDBLayer extends DBLayer {
             }
             where.add(clause);
         }
-        
+
         hql.append("where ").append(String.join(" and ", where)).append(" ");
         Query<InventoryTagItem> query = getSession().createQuery(hql.toString(), InventoryTagItem.class);
         query.setParameter("configType", ConfigurationType.WORKFLOW.intValue());
         List<InventoryTagItem> result = getSession().getResultList(query);
         if (result == null) {
-           return Collections.emptyList();
+            return Collections.emptyList();
         }
         return result;
     }
-    
+
     public List<InventoryTagItem> getFoldersByTagAndTypeForInventory(Set<Integer> inventoryTypes, Boolean onlyValidObjects)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
@@ -378,7 +382,7 @@ public class InventoryTagDBLayer extends DBLayer {
             if (!whereClause.isEmpty()) {
                 sql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
             }
-            
+
             Query<InventoryTagItem> query = getSession().createQuery(sql.toString(), InventoryTagItem.class);
             if (inventoryTypes != null && !inventoryTypes.isEmpty()) {
                 if (inventoryTypes.size() == 1) {
@@ -387,21 +391,21 @@ public class InventoryTagDBLayer extends DBLayer {
                     query.setParameterList("types", inventoryTypes);
                 }
             }
-            
+
             List<InventoryTagItem> result = getSession().getResultList(query);
             if (result == null) {
                 return Collections.emptyList();
             }
-            
+
             return result;
-            
+
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public List<InventoryTagItem> getFoldersByTagAndTypeForInventoryTrash(Set<Integer> inventoryTypes, Boolean onlyValidObjects)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
@@ -423,7 +427,7 @@ public class InventoryTagDBLayer extends DBLayer {
             if (!whereClause.isEmpty()) {
                 sql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
             }
-            
+
             Query<InventoryTagItem> query = getSession().createQuery(sql.toString(), InventoryTagItem.class);
             if (inventoryTypes != null && !inventoryTypes.isEmpty()) {
                 if (inventoryTypes.size() == 1) {
@@ -432,21 +436,21 @@ public class InventoryTagDBLayer extends DBLayer {
                     query.setParameterList("types", inventoryTypes);
                 }
             }
-            
+
             List<InventoryTagItem> result = getSession().getResultList(query);
             if (result == null) {
                 return Collections.emptyList();
             }
-            
+
             return result;
-            
+
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public List<InventoryTagItem> getFoldersByTagAndTypeForDeployedObjects(Set<Integer> deployTypes, String controllerId)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
@@ -468,7 +472,7 @@ public class InventoryTagDBLayer extends DBLayer {
             if (!whereClause.isEmpty()) {
                 sql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
             }
-            
+
             Query<InventoryTagItem> query = getSession().createQuery(sql.toString(), InventoryTagItem.class);
             if (deployTypes != null && !deployTypes.isEmpty()) {
                 if (deployTypes.size() == 1) {
@@ -480,23 +484,23 @@ public class InventoryTagDBLayer extends DBLayer {
             if (controllerId != null) {
                 query.setParameter("controllerId", controllerId);
             }
-            
+
             List<InventoryTagItem> result = getSession().getResultList(query);
             if (result == null) {
                 return Collections.emptyList();
             }
-            
+
             return result;
-            
+
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
         }
     }
-    
-    public List<InventoryTagItem> getFoldersByTagAndTypeForReleasedObjects(Set<Integer> inventoryTypes)
-            throws DBConnectionRefusedException, DBInvalidDataException {
+
+    public List<InventoryTagItem> getFoldersByTagAndTypeForReleasedObjects(Set<Integer> inventoryTypes) throws DBConnectionRefusedException,
+            DBInvalidDataException {
         try {
             List<String> whereClause = new ArrayList<String>();
             StringBuilder sql = new StringBuilder();
@@ -513,7 +517,7 @@ public class InventoryTagDBLayer extends DBLayer {
             if (!whereClause.isEmpty()) {
                 sql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
             }
-            
+
             Query<InventoryTagItem> query = getSession().createQuery(sql.toString(), InventoryTagItem.class);
             if (inventoryTypes != null && !inventoryTypes.isEmpty()) {
                 if (inventoryTypes.size() == 1) {
@@ -522,37 +526,37 @@ public class InventoryTagDBLayer extends DBLayer {
                     query.setParameterList("types", inventoryTypes);
                 }
             }
-            
+
             List<InventoryTagItem> result = getSession().getResultList(query);
             if (result == null) {
                 return Collections.emptyList();
             }
-            
+
             return result;
-            
+
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public List<DBItemInventoryTagging> getTaggings(Long cid) {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_INV_TAGGINGS);
             sql.append(" where cid=:cid");
-  
+
             Query<DBItemInventoryTagging> query = getSession().createQuery(sql.toString());
             query.setParameter("cid", cid);
-            
+
             List<DBItemInventoryTagging> result = getSession().getResultList(query);
             if (result == null) {
                 return Collections.emptyList();
             }
-            
+
             return result;
-            
+
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -565,24 +569,24 @@ public class InventoryTagDBLayer extends DBLayer {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_INV_TAGGINGS);
             sql.append(" where tagId=:tagId");
-  
+
             Query<DBItemInventoryTagging> query = getSession().createQuery(sql.toString());
             query.setParameter("tagId", tagId);
-            
+
             List<DBItemInventoryTagging> result = getSession().getResultList(query);
             if (result == null) {
                 return Collections.emptyList();
             }
-            
+
             return result;
-            
+
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
         }
     }
-  
+
     public List<DBItemInventoryTagging> getTaggings(String name, Integer type) {
         try {
             StringBuilder sql = new StringBuilder();
@@ -592,100 +596,100 @@ public class InventoryTagDBLayer extends DBLayer {
             Query<DBItemInventoryTagging> query = getSession().createQuery(sql.toString());
             query.setParameter("name", name);
             query.setParameter("type", type);
-            
+
             List<DBItemInventoryTagging> result = getSession().getResultList(query);
             if (result == null) {
                 return Collections.emptyList();
             }
-            
+
             return result;
-            
+
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public List<String> getTags(Long cid) {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("select t.name from ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg join ").append(
-                    DBLayer.DBITEM_INV_TAGS).append(" t on t.id = tg.tagId");
-            
+            sql.append("select t.name from ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg join ").append(DBLayer.DBITEM_INV_TAGS).append(
+                    " t on t.id = tg.tagId");
+
             sql.append(" where tg.cid=:cid");
             sql.append(" order by t.ordering");
 
             Query<String> query = getSession().createQuery(sql.toString());
             query.setParameter("cid", cid);
-            
+
             List<String> result = getSession().getResultList(query);
             if (result == null) {
                 return Collections.emptyList();
             }
-            
+
             return result;
-            
+
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public List<String> getTags(String name, Integer type) {
-      try {
-          StringBuilder sql = new StringBuilder();
-          sql.append("select t.name from ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg join ").append(
-                  DBLayer.DBITEM_INV_TAGS).append(" t on t.id = tg.tagId");
-          
-          sql.append(" where tg.name=:name and tg.type=:type");
-          sql.append(" order by t.ordering");
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("select t.name from ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg join ").append(DBLayer.DBITEM_INV_TAGS).append(
+                    " t on t.id = tg.tagId");
 
-          Query<String> query = getSession().createQuery(sql.toString());
-          query.setParameter("name", name);
-          query.setParameter("type", type);
-          
-          List<String> result = getSession().getResultList(query);
-          if (result == null) {
-              return Collections.emptyList();
-          }
-          
-          return result;
-          
-      } catch (SOSHibernateInvalidSessionException ex) {
-          throw new DBConnectionRefusedException(ex);
-      } catch (Exception ex) {
-          throw new DBInvalidDataException(ex);
-      }
-  }
-  
+            sql.append(" where tg.name=:name and tg.type=:type");
+            sql.append(" order by t.ordering");
+
+            Query<String> query = getSession().createQuery(sql.toString());
+            query.setParameter("name", name);
+            query.setParameter("type", type);
+
+            List<String> result = getSession().getResultList(query);
+            if (result == null) {
+                return Collections.emptyList();
+            }
+
+            return result;
+
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
     public List<DBItemInventoryTag> getTagDBItems(String name, Integer type) {
-      try {
-          StringBuilder sql = new StringBuilder();
-          sql.append("select t from ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg join ").append(
-                  DBLayer.DBITEM_INV_TAGS).append(" t on t.id = tg.tagId");
-          
-          sql.append(" where tg.name=:name and tg.type=:type");
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("select t from ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg join ").append(DBLayer.DBITEM_INV_TAGS).append(
+                    " t on t.id = tg.tagId");
 
-          Query<DBItemInventoryTag> query = getSession().createQuery(sql.toString());
-          query.setParameter("name", name);
-          query.setParameter("type", type);
-          
-          List<DBItemInventoryTag> result = getSession().getResultList(query);
-          if (result == null) {
-              return Collections.emptyList();
-          }
-          
-          return result;
-          
-      } catch (SOSHibernateInvalidSessionException ex) {
-          throw new DBConnectionRefusedException(ex);
-      } catch (Exception ex) {
-          throw new DBInvalidDataException(ex);
-      }
-  }
-  
+            sql.append(" where tg.name=:name and tg.type=:type");
+
+            Query<DBItemInventoryTag> query = getSession().createQuery(sql.toString());
+            query.setParameter("name", name);
+            query.setParameter("type", type);
+
+            List<DBItemInventoryTag> result = getSession().getResultList(query);
+            if (result == null) {
+                return Collections.emptyList();
+            }
+
+            return result;
+
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
     public List<String> getTags(List<Long> cids) {
         if (cids == null || cids.isEmpty()) {
             return Collections.emptyList();
@@ -722,6 +726,51 @@ public class InventoryTagDBLayer extends DBLayer {
         }
     }
     
+    public Map<String, LinkedHashSet<String>> getWorkflowTags(Stream<String> workflowNames) {
+        List<ResponseBaseSearchItem> result = getWorkflowTags(workflowNames.distinct().collect(Collectors.toList()));
+        return result.stream().sorted(Comparator.comparingInt(ResponseBaseSearchItem::getOrdering)).collect(Collectors.groupingBy(
+                ResponseBaseSearchItem::getPath, Collectors.mapping(ResponseBaseSearchItem::getName, Collectors.toCollection(LinkedHashSet::new))));
+    }
+    
+    private List<ResponseBaseSearchItem> getWorkflowTags(List<String> workflowNames) {
+        if (workflowNames == null || workflowNames.isEmpty()) {
+            return Collections.emptyList();
+        }
+        if (workflowNames.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            List<ResponseBaseSearchItem> result = new ArrayList<>();
+            for (int i = 0; i < workflowNames.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                result.addAll(getWorkflowTags(SOSHibernate.getInClausePartition(i, workflowNames)));
+            }
+            return result;
+        } else {
+            try {
+                StringBuilder sql = new StringBuilder();
+                sql.append("select ic.name as path, t.name as name, t.ordering as ordering from ");
+                sql.append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg left join ");
+                sql.append(DBLayer.DBITEM_INV_TAGS).append(" t on t.id = tg.tagId left join ");
+                sql.append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic on tg.cid = ic.id");
+
+                sql.append(" where ic.name in (:workflowNames)");
+                sql.append(" and tg.type=:type");
+
+                Query<ResponseBaseSearchItem> query = getSession().createQuery(sql.toString(), ResponseBaseSearchItem.class);
+                query.setParameterList("workflowNames", workflowNames);
+                query.setParameter("type", ConfigurationType.WORKFLOW.intValue());
+
+                List<ResponseBaseSearchItem> result = getSession().getResultList(query);
+                if (result == null) {
+                    return Collections.emptyList();
+                }
+
+                return result;
+
+            } catch (Exception ex) {
+                // this method is exclusively used for tagging events. That should not throw exception. It affects only missing events.
+                return Collections.emptyList();
+            }
+        }
+    }
+
     public boolean hasTaggings(String name, Integer type) {
         try {
             StringBuilder sql = new StringBuilder();
@@ -731,16 +780,16 @@ public class InventoryTagDBLayer extends DBLayer {
             Query<Long> query = getSession().createQuery(sql.toString());
             query.setParameter("name", name);
             query.setParameter("type", type);
-            
+
             return getSession().getSingleResult(query) > 0L;
-            
+
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public Set<String> getWorkflowNamesHavingTags(Collection<String> workflowNames, Set<String> tags) throws DBConnectionRefusedException,
             DBInvalidDataException {
         if (workflowNames == null || workflowNames.isEmpty()) {
@@ -750,9 +799,8 @@ public class InventoryTagDBLayer extends DBLayer {
         wNames.retainAll(workflowNames);
         return wNames.stream().collect(Collectors.toSet());
     }
-    
-    public List<String> getWorkflowNamesHavingTags(List<String> tags) throws DBConnectionRefusedException,
-            DBInvalidDataException {
+
+    public List<String> getWorkflowNamesHavingTags(List<String> tags) throws DBConnectionRefusedException, DBInvalidDataException {
         if (tags == null || tags.isEmpty()) {
             return Collections.emptyList();
         }
@@ -789,7 +837,7 @@ public class InventoryTagDBLayer extends DBLayer {
             }
         }
     }
-    
+
     public int delete(String name, Integer type) {
         try {
             StringBuilder sql = new StringBuilder();
@@ -799,16 +847,16 @@ public class InventoryTagDBLayer extends DBLayer {
             Query<String> query = getSession().createQuery(sql.toString());
             query.setParameter("name", name);
             query.setParameter("type", type);
-            
+
             return getSession().executeUpdate(query);
-            
+
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public int update(String name, Integer type, Long cid) {
         try {
             StringBuilder sql = new StringBuilder();
@@ -820,16 +868,16 @@ public class InventoryTagDBLayer extends DBLayer {
             query.setParameter("cid", cid);
             query.setParameter("name", name);
             query.setParameter("type", type);
-            
+
             return getSession().executeUpdate(query);
-            
+
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public int update(String trashName, String name, Integer type, Long cid) {
         try {
             StringBuilder sql = new StringBuilder();
@@ -843,9 +891,9 @@ public class InventoryTagDBLayer extends DBLayer {
             query.setParameter("name", name);
             query.setParameter("trashName", trashName);
             query.setParameter("type", type);
-            
+
             return getSession().executeUpdate(query);
-            
+
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {

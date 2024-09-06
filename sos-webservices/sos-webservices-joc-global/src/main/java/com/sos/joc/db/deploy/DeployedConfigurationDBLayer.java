@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.checkerframework.checker.units.qual.t;
 import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernate;
@@ -25,6 +26,7 @@ import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue.ReturnType;
 import com.sos.commons.hibernate.function.regex.SOSHibernateRegexp;
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.workflow.WorkflowId;
+import com.sos.controller.model.workflow.WorkflowIdAndTags;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.common.FolderPath;
@@ -660,10 +662,10 @@ public class DeployedConfigurationDBLayer {
         }
     }
 
-    public List<WorkflowId> getAddOrderWorkflowsByWorkflow(String workflowName, String controllerId) throws DBConnectionRefusedException,
+    public <T extends WorkflowId> List<T> getAddOrderWorkflowsByWorkflow(String workflowName, String controllerId) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {
-            StringBuilder hql = new StringBuilder("select new ").append(WorkflowId.class.getName());
+            StringBuilder hql = new StringBuilder("select new ").append(WorkflowIdAndTags.class.getName());
             hql.append("(dc.path, dc.commitId) from ");
             hql.append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" dc left join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
             hql.append("on dc.inventoryConfigurationId=sw.inventoryConfigurationId ");
@@ -675,7 +677,7 @@ public class DeployedConfigurationDBLayer {
             String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.instructions", "$.addOrders");
             hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":workflowName"));
 
-            Query<WorkflowId> query = session.createQuery(hql.toString());
+            Query<T> query = session.createQuery(hql.toString());
             query.setParameter("type", DeployType.WORKFLOW.intValue());
             query.setParameter("controllerId", controllerId);
             query.setParameter("workflowName", getRegexpParameter(workflowName, "\""));
@@ -748,17 +750,17 @@ public class DeployedConfigurationDBLayer {
         }
     }
 
-    public List<WorkflowId> getWorkflowsIds(List<String> workflowNames, String controllerId) throws DBConnectionRefusedException,
+    public <T extends WorkflowId> List<T> getWorkflowsIds(List<String> workflowNames, String controllerId) throws DBConnectionRefusedException,
             DBInvalidDataException {
         if (workflowNames != null && workflowNames.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
-            List<WorkflowId> result = new ArrayList<>();
+            List<T> result = new ArrayList<>();
             for (int i = 0; i < workflowNames.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
                 result.addAll(getWorkflowsIds(SOSHibernate.getInClausePartition(i, workflowNames), controllerId));
             }
             return result;
         } else {
             try {
-                StringBuilder hql = new StringBuilder("select new ").append(WorkflowId.class.getName());
+                StringBuilder hql = new StringBuilder("select new ").append(WorkflowIdAndTags.class.getName());
                 hql.append("(path, commitId) from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
                 hql.append(" where type=:type");
                 hql.append(" and controllerId=:controllerId");
@@ -766,13 +768,13 @@ public class DeployedConfigurationDBLayer {
                     hql.append(" and name in (:workflowNames)");
                 }
 
-                Query<WorkflowId> query = session.createQuery(hql.toString());
+                Query<T> query = session.createQuery(hql.toString());
                 query.setParameter("type", DeployType.WORKFLOW.intValue());
                 query.setParameter("controllerId", controllerId);
                 if (workflowNames != null && !workflowNames.isEmpty()) {
                     query.setParameterList("workflowNames", workflowNames);
                 }
-                List<WorkflowId> result = session.getResultList(query);
+                List<T> result = session.getResultList(query);
                 if (result == null) {
                     return Collections.emptyList();
                 }

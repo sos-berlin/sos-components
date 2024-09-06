@@ -2,8 +2,11 @@ package com.sos.joc.workflow.impl;
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import jakarta.ws.rs.Path;
 
@@ -100,7 +103,7 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
                 if (workflow.getIsCurrentVersion() && !compact) {
                     workflow.setFileOrderSources(WorkflowsHelper.workflowToFileOrderSources(currentstate, controllerId, content.getName(), dbLayer));
                 }
-                List<WorkflowId> wIds = dbLayer.getAddOrderWorkflowsByWorkflow(JocInventory.pathToName(workflow.getPath()), controllerId);
+                List<WorkflowId> wIds = dbLayer.getAddOrderWorkflowsByWorkflow(content.getName(), controllerId);
                 if (wIds != null && !wIds.isEmpty()) {
                     workflow.setHasAddOrderDependencies(true);
                 }
@@ -119,6 +122,11 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
                     // workflow.setOrderPreparation(null);
                 } else if (workflow.getOrderPreparation() != null) {
                     workflow.setOrderPreparation(WorkflowsHelper.removeFinals(workflow));
+                }
+                
+                if (WorkflowsHelper.withWorkflowTagsDisplayed()) {
+                    Map<String, LinkedHashSet<String>> wTags = WorkflowsHelper.getMapOfTagsPerWorkflow(connection, Stream.of(content.getName()));
+                    workflow.setWorkflowTags(wTags.get(content.getName()));
                 }
                 entity.setWorkflow(workflow);
             } else {

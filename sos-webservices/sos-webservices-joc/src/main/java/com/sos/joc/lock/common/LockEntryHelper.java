@@ -26,6 +26,7 @@ import com.sos.joc.classes.common.SyncStateHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.order.OrdersHelper;
+import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.model.lock.common.LockEntry;
 import com.sos.joc.model.lock.common.LockOrder;
@@ -40,6 +41,7 @@ import js7.data.lock.LockPath;
 import js7.data.lock.LockState;
 import js7.data.order.OrderId;
 import js7.data.workflow.Instruction;
+import js7.data.workflow.WorkflowPath;
 import js7.data.workflow.instructions.LockInstruction;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.lock.JLockState;
@@ -56,6 +58,7 @@ public class LockEntryHelper {
     private final Integer limit;
     private final ZoneId zoneId;
     private final SOSHibernateSession session;
+    private final Boolean withWorkflowTagsDisplayed;
 
     public LockEntryHelper(String controllerId, Boolean compact, Integer limit, ZoneId zoneId, SOSHibernateSession session) {
         this.controllerId = controllerId;
@@ -63,6 +66,7 @@ public class LockEntryHelper {
         this.limit = limit;
         this.zoneId = zoneId;
         this.session = session;
+        this.withWorkflowTagsDisplayed = WorkflowsHelper.withWorkflowTagsDisplayed();
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LockEntryHelper.class);
@@ -181,6 +185,10 @@ public class LockEntryHelper {
         entry.setOrdersWaitingForLocksCount(ordersWaitingForLocksCount);
         entry.setLock(item);
         entry.setWorkflows(workflows.values().stream().collect(Collectors.toList()));
+        if (withWorkflowTagsDisplayed) {
+            entry.setWorkflowTagsPerWorkflow(WorkflowsHelper.getTagsPerWorkflow(session, workflows.keySet().stream().map(JWorkflowId::path).map(
+                    WorkflowPath::string)));
+        }
         return entry;
     }
 

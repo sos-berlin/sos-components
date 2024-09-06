@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -16,7 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.controller.model.workflow.WorkflowId;
+import com.sos.controller.model.workflow.WorkflowIdAndTags;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -73,6 +74,7 @@ public class WorkflowBoardsResourceImpl extends JOCResourceImpl implements IWork
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
+            boolean withWorkflowTagsDisplayed = WorkflowsHelper.withWorkflowTagsDisplayed();
 
             DeployedContent content = dbLayer.getDeployedInventory(controllerId, DeployType.WORKFLOW.intValue(), workflowPath, versionId);
             if (content != null && content.getContent() != null && !content.getContent().isEmpty()) {
@@ -113,6 +115,11 @@ public class WorkflowBoardsResourceImpl extends JOCResourceImpl implements IWork
                     workflow.setOrderPreparation(WorkflowsHelper.removeFinals(workflow));
                 }
                 
+                if (withWorkflowTagsDisplayed) {
+                    Map<String, LinkedHashSet<String>> wTags = WorkflowsHelper.getMapOfTagsPerWorkflow(connection, Stream.of(content.getName()));
+                    workflow.setWorkflowTags(wTags.get(content.getName()));
+                }
+                
 //                JocError jocError = getJocError();
                 WorkflowsFilter f = new WorkflowsFilter();
                 f.setControllerId(controllerId);
@@ -127,16 +134,16 @@ public class WorkflowBoardsResourceImpl extends JOCResourceImpl implements IWork
                 
                 List<WorkflowBoards> allWorkflowIdsWithBoards = dbLayer.getUsedWorkflowsByNoticeBoards(controllerId);
 //                Set<WorkflowId> workflowsWithNotices = new HashSet<>();
-                Map<String, Set<WorkflowId>> workflowsWithPostNotices = new HashMap<>();
-                Map<String, Set<WorkflowId>> workflowsWithExpectedNotices = new HashMap<>();
-                Map<String, Set<WorkflowId>> workflowsWithConsumeNotices = new HashMap<>();
+                Map<String, Set<WorkflowIdAndTags>> workflowsWithPostNotices = new HashMap<>();
+                Map<String, Set<WorkflowIdAndTags>> workflowsWithExpectedNotices = new HashMap<>();
+                Map<String, Set<WorkflowIdAndTags>> workflowsWithConsumeNotices = new HashMap<>();
                 
                 
                 for (WorkflowBoards wb : allWorkflowIdsWithBoards) {
                     List<String> pNotices = wb.getPostNotices();
                     List<String> eNotices = wb.getExpectNotices();
                     List<String> cNotices = wb.getConsumeNotices();
-                    WorkflowId wId = new WorkflowId(wb.getPath(), wb.getVersionId());
+                    WorkflowIdAndTags wId = new WorkflowIdAndTags(null, wb.getPath(), wb.getVersionId());
                     if (pNotices != null && !pNotices.isEmpty()) {
                         pNotices.retainAll(expectedAndConsumeNoticeBoards);
 //                        if (!pNotices.isEmpty()) {
@@ -179,7 +186,7 @@ public class WorkflowBoardsResourceImpl extends JOCResourceImpl implements IWork
                 
                 for (String boardName : postNoticeBoards) {
                     
-                    Set<WorkflowId> wIds = null;
+                    Set<WorkflowIdAndTags> wIds = null;
                     
 //                    f.setWorkflowIds(new ArrayList<>(workflowsWithExpectedNotices.getOrDefault(boardName, Collections.emptySet())));
                     wIds = workflowsWithExpectedNotices.get(boardName);
@@ -206,7 +213,7 @@ public class WorkflowBoardsResourceImpl extends JOCResourceImpl implements IWork
                 }
                 for (String boardName : expectedAndConsumeNoticeBoards) {
 //                    f.setWorkflowIds(new ArrayList<>(workflowsWithPostNotices.getOrDefault(boardName, Collections.emptySet())));
-                    Set<WorkflowId> wIds = workflowsWithPostNotices.get(boardName);
+                    Set<WorkflowIdAndTags> wIds = workflowsWithPostNotices.get(boardName);
                     if (wIds != null && !wIds.isEmpty()) {
                         //workflow.getPostNoticeBoards().setAdditionalProperty(boardName, getWorkflowFromWorkflowId(wIds));
                         workflow.getPostNoticeBoards().setAdditionalProperty(boardName, new ArrayList<>(wIds));
@@ -218,8 +225,16 @@ public class WorkflowBoardsResourceImpl extends JOCResourceImpl implements IWork
 //                    }
                 }
 //                f.setWorkflowIds(dbLayer.getAddOrderWorkflowsByWorkflow(JocInventory.pathToName(workflow.getPath()), controllerId));
-                List<WorkflowId> wIds2 = dbLayer.getAddOrderWorkflowsByWorkflow(JocInventory.pathToName(workflow.getPath()), controllerId);
+                List<WorkflowIdAndTags> wIds2 = dbLayer.getAddOrderWorkflowsByWorkflow(JocInventory.pathToName(workflow.getPath()), controllerId);
                 if (wIds2 != null && !wIds2.isEmpty()) {
+                    if (withWorkflowTagsDisplayed) {
+                        Map<String, LinkedHashSet<String>> wTags = WorkflowsHelper.getMapOfTagsPerWorkflow(connection, wIds2.stream().map(
+                                WorkflowIdAndTags::getPath).map(JocInventory::pathToName));
+                        if (!wTags.isEmpty()) {
+                            wIds2 = wIds2.stream().peek(w -> w.setWorkflowTags(wTags.get(JocInventory.pathToName(w.getPath())))).collect(Collectors
+                                    .toList());
+                        }
+                    }
 //                    if (compact) {
                         //workflow.setAddOrderFromWorkflows(getWorkflowFromWorkflowId(wIds2));
                         workflow.setAddOrderFromWorkflows(wIds2);
@@ -235,6 +250,14 @@ public class WorkflowBoardsResourceImpl extends JOCResourceImpl implements IWork
                     wIds2 = dbLayer.getWorkflowsIds(workflow.getAddOrderToWorkflows().stream().map(w -> w.getPath()).distinct().collect(Collectors
                           .toList()), controllerId);
                     if (wIds2 != null && !wIds2.isEmpty()) {
+                        if (withWorkflowTagsDisplayed) {
+                            Map<String, LinkedHashSet<String>> wTags = WorkflowsHelper.getMapOfTagsPerWorkflow(connection, wIds2.stream().map(
+                                    WorkflowIdAndTags::getPath).map(JocInventory::pathToName));
+                            if (!wTags.isEmpty()) {
+                                wIds2 = wIds2.stream().peek(w -> w.setWorkflowTags(wTags.get(JocInventory.pathToName(w.getPath())))).collect(Collectors
+                                        .toList());
+                            }
+                        }
 //                        if (compact) {
                             //workflow.setAddOrderToWorkflows(getWorkflowFromWorkflowId(wIds2));
                             workflow.setAddOrderToWorkflows(wIds2);

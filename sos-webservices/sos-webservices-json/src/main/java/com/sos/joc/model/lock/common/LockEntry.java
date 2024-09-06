@@ -5,8 +5,10 @@ import java.util.ArrayList;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.controller.model.lock.Lock;
+import com.sos.joc.model.common.WorkflowTags;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -24,7 +26,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "acquiredLockCount",
     "ordersHoldingLocksCount",
     "ordersWaitingForLocksCount",
-    "workflows"
+    "workflows",
+    "workflowTagsPerWorkflow"
 })
 public class LockEntry {
 
@@ -66,6 +69,15 @@ public class LockEntry {
     private Integer ordersWaitingForLocksCount;
     @JsonProperty("workflows")
     private List<LockWorkflow> workflows = new ArrayList<LockWorkflow>();
+    /**
+     * workflow tags
+     * <p>
+     * a map of workflowName -> tags-array
+     * 
+     */
+    @JsonProperty("workflowTagsPerWorkflow")
+    @JsonPropertyDescription("a map of workflowName -> tags-array")
+    private WorkflowTags workflowTagsPerWorkflow;
 
     /**
      * lock
@@ -173,14 +185,36 @@ public class LockEntry {
         this.workflows = workflows;
     }
 
+    /**
+     * workflow tags
+     * <p>
+     * a map of workflowName -> tags-array
+     * 
+     */
+    @JsonProperty("workflowTagsPerWorkflow")
+    public WorkflowTags getWorkflowTagsPerWorkflow() {
+        return workflowTagsPerWorkflow;
+    }
+
+    /**
+     * workflow tags
+     * <p>
+     * a map of workflowName -> tags-array
+     * 
+     */
+    @JsonProperty("workflowTagsPerWorkflow")
+    public void setWorkflowTagsPerWorkflow(WorkflowTags workflowTagsPerWorkflow) {
+        this.workflowTagsPerWorkflow = workflowTagsPerWorkflow;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("lock", lock).append("acquiredLockCount", acquiredLockCount).append("ordersHoldingLocksCount", ordersHoldingLocksCount).append("ordersWaitingForLocksCount", ordersWaitingForLocksCount).append("workflows", workflows).toString();
+        return new ToStringBuilder(this).append("lock", lock).append("acquiredLockCount", acquiredLockCount).append("ordersHoldingLocksCount", ordersHoldingLocksCount).append("ordersWaitingForLocksCount", ordersWaitingForLocksCount).append("workflows", workflows).append("workflowTagsPerWorkflow", workflowTagsPerWorkflow).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(lock).append(workflows).append(acquiredLockCount).append(ordersHoldingLocksCount).append(ordersWaitingForLocksCount).toHashCode();
+        return new HashCodeBuilder().append(ordersWaitingForLocksCount).append(lock).append(workflowTagsPerWorkflow).append(workflows).append(acquiredLockCount).append(ordersHoldingLocksCount).toHashCode();
     }
 
     @Override
@@ -192,7 +226,7 @@ public class LockEntry {
             return false;
         }
         LockEntry rhs = ((LockEntry) other);
-        return new EqualsBuilder().append(lock, rhs.lock).append(workflows, rhs.workflows).append(acquiredLockCount, rhs.acquiredLockCount).append(ordersHoldingLocksCount, rhs.ordersHoldingLocksCount).append(ordersWaitingForLocksCount, rhs.ordersWaitingForLocksCount).isEquals();
+        return new EqualsBuilder().append(ordersWaitingForLocksCount, rhs.ordersWaitingForLocksCount).append(lock, rhs.lock).append(workflowTagsPerWorkflow, rhs.workflowTagsPerWorkflow).append(workflows, rhs.workflows).append(acquiredLockCount, rhs.acquiredLockCount).append(ordersHoldingLocksCount, rhs.ordersHoldingLocksCount).isEquals();
     }
 
 }

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -29,6 +30,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.workflow.WorkflowPaths;
+import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.db.history.HistoryFilter;
@@ -135,7 +137,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                             sr = dbLayer.getJobs();
                         }
                         Instant profilerAfterSelect = Instant.now();
-
+                        
                         if (sr != null) {
                             Instant profilerFirstEntry = null;
                             int i = 0;
@@ -144,6 +146,8 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                             Map<String, Boolean> checkedFolders = new HashMap<>();
 //                            List<Long> historyIdsForOrderTagging = new ArrayList<>(); //obsolete -> orderIds are not displayed in Task History
 //                            boolean withTagsDisplayedAsOrderId = OrderTags.withTagsDisplayedAsOrderId();
+                            Set<String> workflowNames = new HashSet<>();
+                            boolean withWorkflowTagsDisplayed = WorkflowsHelper.withWorkflowTagsDisplayed();
 
                             while (sr.next()) {
                                 i++;
@@ -161,6 +165,9 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
 //                                if (withTagsDisplayedAsOrderId) {
 //                                    historyIdsForOrderTagging.add(item.getHistoryOrderId());
 //                                }
+                                if (withWorkflowTagsDisplayed) {
+                                    workflowNames.add(item.getWorkflowName());
+                                }
                                 history.add(HistoryMapper.map2TaskHistoryItem(item));
                             }
                             logProfiler(profiler, i, profilerStart, profilerAfterSelect, profilerFirstEntry);
@@ -172,6 +179,9 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
 //                                            .getOrderId())))).collect(Collectors.toList());
 //                                }
 //                            }
+                            if (withWorkflowTagsDisplayed) {
+                                answer.setWorkflowTagsPerWorkflow(WorkflowsHelper.getTagsPerWorkflow(session, workflowNames));
+                            }
                         }
                     } catch (Exception e) {
                         throw e;

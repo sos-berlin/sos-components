@@ -4,15 +4,14 @@ package com.sos.joc.model.order;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.commons.lang3.builder.ToStringBuilder;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.common.WorkflowTags;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
@@ -25,7 +24,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "deliveryDate",
     "surveyDate",
-    "orders"
+    "orders",
+    "workflowTagsPerWorkflow"
 })
 public class OrdersV {
 
@@ -55,6 +55,15 @@ public class OrdersV {
      */
     @JsonProperty("orders")
     private List<OrderV> orders = new ArrayList<OrderV>();
+    /**
+     * workflow tags
+     * <p>
+     * a map of workflowName -> tags-array
+     * 
+     */
+    @JsonProperty("workflowTagsPerWorkflow")
+    @JsonPropertyDescription("a map of workflowName -> tags-array")
+    private WorkflowTags workflowTagsPerWorkflow;
 
     /**
      * timestamp
@@ -122,14 +131,36 @@ public class OrdersV {
         this.orders = orders;
     }
 
+    /**
+     * workflow tags
+     * <p>
+     * a map of workflowName -> tags-array
+     * 
+     */
+    @JsonProperty("workflowTagsPerWorkflow")
+    public WorkflowTags getWorkflowTagsPerWorkflow() {
+        return workflowTagsPerWorkflow;
+    }
+
+    /**
+     * workflow tags
+     * <p>
+     * a map of workflowName -> tags-array
+     * 
+     */
+    @JsonProperty("workflowTagsPerWorkflow")
+    public void setWorkflowTagsPerWorkflow(WorkflowTags workflowTagsPerWorkflow) {
+        this.workflowTagsPerWorkflow = workflowTagsPerWorkflow;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("orders", orders).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("orders", orders).append("workflowTagsPerWorkflow", workflowTagsPerWorkflow).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(orders).append(deliveryDate).append(surveyDate).toHashCode();
+        return new HashCodeBuilder().append(orders).append(workflowTagsPerWorkflow).append(deliveryDate).append(surveyDate).toHashCode();
     }
 
     @Override
@@ -141,7 +172,7 @@ public class OrdersV {
             return false;
         }
         OrdersV rhs = ((OrdersV) other);
-        return new EqualsBuilder().append(orders, rhs.orders).append(deliveryDate, rhs.deliveryDate).append(surveyDate, rhs.surveyDate).isEquals();
+        return new EqualsBuilder().append(orders, rhs.orders).append(workflowTagsPerWorkflow, rhs.workflowTagsPerWorkflow).append(deliveryDate, rhs.deliveryDate).append(surveyDate, rhs.surveyDate).isEquals();
     }
 
 }

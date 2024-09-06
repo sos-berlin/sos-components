@@ -1,54 +1,57 @@
 
-package com.sos.inventory.model.common;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.commons.lang3.builder.ToStringBuilder;
+package com.sos.joc.model.common;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.inventory.model.common.Variables;
+
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
- * key-value pairs
+ * workflow tags
  * <p>
- * a map for arbitrary key-value pairs
+ * a map of workflowName -> tags-array
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
 
 })
-public class Variables {
+public class WorkflowTags {
+
 
     @JsonIgnore
-    private Map<String, Object> additionalProperties = new LinkedHashMap<String, Object>();
+    private Map<String, LinkedHashSet<String>> additionalProperties = new LinkedHashMap<String, LinkedHashSet<String>>();
 
     /**
      * No args constructor for use in serialization
      * 
      */
-    public Variables() {
+    public WorkflowTags() {
     }
 
     @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
+    public Map<String, LinkedHashSet<String>> getAdditionalProperties() {
         return this.additionalProperties;
     }
 
     @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
+    public void setAdditionalProperty(String name, LinkedHashSet<String> value) {
         this.additionalProperties.put(name, value);
     }
     
     @JsonIgnore
-    public void setAdditionalProperties(Map<String, Object> vars) {
+    public void setAdditionalProperties(Map<String, LinkedHashSet<String>> vars) {
         if (vars != null) {
             this.additionalProperties.putAll(vars);
         }
@@ -79,7 +82,7 @@ public class Variables {
         if ((other instanceof Variables) == false) {
             return false;
         }
-        Variables rhs = ((Variables) other);
+        WorkflowTags rhs = ((WorkflowTags) other);
         return new EqualsBuilder().append(additionalProperties, rhs.additionalProperties).isEquals();
     }
 

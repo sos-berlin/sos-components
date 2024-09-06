@@ -28,6 +28,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "path",
+    "workflowTags",
     "isCurrentVersion",
     "versionDate",
     "state",
@@ -56,6 +57,15 @@ public class Workflow
     @JsonProperty("path")
     @JsonPropertyDescription("absolute path of an object.")
     private String path;
+    /**
+     * tags
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflowTags")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<String> workflowTags = null;
     @JsonProperty("isCurrentVersion")
     private Boolean isCurrentVersion = true;
     /**
@@ -148,11 +158,13 @@ public class Workflow
      * @param versionId
      * @param forkListVariables
      * @param isCurrentVersion
+     * @param workflowTags
      * @param numOfSkippedInstructions
      */
-    public Workflow(String path, Boolean isCurrentVersion, Date versionDate, SyncState state, Boolean suspended, List<FileOrderSource> fileOrderSources, Set<String> forkListVariables, Boolean hasExpectedNoticeBoards, Boolean hasPostNoticeBoards, Boolean hasConsumeNoticeBoards, Boolean hasAddOrderDependencies, Integer numOfStoppedInstructions, Integer numOfSkippedInstructions, Boolean valid, Boolean deployed, String version, String versionId, String timeZone, String title, String documentationName, Requirements orderPreparation, List<String> jobResourceNames, List<Instruction> instructions, Jobs jobs) {
+    public Workflow(String path, Set<String> workflowTags, Boolean isCurrentVersion, Date versionDate, SyncState state, Boolean suspended, List<FileOrderSource> fileOrderSources, Set<String> forkListVariables, Boolean hasExpectedNoticeBoards, Boolean hasPostNoticeBoards, Boolean hasConsumeNoticeBoards, Boolean hasAddOrderDependencies, Integer numOfStoppedInstructions, Integer numOfSkippedInstructions, Boolean valid, Boolean deployed, String version, String versionId, String timeZone, String title, String documentationName, Requirements orderPreparation, List<String> jobResourceNames, List<Instruction> instructions, Jobs jobs) {
         super(version, versionId, timeZone, title, documentationName, orderPreparation, jobResourceNames, instructions, jobs);
         this.path = path;
+        this.workflowTags = workflowTags;
         this.isCurrentVersion = isCurrentVersion;
         this.versionDate = versionDate;
         this.state = state;
@@ -189,6 +201,28 @@ public class Workflow
     @JsonProperty("path")
     public void setPath(String path) {
         this.path = path;
+    }
+
+    /**
+     * tags
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflowTags")
+    public Set<String> getWorkflowTags() {
+        return workflowTags;
+    }
+
+    /**
+     * tags
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflowTags")
+    public void setWorkflowTags(Set<String> workflowTags) {
+        this.workflowTags = workflowTags;
     }
 
     @JsonProperty("isCurrentVersion")
@@ -389,12 +423,12 @@ public class Workflow
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("isCurrentVersion", isCurrentVersion).append("versionDate", versionDate).append("state", state).append("suspended", suspended).append("fileOrderSources", fileOrderSources).append("forkListVariables", forkListVariables).append("hasExpectedNoticeBoards", hasExpectedNoticeBoards).append("hasPostNoticeBoards", hasPostNoticeBoards).append("hasConsumeNoticeBoards", hasConsumeNoticeBoards).append("hasAddOrderDependencies", hasAddOrderDependencies).append("numOfStoppedInstructions", numOfStoppedInstructions).append("numOfSkippedInstructions", numOfSkippedInstructions).append("valid", valid).append("deployed", deployed).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("workflowTags", workflowTags).append("isCurrentVersion", isCurrentVersion).append("versionDate", versionDate).append("state", state).append("suspended", suspended).append("fileOrderSources", fileOrderSources).append("forkListVariables", forkListVariables).append("hasExpectedNoticeBoards", hasExpectedNoticeBoards).append("hasPostNoticeBoards", hasPostNoticeBoards).append("hasConsumeNoticeBoards", hasConsumeNoticeBoards).append("hasAddOrderDependencies", hasAddOrderDependencies).append("numOfStoppedInstructions", numOfStoppedInstructions).append("numOfSkippedInstructions", numOfSkippedInstructions).append("valid", valid).append("deployed", deployed).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(hasExpectedNoticeBoards).append(hasPostNoticeBoards).append(deployed).append(versionDate).append(suspended).append(hasConsumeNoticeBoards).append(valid).append(path).append(numOfStoppedInstructions).append(fileOrderSources).append(forkListVariables).append(isCurrentVersion).append(state).append(hasAddOrderDependencies).append(numOfSkippedInstructions).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(hasExpectedNoticeBoards).append(hasPostNoticeBoards).append(deployed).append(versionDate).append(suspended).append(hasConsumeNoticeBoards).append(valid).append(path).append(numOfStoppedInstructions).append(fileOrderSources).append(forkListVariables).append(isCurrentVersion).append(workflowTags).append(state).append(hasAddOrderDependencies).append(numOfSkippedInstructions).toHashCode();
     }
 
     @Override
@@ -406,7 +440,7 @@ public class Workflow
             return false;
         }
         Workflow rhs = ((Workflow) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(hasExpectedNoticeBoards, rhs.hasExpectedNoticeBoards).append(hasPostNoticeBoards, rhs.hasPostNoticeBoards).append(deployed, rhs.deployed).append(versionDate, rhs.versionDate).append(suspended, rhs.suspended).append(hasConsumeNoticeBoards, rhs.hasConsumeNoticeBoards).append(valid, rhs.valid).append(path, rhs.path).append(numOfStoppedInstructions, rhs.numOfStoppedInstructions).append(fileOrderSources, rhs.fileOrderSources).append(forkListVariables, rhs.forkListVariables).append(isCurrentVersion, rhs.isCurrentVersion).append(state, rhs.state).append(hasAddOrderDependencies, rhs.hasAddOrderDependencies).append(numOfSkippedInstructions, rhs.numOfSkippedInstructions).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(hasExpectedNoticeBoards, rhs.hasExpectedNoticeBoards).append(hasPostNoticeBoards, rhs.hasPostNoticeBoards).append(deployed, rhs.deployed).append(versionDate, rhs.versionDate).append(suspended, rhs.suspended).append(hasConsumeNoticeBoards, rhs.hasConsumeNoticeBoards).append(valid, rhs.valid).append(path, rhs.path).append(numOfStoppedInstructions, rhs.numOfStoppedInstructions).append(fileOrderSources, rhs.fileOrderSources).append(forkListVariables, rhs.forkListVariables).append(isCurrentVersion, rhs.isCurrentVersion).append(workflowTags, rhs.workflowTags).append(state, rhs.state).append(hasAddOrderDependencies, rhs.hasAddOrderDependencies).append(numOfSkippedInstructions, rhs.numOfSkippedInstructions).isEquals();
     }
 
 }

@@ -145,7 +145,7 @@ public class BoardsResourceImpl extends JOCResourceImpl implements IBoardsResour
                                 throw new DBMissingDataException("doesn't exist");
                             }
                             return BoardHelper.getBoard(controllerState, dc, expectings.getOrDefault(dc.getName(), new ConcurrentHashMap<>()),
-                                    orderTags, limit, zoneId, surveyDateMillis);
+                                    orderTags, limit, zoneId, surveyDateMillis, dbLayer.getSession());
                         } catch (Throwable e) {
                             if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
                                 LOGGER.info(jocError.printMetaInfo());

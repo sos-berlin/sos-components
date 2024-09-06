@@ -100,6 +100,9 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     //order tags instead orderId
     private ConfigurationEntry numOfTagsDisplayedAsOrderId = new ConfigurationEntry("num_of_tags_displayed_as_order_id", "0",
             GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
+    //display workflow tags
+    private ConfigurationEntry numOfWOrkflowTagsDisplayed = new ConfigurationEntry("num_of_workflow_tags_displayed", "0",
+            GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
     
     private Charset encodingCharset = null;
     private boolean encodingCharsetReaded = false;
@@ -157,6 +160,7 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         
         reportJavaOptions.setOrdering(++index);
         numOfTagsDisplayedAsOrderId.setOrdering(++index);
+        numOfWOrkflowTagsDisplayed.setOrdering(++index);
     }
 
     public static List<String> getAuditLogComments() {
@@ -333,6 +337,14 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     public Integer getNumOfTagsDisplayedAsOrderId() {
         try {
             return Integer.parseInt(numOfTagsDisplayedAsOrderId.getValue());
+        } catch (Exception e) {
+            return 0; // default
+        }
+    }
+    
+    public Integer getNumOfWorkflowTagsDisplayed() {
+        try {
+            return Integer.parseInt(numOfWOrkflowTagsDisplayed.getValue());
         } catch (Exception e) {
             return 0; // default
         }

@@ -29,7 +29,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "surveyDate",
     "controllerId",
     "orderId",
-    "tags",
+    "orderTags",
     "workflow",
     "startTime",
     "plannedTime",
@@ -63,9 +63,15 @@ public class OrderHistoryItem {
      */
     @JsonProperty("orderId")
     private String orderId;
-    @JsonProperty("tags")
+    /**
+     * tags
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("orderTags")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<String> tags = new LinkedHashSet<String>();
+    private Set<String> orderTags = new LinkedHashSet<String>();
     /**
      * path
      * <p>
@@ -214,14 +220,26 @@ public class OrderHistoryItem {
         this.orderId = orderId;
     }
 
-    @JsonProperty("tags")
-    public Set<String> getTags() {
-        return tags;
+    /**
+     * tags
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("orderTags")
+    public Set<String> getOrderTags() {
+        return orderTags;
     }
 
-    @JsonProperty("tags")
-    public void setTags(Set<String> tags) {
-        this.tags = tags;
+    /**
+     * tags
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("orderTags")
+    public void setOrderTags(Set<String> orderTags) {
+        this.orderTags = orderTags;
     }
 
     /**
@@ -468,12 +486,12 @@ public class OrderHistoryItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("controllerId", controllerId).append("orderId", orderId).append("tags", tags).append("workflow", workflow).append("startTime", startTime).append("plannedTime", plannedTime).append("endTime", endTime).append("position", position).append("sequence", sequence).append("state", state).append("orderState", orderState).append("historyId", historyId).append("children", children).append("arguments", arguments).toString();
+        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("controllerId", controllerId).append("orderId", orderId).append("orderTags", orderTags).append("workflow", workflow).append("startTime", startTime).append("plannedTime", plannedTime).append("endTime", endTime).append("position", position).append("sequence", sequence).append("state", state).append("orderState", orderState).append("historyId", historyId).append("children", children).append("arguments", arguments).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(surveyDate).append(controllerId).append(workflow).append(orderId).append(tags).append(orderState).append(sequence).append(children).append(historyId).append(plannedTime).append(startTime).append(arguments).append(endTime).append(position).append(state).toHashCode();
+        return new HashCodeBuilder().append(surveyDate).append(controllerId).append(workflow).append(orderId).append(orderTags).append(orderState).append(sequence).append(children).append(historyId).append(plannedTime).append(startTime).append(arguments).append(endTime).append(position).append(state).toHashCode();
     }
 
     @Override
@@ -485,7 +503,7 @@ public class OrderHistoryItem {
             return false;
         }
         OrderHistoryItem rhs = ((OrderHistoryItem) other);
-        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(controllerId, rhs.controllerId).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(tags, rhs.tags).append(orderState, rhs.orderState).append(sequence, rhs.sequence).append(children, rhs.children).append(historyId, rhs.historyId).append(plannedTime, rhs.plannedTime).append(startTime, rhs.startTime).append(arguments, rhs.arguments).append(endTime, rhs.endTime).append(position, rhs.position).append(state, rhs.state).isEquals();
+        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(controllerId, rhs.controllerId).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(orderTags, rhs.orderTags).append(orderState, rhs.orderState).append(sequence, rhs.sequence).append(children, rhs.children).append(historyId, rhs.historyId).append(plannedTime, rhs.plannedTime).append(startTime, rhs.startTime).append(arguments, rhs.arguments).append(endTime, rhs.endTime).append(position, rhs.position).append(state, rhs.state).isEquals();
     }
 
 }

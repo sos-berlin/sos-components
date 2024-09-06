@@ -20,6 +20,7 @@ import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.order.OrdersHelper;
+import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.dailyplan.db.DBLayerDailyPlannedOrders;
@@ -226,23 +227,29 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
 
     }
 
-    protected void addOrders(SOSHibernateSession session, String controllerId, Date plannedStartFrom, Date plannedStartTo, DailyPlanOrderFilterDef in,
+    protected Set<String> addOrders(SOSHibernateSession session, String controllerId, Date plannedStartFrom, Date plannedStartTo, DailyPlanOrderFilterDef in,
             List<DBItemDailyPlanWithHistory> orders, List<PlannedOrderItem> result, boolean getCyclicDetails, Map<String, Set<String>> orderTags) {
 
+        boolean withWorkflowTagsDisplayed = WorkflowsHelper.withWorkflowTagsDisplayed();
+        Set<String> workflowNames = new HashSet<>();
         if (orders != null) {
             DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
             for (DBItemDailyPlanWithHistory item : orders) {
                 PlannedOrderItem p = createPlanItem(item);
                 p.setControllerId(controllerId);
-                p.setTags(orderTags.get(OrdersHelper.getParentOrderId(p.getOrderId())));
+                p.setOrderTags(orderTags.get(OrdersHelper.getParentOrderId(p.getOrderId())));
 
                 if ((p.getStartMode().equals(DBLayerDailyPlannedOrders.START_MODE_CYCLIC) && !in.getExpandCycleOrders())) {
                     result.add(getCyclicPlannedOrder(dbLayer, plannedStartFrom, plannedStartTo, p, getCyclicDetails));
                 } else {
                     result.add(p);
                 }
+                if (withWorkflowTagsDisplayed) {
+                    workflowNames.add(item.getWorkflowName());
+                }
             }
         }
+        return workflowNames;
     }
 
     private PlannedOrderItem getCyclicPlannedOrder(DBLayerDailyPlannedOrders dbLayer, Date plannedStartFrom, Date plannedStartTo,

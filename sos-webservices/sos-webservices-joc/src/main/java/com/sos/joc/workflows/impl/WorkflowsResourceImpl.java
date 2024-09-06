@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -71,8 +72,20 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
             }
             final Set<Folder> folders = folderPermissions.getPermittedFolders(workflowsFilter.getFolders());
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
-            workflows.setWorkflows(getWorkflows(workflowsFilter, new DeployedConfigurationDBLayer(connection), currentstate, folders,
-                    getJocError()));
+            if (WorkflowsHelper.withWorkflowTagsDisplayed()) {
+                List<Workflow> ws = getWorkflows(workflowsFilter, new DeployedConfigurationDBLayer(connection), currentstate, folders, getJocError());
+                Map<String, LinkedHashSet<String>> wTags = WorkflowsHelper.getMapOfTagsPerWorkflow(connection, ws.stream().map(Workflow::getPath).map(
+                        JocInventory::pathToName));
+                if (!wTags.isEmpty()) {
+                    workflows.setWorkflows(ws.stream().peek(w -> w.setWorkflowTags(wTags.get(JocInventory.pathToName(w.getPath())))).collect(
+                            Collectors.toList()));
+                } else {
+                    workflows.setWorkflows(ws);
+                }
+            } else {
+                workflows.setWorkflows(getWorkflows(workflowsFilter, new DeployedConfigurationDBLayer(connection), currentstate, folders,
+                        getJocError()));
+            }
             workflows.setDeliveryDate(Date.from(Instant.now()));
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(workflows));

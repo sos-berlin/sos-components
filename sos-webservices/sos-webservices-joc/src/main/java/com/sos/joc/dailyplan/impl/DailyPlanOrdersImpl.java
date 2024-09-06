@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -19,6 +20,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.proxy.Proxies;
+import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
 import com.sos.joc.dailyplan.db.DBLayerDailyPlannedOrders;
 import com.sos.joc.dailyplan.db.FilterDailyPlannedOrders;
@@ -82,6 +84,8 @@ public class DailyPlanOrdersImpl extends JOCOrderResourceImpl implements IDailyP
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
             List<PlannedOrderItem> result = new ArrayList<>();
+            Set<String> workflowNames = new HashSet<>();
+            
             for (String controllerId : allowedControllers) {
                 List<Long> submissions = dbLayer.getSubmissionIds(controllerId, dateFrom, dateTo);
                 if (submissions == null || submissions.size() == 0) {
@@ -113,12 +117,13 @@ public class DailyPlanOrdersImpl extends JOCOrderResourceImpl implements IDailyP
                 List<DBItemDailyPlanWithHistory> orders = getOrders(session, filter, true);
                 Map<String, Set<String>> orderTags = orders == null ? Collections.emptyMap() : OrderTags.getTagsByOrderIds(controllerId, orders
                         .stream().map(DBItemDailyPlanWithHistory::getOrderId), session);
-                addOrders(session, controllerId, plannedStartFrom, plannedStartTo, in, orders, result, true, orderTags);
+                workflowNames.addAll(addOrders(session, controllerId, plannedStartFrom, plannedStartTo, in, orders, result, true, orderTags));
             }
 
             PlannedOrders answer = new PlannedOrders();
             answer.setPlannedOrderItems(result);
             answer.setDeliveryDate(Date.from(Instant.now()));
+            answer.setWorkflowTagsPerWorkflow(WorkflowsHelper.getTagsPerWorkflow(session, workflowNames));
 
             return JOCDefaultResponse.responseStatus200(answer);
 

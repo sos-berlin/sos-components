@@ -92,7 +92,7 @@ public class BoardResourceImpl extends JOCResourceImpl implements IBoardResource
                 Map<String, Set<String>> orderTags = OrderTags.getTags(filter.getControllerId(), eos.stream().map(ExpectingOrder::getJOrder),
                         session);
                 answer.setNoticeBoard(BoardHelper.getBoard(currentstate, dc, expectings, orderTags, limit, OrdersHelper.getDailyPlanTimeZone(),
-                        surveyDateMillis));
+                        surveyDateMillis, session));
             }
             answer.setDeliveryDate(Date.from(Instant.now()));
             return answer;

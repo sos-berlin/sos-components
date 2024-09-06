@@ -134,6 +134,7 @@
 								<include>**/*.json</include>
 							</includes>
 							<excludes>
+								<exclude>common/workflowTags-schema.json</exclude>
 								<exclude>user/*.json</exclude>
 								<exclude>calendar/*.json</exclude>
 								<exclude>inventory/*.json</exclude>
@@ -188,6 +189,7 @@
 							<addCompileSourceRoot>false</addCompileSourceRoot>
 							<useCommonsLang3>true</useCommonsLang3>
 							<includes>
+								<include>common/workflowTags-schema.json</include>
 								<include>configuration/globals/*.json</include>
 								<include>order/orderIdMap*.json</include>
 								<include>agent/*.json</include>

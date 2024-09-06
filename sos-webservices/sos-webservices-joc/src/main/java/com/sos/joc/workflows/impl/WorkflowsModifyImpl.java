@@ -118,7 +118,7 @@ public class WorkflowsModifyImpl extends JOCResourceImpl implements IWorkflowsMo
             try {
                 connection = Globals.createSosHibernateStatelessConnection(API_CALL + action.name().toLowerCase());
                 DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
-                workflowsStream = dbLayer.getWorkflowsIds(null, controllerId).stream().map(WorkflowId::getPath).filter(w -> canAdd(w,
+                workflowsStream = dbLayer.getWorkflowsIds(null, controllerId).stream().map(WorkflowId::getPath).distinct().filter(w -> canAdd(w,
                         permittedFolders)).map(JocInventory::pathToName).map(WorkflowPath::of).filter(w -> WorkflowsHelper.workflowCurrentlyExists(
                                 currentState, w));
             } finally {

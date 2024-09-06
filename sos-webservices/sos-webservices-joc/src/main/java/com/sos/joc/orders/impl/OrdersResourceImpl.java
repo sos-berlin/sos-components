@@ -41,6 +41,7 @@ import com.sos.joc.db.history.JobHistoryDBLayer;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.common.WorkflowTags;
 import com.sos.joc.model.dailyplan.CyclicOrderInfos;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.OrderV;
@@ -424,6 +425,14 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 };
 
                 entity.setOrders(orderStream.parallel().map(mapJOrderToOrderV).filter(Objects::nonNull).collect(Collectors.toList()));
+                
+                if (WorkflowsHelper.withWorkflowTagsDisplayed()) {
+                    if (connection == null) {
+                        connection = Globals.createSosHibernateStatelessConnection(API_CALL);
+                    }
+                    entity.setWorkflowTagsPerWorkflow(WorkflowsHelper.getTagsPerWorkflow(connection, groupedByWorkflowIds.keySet().stream().map(
+                            JWorkflowId::path).map(WorkflowPath::string)));
+                }
             }
             
             entity.setDeliveryDate(Date.from(Instant.now()));

@@ -32,6 +32,7 @@ import com.sos.controller.model.workflow.BoardWorkflows;
 import com.sos.controller.model.workflow.Workflow;
 import com.sos.controller.model.workflow.WorkflowDeps;
 import com.sos.controller.model.workflow.WorkflowId;
+import com.sos.controller.model.workflow.WorkflowIdAndTags;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.instruction.AddOrder;
 import com.sos.inventory.model.instruction.ConsumeNotices;
@@ -68,17 +69,20 @@ import com.sos.joc.classes.inventory.LockToLockDemandsConverter;
 import com.sos.joc.classes.inventory.NoticeToNoticesConverter;
 import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.order.OrdersHelper;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.DeployedConfigurationFilter;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.model.audit.ObjectType;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.common.WorkflowTags;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.order.BlockPosition;
 import com.sos.joc.model.order.OrderStateText;
@@ -567,7 +571,7 @@ public class WorkflowsHelper {
         expectedNoticeBoards.forEach(board -> w.getExpectedNoticeBoards().setAdditionalProperty(board, Collections.emptyList()));
         postNoticeBoards.forEach(board -> w.getPostNoticeBoards().setAdditionalProperty(board, Collections.emptyList()));
         if (workflowNamesFromAddOrders != null) {
-            w.setAddOrderToWorkflows(workflowNamesFromAddOrders.stream().distinct().map(name -> new WorkflowId(name, null)).collect(Collectors
+            w.setAddOrderToWorkflows(workflowNamesFromAddOrders.stream().distinct().map(name -> new WorkflowIdAndTags(null, name, null)).collect(Collectors
                     .toList()));
         } else {
             w.setAddOrderToWorkflows(Collections.emptyList());
@@ -1873,6 +1877,30 @@ public class WorkflowsHelper {
             }
         }
         return Optional.empty();
+    }
+    
+    private static Integer getNumOfWorkflowTagsDisplayed() {
+        ConfigurationGlobalsJoc jocSettings = Globals.getConfigurationGlobalsJoc();
+        return jocSettings.getNumOfWorkflowTagsDisplayed();
+    }
+    
+    public static boolean withWorkflowTagsDisplayed() {
+        return true;//getNumOfWorkflowTagsDisplayed() != 0;
+    }
+
+    public static WorkflowTags getTagsPerWorkflow(SOSHibernateSession session, Collection<String> workflowNames) {
+        return getTagsPerWorkflow(session, workflowNames == null ? Stream.empty() : workflowNames.stream());
+    }
+    
+    public static WorkflowTags getTagsPerWorkflow(SOSHibernateSession session, Stream<String> workflowNames) {
+        WorkflowTags wt = new WorkflowTags();
+        wt.setAdditionalProperties(getMapOfTagsPerWorkflow(session, workflowNames));
+        return wt;
+    }
+    
+    public static Map<String, LinkedHashSet<String>> getMapOfTagsPerWorkflow(SOSHibernateSession session, Stream<String> workflowNames) {
+        InventoryTagDBLayer dbLayer = new InventoryTagDBLayer(session);
+        return dbLayer.getWorkflowTags(workflowNames.distinct());
     }
 
 }
