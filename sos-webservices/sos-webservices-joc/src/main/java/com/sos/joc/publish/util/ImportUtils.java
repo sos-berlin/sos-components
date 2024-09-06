@@ -330,6 +330,12 @@ public class ImportUtils {
             try {
                 alreadyExist.setContent(Globals.objectMapper.writeValueAsString(config.getConfiguration()));
                 alreadyExist.setModified(Date.from(Instant.now()));
+                try {
+                    Validator.validate(alreadyExist.getTypeAsEnum(), alreadyExist.getContent().getBytes(), new InventoryDBLayer(dbLayer.getSession()), null);
+                    alreadyExist.setValid(true);
+                } catch (Throwable e) {
+                    alreadyExist.setValid(false);
+                }
                 JocInventory.updateConfiguration(new InventoryDBLayer(dbLayer.getSession()), alreadyExist);
             } catch (JsonProcessingException e) {
                 LOGGER.error(e.getMessage(),e);
