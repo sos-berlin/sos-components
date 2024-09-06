@@ -145,8 +145,9 @@ public class JocClusterActiveMemberHandler {
 
     private JocClusterAnswer performServices(StartupMode mode, List<Supplier<JocClusterAnswer>> tasks, PerformType type,
             ScheduledExecutorService heartBeat) {
+        String logPrefix = "[" + mode + "]";
         if (tasks == null || tasks.size() == 0) {
-            JocCluster.shutdownThreadPool(mode, heartBeat, 1);
+            JocCluster.shutdownThreadPool(logPrefix, heartBeat, 1);
             return JocCluster.getErrorAnswer(JocClusterAnswerState.MISSING_HANDLERS);
         }
 
@@ -165,8 +166,8 @@ public class JocClusterActiveMemberHandler {
         List<CompletableFuture<JocClusterAnswer>> futuresList = tasks.stream().map(task -> CompletableFuture.supplyAsync(task, es)).collect(Collectors
                 .toList());
         CompletableFuture.allOf(futuresList.toArray(new CompletableFuture[futuresList.size()])).join();
-        JocCluster.shutdownThreadPool(mode, es, 3);
-        JocCluster.shutdownThreadPool(mode, heartBeat, 1);
+        JocCluster.shutdownThreadPool(logPrefix, es, 3);
+        JocCluster.shutdownThreadPool(logPrefix, heartBeat, 1);
 
         // for (CompletableFuture<ClusterAnswer> future : futuresList) {
         // try {
@@ -238,25 +239,27 @@ public class JocClusterActiveMemberHandler {
         s.update(mode, configuration);
     }
 
-    public JocClusterAnswer runService(StartupMode mode, String identifier, AConfigurationSection configuration) {
+    public JocClusterAnswer runServiceNow(StartupMode mode, String identifier, AConfigurationSection configuration) {
         Optional<IJocActiveMemberService> os = services.stream().filter(h -> h.getIdentifier().equals(identifier)).findAny();
         if (!os.isPresent()) {
-            return JocCluster.getErrorAnswer(new Exception(String.format("handler not found for %s", identifier)));
+            return JocCluster.getErrorAnswer(new Exception(String.format("[runServiceNow]handler not found for %s", identifier)));
         }
-        JocClusterAnswer answer = new JocClusterAnswer(JocClusterAnswerState.STARTED);
-
-        JocClusterServiceLogger.setLogger();
-        LOGGER.info(String.format("[%s][runService][%s]start...", mode, identifier));
+        JocClusterAnswer answer = new JocClusterAnswer(JocClusterAnswerState.RUNNING);
 
         IJocActiveMemberService s = os.get();
         JocServiceAnswer serviceAnswer = s.getInfo();
         if (serviceAnswer.isBusyState()) {
-            answer.setState(JocClusterAnswerState.ALREADY_STARTED);
+            answer.setState(JocClusterAnswerState.ALREADY_RUNNING);
         } else {
+            JocClusterServiceLogger.setLogger();
+            LOGGER.info(String.format("[%s][runServiceNow][%s]start...", mode, identifier));
+            JocClusterServiceLogger.removeLogger();
 
+            s.runNow(mode, configuration);
         }
 
-        LOGGER.info(String.format("[%s][runService][%s][not implemented yet...]%s", mode, identifier, SOSString.toString(answer)));
+        JocClusterServiceLogger.setLogger();
+        LOGGER.info(String.format("[%s][runServiceNow][%s]%s", mode, identifier, SOSString.toString(answer)));
         JocClusterServiceLogger.removeLogger();
         return answer;
     }

@@ -41,6 +41,7 @@ public class CleanupService extends AJocActiveMemberService {
     private CleanupServiceSchedule schedule = null;
     private CleanupServiceConfiguration config = null;
     private AtomicBoolean closed = new AtomicBoolean(false);
+    private AtomicBoolean runServiceNow = new AtomicBoolean(false);
     private AtomicLong lastActivityStart = new AtomicLong();
     private AtomicLong lastActivityEnd = new AtomicLong();
     private final Object lock = new Object();
@@ -75,12 +76,24 @@ public class CleanupService extends AJocActiveMemberService {
                     @Override
                     public void run() {
                         StartupMode startupMode = mode;
+                        boolean runNow = false;
                         while (!closed.get()) {
                             setServiceLogger();
                             try {
-                                schedule.start(startupMode);
-                                startupMode = StartupMode.automatic;
-                                waitFor(30);
+                                schedule.start(startupMode, runNow);
+                                if (runNow) { // 2) - after next iteration
+                                    runServiceNow.set(false);
+                                    runNow = false;
+                                }
+                                if (runServiceNow.get()) { // runServiceNow was set by another thread
+                                    runNow = true; // 1) set runNow for the next while iteration
+                                    startupMode = StartupMode.manual;
+                                }
+
+                                if (!runNow) {
+                                    startupMode = StartupMode.automatic;
+                                    waitFor(30);
+                                }
                             } catch (CleanupComputeException e) {
                                 closed.set(true);
                                 setServiceLogger();
@@ -102,7 +115,6 @@ public class CleanupService extends AJocActiveMemberService {
                                     waitFor(60);
                                 }
                             }
-
                         }
                     }
                 };
@@ -143,7 +155,24 @@ public class CleanupService extends AJocActiveMemberService {
 
     @Override
     public void runNow(StartupMode mode, AConfigurationSection configuration) {
+        setServiceLogger();
+        if (schedule == null) {
+            LOGGER.info(String.format("[%s][%s][runNow][skip]schedule=null", getIdentifier(), mode));
+            return;
+        }
+        runServiceNow.set(true);
+        if (configuration instanceof ConfigurationGlobalsCleanup) {
+            setConfig((ConfigurationGlobalsCleanup) configuration);
+        }
+        try {
+            schedule.runNow(mode);
+        } catch (Throwable e) {
+            LOGGER.error(String.format("[%s][%s][runNow]%s", getIdentifier(), mode, e.toString()), e);
+        }
+    }
 
+    public ZonedDateTime getNow() {
+        return Instant.now().atZone(config.getZoneId());
     }
 
     private void setConfig(ConfigurationGlobalsCleanup configuration) {
@@ -164,7 +193,7 @@ public class CleanupService extends AJocActiveMemberService {
             schedule.stop(mode);
         }
         if (threadPool != null) {
-            JocCluster.shutdownThreadPool(mode, threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
+            JocCluster.shutdownThreadPool("[" + getIdentifier() + "][" + mode + "]", threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
             threadPool = null;
         }
         removeServiceLogger();

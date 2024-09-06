@@ -111,7 +111,7 @@ public class JocClusterEmbeddedServicesHandler {
         List<CompletableFuture<JocClusterAnswer>> futuresList = tasks.stream().map(task -> CompletableFuture.supplyAsync(task, es)).collect(Collectors
                 .toList());
         CompletableFuture.allOf(futuresList.toArray(new CompletableFuture[futuresList.size()])).join();
-        JocCluster.shutdownThreadPool(mode, es, 3);
+        JocCluster.shutdownThreadPool("[" + mode + "]", es, 3);
 
         LOGGER.info(String.format("[%s][%s][active=%s][completed]%s", mode, type.name(), active, cluster.getJocConfig().getMemberId()));
         if (active) {

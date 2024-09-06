@@ -150,7 +150,8 @@ public class HistoryMonitoringModel implements Serializable {
 
         if (threadPool != null) {
             MonitorService.setLogger();
-            JocCluster.shutdownThreadPool(mode, threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
+            JocCluster.shutdownThreadPool("[" + MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY + "][" + mode + "]", threadPool,
+                    JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
             threadPool = null;
             serialize();
         }

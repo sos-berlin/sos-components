@@ -1025,14 +1025,19 @@ public class JocCluster {
         return answer;
     }
 
-    public static void shutdownThreadPool(StartupMode mode, ExecutorService threadPool, long awaitTerminationTimeout) {
-        shutdownThreadPool(mode, threadPool, awaitTerminationTimeout, true);
+    public static void shutdownThreadPool(String logPrefix, ExecutorService threadPool, long awaitTerminationTimeout) {
+        shutdownThreadPool(3, logPrefix, threadPool, awaitTerminationTimeout, true);
     }
 
-    public static void shutdownThreadPool(StartupMode mode, ExecutorService threadPool, long awaitTerminationTimeout, boolean logLevelInfo) {
-        String caller = SOSClassUtil.getMethodName(2);
+    public static void shutdownThreadPool(String logPrefix, ExecutorService threadPool, long awaitTerminationTimeout, boolean logLevelInfo) {
+        shutdownThreadPool(3, logPrefix, threadPool, awaitTerminationTimeout, logLevelInfo);
+    }
 
-        String logMode = mode == null ? "" : "[" + mode + "]";
+    private static void shutdownThreadPool(int methodNameIndex, String logPrefix, ExecutorService threadPool, long awaitTerminationTimeout,
+            boolean logLevelInfo) {
+        String caller = SOSClassUtil.getMethodName(methodNameIndex > 0 ? methodNameIndex : 2);
+
+        String logp = logPrefix == null ? "" : logPrefix;
         try {
             if (threadPool == null) {
                 return;
@@ -1041,7 +1046,7 @@ public class JocCluster {
             threadPool.shutdown();// Disable new tasks from being submitted
             // Wait a while for existing tasks to terminate
             if (threadPool.awaitTermination(awaitTerminationTimeout, TimeUnit.SECONDS)) {
-                String msg = String.format("%s[shutdown][%s]thread pool has been shut down correctly", logMode, caller);
+                String msg = String.format("%s[shutdown][%s]thread pool has been shut down correctly", logp, caller);
                 if (logLevelInfo) {
                     LOGGER.info(msg);
                 } else {
@@ -1051,7 +1056,7 @@ public class JocCluster {
                 threadPool.shutdownNow();// Cancel currently executing tasks
                 // Wait a while for tasks to respond to being cancelled
                 if (threadPool.awaitTermination(3, TimeUnit.SECONDS)) {
-                    String msg = String.format("%s[shutdown][%s]thread pool has ended due to timeout of %ss on shutdown", logMode, caller,
+                    String msg = String.format("%s[shutdown][%s]thread pool has ended due to timeout of %ss on shutdown", logp, caller,
                             awaitTerminationTimeout);
                     if (logLevelInfo) {
                         LOGGER.info(msg);
@@ -1059,13 +1064,13 @@ public class JocCluster {
                         LOGGER.debug(msg);
                     }
                 } else {
-                    LOGGER.info(String.format("%s[shutdown][%s]thread pool did not terminate due to timeout of %ss on shutdown", logMode, caller,
+                    LOGGER.info(String.format("%s[shutdown][%s]thread pool did not terminate due to timeout of %ss on shutdown", logp, caller,
                             awaitTerminationTimeout));
                 }
             }
         } catch (InterruptedException e) {
             // (Re-)Cancel if current thread also interrupted
-            LOGGER.info(String.format("%s[shutdown][%s][exception]%s", logMode, caller, e.toString()), e);
+            LOGGER.info(String.format("%s[shutdown][%s][exception]%s", logp, caller, e.toString()), e);
             threadPool.shutdownNow();
             // Thread.currentThread().interrupt();
         }

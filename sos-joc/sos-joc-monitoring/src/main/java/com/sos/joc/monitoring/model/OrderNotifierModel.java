@@ -382,7 +382,7 @@ public class OrderNotifierModel {
         closed.set(true);
 
         if (threadPool != null) {
-            JocCluster.shutdownThreadPool(mode, threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
+            JocCluster.shutdownThreadPool("[" + IDENTIFIER + "][" + mode + "]", threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
         }
         closeFactory();
         return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);

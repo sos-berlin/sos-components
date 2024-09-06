@@ -78,7 +78,7 @@ public class LogExtAsyncHandler {
 
         if (threadPool != null) {
             HistoryService.setLogger();
-            JocCluster.shutdownThreadPool(mode, threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
+            JocCluster.shutdownThreadPool("[history][" + mode + "]", threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
             threadPool = null;
         }
         serialize();
@@ -195,7 +195,7 @@ public class LogExtAsyncHandler {
             List<CompletableFuture<LogExt>> futuresList = tasks.stream().map(task -> CompletableFuture.supplyAsync(task, es)).collect(Collectors
                     .toList());
             CompletableFuture.allOf(futuresList.toArray(new CompletableFuture[futuresList.size()])).join();
-            JocCluster.shutdownThreadPool(StartupMode.automatic, es, 3, false);
+            JocCluster.shutdownThreadPool("[history][" + StartupMode.automatic + "]", es, 3, false);
 
             copy.stream().forEach(l -> {
                 if (l.isProcessed()) {

@@ -194,10 +194,10 @@ public class SystemNotifierModel {
         closed.set(true);
 
         if (threadPool != null) {
-            JocCluster.shutdownThreadPool(mode, threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
+            JocCluster.shutdownThreadPool("[" + IDENTIFIER + "][" + mode + "]", threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
         }
         if (threadPoolDB != null) {
-            JocCluster.shutdownThreadPool(mode, threadPoolDB, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
+            JocCluster.shutdownThreadPool("[" + IDENTIFIER + "][" + mode + "]", threadPoolDB, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
         }
         return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
     }

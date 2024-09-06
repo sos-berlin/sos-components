@@ -58,10 +58,10 @@ public class SystemMonitoringModel {
     private static final Map<String, Set<String>> SKIPPED_WARN_NOTIFIERS_BY_MESSAGE_START = Stream.of(new AbstractMap.SimpleEntry<>(
             "js7.proxy.ControllerApi", new HashSet<>(Arrays.asList("akka.stream.scaladsl.TcpIdleTimeoutException")))).collect(Collectors.toMap(
                     Map.Entry::getKey, Map.Entry::getValue));
-    
+
     private static final Map<String, Set<String>> SKIPPED_ERROR_NOTIFIERS_BY_MESSAGE_START = Stream.of(new AbstractMap.SimpleEntry<>(
-            "js7.proxy.JournaledProxy", new HashSet<>(Arrays.asList("UnknownEventId:")))).collect(Collectors.toMap(
-                    Map.Entry::getKey, Map.Entry::getValue));
+            "js7.proxy.JournaledProxy", new HashSet<>(Arrays.asList("UnknownEventId:")))).collect(Collectors.toMap(Map.Entry::getKey,
+                    Map.Entry::getValue));
 
     // ms
     private static final long MAX_ADDED_TIME = 2 * 60 * 1_000; // 2m
@@ -86,7 +86,7 @@ public class SystemMonitoringModel {
             allEvents.add(new SystemMonitoringEvent(evt));
         }
     }
-    
+
     @Subscribe({ SystemNotificationLogEvent.class })
     public void handleNotificationLogEvent(SystemNotificationLogEvent evt) {
         if (Configuration.INSTANCE.getSystemNotification() != null) {
@@ -133,7 +133,7 @@ public class SystemMonitoringModel {
         }
         if (threadPool != null) {
             MonitorService.setLogger();
-            JocCluster.shutdownThreadPool(mode, threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
+            JocCluster.shutdownThreadPool("[" + service.getIdentifier() + "][" + mode + "]", threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
             threadPool = null;
         }
     }

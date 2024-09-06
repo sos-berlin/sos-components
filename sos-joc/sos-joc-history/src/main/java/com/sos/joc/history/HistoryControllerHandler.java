@@ -179,7 +179,7 @@ public class HistoryControllerHandler {
                 start(mode, tg, new AtomicLong(model.getStoredEventId()));
             }
         } catch (Throwable e) {
-            LOGGER.error(String.format("[%s][%s]%s", identifier, method, e.toString()), e);
+            LOGGER.error(String.format("[%s][%s][%s]%s", serviceIdentifier, identifier, method, e.toString()), e);
             waitFor(config.getWaitIntervalOnError());
         }
     }
@@ -326,7 +326,7 @@ public class HistoryControllerHandler {
                     try {
                         FluxEventHandler.processEvent(e, controllerId);
                     } catch (Throwable e1) {
-                        LOGGER.info("[FluxEventHandler.processEvent]" + e.toString(), e);
+                        LOGGER.info("[" + serviceIdentifier + "][FluxEventHandler.processEvent]" + e.toString(), e);
                     }
                 }
             }).thenReturn(e).filter(event -> {
@@ -335,7 +335,7 @@ public class HistoryControllerHandler {
                     return HistoryEventType.fromValue(event.stampedEvent().value().event().getClass().getSimpleName()) != null;
                 } catch (Throwable ex) {
                     JocClusterServiceLogger.setLogger(serviceIdentifier);
-                    LOGGER.info("[process][error filtering event]" + ex.toString(), ex);
+                    LOGGER.info("[" + serviceIdentifier + "][process][error filtering event]" + ex.toString(), ex);
                     return false;
                 }
             }).subscribeOn(Schedulers.fromExecutor(ForkJoinPool.commonPool())));
@@ -388,7 +388,7 @@ public class HistoryControllerHandler {
                                                     new Date(errorStartMs), totalErrors);
                                         }
                                     }
-                                    LOGGER.error("[processing][errorCounter=" + errorCounter + "]" + e.toString(), e);
+                                    LOGGER.error("[" + serviceIdentifier + "][processing][errorCounter=" + errorCounter + "]" + e.toString(), e);
                                     waitFor(config.getWaitIntervalOnProcessingError());
                                 } finally {
                                     if (errorCounter == 0) {
@@ -479,9 +479,10 @@ public class HistoryControllerHandler {
                 } catch (Throwable e) {
                     try {
                         order = entry.getCheckedOrder();
-                        LOGGER.info(String.format("[OrderMoved][%s]%s", order.getOrderId(), e.toString()), e);
+                        LOGGER.info(String.format("[" + serviceIdentifier + "][" + identifier + "][OrderMoved][%s]%s", order.getOrderId(), e
+                                .toString()), e);
                     } catch (Throwable ee) {
-                        LOGGER.info(String.format("[OrderMoved]%s", e.toString()), e);
+                        LOGGER.info(String.format("[" + serviceIdentifier + "][" + identifier + "][OrderMoved]%s", e.toString()), e);
                     }
                     event = new FatEventEmpty();
                 }
@@ -794,23 +795,23 @@ public class HistoryControllerHandler {
 
     private void fluxDoOnCancel() {
         JocClusterServiceLogger.setLogger(serviceIdentifier);
-        LOGGER.debug(String.format("[%s][fluxDoOnCancel]", controllerId));
+        LOGGER.debug(String.format("[%s][%s][fluxDoOnCancel]", serviceIdentifier, controllerId));
     }
 
     private Throwable fluxDoOnError(Throwable t) {
         JocClusterServiceLogger.setLogger(serviceIdentifier);
-        LOGGER.info(String.format("[%s][fluxDoOnError]%s", controllerId, t.toString()));
+        LOGGER.info(String.format("[%s][%s][fluxDoOnError]%s", serviceIdentifier, controllerId, t.toString()));
         return t;
     }
 
     private void fluxDoOnComplete() {
         JocClusterServiceLogger.setLogger(serviceIdentifier);
-        LOGGER.info(String.format("[%s][fluxDoOnComplete]", controllerId));
+        LOGGER.info(String.format("[%s][%s][fluxDoOnComplete]", serviceIdentifier, controllerId));
     }
 
     private void fluxDoFinally(SignalType type) {
         JocClusterServiceLogger.setLogger(serviceIdentifier);
-        LOGGER.info(String.format("[%s][fluxDoFinally]SignalType=%s", controllerId, type));
+        LOGGER.info(String.format("[%s][%s][fluxDoFinally]SignalType=%s", serviceIdentifier, controllerId, type));
     }
 
     private boolean isProblemException(Throwable t) {
@@ -867,7 +868,7 @@ public class HistoryControllerHandler {
     }
 
     private String getMethodName(String name) {
-        String prefix = identifier == null ? "" : String.format("[%s]", identifier);
+        String prefix = identifier == null ? "[" + serviceIdentifier + "]" : String.format("[%s][%s]", serviceIdentifier, identifier);
         return String.format("%s[%s]", prefix, name);
     }
 
@@ -892,7 +893,7 @@ public class HistoryControllerHandler {
                 stopper.stop();
             }
         } catch (Throwable e) {
-            LOGGER.warn("[stopFlux][stopper]" + e.toString(), e);
+            LOGGER.warn("[" + serviceIdentifier + "][stopFlux][stopper]" + e.toString(), e);
         }
     }
 
@@ -939,10 +940,10 @@ public class HistoryControllerHandler {
                 model.setStoredEventId(model.getEventId());
                 run = false;
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug(String.format("[%s][%s]%s", identifier, method, model.getStoredEventId()));
+                    LOGGER.debug(String.format("[%s][%s][%s]%s", serviceIdentifier, identifier, method, model.getStoredEventId()));
                 }
             } catch (Throwable e) {
-                LOGGER.error(String.format("[%s][%s][%s]%s", identifier, method, count, e.toString()), e);
+                LOGGER.error(String.format("[%s][%s][%s][%s]%s", serviceIdentifier, identifier, method, count, e.toString()), e);
                 waitFor(config.getWaitIntervalOnError());
             }
         }
@@ -962,12 +963,12 @@ public class HistoryControllerHandler {
             if ((current - lastReleaseEvents) >= releaseEventsInterval) {
                 String method = "releaseEvents";
                 try {
-                    LOGGER.info(String.format("[%s][%s]%s", getIdentifier(), method, eventId));
+                    LOGGER.info(String.format("[%s][%s][%s]%s", serviceIdentifier, getIdentifier(), method, eventId));
                     // js7.data_for_java.vavr.VavrUtils.await(api.releaseEvents(eventId));
                     api.releaseEvents(eventId);
                     lastReleaseEventId = eventId;
                 } catch (Throwable t) {
-                    LOGGER.error(String.format("[%s][%s][%s]%s", getIdentifier(), method, eventId, t.toString()));
+                    LOGGER.error(String.format("[%s][%s][%s][%s]%s", serviceIdentifier, getIdentifier(), method, eventId, t.toString()));
                 } finally {
                     lastReleaseEvents = current;
                 }

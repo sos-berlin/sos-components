@@ -152,7 +152,7 @@ public class JocClusterService {
             stopSettingsChangedTimer();
             closeCluster(mode, deleteActiveCurrentMember);
             closeFactory();
-            JocCluster.shutdownThreadPool(mode, threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
+            JocCluster.shutdownThreadPool("[" + mode + "]", threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
 
             ThreadHelper.tryStop(mode, tg);
         }
@@ -322,19 +322,19 @@ public class JocClusterService {
         cluster.getActiveMemberHandler().updateService(mode, ClusterServices.history.name(), controllerId, action);
     }
 
-    public JocClusterAnswer runService(ClusterRestart r, StartupMode mode) {
+    public JocClusterAnswer runServiceNow(ClusterRestart r, StartupMode mode) {
         if (cluster == null) {
             return JocCluster.getErrorAnswer(new Exception(String.format("cluster not started. %s run %s can't be performed.", mode, r.getType())));
         }
         if (!cluster.getActiveMemberHandler().isActive()) {
             return JocCluster.getErrorAnswer(new Exception(String.format("cluster inactiv. %s run %s can't be performed.", mode, r.getType())));
         }
+
         JocClusterServiceLogger.setLogger();
         JocClusterAnswer answer = null;
-
         switch (r.getType()) {
         case cleanup:
-            answer = cluster.getActiveMemberHandler().runService(mode, ClusterServices.cleanup.name(), Globals.configurationGlobals
+            answer = cluster.getActiveMemberHandler().runServiceNow(mode, ClusterServices.cleanup.name(), Globals.configurationGlobals
                     .getConfigurationSection(DefaultSections.cleanup));
             break;
         default:

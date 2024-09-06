@@ -114,9 +114,9 @@ public class HistoryService extends AJocActiveMemberService {
                     public void run() {
                         JocClusterServiceLogger.setLogger(IDENTIFIER);
 
-                        LOGGER.info(String.format("[%s][run]start...", controllerHandler.getIdentifier()));
+                        LOGGER.info(String.format("[%s][%s][run]start...", IDENTIFIER, controllerHandler.getIdentifier()));
                         controllerHandler.start(mode, tg);
-                        LOGGER.info(String.format("[%s][run]end", controllerHandler.getIdentifier()));
+                        LOGGER.info(String.format("[%s][%s][run]end", IDENTIFIER, controllerHandler.getIdentifier()));
 
                         // JocClusterServiceLogger.clearAllLoggers();
                     }
@@ -145,7 +145,7 @@ public class HistoryService extends AJocActiveMemberService {
                 handleLogsOnStop(mode);
             }
             closeFactory();
-            JocCluster.shutdownThreadPool(mode, threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
+            JocCluster.shutdownThreadPool("[" + getIdentifier() + "][" + mode + "]", threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
         } finally {
             stop.set(false);
             processingStarted.set(false);
@@ -180,7 +180,7 @@ public class HistoryService extends AJocActiveMemberService {
             @Override
             public void run() {
                 setLogger();
-                LOGGER.info(String.format("[%s][%s]start...", controllerId, action));
+                LOGGER.info(String.format("[%s][%s][%s]start...", getIdentifier(), controllerId, action));
                 Optional<HistoryControllerHandler> oh = activeHandlers.stream().filter(c -> c.getControllerId().equals(controllerId)).findAny();
                 if (oh.isPresent()) {
                     HistoryControllerHandler h = oh.get();
@@ -194,7 +194,7 @@ public class HistoryService extends AJocActiveMemberService {
                         h = new HistoryControllerHandler(factory, config, occ.get(), IDENTIFIER);
                         activeHandlers.add(h);
                     } else {
-                        LOGGER.error(String.format("[%s]counfiguration not found", controllerId));
+                        LOGGER.error(String.format("[%s][%s]counfiguration not found", getIdentifier(), controllerId));
                     }
                 }
                 int poolSize = getThreadPoolSize();
@@ -205,7 +205,7 @@ public class HistoryService extends AJocActiveMemberService {
                 if (h != null) {
                     h.start(mode, getThreadGroup());
                 }
-                LOGGER.info(String.format("[%s][%s]end", controllerId, action));
+                LOGGER.info(String.format("[%s][%s][%s]end", getIdentifier(), controllerId, action));
                 // JocClusterServiceLogger.clearAllLoggers();
             }
         };
@@ -248,7 +248,7 @@ public class HistoryService extends AJocActiveMemberService {
             if (result && !onStart) {
                 String ltc = logTransferChanges == null ? "" : "[" + logTransferChanges + "]";
                 String lsc = logSizeChanges == null ? "" : "[" + logSizeChanges + "]";
-                LOGGER.info(String.format("[%s]%s%s", StartupMode.settings_changed.name(), ltc, lsc));
+                LOGGER.info(String.format("[%s][%s]%s%s", getIdentifier(), StartupMode.settings_changed.name(), ltc, lsc));
             }
         }
         return result;
@@ -270,11 +270,11 @@ public class HistoryService extends AJocActiveMemberService {
         boolean result = !config.isLogExtDirEquals(oldDir) || !config.isLogExtOrderHistoryEquals(oldOrderHistory) || !config.isLogExtOrderEquals(
                 oldOrder) || !config.isLogExtTaskEquals(oldTask);
         if (result && !onStart) {
-            return String.format("[%s][old %s=%s,%s=%s,%s=%s,%s=%s][new %s=%s,%s=%s,%s=%s,%s=%s]", StartupMode.settings_changed.name(), joc
-                    .getLogExtDirectory().getName(), oldDir, joc.getLogExtOrderHistory().getName(), oldOrderHistory, joc.getLogExtOrder().getName(),
-                    oldOrder, joc.getLogExtTask().getName(), oldTask, joc.getLogExtDirectory().getName(), config.getLogExtDir(), joc
-                            .getLogExtOrderHistory().getName(), config.getLogExtOrderHistory(), joc.getLogExtOrder().getName(), config
-                                    .getLogExtOrder(), joc.getLogExtTask().getName(), config.getLogExtTask());
+            return String.format("[%s][%s][old %s=%s,%s=%s,%s=%s,%s=%s][new %s=%s,%s=%s,%s=%s,%s=%s]", getIdentifier(), StartupMode.settings_changed
+                    .name(), joc.getLogExtDirectory().getName(), oldDir, joc.getLogExtOrderHistory().getName(), oldOrderHistory, joc.getLogExtOrder()
+                            .getName(), oldOrder, joc.getLogExtTask().getName(), oldTask, joc.getLogExtDirectory().getName(), config.getLogExtDir(),
+                    joc.getLogExtOrderHistory().getName(), config.getLogExtOrderHistory(), joc.getLogExtOrder().getName(), config.getLogExtOrder(),
+                    joc.getLogExtTask().getName(), config.getLogExtTask());
         }
         return null;
     }
@@ -291,28 +291,28 @@ public class HistoryService extends AJocActiveMemberService {
         try {
             config.setLogApplicableMBSize(Integer.parseInt(joc.getLogApplicableSize().getValue()));
         } catch (Throwable e) {
-            LOGGER.warn(String.format("[%s][%s=%s][use default %s][error]%s", StartupMode.settings_changed.name(), joc.getLogApplicableSize()
-                    .getName(), joc.getLogApplicableSize().getValue(), config.getLogApplicableMBSize(), e.toString()));
+            LOGGER.warn(String.format("[%s][%s][%s=%s][use default %s][error]%s", getIdentifier(), StartupMode.settings_changed.name(), joc
+                    .getLogApplicableSize().getName(), joc.getLogApplicableSize().getValue(), config.getLogApplicableMBSize(), e.toString()));
         }
         try {
             config.setLogMaximumMBSize(Integer.parseInt(joc.getLogMaxSize().getValue()));
         } catch (Throwable e) {
-            LOGGER.warn(String.format("[%s][%s=%s][use default %s][error]%s", StartupMode.settings_changed.name(), joc.getLogMaxSize().getName(), joc
-                    .getLogMaxSize().getValue(), config.getLogMaximumMBSize(), e.toString()));
+            LOGGER.warn(String.format("[%s][%s][%s=%s][use default %s][error]%s", getIdentifier(), StartupMode.settings_changed.name(), joc
+                    .getLogMaxSize().getName(), joc.getLogMaxSize().getValue(), config.getLogMaximumMBSize(), e.toString()));
         }
         try {
             config.setLogMaximumDisplayMBSize(Integer.parseInt(joc.getMaxDisplaySize().getValue()));
         } catch (Throwable e) {
-            LOGGER.warn(String.format("[%s][%s=%s][use default %s][error]%s", StartupMode.settings_changed.name(), joc.getLogMaxSize().getName(), joc
-                    .getLogMaxSize().getValue(), config.getLogMaximumMBSize(), e.toString()));
+            LOGGER.warn(String.format("[%s][%s][%s=%s][use default %s][error]%s", getIdentifier(), StartupMode.settings_changed.name(), joc
+                    .getLogMaxSize().getName(), joc.getLogMaxSize().getValue(), config.getLogMaximumMBSize(), e.toString()));
         }
         result = (oldLogApplicableMBSize != config.getLogApplicableMBSize()) || (oldLogMaximumMBSize != config.getLogMaximumMBSize()
                 || oldLogMaximumDisplayMBSize != config.getLogMaximumDisplayMBSize());
         if (result && !onStart) {
-            return String.format("[old %s=%s,%s=%s,%s=%s][new %s=%s,%s=%s,%s=%s]", joc.getLogApplicableSize().getName(), oldLogApplicableMBSize, joc
-                    .getLogMaxSize().getName(), oldLogMaximumMBSize, joc.getMaxDisplaySize().getName(), oldLogMaximumDisplayMBSize, joc
-                            .getLogApplicableSize().getName(), config.getLogApplicableMBSize(), joc.getLogMaxSize().getName(), config
-                                    .getLogMaximumMBSize(), joc.getMaxDisplaySize().getName(), config.getLogMaximumDisplayMBSize());
+            return String.format("[%s][old %s=%s,%s=%s,%s=%s][new %s=%s,%s=%s,%s=%s]", getIdentifier(), joc.getLogApplicableSize().getName(),
+                    oldLogApplicableMBSize, joc.getLogMaxSize().getName(), oldLogMaximumMBSize, joc.getMaxDisplaySize().getName(),
+                    oldLogMaximumDisplayMBSize, joc.getLogApplicableSize().getName(), config.getLogApplicableMBSize(), joc.getLogMaxSize().getName(),
+                    config.getLogMaximumMBSize(), joc.getMaxDisplaySize().getName(), config.getLogMaximumDisplayMBSize());
         }
         return null;
     }
@@ -333,10 +333,10 @@ public class HistoryService extends AJocActiveMemberService {
             try {
                 Files.createDirectory(config.getLogDir());
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug(String.format("[history_log_dir=%s]created", config.getLogDir()));
+                    LOGGER.debug(String.format("[%s][history_log_dir=%s]created", getIdentifier(), config.getLogDir()));
                 }
             } catch (Throwable e) {
-                throw new Exception(String.format("[%s][can't create directory]%s", config.getLogDir(), e.toString()), e);
+                throw new Exception(String.format("[%s][%s][can't create directory]%s", getIdentifier(), config.getLogDir(), e.toString()), e);
             }
         }
     }
@@ -352,34 +352,35 @@ public class HistoryService extends AJocActiveMemberService {
                     switch (mode) {
                     case manual_restart:// restart cluster or history service
                     case settings_changed:
-                        LOGGER.info(String.format("[%s][skip]because start=%s", method, mode));
+                        LOGGER.info(String.format("[%s][%s][skip]because start=%s", getIdentifier(), method, mode));
                         // delete BLOB ???
                         break;
                     default:
                         //
                         DBItemJocVariable item = dbLayer.getLogsVariable();
                         if (item == null) {
-                            LOGGER.info(String.format("[%s][skip]because compressed data not found", method));
+                            LOGGER.info(String.format("[%s][%s][skip]because compressed data not found", getIdentifier(), method));
                             return;
                         }
                         byte[] compressed = item.getBinaryValue();
                         if (compressed == null) {
-                            LOGGER.info(String.format("[%s][skip][remove empty entry]because compressed data not found", method));
+                            LOGGER.info(String.format("[%s][%s][skip][remove empty entry]because compressed data not found", getIdentifier(),
+                                    method));
                             dbLayer.beginTransaction();
                             dbLayer.handleLogsVariable(getJocConfig().getMemberId(), null);
                             dbLayer.commit();
                             return;
                         }
                         if (stop.get()) {
-                            LOGGER.info(String.format("[%s][skip]because stop called", method));
+                            LOGGER.info(String.format("[%s][%s][skip]because stop called", getIdentifier(), method));
                             return;
                         }
                         dbLayer.close();
 
                         // decompress
-                        LOGGER.info(String.format("[%s][%s]start..", method, config.getLogDir()));
+                        LOGGER.info(String.format("[%s][%s][%s]start..", getIdentifier(), method, config.getLogDir()));
                         SOSGzipResult gr = SOSGzip.decompress(compressed, config.getLogDir(), true);
-                        LOGGER.info(String.format("[%s][end]%s", method, gr));
+                        LOGGER.info(String.format("[%s][%s][end]%s", getIdentifier(), method, gr));
                         gr.getDirectories().forEach(d -> {
                             LOGGER.info(String.format("    [decompressed]%s", d));
                         });
@@ -424,15 +425,15 @@ public class HistoryService extends AJocActiveMemberService {
                     switch (mode) {
                     case manual_restart:// restart cluster or history service
                     case settings_changed:
-                        LOGGER.info(String.format("[%s][skip]because stop=%s", method, mode));
+                        LOGGER.info(String.format("[%s][%s][skip]because stop=%s", getIdentifier(), method, mode));
                         // delete BLOB ???
                         break;
                     default:
                         // TODO select List<Long> (convert to Set) and remove "old" folders before compress
                         Long orderLogs = dbLayer.getCountNotFinishedOrderLogs();
                         long subfolders = SOSPath.getCountSubfolders(config.getLogDir(), 1);
-                        LOGGER.info(String.format("[%s][db: not finished order logs=%s][log directory: subfolders=%s]", method, orderLogs,
-                                subfolders));
+                        LOGGER.info(String.format("[%s][%s][db: not finished order logs=%s][log directory: subfolders=%s]", getIdentifier(), method,
+                                orderLogs, subfolders));
 
                         hasOnlyFinished = orderLogs.equals(0L);
                         if (hasOnlyFinished) {
@@ -446,13 +447,13 @@ public class HistoryService extends AJocActiveMemberService {
                             dbLayer.close();
 
                             if (subfolders == 0 || SOSPath.isDirectoryEmpty(config.getLogDir())) {
-                                LOGGER.info(String.format("[%s][compress][skip][%s]is empty", method, config.getLogDir()));
+                                LOGGER.info(String.format("[%s][%s][compress][skip][%s]is empty", getIdentifier(), method, config.getLogDir()));
                             } else {
                                 // truncate the logs that exceed the log applicable size
                                 truncateLogs(method, config.getLogDir());
 
                                 // compress
-                                LOGGER.info(String.format("[%s][compress][%s]start..", method, config.getLogDir()));
+                                LOGGER.info(String.format("[%s][%s][compress][%s]start..", getIdentifier(), method, config.getLogDir()));
                                 SOSGzipResult gr = SOSGzip.compress(config.getLogDir(), false);
 
                                 // write compressed to database
@@ -481,16 +482,16 @@ public class HistoryService extends AJocActiveMemberService {
 
                 Long orderLogs = dbLayer.getCountNotFinishedOrderLogs();
                 hasOnlyFinished = orderLogs.equals(0L);
-                LOGGER.info(String.format("[%s][not finished order logs]%s", method, orderLogs));
+                LOGGER.info(String.format("[%s][%s][not finished order logs]%s", getIdentifier(), method, orderLogs));
             }
             dbLayer.close();
             dbLayer = null;
 
             if (hasOnlyFinished) {
                 // cleanup
-                LOGGER.info(String.format("[%s][cleanup][%s]start..", method, config.getLogDir()));
+                LOGGER.info(String.format("[%s][%s][cleanup][%s]start..", getIdentifier(), method, config.getLogDir()));
                 SOSPathResult pr = SOSPath.cleanupDirectory(config.getLogDir());
-                LOGGER.info(String.format("[%s][cleanup][end]%s", method, pr));
+                LOGGER.info(String.format("[%s][%s][cleanup][end]%s", getIdentifier(), method, pr));
                 pr.getDirectories().forEach(d -> {
                     LOGGER.info(String.format("    [deleted]%s", d));
                 });
@@ -545,8 +546,9 @@ public class HistoryService extends AJocActiveMemberService {
                         }
                     }
                 } catch (Throwable e) {
-                    LOGGER.warn(String.format("[%s][truncateLogs][%s=%s][%s=%s][error]%s", caller, joc.getLogMaxSize().getName(), joc.getLogMaxSize()
-                            .getValue(), joc.getLogApplicableSize().getName(), joc.getLogApplicableSize().getValue(), e.toString()));
+                    LOGGER.warn(String.format("[%s][%s][truncateLogs][%s=%s][%s=%s][error]%s", getIdentifier(), caller, joc.getLogMaxSize().getName(),
+                            joc.getLogMaxSize().getValue(), joc.getLogApplicableSize().getName(), joc.getLogApplicableSize().getValue(), e
+                                    .toString()));
                 }
             }
         }
@@ -563,14 +565,14 @@ public class HistoryService extends AJocActiveMemberService {
         }
         dbLayer.commit();
         Instant end = Instant.now();
-        LOGGER.info(String.format("[%s][%s][end]%s,db update=%s", caller, method, gr, SOSDate.getDuration(start, end)));
+        LOGGER.info(String.format("[%s][%s][%s][end]%s,db update=%s", getIdentifier(), caller, method, gr, SOSDate.getDuration(start, end)));
     }
 
     private void cleanupAllLogs(String caller) throws IOException {
         String method = "cleanupAllLogs";
-        LOGGER.info(String.format("[%s][%s][%s]start..", caller, method, config.getLogDir()));
+        LOGGER.info(String.format("[%s][%s][%s][%s]start..", getIdentifier(), caller, method, config.getLogDir()));
         SOSPathResult r = SOSPath.cleanupDirectory(config.getLogDir());
-        LOGGER.info(String.format("[%s][%s][end]%s", caller, method, r));
+        LOGGER.info(String.format("[%s][%s][%s][end]%s", getIdentifier(), caller, method, r));
     }
 
     // TODO duplicate method (some changes) - see com.sos.joc.cleanup.model.CleanupTaskHistory
@@ -578,7 +580,7 @@ public class HistoryService extends AJocActiveMemberService {
         Path dir = config.getLogDir().toAbsolutePath();
         if (Files.exists(dir)) {
             String method = "deleteNotReferencedLogs";
-            LOGGER.info(String.format("[%s][%s]%s", caller, method, dir));
+            LOGGER.info(String.format("[%s][%s][%s]%s", getIdentifier(), caller, method, dir));
 
             try {
                 int i = 0;
@@ -606,9 +608,9 @@ public class HistoryService extends AJocActiveMemberService {
                         }
                     }
                 }
-                LOGGER.info(String.format("[%s][%s][deleted][total]%s", caller, method, i));
+                LOGGER.info(String.format("[%s][%s][%s][deleted][total]%s", getIdentifier(), caller, method, i));
             } catch (Throwable e) {
-                LOGGER.warn(String.format("[%s][%s]%s", caller, method, e.toString()), e);
+                LOGGER.warn(String.format("[%s][%s][%s]%s", getIdentifier(), caller, method, e.toString()), e);
             }
         }
     }
@@ -618,7 +620,7 @@ public class HistoryService extends AJocActiveMemberService {
 
         int size = activeHandlers.size();
         JocClusterServiceLogger.setLogger(IDENTIFIER);
-        LOGGER.info(String.format("[%s]found %s active handlers", method, size));
+        LOGGER.info(String.format("[%s][%s]found %s active handlers", getIdentifier(), method, size));
         // JocClusterServiceLogger.clearAllLoggers();
         if (size > 0) {
             // close all event handlers
@@ -630,22 +632,22 @@ public class HistoryService extends AJocActiveMemberService {
                     @Override
                     public void run() {
                         JocClusterServiceLogger.setLogger(IDENTIFIER);
-                        LOGGER.info(String.format("[%s][%s]start...", method, h.getIdentifier()));
+                        LOGGER.info(String.format("[%s][%s][%s]start...", getIdentifier(), method, h.getIdentifier()));
                         h.close(mode);
-                        LOGGER.info(String.format("[%s][%s]end", method, h.getIdentifier()));
+                        LOGGER.info(String.format("[%s][%s][%s]end", getIdentifier(), method, h.getIdentifier()));
                         // JocClusterServiceLogger.clearAllLoggers();
                     }
                 };
                 threadPool.submit(thread);
             }
             JocClusterServiceLogger.setLogger(IDENTIFIER);
-            JocCluster.shutdownThreadPool(mode, threadPool, AWAIT_TERMINATION_TIMEOUT_EVENTHANDLER);
+            JocCluster.shutdownThreadPool("[" + getIdentifier() + "][" + mode + "]", threadPool, AWAIT_TERMINATION_TIMEOUT_EVENTHANDLER);
             // JocClusterServiceLogger.clearAllLoggers();
             activeHandlers = new CopyOnWriteArrayList<>();
         } else {
             if (LOGGER.isDebugEnabled()) {
                 JocClusterServiceLogger.setLogger(IDENTIFIER);
-                LOGGER.debug(String.format("[%s][skip]already closed", method));
+                LOGGER.debug(String.format("[%s][%s][skip]already closed", getIdentifier(), method));
                 // JocClusterServiceLogger.clearAllLoggers();
             }
         }
