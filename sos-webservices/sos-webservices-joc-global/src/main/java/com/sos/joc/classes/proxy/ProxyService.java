@@ -8,7 +8,6 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
-import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
@@ -16,6 +15,7 @@ import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration.Action;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.cluster.service.active.AJocActiveMemberService;
+import com.sos.joc.model.cluster.common.state.JocClusterState;
 
 public class ProxyService extends AJocActiveMemberService {
 
@@ -33,14 +33,14 @@ public class ProxyService extends AJocActiveMemberService {
         }
         Proxies.startAll(Globals.sosCockpitProperties, ProxyUser.JOC);
         // Proxies.startAll(Globals.sosCockpitProperties, ProxyUser.HISTORY);
-        return JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);
+        return JocCluster.getOKAnswer(JocClusterState.STARTED);
     }
 
     @Override
     public JocClusterAnswer stop(StartupMode mode) {
         MDC.put("clusterService", IDENTIFIER);
         Proxies.closeAll();
-        return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
+        return JocCluster.getOKAnswer(JocClusterState.STOPPED);
     }
 
     @Override

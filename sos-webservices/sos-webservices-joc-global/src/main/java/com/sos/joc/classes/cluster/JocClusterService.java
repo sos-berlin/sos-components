@@ -27,7 +27,6 @@ import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.ThreadHelper;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
-import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
@@ -47,6 +46,7 @@ import com.sos.joc.event.bean.proxy.ProxyStarted;
 import com.sos.joc.model.cluster.ClusterRestart;
 import com.sos.joc.model.cluster.ClusterServiceRun;
 import com.sos.joc.model.cluster.common.ClusterServices;
+import com.sos.joc.model.cluster.common.state.JocClusterState;
 
 public class JocClusterService {
 
@@ -101,7 +101,7 @@ public class JocClusterService {
     }
 
     public JocClusterAnswer start(StartupMode mode, boolean onJocStart) {
-        JocClusterAnswer answer = JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);
+        JocClusterAnswer answer = JocCluster.getOKAnswer(JocClusterState.STARTED);
         if (cluster == null) {
             JocClusterConfiguration clusterConfig = new JocClusterConfiguration(Globals.sosCockpitProperties.getProperties());
             config.setClusterMode(clusterConfig.getClusterModeResult().getUse());
@@ -137,7 +137,7 @@ public class JocClusterService {
         } else {
             JocClusterServiceLogger.setLogger();
             LOGGER.info("[" + mode + "][start][skip]already started");
-            answer.setState(JocClusterAnswerState.ALREADY_STARTED);
+            answer.setState(JocClusterState.ALREADY_STARTED);
             JocClusterServiceLogger.removeLogger();
         }
         return answer;
@@ -145,9 +145,9 @@ public class JocClusterService {
 
     public JocClusterAnswer stop(StartupMode mode, boolean deleteActiveCurrentMember) {
         JocClusterServiceLogger.setLogger();
-        JocClusterAnswer answer = JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
+        JocClusterAnswer answer = JocCluster.getOKAnswer(JocClusterState.STOPPED);
         if (cluster == null) {
-            answer.setState(JocClusterAnswerState.ALREADY_STOPPED);
+            answer.setState(JocClusterState.ALREADY_STOPPED);
         } else {
             ThreadGroup tg = cluster.getConfig().getThreadGroup();
             stopSettingsChangedTimer();
@@ -165,8 +165,8 @@ public class JocClusterService {
     public JocClusterAnswer restart(StartupMode mode) {
         stop(mode, false);
         JocClusterAnswer answer = start(mode, false);
-        if (answer.getState().equals(JocClusterAnswerState.STARTED)) {
-            answer.setState(JocClusterAnswerState.RESTARTED);
+        if (answer.getState().equals(JocClusterState.STARTED)) {
+            answer.setState(JocClusterState.RESTARTED);
         }
         return answer;
     }

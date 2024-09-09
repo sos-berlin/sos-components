@@ -19,8 +19,8 @@ import com.sos.joc.cleanup.db.DBLayerCleanup;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
 import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer;
-import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
 import com.sos.joc.cluster.service.active.IJocActiveMemberService;
+import com.sos.joc.model.cluster.common.state.JocClusterServiceTaskState;
 
 public class CleanupTaskModel implements ICleanupTask {
 
@@ -48,7 +48,7 @@ public class CleanupTaskModel implements ICleanupTask {
     private final String identifier;
     private final Object lock = new Object();
 
-    private JocServiceTaskAnswerState state = null;
+    private JocClusterServiceTaskState state = null;
     private AtomicBoolean stopped = new AtomicBoolean(false);
     private AtomicBoolean completed = new AtomicBoolean(false);
 
@@ -87,7 +87,7 @@ public class CleanupTaskModel implements ICleanupTask {
     }
 
     private void start(List<TaskDateTime> datetimes, int counter) {
-        state = JocServiceTaskAnswerState.UNCOMPLETED;
+        state = JocClusterServiceTaskState.UNCOMPLETED;
         stopped.set(false);
         completed.set(false);
 
@@ -139,7 +139,7 @@ public class CleanupTaskModel implements ICleanupTask {
     }
 
     @Override
-    public JocServiceTaskAnswerState getState() {
+    public JocClusterServiceTaskState getState() {
         return state;
     }
 
@@ -163,11 +163,11 @@ public class CleanupTaskModel implements ICleanupTask {
         return type == null ? "null" : type.name().toLowerCase();
     }
 
-    public JocServiceTaskAnswerState cleanup(List<TaskDateTime> datetimes) throws Exception {
+    public JocClusterServiceTaskState cleanup(List<TaskDateTime> datetimes) throws Exception {
         return state;
     }
 
-    public JocServiceTaskAnswerState cleanup(int counter) throws Exception {
+    public JocClusterServiceTaskState cleanup(int counter) throws Exception {
         return state;
     }
 
@@ -185,7 +185,7 @@ public class CleanupTaskModel implements ICleanupTask {
         return type;
     }
 
-    public void setState(JocServiceTaskAnswerState val) {
+    public void setState(JocClusterServiceTaskState val) {
         state = val;
     }
 
@@ -304,8 +304,8 @@ public class CleanupTaskModel implements ICleanupTask {
         return "";
     }
 
-    protected boolean isCompleted(JocServiceTaskAnswerState state) {
-        return state == null || state.equals(JocServiceTaskAnswerState.COMPLETED);
+    protected boolean isCompleted(JocClusterServiceTaskState state) {
+        return state == null || state.equals(JocClusterServiceTaskState.COMPLETED);
     }
 
     protected Date getRemainingStartTime(TaskDateTime datetime) {

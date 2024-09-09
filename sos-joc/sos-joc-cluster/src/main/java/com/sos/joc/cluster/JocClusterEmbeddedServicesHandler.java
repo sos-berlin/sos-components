@@ -14,14 +14,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
-import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
-import com.sos.joc.cluster.bean.answer.JocServiceAnswer.JocServiceAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.cluster.service.embedded.IJocEmbeddedService;
+import com.sos.joc.model.cluster.common.state.JocClusterServiceState;
+import com.sos.joc.model.cluster.common.state.JocClusterState;
 
 public class JocClusterEmbeddedServicesHandler {
 
@@ -48,24 +48,24 @@ public class JocClusterEmbeddedServicesHandler {
         LOGGER.info(String.format("[%s][perform][active=%s]%s", mode, active, type.name()));
 
         if (cluster.getConfig().getEmbeddedServices() == null || cluster.getConfig().getEmbeddedServices().size() == 0) {
-            return JocCluster.getErrorAnswer(JocClusterAnswerState.MISSING_CONFIGURATION);
+            return JocCluster.getErrorAnswer(JocClusterState.MISSING_CONFIGURATION);
         }
 
         String method = type.name().toLowerCase();
         boolean isStart = type.equals(PerformType.START);
         if (isStart) {
             if (active) {
-                return JocCluster.getOKAnswer(JocClusterAnswerState.ALREADY_STARTED);
+                return JocCluster.getOKAnswer(JocClusterState.ALREADY_STARTED);
             }
         } else {
             if (!active || (services == null || services.size() == 0)) {
-                return JocCluster.getOKAnswer(JocClusterAnswerState.ALREADY_STOPPED);
+                return JocCluster.getOKAnswer(JocClusterState.ALREADY_STOPPED);
             }
         }
 
         tryCreateServices();
         if (services.size() == 0) {
-            return JocCluster.getErrorAnswer(JocClusterAnswerState.MISSING_HANDLERS);
+            return JocCluster.getErrorAnswer(JocClusterState.MISSING_HANDLERS);
         }
 
         List<Supplier<JocClusterAnswer>> tasks = new ArrayList<Supplier<JocClusterAnswer>>();
@@ -115,10 +115,10 @@ public class JocClusterEmbeddedServicesHandler {
 
         LOGGER.info(String.format("[%s][%s][active=%s][completed]%s", mode, type.name(), active, cluster.getJocConfig().getMemberId()));
         if (active) {
-            return JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);// TODO check future results
+            return JocCluster.getOKAnswer(JocClusterState.STARTED);// TODO check future results
         } else {
             services = null;
-            return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);// TODO check future results
+            return JocCluster.getOKAnswer(JocClusterState.STOPPED);// TODO check future results
         }
     }
 
@@ -166,14 +166,14 @@ public class JocClusterEmbeddedServicesHandler {
 
         IJocEmbeddedService s = os.get();
         JocServiceAnswer answer = s.getInfo();
-        if (!answer.getState().equals(JocServiceAnswerState.RELAX)) {
+        if (answer.isBusyState()) {
             if (answer.getDiff() < 0) {
                 JocClusterServiceLogger.setLogger();
                 LOGGER.info(String.format("[%s][restart][%s][service status %s][last activity start=%s, end=%s]wait 30s and ask again...", mode,
                         identifier, answer.getState(), answer.getLastActivityStart(), answer.getLastActivityEnd()));
                 cluster.waitFor(10);
                 answer = s.getInfo();
-                if (answer.getState().equals(JocServiceAnswerState.RELAX)) {
+                if (answer.getState().equals(JocClusterServiceState.RELAX)) {
                     LOGGER.info(String.format("[%s][restart][%s]service status %s", mode, identifier, answer.getState()));
                 } else {
                     String msg = String.format("[%s][restart][%s][service status %s][last activity start=%s, end=%s]force restart", mode, identifier,
@@ -208,7 +208,7 @@ public class JocClusterEmbeddedServicesHandler {
         LOGGER.info(String.format("[%s][restart][%s]completed", mode, identifier));
         JocClusterServiceLogger.removeLogger();
 
-        return JocCluster.getOKAnswer(JocClusterAnswerState.RESTARTED);
+        return JocCluster.getOKAnswer(JocClusterState.RESTARTED);
     }
 
     public boolean isActive() {

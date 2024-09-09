@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
 import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer;
-import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
+import com.sos.joc.model.cluster.common.state.JocClusterServiceTaskState;
 
 public interface ICleanupTask {
 
@@ -14,7 +14,7 @@ public interface ICleanupTask {
 
     public JocServiceTaskAnswer stop(int maxTimeoutSeconds);
 
-    public JocServiceTaskAnswerState getState();
+    public JocClusterServiceTaskState getState();
 
     public boolean isStopped();
 

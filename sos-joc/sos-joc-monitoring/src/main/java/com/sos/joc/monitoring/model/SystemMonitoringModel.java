@@ -26,7 +26,6 @@ import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
-import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
@@ -36,6 +35,7 @@ import com.sos.joc.event.bean.monitoring.NotificationConfigurationReleased;
 import com.sos.joc.event.bean.monitoring.NotificationConfigurationRemoved;
 import com.sos.joc.event.bean.monitoring.NotificationLogEvent;
 import com.sos.joc.event.bean.monitoring.SystemNotificationLogEvent;
+import com.sos.joc.model.cluster.common.state.JocClusterState;
 import com.sos.joc.monitoring.MonitorService;
 import com.sos.joc.monitoring.SystemMonitorService;
 import com.sos.joc.monitoring.bean.SystemMonitoringEvent;
@@ -121,7 +121,7 @@ public class SystemMonitoringModel {
         try {
             Configuration.INSTANCE.loadIfNotExists(service.getIdentifier(), service.getJocConfig().getTitle(), service.getJocConfig().getUri());
             schedule(service.getThreadGroup());
-            return JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);
+            return JocCluster.getOKAnswer(JocClusterState.STARTED);
         } catch (Exception e) {
             return JocCluster.getErrorAnswer(e);
         }

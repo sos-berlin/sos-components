@@ -5,17 +5,15 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
-public class JocServiceAnswer {
+import com.sos.joc.model.cluster.common.state.JocClusterServiceState;
 
-    public enum JocServiceAnswerState {
-        UNKNOWN, BUSY, RELAX
-    }
+public class JocServiceAnswer {
 
     private static final ZoneId ZONE_ID = ZoneId.of("Etc/UTC");
 
     private static long RELAX = 10;// seconds
 
-    private JocServiceAnswerState state;
+    private JocClusterServiceState state;
     private ZonedDateTime lastActivityStart;
     private ZonedDateTime lastActivityEnd;
     private long diff;
@@ -24,29 +22,29 @@ public class JocServiceAnswer {
         this(null, null);
     }
 
-    public JocServiceAnswer(JocServiceAnswerState state) {
+    public JocServiceAnswer(JocClusterServiceState state) {
         this.state = state;
     }
 
     public JocServiceAnswer(Instant start, Instant end) {
         diff = 0;
         if (start == null || end == null) {
-            state = JocServiceAnswerState.UNKNOWN;
+            state = JocClusterServiceState.UNKNOWN;
             lastActivityStart = null;
             lastActivityEnd = null;
         } else {
             lastActivityStart = ZonedDateTime.ofInstant(start, ZONE_ID);
             lastActivityEnd = ZonedDateTime.ofInstant(end, ZONE_ID);
             if (lastActivityStart.isAfter(lastActivityEnd)) {
-                state = JocServiceAnswerState.BUSY;
+                state = JocClusterServiceState.BUSY;
                 diff = -1;
             } else {
                 ZonedDateTime now = ZonedDateTime.ofInstant(Instant.now(), ZONE_ID);
                 diff = Duration.between(now, lastActivityEnd).abs().getSeconds();
                 if (diff >= RELAX) {
-                    state = JocServiceAnswerState.RELAX;
+                    state = JocClusterServiceState.RELAX;
                 } else {
-                    state = JocServiceAnswerState.BUSY;
+                    state = JocClusterServiceState.BUSY;
                 }
             }
         }
@@ -56,7 +54,7 @@ public class JocServiceAnswer {
         return diff;
     }
 
-    public JocServiceAnswerState getState() {
+    public JocClusterServiceState getState() {
         return state;
     }
 
@@ -69,7 +67,7 @@ public class JocServiceAnswer {
     }
 
     public boolean isBusyState() {
-        return JocServiceAnswerState.BUSY.equals(state);
+        return JocClusterServiceState.BUSY.equals(state);
     }
 
 }

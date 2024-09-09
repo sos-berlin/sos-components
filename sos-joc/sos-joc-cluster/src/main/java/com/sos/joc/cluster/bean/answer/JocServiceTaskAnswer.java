@@ -1,18 +1,16 @@
 package com.sos.joc.cluster.bean.answer;
 
+import com.sos.joc.model.cluster.common.state.JocClusterServiceTaskState;
+
 public class JocServiceTaskAnswer {
 
-    public enum JocServiceTaskAnswerState {
-        COMPLETED, UNCOMPLETED, UNKNOWN
-    }
+    private JocClusterServiceTaskState state;
 
-    private JocServiceTaskAnswerState state;
-
-    public JocServiceTaskAnswer(JocServiceTaskAnswerState state) {
+    public JocServiceTaskAnswer(JocClusterServiceTaskState state) {
         this.state = state;
     }
 
-    public JocServiceTaskAnswerState getState() {
+    public JocClusterServiceTaskState getState() {
         return state;
     }
 

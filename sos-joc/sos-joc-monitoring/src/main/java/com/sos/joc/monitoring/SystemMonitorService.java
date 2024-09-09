@@ -7,13 +7,13 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
-import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
-import com.sos.joc.cluster.bean.answer.JocServiceAnswer.JocServiceAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.cluster.service.embedded.AJocEmbeddedService;
+import com.sos.joc.model.cluster.common.state.JocClusterServiceState;
+import com.sos.joc.model.cluster.common.state.JocClusterState;
 import com.sos.joc.monitoring.model.SystemMonitoringModel;
 
 public class SystemMonitorService extends AJocEmbeddedService {
@@ -36,7 +36,7 @@ public class SystemMonitorService extends AJocEmbeddedService {
 
             model = new SystemMonitoringModel(this);
             model.start(mode);
-            return JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);
+            return JocCluster.getOKAnswer(JocClusterState.STARTED);
         } catch (Exception e) {
             return JocCluster.getErrorAnswer(e);
         }
@@ -52,12 +52,12 @@ public class SystemMonitorService extends AJocEmbeddedService {
             model.close(mode);
         }
         LOGGER.info(String.format("[%s][%s]stopped", MonitorService.SUB_SERVICE_IDENTIFIER_SYSTEM, mode));
-        return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
+        return JocCluster.getOKAnswer(JocClusterState.STOPPED);
     }
 
     @Override
     public JocServiceAnswer getInfo() {
-        return new JocServiceAnswer(JocServiceAnswerState.RELAX);
+        return new JocServiceAnswer(JocClusterServiceState.RELAX);
     }
 
     @Override

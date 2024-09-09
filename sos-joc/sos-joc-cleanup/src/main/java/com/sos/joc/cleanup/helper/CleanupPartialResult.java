@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.cleanup.model.CleanupTaskModel;
-import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
+import com.sos.joc.model.cluster.common.state.JocClusterServiceTaskState;
 
 public class CleanupPartialResult {
 
@@ -20,7 +20,7 @@ public class CleanupPartialResult {
 
     private final String table;
 
-    private JocServiceTaskAnswerState state;
+    private JocClusterServiceTaskState state;
     private Map<String, Object> parameters = null;
     private long deletedTotal;
     private int deletedLast;
@@ -43,7 +43,7 @@ public class CleanupPartialResult {
         }
 
         boolean doRun = true;
-        state = JocServiceTaskAnswerState.UNCOMPLETED;
+        state = JocClusterServiceTaskState.UNCOMPLETED;
         while (doRun) {
             if (task.isStopped()) {
                 return;
@@ -71,7 +71,7 @@ public class CleanupPartialResult {
             }
 
             if (getDeletedLast() == 0) {
-                state = JocServiceTaskAnswerState.COMPLETED;
+                state = JocClusterServiceTaskState.COMPLETED;
                 if (deletedTotal > 0) {
                     int r = runCounter + 1;
                     LOGGER.info(logPrefix + "[run=" + r + "]" + task.getDeleted(table, lastRunsDeleted, getDeletedTotal()).toString());
@@ -89,7 +89,7 @@ public class CleanupPartialResult {
         }
     }
 
-    public JocServiceTaskAnswerState getState() {
+    public JocClusterServiceTaskState getState() {
         return state;
     }
 
