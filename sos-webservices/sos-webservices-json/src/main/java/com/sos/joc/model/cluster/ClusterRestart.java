@@ -23,6 +23,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 public class ClusterRestart {
 
     /**
+     * JOC cluster services
+     * <p>
      * 
      * (Required)
      * 
@@ -31,6 +33,8 @@ public class ClusterRestart {
     private ClusterServices type;
 
     /**
+     * JOC cluster services
+     * <p>
      * 
      * (Required)
      * 
@@ -41,6 +45,8 @@ public class ClusterRestart {
     }
 
     /**
+     * JOC cluster services
+     * <p>
      * 
      * (Required)
      * 

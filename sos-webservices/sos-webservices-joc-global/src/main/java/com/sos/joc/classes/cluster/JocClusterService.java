@@ -45,6 +45,7 @@ import com.sos.joc.event.bean.proxy.ProxyEvent;
 import com.sos.joc.event.bean.proxy.ProxyRestarted;
 import com.sos.joc.event.bean.proxy.ProxyStarted;
 import com.sos.joc.model.cluster.ClusterRestart;
+import com.sos.joc.model.cluster.ClusterServiceRun;
 import com.sos.joc.model.cluster.common.ClusterServices;
 
 public class JocClusterService {
@@ -322,7 +323,7 @@ public class JocClusterService {
         cluster.getActiveMemberHandler().updateService(mode, ClusterServices.history.name(), controllerId, action);
     }
 
-    public JocClusterAnswer runServiceNow(ClusterRestart r, StartupMode mode) {
+    public JocClusterAnswer runServiceNow(ClusterServiceRun r, StartupMode mode) {
         if (cluster == null) {
             return JocCluster.getErrorAnswer(new Exception(String.format("cluster not started. %s run %s can't be performed.", mode, r.getType())));
         }

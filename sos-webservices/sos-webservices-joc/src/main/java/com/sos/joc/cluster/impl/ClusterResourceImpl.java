@@ -25,6 +25,7 @@ import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocServiceException;
 import com.sos.joc.model.cluster.ClusterRestart;
+import com.sos.joc.model.cluster.ClusterServiceRun;
 import com.sos.joc.model.cluster.ClusterSwitchMember;
 import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.schema.JsonValidator;
@@ -47,8 +48,8 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
     public JOCDefaultResponse runService(String accessToken, byte[] filterBytes) {
         try {
             initLogging(API_CALL_RUN, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, ClusterRestart.class);
-            ClusterRestart in = Globals.objectMapper.readValue(filterBytes, ClusterRestart.class);
+            JsonValidator.validateFailFast(filterBytes, ClusterServiceRun.class);
+            ClusterServiceRun in = Globals.objectMapper.readValue(filterBytes, ClusterServiceRun.class);
             JOCDefaultResponse response = initPermissions("", getJocPermissions(accessToken).getCluster().getManage());
             if (response == null) {
                 processAnswer(JocClusterService.getInstance().runServiceNow(in, StartupMode.manual));

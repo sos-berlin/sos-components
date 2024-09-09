@@ -30,12 +30,12 @@ import com.sos.schema.exception.SOSJsonSchemaException;
 public class JsonValidator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JsonValidator.class);
-    private static final ObjectMapper MAPPER = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            .configure(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true);
+    private static final ObjectMapper MAPPER = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
+            DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true);
     private static final SpecVersion.VersionFlag JSONDRAFT = SpecVersion.VersionFlag.V4;
     private static final List<NonValidationKeyword> NON_VALIDATION_KEYS = Arrays.asList(new NonValidationKeyword("javaType"),
             new NonValidationKeyword("javaInterfaces"), new NonValidationKeyword("javaEnumNames"), new NonValidationKeyword("extends"),
-            new NonValidationKeyword("additionalProperties"), new NonValidationKeyword("propertyOrder"), new NonValidationKeyword("alias"), 
+            new NonValidationKeyword("additionalProperties"), new NonValidationKeyword("propertyOrder"), new NonValidationKeyword("alias"),
             new NonValidationKeyword("schemaVersion"));
     private static final List<NonValidationKeyword> NON_VALIDATION_KEYS_STRICT = Arrays.asList(new NonValidationKeyword("javaType"),
             new NonValidationKeyword("javaInterfaces"), new NonValidationKeyword("javaEnumNames"), new NonValidationKeyword("extends"),
@@ -61,8 +61,9 @@ public class JsonValidator {
             put("CalendarDatesFilter", "calendar/calendarDatesFilter-schema.json");
             put("CalendarsFilter", "calendar/calendarsFilter-schema.json");
 
-            put("ClusterRestart", "cluster/restart-schema.json");
-            put("ClusterSwitchMember", "cluster/switch-schema.json");
+            put("ClusterRestart", "cluster/joc-cluster-restart-schema.json");
+            put("ClusterServiceRun", "cluster/joc-cluster-service-run-schema.json");
+            put("ClusterSwitchMember", "cluster/joc-cluster-switch-member-schema.json");
 
             put("DocumentationShowFilter", "docu/documentationShow-schema.json");
             put("DocumentationFilter", "docu/documentationFilter-schema.json");
@@ -128,7 +129,6 @@ public class JsonValidator {
             put("WorkflowSearchFilter", "workflow/search/workflowBaseSearchFilter-schema.json");
             put("DeployedObjectQuickSearchFilter", "common/quickSearchFilter-schema.json");
 
-
             put("OrderFilter", "order/orderFilter-schema.json");
             put("OrdersFilter", "order/ordersFilter-schema.json");
             put("OrdersFilterV", "order/ordersFilterV-schema.json");
@@ -143,7 +143,7 @@ public class JsonValidator {
             put("JobsFilter", "job/jobsFilter-schema.json");
             put("TaskFilter", "job/taskFilter-schema.json");
             put("RunningTaskLogFilter", "job/runningTaskLogFilter-schema.json");
-            
+
             put("ApplyConfiguration", "xmleditor/apply/apply-configuration-schema.json");
             put("SchemaAssignConfiguration", "xmleditor/schema/assign/schema-assign-configuration-schema.json");
             put("DeleteAll", "xmleditor/delete/all/delete-all-schema.json");
@@ -195,14 +195,14 @@ public class JsonValidator {
             put("com.sos.joc.model.inventory.convert.ConvertCronFilter", "inventory/convert/convertCronFilter-schema.json");
             put("com.sos.joc.model.inventory.validate.RequestFolder", "inventory/revalidate/request-folder-schema.json");
             put("JobWizardFilter", "wizard/wizard-job-filter-schema.json");
-            
+
             put("com.sos.joc.model.tag.common.RequestFilters", "tag/common/request-filters-schema.json");
             put("com.sos.joc.model.tag.common.RequestFolder", "tag/common/request-folder-schema.json");
             put("com.sos.joc.model.tag.tagging.RequestFilter", "tag/tagging/request-filter-schema.json");
             put("com.sos.joc.model.tag.rename.RequestFilter", "tag/rename/request-filter-schema.json");
             put("com.sos.joc.model.tag.tagging.RequestModifyFilter", "tag/tagging/request-modify-filter-schema.json");
             put("com.sos.joc.model.inventory.common.RequestTag", "inventory/common/request-tag-schema.json");
-            
+
             put("com.sos.joc.model.descriptor.common.RequestFilter", "descriptor/common/request-filter-schema.json");
             put("com.sos.joc.model.descriptor.common.RequestFolder", "descriptor/common/request-folder-schema.json");
             put("com.sos.joc.model.descriptor.common.ResponseFolder", "descriptor/common/response-folder-schema.json");
@@ -251,7 +251,7 @@ public class JsonValidator {
             put("com.sos.joc.model.publish.repository.ReadFromFilter", "publish/repository/readFromRepositoryFilter-schema.json");
             put("com.sos.joc.model.publish.repository.UpdateFromFilter", "publish/repository/updateFromRepositoryFilter-schema.json");
             put("com.sos.joc.model.inventory.dependencies.GetDependenciesRequest", "inventory/dependencies/dependency-request-schema.json");
-            
+
             // encipherment
             put("AgentAssignmentRequestFilter", "encipherment/agentAssignmentRequestFilter-schema.json");
             put("ShowAgentAssignmentsRequestFilter", "encipherment/showAgentAssignmentsRequestFilter-schema.json");
@@ -260,8 +260,7 @@ public class JsonValidator {
             put("ShowCertificateRequestFilter", "encipherment/showCertificateRequestFilter-schema.json");
             put("DeleteCertificateRequestFilter", "encipherment/deleteCertificateRequestFilter-schema.json");
             put("EncryptRequestFilter", "encipherment/encryptRequestFilter-schema.json");
-            
-            
+
             // schedules
             put("com.sos.webservices.order.initiator.model.ScheduleSelector", "orderManagement/orders/schedulesSelector-schema.json");
 
@@ -275,7 +274,8 @@ public class JsonValidator {
             put("com.sos.joc.model.dailyplan.submissions.SubmissionsRequest", "dailyplan/submissions/submissions-request-schema.json");
             put("com.sos.joc.model.dailyplan.projections.ProjectionsRequest", "dailyplan/projections/projections-request-schema.json");
             put("com.sos.joc.model.dailyplan.projections.ProjectionsDayRequest", "dailyplan/projections/projections-day-request-schema.json");
-            put("com.sos.joc.model.dailyplan.projections.ProjectionsScheduleRequest", "dailyplan/projections/projections-schedule-request-schema.json");
+            put("com.sos.joc.model.dailyplan.projections.ProjectionsScheduleRequest",
+                    "dailyplan/projections/projections-schedule-request-schema.json");
 
             put("com.sos.joc.model.yade.TransferFilter", "yade/transferFilter-schema.json");
             put("com.sos.joc.model.yade.TransferId", "yade/transferId-schema.json");
@@ -373,10 +373,10 @@ public class JsonValidator {
             put("com.sos.joc.model.notification.DeleteNotificationFilter", "notification/deleteNotificationFilter-schema.json");
             put("com.sos.joc.model.notification.StoreNotificationFilter", "notification/storeNotificationFilter-schema.json");
             put("com.sos.joc.model.notification.ReleaseNotificationFilter", "notification/releaseNotificationFilter-schema.json");
-            
+
             // utilities
             put("com.sos.joc.model.utilities.SendMail", "utilities/sendMail-schema.json");
-            
+
             // reporting
             // obsolete put("com.sos.joc.model.reporting.OrderSteps", "reporting/orderSteps-schema.json");
             put("com.sos.joc.model.reporting.LoadFilter", "reporting/load-schema.json");
@@ -386,7 +386,6 @@ public class JsonValidator {
             put("com.sos.joc.model.reporting.RunReports", "reporting/run-reports-schema.json");
             put("com.sos.joc.model.reporting.RunHistoryFilter", "reporting/runHistory-request-schema.json");
             put("com.sos.joc.model.reporting.DeleteReports", "reporting/delete-request-schema.json");
-
 
             // TODO complete the map
         }
@@ -403,7 +402,7 @@ public class JsonValidator {
             validate(json, URI.create(BASE_URI + schemaPath), false, false, false);
         }
     }
-    
+
     public static void validate(byte[] json, String schemaPath, boolean onlyFirstError) throws IOException, SOSJsonSchemaException {
         if (schemaPath != null) {
             validate(json, URI.create(BASE_URI + schemaPath), false, false, onlyFirstError);
@@ -419,7 +418,7 @@ public class JsonValidator {
     public static void validate(byte[] json, Class<?> clazz) throws IOException, SOSJsonSchemaException {
         validate(json, getSchemaPath(clazz), false);
     }
-    
+
     public static void validate(byte[] json, Class<?> clazz, boolean onlyFirstError) throws IOException, SOSJsonSchemaException {
         validate(json, getSchemaPath(clazz), onlyFirstError);
     }
@@ -435,7 +434,7 @@ public class JsonValidator {
             validate(json, schemaUri, false, false, false);
         }
     }
-    
+
     public static void validate(byte[] json, URI schemaUri, boolean onlyFirstError) throws IOException, SOSJsonSchemaException {
         if (schemaUri != null) {
             validate(json, schemaUri, false, false, onlyFirstError);
@@ -481,7 +480,7 @@ public class JsonValidator {
             validate(json, URI.create(BASE_URI + schemaPath), false, true, false);
         }
     }
-    
+
     public static void validateStrict(byte[] json, String schemaPath, boolean onlyFirstError) throws IOException, SOSJsonSchemaException {
         if (schemaPath != null) {
             validate(json, URI.create(BASE_URI + schemaPath), false, true, onlyFirstError);
@@ -491,7 +490,7 @@ public class JsonValidator {
     public static void validateStrict(byte[] json, Class<?> clazz) throws IOException, SOSJsonSchemaException {
         validateStrict(json, getSchemaPath(clazz), false);
     }
-    
+
     public static void validateStrict(byte[] json, Class<?> clazz, boolean onlyFirstError) throws IOException, SOSJsonSchemaException {
         validateStrict(json, getSchemaPath(clazz), onlyFirstError);
     }
@@ -501,7 +500,7 @@ public class JsonValidator {
             validate(json, schemaUri, false, true, false);
         }
     }
-    
+
     public static void validateStrict(byte[] json, URI schemaUri, boolean onlyFirstError) throws IOException, SOSJsonSchemaException {
         if (schemaUri != null) {
             validate(json, schemaUri, false, true, onlyFirstError);
