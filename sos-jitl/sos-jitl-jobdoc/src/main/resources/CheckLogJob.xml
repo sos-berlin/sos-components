@@ -35,7 +35,7 @@
                 </note>
             </param>
             <param name="pattern"
-                   required="false">
+                   required="true">
                 <note>
                     <title>The regular expression to be used to examine the log</title>
                     <p>

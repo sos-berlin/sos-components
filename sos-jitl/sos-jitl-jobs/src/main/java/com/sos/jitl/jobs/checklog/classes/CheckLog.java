@@ -1,12 +1,37 @@
 package com.sos.jitl.jobs.checklog.classes;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.sos.inventory.model.instruction.AddOrder;
+import com.sos.inventory.model.instruction.Break;
+import com.sos.inventory.model.instruction.ConsumeNotices;
+import com.sos.inventory.model.instruction.Cycle;
+import com.sos.inventory.model.instruction.ExpectNotice;
+import com.sos.inventory.model.instruction.ExpectNotices;
+import com.sos.inventory.model.instruction.Fail;
+import com.sos.inventory.model.instruction.Finish;
+import com.sos.inventory.model.instruction.ForkJoin;
+import com.sos.inventory.model.instruction.ForkList;
+import com.sos.inventory.model.instruction.IfElse;
+import com.sos.inventory.model.instruction.ImplicitEnd;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.InstructionType;
+import com.sos.inventory.model.instruction.Lock;
+import com.sos.inventory.model.instruction.NamedJob;
+import com.sos.inventory.model.instruction.Options;
+import com.sos.inventory.model.instruction.PostNotice;
+import com.sos.inventory.model.instruction.PostNotices;
+import com.sos.inventory.model.instruction.Prompt;
+import com.sos.inventory.model.instruction.RetryCatch;
+import com.sos.inventory.model.instruction.RetryInCatch;
+import com.sos.inventory.model.instruction.StickySubagent;
+import com.sos.inventory.model.instruction.TryCatch;
+import com.sos.inventory.model.workflow.Branch;
 import com.sos.jitl.jobs.checklog.CheckLogJobArguments;
 import com.sos.joc.model.job.RunningTaskLogFilter;
 import com.sos.joc.model.order.OrderFilter;
@@ -29,7 +54,7 @@ public class CheckLog {
     private long checkLogMatchCount = 0;
     private long checkLogGroupCount = 0;
     private long checkLogGroupsMatchesCount = 0;
-    
+
     private String checkLogMatches = "";
     private String checkLogMatchedGroups = "";
     private boolean matchFound = false;
@@ -40,39 +65,99 @@ public class CheckLog {
         this.step = step;
     }
 
+    private String handleInstruction(List<Instruction> instructions, Map<String, Integer> jobCount, Map<String, String> label2Job) {
+        String returnValue = "";
+        for (Instruction instruction : instructions) {
+
+            switch (instruction.getTYPE()) {
+            case EXECUTE_NAMED:
+                com.sos.inventory.model.instruction.NamedJob namedJob = (com.sos.inventory.model.instruction.NamedJob) instruction;
+                int count = jobCount.getOrDefault(namedJob.getJobName(), 0);
+                jobCount.put(namedJob.getJobName(), count + 1);
+                label2Job.put(instruction.getLabel(), namedJob.getJobName());
+                if (namedJob.getJobName().equals(args.getJob())) {
+                    returnValue = instruction.getLabel();
+                }
+                break;
+
+            case TRY:
+                if (!instruction.isRetry()) {
+                    com.sos.inventory.model.instruction.TryCatch tryCatch = (com.sos.inventory.model.instruction.TryCatch) instruction;
+                    returnValue = handleInstruction(tryCatch.getTry().getInstructions(), jobCount, label2Job);
+                } else {
+                    com.sos.inventory.model.instruction.RetryCatch retryCatch = (com.sos.inventory.model.instruction.RetryCatch) instruction;
+                    returnValue = handleInstruction(retryCatch.getTry().getInstructions(), jobCount, label2Job);
+                }
+                break;
+            case IF:
+                com.sos.inventory.model.instruction.IfElse ifElse = (com.sos.inventory.model.instruction.IfElse) instruction;
+                returnValue = handleInstruction(ifElse.getThen().getInstructions(), jobCount, label2Job);
+                returnValue = handleInstruction(ifElse.getElse().getInstructions(), jobCount, label2Job);
+                break;
+            case FORK:
+                com.sos.inventory.model.instruction.ForkJoin forkJoin = (com.sos.inventory.model.instruction.ForkJoin) instruction;
+                for (Branch branch : forkJoin.getBranches())
+                    returnValue = handleInstruction(branch.getWorkflow().getInstructions(), jobCount, label2Job);
+                break;
+            case FORKLIST:
+                com.sos.inventory.model.instruction.ForkList forkList = (com.sos.inventory.model.instruction.ForkList) instruction;
+                returnValue = handleInstruction(forkList.getWorkflow().getInstructions(), jobCount, label2Job);
+                break;
+            case LOCK:
+                com.sos.inventory.model.instruction.Lock lock = (com.sos.inventory.model.instruction.Lock) instruction;
+                returnValue = handleInstruction(lock.getLockedWorkflow().getInstructions(), jobCount, label2Job);
+                break;
+            case STICKY_SUBAGENT:
+                com.sos.inventory.model.instruction.StickySubagent stickySubagent = (com.sos.inventory.model.instruction.StickySubagent) instruction;
+                returnValue = handleInstruction(stickySubagent.getSubworkflow().getInstructions(), jobCount, label2Job);
+                break;
+            case CYCLE:
+                com.sos.inventory.model.instruction.Cycle cycle = (com.sos.inventory.model.instruction.Cycle) instruction;
+                returnValue = handleInstruction(cycle.getCycleWorkflow().getInstructions(), jobCount, label2Job);
+                break;
+            case OPTIONS:
+                com.sos.inventory.model.instruction.Options options = (com.sos.inventory.model.instruction.Options) instruction;
+                returnValue = handleInstruction(options.getBlock().getInstructions(), jobCount, label2Job);
+                break;
+            default:
+                break;
+            }
+        }
+        return returnValue;
+
+    }
+
     private Long checkJob2LabelAssignment(String accessToken, CheckLogWebserviceExecuter orderStateWebserviceExecuter) throws Exception {
         OrderFilter orderFilter = new OrderFilter();
         orderFilter.setControllerId(step.getControllerId());
         orderFilter.setOrderId(step.getOrderId());
+        orderFilter.setOrderId("#2024-09-09#T89463254302-root");
+        orderFilter.setControllerId("controller");
+
         OrderV order = orderStateWebserviceExecuter.getOrder(orderFilter, accessToken);
 
         WorkflowFilter workflowFilter = new WorkflowFilter();
         workflowFilter.setCompact(false);
         workflowFilter.setControllerId(step.getControllerId());
+        workflowFilter.setControllerId("controller");
         workflowFilter.setWorkflowId(order.getWorkflowId());
         Workflow workflow = orderStateWebserviceExecuter.getWorkflow(workflowFilter, accessToken);
 
         OrderHistoryFilter orderHistoryFilter = new OrderHistoryFilter();
         orderHistoryFilter.setControllerId(step.getControllerId());
+        orderHistoryFilter.setControllerId("controller");
         orderHistoryFilter.setOrderId(step.getOrderId());
+        orderHistoryFilter.setOrderId("#2024-09-09#T89463254302-root");
 
         String label = args.getLabel();
         String defaultLabel = "";
         Long taskId = 0L;
         if (workflow != null) {
+
             Map<String, Integer> jobCount = new HashMap<String, Integer>();
             Map<String, String> label2Job = new HashMap<String, String>();
-            for (Instruction instruction : workflow.getWorkflow().getInstructions()) {
-                if (instruction.getTYPE().equals(InstructionType.EXECUTE_NAMED)) {
-                    com.sos.inventory.model.instruction.NamedJob namedJob = (com.sos.inventory.model.instruction.NamedJob) instruction;
-                    int count = jobCount.getOrDefault(namedJob.getJobName(), 0);
-                    jobCount.put(namedJob.getJobName(), count + 1);
-                    label2Job.put(instruction.getLabel(), namedJob.getJobName());
-                    if (namedJob.getJobName().equals(args.getJob())) {
-                        defaultLabel = instruction.getLabel();
-                    }
-                }
-            }
+
+            defaultLabel = handleInstruction(workflow.getWorkflow().getInstructions(), jobCount, label2Job);
 
             if (jobCount.get(args.getJob()) == null) {
                 throw new Exception("could not find job " + "'" + args.getJob() + " in workflow " + "'" + workflowFilter.getWorkflowId().getPath()
@@ -211,6 +296,7 @@ public class CheckLog {
 
             RunningTaskLogFilter runningTaskLogFilter = new RunningTaskLogFilter();
             runningTaskLogFilter.setControllerId(step.getControllerId());
+            runningTaskLogFilter.setControllerId("controller");
             runningTaskLogFilter.setTaskId(taskId);
 
             String taskLog = orderStateWebserviceExecuter.getTaskLog(runningTaskLogFilter, accessToken);
@@ -242,12 +328,10 @@ public class CheckLog {
         return matchFound;
     }
 
-    
     public long getCheckLogGroupCount() {
         return checkLogGroupCount;
     }
 
-    
     public long getCheckLogGroupsMatchesCount() {
         return checkLogGroupsMatchesCount;
     }
