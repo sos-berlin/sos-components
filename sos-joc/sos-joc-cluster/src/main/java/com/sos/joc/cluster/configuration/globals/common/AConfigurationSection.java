@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
 import com.sos.joc.model.configuration.globals.GlobalSettingsSectionEntry;
+import com.sos.joc.model.configuration.globals.GlobalSettingsSectionEntryChildren;
 import com.sos.joc.model.configuration.globals.GlobalSettingsSectionValueType;
 
 public abstract class AConfigurationSection {
@@ -34,6 +35,7 @@ public abstract class AConfigurationSection {
                     se.setDefault(ce.getDefault());
                     se.setValues(ce.getValues());
                     se.setOrdering(ce.getOrdering());
+                    se = toDefaultsSetChildren(ce, se);
                     s.setAdditionalProperty(ce.getName(), se);
                 }
             } catch (Throwable e) {
@@ -41,6 +43,28 @@ public abstract class AConfigurationSection {
             }
         }
         return s;
+    }
+
+    private GlobalSettingsSectionEntry toDefaultsSetChildren(ConfigurationEntry ce, GlobalSettingsSectionEntry se) {
+        if (ce.hasChildren()) {
+            GlobalSettingsSectionEntryChildren seChildren = new GlobalSettingsSectionEntryChildren();
+            for (ConfigurationEntry ceChild : ce.getChildren()) {
+                GlobalSettingsSectionEntry seChild = new GlobalSettingsSectionEntry();
+                seChild.setType(ceChild.getType());
+                seChild.setDefault(ceChild.getDefault());
+                seChild.setValues(ceChild.getValues());
+                seChild.setOrdering(ceChild.getOrdering());
+
+                if (ceChild.hasChildren()) {
+                    seChild = toDefaultsSetChildren(ceChild, seChild);
+                }
+                seChildren.setAdditionalProperty(ceChild.getName(), seChild);
+            }
+            se.setChildren(seChildren);
+        } else {
+            se.setChildren(null);
+        }
+        return se;
     }
 
     public void setValues(GlobalSettingsSection section) {
@@ -55,15 +79,17 @@ public abstract class AConfigurationSection {
                     if (section == null || section.getAdditionalProperties() == null || !section.getAdditionalProperties().containsKey(ce
                             .getName())) {
                         ce.setValue(ce.getDefault());
+                        if (ce.hasChildren()) {
+                            ce = setValuesSetChildren(ce, null);
+                        }
                         field.set(this, ce);
                         continue;
                     }
                     GlobalSettingsSectionEntry entry = section.getAdditionalProperties().get(ce.getName());
-                    String val = entry.getValue() == null ? null : entry.getValue().trim();
-                    if (GlobalSettingsSectionValueType.PASSWORD.equals(ce.getType())) {
-                        ce.setValue(val == null ? ce.getDefault() : val);  //allow empty strings
-                    } else {
-                        ce.setValue(SOSString.isEmpty(val) ? ce.getDefault() : val);
+                    ce.setValue(setValuesGetValue(ce, entry));
+
+                    if (ce.hasChildren()) {
+                        ce = setValuesSetChildren(ce, entry);
                     }
                     field.set(this, ce);
                 }
@@ -72,4 +98,38 @@ public abstract class AConfigurationSection {
             }
         }
     }
+
+    private ConfigurationEntry setValuesSetChildren(ConfigurationEntry ce, GlobalSettingsSectionEntry entry) {
+        if (ce.hasChildren()) {
+            for (ConfigurationEntry cecc : ce.getChildren()) {
+                GlobalSettingsSectionEntry entryChild = setValuesGetSettingsSectionEntryChildEntry(entry, cecc.getName());
+                if (entryChild == null) {
+                    cecc.setValue(cecc.getDefault());
+                } else {
+                    cecc.setValue(setValuesGetValue(cecc, entryChild));
+                }
+                if (cecc.hasChildren()) {
+                    cecc = setValuesSetChildren(cecc, entryChild);
+                }
+            }
+        }
+        return ce;
+    }
+
+    private GlobalSettingsSectionEntry setValuesGetSettingsSectionEntryChildEntry(GlobalSettingsSectionEntry entry, String childName) {
+        if (entry == null || entry.getChildren() == null || entry.getChildren().getAdditionalProperties() == null) {
+            return null;
+        }
+        return entry.getChildren().getAdditionalProperties().get(childName);
+    }
+
+    private String setValuesGetValue(ConfigurationEntry ce, GlobalSettingsSectionEntry entry) {
+        String val = entry.getValue() == null ? null : entry.getValue().trim();
+        if (GlobalSettingsSectionValueType.PASSWORD.equals(ce.getType())) {
+            return val == null ? ce.getDefault() : val;  // allow empty strings
+        } else {
+            return SOSString.isEmpty(val) ? ce.getDefault() : val;
+        }
+    }
+
 }

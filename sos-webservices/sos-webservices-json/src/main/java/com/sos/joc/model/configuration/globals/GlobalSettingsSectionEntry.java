@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -23,7 +24,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "type",
     "default",
     "values",
-    "ordering"
+    "ordering",
+    "children"
 })
 public class GlobalSettingsSectionEntry {
 
@@ -61,6 +63,15 @@ public class GlobalSettingsSectionEntry {
      */
     @JsonProperty("ordering")
     private Integer ordering;
+    /**
+     * cluster setting
+     * <p>
+     * a map for arbitrary key-value pairs (String, GlobalSettingsSectionEntry)
+     * 
+     */
+    @JsonProperty("children")
+    @JsonPropertyDescription("a map for arbitrary key-value pairs (String, GlobalSettingsSectionEntry)")
+    private GlobalSettingsSectionEntryChildren children;
 
     /**
      * string without < and >
@@ -160,14 +171,36 @@ public class GlobalSettingsSectionEntry {
         this.ordering = ordering;
     }
 
+    /**
+     * cluster setting
+     * <p>
+     * a map for arbitrary key-value pairs (String, GlobalSettingsSectionEntry)
+     * 
+     */
+    @JsonProperty("children")
+    public GlobalSettingsSectionEntryChildren getChildren() {
+        return children;
+    }
+
+    /**
+     * cluster setting
+     * <p>
+     * a map for arbitrary key-value pairs (String, GlobalSettingsSectionEntry)
+     * 
+     */
+    @JsonProperty("children")
+    public void setChildren(GlobalSettingsSectionEntryChildren children) {
+        this.children = children;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("value", value).append("type", type).append("_default", _default).append("values", values).append("ordering", ordering).toString();
+        return new ToStringBuilder(this).append("value", value).append("type", type).append("_default", _default).append("values", values).append("ordering", ordering).append("children", children).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(_default).append(type).append(value).append(ordering).append(values).toHashCode();
+        return new HashCodeBuilder().append(_default).append(children).append(ordering).append(values).append(type).append(value).toHashCode();
     }
 
     @Override
@@ -179,7 +212,7 @@ public class GlobalSettingsSectionEntry {
             return false;
         }
         GlobalSettingsSectionEntry rhs = ((GlobalSettingsSectionEntry) other);
-        return new EqualsBuilder().append(_default, rhs._default).append(type, rhs.type).append(value, rhs.value).append(ordering, rhs.ordering).append(values, rhs.values).isEquals();
+        return new EqualsBuilder().append(_default, rhs._default).append(children, rhs.children).append(ordering, rhs.ordering).append(values, rhs.values).append(type, rhs.type).append(value, rhs.value).isEquals();
     }
 
 }

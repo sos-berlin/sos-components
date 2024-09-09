@@ -24,7 +24,6 @@ public class CleanupServiceConfiguration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupServiceConfiguration.class);
 
-    public static final String PROPERTY_NAME_PERIOD = "period";
     public static final int MIN_MAX_POOL_SIZE = 5;
 
     private ZoneId zoneId;
@@ -42,7 +41,7 @@ public class CleanupServiceConfiguration {
     private int deploymentHistoryVersions;
     private int batchSize;
     private int maxPoolSize;
-    private boolean forceCleanup;
+    private ForceCleanup forceCleanup;
 
     private Path hibernateConfiguration;
 
@@ -101,12 +100,7 @@ public class CleanupServiceConfiguration {
             maxPoolSize = MIN_MAX_POOL_SIZE;
         }
 
-        try {
-            forceCleanup = Boolean.parseBoolean(configuration.getForceCleanup().getValue());
-        } catch (Throwable e) {
-            LOGGER.error(String.format("[%s configured=%s]%s", configuration.getForceCleanup().getName(), configuration.getForceCleanup().getValue(),
-                    e.toString()), e);
-        }
+        forceCleanup = new ForceCleanup(configuration.getForceCleanup());
     }
 
     public ZoneId getZoneId() {
@@ -169,7 +163,7 @@ public class CleanupServiceConfiguration {
         return maxPoolSize;
     }
 
-    public boolean forceCleanup() {
+    public ForceCleanup getForceCleanup() {
         return forceCleanup;
     }
 
@@ -185,7 +179,19 @@ public class CleanupServiceConfiguration {
     public String toString() {
         StringBuilder sb = new StringBuilder("[");
         sb.append(getClass().getSimpleName());
-        sb.append(" forceCleanup=").append(forceCleanup);
+        sb.append(" forceCleanup=").append(forceCleanup.force);
+        if (forceCleanup.force) {
+            sb.append("[");
+            sb.append("historyPauseDuration=[");
+            sb.append("configured=").append(forceCleanup.historyPauseDurationAge.getConfigured());
+            sb.append(",seconds=").append(forceCleanup.historyPauseDurationAge.getSeconds());
+            sb.append("]");
+            sb.append("historyPauseDelayAge=[");
+            sb.append("configured=").append(forceCleanup.historyPauseDelayAge.getConfigured());
+            sb.append(",seconds=").append(forceCleanup.historyPauseDelayAge.getSeconds());
+            sb.append("]");
+            sb.append("]");
+        }
         sb.append(",batchSize=").append(batchSize);
         sb.append(",maxPoolSize=").append(maxPoolSize);
         sb.append(",zoneId=").append(zoneId);
@@ -227,37 +233,82 @@ public class CleanupServiceConfiguration {
         return sb.toString();
     }
 
+    public class ForceCleanup {
+
+        private boolean force = false;
+        private Age historyPauseDurationAge;
+        private Age historyPauseDelayAge;
+
+        private ForceCleanup(ConfigurationEntry entry) {
+            try {
+                force = Boolean.parseBoolean(entry.getValue());
+            } catch (Throwable e) {
+                LOGGER.error(String.format("[%s configured=%s]%s", entry.getName(), entry.getValue(), e.toString()), e);
+            }
+            historyPauseDurationAge = new Age(entry.getChild(ConfigurationGlobalsCleanup.ENTRY_NAME_HISTORY_PAUSE_DURATION));
+            historyPauseDelayAge = new Age(entry.getChild(ConfigurationGlobalsCleanup.ENTRY_NAME_HISTORY_PAUSE_DELAY));
+        }
+
+        public boolean force() {
+            return force;
+        }
+
+        public Age getHistoryPauseDurationAge() {
+            return historyPauseDurationAge;
+        }
+
+        public Age getHistoryPauseDelayAge() {
+            return historyPauseDelayAge;
+        }
+    }
+
     public class Age {
 
         private String propertyName = null;
         private String configured = null;
         private long minutes = 0;
+        private long seconds = 0;
 
         public Age(ConfigurationEntry entry) {
             this.propertyName = entry.getName();
             this.configured = entry.getValue() == null ? "" : entry.getValue();
             try {
+                minutes = 0;
+                seconds = 0;
+
                 if (SOSString.isEmpty(this.configured) || this.configured.equals("0")) {
-                    minutes = 0;
                 } else {
                     if (StringUtils.isNumeric(this.configured)) {
                         this.configured = this.configured + "d";
                     }
-                    minutes = SOSDate.resolveAge("m", this.configured).longValue();
-                    if (minutes < 0) {
-                        minutes = 0;
+
+                    if (this.configured.endsWith("s")) {
+                        seconds = SOSDate.resolveAge("s", this.configured).longValue();
+                        if (seconds < 0) {
+                            seconds = 0;
+                        }
+                    } else {
+                        minutes = SOSDate.resolveAge("m", this.configured).longValue();
+                        if (minutes < 0) {
+                            minutes = 0;
+                        }
+                    }
+                    if (seconds == 0 && minutes > 0) {
+                        seconds = minutes * 60;
                     }
                 }
             } catch (Exception e) {
                 minutes = 0;
+                seconds = 0;
                 LOGGER.error(String.format("[%s]%s", this.configured, e.toString()));
             }
         }
 
-        private Age(String propertyName, String configured, long minutes) {
+        private Age(String propertyName, String configured, long minutes, long seconds) {
             this.propertyName = propertyName;
             this.configured = configured;
             this.minutes = minutes;
+            this.seconds = seconds;
         }
 
         public String getPropertyName() {
@@ -269,11 +320,15 @@ public class CleanupServiceConfiguration {
         }
 
         public Age clone(String propertyName) {
-            return new Age(propertyName, this.configured, this.minutes);
+            return new Age(propertyName, this.configured, this.minutes, this.seconds);
         }
 
         public long getMinutes() {
             return minutes;
+        }
+
+        public long getSeconds() {
+            return seconds;
         }
     }
 

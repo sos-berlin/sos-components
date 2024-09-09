@@ -65,7 +65,7 @@ public class CleanupService extends AJocActiveMemberService {
             lastActivityEnd.set(new Date().getTime());
             if (config.getPeriod() == null || config.getPeriod().getWeekDays().size() == 0) {
                 LOGGER.info(String.format("[%s][%s][stop]missing \"%s\" parameter", getIdentifier(), mode,
-                        CleanupServiceConfiguration.PROPERTY_NAME_PERIOD));
+                        ConfigurationGlobalsCleanup.ENTRY_NAME_PERIOD));
                 return JocCluster.getOKAnswer(JocClusterAnswerState.MISSING_CONFIGURATION);
             } else {
                 threadPool = Executors.newFixedThreadPool(1, new JocClusterThreadFactory(getThreadGroup(), IDENTIFIER + "-start"));
@@ -140,6 +140,9 @@ public class CleanupService extends AJocActiveMemberService {
 
     @Override
     public JocServiceAnswer getInfo() {
+        if (runServiceNow.get()) {
+            lastActivityStart.set(new Date().getTime());
+        }
         return new JocServiceAnswer(Instant.ofEpochMilli(lastActivityStart.get()), Instant.ofEpochMilli(lastActivityEnd.get()));
     }
 

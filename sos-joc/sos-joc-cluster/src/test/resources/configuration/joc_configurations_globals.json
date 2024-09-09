@@ -1,0 +1,106 @@
+{
+	"cleanup": {
+		"ordering": 1,
+		"period": {
+			"ordering": 1,
+			"value": "4"
+		},
+		"period_end": {
+			"ordering": 3,
+			"value": "23:59:59"
+		},
+		"time_zone": {
+			"ordering": 0,
+			"value": "Europe/Berlin"
+		},
+		"period_begin": {
+			"ordering": 2,
+			"value": "10:00:00"
+		},
+		"failed_login_history_age": {
+			"ordering": 15,
+			"value": "1d"
+		},
+		"order_history_logs_age": {
+			"ordering": 8,
+			"value": "2d"
+		},
+		"order_history_age": {
+			"ordering": 7,
+			"value": "2d"
+		},
+		"audit_log_age": {
+			"ordering": 10,
+			"value": "10d"
+		},
+		"force_cleanup": {
+			"ordering": 4,
+			"value": true,
+			"children": {
+				"history_pause_duration": {
+					"ordering": 1,
+					"value": "30s"
+				},
+				"history_pause_delay": {
+					"ordering": 2,
+					"value": "40s"
+				}
+			}
+		}
+	},
+	"joc": {
+		"ordering": 2,
+		"restore_suffix": {
+			"ordering": 6,
+			"value": "restored1234"
+		},
+		"force_comments_for_audit_log": {
+			"ordering": 0,
+			"value": false
+		},
+		"encoding": {
+			"ordering": 23,
+			"value": "cp852"
+		},
+		"log_applicable_size": {
+			"ordering": 30,
+			"value": "600"
+		},
+		"log_ext_order_history": {
+			"ordering": 26,
+			"value": "all"
+		},
+		"log_ext_task": {
+			"ordering": 28,
+			"value": "all"
+		},
+		"log_ext_order": {
+			"ordering": 27,
+			"value": "all"
+		},
+		"num_of_tags_displayed_as_order_id": {
+			"ordering": 36,
+			"value": "3"
+		}
+	},
+	"dailyplan": {
+		"ordering": 0
+	},
+	"user": {
+		"ordering": 3,
+		"welcome_got_it": {
+			"ordering": 0,
+			"value": true
+		},
+		"welcome_do_not_remind_me": {
+			"ordering": 1,
+			"value": true
+		}
+	},
+	"git": {
+		"ordering": 4
+	},
+	"lognotification": {
+		"ordering": 5
+	}
+}

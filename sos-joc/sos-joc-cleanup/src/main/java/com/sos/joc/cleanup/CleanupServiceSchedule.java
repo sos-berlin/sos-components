@@ -113,7 +113,7 @@ public class CleanupServiceSchedule {
     private long computeRunNowDelay() {
         ZonedDateTime now = service.getNow();
         start = now.plusSeconds(5);
-        if (service.getConfig().forceCleanup()) {
+        if (service.getConfig().getForceCleanup().force()) {
             // TODO read timeout from settings
             end = now.plusSeconds(DEFAULT_RUN_SERVICE_NOW_TIMEOUT);
         } else {

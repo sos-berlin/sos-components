@@ -8,11 +8,17 @@ public class ConfigurationGlobalsCleanup extends AConfigurationSection {
 
     public final static String INITIAL_PERIOD = "1,2,3,4,5,6,7";
 
+    public static final String ENTRY_NAME_PERIOD = "period";
+    public static final String ENTRY_NAME_HISTORY_PAUSE_DURATION = "history_pause_duration";
+    public static final String ENTRY_NAME_HISTORY_PAUSE_DELAY = "history_pause_delay";
+
     private ConfigurationEntry timeZone = new ConfigurationEntry("time_zone", "UTC", GlobalSettingsSectionValueType.TIMEZONE);
-    private ConfigurationEntry period = new ConfigurationEntry("period", null, GlobalSettingsSectionValueType.WEEKDAYS);
+    private ConfigurationEntry period = new ConfigurationEntry(ENTRY_NAME_PERIOD, null, GlobalSettingsSectionValueType.WEEKDAYS);
     private ConfigurationEntry periodBegin = new ConfigurationEntry("period_begin", "01:00", GlobalSettingsSectionValueType.TIME);
     private ConfigurationEntry periodEnd = new ConfigurationEntry("period_end", "04:00", GlobalSettingsSectionValueType.TIME);
+
     private ConfigurationEntry forceCleanup = new ConfigurationEntry("force_cleanup", "false", GlobalSettingsSectionValueType.BOOLEAN);
+
     private ConfigurationEntry batchSize = new ConfigurationEntry("batch_size", "1000", GlobalSettingsSectionValueType.POSITIVEINTEGER);
     private ConfigurationEntry maxPoolSize = new ConfigurationEntry("max_pool_size", "8", GlobalSettingsSectionValueType.POSITIVEINTEGER);
 
@@ -38,7 +44,11 @@ public class ConfigurationGlobalsCleanup extends AConfigurationSection {
         period.setOrdering(++index);
         periodBegin.setOrdering(++index);
         periodEnd.setOrdering(++index);
+
         forceCleanup.setOrdering(++index);
+        forceCleanup.addChild(new ConfigurationEntry(ENTRY_NAME_HISTORY_PAUSE_DURATION, null, GlobalSettingsSectionValueType.DURATION));
+        forceCleanup.addChild(new ConfigurationEntry(ENTRY_NAME_HISTORY_PAUSE_DELAY, "60s", GlobalSettingsSectionValueType.DURATION));
+
         batchSize.setOrdering(++index);
         maxPoolSize.setOrdering(++index);
 

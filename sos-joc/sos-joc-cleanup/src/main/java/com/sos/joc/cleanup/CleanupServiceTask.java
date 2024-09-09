@@ -104,7 +104,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
                 LOGGER.warn(e.toString(), e);
             }
 
-            final boolean forceCleanup = cleanupSchedule.getService().getConfig().forceCleanup();
+            final boolean forceCleanup = cleanupSchedule.getService().getConfig().getForceCleanup().force();
 
             List<Supplier<JocClusterAnswer>> tasks = new ArrayList<Supplier<JocClusterAnswer>>();
             // 1) service tasks

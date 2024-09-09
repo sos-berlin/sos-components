@@ -1,5 +1,6 @@
 package com.sos.joc.cluster.configuration.globals.common;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.sos.joc.model.configuration.globals.GlobalSettingsSectionValueType;
@@ -12,6 +13,7 @@ public class ConfigurationEntry {
     private final String defaultValue;
     private String value;
     private int ordering;
+    private List<ConfigurationEntry> children;
 
     public ConfigurationEntry(String name, String defaultValue, GlobalSettingsSectionValueType type) {
         this(name, defaultValue, null, type);
@@ -54,5 +56,28 @@ public class ConfigurationEntry {
 
     public List<String> getValues() {
         return values;
+    }
+
+    public void addChild(ConfigurationEntry entry) {
+        if (children == null) {
+            children = new ArrayList<>();
+        }
+        entry.setOrdering(children.size() + 1);
+        children.add(entry);
+    }
+
+    public ConfigurationEntry getChild(String name) {
+        if (children == null || name == null) {
+            return null;
+        }
+        return children.stream().filter(e -> name.equals(e.getName())).findFirst().orElse(null);
+    }
+
+    public boolean hasChildren() {
+        return children != null && children.size() > 0;
+    }
+
+    protected List<ConfigurationEntry> getChildren() {
+        return children;
     }
 }

@@ -8,6 +8,7 @@ import com.sos.joc.model.configuration.ConfigurationObjectType;
 import com.sos.joc.model.configuration.globals.GlobalSettings;
 import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
 import com.sos.joc.model.configuration.globals.GlobalSettingsSectionEntry;
+import com.sos.joc.model.configuration.globals.GlobalSettingsSectionEntryChildren;
 
 public class ConfigurationGlobals {
 
@@ -62,7 +63,7 @@ public class ConfigurationGlobals {
         settings.getAdditionalProperties().entrySet().stream().forEach(s -> {
             s.getValue().getAdditionalProperties().entrySet().stream().forEach(e -> {
                 GlobalSettingsSectionEntry entry = e.getValue();
-                if (s.getKey().equals(DefaultSections.cleanup.name()) && e.getKey().equals("period")) {
+                if (s.getKey().equals(DefaultSections.cleanup.name()) && e.getKey().equals(ConfigurationGlobalsCleanup.ENTRY_NAME_PERIOD)) {
                     entry.setValue(ConfigurationGlobalsCleanup.INITIAL_PERIOD);
                 } else if (e.getKey().equals("time_zone")) {
                     entry.setValue(timeZone);
@@ -81,7 +82,7 @@ public class ConfigurationGlobals {
     public GlobalSettings getDefaults() {
         return defaults;
     }
-    
+
     public GlobalSettings getClonedDefaults() {
         return clone(defaults);
     }
@@ -130,6 +131,7 @@ public class ConfigurationGlobals {
                 ne.setType(oe.getType());
                 ne.setValue(oe.getValue());
                 ne.setValues(oe.getValues());
+                ne = cloneChildren(oe, ne);
 
                 ns.getAdditionalProperties().put(e.getKey(), ne);
             });
@@ -138,6 +140,30 @@ public class ConfigurationGlobals {
         });
 
         return s;
+    }
+
+    private GlobalSettingsSectionEntry cloneChildren(GlobalSettingsSectionEntry source, GlobalSettingsSectionEntry target) {
+        if (source.getChildren() != null && source.getChildren().getAdditionalProperties() != null && source.getChildren().getAdditionalProperties()
+                .size() > 0) {
+            GlobalSettingsSectionEntryChildren children = new GlobalSettingsSectionEntryChildren();
+            source.getChildren().getAdditionalProperties().entrySet().stream().forEach(e -> {
+                GlobalSettingsSectionEntry oe = e.getValue();
+                GlobalSettingsSectionEntry ne = new GlobalSettingsSectionEntry();
+
+                ne.setDefault(oe.getDefault());
+                ne.setOrdering(oe.getOrdering());
+                ne.setType(oe.getType());
+                ne.setValue(oe.getValue());
+                ne.setValues(oe.getValues());
+                ne = cloneChildren(oe, ne);
+
+                children.getAdditionalProperties().put(e.getKey(), ne);
+            });
+            target.setChildren(children);
+        } else {
+            target.setChildren(null);
+        }
+        return target;
     }
 
 }
