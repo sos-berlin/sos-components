@@ -106,7 +106,7 @@ public class HistoryMonitorService extends AJocActiveMemberService {
     }
 
     @Override
-    public void runNow(StartupMode mode, AConfigurationSection configuration) {
+    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration) {
 
     }
 

@@ -338,6 +338,10 @@ public class JocClusterService {
             answer = cluster.getActiveMemberHandler().runServiceNow(mode, ClusterServices.cleanup.name(), Globals.configurationGlobals
                     .getConfigurationSection(DefaultSections.cleanup));
             break;
+        case dailyplan:
+            answer = cluster.getActiveMemberHandler().runServiceNow(mode, ClusterServices.dailyplan.name(), Globals.configurationGlobals
+                    .getConfigurationSection(DefaultSections.dailyplan));
+            break;
         default:
             answer = JocCluster.getErrorAnswer(new Exception(String.format("%s run not yet supported for %s", mode, r.getType())));
         }

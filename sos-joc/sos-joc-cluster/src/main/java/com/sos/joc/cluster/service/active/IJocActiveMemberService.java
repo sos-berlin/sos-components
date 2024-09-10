@@ -21,7 +21,7 @@ public interface IJocActiveMemberService {
     public JocClusterAnswer stop(StartupMode mode);
 
     // run service implementation immediately - when the service starts at a specific time (e.g. cleanup service)
-    public void runNow(StartupMode mode, AConfigurationSection configuration);
+    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration);
 
     // react when controllers have changed (added, removed ...)
     public void update(StartupMode mode, List<ControllerConfiguration> controllers, String controllerId, Action action);

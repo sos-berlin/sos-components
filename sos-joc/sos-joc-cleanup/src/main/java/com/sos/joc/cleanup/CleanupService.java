@@ -157,12 +157,13 @@ public class CleanupService extends AJocActiveMemberService {
     }
 
     @Override
-    public void runNow(StartupMode mode, AConfigurationSection configuration) {
+    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration) {
         setServiceLogger();
         if (schedule == null) {
             LOGGER.info(String.format("[%s][%s][runNow][skip]schedule=null", getIdentifier(), mode));
             return;
         }
+        lastActivityStart.set(new Date().getTime());
         runServiceNow.set(true);
         if (configuration instanceof ConfigurationGlobalsCleanup) {
             setConfig((ConfigurationGlobalsCleanup) configuration);
