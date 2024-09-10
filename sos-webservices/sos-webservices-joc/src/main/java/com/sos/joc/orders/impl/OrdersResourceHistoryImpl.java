@@ -196,7 +196,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                     List<Long> historyIdsForOrderTagging = new ArrayList<>();
                     Set<String> workflowNames = new HashSet<>();
                     boolean withTagsDisplayedAsOrderId = OrderTags.withTagsDisplayedAsOrderId();
-                    boolean withWorkflowTagsDisplayed = WorkflowsHelper.withWorkflowTagsDisplayed();
+                    boolean withWorkflowTagsDisplayed = in.getWithoutWorkflowTags() != Boolean.TRUE && WorkflowsHelper.withWorkflowTagsDisplayed();
 
                     try {
                         boolean profiler = false;
