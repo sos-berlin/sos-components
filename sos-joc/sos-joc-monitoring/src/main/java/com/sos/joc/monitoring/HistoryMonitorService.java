@@ -13,7 +13,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
-import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
+import com.sos.joc.cluster.common.JocClusterServiceActivity;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
@@ -22,7 +22,6 @@ import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.cluster.service.active.AJocActiveMemberService;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.model.cluster.common.state.JocClusterServiceState;
 import com.sos.joc.model.cluster.common.state.JocClusterState;
 import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.model.HistoryMonitoringModel;
@@ -72,12 +71,12 @@ public class HistoryMonitorService extends AJocActiveMemberService {
     }
 
     @Override
-    public JocServiceAnswer getInfo() {
+    public JocClusterServiceActivity getActivity() {
         if (history == null) {
-            return new JocServiceAnswer(JocClusterServiceState.RELAX);
+            return JocClusterServiceActivity.Relax();
         } else {
-            return new JocServiceAnswer(Instant.ofEpochMilli(history.getLastActivityStart().get()), Instant.ofEpochMilli(history.getLastActivityEnd()
-                    .get()));
+            return new JocClusterServiceActivity(Instant.ofEpochMilli(history.getLastActivityStart().get()), Instant.ofEpochMilli(history
+                    .getLastActivityEnd().get()));
         }
     }
 

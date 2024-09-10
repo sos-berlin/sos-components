@@ -8,7 +8,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
-import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
+import com.sos.joc.cluster.common.JocClusterServiceActivity;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
@@ -44,8 +44,8 @@ public class ProxyService extends AJocActiveMemberService {
     }
 
     @Override
-    public JocServiceAnswer getInfo() {
-        return new JocServiceAnswer();
+    public JocClusterServiceActivity getActivity() {
+        return JocClusterServiceActivity.Relax();
     }
 
     @Override

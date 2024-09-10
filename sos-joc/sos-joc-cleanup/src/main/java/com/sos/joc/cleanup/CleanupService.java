@@ -19,7 +19,7 @@ import com.sos.joc.cleanup.exception.CleanupComputeException;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
-import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
+import com.sos.joc.cluster.common.JocClusterServiceActivity;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
@@ -139,11 +139,11 @@ public class CleanupService extends AJocActiveMemberService {
     }
 
     @Override
-    public JocServiceAnswer getInfo() {
+    public JocClusterServiceActivity getActivity() {
         if (runServiceNow.get()) {
             lastActivityStart.set(new Date().getTime());
         }
-        return new JocServiceAnswer(Instant.ofEpochMilli(lastActivityStart.get()), Instant.ofEpochMilli(lastActivityEnd.get()));
+        return new JocClusterServiceActivity(Instant.ofEpochMilli(lastActivityStart.get()), Instant.ofEpochMilli(lastActivityEnd.get()));
     }
 
     @Override

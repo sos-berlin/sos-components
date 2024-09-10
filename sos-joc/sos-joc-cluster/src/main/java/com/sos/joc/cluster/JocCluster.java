@@ -596,7 +596,7 @@ public class JocCluster {
             throws Exception {
         mode = StartupMode.manual_switchover;
 
-        JocClusterAnswer answer = getOKAnswer(JocClusterState.SWITCH);
+        JocClusterAnswer answer = getOKAnswer(JocClusterState.SWITCH_MEMBER);
         try {
             dbLayer.beginTransaction();
             DBItemJocCluster item = dbLayer.getCluster();

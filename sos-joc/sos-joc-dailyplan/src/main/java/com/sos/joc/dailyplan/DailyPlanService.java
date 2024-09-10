@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
-import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
+import com.sos.joc.cluster.common.JocClusterServiceActivity;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
@@ -85,7 +85,7 @@ public class DailyPlanService extends AJocActiveMemberService {
     }
 
     @Override
-    public JocServiceAnswer getInfo() {
+    public JocClusterServiceActivity getActivity() {
         if (runner != null) {
             Instant rla = Instant.ofEpochMilli(runner.getLastActivityStart().get());
             if (rla.isAfter(this.lastActivityStart)) {
@@ -96,7 +96,7 @@ public class DailyPlanService extends AJocActiveMemberService {
                 this.lastActivityEnd = rla;
             }
         }
-        return new JocServiceAnswer(lastActivityStart, lastActivityEnd);
+        return new JocClusterServiceActivity(lastActivityStart, lastActivityEnd);
     }
 
     @Override

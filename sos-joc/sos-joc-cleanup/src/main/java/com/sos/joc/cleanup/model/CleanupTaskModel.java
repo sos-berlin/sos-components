@@ -17,8 +17,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
 import com.sos.joc.cleanup.db.DBLayerCleanup;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
-import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
-import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer;
+import com.sos.joc.cluster.common.JocClusterServiceActivity;
 import com.sos.joc.cluster.service.active.IJocActiveMemberService;
 import com.sos.joc.model.cluster.common.state.JocClusterServiceTaskState;
 
@@ -116,7 +115,7 @@ public class CleanupTaskModel implements ICleanupTask {
     }
 
     @Override
-    public JocServiceTaskAnswer stop(int maxTimeoutSeconds) {
+    public JocClusterServiceTaskState stop(int maxTimeoutSeconds) {
         stopped.set(true);
 
         synchronized (lock) {
@@ -135,7 +134,7 @@ public class CleanupTaskModel implements ICleanupTask {
             }
             completed.set(true);
         }
-        return new JocServiceTaskAnswer(state);
+        return state;
     }
 
     @Override
@@ -213,10 +212,10 @@ public class CleanupTaskModel implements ICleanupTask {
 
     protected boolean askService() {
         if (!forceCleanup && this.type.equals(TaskType.SERVICE_TASK)) {
-            JocServiceAnswer info = getService().getInfo();
-            boolean doCleanup = !info.isBusyState();
+            JocClusterServiceActivity activity = getService().getActivity();
+            boolean doCleanup = !activity.isBusy();
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("[%s][ask service][doCleanup=%s]%s", identifier, doCleanup, SOSString.toString(info)));
+                LOGGER.debug(String.format("[%s][ask service][doCleanup=%s]%s", identifier, doCleanup, SOSString.toString(activity)));
             }
             return doCleanup;
         }

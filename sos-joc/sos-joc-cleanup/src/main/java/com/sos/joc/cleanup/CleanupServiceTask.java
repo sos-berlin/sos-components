@@ -33,7 +33,6 @@ import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
-import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.service.active.IJocActiveMemberService;
 import com.sos.joc.db.DBLayer;
@@ -337,18 +336,18 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
         }
         schedule.getService().setLastActivityStart(new Date().getTime());
 
-        List<Supplier<JocServiceTaskAnswer>> tasks = new ArrayList<Supplier<JocServiceTaskAnswer>>();
+        List<Supplier<JocClusterServiceTaskState>> tasks = new ArrayList<Supplier<JocClusterServiceTaskState>>();
         for (int i = 0; i < cleanupTasks.size(); i++) {
             ICleanupTask cleanupTask = cleanupTasks.get(i);
 
-            Supplier<JocServiceTaskAnswer> task = new Supplier<JocServiceTaskAnswer>() {
+            Supplier<JocClusterServiceTaskState> task = new Supplier<JocClusterServiceTaskState>() {
 
                 @Override
-                public JocServiceTaskAnswer get() {
+                public JocClusterServiceTaskState get() {
                     CleanupService.setServiceLogger();
-                    JocServiceTaskAnswer answer = null;
+                    JocClusterServiceTaskState state = null;
                     if (cleanupTask.isStopped()) {
-                        answer = new JocServiceTaskAnswer(cleanupTask.getState());
+                        state = cleanupTask.getState();
                         LOGGER.info(String.format("[%s][%s][%s][stop][completed=%s]already stopped", logIdentifier, cleanupTask.getTypeName(),
                                 cleanupTask.getIdentifier(), cleanupTask.isCompleted()));
                     } else {
@@ -359,11 +358,11 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
                         }
                         LOGGER.info(String.format("[%s][%s][%s][stop][completed=%s]%sstart...", logIdentifier, cleanupTask.getTypeName(), cleanupTask
                                 .getIdentifier(), cleanupTask.isCompleted(), tMsg));
-                        answer = cleanupTask.stop(t);
+                        state = cleanupTask.stop(t);
                         LOGGER.info(String.format("[%s][%s][%s][stop][completed=%s][end]%s", logIdentifier, cleanupTask.getTypeName(), cleanupTask
-                                .getIdentifier(), cleanupTask.isCompleted(), SOSString.toString(answer)));
+                                .getIdentifier(), cleanupTask.isCompleted(), state));
                     }
-                    return answer;
+                    return state;
                 }
             };
             tasks.add(task);
@@ -373,8 +372,8 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
         if (tasks.size() > 0) {
             ExecutorService es = Executors.newFixedThreadPool(tasks.size(), new JocClusterThreadFactory(schedule.getService().getThreadGroup(),
                     identifier + "-t-s-stop"));
-            List<CompletableFuture<JocServiceTaskAnswer>> futuresList = tasks.stream().map(task -> CompletableFuture.supplyAsync(task, es)).collect(
-                    Collectors.toList());
+            List<CompletableFuture<JocClusterServiceTaskState>> futuresList = tasks.stream().map(task -> CompletableFuture.supplyAsync(task, es))
+                    .collect(Collectors.toList());
             CompletableFuture.allOf(futuresList.toArray(new CompletableFuture[futuresList.size()])).join();
             JocCluster.shutdownThreadPool(null, es, 3);
         }

@@ -7,12 +7,11 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
-import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
+import com.sos.joc.cluster.common.JocClusterServiceActivity;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.cluster.service.embedded.AJocEmbeddedService;
-import com.sos.joc.model.cluster.common.state.JocClusterServiceState;
 import com.sos.joc.model.cluster.common.state.JocClusterState;
 import com.sos.joc.monitoring.model.SystemMonitoringModel;
 
@@ -56,8 +55,8 @@ public class SystemMonitorService extends AJocEmbeddedService {
     }
 
     @Override
-    public JocServiceAnswer getInfo() {
-        return new JocServiceAnswer(JocClusterServiceState.RELAX);
+    public JocClusterServiceActivity getActivity() {
+        return JocClusterServiceActivity.Relax();
     }
 
     @Override

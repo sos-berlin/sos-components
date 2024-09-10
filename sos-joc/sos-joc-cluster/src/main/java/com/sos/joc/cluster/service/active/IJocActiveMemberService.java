@@ -3,7 +3,7 @@ package com.sos.joc.cluster.service.active;
 import java.util.List;
 
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
-import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
+import com.sos.joc.cluster.common.JocClusterServiceActivity;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration.Action;
@@ -30,7 +30,7 @@ public interface IJocActiveMemberService {
     public void update(StartupMode mode, AConfigurationSection configuration);
 
     // service information - is busy etc ...
-    public JocServiceAnswer getInfo();
+    public JocClusterServiceActivity getActivity();
 
     public String getControllerApiUser();
 
