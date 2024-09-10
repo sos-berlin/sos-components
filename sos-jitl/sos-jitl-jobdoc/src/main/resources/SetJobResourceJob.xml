@@ -69,7 +69,7 @@ They are needed for decoding:
                 </note>
             </param>
             <param name="encipherment_certificate"
-                   required="true">
+                   required="false">
                 <note>
                     <title>The certificate</title>
                     <p>

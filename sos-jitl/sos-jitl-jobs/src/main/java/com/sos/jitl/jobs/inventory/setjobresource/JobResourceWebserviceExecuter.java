@@ -171,21 +171,36 @@ public class JobResourceWebserviceExecuter {
 
     }
 
-    private String getValue(String value, String argsTimeZone) {
-        if (value.trim().startsWith("[") && value.trim().endsWith("]")) {
-            Date now = new Date();
-            String timeZone = "UTC";
-            String pattern = value.substring(1, value.length() - 1);
-            if (argsTimeZone != null && !argsTimeZone.isEmpty()) {
-                timeZone = argsTimeZone;
+    private String getValue(SetJobResourceJobArguments args) throws IOException {
+        String value = args.getValue();
+        String file = args.getFile();
+        String argsTimeZone = args.getTimeZone();
+
+        if (args.getFile() != null && !args.getFile().isEmpty()) {
+            String extension = "";
+
+            int i = file.lastIndexOf('.');
+            if (i >= 0) {
+                extension = file.substring(i + 1);
             }
-            try {
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
-                Instant instant = now.toInstant();
-                LocalDateTime ldt = instant.atZone(ZoneId.of(timeZone)).toLocalDateTime();
-                value = ldt.format(formatter);
-            } catch (IllegalArgumentException e) {
-                return value;
+            value = "to_file('" + Files.readString(Paths.get(file)) + "','*." + extension + "')";
+        } else {
+
+            if (value.trim().startsWith("[") && value.trim().endsWith("]")) {
+                Date now = new Date();
+                String timeZone = "UTC";
+                String pattern = value.substring(1, value.length() - 1);
+                if (argsTimeZone != null && !argsTimeZone.isEmpty()) {
+                    timeZone = argsTimeZone;
+                }
+                try {
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
+                    Instant instant = now.toInstant();
+                    LocalDateTime ldt = instant.atZone(ZoneId.of(timeZone)).toLocalDateTime();
+                    value = ldt.format(formatter);
+                } catch (IllegalArgumentException e) {
+                    return value;
+                }
             }
         }
         return value;
@@ -239,10 +254,7 @@ public class JobResourceWebserviceExecuter {
     private Encryption getEncryptedValue(SetJobResourceJobArguments args) throws Exception {
         Encryption encryption = new Encryption();
         File outFile = null;
-
-        if (args.getEnciphermentCertificate() != null && !args.getEnciphermentCertificate().isEmpty()) {
-            encryption.setEncryptedValue(ENC_PREFIX + this.encrypt(args, args.getValue(), outFile));
-        }
+        encryption.setEncryptedValue(ENC_PREFIX + this.encrypt(args, args.getValue(), outFile));
         return encryption;
     }
 
@@ -270,7 +282,6 @@ public class JobResourceWebserviceExecuter {
     public void handleJobResource(RequestFilter requestFilter, SetJobResourceJobArguments args, String accessToken) throws Exception {
         ConfigurationObject configurationObject = this.getInventoryItem(requestFilter, accessToken);
         JobResource jobResource = (JobResource) configurationObject.getConfiguration();
-        Encryption encryption = null;
         if (jobResource.getArguments() == null) {
             jobResource.setArguments(new Environment());
         }
@@ -278,20 +289,28 @@ public class JobResourceWebserviceExecuter {
             jobResource.setEnv(new Environment());
         }
 
-        if (args.getFile() != null && !args.getFile().isEmpty()) {
-            encryption = getEncryptedFileValue(args);
-            jobResource.getArguments().getAdditionalProperties().put("key_" + args.getKey(), "'" + encryption.getNormalizedEncryptionKey() + "'");
+        if (args.getEnciphermentCertificate() != null && !args.getEnciphermentCertificate().isEmpty()) {
+            Encryption encryption = null;
+            if (args.getFile() != null && !args.getFile().isEmpty()) {
+                encryption = getEncryptedFileValue(args);
+                jobResource.getArguments().getAdditionalProperties().put("key_" + args.getKey(), "'" + encryption.getNormalizedEncryptionKey() + "'");
+                if (args.getEnvironmentVariable() != null && !args.getEnvironmentVariable().isEmpty()) {
+                    jobResource.getEnv().getAdditionalProperties().put(args.getEnvironmentVariable(), "$" + "key_" + args.getKey());
+                }
+            } else {
+                encryption = getEncryptedValue(args);
+            }
+
+            jobResource.getArguments().getAdditionalProperties().put(args.getKey(), "\"" + encryption.getNormalizedEncryptedValue() + "\"");
             if (args.getEnvironmentVariable() != null && !args.getEnvironmentVariable().isEmpty()) {
-                jobResource.getEnv().getAdditionalProperties().put(args.getEnvironmentVariable(), "$" + "key_" + args.getKey());
+                jobResource.getEnv().getAdditionalProperties().put(args.getEnvironmentVariable(), "$" + args.getKey());
             }
         } else {
-            encryption = getEncryptedValue(args);
+            jobResource.getArguments().getAdditionalProperties().put(args.getKey(), "\"" + getValue(args) + "\"");
+            if (args.getEnvironmentVariable() != null && !args.getEnvironmentVariable().isEmpty()) {
+                jobResource.getEnv().getAdditionalProperties().put(args.getEnvironmentVariable(), "$" + args.getKey());
+            }
         }
-        jobResource.getArguments().getAdditionalProperties().put(args.getKey(), "\"" + encryption.getNormalizedEncryptedValue() + "\"");
-        if (args.getEnvironmentVariable() != null && !args.getEnvironmentVariable().isEmpty()) {
-            jobResource.getEnv().getAdditionalProperties().put(args.getEnvironmentVariable(), "$" + args.getKey());
-        }
-
         configurationObject.setConfiguration(jobResource);
         configurationObject = this.setInventoryItem(configurationObject, accessToken);
         publishDeployableItem(configurationObject, args, accessToken);
