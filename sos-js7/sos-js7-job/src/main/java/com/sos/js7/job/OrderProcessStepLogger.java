@@ -39,7 +39,10 @@ public class OrderProcessStepLogger {
             LOGGER.info(m);
             return;
         }
-        step.out().println(m);
+        try {
+            step.out().println(m);
+        } catch (Throwable e) {
+        }
     }
 
     public void info(final String format, final Object... args) {
@@ -59,7 +62,10 @@ public class OrderProcessStepLogger {
             LOGGER.debug(m);
             return;
         }
-        step.out().println(m);
+        try {
+            step.out().println(m);
+        } catch (Throwable e) {
+        }
     }
 
     public void debug(final String format, final Object... args) {
@@ -82,7 +88,10 @@ public class OrderProcessStepLogger {
             LOGGER.trace(m);
             return;
         }
-        step.out().println(m);
+        try {
+            step.out().println(m);
+        } catch (Throwable e) {
+        }
     }
 
     public void trace(final String format, final Object... args) {
@@ -102,7 +111,10 @@ public class OrderProcessStepLogger {
             LOGGER.warn(m);
             return;
         }
-        step.out().println(m);
+        try {
+            step.out().println(m);
+        } catch (Throwable e) {
+        }
     }
 
     public void warn(final String format, final Object... args) {
@@ -131,7 +143,10 @@ public class OrderProcessStepLogger {
             LOGGER.error(m);
             return;
         }
-        step.err().println(m);
+        try {
+            step.err().println(m);
+        } catch (Throwable e) {
+        }
     }
 
     public void error(final String format, final Object... args) {
