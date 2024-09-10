@@ -6,7 +6,7 @@
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
     <job name="EncryptJob"
-         title="Check task logs with regular expression "
+         title="Encrypt values or files"
          category="JITL">
         <script language="java"
                 java_class="com.sos.jitl.jobs.encrypt.EncryptJob"
