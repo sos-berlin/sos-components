@@ -32,7 +32,7 @@ import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
-import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
+import com.sos.joc.cluster.common.JocClusterServiceActivity;
 import com.sos.joc.cluster.common.JocClusterUtil;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
@@ -157,7 +157,7 @@ public class HistoryService extends AJocActiveMemberService {
     }
 
     @Override
-    public JocServiceAnswer getInfo() {
+    public JocClusterServiceActivity getActivity() {
         long start = 0;
         long end = 0;
         if (activeHandlers.size() > 0) {
@@ -170,7 +170,7 @@ public class HistoryService extends AJocActiveMemberService {
                 }
             }
         }
-        return new JocServiceAnswer(start == 0 ? null : Instant.ofEpochMilli(start), end == 0 ? null : Instant.ofEpochMilli(end));
+        return new JocClusterServiceActivity(start == 0 ? null : Instant.ofEpochMilli(start), end == 0 ? null : Instant.ofEpochMilli(end));
     }
 
     @Override
@@ -219,7 +219,7 @@ public class HistoryService extends AJocActiveMemberService {
     }
 
     @Override
-    public void runNow(StartupMode mode, AConfigurationSection configuration) {
+    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration) {
 
     }
 

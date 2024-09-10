@@ -9,8 +9,6 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.Globals;
@@ -27,12 +25,15 @@ import com.sos.joc.model.workflow.WorkflowPathFilter;
 import com.sos.joc.workflow.resource.IWorkflowOrderTemplates;
 import com.sos.schema.JsonValidator;
 
+import jakarta.ws.rs.Path;
+
 @Path("workflow")
 public class WorkflowOrderTemplatesImpl extends JOCResourceImpl implements IWorkflowOrderTemplates {
 
     private static final String API_CALL = "./workflow/order_templates";
     private static final Predicate<String> hasOrderParameterisationPattern = Pattern.compile("\"orderParameterisations\"\\s*:").asPredicate();
-    private static final Predicate<DBItemInventoryConfiguration> hasOrderParameterisation = s -> hasOrderParameterisationPattern.test(s.getContent());
+    private static final Predicate<DBItemInventoryConfiguration> hasOrderParameterisation = s -> hasOrderParameterisationPattern.test(s
+            .getContent());
 
     @Override
     public JOCDefaultResponse postOrderTemplates(String accessToken, byte[] filterBytes) {

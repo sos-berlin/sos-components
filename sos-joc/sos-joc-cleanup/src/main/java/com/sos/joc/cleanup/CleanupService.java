@@ -19,7 +19,7 @@ import com.sos.joc.cleanup.exception.CleanupComputeException;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
-import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
+import com.sos.joc.cluster.common.JocClusterServiceActivity;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
@@ -139,11 +139,11 @@ public class CleanupService extends AJocActiveMemberService {
     }
 
     @Override
-    public JocServiceAnswer getInfo() {
+    public JocClusterServiceActivity getActivity() {
         if (runServiceNow.get()) {
             lastActivityStart.set(new Date().getTime());
         }
-        return new JocServiceAnswer(Instant.ofEpochMilli(lastActivityStart.get()), Instant.ofEpochMilli(lastActivityEnd.get()));
+        return new JocClusterServiceActivity(Instant.ofEpochMilli(lastActivityStart.get()), Instant.ofEpochMilli(lastActivityEnd.get()));
     }
 
     @Override
@@ -157,12 +157,13 @@ public class CleanupService extends AJocActiveMemberService {
     }
 
     @Override
-    public void runNow(StartupMode mode, AConfigurationSection configuration) {
+    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration) {
         setServiceLogger();
         if (schedule == null) {
             LOGGER.info(String.format("[%s][%s][runNow][skip]schedule=null", getIdentifier(), mode));
             return;
         }
+        lastActivityStart.set(new Date().getTime());
         runServiceNow.set(true);
         if (configuration instanceof ConfigurationGlobalsCleanup) {
             setConfig((ConfigurationGlobalsCleanup) configuration);

@@ -14,13 +14,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
-import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
+import com.sos.joc.cluster.common.JocClusterServiceActivity;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.cluster.service.embedded.IJocEmbeddedService;
-import com.sos.joc.model.cluster.common.state.JocClusterServiceState;
 import com.sos.joc.model.cluster.common.state.JocClusterState;
 
 public class JocClusterEmbeddedServicesHandler {
@@ -165,19 +164,19 @@ public class JocClusterEmbeddedServicesHandler {
         JocClusterServiceLogger.removeLogger();
 
         IJocEmbeddedService s = os.get();
-        JocServiceAnswer answer = s.getInfo();
-        if (answer.isBusyState()) {
-            if (answer.getDiff() < 0) {
+        JocClusterServiceActivity activity = s.getActivity();
+        if (activity.isBusy()) {
+            if (activity.getDiff() < 0) {
                 JocClusterServiceLogger.setLogger();
                 LOGGER.info(String.format("[%s][restart][%s][service status %s][last activity start=%s, end=%s]wait 30s and ask again...", mode,
-                        identifier, answer.getState(), answer.getLastActivityStart(), answer.getLastActivityEnd()));
+                        identifier, activity.getState(), activity.getLastStart(), activity.getLastEnd()));
                 cluster.waitFor(10);
-                answer = s.getInfo();
-                if (answer.getState().equals(JocClusterServiceState.RELAX)) {
-                    LOGGER.info(String.format("[%s][restart][%s]service status %s", mode, identifier, answer.getState()));
+                activity = s.getActivity();
+                if (activity.isRelax()) {
+                    LOGGER.info(String.format("[%s][restart][%s]service status %s", mode, identifier, activity.getState()));
                 } else {
                     String msg = String.format("[%s][restart][%s][service status %s][last activity start=%s, end=%s]force restart", mode, identifier,
-                            answer.getState(), answer.getLastActivityStart(), answer.getLastActivityEnd());
+                            activity.getState(), activity.getLastStart(), activity.getLastEnd());
                     LOGGER.info(msg);
                 }
             }

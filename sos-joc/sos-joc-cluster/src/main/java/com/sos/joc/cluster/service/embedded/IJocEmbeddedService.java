@@ -1,7 +1,7 @@
 package com.sos.joc.cluster.service.embedded;
 
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
-import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
+import com.sos.joc.cluster.common.JocClusterServiceActivity;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 
@@ -15,7 +15,7 @@ public interface IJocEmbeddedService {
 
     public ThreadGroup getThreadGroup();
 
-    public JocServiceAnswer getInfo();
+    public JocClusterServiceActivity getActivity();
 
     public void update(StartupMode mode, AConfigurationSection configuration);
 }

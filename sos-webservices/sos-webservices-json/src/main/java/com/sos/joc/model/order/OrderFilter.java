@@ -20,7 +20,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "controllerId",
     "orderId",
-    "compact"
+    "compact",
+    "withoutWorkflowTags"
 })
 public class OrderFilter {
 
@@ -51,6 +52,13 @@ public class OrderFilter {
     @JsonProperty("compact")
     @JsonPropertyDescription("controls if the object's data is compact or detailed")
     private Boolean compact = false;
+    /**
+     * if true then response doesn't contain 'workflowsTagPerWorkflow'
+     * 
+     */
+    @JsonProperty("withoutWorkflowTags")
+    @JsonPropertyDescription("if true then response doesn't contain 'workflowsTagPerWorkflow'")
+    private Boolean withoutWorkflowTags = false;
 
     /**
      * controllerId
@@ -122,14 +130,32 @@ public class OrderFilter {
         this.compact = compact;
     }
 
+    /**
+     * if true then response doesn't contain 'workflowsTagPerWorkflow'
+     * 
+     */
+    @JsonProperty("withoutWorkflowTags")
+    public Boolean getWithoutWorkflowTags() {
+        return withoutWorkflowTags;
+    }
+
+    /**
+     * if true then response doesn't contain 'workflowsTagPerWorkflow'
+     * 
+     */
+    @JsonProperty("withoutWorkflowTags")
+    public void setWithoutWorkflowTags(Boolean withoutWorkflowTags) {
+        this.withoutWorkflowTags = withoutWorkflowTags;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderId", orderId).append("compact", compact).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderId", orderId).append("compact", compact).append("withoutWorkflowTags", withoutWorkflowTags).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(compact).append(orderId).toHashCode();
+        return new HashCodeBuilder().append(withoutWorkflowTags).append(controllerId).append(compact).append(orderId).toHashCode();
     }
 
     @Override
@@ -141,7 +167,7 @@ public class OrderFilter {
             return false;
         }
         OrderFilter rhs = ((OrderFilter) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(orderId, rhs.orderId).isEquals();
+        return new EqualsBuilder().append(withoutWorkflowTags, rhs.withoutWorkflowTags).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(orderId, rhs.orderId).isEquals();
     }
 
 }

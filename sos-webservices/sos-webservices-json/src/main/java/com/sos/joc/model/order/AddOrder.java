@@ -248,7 +248,7 @@ public class AddOrder {
         return tags;
     }
 
-    @JsonProperty("orderTags")
+    @JsonProperty("tags")
     public void setTags(Set<String> tags) {
         this.tags = tags;
     }

@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
-import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
+import com.sos.joc.cluster.common.JocClusterServiceActivity;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
@@ -14,7 +14,6 @@ import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsLogNotifica
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.cluster.service.active.AJocActiveMemberService;
 import com.sos.joc.model.cluster.common.ClusterServices;
-import com.sos.joc.model.cluster.common.state.JocClusterServiceState;
 import com.sos.joc.model.cluster.common.state.JocClusterState;
 
 public class LogNotificationService extends AJocActiveMemberService {
@@ -51,8 +50,8 @@ public class LogNotificationService extends AJocActiveMemberService {
     }
 
     @Override
-    public JocServiceAnswer getInfo() {
-        return new JocServiceAnswer(JocClusterServiceState.RELAX);
+    public JocClusterServiceActivity getActivity() {
+        return JocClusterServiceActivity.Relax();
     }
 
     @Override
@@ -78,7 +77,7 @@ public class LogNotificationService extends AJocActiveMemberService {
     }
 
     @Override
-    public void runNow(StartupMode mode, AConfigurationSection configuration) {
+    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration) {
 
     }
 }

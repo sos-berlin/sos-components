@@ -8,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum JocClusterServiceTaskState {
 
-    UNKNOWN("UNKNOWN"),
     COMPLETED("COMPLETED"),
     UNCOMPLETED("UNCOMPLETED");
     private final String value;

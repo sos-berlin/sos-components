@@ -6,21 +6,20 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum JocClusterServiceState {
+public enum JocClusterServiceActivityState {
 
-    UNKNOWN("UNKNOWN"),
     BUSY("BUSY"),
     RELAX("RELAX");
     private final String value;
-    private final static Map<String, JocClusterServiceState> CONSTANTS = new HashMap<String, JocClusterServiceState>();
+    private final static Map<String, JocClusterServiceActivityState> CONSTANTS = new HashMap<String, JocClusterServiceActivityState>();
 
     static {
-        for (JocClusterServiceState c: values()) {
+        for (JocClusterServiceActivityState c: values()) {
             CONSTANTS.put(c.value, c);
         }
     }
 
-    private JocClusterServiceState(String value) {
+    private JocClusterServiceActivityState(String value) {
         this.value = value;
     }
 
@@ -35,8 +34,8 @@ public enum JocClusterServiceState {
     }
 
     @JsonCreator
-    public static JocClusterServiceState fromValue(String value) {
-        JocClusterServiceState constant = CONSTANTS.get(value);
+    public static JocClusterServiceActivityState fromValue(String value) {
+        JocClusterServiceActivityState constant = CONSTANTS.get(value);
         if (constant == null) {
             throw new IllegalArgumentException(value);
         } else {
