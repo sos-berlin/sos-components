@@ -23,10 +23,10 @@ import com.sos.commons.util.SOSPath;
 import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
 import com.sos.joc.cleanup.helper.CleanupPartialResult;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
-import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
 import com.sos.joc.cluster.configuration.JocHistoryConfiguration;
 import com.sos.joc.cluster.service.active.IJocActiveMemberService;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.model.cluster.common.state.JocClusterServiceTaskState;
 
 public class CleanupTaskHistory extends CleanupTaskModel {
 
@@ -59,11 +59,11 @@ public class CleanupTaskHistory extends CleanupTaskModel {
     }
 
     @Override
-    public JocServiceTaskAnswerState cleanup(List<TaskDateTime> datetimes) throws Exception {
+    public JocClusterServiceTaskState cleanup(List<TaskDateTime> datetimes) throws Exception {
         try {
             TaskDateTime orderDatetime = datetimes.get(0);
             TaskDateTime logsDatetime = datetimes.get(1);
-            JocServiceTaskAnswerState state = null;
+            JocClusterServiceTaskState state = null;
 
             tryOpenSession();
 
@@ -97,7 +97,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
             }
 
             // Cleanup Orders/Steps/States/Tags
-            if (orderDatetime.getDatetime() != null && (state == null || state.equals(JocServiceTaskAnswerState.COMPLETED))) {
+            if (orderDatetime.getDatetime() != null && (state == null || state.equals(JocClusterServiceTaskState.COMPLETED))) {
                 notStartedOrdersLogsDatetime = orderDatetime;
                 String logPrefix = String.format("[%s][orders][%s][%s]", getIdentifier(), orderDatetime.getAge().getConfigured(), orderDatetime
                         .getZonedDatetime());
@@ -121,8 +121,8 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         }
     }
 
-    private JocServiceTaskAnswerState cleanupOrders(TaskDateTime dateTime, boolean deleteLogs) throws SOSHibernateException {
-        JocServiceTaskAnswerState state = cleanupOrders(Scope.MAIN, Range.ALL, dateTime.getDatetime(), dateTime.getAge().getConfigured(), deleteLogs);
+    private JocClusterServiceTaskState cleanupOrders(TaskDateTime dateTime, boolean deleteLogs) throws SOSHibernateException {
+        JocClusterServiceTaskState state = cleanupOrders(Scope.MAIN, Range.ALL, dateTime.getDatetime(), dateTime.getAge().getConfigured(), deleteLogs);
         if (isCompleted(state)) {
             Date remainingStartTime = getRemainingStartTime(dateTime);
             String remainingAgeInfo = getRemainingAgeInfo(dateTime);
@@ -147,7 +147,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         }
     }
 
-    protected JocServiceTaskAnswerState cleanupOrders(Scope scope, Range range, Date startTime, String ageInfo, boolean deleteLogs)
+    protected JocClusterServiceTaskState cleanupOrders(Scope scope, Range range, Date startTime, String ageInfo, boolean deleteLogs)
             throws SOSHibernateException {
 
         setQuotedColumns();
@@ -161,43 +161,43 @@ public class CleanupTaskHistory extends CleanupTaskModel {
 
             boolean completed = cleanupOrderTags(startTime);
             if (!completed && isStopped()) {
-                return JocServiceTaskAnswerState.UNCOMPLETED;
+                return JocClusterServiceTaskState.UNCOMPLETED;
             }
         }
 
         boolean runm = true;
         while (runm) {
             if (isStopped()) {
-                return JocServiceTaskAnswerState.UNCOMPLETED;
+                return JocClusterServiceTaskState.UNCOMPLETED;
             }
 
             tryOpenSession();
 
             Long maxMainParentId = getOrderMaxMainParentId(scope, range, startTime, ageInfo);
             if (maxMainParentId == null || maxMainParentId.intValue() == 0) {
-                return JocServiceTaskAnswerState.COMPLETED;
+                return JocClusterServiceTaskState.COMPLETED;
             }
 
             boolean completed = cleanupOrders(scope, range, startTime, ageInfo, deleteLogs, maxMainParentId);
             if (!completed) {
-                return JocServiceTaskAnswerState.UNCOMPLETED;
+                return JocClusterServiceTaskState.UNCOMPLETED;
             }
         }
-        return JocServiceTaskAnswerState.COMPLETED;
+        return JocClusterServiceTaskState.COMPLETED;
     }
 
-    private JocServiceTaskAnswerState cleanupRemaining(Date startTime, String ageInfo, boolean deleteLogs) throws SOSHibernateException {
+    private JocClusterServiceTaskState cleanupRemaining(Date startTime, String ageInfo, boolean deleteLogs) throws SOSHibernateException {
         if (isStopped()) {
-            return JocServiceTaskAnswerState.UNCOMPLETED;
+            return JocClusterServiceTaskState.UNCOMPLETED;
         }
         tryOpenSession();
 
-        JocServiceTaskAnswerState state = JocServiceTaskAnswerState.COMPLETED;
+        JocClusterServiceTaskState state = JocClusterServiceTaskState.COMPLETED;
         getDbLayer().beginTransaction();
         deleteRemainingStates(startTime, ageInfo);
         if (deleteLogs) {
             if (isStopped()) {
-                state = JocServiceTaskAnswerState.UNCOMPLETED;
+                state = JocClusterServiceTaskState.UNCOMPLETED;
             } else {
                 deleteRemainingLogs(startTime, ageInfo);
             }
@@ -357,7 +357,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
     private boolean cleanupOrderTags(Date startTime) throws SOSHibernateException {
         CleanupPartialResult r = deleteOrderTags(startTime);
         totalOrderTags += r.getDeletedTotal();
-        return JocServiceTaskAnswerState.COMPLETED.equals(r.getState());
+        return JocClusterServiceTaskState.COMPLETED.equals(r.getState());
     }
 
     private CleanupPartialResult deleteOrderTags(Date date) throws SOSHibernateException {
@@ -623,8 +623,8 @@ public class CleanupTaskHistory extends CleanupTaskModel {
     }
 
     // TODO duplicate method (some changes) - see com.sos.js7.history.controller.HistoryService
-    private void deleteNotReferencedLogs(JocServiceTaskAnswerState state) {
-        if (state != null && !state.equals(JocServiceTaskAnswerState.COMPLETED)) {
+    private void deleteNotReferencedLogs(JocClusterServiceTaskState state) {
+        if (state != null && !state.equals(JocClusterServiceTaskState.COMPLETED)) {
             return;
         }
         if (isStopped()) {
@@ -674,7 +674,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         }
     }
 
-    private JocServiceTaskAnswerState cleanupLogs(Scope scope, Range range, TaskDateTime datetime) throws Exception {
+    private JocClusterServiceTaskState cleanupLogs(Scope scope, Range range, TaskDateTime datetime) throws Exception {
         setQuotedColumns();
 
         String ageInfo = datetime.getAge().getConfigured();
@@ -689,7 +689,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
             // check based on the order logs created
             maxMainParentId = getOrderLogsMaxMainParentId(scope, range, startTime, ageInfo);
             if (maxMainParentId == null || maxMainParentId.intValue() == 0) {
-                return JocServiceTaskAnswerState.COMPLETED;
+                return JocClusterServiceTaskState.COMPLETED;
             }
         }
 

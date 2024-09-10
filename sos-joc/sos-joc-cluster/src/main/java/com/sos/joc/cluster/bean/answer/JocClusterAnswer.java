@@ -1,29 +1,27 @@
 package com.sos.joc.cluster.bean.answer;
 
+import com.sos.joc.model.cluster.common.state.JocClusterState;
+
 public class JocClusterAnswer {
 
-    public enum JocClusterAnswerState {
-        STARTED, RUNNING, STOPPED, RESTARTED, ALREADY_STARTED, ALREADY_RUNNING, ALREADY_STOPPED, SWITCH, MISSING_CONFIGURATION, MISSING_HANDLERS, MISSING_LICENSE, ERROR, COMPLETED, UNCOMPLETED
-    }
-
-    private JocClusterAnswerState state;
+    private JocClusterState state;
     private JocClusterAnswerError error;
     private String message;
 
-    public JocClusterAnswer(JocClusterAnswerState val) {
+    public JocClusterAnswer(JocClusterState val) {
         state = val;
     }
 
-    public JocClusterAnswer(JocClusterAnswerState val, String message) {
+    public JocClusterAnswer(JocClusterState val, String message) {
         this(val);
         this.message = message;
     }
 
-    public JocClusterAnswerState getState() {
+    public JocClusterState getState() {
         return state;
     }
 
-    public void setState(JocClusterAnswerState val) {
+    public void setState(JocClusterState val) {
         state = val;
     }
 

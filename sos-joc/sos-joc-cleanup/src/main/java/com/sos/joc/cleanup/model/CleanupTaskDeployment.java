@@ -15,8 +15,8 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.cleanup.db.DeploymentVersion;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
-import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.model.cluster.common.state.JocClusterServiceTaskState;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 
 public class CleanupTaskDeployment extends CleanupTaskModel {
@@ -35,9 +35,9 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
     }
 
     @Override
-    public JocServiceTaskAnswerState cleanup(int versions) throws Exception {
+    public JocClusterServiceTaskState cleanup(int versions) throws Exception {
         try {
-            JocServiceTaskAnswerState state = cleanupDeployments(versions);
+            JocClusterServiceTaskState state = cleanupDeployments(versions);
             if (isCompleted(state)) {
                 state = cleanupSearch();
             }
@@ -51,7 +51,7 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
         }
     }
 
-    private JocServiceTaskAnswerState cleanupDeployments(int versions) throws Exception {
+    private JocClusterServiceTaskState cleanupDeployments(int versions) throws Exception {
         LOGGER.info(String.format("[%s][deployments][versions=%s]start cleanup", getIdentifier(), versions));
 
         tryOpenSession();
@@ -62,7 +62,7 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
             if (size > SOSHibernate.LIMIT_IN_CLAUSE) {
                 ArrayList<DeploymentVersion> copy = (ArrayList<DeploymentVersion>) depVersions.stream().collect(Collectors.toList());
 
-                JocServiceTaskAnswerState state = null;
+                JocClusterServiceTaskState state = null;
                 for (int i = 0; i < size; i += SOSHibernate.LIMIT_IN_CLAUSE) {
                     List<DeploymentVersion> subList;
                     if (size > i + SOSHibernate.LIMIT_IN_CLAUSE) {
@@ -78,16 +78,16 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
                 return cleanupDeployments(depVersions, versions);
             }
         } else {
-            return JocServiceTaskAnswerState.COMPLETED;
+            return JocClusterServiceTaskState.COMPLETED;
         }
     }
 
-    private JocServiceTaskAnswerState cleanupDeployments(List<DeploymentVersion> depVersions, int versions) throws SOSHibernateException {
-        JocServiceTaskAnswerState state = null;
+    private JocClusterServiceTaskState cleanupDeployments(List<DeploymentVersion> depVersions, int versions) throws SOSHibernateException {
+        JocClusterServiceTaskState state = null;
         for (int i = 0; i < depVersions.size(); i++) {
             int counter = i + 1;
             if (isStopped()) {
-                return JocServiceTaskAnswerState.UNCOMPLETED;
+                return JocClusterServiceTaskState.UNCOMPLETED;
             }
 
             DeploymentVersion depVersion = depVersions.get(i);
@@ -106,7 +106,7 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
                     }
                 }
                 if (isStopped()) {
-                    return JocServiceTaskAnswerState.UNCOMPLETED;
+                    return JocClusterServiceTaskState.UNCOMPLETED;
                 }
 
                 List<Long> r = getLessThanMaxHistoryIds(depVersion);
@@ -129,15 +129,15 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
                             getIdentifier(), counter, depVersion.getMaxId(), versions, r.size(), toIndex));
                 }
                 run = false;
-                state = JocServiceTaskAnswerState.COMPLETED;
+                state = JocClusterServiceTaskState.COMPLETED;
             }
         }
-        return state == null ? JocServiceTaskAnswerState.UNCOMPLETED : state;
+        return state == null ? JocClusterServiceTaskState.UNCOMPLETED : state;
     }
 
-    protected JocServiceTaskAnswerState cleanupSearch() throws Exception {
+    protected JocClusterServiceTaskState cleanupSearch() throws Exception {
         if (isStopped()) {
-            return JocServiceTaskAnswerState.UNCOMPLETED;
+            return JocClusterServiceTaskState.UNCOMPLETED;
         }
         LOGGER.info(String.format("[%s][search]start cleanup", getIdentifier()));
 
@@ -147,7 +147,7 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
         boolean completed = deleteSearch();
         getDbLayer().commit();
 
-        return completed ? JocServiceTaskAnswerState.COMPLETED : JocServiceTaskAnswerState.UNCOMPLETED;
+        return completed ? JocClusterServiceTaskState.COMPLETED : JocClusterServiceTaskState.UNCOMPLETED;
 
     }
 

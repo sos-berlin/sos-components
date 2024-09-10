@@ -12,8 +12,8 @@ import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
-import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.model.cluster.common.state.JocClusterServiceTaskState;
 
 public class CleanupTaskYade extends CleanupTaskModel {
 
@@ -27,7 +27,7 @@ public class CleanupTaskYade extends CleanupTaskModel {
     }
 
     @Override
-    public JocServiceTaskAnswerState cleanup(List<TaskDateTime> datetimes) throws Exception {
+    public JocClusterServiceTaskState cleanup(List<TaskDateTime> datetimes) throws Exception {
         try {
             TaskDateTime datetime = datetimes.get(0);
             LOGGER.info(String.format("[%s][%s][%s]start cleanup", getIdentifier(), datetime.getAge().getConfigured(), datetime.getZonedDatetime()));
@@ -37,10 +37,10 @@ public class CleanupTaskYade extends CleanupTaskModel {
             while (run) {
                 List<Long> ids = getIds(datetime);
                 if (ids == null || ids.size() == 0) {
-                    return JocServiceTaskAnswerState.COMPLETED;
+                    return JocClusterServiceTaskState.COMPLETED;
                 }
                 if (isStopped()) {
-                    return JocServiceTaskAnswerState.UNCOMPLETED;
+                    return JocClusterServiceTaskState.UNCOMPLETED;
                 }
 
                 int size = ids.size();
@@ -72,7 +72,7 @@ public class CleanupTaskYade extends CleanupTaskModel {
         } finally {
             close();
         }
-        return JocServiceTaskAnswerState.COMPLETED;
+        return JocClusterServiceTaskState.COMPLETED;
     }
 
     private List<Long> getIds(TaskDateTime datetime) throws SOSHibernateException {

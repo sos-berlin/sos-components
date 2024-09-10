@@ -9,9 +9,9 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
-import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
 import com.sos.joc.cluster.service.active.IJocActiveMemberService;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.model.cluster.common.state.JocClusterServiceTaskState;
 
 public class CleanupTaskDailyPlan extends CleanupTaskModel {
 
@@ -27,7 +27,7 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
     }
 
     @Override
-    public JocServiceTaskAnswerState cleanup(List<TaskDateTime> datetimes) throws Exception {
+    public JocClusterServiceTaskState cleanup(List<TaskDateTime> datetimes) throws Exception {
         try {
             TaskDateTime datetime = datetimes.get(0);
             LOGGER.info(String.format("[%s][%s][%s]start cleanup", getIdentifier(), datetime.getAge().getConfigured(), datetime.getZonedDatetime()));
@@ -35,14 +35,14 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
             boolean run = true;
             while (run) {
                 if (isStopped()) {
-                    return JocServiceTaskAnswerState.UNCOMPLETED;
+                    return JocClusterServiceTaskState.UNCOMPLETED;
                 }
 
                 tryOpenSession();
 
                 List<Long> r = getSubmissionIds(datetime);
                 if (r == null || r.size() == 0) {
-                    return JocServiceTaskAnswerState.COMPLETED;
+                    return JocClusterServiceTaskState.COMPLETED;
                 }
 
                 if (askService()) {
@@ -60,7 +60,7 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
         } finally {
             close();
         }
-        return JocServiceTaskAnswerState.COMPLETED;
+        return JocClusterServiceTaskState.COMPLETED;
     }
 
     private void cleanupEntries(TaskDateTime datetime, List<Long> ids) throws SOSHibernateException {

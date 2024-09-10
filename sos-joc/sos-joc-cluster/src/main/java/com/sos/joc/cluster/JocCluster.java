@@ -27,7 +27,6 @@ import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.cluster.JocClusterActiveMemberHandler.PerformType;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
-import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
@@ -45,6 +44,7 @@ import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.cluster.ActiveClusterChangedEvent;
 import com.sos.joc.event.bean.configuration.ConfigurationGlobalsChanged;
 import com.sos.joc.event.bean.dailyplan.DailyPlanCalendarEvent;
+import com.sos.joc.model.cluster.common.state.JocClusterState;
 import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.configuration.globals.GlobalSettings;
 
@@ -524,14 +524,14 @@ public class JocCluster {
                 return getErrorAnswer(msg);
             } else {
                 if (activeMemberHandler.isActive()) {
-                    return getOKAnswer(JocClusterAnswerState.ALREADY_STARTED);
+                    return getOKAnswer(JocClusterState.ALREADY_STARTED);
                 }
             }
         }
 
         config.rereadClusterMode();
         if (!config.getClusterModeResult().getUse()) {
-            return JocCluster.getErrorAnswer(JocClusterAnswerState.MISSING_LICENSE);
+            return JocCluster.getErrorAnswer(JocClusterState.MISSING_LICENSE);
         }
 
         try {
@@ -542,7 +542,7 @@ public class JocCluster {
                 while (run) {
                     if (closed) {
                         LOGGER.info(String.format("[%s][switch][skip]because closed", mode));
-                        return getOKAnswer(JocClusterAnswerState.STOPPED);
+                        return getOKAnswer(JocClusterState.STOPPED);
                     }
 
                     DBLayerJocCluster dbLayer = null;
@@ -596,7 +596,7 @@ public class JocCluster {
             throws Exception {
         mode = StartupMode.manual_switchover;
 
-        JocClusterAnswer answer = getOKAnswer(JocClusterAnswerState.SWITCH);
+        JocClusterAnswer answer = getOKAnswer(JocClusterState.SWITCH_MEMBER);
         try {
             dbLayer.beginTransaction();
             DBItemJocCluster item = dbLayer.getCluster();
@@ -610,7 +610,7 @@ public class JocCluster {
                     // current is active - handled by checkSwitchMember
                     // current is not active - not possible (item.getMember() is an active instance)
                     LOGGER.info(String.format("[%s][switch][skip][newMemberId=%s]because newMemberId=currentMemberId", mode, newMemberId));
-                    answer = getOKAnswer(JocClusterAnswerState.ALREADY_STARTED);
+                    answer = getOKAnswer(JocClusterState.ALREADY_STARTED);
                 } else {
                     DBItemJocInstance ni = dbLayer.getInstance(newMemberId);
                     Date now = dbLayer.getNowUTC();
@@ -657,7 +657,7 @@ public class JocCluster {
             } else {
                 if (item.getMemberId().equals(newMemberId)) {
                     LOGGER.info("[" + mode + "][switch][end][skip][already active]activeMemberId=switch memberId");
-                    answer = getOKAnswer(JocClusterAnswerState.ALREADY_STARTED);
+                    answer = getOKAnswer(JocClusterState.ALREADY_STARTED);
                 } else {
                     if (item.getSwitchMemberId() == null || !item.getSwitchMemberId().equals(newMemberId)) {
                         Date lastHeartBeat = null;
@@ -859,7 +859,7 @@ public class JocCluster {
     private JocClusterAnswer performActiveMemberServices(StartupMode mode, ConfigurationGlobals configurations, String memberId) {
         if (memberId.equals(currentMemberId)) {
             if (activeMemberHandler.isActive()) {
-                return getOKAnswer(JocClusterAnswerState.ALREADY_STARTED);
+                return getOKAnswer(JocClusterState.ALREADY_STARTED);
             } else {
                 return activeMemberHandler.perform(mode, PerformType.START, configurations);
             }
@@ -867,7 +867,7 @@ public class JocCluster {
             if (activeMemberHandler.isActive()) {
                 return activeMemberHandler.perform(mode, PerformType.STOP, configurations);
             } else {
-                return getOKAnswer(JocClusterAnswerState.ALREADY_STOPPED);
+                return getOKAnswer(JocClusterState.ALREADY_STOPPED);
             }
         }
     }
@@ -895,7 +895,7 @@ public class JocCluster {
         if (activeMemberHandler.isActive()) {
             answer = activeMemberHandler.perform(mode, PerformType.STOP, configurations);
         } else {
-            answer = getOKAnswer(JocClusterAnswerState.ALREADY_STOPPED);
+            answer = getOKAnswer(JocClusterState.ALREADY_STOPPED);
         }
         LOGGER.info("[" + mode + "][cluster][closeActiveMemberServices][isActive=" + activeMemberHandler.isActive() + "]end");
         return answer;
@@ -999,27 +999,27 @@ public class JocCluster {
         }
     }
 
-    public static JocClusterAnswer getOKAnswer(JocClusterAnswerState state) {
+    public static JocClusterAnswer getOKAnswer(JocClusterState state) {
         return new JocClusterAnswer(state);
     }
 
-    public static JocClusterAnswer getOKAnswer(JocClusterAnswerState state, String message) {
+    public static JocClusterAnswer getOKAnswer(JocClusterState state, String message) {
         return new JocClusterAnswer(state, message);
     }
 
     public static JocClusterAnswer getErrorAnswer(String msg) {
-        return getErrorAnswer(JocClusterAnswerState.ERROR, new Exception(msg));
+        return getErrorAnswer(JocClusterState.ERROR, new Exception(msg));
     }
 
-    public static JocClusterAnswer getErrorAnswer(JocClusterAnswerState state) {
+    public static JocClusterAnswer getErrorAnswer(JocClusterState state) {
         return getErrorAnswer(state, new Exception(state.toString()));
     }
 
     public static JocClusterAnswer getErrorAnswer(Exception e) {
-        return getErrorAnswer(JocClusterAnswerState.ERROR, e);
+        return getErrorAnswer(JocClusterState.ERROR, e);
     }
 
-    public static JocClusterAnswer getErrorAnswer(JocClusterAnswerState state, Exception e) {
+    public static JocClusterAnswer getErrorAnswer(JocClusterState state, Exception e) {
         JocClusterAnswer answer = new JocClusterAnswer(state);
         answer.setError(e);
         return answer;

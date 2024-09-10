@@ -11,8 +11,8 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
 import com.sos.joc.cleanup.helper.CleanupPartialResult;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
-import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.model.cluster.common.state.JocClusterServiceTaskState;
 
 public class CleanupTaskReporting extends CleanupTaskModel {
 
@@ -29,7 +29,7 @@ public class CleanupTaskReporting extends CleanupTaskModel {
     }
 
     @Override
-    public JocServiceTaskAnswerState cleanup(List<TaskDateTime> datetimes) throws Exception {
+    public JocClusterServiceTaskState cleanup(List<TaskDateTime> datetimes) throws Exception {
 
         setQuotedColumns();
 
@@ -47,7 +47,7 @@ public class CleanupTaskReporting extends CleanupTaskModel {
         } finally {
             close();
         }
-        return JocServiceTaskAnswerState.COMPLETED;
+        return JocClusterServiceTaskState.COMPLETED;
     }
 
     private void cleanupReports(TaskDateTime datetime) throws SOSHibernateException {

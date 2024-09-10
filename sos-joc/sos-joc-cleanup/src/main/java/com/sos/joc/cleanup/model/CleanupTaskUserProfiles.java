@@ -11,8 +11,8 @@ import com.sos.joc.classes.profiles.Profiles;
 import com.sos.joc.classes.profiles.ProfilesDeleteResult;
 import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
-import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.model.cluster.common.state.JocClusterServiceTaskState;
 import com.sos.joc.model.profile.ProfilesFilter;
 
 public class CleanupTaskUserProfiles extends CleanupTaskModel {
@@ -24,7 +24,7 @@ public class CleanupTaskUserProfiles extends CleanupTaskModel {
     }
 
     @Override
-    public JocServiceTaskAnswerState cleanup(List<TaskDateTime> datetimes) throws Exception {
+    public JocClusterServiceTaskState cleanup(List<TaskDateTime> datetimes) throws Exception {
         try {
             TaskDateTime profileAge = datetimes.get(0);
             TaskDateTime failedLoginHistoryAge = datetimes.get(1);
@@ -57,7 +57,7 @@ public class CleanupTaskUserProfiles extends CleanupTaskModel {
                 LOGGER.info(log.toString());
             }
             if (isStopped()) {
-                return JocServiceTaskAnswerState.UNCOMPLETED;
+                return JocClusterServiceTaskState.UNCOMPLETED;
             }
 
             // FAILED LOGINS
@@ -77,7 +77,7 @@ public class CleanupTaskUserProfiles extends CleanupTaskModel {
 
                 LOGGER.info(log.toString());
             }
-            return JocServiceTaskAnswerState.COMPLETED;
+            return JocClusterServiceTaskState.COMPLETED;
         } catch (Throwable e) {
             getDbLayer().rollback();
             throw e;

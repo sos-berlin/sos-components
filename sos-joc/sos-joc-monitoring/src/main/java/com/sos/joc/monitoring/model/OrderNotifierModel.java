@@ -20,7 +20,6 @@ import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
-import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.bean.history.HistoryOrderBean;
 import com.sos.joc.cluster.bean.history.HistoryOrderStepBean;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
@@ -30,6 +29,7 @@ import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.db.monitoring.DBItemNotification;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.monitoring.NotificationCreated;
+import com.sos.joc.model.cluster.common.state.JocClusterState;
 import com.sos.joc.monitoring.MonitorService;
 import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.Notification;
@@ -385,7 +385,7 @@ public class OrderNotifierModel {
             JocCluster.shutdownThreadPool("[" + IDENTIFIER + "][" + mode + "]", threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
         }
         closeFactory();
-        return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
+        return JocCluster.getOKAnswer(JocClusterState.STOPPED);
     }
 
     private JocClusterHibernateFactory createFactory(Path configFile) {

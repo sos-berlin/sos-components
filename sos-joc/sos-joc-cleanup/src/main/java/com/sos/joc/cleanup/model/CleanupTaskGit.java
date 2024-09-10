@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
-import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
+import com.sos.joc.model.cluster.common.state.JocClusterServiceTaskState;
 
 public class CleanupTaskGit extends CleanupTaskModel {
 
@@ -19,7 +19,7 @@ public class CleanupTaskGit extends CleanupTaskModel {
 
     /** Git cleanup is datetimes independent */
     @Override
-    public JocServiceTaskAnswerState cleanup(List<TaskDateTime> datetimes) throws Exception {
+    public JocClusterServiceTaskState cleanup(List<TaskDateTime> datetimes) throws Exception {
         try {
             LOGGER.info(String.format("[%s]start cleanup", getIdentifier()));
             return cleanupGit();
@@ -32,7 +32,7 @@ public class CleanupTaskGit extends CleanupTaskModel {
 
     }
 
-    private JocServiceTaskAnswerState cleanupGit() throws Exception {
+    private JocClusterServiceTaskState cleanupGit() throws Exception {
         // the tryOpenSession() ... getDbLayer().close() block can be repeated if necessary to avoid leaving a session open for a long time ...
         tryOpenSession();
         // do select
@@ -41,12 +41,12 @@ public class CleanupTaskGit extends CleanupTaskModel {
         // do cleanup "local" repositories
 
         if (isStopped()) { // the cleanup service was stopped because the execution time window was exceeded
-            return JocServiceTaskAnswerState.UNCOMPLETED;
+            return JocClusterServiceTaskState.UNCOMPLETED;
         }
 
         // do cleanup "rollout" repositories
 
-        return JocServiceTaskAnswerState.COMPLETED;
+        return JocClusterServiceTaskState.COMPLETED;
     }
 
 }

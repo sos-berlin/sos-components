@@ -13,9 +13,9 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
 import com.sos.joc.cleanup.helper.CleanupPartialResult;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
-import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
 import com.sos.joc.cluster.service.active.IJocActiveMemberService;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.model.cluster.common.state.JocClusterServiceTaskState;
 import com.sos.monitoring.notification.NotificationApplication;
 
 public class CleanupTaskMonitoring extends CleanupTaskModel {
@@ -47,11 +47,11 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
     }
 
     @Override
-    public JocServiceTaskAnswerState cleanup(List<TaskDateTime> datetimes) throws Exception {
+    public JocClusterServiceTaskState cleanup(List<TaskDateTime> datetimes) throws Exception {
         try {
             TaskDateTime monitoringDatetime = datetimes.get(0);
             TaskDateTime notificationDatetime = datetimes.get(1);
-            JocServiceTaskAnswerState state = null;
+            JocClusterServiceTaskState state = null;
 
             tryOpenSession();
             if (notificationDatetime.getDatetime() != null) {
@@ -61,7 +61,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
                         .getConfigured()));
             }
 
-            if (monitoringDatetime.getDatetime() != null && (state == null || state.equals(JocServiceTaskAnswerState.COMPLETED))) {
+            if (monitoringDatetime.getDatetime() != null && (state == null || state.equals(JocClusterServiceTaskState.COMPLETED))) {
                 String logPrefix = String.format("[%s][monitoring][%s][%s]", getIdentifier(), monitoringDatetime.getAge().getConfigured(),
                         monitoringDatetime.getZonedDatetime());
 
@@ -91,13 +91,13 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         }
     }
 
-    private JocServiceTaskAnswerState cleanupNotifications(MontitoringScope scope, TaskDateTime datetime) throws SOSHibernateException {
+    private JocClusterServiceTaskState cleanupNotifications(MontitoringScope scope, TaskDateTime datetime) throws SOSHibernateException {
         String logPrefix = String.format("[%s][order_notifications][%s][%s]", getIdentifier(), datetime.getAge().getConfigured(), datetime
                 .getZonedDatetime());
 
         LOGGER.info(logPrefix + "start cleanup");
-        JocServiceTaskAnswerState state = cleanupOrderNotifications(scope, datetime);
-        if (state.equals(JocServiceTaskAnswerState.COMPLETED)) {
+        JocClusterServiceTaskState state = cleanupOrderNotifications(scope, datetime);
+        if (state.equals(JocClusterServiceTaskState.COMPLETED)) {
             String logPrefixSN = String.format("[%s][system_notifications][%s][%s]", getIdentifier(), datetime.getAge().getConfigured(), datetime
                     .getZonedDatetime());
             LOGGER.info(logPrefixSN + "start cleanup");
@@ -108,44 +108,44 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         return state;
     }
 
-    private JocServiceTaskAnswerState cleanupOrderNotifications(MontitoringScope scope, TaskDateTime datetime) throws SOSHibernateException {
+    private JocClusterServiceTaskState cleanupOrderNotifications(MontitoringScope scope, TaskDateTime datetime) throws SOSHibernateException {
         boolean runm = true;
         while (runm) {
             tryOpenSession();
 
             List<Long> rm = getOrderNotificationIds(scope, datetime);
             if (rm == null || rm.size() == 0) {
-                return JocServiceTaskAnswerState.COMPLETED;
+                return JocClusterServiceTaskState.COMPLETED;
             }
             if (isStopped()) {
-                return JocServiceTaskAnswerState.UNCOMPLETED;
+                return JocClusterServiceTaskState.UNCOMPLETED;
             }
 
             getDbLayer().beginTransaction();
             deleteOrderNotifications(scope, datetime, rm);
             getDbLayer().commit();
         }
-        return JocServiceTaskAnswerState.COMPLETED;
+        return JocClusterServiceTaskState.COMPLETED;
     }
 
-    private JocServiceTaskAnswerState cleanupSystemNotifications(MontitoringScope scope, TaskDateTime datetime) throws SOSHibernateException {
+    private JocClusterServiceTaskState cleanupSystemNotifications(MontitoringScope scope, TaskDateTime datetime) throws SOSHibernateException {
         boolean runm = true;
         while (runm) {
             tryOpenSession();
 
             List<Long> rm = getSystemNotificationIds(scope, datetime);
             if (rm == null || rm.size() == 0) {
-                return JocServiceTaskAnswerState.COMPLETED;
+                return JocClusterServiceTaskState.COMPLETED;
             }
             if (isStopped()) {
-                return JocServiceTaskAnswerState.UNCOMPLETED;
+                return JocClusterServiceTaskState.UNCOMPLETED;
             }
 
             getDbLayer().beginTransaction();
             deleteSystemNotifications(scope, datetime, rm);
             getDbLayer().commit();
         }
-        return JocServiceTaskAnswerState.COMPLETED;
+        return JocClusterServiceTaskState.COMPLETED;
     }
 
     private void setQuotedColumns() {
@@ -157,7 +157,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         }
     }
 
-    protected JocServiceTaskAnswerState cleanupOrders(MontitoringScope scope, MontitoringRange range, Date startTime, String ageInfo)
+    protected JocClusterServiceTaskState cleanupOrders(MontitoringScope scope, MontitoringRange range, Date startTime, String ageInfo)
             throws SOSHibernateException {
 
         setQuotedColumns();
@@ -168,18 +168,18 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
 
             Long maxMainParentId = getOrderMaxMainParentId(scope, range, startTime, ageInfo);
             if (maxMainParentId == null || maxMainParentId.intValue() == 0) {
-                return JocServiceTaskAnswerState.COMPLETED;
+                return JocClusterServiceTaskState.COMPLETED;
             }
             if (isStopped()) {
-                return JocServiceTaskAnswerState.UNCOMPLETED;
+                return JocClusterServiceTaskState.UNCOMPLETED;
             }
 
             boolean completed = cleanupOrders(scope, range, startTime, ageInfo, maxMainParentId);
             if (!completed) {
-                return JocServiceTaskAnswerState.UNCOMPLETED;
+                return JocClusterServiceTaskState.UNCOMPLETED;
             }
         }
-        return JocServiceTaskAnswerState.COMPLETED;
+        return JocClusterServiceTaskState.COMPLETED;
     }
 
     private Long getOrderMaxMainParentId(MontitoringScope scope, MontitoringRange range, Date startTime, String ageInfo)

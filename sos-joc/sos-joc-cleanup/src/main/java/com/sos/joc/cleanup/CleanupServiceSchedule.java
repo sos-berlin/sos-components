@@ -29,9 +29,9 @@ import com.sos.joc.cleanup.exception.CleanupComputeException;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
-import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.db.joc.DBItemJocVariable;
+import com.sos.joc.model.cluster.common.state.JocClusterState;
 
 public class CleanupServiceSchedule {
 
@@ -159,7 +159,7 @@ public class CleanupServiceSchedule {
             ZonedDateTime storedFirstStart = null;
             ZonedDateTime storedNextBegin = null;
             ZonedDateTime storedNextEnd = null;
-            JocClusterAnswerState storedState = null;
+            JocClusterState storedState = null;
 
             Period period = service.getConfig().getPeriod();
             List<Integer> weekDays = service.getConfig().getPeriod().getWeekDays();
@@ -180,14 +180,14 @@ public class CleanupServiceSchedule {
                     LOGGER.info(String.format("%s[%s][stored=%s][storedPeriod=%s]", logPrefix, method, item.getTextValue(), storedPeriod));
 
                     if (storedNextBegin != null && storedNextEnd != null) {
-                        storedState = JocClusterAnswerState.RESTARTED;
+                        storedState = JocClusterState.RESTARTED;
                         if (storedNextBegin != null && arr.length > 4) {
                             String state = arr[4];
-                            if (state.equalsIgnoreCase(JocClusterAnswerState.COMPLETED.name())) {
-                                storedState = JocClusterAnswerState.COMPLETED;
+                            if (state.equalsIgnoreCase(JocClusterState.COMPLETED.name())) {
+                                storedState = JocClusterState.COMPLETED;
                             } else {
-                                if (state.startsWith(JocClusterAnswerState.UNCOMPLETED.name())) {
-                                    storedState = JocClusterAnswerState.UNCOMPLETED;
+                                if (state.startsWith(JocClusterState.UNCOMPLETED.name())) {
+                                    storedState = JocClusterState.UNCOMPLETED;
                                     arr = state.split("=");// UNCOMPLETED=dayliplan,history
                                     if (arr.length > 1) {
                                         uncompleted = Stream.of(arr[1].split(",", -1)).collect(Collectors.toList());
@@ -196,11 +196,11 @@ public class CleanupServiceSchedule {
                             }
                         }
                         if (now.isAfter(storedNextBegin)) {
-                            if (storedState.equals(JocClusterAnswerState.COMPLETED)) {
+                            if (storedState.equals(JocClusterState.COMPLETED)) {
                                 computeNewPeriod = true;
                                 LOGGER.info(String.format("%s[%s][%s]compute next period...", logPrefix, method, storedState));
                             } else {
-                                if (storedState.equals(JocClusterAnswerState.UNCOMPLETED)) {
+                                if (storedState.equals(JocClusterState.UNCOMPLETED)) {
                                     LOGGER.info(String.format("%s[%s][%s][stored][skip]now(%s) is after the storedNextBegin(%s)", logPrefix, method,
                                             storedState, now, storedNextBegin));
                                 } else {
@@ -446,7 +446,7 @@ public class CleanupServiceSchedule {
 
     private synchronized void closeTasks(int timeout, boolean runNow) {
         JocClusterAnswer answer = task.stop(timeout);
-        if (answer != null && answer.getState().equals(JocClusterAnswerState.UNCOMPLETED)) {
+        if (answer != null && answer.getState().equals(JocClusterState.UNCOMPLETED)) {
             try {
                 updateJocVariableOnResult(answer, runNow);
             } catch (Throwable e) {
@@ -534,7 +534,7 @@ public class CleanupServiceSchedule {
             return;
         }
 
-        if (answer == null || answer.getState().equals(JocClusterAnswerState.STOPPED)) {
+        if (answer == null || answer.getState().equals(JocClusterState.STOPPED)) {
             LOGGER.info(String.format("%s[%s][skip store]STOPPED", logPrefix, method));
             return;
         }

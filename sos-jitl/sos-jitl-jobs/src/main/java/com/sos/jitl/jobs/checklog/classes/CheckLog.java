@@ -131,23 +131,18 @@ public class CheckLog {
         OrderFilter orderFilter = new OrderFilter();
         orderFilter.setControllerId(step.getControllerId());
         orderFilter.setOrderId(step.getOrderId());
-        orderFilter.setOrderId("#2024-09-09#T89463254302-root");
-        orderFilter.setControllerId("controller");
 
         OrderV order = orderStateWebserviceExecuter.getOrder(orderFilter, accessToken);
 
         WorkflowFilter workflowFilter = new WorkflowFilter();
         workflowFilter.setCompact(false);
         workflowFilter.setControllerId(step.getControllerId());
-        workflowFilter.setControllerId("controller");
         workflowFilter.setWorkflowId(order.getWorkflowId());
         Workflow workflow = orderStateWebserviceExecuter.getWorkflow(workflowFilter, accessToken);
 
         OrderHistoryFilter orderHistoryFilter = new OrderHistoryFilter();
         orderHistoryFilter.setControllerId(step.getControllerId());
-        orderHistoryFilter.setControllerId("controller");
         orderHistoryFilter.setOrderId(step.getOrderId());
-        orderHistoryFilter.setOrderId("#2024-09-09#T89463254302-root");
 
         String label = args.getLabel();
         String defaultLabel = "";
@@ -296,7 +291,6 @@ public class CheckLog {
 
             RunningTaskLogFilter runningTaskLogFilter = new RunningTaskLogFilter();
             runningTaskLogFilter.setControllerId(step.getControllerId());
-            runningTaskLogFilter.setControllerId("controller");
             runningTaskLogFilter.setTaskId(taskId);
 
             String taskLog = orderStateWebserviceExecuter.getTaskLog(runningTaskLogFilter, accessToken);

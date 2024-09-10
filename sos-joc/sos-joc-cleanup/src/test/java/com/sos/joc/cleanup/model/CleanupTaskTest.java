@@ -19,8 +19,8 @@ import com.sos.joc.cleanup.model.CleanupTaskHistory.Scope;
 import com.sos.joc.cleanup.model.CleanupTaskMonitoring.MontitoringRange;
 import com.sos.joc.cleanup.model.CleanupTaskMonitoring.MontitoringScope;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
-import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.model.cluster.common.state.JocClusterServiceTaskState;
 
 public class CleanupTaskTest {
 
@@ -58,7 +58,7 @@ public class CleanupTaskTest {
 
             Date d = SOSDate.add(new Date(), -9, ChronoUnit.DAYS);
 
-            JocServiceTaskAnswerState state = t.cleanupOrders(Scope.MAIN, Range.ALL, d, "", true);
+            JocClusterServiceTaskState state = t.cleanupOrders(Scope.MAIN, Range.ALL, d, "", true);
             LOGGER.info("[STATE]" + state);
         } catch (Exception e) {
             if (t != null && t.getDbLayer() != null) {
@@ -86,7 +86,7 @@ public class CleanupTaskTest {
 
             Date d = SOSDate.add(new Date(), -2, ChronoUnit.DAYS);
 
-            JocServiceTaskAnswerState state = t.cleanupOrders(MontitoringScope.MAIN, MontitoringRange.ALL, d, "");
+            JocClusterServiceTaskState state = t.cleanupOrders(MontitoringScope.MAIN, MontitoringRange.ALL, d, "");
             LOGGER.info("[STATE]" + state);
         } catch (Exception e) {
             if (t != null && t.getDbLayer() != null) {

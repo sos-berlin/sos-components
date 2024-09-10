@@ -32,8 +32,7 @@ import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
-import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
-import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
+import com.sos.joc.cluster.common.JocClusterServiceActivity;
 import com.sos.joc.cluster.common.JocClusterUtil;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
@@ -52,6 +51,7 @@ import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.db.joc.DBItemJocVariable;
 import com.sos.joc.history.db.DBLayerHistory;
 import com.sos.joc.model.cluster.common.ClusterServices;
+import com.sos.joc.model.cluster.common.state.JocClusterState;
 
 public class HistoryService extends AJocActiveMemberService {
 
@@ -124,7 +124,7 @@ public class HistoryService extends AJocActiveMemberService {
                 };
                 threadPool.submit(task);
             }
-            return JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);
+            return JocCluster.getOKAnswer(JocClusterState.STARTED);
         } catch (Exception e) {
             return JocCluster.getErrorAnswer(e);
         }
@@ -153,11 +153,11 @@ public class HistoryService extends AJocActiveMemberService {
         LOGGER.info(String.format("[%s][%s]stopped", getIdentifier(), mode));
 
         JocClusterServiceLogger.removeLogger(IDENTIFIER);
-        return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
+        return JocCluster.getOKAnswer(JocClusterState.STOPPED);
     }
 
     @Override
-    public JocServiceAnswer getInfo() {
+    public JocClusterServiceActivity getActivity() {
         long start = 0;
         long end = 0;
         if (activeHandlers.size() > 0) {
@@ -170,7 +170,7 @@ public class HistoryService extends AJocActiveMemberService {
                 }
             }
         }
-        return new JocServiceAnswer(start == 0 ? null : Instant.ofEpochMilli(start), end == 0 ? null : Instant.ofEpochMilli(end));
+        return new JocClusterServiceActivity(start == 0 ? null : Instant.ofEpochMilli(start), end == 0 ? null : Instant.ofEpochMilli(end));
     }
 
     @Override

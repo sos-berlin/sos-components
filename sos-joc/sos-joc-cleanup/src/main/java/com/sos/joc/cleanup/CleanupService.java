@@ -19,8 +19,7 @@ import com.sos.joc.cleanup.exception.CleanupComputeException;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
-import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
-import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
+import com.sos.joc.cluster.common.JocClusterServiceActivity;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
@@ -30,6 +29,7 @@ import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.cluster.service.active.AJocActiveMemberService;
 import com.sos.joc.model.cluster.common.ClusterServices;
+import com.sos.joc.model.cluster.common.state.JocClusterState;
 
 public class CleanupService extends AJocActiveMemberService {
 
@@ -66,7 +66,7 @@ public class CleanupService extends AJocActiveMemberService {
             if (config.getPeriod() == null || config.getPeriod().getWeekDays().size() == 0) {
                 LOGGER.info(String.format("[%s][%s][stop]missing \"%s\" parameter", getIdentifier(), mode,
                         ConfigurationGlobalsCleanup.ENTRY_NAME_PERIOD));
-                return JocCluster.getOKAnswer(JocClusterAnswerState.MISSING_CONFIGURATION);
+                return JocCluster.getOKAnswer(JocClusterState.MISSING_CONFIGURATION);
             } else {
                 threadPool = Executors.newFixedThreadPool(1, new JocClusterThreadFactory(getThreadGroup(), IDENTIFIER + "-start"));
                 schedule = new CleanupServiceSchedule(this);
@@ -119,7 +119,7 @@ public class CleanupService extends AJocActiveMemberService {
                     }
                 };
                 threadPool.submit(thread);
-                return JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);
+                return JocCluster.getOKAnswer(JocClusterState.STARTED);
             }
         } catch (Exception e) {
             return JocCluster.getErrorAnswer(e);
@@ -135,15 +135,15 @@ public class CleanupService extends AJocActiveMemberService {
         close(mode);
         LOGGER.info(String.format("[%s][%s]stopped", getIdentifier(), mode));
         removeServiceLogger();
-        return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
+        return JocCluster.getOKAnswer(JocClusterState.STOPPED);
     }
 
     @Override
-    public JocServiceAnswer getInfo() {
+    public JocClusterServiceActivity getActivity() {
         if (runServiceNow.get()) {
             lastActivityStart.set(new Date().getTime());
         }
-        return new JocServiceAnswer(Instant.ofEpochMilli(lastActivityStart.get()), Instant.ofEpochMilli(lastActivityEnd.get()));
+        return new JocClusterServiceActivity(Instant.ofEpochMilli(lastActivityStart.get()), Instant.ofEpochMilli(lastActivityEnd.get()));
     }
 
     @Override

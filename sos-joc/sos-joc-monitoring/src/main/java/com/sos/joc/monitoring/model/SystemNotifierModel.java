@@ -18,11 +18,11 @@ import com.sos.joc.Globals;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
-import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.db.monitoring.DBItemNotificationMonitor;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.monitoring.MonitoringGuiEvent;
+import com.sos.joc.model.cluster.common.state.JocClusterState;
 import com.sos.joc.monitoring.MonitorService;
 import com.sos.joc.monitoring.bean.SystemMonitoringEvent;
 import com.sos.joc.monitoring.bean.SystemNotifierResult;
@@ -199,7 +199,7 @@ public class SystemNotifierModel {
         if (threadPoolDB != null) {
             JocCluster.shutdownThreadPool("[" + IDENTIFIER + "][" + mode + "]", threadPoolDB, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
         }
-        return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
+        return JocCluster.getOKAnswer(JocClusterState.STOPPED);
     }
 
     /** Truncate ms, because the database can round seconds from ms, but the time sent by the notifiers is not rounded<br/>

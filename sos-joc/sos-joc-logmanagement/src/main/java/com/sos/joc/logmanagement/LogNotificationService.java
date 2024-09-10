@@ -5,9 +5,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
-import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
-import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
-import com.sos.joc.cluster.bean.answer.JocServiceAnswer.JocServiceAnswerState;
+import com.sos.joc.cluster.common.JocClusterServiceActivity;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
@@ -16,6 +14,7 @@ import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsLogNotifica
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.cluster.service.active.AJocActiveMemberService;
 import com.sos.joc.model.cluster.common.ClusterServices;
+import com.sos.joc.model.cluster.common.state.JocClusterState;
 
 public class LogNotificationService extends AJocActiveMemberService {
 
@@ -37,7 +36,7 @@ public class LogNotificationService extends AJocActiveMemberService {
                 udpServer = new UDPServer();
             }
             udpServer.start();
-            return JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);
+            return JocCluster.getOKAnswer(JocClusterState.STARTED);
         } catch (Exception e) {
             return JocCluster.getErrorAnswer(e);
         }
@@ -47,12 +46,12 @@ public class LogNotificationService extends AJocActiveMemberService {
     public JocClusterAnswer stop(StartupMode mode) {
         udpServer.stop();
         closed.set(true);
-        return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
+        return JocCluster.getOKAnswer(JocClusterState.STOPPED);
     }
 
     @Override
-    public JocServiceAnswer getInfo() {
-        return new JocServiceAnswer(JocServiceAnswerState.RELAX);
+    public JocClusterServiceActivity getActivity() {
+        return JocClusterServiceActivity.Relax();
     }
 
     @Override

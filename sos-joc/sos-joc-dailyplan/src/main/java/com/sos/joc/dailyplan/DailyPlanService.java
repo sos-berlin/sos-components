@@ -9,8 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
-import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
-import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
+import com.sos.joc.cluster.common.JocClusterServiceActivity;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
@@ -22,6 +21,7 @@ import com.sos.joc.dailyplan.common.DailyPlanHelper;
 import com.sos.joc.dailyplan.common.DailyPlanSettings;
 import com.sos.joc.dailyplan.common.GlobalSettingsReader;
 import com.sos.joc.model.cluster.common.ClusterServices;
+import com.sos.joc.model.cluster.common.state.JocClusterState;
 
 public class DailyPlanService extends AJocActiveMemberService {
 
@@ -63,7 +63,7 @@ public class DailyPlanService extends AJocActiveMemberService {
             }
 
             lastActivityEnd = Instant.now();
-            return JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);
+            return JocCluster.getOKAnswer(JocClusterState.STARTED);
         } catch (Exception e) {
             LOGGER.error(e.toString(), e);
             return JocCluster.getErrorAnswer(e);
@@ -81,11 +81,11 @@ public class DailyPlanService extends AJocActiveMemberService {
             timer.purge();
         }
         JocClusterServiceLogger.removeLogger(IDENTIFIER);
-        return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
+        return JocCluster.getOKAnswer(JocClusterState.STOPPED);
     }
 
     @Override
-    public JocServiceAnswer getInfo() {
+    public JocClusterServiceActivity getActivity() {
         if (runner != null) {
             Instant rla = Instant.ofEpochMilli(runner.getLastActivityStart().get());
             if (rla.isAfter(this.lastActivityStart)) {
@@ -96,7 +96,7 @@ public class DailyPlanService extends AJocActiveMemberService {
                 this.lastActivityEnd = rla;
             }
         }
-        return new JocServiceAnswer(lastActivityStart, lastActivityEnd);
+        return new JocClusterServiceActivity(lastActivityStart, lastActivityEnd);
     }
 
     @Override
