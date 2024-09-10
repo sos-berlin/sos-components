@@ -250,12 +250,15 @@ public class JocClusterActiveMemberHandler {
         JocClusterServiceActivity activity = s.getActivity();
         if (activity.isBusy()) {
             answer.setState(JocClusterState.ALREADY_RUNNING);
+            JocClusterServiceLogger.setLogger(identifier);
+            LOGGER.info(String.format("[%s][runServiceNow][%s][skip]%s", mode, identifier, answer.getState()));
+            JocClusterServiceLogger.removeLogger(identifier);
         } else {
             JocClusterServiceLogger.setLogger();
             LOGGER.info(String.format("[%s][runServiceNow][%s]start...", mode, identifier));
             JocClusterServiceLogger.removeLogger();
 
-            s.runNow(mode, configuration);
+            s.runNow(mode, cluster.getControllers(), configuration);
         }
 
         JocClusterServiceLogger.setLogger();

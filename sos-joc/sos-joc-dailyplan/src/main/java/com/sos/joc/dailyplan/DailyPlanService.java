@@ -52,14 +52,12 @@ public class DailyPlanService extends AJocActiveMemberService {
                     .getPeriodBegin());
 
             if (settings.getDayAheadPlan() > 0) {
-                if (!StartupMode.manual_restart.equals(mode)) {
-                    LOGGER.info(String.format("[%s][planned][%s %s]creating daily plan for %s days ahead, submitting for %s days ahead", mode,
-                            startTime, settings.getTimeZone(), settings.getDayAheadPlan(), settings.getDayAheadSubmit()));
-                }
+                LOGGER.info(String.format("[%s][%s][planned][%s %s]creating daily plan for %s days ahead, submitting for %s days ahead",
+                        getIdentifier(), mode, startTime, settings.getTimeZone(), settings.getDayAheadPlan(), settings.getDayAheadSubmit()));
                 schedule(settings);
             } else {
-                LOGGER.info(String.format("[%s][planned][%s %s][skip]because creating daily plan for %s days ahead", mode, startTime, settings
-                        .getTimeZone(), settings.getDayAheadPlan()));
+                LOGGER.info(String.format("[%s][%s][planned][%s %s][skip]because creating daily plan for %s days ahead", getIdentifier(), mode,
+                        startTime, settings.getTimeZone(), settings.getDayAheadPlan()));
             }
 
             lastActivityEnd = Instant.now();
@@ -110,8 +108,18 @@ public class DailyPlanService extends AJocActiveMemberService {
     }
 
     @Override
-    public void runNow(StartupMode mode, AConfigurationSection configuration) {
+    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration) {
+        lastActivityStart = Instant.now();
 
+        JocClusterServiceLogger.setLogger(IDENTIFIER);
+        try {
+            LOGGER.info(String.format("[%s][%s][runNow]...", getIdentifier(), mode));
+            DailyPlanSettings settings = getSettings(mode, controllers, configuration);
+            settings.setRunNow(true);
+            schedule(settings);
+        } catch (Throwable e) {
+            LOGGER.error(String.format("[%s][%s][runNow]%s", getIdentifier(), mode, e.toString()), e);
+        }
     }
 
     private void schedule(DailyPlanSettings settings) {

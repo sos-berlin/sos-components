@@ -17,15 +17,20 @@ public class DailyPlanSettings {
 
     private List<ControllerConfiguration> controllers;
     private StartupMode startMode;
+
     private Date dailyPlanDate;
     private Date submissionTime;
+
     private String userAccount = "JS7";
     private String timeZone = "UTC";
     private String periodBegin = "00:00";
-    private boolean periodBeginMidnight = true;
     private String dailyPlanStartTime;
+
+    private boolean periodBeginMidnight = true;
     private boolean overwrite = false;
     private boolean submit = true;
+    private boolean runNow = false;
+
     private int dayAheadPlan = 0;
     private int dayAheadSubmit = 0;
     private int projectionsMonthsAhead = 0;
@@ -115,6 +120,14 @@ public class DailyPlanSettings {
 
     public void setOverwrite(boolean val) {
         overwrite = val;
+    }
+
+    public boolean isRunNow() {
+        return runNow;
+    }
+
+    public void setRunNow(boolean val) {
+        runNow = val;
     }
 
     public int getDayAheadPlan() {
