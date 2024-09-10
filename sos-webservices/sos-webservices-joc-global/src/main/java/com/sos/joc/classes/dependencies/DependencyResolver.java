@@ -730,7 +730,7 @@ public class DependencyResolver {
         ReferencedDbItem newDbItem = new ReferencedDbItem(invCfg);
         if(dependencies != null && !dependencies.isEmpty()) {
             for(DBItemInventoryDependency dependency : dependencies) {
-                DBItemInventoryConfiguration cfg = dbLayer.getConfiguration(dependency.getInvId());
+                DBItemInventoryConfiguration cfg = dbLayer.getConfiguration(dependency.getInvDependencyId());
                 if(cfg != null) {
                     newDbItem.getReferencedBy().add(cfg);
                 }
