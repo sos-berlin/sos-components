@@ -147,7 +147,8 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
 //                            List<Long> historyIdsForOrderTagging = new ArrayList<>(); //obsolete -> orderIds are not displayed in Task History
 //                            boolean withTagsDisplayedAsOrderId = OrderTags.withTagsDisplayedAsOrderId();
                             Set<String> workflowNames = new HashSet<>();
-                            boolean withWorkflowTagsDisplayed = WorkflowsHelper.withWorkflowTagsDisplayed();
+                            boolean withWorkflowTagsDisplayed = in.getWithoutWorkflowTags() != Boolean.TRUE && WorkflowsHelper
+                                    .withWorkflowTagsDisplayed();
 
                             while (sr.next()) {
                                 i++;
