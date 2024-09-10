@@ -39,7 +39,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "stateDateTo",
     "timeZone",
     "scheduledNever",
-    "limit"
+    "limit",
+    "withoutWorkflowTags"
 })
 public class OrdersFilterV {
 
@@ -152,6 +153,13 @@ public class OrdersFilterV {
     @JsonProperty("limit")
     @JsonPropertyDescription("-1=unlimited")
     private Integer limit = 10000;
+    /**
+     * if true then response doesn't contain 'workflowsTagPerWorkflow'
+     * 
+     */
+    @JsonProperty("withoutWorkflowTags")
+    @JsonPropertyDescription("if true then response doesn't contain 'workflowsTagPerWorkflow'")
+    private Boolean withoutWorkflowTags = false;
 
     /**
      * controllerId
@@ -294,7 +302,7 @@ public class OrdersFilterV {
     public void setOrderTags(Set<String> orderTags) {
         this.orderTags = orderTags;
     }
-    
+
     /**
      * tags
      * <p>
@@ -437,14 +445,32 @@ public class OrdersFilterV {
         this.limit = limit;
     }
 
+    /**
+     * if true then response doesn't contain 'workflowsTagPerWorkflow'
+     * 
+     */
+    @JsonProperty("withoutWorkflowTags")
+    public Boolean getWithoutWorkflowTags() {
+        return withoutWorkflowTags;
+    }
+
+    /**
+     * if true then response doesn't contain 'workflowsTagPerWorkflow'
+     * 
+     */
+    @JsonProperty("withoutWorkflowTags")
+    public void setWithoutWorkflowTags(Boolean withoutWorkflowTags) {
+        this.withoutWorkflowTags = withoutWorkflowTags;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderIds", orderIds).append("workflowIds", workflowIds).append("compact", compact).append("regex", regex).append("states", states).append("folders", folders).append("orderTags", orderTags).append("workflowTags", workflowTags).append("dateTo", dateTo).append("stateDateFrom", stateDateFrom).append("stateDateTo", stateDateTo).append("timeZone", timeZone).append("scheduledNever", scheduledNever).append("limit", limit).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderIds", orderIds).append("workflowIds", workflowIds).append("compact", compact).append("regex", regex).append("states", states).append("folders", folders).append("orderTags", orderTags).append("workflowTags", workflowTags).append("dateTo", dateTo).append("stateDateFrom", stateDateFrom).append("stateDateTo", stateDateTo).append("timeZone", timeZone).append("scheduledNever", scheduledNever).append("limit", limit).append("withoutWorkflowTags", withoutWorkflowTags).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowIds).append(scheduledNever).append(folders).append(controllerId).append(compact).append(timeZone).append(states).append(orderTags).append(workflowTags).append(stateDateFrom).append(regex).append(dateTo).append(limit).append(orderIds).append(stateDateTo).toHashCode();
+        return new HashCodeBuilder().append(workflowIds).append(scheduledNever).append(folders).append(controllerId).append(compact).append(timeZone).append(states).append(orderTags).append(stateDateFrom).append(withoutWorkflowTags).append(regex).append(dateTo).append(limit).append(orderIds).append(workflowTags).append(stateDateTo).toHashCode();
     }
 
     @Override
@@ -456,7 +482,7 @@ public class OrdersFilterV {
             return false;
         }
         OrdersFilterV rhs = ((OrdersFilterV) other);
-        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(scheduledNever, rhs.scheduledNever).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(timeZone, rhs.timeZone).append(states, rhs.states).append(orderTags, rhs.orderTags).append(workflowTags, rhs.workflowTags).append(stateDateFrom, rhs.stateDateFrom).append(regex, rhs.regex).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(orderIds, rhs.orderIds).append(stateDateTo, rhs.stateDateTo).isEquals();
+        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(scheduledNever, rhs.scheduledNever).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(timeZone, rhs.timeZone).append(states, rhs.states).append(orderTags, rhs.orderTags).append(stateDateFrom, rhs.stateDateFrom).append(withoutWorkflowTags, rhs.withoutWorkflowTags).append(regex, rhs.regex).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(orderIds, rhs.orderIds).append(workflowTags, rhs.workflowTags).append(stateDateTo, rhs.stateDateTo).isEquals();
     }
 
 }

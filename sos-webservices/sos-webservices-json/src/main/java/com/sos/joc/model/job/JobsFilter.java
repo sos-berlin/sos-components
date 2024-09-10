@@ -45,7 +45,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "taskIds",
     "historyIds",
     "workflowTags",
-    "orderTags"
+    "orderTags",
+    "withoutWorkflowTags"
 })
 public class JobsFilter {
 
@@ -175,6 +176,13 @@ public class JobsFilter {
     @JsonProperty("orderTags")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     private Set<String> orderTags = new LinkedHashSet<String>();
+    /**
+     * if true then response doesn't contain 'workflowsTagPerWorkflow'
+     * 
+     */
+    @JsonProperty("withoutWorkflowTags")
+    @JsonPropertyDescription("if true then response doesn't contain 'workflowsTagPerWorkflow'")
+    private Boolean withoutWorkflowTags = false;
 
     /**
      * controllerId
@@ -510,14 +518,32 @@ public class JobsFilter {
         this.orderTags = orderTags;
     }
 
+    /**
+     * if true then response doesn't contain 'workflowsTagPerWorkflow'
+     * 
+     */
+    @JsonProperty("withoutWorkflowTags")
+    public Boolean getWithoutWorkflowTags() {
+        return withoutWorkflowTags;
+    }
+
+    /**
+     * if true then response doesn't contain 'workflowsTagPerWorkflow'
+     * 
+     */
+    @JsonProperty("withoutWorkflowTags")
+    public void setWithoutWorkflowTags(Boolean withoutWorkflowTags) {
+        this.withoutWorkflowTags = withoutWorkflowTags;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("jobs", jobs).append("excludeJobs", excludeJobs).append("jobName", jobName).append("workflowPath", workflowPath).append("workflowName", workflowName).append("dateFrom", dateFrom).append("dateTo", dateTo).append("completedDateFrom", completedDateFrom).append("completedDateTo", completedDateTo).append("timeZone", timeZone).append("folders", folders).append("limit", limit).append("historyStates", historyStates).append("criticalities", criticalities).append("taskIds", taskIds).append("historyIds", historyIds).append("workflowTags", workflowTags).append("orderTags", orderTags).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("jobs", jobs).append("excludeJobs", excludeJobs).append("jobName", jobName).append("workflowPath", workflowPath).append("workflowName", workflowName).append("dateFrom", dateFrom).append("dateTo", dateTo).append("completedDateFrom", completedDateFrom).append("completedDateTo", completedDateTo).append("timeZone", timeZone).append("folders", folders).append("limit", limit).append("historyStates", historyStates).append("criticalities", criticalities).append("taskIds", taskIds).append("historyIds", historyIds).append("workflowTags", workflowTags).append("orderTags", orderTags).append("withoutWorkflowTags", withoutWorkflowTags).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobName).append(folders).append(controllerId).append(workflowPath).append(completedDateFrom).append(jobs).append(historyStates).append(timeZone).append(workflowName).append(criticalities).append(dateFrom).append(taskIds).append(completedDateTo).append(historyIds).append(orderTags).append(dateTo).append(limit).append(workflowTags).append(excludeJobs).toHashCode();
+        return new HashCodeBuilder().append(jobName).append(folders).append(controllerId).append(workflowPath).append(completedDateFrom).append(jobs).append(historyStates).append(timeZone).append(workflowName).append(criticalities).append(dateFrom).append(taskIds).append(completedDateTo).append(historyIds).append(orderTags).append(withoutWorkflowTags).append(dateTo).append(limit).append(workflowTags).append(excludeJobs).toHashCode();
     }
 
     @Override
@@ -529,7 +555,7 @@ public class JobsFilter {
             return false;
         }
         JobsFilter rhs = ((JobsFilter) other);
-        return new EqualsBuilder().append(jobName, rhs.jobName).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(workflowPath, rhs.workflowPath).append(completedDateFrom, rhs.completedDateFrom).append(jobs, rhs.jobs).append(historyStates, rhs.historyStates).append(timeZone, rhs.timeZone).append(workflowName, rhs.workflowName).append(criticalities, rhs.criticalities).append(dateFrom, rhs.dateFrom).append(taskIds, rhs.taskIds).append(completedDateTo, rhs.completedDateTo).append(historyIds, rhs.historyIds).append(orderTags, rhs.orderTags).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(workflowTags, rhs.workflowTags).append(excludeJobs, rhs.excludeJobs).isEquals();
+        return new EqualsBuilder().append(jobName, rhs.jobName).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(workflowPath, rhs.workflowPath).append(completedDateFrom, rhs.completedDateFrom).append(jobs, rhs.jobs).append(historyStates, rhs.historyStates).append(timeZone, rhs.timeZone).append(workflowName, rhs.workflowName).append(criticalities, rhs.criticalities).append(dateFrom, rhs.dateFrom).append(taskIds, rhs.taskIds).append(completedDateTo, rhs.completedDateTo).append(historyIds, rhs.historyIds).append(orderTags, rhs.orderTags).append(withoutWorkflowTags, rhs.withoutWorkflowTags).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(workflowTags, rhs.workflowTags).append(excludeJobs, rhs.excludeJobs).isEquals();
     }
 
 }
