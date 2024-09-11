@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.joc.cleanup.CleanupServiceConfiguration.ForceCleanup;
 import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.db.DBLayer;
@@ -22,7 +23,7 @@ public class CleanupTaskAuditLog extends CleanupTaskModel {
     private int totalAuditLogs = 0;
     private int totalAuditLogDetails = 0;
 
-    public CleanupTaskAuditLog(JocClusterHibernateFactory factory, int batchSize, String identifier, boolean forceCleanup) {
+    public CleanupTaskAuditLog(JocClusterHibernateFactory factory, int batchSize, String identifier, ForceCleanup forceCleanup) {
         super(factory, batchSize, identifier, forceCleanup);
     }
 

@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.joc.cleanup.CleanupServiceConfiguration.ForceCleanup;
 import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
 import com.sos.joc.cleanup.helper.CleanupPartialResult;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
@@ -42,7 +43,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
     private String columnQuotedHoMainParentId;
     private String columnQuotedMainParentId;
 
-    public CleanupTaskMonitoring(JocClusterHibernateFactory factory, IJocActiveMemberService service, int batchSize, boolean forceCleanup) {
+    public CleanupTaskMonitoring(JocClusterHibernateFactory factory, IJocActiveMemberService service, int batchSize, ForceCleanup forceCleanup) {
         super(factory, service, batchSize, forceCleanup);
     }
 

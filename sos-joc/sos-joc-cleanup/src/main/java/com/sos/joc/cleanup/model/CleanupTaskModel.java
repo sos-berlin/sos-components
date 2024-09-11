@@ -14,6 +14,7 @@ import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 import com.sos.commons.hibernate.exception.SOSHibernateOpenSessionException;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
+import com.sos.joc.cleanup.CleanupServiceConfiguration.ForceCleanup;
 import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
 import com.sos.joc.cleanup.db.DBLayerCleanup;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
@@ -42,7 +43,7 @@ public class CleanupTaskModel implements ICleanupTask {
     private final DBLayerCleanup dbLayer;
     private final IJocActiveMemberService service;
     private final int batchSize;
-    private final boolean forceCleanup;
+    private final ForceCleanup forceCleanup;
     private final TaskType type;
     private final String identifier;
     private final Object lock = new Object();
@@ -51,16 +52,16 @@ public class CleanupTaskModel implements ICleanupTask {
     private AtomicBoolean stopped = new AtomicBoolean(false);
     private AtomicBoolean completed = new AtomicBoolean(false);
 
-    protected CleanupTaskModel(JocClusterHibernateFactory factory, int batchSize, String identifier, boolean forceCleanup) {
+    protected CleanupTaskModel(JocClusterHibernateFactory factory, int batchSize, String identifier, ForceCleanup forceCleanup) {
         this(factory, null, batchSize, identifier, forceCleanup);
     }
 
-    protected CleanupTaskModel(JocClusterHibernateFactory factory, IJocActiveMemberService service, int batchSize, boolean forceCleanup) {
+    protected CleanupTaskModel(JocClusterHibernateFactory factory, IJocActiveMemberService service, int batchSize, ForceCleanup forceCleanup) {
         this(factory, service, batchSize, null, forceCleanup);
     }
 
     private CleanupTaskModel(JocClusterHibernateFactory factory, IJocActiveMemberService service, int batchSize, String identifier,
-            boolean forceCleanup) {
+            ForceCleanup forceCleanup) {
         this.factory = factory;
         this.service = service;
         this.batchSize = batchSize;
@@ -211,7 +212,7 @@ public class CleanupTaskModel implements ICleanupTask {
     }
 
     protected boolean askService() {
-        if (!forceCleanup && this.type.equals(TaskType.SERVICE_TASK)) {
+        if ((forceCleanup != null && !forceCleanup.force()) && this.type.equals(TaskType.SERVICE_TASK)) {
             JocClusterServiceActivity activity = getService().getActivity();
             boolean doCleanup = !activity.isBusy();
             if (LOGGER.isDebugEnabled()) {
