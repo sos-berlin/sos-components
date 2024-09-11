@@ -53,7 +53,7 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
             ClusterServiceRun in = Globals.objectMapper.readValue(filterBytes, ClusterServiceRun.class);
             JOCDefaultResponse response = initPermissions("", getJocPermissions(accessToken).getCluster().getManage());
             if (response == null) {
-                response = processAnswer(JocClusterService.getInstance().runServiceNow(in, StartupMode.manual));
+                response = processAnswer(in.getType(), JocClusterService.getInstance().runServiceNow(in, StartupMode.manual));
                 // response = JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
             }
             return response;
@@ -74,11 +74,11 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
             JOCDefaultResponse response = initPermissions("", getJocPermissions(accessToken).getCluster().getManage());
             if (response == null) {
                 if (in.getType().equals(ClusterServices.cluster)) { // all services
-                    response = processAnswer(JocClusterService.getInstance().restart(StartupMode.manual_restart));
+                    response = processAnswer(in.getType(), JocClusterService.getInstance().restart(StartupMode.manual_restart));
                     // proxy restart in addition
                     ProxiesEdit.forcedRestartForJOC();
                 } else {
-                    response = processAnswer(JocClusterService.getInstance().restartService(in, StartupMode.manual_restart));
+                    response = processAnswer(in.getType(), JocClusterService.getInstance().restartService(in, StartupMode.manual_restart));
                 }
                 // response = JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
             }
@@ -99,7 +99,8 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
             ClusterSwitchMember in = Globals.objectMapper.readValue(filterBytes, ClusterSwitchMember.class);
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getCluster().getManage());
             if (response == null) {
-                response = processAnswer(JocClusterService.getInstance().switchMember(StartupMode.manual_switchover, in.getMemberId()));
+                response = processAnswer(ClusterServices.cluster, JocClusterService.getInstance().switchMember(StartupMode.manual_switchover, in
+                        .getMemberId()));
                 // response = JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
             }
             return response;
@@ -165,7 +166,7 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
         }
     }
 
-    private JOCDefaultResponse processAnswer(JocClusterAnswer answer) throws Exception {
+    private JOCDefaultResponse processAnswer(ClusterServices type, JocClusterAnswer answer) throws Exception {
         if (answer.getError() != null) {
             Exception ex = answer.getError().getException();
             if (ex != null) {
@@ -175,6 +176,7 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
             }
         }
         ClusterResponse response = new ClusterResponse();
+        response.setType(type);
         response.setState(answer.getState());
         response.setDeliveryDate(Date.from(Instant.now()));
         return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(response));

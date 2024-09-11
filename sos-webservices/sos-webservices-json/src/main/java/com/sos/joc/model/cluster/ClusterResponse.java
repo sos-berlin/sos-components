@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.joc.model.cluster.common.state.JocClusterState;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -21,6 +22,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "deliveryDate",
+    "type",
     "state"
 })
 public class ClusterResponse {
@@ -35,6 +37,15 @@ public class ClusterResponse {
     @JsonProperty("deliveryDate")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deliveryDate;
+    /**
+     * JOC cluster services
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("type")
+    private ClusterServices type;
     /**
      * JOC cluster states
      * <p>
@@ -70,6 +81,30 @@ public class ClusterResponse {
     }
 
     /**
+     * JOC cluster services
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("type")
+    public ClusterServices getType() {
+        return type;
+    }
+
+    /**
+     * JOC cluster services
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("type")
+    public void setType(ClusterServices type) {
+        this.type = type;
+    }
+
+    /**
      * JOC cluster states
      * <p>
      * 
@@ -95,12 +130,12 @@ public class ClusterResponse {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("state", state).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("type", type).append("state", state).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deliveryDate).append(state).toHashCode();
+        return new HashCodeBuilder().append(state).append(deliveryDate).append(type).toHashCode();
     }
 
     @Override
@@ -112,7 +147,7 @@ public class ClusterResponse {
             return false;
         }
         ClusterResponse rhs = ((ClusterResponse) other);
-        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(state, rhs.state).isEquals();
+        return new EqualsBuilder().append(state, rhs.state).append(deliveryDate, rhs.deliveryDate).append(type, rhs.type).isEquals();
     }
 
 }
