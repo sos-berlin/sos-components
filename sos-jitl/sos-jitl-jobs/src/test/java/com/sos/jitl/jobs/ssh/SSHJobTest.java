@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.js7.job.UnitTestJobHelper;
+import com.sos.js7.job.UnitTestJobHelper.UnitTestStepConfig;
 
 import js7.data_for_java.order.JOutcome;
 
@@ -30,6 +31,7 @@ public class SSHJobTest {
 
         // for unit tests only
         UnitTestJobHelper<SSHJobArguments> h = new UnitTestJobHelper<>(new SSHJob());
+        h.getStepConfig().setControllerId("js7");
         // creates a new thread for each new onOrderProcess call
         JOutcome.Completed result = h.processOrder(args);
         LOGGER.info("###############################################");
@@ -53,5 +55,5 @@ public class SSHJobTest {
         LOGGER.info("###############################################");
         LOGGER.info(String.format("[RESULT] %s", result));
     }
-    
+
 }
