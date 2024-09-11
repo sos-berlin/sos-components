@@ -29,6 +29,7 @@ import com.sos.commons.vfs.ssh.SSHProvider;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
 import com.sos.js7.job.JobArgument.Type;
 import com.sos.js7.job.JobArguments.LogLevel;
+import com.sos.js7.job.UnitTestJobHelper.UnitTestStepConfig;
 import com.sos.js7.job.ValueSource.ValueSourceType;
 import com.sos.js7.job.exception.JobArgumentException;
 import com.sos.js7.job.exception.JobProblemException;
@@ -221,8 +222,20 @@ public class OrderProcessStep<A extends JobArguments> {
         setAllArguments();
     }
 
-    protected void init(A arguments, Map<String, Object> unitTestUndeclaredArguments) throws Exception {
+    @SuppressWarnings("rawtypes")
+    protected void init4unittest(A arguments, Map<String, Object> unitTestUndeclaredArguments, UnitTestStepConfig stepConfig) throws Exception {
         this.unitTestUndeclaredArguments = unitTestUndeclaredArguments;
+        if (stepConfig != null) {
+            this.controllerId = stepConfig.getControllerId();
+            this.orderId = stepConfig.getOrderId();
+            this.agentId = stepConfig.getAgentId();
+            this.jobInstructionLabel = stepConfig.getJobInstructionLabel();
+            this.jobName = stepConfig.getJobName();
+            this.workflowPath = stepConfig.getWorkflowPath();
+            this.workflowName = stepConfig.getWorkflowName();
+            this.workflowVersionId = stepConfig.getWorkflowVersionId();
+            this.workflowPosition = stepConfig.getWorkflowPosition();
+        }
         init(arguments);
     }
 

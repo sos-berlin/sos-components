@@ -24,10 +24,13 @@ public class UnitTestJobHelper<A extends JobArguments> {
     private static final Logger LOGGER = LoggerFactory.getLogger(UnitTestJobHelper.class);
 
     private final Job<A> job;
+    private final UnitTestStepConfig stepConfig;
+
     private Map<String, String> environment;
 
     public UnitTestJobHelper(Job<A> job) {
         this.job = job;
+        this.stepConfig = new UnitTestStepConfig();
         setModifiableEnvironment();
     }
 
@@ -55,7 +58,7 @@ public class UnitTestJobHelper<A extends JobArguments> {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 ArgumentsResult r = toArgs(step, args, job.onCreateJobArguments(null, step));
-                step.init(r.instance, r.undeclared);
+                step.init4unittest(r.instance, r.undeclared, stepConfig);
 
                 step.checkAndLogParameterization(null, null);
                 this.job.processOrder(step);
@@ -80,6 +83,10 @@ public class UnitTestJobHelper<A extends JobArguments> {
 
     public Job<A> getJob() {
         return job;
+    }
+
+    public UnitTestStepConfig getStepConfig() {
+        return stepConfig;
     }
 
     private OrderProcessStep<A> newOrderProcessStep(Map<String, Object> args) throws Exception {
@@ -180,4 +187,89 @@ public class UnitTestJobHelper<A extends JobArguments> {
         private Map<String, Object> undeclared;
     }
 
+    public class UnitTestStepConfig {
+
+        private String controllerId;
+        private String orderId;
+        private String agentId;
+        private String jobInstructionLabel;
+        private String jobName;
+        private String workflowPath;
+        private String workflowName;
+        private String workflowVersionId;
+        private String workflowPosition;
+
+        public String getControllerId() {
+            return controllerId;
+        }
+
+        public void setControllerId(String val) {
+            controllerId = val;
+        }
+
+        public String getOrderId() {
+            return orderId;
+        }
+
+        public void setOrderId(String val) {
+            orderId = val;
+        }
+
+        public String getAgentId() {
+            return agentId;
+        }
+
+        public void setAgentId(String val) {
+            agentId = val;
+        }
+
+        public String getJobInstructionLabel() {
+            return jobInstructionLabel;
+        }
+
+        public void setJobInstructionLabel(String val) {
+            jobInstructionLabel = val;
+        }
+
+        public String getJobName() {
+            return jobName;
+        }
+
+        public void setJobName(String val) {
+            jobName = val;
+        }
+
+        public String getWorkflowPath() {
+            return workflowPath;
+        }
+
+        public void setWorkflowPath(String val) {
+            workflowPath = val;
+        }
+
+        public String getWorkflowName() {
+            return workflowName;
+        }
+
+        public void setWorkflowName(String val) {
+            workflowName = val;
+        }
+
+        public String getWorkflowVersionId() {
+            return workflowVersionId;
+        }
+
+        public void setWorkflowVersionId(String val) {
+            workflowVersionId = val;
+        }
+
+        public String getWorkflowPosition() {
+            return workflowPosition;
+        }
+
+        public void setWorkflowPosition(String val) {
+            workflowPosition = val;
+        }
+
+    }
 }
