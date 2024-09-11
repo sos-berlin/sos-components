@@ -23,8 +23,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "agentPath",
-    "subagentSelectionId",
-    "subagentSelectionIdExpr",
+    "subagentBundleId",
+    "subagentBundleIdExpr",
     "executable",
     "admissionTimeScheme",
     "skipIfNoAdmissionStartForOrderDay",
@@ -50,16 +50,18 @@ public class Job {
         "agentName"
     })
     private String agentPath;
-    @JsonProperty("subagentSelectionId")
+    @JsonProperty("subagentBundleId")
     @JsonAlias({
-        "subagentClusterId"
+        "subagentClusterId",
+        "subagentSelectionId"
     })
-    private String subagentSelectionId;
-    @JsonProperty("subagentSelectionIdExpr")
+    private String subagentBundleId;
+    @JsonProperty("subagentBundleIdExpr")
     @JsonAlias({
-        "subagentClusterIdExpr"
+        "subagentClusterIdExpr",
+        "subagentSelectionIdExpr"
     })
-    private String subagentSelectionIdExpr;
+    private String subagentBundleIdExpr;
     /**
      * 
      * (Required)
@@ -145,14 +147,14 @@ public class Job {
 
     /**
      * 
-     * @param subagentSelectionId
      * @param sigkillDelay
      * @param failOnErrWritten
+     * @param subagentBundleId
+     * @param subagentBundleIdExpr
      * @param executable
      * @param timeout
      * @param admissionTimeScheme
      * @param agentPath
-     * @param subagentSelectionIdExpr
      * @param returnCodeMeaning
      * @param processLimit
      * @param defaultArguments
@@ -160,11 +162,11 @@ public class Job {
      * @param skipIfNoAdmissionStartForOrderDay
      * @param isNotRestartable
      */
-    public Job(String agentPath, String subagentSelectionId, String subagentSelectionIdExpr, Executable executable, AdmissionTimeScheme admissionTimeScheme, Boolean skipIfNoAdmissionStartForOrderDay, JobReturnCode returnCodeMeaning, Integer processLimit, Integer timeout, Integer sigkillDelay, Boolean failOnErrWritten, Environment defaultArguments, List<String> jobResourcePaths, Boolean isNotRestartable) {
+    public Job(String agentPath, String subagentBundleId, String subagentBundleIdExpr, Executable executable, AdmissionTimeScheme admissionTimeScheme, Boolean skipIfNoAdmissionStartForOrderDay, JobReturnCode returnCodeMeaning, Integer processLimit, Integer timeout, Integer sigkillDelay, Boolean failOnErrWritten, Environment defaultArguments, List<String> jobResourcePaths, Boolean isNotRestartable) {
         super();
         this.agentPath = agentPath;
-        this.subagentSelectionId = subagentSelectionId;
-        this.subagentSelectionIdExpr = subagentSelectionIdExpr;
+        this.subagentBundleId = subagentBundleId;
+        this.subagentBundleIdExpr = subagentBundleIdExpr;
         this.executable = executable;
         this.admissionTimeScheme = admissionTimeScheme;
         this.skipIfNoAdmissionStartForOrderDay = skipIfNoAdmissionStartForOrderDay;
@@ -198,24 +200,24 @@ public class Job {
         this.agentPath = agentPath;
     }
 
-    @JsonProperty("subagentSelectionId")
-    public String getSubagentSelectionId() {
-        return subagentSelectionId;
+    @JsonProperty("subagentBundleId")
+    public String getSubagentBundleId() {
+        return subagentBundleId;
     }
 
-    @JsonProperty("subagentSelectionId")
-    public void setSubagentSelectionId(String subagentSelectionId) {
-        this.subagentSelectionId = subagentSelectionId;
+    @JsonProperty("subagentBundleId")
+    public void setSubagentBundleId(String subagentBundleId) {
+        this.subagentBundleId = subagentBundleId;
     }
 
-    @JsonProperty("subagentSelectionIdExpr")
-    public String getSubagentSelectionIdExpr() {
-        return subagentSelectionIdExpr;
+    @JsonProperty("subagentBundleIdExpr")
+    public String getSubagentBundleIdExpr() {
+        return subagentBundleIdExpr;
     }
 
-    @JsonProperty("subagentSelectionIdExpr")
-    public void setSubagentSelectionIdExpr(String subagentSelectionIdExpr) {
-        this.subagentSelectionIdExpr = subagentSelectionIdExpr;
+    @JsonProperty("subagentBundleIdExpr")
+    public void setSubagentBundleIdExpr(String subagentBundleIdExpr) {
+        this.subagentBundleIdExpr = subagentBundleIdExpr;
     }
 
     /**
@@ -404,12 +406,12 @@ public class Job {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentPath", agentPath).append("subagentSelectionId", subagentSelectionId).append("subagentSelectionIdExpr", subagentSelectionIdExpr).append("executable", executable).append("admissionTimeScheme", admissionTimeScheme).append("skipIfNoAdmissionStartForOrderDay", skipIfNoAdmissionStartForOrderDay).append("returnCodeMeaning", returnCodeMeaning).append("processLimit", processLimit).append("timeout", timeout).append("sigkillDelay", sigkillDelay).append("failOnErrWritten", failOnErrWritten).append("defaultArguments", defaultArguments).append("jobResourcePaths", jobResourcePaths).append("isNotRestartable", isNotRestartable).toString();
+        return new ToStringBuilder(this).append("agentPath", agentPath).append("subagentBundleId", subagentBundleId).append("subagentBundleIdExpr", subagentBundleIdExpr).append("executable", executable).append("admissionTimeScheme", admissionTimeScheme).append("skipIfNoAdmissionStartForOrderDay", skipIfNoAdmissionStartForOrderDay).append("returnCodeMeaning", returnCodeMeaning).append("processLimit", processLimit).append("timeout", timeout).append("sigkillDelay", sigkillDelay).append("failOnErrWritten", failOnErrWritten).append("defaultArguments", defaultArguments).append("jobResourcePaths", jobResourcePaths).append("isNotRestartable", isNotRestartable).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(subagentSelectionId).append(sigkillDelay).append(failOnErrWritten).append(executable).append(timeout).append(admissionTimeScheme).append(agentPath).append(subagentSelectionIdExpr).append(returnCodeMeaning).append(processLimit).append(defaultArguments).append(jobResourcePaths).append(skipIfNoAdmissionStartForOrderDay).append(isNotRestartable).toHashCode();
+        return new HashCodeBuilder().append(sigkillDelay).append(failOnErrWritten).append(subagentBundleId).append(subagentBundleIdExpr).append(executable).append(timeout).append(admissionTimeScheme).append(agentPath).append(returnCodeMeaning).append(processLimit).append(defaultArguments).append(jobResourcePaths).append(skipIfNoAdmissionStartForOrderDay).append(isNotRestartable).toHashCode();
     }
 
     @Override
@@ -421,7 +423,7 @@ public class Job {
             return false;
         }
         Job rhs = ((Job) other);
-        return new EqualsBuilder().append(subagentSelectionId, rhs.subagentSelectionId).append(sigkillDelay, rhs.sigkillDelay).append(failOnErrWritten, rhs.failOnErrWritten).append(executable, rhs.executable).append(timeout, rhs.timeout).append(admissionTimeScheme, rhs.admissionTimeScheme).append(agentPath, rhs.agentPath).append(subagentSelectionIdExpr, rhs.subagentSelectionIdExpr).append(returnCodeMeaning, rhs.returnCodeMeaning).append(processLimit, rhs.processLimit).append(defaultArguments, rhs.defaultArguments).append(jobResourcePaths, rhs.jobResourcePaths).append(skipIfNoAdmissionStartForOrderDay, rhs.skipIfNoAdmissionStartForOrderDay).append(isNotRestartable, rhs.isNotRestartable).isEquals();
+        return new EqualsBuilder().append(sigkillDelay, rhs.sigkillDelay).append(failOnErrWritten, rhs.failOnErrWritten).append(subagentBundleId, rhs.subagentBundleId).append(subagentBundleIdExpr, rhs.subagentBundleIdExpr).append(executable, rhs.executable).append(timeout, rhs.timeout).append(admissionTimeScheme, rhs.admissionTimeScheme).append(agentPath, rhs.agentPath).append(returnCodeMeaning, rhs.returnCodeMeaning).append(processLimit, rhs.processLimit).append(defaultArguments, rhs.defaultArguments).append(jobResourcePaths, rhs.jobResourcePaths).append(skipIfNoAdmissionStartForOrderDay, rhs.skipIfNoAdmissionStartForOrderDay).append(isNotRestartable, rhs.isNotRestartable).isEquals();
     }
 
 }

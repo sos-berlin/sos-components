@@ -38,13 +38,14 @@ import io.vavr.control.Either;
 import jakarta.ws.rs.Path;
 import js7.base.web.Uri;
 import js7.data.agent.AgentPath;
+import js7.data.subagent.SubagentBundleId;
 import js7.data.subagent.SubagentId;
-import js7.data.subagent.SubagentSelectionId;
 import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.item.JUpdateItemOperation;
+import js7.data_for_java.subagent.JSubagentBundle;
 import js7.data_for_java.subagent.JSubagentItem;
-import js7.data_for_java.subagent.JSubagentSelection;
+import js7.data_for_java.value.JExpression;
 import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
 
@@ -101,9 +102,13 @@ public class SubAgentClusterDeployImpl extends JOCResourceImpl implements ISubAg
             for (Map.Entry<DBItemInventorySubAgentCluster, List<SubAgentId>> subAgentCluster : subAgentClusters.entrySet()) {
                 DBItemInventorySubAgentCluster key = subAgentCluster.getKey();
                 
-                JSubagentSelection selection = JSubagentSelection.of(SubagentSelectionId.of(key.getSubAgentClusterId()),
+//                JSubagentBundle selection = JSubagentBundle.of(SubagentBundleId.of(key.getSubAgentClusterId()),
+//                        subAgentCluster.getValue().stream().collect(Collectors.toMap(s -> SubagentId.of(s.getSubagentId()),
+//                                SubAgentId::getPriority)));
+                
+                JSubagentBundle selection = JSubagentBundle.of(SubagentBundleId.of(key.getSubAgentClusterId()),
                         subAgentCluster.getValue().stream().collect(Collectors.toMap(s -> SubagentId.of(s.getSubagentId()),
-                                SubAgentId::getPriority)));
+                                s -> JExpression.fromNumber(scala.math.BigDecimal.int2bigDecimal(s.getPriority())))));
                 
                 // if the cluster agent of the subagent cluster is unknown in Controller then deploy the cluster agent too
                 if (!updateAgentIds.contains(key.getAgentId()) && knownAgents.get(AgentPath.of(key.getAgentId())) == null) {

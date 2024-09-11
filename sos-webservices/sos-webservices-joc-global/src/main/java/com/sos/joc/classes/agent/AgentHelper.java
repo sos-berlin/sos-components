@@ -32,8 +32,8 @@ import com.sos.joc.exceptions.JocMissingLicenseException;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 
 import js7.data.agent.AgentPath;
+import js7.data.subagent.SubagentBundleId;
 import js7.data.subagent.SubagentId;
-import js7.data.subagent.SubagentSelectionId;
 import js7.data_for_java.controller.JControllerState;
 
 public class AgentHelper {
@@ -133,7 +133,7 @@ public class AgentHelper {
             return null;
         }
         try {
-            return currentState.idToSubagentSelection().keySet().stream().map(SubagentSelectionId::string).collect(Collectors.toSet());
+            return currentState.idToSubagentBundle().keySet().stream().map(SubagentBundleId::string).collect(Collectors.toSet());
         } catch (Exception e1) {
             return null;
         }
