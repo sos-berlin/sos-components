@@ -50,6 +50,7 @@ public class CleanupPartialResult {
             }
 
             if (task.getServicePauseConfig() != null) {
+                // task.getService().startPause();
             }
 
             task.tryOpenSession();
@@ -65,6 +66,7 @@ public class CleanupPartialResult {
                 addDeletedLast(task.getDbLayer().getSession().executeUpdate(query));
                 task.getDbLayer().commit();
             } catch (Throwable e) {
+                // task.getService().stopPause();
                 if (task.isStopped()) {
                     LOGGER.info("[" + task.getIdentifier() + "][STOPPED]" + e);
                     return;
@@ -74,6 +76,7 @@ public class CleanupPartialResult {
             }
 
             if (getDeletedLast() == 0) {
+                // task.getService().stopPause();
                 state = JocClusterServiceTaskState.COMPLETED;
                 if (deletedTotal > 0) {
                     int r = runCounter + 1;

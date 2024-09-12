@@ -904,16 +904,23 @@ public class HistoryControllerHandler {
                 LOGGER.info("[" + serviceIdentifier + "][doPauseIfSet][stopped]MAX_PAUSE_IN_SECONDS=" + MAX_PAUSE_IN_SECONDS + " reached");
             }
         }
-    }
-
-    public void startPause() {
-        if (!closed.get()) {
-            pause.set(true);
+        if (counter > 0) {
+            LOGGER.info("[" + serviceIdentifier + "][doPauseIfSet][released]after " + counter + " seconds");
         }
     }
 
+    // from another thread
+    public void startPause() {
+        if (!closed.get()) {
+            pause.set(true);
+            LOGGER.info("[" + serviceIdentifier + "][startPause]...");
+        }
+    }
+
+    // from another thread
     public void stopPause() {
         pause.set(false);
+        LOGGER.info("[" + serviceIdentifier + "][stopPause]...");
     }
 
     private void stopFlux() {

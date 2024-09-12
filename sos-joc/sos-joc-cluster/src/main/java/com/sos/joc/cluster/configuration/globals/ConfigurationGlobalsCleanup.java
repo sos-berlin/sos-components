@@ -7,16 +7,17 @@ import com.sos.joc.model.configuration.globals.GlobalSettingsSectionValueType;
 public class ConfigurationGlobalsCleanup extends AConfigurationSection {
 
     public final static String INITIAL_PERIOD = "1,2,3,4,5,6,7";
-
     public static final String ENTRY_NAME_PERIOD = "period";
-    public static final String ENTRY_NAME_HISTORY_PAUSE_DURATION = "history_pause_duration";
-    public static final String ENTRY_NAME_HISTORY_PAUSE_DELAY = "history_pause_delay";
+
+    private static final String ENTRY_NAME_HISTORY_PAUSE_DURATION = "history_pause_duration";
+    private static final String ENTRY_NAME_HISTORY_PAUSE_DELAY = "history_pause_delay";
 
     private ConfigurationEntry timeZone = new ConfigurationEntry("time_zone", "UTC", GlobalSettingsSectionValueType.TIMEZONE);
     private ConfigurationEntry period = new ConfigurationEntry(ENTRY_NAME_PERIOD, null, GlobalSettingsSectionValueType.WEEKDAYS);
     private ConfigurationEntry periodBegin = new ConfigurationEntry("period_begin", "01:00", GlobalSettingsSectionValueType.TIME);
     private ConfigurationEntry periodEnd = new ConfigurationEntry("period_end", "04:00", GlobalSettingsSectionValueType.TIME);
 
+    // see constructor and getForceCleanup for forceCleanup child arguments
     private ConfigurationEntry forceCleanup = new ConfigurationEntry("force_cleanup", "false", GlobalSettingsSectionValueType.BOOLEAN);
 
     private ConfigurationEntry batchSize = new ConfigurationEntry("batch_size", "1000", GlobalSettingsSectionValueType.POSITIVEINTEGER);
@@ -46,7 +47,7 @@ public class ConfigurationGlobalsCleanup extends AConfigurationSection {
         periodEnd.setOrdering(++index);
 
         forceCleanup.setOrdering(++index);
-        forceCleanup.addChild(new ConfigurationEntry(ENTRY_NAME_HISTORY_PAUSE_DURATION, null, GlobalSettingsSectionValueType.DURATION));
+        forceCleanup.addChild(new ConfigurationEntry(ENTRY_NAME_HISTORY_PAUSE_DURATION, "60s", GlobalSettingsSectionValueType.DURATION));
         forceCleanup.addChild(new ConfigurationEntry(ENTRY_NAME_HISTORY_PAUSE_DELAY, "60s", GlobalSettingsSectionValueType.DURATION));
 
         batchSize.setOrdering(++index);
@@ -89,8 +90,8 @@ public class ConfigurationGlobalsCleanup extends AConfigurationSection {
         return periodEnd;
     }
 
-    public ConfigurationEntry getForceCleanup() {
-        return forceCleanup;
+    public ForceCleanup getForceCleanup() {
+        return new ForceCleanup();
     }
 
     public ConfigurationEntry getBatchSize() {
@@ -143,6 +144,56 @@ public class ConfigurationGlobalsCleanup extends AConfigurationSection {
 
     public ConfigurationEntry getDeploymentHistoryVersions() {
         return deploymentHistoryVersions;
+    }
+
+    public class ForceCleanup {
+
+        private final String argNameForce;
+        private final String argNameHistoryPauseDuration;
+        private final String argNameHistoryPauseDelay;
+
+        private final String force;
+        private final String historyPauseDuration;
+        private final String historyPauseDelay;
+
+        private ForceCleanup() {
+            ConfigurationEntry duration = forceCleanup.getChild(ConfigurationGlobalsCleanup.ENTRY_NAME_HISTORY_PAUSE_DURATION);
+            ConfigurationEntry delay = forceCleanup.getChild(ConfigurationGlobalsCleanup.ENTRY_NAME_HISTORY_PAUSE_DELAY);
+
+            argNameForce = forceCleanup.getName();
+            argNameHistoryPauseDuration = duration.getName();
+            argNameHistoryPauseDelay = delay.getName();
+
+            force = forceCleanup.getValue();
+            historyPauseDuration = duration.getValue();
+            historyPauseDelay = delay.getValue();
+
+        }
+
+        public String getArgNameForce() {
+            return argNameForce;
+        }
+
+        public String getArgNameHistoryPauseDuration() {
+            return argNameHistoryPauseDuration;
+        }
+
+        public String getArgNameHistoryPauseDelay() {
+            return argNameHistoryPauseDelay;
+        }
+
+        public String getForce() {
+            return force;
+        }
+
+        public String getHistoryPauseDuration() {
+            return historyPauseDuration;
+        }
+
+        public String getHistoryPauseDelay() {
+            return historyPauseDelay;
+        }
+
     }
 
 }
