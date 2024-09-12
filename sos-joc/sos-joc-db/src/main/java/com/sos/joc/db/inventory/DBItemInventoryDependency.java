@@ -10,14 +10,12 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
-import jakarta.persistence.UniqueConstraint;
 
 @Entity
-@IdClass(InventoryDependencyPK.class)
-@Table(name = DBLayer.TABLE_INV_DEPENDENCIES, uniqueConstraints = {@UniqueConstraint(columnNames = { "[INV_ID]", "[INV_DEP_ID]", "[PUBLISHED]" }) })
+//@IdClass(InventoryDependencyPK.class)
+@Table(name = DBLayer.TABLE_INV_DEPENDENCIES)
 public class DBItemInventoryDependency extends DBItem {
 
     private static final long serialVersionUID = 1L;
