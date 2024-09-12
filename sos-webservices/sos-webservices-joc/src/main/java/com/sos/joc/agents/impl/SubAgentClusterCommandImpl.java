@@ -29,7 +29,7 @@ import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
 import jakarta.ws.rs.Path;
-import js7.data.subagent.SubagentSelectionId;
+import js7.data.subagent.SubagentBundleId;
 import js7.data_for_java.item.JUpdateItemOperation;
 import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
@@ -80,10 +80,10 @@ public class SubAgentClusterCommandImpl extends JOCResourceImpl implements ISubA
             }
             
             JControllerProxy proxy = Proxy.of(controllerId);
-            final List<String> knownSubagentSelectionIds = proxy.currentState().idToSubagentSelection().keySet().stream().map(
-                    SubagentSelectionId::string).collect(Collectors.toList());
+            final List<String> knownSubagentSelectionIds = proxy.currentState().idToSubagentBundle().keySet().stream().map(
+                    SubagentBundleId::string).collect(Collectors.toList());
             Predicate<String> knownInController = s -> knownSubagentSelectionIds.contains(s);
-            List<JUpdateItemOperation> s = subagentClusterIds.stream().filter(knownInController).map(SubagentSelectionId::of).map(
+            List<JUpdateItemOperation> s = subagentClusterIds.stream().filter(knownInController).map(SubagentBundleId::of).map(
                     JUpdateItemOperation::deleteSimple).collect(Collectors.toList());
             
             if (!s.isEmpty()) {
@@ -162,7 +162,7 @@ public class SubAgentClusterCommandImpl extends JOCResourceImpl implements ISubA
             }
 
             JControllerProxy proxy = Proxy.of(controllerId);
-            final List<String> knownSubagentSelectionIds = proxy.currentState().idToSubagentSelection().keySet().stream().map(SubagentSelectionId::string).collect(Collectors.toList());
+            final List<String> knownSubagentSelectionIds = proxy.currentState().idToSubagentBundle().keySet().stream().map(SubagentBundleId::string).collect(Collectors.toList());
             Predicate<String> knownInController = s -> knownSubagentSelectionIds.contains(s);
             
             List<String> unknownSubagentSelectionIds = subagentClusterIds.stream().filter(knownInController.negate()).collect(Collectors.toList());
@@ -172,7 +172,7 @@ public class SubAgentClusterCommandImpl extends JOCResourceImpl implements ISubA
                 Globals.commit(connection);
             }
 
-            proxy.api().updateItems(Flux.fromIterable(subagentClusterIds.stream().filter(knownInController).map(SubagentSelectionId::of).map(
+            proxy.api().updateItems(Flux.fromIterable(subagentClusterIds.stream().filter(knownInController).map(SubagentBundleId::of).map(
                     JUpdateItemOperation::deleteSimple).collect(Collectors.toSet()))).thenAccept(e -> {
                         ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), null);
                         if (e.isRight()) {

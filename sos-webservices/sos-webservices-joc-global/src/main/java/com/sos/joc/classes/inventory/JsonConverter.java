@@ -194,12 +194,12 @@ public class JsonConverter {
     
     private static void considerSubagentClusterId(Job invJob, com.sos.sign.model.job.Job signJob) {
         if (signJob != null) {
-            if (signJob.getSubagentSelectionIdExpr() == null || signJob.getSubagentSelectionIdExpr().isEmpty()) {
+            if (signJob.getSubagentBundleIdExpr() == null || signJob.getSubagentBundleIdExpr().isEmpty()) {
                 if (invJob.getSubagentClusterId() != null && !invJob.getSubagentClusterId().isEmpty()) {
-                    signJob.setSubagentSelectionIdExpr(quoteString(invJob.getSubagentClusterId()));
+                    signJob.setSubagentBundleIdExpr(quoteString(invJob.getSubagentClusterId()));
                 }
             }
-            signJob.setSubagentSelectionId(null);
+            signJob.setSubagentBundleId(null);
         }
     }
     
@@ -510,9 +510,9 @@ public class JsonConverter {
     }
     
     private static void convertStickySubagent(StickySubagent ss, com.sos.sign.model.instruction.StickySubagent sss) {
-        if (sss.getSubagentSelectionIdExpr() == null) {
+        if (sss.getSubagentBundleIdExpr() == null) {
             if (ss.getSubagentClusterId() != null) {
-                sss.setSubagentSelectionIdExpr(quoteString(ss.getSubagentClusterId()));
+                sss.setSubagentBundleIdExpr(quoteString(ss.getSubagentClusterId()));
             }
         }
     }

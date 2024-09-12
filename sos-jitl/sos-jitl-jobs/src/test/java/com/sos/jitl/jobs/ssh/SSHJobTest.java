@@ -30,6 +30,7 @@ public class SSHJobTest {
 
         // for unit tests only
         UnitTestJobHelper<SSHJobArguments> h = new UnitTestJobHelper<>(new SSHJob());
+        h.getStepConfig().setControllerId("js7");
         // creates a new thread for each new onOrderProcess call
         JOutcome.Completed result = h.processOrder(args);
         LOGGER.info("###############################################");
@@ -53,5 +54,5 @@ public class SSHJobTest {
         LOGGER.info("###############################################");
         LOGGER.info(String.format("[RESULT] %s", result));
     }
-    
+
 }

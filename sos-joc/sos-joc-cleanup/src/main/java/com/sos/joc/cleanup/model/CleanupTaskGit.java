@@ -5,6 +5,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.joc.cleanup.CleanupServiceConfiguration.ForceCleanup;
 import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.model.cluster.common.state.JocClusterServiceTaskState;
@@ -13,7 +14,7 @@ public class CleanupTaskGit extends CleanupTaskModel {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupTaskGit.class);
 
-    public CleanupTaskGit(JocClusterHibernateFactory factory, int batchSize, String identifier, boolean forceCleanup) {
+    public CleanupTaskGit(JocClusterHibernateFactory factory, int batchSize, String identifier, ForceCleanup forceCleanup) {
         super(factory, batchSize, identifier, forceCleanup);
     }
 

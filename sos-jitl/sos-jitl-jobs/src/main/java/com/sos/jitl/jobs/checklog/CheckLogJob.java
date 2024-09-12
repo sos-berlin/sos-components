@@ -10,7 +10,7 @@ public class CheckLogJob extends Job<CheckLogJobArguments> {
     public CheckLogJob(JobContext jobContext) {
         super(jobContext);
     }
-
+    
     @Override
     public void processOrder(OrderProcessStep<CheckLogJobArguments> step) throws Exception {
 

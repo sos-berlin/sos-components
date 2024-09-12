@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.deploy.DeployType;
+import com.sos.joc.cleanup.CleanupServiceConfiguration.ForceCleanup;
 import com.sos.joc.cleanup.db.DeploymentVersion;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.db.DBLayer;
@@ -30,7 +31,7 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
     private int totalSearchWorkflows = 0;
     private int totalHistory = 0;
 
-    public CleanupTaskDeployment(JocClusterHibernateFactory factory, int batchSize, String identifier, boolean forceCleanup) {
+    public CleanupTaskDeployment(JocClusterHibernateFactory factory, int batchSize, String identifier, ForceCleanup forceCleanup) {
         super(factory, batchSize, identifier, forceCleanup);
     }
 

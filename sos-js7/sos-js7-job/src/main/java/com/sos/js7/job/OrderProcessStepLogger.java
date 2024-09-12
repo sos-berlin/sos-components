@@ -33,13 +33,20 @@ public class OrderProcessStepLogger {
         }
     }
 
+    private void log2Output(String m) throws InterruptedException {
+        step.out().println(m);
+    }
+
+    private void log2Error(String m) throws InterruptedException {
+        step.err().println(m);
+    }
+
     public void info(final Object msg) {
         String m = getMessage(LogLevel.INFO, msg);
         if (step == null) {
             LOGGER.info(m);
             return;
         }
-        step.out().println(m);
     }
 
     public void info(final String format, final Object... args) {
@@ -59,7 +66,11 @@ public class OrderProcessStepLogger {
             LOGGER.debug(m);
             return;
         }
-        step.out().println(m);
+        try {
+            log2Output(m);
+        } catch (InterruptedException e) {
+            LOGGER.warn(e.getMessage() + "cause: " + e.getCause());
+        }
     }
 
     public void debug(final String format, final Object... args) {
@@ -82,7 +93,12 @@ public class OrderProcessStepLogger {
             LOGGER.trace(m);
             return;
         }
-        step.out().println(m);
+        try {
+            log2Output(m);
+        } catch (InterruptedException e) {
+            LOGGER.warn(e.getMessage() + "cause: " + e.getCause());
+        }
+
     }
 
     public void trace(final String format, final Object... args) {
@@ -102,7 +118,11 @@ public class OrderProcessStepLogger {
             LOGGER.warn(m);
             return;
         }
-        step.out().println(m);
+        try {
+            log2Output(m);
+        } catch (InterruptedException e) {
+            LOGGER.warn(e.getMessage() + "cause: " + e.getCause());
+        }
     }
 
     public void warn(final String format, final Object... args) {
@@ -131,7 +151,11 @@ public class OrderProcessStepLogger {
             LOGGER.error(m);
             return;
         }
-        step.err().println(m);
+        try {
+            log2Error(m);
+        } catch (InterruptedException e) {
+            LOGGER.warn(e.getMessage() + "cause: " + e.getCause());
+        }
     }
 
     public void error(final String format, final Object... args) {

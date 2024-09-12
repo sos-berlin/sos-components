@@ -20,6 +20,7 @@ import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSPath;
+import com.sos.joc.cleanup.CleanupServiceConfiguration.ForceCleanup;
 import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
 import com.sos.joc.cleanup.helper.CleanupPartialResult;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
@@ -54,8 +55,10 @@ public class CleanupTaskHistory extends CleanupTaskModel {
     private String columnQuotedHoMainParentId;
     private String columnQuotedMainParentId;
 
-    public CleanupTaskHistory(JocClusterHibernateFactory factory, IJocActiveMemberService service, int batchSize, boolean forceCleanup) {
+    public CleanupTaskHistory(JocClusterHibernateFactory factory, IJocActiveMemberService service, int batchSize, ForceCleanup forceCleanup) {
         super(factory, service, batchSize, forceCleanup);
+        super.createServicePauseConfig(getForceCleanup().getHistoryPauseDurationAge().getSeconds(), getForceCleanup().getHistoryPauseDelayAge()
+                .getSeconds());
     }
 
     @Override
@@ -122,7 +125,8 @@ public class CleanupTaskHistory extends CleanupTaskModel {
     }
 
     private JocClusterServiceTaskState cleanupOrders(TaskDateTime dateTime, boolean deleteLogs) throws SOSHibernateException {
-        JocClusterServiceTaskState state = cleanupOrders(Scope.MAIN, Range.ALL, dateTime.getDatetime(), dateTime.getAge().getConfigured(), deleteLogs);
+        JocClusterServiceTaskState state = cleanupOrders(Scope.MAIN, Range.ALL, dateTime.getDatetime(), dateTime.getAge().getConfigured(),
+                deleteLogs);
         if (isCompleted(state)) {
             Date remainingStartTime = getRemainingStartTime(dateTime);
             String remainingAgeInfo = getRemainingAgeInfo(dateTime);

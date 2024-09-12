@@ -50,8 +50,21 @@ public class LogNotificationService extends AJocActiveMemberService {
     }
 
     @Override
+    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration) {
+
+    }
+
+    @Override
     public JocClusterServiceActivity getActivity() {
         return JocClusterServiceActivity.Relax();
+    }
+
+    @Override
+    public void startPause() {
+    }
+
+    @Override
+    public void stopPause() {
     }
 
     @Override
@@ -76,8 +89,4 @@ public class LogNotificationService extends AJocActiveMemberService {
         }
     }
 
-    @Override
-    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration) {
-
-    }
 }

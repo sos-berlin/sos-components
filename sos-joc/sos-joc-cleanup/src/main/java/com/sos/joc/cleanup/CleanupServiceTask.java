@@ -20,6 +20,7 @@ import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.cluster.JocClusterService;
 import com.sos.joc.cleanup.CleanupServiceConfiguration.Age;
+import com.sos.joc.cleanup.CleanupServiceConfiguration.ForceCleanup;
 import com.sos.joc.cleanup.model.CleanupTaskAuditLog;
 import com.sos.joc.cleanup.model.CleanupTaskDailyPlan;
 import com.sos.joc.cleanup.model.CleanupTaskDeployment;
@@ -103,7 +104,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
                 LOGGER.warn(e.toString(), e);
             }
 
-            final boolean forceCleanup = cleanupSchedule.getService().getConfig().getForceCleanup().force();
+            final ForceCleanup forceCleanup = cleanupSchedule.getService().getConfig().getForceCleanup();
 
             List<Supplier<JocClusterAnswer>> tasks = new ArrayList<Supplier<JocClusterAnswer>>();
             // 1) service tasks
@@ -319,7 +320,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
         }
     }
 
-    private List<ICleanupTask> getManualCleanupTasks(JocClusterHibernateFactory factory, int batchSize, boolean forceCleanup) {
+    private List<ICleanupTask> getManualCleanupTasks(JocClusterHibernateFactory factory, int batchSize, ForceCleanup forceCleanup) {
         List<ICleanupTask> tasks = new ArrayList<ICleanupTask>();
         tasks.add(new CleanupTaskDeployment(factory, batchSize, MANUAL_TASK_IDENTIFIER_DEPLOYMENT, forceCleanup));
         tasks.add(new CleanupTaskAuditLog(factory, batchSize, MANUAL_TASK_IDENTIFIER_AUDITLOG, forceCleanup));

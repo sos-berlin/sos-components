@@ -1,13 +1,14 @@
 
 package com.sos.sign.model.instruction;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
@@ -19,7 +20,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "agentPath",
-    "subagentSelectionIdExpr",
+    "subagentBundleIdExpr",
     "subworkflow"
 })
 public class StickySubagent
@@ -37,11 +38,12 @@ public class StickySubagent
         "agentName"
     })
     private String agentPath;
-    @JsonProperty("subagentSelectionIdExpr")
+    @JsonProperty("subagentBundleIdExpr")
     @JsonAlias({
-        "subagentClusterIdExpr"
+        "subagentClusterIdExpr",
+        "subagentSelectionIdExpr"
     })
-    private String subagentSelectionIdExpr;
+    private String subagentBundleIdExpr;
     /**
      * instructions
      * <p>
@@ -61,13 +63,13 @@ public class StickySubagent
     /**
      * 
      * @param agentPath
-     * @param subagentSelectionIdExpr
      * @param subworkflow
+     * @param subagentBundleIdExpr
      */
-    public StickySubagent(String agentPath, String subagentSelectionIdExpr, Instructions subworkflow) {
+    public StickySubagent(String agentPath, String subagentBundleIdExpr, Instructions subworkflow) {
         super();
         this.agentPath = agentPath;
-        this.subagentSelectionIdExpr = subagentSelectionIdExpr;
+        this.subagentBundleIdExpr = subagentBundleIdExpr;
         this.subworkflow = subworkflow;
     }
 
@@ -91,14 +93,14 @@ public class StickySubagent
         this.agentPath = agentPath;
     }
 
-    @JsonProperty("subagentSelectionIdExpr")
-    public String getSubagentSelectionIdExpr() {
-        return subagentSelectionIdExpr;
+    @JsonProperty("subagentBundleIdExpr")
+    public String getSubagentBundleIdExpr() {
+        return subagentBundleIdExpr;
     }
 
-    @JsonProperty("subagentSelectionIdExpr")
-    public void setSubagentSelectionIdExpr(String subagentSelectionIdExpr) {
-        this.subagentSelectionIdExpr = subagentSelectionIdExpr;
+    @JsonProperty("subagentBundleIdExpr")
+    public void setSubagentBundleIdExpr(String subagentBundleIdExpr) {
+        this.subagentBundleIdExpr = subagentBundleIdExpr;
     }
 
     /**
@@ -125,12 +127,12 @@ public class StickySubagent
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("agentPath", agentPath).append("subagentSelectionIdExpr", subagentSelectionIdExpr).append("subworkflow", subworkflow).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("agentPath", agentPath).append("subagentBundleIdExpr", subagentBundleIdExpr).append("subworkflow", subworkflow).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(agentPath).append(subagentSelectionIdExpr).append(subworkflow).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(agentPath).append(subworkflow).append(subagentBundleIdExpr).toHashCode();
     }
 
     @Override
@@ -142,7 +144,7 @@ public class StickySubagent
             return false;
         }
         StickySubagent rhs = ((StickySubagent) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(agentPath, rhs.agentPath).append(subagentSelectionIdExpr, rhs.subagentSelectionIdExpr).append(subworkflow, rhs.subworkflow).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(agentPath, rhs.agentPath).append(subworkflow, rhs.subworkflow).append(subagentBundleIdExpr, rhs.subagentBundleIdExpr).isEquals();
     }
 
 }

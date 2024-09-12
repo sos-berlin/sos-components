@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.classes.profiles.Profiles;
 import com.sos.joc.classes.profiles.ProfilesDeleteResult;
+import com.sos.joc.cleanup.CleanupServiceConfiguration.ForceCleanup;
 import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.db.DBLayer;
@@ -19,7 +20,7 @@ public class CleanupTaskUserProfiles extends CleanupTaskModel {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupTaskUserProfiles.class);
 
-    public CleanupTaskUserProfiles(JocClusterHibernateFactory factory, int batchSize, String identifier, boolean forceCleanup) {
+    public CleanupTaskUserProfiles(JocClusterHibernateFactory factory, int batchSize, String identifier, ForceCleanup forceCleanup) {
         super(factory, batchSize, identifier, forceCleanup);
     }
 

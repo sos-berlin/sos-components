@@ -208,8 +208,8 @@ public class JsonSerializer {
                     job.setAdmissionTimeScheme(emptyAdmissionTimeSchemeToNull(job.getAdmissionTimeScheme()));
                     job.setSkipIfNoAdmissionStartForOrderDay(defaultToNull(job.getSkipIfNoAdmissionStartForOrderDay(), Boolean.FALSE));
                     job.setIsNotRestartable(defaultToNull(job.getIsNotRestartable(), Boolean.FALSE));
-                    if (job.getSubagentSelectionIdExpr() != null && !job.getSubagentSelectionIdExpr().isEmpty()) {
-                        job.setSubagentSelectionId(null); 
+                    if (job.getSubagentBundleIdExpr() != null && !job.getSubagentBundleIdExpr().isEmpty()) {
+                        job.setSubagentBundleIdExpr(null); 
                     }
                 });
             }

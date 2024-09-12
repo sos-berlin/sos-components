@@ -6,38 +6,15 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.sos.inventory.model.instruction.AddOrder;
-import com.sos.inventory.model.instruction.Break;
-import com.sos.inventory.model.instruction.ConsumeNotices;
-import com.sos.inventory.model.instruction.Cycle;
-import com.sos.inventory.model.instruction.ExpectNotice;
-import com.sos.inventory.model.instruction.ExpectNotices;
-import com.sos.inventory.model.instruction.Fail;
-import com.sos.inventory.model.instruction.Finish;
-import com.sos.inventory.model.instruction.ForkJoin;
-import com.sos.inventory.model.instruction.ForkList;
-import com.sos.inventory.model.instruction.IfElse;
-import com.sos.inventory.model.instruction.ImplicitEnd;
 import com.sos.inventory.model.instruction.Instruction;
-import com.sos.inventory.model.instruction.InstructionType;
-import com.sos.inventory.model.instruction.Lock;
-import com.sos.inventory.model.instruction.NamedJob;
-import com.sos.inventory.model.instruction.Options;
-import com.sos.inventory.model.instruction.PostNotice;
-import com.sos.inventory.model.instruction.PostNotices;
-import com.sos.inventory.model.instruction.Prompt;
-import com.sos.inventory.model.instruction.RetryCatch;
-import com.sos.inventory.model.instruction.RetryInCatch;
-import com.sos.inventory.model.instruction.StickySubagent;
-import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.workflow.Branch;
 import com.sos.jitl.jobs.checklog.CheckLogJobArguments;
+import com.sos.joc.model.job.JobsFilter;
 import com.sos.joc.model.job.RunningTaskLogFilter;
+import com.sos.joc.model.job.TaskHistory;
+import com.sos.joc.model.job.TaskHistoryItem;
 import com.sos.joc.model.order.OrderFilter;
 import com.sos.joc.model.order.OrderHistoryFilter;
-import com.sos.joc.model.order.OrderHistoryItemChildItem;
-import com.sos.joc.model.order.OrderHistoryItemChildren;
 import com.sos.joc.model.order.OrderV;
 import com.sos.joc.model.workflow.Workflow;
 import com.sos.joc.model.workflow.WorkflowFilter;
@@ -67,6 +44,7 @@ public class CheckLog {
 
     private String handleInstruction(List<Instruction> instructions, Map<String, Integer> jobCount, Map<String, String> label2Job) {
         String returnValue = "";
+        String s = "";
         for (Instruction instruction : instructions) {
 
             switch (instruction.getTYPE()) {
@@ -83,41 +61,84 @@ public class CheckLog {
             case TRY:
                 if (!instruction.isRetry()) {
                     com.sos.inventory.model.instruction.TryCatch tryCatch = (com.sos.inventory.model.instruction.TryCatch) instruction;
-                    returnValue = handleInstruction(tryCatch.getTry().getInstructions(), jobCount, label2Job);
+                    s = handleInstruction(tryCatch.getTry().getInstructions(), jobCount, label2Job);
+                    if (s != null && !s.isEmpty()) {
+                        returnValue = s;
+                    }
                 } else {
                     com.sos.inventory.model.instruction.RetryCatch retryCatch = (com.sos.inventory.model.instruction.RetryCatch) instruction;
-                    returnValue = handleInstruction(retryCatch.getTry().getInstructions(), jobCount, label2Job);
+                    s = handleInstruction(retryCatch.getTry().getInstructions(), jobCount, label2Job);
+                    if (s != null && !s.isEmpty()) {
+                        returnValue = s;
+                    }
                 }
                 break;
             case IF:
                 com.sos.inventory.model.instruction.IfElse ifElse = (com.sos.inventory.model.instruction.IfElse) instruction;
-                returnValue = handleInstruction(ifElse.getThen().getInstructions(), jobCount, label2Job);
-                returnValue = handleInstruction(ifElse.getElse().getInstructions(), jobCount, label2Job);
+
+                if (ifElse.getThen() != null) {
+                    s = handleInstruction(ifElse.getThen().getInstructions(), jobCount, label2Job);
+                    if (s != null && !s.isEmpty()) {
+                        returnValue = s;
+                    }
+                }
+                if (ifElse.getElse() != null) {
+                    s = handleInstruction(ifElse.getElse().getInstructions(), jobCount, label2Job);
+                    if (s != null && !s.isEmpty()) {
+                        returnValue = s;
+                    }
+                }
                 break;
             case FORK:
                 com.sos.inventory.model.instruction.ForkJoin forkJoin = (com.sos.inventory.model.instruction.ForkJoin) instruction;
-                for (Branch branch : forkJoin.getBranches())
-                    returnValue = handleInstruction(branch.getWorkflow().getInstructions(), jobCount, label2Job);
+                for (Branch branch : forkJoin.getBranches()) {
+                    s = handleInstruction(branch.getWorkflow().getInstructions(), jobCount, label2Job);
+                    if (s != null && !s.isEmpty()) {
+                        returnValue = s;
+                    }
+                }
                 break;
             case FORKLIST:
                 com.sos.inventory.model.instruction.ForkList forkList = (com.sos.inventory.model.instruction.ForkList) instruction;
-                returnValue = handleInstruction(forkList.getWorkflow().getInstructions(), jobCount, label2Job);
+                s = handleInstruction(forkList.getWorkflow().getInstructions(), jobCount, label2Job);
+                if (s != null && !s.isEmpty()) {
+                    returnValue = s;
+                }
                 break;
             case LOCK:
                 com.sos.inventory.model.instruction.Lock lock = (com.sos.inventory.model.instruction.Lock) instruction;
-                returnValue = handleInstruction(lock.getLockedWorkflow().getInstructions(), jobCount, label2Job);
+                s = handleInstruction(lock.getLockedWorkflow().getInstructions(), jobCount, label2Job);
+                if (s != null && !s.isEmpty()) {
+                    returnValue = s;
+                }
                 break;
             case STICKY_SUBAGENT:
                 com.sos.inventory.model.instruction.StickySubagent stickySubagent = (com.sos.inventory.model.instruction.StickySubagent) instruction;
-                returnValue = handleInstruction(stickySubagent.getSubworkflow().getInstructions(), jobCount, label2Job);
+                s = handleInstruction(stickySubagent.getSubworkflow().getInstructions(), jobCount, label2Job);
+                if (s != null && !s.isEmpty()) {
+                    returnValue = s;
+                }
                 break;
             case CYCLE:
                 com.sos.inventory.model.instruction.Cycle cycle = (com.sos.inventory.model.instruction.Cycle) instruction;
-                returnValue = handleInstruction(cycle.getCycleWorkflow().getInstructions(), jobCount, label2Job);
+                s = handleInstruction(cycle.getCycleWorkflow().getInstructions(), jobCount, label2Job);
+                if (s != null && !s.isEmpty()) {
+                    returnValue = s;
+                }
                 break;
             case OPTIONS:
                 com.sos.inventory.model.instruction.Options options = (com.sos.inventory.model.instruction.Options) instruction;
-                returnValue = handleInstruction(options.getBlock().getInstructions(), jobCount, label2Job);
+                s = handleInstruction(options.getBlock().getInstructions(), jobCount, label2Job);
+                if (s != null && !s.isEmpty()) {
+                    returnValue = s;
+                }
+                break;
+            case CONSUME_NOTICES:
+                com.sos.inventory.model.instruction.ConsumeNotices consumeNotices = (com.sos.inventory.model.instruction.ConsumeNotices) instruction;
+                s = handleInstruction(consumeNotices.getSubworkflow().getInstructions(), jobCount, label2Job);
+                if (s != null && !s.isEmpty()) {
+                    returnValue = s;
+                }
                 break;
             default:
                 break;
@@ -143,6 +164,12 @@ public class CheckLog {
         OrderHistoryFilter orderHistoryFilter = new OrderHistoryFilter();
         orderHistoryFilter.setControllerId(step.getControllerId());
         orderHistoryFilter.setOrderId(step.getOrderId());
+        JobsFilter jobsFilter = new JobsFilter();
+        jobsFilter.setControllerId(step.getControllerId());
+        jobsFilter.setOrderId(step.getOrderId() + "*");
+        jobsFilter.setJobName(args.getJob());
+        jobsFilter.setWorkflowName(step.getWorkflowName());
+        jobsFilter.setWithoutWorkflowTags(true);
 
         String label = args.getLabel();
         String defaultLabel = "";
@@ -190,17 +217,20 @@ public class CheckLog {
                             + "'" + workflowFilter.getControllerId() + "'");
                 }
             }
-
-            OrderHistoryItemChildren orderHistoryItemChildren = orderStateWebserviceExecuter.getOrderHistory(orderHistoryFilter, accessToken);
+            TaskHistory taskHistory = orderStateWebserviceExecuter.getTaskHistory(jobsFilter, accessToken);
             jobCount.clear();
             label2Job.clear();
             Map<String, Long> label2TaskId = new HashMap<String, Long>();
 
-            for (OrderHistoryItemChildItem orderHistoryItemChildItem : orderHistoryItemChildren.getChildren()) {
-                int count = jobCount.getOrDefault(orderHistoryItemChildItem.getTask().getJob(), 0);
-                jobCount.put(orderHistoryItemChildItem.getTask().getJob(), count + 1);
-                label2Job.put(orderHistoryItemChildItem.getTask().getLabel(), orderHistoryItemChildItem.getTask().getJob());
-                label2TaskId.put(orderHistoryItemChildItem.getTask().getLabel(), orderHistoryItemChildItem.getTask().getTaskId());
+            for (TaskHistoryItem taskHistoryItem : taskHistory.getHistory()) {
+                if (taskHistoryItem.getTaskId() != null) {
+                    int count = jobCount.getOrDefault(taskHistoryItem.getJob(), 0);
+                    jobCount.put(taskHistoryItem.getJob(), count + 1);
+                    label2Job.put(taskHistoryItem.getLabel(), taskHistoryItem.getJob());
+                    if (label2TaskId.get(taskHistoryItem.getLabel()) == null) {
+                        label2TaskId.put(taskHistoryItem.getLabel(), taskHistoryItem.getTaskId());
+                    }
+                }
             }
 
             if (jobCount.get(args.getJob()) == null) {

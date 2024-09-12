@@ -19,8 +19,8 @@
 		"maxLength": 255,
 		"minLength": 1
 	},
-	"subagentSelectionIdExpr": {
-		"alias": "subagentClusterIdExpr",
+	"subagentBundleIdExpr": {
+		"alias": "subagentClusterIdExpr,subagentSelectionIdExpr",
 		"type": "string",
   		"pattern": "^[^<>]*$",
   		"maxLength": 255

@@ -1,7 +1,9 @@
 package com.sos.jitl.jobs.checklog.classes;
 
 import com.sos.jitl.jobs.sap.common.Globals;
+import com.sos.joc.model.job.JobsFilter;
 import com.sos.joc.model.job.RunningTaskLogFilter;
+import com.sos.joc.model.job.TaskHistory;
 import com.sos.joc.model.order.OrderFilter;
 import com.sos.joc.model.order.OrderHistoryFilter;
 import com.sos.joc.model.order.OrderHistoryItemChildren;
@@ -94,6 +96,30 @@ public class CheckLogWebserviceExecuter {
         orderHistoryItemChildren = Globals.objectMapper.readValue(answer, OrderHistoryItemChildren.class);
 
         return orderHistoryItemChildren;
+
+    }
+
+    public TaskHistory getTaskHistory(JobsFilter jobsFilter, String accessToken) throws Exception {
+
+        String body = Globals.objectMapper.writeValueAsString(jobsFilter);
+        ApiResponse apiResponse = apiExecutor.post(accessToken, "/tasks/history", body);
+        String answer = null;
+        if (apiResponse.getStatusCode() == 200) {
+            answer = apiResponse.getResponseBody();
+        } else {
+            if (apiResponse.getException() != null) {
+                throw apiResponse.getException();
+            } else {
+                throw new Exception(apiResponse.getResponseBody());
+            }
+        }
+        logger.debug(body);
+        logger.debug("answer=" + answer);
+
+        TaskHistory taskHistory = new TaskHistory();
+        taskHistory = Globals.objectMapper.readValue(answer, TaskHistory.class);
+
+        return taskHistory;
 
     }
 

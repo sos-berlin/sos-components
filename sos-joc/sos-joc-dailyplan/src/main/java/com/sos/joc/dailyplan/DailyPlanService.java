@@ -83,6 +83,21 @@ public class DailyPlanService extends AJocActiveMemberService {
     }
 
     @Override
+    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration) {
+        lastActivityStart = Instant.now();
+
+        JocClusterServiceLogger.setLogger(IDENTIFIER);
+        try {
+            LOGGER.info(String.format("[%s][%s][runNow]...", getIdentifier(), mode));
+            DailyPlanSettings settings = getSettings(mode, controllers, configuration);
+            settings.setRunNow(true);
+            schedule(settings);
+        } catch (Throwable e) {
+            LOGGER.error(String.format("[%s][%s][runNow]%s", getIdentifier(), mode, e.toString()), e);
+        }
+    }
+
+    @Override
     public JocClusterServiceActivity getActivity() {
         if (runner != null) {
             Instant rla = Instant.ofEpochMilli(runner.getLastActivityStart().get());
@@ -98,6 +113,14 @@ public class DailyPlanService extends AJocActiveMemberService {
     }
 
     @Override
+    public void startPause() {
+    }
+
+    @Override
+    public void stopPause() {
+    }
+
+    @Override
     public void update(StartupMode mode, List<ControllerConfiguration> controllers, String controllerId, Action action) {
 
     }
@@ -105,21 +128,6 @@ public class DailyPlanService extends AJocActiveMemberService {
     @Override
     public void update(StartupMode mode, AConfigurationSection configuration) {
 
-    }
-
-    @Override
-    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration) {
-        lastActivityStart = Instant.now();
-
-        JocClusterServiceLogger.setLogger(IDENTIFIER);
-        try {
-            LOGGER.info(String.format("[%s][%s][runNow]...", getIdentifier(), mode));
-            DailyPlanSettings settings = getSettings(mode, controllers, configuration);
-            settings.setRunNow(true);
-            schedule(settings);
-        } catch (Throwable e) {
-            LOGGER.error(String.format("[%s][%s][runNow]%s", getIdentifier(), mode, e.toString()), e);
-        }
     }
 
     private void schedule(DailyPlanSettings settings) {
