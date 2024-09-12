@@ -23,18 +23,25 @@ public interface IJocActiveMemberService {
     // run service implementation immediately - when the service starts at a specific time (e.g. cleanup service)
     public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration);
 
+    // signal to pause work and wait for the stopPause signal
+    public void startPause();
+
+    // signal stopPause
+    public void stopPause();
+
+    // service information - is busy etc ...
+    public JocClusterServiceActivity getActivity();
+
     // react when controllers have changed (added, removed ...)
     public void update(StartupMode mode, List<ControllerConfiguration> controllers, String controllerId, Action action);
 
     // react when settings have changed
     public void update(StartupMode mode, AConfigurationSection configuration);
 
-    // service information - is busy etc ...
-    public JocClusterServiceActivity getActivity();
-
     public String getControllerApiUser();
 
     public String getControllerApiUserPassword();
 
     public ThreadGroup getThreadGroup();
+
 }

@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.js7.job.UnitTestJobHelper;
-import com.sos.js7.job.UnitTestJobHelper.UnitTestStepConfig;
 
 import js7.data_for_java.order.JOutcome;
 

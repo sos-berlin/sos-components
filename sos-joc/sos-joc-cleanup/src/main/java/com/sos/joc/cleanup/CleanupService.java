@@ -139,24 +139,6 @@ public class CleanupService extends AJocActiveMemberService {
     }
 
     @Override
-    public JocClusterServiceActivity getActivity() {
-        if (runServiceNow.get()) {
-            lastActivityStart.set(new Date().getTime());
-        }
-        return new JocClusterServiceActivity(Instant.ofEpochMilli(lastActivityStart.get()), Instant.ofEpochMilli(lastActivityEnd.get()));
-    }
-
-    @Override
-    public void update(StartupMode mode, List<ControllerConfiguration> controllers, String controllerId, Action action) {
-
-    }
-
-    @Override
-    public void update(StartupMode mode, AConfigurationSection configuration) {
-
-    }
-
-    @Override
     public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration) {
         setServiceLogger();
         if (schedule == null) {
@@ -173,6 +155,32 @@ public class CleanupService extends AJocActiveMemberService {
         } catch (Throwable e) {
             LOGGER.error(String.format("[%s][%s][runNow]%s", getIdentifier(), mode, e.toString()), e);
         }
+    }
+
+    @Override
+    public void startPause() {
+    }
+
+    @Override
+    public void stopPause() {
+    }
+
+    @Override
+    public JocClusterServiceActivity getActivity() {
+        if (runServiceNow.get()) {
+            lastActivityStart.set(new Date().getTime());
+        }
+        return new JocClusterServiceActivity(Instant.ofEpochMilli(lastActivityStart.get()), Instant.ofEpochMilli(lastActivityEnd.get()));
+    }
+
+    @Override
+    public void update(StartupMode mode, List<ControllerConfiguration> controllers, String controllerId, Action action) {
+
+    }
+
+    @Override
+    public void update(StartupMode mode, AConfigurationSection configuration) {
+
     }
 
     public ZonedDateTime getNow() {

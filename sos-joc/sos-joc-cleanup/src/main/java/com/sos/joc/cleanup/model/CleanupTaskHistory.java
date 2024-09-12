@@ -57,6 +57,8 @@ public class CleanupTaskHistory extends CleanupTaskModel {
 
     public CleanupTaskHistory(JocClusterHibernateFactory factory, IJocActiveMemberService service, int batchSize, ForceCleanup forceCleanup) {
         super(factory, service, batchSize, forceCleanup);
+        super.createServicePauseConfig(getForceCleanup().getHistoryPauseDurationAge().getSeconds(), getForceCleanup().getHistoryPauseDelayAge()
+                .getSeconds());
     }
 
     @Override
@@ -123,7 +125,8 @@ public class CleanupTaskHistory extends CleanupTaskModel {
     }
 
     private JocClusterServiceTaskState cleanupOrders(TaskDateTime dateTime, boolean deleteLogs) throws SOSHibernateException {
-        JocClusterServiceTaskState state = cleanupOrders(Scope.MAIN, Range.ALL, dateTime.getDatetime(), dateTime.getAge().getConfigured(), deleteLogs);
+        JocClusterServiceTaskState state = cleanupOrders(Scope.MAIN, Range.ALL, dateTime.getDatetime(), dateTime.getAge().getConfigured(),
+                deleteLogs);
         if (isCompleted(state)) {
             Date remainingStartTime = getRemainingStartTime(dateTime);
             String remainingAgeInfo = getRemainingAgeInfo(dateTime);

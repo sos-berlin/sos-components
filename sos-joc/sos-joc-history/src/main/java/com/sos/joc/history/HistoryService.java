@@ -157,6 +157,11 @@ public class HistoryService extends AJocActiveMemberService {
     }
 
     @Override
+    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration) {
+
+    }
+
+    @Override
     public JocClusterServiceActivity getActivity() {
         long start = 0;
         long end = 0;
@@ -171,6 +176,30 @@ public class HistoryService extends AJocActiveMemberService {
             }
         }
         return new JocClusterServiceActivity(start == 0 ? null : Instant.ofEpochMilli(start), end == 0 ? null : Instant.ofEpochMilli(end));
+    }
+
+    @Override
+    public void startPause() {
+        if (stop.get()) {
+            return;
+        }
+        if (activeHandlers.size() > 0) {
+            for (HistoryControllerHandler h : activeHandlers) {
+                h.startPause();
+            }
+        }
+    }
+
+    @Override
+    public void stopPause() {
+        if (stop.get()) {
+            return;
+        }
+        if (activeHandlers.size() > 0) {
+            for (HistoryControllerHandler h : activeHandlers) {
+                h.stopPause();
+            }
+        }
     }
 
     @Override
@@ -216,11 +245,6 @@ public class HistoryService extends AJocActiveMemberService {
     public void update(StartupMode mode, AConfigurationSection configuration) {
         setLogger();
         updateHistoryConfiguration();
-    }
-
-    @Override
-    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration) {
-
     }
 
     private void setConfig() {
