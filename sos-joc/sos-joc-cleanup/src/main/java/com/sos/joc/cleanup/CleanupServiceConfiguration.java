@@ -239,14 +239,14 @@ public class CleanupServiceConfiguration {
         private Age historyPauseDurationAge;
         private Age historyPauseDelayAge;
 
-        private ForceCleanup(ConfigurationEntry entry) {
+        private ForceCleanup(com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsCleanup.ForceCleanup entry) {
             try {
-                force = Boolean.parseBoolean(entry.getValue());
+                force = Boolean.parseBoolean(entry.getForce());
             } catch (Throwable e) {
-                LOGGER.error(String.format("[%s configured=%s]%s", entry.getName(), entry.getValue(), e.toString()), e);
+                LOGGER.error(String.format("[%s configured=%s]%s", entry.getArgNameForce(), entry.getForce(), e.toString()), e);
             }
-            historyPauseDurationAge = new Age(entry.getChild(ConfigurationGlobalsCleanup.ENTRY_NAME_HISTORY_PAUSE_DURATION));
-            historyPauseDelayAge = new Age(entry.getChild(ConfigurationGlobalsCleanup.ENTRY_NAME_HISTORY_PAUSE_DELAY));
+            historyPauseDurationAge = new Age(entry.getArgNameHistoryPauseDuration(), entry.getHistoryPauseDuration());
+            historyPauseDelayAge = new Age(entry.getArgNameHistoryPauseDelay(), entry.getHistoryPauseDelay());
         }
 
         public boolean force() {
@@ -270,8 +270,12 @@ public class CleanupServiceConfiguration {
         private long seconds = 0;
 
         public Age(ConfigurationEntry entry) {
-            this.propertyName = entry.getName();
-            this.configured = entry.getValue() == null ? "" : entry.getValue();
+            this(entry.getName(), entry.getValue());
+        }
+
+        public Age(String propertyName, String configured) {
+            this.propertyName = propertyName;
+            this.configured = configured == null ? "" : configured;
             try {
                 minutes = 0;
                 seconds = 0;
