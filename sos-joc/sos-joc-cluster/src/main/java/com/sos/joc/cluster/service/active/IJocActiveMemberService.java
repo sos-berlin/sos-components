@@ -24,10 +24,10 @@ public interface IJocActiveMemberService {
     public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration);
 
     // signal to pause work and wait for the stopPause signal
-    public boolean startPause();
+    public void startPause();
 
     // signal stopPause
-    public boolean stopPause();
+    public void stopPause();
 
     // service information - is busy etc ...
     public JocClusterServiceActivity getActivity();

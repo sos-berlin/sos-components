@@ -179,13 +179,18 @@ public class HistoryService extends AJocActiveMemberService {
     }
 
     @Override
-    public boolean startPause() {
-        return true;
+    public void startPause() {
+        if (activeHandlers.size() > 0) {
+            x: for (HistoryControllerHandler h : activeHandlers) {
+                if (stop.get()) {
+                    break x;
+                }
+            }
+        }
     }
 
     @Override
-    public boolean stopPause() {
-        return true;
+    public void stopPause() {
     }
 
     @Override

@@ -96,7 +96,7 @@ public class DailyPlanService extends AJocActiveMemberService {
             LOGGER.error(String.format("[%s][%s][runNow]%s", getIdentifier(), mode, e.toString()), e);
         }
     }
-    
+
     @Override
     public JocClusterServiceActivity getActivity() {
         if (runner != null) {
@@ -111,15 +111,13 @@ public class DailyPlanService extends AJocActiveMemberService {
         }
         return new JocClusterServiceActivity(lastActivityStart, lastActivityEnd);
     }
-    
+
     @Override
-    public boolean startPause() {
-        return true;
+    public void startPause() {
     }
 
     @Override
-    public boolean stopPause() {
-        return true;
+    public void stopPause() {
     }
 
     @Override
@@ -131,10 +129,6 @@ public class DailyPlanService extends AJocActiveMemberService {
     public void update(StartupMode mode, AConfigurationSection configuration) {
 
     }
-
-   
-
-    
 
     private void schedule(DailyPlanSettings settings) {
         if (timer != null) {
