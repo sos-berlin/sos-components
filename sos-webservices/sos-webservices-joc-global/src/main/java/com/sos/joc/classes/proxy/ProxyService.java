@@ -44,8 +44,23 @@ public class ProxyService extends AJocActiveMemberService {
     }
 
     @Override
+    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration) {
+
+    }
+
+    @Override
     public JocClusterServiceActivity getActivity() {
         return JocClusterServiceActivity.Relax();
+    }
+
+    @Override
+    public boolean startPause() {
+        return true;
+    }
+
+    @Override
+    public boolean stopPause() {
+        return true;
     }
 
     @Override
@@ -57,8 +72,4 @@ public class ProxyService extends AJocActiveMemberService {
     public void update(StartupMode mode, AConfigurationSection configuration) {
     }
 
-    @Override
-    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration) {
-
-    }
 }

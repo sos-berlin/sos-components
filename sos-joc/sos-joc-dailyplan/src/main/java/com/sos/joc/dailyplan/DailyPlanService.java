@@ -83,31 +83,6 @@ public class DailyPlanService extends AJocActiveMemberService {
     }
 
     @Override
-    public JocClusterServiceActivity getActivity() {
-        if (runner != null) {
-            Instant rla = Instant.ofEpochMilli(runner.getLastActivityStart().get());
-            if (rla.isAfter(this.lastActivityStart)) {
-                this.lastActivityStart = rla;
-            }
-            rla = Instant.ofEpochMilli(runner.getLastActivityEnd().get());
-            if (rla.isAfter(this.lastActivityEnd)) {
-                this.lastActivityEnd = rla;
-            }
-        }
-        return new JocClusterServiceActivity(lastActivityStart, lastActivityEnd);
-    }
-
-    @Override
-    public void update(StartupMode mode, List<ControllerConfiguration> controllers, String controllerId, Action action) {
-
-    }
-
-    @Override
-    public void update(StartupMode mode, AConfigurationSection configuration) {
-
-    }
-
-    @Override
     public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration) {
         lastActivityStart = Instant.now();
 
@@ -121,6 +96,45 @@ public class DailyPlanService extends AJocActiveMemberService {
             LOGGER.error(String.format("[%s][%s][runNow]%s", getIdentifier(), mode, e.toString()), e);
         }
     }
+    
+    @Override
+    public JocClusterServiceActivity getActivity() {
+        if (runner != null) {
+            Instant rla = Instant.ofEpochMilli(runner.getLastActivityStart().get());
+            if (rla.isAfter(this.lastActivityStart)) {
+                this.lastActivityStart = rla;
+            }
+            rla = Instant.ofEpochMilli(runner.getLastActivityEnd().get());
+            if (rla.isAfter(this.lastActivityEnd)) {
+                this.lastActivityEnd = rla;
+            }
+        }
+        return new JocClusterServiceActivity(lastActivityStart, lastActivityEnd);
+    }
+    
+    @Override
+    public boolean startPause() {
+        return true;
+    }
+
+    @Override
+    public boolean stopPause() {
+        return true;
+    }
+
+    @Override
+    public void update(StartupMode mode, List<ControllerConfiguration> controllers, String controllerId, Action action) {
+
+    }
+
+    @Override
+    public void update(StartupMode mode, AConfigurationSection configuration) {
+
+    }
+
+   
+
+    
 
     private void schedule(DailyPlanSettings settings) {
         if (timer != null) {

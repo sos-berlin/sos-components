@@ -49,6 +49,10 @@ public class CleanupPartialResult {
                 return;
             }
 
+            if (task.getServicePauseConfig() != null) {
+
+            }
+
             task.tryOpenSession();
             NativeQuery<?> query = task.getDbLayer().getSession().createNativeQuery(deleteSQL.toString());
             if (parameters != null) {

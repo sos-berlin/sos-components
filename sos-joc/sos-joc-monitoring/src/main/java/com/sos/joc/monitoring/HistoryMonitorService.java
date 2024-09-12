@@ -71,6 +71,11 @@ public class HistoryMonitorService extends AJocActiveMemberService {
     }
 
     @Override
+    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration) {
+
+    }
+
+    @Override
     public JocClusterServiceActivity getActivity() {
         if (history == null) {
             return JocClusterServiceActivity.Relax();
@@ -78,6 +83,16 @@ public class HistoryMonitorService extends AJocActiveMemberService {
             return new JocClusterServiceActivity(Instant.ofEpochMilli(history.getLastActivityStart().get()), Instant.ofEpochMilli(history
                     .getLastActivityEnd().get()));
         }
+    }
+
+    @Override
+    public boolean startPause() {
+        return true;
+    }
+
+    @Override
+    public boolean stopPause() {
+        return true;
     }
 
     @Override
@@ -103,11 +118,6 @@ public class HistoryMonitorService extends AJocActiveMemberService {
                 }
             }
         }
-    }
-
-    @Override
-    public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration) {
-
     }
 
     private void close(StartupMode mode) {

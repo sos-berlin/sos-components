@@ -49,13 +49,16 @@ public class CleanupTaskModel implements ICleanupTask {
     private final Object lock = new Object();
 
     private JocClusterServiceTaskState state = null;
+    private ServicePauseConfig servicePauseConfig = null;
     private AtomicBoolean stopped = new AtomicBoolean(false);
     private AtomicBoolean completed = new AtomicBoolean(false);
 
+    // Manual Tasks
     protected CleanupTaskModel(JocClusterHibernateFactory factory, int batchSize, String identifier, ForceCleanup forceCleanup) {
         this(factory, null, batchSize, identifier, forceCleanup);
     }
 
+    // Service Tasks - dailyplan,history,monitoring
     protected CleanupTaskModel(JocClusterHibernateFactory factory, IJocActiveMemberService service, int batchSize, ForceCleanup forceCleanup) {
         this(factory, service, batchSize, null, forceCleanup);
     }
@@ -212,7 +215,7 @@ public class CleanupTaskModel implements ICleanupTask {
     }
 
     protected boolean askService() {
-        if ((forceCleanup != null && !forceCleanup.force()) && this.type.equals(TaskType.SERVICE_TASK)) {
+        if (!forceCleanup.force() && TaskType.SERVICE_TASK.equals(this.type)) {
             JocClusterServiceActivity activity = getService().getActivity();
             boolean doCleanup = !activity.isBusy();
             if (LOGGER.isDebugEnabled()) {
@@ -271,6 +274,10 @@ public class CleanupTaskModel implements ICleanupTask {
         return new StringBuilder("[").append(table).append("=").append(current).append(" total=").append(total).append("]");
     }
 
+    public ForceCleanup getForceCleanup() {
+        return forceCleanup;
+    }
+
     protected String getDateTime(Date date) {
         if (date == null) {
             return "";
@@ -314,5 +321,35 @@ public class CleanupTaskModel implements ICleanupTask {
 
     protected String getRemainingAgeInfo(TaskDateTime datetime) {
         return datetime.getAge().getConfigured() + "+" + REMAINING_AGE + "d";
+    }
+
+    protected void createServicePauseConfig(long duration, long delay) {
+        if (forceCleanup.force() && duration > 0) {
+            servicePauseConfig = new ServicePauseConfig(duration, delay);
+        }
+    }
+
+    public ServicePauseConfig getServicePauseConfig() {
+        return servicePauseConfig;
+    }
+
+    public class ServicePauseConfig {
+
+        // in seconds
+        private final long duration;
+        private final long delay;
+
+        private ServicePauseConfig(long duration, long delay) {
+            this.duration = duration;
+            this.delay = delay;
+        }
+
+        public long getDuration() {
+            return duration;
+        }
+
+        public long getDelay() {
+            return delay;
+        }
     }
 }
