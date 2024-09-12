@@ -50,7 +50,6 @@ public class CleanupPartialResult {
             }
 
             if (task.getServicePauseConfig() != null) {
-
             }
 
             task.tryOpenSession();

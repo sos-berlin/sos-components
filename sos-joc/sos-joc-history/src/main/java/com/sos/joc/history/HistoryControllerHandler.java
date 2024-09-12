@@ -124,6 +124,7 @@ public class HistoryControllerHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryControllerHandler.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
     private static final String TORN_PROBLEM_CODE_REGEXP = "UnknownEventId|SnapshotForUnknownEventId";
+    private static final int MAX_PAUSE_IN_SECONDS = 10 * 60; // 10 minutes
 
     private final SOSHibernateFactory factory;
     private final ControllerConfiguration controllerConfig;
@@ -137,6 +138,8 @@ public class HistoryControllerHandler {
     private HistoryModel model;
 
     private AtomicBoolean closed = new AtomicBoolean(false);
+    private AtomicBoolean pause = new AtomicBoolean();
+
     private String identifier;
     private long releaseEventsInterval;// seconds
     private long lastReleaseEvents;// seconds
@@ -365,6 +368,8 @@ public class HistoryControllerHandler {
                                 run = false;
                             } else {
                                 try {
+                                    doPauseIfSet();
+
                                     lastActivityStart.set(new Date().getTime());
                                     eventId.set(model.process(list));
                                     // list.clear();
@@ -881,10 +886,34 @@ public class HistoryControllerHandler {
 
     public void doClose() {
         closed.set(true);
+        pause.set(false);
         stopFlux();
         synchronized (lockObject) {
             lockObject.notifyAll();
         }
+    }
+
+    private void doPauseIfSet() {
+        int counter = 0;
+        while (pause.get()) {
+            lastActivityStart.set(new Date().getTime());
+            waitFor(1);
+            counter++;
+            if (counter >= MAX_PAUSE_IN_SECONDS) {
+                pause.set(false);
+                LOGGER.info("[" + serviceIdentifier + "][doPauseIfSet][stopped]MAX_PAUSE_IN_SECONDS=" + MAX_PAUSE_IN_SECONDS + " reached");
+            }
+        }
+    }
+
+    public void startPause() {
+        if (!closed.get()) {
+            pause.set(true);
+        }
+    }
+
+    public void stopPause() {
+        pause.set(false);
     }
 
     private void stopFlux() {
