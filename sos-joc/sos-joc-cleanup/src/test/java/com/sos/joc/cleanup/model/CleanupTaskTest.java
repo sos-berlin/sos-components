@@ -5,6 +5,10 @@ import java.nio.file.Paths;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.TimeZone;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -25,6 +29,8 @@ import com.sos.joc.model.cluster.common.state.JocClusterServiceTaskState;
 public class CleanupTaskTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupTaskTest.class);
+
+    private AtomicBoolean isPaused;
 
     @Ignore
     @Test
@@ -114,6 +120,94 @@ public class CleanupTaskTest {
         LOGGER.info(String.format("[%s][ms=%s]%s", TimeZone.getDefault().getID(), SOSPath.getLastModified(p).getTime(), SOSDate.getDateTimeAsString(
                 SOSPath.getLastModified(p))));
 
+    }
+
+    @Ignore
+    @Test
+    public void testPauseScheduleAtFixedRate() {
+        LOGGER.info("[START]");
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+        long duration = 5;
+        long delay = 5;
+        Runnable pauseTask = () -> {
+            LOGGER.info("[pauseHandler]start...");
+            // task.getService().stopPause();
+            try {
+                Thread.sleep(duration + 1 * 1_000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                System.err.println("Delay interrupted: " + e.getMessage());
+            }
+            LOGGER.info("    end");
+        };
+        // scheduler.scheduleAtFixedRate(pauseTask, pauseConfig.getDuration(), pauseConfig.getDuration() + pauseConfig.getDelay(), TimeUnit.SECONDS);
+        scheduler.scheduleAtFixedRate(pauseTask, delay, duration + delay, TimeUnit.SECONDS);
+
+        try {
+            TimeUnit.SECONDS.sleep(duration * 6);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        scheduler.shutdownNow();
+        LOGGER.info("[END]");
+    }
+
+    @Ignore
+    @Test
+    public void testPauseSubmit() {
+        isPaused = new AtomicBoolean(false);
+        LOGGER.info("[START]");
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
+        long duration = 5;
+        long delay = 5;
+        Runnable pauseTask = () -> {
+            boolean run = true;
+            x: while (run) {
+                boolean stopService = true;
+                isPaused.set(false);
+                LOGGER.info("[pauseHandler][start]stopService=" + stopService + ",pause=" + isPaused.get());
+                try {
+                    TimeUnit.SECONDS.sleep(duration);
+                } catch (InterruptedException e) {
+                    run = false;
+                    Thread.currentThread().interrupt();
+                    System.err.println("[duration]Delay interrupted: " + e.getMessage());
+                    break x;
+                }
+                stopService = false;
+                isPaused.set(true);
+                LOGGER.info("    stopService=" + stopService + ",pause=" + isPaused.get());
+
+                scheduler.submit(() -> {
+                    while (isPaused.get()) {
+                        try {
+                            LOGGER.info("    wait because isPaused...");
+                            TimeUnit.SECONDS.sleep(1);
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        }
+                    }
+                });
+
+                try {
+                    TimeUnit.SECONDS.sleep(delay);
+                } catch (InterruptedException e) {
+                    run = false;
+                    isPaused.set(false);
+                    Thread.currentThread().interrupt();
+                    System.err.println("[delay]Delay interrupted: " + e.getMessage());
+                }
+                LOGGER.info("    end");
+            }
+        };
+        scheduler.submit(pauseTask);
+        try {
+            TimeUnit.SECONDS.sleep(duration * 6);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        scheduler.shutdownNow();
+        LOGGER.info("[END]");
     }
 
     private JocClusterHibernateFactory createFactory() throws Exception {

@@ -48,10 +48,8 @@ public class CleanupPartialResult {
             if (task.isStopped()) {
                 return;
             }
-
-            if (task.getServicePauseConfig() != null) {
-                // task.getService().startPause();
-            }
+            task.getPauseHandler().waitWhenPaused();
+            task.getPauseHandler().setCleanupRunning(true);
 
             task.tryOpenSession();
             NativeQuery<?> query = task.getDbLayer().getSession().createNativeQuery(deleteSQL.toString());
@@ -66,7 +64,7 @@ public class CleanupPartialResult {
                 addDeletedLast(task.getDbLayer().getSession().executeUpdate(query));
                 task.getDbLayer().commit();
             } catch (Throwable e) {
-                // task.getService().stopPause();
+                task.getPauseHandler().setCleanupRunning(false);
                 if (task.isStopped()) {
                     LOGGER.info("[" + task.getIdentifier() + "][STOPPED]" + e);
                     return;
@@ -76,12 +74,12 @@ public class CleanupPartialResult {
             }
 
             if (getDeletedLast() == 0) {
-                // task.getService().stopPause();
                 state = JocClusterServiceTaskState.COMPLETED;
                 if (deletedTotal > 0) {
                     int r = runCounter + 1;
                     LOGGER.info(logPrefix + "[run=" + r + "]" + task.getDeleted(table, lastRunsDeleted, getDeletedTotal()).toString());
                 }
+                task.getPauseHandler().setCleanupRunning(false);
                 return;
             }
 
@@ -92,6 +90,7 @@ public class CleanupPartialResult {
                 lastRunsDeleted = 0;
             }
             runCounter++;
+            task.getPauseHandler().setCleanupRunning(false);
         }
     }
 

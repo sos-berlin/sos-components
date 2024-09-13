@@ -17,6 +17,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.joc.cleanup.CleanupServiceConfiguration.ForceCleanup;
 import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
 import com.sos.joc.cleanup.db.DBLayerCleanup;
+import com.sos.joc.cleanup.helper.CleanupPauseHandler;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.common.JocClusterServiceActivity;
 import com.sos.joc.cluster.service.active.IJocActiveMemberService;
@@ -49,7 +50,8 @@ public class CleanupTaskModel implements ICleanupTask {
     private final Object lock = new Object();
 
     private JocClusterServiceTaskState state = null;
-    private ServicePauseConfig servicePauseConfig = null;
+    // private ServicePauseConfig servicePauseConfig = null;
+    private CleanupPauseHandler pauseHandler;
     private AtomicBoolean stopped = new AtomicBoolean(false);
     private AtomicBoolean completed = new AtomicBoolean(false);
 
@@ -77,6 +79,7 @@ public class CleanupTaskModel implements ICleanupTask {
             this.identifier = service.getIdentifier();
         }
         this.dbLayer = new DBLayerCleanup(this.identifier);
+        this.pauseHandler = new CleanupPauseHandler();
     }
 
     @Override
@@ -138,6 +141,8 @@ public class CleanupTaskModel implements ICleanupTask {
             }
             completed.set(true);
         }
+        pauseHandler.stop();
+
         return state;
     }
 
@@ -224,6 +229,10 @@ public class CleanupTaskModel implements ICleanupTask {
             return doCleanup;
         }
         return true;
+    }
+
+    public CleanupPauseHandler getPauseHandler() {
+        return pauseHandler;
     }
 
     protected void waitFor(int interval) {
@@ -323,33 +332,4 @@ public class CleanupTaskModel implements ICleanupTask {
         return datetime.getAge().getConfigured() + "+" + REMAINING_AGE + "d";
     }
 
-    protected void createServicePauseConfig(long duration, long delay) {
-        if (forceCleanup.force() && duration > 0) {
-            servicePauseConfig = new ServicePauseConfig(duration, delay);
-        }
-    }
-
-    public ServicePauseConfig getServicePauseConfig() {
-        return servicePauseConfig;
-    }
-
-    public class ServicePauseConfig {
-
-        // in seconds
-        private final long duration;
-        private final long delay;
-
-        private ServicePauseConfig(long duration, long delay) {
-            this.duration = duration;
-            this.delay = delay;
-        }
-
-        public long getDuration() {
-            return duration;
-        }
-
-        public long getDelay() {
-            return delay;
-        }
-    }
 }
