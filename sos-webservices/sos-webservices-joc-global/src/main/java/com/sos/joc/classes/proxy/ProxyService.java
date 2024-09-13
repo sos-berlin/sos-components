@@ -54,11 +54,11 @@ public class ProxyService extends AJocActiveMemberService {
     }
 
     @Override
-    public void startPause() {
+    public void startPause(String caller) {
     }
 
     @Override
-    public void stopPause() {
+    public void stopPause(String caller) {
     }
 
     @Override

@@ -35,7 +35,7 @@ public class CleanupService extends AJocActiveMemberService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupService.class);
 
-    private static final String IDENTIFIER = ClusterServices.cleanup.name();
+    public static final String IDENTIFIER = ClusterServices.cleanup.name();
 
     private ExecutorService threadPool = null;
     private CleanupServiceSchedule schedule = null;
@@ -158,11 +158,11 @@ public class CleanupService extends AJocActiveMemberService {
     }
 
     @Override
-    public void startPause() {
+    public void startPause(String caller) {
     }
 
     @Override
-    public void stopPause() {
+    public void stopPause(String caller) {
     }
 
     @Override
@@ -256,11 +256,11 @@ public class CleanupService extends AJocActiveMemberService {
         lastActivityEnd.set(val);
     }
 
-    protected static void setServiceLogger() {
+    public static void setServiceLogger() {
         JocClusterServiceLogger.setLogger(IDENTIFIER);
     }
 
-    private static void removeServiceLogger() {
+    public static void removeServiceLogger() {
         JocClusterServiceLogger.removeLogger(IDENTIFIER);
     }
 }

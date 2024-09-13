@@ -2,6 +2,7 @@ package com.sos.joc.history;
 
 import java.nio.file.Path;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -904,23 +905,35 @@ public class HistoryControllerHandler {
                 LOGGER.info("[" + serviceIdentifier + "][doPauseIfSet][stopped]MAX_PAUSE_IN_SECONDS=" + MAX_PAUSE_IN_SECONDS + " reached");
             }
         }
-        if (counter > 0) {
-            LOGGER.info("[" + serviceIdentifier + "][doPauseIfSet][released]after " + counter + " seconds");
-        }
     }
 
     // from another thread
-    public void startPause() {
+    public void startPause(String caller) {
         if (!closed.get()) {
             pause.set(true);
-            LOGGER.info("[" + serviceIdentifier + "][startPause]...");
+            // 1) write to e.g. cleanup log file
+            String msg = "[" + serviceIdentifier + "][called from " + caller + "][startPause]...";
+            LOGGER.info(msg);
+            // 2) write to history log file
+            JocClusterServiceLogger.setLogger(serviceIdentifier);
+            LOGGER.info(msg);
+            JocClusterServiceLogger.removeLogger(serviceIdentifier);
         }
     }
 
     // from another thread
-    public void stopPause() {
-        pause.set(false);
-        LOGGER.info("[" + serviceIdentifier + "][stopPause]...");
+    public void stopPause(String caller) {
+        if (pause.get()) {
+            pause.set(false);
+            // 1) write to e.g. cleanup log file
+            String msg = "[" + serviceIdentifier + "][called from " + caller + "][stopPause]...";
+            LOGGER.info(msg);
+
+            // 2) write to history log file
+            JocClusterServiceLogger.setLogger(serviceIdentifier);
+            LOGGER.info(msg);
+            JocClusterServiceLogger.removeLogger(serviceIdentifier);
+        }
     }
 
     private void stopFlux() {

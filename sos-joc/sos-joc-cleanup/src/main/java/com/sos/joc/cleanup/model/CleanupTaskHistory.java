@@ -57,8 +57,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
 
     public CleanupTaskHistory(JocClusterHibernateFactory factory, IJocActiveMemberService service, int batchSize, ForceCleanup forceCleanup) {
         super(factory, service, batchSize, forceCleanup);
-        super.createServicePauseConfig(getForceCleanup().getHistoryPauseDurationAge().getSeconds(), getForceCleanup().getHistoryPauseDelayAge()
-                .getSeconds());
+        super.getPauseHandler().start(this);
     }
 
     @Override
