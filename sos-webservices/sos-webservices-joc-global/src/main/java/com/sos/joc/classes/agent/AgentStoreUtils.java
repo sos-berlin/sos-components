@@ -494,7 +494,7 @@ public class AgentStoreUtils {
             DBItemInventorySubAgentClusterMember dbSubagentClusterMember = new DBItemInventorySubAgentClusterMember();
             dbSubagentClusterMember.setId(null);
             dbSubagentClusterMember.setModified(now);
-            dbSubagentClusterMember.setPriority(0);
+            dbSubagentClusterMember.setPriority("0");
             dbSubagentClusterMember.setSubAgentClusterId(subAgent.getSubagentId());
             dbSubagentClusterMember.setSubAgentId(subAgent.getSubagentId());
             connection.save(dbSubagentCluster);

@@ -7,14 +7,13 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.joc.Globals;
 import com.sos.joc.agents.resource.ISubAgentClusterStore;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.agent.AgentHelper;
 import com.sos.joc.classes.agent.AgentStoreUtils;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentCluster;
@@ -28,6 +27,10 @@ import com.sos.joc.model.agent.SubAgentId;
 import com.sos.joc.model.agent.SubagentCluster;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
+
+import io.vavr.control.Either;
+import jakarta.ws.rs.Path;
+import js7.data_for_java.value.JExpression;
 
 @Path("agents")
 public class SubAgentClusterStoreImpl extends JOCResourceImpl implements ISubAgentClusterStore {
@@ -79,6 +82,10 @@ public class SubAgentClusterStoreImpl extends JOCResourceImpl implements ISubAge
                 throw new JocBadRequestException(String.format("At least one Subagent doesn't exist: '%s'", missingSubagentId));
             }
             
+            // Check priority expressions
+            agentStoreParameter.getSubagentClusters().stream().map(SubagentCluster::getSubagentIds).flatMap(List::stream).map(SubAgentId::getPriority)
+                    .map(JExpression::parse).filter(Either::isLeft).findAny().ifPresent(ProblemHelper::throwProblemIfExist);
+
             Map<String, SubagentCluster> subagentMap = agentStoreParameter.getSubagentClusters().stream().collect(Collectors.toMap(
                     SubagentCluster::getSubagentClusterId, Function.identity()));
             Date now = Date.from(Instant.now());

@@ -37,7 +37,7 @@ public class SubAgentId {
      * 
      */
     @JsonProperty("priority")
-    private Integer priority;
+    private String priority;
 
     /**
      * string without < and >
@@ -69,7 +69,7 @@ public class SubAgentId {
      * 
      */
     @JsonProperty("priority")
-    public Integer getPriority() {
+    public String getPriority() {
         return priority;
     }
 
@@ -79,7 +79,7 @@ public class SubAgentId {
      * 
      */
     @JsonProperty("priority")
-    public void setPriority(Integer priority) {
+    public void setPriority(String priority) {
         this.priority = priority;
     }
 

@@ -1,5 +1,6 @@
 package com.sos.joc.agents.impl;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -108,7 +109,7 @@ public class SubAgentClusterDeployImpl extends JOCResourceImpl implements ISubAg
                 
                 JSubagentBundle selection = JSubagentBundle.of(SubagentBundleId.of(key.getSubAgentClusterId()),
                         subAgentCluster.getValue().stream().collect(Collectors.toMap(s -> SubagentId.of(s.getSubagentId()),
-                                s -> JExpression.fromNumber(scala.math.BigDecimal.int2bigDecimal(s.getPriority())))));
+                                s -> JExpression.apply(s.getPriority()))));
                 
                 // if the cluster agent of the subagent cluster is unknown in Controller then deploy the cluster agent too
                 if (!updateAgentIds.contains(key.getAgentId()) && knownAgents.get(AgentPath.of(key.getAgentId())) == null) {

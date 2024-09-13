@@ -1613,7 +1613,7 @@ public class JS12JS7Converter {
             for (SubAgent subagent : subagents) {
                 SubAgentId id = new SubAgentId();
                 id.setSubagentId(subagent.getSubagentId());
-                id.setPriority(p);
+                id.setPriority(p + "");
                 ids.add(id);
                 p++;
             }

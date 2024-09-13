@@ -8,7 +8,7 @@ public class SubagentCluster {
     private DBItemInventorySubAgentCluster sa;
     private SubAgentId subagent = new SubAgentId();
     
-    public SubagentCluster(DBItemInventorySubAgentCluster sa, String subAgentId, Integer priority) {
+    public SubagentCluster(DBItemInventorySubAgentCluster sa, String subAgentId, String priority) {
         this.sa = sa;
         this.subagent.setPriority(priority);
         this.subagent.setSubagentId(subAgentId);

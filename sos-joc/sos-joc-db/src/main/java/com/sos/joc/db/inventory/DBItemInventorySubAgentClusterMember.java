@@ -37,7 +37,7 @@ public class DBItemInventorySubAgentClusterMember extends DBItem {
     private String subAgentId;
 
     @Column(name = "[PRIORITY]", nullable = false)
-    private Integer priority;
+    private String priority;
 
     @Column(name = "[MODIFIED]", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
@@ -67,11 +67,11 @@ public class DBItemInventorySubAgentClusterMember extends DBItem {
         subAgentId = val;
     }
 
-    public Integer getPriority() {
+    public String getPriority() {
         return priority;
     }
 
-    public void setPriority(Integer val) {
+    public void setPriority(String val) {
         priority = val;
     }
 
