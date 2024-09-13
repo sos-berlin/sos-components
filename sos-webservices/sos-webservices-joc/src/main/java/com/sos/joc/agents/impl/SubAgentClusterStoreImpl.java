@@ -45,7 +45,7 @@ public class SubAgentClusterStoreImpl extends JOCResourceImpl implements ISubAge
             
             AgentHelper.throwJocMissingLicenseException();
             
-            JsonValidator.validateFailFast(filterBytes, StoreSubagentClusters.class);
+            JsonValidator.validate(filterBytes, StoreSubagentClusters.class);
             StoreSubagentClusters agentStoreParameter = Globals.objectMapper.readValue(filterBytes, StoreSubagentClusters.class);
             boolean permission = getJocPermissions(accessToken).getAdministration().getControllers().getManage();
 
