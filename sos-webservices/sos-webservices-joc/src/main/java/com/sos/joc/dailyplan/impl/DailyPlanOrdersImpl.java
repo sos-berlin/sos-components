@@ -125,7 +125,7 @@ public class DailyPlanOrdersImpl extends JOCOrderResourceImpl implements IDailyP
             answer.setDeliveryDate(Date.from(Instant.now()));
             answer.setWorkflowTagsPerWorkflow(WorkflowsHelper.getTagsPerWorkflow(session, workflowNames));
 
-            return JOCDefaultResponse.responseStatus200(answer);
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
 
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
