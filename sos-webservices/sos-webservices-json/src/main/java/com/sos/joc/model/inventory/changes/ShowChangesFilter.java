@@ -22,7 +22,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "names",
-    "state",
+    "states",
     "owner",
     "lastPublishedBy",
     "created",
@@ -33,14 +33,8 @@ public class ShowChangesFilter {
 
     @JsonProperty("names")
     private List<String> names = new ArrayList<String>();
-    /**
-     * state of a change
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("state")
-    private ChangeState state = ChangeState.fromValue(0);
+    @JsonProperty("states")
+    private List<ChangeState> states = new ArrayList<ChangeState>();
     /**
      * string without < and >
      * <p>
@@ -92,26 +86,14 @@ public class ShowChangesFilter {
         this.names = names;
     }
 
-    /**
-     * state of a change
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("state")
-    public ChangeState getState() {
-        return state;
+    @JsonProperty("states")
+    public List<ChangeState> getStates() {
+        return states;
     }
 
-    /**
-     * state of a change
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("state")
-    public void setState(ChangeState state) {
-        this.state = state;
+    @JsonProperty("states")
+    public void setStates(List<ChangeState> states) {
+        this.states = states;
     }
 
     /**
@@ -226,12 +208,12 @@ public class ShowChangesFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("names", names).append("state", state).append("owner", owner).append("lastPublishedBy", lastPublishedBy).append("created", created).append("modified", modified).append("closed", closed).toString();
+        return new ToStringBuilder(this).append("names", names).append("states", states).append("owner", owner).append("lastPublishedBy", lastPublishedBy).append("created", created).append("modified", modified).append("closed", closed).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(owner).append(names).append(created).append(modified).append(closed).append(state).append(lastPublishedBy).toHashCode();
+        return new HashCodeBuilder().append(owner).append(names).append(created).append(modified).append(closed).append(lastPublishedBy).append(states).toHashCode();
     }
 
     @Override
@@ -243,7 +225,7 @@ public class ShowChangesFilter {
             return false;
         }
         ShowChangesFilter rhs = ((ShowChangesFilter) other);
-        return new EqualsBuilder().append(owner, rhs.owner).append(names, rhs.names).append(created, rhs.created).append(modified, rhs.modified).append(closed, rhs.closed).append(state, rhs.state).append(lastPublishedBy, rhs.lastPublishedBy).isEquals();
+        return new EqualsBuilder().append(owner, rhs.owner).append(names, rhs.names).append(created, rhs.created).append(modified, rhs.modified).append(closed, rhs.closed).append(lastPublishedBy, rhs.lastPublishedBy).append(states, rhs.states).isEquals();
     }
 
 }

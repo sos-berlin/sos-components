@@ -14,7 +14,6 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
 @Entity
-//@IdClass(InventoryDependencyPK.class)
 @Table(name = DBLayer.TABLE_INV_DEPENDENCIES)
 public class DBItemInventoryDependency extends DBItem {
 

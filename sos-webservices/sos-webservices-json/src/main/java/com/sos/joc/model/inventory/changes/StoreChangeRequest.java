@@ -4,7 +4,7 @@ package com.sos.joc.model.inventory.changes;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.inventory.changes.common.Change;
+import com.sos.joc.model.inventory.changes.common.ChangeIdentifier;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -30,7 +30,7 @@ public class StoreChangeRequest {
      * 
      */
     @JsonProperty("store")
-    private Change store;
+    private ChangeIdentifier store;
 
     /**
      * dependencies
@@ -40,7 +40,7 @@ public class StoreChangeRequest {
      * 
      */
     @JsonProperty("store")
-    public Change getStore() {
+    public ChangeIdentifier getStore() {
         return store;
     }
 
@@ -52,7 +52,7 @@ public class StoreChangeRequest {
      * 
      */
     @JsonProperty("store")
-    public void setStore(Change store) {
+    public void setStore(ChangeIdentifier store) {
         this.store = store;
     }
 

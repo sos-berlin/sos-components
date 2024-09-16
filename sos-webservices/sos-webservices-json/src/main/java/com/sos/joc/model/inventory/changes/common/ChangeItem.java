@@ -3,6 +3,7 @@ package com.sos.joc.model.inventory.changes.common;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -19,8 +20,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "name",
-    "objectType",
-    "hasDependencies"
+    "path",
+    "objectType"
 })
 public class ChangeItem {
 
@@ -33,6 +34,15 @@ public class ChangeItem {
     @JsonProperty("name")
     private String name;
     /**
+     * path
+     * <p>
+     * absolute path of an object.
+     * 
+     */
+    @JsonProperty("path")
+    @JsonPropertyDescription("absolute path of an object.")
+    private String path;
+    /**
      * configuration types
      * <p>
      * 
@@ -40,8 +50,6 @@ public class ChangeItem {
      */
     @JsonProperty("objectType")
     private ConfigurationType objectType;
-    @JsonProperty("hasDependencies")
-    private Boolean hasDependencies = false;
 
     /**
      * string without < and >
@@ -66,6 +74,28 @@ public class ChangeItem {
     }
 
     /**
+     * path
+     * <p>
+     * absolute path of an object.
+     * 
+     */
+    @JsonProperty("path")
+    public String getPath() {
+        return path;
+    }
+
+    /**
+     * path
+     * <p>
+     * absolute path of an object.
+     * 
+     */
+    @JsonProperty("path")
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    /**
      * configuration types
      * <p>
      * 
@@ -87,24 +117,18 @@ public class ChangeItem {
         this.objectType = objectType;
     }
 
-    @JsonProperty("hasDependencies")
-    public Boolean getHasDependencies() {
-        return hasDependencies;
-    }
-
-    @JsonProperty("hasDependencies")
-    public void setHasDependencies(Boolean hasDependencies) {
-        this.hasDependencies = hasDependencies;
+    public void setObjectType(Integer type) {
+        this.objectType = ConfigurationType.fromValue(type);
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("name", name).append("objectType", objectType).append("hasDependencies", hasDependencies).toString();
+        return new ToStringBuilder(this).append("name", name).append("path", path).append("objectType", objectType).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(name).append(hasDependencies).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(name).append(path).append(objectType).toHashCode();
     }
 
     @Override
@@ -116,7 +140,7 @@ public class ChangeItem {
             return false;
         }
         ChangeItem rhs = ((ChangeItem) other);
-        return new EqualsBuilder().append(name, rhs.name).append(hasDependencies, rhs.hasDependencies).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(name, rhs.name).append(path, rhs.path).append(objectType, rhs.objectType).isEquals();
     }
 
 }

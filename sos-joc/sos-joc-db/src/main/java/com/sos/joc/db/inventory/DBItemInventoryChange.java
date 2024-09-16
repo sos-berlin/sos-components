@@ -2,22 +2,30 @@ package com.sos.joc.db.inventory;
 
 import java.util.Date;
 
+import org.hibernate.annotations.Proxy;
+
+import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
+@SuppressWarnings("deprecation")
+@Entity
 @Table(name = DBLayer.TABLE_INV_CHANGES, uniqueConstraints = {@UniqueConstraint(columnNames = { "[NAME]" }) })
+@Proxy(lazy = false)
 public class DBItemInventoryChange extends DBItem {
 
     private static final long serialVersionUID = 2550793592142097849L;
 
     @Id
     @Column(name = "[ID]", nullable = false)
-    private Long invId;
+    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_INV_CHANGES_SEQUENCE)
+    private Long id;
     
     @Column(name = "[NAME]", nullable = false)
     private String name;
@@ -44,11 +52,11 @@ public class DBItemInventoryChange extends DBItem {
     private String publishedBy;
     
     
-    public Long getInvId() {
-        return invId;
+    public Long getId() {
+        return id;
     }
-    public void setInvId(Long invId) {
-        this.invId = invId;
+    public void setId(Long invId) {
+        this.id = invId;
     }
     
     public String getName() {

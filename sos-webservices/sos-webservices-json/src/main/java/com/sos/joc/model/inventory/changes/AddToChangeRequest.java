@@ -6,7 +6,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.inventory.changes.common.Change;
+import com.sos.joc.model.inventory.changes.common.ChangeIdentifier;
 import com.sos.joc.model.inventory.changes.common.ChangeItem;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -34,7 +34,7 @@ public class AddToChangeRequest {
      * 
      */
     @JsonProperty("change")
-    private Change change;
+    private ChangeIdentifier change;
     /**
      * 
      * (Required)
@@ -51,7 +51,7 @@ public class AddToChangeRequest {
      * 
      */
     @JsonProperty("change")
-    public Change getChange() {
+    public ChangeIdentifier getChange() {
         return change;
     }
 
@@ -63,7 +63,7 @@ public class AddToChangeRequest {
      * 
      */
     @JsonProperty("change")
-    public void setChange(Change change) {
+    public void setChange(ChangeIdentifier change) {
         this.change = change;
     }
 

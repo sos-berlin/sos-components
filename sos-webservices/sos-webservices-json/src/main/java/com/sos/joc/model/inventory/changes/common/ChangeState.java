@@ -28,7 +28,7 @@ public enum ChangeState {
     public Integer value() {
         return this.value;
     }
-    
+
     @JsonCreator
     public static ChangeState fromValue(Integer value) {
         ChangeState constant = CONSTANTS.get(value);
