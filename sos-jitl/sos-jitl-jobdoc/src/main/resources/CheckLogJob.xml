@@ -42,54 +42,65 @@
 						The regular expression is applied to the log.
                     </p>
                     <p>
-Exampe 1: get lines with errors						
-pattern = ".*error.*"
-log = "One line with error" + "\r\n" + "Line without the word" + "\r\n" + "And one line with error in the middle";
-
+<b>Exampe 1: get lines with errors</b>
+<ul>						
+<li>pattern = ".*error.*"</li>
+<li>log = "One line with error" + "\r\n" + "Line without the word" + "\r\n" + "And one line with error in the middle";</li>
+</ul>
 ==> Result: 
-js7CheckLogMatches: One line with error|And one line with error in the middle
-js7CheckLogMatchedGroups:
-js7CheckLogMatchCount: 2
-js7CheckLogGroupCount: 0
-js7CheckLogGroupsMatchesCount:0
+<ul>
+<li>js7CheckLogMatches: One line with error|And one line with error in the middle</li>
+<li>js7CheckLogMatchedGroups:</li>
+<li>js7CheckLogMatchCount: 2</li>
+<li>js7CheckLogGroupCount: 0</li>
+<li>js7CheckLogGroupsMatchesCount: 0</li>
+</ul>
 
-Exampe 2: get event ids with event###						
-pattern = "event:\\d{3}";
-log = "The first line with event:1234" + "\r\n" + "Line without event" + "\r\n"
-                + "And one line with event:456 and event:555 in the middle";
+<b>Exampe 2: get event ids with event###</b>						
+<ul>
+<li>pattern = "event:\\d{3}";</li>
+<li>log = "The first line with event:1234" + "\r\n" + "Line without event" + "\r\n"
+                + "And one line with event:456 and event:555 in the middle";</li>
+</ul>                
 
 ==> Result:
-js7CheckLogMatches: event:123|event:456|event:555
-js7CheckLogMatchedGroups:
-js7CheckLogMatchCount: 3
-js7CheckLogGroupCount: 0
-js7CheckLogGroupsMatchesCount:0
+<ul>
+<li>js7CheckLogMatches: event:123|event:456|event:555</li>
+<li>js7CheckLogMatchedGroups:</li>
+<li>js7CheckLogMatchCount: 3</li>
+<li>js7CheckLogGroupCount: 0</li>
+<li>js7CheckLogGroupsMatchesCount:0</li>
+</ul>
 
-
-Exampe 3: Get all dates						
-pattern = "\\d{1,2}.\\d{1,2}.\\d{4}";
-log = "1.2.2002: erste Zeile" + "\r\n" +  "04.0.1888: Zweite Zeile"  + "\r\n" +  "22.11.2001: Dritte Zeile";
+<b>Exampe 3: Get all dates</b>						
+<ul>
+<li>pattern = "\\d{1,2}.\\d{1,2}.\\d{4}";</li>
+<li>log = "1.2.2002: erste Zeile" + "\r\n" +  "04.0.1888: Zweite Zeile"  + "\r\n" +  "22.11.2001: Dritte Zeile";</li>
+</ul>
  
 ==> Result:
-checkLogMatchedGroups:
-js7CheckLogMatches: 1.1.2021|22.05.1996|1.04.1888
-js7CheckLogMatchedGroups:
-js7CheckLogMatchCount: 3
-js7CheckLogGroupCount: 0
-js7CheckLogGroupsMatchesCount:0
+<ul>
+<li>js7CheckLogMatchedGroups:</li>
+<li>js7CheckLogMatches: 1.1.2021|22.05.1996|1.04.1888</li>
+<li>js7CheckLogMatchedGroups:</li>
+<li>js7CheckLogMatchCount: 3</li>
+<li>js7CheckLogGroupCount: 0</li>
+<li>js7CheckLogGroupsMatchesCount:0</li>
+</ul>
 
-
-Example 4:
-pattern = "(\\d{1,2}.\\d{1,2}.\\d{4}).(.*)$";
-log = "1.2.2002: erste Zeile" + "\r\n" +  "04.0.1888: Zweite Zeile"  + "\r\n" +  "22.11.2001: Dritte Zeile";
- 
+<b>Example 4:</b>
+<ul>
+<li>pattern = "(\\d{1,2}.\\d{1,2}.\\d{4}).(.*)$";</li>
+<li>log = "1.2.2002: erste Zeile" + "\r\n" +  "04.0.1888: Zweite Zeile"  + "\r\n" +  "22.11.2001: Dritte Zeile";</li>
+</ul> 
 ==> Result:
-js7CheckLogMatches: 1.2.2002: erste Zeile|04.0.1888: Zweite Zeile|22.11.2001: Dritte Zeile
-js7CheckLogMatchedGroups: 1.2.2002|04.0.1888|22.11.2001
-js7CheckLogMatchCount: 3
-js7CheckLogGroupCount: 0
-js7CheckLogGroupsMatchesCount:6
-
+<ul>
+<li>js7CheckLogMatches: 1.2.2002: erste Zeile|04.0.1888: Zweite Zeile|22.11.2001: Dritte Zeile</li>
+<li>js7CheckLogMatchedGroups: 1.2.2002|04.0.1888|22.11.2001</li>
+<li>js7CheckLogMatchCount: 3</li>
+<li>js7CheckLogGroupCount: 0</li>
+<li>js7CheckLogGroupsMatchesCount:6</li>
+</ul>
 
   					</p>
                 </note>
