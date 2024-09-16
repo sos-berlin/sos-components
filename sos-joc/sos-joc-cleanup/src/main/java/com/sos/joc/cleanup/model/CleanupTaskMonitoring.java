@@ -50,6 +50,8 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
     @Override
     public JocClusterServiceTaskState cleanup(List<TaskDateTime> datetimes) throws Exception {
         try {
+            super.getPauseHandler().start(this);
+
             TaskDateTime monitoringDatetime = datetimes.get(0);
             TaskDateTime notificationDatetime = datetimes.get(1);
             JocClusterServiceTaskState state = null;

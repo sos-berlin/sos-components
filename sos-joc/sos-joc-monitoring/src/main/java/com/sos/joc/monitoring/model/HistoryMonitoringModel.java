@@ -40,6 +40,7 @@ import com.sos.joc.cluster.bean.history.HistoryOrderBean;
 import com.sos.joc.cluster.bean.history.HistoryOrderStepBean;
 import com.sos.joc.cluster.common.JocClusterUtil;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
+import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.db.joc.DBItemJocVariable;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
@@ -68,6 +69,10 @@ public class HistoryMonitoringModel implements Serializable {
     /** 1day */
     private static final int MAX_PAYLOAD_SECONDS = 24 * 60 * 60;
 
+    private static final int MAX_IN_PROCESS_IN_SECONDS = 60; // 1 minute
+
+    private static int MAX_PAUSE_IN_SECONDS = -1;
+
     private final SOSHibernateFactory factory;
     private final JocConfiguration jocConfiguration;
     private final OrderNotifierModel notifier;
@@ -81,6 +86,8 @@ public class HistoryMonitoringModel implements Serializable {
     private AtomicLong lastActivityEnd = new AtomicLong();
 
     private AtomicBoolean closed = new AtomicBoolean();
+    private AtomicBoolean pause = new AtomicBoolean();
+    private AtomicBoolean inProcess = new AtomicBoolean();
 
     private boolean tmpLogging = false;
     // TODO ? commit after n db operations
@@ -157,6 +164,58 @@ public class HistoryMonitoringModel implements Serializable {
         }
     }
 
+    // from another thread
+    public void startPause(String caller, int pauseDurationInSeconds) {
+        if (!closed.get()) {
+            MAX_PAUSE_IN_SECONDS = pauseDurationInSeconds + 10;
+            pause.set(true);
+            // 1) write to e.g. cleanup log file
+            String msg = "[" + MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY + "][called from " + caller + "][startPause]for "
+                    + pauseDurationInSeconds + "s...";
+            LOGGER.info(msg);
+            // 2) write to history log file
+            JocClusterServiceLogger.setLogger(MonitorService.MAIN_SERVICE_IDENTIFIER);
+            LOGGER.info(msg);
+            JocClusterServiceLogger.removeLogger(MonitorService.MAIN_SERVICE_IDENTIFIER);
+
+            waitForNotInProcess();
+        }
+    }
+
+    // from another thread
+    public void stopPause(String caller) {
+        if (pause.get()) {
+            pause.set(false);
+            // 1) write to e.g. cleanup log file
+            String msg = "[" + MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY + "][called from " + caller + "][stopPause]...";
+            LOGGER.info(msg);
+
+            // 2) write to history log file
+            JocClusterServiceLogger.setLogger(MonitorService.MAIN_SERVICE_IDENTIFIER);
+            LOGGER.info(msg);
+            JocClusterServiceLogger.removeLogger(MonitorService.MAIN_SERVICE_IDENTIFIER);
+        }
+    }
+
+    // from another thread
+    private void waitForNotInProcess() {
+        int counter = 0;
+        x: while (inProcess.get() && !closed.get()) {
+            try {
+                TimeUnit.SECONDS.sleep(1);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break x;
+            }
+            counter++;
+            if (counter >= MAX_IN_PROCESS_IN_SECONDS) {
+                inProcess.set(false);
+                LOGGER.info("[" + MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY + "][waitForNotInProcess][stopped]MAX_IN_PROCESS_IN_SECONDS="
+                        + MAX_IN_PROCESS_IN_SECONDS + " reached");
+            }
+        }
+    }
+
     private void schedule(ThreadGroup threadGroup) {
         this.threadPool = Executors.newScheduledThreadPool(THREAD_POOL_CORE_POOL_SIZE, new JocClusterThreadFactory(threadGroup,
                 MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY + "-sh"));
@@ -164,6 +223,7 @@ public class HistoryMonitoringModel implements Serializable {
 
             private AtomicLong currentEventId = new AtomicLong();
             private AtomicLong lastStart = new AtomicLong();
+            private AtomicLong pauseCounter = new AtomicLong();
 
             private Long calculateEventId(Long eventId, long lastDuration) {
                 if (eventId == null) {// no new events
@@ -192,15 +252,27 @@ public class HistoryMonitoringModel implements Serializable {
                     boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
                     if (!closed.get()) {
-                        ToNotify toNotifyPayloads = handlePayloads(isDebugEnabled);
-                        ToNotify toNotifyExtraStepsWarnings = handleLongerThan(calculateEventId(toNotifyPayloads.getLastEventId(), lastDuration));
-                        toNotifyExtraStepsWarnings.getSteps().addAll(distinct(toNotifyPayloads.getWarningSteps()));
-                        if (!closed.get()) {
-                            notifier.notify(toNotifyPayloads, toNotifyExtraStepsWarnings);
+                        if (pause.get()) {
+                            pauseCounter.set(pauseCounter.get() + 1);
+                            if (MAX_PAUSE_IN_SECONDS > 0 && pauseCounter.get() >= MAX_PAUSE_IN_SECONDS) {
+                                pause.set(false);
+                                LOGGER.info("[" + MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY + "][doPauseIfSet][stopped]MAX_PAUSE_IN_SECONDS="
+                                        + MAX_PAUSE_IN_SECONDS + " reached");
+                            }
+                        } else {
+                            pauseCounter.set(0L);
+                            inProcess.set(true);
+                            ToNotify toNotifyPayloads = handlePayloads(isDebugEnabled);
+                            ToNotify toNotifyExtraStepsWarnings = handleLongerThan(calculateEventId(toNotifyPayloads.getLastEventId(), lastDuration));
+                            toNotifyExtraStepsWarnings.getSteps().addAll(distinct(toNotifyPayloads.getWarningSteps()));
+                            if (!closed.get()) {
+                                notifier.notify(toNotifyPayloads, toNotifyExtraStepsWarnings);
+                            }
                         }
                     }
 
                 } catch (Throwable e) {
+                    inProcess.set(false);
                     MonitorService.setLogger();
                     LOGGER.error(e.toString(), e);
                 }

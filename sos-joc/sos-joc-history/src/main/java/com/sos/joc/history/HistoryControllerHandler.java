@@ -2,7 +2,6 @@ package com.sos.joc.history;
 
 import java.nio.file.Path;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -125,7 +124,9 @@ public class HistoryControllerHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryControllerHandler.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
     private static final String TORN_PROBLEM_CODE_REGEXP = "UnknownEventId|SnapshotForUnknownEventId";
-    private static final int MAX_PAUSE_IN_SECONDS = 10 * 60; // 10 minutes
+    private static final int MAX_IN_PROCESS_IN_SECONDS = 60; // 1 minute
+
+    private static int MAX_PAUSE_IN_SECONDS = -1;
 
     private final SOSHibernateFactory factory;
     private final ControllerConfiguration controllerConfig;
@@ -140,6 +141,7 @@ public class HistoryControllerHandler {
 
     private AtomicBoolean closed = new AtomicBoolean(false);
     private AtomicBoolean pause = new AtomicBoolean();
+    private AtomicBoolean inProcess = new AtomicBoolean();
 
     private String identifier;
     private long releaseEventsInterval;// seconds
@@ -372,12 +374,15 @@ public class HistoryControllerHandler {
                                     doPauseIfSet();
 
                                     lastActivityStart.set(new Date().getTime());
+                                    inProcess.set(true);
                                     eventId.set(model.process(list));
+                                    inProcess.set(false);
                                     // list.clear();
                                     releaseEvents(eventId.get());
                                     lastActivityEnd.set(new Date().getTime());
                                     errorCounter = 0;
                                 } catch (Throwable e) {
+                                    inProcess.set(false);
                                     if (SOSHibernate.isConnectException(e)) {
                                         throw new HistoryProcessingDatabaseConnectException(controllerId, e);
                                     }
@@ -900,7 +905,7 @@ public class HistoryControllerHandler {
             lastActivityStart.set(new Date().getTime());
             waitFor(1);
             counter++;
-            if (counter >= MAX_PAUSE_IN_SECONDS) {
+            if (MAX_PAUSE_IN_SECONDS > 0 && counter >= MAX_PAUSE_IN_SECONDS) {
                 pause.set(false);
                 LOGGER.info("[" + serviceIdentifier + "][doPauseIfSet][stopped]MAX_PAUSE_IN_SECONDS=" + MAX_PAUSE_IN_SECONDS + " reached");
             }
@@ -908,16 +913,33 @@ public class HistoryControllerHandler {
     }
 
     // from another thread
-    public void startPause(String caller) {
+    public void startPause(String caller, int pauseDurationInSeconds) {
         if (!closed.get()) {
+            MAX_PAUSE_IN_SECONDS = pauseDurationInSeconds + 10;
             pause.set(true);
             // 1) write to e.g. cleanup log file
-            String msg = "[" + serviceIdentifier + "][called from " + caller + "][startPause]...";
+            String msg = "[" + serviceIdentifier + "][called from " + caller + "][startPause]for " + pauseDurationInSeconds + "s...";
             LOGGER.info(msg);
             // 2) write to history log file
             JocClusterServiceLogger.setLogger(serviceIdentifier);
             LOGGER.info(msg);
             JocClusterServiceLogger.removeLogger(serviceIdentifier);
+
+            waitForNotInProcess();
+        }
+    }
+
+    // from another thread
+    private void waitForNotInProcess() {
+        int counter = 0;
+        while (inProcess.get() && !closed.get()) {
+            waitFor(1);
+            counter++;
+            if (counter >= MAX_IN_PROCESS_IN_SECONDS) {
+                inProcess.set(false);
+                LOGGER.info("[" + serviceIdentifier + "][waitForNotInProcess][stopped]MAX_IN_PROCESS_IN_SECONDS=" + MAX_IN_PROCESS_IN_SECONDS
+                        + " reached");
+            }
         }
     }
 

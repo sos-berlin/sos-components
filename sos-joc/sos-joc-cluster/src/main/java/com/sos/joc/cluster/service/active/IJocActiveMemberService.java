@@ -24,7 +24,7 @@ public interface IJocActiveMemberService {
     public void runNow(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection configuration);
 
     // signal to pause work and wait for the stopPause signal
-    public void startPause(String caller);
+    public void startPause(String caller, int pauseDurationInSeconds);
 
     // signal stopPause
     public void stopPause(String caller);

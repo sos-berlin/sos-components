@@ -68,7 +68,7 @@ public class CleanupServiceSchedule {
         task.setStartMode(mode);
         setLogPrefix(mode);
         try {
-            LOGGER.info(logPrefix + "[start]runNow=" + runNow);
+            LOGGER.info(String.format("%s[runNow=%s]%s", logPrefix, runNow, getService().getConfig().toString()));
             long delay = runNow ? computeRunNowDelay() : computeNextDelay(mode);
             if (delay > 0) {
                 long timeout = computeTimeout();
@@ -101,25 +101,12 @@ public class CleanupServiceSchedule {
         task.setStartMode(mode);
         setLogPrefix(mode);
         try {
-            LOGGER.info(logPrefix + "runNow");
             closeTasksForRunNow();
         } catch (Throwable e) {
             LOGGER.info(logPrefix + "[runNow]" + e.toString(), e);
         } finally {
             service.setLastActivityEnd(new Date().getTime());
         }
-    }
-
-    private long computeRunNowDelay() {
-        ZonedDateTime now = service.getNow();
-        start = now.plusSeconds(5);
-        if (service.getConfig().getForceCleanup().force()) {
-            // TODO read timeout from settings
-            end = now.plusSeconds(DEFAULT_RUN_SERVICE_NOW_TIMEOUT);
-        } else {
-            end = now.plusSeconds(DEFAULT_RUN_SERVICE_NOW_TIMEOUT);
-        }
-        return now.until(start, ChronoUnit.NANOS);
     }
 
     private JocClusterAnswer schedule(long delay, long timeout) throws Exception {
@@ -131,6 +118,20 @@ public class CleanupServiceSchedule {
                 .getDuration(Duration.ofSeconds(timeout))));
         resultFuture = threadPool.schedule(task, delay, TimeUnit.NANOSECONDS);
         return resultFuture.get(timeout, TimeUnit.SECONDS);
+    }
+
+    private long computeRunNowDelay() {
+        uncompleted = null;
+        ZonedDateTime now = service.getNow();
+        start = now.plusSeconds(5);
+        if (service.getConfig().getForceCleanup().force()) {
+            // TODO read timeout from settings
+            end = now.plusSeconds(DEFAULT_RUN_SERVICE_NOW_TIMEOUT);
+        } else {
+            end = now.plusSeconds(DEFAULT_RUN_SERVICE_NOW_TIMEOUT);
+        }
+        firstStart = start;
+        return now.until(start, ChronoUnit.NANOS);
     }
 
     private long computeNextDelay(StartupMode mode) throws Exception {

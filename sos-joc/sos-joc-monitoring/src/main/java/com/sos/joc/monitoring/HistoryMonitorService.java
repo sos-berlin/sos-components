@@ -86,11 +86,17 @@ public class HistoryMonitorService extends AJocActiveMemberService {
     }
 
     @Override
-    public void startPause(String caller) {
+    public void startPause(String caller, int pauseDurationInSeconds) {
+        if (history != null) {
+            history.startPause(caller, pauseDurationInSeconds);
+        }
     }
 
     @Override
     public void stopPause(String caller) {
+        if (history != null) {
+            history.stopPause(caller);
+        }
     }
 
     @Override

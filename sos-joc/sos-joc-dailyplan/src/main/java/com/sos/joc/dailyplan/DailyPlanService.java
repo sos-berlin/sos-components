@@ -113,7 +113,7 @@ public class DailyPlanService extends AJocActiveMemberService {
     }
 
     @Override
-    public void startPause(String caller) {
+    public void startPause(String caller, int pauseDurationInSeconds) {
     }
 
     @Override

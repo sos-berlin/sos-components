@@ -57,15 +57,15 @@ public class CleanupPauseHandler {
                 CleanupService.setServiceLogger();
                 boolean run = true;
                 x: while (run) {
+                    if (isPaused.get()) {
+                        isPaused.set(false);
+                    }
                     if (task.isStopped()) {
                         run = false;
                         break x;
                     }
                     // 1) Stop service for duration
-                    if (isPaused.get()) {
-                        isPaused.set(false);
-                    }
-                    task.getService().startPause(CleanupService.IDENTIFIER);
+                    task.getService().startPause(CleanupService.IDENTIFIER, pauseConfig.duration);
                     CleanupService.setServiceLogger();
                     LOGGER.info("[" + task.getIdentifier() + "][pauseHandler]start cleanup...");
                     isPaused.set(false);
@@ -158,19 +158,19 @@ public class CleanupPauseHandler {
     public class PauseConfig {
 
         // in seconds
-        private final long duration;
-        private final long delay;
+        private final int duration;
+        private final int delay;
 
         private PauseConfig(long duration, long delay) {
-            this.duration = duration;
-            this.delay = delay;
+            this.duration = Long.valueOf(duration).intValue();
+            this.delay = Long.valueOf(delay).intValue();
         }
 
-        public long getDuration() {
+        public int getDuration() {
             return duration;
         }
 
-        public long getDelay() {
+        public int getDelay() {
             return delay;
         }
     }

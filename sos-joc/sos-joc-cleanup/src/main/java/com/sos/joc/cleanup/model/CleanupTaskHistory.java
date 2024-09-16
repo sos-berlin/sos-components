@@ -57,12 +57,13 @@ public class CleanupTaskHistory extends CleanupTaskModel {
 
     public CleanupTaskHistory(JocClusterHibernateFactory factory, IJocActiveMemberService service, int batchSize, ForceCleanup forceCleanup) {
         super(factory, service, batchSize, forceCleanup);
-        super.getPauseHandler().start(this);
     }
 
     @Override
     public JocClusterServiceTaskState cleanup(List<TaskDateTime> datetimes) throws Exception {
         try {
+            super.getPauseHandler().start(this);
+
             TaskDateTime orderDatetime = datetimes.get(0);
             TaskDateTime logsDatetime = datetimes.get(1);
             JocClusterServiceTaskState state = null;

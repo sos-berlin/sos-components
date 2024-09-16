@@ -61,7 +61,7 @@ public class CleanupService extends AJocActiveMemberService {
             setConfig((ConfigurationGlobalsCleanup) configuration);
 
             LOGGER.info(String.format("[%s][%s]start...", getIdentifier(), mode));
-            LOGGER.info(String.format("[%s][%s]%s", getIdentifier(), mode, config.toString()));
+            // LOGGER.info(String.format("[%s][%s]%s", getIdentifier(), mode, config.toString()));
             lastActivityEnd.set(new Date().getTime());
             if (config.getPeriod() == null || config.getPeriod().getWeekDays().size() == 0) {
                 LOGGER.info(String.format("[%s][%s][stop]missing \"%s\" parameter", getIdentifier(), mode,
@@ -158,7 +158,7 @@ public class CleanupService extends AJocActiveMemberService {
     }
 
     @Override
-    public void startPause(String caller) {
+    public void startPause(String caller, int pauseDurationInSeconds) {
     }
 
     @Override
@@ -216,7 +216,7 @@ public class CleanupService extends AJocActiveMemberService {
     }
 
     public static ZonedDateTime getZonedDateTimeUTCMinusMinutes(ZonedDateTime datetime, long minutes) {
-        return datetime.withZoneSameInstant(ZoneId.of("UTC")).minusMinutes(minutes);
+        return datetime.withZoneSameInstant(ZoneId.of("Etc/UTC")).minusMinutes(minutes);
     }
 
     public static String toString(Date date) {
