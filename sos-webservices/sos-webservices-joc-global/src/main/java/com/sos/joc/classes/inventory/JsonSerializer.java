@@ -209,7 +209,7 @@ public class JsonSerializer {
                     job.setSkipIfNoAdmissionStartForOrderDay(defaultToNull(job.getSkipIfNoAdmissionStartForOrderDay(), Boolean.FALSE));
                     job.setIsNotRestartable(defaultToNull(job.getIsNotRestartable(), Boolean.FALSE));
                     if (job.getSubagentBundleIdExpr() != null && !job.getSubagentBundleIdExpr().isEmpty()) {
-                        job.setSubagentBundleIdExpr(null); 
+                        job.setSubagentBundleId(null); 
                     }
                 });
             }
