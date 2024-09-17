@@ -36,6 +36,10 @@ public class ChangeUtil {
                 }
             }
         }
+        if(change.getConfigurations().isEmpty()) {
+            // if no configurations are present set to null to remove empty property from response
+            change.setConfigurations(null);
+        }
         return change;
     }
     
