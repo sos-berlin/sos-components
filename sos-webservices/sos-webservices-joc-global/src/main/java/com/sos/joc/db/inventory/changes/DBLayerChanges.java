@@ -15,6 +15,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryChange;
+import com.sos.joc.db.inventory.DBItemInventoryChangesMapping;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.inventory.changes.ShowChangesFilter;
@@ -178,4 +179,12 @@ public class DBLayerChanges extends DBLayer {
         return results;
     }
     
+    public DBItemInventoryChangesMapping getMapping(Long changeId, Long inventoryId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CHANGES_MAPPINGS);
+        hql.append(" where changeId = :changeId and invId = : inventoryId");
+        Query<DBItemInventoryChangesMapping> query = getSession().createQuery(hql.toString());
+        query.setParameter("changeId", changeId);
+        query.setParameter("inventoryId", inventoryId);
+        return getSession().getSingleResult(query);
+    }
 }

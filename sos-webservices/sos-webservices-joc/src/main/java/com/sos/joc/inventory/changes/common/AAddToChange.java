@@ -3,6 +3,7 @@ package com.sos.joc.inventory.changes.common;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -17,7 +18,6 @@ import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.changes.DBLayerChanges;
 import com.sos.joc.model.inventory.changes.AddToChangeRequest;
 import com.sos.joc.model.inventory.changes.common.ChangeItem;
-import com.sos.joc.model.inventory.common.ConfigurationType;
 
 public abstract class AAddToChange extends JOCResourceImpl {
 
@@ -42,9 +42,14 @@ public abstract class AAddToChange extends JOCResourceImpl {
         DBItemInventoryChange change = dbLayer.getChange(request.getChange().getName());
         List<ChangeItem> itemsToAdd = request.getAdd();
         List<DBItemInventoryChangesMapping> mappings = itemsToAdd.stream()
-                .map(item -> convert(item, change.getId(), session)).collect(Collectors.toList());
+                .map(item -> convert(item, change.getId(), session)).filter(Objects::nonNull).collect(Collectors.toList());
         for(DBItemInventoryChangesMapping mapping : mappings) {
-            session.save(mapping);
+            DBItemInventoryChangesMapping exisitingMapping = dbLayer.getMapping(mapping.getChangeId(), mapping.getInvId());
+            if(exisitingMapping != null) {
+                session.update(exisitingMapping);
+            } else {
+                session.save(mapping);
+            }
         }
     }
     
@@ -57,6 +62,10 @@ public abstract class AAddToChange extends JOCResourceImpl {
             mapping.setInvId(inventoryItems.get(0).getId());
             mapping.setType(changeItem.getObjectType());
         }
-        return mapping;
+        if(mapping.getInvId() == null || mapping.getType() == null) {
+            return null;
+        } else {
+            return mapping;
+        }
     }
 }
