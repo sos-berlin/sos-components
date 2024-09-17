@@ -2,19 +2,21 @@ package com.sos.joc.inventory.impl;
 
 import java.util.Date;
 import java.util.Objects;
-
-import jakarta.ws.rs.Path;
+import java.util.Optional;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IReleasablesRecall;
 import com.sos.joc.model.inventory.release.ReleasableRecallFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("inventory")
 public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasablesRecall {
@@ -30,6 +32,12 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
             ReleasableRecallFilter recallFilter = Globals.objectMapper.readValue(filter, ReleasableRecallFilter.class);
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
+            Optional<JocBadRequestException> optException = recallFilter.getReleasables().stream().filter(released -> !JocInventory.isReleasable(
+                    released.getObjectType())).findAny().map(r -> new JocBadRequestException(String.format(
+                            "The object '%s' of type '%s' is not a releasable object.", r.getPath(), r.getObjectType().value().toLowerCase())));
+            if (optException.isPresent()) {
+                throw optException.get();
+            }
             recallFilter.getReleasables().stream().map(released -> dbLayer.getReleasedConfiguration(JocInventory.pathToName(released.getPath()),
                     released.getObjectType())).filter(Objects::nonNull).map(dbItemReleased -> {
                         dbLayer.recallReleasedConfiguration(dbItemReleased);

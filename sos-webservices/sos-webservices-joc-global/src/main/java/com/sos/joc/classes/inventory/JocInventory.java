@@ -534,6 +534,9 @@ public class JocInventory {
         if (!path.contains("/")) {
             return path;
         }
+        if (ROOT_FOLDER.equals(path)) {
+            return "";
+        }
         return Paths.get(path).getFileName().toString();
     }
 

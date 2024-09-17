@@ -36,6 +36,7 @@ public class HistoryMapper {
         history.setSequence(getSequence(item));
         history.setArguments(getVariables(item.getStartVariables()));
         history.setTags(null);
+        history.setChildren(null);
         return history;
     }
 
