@@ -25,7 +25,7 @@ public abstract class AShowChange extends JOCResourceImpl {
             
             List<DBItemInventoryChange> changes = dbLayer.getChanges(filter);
             
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(getResponse(changes)));
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(getResponse(changes, filter.getDetails(), session)));
         } catch (Throwable e) {
             Globals.rollback(session);
             throw e;
@@ -34,9 +34,13 @@ public abstract class AShowChange extends JOCResourceImpl {
         }
     }
     
-    private ShowChangesResponse getResponse(List<DBItemInventoryChange> changes) {
+    private ShowChangesResponse getResponse(List<DBItemInventoryChange> changes, Boolean withDetails, SOSHibernateSession session) {
         ShowChangesResponse response = new ShowChangesResponse();
-        response.setChanges(changes.stream().map(item -> ChangeUtil.convert(item)).collect(Collectors.toList()));
+        if(withDetails) {
+            response.setChanges(changes.stream().map(item -> ChangeUtil.convert(item, withDetails, session)).collect(Collectors.toList()));
+        } else {
+            response.setChanges(changes.stream().map(item -> ChangeUtil.convert(item)).collect(Collectors.toList()));
+        }
         response.setDeliveryDate(Date.from(Instant.now()));
         return response;
     }

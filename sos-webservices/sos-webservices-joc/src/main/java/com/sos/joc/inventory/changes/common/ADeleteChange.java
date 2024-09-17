@@ -1,5 +1,8 @@
 package com.sos.joc.inventory.changes.common;
 
+import java.time.Instant;
+import java.util.Date;
+
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -12,7 +15,8 @@ public abstract class ADeleteChange extends JOCResourceImpl {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(apiCall);
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(apiCall));
+
+            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (Throwable e) {
             Globals.rollback(session);
             throw e;
