@@ -65,6 +65,8 @@ public class ConverterStandaloneJobs {
     private WorkflowResult convertStandaloneWorkflow(JS7ConverterResult result, JobCMD jilJob) {
         String runTimeTimezone = jilJob.getRunTime().getTimezone().getValue();
 
+        converter.getAnalyzer().getConditionAnalyzer().handleStandaloneJobConditions(jilJob);
+
         // WORKFLOW
         Workflow w = new Workflow();
         w.setTitle(JS7ConverterHelper.getJS7InventoryObjectTitle(jilJob.getDescription().getValue()));
