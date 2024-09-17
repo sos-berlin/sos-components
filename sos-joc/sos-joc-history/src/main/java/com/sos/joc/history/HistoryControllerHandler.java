@@ -918,7 +918,7 @@ public class HistoryControllerHandler {
             MAX_PAUSE_IN_SECONDS = pauseDurationInSeconds + 10;
             pause.set(true);
             // 1) write to e.g. cleanup log file
-            String msg = "[" + serviceIdentifier + "][called from " + caller + "][startPause]for " + pauseDurationInSeconds + "s...";
+            String msg = "[" + serviceIdentifier + "][called from " + caller + "][startPause]maximum for " + pauseDurationInSeconds + "s...";
             LOGGER.info(msg);
             // 2) write to history log file
             JocClusterServiceLogger.setLogger(serviceIdentifier);
@@ -937,8 +937,10 @@ public class HistoryControllerHandler {
             counter++;
             if (counter >= MAX_IN_PROCESS_IN_SECONDS) {
                 inProcess.set(false);
+                JocClusterServiceLogger.setLogger(serviceIdentifier);
                 LOGGER.info("[" + serviceIdentifier + "][waitForNotInProcess][stopped]MAX_IN_PROCESS_IN_SECONDS=" + MAX_IN_PROCESS_IN_SECONDS
                         + " reached");
+                JocClusterServiceLogger.removeLogger(serviceIdentifier);
             }
         }
     }

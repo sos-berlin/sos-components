@@ -170,7 +170,7 @@ public class HistoryMonitoringModel implements Serializable {
             MAX_PAUSE_IN_SECONDS = pauseDurationInSeconds + 10;
             pause.set(true);
             // 1) write to e.g. cleanup log file
-            String msg = "[" + MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY + "][called from " + caller + "][startPause]for "
+            String msg = "[" + MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY + "][called from " + caller + "][startPause]maximum for "
                     + pauseDurationInSeconds + "s...";
             LOGGER.info(msg);
             // 2) write to history log file
@@ -210,8 +210,10 @@ public class HistoryMonitoringModel implements Serializable {
             counter++;
             if (counter >= MAX_IN_PROCESS_IN_SECONDS) {
                 inProcess.set(false);
+                JocClusterServiceLogger.setLogger(MonitorService.MAIN_SERVICE_IDENTIFIER);
                 LOGGER.info("[" + MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY + "][waitForNotInProcess][stopped]MAX_IN_PROCESS_IN_SECONDS="
                         + MAX_IN_PROCESS_IN_SECONDS + " reached");
+                JocClusterServiceLogger.removeLogger(MonitorService.MAIN_SERVICE_IDENTIFIER);
             }
         }
     }
