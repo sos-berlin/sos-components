@@ -189,6 +189,18 @@ public class DBLayerChanges extends DBLayer {
         return results;
     }
     
+    public List<DBItemInventoryChangesMapping> getMappings(Long changeId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_INV_CHANGES_MAPPINGS);
+        hql.append(" where changeId = :changeId");
+        Query<DBItemInventoryChangesMapping> query = getSession().createQuery(hql.toString());
+        query.setParameter("changeId", changeId);
+        List<DBItemInventoryChangesMapping> results = getSession().getResultList(query);
+        if(results == null) {
+            results = Collections.emptyList();
+        }
+        return results;
+    }
+    
     public DBItemInventoryChangesMapping getMapping(Long changeId, ChangeItem changeItem) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_INV_CHANGES_MAPPINGS).append(" as mapping ");
         hql.append(" where mapping.changeId = :changeId ");
