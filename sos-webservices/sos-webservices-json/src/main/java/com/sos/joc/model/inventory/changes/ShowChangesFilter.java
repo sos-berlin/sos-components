@@ -27,7 +27,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "lastPublishedBy",
     "created",
     "modified",
-    "closed"
+    "closed",
+    "details"
 })
 public class ShowChangesFilter {
 
@@ -75,6 +76,8 @@ public class ShowChangesFilter {
      */
     @JsonProperty("closed")
     private Timespan closed;
+    @JsonProperty("details")
+    private Boolean details = false;
 
     @JsonProperty("names")
     public List<String> getNames() {
@@ -206,14 +209,24 @@ public class ShowChangesFilter {
         this.closed = closed;
     }
 
+    @JsonProperty("details")
+    public Boolean getDetails() {
+        return details;
+    }
+
+    @JsonProperty("details")
+    public void setDetails(Boolean details) {
+        this.details = details;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("names", names).append("states", states).append("owner", owner).append("lastPublishedBy", lastPublishedBy).append("created", created).append("modified", modified).append("closed", closed).toString();
+        return new ToStringBuilder(this).append("names", names).append("states", states).append("owner", owner).append("lastPublishedBy", lastPublishedBy).append("created", created).append("modified", modified).append("closed", closed).append("details", details).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(owner).append(names).append(created).append(modified).append(closed).append(lastPublishedBy).append(states).toHashCode();
+        return new HashCodeBuilder().append(owner).append(names).append(created).append(modified).append(closed).append(details).append(lastPublishedBy).append(states).toHashCode();
     }
 
     @Override
@@ -225,7 +238,7 @@ public class ShowChangesFilter {
             return false;
         }
         ShowChangesFilter rhs = ((ShowChangesFilter) other);
-        return new EqualsBuilder().append(owner, rhs.owner).append(names, rhs.names).append(created, rhs.created).append(modified, rhs.modified).append(closed, rhs.closed).append(lastPublishedBy, rhs.lastPublishedBy).append(states, rhs.states).isEquals();
+        return new EqualsBuilder().append(owner, rhs.owner).append(names, rhs.names).append(created, rhs.created).append(modified, rhs.modified).append(closed, rhs.closed).append(details, rhs.details).append(lastPublishedBy, rhs.lastPublishedBy).append(states, rhs.states).isEquals();
     }
 
 }

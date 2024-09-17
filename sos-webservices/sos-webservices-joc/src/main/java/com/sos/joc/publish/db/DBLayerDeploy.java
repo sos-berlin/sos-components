@@ -14,9 +14,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.persistence.NoResultException;
-import jakarta.persistence.TemporalType;
-
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,6 +59,9 @@ import com.sos.joc.model.publish.repository.CopyToFilter;
 import com.sos.joc.model.sign.SignaturePath;
 import com.sos.joc.publish.mapper.FilterAttributesMapper;
 import com.sos.joc.publish.util.PublishUtils;
+
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.TemporalType;
 
 public class DBLayerDeploy {
 
@@ -631,7 +631,6 @@ public class DBLayerDeploy {
                 query.setParameter("folder", folder);
             }
             if (deployablesOnly) {
-
                 query.setParameterList("types", JocInventory.DEPLOYABLE_OBJECTS.stream().map(item -> item.intValue()).collect(Collectors.toList()));
             } else if (releasablesOnly) {
                 query.setParameterList("types", JocInventory.RELEASABLE_OBJECTS.stream().map(item -> item.intValue()).collect(Collectors.toList()));
@@ -2185,32 +2184,32 @@ public class DBLayerDeploy {
         }
     }
 
-    private boolean checkAgentNamePresent(String agentName) {
-        try {
-            StringBuilder instanceHql = new StringBuilder("select agentName from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
-            instanceHql.append(" where agentName = :agentName");
-            Query<String> instanceQuery = getSession().createQuery(instanceHql.toString());
-            instanceQuery.setParameter("agentName", agentName);
-            List<String> instanceResults = instanceQuery.getResultList();
-            if (instanceResults != null && !instanceResults.isEmpty()) {
-                return true;
-            } else {
-                StringBuilder aliasHql = new StringBuilder("select agentName from ").append(DBLayer.DBITEM_INV_AGENT_NAMES);
-                aliasHql.append(" where agentName = :agentName");
-                Query<String> aliasQuery = getSession().createQuery(aliasHql.toString());
-                aliasQuery.setParameter("agentName", agentName);
-                List<String> aliasResults = aliasQuery.getResultList();
-                if (aliasResults != null && !aliasResults.isEmpty()) {
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-        } catch (SOSHibernateException e) {
-            throw new JocSosHibernateException(e);
-        }
-    }
-
+//    private boolean checkAgentNamePresent(String agentName) {
+//        try {
+//            StringBuilder instanceHql = new StringBuilder("select agentName from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
+//            instanceHql.append(" where agentName = :agentName");
+//            Query<String> instanceQuery = getSession().createQuery(instanceHql.toString());
+//            instanceQuery.setParameter("agentName", agentName);
+//            List<String> instanceResults = instanceQuery.getResultList();
+//            if (instanceResults != null && !instanceResults.isEmpty()) {
+//                return true;
+//            } else {
+//                StringBuilder aliasHql = new StringBuilder("select agentName from ").append(DBLayer.DBITEM_INV_AGENT_NAMES);
+//                aliasHql.append(" where agentName = :agentName");
+//                Query<String> aliasQuery = getSession().createQuery(aliasHql.toString());
+//                aliasQuery.setParameter("agentName", agentName);
+//                List<String> aliasResults = aliasQuery.getResultList();
+//                if (aliasResults != null && !aliasResults.isEmpty()) {
+//                    return true;
+//                } else {
+//                    return false;
+//                }
+//            }
+//        } catch (SOSHibernateException e) {
+//            throw new JocSosHibernateException(e);
+//        }
+//    }
+//
     public List<DBItemInventoryCertificate> getCaCertificates() {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CERTS);

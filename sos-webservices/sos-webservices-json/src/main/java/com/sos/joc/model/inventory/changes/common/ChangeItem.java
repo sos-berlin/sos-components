@@ -120,7 +120,13 @@ public class ChangeItem {
     public void setObjectType(Integer type) {
         this.objectType = ConfigurationType.fromValue(type);
     }
-
+    
+    public ChangeItem(String name, String path, Integer type) {
+        this.name = name;
+        this.path = path;
+        this.objectType = ConfigurationType.fromValue(type);
+    }
+    
     @Override
     public String toString() {
         return new ToStringBuilder(this).append("name", name).append("path", path).append("objectType", objectType).toString();

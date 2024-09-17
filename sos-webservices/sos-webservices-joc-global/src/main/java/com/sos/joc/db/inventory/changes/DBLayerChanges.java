@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.hibernate.query.Query;
@@ -16,11 +18,10 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryChange;
 import com.sos.joc.db.inventory.DBItemInventoryChangesMapping;
-import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.inventory.changes.ShowChangesFilter;
 import com.sos.joc.model.inventory.changes.common.ChangeItem;
-import com.sos.joc.model.publish.DeploymentState;
+import com.sos.joc.model.inventory.changes.common.ChangeState;
 
 public class DBLayerChanges extends DBLayer {
 
@@ -34,6 +35,10 @@ public class DBLayerChanges extends DBLayer {
     private static final String CLOSED_FROM_DATE = "closed >= :closedFrom";
     private static final String CLOSED_TO_DATE = "closed < :closedTo";
     private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerChanges.class);
+    private static final Set<ChangeState> ALL_CHANGE_STATES = Collections.unmodifiableSet(new HashSet<>(
+            Arrays.asList(ChangeState.OPEN, ChangeState.PUBLISHED, ChangeState.CLOSED)));
+    private static final Set<Integer> ALL_CHANGE_STATE_INT_VALUES = Collections.unmodifiableSet(new HashSet<>(
+            Arrays.asList(ChangeState.OPEN.value(), ChangeState.PUBLISHED.value(), ChangeState.CLOSED.value())));
 
     public DBLayerChanges(SOSHibernateSession session) {
         this.session = session;
@@ -129,7 +134,12 @@ public class DBLayerChanges extends DBLayer {
             }
         }
         if(filter.getStates() != null) {
-            query.setParameterList("states", filter.getStates().stream().map(item -> item.value()).collect(Collectors.toList()));
+            if(!filter.getStates().isEmpty()) {
+                query.setParameterList("states", filter.getStates().stream().map(item -> item.value()).collect(Collectors.toList()));
+            } else {
+                // if not set use all ChangeStates
+                query.setParameterList("states", ALL_CHANGE_STATE_INT_VALUES);
+            }
         }
         if(filter.getOwner() != null) {
             query.setParameter("owner", filter.getOwner());
@@ -164,7 +174,7 @@ public class DBLayerChanges extends DBLayer {
 
     public List<ChangeItem> getChangeItems(Long changeId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select new ").append(ChangeItem.class.getName());
-        hql.append("(id as name, path, objectType) from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append("(name, path, type) from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where id in ");
         hql.append("(");
         hql.append("  select map.invId from ").append(DBLayer.DBITEM_INV_CHANGES_MAPPINGS).append(" as map ");
@@ -177,6 +187,30 @@ public class DBLayerChanges extends DBLayer {
             results = Collections.emptyList();
         }
         return results;
+    }
+    
+    public List<DBItemInventoryChangesMapping> getMappings(Long changeId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_INV_CHANGES_MAPPINGS);
+        hql.append(" where changeId = :changeId");
+        Query<DBItemInventoryChangesMapping> query = getSession().createQuery(hql.toString());
+        query.setParameter("changeId", changeId);
+        List<DBItemInventoryChangesMapping> results = getSession().getResultList(query);
+        if(results == null) {
+            results = Collections.emptyList();
+        }
+        return results;
+    }
+    
+    public DBItemInventoryChangesMapping getMapping(Long changeId, ChangeItem changeItem) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_INV_CHANGES_MAPPINGS).append(" as mapping ");
+        hql.append(" where mapping.changeId = :changeId ");
+        hql.append(" and mapping.invId = (select cfg.id from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" as cfg ");
+        hql.append(" where cfg.name = :name and cfg.type = :type").append(")");
+        Query<DBItemInventoryChangesMapping> query = getSession().createQuery(hql.toString());
+        query.setParameter("changeId", changeId);
+        query.setParameter("name", changeItem.getName());
+        query.setParameter("type", changeItem.getObjectType().intValue());
+        return getSession().getSingleResult(query);
     }
     
     public DBItemInventoryChangesMapping getMapping(Long changeId, Long inventoryId) throws SOSHibernateException {
