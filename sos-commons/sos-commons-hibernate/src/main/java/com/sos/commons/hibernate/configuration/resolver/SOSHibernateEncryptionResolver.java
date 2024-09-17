@@ -15,7 +15,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.commons.util.SOSString;
 
-public class SOSHibernateEncryptionResolver implements ISOSHibernateConfigurationResolver {
+public class  implements ISOSHibernateConfigurationResolver {
 
 
     private String keystorePath;
@@ -164,6 +164,6 @@ public class SOSHibernateEncryptionResolver implements ISOSHibernateConfiguratio
     }
 
     private boolean hasEncryptedValue(String propertyValue) {
-        return propertyValue.startsWith(EncryptionUtils.ENCRYPTION_IDENTIFIER);
+        return (propertyValue != null && propertyValue.startsWith(EncryptionUtils.ENCRYPTION_IDENTIFIER));
     }
 }
