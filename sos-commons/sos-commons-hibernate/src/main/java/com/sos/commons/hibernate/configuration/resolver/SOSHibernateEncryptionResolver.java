@@ -15,7 +15,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.commons.util.SOSString;
 
-public class  implements ISOSHibernateConfigurationResolver {
+public class SOSHibernateEncryptionResolver implements ISOSHibernateConfigurationResolver {
 
 
     private String keystorePath;
