@@ -237,6 +237,7 @@ public class JsonValidator {
             put("com.sos.joc.model.auth.CreateOnetimeTokenFilter", "auth/createOnetimeTokenFilter-schema.json");
             put("com.sos.joc.model.auth.ShowOnetimeTokenFilter", "auth/showOnetimeTokenFilter-schema.json");
             put("com.sos.joc.model.publish.RevokeFilter", "publish/revoke-schema.json");
+            // GIT
             put("com.sos.joc.model.publish.git.GitCredentials", "publish/git/gitCredentials-schema.json");
             put("com.sos.joc.model.publish.git.AddCredentialsFilter", "publish/git/addCredentialsFilter-schema.json");
             put("com.sos.joc.model.publish.git.RemoveCredentials", "publish/git/removeCredentials-schema.json");
@@ -250,8 +251,14 @@ public class JsonValidator {
             put("com.sos.joc.model.publish.repository.DeleteFromFilter", "publish/repository/deleteFromRepositoryFilter-schema.json");
             put("com.sos.joc.model.publish.repository.ReadFromFilter", "publish/repository/readFromRepositoryFilter-schema.json");
             put("com.sos.joc.model.publish.repository.UpdateFromFilter", "publish/repository/updateFromRepositoryFilter-schema.json");
+            // dependencies
             put("com.sos.joc.model.inventory.dependencies.GetDependenciesRequest", "inventory/dependencies/dependency-request-schema.json");
-
+            // changes
+            put("com.sos.joc.model.inventory.changes.AddToChangeRequest", "inventory/changes/addToChange-requestBody-schema.json");
+            put("com.sos.joc.model.inventory.changes.RemoveFromChangeRequest", "inventory/changes/removeFromChange-requestBody-schema.json");
+            put("com.sos.joc.model.inventory.changes.StoreChangeRequest", "inventory/changes/storeChange-requestBody-schema.json");
+            put("com.sos.joc.model.inventory.changes.DeleteChangesRequest", "inventory/changes/deleteChanges-requestBody-schema.json");
+            put("com.sos.joc.model.inventory.changes.ShowChangesFilter", "inventory/changes/showChangesFilter-schema.json");
             // encipherment
             put("AgentAssignmentRequestFilter", "encipherment/agentAssignmentRequestFilter-schema.json");
             put("ShowAgentAssignmentsRequestFilter", "encipherment/showAgentAssignmentsRequestFilter-schema.json");

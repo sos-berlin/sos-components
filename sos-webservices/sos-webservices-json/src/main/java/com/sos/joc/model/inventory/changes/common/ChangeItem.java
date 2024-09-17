@@ -121,6 +121,11 @@ public class ChangeItem {
         this.objectType = ConfigurationType.fromValue(type);
     }
     
+    // constructors added manually
+    public ChangeItem() {
+        
+    }
+    
     public ChangeItem(String name, String path, Integer type) {
         this.name = name;
         this.path = path;
